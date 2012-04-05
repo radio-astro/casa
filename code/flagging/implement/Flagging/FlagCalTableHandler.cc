@@ -31,8 +31,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagCalTableHandler::FlagCalTableHandler(string msname, uShort iterationApproach, Double timeInterval):
-		FlagDataHandler(msname,iterationApproach,timeInterval)
+FlagCalTableHandler::FlagCalTableHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		FlagDataHandler(tablename,iterationApproach,timeInterval)
 {
 	selectedCalTable_p = NULL;
 	originalCalTable_p = NULL;
@@ -65,7 +65,7 @@ bool
 FlagCalTableHandler::open()
 {
 	if (originalCalTable_p) delete originalCalTable_p;
-	originalCalTable_p = new NewCalTable(msname_p,Table::Update,Table::Plain);
+	originalCalTable_p = new NewCalTable(tablename_p,Table::Update,Table::Plain);
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalCalTable_p->field());
@@ -78,6 +78,21 @@ FlagCalTableHandler::open()
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
 	antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
 	*logger_p << LogIO::DEBUG1 << "There are " << antennaNames_p->size() << " antennas with names: " << *antennaNames_p << LogIO::POST;
+
+	// File the baseline to Ant1xAnt2 map
+	String baseline;
+	std::pair<Int,Int> ant1ant2;
+	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	{
+		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		{
+			ant1ant2.first = ant1Idx;
+			ant1ant2.second = ant2Idx;
+			baseline = antennaNames_p->operator()(ant1Idx) + "&&" + antennaNames_p->operator()(ant2Idx);
+			baselineToAnt1Ant2_p[baseline] = ant1ant2;
+			Ant1Ant2ToBaseline_p[ant1ant2] = baseline;
+		}
+	}
 
 	// Create "dummy" correlation products list
 	corrProducts_p = new std::vector<String>(1);
@@ -252,7 +267,7 @@ FlagCalTableHandler::generateIterator()
 // Translate sorting columns from Block<Int> format to Block<string> format
 // -----------------------------------------------------------------------
 Block<String>
-FlagCalTableHandler::getSortColumns(Block<Int> intCols)
+FlagCalTableHandler::getSortColumns(Block<Int> /*intCols*/)
 {
 	Block<String> strCols(2);
 	strCols[0] = "FIELD_ID";
@@ -370,7 +385,7 @@ FlagCalTableHandler::nextBuffer()
 		{
 			Vector<Int> scan = visibilityBuffer_p->get()->scan();
 			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
 			{
 				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 			}
@@ -676,7 +691,7 @@ Vector<Int>& CTBuffer::corrType()
 	{
 		if (!CTnRowOK_p) nCorr();
 		corrType_p.resize(nCorr_p,False);
-		for (uInt corr_i=0;corr_i<nCorr_p;corr_i++)
+		for (uInt corr_i=0;corr_i<(uInt) nCorr_p;corr_i++)
 		{
 			corrType_p[corr_i] =  Stokes::NumberOfTypes+corr_i;
 		}

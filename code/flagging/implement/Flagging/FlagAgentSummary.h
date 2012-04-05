@@ -69,6 +69,9 @@ private:
         std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
         std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
 
+        std::map<Int, std::map<Int, uInt64> > accumAntScanflags;
+        std::map<Int, std::map<Int, uInt64> > accumAntScantotal;
+
         uInt64 accumTotalFlags, accumTotalCount;
 
 	Int arrayId;

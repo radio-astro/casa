@@ -1089,17 +1089,17 @@ fitsimage.done()
 </method>
 
    <method type="function" name="imagecalc">
-   <shortdescription>Construct a \casa\ image via the image calculator</shortdescription>
+   <shortdescription>Perform mathematical calculations on an image or images.</shortdescription>
    
 <input>
   
      <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
+     <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
      <value></value>
      </param>
   
      <param type="string" direction="in" name="pixels">
-     <description>LEL expression.  Default is empty expression.</description>
+     <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
      <value></value>
      </param>
   
@@ -1112,125 +1112,131 @@ fitsimage.done()
 
 <description> 
 
-This function is used to evaluate a mathematical expression involving
-existing \imagefiles, assigning the result to the newly created output
-image.  The syntax of the expression supplied via the {\stfaf pixels}
-argument (in what is called the Lattice Expression Language, or LEL) is
+This method is used to evaluate a mathematical expression involving
+existing images.  The syntax of the expression supplied via the pixels
+parameter (in what is called the Lattice Expression Language, or LEL) is
 explained in detail in \htmladdnormallink{note
-223}{../../notes/223/223.html}.
+223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich 
+mathematical language with allows all manner of mathematical operations
+to be applied to images.
 
 Any image files embedded in the expression may be native \casa\ or
-\fits\ (but not yet Miriad) \imagefiles.  Look
-\htmlref{here}{IMAGES:FOREIGNIMAGES} for more information on foreign
-images. 
+\fits\ (but not yet Miriad) images.
 
-If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
-returned by this function actually references all of the input files
-in the expression.  So if you deleted any of the input image disk
-files, it would render this \tool\ useless.  When you destry this
-on-the-fly \tool\ (with the <link
-anchor="images:image.done.function">done</link> function), the
-reference connections are broken.
+If successful, this method always returns an image analysis tool that
+references the image resulting from the calculation. This returned tool
+should always be captured and closed as soon as the user is done with it
+to free up system resources (eg, memory). The image analysis tool on which
+the method is called (eg the ia tool when one runs ia.imagecalc()) remains
+unaltered, eg it still refers to the same image it did prior to the imagecalc()
+call.
 
-If you make a reference \tool, the expression is re-evaluated every time
-you use it.   So it takes no extra storage, but takes longer
-to access the pixel values (they must be recomputed).
+Values of the returned tool are evaluated "on demand". That is, only when a method
+is run on the returned tool are the necessary values computed. And in fact, the
+values have to be reevaluated for each operation (method call). This means that
+there is a small performance hit for using the returned tool rather than the image
+written to disk and that none of the images which were used in the expression
+should be deleted while the returned tool is in use because they must be accessed
+for calculating the expression each time an operation of the returned tool is
+performed. These limitations do not apply to the ouput image if one is specified
+with the outfile parameter; it is a genuine CASA image with
+numerical values. If outfile is blank, no ouput image is written (although
+the resulting image can still be accessed via the returned image analysis tool
+as described below).
+
+Normally you should just write the image, close the returned
+tool, and open the results image with the default ia tool and operate on it. If
+you are interested in conserving disk space, you don't need to keep the result of
+the calculation around for very long, and/or you are only going to do a small 
+number of operations on the result image, should you set outfile="".
+
 
 </description>
 
 <example>
 
+
+
 """
-#
-print "\t----\t imagecalc Ex 1 \t----"
+# Suppose aF and bF are images with single precision and we want
+# to determine the result of the following expression:
+# aF + min(float($\pi$, mean(bF))
+#  
+# In this case, the images aF and bF do not need to have the same shapes and
+# coordinates, because only the mean(bF) results in the mean of all pixel
+# values in bF.  If aF has single precision pixel values, the resulting image
+# will as well. This expression first computes the scalar value of the minimum
+# of $\pi$ and the mean of the pixel values of bF. That scalar is then
+# added to the value of each pixel in aF. In the code below, the
+# result is written to image cF which can be accessed immediately
+# via the returned image analysis tool captured in the variable myim.
+# If the expression is masked, that mask will be copied to the new image.
+
+# create images of different sizes to operate on
 ia.fromshape('aF',[10,10],overwrite=true)
 ia.fromshape('bF',[10,20,30],overwrite=true)
-myim= ia.imagecalc(outfile='cF', pixels='aF + min(float(pi()), mean(bF))',
-                   overwrite=true)
+# close the ia tool to free up resources
+ia.done()
+# at each pixel in bF, take the minimum of that pixel value and pi and add
+# the resulting value to the corresponding pixel in af
+# note that only the subset of pixels in bF that correspond to those in aF
+# are used; the resulting image has the same size as the smaller image, aF,
+# used in the input
+myim = ia.imagecalc(outfile='cF', pixels='aF + min(float(pi()), mean(bF))',
+                 overwrite=true)
+# confirm the resulting image has the same size as aF, should be [10, 10]
+myim.shape()
+# close the myim tool to free up system resources
 myim.done()
-ia.close()
-#
 """
-
-
-Suppose {\sff aF} and {\sff bF} are \imagefiles\ with single precision
-data.  They do not need to have conforming shapes and coordinates,
-because only the mean of {\sff bF} is used.  Note that {\tt pi} is
-explicitly converted to single precision, because {\cf pi()} results in
-a Double.  If that was not done, the expression result would be a Double
-with the effect that all data of {\sff aF} had to be converted to
-Double.  So this expression first computes a scalar, the minimum of
-$\pi$ and the mean of the \imagefile\ {\sff bF}.    That scalar is then
-added to the value of each pixel in the \imagefile\ {\sff aF}.  The
-resultant is put in the \imagefile\ called {\sff cF} to which access is
-provided via the \imagetool\ called {\stf myim}.
-
-If the expression is masked, that mask will be copied to the new image.
-
 </example>
 
 <example>
 
 """
-#
-print "\t----\t imagecalc Ex 2 \t----"
+# The following example shows the use of the two min() LEL functions. One takes a
+# single argument and will return a scalar representing the minimum pixel value
+# of that entire image. The other takes two arguments (either an image and a
+# scalar or two images of conforming shapes) and returns an image for which
+# the minimum has been calculated on a pixel by pixel basis for the input
+# image(s).
+
+# create an image to operate on 
 ia.fromshape('aF',[10,10],overwrite=true)
+# give it interesting values
+ia.addnoise()
+# free up system resources
+ia.done()
+# do the calculation and write results to image cF
 myim=ia.imagecalc('cF', 'min(aF, (min(aF)+max(aF))/2)', overwrite=true)
+# do whatever stuff you want with myim and the close it to free
+# up system resources
 myim.done()
-ia.close()
-#
 """
-
-
-This example shows that there are 2 {\cf min} functions.  One with a
-single argument returning the minimum value of that image.  The other
-with 2 arguments returning an image containing {\sff aF} data clipped at
-the value of the 2nd argument. 
-
 </example>
 
 <example>
-
 """
-#
-print "\t----\t imagecalc Ex 3 \t----"
+# Here's an example of a more complicated function. Currently
+# ia.fromshape() only creates real-valued images so the real()
+# function is not particularly exciting in this case but illustrates
+# possibilities. Trigonometric functions such as sin() assume the
+# pixel values are in radians.
 ia.fromshape('aD',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('aF',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('bF',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('aC',[10,10],overwrite=true)
+ia.addnoise()
+ia.done()
 myim = ia.imagecalc('eF', 'sin(aD)+(aF*2)+min(bF)+real(aC)', overwrite=true)
 myim.done()
-ia.close()
-#
 """
 
-This shows a mixed type expression.  The real part of the Complex image
-{\sff aC}  is used in an expression that otherwise uses Float
-type.  The result of the expression is written out to the
-disk file called {\sff eF}.
 </example>
 
-<example>
-
-"""
-#
-print "\t----\t imagecalc Ex 4 \t----"
-ia.fromshape('aD',[10,10],overwrite=true)
-ia.fromshape('aF',[10,10],overwrite=true)
-ia.fromshape('bF',[10,10],overwrite=true)
-ia.fromshape('aC',[10,10],overwrite=true)
-myim = ia.imagecalc(pixels='sin(aD)+(aF*2)+min(bF)+real(aC)')
-myim.done()
-ia.close()
-#
-"""
-
-This shows a mixed type expression.  The real part of the Complex image
-{\sff aC}  is used in an expression that otherwise uses Float
-type.  The result of the expression is not written out to disk
-in this case.  It is evaluated each time it is needed.
-</example>
 </method>
 
 <method type="function" name="collapse">
@@ -4211,6 +4217,9 @@ from the zeroth pixel in the specified region. goodfwhmrange is expressed in ter
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
 
+In addition, solutions for which the absolute value of the ratio of the amplitude error to the amplitude exceeds 100 or the
+ratio of the FWHM error to the FWHM exceeds 100 are automatically marked as invalid.
+
 INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
 If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
 near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
@@ -4498,8 +4507,9 @@ ERROR ESTIMATES
 
 The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
 according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
-http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (as outlined
-by Ed Fomalont in CAS-1860), the following algorithms are used to compute the various errors.
+http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (Condon et al
+1998AJ.115.1693; Richards et al. 1999MNRAS.306..954), the following algorithms are used to
+compute the various errors.
 
 R = rms of residual image
 P = fitted peak intensity
@@ -4507,8 +4517,8 @@ S = P/R (signal to noise)
 
 longitude error = (FWHM beam width in longitude direction)/(2*S)
 latitude error = (FWHM beam width in latitude direction)/(2*S)
-FWHM of major axis error = (FWHM beam along major axis)/sqrt(S)
-FWHM of minor axis error = (FWHM beam along minor axis)/sqrt(S)
+FWHM of major axis error = (FWHM beam along major axis)/S
+FWHM of minor axis error = (FWHM beam along minor axis)/S
 position angle error is calculated via standard error propogation of the FWHM major and minor axes sizes and errors
 flux error is computed via standard error propogation of the peak intensity and its error and the FWHM major
 and minor axes sizes and their errors.
@@ -4534,6 +4544,8 @@ assumptions do not hold if for example, there is structure in the noise of the i
 by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
 artifact (eg ripple), or the source(s) is nongaussian (eg a disk or more complex function convolved with a gaussian;
 just because something looks gaussian to the human image analysis system does not necessarily mean it is).
+In addition, in the case of an image produced from interferometric observations, the errors given are appropriate for
+good uv plane coverage. They may be a factor of two or more higher for sparse arrays or snapshots.
 In short, fitcomponents() is not a silver bullet for determining parameters in flawed images and reported errors
 should be interpreted cautiously in the vast majority of all "real life" cases. The closer the source being fit is to
 fulfilling these assumptions the more realistic reported errors will be.

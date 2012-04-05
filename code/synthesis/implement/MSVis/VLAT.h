@@ -30,29 +30,21 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
-using casa::async::Mutex;
-
 #include "UtilJ.h"
-using casa::utilj::ThreadTimes;
-using casa::utilj::DeltaThreadTimes;
 
+#include <boost/tuple/tuple.hpp>
 #include <synthesis/MSVis/AsynchronousInterface.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBufferAsync.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisibilityIteratorImplAsync.h>
 
+#include <map>
+
+//using namespace casa::async;
 using casa::asyncio::RoviaModifiers;
-
-#include <synthesis/MSVis/VisBufferAsync.h>
-#include <boost/tuple/tuple.hpp>
-
-#include <memory>
-using std::pair;
-
-#include <queue>
-using std::queue;
-
-using namespace casa::async;
+using casa::utilj::ThreadTimes;
+using casa::utilj::DeltaThreadTimes;
 
 namespace casa {
 
@@ -240,7 +232,7 @@ public:
 
 protected:
 
-    class FillerDictionary : public map<VisBufferComponents::EnumType, VlatFunctor *> {
+    class FillerDictionary : public std::map<VisBufferComponents::EnumType, VlatFunctor *> {
 
     public:
 

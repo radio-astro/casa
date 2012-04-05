@@ -168,7 +168,7 @@ ComponentList ImageFitter::fit() {
 				fitter, pixels,
 				pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				_curChan, _kludgedStokes,
+				_curChan,
 				models, estimatesRecord,
 				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
@@ -414,13 +414,6 @@ vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
-	/*
-	ImageInputProcessor::OutputStruct logFile;
-	logFile.label = "log file";
-	logFile.outputFile = &_logfileName;
-	logFile.required = False;
-	logFile.replaceable = True;
-	*/
 
 	vector<ImageInputProcessor::OutputStruct> outputs(3);
 	outputs[0] = residualIm;
@@ -451,7 +444,6 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 		|| _getStokes().empty()
         ? "I" : String(_getStokes());
 	// </todo>
-
 	if(estimatesFilename.empty()) {
 		*_getLog() << LogIO::NORMAL
 			<< "No estimates file specified, so will attempt to find and fit one gaussian."
@@ -473,8 +465,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
 	Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
-
-	 uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
+	uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
 
 	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, nChannels);
 	if (_chanVec.size() == 0) {
@@ -714,8 +705,8 @@ void ImageFitter::_setSizes() {
 					(
 						xBeamVal*sinPA * xBeamVal*sinPA
 						+ yBeamVal*cosPA * yBeamVal*cosPA
-					)/signalToNoise
-				)
+					)
+				)/signalToNoise
 			)
 		);
 		_minorAxisErrors[i].setValue(
@@ -725,15 +716,14 @@ void ImageFitter::_setSizes() {
 					(
 						xBeamVal*cosPA * xBeamVal*cosPA
 						+ yBeamVal*sinPA * yBeamVal*sinPA
-					)/signalToNoise
-				)
+					)
+				)/signalToNoise
 			)
 		);
-
 		Double posAngleRad = _positionAngles[i].getValue(Unit("rad"));
 		Quantity posAngErrorFromSN = _positionAngles[i] * sqrt(
 				_majorAxisErrors[i]/_majorAxes[i] * _majorAxisErrors[i]/_majorAxes[i]
-				                                                                   + _minorAxisErrors[i]/_minorAxes[i] * _minorAxisErrors[i]/_minorAxes[i]
+				+ _minorAxisErrors[i]/_minorAxes[i] * _minorAxisErrors[i]/_minorAxes[i]
 		);
 		posAngErrorFromSN *= 1/(1 + posAngleRad*posAngleRad);
 		posAngErrorFromSN.convert(_positionAngleErrors[i].getUnit());
@@ -998,43 +988,6 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 	return spec.str();
 }
 
-/*
-void ImageFitter::_writeLogfile(const String& output) const {
-	String logfile = _getLogfile();
-	File log(logfile);
-	switch (File::FileWriteStatus status = log.getWriteStatus()) {
-	case File::OVERWRITABLE:
-		if (logfileAppend) {
-			Int fd = open(logfile.c_str(), O_RDWR | O_APPEND);
-			FiledesIO fio(fd, logfile.c_str());
-			fio.write(output.length(), output.c_str());
-			FiledesIO::close(fd);
-			*_getLog() << LogIO::NORMAL << "Appended results to file "
-					<< logfile << LogIO::POST;
-		}
-		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
-	case File::CREATABLE:
-		if (status == File::CREATABLE || ! logfileAppend) {
-			// can fall throw from previous case block so status can be File::OVERWRITABLE
-			String action = (status == File::OVERWRITABLE) ? "Overwrote" : "Created";
-			Int fd = FiledesIO::create(logfile.c_str());
-			FiledesIO fio (fd, _logfileName.c_str());
-			fio.write(output.length(), output.c_str());
-			FiledesIO::close(fd);
-			*_getLog() << LogIO::NORMAL << action << " file "
-					<< _logfileName << " with new log file"
-					<< LogIO::POST;
-		}
-		break;
-	default:
-		// checks to see if the log file is not creatable or not writeable should have already been
-		// done and if so _logFileName set to the empty string so this method wouldn't be called in
-		// those cases.
-		*_getLog() << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
-	}
-}
-*/
-
 SubImage<Float> ImageFitter::_createImageTemplate() const {
 	IPosition imShape = _getImage()->shape();
 	IPosition startPos(imShape.nelements(), 0);
@@ -1138,7 +1091,7 @@ ComponentList ImageFitter::_fitsky(
     Array<Bool>& pixelMask, Bool& converged,
     Double& zeroLevelOffsetSolution,
    	Double& zeroLevelOffsetError,
-    const uInt& chan, const String& stokesString,
+    const uInt& chan,
 	const Vector<String>& models, Record& inputEstimate,
 	const Bool fitIt,
 	const Bool deconvolveIt, const Bool list,
@@ -1149,7 +1102,6 @@ ComponentList ImageFitter::_fitsky(
 
 	String error;
 	Vector<SkyComponent> estimate;
-
 	ComponentList compList;
 	if (!compList.fromRecord(error, inputEstimate)) {
 		*_getLog() << LogIO::WARN
@@ -1198,7 +1150,6 @@ ComponentList ImageFitter::_fitsky(
 		IPosition stride(imShape.nelements(), 1);
 		//const CoordinateSystem& imcsys = pImage_p->coordinates();
 		const CoordinateSystem& imcsys = subImageTmp.coordinates();
-
 		if (imcsys.hasSpectralAxis()) {
 			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
 			startPos[spectralAxisNumber] = chan - _chanVec[0];
@@ -1206,11 +1157,10 @@ ComponentList ImageFitter::_fitsky(
 		}
 		if (imcsys.hasPolarizationCoordinate()) {
 			uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
-			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(stokesString);
+			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_getStokes());
 			endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 		}
 		Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
-
 		// CAS-1966, CAS-2633 keep degenerate axes
 		allAxesSubImage = SubImage<Float>(
 			subImageTmp, slice, False, AxesSpecifier(True)
@@ -1231,14 +1181,13 @@ ComponentList ImageFitter::_fitsky(
 	pixelMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
-	Stokes::StokesTypes stokes = Stokes::type(stokesString);
+	Stokes::StokesTypes stokes = Stokes::type(_kludgedStokes);
 
 	// Form masked array and find min/max
 	MaskedArray<Float> maskedPixels(pixels, pixelMask, True);
 	Float minVal, maxVal;
 	IPosition minPos(2), maxPos(2);
 	minMax(minVal, maxVal, minPos, maxPos, pixels);
-
     // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa

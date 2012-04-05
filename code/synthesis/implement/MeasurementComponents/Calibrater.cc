@@ -1167,7 +1167,7 @@ Calibrater::correct()
         Bool calwt(calWt());
         Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
         uncalspw.set(False);		        // instead of bombing the user
-                                                // in a loop.
+                                        // in a loop.
 
         for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
@@ -1205,7 +1205,7 @@ Calibrater::correct()
             }
         }
 
-        vs_p->flush(); // Flush to disk
+        vs_p->flush (); // Flush to disk
 
         // Now that we're out of the loop, summarize any errors.
 
@@ -1293,33 +1293,6 @@ Calibrater::configureForCorrection ()
     return whichOutCol;
 }
 
-//Bool
-//Calibrater::correctUsingVpf ()
-//{
-//    Bool result = False;
-//
-//    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
-//
-//    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
-//
-//    VpEngine vpEngine;
-//
-//    try{
-//
-//        vpEngine.process (* correctorVp, * vi);
-//        result = True;
-//    }
-//    catch (AipsError & e){
-//
-//        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
-//                   << LogIO::NORMAL;
-//
-//    }
-//
-//    return result;
-//
-//}
-
 Bool
 Calibrater::correctUsingVpf ()
 {
@@ -1332,8 +1305,8 @@ Calibrater::correctUsingVpf ()
     vpContainer->add (correctorVp.get());
     vpContainer->add (writerVp.get());
 
-    vpContainer->connect (correctorVp->getOutputRef ("Out"), writerVp->getInputRef ("In"));
-    vpContainer->connect (vpContainer->getInputRef ("In"), correctorVp->getInputRef ("In"));
+    vpContainer->connect (correctorVp.get(), "Out", writerVp.get(), "In");
+    vpContainer->connect ("In", correctorVp.get(), "In");
 
     ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
 
@@ -1587,6 +1560,7 @@ Bool Calibrater::genericGatherAndSolve() {
 
 	// Collapse each timestamp in this chunk according to VisEq
 	//  with calibration and averaging
+	Bool verb(True);
 	for (vi.origin(); vi.more(); vi++) {
 	  
 	  // Force read of the field Id
@@ -1606,6 +1580,16 @@ Bool Calibrater::genericGatherAndSolve() {
 	  // If this solve not freqdep, and channels not averaged yet, do so
 	  if (!svc_p->freqDepMat() && vb.nChannel()>1)
 	    vb.freqAveCubes();
+
+	  if (svc_p->freqDepPar() && 
+	      svc_p->fsolint()!="none" &&
+	      svc_p->fintervalCh()>0.0) {
+	    //	    cout << "svc_p->currSpw() = " << svc_p->currSpw() << endl;
+	    if (verb) cout << "vb.numberChan() = " << vb.nChannel();
+	    vb.channelAve(svc_p->chanAveBounds(spw));
+	    if (verb) cout << "-->" << vb.nChannel() << endl;
+	    verb=False;  // suppress future verbosity
+	  }
 	  
 	  // Accumulate collapsed vb in a time average
 	  //  (only if the vb contains any unflagged data)
@@ -3386,7 +3370,6 @@ CorrectorVp::doProcessingImpl (ProcessingType processingType,
         if (calculateWeights_p){
             inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
         }
-
 
         VpData output;
         VpPort outputPort = getOutputs () [0];

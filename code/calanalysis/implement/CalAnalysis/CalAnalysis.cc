@@ -50,9 +50,6 @@ Description:
 ------------
 This class acts as the interface between the ROCTIter and CalAnalysis classes.
 
-NB: I may replace msName(), parType(), polBasis(), and visCal() with a single
-function whose second argument is the keyword name.
-
 In a nutshell:
 --------------
 * The constructor gets the information from the new format calibration table.
@@ -77,6 +74,9 @@ In a nutshell:
     function calculates the desired statistics which are stored in a vector
     of OUTPUT<T> instances.
 
+NB: There are a lot of get/set member functions.  Unfortunately, they could not
+    be overloaded with the same names.
+
 Nested classes:
 ---------------
 OUTPUT<T> - This nested class contains the outputs for the
@@ -87,14 +87,23 @@ Class public member functions:
 CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
-msName       - This function returns the associated MS name.
-parType      - This function returns the parameter type (Complex or Float).
-polBasis     - This function returns the polarization basis (linear or
-               circular).
-visCal       - This function returns the visibility calibration type.
+calName      - This member function returns the new format calibration table
+               name private variable.
+msName       - This member function returns the associated MS name private
+               variable.
+visCal       - This member function returns the visibility calibration type
+               private variable.
+parType      - This member function returns the parameter type ("Complex" or
+               "Float") private variable.
+polBasis     - This member function returns the polarization basis ("L" or "C")
+               private variable.
+feed         - This member function returns the feeds private variable.
+time         - This member function returns the times private variable.
+spw          - This member function returns the spws private variable.
+numspw       - This member function returns the number of spws private variable.
 
-Class template public stats member functions:
----------------------------------------------
+Class template public member functions:
+---------------------------------------
 stats<T> - This member function is the main user interface for calculating the
            statistics for all iterations.  Allowed T: CalStats::NONE only
            returns the input data, CalStatsFitter::FIT calculates fit
@@ -102,17 +111,43 @@ stats<T> - This member function is the main user interface for calculating the
 
 Class template public static member functions:
 ----------------------------------------------
-exists<T>       - This member function determines whether a value appears in a
-                  vector.
-uniqueNoSort<T> - This member function returns an unsorted and unique vector
-                  from an input vector.
+exists<T> - This member function determines whether a value appears in a vector.
+unique<T> - This member function returns a unique vector from an input vector.
 
 Class private member functions:
 -------------------------------
-feed        - This member function checks the input feed vector and returns the
+calNameGet  - This member function gets the new format calibration table name
+              from the new format calibration table.
+calNameSet  - This member function sets the new format calibration table name
+              private variable.
+msNameGet   - This member function gets the associated MS name from the new
+              format calibration table.
+msNameSet   - This member function sets the associated MS name private variable.
+visCalGet   - This member function gets the visibility calibration type from the
+              new format calibration table.
+visCalSet   - This member function sets the visibility calibration type private
+              variable.
+parTypeGet  - This member function gets the parameter type ("Complex" or
+              "Float") from the new format calibration table.
+parTypeSet  - This member function sets the parameter type ("Complex" or
+              "Float") private variable.
+polBasisGet - This member function gets the polarization basis ("L" or "C") from
+              the new format calibration table.
+polBasisSet - This member function sets the polarization basis ("L" or "C")
+              private variable.
+feedGet     - This member function gets the feeds from the new format
+              calibration table.
+feedSet     - This member function sets the feeds private variables.
+feedCheck   - This member function checks the input feed vector and returns the
               fixed feed vector.
-time        - This member function checks the time range and returns the
+timeGet     - This member function gets the times from the new format
+              calibration table.
+timeSet     - This member function sets the times private variables.
+timeCheck   - This member function checks the time range and returns the
               corresponding time vector.
+spwGet      - This member function gets the spws from the new format calibration
+              table.
+spwSet      - This member function sets the spws private variables.
 spw_channel - This member functions checks the input spectral window and channel
               vectors and returns the fixed spectral window and channel vectors.
 freq        - This member function creates the total frequency vector based on
@@ -138,22 +173,31 @@ Modification history:
 ---------------------
 2012 Jan 20 - Nick Elias, NRAO
               Initial version created with public member functions CalAnalysis()
-              (generic), ~CalAnalysis(), tableType(), polBasis(); template
-              public stats member function stats<T>(); class template public
-              static functions exists<T>() and uniqueNoSort<T>(); private member
-              functions feed(), time(), spw_channel(), freq(); template private
-              member functions parse(), and select<T>(); and protected member
-              functions CalAnalysis() (default), CalAnalysis() (copy), and
+              (generic), ~CalAnalysis(); template static public member function
+              stats<T>(); template public member functions exists<T>() and
+              unique<T>(); private member functions tableType(), polBasisGet(),
+              feedCheck(), timeCheck(), spw_channel(), freq(); template private
+              member functions parse<T>(), and select<T>(); and protected member
+	      functions CalAnalysis() (default), CalAnalysis() (copy), and
               operator=().
 2012 Feb 14 - Nick Elias, NRAO
               Updated this code to reflect changes in NewCalTabIter (now
               ROCTIter) and other classes.  Added the RAP enum.
 2012 Mar 13 - Nick Elias, NRAO
-              Public member function tableType() renamed to parType().  Public
-              member functions visCal() and msName() added.
+              Public member function tableType() renamed to parTypeGet().
+              Private member functions msNameGet() and visCalGet() added.
 2012 Mar 14 - Nick Elias, NRAO
-              I added the spectral window ID, start channel, and stop channel
-              to the nested OUTPUT<T> class.
+              Spectral window ID, start channel, and stop channel added to the
+              nested OUTPUT<T> class.
+2012 Apr 03 - Nick Elias, NRAO
+              Private member function calNameGet() added.  Public member
+              functions calName(), msName(), visCal(), parType(), and polBasis()
+              added.
+2012 Apr 04 - Nick Elias, NRAO
+              Private member functions calNameSet(), msNameSet(), visCalSet(),
+              parTypeSet(), polBasisSet(), feedGet(), feedSet(), timeGet(),
+              timeSet(), spwGet(), and spwSet() added.  Public member functions
+              feed(), time(), spw(), and numspw() added.
 
 */
 
@@ -163,7 +207,7 @@ Modification history:
 
 /*
 
-CalAnalysis::CalAnalysis
+CalAnalysis::CalAnalysis (generic)
 
 Description:
 ------------
@@ -192,7 +236,7 @@ Modification history:
 
 CalAnalysis::CalAnalysis( const String& oTableName ) {
 
-  // Reconstitute the new calibration table in memory
+  // Reconstitute the new format calibration table in memory
 
   try {
     poNCT = new NewCalTable( oTableName, Table::Old, Table::Memory );
@@ -202,7 +246,7 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   }
 
 
-  // Create the iterator for the new calibration table
+  // Create the iterator for the new format calibration table
 
   Block<String> oColIter( 3 );
   oColIter[0] = String( "ANTENNA2" );
@@ -213,38 +257,25 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   poNCTIter->reset();
 
 
-  // Get the type of the parameter column
+  // Set the private variables corresponding to the new format calibration
+  // table name, MS name, visibility calibration type, parameter type, and
+  // polarization basis
 
-  oParType = parType( oTableName );
+  calNameSet( calNameGet( oTableName ) );
 
-
-  // Create the feed vector
-
-  uiNumFeed = poNCTIter->cparam().shape()[0];
-  oFeed = Vector<String>( uiNumFeed, "" );
-
-  if ( uiNumFeed == 1 ) {
-    oFeed[0] = "S";
-  } else {
-    if ( polBasis(oTableName) == 'L' ) {
-      oFeed[0] = "X";
-      oFeed[1] = "Y";
-    } else {
-      oFeed[0] = "L";
-      oFeed[1] = "R";
-    }
-  }
+  msNameSet( msNameGet( oTableName ) );
+  visCalSet( visCalGet( oTableName ) );
+  parTypeSet( parTypeGet( oTableName ) );
+  polBasisSet( polBasisGet( oTableName ) );
 
 
-  // Get the unique and unsorted time vector and spectral window vector
+  // Set the private variables correspnding the complete feed vector, the
+  // complete time vector, the complete spectral window vector, xxx
 
-  oTime = uniqueNoSort<Double>( poNCTIter->time() );
-  uiNumTime = oTime.nelements();
+  feedSet( feedGet( oTableName ) );
+  timeSet( timeGet( oTableName ) );
 
-  Vector<Int> oSPWInt( uniqueNoSort<Int>(poNCTIter->spw()) );
-  uiNumSPW = oSPWInt.nelements();
-  oSPW.resize( uiNumSPW );
-  convertArray<uInt,Int>( oSPW, oSPWInt );
+  spwSet( spwGet( oTableName ) );
 
 
   // Get the CHAN_FREQ column from the spectral window subtable
@@ -331,11 +362,447 @@ CalAnalysis::~CalAnalysis( void ) {
 
 /*
 
+CalAnalysis::calName
+
+Description:
+------------
+This member function returns the new format calibration table name private
+variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the String instance containing the new format calibration table
+name, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::calName( void ) const {
+
+  // Copy the private variable containing the new format calibration table name
+  // and return it
+
+  String* poCalName = new String( oCalName );
+
+  return( *poCalName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
 CalAnalysis::msName
 
 Description:
 ------------
-This function returns the associated MS name.
+This member function returns the MS name private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the String instance containing the MS name, returned via the
+function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::msName( void ) const {
+
+  // Copy the private variable containing the MS name and return it
+
+  String* poMSName = new String( oMSName );
+
+  return( *poMSName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::visCal
+
+Description:
+------------
+This member function returns the visibility calibration type private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the String instance containing the visibility calibration type,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::visCal( void ) const {
+
+  // Copy the private variable containing the visibility calibration type and
+  // return it
+
+  String* poVisCal = new String( oVisCal );
+
+  return( *poVisCal );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::parType
+
+Description:
+------------
+This member function returns the parameter type ("Complex" or "Float") private
+variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the String instance containing the parameter type, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::parType( void ) const {
+
+  // Copy the private variable containing the parameter type and return it
+
+  String* poParType = new String( oParType );
+
+  return( *poParType );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::polBasis
+
+Description:
+------------
+This member function returns the polarization basis ("L" or "C") private
+variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the String instance containing the polarization basis, returned
+via the function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::polBasis( void ) const {
+
+  // Copy the private variable containing the polarization basis and return it
+
+  String* poPolBasis = new String( oPolBasis );
+
+  return( *poPolBasis );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::feed
+
+Description:
+------------
+This member function returns the feeds private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the Vector<String> instance containing the feeds, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<String>& CalAnalysis::feed( void ) const {
+
+  // Copy the private variable containing the feeds and return it
+
+  Vector<String>* poFeed = new Vector<String>( oFeed );
+
+  return( *poFeed );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::spw
+
+Description:
+------------
+This member function returns the spws private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the Vector<uInt> instance containing the spws, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::spw( void ) const {
+
+  // Copy the private variable containing the spws and return it
+
+  Vector<uInt>* poSPW = new Vector<uInt>( oSPW );
+
+  return( *poSPW );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::numspw
+
+Description:
+------------
+This member function returns the number of spws private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the uInt variable containing the spws, returned via the
+function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+uInt& CalAnalysis::numspw( void ) const {
+
+  // Copy the private variable containing the number of spws and return it
+
+  uInt* puiNumSPW = new uInt( uiNumSPW );
+
+  return( *puiNumSPW );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::time
+
+Description:
+------------
+This member function returns the times private variable.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the Vector<Double> instance containing the times, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<Double>& CalAnalysis::time( void ) const {
+
+  // Copy the private variable containing the times and return it
+
+  Vector<Double>* poTime = new Vector<Double>( oTime );
+
+  return( *poTime );
+
+}
+
+// -----------------------------------------------------------------------------
+// End of CalAnalysis public member functions
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Start of CalAnalysis private member functions
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::calNameGet
+
+Description:
+------------
+This member function gets the new format calibration table name from the new
+format calibration table.
+
+NB: This function is somewhat trivial, but it is included because of the other
+get member functions of this class.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the String instance containing the new format calibration table
+name, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 03 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::calNameGet( const String& oTableName ) {
+
+  // Get the new format calibration table name and return it
+
+  String* poTableName = new String( oTableName );
+
+  return( *poTableName );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::calNameSet
+
+Description:
+------------
+This member function sets the new format calibration table name private
+variable.
+
+Inputs:
+-------
+oCalNameIn - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::calNameSet( const String& oCalNameIn ) {
+
+  // Set the new format calibration table name and return
+
+  oCalName = String( oCalNameIn );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::msNameGet
+
+Description:
+------------
+This member function gets the associated MS name from the new format calibration
+table.
 
 Inputs:
 -------
@@ -356,7 +823,7 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-String& CalAnalysis::msName( const String& oTableName ) {
+String& CalAnalysis::msNameGet( const String& oTableName ) {
 
   // Get the record containing the main table keywords
 
@@ -365,7 +832,7 @@ String& CalAnalysis::msName( const String& oTableName ) {
   Record oR( oTP.getKeywordSet( String("") ) );
 
 
-  // Get the MS name and return it
+  // Get the associated MS name and return it
 
   uInt uiIndex = oR.fieldNumber( String( "MSName" ) );
   String* poMSName = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
@@ -378,48 +845,36 @@ String& CalAnalysis::msName( const String& oTableName ) {
 
 /*
 
-CalAnalysis::parType
+CalAnalysis::msNameSet
 
 Description:
 ------------
-This function returns the parameter type (Complex or Float).
+This member function sets the associated MS name private variable.
 
 Inputs:
 -------
-oTableName - This reference to a String instance contains the new format
-             calibration table name.
+oMSNameIn - This reference to a String instance contains the assciated MS name.
 
 Outputs:
 --------
-The reference to the String instance containing the table type (Complex or
-Float), returned via the function value.
+None.
 
 Modification history:
 ---------------------
-2012 Jan 20 - Nick Elias, NRAO
+2012 Apr 04 - Nick Elias, NRAO
               Initial version.
-2012 Mar 13 - Nick Elias, NRAO
-              Function renamed to parType().
 
 */
 
 // -----------------------------------------------------------------------------
 
-String& CalAnalysis::parType( const String& oTableName ) {
+void CalAnalysis::msNameSet( const String& oMSNameIn ) {
 
-  // Get the record containing the main table keywords
+  // Set the assciated MS name and return
 
-  Table oTable( oTableName );
-  TableProxy oTP( oTable );
-  Record oR( oTP.getKeywordSet( String("") ) );
+  oMSName = String( oMSNameIn );
 
-
-  // Get the table type (Complex or Float) and return it
-
-  uInt uiIndex = oR.fieldNumber( String( "ParType" ) );
-  String* poParType = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
-
-  return( *poParType );
+  return;
 
 }
 
@@ -427,11 +882,12 @@ String& CalAnalysis::parType( const String& oTableName ) {
 
 /*
 
-CalAnalysis::polBasis
+CalAnalysis::visCalGet
 
 Description:
 ------------
-This function returns the polarization basis (linear or circular).
+This member function gets the visibility calibration type from the new format
+calibration table.
 
 Inputs:
 -------
@@ -440,64 +896,8 @@ oTableName - This reference to a String instance contains the new format
 
 Outputs:
 --------
-The reference to the String instance containing the polarization basis
-("L"=linear or "C"=circular), returned via the function value.
-
-Modification history:
----------------------
-2012 Jan 20 - Nick Elias, NRAO
-              Initial version.
-2012 Mar 13 - Nick Elias, NRAO
-              No "S"=scalar type.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-String& CalAnalysis::polBasis( const String& oTableName ) {
-
-  // Get the record containing the main table keywords
-
-  Table oTable( oTableName );
-  TableProxy oTP( oTable );
-  Record oR( oTP.getKeywordSet( String("") ) );
-
-
-  // Get the polarization basis ("L"=linear or "C"=circular), make it upper
-  // case, and keep only the initial letter
-
-  uInt uiIndex = oR.fieldNumber( String( "PolBasis" ) );
-  String* poPolBasis = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
-
-  poPolBasis->upcase();
-  *poPolBasis = poPolBasis->operator[](0);
-
-
-  // Return the polarization basis
-
-  return( *poPolBasis );
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::visCal
-
-Description:
-------------
-This function returns the visibility calibration type.
-
-Inputs:
--------
-oTableName - This reference to a String instance contains the new format
-             calibration table name.
-
-Outputs:
---------
-The reference to the String instance containing the visibility calibration type,
-returned via the function value.
+The reference to the String instance containing the visibility calibration type
+instance, returned via the function value.
 
 Modification history:
 ---------------------
@@ -508,7 +908,7 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-String& CalAnalysis::visCal( const String& oTableName ) {
+String& CalAnalysis::visCalGet( const String& oTableName ) {
 
   // Get the record containing the main table keywords
 
@@ -527,16 +927,331 @@ String& CalAnalysis::visCal( const String& oTableName ) {
 }
 
 // -----------------------------------------------------------------------------
-// End of CalAnalysis public member functions
-// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::visCalSet
+
+Description:
+------------
+This member function sets the visibility calibration type private variable.
+
+Inputs:
+-------
+oVisCalIn - This reference to a String instance contains the visibility
+            calibration type.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
 
 // -----------------------------------------------------------------------------
-// Start of CalAnalysis private member functions
+
+void CalAnalysis::visCalSet( const String& oVisCalIn ) {
+
+  // Set the visibility calibration type and return
+
+  oVisCal = String( oVisCalIn );
+
+  return;
+
+}
+
 // -----------------------------------------------------------------------------
 
 /*
 
-CalAnalysis::feed
+CalAnalysis::parTypeGet
+
+Description:
+------------
+This member function gets the parameter column type ("Complex" or "Float") from
+the new format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the String instance containing the parameter column type,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Jan 20 - Nick Elias, NRAO
+              Initial version.
+2012 Mar 13 - Nick Elias, NRAO
+              Function renamed to parType().
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::parTypeGet( const String& oTableName ) {
+
+  // Get the record containing the main table keywords
+
+  Table oTable( oTableName );
+  TableProxy oTP( oTable );
+  Record oR( oTP.getKeywordSet( String("") ) );
+
+
+  // Get the parameter column type and return it
+
+  uInt uiIndex = oR.fieldNumber( String( "ParType" ) );
+  String* poParType = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
+
+  return( *poParType );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::parTypeSet
+
+Description:
+------------
+This member function sets the parameter column type ("Complex" or "Float")
+private variable.
+
+Inputs:
+-------
+oParTypeIn - This reference to a String instance contains the parameter column
+             type.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::parTypeSet( const String& oParTypeIn ) {
+
+  // Set the parameter column type and return
+
+  oParType = String( oParTypeIn );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::polBasisGet
+
+Description:
+------------
+This member function gets the polarization basis ("L" or "C") from the new
+format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the String instance containing the polarization basis, returned
+via the function value.
+
+Modification history:
+---------------------
+2012 Jan 20 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+String& CalAnalysis::polBasisGet( const String& oTableName ) {
+
+  // Get the record containing the main table keywords
+
+  Table oTable( oTableName );
+  TableProxy oTP( oTable );
+  Record oR( oTP.getKeywordSet( String("") ) );
+
+
+  // Get the polarization basis, make it upper case, keep only the initial
+  // letter, and return it
+
+  uInt uiIndex = oR.fieldNumber( String( "PolBasis" ) );
+  String* poPolBasis = new String( RecordFieldPtr<String>(oR,uiIndex).get() );
+
+  poPolBasis->upcase();
+  poPolBasis->operator=( poPolBasis->operator[](0) );
+
+  return( *poPolBasis );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::polBasisSet
+
+Description:
+------------
+This member function sets the polarization basis ("L" or "C") private variable.
+
+Inputs:
+-------
+oPolBasisIn - This reference to a String instance contains the polarization
+              basis.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::polBasisSet( const String& oPolBasisIn ) {
+
+  // Set the polarization basis and return
+
+  oPolBasis = String( oPolBasisIn );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::feedGet
+
+Description:
+------------
+This member function gets the feeds from the new format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<String> instance containing the feeds, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<String>& CalAnalysis::feedGet( const String& oTableName ) {
+
+  // Create a temporary new format calibration table instance and its iterator
+  // instance
+
+  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
+
+  Block<String> oColIter( 3 );
+  oColIter[0] = String( "ANTENNA2" );
+  oColIter[1] = String( "ANTENNA1" );
+  oColIter[2] = String( "FIELD_ID" );
+
+  ROCTIter oNCTIter( oNCT, oColIter );
+  oNCTIter.reset();
+
+
+  // Get the feeds from the new format calibration table and return them
+
+  uInt uiNumFeedTemp = oNCTIter.cparam().shape()[0];
+  Vector<String>* poFeed = new Vector<String>( uiNumFeedTemp, "" );
+
+  if ( uiNumFeedTemp == 1 ) {
+    poFeed->operator[](0) = "S";
+  } else {
+    if ( polBasisGet(oTableName) == 'L' ) {
+      poFeed->operator[](0) = "X";
+      poFeed->operator[](1) = "Y";
+    } else {
+      poFeed->operator[](0) = "R";
+      poFeed->operator[](1) = "L";
+    }
+  }
+
+  return( *poFeed );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::feedSet
+
+Description:
+------------
+This member function sets the feeds private variables.
+
+Inputs:
+-------
+oFeedIn - This reference to a Vector<String> instance contains the feeds.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::feedSet( const Vector<String>& oFeedIn ) {
+
+  // Set the number of feeds and feeds and return
+
+  uiNumFeed = oFeedIn.nelements();
+  oFeed = Vector<String>( oFeedIn.copy() );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::feedCheck
 
 Description:
 ------------
@@ -565,7 +1280,7 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-Bool CalAnalysis::feed( const Vector<String>& oFeedIn,
+Bool CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
     Vector<String>& oFeedOut ) const {
 
   // Check the input feed values
@@ -578,10 +1293,19 @@ Bool CalAnalysis::feed( const Vector<String>& oFeedIn,
   }
 
 
-  // Get the unique and unsorted feed vector
+  // Get the sorted unique feed vector
 
   if ( oFeedOut.nelements() != 0 ) oFeedOut.resize();
-  oFeedOut = uniqueNoSort<String>( oFeedIn );
+  oFeedOut = unique<String>( oFeedIn );
+
+  if ( oFeedOut.nelements() > 2 ) return( False );
+
+  if ( oFeedOut.nelements() == 2 ) {
+    if ( oFeedOut[0] == "L" && oFeedOut[1] == "R" ) {
+      oFeedOut[0] = "R";
+      oFeedOut[1] = "L";
+    }
+  }
 
 
   // Return True
@@ -594,7 +1318,99 @@ Bool CalAnalysis::feed( const Vector<String>& oFeedIn,
 
 /*
 
-CalAnalysis::time
+CalAnalysis::timeGet
+
+Description:
+------------
+This member function gets the times from the new format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<Double> instance containing the times, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<Double>& CalAnalysis::timeGet( const String& oTableName ) {
+
+  // Create a temporary new format calibration table instance and its iterator
+  // instance
+
+  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
+
+  Block<String> oColIter( 3 );
+  oColIter[0] = String( "ANTENNA2" );
+  oColIter[1] = String( "ANTENNA1" );
+  oColIter[2] = String( "FIELD_ID" );
+
+  ROCTIter oNCTIter( oNCT, oColIter );
+  oNCTIter.reset();
+
+
+  // Get the times from the new format calibration table and return them
+
+  Vector<Double>* poTime =
+      new Vector<Double>( unique<Double>( oNCTIter.time() ) );
+
+  return( *poTime );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::timeSet
+
+Description:
+------------
+This member function sets the times private variables.
+
+Inputs:
+-------
+oTimeIn - This reference to a Vector<Double> instance contains the times.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::timeSet( const Vector<Double>& oTimeIn ) {
+
+  // Set the number of times and times and return
+
+  uiNumTime = oTimeIn.nelements();
+  oTime = Vector<Double>( oTimeIn.copy() );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::timeCheck
 
 Description:
 ------------
@@ -621,8 +1437,8 @@ Modification history:
 
 // -----------------------------------------------------------------------------
 
-Bool CalAnalysis::time( const Double& dStartTimeIn, const Double& dStopTimeIn,
-    Vector<Double>& oTimeOut ) const {
+Bool CalAnalysis::timeCheck( const Double& dStartTimeIn,
+    const Double& dStopTimeIn, Vector<Double>& oTimeOut ) const {
 
   // Check the start and stop times
 
@@ -646,6 +1462,101 @@ Bool CalAnalysis::time( const Double& dStartTimeIn, const Double& dStopTimeIn,
   // Return True
 
   return( True );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::spwGet
+
+Description:
+------------
+This member function gets the spws from the new format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<uInt> instance containing the spws, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::spwGet( const String& oTableName ) {
+
+  // Create a temporary new format calibration table instance and its iterator
+  // instance
+
+  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
+
+  Block<String> oColIter( 3 );
+  oColIter[0] = String( "ANTENNA2" );
+  oColIter[1] = String( "ANTENNA1" );
+  oColIter[2] = String( "FIELD_ID" );
+
+  ROCTIter oNCTIter( oNCT, oColIter );
+  oNCTIter.reset();
+
+
+  // Get the spws from the new format calibration table, convert them from Int
+  // to uInt, and return them
+
+  Vector<Int> oSPWInt( unique<Int>( poNCTIter->spw() ) );
+
+  Vector<uInt>* poSPW = new Vector<uInt>( oSPWInt.nelements() );
+  convertArray<uInt,Int>( *poSPW, oSPWInt );
+
+  return( *poSPW );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::spwSet
+
+Description:
+------------
+This member function sets the spws private variables.
+
+Inputs:
+-------
+oSPWIn - This reference to a Vector<uInt> instance contains the spws.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::spwSet( const Vector<uInt>& oSPWIn ) {
+
+  // Set the number of spws and spws and return
+
+  uiNumSPW = oSPWIn.nelements();
+  oSPW = Vector<uInt>( oSPWIn.copy() );
+
+  return;
 
 }
 
@@ -710,7 +1621,7 @@ Bool CalAnalysis::spw_channel( const Vector<uInt>& oSPWIn,
   // values, return False.
 
   if ( oSPWOut.nelements() != 0 ) oSPWOut.resize();
-  oSPWOut = uniqueNoSort<uInt>( oSPWIn );
+  oSPWOut = unique<uInt>( oSPWIn );
 
   uInt uiNumSPWOut = oSPWOut.nelements();
   if ( uiNumSPWOut != uiNumSPWIn ) return( False );

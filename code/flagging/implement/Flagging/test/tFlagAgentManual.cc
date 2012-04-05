@@ -147,7 +147,7 @@ void clearFlags(string inputFile,Bool flag)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -307,7 +307,7 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -454,7 +454,7 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -599,7 +599,7 @@ void summaryFlags(string inputFile)
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

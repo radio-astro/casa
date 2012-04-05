@@ -169,7 +169,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 #
 #
 	except Exception, instance:
-	  print '**** Error **** ',instance
+	  #print '**** Error **** ',instance
+          pass
 </xsl:text>
 <xsl:for-each select="aps:output">
    <xsl:call-template name="checkoutput"/>

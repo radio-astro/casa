@@ -225,7 +225,12 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentTimeFreqCrop::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+FlagAgentTimeFreqCrop::computeAntennaPairFlags(const VisBuffer & /*visBuffer*/,
+                                               VisMapper &visibilities,
+                                               FlagMapper &flags,
+                                               Int /*antenna1*/,
+                                               Int /*antenna2*/,
+                                               vector<uInt> & /*rows*/)
 {
 	// Call 'fltBaseAndFlag' as specified by the user.
 	if(flagDimension_p == String("time"))
@@ -302,9 +307,9 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
     {
       // Calc the mean across axes1 (with flags)
       mval=0.0;mcnt=0;
-      for(uInt i1=0;i1<mind[1];i1++)
+      for(uInt i1=0;i1<(uInt) mind[1];i1++)
 	{
-	  if(mind[0]==nChannels)// if i0 is channel, and i1 is time
+	  if(mind[0]==(Int) nChannels)// if i0 is channel, and i1 is time
 	    {
 	      if( ! ( flags.getModifiedFlags(i0,i1) ) ) //C// && usePreFlags_p ) )
 		{
@@ -352,13 +357,13 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
       // This time, iterate in reverse order : for each i1, get all i0
       // This is because 'avgFit' is of size mind[0], 
       //     and window stats are to be computed along i0
-      for(uInt i1=0;i1<mind[1];i1++)
+      for(uInt i1=0;i1<(uInt) mind[1];i1++)
 	{
 	  // STEP 3A : Divide out the clean bandpass 
 	  avgDat=0,avgFlag=False; 
 	  for(int i0=0;i0<mind[0];i0++)
 	    {
-	      if(mind[0]==nChannels)// if i0 is channel, and i1 is time
+	      if(mind[0]==(Int) nChannels)// if i0 is channel, and i1 is time
 		{
 		  avgFlag[i0] = flags.getModifiedFlags(i0,i1); //C// && usePreFlags_p;
 		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i0,i1)/avgFit(i0);
@@ -426,7 +431,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	  //       However, the following ensures minimal calls to flags.applyFlag().
 	  for(Int i0=0;i0<mind[0];i0++)
 	    {
-	      if(mind[0]==nChannels) // if i0 is channel, and i1 is time
+	      if(mind[0]==(Int) nChannels) // if i0 is channel, and i1 is time
 		{
 		  if(avgFlag[i0])
 		  {
@@ -477,7 +482,7 @@ Float FlagAgentTimeFreqCrop :: calcMean(Vector<Float> &vect, Vector<Bool> &flag)
  */
 Float FlagAgentTimeFreqCrop :: calcVar(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit)
 {
-  Float var=0;
+  //// Float var=0;
   uInt n=0,cnt=0;
   n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
   for(uInt i=0;i<n;i++)
@@ -553,7 +558,7 @@ Float FlagAgentTimeFreqCrop :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, 
 /* Fit Piecewise polynomials to 'data' and get the 'fit' */
 void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt maxnpieces, uInt maxdeg)
 {
-  Int deg=0,start=0;
+  Int deg=0;//,start=0;
   Int left=0,right=0;
   Float sd,TOL=3;
   Vector<Float> tdata;
@@ -615,7 +620,7 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
       npieces = MIN(2*j+1, maxnpieces);
       if(j>1) {deg=2;}
       if(j>2) {deg=3;}
-      deg = MIN(deg,maxdeg);
+      deg = MIN(deg,(Int) maxdeg);
       
       psize = (int)(tdata.nelements()/npieces);
       //     cout << "Iter : " << j << " with Deg : " << deg << " and Piece-size : " << psize << endl;
@@ -653,10 +658,10 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
 	  winstart = i-offset;
 	  winend = i+offset;
 	  if(winstart<0)winstart=0;
-	  if(winend>=tdata.nelements())winend=tdata.nelements()-1;
+	  if(winend>=(int) tdata.nelements())winend=tdata.nelements()-1;
 	  if(winend <= winstart) break;
 	  winsum=0.0;
-	  for(uInt wi=winstart;wi<=winend;++wi)
+	  for(uInt wi=winstart;wi<=(uInt) winend;++wi)
 	    winsum += fit[wi];
 	  fit[i] = winsum/(winend-winstart+1);
 	}

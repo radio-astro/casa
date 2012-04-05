@@ -162,7 +162,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

@@ -52,7 +52,7 @@ Construct a {\tt calanalysis} tool.
 </returns>
 
 <example>
-ca = calanalysis()
+ca = casa.__calanalysishome__.create()
 del ca
 </example>
 
@@ -133,7 +133,7 @@ del ca
 
 <!-- *********************************************************************** -->
 
-<method type="function" name="caltable">
+<method type="function" name="calname">
 
 <shortdescription>
 Get calibration table name.
@@ -150,7 +150,7 @@ Get calibration table name.
 <example>
 ca = calanalysis()
 ca.open( '{caltable name}' )
-caltable = ca.caltable()
+caltable = ca.calname()
 ca.close()
 del ca
 </example>
@@ -177,6 +177,32 @@ Get name of the MS that created this calibration table.
 ca = calanalysis()
 ca.open( '{caltable name}' )
 msname = ca.msname()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="viscal">
+
+<shortdescription>
+Get the type of calibration table (B, G, T, etc.).
+</shortdescription>
+
+<description>
+Get the type of calibration table (B, G, T, etc.).
+</description>
+
+<returns type="string">
+  <shortdescription>Calibration table type</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+viscal = ca.viscal()
 ca.close()
 del ca
 </example>
@@ -237,24 +263,106 @@ del ca
 
 <!-- *********************************************************************** -->
 
-<method type="function" name="viscal">
+<method type="function" name="feed">
 
 <shortdescription>
-Get the type of calibration table (B, G, T, etc.).
+Get feeds in the calibration table.
 </shortdescription>
 
 <description>
-Get the type of calibration table (B, G, T, etc.).
+Get feeds in the calibration table.
 </description>
 
-<returns type="string">
-  <shortdescription>Calibration table type</shortdescription>
+<returns type="stringArray">
+  <shortdescription>Feeds</shortdescription>
 </returns>
 
 <example>
 ca = calanalysis()
 ca.open( '{caltable name}' )
-viscal = ca.viscal()
+feed = ca.feed()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="time">
+
+<shortdescription>
+Get times in the calibration table.
+</shortdescription>
+
+<description>
+Get times in the calibration table.
+</description>
+
+<returns type="doubleArray">
+  <shortdescription>Times</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+time = ca.time()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="spw">
+
+<shortdescription>
+Get spectral windows in the calibration table.  NB: This function will
+eventually return the spectral window names instead of just the numbers, which
+is more useful.
+</shortdescription>
+
+<description>
+Get spectral windows in the calibration table.  NB: This function will
+eventually return the spectral window names instead of just the numbers, which
+is more useful.
+</description>
+
+<returns type="stringArray">
+  <shortdescription>Spectral windows</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+spw = ca.spw()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="numspw">
+
+<shortdescription>
+Get the number of spectral windows in the calibration table.
+</shortdescription>
+
+<description>
+Get the number of spectral windows in the calibration table.
+</description>
+
+<returns type="int">
+  <shortdescription>Number of spectral windows</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+numspw = ca.numspw()
 ca.close()
 del ca
 </example>
@@ -357,6 +465,17 @@ manually.
       ignored.
     </description>
     <value></value>
+  </param>
+
+  <param type="double" name="jumpmax">
+    <description>
+      The maximum deviation from +/- M_PI for adjacent points to be unwrapped
+      by +/- 2.0*M_PI.  This parameter must always used when the specified
+      iteration axis is "FREQUENCY" (unwrapping along the "TIME" axis).  If the
+      specified iteration axis is "TIME" (unwrapping along the "FREQUENCY"),
+      this parameter selects the type of unwrapping (jumpmax == 0.0 --> use
+      group-delay unwrapping, otherwise jumpmax != 0.0 --> simple unwrapping).
+    </description>
   </param>
 
 </input>
@@ -497,6 +616,17 @@ manually.
       ignored.
     </description>
     <value></value>
+  </param>
+
+  <param type="double" name="jumpmax">
+    <description>
+      The maximum deviation from +/- M_PI for adjacent points to be unwrapped
+      by +/- 2.0*M_PI.  This parameter must always used when the specified
+      iteration axis is "FREQUENCY" (unwrapping along the "TIME" axis).  If the
+      specified iteration axis is "TIME" (unwrapping along the "FREQUENCY"),
+      this parameter selects the type of unwrapping (jumpmax == 0.0 --> use
+      group-delay unwrapping, otherwise jumpmax != 0.0 --> simple unwrapping).
+    </description>
   </param>
 
 </input>

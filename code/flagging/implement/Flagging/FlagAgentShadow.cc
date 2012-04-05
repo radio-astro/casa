@@ -78,7 +78,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	    // TODO : Verify input Record. If invalid, print warning and proceed with no extra antennas.
             Bool validants=True;
 	    String errorReason;
-	    for(Int anew=0; anew<additionalAntennas_p.nfields(); anew++)
+	    for(Int anew=0; anew<(Int) additionalAntennas_p.nfields(); anew++)
 	      {
 		// Extract the record.
 		Record arec = additionalAntennas_p.subRecord(RecordFieldId(String::toString(anew)));
@@ -259,7 +259,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   }
   
   void
-  FlagAgentShadow::preProcessBufferCore(const VisBuffer &visBuffer)
+  FlagAgentShadow::preProcessBufferCore(const VisBuffer &/*visBuffer*/)
   {
     // This function is empty, because shadowedAntennas_p needs to be re-calculated for
     // every new timestep, and it is done inside computeRowFlags(), whenever the
@@ -469,7 +469,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   
   
   bool
-  FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+  FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &/*flags*/, uInt row)
   {
     // If we have advanced to a new timestep, calculate new antenna UVW values and shadowed antennas
     // This function resets and fills 'shadowedAntennas_p'.

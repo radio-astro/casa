@@ -39,8 +39,8 @@ atmosphere::atmosphere()
   try {
     itsLog = new LogIO();
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
 }
@@ -66,8 +66,8 @@ atmosphere::~atmosphere()
     }
     delete itsLog;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
 }
@@ -86,8 +86,8 @@ atmosphere::getAtmVersion()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -106,8 +106,8 @@ atmosphere::listAtmosphereTypes()
       rtn.push_back(oss.str());
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -172,8 +172,8 @@ atmosphere::initAtmProfile(const Quantity& altitude,
     oss<<endl;
     rtn = oss.str();
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -232,8 +232,8 @@ atmosphere::updateAtmProfile(const Quantity& altitude,
     oss<<endl;
     rtn = oss.str();
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -298,8 +298,8 @@ atmosphere::getBasicAtmParms(Quantity& altitude, Quantity& temperature,
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -318,8 +318,8 @@ atmosphere::getNumLayers()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -371,8 +371,8 @@ atmosphere::getGroundWH2O()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -431,8 +431,8 @@ atmosphere::getProfile(Quantity& thickness, Quantity& temperature,
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -494,8 +494,8 @@ atmosphere::initSpectralWindow(const int nbands, const Quantity& fCenter,
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -535,8 +535,8 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -555,8 +555,8 @@ atmosphere::getNumSpectralWindows()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -575,8 +575,8 @@ atmosphere::getNumChan(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -595,8 +595,8 @@ atmosphere::getRefChan(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -619,8 +619,8 @@ atmosphere::getRefFreq(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -643,8 +643,8 @@ atmosphere::getChanSep(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -667,8 +667,8 @@ atmosphere::getChanFreq(const int chanNum, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -688,8 +688,8 @@ atmosphere::getSpectralWindow(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -709,8 +709,8 @@ atmosphere::getChanNum(const Quantity& freq, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -733,8 +733,8 @@ atmosphere::getBandwidth(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -757,8 +757,8 @@ atmosphere::getMinFreq(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -781,8 +781,8 @@ atmosphere::getMaxFreq(const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -806,8 +806,8 @@ atmosphere::getDryOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dryOpacity;
@@ -831,8 +831,8 @@ atmosphere::getDryContOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dryContOpacity;
@@ -857,8 +857,8 @@ atmosphere::getO2LinesOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return o2LinesOpacity;
@@ -883,8 +883,8 @@ atmosphere::getO3LinesOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return o3LinesOpacity;
@@ -909,8 +909,8 @@ atmosphere::getCOLinesOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return coLinesOpacity;
@@ -935,8 +935,8 @@ atmosphere::getN2OLinesOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return n2oLinesOpacity;
@@ -966,8 +966,8 @@ atmosphere::getWetOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return wetOpacity;
@@ -993,8 +993,8 @@ atmosphere::getH2OLinesOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return h2oLinesOpacity;
@@ -1020,8 +1020,8 @@ atmosphere::getH2OContOpacity(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return h2oContOpacity;
@@ -1046,8 +1046,8 @@ atmosphere::getDryOpacitySpec(std::vector<double>& dryOpacity, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return nchan;
@@ -1074,8 +1074,8 @@ atmosphere::getWetOpacitySpec(Quantity& wetOpacity, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return nchan;
@@ -1102,8 +1102,8 @@ atmosphere::getDispersivePhaseDelay(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dpd;
@@ -1131,8 +1131,8 @@ atmosphere::getDispersiveWetPhaseDelay(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dwpd;
@@ -1160,8 +1160,8 @@ atmosphere::getNonDispersiveWetPhaseDelay(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return ndwpd;
@@ -1188,8 +1188,8 @@ atmosphere::getNonDispersiveDryPhaseDelay(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return nddpd;
@@ -1216,8 +1216,8 @@ atmosphere::getNonDispersivePhaseDelay(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return ndpd;
@@ -1251,8 +1251,8 @@ atmosphere::getDispersivePathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dpl;
@@ -1280,8 +1280,8 @@ atmosphere::getDispersiveWetPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return dwpl;
@@ -1309,8 +1309,8 @@ atmosphere::getNonDispersiveWetPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return ndwpl;
@@ -1337,8 +1337,8 @@ atmosphere::getNonDispersiveDryPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return nddpl;
@@ -1366,8 +1366,8 @@ atmosphere::getO2LinesPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return o2pl;
@@ -1394,8 +1394,8 @@ atmosphere::getO3LinesPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return o3pl;
@@ -1422,8 +1422,8 @@ atmosphere::getCOLinesPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return COpl;
@@ -1450,8 +1450,8 @@ atmosphere::getN2OLinesPathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return N2Opl;
@@ -1479,8 +1479,8 @@ atmosphere::getNonDispersivePathLength(const int nc, const int spwId)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return ndpl;
@@ -1501,8 +1501,8 @@ atmosphere::getAbsH2OLines(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1523,8 +1523,8 @@ atmosphere::getAbsH2OCont(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1545,8 +1545,8 @@ atmosphere::getAbsO2Lines(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1567,8 +1567,8 @@ atmosphere::getAbsDryCont(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1589,8 +1589,8 @@ atmosphere::getAbsO3Lines(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1611,8 +1611,8 @@ atmosphere::getAbsCOLines(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1633,8 +1633,8 @@ atmosphere::getAbsN2OLines(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1655,8 +1655,8 @@ atmosphere::getAbsTotalDry(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1677,8 +1677,8 @@ atmosphere::getAbsTotalWet(int nl, int nf, const int spwid)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rtn;
@@ -1700,8 +1700,8 @@ atmosphere::setUserWH2O(const Quantity& wh2o)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1723,8 +1723,8 @@ atmosphere::getUserWH2O()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -1744,8 +1744,8 @@ atmosphere::setAirMass(const double airmass)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1764,8 +1764,8 @@ atmosphere::getAirMass()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return m;
@@ -1786,8 +1786,8 @@ atmosphere::setSkyBackgroundTemperature(const Quantity& tbgr)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1809,8 +1809,8 @@ atmosphere::getSkyBackgroundTemperature()
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -1837,8 +1837,8 @@ atmosphere::getAverageTebbSky(const int spwid, const Quantity& wh2o)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;
@@ -1871,8 +1871,8 @@ atmosphere::getTebbSky(const int nc, const int spwid, const Quantity& wh2o)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//	    << LogIO::POST;
     RETHROW(x);
   }
   return q;

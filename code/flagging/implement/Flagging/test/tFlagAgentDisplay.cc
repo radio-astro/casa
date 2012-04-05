@@ -173,7 +173,7 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();
@@ -391,7 +391,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Print total stats from each agent
-	agentList.msSummary();
+	agentList.tableSummary();
 
 	// Stop Flag Agent
 	agentList.terminate();

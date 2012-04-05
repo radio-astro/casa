@@ -23,7 +23,6 @@ calanalysis::calanalysis() {
 
   // Initialize the CalAnalysis pointer and return
 
-  oCalTable = string();
   poCA = NULL;
 
   return;
@@ -35,8 +34,6 @@ calanalysis::calanalysis() {
 calanalysis::~calanalysis() {
 
   //  If the CalAnalysis instance is valid deallocate it and return
-  
-  oCalTable = string();
 
   if ( poCA != NULL ) {
     delete poCA;
@@ -53,8 +50,7 @@ bool calanalysis::open( const std::string& caltable ) {
 
   // Allocate the CalAnalysis instance and return true
 
-  oCalTable = String( caltable );
-  poCA = new CalAnalysis( oCalTable );
+  poCA = new CalAnalysis( String(caltable) );
 
   return( true );
 
@@ -65,8 +61,6 @@ bool calanalysis::open( const std::string& caltable ) {
 bool calanalysis::close() {
 
   // Deallocate the CalAnalysis instance and return true
-
-  oCalTable = string();
 
   if ( poCA != NULL ) {
     delete poCA;
@@ -79,13 +73,13 @@ bool calanalysis::close() {
 
 // --- ///
 
-std::string calanalysis::caltable() {
+std::string calanalysis::calname() {
 
   // If the CalAnalysis instance is valid return the caltable name otherwise
   // return a null string
 
   if ( poCA != NULL ) {
-    return( oCalTable );
+    return( poCA->calName() );
   } else {
     return( string() );
   }
@@ -99,7 +93,21 @@ std::string calanalysis::msname() {
   // Return the associated caltable name
 
   if ( poCA != NULL ) {
-    return( poCA->msName( oCalTable ) );
+    return( poCA->msName() );
+  } else {
+    return( string() );
+  }
+
+}
+
+// --- ///
+
+std::string calanalysis::viscal() {
+
+  // Return the caltable type (B, G, T, etc.)
+
+  if ( poCA != NULL ) {
+    return( poCA->visCal() );
   } else {
     return( string() );
   }
@@ -114,7 +122,7 @@ std::string calanalysis::partype() {
   // or "Float" for a PARAM colum, otherwise a null string
 
   if ( poCA != NULL ) {
-    return( poCA->parType( oCalTable ) );
+    return( poCA->parType() );
   } else {
     return( string() );
   }
@@ -129,7 +137,7 @@ std::string calanalysis::polbasis() {
   // return a null string
 
   if ( poCA != NULL ) {
-    return( poCA->polBasis( oCalTable ) );
+    return( poCA->polBasis() );
   } else {
     return( string() );
   }
@@ -140,14 +148,57 @@ std::string calanalysis::polbasis() {
 
 // --- ///
 
-std::string calanalysis::viscal() {
-
-  // Return the caltable type (B, G, T, etc.)
+std::vector<std::string> calanalysis::feed( void ) {
 
   if ( poCA != NULL ) {
-    return( poCA->visCal( oCalTable ) );
+    Vector<String> oFeed( poCA->feed() ); uInt uiNumFeed = oFeed.nelements();
+    std::vector<std::string> feed( uiNumFeed );
+    for ( uInt f=0; f<uiNumFeed; f++ ) feed[f] = oFeed[f];
+    return( feed );
   } else {
-    return( string() );
+    return( std::vector<std::string>() );
+  }
+
+}
+
+// --- ///
+
+std::vector<double> calanalysis::time( void ) {
+
+  if ( poCA != NULL ) {
+    Vector<Double> oTime( poCA->time() ); uInt uiNumTime = oTime.nelements();
+    std::vector<double> time( uiNumTime );
+    for ( uInt t=0; t<uiNumTime; t++ ) time[t] = oTime[t];
+    return( time );
+  } else {
+    return( std::vector<double>() );
+  }
+
+}
+
+// --- ///
+
+std::vector<std::string> calanalysis::spw( void ) {
+
+  if ( poCA != NULL ) {
+    Vector<uInt> oSPW( poCA->spw() ); uInt uiNumSPW = oSPW.nelements();
+    std::vector<std::string> spw( uiNumSPW );
+    for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = uint2string( oSPW[s] );
+    return( spw );
+  } else {
+    return( std::vector<std::string>() );
+  }
+
+}
+
+// --- ///
+
+int calanalysis::numspw() {
+
+  if ( poCA != NULL ) {
+    return( poCA->numspw() );
+  } else {
+    return( 0 );
   }
 
 }
@@ -155,18 +206,18 @@ std::string calanalysis::viscal() {
 // --- ///
 
 ::casac::record* calanalysis::get( const std::vector<std::string>& field,
-    const std::vector<std::string>& antenna1,
-    const std::vector<std::string>& antenna2, const double starttime,
-    const double stoptime, const std::vector<std::string>& feed,
-    const std::vector<std::string>& spw, const std::vector<int>& startchan,
-    const std::vector<int>& stopchan, const std::string& axis,
-    const std::string& ap ) {
+  const std::vector<std::string>& antenna1,
+  const std::vector<std::string>& antenna2, const double starttime,
+  const double stoptime, const std::vector<std::string>& feed,
+  const std::vector<std::string>& spw, const std::vector<int>& startchan,
+  const std::vector<int>& stopchan, const std::string& axis,
+  const std::string& ap, const double jumpmax ) {
 
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
   Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
 
 
   // Initialize the antenna parameters
@@ -207,8 +258,8 @@ std::string calanalysis::viscal() {
   uInt uiNumSPW = spw.size();
 
   if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
-    String oError( "The number of startchan and/or stopchan must be the same " );
-    oError += "as the number of spw";
+    String oError( "The number of startchan and/or stopchan must be the " );
+    oError += "same as the number of spw";
     throw( AipsError( oError ) );
   }
 
@@ -249,6 +300,11 @@ std::string calanalysis::viscal() {
   }
 
 
+  // Initialize the initial jump parameter
+
+  Double dJumpMax = jumpmax;
+
+
   // Initialize the arguments (NONE)
 
   CalStats::ARG<CalStats::NONE> oArg;
@@ -261,7 +317,7 @@ std::string calanalysis::viscal() {
   try {
     oOutput = poCA->stats<CalStats::NONE>( oField, oAntenna1, oAntenna2,
         dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, oArg );
+        eAxisIterUserID, eRAP, dJumpMax, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -300,8 +356,8 @@ std::string calanalysis::viscal() {
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
 
         oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startchan"), startchan );
-	oRecIter.insert( std::string("stopchan"), stopchan );
+        oRecIter.insert( std::string("startChan"), startchan );
+	oRecIter.insert( std::string("stopChan"), stopchan );
 
         std::string oFeedKey( "feed" );
 	std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
@@ -367,20 +423,20 @@ std::string calanalysis::viscal() {
 
 // --- ///
 
-::casac::record* calanalysis::fit(const std::vector<std::string>& field,
-    const std::vector<std::string>& antenna1,
-    const std::vector<std::string>& antenna2, const double starttime,
-    const double stoptime, const std::vector<std::string>& feed,
-    const std::vector<std::string>& spw, const std::vector<int>& startchan,
-    const std::vector<int>& stopchan, const std::string& axis,
-    const std::string& order, const std::string& type, const bool weight,
-    const std::string& ap ) {
+::casac::record* calanalysis::fit( const std::vector<std::string>& field,
+  const std::vector<std::string>& antenna1,
+  const std::vector<std::string>& antenna2, const double starttime,
+  const double stoptime, const std::vector<std::string>& feed,
+  const std::vector<std::string>& spw, const std::vector<int>& startchan,
+  const std::vector<int>& stopchan, const std::string& axis,
+  const std::string& order, const std::string& type, const bool weight,
+  const std::string& ap, const double jumpmax ) {
 
   // Initialize the field parameter
 
   uInt uiNumField = field.size();
   Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi( field[f].c_str() );
+  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
 
 
   // Initialize the antenna parameters
@@ -492,6 +548,11 @@ std::string calanalysis::viscal() {
   }
 
 
+  // Initialize the initial jump parameter
+
+  Double dJumpMax = jumpmax;
+
+
   // Call the CalAnalysis::stats<T>() member function for getting and fitting
 
   Vector<CalAnalysis::OUTPUT<CalStatsFitter::FIT> > oOutput;
@@ -499,7 +560,7 @@ std::string calanalysis::viscal() {
   try {
     oOutput = poCA->stats<CalStatsFitter::FIT>( oField, oAntenna1, oAntenna2,
         dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, oArg );
+        eAxisIterUserID, eRAP, dJumpMax, oArg );
   }
   catch( AipsError oAipsError ) {
     throw( oAipsError );
@@ -538,8 +599,8 @@ std::string calanalysis::viscal() {
         oRecIter.insert( std::string("antenna2"), oAntenna2 );
 
         oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startchan"), startchan );
-	oRecIter.insert( std::string("stopchan"), stopchan );
+        oRecIter.insert( std::string("startChan"), startchan );
+	oRecIter.insert( std::string("stopChan"), stopchan );
 
         std::string oFeedKey( "feed" );
         std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
@@ -654,6 +715,14 @@ std::string calanalysis::viscal() {
 
   return( poRecOutput );
 
+}
+
+// --- ///
+
+std::string calanalysis::uint2string(const unsigned int &number) {
+   stringstream ss;
+   ss << number;
+   return( ss.str() );
 }
 
 } // casac namespace

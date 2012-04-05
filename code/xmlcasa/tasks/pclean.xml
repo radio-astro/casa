@@ -122,7 +122,7 @@
 			<value>500</value>
 		</param>
 		<param type="double" name="gain">
-			<description>Maximum number of iterations</description>
+			<description>Gain to use in deconvolution</description>
 			<value>0.1</value>
 		</param>
 		<param type="string" name="threshold">
@@ -158,7 +158,7 @@
 		</param>
 		
 		<param type="string" name="mode">
-			<description>Clean mode (\'continuum\', \'channel\')</description>
+			<description>Clean mode (\'continuum\', \'cube\')</description>
 			<!--description>Clean mode (continuum, channel, frequency, velocity, mfs)</description-->
 			<value>continuum</value>
 	              <allowed kind="enum">
@@ -260,8 +260,14 @@
 		  <any type="variant" limittypes="string int"/>
 		  <value type="string"></value>
 		</param>
-
-
+		<param type="boolean" name="pbcorr">
+			<description>Correct for the primary beam post deconvolution</description>
+			<value>False</value>
+		</param>
+		<param type="string" name="clusterdef">
+			<description>File that contains cluster definition</description>
+			<value></value>
+		</param>
 		<constraints>
 		  <when param="mode">
 		    <equals type="string" value="continuum"></equals>
@@ -370,34 +376,9 @@
                example: phasecenter=6
                      or phasecenter='J2000 19h30m00 -40d00m00'
         
-        mask -- Specification of cleanbox(es), mask image(s), and/or
-               region(s) to be used for CLEANing. As long as the image has
+        mask -- mask image to be used for CLEANing. As long as the image has
                the same shape (size), mask images from a previous
-               interactive session can be used for a new execution. NOTE:
-               the initial clean mask actually used is the union of what
-               is specified in mask and imagename.mask default: [] (no
-               masking); Possible specification types: 
-               (a) Explicit cleanbox pixel ranges 
-                  example: mask=[110,110,150,145] clean region with 
-                           blc=110,100; trc=150,145 (pixel values) 
-               (b) Filename with cleanbox pixel values with ascii format:
-                  example: mask='mycleanbox.txt' with 
-                    fieldid blc-x blc-y trc-x trc-y on each line
-                    1 45 66 123 124
-                    2 23 100 300 340
-               (c) Filename for image mask 
-                  example: mask='myimage.mask'
-               (d) Filename for region specification (e.g. from viewer)
-                  example: mask='myregion.rgn' 
-               (e) Combinations of any of the above 
-                  example: mask=[[110,110,150,145],'mycleanbox.txt',
-                                  'myimage.mask','myregion.rgn']
-                  If include outlier fields, then mask need to be 
-                  specified in nested lists: e.g. 
-                  mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-               (A clean box with [110,110,150,145] and a image mask for main
-                field, no mask for 1st outlier field, 1 clean box for second
-                outlier field.)
+               interactive session can be used for a new execution.
 
         field -- Select fields in MS.  Use field id(s) or field name(s).
                     ['go listobs' to obtain the list id's or names]
@@ -430,11 +411,11 @@
                  'ft' (standard interferometric gridding), 
                  'sd' (standard single dish),
                  'mosaic' (grid using PB as convolution function).
-                 'pbwproject'
+                 'wproject' (wprojection gridder to correct for widefield 'w' term errors)
                default: 'ft'
  
         alg -- Deconvolution algorithm
-               Options: 'clark', 'clarkstokes', 'hogbom'
+               Options: 'clark', 'hogbom', 'multiscale'
                default: 'clark'
 
         majorcycles -- integer number of CS major cycles to do 
@@ -455,7 +436,7 @@
     
         weighting -- Weighting to apply to visibilities:
                Options: 'natural','uniform','briggs', 
-                        'superuniform','briggsabs','radial'
+                        'superuniform','radial'
                default: 'natural'; 
                example: weighting='uniform';
 
@@ -464,15 +445,12 @@
                example: scales=[0, 3, 10]
 
         mode -- type of image to be generated 
-               Options: 'continuum', 'channel', 'frequency',
-                        'velocity', 'mfs'
+               Options: 'continuum', 'cube'
                default: 'continuum'
                example:
-                 mode='channel'; Use with nchan, start, step to specify
+                 mode='cube'; Use with nchan, start, step to specify
                         output image cube.
-                 mode='velocity', channels are specified in velocity.
-                 mode='frequency', channels are specified in frequency.
-  &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parame
+  &gt;&gt;&gt; mode='cube' expandable parame
 ters
            nchan -- Total number of channels in the output image.
               Example: nchan=100.
@@ -480,166 +458,81 @@ ters
               data selected by 'spw' and consistent with 'start' and 'step'
               It is often easiest to leave nchan at the default value.
            start -- First channel, velocity, or frequency.
-              For mode='channel'; This selects the channel index number
-              from the MS (0 based) that you want to correspond to the first
-              channel of the output cube. The output cube will be in frequency
-              space with the first channel having the frequency of the
-              MS channel selected by start.  start=0 refers to the first
-              channel in the first selected spw, even if that channel
-              is de-selected in the spw parameter. 
+	      if start is an integer pclean will assume it is the a channel index
+	      if start is in units of velocity or frequency it will take it as such
+              
+	      If the user use the the ms channel as starting pclean will assign 
+	      the first channel of the image to the data channel frequency of the first 
+	      spw selected at the first time seen in the data and the direction of the 
+	      source selected. 
+	      If the data is not in the LSRK frame the user should be aware that the 
+	      data channel indicated may not fall on the first image channel as time goes.
+
               example:start=5
-
-              For mode='velocity' or 'frequency': default='';
-                 starts at first input channel of first input spw
-                 examples: start='5.0km/s', or start='22.3GHz'.
-           step -- Output channel width
-              For mode='channel', default=1; &gt;1 indicates channel averaging
+             start can be in units of frequency or velocity too
+	     When velocity units is used it is obvious then that it is refering to the line
+	     whose restfrequency is provided by the user or is default one for the source 
+	     in the MS/SOURCE table.
+	     examples: start='5.0km/s', or start='22.3GHz'.
+           width -- Output channel width
+              should be in the same units as start 
+              default=1; &gt;1 indicates channel averaging
+              if start is an integer, width has to be an integer defining the image channel 
+              width by the number of channels of first spectral window selected
               example: width=4.
-
-              For mode=' 'velocity' or 'frequency', default=''; width of
-              first input channel, or more precisely, the difference
-              in frequencies between the first two selected channels.
-              (for example if channels 1 and 3 are selected with spw,
-              then the default width will be the difference between their
-              frequencies, and not the width of channel 1)
-              When not using the default, one must give units
+              when start is in frequency or velocity units then the width has to be in the same units.  default=''; 
+             
               examples: width='1.0km/s', or width='24.2kHz'.
-              Setting width>0 gives channels of increasing frequency for
-              mode='frequency', and increasing velocity for mode='velocity'.
 
-           chanchunk -- number of channel to process at a go per process
-              (careful not to go above total memory available)
-    
+           
 	interactive -- Create a mask interactively or not.
               interactive clean allows the user to build the cleaning
-              mask interactively using the viewer.  The viewer will
-              appear every npercycle interation, but modify as needed
-              The final interactive mask is saved in the file
-              imagename_interactive.mask.  The initial masks use the
-              union of mask and cleanbox (see below).
+              mask interactively using the viewer.  
 
               default: False; 
               example: interactive=True
                 The viewer will open with the image displayed. Select the
         	region for the mask and double click in the middle of it.
 
-        contclean -- Use existing model image 
-               if False the imagename.model is deleted if it is exists
-               if True clean will continue from previous run
-               default: False
+        overwrite -- If False use existing model image of same name to continue clean 
+               if True the imagename.model is deleted if it is exists
+               default: True
 
-        visinmem -- load visibility in memory for major cycles
-               make sure total memory available to all processes is more 
-               than the MS siz
-               default: False
+	clusterdef -- Name of a file that contains the cluster definition.
+                       If clusterdef='' (the default) then all the cores of the machine on 
+                       which casapy is run will be used
+		       The cluster definition file has lines with 3 comma seperated fields:
+                       computername, number of cores to use and working directory
+		       e.g of a cluster definition file:
+		       ############################
+		       hal9000, 10,   /home/ptest
+		       sal9000, 12,   /home/ptest
+		       nearstar, 6,    /home/ptest
+		       ############################
+		       IMPORTANT: the user have to have passwordless ssh access
+		       to all the computers used in a cluster definition file and the working 
+		       directories has to be crossmounted  by all the computers under the 
+		       same names         
+                  
+          Example of a cube imaging run:
+	  
+	  pclean(vis="ngc5921.ms.contsub",imagename="loulou",imsize=[2500, 2500],
+	  cell=['15.0arcsec', '15.0arcsec'],phasecenter="",stokes="I",field="0",spw="*",
+	  ftmachine="ft",alg="hogbom",majorcycles=2, niter=6000,gain=0.1,
+	  threshold="8mJy",weighting="briggs",robust=0.5,npixels=0,mode="cube",
+	  start=5,nchan=46,width=1,interactive=True,overwrite=True,uvtaper=False,
+	  outertaper=[''],pbcorr=True)              
+		       
+	  Example of a continuum run:
 
-        hostnames -- list of strings of hostnames
-               default: ''; empty string means localhost
-               example: hostnames=['casa-dev-01', 'casa-dev-07']
-
-        numcpuperhost -- integer number of processes to launch on each host
-               default: 1
-               example: numcpuperhost=3
-
-  &gt;&gt;&gt; gridmode='' expandable parameters
-               The default value of '' has no effect.
-
-  &gt;&gt;&gt; gridmode='widefield' expandable parameters
-               Apply corrections for non-coplanar effects during imaging
-               using the W-Projection algorithm (Cornwell et al. IEEE JSTSP
-               (2008)) or faceting or a combination of the two.
-
-               wprojplanes is the number of pre-computed w-planes used for
-                   the W-Projection algorithm.  wprojplanes=1 disables
-                   correction for non-coplanar effects.
-               facets is the number of facets used.  W-Projection is done
-                   for each facet.
-
-  &gt;&gt;&gt; gridmode='aprojection' expandable parameters
-               Corrects for the (E)VLA polarization squint using the
-               A-Projection algorithm (Bhatnagar et al., AandA (2008)).
-
-               cfcache is the name of the directory to be used to cache the
-                   convolution functions.  These functions can be reused
-                   again if the image parameters are unchanged.  If the imag
-e
-                   parameters change, a new cache must be created (or the
-                   existing one removed).
-               painc (in degrees) is the Parallactic Angle increment used to
-                   compute the convolution functions.
-
-  &gt;&gt;&gt; gridmode='experimental' expandable parameters
-               cfcache -- The disk cache directory for convolution 
-                   functions rections are applied (default=0.1)
-               epjtablename -- Table containing antenna pointing offsets
-               wprojplanes -- the number of pre-computed w-planes used for
-                   the W-Projection algorithm.  wprojplanes=1 disables
-                   correction for non-coplanar effects.
-               facets -- the number of facets used.  W-Projection is done
-                   for each facet.
-
-               applyoffsets -- apply antenna pointing offsets from the 
-                   pointing table given by epjtablename
-
-        dopbcorr -- correct for PB in the major cycles as well pointing 
-          table given by epjtablename
-
-        pblimit -- The fraction of the peak of the PB to which the PB c
-          orrections are applied (default=0.1)
-
-	
-   pclean(vis='sim100g_4chan15kRows.ms',
+	  pclean(vis='sim100g_4chan15kRows.ms',
           imagename='hundredG_cont', imsize=[1500, 1500],
-          cell=['0.135arcsec', '0.135arcsec'], phasecenter=0,
-          field='0', spw='*', ftmachine='ft', wprojplanes=128,
-          hostnames=['casa-dev-03', 'casa-dev-04', 'casa-dev-02'], 
-          numcpuperhost=1,threshold='0.1mJy', 
+          cell=['0.135arcsec', '0.135arcsec'], mode='continuum', phasecenter='0',
+          field='0', spw='*', ftmachine='wproject', wprojplanes=128,
+          threshold='0.1mJy', 
           majorcycles=4, niter=10000, alg='clark',
           weighting='natural',
-          contclean=False, visinmem=False)
-
-   pclean(vis='sim100g_4chan15kRows.ms', 
-          imagename='hundredG', imsize=[1200, 1200], 
-          cell=['0.135arcsec', '0.135arcsec'], phasecenter=0, 
-          field='0', spw='*', ftmachine='ft', wprojplanes=128, 
-          hostnames=['casa-dev-03', 'casa-dev-04', 'casa-dev-02'], 
-          numcpuperhost=1,threshold='0.1mJy', 
-          majorcycles=4, niter=4000, alg='clark',
-          mode='channel', start=0, nchan=1024, step=1, 
-          weighting='natural',
-          contclean=False, chanchunk=1, visinmem=False)
-
-   pclean(
-          vis="../test/ngc6503/ngc6503_output/ngc6503.ms",
-          imagename="ngc6503_cube.im",
-          field="",spw="",imsize=[256, 256],
-          cell=['5arcsec', '5arcsec'],
-          phasecenter="",niter=20000,weighting="natural",
-          ftmachine="ft",alg="clark",wprojplanes=128,
-          facats=1,majorcycles=1,painc=360.0,pblimit=0.1,
-          dopbcorr=True,applyoffsets=False,cfcache="cfcache.dir",
-          epjtablename="",contclean=False,visinmem=False,
-          mode="channel",start=0,nchan=128,step=1,
-          imagetilevol=1000000,chanchunk=1,scales=[0],
-          hostnames=['casa-dev-02', 'casa-dev-03', 'casa-dev-04', 'casa-dev-16'],
-          numcpuperhost=1
-         )
-
-   pclean(
-          vis="../test/ngc6503/ngc6503_output/ngc6503.ms",
-          imagename="ngc6503.im",
-          field="",spw="",imsize=[256, 256],
-          cell=['5arcsec', '5arcsec'],
-          phasecenter="",niter=20000,weighting="natural",
-          ftmachine="ft",alg="clark",wprojplanes=128,
-          facats=1,majorcycles=1,painc=360.0,pblimit=0.1,
-          dopbcorr=True,applyoffsets=False,cfcache="cfcache.dir",
-          epjtablename="",contclean=False,visinmem=False,
-          mode="continuum",start=0,nchan=10,step=1,
-          imagetilevol=1000000,chanchunk=1,scales=[0],
-          hostnames=['casa-dev-02', 'casa-dev-03', 'casa-dev-04', 'casa-dev-16'],
-          numcpuperhost=1
-         )
+          overwrite=True)
 
  </example>
  </task>

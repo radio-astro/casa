@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual String methodName()=0;
 
     // Set autoflag params
-    virtual Bool setParameters(Record &parameters){};
+    virtual Bool setParameters(Record &/*parameters*/){ return False;}
     
     // Get default autoflag params
     virtual Record getParameters(){return Record();};
@@ -72,15 +72,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vb.assign(inVb,False);
       visc.reference(inVisc); flagc.reference(inFlagc); preflagc.reference(inPreFlagc);
       NumT=numT, NumAnt=numAnt; NumB=numB; NumC=numC; NumP=numP;
+
+      return False;
      };    
 
     // Extract a diagnostic spectrum vector.
-    virtual Bool getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs)
+    virtual Bool getMonitorSpectrum(Vector<Float> &/*monspec*/, uInt /*pl*/, uInt /*bs*/)
     {return False;};
 
     // Set baselineFlags...
     virtual Bool setBaselineFlag(Vector<Bool> &inBaselineFlag)
-    {baselineFlag.reference(inBaselineFlag);}
+    {baselineFlag.reference(inBaselineFlag); return False;}
 
 /* Return antenna numbers from baseline number - upper triangle storage */
  void Ants(uInt bs, uInt *a1, uInt *a2)
@@ -98,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   /* Return baseline index from a pair of antenna numbers - upper triangle storage */
-  uInt BaselineIndex(uInt row, uInt a1, uInt a2)
+  uInt BaselineIndex(uInt /*row*/, uInt a1, uInt a2)
   {
     return ( (NumAnt)*((NumAnt)+1)/2 - ((NumAnt)-a1)*((NumAnt)-a1+1)/2 + (a2 - a1) );
   }

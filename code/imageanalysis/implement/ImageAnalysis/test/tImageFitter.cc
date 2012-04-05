@@ -112,7 +112,6 @@ int main() {
     );
 	const Path compTable(dirName + "/myCompList.cl");
 	int returnValue = 0;
-
     try {
        {
             writeTestString(
@@ -397,17 +396,17 @@ int main() {
         	AlwaysAssert(near(yPosError.getValue(), 1.05117e-07, 1e-4), AipsError);
 
         	Vector<Double> compErrors = compList.getShape(0)->errors();
-        	AlwaysAssert(near(compErrors[0], 8.57789e-09, 1e-4), AipsError);
-        	AlwaysAssert(near(compErrors[1], 7.11494e-09, 1e-4), AipsError);
-        	AlwaysAssert(near(compErrors[2], 3.40562e-05, 1e-4), AipsError);
+        	AlwaysAssert(near(compErrors[0], 1.0265e-12, 1e-4), AipsError);
+        	AlwaysAssert(near(compErrors[1], 8.51429e-13, 1e-4), AipsError);
+        	AlwaysAssert(near(compErrors[2], 7.49986e-09, 1e-4), AipsError);
 
         	GaussianShape *gauss = dynamic_cast<GaussianShape *>(compList.getShape(0)->clone());
         	AlwaysAssert(gauss->majorAxisError().getUnit() == gauss->majorAxis().getUnit(), AipsError);
         	AlwaysAssert(gauss->minorAxisError().getUnit() == gauss->minorAxis().getUnit(), AipsError);
         	AlwaysAssert(gauss->positionAngleError().getUnit() == gauss->positionAngle().getUnit(), AipsError);
-        	AlwaysAssert(near(gauss->majorAxisError().getValue(), 0.00176932, 1e-5), AipsError);
-        	AlwaysAssert(near(gauss->minorAxisError().getValue(), 0.00146756, 1e-5), AipsError);
-        	AlwaysAssert(near(gauss->positionAngleError().getValue(), 0.00195128, 1e-5), AipsError);
+        	AlwaysAssert(near(gauss->majorAxisError().getValue(), 2.1173e-07, 1e-5), AipsError);
+        	AlwaysAssert(near(gauss->minorAxisError().getValue(), 1.7562e-07, 1e-5), AipsError);
+        	AlwaysAssert(near(gauss->positionAngleError().getValue(), 4.29711e-07, 1e-5), AipsError);
         }
         {
         	writeTestString(

@@ -32,8 +32,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagMSHandler::FlagMSHandler(string msname, uShort iterationApproach, Double timeInterval):
-		FlagDataHandler(msname,iterationApproach,timeInterval)
+FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double timeInterval):
+		FlagDataHandler(tablename,iterationApproach,timeInterval)
 {
 	selectedMeasurementSet_p = NULL;
 	originalMeasurementSet_p = NULL;
@@ -72,7 +72,7 @@ FlagMSHandler::open()
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	originalMeasurementSet_p = new MeasurementSet(msname_p,Table::Update);
+	originalMeasurementSet_p = new MeasurementSet(tablename_p,Table::Update);
 
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
@@ -82,6 +82,21 @@ FlagMSHandler::open()
 	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
 	antennaPositions_p = new ROScalarMeasColumn<MPosition>(antennaSubTable->positionMeas());
+
+	// File the baseline to Ant1xAnt2 map
+	String baseline;
+	std::pair<Int,Int> ant1ant2;
+	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	{
+		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		{
+			ant1ant2.first = ant1Idx;
+			ant1ant2.second = ant2Idx;
+			baseline = antennaNames_p->operator()(ant1Idx) + "&&" + antennaNames_p->operator()(ant2Idx);
+			baselineToAnt1Ant2_p[baseline] = ant1ant2;
+			Ant1Ant2ToBaseline_p[ant1ant2] = baseline;
+		}
+	}
 
 	// Read field names
 	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
@@ -348,7 +363,7 @@ FlagMSHandler::checkMaxMemory()
 		if (groupTimeSteps_p)
 		{
 			rwVisibilityIterator_p->setRowBlocking(rwVisibilityIterator_p->nRowChunk());
-			if (rwVisibilityIterator_p->nRowChunk() > maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
+			if (rwVisibilityIterator_p->nRowChunk() > (Int) maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
 		}
 
 		// Iterate over vis buffers
@@ -665,7 +680,7 @@ FlagMSHandler::nextBuffer()
 		if (bufferNo == 1)
 		{
 			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<visibilityBuffer_p->get()->nCorr();corr_i++)
+			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
 			{
 				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 			}

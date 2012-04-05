@@ -93,8 +93,8 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
          }
        }
       catch(AipsError x){
-        *itsLog << LogIO::SEVERE << "Exception Reported: "
-                << x.getMesg() << LogIO::POST;
+        //*itsLog << LogIO::SEVERE << "Exception Reported: "
+         //       << x.getMesg() << LogIO::POST;
         RETHROW(x);
       }
    }
@@ -130,7 +130,7 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 	  retval=fromRecord(outRec);
 	}
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
   } else {
@@ -150,7 +150,7 @@ imager::approximatepsf(const std::string& psf, const bool async)
          String apsf(psf);
          rstat = itsImager->approximatepsf(apsf);
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -170,7 +170,7 @@ imager::boxmask(const std::string& mask, const std::vector<int>& blc, const std:
       //Vector <String> apsf(toVectorString(psf));
           rstat = itsImager->boxmask(mask, blc, trc, value);
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -216,8 +216,8 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode,
 
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+     //       << LogIO::POST;
     Table::relinquishAutoLocks();
     RETHROW(x);
   }
@@ -256,7 +256,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	 } 
        catch  (AipsError x) 
 	 {
-	   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	   RETHROW(x);
 	 }
      } 
@@ -277,7 +277,7 @@ imager::clipimage(const std::string& image, const ::casac::variant& threshold)
       try {
          rstat = itsImager->clipimage(image, casaQuantity(threshold));
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -294,7 +294,7 @@ imager::clipvis(const ::casac::variant& threshold)
       try {
          rstat = itsImager->clipvis(casaQuantity(threshold));
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -328,7 +328,7 @@ imager::close()
     
    rstat = True;
  } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  Table::relinquishAutoLocks();
@@ -355,7 +355,7 @@ int imager::drawmask(const std::string& image, const std::string& mask ){
     String dummiest="0.0Jy";
     rstat=itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
   } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -380,7 +380,7 @@ imager::feather(const std::string& image, const std::string& highres, const std:
    try {
      rstat = itsImager->feather(String(image), String(highres), String(lowres), String(lowpsf), Float(dishdiam), showplot);
    } catch  (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);
    }
    
@@ -400,7 +400,7 @@ imager::filter(const std::string& type, const ::casac::variant& bmaj, const ::ca
      rstat = itsImager->filter(type, casaQuantity(bmaj), 
 			       casaQuantity(bmin), posang);
     } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
     }
    } else {
@@ -425,8 +425,8 @@ imager::fitpsf(::casac::record& bmaj, ::casac::record& bmin, ::casac::record& bp
       bmin  = *recordFromQuantity(cbmin);
    }
    catch(AipsError x){
-     *itsLog << LogIO::SEVERE << "Exception Reported: "
-             << x.getMesg() << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: "
+      //       << x.getMesg() << LogIO::POST;
      RETHROW(x);
    }
    return rstat;
@@ -488,8 +488,8 @@ bool imager::fixvis(const std::vector<int>& fields,
     rstat = True;
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+     //       << LogIO::POST;
     Table::relinquishAutoLocks();
     RETHROW(x);
   }
@@ -506,7 +506,7 @@ imager::ft(const std::vector<std::string>& model, const std::string& complist, c
       Vector <String> amodel(toVectorString(model));
       rstat = itsImager->ft(amodel, complist, incremental);
     } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
     }
    } else {
@@ -530,7 +530,7 @@ imager::linearmosaic(const std::vector<std::string>& images, const std::string& 
 	itsImager->setvp(True, True, "", False, casa::Quantity(360.0, "deg"), casa::Quantity(180.0, "deg"));
       rstat = itsImager->linearmosaic(mosaic, fluxscale, sensitivity, aimages, fieldids);
     } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
     }
    } else {
@@ -547,7 +547,7 @@ bool imager::make(const std::string& image, const bool async)
    try {
       rstat = itsImager->make(image);
     } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
     }
    } else {
@@ -585,8 +585,8 @@ std::string imager::predictcomp(const std::string& objname,
 				 freqv, String(pfx));
   }
   catch(AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+     //       << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -602,7 +602,7 @@ bool imager::makeimage(const std::string& type, const std::string& image,
         rstat = itsImager->makeimage(String(type), String(image), String(compleximage),
                                      verbose);
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -623,7 +623,7 @@ bool imager::makemodelfromsd(const std::string& sdimage, const std::string& mode
                                       String(sdpsf), mask);
       
   } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return False;
@@ -636,7 +636,7 @@ bool imager::mask(const std::string& image, const std::string& mask,
    try {
      rstat = itsImager->mask(mask, image, casaQuantity(threshold));
    } catch  (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);
    }
    return rstat;
@@ -660,7 +660,7 @@ imager::mem(const std::string& algorithm, const int niter, const ::casac::varian
                                 String(complist), aprior, amask,
                                 aimage, aresidual);
       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
       }
    } else {
@@ -685,7 +685,7 @@ imager::nnls(const std::vector<std::string>& model, const std::vector<bool>& kee
          rstat = itsImager->nnls(String(), niter, tolerance, amodel, fixed, complist,
                                  afluxmask, adatamask, aresidual, aimage);
       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
       }
    } else {
@@ -723,7 +723,7 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
       if(rstat) hasValidMS_p=true;
     } catch  (AipsError x) {
 
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
     return rstat;
@@ -745,8 +745,8 @@ imager::pb(const std::string& inimage, const std::string& outimage,
                             mpointingcenter, casaQuantity(parangle), pborvp);
     }
     catch(AipsError x){
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-              << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+       //       << LogIO::POST;
       RETHROW(x);
     }
   }
@@ -766,7 +766,7 @@ imager::plotsummary()
       try {
         rstat = itsImager->plotsummary();
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -784,7 +784,7 @@ imager::plotuv(const bool rotate)
       try {
         rstat = itsImager->plotuv(rotate);
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -802,7 +802,7 @@ imager::plotvis(const std::string& type, const int increment)
       try {
         rstat = itsImager->plotvis(type, increment);
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -821,7 +821,7 @@ imager::plotvis(const std::string& type, const int increment)
          // something else, or fix.
          rstat = itsImager->plotweights(gridded, increment);
       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         // *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
  	 RETHROW(x);
        }
     } else {
@@ -862,7 +862,7 @@ imager::plotvis(const std::string& type, const int increment)
 	 }
 
       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         // *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
  	 RETHROW(x);
        }
     } else {
@@ -901,7 +901,7 @@ Bool rstat(False);
 	rstat = itsImager->setWeightGrid(blocko, type);	
 
       } catch  (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
       }
    } else {
@@ -1023,7 +1023,7 @@ imager::regionmask(const std::string& mask, const ::casac::record& region,
 	  delete pRegion;
 
       } catch  (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
       }
    } else {
@@ -1139,7 +1139,7 @@ imager::regiontoimagemask(const std::string& mask,
       delete pRegion;
     
   } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   
@@ -1159,7 +1159,7 @@ imager::residual(const std::vector<std::string>& model, const std::string& compl
          Vector <String> aimage(toVectorString(image));
          rstat = itsImager->residual(amodel, complist, aimage);
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -1178,7 +1178,7 @@ bool imager::updateresidual(const std::vector<std::string>& model, const std::st
       Vector <String> aresidual(toVectorString(residual));
       rstat = itsImager->updateresidual(amodel, complist, aimage, aresidual);
     } catch  (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
   } else {
@@ -1200,7 +1200,7 @@ imager::restore(const std::vector<std::string>& model, const std::string& compli
          Vector <String> aresidual(toVectorString(residual));
          rstat = itsImager->restore(amodel, complist, aimage, aresidual);
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -1221,8 +1221,8 @@ imager::sensitivity(::casac::record& pointsource, double& relative,
         pointsource = *recordFromQuantity(qpointsource);
       }
       catch(AipsError x){
-         *itsLog << LogIO::SEVERE << "Exception Reported: "
-                 << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: "
+          //       << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    }
@@ -1245,8 +1245,8 @@ imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin,
                                    casaQuantity(bpa));
       }
       catch(AipsError x){
-         *itsLog << LogIO::SEVERE << "Exception Reported: "
-                 << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: "
+          //       << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    }
@@ -1328,7 +1328,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 					   spwstring, uvdist, scanrange, obsrange, useScratch, !writeaccess);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -1471,7 +1471,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 				     Vector<Int>(spwid), facets, restFreq, mfframe,
 				     cdistance, domovingSource, movingDir);
     } catch  (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }    
   } else {
@@ -1529,7 +1529,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
                                spix, mfreqref, timerange, scanstr, obsstr);
     } 
     catch(AipsError x){
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
   }
@@ -1562,7 +1562,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
          rstat = itsImager->setmfcontrol(cyclefactor, cyclespeedup, cyclemaxpsffraction, stoplargenegatives,
                                          stoppointmode, scaletype, minpb, constpb, afluxscale, flatnoise);
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -1592,7 +1592,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					String(cfcachedirname), Float(pastep), 
 					Float(pblimit), String(freqinterp), imagetilevol, singprec, numthreads);
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -1615,7 +1615,7 @@ imager::setscales(const std::string& scalemethod, const int nscales, const std::
        convertArray(scalvec, Vector<Double> (uservector));
        rstat = itsImager->setscales(scalemethod, nscales, scalvec);
      } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
      }
      
@@ -1635,7 +1635,7 @@ imager::setsmallscalebias(const float inbias)
      try {
        rstat = itsImager->setSmallScaleBias(inbias);
      } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
      }
      
@@ -1654,7 +1654,7 @@ imager::settaylorterms(const int ntaylorterms, const double reffreq)
      try {
        rstat = itsImager->settaylorterms(ntaylorterms,reffreq);
      } catch  (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        RETHROW(x);
      }
      
@@ -1674,7 +1674,7 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
      cerr << "SCALE " << scale << endl;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
    } catch  (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);
    }
 
@@ -1700,7 +1700,7 @@ bool imager::setvp(const bool dovp, const bool usedefaultvp,
      rstat = itsImager->setvp(dovp, usedefaultvp, vptable, dosquint, parang, 
 			      skyposthr, telescope, verbose);
    } catch  (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);
    }
    return rstat;
@@ -1720,7 +1720,7 @@ imager::smooth(const std::vector<std::string>& model, const std::vector<std::str
          rstat = itsImager->smooth(amodel, aimage, usefit,
                          qbmaj, qbmin, qbpa, normalize);
        } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+          //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);
        }
     } else {
@@ -1747,7 +1747,7 @@ imager::summary()
       try {
          rstat = itsImager->summary();
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -1767,7 +1767,7 @@ imager::uvrange(const double uvmin, const double uvmax)
          if(!rstat)
             *itsLog << LogIO::WARN << "uvrange failed did you setdata first?" << LogIO::POST;
       } catch  (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+         //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
@@ -1789,8 +1789,8 @@ imager::weight(const std::string& type, const std::string& rmode,
                                 robust, casaQuantity(fieldofview), npixels, mosaic);
     }
     catch(AipsError x){
-      *itsLog << LogIO::SEVERE << "Exception Reported: "
-              << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: "
+       //       << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
   }

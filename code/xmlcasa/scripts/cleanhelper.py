@@ -288,12 +288,18 @@ class cleanhelper:
                 self.spwindex = spwindex
 
         ##end spwindex
+
+        if self.usespecframe=='': 
+            useframe=self.dataspecframe
+        else:
+            useframe=self.usespecframe
+
         self.im.defineimage(nx=imsize[0],      ny=imsize[1],
                             cellx=cellx,       celly=celly,
                             mode=mode,         nchan=nchan,
                             start=elstart,       step=width,
                             spw=spwindex,      stokes=stokes,
-                            restfreq=restfreq, outframe=outframe,
+                            restfreq=restfreq, outframe=useframe,
                             veltype=veltype, phasecenter=phasecenter,
                             facets=facets)
 
@@ -694,7 +700,7 @@ class cleanhelper:
         for key in self.maskimages.keys():
             if(os.path.exists(self.maskimages[key])):
                 ia.open(self.maskimages[key])
-                fsum=ia.statistics()['sum']
+                fsum=ia.statistics(verbose=False)['sum']
                 if(len(fsum)!=0 and fsum[0]==0.0):
                     # make an empty mask
                     ia.set(pixels=0.0)
@@ -1210,7 +1216,7 @@ class cleanhelper:
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
                 ia.open(maskelos[k])
                 ##sd mask cover whole image...delete it as it is not needed
-                if((ia.statistics()['min']) >0):
+                if((ia.statistics(verbose=False)['min']) >0):
                     ia.remove(done=True, verbose=False)
                     maskelos.remove(maskelos[k])
                 ia.done()
@@ -1244,7 +1250,7 @@ class cleanhelper:
             doAnd=False;
             if(os.path.exists(outputmask)):
                 ia.open(outputmask)
-                if((ia.statistics()['max'].max()) > 0.00001):
+                if((ia.statistics(verbose=False)['max'].max()) > 0.00001):
                     doAnd=True
                 ia.close()
             if(doAnd):
@@ -2189,6 +2195,7 @@ class cleanhelper:
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
                               start=start,width=width,phasec=inphasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
+        print newfreqs
         descendingnewfreqs=False
         if type(newfreqs)==list:
           if newfreqs[1]-newfreqs[0] < 0:
