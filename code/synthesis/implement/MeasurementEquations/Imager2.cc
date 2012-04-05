@@ -3250,8 +3250,21 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   AlwaysAssert(ft_p, AipsError);
   AlwaysAssert(cft_p, AipsError);
 
+  // Setup the sky equation
+  setSkyEquation();
+
+  // If primary-beams are needed, force the fluxScale images held by
+  // the SkyModel classes to be allocated/initialized.
+  if(doVP_p){
+      if(ft_p->name() != "MosaicFT") 
+	sm_p->mandateFluxScale(0);
+    }
+ 
+
+  /* // Commented out by URV (4 Apr 2012) : Redundant Code.
   // This block determines which SkyEquation is to be used.
   // We are using a mf* algorithm and there is more than one image
+      
   if (doMultiFields_p && multiFields_p) {
     // Mosaicing case
     if(doVP_p){
@@ -3302,6 +3315,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
          << "Processing single field with simple sky equation" << LogIO::POST;    
     } 
   }
+
+  */
+
+
   //os.localSink().flush();
   //For now force none sault weighting with mosaic ft machine
   

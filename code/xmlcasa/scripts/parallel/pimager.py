@@ -38,6 +38,7 @@ class pimager():
         self.baselines=''
         self.scan=''
         self.observation=''
+        self.pbcorr=False
         self.c=cluster
         if self.c == '' :
             # Until we move to the simple cluster
@@ -458,7 +459,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', 
+              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -526,6 +527,7 @@ class pimager():
         self.scan=scan
         self.observation=observation
         self.visinmem=visinmem
+        self.pbcorr=pbcorr
         self.numthreads=numthreads
 
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
@@ -757,7 +759,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
               robust=0.0, npixels=0, 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
+              contclean=False, pbcorr=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -820,6 +822,7 @@ class pimager():
         self.npixels=npixels
         self.visinmem=visinmem
         self.numthreads=numthreads
+        self.pbcorr=pbcorr
         self.setupcluster(hostnames,numcpuperhost, 3)
         numcpu=self.numcpu
         ##Start an slave for my async use for cleaning up etc here
@@ -988,7 +991,7 @@ class pimager():
               hostnames='', 
               numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
-              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -1061,6 +1064,7 @@ class pimager():
         self.scan=scan
         self.observation=observation
         self.numthreads=numthreads
+        self.pbcorr=pbcorr
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####
@@ -1221,8 +1225,15 @@ class pimager():
         print 'Time to image is ', (timebegrem-time1)/60.0, 'mins'
         chans=(np.array(range(nchanchunk))*chanchunk).tolist()
         imnams=[imagename]*nchanchunk
+        ia.open(imnams[0]+'0.image')
+        rb=ia.restoringbeam()
+        ia.done()
+        ia.open(imagename+'.image')
+        ia.setrestoringbeam(beam=rb)
+        ia.done()
         imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
+        
         imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
@@ -1242,7 +1253,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, stokes='I', restfreq='', weight='natural', 
               robust=0.0, npixels=0, 
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=-1,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , pbcorr=False, numthreads=-1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -1306,6 +1317,7 @@ class pimager():
         self.numthreads=numthreads
         self.stokes=stokes
         self.gain=gain
+        self.pbcorr=pbcorr
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####
@@ -1489,8 +1501,8 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, 
-                     contclean=False, visinmem=False, maskimage='lala.mask', numthreads=1,
+                     numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, pbcorr=False, 
+                     contclean=False, visinmem=False, maskimage='lala.mask',  numthreads=1,
                      painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                      epjtablename=''):
         """
@@ -1549,6 +1561,7 @@ class pimager():
         self.visinmem=visinmem
         self.gain=gain
         self.numthreads=numthreads
+        self.pbcorr=pbcorr
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
         model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
         if(not contclean):
@@ -2008,7 +2021,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));

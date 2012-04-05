@@ -4211,6 +4211,9 @@ from the zeroth pixel in the specified region. goodfwhmrange is expressed in ter
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
 
+In addition, solutions for which the absolute value of the ratio of the amplitude error to the amplitude exceeds 100 or the
+ratio of the FWHM error to the FWHM exceeds 100 are automatically marked as invalid.
+
 INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
 If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
 near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
