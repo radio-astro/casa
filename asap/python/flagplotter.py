@@ -26,6 +26,7 @@ class flagplotter(asapplotter):
     def __init__(self, visible=None, **kwargs):
         self._scan = None
         asapplotter.__init__(self,visible=visible, **kwargs)
+        self._assert_plotter(action='reload')
         self._plotter._set_window_title('Flag Plotter')
         self._panelling = 'r'
         self.set_stacking('scan')
@@ -99,6 +100,8 @@ class flagplotter(asapplotter):
                          The default False is to return with warning
                          without writing the output. USE WITH CARE.
         """
+        if not self._data:
+            raise RuntimeError("No scantable has been set yet.")
         # simply calls scantable.save
         self._data.save(name,format,overwrite)
 

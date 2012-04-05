@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# Fitter.cc: A Fitter class for spectra
 //#--------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2004-2012
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -117,13 +117,17 @@ bool Fitter::computeEstimate() {
   for (uInt i=0; i<n;i++) {
     g = dynamic_cast<Gaussian1D<Float>* >(funcs_[i]);
     if (g) {
-      const GaussianSpectralElement *gauss = dynamic_cast<const GaussianSpectralElement *>(listGauss[i]) ;
+#ifdef USE_CASAPY
+      const GaussianSpectralElement *gauss = 
+	dynamic_cast<const GaussianSpectralElement *>(listGauss[i]) ;
       (*g)[0] = gauss->getAmpl();
       (*g)[1] = gauss->getCenter();
-      (*g)[2] = gauss->getFWHM();
-//       (*g)[0] = listGauss[i].getAmpl();
-//       (*g)[1] = listGauss[i].getCenter();
-//       (*g)[2] = listGauss[i].getFWHM();
+      (*g)[2] = gauss->getFWHM();     
+#else      
+      (*g)[0] = listGauss[i].getAmpl();
+      (*g)[1] = listGauss[i].getCenter();
+      (*g)[2] = listGauss[i].getFWHM();
+#endif
     }
   }
   estimate_.resize();

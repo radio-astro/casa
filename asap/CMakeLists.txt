@@ -15,6 +15,11 @@ option( STANDALONE
 message( STATUS "USE_LIBCASACORE = " ${USE_LIBCASACORE} )
 message( STATUS "STANDALONE = " ${STANDALONE} )
 
+# Use casapy's fork of casacore  
+if ( NOT STANDALONE )
+  add_definitions( -DUSE_CASAPY )
+endif ()
+
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
 if( APPLE )
     if( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
@@ -41,6 +46,8 @@ project( ASAP )
 # CMAKE_BUILD_TYPE (Release, Debug, RelWithDebInfo, MinSizeRel, Profile)
 # default is RelWithDebInfo
 #
+
+
 if ( NOT CMAKE_BUILD_TYPE )
    set( CMAKE_BUILD_TYPE RelWithDebInfo )
 endif()

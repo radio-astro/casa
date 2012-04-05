@@ -55,8 +55,10 @@ class AsapLogger(object):
         if isinstance(self.logger, LogSink):
             logs = self.logger.pop().strip()
             if len(logs) > 0:
-                print >>sys.stdout, logs
-                sys.stdout.flush()
+                if rcParams['verbose']:
+                    print >>sys.stdout, logs
+                    if hasattr(sys.stdout, "flush"):
+                        sys.stdout.flush()
         self._log = ""
 
     def clear(self):
@@ -109,17 +111,17 @@ def asaplog_post_dec(f):
     def wrap_it(*args, **kw):
         level = "INFO"
         try:
-            val = f(*args, **kw)
-            return val
-        except Exception, ex:
-            level = "ERROR"
-            asaplog.push(str(ex))
-            if rcParams['verbose']:
-                pass
-            else:
-                raise
+            try:
+                val = f(*args, **kw)
+                return val
+            except Exception, ex:
+                level = "ERROR"
+                asaplog.push(str(ex))
+                if rcParams['verbose']:
+                    pass
+                else:
+                    raise
         finally:
             asaplog.post(level, f.func_name)
-            #asaplog.post(level, ".".join([f.__module__,f.func_name]))
     return wrap_it
 

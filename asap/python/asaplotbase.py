@@ -82,6 +82,10 @@ class asaplotbase:
 
         self.buffering = buffering
 
+        self.events = {'button_press':None,
+                       'button_release':None,
+                       'motion_notify':None}
+
     def clear(self):
         """
         Delete all lines from the plot.  Line numbering will restart from 0.
@@ -553,8 +557,8 @@ class asaplotbase:
             help(matplotlib.lines)
 
         The set_* methods of class Line2D define the attribute names and
-        values.  For non-US usage, "colour" is recognized as synonymous with
-        "color".
+        values.  For non-US usage, 'colour' is recognized as synonymous with
+        'color'.
 
         Set the value to None to delete an attribute.
 

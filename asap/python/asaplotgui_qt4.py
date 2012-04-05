@@ -28,7 +28,9 @@ class asaplotgui(asaplotbase):
         del v['self']
 
         asaplotbase.__init__(self, **v)
+        matplotlib.rcParams["interactive"] = True
 
+        _pylab_helpers.Gcf.destroy(0)
         self.canvas = FigureCanvasQTAgg(self.figure)
         # Simply instantiating this is enough to get a working toolbar.
         self.figmgr = FigureManagerQTAgg(self.canvas, 0)
@@ -49,13 +51,6 @@ class asaplotgui(asaplotbase):
 
         qt.QtCore.QObject.connect(self.window, qt.QtCore.SIGNAL('destroyed()'),dest_callback)
 
-	self.events = {'button_press':None,
-		       'button_release':None,
-		       'motion_notify':None}
-
-	matplotlib.rcParams["interactive"] = True
-	self.buffering = buffering
-
         self.unmap()
 	#self.canvas.show()
 
@@ -64,6 +59,8 @@ class asaplotgui(asaplotbase):
 	Reveal the ASAPlot graphics window and bring it to the top of the
 	window stack.
 	"""
+        if self.is_dead:
+            raise RuntimeError( "No plotter to show. Not yet plotted or plotter is closed." )
         self.window.activateWindow()
         #To raise this window to the top of the stacking order
         self.window.raise_()
@@ -74,13 +71,24 @@ class asaplotgui(asaplotbase):
 	Destroy the ASAPlot graphics window.
 	"""
         self.is_dead = True
-        try: self.window.close()
+        if not self.figmgr:
+            return
+        try:
+            #self.window.close()
+            # TODO destroy casabar
+            _pylab_helpers.Gcf.destroy(self.figmgr.num)
+            del self.window, self.canvas, self.figmgr
+            self.window = None
+            self.canvas = None
+            self.figmgr = None
         except RuntimeError: pass # the window may already be closed by user
 
     def show(self, hardrefresh=True):
 	"""
 	Show graphics dependent on the current buffering state.
 	"""
+        if self.is_dead:
+            raise RuntimeError( "No plotter to show (not yet plotted or closed)." )
 	if not self.buffering:
             if hardrefresh:
                 asaplotbase.show(self)
@@ -93,12 +101,20 @@ class asaplotgui(asaplotbase):
 	"""
 	Clear the figure.
 	"""
+        if not self.window:
+            asaplog.push( "No plotter window to terminate." )
+            asaplog.post( "WARN" )
+            return
 	self.window.close()
 
     def unmap(self):
 	"""
 	Hide the ASAPlot graphics window.
 	"""
+        if not self.window:
+            asaplog.push( "No plotter window to unmap." )
+            asaplog.post( "WARN" )
+            return
         self.window.hide()
 
     def _set_window_title(self,title):

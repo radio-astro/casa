@@ -10,7 +10,9 @@
 //
 //
 #include <stdio.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
@@ -164,22 +166,32 @@ Broker::~Broker()
 
 void Broker::enableNested()
 {
+#ifdef _OPENMP
 	omp_set_nested(1);
+#endif
 }
 
 void Broker::disableNested()
 {
+#ifdef _OPENMP
 	omp_set_nested(0);
+#endif
 }
 
 void Broker::setNestedState(bool nested)
 {
+#ifdef _OPENMP
 	omp_set_nested(static_cast<int>(nested));
+#endif
 }
 
 bool Broker::getNestedState()
 {
+#ifdef _OPENMP
 	return omp_get_nested() ? true : false;
+#else
+	return false;
+#endif
 }
 
 void Broker::runProducerAsMasterThread(void *context, unsigned do_ahead)

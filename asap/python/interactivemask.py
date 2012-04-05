@@ -156,13 +156,14 @@ class interactivemask:
             self.showmask = True
 
         #if not self.p._plotter or self.p._plotter.is_dead:
-        if not self.p or self.p._plotter.is_dead:
+        if not self.p:
             asaplog.push('A new ASAP plotter will be loaded')
             asaplog.post()
             from asap.asapplotter import asapplotter
             self.p = asapplotter()
             self.newplot = True
-
+        self.p._assert_plotter(action='reload')
+        
         # Plot selected spectra if needed
         if self.scan != self.p._data:
             if len(self.scan.getifnos()) > 16:
@@ -170,7 +171,7 @@ class interactivemask:
                 asaplog.push("Number of panels > 16. Plotting the first 16...")
                 asaplog.post("WARN")
             # Need replot
-            self.p._plotter.legend(1)
+            self.p._legendloc = 1
             self.p.plot(self.scan)
             # disable casa toolbar
             if self.p._plotter.figmgr.casabar:

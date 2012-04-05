@@ -44,9 +44,8 @@ class asapplotter:
         self._visible = rcParams['plotter.gui']
         if visible is not None:
             self._visible = visible
-        self._plotter = self._newplotter(**kwargs)
-        # additional tool bar
-        self._plotter.figmgr.casabar=self._new_custombar()
+        self._plotter = None
+        self._inikwg = kwargs
 
         self._panelling = None
         self._stacking = None
@@ -54,7 +53,6 @@ class asapplotter:
         self.set_stacking()
         self._rows = None
         self._cols = None
-        self._autoplot = False
         self._minmaxx = None
         self._minmaxy = None
         self._datamask = None
@@ -75,6 +73,9 @@ class asapplotter:
         self._ipanel = -1
         self._panelrows = []
         self._headtext={'string': None, 'textobj': None}
+        self._colormap = None
+        self._linestyles = None
+        self._legendloc = None
 
     def _translate(self, instr):
         keys = "s b i p t r".split()
@@ -84,8 +85,21 @@ class asapplotter:
                     return key
         return None
 
-    def _newplotter(self, **kwargs):
-        return new_asaplot(self._visible,**kwargs)
+    def _reload_plotter(self):
+        if self._plotter is not None:
+            if  not self._plotter.is_dead:
+                # clear lines and axes
+                self._plotter.clear()
+            if self.casabar_exists():
+                del self._plotter.figmgr.casabar
+            self._plotter.quit()
+            del self._plotter
+        self._plotter = new_asaplot(self._visible,**self._inikwg)
+        self._plotter.figmgr.casabar=self._new_custombar()
+        # just to make sure they're set
+        self._plotter.palette(color=0,colormap=self._colormap,
+                              linestyle=0,linestyles=self._linestyles)
+        self._plotter.legend(self._legendloc)
 
     def _new_custombar(self):
         backend=matplotlib.get_backend()
@@ -106,6 +120,42 @@ class asapplotter:
             return True
         return False
 
+    def _assert_plotter(self,action="status",errmsg=None):
+        """
+        Check plot window status. Returns True if plot window is alive.
+        Parameters
+            action:    An action to take if the plotter window is not alive.
+                       ['status'|'reload'|'halt']
+                       The action 'status' simply returns False if asaplot
+                       is not alive. When action='reload', plot window is
+                       reloaded and the method returns True. Finally, an
+                       error is raised when action='halt'.
+            errmsg:    An error (warning) message to send to the logger,
+                       when plot window is not alive.
+        """
+        if self._plotter and not self._plotter.is_dead:
+            return True
+        # Plotter is not alive.
+        haltmsg = "Plotter window has not yet been loaded or is closed."
+        if type(errmsg)==str and len(errmsg) > 0:
+            haltmsg = errmsg
+        
+        if action.upper().startswith("R"):
+            # reload plotter
+            self._reload_plotter()
+            return True
+        elif action.upper().startswith("H"):
+            # halt
+            asaplog.push(haltmsg)
+            asaplog.post("ERROR")
+            raise RuntimeError(haltmsg)
+        else:
+            if errmsg:
+                asaplog.push(errmsg)
+                asaplog.post("WARN")
+            return False
+
+
     @asaplog_post_dec
     def plot(self, scan=None):
         """
@@ -118,24 +168,26 @@ class asapplotter:
             NO checking is done that the abcissas of the scantable
             are consistent e.g. all 'channel' or all 'velocity' etc.
         """
-        self._startrow = 0
-        self._ipanel = -1
-        self._reset_header()
-        if self._plotter.is_dead:
-            if self.casabar_exists():
-                del self._plotter.figmgr.casabar
-            self._plotter = self._newplotter()
-            self._plotter.figmgr.casabar=self._new_custombar()
-        if self.casabar_exists():
-            self._plotter.figmgr.casabar.set_pagecounter(1)
-        self._panelrows = []
-        self._plotter.hold()
-        #self._plotter.clear()
         if not self._data and not scan:
             msg = "Input is not a scantable"
             raise TypeError(msg)
+        self._startrow = 0
+        self._ipanel = -1
+        self._reset_header()
+        self._panelrows = []
+
+        self._assert_plotter(action="reload")
+        if self.casabar_exists():
+            self._plotter.figmgr.casabar.set_pagecounter(1)
+
+        self._plotter.hold()
+        #self._plotter.clear()
         if scan: 
             self.set_data(scan, refresh=False)
+        self._plotter.palette(color=0,colormap=self._colormap,
+                              linestyle=0,linestyles=self._linestyles)
+        self._plotter.legend(self._legendloc)
+
         self._plot(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
@@ -146,10 +198,16 @@ class asapplotter:
         return
 
     def gca(self):
+        errmsg = "No axis to retun. Need to plot first."
+        if not self._assert_plotter(action="status",errmsg=errmsg):
+            return None
         return self._plotter.figure.gca()
 
     def refresh(self):
         """Do a soft refresh"""
+        errmsg = "No figure to re-plot. Need to plot first."
+        self._assert_plotter(action="halt",errmsg=errmsg)
+
         self._plotter.figure.show()
 
     def create_mask(self, nwin=1, panel=0, color=None):
@@ -162,7 +220,11 @@ class asapplotter:
             panel:      Which panel to use for mask selection. This is useful
                         if different IFs are spread over panels (default 0)
         """
-        if self._data is None:
+        ## this method relies on already plotted figure
+        if not self._assert_plotter(action="status") or (self._data is None):
+            msg = "Cannot create mask interactively on plot. Can only create mask after plotting."
+            asaplog.push( msg )
+            asaplog.post( "ERROR" )
             return []
         outmask = []
         self._plotter.subplot(panel)
@@ -209,6 +271,7 @@ class asapplotter:
 
     # forwards to matplotlib axes
     def text(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_point()
@@ -218,6 +281,7 @@ class asapplotter:
     text.__doc__ = matplotlib.axes.Axes.text.__doc__
 
     def arrow(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_region()
@@ -230,6 +294,7 @@ class asapplotter:
     arrow.__doc__ = matplotlib.axes.Axes.arrow.__doc__
 
     def annotate(self, text, xy=None, xytext=None, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 xy = self._plotter.get_point()
@@ -241,6 +306,7 @@ class asapplotter:
     annotate.__doc__ = matplotlib.axes.Axes.annotate.__doc__
 
     def axvline(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_point()
@@ -250,6 +316,7 @@ class asapplotter:
     axvline.__doc__ = matplotlib.axes.Axes.axvline.__doc__
 
     def axhline(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_point()
@@ -259,6 +326,7 @@ class asapplotter:
     axhline.__doc__ = matplotlib.axes.Axes.axhline.__doc__
 
     def axvspan(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_region()
@@ -273,6 +341,7 @@ class asapplotter:
     axvspan.__doc__ = matplotlib.axes.Axes.axvspan.__doc__
 
     def axhspan(self, *args, **kwargs):
+        self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
             if kwargs.pop("interactive"):
                 pos = self._plotter.get_region()
@@ -287,6 +356,7 @@ class asapplotter:
     axhspan.__doc__ = matplotlib.axes.Axes.axhspan.__doc__
 
     def _axes_callback(self, axesfunc, *args, **kwargs):
+        self._assert_plotter(action="reload")
         panel = 0
         if kwargs.has_key("panel"):
             panel = kwargs.pop("panel")
@@ -503,7 +573,8 @@ class asapplotter:
              plotter.set_legend([r'$^{12}CO$', r'SiO'])
         """
         self._lmap = mp
-        self._plotter.legend(mode)
+        #self._plotter.legend(mode)
+        self._legendloc = mode
         if isinstance(fontsize, int):
             from matplotlib import rc as rcp
             rcp('legend', fontsize=fontsize)
@@ -512,15 +583,17 @@ class asapplotter:
 
     def set_title(self, title=None, fontsize=None, refresh=True):
         """
-        Set the title of the plot. If multiple panels are plotted,
+        Set the title of sub-plots. If multiple sub-plots are plotted,
         multiple titles have to be specified.
         Parameters:
+            title:      a list of titles of sub-plots.
+            fontsize:   a font size of titles (integer)
             refresh:    True (default) or False. If True, the plot is
                         replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
-             plotter.set_title(["First Panel","Second Panel"])
+             plotter.set_title(['First Panel','Second Panel'])
         """
         self._title = title
         if isinstance(fontsize, int):
@@ -536,12 +609,13 @@ class asapplotter:
         Parameters:
             ordinate:    a list of ordinate labels. None (default) let
                          data determine the labels
+            fontsize:    a font size of vertical axis labels (integer)
             refresh:     True (default) or False. If True, the plot is
                          replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
-             plotter.set_ordinate(["First Y-Axis","Second Y-Axis"])
+             plotter.set_ordinate(['First Y-Axis','Second Y-Axis'])
         """
         self._ordinate = ordinate
         if isinstance(fontsize, int):
@@ -558,12 +632,13 @@ class asapplotter:
         Parameters:
             abcissa:     a list of abcissa labels. None (default) let
                          data determine the labels
+            fontsize:    a font size of horizontal axis labels (integer)
             refresh:     True (default) or False. If True, the plot is
                          replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
         Example:
              # two panels are visible on the plotter
-             plotter.set_ordinate(["First X-Axis","Second X-Axis"])
+             plotter.set_ordinate(['First X-Axis','Second X-Axis'])
         """
         self._abcissa = abcissa
         if isinstance(fontsize, int):
@@ -583,14 +658,15 @@ class asapplotter:
                         replotted based on the new parameter setting(s).
                         Otherwise,the parameter(s) are set without replotting.
         Example:
-             plotter.set_colors("red green blue")
+             plotter.set_colors('red green blue')
              # If for example four lines are overlaid e.g I Q U V
              # 'I' will be 'red', 'Q' will be 'green', U will be 'blue'
              # and 'V' will be 'red' again.
         """
-        if isinstance(colmap,str):
-            colmap = colmap.split()
-        self._plotter.palette(0, colormap=colmap)
+        #if isinstance(colmap,str):
+        #    colmap = colmap.split()
+        #self._plotter.palette(0, colormap=colmap)
+        self._colormap = colmap
         if refresh and self._data: self.plot(self._data)
 
     # alias for english speakers
@@ -603,6 +679,7 @@ class asapplotter:
             hist:        True (default) or False. The fisrt default
                          is taken from the .asaprc setting
                          plotter.histogram
+            linewidth:   a line width
             refresh:     True (default) or False. If True, the plot is
                          replotted based on the new parameter setting(s).
                          Otherwise,the parameter(s) are set without replotting.
@@ -619,23 +696,25 @@ class asapplotter:
         these linestyles when lines are overlaid (stacking mode) AND
         only one color has been set.
         Parameters:
-             linestyles:     a list of linestyles to use.
+            linestyles:      a list of linestyles to use.
                              'line', 'dashed', 'dotted', 'dashdot',
                              'dashdotdot' and 'dashdashdot' are
                              possible
+            linewidth:       a line width
             refresh:         True (default) or False. If True, the plot is
                              replotted based on the new parameter setting(s).
                              Otherwise,the parameter(s) are set without replotting.
         Example:
-             plotter.set_colors("black")
-             plotter.set_linestyles("line dashed dotted dashdot")
+             plotter.set_colors('black')
+             plotter.set_linestyles('line dashed dotted dashdot')
              # If for example four lines are overlaid e.g I Q U V
              # 'I' will be 'solid', 'Q' will be 'dashed',
              # U will be 'dotted' and 'V' will be 'dashdot'.
         """
-        if isinstance(linestyles,str):
-            linestyles = linestyles.split()
-        self._plotter.palette(color=0,linestyle=0,linestyles=linestyles)
+        #if isinstance(linestyles,str):
+        #    linestyles = linestyles.split()
+        #self._plotter.palette(color=0,linestyle=0,linestyles=linestyles)
+        self._linestyles = linestyles
         if isinstance(linewidth, float) or isinstance(linewidth, int):
             from matplotlib import rc as rcp
             rcp('lines', linewidth=linewidth)
@@ -706,6 +785,8 @@ class asapplotter:
         Notes:
         If the spectrum is flagged no line will be drawn in that location.
         """
+        errmsg = "Cannot plot spectral lines. Need to plot scantable first."
+        self._assert_plotter(action="halt",errmsg=errmsg)
         if not self._data:
             raise RuntimeError("No scantable has been plotted yet.")
         from asap._asap import linecatalog
@@ -783,6 +864,9 @@ class asapplotter:
                           automatically oriented to fill the page.
              dpi:         The dpi of the output non-ps plot
         """
+        errmsg = "Cannot save figure. Need to plot first."
+        self._assert_plotter(action="halt",errmsg=errmsg)
+        
         self._plotter.save(filename,orientation,dpi)
         return
 
@@ -790,7 +874,7 @@ class asapplotter:
     def set_mask(self, mask=None, selection=None, refresh=True):
         """
         Set a plotting mask for a specific polarization.
-        This is useful for masking out "noise" Pangle outside a source.
+        This is useful for masking out 'noise' Pangle outside a source.
         Parameters:
              mask:           a mask from scantable.create_mask
              selection:      the spectra to apply the mask to.
@@ -799,7 +883,7 @@ class asapplotter:
                              Otherwise,the parameter(s) are set without replotting.
         Example:
              select = selector()
-             select.setpolstrings("Pangle")
+             select.setpolstrings('Pangle')
              plotter.set_mask(mymask, select)
         """
         if not self._data:
@@ -1304,11 +1388,7 @@ class asapplotter:
     # plotting in time is not yet implemented..
     @asaplog_post_dec
     def plottp(self, scan=None, outfile=None):
-        if self._plotter.is_dead:
-            if self.casabar_exists():
-                del self._plotter.figmgr.casabar
-            self._plotter = self._newplotter()
-            self._plotter.figmgr.casabar=self._new_custombar()
+        self._assert_plotter(action="reload")
         self._plotter.hold()
         self._plotter.clear()
         from asap import scantable
@@ -1398,6 +1478,7 @@ class asapplotter:
         matplotlib.Figure.text.
         See the method help for detailed information.
         """
+        self._assert_plotter(action="reload")
         self._plotter.text(*args, **kwargs)
     # end matplotlib.Figure.text forwarding function
 
@@ -1436,6 +1517,8 @@ class asapplotter:
         headstr.append('***Selections***\n'+ssel)
 
         if plot:
+            errmsg = "Can plot header only after the first call to plot()."
+            self._assert_plotter(action="halt",errmsg=errmsg)
             self._plotter.hold()
             self._header_plot(headstr,fontsize=fontsize)
             import time
@@ -1468,7 +1551,7 @@ class asapplotter:
         if not self._headtext['textobj']:
             asaplog.push("No header has been plotted. Exit without any operation")
             asaplog.post("WARN")
-        else:
+        elif self._assert_plotter(action="status"):
             self._plotter.hold()
             for textobj in self._headtext['textobj']:
                 #if textobj.get_text() in self._headstring:

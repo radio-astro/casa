@@ -6,6 +6,7 @@ from asap.asaplotbase import *
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backend_bases import FigureManagerBase
+from matplotlib import _pylab_helpers
 
 class asaplot(asaplotbase):
     """
@@ -21,8 +22,11 @@ class asaplot(asaplotbase):
         v = vars()
         del v['self']
         asaplotbase.__init__(self,**v)
+        _pylab_helpers.Gcf.destroy(0)
+        self.window = None
         self.canvas = FigureCanvasAgg(self.figure)
         self.figmgr = FigureManagerBase(self.canvas,1)
+        _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr
 
     def map(self):
         """ This method is not available in non-GUI plotting class"""
