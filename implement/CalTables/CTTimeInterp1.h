@@ -64,8 +64,11 @@ public:
   // Set interpolation type
   void setInterpType(String strtype);
 
-  // Interpolate, given timestamp and freq list; returns T if new result
+  // Interpolate, given timestamp; returns T if new result
   Bool interpolate(Double time);
+
+  // Interpolate, given timestamp and fiducial freq; returns T if new result
+  Bool interpolate(Double newtime, Double freq);
 
   void state(Bool verbose=False);
 
@@ -73,6 +76,9 @@ private:
   
   // Find 
   Bool findTimeRegistration(Int& idx,Bool& exact,Float newtime);
+
+  // 
+  void applyPhaseDelay(Double freq);
 
 
   // The CalTable 
@@ -101,6 +107,10 @@ private:
   // Pointer to the time interpolator
   Interpolate1D<Float,Array<Float> > *tInterpolator_p;
 
+  // Phase-delay correction info
+  Double cfreq_;
+  Cube<Float> cycles_;   // [npar,nchan,ntime]
+  
   // Arrays in which to deposit results
   //  (ordinarily, these (CASA-Array) reference external Arrays)
   Array<Float> result_;
