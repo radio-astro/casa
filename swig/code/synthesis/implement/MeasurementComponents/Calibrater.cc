@@ -1165,8 +1165,8 @@ Calibrater::correct()
 
         // Pass each timestamp (VisBuffer) to VisEquation for correction
         Bool calwt(calWt());
-        map <Int, Bool> uncalspw;	// Used to accumulate error messages
-                                        // instead of bombing the user
+        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+        uncalspw.set(False);		        // instead of bombing the user
                                         // in a loop.
 
         for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
@@ -1175,8 +1175,6 @@ Calibrater::correct()
 
                 uInt spw = vb->spectralWindow();
                 if (ve_p->spwOK(spw)){
-
-                    uncalspw[spw] = false;
 
                     // If we are going to update the weights, reset them first
                     // TBD: move this to VisEquation::correct?
@@ -1211,11 +1209,7 @@ Calibrater::correct()
 
         // Now that we're out of the loop, summarize any errors.
 
-        Vector<Bool> uncalibrated (uncalspw.size(), False);
-        for (int i = 0; i < uncalspw.size(); i++){
-            uncalibrated [i] = uncalspw [i];
-        }
-        retval = summarize_uncalspws(uncalibrated, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct");
     }
     catch (AipsError x) {
         logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
@@ -1566,6 +1560,7 @@ Bool Calibrater::genericGatherAndSolve() {
 
 	// Collapse each timestamp in this chunk according to VisEq
 	//  with calibration and averaging
+	Bool verb(True);
 	for (vi.origin(); vi.more(); vi++) {
 	  
 	  // Force read of the field Id
@@ -1585,6 +1580,16 @@ Bool Calibrater::genericGatherAndSolve() {
 	  // If this solve not freqdep, and channels not averaged yet, do so
 	  if (!svc_p->freqDepMat() && vb.nChannel()>1)
 	    vb.freqAveCubes();
+
+	  if (svc_p->freqDepPar() && 
+	      svc_p->fsolint()!="none" &&
+	      svc_p->fintervalCh()>0.0) {
+	    //	    cout << "svc_p->currSpw() = " << svc_p->currSpw() << endl;
+	    if (verb) cout << "vb.numberChan() = " << vb.nChannel();
+	    vb.channelAve(svc_p->chanAveBounds(spw));
+	    if (verb) cout << "-->" << vb.nChannel() << endl;
+	    verb=False;  // suppress future verbosity
+	  }
 	  
 	  // Accumulate collapsed vb in a time average
 	  //  (only if the vb contains any unflagged data)

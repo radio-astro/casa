@@ -912,10 +912,15 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
-	resizing_region = allocate_region( wc, linx, liny, linx, liny );
 
-	resizing_region_handle = 1;
+	resizing_region = allocate_region( wc, linx, liny, linx, liny );
 	rectangles.push_back( resizing_region );
+
+	if ( type( ) != POINTTOOL )
+	    resizing_region_handle = 1;
+	else
+	    resizing_region = memory::nullptr;
+
 	set(x,y, x,y);
 	moving_regions.clear( );		// ensure that moving state is clear...
     }

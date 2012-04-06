@@ -146,7 +146,7 @@ CTPatchedInterp::~CTPatchedInterp() {
       }
 }
 
-Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time) {
+Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, Double freq) {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...)" << endl;
 
@@ -160,7 +160,10 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time) {
   for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
     // Call fully _patched_ time-interpolator, keeping track of 'newness'
     //  fills timeResult_/timeResFlag_ implicitly
-    newcal|=tI_(iElemOut,spw,fld)->interpolate(time);
+    if (freq>0.0)
+      newcal|=tI_(iElemOut,spw,fld)->interpolate(time,freq);
+    else
+      newcal|=tI_(iElemOut,spw,fld)->interpolate(time);
   }
 
   // Whole result referred to time result:
@@ -439,6 +442,8 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
   Int flparmod=nFPar_/nPar_;    // for indexing the flag Matrices on the par axis
 
+  Bool unWrapPhase=flparmod>1;
+
   //  cout << "nFPar_,nPar_,flparmod = " << nFPar_ << "," << nPar_ << "," << flparmod << endl;
 
   fres=0.0;
@@ -471,6 +476,14 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
       fflgi.set(False);  // none are flagged
       continue;
     }
+
+    if (ifpar%2==1 && unWrapPhase) {
+      for (Int i=1;i<mtresi.nelements();++i) {
+        while ( (mtresi(i)-mtresi(i-1))>C::pi ) mtresi(i)-=C::_2pi;
+        while ( (mtresi(i)-mtresi(i-1))<-C::pi ) mtresi(i)+=C::_2pi;
+      }
+    }
+
 
     // TBD: ensure phases tracked on freq axis...
 

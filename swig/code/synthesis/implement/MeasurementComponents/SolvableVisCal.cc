@@ -93,7 +93,10 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
-  solnorm_(False),
+  fsolint_("none"),
+  fintervalHz_(-1.0),
+  fintervalCh_(vs.numberSpw(),0.0),
+  chanAveBounds_(vs.numberSpw(),Matrix<Int>()),
   minSNR_(0.0f),
   combine_(""),
   focusChan_(0),
@@ -152,6 +155,7 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
+  fsolint_("none"),
   solnorm_(False),
   minSNR_(0.0),
   combine_(""),
@@ -1026,8 +1030,21 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (calTableName().length()==0)
     throw(AipsError("Please specify a name for the output calibration table!"));
 
-  if (solve.isDefined("solint")) 
-    solint()=solve.asString("solint");
+  // Internal default solint 
+  solint()="inf";
+  fsolint()="none";
+  if (solve.isDefined("solint")) {
+    String usolint=solve.asString("solint");
+    if (usolint.contains(',')) {
+      // both time and freq solint specified
+      solint()=usolint.before(',');
+      fsolint()=usolint.after(',');
+    }
+    else
+      // interpret as only time-dep solint
+      solint()=usolint;
+  }
+
 
   // Handle solint format
   if (upcase(solint()).contains("INF") || solint()=="") {
@@ -1042,7 +1059,7 @@ void SolvableVisCal::setSolve(const Record& solve)
     Quantity qsolint;
     qhsolint.fromString(error,solint());
     if (error.length()!=0)
-      throw(AipsError("Unrecognized units for solint."));
+      throw(AipsError("Unrecognized units for time-dep solint."));
     qsolint=qhsolint.asQuantumDouble();
     
     if (qsolint.isConform("s"))
@@ -1050,7 +1067,6 @@ void SolvableVisCal::setSolve(const Record& solve)
     else {
       if (qsolint.getUnit().length()==0) {
 	// when no units specified, assume seconds
-	// assume seconds
 	interval()=qsolint.getValue();
 	solint()=solint()+"s";
       }
@@ -1059,7 +1075,56 @@ void SolvableVisCal::setSolve(const Record& solve)
 	throw(AipsError("Unrecognized units for solint (e.g., use 'min', not 'm', for minutes)"));
     }
   }
-  
+
+  // Handle fsolint format
+  if (upcase(fsolint()).contains("NONE")) {
+    fsolint()="none";
+    fintervalCh_.set(0.0); 
+    fintervalHz_=-1.0;
+  }
+  else {
+    if (!freqDepPar()) 
+      cout << "Ignoring freq-dep solint because " << typeName() << " isn't channel-dependent." << endl;
+    else {
+      // Try to parse it
+      if (upcase(fsolint()).contains("CH")) {
+	String fsolintstr=upcase(fsolint());
+	fintervalCh_.set(String::toDouble(upcase(fsolint()).before("CH")));
+	fintervalHz_=-1.0;  // Don't know in Hz, and don't really care
+	fsolint()=downcase(fsolint());
+      }
+      else {
+	QuantumHolder qhFsolint;
+	String error;
+	qhFsolint.fromString(error,fsolint());
+	if (error.length()!=0)
+	  throw(AipsError("Unrecognized units for freq-dep solint."));
+	Quantity qFsolint;
+	qFsolint=qhFsolint.asQuantumDouble();
+	
+	if (qFsolint.isConform("Hz")) {
+	  fintervalHz_=qFsolint.get("Hz").getValue();
+	  fintervalCh_.set(-1.0);
+	  //	  throw(AipsError("Not able to convert freq-dep solint from Hz to channel yet."));
+	}
+	else {
+	  if (qFsolint.getUnit().length()==0) {
+	    // when no units specified, assume channel
+	    fintervalCh_.set(qFsolint.getValue());
+	    fsolint()=fsolint()+"ch";
+	  }
+	  else
+	    // unrecognized units:
+	    throw(AipsError("Unrecognized units for freq-dep solint"));
+	} // Hz vs. Ch via Quantum
+      } // parse by Quantum
+    } // freqDepPar
+    cout << "Freq-dep solint: " << fsolint() 
+	 << " Ch=" << fintervalCh_ 
+	 << " Hz=" << fintervalHz() 
+	 << endl;
+  } // user set something
+
   if (solve.isDefined("preavg"))
     preavg()=solve.asFloat("preavg");
 
@@ -2204,6 +2269,10 @@ void SolvableVisCal::setSolveChannelization(VisSet& vs) {
     nChanParList() = nDatChan;
     startChanList() = startDatChan;
 
+    // Handle partial freq average
+    if (fsolint()!="none" && (allGT(fintervalCh_,0.0)||fintervalHz_>0.0))
+      setFracChanAve();
+    
     // However, for solving, we will only consider one channel at a time:
     nChanMatList() = 1;
 
@@ -2238,6 +2307,60 @@ void SolvableVisCal::setSolveChannelization(VisSet& vs) {
   //     solve parameters depend (e.g., delay, polynomial bandpass, etc.)
 
 }
+
+void SolvableVisCal::setFracChanAve() {
+
+  // TBD: calculate fintervalCh from fintervalHz
+  MeasurementSet ms(msName());
+  ROMSSpWindowColumns spwcol(ms.spectralWindow());
+
+  //  cout << "setFracChanAve!" << endl;
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    //    cout << "ispw=" << ispw << ":" << endl;
+    //    cout << " nChanData      = " << nChanPar() << endl;
+    //    cout << " startChan()    = " << startChan() << endl;
+    currSpw()=ispw;
+
+    // Calculate channel increment from Hz
+    if (fintervalCh()<0.0 && fintervalHz()>0.0) {
+      Double datawidth=abs(spwcol.chanWidth()(ispw)(IPosition(1,0)));
+      cout << "ispw=" << ispw << " datawidth=" << datawidth << flush;
+      fintervalCh()=floor(fintervalHz()/datawidth);
+      if (fintervalCh()<1.0) fintervalCh()=1.0;
+      cout << " dHz=" << fintervalHz() << " --> " << fintervalCh() << " channels." << endl;
+    }
+
+    Int extrach=nChanPar()%Int(fintervalCh());
+    Int nChanOut=nChanPar()/Int(fintervalCh()) + (extrach > 0 ? 1 : 0);
+
+    //    cout << " fintervalCh()  = " << fintervalCh() << endl;
+    //    cout << " extrach        = " << extrach << endl;
+    //    cout << " nChanOut       = " << nChanOut << endl;
+    
+    chanAveBounds_(ispw).resize(nChanOut,2);
+    Matrix<Int> bounds(chanAveBounds_(ispw));
+    bounds.column(0).set(startChan());
+    bounds.column(1).set(startChan()+Int(fintervalCh()-1));
+    for (Int ochan=1;ochan<nChanOut;++ochan) {
+      Vector<Int> col(bounds.row(ochan));
+      col+=Int(ochan*fintervalCh());
+    }
+    if (extrach>0) bounds(nChanOut-1,1)+=(extrach-Int(fintervalCh()));
+    
+    //    for (int ochan=0;ochan<nChanOut;++ochan) 
+    //      cout << "    ochan="<<ochan<< " bounds=" 
+    //	   << bounds.row(ochan) 
+    //	   << " n=" << bounds(ochan,1)-bounds(ochan,0)+1
+    //	   << endl;
+
+    // Revise nChanPar()
+    nChanPar()=nChanOut;
+  }
+  currSpw()=0;
+  //  cout << "nChanParList() = " << nChanParList() << endl;
+  //  cout << "chanAveBounds_ = " << chanAveBounds_ << endl;
+}
+
 
 
 // Fill the Calset with meta data
@@ -2909,10 +3032,15 @@ void SolvableVisCal::calcPar() {
     //    cout.precision(12);
     //    cout << typeName() << " t="<< currTime() << " newcal=" << boolalpha << newcal << endl;
   }
-  else
-    // Don't bother to include freq
-    // TBD: will include fiducial freq, soon, to support phase delay
-    newcal=ci_->interpolate(currField(),currSpw(),currTime());
+  else {
+    if (parType()==VisCalEnum::COMPLEX)
+      // Call w/ fiducial freq for phase-delay correction
+      // TBD: improve freq spec
+      newcal=ci_->interpolate(currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
+    else
+      // No freq info at all
+      newcal=ci_->interpolate(currField(),currSpw(),currTime());
+  }
 
   // TBD: signal failure to find calibration??  (e.g., for a spw?)
 
@@ -3003,24 +3131,61 @@ void SolvableVisCal::createMemCalTable() {
     currSpw()=ispw;
 
     // MS freqs
-    Vector<Double> chfr;
+    Vector<Double> chfr,chwid,chres,cheff;
     ncc.spectralWindow().chanFreq().get(ispw,chfr);
+    ncc.spectralWindow().chanWidth().get(ispw,chwid);
+    ncc.spectralWindow().resolution().get(ispw,chres);
+    ncc.spectralWindow().effectiveBW().get(ispw,cheff);
 
     Int nchan=0;
-    Vector<Double> calfreq;
+    Vector<Double> calfreq,calwid,calres,caleff;
     if (startChan()>-1 && nChanPar()>0) {
 
       if (freqDepPar()) { 
-	nchan=nChanPar();
-	if (nChanPar()<Int(chfr.nelements()))
-	  calfreq=chfr(Slice(startChan(),nChanPar()));
-	else
-	  calfreq.reference(chfr);
+	if (fsolint()!="none") {
+	  IPosition blc(1,0),trc(1,0);
+	  Matrix<Int> bounds(chanAveBounds());
+	  nchan=bounds.nrow();
+	  calfreq.resize(nchan);
+	  calwid.resize(nchan);
+	  calres.resize(nchan);
+	  caleff.resize(nchan);
+	  cout.precision(12);
+	  for (Int ochan=0;ochan<nchan;++ochan) {
+	    blc(0)=bounds(ochan,0);
+	    trc(0)=bounds(ochan,1);
+	    calfreq(ochan)=mean(chfr(blc,trc));
+	    calwid(ochan)=sum(chwid(blc,trc));
+	    calres(ochan)=sum(chres(blc,trc));
+	    caleff(ochan)=sum(cheff(blc,trc));
+	  }
+	}
+	else {
+	  nchan=nChanPar();
+	  if (nChanPar()<Int(chfr.nelements())) {
+	    calfreq=chfr(Slice(startChan(),nChanPar()));
+	    calwid=chwid(Slice(startChan(),nChanPar()));
+	    calres=chres(Slice(startChan(),nChanPar()));
+	    caleff=cheff(Slice(startChan(),nChanPar()));
+	  }
+	  else {
+	    calfreq.reference(chfr);
+	    calwid.reference(chwid);
+	    calres.reference(chres);
+	    caleff.reference(cheff);
+	  }
+	}
       }
       else {
 	nchan=1;
 	calfreq.resize(1);
+	calwid.resize(1);
+	calres.resize(1);
+	caleff.resize(1);
 	calfreq(0)=mean(chfr(Slice(startChan(),nChanPar())));
+	calwid(0)=sum(chwid(Slice(startChan(),nChanPar())));
+	calres(0)=sum(chres(Slice(startChan(),nChanPar())));
+	caleff(0)=sum(cheff(Slice(startChan(),nChanPar())));
       }
     }
     //    cout << "nchan=" << nchan << " calfreq.nelements() = " << calfreq.nelements() << " " << calfreq << endl;
@@ -3028,7 +3193,11 @@ void SolvableVisCal::createMemCalTable() {
       ncc.spectralWindow().chanFreq().setShape(ispw,IPosition(1,nchan));
       //      cout << "ncc.spectralWindow().chanFreq().shape(ispw)         = " << ncc.spectralWindow().chanFreq().shape(ispw) << endl;
       ncc.spectralWindow().chanFreq().put(ispw,calfreq);
+      ncc.spectralWindow().chanWidth().put(ispw,calwid);
+      ncc.spectralWindow().resolution().put(ispw,calres);  // same as chanWidth, for now
+      ncc.spectralWindow().effectiveBW().put(ispw,caleff);  // same as chanWidth, for now
       ncc.spectralWindow().numChan().put(ispw,nchan);
+      ncc.spectralWindow().totalBandwidth().put(ispw,abs(sum(calwid)));
     }
     else
       ncc.spectralWindow().flagRow().put(ispw,True);
@@ -4846,7 +5015,7 @@ void SolvableVisJones::applyRefAnt() {
     //    cout << "nfalse(fl(1,:,:)) = " << nfalse(fl(blc,trc)) << endl;
 
     // If there are no unflagged solutions in 2nd pol, 
-    //   avoid it is refant calculations
+    //   avoid it in refant calculations
     if (nfalse(fl(blc,trc))==0)
       nPol=1;
   }

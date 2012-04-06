@@ -68,7 +68,7 @@ public:
 
   // Interpolate, given input field, spw, timestamp, & (optionally) freq list
   //    returns T if new result (anywhere)
-  Bool interpolate(Int fld, Int spw, Double time);
+  Bool interpolate(Int fld, Int spw, Double time, Double freq=-1.0);
   Bool interpolate(Int fld, Int spw, Double time, const Vector<Double>& freq);
 
   // Access to the result

@@ -91,7 +91,7 @@ class CalStatsReal : public CalStats {
     CalStatsReal( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
-        const CalStats::AXIS& eAxisIterUser );
+        const CalStats::AXIS& eAxisIterUserID );
 
     // Destructor
     ~CalStatsReal( void );
@@ -145,7 +145,7 @@ class CalStatsAmp : public CalStats {
     CalStatsAmp( const Cube<DComplex>& oValue, const Cube<Double>& oValueErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
-        const CalStats::AXIS& eAxisIterUser, const Bool& bNorm );
+        const CalStats::AXIS& eAxisIterUserID, const Bool& bNorm );
 
     // Destructor
     ~CalStatsAmp( void );
@@ -173,16 +173,22 @@ Description:
 This class converts complex data to phases and initializes the CalStats base
 class.
 
-CalStatsPhase public member functions:
---------------------------------------
+Inhertited classes:
+-------------------
+CalStats - This class calculates statistics of new CASA caltables.
+
+Class public member functions:
+------------------------------
 CalStatsPhase  - This generic constructor converts complex data to amplitudes
-                 and initializes the CalStats base class.  It is primarily used 
-                 for initial testing.
+                 and initializes the CalStats base class.
 ~CalStatsPhase - This destructor deallocates the internal memory of an instance.
 
 CalStatsPhase public static member functions:
 ---------------------------------------------
-unwrap - This member function unwraps the phases.
+unwrapGD     - This member function unwraps the phases along the frequency axis
+               with respect to the group delay.
+unwrapSimple - This member function performs a simple unwrapping procedure for
+               both frequency and temporal abscissae.
 
 CalStatsPhase private static member functions:
 ----------------------------------------------
@@ -196,13 +202,16 @@ maxLocation - This member function finds the abscissa corresponding to the peak
 Modification history:
 ---------------------
 2011 Nov 15 - Nick Elias, NRAO
-              Initial version.  The public member functions are CalStatsPhase()
-              (generic) and ~CalStatsPhase().  The static member function is
-              unwrap().
+              Initial version created with public member functions are
+              CalStatsPhase() and ~CalStatsPhase(); and public static member
+              function is unwrap().
 2012 Mar 27 - Nick Elias, NRAO
               Private static member functions fringePacket2() and maxLocation()
               added. Private static member variables NUM_ITER_UNWRAP and
               NEW_RANGE_FACTOR added.
+2012 Mar 30 - Nick Elias, NRAO
+              Public static member function unwrap() renamed to unwrapGD().
+              Public static member function unwrapSimple() added.
 
 */
 
@@ -216,14 +225,19 @@ class CalStatsPhase : public CalStats {
     CalStatsPhase( const Cube<DComplex>& oValue, const Cube<Double>& oValueErr,
         const Cube<Bool>& oFlag, const Vector<String>& oFeed,
         const Vector<Double>& oFrequency, const Vector<Double>& oTime,
-        const CalStats::AXIS& eAxisIterUser, const Bool& bUnwrap );
+        const CalStats::AXIS& eAxisIterUserID, const Bool& bUnwrap,
+        const Double& dJumpMax );
 
     // Destructor
     ~CalStatsPhase( void );
 
-    // Unwrap member function
-    static void unwrap( Vector<Double>& oPhase,
+    // Group-delay unwrapping member function
+    static void unwrapGD( Vector<Double>& oPhase,
         const Vector<Double>& oFrequency, const Vector<Bool>& oFlag );
+
+    // Simple phase unwrapping member function
+    static void unwrapSimple( Vector<Double>& oPhase, const Double& dJumpMax,
+        const Vector<Bool>& oFlag );
 
   private:
 

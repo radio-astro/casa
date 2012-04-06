@@ -613,6 +613,8 @@ public:
 	String tablename_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
+	std::map< string, std::pair<Int,Int> > baselineToAnt1Ant2_p;
+	std::map< std::pair<Int,Int>, string > Ant1Ant2ToBaseline_p;
 	ROScalarMeasColumn<MPosition> *antennaPositions_p;
 	Vector<Double> *antennaDiameters_p;
 	Vector<String> *fieldNames_p;
