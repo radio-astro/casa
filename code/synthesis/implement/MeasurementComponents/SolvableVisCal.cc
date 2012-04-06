@@ -3032,10 +3032,15 @@ void SolvableVisCal::calcPar() {
     //    cout.precision(12);
     //    cout << typeName() << " t="<< currTime() << " newcal=" << boolalpha << newcal << endl;
   }
-  else
-    // Don't bother to include freq
-    // TBD: will include fiducial freq, soon, to support phase delay
-    newcal=ci_->interpolate(currField(),currSpw(),currTime());
+  else {
+    if (parType()==VisCalEnum::COMPLEX)
+      // Call w/ fiducial freq for phase-delay correction
+      // TBD: improve freq spec
+      newcal=ci_->interpolate(currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
+    else
+      // No freq info at all
+      newcal=ci_->interpolate(currField(),currSpw(),currTime());
+  }
 
   // TBD: signal failure to find calibration??  (e.g., for a spw?)
 
