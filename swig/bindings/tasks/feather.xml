@@ -27,7 +27,7 @@ two images must have the same flux density normalization scale.
 			<description>Name of low resolution (single dish) image</description>
 			<value></value>
 		</param>
-		<param type="double" name="sdscale">
+		<param type="double" name="sdfactor">
 			<description>Scale factor to apply to Single Dish image</description>
 			<value>1.0</value>
 		</param>
@@ -74,7 +74,8 @@ two images must have the same flux density normalization scale.
 	     This image is often a image from a single-dish observations
 	        or a clean image obtained from lower resolution synthesis
 		observations.
-         sdscale -- value by which to scale the Single Dish image. Default is 1.0
+         sdfactor -- value by which to scale the Single Dish image. Default is 1.0
+                         Basically modifying the flux scale of the SD image
 	 effdishdiam -- New effective SingleDish diameter to use in m. Obviously one can only reduce the dish effective dish diameter in feathering. Default -1.0 means leave as is.
 	 showplot -- If True will plot the cuts across the feathring function
 

@@ -280,7 +280,7 @@ vlafillertask::fill(const std::string& msname,
    }
    catch (AipsError x)
    {
-      cerr << x.getMesg() << endl;
+      //cerr << x.getMesg() << endl;
       RETHROW(x);
       return;
    }

@@ -34,7 +34,7 @@ calplot::calplot()
       itsLog = new LogIO();
       itsPlotCal=NULL;
    } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
 }
@@ -45,7 +45,7 @@ calplot::~calplot()
       if(itsLog)
          delete itsLog;
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      // *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
 }
@@ -60,7 +60,7 @@ calplot::close()
      rstat = True;
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -77,7 +77,7 @@ calplot::done()
      rstat = True;
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -97,7 +97,7 @@ calplot::next()
      rstat = itsPlotCal->iterPlotNext();
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -120,7 +120,7 @@ calplot::open(const std::string& caltable)
 
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -141,7 +141,7 @@ calplot::plot(const std::string& xaxis,
      rstat = itsPlotCal->plot(String(xaxis),String(yaxis));
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       //Catching an exception here leaves itsPlotCal in a very funny state
       //  that often causes segv on deletion
       //  better to leak it than crash
@@ -173,7 +173,7 @@ calplot::savefig( const std::string& filename,
 		   String( orientation ), String( papertype ), 
 		   String( facecolor ), String( edgecolor ) );
     } catch ( casa::AipsError x ) {
-	*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+//	*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
       rstat = casa::False;
     }
@@ -204,7 +204,7 @@ calplot::plotoptions(const int subplot,
 				      plotsymbol,plotcolor,markersize,fontsize);
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -219,7 +219,7 @@ bool calplot::markflags(const int panel, const std::vector<double>& region){
 
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -237,7 +237,7 @@ bool calplot::flagdata(){
     rstat = itsPlotCal->flagData(FLAG);
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -256,7 +256,7 @@ bool calplot::locatedata(){
     rstat = itsPlotCal->locateData();
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -286,7 +286,7 @@ calplot::selectcal(const ::casac::variant& antenna,
     rstat=True;
     
   } catch (AipsError x) {
-    *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -303,7 +303,7 @@ calplot::stopiter( const bool rmplotter )
      rstat = itsPlotCal->iterPlotStop( rmplotter );
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;
@@ -319,7 +319,7 @@ calplot::clearplot(const int subplot)
      rstat = itsPlotCal->clearPlot(subplot);
    } catch (AipsError x)
    {
-      *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
    }
    return rstat;

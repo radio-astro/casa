@@ -5,7 +5,7 @@ import time
 import numpy as np
 from cleanhelper import *
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False):
         self.im=imtool.create()
         self.imperms={}
         self.dc=dctool.create()
@@ -31,7 +31,7 @@ class imagecont():
         self.visInMem=False
         self.painc=360.0
         self.pblimit=0.1
-        self.dopbcorr=True
+        self.dopbcorr=False
         self.novaliddata={}
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
@@ -44,7 +44,18 @@ class imagecont():
         self.baselines=baselines
         self.scan=scan
         self.observation=observation
+        self.pbcorr=pbcorr
 
+    def setextraoptions(self, im, cyclefactor=1.5, fluxscaleimage='', scaletype='SAULT'):
+        if(self.ft=='mosaic'):
+            im.setmfcontrol(scaletype='SAULT', fluxscale=[fluxscaleimage], 
+                            cyclefactor=cyclefactor)
+        else:
+            im.setmfcontrol(cyclefactor=cyclefactor, scaletype=scaletype)
+        if(self.pbcorr):
+            im.setvp(True)
+            im.setmfcontrol(scaletype='NONE', cyclefactor=cyclefactor)
+            
     def setparamcont(self, im, freq, band, singleprec=False):
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
                        celly=self.cell[1], phasecenter=self.phCen, mode='frequency', 
@@ -55,7 +66,8 @@ class imagecont():
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, 
                       pastep=self.painc, pblimit=self.pblimit, 
                       cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, 
-                      applypointingoffsets=self.applyoffsets, imagetilevol=self.imagetilevol,
+                      applypointingoffsets=self.applyoffsets, 
+                      imagetilevol=self.imagetilevol,
                        singleprecisiononly=singleprec, numthreads=self.numthreads)
 
     def imagecontmultims(self, msnames=[''], start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
@@ -138,7 +150,7 @@ class imagecont():
         #imname=imname+'_%02d'%(j)               
             self.setparamcont(im, freq, band)
             if(self.ft=='mosaic'):
-                im.setmfcontrol(scaletype='SAULT', fluxscale=[imname+'.flux'])
+                self.setextraoptions(im,  fluxscaleimage=imname+'.flux', scaletype='SAULT')
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
         self.makecontimage(im, self.novaliddata[msname], imname)
@@ -277,7 +289,7 @@ class imagecont():
        
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
-        im.setmfcontrol(cyclefactor=0.0)  
+        self.setextraoptions(im, cyclefactor=0.0)
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
             im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
@@ -297,6 +309,7 @@ class imagecont():
         origname=msname
         ia.open(imroot+'.model')
         csys=ia.coordsys()
+        ia.done()
         fstart=csys.toworld([0,0,0,imchan*chanchunk],'n')['numeric'][3]
         fstep=csys.toworld([0,0,0,imchan*chanchunk+1],'n')['numeric'][3]-fstart
         fend=fstep*(chanchunk-1)+fstart
@@ -326,7 +339,7 @@ class imagecont():
        
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
-        im.setmfcontrol(cyclefactor=0.0)  
+        self.setextraoptions(im, cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         try:
             
@@ -360,7 +373,7 @@ class imagecont():
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
-        im.setmfcontrol(cyclefactor=0.0)  
+        self.setextraoptions(im, cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
             im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', 

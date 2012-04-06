@@ -60,7 +60,7 @@
 			<value>False</value>
 		</param>
 		<param type="bool" name="usescratch">
-			<description>Add to the existing model visibility?</description>
+			<description>If True predicted  visibility  is stored in MODEL_DATA column</description>
 			<value>False</value>
 		</param>	
 
@@ -117,9 +117,10 @@
        incremental -- Add model visibility to the existing model visibilties stored in the MS
                default: False; example: incremental=True
        usescratch  -- if True model visibilities will be stored in the scratch column 
-                            MODEL_SATA; when false the moedl visibilities will be generated 
-                            on the fly (this mode saves 1/3 of the disk space). 
-                            default: True; example default=False
+                            MODEL_DATA; when false the model visibilities will be generated 
+                            on the fly (this mode may save some disk space equivalent to 
+			    the volume of the observed data). 
+                            default: False; example usescratch=True
 
 
      

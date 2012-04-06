@@ -209,7 +209,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           if(self.__globals__.has_key('__rethrow_casa_exceptions') and self.__globals__['__rethrow_casa_exceptions']) :
              raise
           else :
-             print '**** Error **** ',instance
+             #print '**** Error **** ',instance
+             pass
 </xsl:text>
 <xsl:for-each select="aps:output">
    <xsl:call-template name="checkoutput"/>

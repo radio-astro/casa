@@ -93,7 +93,7 @@ ms::ms()
      itsFlag = new MSFlagger();
      itsMSS = new MSSelection();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -109,7 +109,7 @@ ms::~ms()
     if(itsLog)          {delete itsLog; itsLog=NULL;}
     if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -201,8 +201,7 @@ bool ms::ismultims()
       rstat = (itsMS->tableInfo().subType() == "CONCATENATED");
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -225,8 +224,7 @@ std::vector<std::string> ms::getreferencedtables()
 
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -246,7 +244,7 @@ ms::nrow(const bool selected)
            rstat = itsSel->nrow();
      }
   } catch (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -262,7 +260,7 @@ ms::iswritable()
     rstat = ready2write_();
   }
   catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -307,7 +305,7 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
      itsSel->setMS(*itsMS);
      itsFlag->setMSSelector(*itsSel);
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -331,7 +329,7 @@ ms::reset()
     }
   catch (AipsError x) 
     {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       Table::relinquishAutoLocks(True);
       RETHROW(x);
     }
@@ -372,9 +370,11 @@ try {
    if(dummy)
       rstat=true;
       */
+
+
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -398,7 +398,7 @@ ms::fromfitsidi(const std::string& msfile, const std::string &fitsidifile, const
     
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -429,7 +429,7 @@ ms::close()
       rstat = True;
     }
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -446,7 +446,7 @@ ms::name()
          rstat = itsOriginalMS->tableName();
       }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -555,7 +555,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	   delete mssel;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -633,7 +633,7 @@ ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
        }
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -658,8 +658,7 @@ ms::getscansummary(::casac::record& scansummary)
       rstat = True;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -684,8 +683,7 @@ ms::getspectralwindowinfo(::casac::record& spwSummary)
       rstat = True;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -706,7 +704,7 @@ ms::listhistory()
        rstat = True;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -738,7 +736,7 @@ ms::writehistory(const std::string& message, const std::string& parms, const std
        rstat = True;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -757,7 +755,7 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
           retval = fromRecord(msrange.range(toVectorString(items), useflags, False));
        }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1214,7 +1212,7 @@ ms::statistics(const std::string& column,
          }
        } // end if !detached
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1252,7 +1250,7 @@ ms::lister(const std::string& options,
 	     showflags, msselect, pagerows, listfile);
     rstat = True;
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1281,7 +1279,7 @@ ms::selectinit(const int datadescid, const bool reset)
        }
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1300,7 +1298,7 @@ ms::select(const ::casac::record& items)
         delete myTmp;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1316,7 +1314,7 @@ ms::selecttaql(const std::string& msselect)
      if(!detached())
        retval = itsSel->select(msselect);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1332,7 +1330,7 @@ ms::selectchannel(const int nchan, const int start, const int width, const int i
      if(!detached())
        retval = itsSel->selectChannel(nchan, start, width, inc);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1348,7 +1346,7 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
     if(!detached())
        retval = itsSel->selectPolarization(toVectorString(wantedpol));
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -1451,7 +1449,7 @@ ms::regridspw(const std::string& outframe,
      delete subms;
 
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -1806,7 +1804,7 @@ ms::cvel(const std::string& mode,
     if(sms){
       delete sms;
     }
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2037,7 +2035,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     } // end if !detached
 
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -2073,7 +2071,7 @@ ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int
      if(!detached())
          retval = fromRecord(itsSel->getData(toVectorString(items), ifraxis, ifraxisgap, increment, average, False)); 
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2092,7 +2090,7 @@ ms::putdata(const ::casac::record& items)
         delete myTmp;
      }
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -2156,8 +2154,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	}
 	rstat = True;
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		<< LogIO::POST;
+	//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	Table::relinquishAutoLocks(True);
 	RETHROW(x);
     }
@@ -2214,8 +2211,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	}
 	rstat = True;
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		<< LogIO::POST;
+	//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	Table::relinquishAutoLocks(True);
 	RETHROW(x);
     }
@@ -2277,7 +2273,7 @@ ms::timesort(const std::string& msname)
 	}
 	
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	Table::relinquishAutoLocks(True);
 	RETHROW(x);
     }
@@ -2365,7 +2361,7 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
     rstat = True;
   }
   catch (AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2438,7 +2434,7 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
     rstat = True;
   }
   catch(AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2522,7 +2518,7 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
 
     rstat = True;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2592,7 +2588,7 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
    
     rstat = True;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2614,8 +2610,7 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
                                   adddefaultsortcolumns);
      }
    } catch (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-             << LogIO::POST;
+     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      Table::relinquishAutoLocks(True);
      RETHROW(x);
    }
@@ -2631,7 +2626,7 @@ ms::iterorigin()
       if(!detached())
           rstat =  itsSel->iterOrigin();
    } catch (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2647,7 +2642,7 @@ ms::iternext()
       if(!detached())
           rstat =  itsSel->iterNext();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2663,7 +2658,7 @@ ms::iterend()
       if(!detached())
          rstat =  itsSel->iterEnd();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2755,8 +2750,7 @@ ms::fillbuffer(const std::string& item, const bool ifraxis)
      if(!detached())
         rstat =  itsFlag->fillDataBuffer(item, ifraxis);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2776,8 +2770,7 @@ ms::diffbuffer(const std::string& direction, const int window)
         retval = fromRecord(daRec);
 	}
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2793,8 +2786,7 @@ ms::getbuffer()
    if(!detached())
       retval = fromRecord(itsFlag->getDataBuffer());
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
  }
@@ -2809,7 +2801,7 @@ ms::clipbuffer(const double pixellevel, const double timelevel, const double cha
      if(!detached())
         rstat =  itsFlag->clipDataBuffer(pixellevel, timelevel, channellevel);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2828,7 +2820,7 @@ ms::setbufferflags(const ::casac::record& flags)
        delete myTmp;
     }
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -2845,7 +2837,7 @@ ms::writebufferflags()
      if(!detached())
         rstat =  itsFlag->writeDataBufferFlags();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2861,8 +2853,7 @@ ms::clearbuffer()
      if(!detached())
         rstat =  itsFlag->clearDataBuffer();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2893,8 +2884,7 @@ bool ms::continuumsub(const ::casac::variant& field,
     *itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;  
     rstat = True;
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
  }
@@ -2935,7 +2925,7 @@ ms::detached()
        rstat = True;
      }
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
   }
@@ -3014,7 +3004,7 @@ ms::hanningsmooth(const std::string& datacolumn)
 
      rstat = True;
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -3046,8 +3036,7 @@ ms::uvsub(Bool reverse)
      rstat = True;
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -3192,8 +3181,7 @@ ms::moments(const std::vector<int>& moments,
      }
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }

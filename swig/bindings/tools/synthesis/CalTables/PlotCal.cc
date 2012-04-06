@@ -67,6 +67,7 @@
 #include <tools/synthesis/CalTables/PlotCal.h>
 #include <tools/synthesis/CalTables/PlotCalHooks.h>
 #include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTInterface.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
@@ -363,7 +364,6 @@ Bool PlotCal::selectCal(const String& antenna,
 	condition=condition && tab_p.col(col).in(fldId);
     }
     if(spwSel){
-
       String col=CDIcol();
       Vector<Int> caldescids=getCalDescIds(spwId);
 
@@ -435,6 +435,7 @@ Bool PlotCal::selectCal(const String& antenna,
 	throw(AipsError("Combined selection selects nothing."));
 	return False;
       }
+
     }
   }
   else 
@@ -705,6 +706,8 @@ void PlotCal::getAxisTaQL(const String& axis,
     }
   }
   
+  //  cout << axis << " " << taql << " " << label << endl;
+
 }
 
 
@@ -919,7 +922,7 @@ Bool PlotCal::doPlot(){
 
       if (xAxis_p.contains("PARANG"))
 	itsPlotOptions.Convert= new PlotCalParang(fldlist_p);
-      
+
       tp_p->setTableT(vt,tabnames,dummysel);
       tp_p->checkInputs(itsPlotOptions,plotTaQL_p,iterAxes);
       tp_p->plotData(itsPlotOptions, plotTaQL_p);
@@ -1472,11 +1475,58 @@ Int PlotCal::multiTables(const Table& tablein,
 
   }
 
-
-
   // Interpret antenna indices (via MSSelection)
   Vector<Int> PlotCal::getAntIdx(const String& antenna) {
-    
+
+    if (isNCT_p) {
+      
+      if (antenna.length()<1) return Vector<Int>();
+
+      CTInterface cti(ct_p);
+      MSSelection mss;
+      mss.setAntennaExpr(antenna);
+      mss.toTableExprNode(&cti);
+
+      // Handle baseline-based types
+      if (calType_p=="M" || calType_p=="MF" || calType_p=="A") {
+
+	// Form the baseline list (which selects from ANTENNA1, currently
+
+	// Punt if given too complex specification
+	if (antenna.contains(";")) 
+	  throw(AipsError("Antenna/baseline selection only supports single expressions (don't use ;)"));
+
+	Int nAnt=ct_p.antenna().nrow();
+
+	Vector<Int> a1=mss.getAntenna1List();
+	Vector<Int> a2=mss.getAntenna2List();
+	Vector<Int> bllist;
+	Int nbl=0;
+	Int i,j;
+	for (uInt ii=0;ii<a1.nelements();++ii) {
+	  for (uInt jj=0;jj<a2.nelements();++jj) {
+	    if (a1(ii)>a2(jj)) {
+	      j=a1(ii);
+	      i=a2(jj);
+	    }
+	    else {
+	      i=a1(ii);
+	      j=a2(jj);
+	    }
+	    bllist.resize(nbl+1,True);
+	    bllist(nbl)=(i+1)*(i+2)/2 + (nAnt-i-1)*i + j-i-1;
+	    ++nbl;
+	  }
+	}
+	return bllist;
+      }
+      else {
+	// Antenna-based case is easy
+	return mss.getAntenna1List();
+      }
+    }
+    else {
+
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
       MSSelection mssel;
@@ -1525,12 +1575,26 @@ Int PlotCal::multiTables(const Table& tablein,
     else {
       return Vector<Int>();
     }
+    } // NCT or old
 
   }
 
   // Interpret field indices (MSSelection)
   Vector<Int> PlotCal::getFieldIdx(const String& field) {
-    
+
+    if (isNCT_p) {
+
+      if (field.length()<1) return Vector<Int>();
+
+      CTInterface cti(ct_p);
+      MSSelection mss;
+      mss.setFieldExpr(field);
+      mss.toTableExprNode(&cti);
+
+      return mss.getFieldList();
+    }
+    else {
+
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
       MSSelection mssel;
@@ -1540,11 +1604,29 @@ Int PlotCal::multiTables(const Table& tablein,
     else {
       return Vector<Int>();
     }
-    
+    } // NCT or old    
   }
 
   // Get cal_desc indices (via MSSelection on spws)
   Vector<Int> PlotCal::getSpwIdx(const String& spw, Matrix<Int>& chanId) {
+
+    if (isNCT_p) {
+
+      if (spw.length()<1) return Vector<Int>();
+
+      CTInterface cti(ct_p);
+      MSSelection mss;
+      mss.setSpwExpr(spw);
+      mss.toTableExprNode(&cti);
+
+
+      if ((calType_p == "B") || (calType_p == "BPOLY")) {
+	chanId.resize();
+	chanId=mss.getChanList();
+      }
+      return mss.getSpwList();
+    }
+    else {
 
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
@@ -1565,6 +1647,8 @@ Int PlotCal::multiTables(const Table& tablein,
     else {
       return Vector<Int>();
     }
+
+    } // NCT or old
 
   }
 
