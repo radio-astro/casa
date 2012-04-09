@@ -1,7 +1,8 @@
 import os
 from taskinit import *
 
-def feather(imagename=None,highres=None,lowres=None, sdscale=None, effdishdiam=None, showplot=None):
+
+def feather(imagename=None,highres=None,lowres=None, sdfactor=None, effdishdiam=None, showplot=None):
 	""" Feathering: Combine two images using the Fourier Addition:
 	
 	The algorithm converts each image to the gridded visibility
@@ -30,7 +31,7 @@ def feather(imagename=None,highres=None,lowres=None, sdscale=None, effdishdiam=N
 	try:
 		imFea=imtool.create()
 		imFea.setvp(dovp=True)
-		imFea.setsdoptions(scale=sdscale)
+		imFea.setsdoptions(scale=sdfactor)
 		imFea.feather(image=imagename,highres=highres,lowres=lowres, effdishdiam=effdishdiam,  showplot=showplot)
 		imFea.done()
 		del imFea
