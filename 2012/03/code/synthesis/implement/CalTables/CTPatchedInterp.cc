@@ -146,7 +146,7 @@ CTPatchedInterp::~CTPatchedInterp() {
       }
 }
 
-Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time) {
+Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time, Double freq) {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...)" << endl;
 
@@ -160,7 +160,10 @@ Bool CTPatchedInterp::interpolate(Int fld, Int spw, Double time) {
   for (Int iElemOut=0;iElemOut<nElemOut_;++iElemOut) {
     // Call fully _patched_ time-interpolator, keeping track of 'newness'
     //  fills timeResult_/timeResFlag_ implicitly
-    newcal|=tI_(iElemOut,spw,fld)->interpolate(time);
+    if (freq>0.0)
+      newcal|=tI_(iElemOut,spw,fld)->interpolate(time,freq);
+    else
+      newcal|=tI_(iElemOut,spw,fld)->interpolate(time);
   }
 
   // Whole result referred to time result:

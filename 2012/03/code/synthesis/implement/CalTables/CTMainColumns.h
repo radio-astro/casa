@@ -81,6 +81,12 @@ class ROCTMainColumns
   //   what can be: "","AP"
   Array<Float> fparamArray(String what="",const Vector<uInt>& rows=Vector<uInt>());
   void fparamArray(Array<Float>& arr,String what="",const Vector<uInt>& rows=Vector<uInt>());
+
+  // Some additional methods to extract phase-like info
+  Array<Float> phase();
+  void phase(Array<Float>& ph);
+  Array<Float> cycles();
+  void cycles(Array<Float>& cy);
   
  protected:
   // Prohibit public use of the null constructor, which
