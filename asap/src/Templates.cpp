@@ -35,14 +35,9 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/CountedPtr.h>
 
-template class casa::CountedConstPtr<asap::Scantable>;
+//template class casa::CountedConstPtr<asap::Scantable>;
 template class casa::CountedPtr<asap::Scantable>;
 template class casa::CountedPtr<asap::STPol>;
-template class casa::PtrRep<asap::Scantable>;
-template class casa::SimpleCountedConstPtr<asap::Scantable>;
-template class casa::SimpleCountedConstPtr<asap::STPol>;
-template class casa::SimpleCountedPtr<asap::Scantable>;
-template class casa::SimpleCountedPtr<asap::STPol>;
 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>

@@ -27,7 +27,7 @@
 
 #include <measures/Measures/MDirection.h>
 
-#include <MathUtils.h>
+#include "MathUtils.h"
 #include <atnf/PKSIO/SrcType.h>
 
 #include "STGrid.h"

@@ -85,3 +85,7 @@ def page(message):
         return None
     else:
         return message
+
+def toggle_verbose():
+    from asap import rcParams
+    rcParams['verbose'] = not bool(rcParams['verbose'])
