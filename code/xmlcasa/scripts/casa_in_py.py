@@ -8,6 +8,10 @@ import commands
 from get_user import get_user
 
 try:
+    import asap as sd
+except ImportError, e:
+    print "failed to load asap:\n", e
+try:
     import casac
 except ImportError, e:
     print "failed to load casa:\n", e
@@ -207,21 +211,27 @@ from partition_pg import partition_pg as partition
 ## asap may not be available with every casa installation
 ##
 try:
-    x=1
-#    from sdcoadd_pg import sdcoadd_pg as sdcoadd
-#    from sdscale_pg import sdscale_pg as sdscale 
-#    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
-#    from sdlist_pg import sdlist_pg as sdlist
-#    from sdfit_pg import sdfit_pg as sdfit
-#    from sdbaseline_pg import sdbaseline_pg as sdbaseline
-#    from sdstat_pg import sdstat_pg as sdstat
-#    from sdsave_pg import sdsave_pg as sdsave
-#    from sdflag_pg import sdflag_pg as sdflag
-#    from sdcal_pg import sdcal_pg as sdcal
-#    from sdplot_pg import sdplot_pg as sdplot
-#    from sdsmooth_pg import sdsmooth_pg as sdsmooth
-#    from sdreduce_pg import sdreduce_pg as sdreduce
-except ImportError:
+    #import asap as sd
+    from sdbaseline_pg import sdbaseline_pg as sdbaseline
+    from sdcal_pg import sdcal_pg as sdcal
+    from sdcoadd_pg import sdcoadd_pg as sdcoadd
+    from sdflag_pg import sdflag_pg as sdflag
+    from sdflagmanager_pg import sdflagmanager_pg as sdflagmanager
+    from sdfit_pg import sdfit_pg as sdfit
+    from sdgrid_pg import sdgrid_pg as sdgrid
+    from sdimaging_pg import sdimaging_pg as sdimaging
+    from sdimprocess_pg import sdimprocess_pg as sdimprocess
+    from sdlist_pg import sdlist_pg as sdlist
+    from sdmath_pg import sdmath_pg as sdmath
+    from sdplot_pg import sdplot_pg as sdplot
+    from sdreduce_pg import sdreduce_pg as sdreduce
+    from sdsave_pg import sdsave_pg as sdsave
+    from sdscale_pg import sdscale_pg as sdscale 
+    from sdsmooth_pg import sdsmooth_pg as sdsmooth
+    from sdstat_pg import sdstat_pg as sdstat
+    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
+except ImportError, e:
+    print "failed to load ASAP:\n", e
     sdcoadd = None
     sdscale = None
     sdtpimaging = None

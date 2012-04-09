@@ -39,7 +39,7 @@ lightflagger::lightflagger()
       lightflagger_p = new LightFlagger();
 	
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 
@@ -51,7 +51,7 @@ lightflagger::~lightflagger()
     {
         done();
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -66,7 +66,7 @@ lightflagger::open(const std::string& msname)
 	}
         return lightflagger_p->attach(String(msname));
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -92,7 +92,7 @@ lightflagger::setdata(
         }
 	return false;
     } catch (AipsError x) {
-	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -111,7 +111,7 @@ lightflagger::getparameters(const std::string& algorithm)
         }
         return rstat;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -128,7 +128,7 @@ lightflagger::setparameters(const std::string& algorithm, const ::casac::record&
         }
         return false;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -145,7 +145,7 @@ lightflagger::run(const ::casac::record& parameters)
         }
         return rstat;
     } catch (AipsError x) {
-        *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
         RETHROW(x);
     }
 }
@@ -162,7 +162,7 @@ lightflagger::done()
         }
         return true;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -178,7 +178,7 @@ lightflagger::saveflagversion(const std::string& versionname, const std::string&
         }
         return False;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -197,7 +197,7 @@ lightflagger::restoreflagversion(const std::vector<std::string>& versionname, co
         }
         return False;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -216,7 +216,7 @@ lightflagger::deleteflagversion(const std::vector<std::string>& versionname)
         }
         return False;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -240,7 +240,7 @@ lightflagger::getflagversionlist(const bool printflags)
         }
         return result;
     } catch (AipsError x) {
-            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
