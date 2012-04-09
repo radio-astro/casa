@@ -62,6 +62,8 @@ CTTimeInterp1::CTTimeInterp1(NewCalTable& ct,
   domain_(2,0.0),
   flaglist_(),
   tInterpolator_p(NULL),
+  cfreq_(-1.0),
+  cycles_(),
   result_(),
   rflag_()
 {
@@ -89,6 +91,19 @@ CTTimeInterp1::CTTimeInterp1(NewCalTable& ct,
   //  TBD:  f(par) (because flags may be different for each par...)
   tInterpolator_p = new Interpolate1D<Float,Array<Float> >();
   setInterpType(timeType_);
+
+  // Get fiducial frequency
+
+  // Get cycles, if nec.
+  if (timetype.contains("PD")) {
+    Int spw=mcols_p->spwId()(0);
+    MSSpWindowColumns spwcol(ct_.spectralWindow());
+    Int nChan=spwcol.numChan()(spw);
+    cfreq_=Vector<Double>(spwcol.chanFreq()(spw))(nChan/2);
+    //cout << "cfreq_ = " << cfreq_ << endl;
+    mcols_p->cycles(cycles_);
+    //cout << "ant = " << mcols_p->antenna1()(0) << ":  cycles_ = " << cycles_ << endl;
+  }
 
   // Reference supplied arrays for results
   //  Elsewhere, must always use strict (non-shape-changing) assignment for these!
@@ -133,7 +148,7 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   // Update interpolator coeffs if new registr. and not nearest
   if (newReg || (!exact && lastWasExact_)) {
     // Only bother if not 'nearest' nor exact...
-    if (timeType()!="nearest" && !exact) { 
+    if (!timeType().contains("nearest") && !exact) { 
       ScalarSampledFunctional<Float> xf(timelist_(Slice(newIdx,2)));
       Vector<uInt> rows(2); indgen(rows); rows+=uInt(newIdx);
       Array<Float> ya(mcols_p->fparamArray("",rows));
@@ -143,11 +158,11 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
   }
   else
     // Escape if registration unchanged and 'nearest' or exact
-    if (timeType()=="nearest" || exact) return False;  // no change
+    if (timeType().contains("nearest") || exact) return False;  // no change
 
   // Now calculate the interpolation result
 
-  if (timeType()=="nearest" || exact) {
+  if (timeType().contains("nearest") || exact) {
     if (CTTIMEINTERPVERB1) cout << " nearest or exact" << endl;
     Cube<Float> r(mcols_p->fparamArray("",Vector<uInt>(1,newIdx)));
     result_=r.xyPlane(0);
@@ -167,6 +182,17 @@ Bool CTTimeInterp1::interpolate(Double newtime) {
 
   return True;
  
+}
+
+Bool CTTimeInterp1::interpolate(Double newtime, Double freq) {
+
+  Bool newcal=this->interpolate(newtime);
+
+  if (newcal && timeType().contains("PD"))
+    applyPhaseDelay(freq);
+
+  return newcal;
+
 }
 
 void CTTimeInterp1::state(Bool verbose) {
@@ -190,11 +216,11 @@ void CTTimeInterp1::state(Bool verbose) {
 void CTTimeInterp1::setInterpType(String strtype) {
   timeType_=strtype;
   currTime_=-999.0; // ensure force refreshed calculation
-  if (strtype=="nearest") {
+  if (strtype.contains("nearest")) {
     tInterpolator_p->setMethod(Interpolate1D<Float,Array<Float> >::nearestNeighbour);
     return;
   }
-  if (strtype=="linear") {
+  if (strtype.contains("linear")) {
     tInterpolator_p->setMethod(Interpolate1D<Float,Array<Float> >::linear);
     return;
   }
@@ -239,7 +265,7 @@ Bool CTTimeInterp1::findTimeRegistration(Int& idx,Bool& exact,Float newtime) {
       if (idx>0) idx--;
 
       // If nearest, fine-tune slot to actual nearest:
-      if ( timeType()=="nearest" ) {
+      if ( timeType().contains("nearest") ) {
 	//        exact=True;   // Nearest behaves like exact match
         if (idx!=(ntime-1) && 
             (timelist_(idx+1)-newtime) < (newtime-timelist_(idx)) )
@@ -256,5 +282,19 @@ Bool CTTimeInterp1::findTimeRegistration(Int& idx,Bool& exact,Float newtime) {
 
 }
 
+void CTTimeInterp1::applyPhaseDelay(Double freq) {
+
+  if (freq>0.0) {
+    IPosition blc(2,1,0),trc(result_.shape()-1),stp(2,2,1);
+    Matrix<Float> rph(result_(blc,trc,stp));
+    if (cfreq_>0.0) {
+      rph+=cycles_.xyPlane(currIdx_);
+      rph*=Float(freq/cfreq_);
+    }
+  }
+  else
+    throw(AipsError("CTTimeInterp1::applyPhaseDelay: invalid frequency."));
+
+}
 
 } //# NAMESPACE CASA - END

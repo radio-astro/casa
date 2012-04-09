@@ -155,6 +155,8 @@ calibrations can be applied on the fly.
 		<allowed kind="enum">
 			<value>nearest</value>
 			<value>linear</value>
+			<value>nearestPD</value>
+			<value>linearPD</value>
                         <value>nearest,nearest</value>
 			<value>linear,nearest</value>
 			<value>nearest,linear</value>
@@ -163,6 +165,10 @@ calibrations can be applied on the fly.
 			<value>linear,cubic</value>
 			<value>nearest,spline</value>
 			<value>linear,spline</value>
+			<value>,nearest</value>
+			<value>,linear</value>
+			<value>,cubic</value>
+			<value>,spline</value>
 			<value></value>
 		</allowed>
 	</param>
@@ -382,6 +388,9 @@ calibrations can be applied on the fly.
                 types with a comma (freq _after_ the comma).                
                 Specifications for frequency are ignored when the
                 calibration table has no channel-dependence.
+                Time-dependent interp options ending in 'PD' enable a
+                "phase delay" correction per spw for non-channel-dependent
+                calibration types.
                 default: '' --&gt; 'linear,linear' for all gaintable(s)
                 example: interp='nearest'   (in time, freq-dep will be
                                              linear, if relevant)

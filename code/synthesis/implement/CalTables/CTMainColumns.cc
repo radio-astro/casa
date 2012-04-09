@@ -28,6 +28,7 @@
 
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <synthesis/CalTables/RIorAParray.h>
+#include <casa/Arrays/ArrayMath.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -134,6 +135,34 @@ void ROCTMainColumns::fparamArray(Array<Float>& arr,String what,const Vector<uIn
     return;
   }
 }
+
+Array<Float> ROCTMainColumns::phase() {
+  Array<Float> ph;
+  this->phase(ph);
+  return ph;
+}
+
+void ROCTMainColumns::phase(Array<Float>& ph) {
+  if (!cparam().isNull()) 
+    ph.assign(casa::phase(cparam().getColumn()));
+  else
+    throw(AipsError("ROCTMainColumns cannot extract phase without CPARAM column."));
+}
+
+Array<Float> ROCTMainColumns::cycles() {
+  Array<Float> c;
+  this->cycles(c);
+  return c;
+}
+
+void ROCTMainColumns::cycles(Array<Float>& cy) {
+  this->phase(cy);    // Extract phase
+  cy+=Float(C::pi);   // add a half-cycle
+  cy/=Float(C::_2pi); // divide by rad/cycle
+  cy=floor(cy);       // integer part is cycles
+  cy*=Float(C::_2pi); // in radians
+}
+
 
 //----------------------------------------------------------------------------
 
