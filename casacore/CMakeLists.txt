@@ -23,22 +23,6 @@ option (USE_FFTW3 "" YES)
 option (USE_THREADS "" NO)
 option (ENABLE_MULTI_THREADING "" NO)
 
-# Enables support for thread neutral implmentations.
-# This includes using boost::shared_ptr in the implementation of
-# CountedPtr and a boost::recursive_mutex in MeasFrame.cc.  These
-# implmentation should allow threads to shared casacore objects
-# between just as they would be able to using normal C++ pointers.  
-# N.B.: this does not make such sharing thread-safe but merely
-# prevents potential thread collisions using the two smart-pointer
-# implementations.  
-#
-# Finds the needed boost libraries in the casa package area and
-# adds the associated include directories to the compiles and
-# links.  Also defines CASA_THREAD_NEUTRAL and USE_BOOST_SHARED_PTR
-# symbols in the compilation flags.
-
-option (CASA_THREAD_NEUTRAL "" NO) 
-
 # Define the compiler flags to be used.
 # Note: -Wshadow and -Wunreachable-code give (too) many warnings.
 # Casacore uses longlong, so no warnings for it.
@@ -63,6 +47,26 @@ if (HDF5_ROOT_DIR)
     set (ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
 endif (HDF5_ROOT_DIR)
 
+##################################################
+#
+# NRAO/ALMA Thread Neutrality handling
+#
+
+include (ThreadNeutral OPTIONAL RESULT_VARIABLE foundIt)
+
+if (foundIt STREQUAL NOTFOUND)
+
+    configure_file (casa/Utilities/CasaThreadNeutrality.h.in
+                    ${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h)
+
+endif (foundIt STREQUAL NOTFOUND)
+
+#
+# end {NRAO/ALMA Thread Neutrality handling}
+#
+##################################################
+
+
 #################################
 #
 # Find out which modules to build.
@@ -75,10 +79,6 @@ set (_usebison NO)
 set (_uselapack NO)
 set (_usefits NO)
 set (_usewcs NO)
-#
-# NRAO/ALMA thread neutral build
-#
-include (ThreadNeutral RESULT_VARIABLE foundit)
 set (_modules casa)
 if (NOT ${MODULE} STREQUAL "casa")
     set (_modules ${_modules} tables)
@@ -211,5 +211,5 @@ message (STATUS "WCS library? .......... = ${WCSLIB_LIBRARIES}")
 message (STATUS "CFitsio library? ...... = ${CFITSIO_LIBRARIES}")
 message (STATUS "HDF5 library? ......... = ${HDF5_hdf5_LIBRARY}")
 message (STATUS "FFTW3 library? ........ = ${FFTW3_LIBRARIES}")
-message (STATUS "CASA Thread Neutrality. = ${CASA_THREAD_NEUTRALITY}")
-message (STATUS "Boost library? ........ = ${Boost_LIBRARIES}")
+message (STATUS "CASA Thread Neutral? .. = ${CASA_THREAD_NEUTRAL}")
+message (STATUS "Boost for CASA? ....... = ${Boost_LIBRARIES}")
