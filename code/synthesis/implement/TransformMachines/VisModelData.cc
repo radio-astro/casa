@@ -237,7 +237,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      for(uInt spi=0; spi < spws.nelements(); ++spi){
 		Int indx=-1;
 		Int ftindx=-1;
-		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) >= 0 )){
 		  
 		  indx=ftindex_p(spws[spi], fields[fi], vb.msId());
 		  ftindx=ftholder_p[indx].nelements();
@@ -281,7 +281,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      for(uInt spi=0; spi < spws.nelements(); ++spi){
 		Int indx=-1;
 		Int clindx=-1;
-		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) >= 0 )){
 		  indx=clindex_p(spws[spi], fields[fi], vb.msId());
 		  clindx=clholder_p[indx].nelements();
 		  clholder_p[indx].resize(clindx+1, True);
