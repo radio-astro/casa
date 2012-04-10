@@ -164,6 +164,7 @@ from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
 #from polcal_pg import polcal_pg as polcal
 
 from clearcal_pg import clearcal_pg as clearcal
+from delmod_pg import delmod_pg as delmod
 from bandpass_pg import bandpass_pg as bandpass
 #from clearplot_pg import clearplot_pg as clearplot
 from listvis_pg import listvis_pg as listvis

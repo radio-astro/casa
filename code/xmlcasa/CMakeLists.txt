@@ -226,6 +226,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_csvclean.py
   scripts/task_pclean.py
   scripts/task_cvel.py
+  scripts/task_delmod.py
   scripts/task_deconvolve.py
   scripts/task_exportasdm.py
   scripts/task_exportfits.py
@@ -362,6 +363,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/pclean.xml
   tasks/cvel.xml
   tasks/deconvolve.xml
+  tasks/delmod.xml
   tasks/exportasdm.xml
   tasks/exportfits.xml
   tasks/exportuvfits.xml
