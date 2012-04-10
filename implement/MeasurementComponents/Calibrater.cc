@@ -1672,9 +1672,13 @@ Bool Calibrater::genericGatherAndSolve() {
 	    //	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
 	    
 	  }
-	  else 
+	  else {
 	    // report where this failure occured
 	    svc_p->currMetaNote();
+	    if (svc_p->freqDepPar())
+	      // We must record a flagged solution for this channel
+	      svc_p->keep1(ich);
+	  }
 	  
 	} // parameter channels
 
