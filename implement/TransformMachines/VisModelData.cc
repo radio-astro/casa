@@ -240,7 +240,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
 		  
 		  indx=ftindex_p(spws[spi], fields[fi], vb.msId());
-		  ftindx=clholder_p[indx].nelements();
+		  ftindx=ftholder_p[indx].nelements();
 		  ftholder_p[indx].resize(ftindx+1, True);
 		  ftholder_p[indx][ftindx]=ftholder_p[indexft][0];
 		}
