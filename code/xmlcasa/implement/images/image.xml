@@ -1500,7 +1500,7 @@ bigim.done()
  
  
    <method type="function" name="fromarray">
-   <shortdescription>Construct a \casa\ image from an array</shortdescription>
+   <shortdescription>Construct a \casa\ image from a numerical (integer or float) array</shortdescription>
    
 <input>
   
@@ -1539,59 +1539,84 @@ bigim.done()
 
 <description>
 
-This function converts an array of any size into a \casa\
-\imagefile. 
+This function converts a numerical (integer or float) numpy array of any size and
+dimensionality into a \casa\ image. 
 
-If {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the Image \tool\ is associated
-with a temporary image.  This temporary image may be in memory or on
-disk, depending on its size.  <!-- When you destroy the Image \tool\ 
-(with the <link anchor="images:image.close.function">close</link> function) this
-temporary image is deleted.-->  When you close the Image \tool\
-with the close function this temporary image is deleted.
+The image analysis tool on which this method is called will reference the created image;
+if this tool referenced another image before this call, that image will no longer be referenced
+by the tool after the creation of the new image. If you would rather have a new image analysis
+tool returned, keeping the one on which this method is called unaltered, use newimagefromarray()
+instead. If {\stfaf outfile} is given, the image is written to disk, if not, the image tool on
+which this method was called will reference a temporary image (either in memory or on disk, 
+depending on its size) that will be deleted when the tool
+is closed.
 
 At present, no matter what type the {\stfaf pixels} array is, a
-real-valued image will be written (the input pixels will be converted to
-Float).  In the future, Complex images will be supported.
+float-valued image will be written.
 
-The Coordinate System, provided as a <link
-anchor="images:coordsys">Coordsys</link> \tool  (converted to a record)
-is optional.  If you provide it, it must be dimensionally consistent
-with the pixels array you give (see also <link
-anchor="images:image.coordsys.function">coordsys</link>).
+The coordinate system, provided as a <link
+anchor="images:coordsys">coordsys</link> \tool converted to a record
+is optional.  If you provide it, it must have the same number of dimensions
+as the pixels array (see also <link anchor="images:image.coordsys.function">coordsys</link>).
+Call the naxes() method on the coordinate system tool to see how many dimensions the coordinate
+system has. A coordinate system can be created from scratch using the coordinate system (cs) tool and
+methods therein, but often users prefer to use a coordinate system from an already existing image.
+This can be gotten using ia.coordsys() which returns a coordinate system tool. A torecord() call
+on that tool will result in a python dictionary describing the coordinate system which is the
+necessary format for the csys input parameter of ia.fromarray().
 
-If you don't provide the Coordinate System (unset), a default Coordinate System
-is made for you.  If {\stfaf linear=F} (the default) then it is a
-standard RA/DEC/Stokes/Spectral Coordinate System depending exactly upon
+If csys is not specified, a default coordinate system
+is created.  If {\stfaf linear=F} (the default) the created coordinate system will have
+standard RA/DEC/Stokes/Spectral Coordinate axes depending upon
 the shape of the {\stfaf pixels} array (Stokes axis must be no longer
-than 4 pixels and you may find the spectral axis coming out before the
+than 4 pixels and you may find the spectral axis preceding the
 Stokes axis if say, {\cf shape=[64,64,32,4]}).  Extra dimensions are
-given linear coordinates.  If {\stfaf linear=T} then you get a linear
-Coordinate System. 
+given linear coordinates.  If {\stfaf linear=T}, then all the resulting coordinates
+are linear with the axes represent lengths. In this case each axis will have a value
+of 0.0 at its center pixel. The increment of each axis will be 1.0 km.
+
+The method returns True if creation of the image was successful, False otherwise,
+so you can check programmatically if the image creation was successful.
 
 </description>
 <example>
 
 """
-#
-print "\t----\t fromarray Ex 1 \t----"
-ia.fromarray(outfile='test.data', pixels=ia.makearray(0, [64, 64, 4, 128]),
-             overwrite=true)
-mycs = ia.coordsys(axes=[0,1])
-ia.close()
-ia.fromarray(pixels=ia.makearray(1.0, [32, 64]), csys=mycs.torecord())
-mycs.done()
-ia.close()
-#
+# make an image with a default RA/Dec/Stokes/Frequency coordinate system
+# having all pixels set to 2.5.
+ary = ia.makearray(v=2.5, shape=[64, 64, 4, 128])
+# the ia tool does not need to reference an image in this case (ie open()
+# need not have been called), if it does reference another image, that reference
+# will be lost and replaced with a reference to the newly created image.
+res = ia.fromarray(outfile='test.data', pixels=ary, overwrite=true)
+if res:
+    # perform operations on the newly created image if desired and make sure
+    # to close it when done to free up system resources (eg memory)
+    ia.shape()
+ia.done()
 """
 
+</example>
 
-The first example creates a zero-filled \imagefile\ named {\sff
-test.data} which is of shape [64,64,4,128].  If you examine the header with
-{\stff ia.summary()} you will see the default RA/DEC/Stokes/Frequency coordinate information. 
-In the second example, a Coordinate System describing the first two axes
-of the image {\sff test.data} is created and used to create a 2D
-temporary image.
+<example>
+"""
+    
+# create an image using the coordinate system from another image
+ia.open("myexistingimage.im")
+
+mycs = ia.coordsys()
+# the number of dimensions in the array and the coordinate system must
+# be the same. For this example to work, mycs.naxes() must return 4.
+ia.done()
+ary = ia.makearray(v=2.5, shape=[64, 64, 4, 128])
+res = ia.fromarray(pixels=ary, csys=mycs.torecord())
+mycs.done()
+if (res):
+    # do things with the newly created temporary image before closing it
+    ia.shape()
+ia.done()
+
+"""
 
 </example>
 </method>
