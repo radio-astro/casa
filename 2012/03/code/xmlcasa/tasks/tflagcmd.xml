@@ -6,14 +6,21 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tflagcmd" category="data editing" visibility="experimental">
-        <shortdescription>Flagging task based on flagging commands</shortdescription>
+        <shortdescription>Flagging task based on batches of flag-commands</shortdescription>
         <description>
-        The task will select a subset of data explicitly for flagging,
-        quacking, clipping, autocorrelation flagging, or flagging
-        of shadowed antennas. Unflagging is also available.
+        The tflagcmd task allows several batch-operations using flag commands.
 
-        The flagging command syntax is currently defined in CAS-2405.
+        Flag commands follow the mode and parameter names from the tflagdata task
+        (also explained below).  The available modes are: manual, clip, shadow, quack, 
+        elevation,  tfcrop, rflag, extend and unflag.
 
+        The tflagcmd task will flag data based on the commands input on inpmode :
+            table = input from FLAG_CMD table in MS
+            file  = input from flagging command file "inpfile"
+            cmd   = input from a (python) list of command strings
+            xml   = input from Flag.xml in the MS given by vis
+
+        Batch operations include : apply/unapply/list/plot/clear/extract
 
         </description>
         <input>
@@ -34,7 +41,7 @@
                 </param>
 
                 <param type="string" name="inpfile" subparam="true">
-                        <description>Name of flag command file to input</description>
+                        <description>Source of flag commands</description>
                         <value></value>
                 </param>
                 <param type="intArray" name="tablerows" subparam="true">
@@ -161,29 +168,19 @@
 <returns type="void"/>
 
 <example>
-        The task will select a subset of data explicitly for flagging
-        using the modes and parameters defined in the task tflagger. 
-        The available modes are: manual, clip, shadow, quack, elevation,
-        tfcrop, extend and unflag.
-        
-        This task is equivalent to the corresponding parts of
-        tflagger, but works from a series of flagging commands
-        specified by the "inpfile" parameter, which can refer to
-        an ASCII file, a FLAG_CMD table or Flag.xml table in the MS, 
-        or directly input the flagging commands as a list of strings.
 
-        If flagbackup=True, the current flags are backed up before applying 
-        new flags. Previous flag versions can be recovered using the 
-        flagmanager task.
+        Flag commands follow the mode and parameter names from the tflagdata task
+        (also explained below).  The available modes are: manual, clip, shadow, quack, 
+        elevation,  tfcrop, rflag, extend and unflag.
 
         The tflagcmd task will flag data based on the commands input on inpmode :
             table = input from FLAG_CMD table in MS
             file  = input from flagging command file "inpfile"
-            cmd   = input from "command" list of strings
+            cmd   = input from a (python) list of command strings
             xml   = input from Flag.xml in the MS given by vis
 
-        The flags stored in the MS are automatically backed up before each run,
-        unless flagbackup = False.
+        Batch operations include : apply/unapply/list/plot/clear/extract
+
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -196,7 +193,7 @@
            inpmode "table" --  input commands from FLAG_CMD table of MS
        
               inpfile -- path to MS containing FLAG_CMD
-                   default: '' (read from FLAG_CMD table in vis)
+                   default: '' (read from FLAG_CMD table in the MS specified via 'vis')
 
                    Main use is to read flags from internal FLAG_CMD,
                    but by setting inpfile to a different MS you can 

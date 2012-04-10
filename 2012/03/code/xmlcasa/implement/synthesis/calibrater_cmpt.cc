@@ -464,6 +464,55 @@ calibrater::initcalset(const int calset)
 }
 
 bool
+calibrater::delmod(const bool otf, const bool scr)
+{
+  if (! itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+	    << endl << LogIO::POST;
+    return false;
+  }
+
+  try {
+
+    logSink_p.clearLocally();
+    LogIO os(LogOrigin("calibrater", "delmod"), logSink_p);
+    os << "Beginning delmod------------------------" << LogIO::POST;
+    
+    //remove the model from the header
+    if (otf) {
+      *itsLog << "Deleting OTF Visbility Model info." << LogIO::POST;
+      VisModelData::clearModel(*itsMS);
+    }
+
+    // remove the MODEL_DATA column
+    if (scr) {
+      *itsLog << "Deleting MODEL_DATA column (if not already absent)." << LogIO::POST;
+
+      String modcol;
+      modcol=MS::columnName(MS::MODEL_DATA);
+ 
+      if (itsMS->tableDesc().isColumn(modcol)) {
+        itsMS->removeColumn(modcol);
+      };
+      if (itsMS->tableDesc().isColumn(modcol+"_COMPRESSED")) {
+        itsMS->removeColumn(modcol+"_COMPRESSED");
+      };
+      if (itsMS->tableDesc().isColumn(modcol+"_SCALE")) {
+        itsMS->removeColumn(modcol+"_SCALE");
+      };
+      if (itsMS->tableDesc().isColumn(modcol+"_OFFSET")) {
+        itsMS->removeColumn(modcol+"_OFFSET");
+      };
+    }
+    
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return true;
+}
+
+bool
 calibrater::solve()
 {
   if (! itsMS) {

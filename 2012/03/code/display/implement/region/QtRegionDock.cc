@@ -32,6 +32,7 @@
 #include <display/region/QtRegionDock.qo.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/ds9/ds9writer.h>
+#include <display/DisplayErrors.h>
 
 namespace casa {
     namespace viewer {
