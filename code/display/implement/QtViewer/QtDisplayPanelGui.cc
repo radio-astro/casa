@@ -795,7 +795,7 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 	logger << LogIO::WARN
 	       << "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
 	       << LogIO::POST;
-	logger_did_region_warning == true;
+	logger_did_region_warning = true;
     }
 
     qdp_->loadRegions( path, datatype, displaytype );
