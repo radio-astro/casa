@@ -282,6 +282,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Set up the UVWMachine. 
     if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
+
+
     String observatory=vb.msColumns().observation().telescopeName()(0);
     if(observatory.contains("ATCA") || observatory.contains("DRAO")
        || observatory.contains("WSRT")){
@@ -353,7 +355,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       chanMap=Vector<Int>(vb.frequency().nelements(), -1);
     
     {
-      logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
+      //logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
     }
     // Should never get here
     if(max(chanMap)>=nchan||min(chanMap)<-1) {
@@ -414,12 +416,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	else {
 	  isIOnly=True;
-	  logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
+	  //logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
 	}
       }; 
     }
-    logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
-	    << LogIO::POST;
+    //logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
+    //	    << LogIO::POST;
     
     initPolInfo(vb);
     //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
@@ -742,17 +744,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // UVrotation is False only if field never changes
     if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
       doUVWRotation_p=True;
-    if(doUVWRotation_p || tangentSpecified_p){
+    if(doUVWRotation_p || tangentSpecified_p || fixMovingSource_p){
       ok();
       
       mFrame_p.epoch() != 0 ? 
 	mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
 	mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), vb.msColumns().timeMeas()(0).getRef()));
       
+      MDirection phasecenter=mImage_p;
+      if(fixMovingSource_p){
+      
+      //First convert to HA-DEC or AZEL for parallax correction
+	MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+	MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+	MDirection::Ref outref(mImage_p.getRef().getType(), mFrame_p);
+	MDirection sourcenow=MDirection::Convert(tmphadec, outref)();
+	phasecenter.set(MVDirection(phasecenter.getAngle()-firstMovingDir_p.getAngle()+sourcenow.getAngle()));
+	
+    }
+
+
       // Set up the UVWMachine only if the field id has changed. If
       // the tangent plane is specified then we need a UVWMachine that
       // will reproject to that plane iso the image plane
-      if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p)) {
+      if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p) || fixMovingSource_p) {
 	
 	String observatory=vb.msColumns().observation().telescopeName()(0);
 	if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
@@ -760,21 +775,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(observatory.contains("ATCA") || observatory.contains("WSRT")){
 	    //Tangent specified is being wrongly used...it should be for a 
 	    //Use the safest way  for now.
-	    uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
+	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
 					True, False);
 	  }
 	  else{
-	    uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
+	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
 					False, True);
 	  }
 	}
 	else {
 	  if(observatory.contains("ATCA") || observatory.contains("WSRT")){
-	    uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
+	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
 					True, False);
 	  }
 	  else{
-	    uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
+	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p, 
 					False, True);
 	  }
 	}
@@ -1362,11 +1377,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  chanMap(chan)=pixel;
 	  nFound++;
 	  if(nvischan>1&&(chan==0||chan==nvischan-1)) {
-	    logIO() << LogIO::DEBUGGING
+	    /*logIO() << LogIO::DEBUGGING
 		    << "Selected visibility channel : " << chan+1
 		    << " has frequency "
 		    <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
 		    << " GHz and maps to image pixel " << pixel+1 << LogIO::POST;
+	    */
 	  }
 	}
       }

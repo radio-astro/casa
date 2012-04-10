@@ -26,6 +26,7 @@
 //# $Id$
 #include <display/DisplayEvents/RegionTool.h>
 #include <display/Display/WorldCanvas.h>
+#include <display/DisplayErrors.h>
 
 namespace casa {
     void RegionTool::keyPressed(const WCPositionEvent &ev) {  }

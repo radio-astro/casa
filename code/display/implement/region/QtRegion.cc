@@ -7,6 +7,7 @@
 #include <display/region/QtRegionDock.qo.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
+#include <display/DisplayErrors.h>
 #include <casaqt/QtUtilities/QtId.h>
 
 namespace casa {

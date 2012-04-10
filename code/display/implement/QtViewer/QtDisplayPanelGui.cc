@@ -49,8 +49,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+bool QtDisplayPanelGui::logger_did_region_warning = false;;
+
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
-		   QtPanelBase(parent), qdm_(0),qem_(0),qdo_(0), qfb_(0),
+		   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
 		   qsm_(0), qst_(0),
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
@@ -789,6 +791,13 @@ Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
   return False;  }
 
 void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+    if ( logger_did_region_warning == false ) {
+	logger << LogIO::WARN
+	       << "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
+	       << LogIO::POST;
+	logger_did_region_warning = true;
+    }
+
     qdp_->loadRegions( path, datatype, displaytype );
 }
 

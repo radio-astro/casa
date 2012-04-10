@@ -364,6 +364,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void restoreGuiState_(QDomDocument*); 
  
  protected:
+
+  LogIO logger;
+  static bool logger_did_region_warning;
     
   // Existing user-visible QDDs
   List<QtDisplayData*> qdds_;

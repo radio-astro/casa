@@ -35,6 +35,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
@@ -173,7 +174,11 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
   for (uInt icomp=0;icomp<ncomponents;icomp++) {
     SkyComponent component=compList.component(icomp).copy();
     component.flux().convertUnit(Unit("Jy"));
-    if(vb.polFrame()==MSIter::Linear) {
+    if(anyGT(Int(Stokes::RR), vb.corrType())){
+      component.flux().convertPol(ComponentType::STOKES);
+      corrType = vb.corrType()-1;
+    }
+    else if(vb.polFrame()==MSIter::Linear) {
       component.flux().convertPol(ComponentType::LINEAR);
       corrType = corrTypeL;
     } else {
