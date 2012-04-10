@@ -241,7 +241,7 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	    vb->setModelVisCube(Complex(0.0,0.0));
 	    //	  vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
 	  }
-	
+	  
 
 	  // get always fills Model
 	  get(* vb, sm_->componentList() );
@@ -267,6 +267,9 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	    String err;
 	    Record clrec;
 	    //cerr << "in componentlist saving" << endl;
+	    if(anyGT(Int(Stokes::RR), vb->corrType())){
+	      throw(AipsError("Invalid MS: correlation type cannot be decomposed into feed product; DataDescId="+String::toString(vb->dataDescriptionId()) ));
+	    } 
 	    if(!sm_->componentList().toRecord(err, clrec))
 	      throw(AipsError("Error saving componentlist: "+err));
 	    vi.putModel(clrec, True, True);
