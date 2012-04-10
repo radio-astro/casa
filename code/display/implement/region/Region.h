@@ -49,20 +49,6 @@ namespace casa {
 
     namespace viewer {
 
-	struct internal_error : public std::exception {
-	    internal_error( const char *err="internal viewer inconsistency" ) : str(err) { }
-	    ~internal_error( ) throw( ) { }
-	    const char* what() const throw() { return str.c_str( ); }
-	    const std::string str;
-	};
-
-	struct runtime_error : public std::exception {
-	    runtime_error( const char *err="runtime viewer error" ) : str(err) { }
-	    ~runtime_error( ) throw( ) { }
-	    const char* what() const throw() { return str.c_str( ); }
-	    const std::string str;
-	};
-
 	// convert linear coordinates to viewer screen coordinates...
 	void linear_to_screen( WorldCanvas *wc_, double, double, int &, int & );
 	void linear_to_screen( WorldCanvas *wc_, double, double, double, double, int &, int &, int &, int & );
