@@ -356,16 +356,15 @@ def immath(
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
             res = _myia.imagecalc(pixels=expr, outfile=outfile)
-            
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
-                csys = _myia.coordsys()
+                csys = res.coordsys()
                 if isTPol:
                     csys.setstokes('Ptotal')
                 elif isLPol:
                     csys.setstokes('Plinear')
                 res.setcoordsys(csys.torecord())
-            _myia.done()
+            res.done()
             if (doPolThresh):
                 _immath_createPolMask(polithresh, lpol, outfile)
             return True

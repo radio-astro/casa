@@ -1347,8 +1347,8 @@ wild cards accepted.  Default is empty string.</description>
      </param>
   
      <param type="int" direction="in" name="axis">
-	     <description>Concatenation pixel axis.  Default is spectral axis if there is one.</description>
-     <value>-10</value>
+	     <description>Concatenation pixel axis. Use ia.coordsys().names() to get a list of axes. A negative value means use the spectral axis if there is one, if not an exception is thrown.</description>
+     <value>-1</value>
      </param>
   
      <param type="bool" direction="in" name="relax">
@@ -1374,10 +1374,21 @@ This function is used to concatenate two or more input \casa\
 images into one output image.  For example, if you have two image cubes
 which are contiguous along one axis (say a spectral axis) and you would
 like to glue them together along this axis, then this function is the
-appropriate thing to use. 
+appropriate thing to use.
+
+The axis parameter is used to specify which zero-based axis the images
+should be concatenated along. A negative value indicates that the
+spectral axis should be used. If a negative value is given but there is no
+spectral axis, an exception will be thrown. The zero-based order of the
+axes of an image can be determined from ia.coordsys().names().
+
+If successful, this method will return an image analysis tool referencing
+the concatenated image. Even if it is not wanted, the returned tool should
+be captured and closed as soon as the user is finished with it to free up
+system resources (eg memory).
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-lfy Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
 created by the function actually references all of the input files.
 So if you deleted any of the input image disk files, it would render
 this \tool\ useless.  When you destroy this tool (with the <link
@@ -1398,8 +1409,7 @@ pixel, reference value etc) for the non-concatenation axes must be the
 same or an error will result. 
 
 The input disk image files may be in native \casa, \fits, or Miriad
-formats.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+formats.
 
 The contiguous criterion and coordinate descriptor equality criteria can
 be relaxed by setting {\stfaf relax=T} whereupon only warnings will be
@@ -1427,8 +1437,9 @@ comma delimiters, it is not possible because an expression such as
 ``cena.b'') would confuse such parsing (you would get two files of name
 {\sff cena.\{a} and {\sff b\}}. 
 
-You can look at the Coordinate System of the output image with
-<link anchor="images:image.summary.function">summary</link> to make sure it's correct.
+You can look at the coordinate system of the output image using the 
+<link anchor="images:image.summary.function">ia.summary()</link> tool method
+to ensure it's correct.
 
 The argument {\stfaf tempclose} is, by default, True.  This means that
 all internal reference copies of the input images are  kept closed until
@@ -1441,48 +1452,48 @@ you might use {\stfaf tempclose=F}.  This will leave all internal
 reference copies permanently open, but performance, if you don't hit the
 file limit, will be better.
 
+This method requires multiple images which are specified with the infiles
+parameter. Therefore calling ia.open() is not necessary, although calling
+imageconcat() using an already open image analysis tool will work and the state
+of that tool (eg the image it references) will not be changed.
+
 </description>
 <example>
 
 """
-#
-print "\t----\t imageconcat Ex 1 \t----"
+# Create three images to concatenate together.
 ia.fromshape('im.1',[10,10,10],overwrite=T)
 ia.fromshape('im.2',[10,10,10],overwrite=T)
 ia.fromshape('im.3',[10,10,10],overwrite=T)
+ia.done()
+# now concatenate.
+# The three images have the same shape along the axes not to be
+# concatenated as they must. relax=T means that the contiguity
+# constraint along the concatenated axis is not imposed (if it were
+# the call would fail because the spectral axes of the input images
+# are not contiguous).
 bigim = ia.imageconcat(outfile='bigimage', infiles='im.1 im.2 im.3',
                        axis=2, relax=T, tempclose=F, overwrite=T)
+# be sure to call done() on the return tool to free up system resources.
 bigim.done()
-ia.close()
-#
 """
 
-The \imagefiles\ {\sff im1}, {\sff im2}, and {\sff im3} are concatenated along
-the third axis to form the output \imagefile\ {\sff bigimage}.
-Only warnings are issued if axis descriptors mismatch.
-Access to the output image is provided via the \tool\ called {\stf bigim}.
 </example>
 
 <example>
 
 """
 #
-print "\t----\t imageconcat Ex 2 \t----"
+# All images whose file names begin with {\sff im.} that reside in
+# the current directory are concatenated along the spectral axis if
+# there is one. All image coordinate descriptors must match.  If any
+# input image does not have a spectral axis an error will
+# result.  Because an oufile is not specified, the returned image analysis
+# tool captured in the variable named bigim just references the input images;
+# this call does not create a persistent result image.
 bigim = ia.imageconcat(infiles="im.*",relax=T)
 bigim.done()
-ia.close()
-#
 """
-
-All images whose file names begin with {\sff im} and terminate with
-any valid filename extension that reside in the current directory <!--
-given by the translation of the environment variable {\tt \$ADATA} -->
-are concatenated along the spectral axis if there is one.  The image
-must be contiguous along the spectral axis and all image coordinate
-descriptors must match.  If there is no spectral axis an error will
-result.  Because an output file name is not given, the Image tool just
-references the input files, it does not copy them.
-
 </example>
 </method>
 
