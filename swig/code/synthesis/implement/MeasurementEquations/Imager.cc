@@ -2828,10 +2828,6 @@ Bool Imager::makeimage(const String& type, const String& image,
 	 << LogIO::POST;
     }
     else if (type=="model") {
-      if(rvi_p->msColumns().modelData().isNull())
-	os << LogIO::SEVERE
-           << "Cannot make model image without scratch model-data column "
-	   << LogIO::EXCEPTION;
       seType=FTMachine::MODEL;
       os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
@@ -2845,17 +2841,10 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
     else if (type=="psf") {
       seType=FTMachine::PSF;
-      if(rvi_p->msColumns().modelData().isNull())
-	os << "Cannot make psf image without scratch model-data column for now"
-	   << LogIO::EXCEPTION;
       os << "Making point spread function "
 	 << LogIO::POST;
     }
     else if (type=="residual") {
-      if(rvi_p->msColumns().modelData().isNull())
-	os << LogIO::SEVERE
-           << "Cannot make residual image without scratch model-data column "
-	   << LogIO::EXCEPTION;
       seType=FTMachine::RESIDUAL;
       os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
@@ -4347,15 +4336,11 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
 	destroySkyEquation();
     }
 
-    if(incremental) {
-      os << LogIO::NORMAL // Loglevel INFO
-         << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
-    }
-    else {
-      os << LogIO::NORMAL // Loglevel INFO
-         << "Fourier transforming: replacing MODEL_DATA column" << LogIO::POST;
-    }
-
+    os << LogIO::NORMAL // Loglevel INFO
+       << String("Fourier transforming: ") + 
+      (incremental ? String("adding to "): String("replacing "))+ 
+      (useModelCol_p ? String("MODEL_DATA column") : String("visibility model header")) << LogIO::POST;
+   
     if (redoSkyModel_p){
       if(!createSkyEquation(model, complist)) return False;
     }

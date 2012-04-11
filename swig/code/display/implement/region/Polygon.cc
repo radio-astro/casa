@@ -1,5 +1,5 @@
-//# polygon.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Polygon.cc: non-GUI polygon region
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -35,6 +35,7 @@
 
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <display/DisplayErrors.h>
 
 namespace casa {
     namespace viewer {

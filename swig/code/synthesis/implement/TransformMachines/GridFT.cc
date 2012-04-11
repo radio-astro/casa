@@ -340,8 +340,8 @@ void GridFT::prepGridForDegrid(){
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
   arrayLattice = new ArrayLattice<Complex>(griddedData);
   lattice=arrayLattice;
-   logIO() << LogIO::DEBUGGING
-	  << "Starting grid correction and FFT of image" << LogIO::POST;
+  //logIO() << LogIO::DEBUGGING
+  //	  << "Starting grid correction and FFT of image" << LogIO::POST;
 
    // Do the Grid-correction. 
    {
@@ -361,8 +361,8 @@ void GridFT::prepGridForDegrid(){
    // Now do the FFT2D in place
    LatticeFFT::cfft2d(*lattice);
    
-    logIO() << LogIO::DEBUGGING
-	    << "Finished grid correction and FFT of image" << LogIO::POST;
+   //logIO() << LogIO::DEBUGGING
+   //	    << "Finished grid correction and FFT of image" << LogIO::POST;
     
 }
 
@@ -1134,8 +1134,8 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
 
     const IPosition latticeShape = lattice->shape();
     
-    logIO() << LogIO::DEBUGGING
-	    << "Starting FFT and scaling of image" << LogIO::POST;
+    //logIO() << LogIO::DEBUGGING
+    //	    << "Starting FFT and scaling of image" << LogIO::POST;
     
 
   

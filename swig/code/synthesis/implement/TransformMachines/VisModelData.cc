@@ -378,7 +378,6 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	}
     }
     if(ft.nelements()>0){
-      cerr << "NELEMENTS " << ft.nelements() << endl;
       Cube<Complex> tmpModel;
       if(incremental || ft.nelements() >1)
 	tmpModel.assign(vb.modelVisCube());
