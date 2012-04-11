@@ -76,6 +76,7 @@ scripts/task_csvclean.py
 scripts/task_pclean.py
 scripts/task_cvel.py
 scripts/task_deconvolve.py
+scripts/task_delmod.py
 scripts/task_exportasdm.py
 scripts/task_exportfits.py
 scripts/task_exportuvfits.py
@@ -103,7 +104,6 @@ scripts/task_immoments.py
 scripts/task_impbcor.py
 scripts/task_importasdm.py
 scripts/task_importevla.py
-scripts/task_importevla2.py
 scripts/task_importfits.py
 scripts/task_importfitsidi.py
 scripts/task_importgmrt.py

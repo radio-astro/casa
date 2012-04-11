@@ -19,6 +19,7 @@ csvclean.xml
 pclean.xml
 cvel.xml
 deconvolve.xml
+delmod.xml
 exportasdm.xml
 exportfits.xml
 exportuvfits.xml
@@ -45,7 +46,6 @@ immoments.xml
 impbcor.xml
 importasdm.xml
 importevla.xml
-importevla2.xml
 importfits.xml
 importfitsidi.xml
 importgmrt.xml

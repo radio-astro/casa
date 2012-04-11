@@ -47,6 +47,16 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
+        
+	# DEPRECATE THIS TASK
+	casalog.post('***********************************************************','WARN')
+	casalog.post('  THIS TASK (flagcmd) IS OBSOLETE AND WILL BE DEPRECATED', 'WARN')
+	casalog.post('','WARN')
+	casalog.post('		USE THE TASK tflagcmd', 'WARN')
+	casalog.post('***********************************************************','WARN')
+	casalog.post('','WARN')
+
+	
 	casalog.post('You are using flagcmd v4.2 Updated STM 2012-03-01')
 
         fglocal = casac.flagger()

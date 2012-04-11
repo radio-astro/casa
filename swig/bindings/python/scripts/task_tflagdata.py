@@ -64,7 +64,7 @@ def tflagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
-             run,           # run or not the tool
+             applyflags,           # run or not the tool
              writeflags,
              display,
              flagbackup,
@@ -72,7 +72,7 @@ def tflagdata(vis,
              outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, mode, run, savepars                      
+    # vis, mode, applyflags, savepars                      
     
     #
     # Task tflagdata
@@ -373,8 +373,8 @@ def tflagdata(vis,
 
                                   
                           
-        ##########  Only save the parameters and exit; run = False        
-        if not run and savepars:
+        ##########  Only save the parameters and exit; applyflags = False        
+        if not applyflags and savepars:
 
             fh.writeFlagCmd(vis, flagcmd, vrows, False, outfile)  
             if outfile == '':
@@ -384,7 +384,7 @@ def tflagdata(vis,
             return 0
 
         
-        ######### From now on it is assumed that run = True
+        ######### From now on it is assumed that applyflags = True
         
         # Select the data and parse the agent's parameters
         if mode != 'list':
