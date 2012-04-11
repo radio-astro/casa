@@ -171,7 +171,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
             <param type="any" name="addantenna" subparam="true">
                 <description>File name or dictionary with additional antenna names, positions and diameters</description>
-                <any type='variant' limittype='string record'/>
+                <any type='variant' limittypes='string record'/>
                 <value type="string"></value>
             </param>
             
@@ -320,9 +320,9 @@ tfcrop,rflag,extend,unflag,summary)</description>
             </param>
 
 
-            <!-- RUN parameters -->
-            <param type="bool" name="run">
-                <description>Run and flag based on the parameters or the list given in inpfile</description>
+            <!-- APPLYFLAGS parameters -->
+            <param type="bool" name="applyflags">
+                <description>Run and apply flags based on the parameters or the list given in inpfile</description>
                 <value>True</value>
             </param>
             <param type="bool" name="writeflags" subparam="true">
@@ -535,7 +535,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     </equals>
                 </when>
 
-                <when param="run">
+                <when param="applyflags">
                     <equals type="bool" value="True">
                         <default param="writeflags"><value type="bool">True</value></default>
                         <default param="display"><value type="string"></value></default>
@@ -1056,7 +1056,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     s['flagged']                : amount of flagged data
         
 
-        run -- Run the task to produce flags or not. 
+        applyflags -- Run the task to produce flags or not. 
                default: True
                options: True/False
                     When set to False, the underlying tool will not be executed and no
@@ -1073,7 +1073,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
                         dataset. Use the display parameter to inspect the data.
                     Note: this parameter is disabled when mode='summary'.
                  
-              display -- Display data and/or end-of-MS reports at runtime.        
+              display -- Display data and/or end-of-MS reports at run-time.        
                	   default: 'none'
                	   options: 'none', 'data', 'report', 'both'
 
@@ -1092,8 +1092,8 @@ tfcrop,rflag,extend,unflag,summary)</description>
                   	'both' --> displays data per chunk and end-of-MS reports on the screen
                                  
               flagbackup -- Automatically backup flags before running the tool.
-                                  Flagversion names are chosen automatically, and are based on the
-                                  mode being used.
+                            Flagversion names are chosen automatically, and are based on the
+                            mode being used.
                    default: True
                    options: True/False                    
 
@@ -1139,7 +1139,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
             
         7) Clip only the water vapour radiometer data.
         
-            tflagdata(vis='my.ms',mode='clip',clipminmax=[0,50], correlation='ABS WVR')
+            tflagdata(vis='my.ms',mode='clip',clipminmax=[0,50], correlation='ABS_WVR')
 
 		8) Clip only zero-value data.
 

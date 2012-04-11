@@ -862,7 +862,7 @@ class test_list(test_base):
         create_input(input, filename)
         
         # apply and don't save to MS. Ignore comment line
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, run=True)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, applyflags=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 0)
         self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
@@ -878,7 +878,7 @@ class test_list(test_base):
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
             
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, run=False, outfile='myflags.txt')
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, applyflags=False, outfile='myflags.txt')
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
         res = tflagdata(vis=self.vis, mode='summary')
@@ -909,7 +909,7 @@ class test_list(test_base):
         # Delete any rows from FLAG_CMD
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
-        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, run=False, 
+        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, applyflags=False, 
                  savepars=True)
         
         tflagcmd(vis=self.vis, action='apply')
@@ -927,7 +927,7 @@ class test_list(test_base):
         create_input(input, filename)
 
         # Save to FLAG_CMD
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, run=False, savepars=True)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, applyflags=False, savepars=True)
         
         # Run in tflagcmd and select by reason
         tflagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
