@@ -77,6 +77,7 @@
 #include <tables/Tables/TiledShapeStMan.h>
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledStManAccessor.h>
+#include <tables/Tables/ExprNode.h>
 #include <casa/Utilities/Fallible.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Utilities/Regex.h>
@@ -439,8 +440,8 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
     FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
     obsTime(0) = timeVal.second();
     obsTime(1) = timeVal.second();
-    cout << "timeVal=" << timeVal << endl;
-    cout << "obstime=" << obsTime(0) << " " << obsTime(1) << endl;
+    //cout << "timeVal=" << timeVal << endl;
+    //cout << "obstime=" << obsTime(0) << " " << obsTime(1) << endl;
 
     
     fillHistoryTable(kwlist);
@@ -503,8 +504,9 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                     //showBinaryTable(*bt);
                     fillOtherUVTables(*bt, *fqTab);
                     //bt->fullTable();
+                    fillMSMainTable(*bt);
                     moreToDo = false;
-		        }
+		}
                 else {
                     //bt->fullTable();
                     //infile_p->skip_all(FITS::BinaryTableHDU);
@@ -531,11 +533,11 @@ void MSFitsInput::readFitsFile(Int obsType) {
     if (infile_p->hdutype() == FITS::PrimaryGroupHDU) {
         readRandomGroupUVFits(obsType);
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
-        itsLog << LogOrigin("MSFitsInput", "readFitsFile")
-           << LogIO::SEVERE
-           << "Primary Table uvfits not yet handled!"
-           << LogIO::EXCEPTION;
-        //readPrimaryTableUVFits(obsType);
+        //itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+        //   << LogIO::SEVERE
+        //  << "Primary Table uvfits not yet handled!"
+        //   << LogIO::EXCEPTION;
+        readPrimaryTableUVFits(obsType);
     } 
     else {
         itsLog << LogOrigin("MSFitsInput", "readFitsFile")
@@ -613,8 +615,6 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
         delta_p(i) = static_cast<Double> (priGroup_p.cdelt(i));
     }
 
-    checkRequiredAxis();
-    /*
     // Check if required axes are there
     if (getIndex(coordType_p, "COMPLEX") < 0) {
         itsLog << "Data does not have a COMPLEX axis" << LogIO::EXCEPTION;
@@ -636,10 +636,7 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
             < 0)) {
         itsLog << "Data does not have a DEC axis" << LogIO::EXCEPTION;
     }
-    */
 
-    sortPolarizations();
-    /*
     // Sort out the order of the polarizations and find the sort indices
     // to put them in 'standard' order: PP,PQ,QP,QQ
     const uInt iPol = getIndex(coordType_p, "STOKES");
@@ -720,7 +717,7 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
                     << Stokes::name(cType) << LogIO::POST;
         }
     }
-    */
+
     // Save the object name, we may need it (for single source fits)
     const FitsKeyword* kwp;
     object_p = (kwp = priGroup_p.kw(FITS::OBJECT)) ? kwp->asString()
@@ -1913,8 +1910,6 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
         if (nChan > 33)
             addSourceTable_p = True;
 
-    fillPolarizationTable();
-    /*
     MSPolarizationColumns& msPol(msc_p->polarization());
     Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     // fill out the polarization info (only single entry allowed in fits input)
@@ -1923,7 +1918,7 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
     msPol.corrType().put(0, corrType_p);
     msPol.corrProduct().put(0, corrProduct_p);
     msPol.flagRow().put(0, False);
-    */
+
 
     //  Table fqTab=bt.fullTable("",Table::Scratch);
     Table fqTab = bt.fullTable();
@@ -2013,8 +2008,6 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
 
 void MSFitsInput::fillSpectralWindowTable() {
 
-    fillPolarizationTable();
-    /*
     MSPolarizationColumns& msPol(msc_p->polarization());
     Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     // fill out the polarization info (only single entry allowed in fits input)
@@ -2023,7 +2016,6 @@ void MSFitsInput::fillSpectralWindowTable() {
     msPol.corrType().put(0, corrType_p);
     msPol.corrProduct().put(0, corrProduct_p);
     msPol.flagRow().put(0, False);
-    */
 
     Int spw = 0;
 
@@ -2575,10 +2567,15 @@ void MSFitsInput::getAxisInfo(ConstFitsKeywordList& kwl) {
         //tmp = (String::toString(i + 1).append("CROT").append(String::toString(nAxis))).chars();
         //cRot_p(i) = kwl(tmp)->asDouble();
     }
-    cout << "coordType=" << coordType_p << endl;
-    cout << "refVal=" << refVal_p<< endl;
-    cout << "refPix=" << refPix_p << endl;
-    cout << "delta=" << delta_p << endl;
+    itsLog << LogOrigin("MSFitsInput", "fillMSMainTable")
+               << LogIO::DEBUG1
+               << "coordType=" << coordType_p
+               << "\nrefVal=" << refVal_p
+               << "\nrefPix=" << refPix_p
+               << "\ndelta=" << delta_p
+               << "\nnPixel_p=" << nPixel_p
+               << LogIO::POST;
+
 }
 
 void MSFitsInput::sortPolarizations() {
@@ -2681,21 +2678,12 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt) {
     MSSpWindowColumns& msSpW(msc_p->spectralWindow());
     MSDataDescColumns& msDD(msc_p->dataDescription());
 
-    /*
-    Int iFreq = getIndex(coordType_p, "FREQ");
-    Int nChan = nPixel_p(iFreq);
-    // assume spectral line, make source table to allow restfreq to be entered
-        if (nChan > 33)
-            addSourceTable_p = True;
-
-     //  Table fqTab=bt.fullTable("",Table::Scratch);
-      */
-     const Regex trailing(" *$"); // trailing blanks
-     ConstFitsKeywordList kwl = bt.kwlist();
-     const FitsKeyword* kw;
-     kwl.first();
-     Int nIF = (kw = kwl("NO_IF")) ? kw->asInt() : 1;
-     nIF_p = nIF;
+    const Regex trailing(" *$"); 
+    ConstFitsKeywordList kwl = bt.kwlist();
+    const FitsKeyword* kw;
+    kwl.first();
+    Int nIF = (kw = kwl("NO_IF")) ? kw->asInt() : 1;
+    nIF_p = nIF;
 
     Table fqTab = bt.fullTable();
     Int nRow = fqTab.nrow();
@@ -2723,7 +2711,7 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt) {
         colTotalBandwidth.getColumn(totalBandwidth);
     }
 
-    Int nSpW = nRow;
+    Int nSpW = nIF;
     Int iFreq = getIndex(coordType_p, "FREQ");
     Int nChan = nPixel_p(iFreq);
 
@@ -2789,65 +2777,406 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt) {
     }
 }
 
+void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
+    MSColumns& msc(*msc_p);
+    const Regex trailing(" *$"); 
+
+    ConstFitsKeywordList kwl = bt.kwlist();
+    //FitsKeywordList pkw = kwl;
+    //cout << "-----\n" << pkw << endl;
+    const FitsKeyword* kw;
+    kwl.first();
+
+    // get the uv table column names
+    //Int nParams = 0; // (kw = kwl("PCOUNT")) ? kw->asInt() : 0;
+    //Int nGroups = 1; // (kw = kwl("GCOUNT")) ? kw->asInt() : 1;
+    Int nFields = (kw = kwl("TFIELDS")) ? kw->asInt() : -1;
+    if (nFields == -1) {
+        itsLog << LogOrigin("MSFitsInput", "fillMSMainTable")
+               << "Could not find the number of fields of the uv table"
+               << LogIO::EXCEPTION;
+    }
+    
+    Vector<String> TType(nFields);
+    Vector<Double> TScal(nFields);
+    Vector<Double> TZero(nFields);
+
+    kwl.first();
+    for (Int i = 0; i < nFields; i++) {
+        TType(i) = (kw = kwl(FITS::TTYPE, i + 1)) ?
+        		String(kw->asString()) : "";
+        TType(i) = TType(i).before(trailing);
+        TScal(i) = (kw = kwl(FITS::TSCAL, i + 1)) ?
+        		 kw->asDouble() : 1;
+        TZero(i) = (kw = kwl(FITS::TZERO, i + 1)) ?
+        		kw->asDouble() : 0;
+    }
+    itsLog << LogOrigin("MSFitsInput", "fillMSMainTable")
+               << LogIO::DEBUG1
+               << "TType=" << TType
+               << "\nTScal=" << TScal
+               << "\nTZero=" << TZero
+               << LogIO::POST;
+
+    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
+    Int nChan = nPixel_p(getIndex(coordType_p, "FREQ"));
+
+    Matrix<Complex> vis(nCorr, nChan);
+    Vector<Float> sigma(nCorr);
+    Matrix<Float> weightSpec(nCorr, nChan);
+    Vector<Float> weight(nCorr);
+    const Int nCat = 3; 
+    
+    Vector<String> cat(nCat);
+    cat(0) = "FLAG_CMD";
+    cat(1) = "ORIGINAL";
+    cat(2) = "USER";
+    msc.flagCategory().rwKeywordSet().define("CATEGORY", cat);
+    Cube<Bool> flagCat(nCorr, nChan, nCat, False);
+    Matrix<Bool> flag = flagCat.xyPlane(0); // references flagCat's storage
+
+
+    Int iU, iV, iW;
+    iU = getIndexContains(TType, "UU");
+    iV = getIndexContains(TType, "VV");
+    iW = getIndexContains(TType, "WW");
+    if (iU < 0 || iV < 0 || iW < 0) {
+        throw(AipsError("MSFitsInput: Cannot find UVW information"));
+    }
+
+    Int iBsln = getIndex(TType, "BASELINE");
+    Int iTime0 = getIndex(TType, "DATE");
+    Int iSource = getIndex(TType, "SOURCE");
+    Int iFreq = getIndex(TType, "FREQSEL");
+    Int iVis = getIndex(TType, "VISIBILITIES");
+
+    receptorAngle_p.resize(1);
+    nAnt_p = 0;
+    Int nrows = bt.nrows();
+
+    itsLog << LogIO::NORMAL << "Reading and writing " << nrows
+            << " rows visibility data " << LogIO::POST;
+    Int row = -1;
+
+    Double interval, exposure;
+    interval = 0.0;
+    exposure = 0.0;
+    Bool discernIntExp(True);
+    Double discernedInt(DBL_MAX);
+
+    ProgressMeter meter(0.0, nrows * 1.0, "UVFITS Filler", "rows copied",
+            "", "", True, nrows / 100);
+
+    Vector<Double> uvw(3);
+
+    // Remember last-filled values for TSM use
+    Int lastFillArrayId, lastFillFieldId, lastFillScanNumber;
+    lastFillArrayId = -1;
+    lastFillFieldId = -1, lastFillScanNumber = 0;
+    Double lastFillTime = 0;
+
+    // Keep track of array-specific scanNumbers, FieldIds and FreqIds
+    Vector<Int> scanNumber(1);
+    Vector<Int> lastFieldId(1);
+    Vector<Int> lastFreqId(1);
+    scanNumber = 0;
+    lastFieldId = -1;
+    lastFreqId = -1;
+    nArray_p = -1;
+
+    Bool lastRowFlag = False;
+
+    for (Int group = 0; group < nrows; group++) {
+  		const Table  tb = (group < 1)? bt.thisRow(): bt.nextRow();
+
+        //const TableDesc td = tb.tableDesc();
+        //td.show();
+        //cout << "nr=" << tb.nrow() << " nc=" << tb.isNull() << endl;
+
+        try{
+            ROScalarColumn<Float> colFrqSel(tb, TType(iFreq));
+            ROScalarColumn<Float> colDate(tb, TType(iTime0));
+            ROScalarColumn<Float> colUU(tb, TType(iU));
+            ROScalarColumn<Float> colVV(tb, TType(iV));
+            ROScalarColumn<Float> colWW(tb, TType(iW));
+            ROScalarColumn<Float> colBL(tb, TType(iBsln));
+            ROScalarColumn<Float> colSU(tb, TType(iSource));
+            ROArrayColumn<Float> colVis(tb, TType(iVis));
+    
+            Int visL = 1;
+            for (uInt i  = 0; i < nPixel_p.nelements(); i++)
+            	visL *= nPixel_p(i);
+            Vector<Float> visib(visL);
+    
+            visib = colVis.getColumn();
+            //cout << "visib=" << visib << endl;
+    
+            Double time = TZero(iTime0) + colDate.asdouble(0);
+            time *= C::day;
+    
+            // Extract fqid
+            Int freqId = (Int)colFrqSel.asfloat(0);
+    
+            // Extract field Id
+            Int fieldId = 0;
+            if (iSource >= 0) {
+                // make 0-based
+                fieldId = (Int)colSU.asfloat(0) - 1;
+            }
+    
+            // Extract uvw
+            uvw(0) = colUU.asdouble(0);
+            uvw(1) = colVV.asdouble(0);
+            uvw(2) = colWW.asdouble(0);
+            // Convert from units of seconds to meters
+            uvw *= C::c;
+    
+            // Extract array/baseline/antenna info
+            Float baseline = colBL.asfloat(0);
+            Int arrayId = Int(100.0 * (baseline - Int(baseline) + 0.001));
+            nArray_p = max(nArray_p, arrayId + 1);
+    
+            Int ant1 = Int(baseline) / 256;
+            nAnt_p = max(nAnt_p, ant1);
+            Int ant2 = Int(baseline) - ant1 * 256;
+            nAnt_p = max(nAnt_p, ant2);
+            ant1--;
+            ant2--; // make 0-based
+    
+            // Ensure arrayId-specific params are of correct length:
+            if (scanNumber.shape() < nArray_p) {
+                scanNumber.resize(nArray_p, True);
+                lastFieldId.resize(nArray_p, True);
+                lastFreqId.resize(nArray_p, True);
+                scanNumber(nArray_p - 1) = 0;
+                lastFieldId(nArray_p - 1) = -1;
+                lastFreqId(nArray_p - 1) = -1;
+            }
+    
+            // Detect new scan (field or freqid change) for each arrayId
+            if (fieldId != lastFieldId(arrayId) || freqId != lastFreqId(arrayId)
+                    || time - lastFillTime > 300.0) {
+                scanNumber(arrayId)++;
+                lastFieldId(arrayId) = fieldId;
+                lastFreqId(arrayId) = freqId;
+            }
+    
+    
+                // keep track of minimum which is the only one
+                // (if time step is larger than UVFITS precision (and zero))
+                discernIntExp = True;
+                Double tempint;
+                tempint = time - lastFillTime;
+                if (tempint > 0.01) {
+                    discernedInt = min(discernedInt, tempint);
+                }
+    
+    
+            // Work out which axis increments fastests, pol or channel
+            Bool polFastest = (getIndex(coordType_p, "STOKES") < 
+                               getIndex(coordType_p, "FREQ"));
+            const Int nx = (polFastest ? nChan : nCorr);
+            const Int ny = (polFastest ? nCorr : nChan);
+    
+            Int count = 0;
+            for (Int ifno = 0; ifno < max(1, nIF_p); ifno++) {
+                // IFs go to separate rows in the MS
+                ms_p.addRow();
+                row++;
+    
+                // fill in values for all the unused columns
+                if (row == 0) {
+                    msc.feed1().put(row, 0);
+                    msc.feed2().put(row, 0);
+                    msc.flagRow().put(row, False);
+                    lastRowFlag = False;
+                    msc.processorId().put(row, -1);
+                    msc.observationId().put(row, 0);
+                    msc.stateId().put(row, -1);
+                }
+    
+                // Fill scanNumber if changed since last row
+                if (scanNumber(arrayId) != lastFillScanNumber) {
+                    msc.scanNumber().put(row, scanNumber(arrayId));
+                    lastFillScanNumber = scanNumber(arrayId);
+                }
+    
+                weight = 0.0;
+                count = 0;
+                // Loop over chans and corrs:
+                for (Int ix = 0; ix < nx; ix++) {
+                    for (Int iy = 0; iy < ny; iy++) {
+                        const Float visReal = visib(count++);
+                        const Float visImag = visib(count++);
+                        const Float wt = visib(count++);
+                        const Int pol = (polFastest ? corrIndex_p[iy]
+                                : corrIndex_p[ix]);
+                        const Int chan = (polFastest ? ix : iy);
+                        if (wt <= 0.0) {
+                            weightSpec(pol, chan) = abs(wt);
+                            flag(pol, chan) = True;
+                        } else {
+                            weightSpec(pol, chan) = wt;
+                            flag(pol, chan) = False;
+                            weight(pol) += wt;
+                        }
+                        vis(pol, chan) = Complex(visReal, visImag);
+                    }
+                }
+    
+                // calculate sigma (weight = inverse variance)
+                for (Int nc = 0; nc < nCorr; nc++) {
+                    if (weight(nc) > 0.0) {
+                        sigma(nc) = sqrt(1.0 / weight(nc));
+                    } else {
+                        sigma(nc) = 0.0;
+                    }
+                }
+    
+                // If available, store interval/exposure
+                if (!discernIntExp) {
+                    msc.interval().put(row, interval);
+                    msc.exposure().put(row, exposure);
+                }
+    
+                msc.data().put(row, vis);
+    
+                msc.weight().put(row, weight);
+                msc.sigma().put(row, sigma);
+                msc.weightSpectrum().put(row, weightSpec);
+    
+                msc.flag().put(row, flag);
+                msc.flagCategory().put(row, flagCat);
+                Bool rowFlag = allEQ(flag, True);
+                if (rowFlag != lastRowFlag) {
+                    msc.flagRow().put(row, rowFlag);
+                    lastRowFlag = rowFlag;
+                }
+    
+                if (arrayId != lastFillArrayId) {
+                    msc.arrayId().put(row, arrayId);
+                    lastFillArrayId = arrayId;
+                }
+    
+                msc.antenna1().put(row, ant1);
+                msc.antenna2().put(row, ant2);
+                if (time != lastFillTime) {
+                    msc.time().put(row, time);
+                    msc.timeCentroid().put(row, time);
+                    lastFillTime = time;
+                }
+                msc.uvw().put(row, uvw);
+    
+                // determine the spectralWindowId
+                Int spW = ifno;
+                if (iFreq >= 0) {
+                    spW = (Int)colFrqSel.asfloat(0) - 1; // make 0-based
+                    if (nIF_p > 0) {
+                        spW *= nIF_p;
+                        spW += ifno;
+                    }
+                }
+               // nSpW = max(nSpW, spW + 1);
+    
+                // Always put DDI (SSM) since it might change rapidly
+                msc.dataDescId().put(row, spW);
+    
+                // store the fieldId
+                if (fieldId != lastFillFieldId) {
+                    msc.fieldId().put(row, fieldId);
+                   // nField = max(nField, fieldId + 1);
+                    lastFillFieldId = fieldId;
+                }
+    
+            }
+            meter.update((group + 1) * 1.0);
+        }
+        catch (AipsError x) { 
+            itsLog << LogOrigin("MSFitsInput", "fillMSMainTable")
+                          << "Exception while filling MS main table. "
+                          << x.getMesg()
+                          << LogIO::EXCEPTION;
+        }
+
+    }
+
+    // If determining interval on-the-fly, fill interval/exposure columns
+    //  now:
+    if (discernIntExp) {
+        discernedInt = floor(100.0 * discernedInt + 0.5) / 100.0;
+        msc.interval().fillColumn(discernedInt);
+        msc.exposure().fillColumn(discernedInt);
+    }
+
+
+    // fill the receptorAngle with defaults, just in case there is no AN table
+    receptorAngle_p = 0;
+    // set the Measure References
+
+
+}
+
+void MSFitsInput::fillObservationTable(ConstFitsKeywordList& kwl) {
+	const FitsKeyword* kw;
+	const Regex trailing(" *$"); // trailing blanks
+	kwl.first();
+	ms_p.observation().addRow();
+	String observer;
+	observer = (kw = kwl(FITS::OBSERVER)) ? kw->asString() : "";
+	observer = observer.before(trailing);
+	MSObservationColumns msObsCol(ms_p.observation());
+	msObsCol.observer().put(0, observer);
+	String telescope = (kw = kwl(FITS::TELESCOP)) ? kw->asString() : "unknown";
+	telescope = telescope.before(trailing);
+	if (telescope == "HATCREEK")
+		telescope = "BIMA";
+	String instrume = (kw = kwl(FITS::INSTRUME)) ? kw->asString() : "unknown";
+	instrume = instrume.before(trailing);
+	msObsCol.telescopeName().put(0, telescope);
+	msObsCol.scheduleType().put(0, "");
+	msObsCol.project().put(0, "");
+
+	Double epoch = (kw = kwl(FITS::EPOCH)) ? kw->asDouble() : 2000;
+
+	String date;
+	date = (kw = kwl(FITS::DATE_OBS)) ? kw->asString() : "";
+	if (date == "")
+		date = "2000-01-01";
+	String date_map;
+	date_map = (kw = kwl(FITS::DATE_MAP)) ? kw->asString() : "";
+	MVTime timeVal, timeRel;
+	MEpoch::Types epochRef;
+	FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
+	FITSDateUtil::fromFITS(timeRel, epochRef, date_map, "UTC");
+	Vector<Double> times(2);
+	times(0) = timeVal.second();
+	times(1) = timeVal.second();
+	obsTime(0) = times(0);
+	obsTime(1) = times(1);
+
+	msObsCol.timeRange().put(0, times);
+	msObsCol.releaseDate().put(0, timeRel.second());
+	msObsCol.flagRow().put(0, False);
+
+}
+
 void MSFitsInput::fillOtherUVTables(BinaryTable& bt, BinaryTable& fqTab) {
-    const Regex trailing(" *$"); // trailing blanks
+
     //TableRecord btKeywords = bt.getKeywords();
 
     ConstFitsKeywordList kwl = bt.kwlist();
-    const FitsKeyword* kw;
 
-    kwl.first();
+    //FitsKeywordList pkw = kwl;
+    //cout << "UV table keywords:\n" << pkw << endl;
 
-    FitsKeywordList pkw = kwl;
-    cout << "UV table keywords:\n" << pkw << endl;
-
-    //////////fill observation table>>>>>>>>>>>
-    ms_p.observation().addRow();
-    String observer;
-    observer = (kw = kwl(FITS::OBSERVER)) ? kw->asString() : "";
-    observer = observer.before(trailing);
-    MSObservationColumns msObsCol(ms_p.observation());
-    msObsCol.observer().put(0, observer);
-    String telescope = (kw = kwl(FITS::TELESCOP)) ? kw->asString() : "unknown";
-    telescope = telescope.before(trailing);
-    if (telescope == "HATCREEK")
-        telescope = "BIMA";
-    String instrume = (kw = kwl(FITS::INSTRUME)) ? kw->asString() : "unknown";
-    instrume = instrume.before(trailing);
-    msObsCol.telescopeName().put(0, telescope);
-    msObsCol.scheduleType().put(0, "");
-    msObsCol.project().put(0, "");
-
-    Double epoch = (kw = kwl(FITS::EPOCH)) ? kw->asDouble() : 2000;
-
-    String date;
-    date = (kw = kwl(FITS::DATE_OBS)) ? kw->asString() : "";
-    if (date == "")
-        date = "2000-01-01";
-    String date_map;
-    date_map = (kw = kwl(FITS::DATE_MAP)) ? kw->asString() : "";
-    MVTime timeVal, timeRel;
-    MEpoch::Types epochRef;
-    FITSDateUtil::fromFITS(timeVal, epochRef, date, "UTC");
-    FITSDateUtil::fromFITS(timeRel, epochRef, date_map, "UTC");
-    Vector<Double> times(2);
-    times(0) = timeVal.second();
-    times(1) = timeVal.second(); 
-    obsTime(0) = times(0);
-    obsTime(1) = times(1);
-
-    msObsCol.timeRange().put(0, times);
-    msObsCol.releaseDate().put(0, timeRel.second());
-    msObsCol.flagRow().put(0, False);
-    //<<<<<<<<<<<<<<<fill observation table/////////
-
-
+    fillObservationTable(kwl);
     fillHistoryTable(kwl);
 
     getAxisInfo(kwl);
     sortPolarizations();
     fillPolarizationTable();
     fillSpectralWindowTable(fqTab);
+
 }
 
 
