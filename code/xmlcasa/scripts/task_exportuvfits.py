@@ -28,7 +28,6 @@ def exportuvfits(vis, fitsfile, datacolumn, field, spw, antenna, time,
                           padwithflags=padwithflags)
 		ms.close( )
 	except Exception, instance:
-		print '*** Error ***',instance
-		raise Exception, instance
+		raise Exception
 
 
