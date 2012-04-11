@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from taskinit import *
 import time
 import os
