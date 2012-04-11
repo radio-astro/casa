@@ -41,6 +41,7 @@
 #include <measures/Measures/MFrequency.h>
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
+#include <tables/Tables/BaseTable.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -312,6 +313,9 @@ protected:
   // Read a binary table extension and update history table
   void fillHistoryTable(ConstFitsKeywordList& kwl);
 
+  // Read a binary table extension and update history table
+  void fillObservationTable(ConstFitsKeywordList& kwl);
+
   //extract axis information
   void getAxisInfo(ConstFitsKeywordList&);
 
@@ -327,6 +331,8 @@ protected:
 
   // fill observation, polarization, description, main tables from FITS UV table
   void fillOtherUVTables(BinaryTable& bt, BinaryTable& fq);
+
+  void fillMSMainTable(BinaryTable& bt);
 
   // fill spectralwindow table from FITS FQ table + header info
   void fillSpectralWindowTable(BinaryTable& bt, Int nSpW);
