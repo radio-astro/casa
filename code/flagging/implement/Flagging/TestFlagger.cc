@@ -587,7 +587,9 @@ TestFlagger::initAgents()
 						createAgent = fdh_p->checkIfColumnExists(MS::columnName(MS::CORRECTED_DATA));
 						if (!createAgent)
 						{
-							os << LogIO::WARN << "Agent cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
+							String name;
+							agent_rec.get("name",name);
+							os << LogIO::WARN << "Agent " << name << " cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
 						}
 					}
 				}
