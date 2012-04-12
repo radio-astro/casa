@@ -448,6 +448,8 @@ def tflagdata(vis,
             elif display == 'report':
                 agent_pars['reportdisplay'] = True
                 
+            # jagonzal: CAS-3966 Add datacolumn to display agent parameters
+            agent_pars['datacolumn'] = datacolumn
             tflocal.parseagentparameters(agent_pars)
             
             # Disable saving the parameters to avoid inconsistencies
