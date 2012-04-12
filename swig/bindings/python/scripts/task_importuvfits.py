@@ -21,8 +21,8 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
         myms.close()
     except Exception, instance: 
         ok = False
-        #print "Error importing %s to %s \n     " % (fitsfile, vis) , instance
-        raise Exception   , instance
+        casalog.post("Failed to import %s to %s" % (fitsfile, vis))
+        raise Exception
 
     if not ok:
         return;
@@ -33,8 +33,7 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
         param_vals = [eval(p) for p in param_names]
         ok &= write_history(myms, vis, 'importuvfits', param_names, param_vals, casalog)
     except Exception, instance:
-        casalog.post("Error \'%s\' updating HISTORY (importuvfits)\n     " % (instance),
-                  'WARN')
+        casalog.post("Failed to updated HISTORY table", 'WARN')
 
     if not ok:
         return;
@@ -47,5 +46,5 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
                        merge='replace')
         ok &= tflocal.done()
     except Exception, instance: 
-        print 'Error saving original flags (importuvfits)\n     ' , instance
+        casalog.post('Failed to save original flags', 'WARN')
         raise Exception #, instance

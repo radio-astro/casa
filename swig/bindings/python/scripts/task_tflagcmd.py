@@ -37,7 +37,6 @@ def tflagcmd(
         raise Exception, 'Failed to load xml.dom.minidom into python'
 
     casalog.origin('tflagcmd')
-#    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
     tflocal = casac.testflagger()
     mslocal = casac.ms()
@@ -107,7 +106,6 @@ def tflagcmd(
             else:
                 myflagcmd = readFromTable(msfile, myflagrows=tablerows,
                         useapplied=useapplied, myreason=reason)
-
 
             listmode = 'cmd'
         elif inpmode == 'file':
@@ -229,7 +227,7 @@ def tflagcmd(
 
             # Apply/Unapply the flag commands to the data
             apply = True
-            
+
             # Preserve the order of the cmd list. When unapply, the order
             # should not be preserved, because the unapply list should run
             # before the re-apply list in the FlagAgentList.apply() method
@@ -255,11 +253,11 @@ def tflagcmd(
                     casalog.post('%s' % unionpars)
                 else:
                     casalog.post('Iterating through the entire MS')
-                
+
                 mslocal.close()
-                    
-            # Get all the selection parameters, but set correlation to ''
             elif cmdlist.__len__() == 1:
+
+            # Get all the selection parameters, but set correlation to ''
                 cmd0 = myflagcmd[cmdkeys[0]]['command']
                 unionpars = fh.getSelectionPars(cmd0)
                 casalog.post('The selected subset of the MS will be: ')
@@ -272,7 +270,8 @@ def tflagcmd(
                 apply = False
                 preserve_order = False
 
-            list2save = fh.setupAgent(tflocal, myflagcmd, tablerows, apply, True)
+            list2save = fh.setupAgent(tflocal, myflagcmd, tablerows,
+                    apply, True)
 
             # Initialize the Agents
             tflocal.init()
@@ -344,7 +343,7 @@ def tflagcmd(
                 # Plot flag commands from FLAG_CMD or xml
                 casalog.post('Warning: will only reliably plot individual per-antenna flags'
                              )
-                plotflags(myflagcmd, plotfile, t1sdata, t2sdata)
+                newplotflags(myflagcmd, plotfile, t1sdata, t2sdata)
             else:
                 casalog.post('Warning: empty flag dictionary, nothing to plot'
                              )
@@ -352,8 +351,8 @@ def tflagcmd(
             # Output flag dictionary
             casalog.post('Returning extracted dictionary')
             return myflagcmd
-        
     except Exception, instance:
+
         tflocal.done()
         casalog.post('%s' % instance, 'ERROR')
         raise
@@ -481,7 +480,7 @@ def readFromTable(
             # Extract antenna and timerange strings from cmd
             antstr = ''
             timstr = ''
-            
+
             flagd['id'] = str(i)
             flagd['antenna'] = ''
             flagd['mode'] = ''
@@ -494,20 +493,21 @@ def readFromTable(
             flagd['applied'] = f_applied[i]
 
             # If shadow, remove the addantenna dictionary
-            if cmd.__contains__('shadow') and cmd.__contains__('addantenna'):
+            if cmd.__contains__('shadow') \
+                and cmd.__contains__('addantenna'):
                 i0 = cmd.rfind('addantenna')
-                if cmd[i0+11] == '{':
+                if cmd[i0 + 11] == '{':
                     # It is a dictionary. Remove it from line
                     i1 = cmd.rfind('}')
-                    antpar = cmd[i0+11:i1+1]
-                    temp = cmd[i0:i1+1]
-                    newcmd = cmd.replace(temp,'')
+                    antpar = cmd[i0 + 11:i1 + 1]
+                    temp = cmd[i0:i1 + 1]
+                    newcmd = cmd.replace(temp, '')
                     antpardict = fh.convertStringToDict(antpar)
                     flagd['addantenna'] = antpardict
-                    cmd = newcmd                                
- 
+                    cmd = newcmd
+
             flagd['command'] = cmd
-            
+
             keyvlist = cmd.split()
             if keyvlist.__len__() > 0:
                 for keyv in keyvlist:
@@ -522,7 +522,7 @@ def readFromTable(
                         xval = xval.strip("'")
                     if xval.count('"') > 0:
                         xval = xval.strip('"')
-                        
+
                     if xkey == 'mode':
                         flagd['mode'] = xval
                     elif xkey == 'timerange':
@@ -531,7 +531,6 @@ def readFromTable(
                         flagd['antenna'] = xval
                     elif xkey == 'id':
                         flagd['id'] = xval
-
 
             # STM 2010-12-08 Do not put timerange if not in command
             # if timstr=='':
@@ -1080,8 +1079,8 @@ def listFlagCmd(
             if fld.has_key('addantenna'):
                 addantenna = fld['addantenna']
                 cmd = cmd + ' addantenna=' + str(addantenna)
-            
         else:
+
             cmd = 'Unset'
         if fld.has_key('type'):
             typ = fld['type']
@@ -1569,7 +1568,7 @@ def plotflags(
                 thisReason = myflags[thisflag]['reason']
                 if thisReason == 'FOCUS_ERROR':
                     thisColor = 'red'
-                    thisOffset = 0.29999999999999999
+                    thisOffset = 0.3
                 elif thisReason == 'SUBREFLECTOR_ERROR':
                     thisColor = 'blue'
                     thisOffset = .15
@@ -1581,7 +1580,7 @@ def plotflags(
                     thisOffset = -.15
                 else:
                     thisColor = 'orange'
-                    thisOffset = 0.29999999999999999
+                    thisOffset = 0.3
                 mytimerange = myflags[thisflag]['timerange']
                 if mytimerange != '':
                     t1 = mytimerange[:mytimerange.find('~')]
@@ -1605,8 +1604,8 @@ def plotflags(
     myXlim = ax1.get_xlim()
     myXrange = myXlim[1] - myXlim[0]
     legendFontSize = 12
-    ax1.text(myXlim[0] + .05 * myXrange, 29, 'FOCUS', color='red',
-             size=legendFontSize)
+    ax1.text(myXlim[0] + 0.050000000000000003 * myXrange, 29, 'FOCUS',
+             color='red', size=legendFontSize)
     ax1.text(myXlim[0] + .17 * myXrange, 29, 'SUBREFLECTOR',
              color='blue', size=legendFontSize)
     ax1.text(myXlim[0] + .42 * myXrange, 29, 'OFF SOURCE', color='green'
@@ -1638,6 +1637,347 @@ def plotflags(
     return
 
 
+def newplotflags(
+    myflags,
+    plotname,
+    t1sdata,
+    t2sdata,
+    ):
+    #
+    # Function to plot flagging dictionary
+    # Adapted from J.Marvil
+    # Updated STM v4.1 2011-11-02 to handle ALMA flags
+    # Updated STM v4.2 2012-02-16 trim flag times to data times
+    # Updated STM v4.2 2012-04-10 bug fix in trim flag times to data times
+    # Updated STM v4.2 2012-04-10 messages to logger
+    try:
+        import casac
+    except ImportError, e:
+        print 'failed to load casa:\n', e
+        exit(1)
+    qatool = casac.homefinder.find_home_by_name('quantaHome')
+    qa = casac.qa = qatool.create()
+
+    try:
+        import pylab as pl
+    except ImportError, e:
+        print 'failed to load pylab:\n', e
+        exit(1)
+
+    # list of supported colors (in order)
+    colorlist = [
+        'red',
+        'blue',
+        'green',
+        'black',
+        'cyan',
+        'magenta',
+        'yellow',
+        'orange',
+        ]
+    ncolors = colorlist.__len__()
+
+    # get list of flag keys
+    keylist = myflags.keys()
+
+    # get lists of antennas and reasons
+    # make plotting dictionary
+    myants = []
+    myreas = []
+    plotflag = {}
+    ipf = 0
+    for key in keylist:
+        antstr = myflags[key]['antenna']
+        reastr = myflags[key]['reason']
+        timstr = myflags[key]['timerange']
+        if antstr != '':
+            # flags that have antenna specified
+            antlist = antstr.split(',')
+            nantlist = antlist.__len__()
+        else:
+            # Special
+            antlist = ['All']
+            nantlist = 1
+        #
+        realist = reastr.split(',')
+        nrealist = realist.__len__()
+        #
+        timlist = timstr.split(',')
+        ntimlist = timlist.__len__()
+        #
+        # Break these into nants x ntimes flags
+        # Trick is assigning multiple reasons
+        # Normal cases:
+        # A. One reason, single/multiple antennas x times
+        # B. Multiple reasons=times, single/multiple antenna(s)
+        # C. Single time, multiple antennas/reasons
+        # D. Multiple reasons, no way to correspond with times
+        #
+        timmin = 1.0E11
+        timmax = 0.0
+        if nrealist == 1:
+            # simplest case, single reason
+            reas = realist[0]
+            if reas == '':
+                reas = 'Unknown'
+            if myreas.count(reas) == 0:
+                myreas.append(reas)
+            for ia in range(nantlist):
+                ant = antlist[ia]
+                if myants.count(ant) == 0:
+                    myants.append(ant)
+                for it in range(ntimlist):
+                    times = timlist[it]
+                    plotflag[ipf] = {}
+                    plotflag[ipf]['antenna'] = ant
+                    plotflag[ipf]['reason'] = reas
+                    plotflag[ipf]['timerange'] = times
+                    plotflag[ipf]['show'] = True
+                    ipf += 1
+        elif nrealist == ntimlist:
+            # corresponding reasons and times
+            for ia in range(nantlist):
+                ant = antlist[ia]
+                if myants.count(ant) == 0:
+                    myants.append(ant)
+                for it in range(ntimlist):
+                    times = timlist[it]
+                    reas = realist[it]
+                    if reas == '':
+                        reas = 'Unknown'
+                    if myreas.count(reas) == 0:
+                        myreas.append(reas)
+                    plotflag[ipf] = {}
+                    plotflag[ipf]['antenna'] = ant
+                    plotflag[ipf]['reason'] = reas
+                    plotflag[ipf]['timerange'] = times
+                    plotflag[ipf]['show'] = True
+                    ipf += 1
+        else:
+            # no correspondence between multiple reasons and ants/times
+            # assign reason 'Miscellaneous'
+            reas = 'Miscellaneous'
+            if myreas.count(reas) == 0:
+                myreas.append(reas)
+            for ia in range(nantlist):
+                ant = antlist[ia]
+                if myants.count(ant) == 0:
+                    myants.append(ant)
+                for it in range(ntimlist):
+                    times = timlist[it]
+                    plotflag[ipf] = {}
+                    plotflag[ipf]['antenna'] = ant
+                    plotflag[ipf]['reason'] = reas
+                    plotflag[ipf]['timerange'] = times
+                    plotflag[ipf]['show'] = True
+                    ipf += 1
+
+    myants.sort()
+    nants = myants.__len__()
+    nreas = myreas.__len__()
+    casalog.post('Found ' + str(nreas) + ' reasons to plot for '
+                 + str(nants) + ' antennas')
+    npf = ipf
+    casalog.post('Found ' + str(npf) + ' total flag ranges to plot')
+
+    # sort out times
+    for ipf in range(npf):
+        times = plotflag[ipf]['timerange']
+        if times != '':
+            if times.count('~') > 0:
+                t1 = times[:times.find('~')]
+                t2 = times[times.find('~') + 1:]
+            else:
+                t1 = times
+                t2 = t1
+            (t1s, t2s) = (qa.convert(t1, 's')['value'], qa.convert(t2,
+                          's')['value'])
+            plotflag[ipf]['t1s'] = t1s
+            plotflag[ipf]['t2s'] = t2s
+            if t1s < timmin:
+                timmin = t1s
+            if t2s > timmax:
+                timmax = t2s
+    # min,max times
+    q1 = qa.quantity(timmin, 's')
+    time1 = qa.time(q1, form='ymd', prec=9)
+    q2 = qa.quantity(timmax, 's')
+    time2 = qa.time(q2, form='ymd', prec=9)
+    casalog.post('Found flag times from ' + time1 + ' to ' + time2)
+
+    # sort out blank times
+    for ipf in range(npf):
+        times = plotflag[ipf]['timerange']
+        if times == '':
+            if t2sdata >= t1sdata > 0:
+                plotflag[ipf]['t1s'] = t1sdata
+                plotflag[ipf]['t2s'] = t2sdata
+            else:
+                plotflag[ipf]['t1s'] = timmin
+                plotflag[ipf]['t2s'] = timmax
+
+    # if flag times are beyond range of data, trim them
+    # Added STM 2012-02-16, fixed STM 2012-04-10
+    ndropped = 0
+    if t2sdata >= t1sdata > 0 and (timmin < t1sdata or timmax
+                                   > t2sdata):
+        # min,max data times
+        q1 = qa.quantity(t1sdata, 's')
+        tdata1 = qa.time(q1, form='ymd', prec=9)
+        q2 = qa.quantity(t2sdata, 's')
+        tdata2 = qa.time(q2, form='ymd', prec=9)
+        casalog.post('WARNING: Trimming flag times to data limits '
+                     + tdata1 + ' to ' + tdata2)
+
+        for ipf in range(npf):
+            t1s = plotflag[ipf]['t1s']
+            t2s = plotflag[ipf]['t2s']
+            if t1s < t1sdata:
+                if t2s >= t1sdata:
+                    # truncate to t1sdata
+                    plotflag[ipf]['t1s'] = t1sdata
+                else:
+                    # entirely outside data range, do not plot
+                    plotflag[ipf]['show'] = False
+                    ndropped += 1
+
+            if t2s > t2sdata:
+                if t1s <= t2sdata:
+                    # truncate to t2sdata
+                    plotflag[ipf]['t2s'] = t2sdata
+                else:
+                    # entirely outside data range, do not plot
+                    plotflag[ipf]['show'] = False
+                    ndropped += 1
+
+        if ndropped > 0:
+            casalog.post('WARNING: Trimming dropped ' + str(ndropped)
+                         + ' flags entirely')
+
+    # make reason dictionary with mapping of colors and offsets (-0.3 to 0.3)
+    readict = {}
+    reakeys = []
+    if nreas > ncolors:
+        for i in range(nreas):
+            reas = myreas[i]
+            readict[reas] = {}
+            if i < ncolors - 1:
+                colr = colorlist[i]
+                readict[reas]['color'] = colr
+                readict[reas]['index'] = i
+                offs = 0.3 - float(i) * 0.6 / float(ncolors - 1)
+                readict[reas]['offset'] = offs
+                reakeys.append(reas)
+            else:
+                colr = colorlist[ncolors - 1]
+                readict[reas]['color'] = colr
+                readict[reas]['index'] = ncolors - 1
+                readict[reas]['offset'] = -0.3
+        reakeys.append('Other')
+        readict['Other'] = {}
+        readict['Other']['color'] = colorlist[ncolors - 1]
+        readict['Other']['index'] = ncolors - 1
+        readict['Other']['offset'] = -0.3
+    else:
+        for i in range(nreas):
+            reas = myreas[i]
+            reakeys.append(reas)
+            colr = colorlist[i]
+            offs = 0.3 - float(i) * 0.6 / float(ncolors - 1)
+            readict[reas] = {}
+            readict[reas]['color'] = colr
+            readict[reas]['index'] = i
+            readict[reas]['offset'] = offs
+    nlegend = reakeys.__len__()
+    casalog.post('Will plot ' + str(nlegend) + ' reasons in legend')
+
+    antind = 0
+    if plotname == '':
+        pl.ion()
+    else:
+        pl.ioff()
+
+    f1 = pl.figure()
+    ax1 = f1.add_axes([.15, .1, .75, .85])
+#    ax1.set_ylabel('antenna')
+#    ax1.set_xlabel('time')
+    # badflags=[]
+    nplotted = 0
+    for thisant in myants:
+        antind += 1
+        for ipf in range(npf):
+            if plotflag[ipf]['show'] and plotflag[ipf]['antenna'] \
+                == thisant:
+                # plot this flag
+                thisReason = plotflag[ipf]['reason']
+                thisColor = readict[thisReason]['color']
+                thisOffset = readict[thisReason]['offset']
+                t1s = plotflag[ipf]['t1s']
+                t2s = plotflag[ipf]['t2s']
+                myTimeSpan = t2s - t1s
+    
+                ax1.plot([t1s, t2s], [antind + thisOffset, antind
+                     + thisOffset], color=thisColor, lw=2, alpha=.7)
+                nplotted += 1
+
+    casalog.post('Plotted ' + str(nplotted) + ' flags')
+
+    myXlim = ax1.get_xlim()
+    myXrange = myXlim[1] - myXlim[0]
+    # Pad the time axis?
+    PadTime = 0.050000000000000003
+    if PadTime > 0:
+        xPad = PadTime * myXrange
+        x0 = myXlim[0] - xPad
+        x1 = myXlim[1] + xPad
+        ax1.set_xlim(x0, x1)
+        myXrange = x1 - x0
+    else:
+        # print '  Rescaled x axis'
+        x0 = myXlim[0]
+        x1 = myXlim[1]
+
+    legendFontSize = 12
+    myYupper = nants + nlegend + 1.5
+    # place legend text
+    i = nants
+    x = x0 + 0.050000000000000003 * myXrange
+    for reas in reakeys:
+        i += 1
+        colr = readict[reas]['color']
+        ax1.text(x, i, reas, color=colr, size=legendFontSize)
+    ax1.set_ylim([0, myYupper])
+
+    ax1.set_yticks(range(1, len(myants) + 1))
+    ax1.set_yticklabels(myants)
+    # print '  Relabled y axis'
+
+    nxticks = 3
+    ax1.set_xticks(pl.linspace(myXlim[0], myXlim[1], nxticks))
+
+    mytime = []
+    myTimestr = []
+    for itim in range(nxticks):
+        time = myXlim[0] + (myXlim[1] - myXlim[0]) * float(itim) \
+            / float(nxticks - 1)
+        mytime.append(time)
+        q1 = qa.quantity(time, 's')
+        time1 = qa.time(q1, form='ymd', prec=9)
+        if itim > 0:
+            time1s = time1[11:]
+        else:
+            time1s = time1
+        myTimestr.append(time1s)
+
+    ax1.set_xticklabels(myTimestr)
+    # print myTimestr
+    if plotname == '':
+        pl.draw()
+    else:
+        pl.savefig(plotname, dpi=150)
+    return
+
+
 def isModeValid(line):
     '''Check if mode is valid based on a line
        molinede --> line with strings
@@ -1645,9 +1985,9 @@ def isModeValid(line):
            '',manual,clip,quack,shadow,elevation      '''
 
     if line.__contains__('mode'):
-        if (line.__contains__('manual') or line.__contains__('clip') or
-            line.__contains__('quack') or line.__contains__('shadow') or
-            line.__contains__('elevation')):
+        if line.__contains__('manual') or line.__contains__('clip') \
+            or line.__contains__('quack') or line.__contains__('shadow'
+                ) or line.__contains__('elevation'):
             return True
         else:
             return False
