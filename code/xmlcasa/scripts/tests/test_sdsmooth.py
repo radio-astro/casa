@@ -176,7 +176,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 61.521829228644677,
                   'baserms': 0.17469978332519531}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test02(self):
         """Test 2: kernel = 'boxcar'"""
@@ -193,7 +193,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 62.508279566880944,
                   'baserms': 0.15886218845844269}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test03(self):
         """Test 3: kernel = 'boxcar' + kwidth = 16"""
@@ -212,7 +212,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 65.946254391136108,
                   'baserms': 0.096009217202663422}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
 
     def test04(self):
@@ -230,7 +230,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 63.315141667417912,
                   'baserms': 0.14576216042041779}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test05(self):
         """Test 5: kernel = 'gaussian' + kwidth = 16"""
@@ -249,7 +249,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 68.064315277502047,
                   'baserms': 0.074664078652858734}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test06(self):
         """Test 6: Test overwrite=True"""
@@ -281,7 +281,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 63.315141667417912,
                   'baserms': 0.14576216042041779}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
 
     def test07(self):
@@ -309,7 +309,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.916985,
                  "incr": 24416.931915037214}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")
@@ -353,7 +353,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.916985,
                  "incr": 24416.931914787496}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")
@@ -397,7 +397,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.917,
                  "incr": 24416.931942994266}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")
