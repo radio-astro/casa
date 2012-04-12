@@ -83,12 +83,12 @@ class clean_test1(unittest.TestCase):
     def test2(self):
         """Clean 2: Wrong input should return False"""
         msfile = 'badfilename'
-        self.res = clean(vis=msfile, imagename=self.img)
+        self.res = clean(vis=msfile, imagename=self.img, imagermode='')
         self.assertFalse(self.res)
         
     def test3(self):
         """Clean 3: Good input should return None"""
-        self.res = clean(vis=self.msfile,imagename=self.img)
+        self.res = clean(vis=self.msfile,imagename=self.img, imagermode='')
         self.assertEqual(self.res,None)
         
     def test4(self):
@@ -103,7 +103,7 @@ class clean_test1(unittest.TestCase):
         
     def test6(self):
         """Clean 6: Non-default field value"""
-        self.res = clean(vis=self.msfile,imagename=self.img,field='0~1')
+        self.res = clean(vis=self.msfile,imagename=self.img,field='0~1', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))           
         
@@ -114,7 +114,7 @@ class clean_test1(unittest.TestCase):
        
     def test8(self):
         """Clean 8: Non-default spw value"""
-        self.res = clean(vis=self.msfile,imagename=self.img,spw='0')
+        self.res = clean(vis=self.msfile,imagename=self.img,spw='0', imagermode='')
         self.assertTrue(os.path.exists(self.img+'.image'))
 
     def test9(self):
@@ -125,7 +125,7 @@ class clean_test1(unittest.TestCase):
     # FIXME: CHANGE SUBPARAMETERS FOR DIFFERENT MODES
     def test10(self):
         """Clean 10: Non-default mode channel"""
-        self.res = clean(vis=self.msfile,imagename=self.img,mode='channel')
+        self.res = clean(vis=self.msfile,imagename=self.img,mode='channel',imagermode='')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
@@ -137,7 +137,7 @@ class clean_test1(unittest.TestCase):
         # to change (wider, since the velocity width was calculated from lower
         # frequency side) for the default velocity mode. This cause the last
         # channel image to be blank. To avoid this use nearest interpolation. 
-        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='23600MHz', interpolation='nearest')
+        res = clean(vis=self.msfile,imagename=self.img,mode='velocity',restfreq='23600MHz', interpolation='nearest',imagermode='')
         if(res != None):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -161,7 +161,7 @@ class clean_test1(unittest.TestCase):
         
     def test12(self):
         """Clean 12: Non-default mode frequency"""
-        self.res = clean(vis=self.msfile,imagename=self.img,mode='frequency')
+        self.res = clean(vis=self.msfile,imagename=self.img,mode='frequency',imagermode='')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
         
@@ -172,7 +172,7 @@ class clean_test1(unittest.TestCase):
         
     def test14(self):
         """Clean 14: Non-default gridmode widefield"""
-        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='widefield',imsize=[20])
+        self.res = clean(vis=self.msfile,imagename=self.img,gridmode='widefield',imsize=[20],imagermode='')
         self.assertEqual(self.res, None) 
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist'%self.img)
 
@@ -191,7 +191,7 @@ class clean_test1(unittest.TestCase):
     def test16(self):
         """Clean 16: Non-default niter values"""
         for n in range(10,400,50):
-            self.res = clean(vis=self.msfile,imagename=self.img,niter=n)
+            self.res = clean(vis=self.msfile,imagename=self.img,niter=n, imagermode='')
             self.assertEqual(self.res,None,'Failed for niter = %s' %n)
     
     def test17(self):
@@ -201,13 +201,13 @@ class clean_test1(unittest.TestCase):
         
     def test18(self):
         """Clean 18: Non-default psfmode hogbom"""
-        self.res = clean(vis=self.msfile,imagename=self.img,psfmode='hogbom')
+        self.res = clean(vis=self.msfile,imagename=self.img,psfmode='hogbom',imagermode='')
         self.assertEqual(self.res, None)            
         self.assertTrue(os.path.exists(self.img+'.image'))
         
     def test19(self):
         """Clean 19: Non-default psfmode clarkstokes"""
-        self.res = clean(vis=self.msfile,imagename=self.img,psfmode='clarkstokes')
+        self.res = clean(vis=self.msfile,imagename=self.img,psfmode='clarkstokes',imagermode='')
         self.assertEqual(self.res, None)            
         self.assertTrue(os.path.exists(self.img+'.image'))
       
@@ -218,6 +218,7 @@ class clean_test1(unittest.TestCase):
 
     def test21(self):
         '''Clean 21: Non-default imagermode csclean'''
+        # now csclean is the default
         self.res = clean(vis=self.msfile,imagename=self.img,imagermode='csclean')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
@@ -235,13 +236,13 @@ class clean_test1(unittest.TestCase):
 
     def test24(self):
         '''Clean 24: Non-default imsize values'''
-        self.res = clean(vis=self.msfile,imagename=self.img,imsize=[80,80])
+        self.res = clean(vis=self.msfile,imagename=self.img,imsize=[80,80], imagermode='')
         self.assertEqual(self.res,None)
         self.assertTrue(os.path.exists(self.img+'.image'),'Image %s does not exist' %self.img)
 
     def test25(self):
         """Clean 25: Non-default cell values"""
-        self.res = clean(vis=self.msfile,imagename=self.img, cell=12.5)
+        self.res = clean(vis=self.msfile,imagename=self.img, cell=12.5, imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
@@ -252,7 +253,7 @@ class clean_test1(unittest.TestCase):
         
     def test27(self):
         """Clean 27: Non-default Stokes parameter"""
-        self.res = clean(vis=self.msfile,imagename=self.img, stokes='RR')
+        self.res = clean(vis=self.msfile,imagename=self.img, stokes='RR', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
@@ -263,19 +264,19 @@ class clean_test1(unittest.TestCase):
         
     def test29(self):
         '''Clean 29: Non-default weighting uniform'''
-        self.res = clean(vis=self.msfile,imagename=self.img, weighting='uniform')
+        self.res = clean(vis=self.msfile,imagename=self.img, weighting='uniform', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
     def test30(self):
         '''Clean 30: Non-default weighting briggs'''
-        self.res = clean(vis=self.msfile,imagename=self.img, weighting='briggs')
+        self.res = clean(vis=self.msfile,imagename=self.img, weighting='briggs', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
     def test31(self):
         '''Clean 31: Non-default weighting radial'''
-        self.res = clean(vis=self.msfile,imagename=self.img, weighting='radial')
+        self.res = clean(vis=self.msfile,imagename=self.img, weighting='radial', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         
@@ -284,7 +285,7 @@ class clean_test1(unittest.TestCase):
 #        self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
 #                         timerange='>11:30:00',antenna='VA12')
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>11:30:00',antenna='VA01')
+                         timerange='>11:30:00',antenna='VA01', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
 
@@ -298,7 +299,7 @@ class clean_test1(unittest.TestCase):
         '''Clean 34: Verify the value of pixel 50'''
         #run clean with some parameters
         self.res = clean(vis=self.msfile,imagename=self.img,selectdata=True,
-                         timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10)
+                         timerange='>11:28:00',field='0~2',imsize=[100,100],niter=10,imagermode='')
         
         os.system('cp -r ' + self.img + '.image' + ' myimage.im')
         self.assertEqual(self.res, None)
@@ -319,18 +320,18 @@ class clean_test1(unittest.TestCase):
         
     def test36(self):
         '''Clean 36: Non-default value of phasecenter'''
-        self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2)
+        self.res=clean(vis=self.msfile,imagename=self.img,phasecenter=2,imagermode='')
         self.assertTrue(os.path.exists(self.img+'.image'))
 
     def test37(self):
         '''Clean 37: Test box mask'''
-        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145],imagermode='')
         self.assertTrue(os.path.exists(self.img+'.image') and
 			os.path.exists(self.img+'.mask'))
 
     def test38(self):
         '''Clean 38: Test freeing of resource for mask (checks CAS-954)'''
-        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145])
+        self.res=clean(vis=self.msfile,imagename=self.img,mask=[115,115,145,145],imagermode='')
         cmd='/usr/sbin/lsof|grep %s' % self.img+'.mask'
         output=commands.getoutput(cmd)
         ret=output.find(self.img+'.mask')
@@ -340,7 +341,7 @@ class clean_test1(unittest.TestCase):
         '''Clean 39: Input mask image specified'''
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         shutil.copytree(datapath+self.msk, '1_'+self.msk)
-        self.res=clean(vis=self.msfile,imagename=self.img2,mask='1_'+self.msk)
+        self.res=clean(vis=self.msfile,imagename=self.img2,mask='1_'+self.msk, imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img2+'.image'))
         # cleanup
@@ -350,20 +351,20 @@ class clean_test1(unittest.TestCase):
         '''Clean 40: Test chaniter=T clean with flagged channels'''
         # test CAS-2369 bug fix 
         flagdata(vis=self.msfile,mode='manualflag',spw='0:0~0')
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',chaniter=True, spw='0')
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',chaniter=True, spw='0', imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
          
     def test41(self):
         '''Clean 41: Test nterms=2 and ref-freq > maximum-frequency'''
         # This tests if negative-weights are being correctly allowed through the gridders
-        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='25.0GHz',niter=5);
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='25.0GHz',niter=5,imagermode='');
         self.assertEqual(self.res,None);
 
     def test42(self):
         '''Clean42: Test nterms=2, with only one channel whose frequency is same as ref-freq'''
         # This tests if a numerical failure-mode is detected and returned without fuss.
-        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0');
+        self.res=clean(vis=self.msfile,imagename=self.img,nterms=2,reffreq='23691.4682MHz',spw='0:0',imagermode='');
         self.assertFalse(self.res);
 
     def test43(self):
@@ -371,7 +372,7 @@ class clean_test1(unittest.TestCase):
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         refpath=datapath+'reference/'
         shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=self.boxmsk)
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=self.boxmsk,imagermode='')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
         self.assertTrue(self.compareimages(self.img+'.mask', refpath+'ref_cleantest1boxfile.mask'))
@@ -382,14 +383,14 @@ class clean_test1(unittest.TestCase):
         refpath=datapath+'reference/'
         shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
         # wider channel range mask 
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=[115,115,145,145], niter=10)
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=[115,115,145,145], niter=10,imagermode='')
         self.assertEqual(self.res, None)
         # apply to narrower channel range 
         self.res=clean(vis=self.msfile,imagename=self.img+'.narrow',mode='channel', 
-                       nchan=3, start=2, mask=self.img+'.mask', niter=10)
+                       nchan=3, start=2, mask=self.img+'.mask', niter=10,imagermode='')
         self.assertEqual(self.res, None)
         # apply the narrower channel range mask to wider channel range clean
-        self.res=clean(vis=self.msfile,imagename=self.img+'.wide',mode='channel',mask=self.img+'.narrow.mask', niter=10)
+        self.res=clean(vis=self.msfile,imagename=self.img+'.wide',mode='channel',mask=self.img+'.narrow.mask', niter=10,imagermode='')
       
         # make sub-image from masks for comparison 
         ia.open(self.img+'.mask')
@@ -421,7 +422,7 @@ class clean_test1(unittest.TestCase):
     def test45(self):
         """Clean 45: Test selection of obs ID 0 (present)"""
         self.res = clean(vis=self.msfile, imagename=self.img + '0',
-                         selectdata=True, observation='0', niter=10)
+                         selectdata=True, observation='0', niter=10, imagermode='')
         self.assertTrue(os.path.exists(self.img + '0.image'))
 
     def test46(self):
@@ -531,6 +532,7 @@ class clean_multifield_test(unittest.TestCase):
                         mode="mfs",
                         interpolation="linear",
                         niter=100, psfmode="clark",
+                        imagermode='',
                         #mask=[[250, 250, 262, 262], [250, 350, 262, 362]],
                         # use (new) CASA region 
                         mask=['box[ [250pix, 250pix], [262pix, 262pix]]', 'box[ [250pix, 350pix], [262pix, 362pix]]'],
@@ -561,6 +563,7 @@ class clean_multifield_test(unittest.TestCase):
                         mode="mfs",
                         interpolation="linear",
                         niter=100, psfmode="clark",
+                        imagermode='',
                         mask=[250, 250, 262, 262],
                         imsize=[512, 512],
                         cell="0.0001arcsec",
@@ -591,6 +594,7 @@ class clean_multifield_test(unittest.TestCase):
                         mode="mfs",
                         interpolation="linear",
                         niter=100, psfmode="clark",
+                        imagermode='',
                         mask='box [[250pix, 250pix], [262pix, 262pix]]',
                         imsize=[512, 512],
                         cell="0.0001arcsec",
@@ -656,6 +660,7 @@ class clean_multiterm_multifield_test(unittest.TestCase):
                         mode="mfs",
                         nterms=2,
                         niter=10,
+                        imagermode='',
                         mask='circle[[50pix , 50pix] ,15pix ]', 
                         modelimage=['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'],
                         imsize=[100, 100],
@@ -751,9 +756,9 @@ class clean_multims_test(unittest.TestCase):
     def test_multims1(self):
         '''Clean multims test1: Test two cases with wrong numbers of spw or field given)'''
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
-        resfail1=clean(vis=self.msfiles,spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img)
-        resfail2=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img)
-        self.res=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img)
+        resfail1=clean(vis=self.msfiles,spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img,imagermode='')
+        resfail2=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img,imagermode='')
+        self.res=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img,imagermode='')
         self.assertFalse(resfail1)
         self.assertFalse(resfail2)
         self.assertEqual(self.res,None)
@@ -767,7 +772,7 @@ class clean_multims_test(unittest.TestCase):
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
-                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img)
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img,imagermode='')
         self.assertEqual(self.res,None)
         imhout=imhead(imagename=self.img+'.image',mode='list')
         imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
@@ -787,7 +792,7 @@ class clean_multims_test(unittest.TestCase):
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='mfs', spw=['0:0~19','0:0~16'], field='',imsize=[200],
-                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img)
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, imagermode='')
         self.assertEqual(self.res,None)
         imhout=imhead(imagename=self.img+'.image',mode='list')
         imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
@@ -808,7 +813,7 @@ class clean_multims_test(unittest.TestCase):
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='frequency', spw='', field='',imsize=[200],
-                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, start='1.5GHz', width='1GHz', nchan=1)
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, start='1.5GHz', width='1GHz', nchan=1, imagermode='')
         self.assertEqual(self.res,None)
         imhout=imhead(imagename=self.img+'.image',mode='list')
         imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
@@ -831,7 +836,7 @@ class clean_multims_test(unittest.TestCase):
         if not os.path.exists(self.mask):
             shutil.copytree(datapath+self.mask, self.mask)
         self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
-                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, mask=self.mask)
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, mask=self.mask,imagermode='')
         self.assertEqual(self.res,None)
         imhout=imhead(imagename=self.img+'.image',mode='list')
         imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
