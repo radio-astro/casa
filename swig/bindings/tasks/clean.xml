@@ -178,11 +178,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="imagermode">
       <description>Options: \'csclean\' or \'mosaic\', \'\', uses psfmode</description>
-      <value></value>
+      <value>csclean</value>
       <allowed kind="enum">
 	<value></value>
 	<value>csclean</value>
 	<value>mosaic</value>
+      <value></value>
       </allowed>
 
 
@@ -587,7 +588,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        </equals>
             </when>
 	    <when param="imagermode">
-		<equals value=""/>
 		<equals value="csclean">
 			<default param="cyclefactor"><value>1.5</value></default>
 			<default param="cyclespeedup"><value>-1</value></default>
@@ -600,6 +600,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="cyclespeedup"><value>-1</value></default>
 			<default param="flatnoise"><value>True</value></default>
 	        </equals>
+		<equals value=""/>
 <!--
                 <equals value="multiscale">
                         <default param="ftmachine"><value type="string">ft</value></default>
@@ -927,8 +928,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	       uv-coverage)
                Note:  psfmode will also be used to clean if imagermode = ''
        imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean
-               default: imagermode='': Options: '', 'csclean', 'mosaic'
-               default ''  =&gt; psfmode cleaning algorithm used
+               default: imagermode='csclean': Options: '', 'csclean', 'mosaic'
+               ''  =&gt; psfmode cleaning algorithm used
 	       NOTE: imagermode 'mosaic' (and/or) any gridmode not blank 
                          (and/or) nterms>1 : will always use CS style clean. 
 

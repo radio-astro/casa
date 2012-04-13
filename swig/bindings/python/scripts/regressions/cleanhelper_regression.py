@@ -247,6 +247,7 @@ for te in tests:
                 clean(vis=rt+'.ms',
                       imagename=rt+'_'+te['name'],
                       cell="6arcsec",imsize=[n,n],
+                      imagermode='',
                       spw=spw,
                       mode=te['mode'],veltype=vtype,
                       start=sta,width=wid,nchan=nchan,
