@@ -329,10 +329,14 @@ protected:
 
    void fillSpectralWindowTable(BinaryTable& bt);
 
-  // fill observation, polarization, description, main tables from FITS UV table
+  // fill observation, polarization, description from FITS UV table
   void fillOtherUVTables(BinaryTable& bt, BinaryTable& fq);
 
   void fillMSMainTable(BinaryTable& bt);
+
+  void fillSourceTable();
+
+  void fillPointingTable();
 
   // fill spectralwindow table from FITS FQ table + header info
   void fillSpectralWindowTable(BinaryTable& bt, Int nSpW);
