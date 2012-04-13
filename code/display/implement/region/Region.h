@@ -29,6 +29,7 @@
 #ifndef REGION_REGION_H_
 #define REGION_REGION_H_
 
+#include <set>
 #include <list>
 #include <string>
 #include <images/Images/ImageStatistics.h>
@@ -98,6 +99,7 @@ namespace casa {
 	// this means that coordinate transformation is required each time the region is drawn.
 	class Region : public dtorNotifier {
 	    public:
+		typedef std::set<Region*> region_list_type;
 
 		/* enum states { undisplayed, inactive, highlighted, selected }; */
 		// LSDoubleDashed is only used to preserve state (it is a Display::LineStyle option)
@@ -202,7 +204,7 @@ namespace casa {
 		virtual unsigned int mouseMovement( double /*x*/, double /*y*/, bool /*other_selected*/ )
 		DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
-		virtual void draw( );
+		virtual void draw( bool other_selected );
 
 		// indicates that region movement requires that the statistcs be updated...
 		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
@@ -230,7 +232,8 @@ namespace casa {
 		// unified selection and manipulation of the various region types...
 		virtual void mark( bool set=true ) = 0;
 		virtual bool marked( ) const = 0;
-		virtual void mark_toggle( ) = 0;
+		// returns the new state...
+		virtual bool mark_toggle( ) = 0;
 
 		// in "linear" coordinates...
 		virtual void boundingRectangle (double &/*blc_x*/, double &/*blc_y*/, double &/*trc_x*/,

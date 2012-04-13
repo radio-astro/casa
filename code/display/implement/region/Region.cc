@@ -139,7 +139,7 @@ namespace casa {
 	    pc->callRefreshEventHandlers(Display::BackCopiedToFront);
 	}
 
-	void Region::draw( ) {
+	void Region::draw( bool other_selected ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    // When stepping through a cube, this detects that a different plane is being displayed...
@@ -163,7 +163,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 	    setDrawingEnv( );
-	    drawRegion( selected( ) || marked( ) );
+	    drawRegion( (! other_selected && selected( )) || marked( ) );
 	    resetDrawingEnv( );
 
 	    setTextEnv( );

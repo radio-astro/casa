@@ -59,9 +59,9 @@ class WCInvisTool : public WCTool {
   // pass control on to the doubleInside and doubleOutside
   // functions
   // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev);
+  virtual void keyPressed(const WCPositionEvent &/*ev*/);
+  virtual void keyReleased(const WCPositionEvent &/*ev*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
   // </group>
 
   // Function called when a position is ready

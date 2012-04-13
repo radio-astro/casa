@@ -217,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 }
 #endif
 
-    void MultiPolyTool::moved(const WCMotionEvent &ev) {
+   void MultiPolyTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type &selected_regions) {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -246,8 +246,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return;
 	}
 
+	int size = selected_regions.size( );
 	for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
-	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -402,9 +403,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }
 
-    void MultiPolyTool::draw(const WCRefreshEvent &ev) {
+    void MultiPolyTool::draw(const WCRefreshEvent &ev, const viewer::Region::region_list_type &selected_regions) {
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter )
-	    (*iter)->draw( );
+	    (*iter)->draw( selected_regions.size( ) > 0 );
     }
 
 

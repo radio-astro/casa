@@ -1,4 +1,4 @@
-//# errors.h: internal viewer errors
+//# DisplayErrors.h: internal viewer errors
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#

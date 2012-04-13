@@ -53,7 +53,7 @@ void WCInvisTool::keyReleased(const WCPositionEvent &) {
   itsActive = False;
 }
 
-void WCInvisTool::moved(const WCMotionEvent &ev) {
+void WCInvisTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
   if (!itsActive) {
     return;
   } else {
