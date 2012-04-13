@@ -577,19 +577,21 @@ class cleanhelper:
         # * It appears somewhat duplicating with makemaskimage 
         #   but it is necessary to create a maskimage for
         #   each field at this point...
-        if self.usespecframe=='': 
-            maskframe=self.dataspecframe
-        else:
-            maskframe=self.usespecframe
+        #if self.usespecframe=='': 
+        #    maskframe=self.dataspecframe
+        #else:
+        #    maskframe=self.usespecframe
+        #print "Frame : ", maskframe
+        #print "dataframe : ", self.dataspecframe , "   useframe : ", self.usespecframe
         for k in range(len(self.imagelist)):
             if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
                 ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
-                mcsys=ia.coordsys().torecord()
-                mcsys['spectral2']['conversion']['system']=maskframe
-                ia.setcoordsys(mcsys)
+                #mcsys=ia.coordsys().torecord()
+                #mcsys['spectral2']['conversion']['system']=maskframe
+                #ia.setcoordsys(mcsys)
                 ia.done(verbose=False)
 
         # take out extra []'s
@@ -847,22 +849,22 @@ class cleanhelper:
         # keep this info for reading worldbox
         self.csysorder=ia.coordsys().coordinatetype()
         # respect dataframe or outframe
-        if self.usespecframe=='': 
-            maskframe=self.dataspecframe
-        else:
-            maskframe=self.usespecframe
-        if len(self.vis)!=1:
-            if  not self.inframe:
-                # for multi-ms case default output frame is default to LSRK
-                # (set by baseframe in imager_cmt.cc) 
-                maskframe='LSRK'
-        mycsys=ia.coordsys()
-        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
-            mycsys.setreferencecode(maskframe,'spectral',True)
-        self.csys=mycsys.torecord()
-        if self.csys['spectral2']['conversion']['system']!=maskframe:
-            self.csys['spectral2']['conversion']['system']=maskframe
-        ia.setcoordsys(self.csys)
+        #if self.usespecframe=='': 
+        #    maskframe=self.dataspecframe
+        #else:
+        #    maskframe=self.usespecframe
+        #if len(self.vis)!=1:
+        #    if  not self.inframe:
+        #        # for multi-ms case default output frame is default to LSRK
+        #        # (set by baseframe in imager_cmt.cc) 
+        #        maskframe='LSRK'
+        #mycsys=ia.coordsys()
+        #if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+        #    mycsys.setreferencecode(maskframe,'spectral',True)
+        #self.csys=mycsys.torecord()
+        #if self.csys['spectral2']['conversion']['system']!=maskframe:
+        #    self.csys['spectral2']['conversion']['system']=maskframe
+        #ia.setcoordsys(self.csys)
         ##ia.setcoordsys(mycsys.torecord())
         ia.close()
         if(len(maskimage) > 0):
