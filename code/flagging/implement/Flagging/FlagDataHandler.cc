@@ -595,28 +595,28 @@ FlagDataHandler::generatePolarizationsMap()
 			}
 			case VisMapper::CALSOL1:
 			{
-				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " Calibration solution 1 found at " << pos << LogIO::POST;
 				(*polarizationMap_p)[VisMapper::CALSOL1] = pos;
 				(*polarizationIndexMap_p)[pos] = "Sol1";
 				break;
 			}
 			case VisMapper::CALSOL2:
 			{
-				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " Calibration solution 2 found at " << pos << LogIO::POST;
 				(*polarizationMap_p)[VisMapper::CALSOL2] = pos;
 				(*polarizationIndexMap_p)[pos] = "Sol2";
 				break;
 			}
 			case VisMapper::CALSOL3:
 			{
-				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " Calibration solution 3 found at " << pos << LogIO::POST;
 				(*polarizationMap_p)[VisMapper::CALSOL3] = pos;
 				(*polarizationIndexMap_p)[pos] = "Sol3";
 				break;
 			}
 			case VisMapper::CALSOL4:
 			{
-				*logger_p << LogIO::DEBUG1 << " The " << pos << " th calibration solution" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " Calibration solution 4 found at " << pos << LogIO::POST;
 				(*polarizationMap_p)[VisMapper::CALSOL4] = pos;
 				(*polarizationIndexMap_p)[pos] = "Sol4";
 				break;
@@ -1968,7 +1968,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			//throw AipsError("Requested Stokes parameter (V) cannot be computed from available polarizations");
 		}
 	}
-	if (expression_p.find("Sol1") != string::npos)
+	if (expression_p.find("SOL1") != string::npos)
 	{
 		if (polMap_p->find(VisMapper::CALSOL1) != polMap_p->end())
 		{
@@ -1976,7 +1976,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL1]);
 			selectedCorrelations_p.push_back(selectedPolarizations);
 			selectedCorrelationProducts_p.push_back(&VisMapper::calsol1);
-			selectedCorrelationStrings_p.push_back(string("Sol1"));
+			selectedCorrelationStrings_p.push_back(string("Calibration Solution 1"));
 			matchExpression = true;
 		}
 		else
@@ -1984,7 +1984,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
-	if (expression_p.find("Sol2") != string::npos)
+	if (expression_p.find("SOL2") != string::npos)
 	{
 		if (polMap_p->find(VisMapper::CALSOL2) != polMap_p->end())
 		{
@@ -1992,7 +1992,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL2]);
 			selectedCorrelations_p.push_back(selectedPolarizations);
 			selectedCorrelationProducts_p.push_back(&VisMapper::calsol2);
-			selectedCorrelationStrings_p.push_back(string("Sol2"));
+			selectedCorrelationStrings_p.push_back(string("Calibration Solution 2"));
 			matchExpression = true;
 		}
 		else
@@ -2000,7 +2000,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
-	if (expression_p.find("Sol3") != string::npos)
+	if (expression_p.find("SOL3") != string::npos)
 	{
 		if (polMap_p->find(VisMapper::CALSOL3) != polMap_p->end())
 		{
@@ -2008,7 +2008,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL3]);
 			selectedCorrelations_p.push_back(selectedPolarizations);
 			selectedCorrelationProducts_p.push_back(&VisMapper::calsol3);
-			selectedCorrelationStrings_p.push_back(string("Sol3"));
+			selectedCorrelationStrings_p.push_back(string("Calibration Solution 3"));
 			matchExpression = true;
 		}
 		else
@@ -2016,7 +2016,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			//throw AipsError("Requested Calibration solution element (Sol1) not available");
 		}
 	}
-	if (expression_p.find("Sol4") != string::npos)
+	if (expression_p.find("SOL4") != string::npos)
 	{
 		if (polMap_p->find(VisMapper::CALSOL4) != polMap_p->end())
 		{
@@ -2024,7 +2024,7 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 			selectedPolarizations.push_back((*polMap_p)[VisMapper::CALSOL4]);
 			selectedCorrelations_p.push_back(selectedPolarizations);
 			selectedCorrelationProducts_p.push_back(&VisMapper::calsol4);
-			selectedCorrelationStrings_p.push_back(string("Sol4"));
+			selectedCorrelationStrings_p.push_back(string("Calibration Solution 4"));
 			matchExpression = true;
 		}
 		else

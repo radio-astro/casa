@@ -95,8 +95,11 @@ FlagCalTableHandler::open()
 	}
 
 	// Create "dummy" correlation products list
-	corrProducts_p = new std::vector<String>(1);
-	corrProducts_p->push_back("Sol1");
+	corrProducts_p = new std::vector<String>();
+	corrProducts_p->push_back("SOL1");
+	corrProducts_p->push_back("SOL2");
+	corrProducts_p->push_back("SOL3");
+	corrProducts_p->push_back("SOL4");
 
 	return true;
 }
@@ -646,6 +649,7 @@ Vector<Int>& CTBuffer::antenna2()
 	if (!CTantenna2OK_p)
 	{
 		Vector<Int> tmp = calIter_p->antenna2();
+		if (tmp[0] < 0) tmp = calIter_p->antenna1();
 		antenna2_p.resize(tmp.size(),False);
 		antenna2_p = tmp;
 		CTantenna2OK_p = True;
@@ -732,12 +736,66 @@ Cube<Complex>& CTBuffer::visCube()
 	if (!CTVisCubeOK_p)
 	{
 		Cube<Complex> tmp = calIter_p->cparam();
-		calsolution_p.resize(tmp.shape(),False);
-		calsolution_p = tmp;
+		cparam_p.resize(tmp.shape(),False);
+		cparam_p = tmp;
 		CTVisCubeOK_p = True;
 	}
 
-	return calsolution_p;
+	return cparam_p;
+}
+
+Cube<Complex>& CTBuffer::correctedVisCube()
+{
+	if (!CTcorrectedVisCubeOK_p)
+	{
+		Cube<Float> tmp = calIter_p->paramErr();
+
+		// Transform Cube<Float> into Cube<Complex>
+		Cube<Complex> tmpTrans(tmp.shape());
+		for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
+		{
+			for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
+			{
+				for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
+				{
+					tmpTrans(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
+				}
+			}
+		}
+
+		paramerr_p.resize(tmpTrans.shape(),False);
+		paramerr_p = tmpTrans;
+		CTcorrectedVisCubeOK_p = True;
+	}
+
+	return paramerr_p;
+}
+
+Cube<Complex>& CTBuffer::modelVisCube()
+{
+	if (!CTmodelVisCubeOK_p)
+	{
+		Cube<Float> tmp = calIter_p->snr();
+
+		// Transform Cube<Float> into Cube<Complex>
+		Cube<Complex> tmpTrans(tmp.shape());
+		for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
+		{
+			for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
+			{
+				for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
+				{
+					tmpTrans(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
+				}
+			}
+		}
+
+		snr_p.resize(tmpTrans.shape(),False);
+		snr_p = tmpTrans;
+		CTmodelVisCubeOK_p = True;
+	}
+
+	return snr_p;
 }
 
 Int& CTBuffer::nRow()
@@ -792,6 +850,8 @@ void CTBuffer::invalidate()
 	CTchannelOK_p = False;
 	CTfrequencyOK_p = False;
 	CTVisCubeOK_p = False;
+	CTcorrectedVisCubeOK_p = False;
+	CTmodelVisCubeOK_p = False;
 	CTnRowChunkOK_p = False;
 	CTnChannelOK_p = False;
 	CTnCorrOK_p = False;

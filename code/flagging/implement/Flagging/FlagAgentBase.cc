@@ -976,6 +976,8 @@ FlagAgentBase::setAgentParameters(Record config)
 			}
 		}
 
+		expression_p.upcase();
+
 		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
 
 		// Request to pre-load spw and corrType
@@ -1030,6 +1032,27 @@ FlagAgentBase::setAgentParameters(Record config)
 
 			// Request to pre-load ObservedCube and ModelCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
+		}
+		if (dataColumn_p.compare("CPARAM") == 0)
+		{
+			dataReference_p = DATA;
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+		}
+		else if (dataColumn_p.compare("PARAMERR") == 0)
+		{
+			dataReference_p = CORRECTED;
+
+			// Request to pre-load CorrectedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
+		}
+		else if (dataColumn_p.compare("SNR") == 0)
+		{
+			dataReference_p = MODEL;
+
+			// Request to pre-load ModelCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else
@@ -1845,6 +1868,21 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 			rightVisCube = &(visibilityBuffer_p->get()->modelVisCube());
 			break;
 		}
+		case CPARAM:
+		{
+			leftVisCube = &(visibilityBuffer_p->get()->visCube());
+			break;
+		}
+		case PARAMERR:
+		{
+			leftVisCube = &(visibilityBuffer_p->get()->correctedVisCube());
+			break;
+		}
+		case SNR:
+		{
+			leftVisCube = &(visibilityBuffer_p->get()->modelVisCube());
+			break;
+		}
 		default:
 		{
 			leftVisCube = &(visibilityBuffer_p->get()->visCube());
@@ -2115,7 +2153,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 			return False;
 		}
 	}
-	else if (expression_p.find("Sol1") != string::npos)
+	else if (expression_p.find("SOL1") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL1) != polMap->end())
 		{
@@ -2123,11 +2161,11 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol1) not available" << LogIO::POST;
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL1) not available" << LogIO::POST;
 			return False;
 		}
 	}
-	else if (expression_p.find("Sol2") != string::npos)
+	else if (expression_p.find("SOL2") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL2) != polMap->end())
 		{
@@ -2135,11 +2173,11 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol2) not available" << LogIO::POST;
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL2) not available" << LogIO::POST;
 			return False;
 		}
 	}
-	else if (expression_p.find("Sol3") != string::npos)
+	else if (expression_p.find("SOL3") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL3) != polMap->end())
 		{
@@ -2147,11 +2185,11 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol3) not available" << LogIO::POST;
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL3) not available" << LogIO::POST;
 			return False;
 		}
 	}
-	else if (expression_p.find("Sol4") != string::npos)
+	else if (expression_p.find("SOL4") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL4) != polMap->end())
 		{
@@ -2159,7 +2197,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (Sol4) not available" << LogIO::POST;
+			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL4) not available" << LogIO::POST;
 			return False;
 		}
 	}
