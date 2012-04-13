@@ -50,6 +50,9 @@ void smoothCT(NewCalTable ct,
 	      const Double& smtime,
 	      Vector<Int> selfields) {
 
+  // Complex parameters?
+  Bool cmplx=ct.isComplex();
+
   // half-width
   Double thw(smtime/2.0);
 
@@ -59,7 +62,7 @@ void smoothCT(NewCalTable ct,
   Vector<Bool> pOK, newpOK;
 
   Cube<Float> fpar;
-  Cube<Bool> fparok;
+  Cube<Bool> fparok,newfparok;
 
   Vector<Bool> mask;
 
@@ -91,11 +94,14 @@ void smoothCT(NewCalTable ct,
 
       times.assign(ctiter.time());
 
-      newpOK.resize(nSlot);
-
       // Extract Float info
-      fpar.assign(ctiter.casfparam("AP"));
+      if (cmplx)
+        fpar.assign(ctiter.casfparam("AP"));
+      else
+        fpar.assign(ctiter.fparam());
+
       fparok.assign(!ctiter.flag());
+      newfparok.assign(fparok);
       IPosition fsh(fpar.shape());
 
       // For each channel
@@ -104,13 +110,13 @@ void smoothCT(NewCalTable ct,
 	// For each param (pol)
 	for (Int ipar=0;ipar<fsh(0);++ipar) {
 	  blc(0)=trc(0)=ipar;
-	  fblc(0)=ftrc(0)=ipar/2;
+	  fblc(0)=ftrc(0)=ipar/(cmplx?2:1);
 	  
 	  // Reference slices of par/parOK
 	  p.reference(fpar(blc,trc).reform(vec));
 	  newp.assign(p);
 	  pOK.reference(fparok(fblc,ftrc).reform(vec));
-	  newpOK.assign(pOK);
+	  newpOK.reference(newfparok(fblc,ftrc).reform(vec));
 
        /*
 	    cout << ispw << " "
@@ -153,13 +159,16 @@ void smoothCT(NewCalTable ct,
 	  } // i
 	  // keep new ok info
 	  p=newp;
-	  pOK=newpOK;
 	} // ipar
       } // ichan
 
       // Put info back
-      ctiter.setcparam(RIorAPArray(fpar).c());
-      ctiter.setflag(!fparok);
+      if (cmplx)
+        ctiter.setcparam(RIorAPArray(fpar).c());
+      else
+        ctiter.setfparam(fpar);
+
+      ctiter.setflag(!newfparok);
 
     } // nSlot>1
 
@@ -206,7 +215,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
       
       Vector<Double> times=ROTableVector<Double>(thistab,"TIME").makeVector();
       timelo(iscan)=min(times)-1e-5;
-      timehi(iscan)=max(times);
+      timehi(iscan)=max(times)+1e-5;
       
       mstiter.next();
       ++iscan;
@@ -262,7 +271,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
       }
       //      cout << " Found: ";
     }
-    else 
+    //else 
       //      cout << " Still: ";
 
     thisScan=scanlist(ord(itime));
