@@ -118,7 +118,7 @@ namespace casa {
 		// unified selection and manipulation of the various region types...
 		void mark( bool set=true ) { mystate->mark( set ); }
 		bool marked( ) const { return mystate->marked( ); }
-		void mark_toggle( ) { mystate->mark_toggle( ); }
+		bool mark_toggle( ) { return mystate->mark_toggle( ); }
 
 		virtual void output( ds9writer &out ) const = 0;
 

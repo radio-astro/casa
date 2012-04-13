@@ -523,7 +523,217 @@ private:
 	void (casa::FlagMapper::*applyFlagRow_p)(uInt);
 };
 
-// Flag Data Handler class definition
+// <summary>
+// A top level class defining the data handling interface for the flagging module
+// </summary>
+//
+// <use visibility=export>
+//
+// <prerequisite>
+//   <li> <linkto class="VisBuffer:description">VisBuffer</linkto>
+//   <li> <linkto class="FlagMapper:description">FlagMapper</linkto>
+//   <li> <linkto class="VisMapper:description">VisMapper</linkto>
+// </prerequisite>
+//
+// <etymology>
+// FlagDataHandler stands for generic data handling (i.e. MSs, CalTables, ...) specific to the flagging module
+// </etymology>
+//
+// <synopsis>
+//
+// This is a top-level class defining the data handling interface for the flagging module.
+// There are various methods (virtual) that must be re-implemented by the specific derived
+// classes (e.g. FlagMSHandler, FlagCalTableHandler). These methods essentially cover:
+//
+// - Table access (i.e. open/close/iteration/rw)
+//
+// - Table selection (i.e. expression parsing, sub-table selection)
+//
+// Additionally there are public non-virtual methods to:
+//
+// - Set configuration parameters (pre-sort columns, data selection, time interval, async I/O)
+//
+// - Enable and access different kinds of mapping (baselines, correlation products, antenna pointing)
+//
+// Also at this top level there are public members which are used by the FlagAgent classes,
+// so that there is no dependency with the specific implementation classes (e.g. FlagMsHandler,
+// FlagCalTableHandler), and thus no re-implementation is required at the FlagAgent level.
+//
+// - VisBuffer (for accessing the data and meta data columns)
+//
+// - Chunk and Table flag counters (for statistics)
+//
+// </synopsis>
+//
+// <motivation>
+// The motivation for the FlagDataHandler class is having all the data operations encapsulated
+// in one single class, with a common interface for all types of tables (MSs, CalTables, SingleDish),
+// so that no specific specific table type implementation has to be done at the FlagAgent level.
+// </motivation>
+//
+// <todo>
+// CAS-3855: Allow specific ntime per flagging agent when running in list mode
+// CAS-3856: Improve handling of ALMA WVR data when using auto-flagging algorithms
+// </todo>
+//
+// <example>
+// <srcblock>
+//
+// // The following code sets up a FlagDataHandler with either CalTable or MS implementation and
+// // iterates through the table applying a clip agent, flushing the flags, and extracting summaries.
+//
+// // IMPORTANT NOTE:
+// // The order of FlagDataHandler and FlagAgent initialization is critical to have everything right,
+// // in particular data selection must happen before initializing FlagAgents, and iterator generation
+// // must be done after initializing FlagAgents, so that each agent can communicate to the FlagDataHandler
+// // which columns have to be pre-fetched (async i/o or parallel mode), and what mapping options are necessary.
+//
+// // NOTE ON ASYNC I/O:
+// // Asyncnronous I/O is only enabled for MS-type tables, but not for CalTables, and it is necessary to switch
+// // it on before generating the iterators. Something else to take into account, is that there are 2 global
+// // switches at .casarc level which invalidate the application code selection:
+// //
+// // VisibilityIterator.async.enabled rules over
+// // |-> FlagDataHandler.asyncio, and in turns rules over
+// //     |-> FlagDataHandler.enableAsyncIO(True)
+//
+// // Identify table type
+// Table table(msname_p,TableLock(TableLock::AutoNoReadLocking));
+// TableInfo& info = table.tableInfo();
+// String type=info.type();
+//
+// // Create derived FlagDataHandler object with corresponding implementation
+// FlagDataHandler *fdh_p = NULL;
+// if (type == "Measurement Set")
+// {
+//    fdh_p = new FlagMSHandler(msname_p, FlagDataHandler::COMPLETE_SCAN_UNMAPPED, timeInterval_p);
+// }
+// else
+// {
+//    fdh_p = new FlagCalTableHandler(msname_p, FlagDataHandler::COMPLETE_SCAN_UNMAPPED, timeInterval_p);
+// }
+//
+// // Open table
+// fdh_p->open();
+//
+// // Parse data selection to Flag Data Handler
+// fdh_p->setDataSelection(dataSelection);
+//
+// // Select data (thus creating selected table)
+// fdh_p->selectData();
+//
+// // Create flagging agent and list
+// Record agentConfig;
+// agentConfig.define("mode","clip")
+// FlagAgentBase *agent = FlagAgentBase::create(fdh_p,agentConfig);
+// FlagAgentList agentList;
+// agentList.push_back(agent);
+//
+// // Switch on/off async i/p
+// fdh_p->enableAsyncIO(true);
+//
+// // Generate table iterator
+// fdh_p->generateIterator();
+//
+// // Start Flag Agent
+// agentList.start();
+//
+// // Iterates over chunks (constant column values)
+// while (fdh_p->nextChunk())
+// {
+//    // Iterates over buffers (time steps)
+//    while (fdh_p->nextBuffer())
+//    {
+//       // Apply flags
+//       agentList.apply();
+//       // Flush flag cube
+//       fdh_p->flushFlags();
+//    }
+//
+//    // Print end-of-chunk statistics
+//    agentList.chunkSummary();
+// }
+//
+// // Print total stats from each agent
+// agentList.msSummary();
+//
+// // Stop Flag Agent
+// agentList.terminate();
+// agentList.join();
+//
+// // Close MS
+// fdh_p->close();
+//
+// // Clear Flag Agent List
+// agentList.clear();
+//
+// </srcblock>
+// </example>
+//
+// <example>
+// <srcblock>
+//
+// // The following code shows the FlagAgent-FlagDataHandler interaction works internally:
+//
+// // First of all, at construction time, each agent has to communicate to the FlagDataHandler
+// // which columns have to be pre-fetched (for async i/o or parallel mode) and what mapping
+// // options are necessary
+
+// // ...for instance in the case of FlagAgentShadow we need Ant1,Ant2,UVW,TimeCentroid and PhaseCenter:
+// flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+// flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+// flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
+// flagDataHandler_p->preLoadColumn(VisBufferComponents::TimeCentroid);
+// flagDataHandler_p->preLoadColumn(VisBufferComponents::PhaseCenter);
+//
+// // ...and FlagAgentElevation needs to have the antenna pointing information globally available for each chunk:
+// flagDataHandler_p->setMapAntennaPointing(true);
+//
+// // Then, at iteration time, the FlagAgentBase class has access to the VisBuffer held
+// // in the FlagDataHandler, in order to retrieve the meta-data columns needed for the
+// // data selection engine (agent-level row filtering).
+// // NOTE: The VisBuffer is actually held within an auto-pointer wrapper,
+// //       thus there is an additional get() involved when accessing it.
+//
+// if (spwList_p.size())
+// {
+//    if (!find(spwList_p,visibilityBuffer_p->get()->spectralWindow())) return false;
+// }
+//
+// // The sorting columns used for the iteration are also accessible to optimize the selection engine:
+// // (e.g.: If scan is constant check only 1st row)
+// if ( (scanList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::SCAN_NUMBER)==true) )
+// {
+//    if (!find(scanList_p,visibilityBuffer_p->get()->scan()[0])) return false;
+// }
+//
+// // Once that chunk/rows are evaluated as eligible for the flagging process
+// // by the data selection engine, the previously booked maps at construction
+// // time can be access in order to iterate trough the data as desired:
+// // e.g.: Baseline (antenna pairs) iteration
+// for (myAntennaPairMapIterator=flagDataHandler_p->getAntennaPairMap()->begin();
+//      myAntennaPairMapIterator != flagDataHandler_p->getAntennaPairMap()->end();
+//      ++myAntennaPairMapIterator)
+// {
+//    vector<uInt> baselineRows = (*flagDataHandler_p->getAntennaPairMap())[std::make_pair(antennaPair.first,antennaPair.second)];
+//    // NOTE: This rows can be now inserted in the mapper classes
+//    //       (VisMapper and FlagMapper using the CubeView<T> template class)
+//    //       For further information check the FlagAgentBase documentation
+// }
+//
+// // Finally, after flagging time, the FlagAgent can communicate to the FlagDataHandler
+// // that the modified FlagCube has to be flushed to disk, this is a small but very important
+// // step in order to avoid unnecessary I/O activity when a chunk is not eligible for flagging
+// // or the auto-flagging algorithms don't produce any flags.
+//
+// // If any row was flag, then we have to flush the flagRow
+// if (flagRow_p) flagDataHandler_p->flushFlagRow_p = true;
+// // If any flag was raised, then we have to flush the flagCube
+// if (visBufferFlags_p>0) flagDataHandler_p->flushFlags_p = true;
+//
+// </srcblock>
+// </example>
+
 class FlagDataHandler
 {
 
@@ -561,6 +771,7 @@ public:
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
 	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
+	virtual bool checkIfColumnExists(String column) {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);

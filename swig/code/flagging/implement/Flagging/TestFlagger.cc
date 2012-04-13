@@ -573,10 +573,34 @@ TestFlagger::initAgents()
 
 			try
 			{
-				// Create this agent
-				FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
-				fa = tfa;
+				// jagonzal: CAS-3943 (tflagdata seg-faults when non-existent data column is to be read)
+				Bool createAgent = true;
+				if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
+					or mode.compare("clip") == 0 or mode.compare("display") == 0))
+					and (agent_rec.fieldNumber ("datacolumn") >= 0))
+				{
+					String datacolumn;
+					agent_rec.get("datacolumn", datacolumn);
+					datacolumn.upcase();
 
+					if ((datacolumn.compare("CORRECTED") == 0) or (datacolumn.compare("RESIDUAL") == 0))
+					{
+						createAgent = fdh_p->checkIfColumnExists(MS::columnName(MS::CORRECTED_DATA));
+						if (!createAgent)
+						{
+							String name;
+							agent_rec.get("name",name);
+							os << LogIO::WARN << "Agent " << name << " cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
+						}
+					}
+				}
+
+				// Create this agent if the necessary columns are available
+				if (createAgent)
+				{
+					FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
+					fa = tfa;
+				}
 			}
 			catch(AipsError x)
 			{

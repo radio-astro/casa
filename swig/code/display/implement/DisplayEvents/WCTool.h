@@ -33,6 +33,7 @@
 #include <display/DisplayEvents/WCMotionEH.h>
 #include <display/DisplayEvents/WCRefreshEH.h>
 #include <display/DisplayEvents/DisplayTool.h>
+#include <display/region/Region.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -169,12 +170,12 @@ class WCTool : public DisplayTool {
   // by default they do nothing, so a derived class needs only
   // implement the events it cares about
   // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void otherKeyReleased(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev);
-  virtual void refresh(const WCRefreshEvent &ev);
+  virtual void keyPressed(const WCPositionEvent &/*ev*/);
+  virtual void keyReleased(const WCPositionEvent &/*ev*/);
+  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+  virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void refresh(const WCRefreshEvent &/*ev*/);
   // </group>
 
   // Get the WorldCanvas that this Tool is attached to

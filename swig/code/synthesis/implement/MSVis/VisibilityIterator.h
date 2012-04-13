@@ -678,6 +678,10 @@ public:
 				 Block<Vector<Int> >& nchan, 
 				 Double freqStart, Double freqEnd, 
 				 Double freqStep, MFrequency::Types freqFrame=MFrequency::LSRK);
+
+  //Get the frequency range of the data selection
+  void getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe = MFrequency::LSRK);
+
   // Attach a VisBuffer object.
   // Note that while more than one VisBuffer may be attached, only the
   // last one is actively updated. A Stack is kept internally, so after 

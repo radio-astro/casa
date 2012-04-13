@@ -604,6 +604,10 @@ public:
                                     Double freqStart, Double freqEnd,
                                     Double freqStep, MFrequency::Types freqFrame = MFrequency::LSRK) const;
 
+    // Get the range of frequency convered by the selected data in the frame requested
+
+    virtual void getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe = MFrequency::LSRK) const;
+
     // Attach a VisBuffer object.
     // Note that while more than one VisBuffer may be attached, only the
     // last one is actively updated. A Stack is kept internally, so after

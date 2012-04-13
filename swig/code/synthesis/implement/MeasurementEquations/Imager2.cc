@@ -362,6 +362,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     Double fmin=C::dbl_max;
     Double fmax=-(C::dbl_max);
     Double fmean=0.0;
+    /*
     Int nms = freqrange_p.shape()(0);
     for (Int i=0;i<nspw;++i) {
       Int spw=spectralwindowids_p(i);
@@ -425,6 +426,10 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
  
     }
 
+    */
+    rvi_p->getFreqInSpwRange(fmin, fmax, freqFrameValid_p ? MFrequency::LSRK : freqFrame_p);
+    
+
     fmean=(fmax+fmin)/2.0;
     Vector<Double> restFreqArray;
     Double restFreq=fmean;
@@ -433,7 +438,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean//-finc/2.0
+    mySpectral = new SpectralCoordinate(freqFrameValid_p ? MFrequency::LSRK : freqFrame_p,  fmean//-finc/2.0
 					, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
@@ -475,10 +480,10 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       
 
       if (imageNchan_p==1) {
-      mySpectral = new SpectralCoordinate(mfreqref,
-      					  mfImageStart_p.get("Hz").getValue(),
-      					  mfImageStep_p.get("Hz").getValue(),
-      					  refChan, restFreq);
+	mySpectral = new SpectralCoordinate(mfreqref,
+					    mfImageStart_p.get("Hz").getValue(),
+					    mfImageStep_p.get("Hz").getValue(),
+					    refChan, restFreq);
       }
       else {
         Double finc= imgridfreqs(1)-imgridfreqs(0);
@@ -560,20 +565,27 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
      
       Double finc;
       if(imageNchan_p > 1){
-	  finc=chanFreq(1)-chanFreq(0);
+	// Now use outframe (instead of data frame) as the rest of
+	// the modes do
+	//
+	finc=chanFreq(1)-chanFreq(0);
+	mySpectral = new SpectralCoordinate(freqFrame_p,
+      					  chanFreq(0),
+					    finc,  
+					    refChan, restFreq);
       }
       else if(imageNchan_p==1) {
-	finc=freqResolution(IPosition(1,0));
+	//Single channel ...do it like mfs setting
+	//finc=freqResolution(IPosition(1,0));
+	Double fmin; 
+	Double fmax;
+	rvi_p->getFreqInSpwRange(fmin, fmax, freqFrameValid_p ? MFrequency::LSRK : freqFrame_p);
+	finc=(fmax-fmin); 
+	mySpectral = new SpectralCoordinate(freqFrameValid_p ? MFrequency::LSRK : freqFrame_p,
+					    (fmax+fmin)/2.0,
+					    finc,  
+					    refChan, restFreq);
       }
-
-      // Now use outframe (instead of data frame) as the rest of
-      // the modes do
-      //
-      mySpectral = new SpectralCoordinate(freqFrame_p,
-      //mySpectral = new SpectralCoordinate(obsFreqRef,
-      					  chanFreq(0),
-                                          finc,  
-      					  refChan, restFreq);
         
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO

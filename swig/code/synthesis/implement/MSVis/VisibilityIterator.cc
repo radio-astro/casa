@@ -880,6 +880,12 @@ ROVisibilityIterator::getSpwInFreqRange (Block<Vector<Int> >& spw,
     readImpl_p->getSpwInFreqRange (spw, start, nchan, freqStart, freqEnd, freqStep, freqFrame);
 }
 
+void ROVisibilityIterator::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe){
+  CheckImplementationPointerR ();
+  readImpl_p->getFreqInSpwRange(freqStart, freqEnd, freqframe);
+}
+
+
 SubChunkPair
 ROVisibilityIterator::getSubchunkId () const
 {

@@ -49,8 +49,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Double freqStep,
 				  const MFrequency::Types freqframe=MFrequency::LSRK, 
 				  const Int fieldId=0);
+    
 
-
+    // The following wil provide the range of frequency convered in the frame requested by the spw, channel selection 
+ 
+    static void getFreqRangeInSpw( Double& freqStart,
+			      Double& freqEnd, 
+			      const Vector<Int>& spw, 
+			      const Vector<Int>& start,
+			      const Vector<Int>& nchan,
+			      const MeasurementSet& ms, 
+			      const MFrequency::Types freqframe=MFrequency::LSRK,
+				   const Int fieldId=0);
 
 
   };
