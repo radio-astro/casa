@@ -148,7 +148,7 @@ thistest_imrms=statistics['rms'][0]
 cal_max=2.413
 src_max=18.3638
 im_max=0.2606
-im_rms=0.0127
+im_rms=0.0114
 
 
 diff_cal=abs((cal_max-thistest_cal)/cal_max)

@@ -461,11 +461,11 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   // Disable the Next button for now
   if (!multiPlot_p) 
     tp_p->changeGuiButtonState("iternext","disabled");
-    
+
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
      calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
-     calType_p=="D" || calType_p=="X")
+     calType_p=="D" || calType_p=="X" || calType_p=="EVLAGAIN")
     return doPlot();
 
   else if(calType_p=="K")
@@ -593,9 +593,21 @@ void PlotCal::getAxisTaQL(const String& axis,
     if (calType_p=="BPOLY")
       label = "Arbitrary Channel";
   }
-  else if (axis.contains("ANTENNA")) {
+  else if (axis=="ANTENNA") {
     taql="ANTENNA1";
     label= "Antenna INDEX";
+  }
+  else if (axis.contains("ANTENNA1")) {
+    taql="ANTENNA1";
+    label= "Antenna1 INDEX";
+  }
+  else if (axis.contains("ANTENNA2")) {
+    taql="ANTENNA2";
+    label= "Antenna2 INDEX";
+  }
+  else if (axis.contains("SCAN")) {
+    taql="SCAN_NUMBER";
+    label= "Scan";
   }
   else if (axis.contains("PARANG")) {
     taql="TIME";
@@ -628,11 +640,26 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase POLN Difference (deg)";
       }
       else if (axis.contains("TSYS")) {
-	if (isNCT_p) 
-	  taql = "(FPARAM[1,"+chansel+"]/FPARAM[2,"+chansel+"])";
-	else 
-	  taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
+	if (calType_p.contains("EVLAGAIN")) {
+  	  if (isNCT_p) 
+	    taql = "(FPARAM[2,"+chansel+"]/FPARAM[4,"+chansel+"])";
+	  else 
+	    taql = "(REAL("+GAINcol()+"[2,"+chansel+"]/"+GAINcol()+"[4,"+chansel+"]))";
+	}
+        else {
+  	  if (isNCT_p) 
+	    taql = "(FPARAM[1,"+chansel+"]/FPARAM[2,"+chansel+"])";
+	  else 
+	    taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
+	}
 	label = "Tsys POLN ratio";
+      }
+      else if (axis.contains("SPGAIN")) {
+  	if (isNCT_p) 
+	  taql = "(FPARAM[1,"+chansel+"]/FPARAM[3,"+chansel+"])";
+	else 
+	  taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[3,"+chansel+"]))";
+	label = "EVLA SP Gain POLN ratio";
       }
       else if (axis.contains("DEL")) {
 	if (isNCT_p) 
@@ -682,11 +709,27 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase (deg)";
       }
       else if (axis.contains("TSYS")) {
+	if (calType_p.contains("EVLAGAIN")) {
+	  if (polType_p=="R") polsel="2";
+	  else if (polType_p=="L") polsel="4";
+	  else polsel="2:4:2";
+	}
 	if (isNCT_p) 
 	  taql = "(FPARAM["+polsel+","+chansel+"])";
 	else 
 	  taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
 	label = "Tsys (K)";
+      }
+      else if (axis.contains("SPGAIN")) {
+	if (polType_p=="R") polsel="1";
+	else if (polType_p=="L") polsel="3";
+	else polsel="1:3:2";
+	
+	if (isNCT_p) 
+	  taql = "(FPARAM["+polsel+","+chansel+"])";
+	else 
+	  taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
+	label = "EVLA SP Gain";
       }
       else if (axis.contains("DEL")) {
 	if (isNCT_p) 
@@ -696,7 +739,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Delay (nsec)";
       }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || calType_p=="MF" || calType_p=="A")
+	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLAGAIN")
 	  throw(AipsError("Baseline-based calibration types don't support SNR plots."));
 	taql = "(SNR["+polsel+",])";
 	label = "Solution SNR";
@@ -725,19 +768,21 @@ Bool PlotCal::doPlot(){
     if(calType_p=="G" || 
        calType_p=="T" || 
        calType_p=="M" || calType_p=="A" || 
-       calType_p=="GSPLINE") 
+       calType_p=="GSPLINE" || calType_p=="EVLAGAIN") 
       xAxis_p="TIME";
     else if (calType_p=="D")
       xAxis_p="ANTENNA";
     else
       xAxis_p="CHAN";
   
-  if (yAxis_p=="")
+  if (yAxis_p=="") {
     if (calType_p=="D")
       yAxis_p="AMP";
+    else if (calType_p=="EVLAGAIN")
+      yAxis_p="SPGAIN";
     else
       yAxis_p="AMP";
-
+  }
 
   // Get meta info for labels/locate
   getMetaRecord();
@@ -1132,7 +1177,10 @@ Int PlotCal::multiTables(const Table& tablein,
     String subType[2];
     split(tab_p.tableInfo().subType(), subType, 2, String(" "));
  
-    if(subType[0].contains("G")){
+    if (subType[1].contains("EVLAGAIN")) {
+      calType_p="EVLAGAIN";
+    }
+    else if(subType[0].contains("G")){
       if (tab_p.tableInfo().subType()=="GSPLINE")
 	calType_p="GSPLINE";
       else
