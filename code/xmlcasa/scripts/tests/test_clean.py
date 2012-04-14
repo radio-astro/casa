@@ -307,6 +307,7 @@ class clean_test1(unittest.TestCase):
 #        ref = 0.007161217276006937
         ref = 0.011824539862573147
 #        ref = 0.009637                                 # active rev. 12908
+        ref = 0.0143232932314   # active rec. 19307+ (after change to image bandwidth and reffreq)
         value = self.getpixval(self.img+'.image', 50)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-4,
@@ -766,15 +767,20 @@ class clean_multims_test(unittest.TestCase):
     def test_multims2(self):
         '''Clean multims test2: Test multiple MSes input in mfs mode'''
         # expected reference values on r.15199 
-        refimbandw=1.0e+09
-        refimmax=1.198562
-        refimfreq=1.49e+09
+        #refimbandw=1.0e+09
+        #refimfreq=1.49e+09
+        #refimmax=1.198562
+        # expected reference values for r19307+  (change to defineimage bandwidth and reffreq)
+        refimbandw=1.019991294e+09
+        refimfreq=1.489984788e+09
+        refimmax=1.19856226444
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
                        cell=['4.0arcsec', '4.0arcsec'], imagename=self.img,imagermode='')
         self.assertEqual(self.res,None)
         imhout=imhead(imagename=self.img+'.image',mode='list')
+        #print "imhout['cdelt4']=", imhout['cdelt4'], " imhout['crval4']=", imhout['crval4'], " imhout['datamax']=",imhout['datamax']
         imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
         imfreqrdiff = abs(refimfreq-float(imhout['crval4']))/refimfreq
         maxrdiff = abs(refimmax-float(imhout['datamax']))/refimmax
@@ -786,9 +792,13 @@ class clean_multims_test(unittest.TestCase):
     def test_multims3(self):
         '''Clean multims test3: Test multiple MSes input in mfs mode with spw channel selection'''
         # expected reference values on r.15199
-        refimbandw=9.2e+08
-        refimmax=1.25990
-        refimfreq=1.45e+09
+        #refimbandw=9.2e+08
+        #refimfreq=1.45e+09
+        #refimmax=1.25990
+        # expected reference values for r19307+  (change to defineimage bandwidth and reffreq)
+        refimbandw=9.59991881e+08
+        refimfreq=1.459985082e+09
+        refimmax=1.2438338995
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='mfs', spw=['0:0~19','0:0~16'], field='',imsize=[200],
