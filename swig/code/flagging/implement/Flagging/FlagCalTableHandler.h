@@ -54,6 +54,8 @@ public:
 	Int& nChannel();
 	Int& nCorr();
 	Cube<Complex>& visCube();
+	Cube<Complex>& correctedVisCube();
+	Cube<Complex>& modelVisCube();
 
 	// Convenient public methods for compatibility with MS-like interface
 	Vector<Int>& observationId();
@@ -76,7 +78,9 @@ private:
 	Cube<Bool> flagCube_p;
 	Vector<Int> channel_p;
 	Vector<Double> frequency_p;
-	Cube<Complex> calsolution_p;
+	Cube<Complex> cparam_p;
+	Cube<Complex> paramerr_p;
+	Cube<Complex> snr_p;
 	Int nRow_p;
 	Int nRowChunk_p;
 	Int nChannel_p;
@@ -99,6 +103,8 @@ private:
 	Bool CTchannelOK_p;
 	Bool CTfrequencyOK_p;
 	Bool CTVisCubeOK_p;
+	Bool CTcorrectedVisCubeOK_p;
+	Bool CTmodelVisCubeOK_p;
 	Bool CTnRowOK_p;
 	Bool CTnRowChunkOK_p;
 	Bool CTnChannelOK_p;

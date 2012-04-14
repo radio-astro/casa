@@ -158,6 +158,9 @@ class NewCalTable : public Table
    void copyMemCalSubtables(const NewCalTable& other);
    void copyMemCalSubtable(const Table& otherSubtable, Table& subTable);
 
+   // Complex parameters?  (else Float)
+   Bool isComplex();
+
    // Get a row from cal_main
    Record getRowMain (const Int& jrow);
     

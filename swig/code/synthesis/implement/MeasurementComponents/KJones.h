@@ -79,8 +79,8 @@ public:
   // This type is not yet accumulatable
   virtual Bool accumulatable() { return False; };
 
-  // This type is not yet smoothable
-  virtual Bool smoothable() { return False; };
+  // This type is smoothable
+  virtual Bool smoothable() { return True; };
 
   // Calculate phase(chan) from delay
   virtual void calcAllJones();
@@ -199,6 +199,9 @@ public:
   virtual Jones::JonesType jonesType() { return Jones::Scalar; };
 
   virtual Bool timeDepMat() { return True; };
+
+  // This type is not smoothable
+  virtual Bool smoothable() { return False; };
 
   // Local setApply to enforce spwmap=0 for all spw
   virtual void setApply(const Record& apply);

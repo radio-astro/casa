@@ -6813,47 +6813,78 @@ Int Imager::interactivemask(const String& image, const String& mask,
     return rstat;
   }
 
-Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
+Bool Imager::adviseChanSelex(Double& freqStart, Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
-			     Vector< Vector<Int> >& nchan, const String& ms, const Int field_id){
+			     Vector< Vector<Int> >& nchan, const String& ms, const Int field_id, const Bool getFreqRange, const String spwselection){
 
   LogIO os(LogOrigin("imager", "adviseChanSelex"));
+  if(ms==String("")){
+    if(numMS_p < 1 || !rvi_p){
+      os << LogIO::SEVERE << "Data selection incomplete" 
+	 << LogIO::POST;
+      return False;
+    }
+  }
   spw.resize();
   start.resize();
   nchan.resize();
   try {
-    Block<Vector<Int> > bnchan;
-    Block<Vector<Int> > bstart;
-    Block<Vector<Int> > bspw;
-    Double fS, fE;
-    fS=freqStart;
-    fE=freqEnd;
-    if(freqEnd < freqStart){
-      fS=freqEnd;
-      fE=freqStart;
-    }
-    if(ms==String("")){
-      if(numMS_p < 1 || !rvi_p){
-	os << LogIO::SEVERE << "Data selection incomplete" 
-	   << LogIO::POST;
-	return False;
+    if(!getFreqRange){
+      Block<Vector<Int> > bnchan;
+      Block<Vector<Int> > bstart;
+      Block<Vector<Int> > bspw;
+      Double fS, fE;
+      fS=freqStart;
+      fE=freqEnd;
+      if(freqEnd < freqStart){
+	fS=freqEnd;
+	fE=freqStart;
       }
-      
-      rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+    
+      if(ms==String("")){
+	rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+      }
+      else{
+	bnchan.resize(1);
+	bstart.resize(1);
+	bspw.resize(1);
+	MeasurementSet elms(String(ms), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+	MSUtil::getSpwInFreqRange(bspw[0], bstart[0], bnchan[0], elms, fS, fE, fabs(freqStep), freqframe, field_id);
+	elms.relinquishAutoLocks(True);
+
+      }
+      spw=Vector<Vector<Int> >(bspw, bspw.nelements());
+      start=Vector<Vector<Int> >(bstart, bstart.nelements());
+      nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());
     }
     else{
-      bnchan.resize(1);
-      bstart.resize(1);
-      bspw.resize(1);
-      MeasurementSet elms(String(ms), TableLock(TableLock::AutoNoReadLocking), Table::Old);
-      MSUtil::getSpwInFreqRange(bspw[0], bstart[0], bnchan[0], elms, fS, fE, fabs(freqStep), freqframe, field_id);
-      elms.relinquishAutoLocks(True);
+      if(ms==String("")){
+	rvi_p->getFreqInSpwRange(freqStart, freqEnd, freqframe);
+      }
+      else{
+	MeasurementSet elms(ms, TableLock(TableLock::AutoNoReadLocking), Table::Old);
+	MSSelection thisSelection;
+	String spsel=spwselection;
+	if(spsel=="")spsel="*";
+	thisSelection.setSpwExpr(spsel);
+	TableExprNode exprNode=thisSelection.toTableExprNode(&elms);
+	Matrix<Int> chanlist=thisSelection.getChanList();
+	if(chanlist.ncolumn() <3){
+	  freqStart=-1.0;
+	  freqEnd=-1.0;
+	  return False;
+	}
+	Vector<Int> elspw=chanlist.column(0);
+	Vector<Int> elstart=chanlist.column(1);
+	Vector<Int> elnchan=Vector<Int> (chanlist.column(2)-elstart)+1;
+	MSUtil::getFreqRangeInSpw(freqStart, freqEnd, elspw, elstart, elnchan, elms, freqframe, field_id);
+      }
 
     }
-    spw=Vector<Vector<Int> >(bspw, bspw.nelements());
-    start=Vector<Vector<Int> >(bstart, bstart.nelements());
-    nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());
+
+
+
         
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
