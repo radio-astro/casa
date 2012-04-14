@@ -108,7 +108,7 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 
 
 ::casac::record* imager::advisechansel(const double freqstart, const double freqend, const double freqstep, const std::string& freqframe, const std::string& msname, 
-				       const int fieldid){
+				       const int fieldid, const bool getfreqrange, const std::string& spwselection){
   casac::record* retval=0;
   if(hasValidMS_p || msname.length() > 0){
       try {
@@ -118,14 +118,23 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 	MFrequency::Types tp;
 	if(!MFrequency::getType(tp, freqframe))
 	  throw(AipsError("Invalid frequency frame"));
-	if(itsImager->adviseChanSelex(freqstart, freqend, freqstep, tp, spw, start, nchan, msname, fieldid)){
+	Double fstart=freqstart;
+	Double fend=freqend;
+	if(itsImager->adviseChanSelex(fstart, fend, freqstep, tp, spw, start, nchan, msname, fieldid, getfreqrange, spwselection)){
 	  Record outRec;
-	  for (uInt k =0; k < spw.nelements(); ++k){
-	    Record subRec;
-	    subRec.define("spw", spw[k]);
-	    subRec.define("start", start[k]);
-	    subRec.define("nchan", nchan[k]);
-	    outRec.defineRecord(String("ms_")+String::toString(k), subRec);
+	  if(!getfreqrange){
+	    for (uInt k =0; k < spw.nelements(); ++k){
+	      Record subRec;
+	      subRec.define("spw", spw[k]);
+	      subRec.define("start", start[k]);
+	      subRec.define("nchan", nchan[k]);
+	      outRec.defineRecord(String("ms_")+String::toString(k), subRec);
+	    }
+	  }
+	  else{
+	    outRec.define("freqstart", fstart);
+	    outRec.define("freqend", fend);
+
 	  }
 	  retval=fromRecord(outRec);
 	}

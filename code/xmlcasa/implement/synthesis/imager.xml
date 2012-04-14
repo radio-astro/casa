@@ -205,6 +205,15 @@ for the beam size both in the plane of the sky and along the $w$ axis.
        <description>fieldid to use when msname is not empty otherwise ignored and field selected in selectvis is used</description>
        <value>0</value>
      </param>
+     <param type="bool" name="getfreqrange">
+     <description>if set then freqrange is returned in the frame requested for the data selected</description>
+     <value>false</value>
+     </param>
+     <param type="string" name="spwselection">
+       <description>if getfreqrange=True then this is needed to find the range of frequency in the frame requested</description>
+       <value></value>
+     </param>
+     
 </input>
 <example>
 In this example, we are interested in an image cube which span 20.0682GHz to 20.1982 in LSRK  which will have a channel resolution of 3.9MHz. The field we are interested is field 4 of each of the ms.
