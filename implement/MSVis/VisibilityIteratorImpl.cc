@@ -2403,9 +2403,9 @@ void VisibilityIteratorReadImpl::getFreqInSpwRange(Double& freqStart, Double& fr
     Vector<uInt>  uniqIndx;
     Vector<Int> fldId;
     ROScalarColumn<Int> (msIter_p.ms (msId), MS::columnName (MS::FIELD_ID)).getColumn (fldId);
-    uInt nFields = GenSortIndirect<Int>::sort (uniqIndx, fldId, Sort::Ascending, Sort::QuickSort | Sort::NoDuplicates);
+    uInt nFields = GenSort<Int>::sort (fldId, Sort::Ascending, Sort::QuickSort | Sort::NoDuplicates);
     for (uInt indx=0; indx< nFields; ++indx){
-      Int fieldid=fldId(uniqIndx[indx]);
+      Int fieldid=fldId(indx);
       Double tmpFreqStart; 
       Double tmpFreqEnd;
       MSUtil::getFreqRangeInSpw(tmpFreqStart, tmpFreqEnd, spws, starts, nchan, msIter_p.ms(msId), freqframe, fieldid);
