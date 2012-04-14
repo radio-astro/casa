@@ -224,7 +224,7 @@ class clean_test1(unittest.TestCase):
         self.assertTrue(os.path.exists(self.img+'.image'))
 
     def test22(self):
-        '''Clean 22: Non-default imagermode mosaic'''
+        '''Clean 22: Non-default imagermode mosaic''' 
         self.res = clean(vis=self.msfile,imagename=self.img,imagermode='mosaic',imsize=[20])
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
@@ -307,7 +307,7 @@ class clean_test1(unittest.TestCase):
 #        ref = 0.007161217276006937
         ref = 0.011824539862573147
 #        ref = 0.009637                                 # active rev. 12908
-        ref = 0.0143232932314   # active rec. 19307+ (after change to image bandwidth and reffreq)
+        ref = 0.011824540793895721   # active rec. 19307+ (after change to image bandwidth and reffreq)
         value = self.getpixval(self.img+'.image', 50)
         diff = abs(ref - value)
         self.assertTrue(diff < 10e-4,

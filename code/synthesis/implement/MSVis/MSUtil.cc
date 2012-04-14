@@ -31,6 +31,7 @@
 #include <ms/MeasurementSets/MSSpwIndex.h>
 #include <ms/MeasurementSets/MSDataDescIndex.h>
 #include <synthesis/MSVis/MSUtil.h>
+#include <casa/Arrays/ArrayMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -138,6 +139,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ROMSDataDescColumns ddCol(ms.dataDescription());
     ROMSSpWindowColumns spwCol(ms.spectralWindow());
     ROScalarMeasColumn<MEpoch> timeCol(ms, MS::columnName(MS::TIME));
+    Vector<Double> ddIdD(ddId.shape());
+    convertArray(ddIdD, ddId);
+    ddIdD+= 1.0; //no zero id
+    //we have to do this as one can have multiple dd for the same time. 
+    t*=ddIdD;
     Vector<uInt>  uniqIndx;
     uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
     MDirection dir =fieldCol.phaseDirMeas(fieldId);
