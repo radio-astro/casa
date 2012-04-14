@@ -566,7 +566,8 @@ class Imager
                    const MEpoch& obsEpoch, const MPosition& obsPosition,
                    const Double& restFreq);
 
-  // Advise the chanselection needed for the frequency range
+  // Advise the chanselection needed for the frequency range or
+  // give the frequency range for a give spwselection  if getFreqRange==True
   // if the parameter msname is used then the MSs associated associated with
   // this object (that have been either 'open'ed or 'selectvis'ed) are ignored
   // In this mode it is a helper function to the general world ...no need to
@@ -574,11 +575,15 @@ class Imager
   // being done for in the helper mode. 
   // If you have already set MS's and selected data and msname="" then 
   // the calulation is done for the field(s) selected in selectvis.
-  Bool adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
+  // getFreqRange=True then the freqrange in the frame and spwselection  you choose is 
+  // returned in freqStart and freqEnd (in the case of msname="" then it is for the fields 
+  //and spw you have chosen in selectvis). 
+  Bool adviseChanSelex(Double& freqStart, Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
 		       Vector< Vector<Int> >& nchan, const String& msname="", 
-		       const Int fieldid=0);
+		       const Int fieldid=0, const Bool getFreqRange=False, 
+		       const String spwselection="");
 
 
   //These are utility functions when weights from different imager instances 
