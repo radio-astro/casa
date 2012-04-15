@@ -272,7 +272,7 @@ test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
 	      ('SD Model (MS)',       'flux', 357, ' ', 'SD Model (MS)', 'Feather 3'),
 	      ('SD Model (MEM)',      'flux', 286, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 238, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 226, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was
