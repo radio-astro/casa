@@ -107,7 +107,7 @@ print " MS will be called "+msfile
 
 default('importvla')
 
-archivefiles=['AS649_1','AS649_2','AS649_3','AS649_4']
+archivefiles=['/home/onager4/Regression/Data/regression/ngc2403/AS649_1','/home/onager4/Regression/Data/regression/ngc2403/AS649_2','/home/onager4/Regression/Data/regression/ngc2403/AS649_3','/home/onager4/Regression/Data/regression/ngc2403/AS649_4']
 vis = msfile
 importvla()
 
@@ -1027,7 +1027,7 @@ print "Canonical regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
 canonical_results['dirty_image_rms'] = {}
-canonical_results['dirty_image_rms']['value'] = 0.000588262734707
+canonical_results['dirty_image_rms']['value'] = 0.000342
 
 canonical_results['clean_image_max'] = {}
 canonical_results['clean_image_max']['value'] = 0.0231359191239
