@@ -107,7 +107,7 @@ print " MS will be called "+msfile
 
 default('importvla')
 
-archivefiles=['/home/onager4/Regression/Data/regression/ngc2403/AS649_1','/home/onager4/Regression/Data/regression/ngc2403/AS649_2','/home/onager4/Regression/Data/regression/ngc2403/AS649_3','/home/onager4/Regression/Data/regression/ngc2403/AS649_4']
+archivefiles=['AS649_1','AS649_2','AS649_3','AS649_4']
 vis = msfile
 importvla()
 
