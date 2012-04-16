@@ -392,12 +392,23 @@ EVLAGainTsys::EVLAGainTsys(VisSet& vs) :
   VisMueller(vs),         // virtual base
   GJones(vs),              // immediate parent
   sysPowTabName_(vs.msName()+"/SYSPOWER"),
-  calDevTabName_(vs.msName()+"/CALDEVICE")
+  calDevTabName_(vs.msName()+"/CALDEVICE"),
+  correff_(Float(0.932)),     // EVLA-specific net corr efficiency (4bit)
+  frgrotscale_(Float(1.176)), // EVLA-specific fringe rotation mean _scale_
+  nyquist_(1.0),
+  effChBW_()
+
 {
   if (prtlev()>2) cout << "EVLAGainTsys::EVLAGainTsys(vs)" << endl;
 
   nChanParList().set(1);
   startChanList().set(0);
+
+  // Get spw total bandwidths
+  const ROMSSpWindowColumns& spwcols = vs.iter().msColumns().spectralWindow();
+  effChBW_.resize(nSpw());
+  for (Int ispw=0;ispw<nSpw();++ispw) 
+    effChBW_(ispw)=Vector<Double>(spwcols.effectiveBW()(0))(0);
   
 }
 
@@ -407,6 +418,9 @@ EVLAGainTsys::EVLAGainTsys(const Int& nAnt) :
   GJones(nAnt)
 {
   if (prtlev()>2) cout << "EVLAGainTsys::EVLAGainTsys(nAnt)" << endl;
+
+  throw(AipsError("Cannot use EVLAGainTsys with generic ctor."));
+
 }
 
 EVLAGainTsys::~EVLAGainTsys() {
@@ -497,6 +511,9 @@ void EVLAGainTsys::specify(const Record&) {
   // Fill the Tcals first
   fillTcals();
 
+  // The net digital factor for antenna-based (voltage) gain
+  Float dig=sqrt(correff_*frgrotscale_);
+
   // Keep a count of the number of Tsys found per spw/ant
   Matrix<Int> goodcount(nSpw(),nElem(),0), badcount(nSpw(),nElem(),0);
 
@@ -575,8 +592,8 @@ void EVLAGainTsys::specify(const Record&) {
 	blc(0)=0;
 	gain.reference(solveAllRPar()(blc,trc,stp).nonDegenerate(1));   // 'gain'
 	gain=sqrt(currpdif/currtcal);
-	gain*=Float(0.932*1.17);  // correlator efficiency X lobe rotator factor
-	
+	gain*=dig; // scale by net digital factor
+
 	blc(0)=1;
 	solveAllRPar()(blc,trc,stp).nonDegenerate(1)=(currtcal*currpsum/currpdif/2.0);  // 'tsys'
 	
@@ -690,6 +707,23 @@ void EVLAGainTsys::fillTcals() {
 
 }
 
+// Local version to extract integration time and bandwidth
+void EVLAGainTsys::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
+			    Bool avoidACs) {
+
+  // Calculate Nyquist factor so we get weights right
+  //  (sqrt because it will be applied in antenna-based manner)
+  nyquist_=Float(sqrt(2.0*vb.exposure()(0)*effChBW_(currSpw())));
+		 
+  //  cout << "currSpw() = " << currSpw() << " nyquist_= " << nyquist_ << endl;
+
+  // Call parent to get the rest done as usual
+  GJones::applyCal(vb,Vout,avoidACs);
+
+}
+  
+
+
 void EVLAGainTsys::calcAllJones() {
 
   // 0th and 2nd pars are the gains
@@ -708,10 +742,11 @@ void EVLAGainTsys::syncWtScale() {
   Tsys(Tsys<FLT_MIN)=1.0;  // OK?
 
   currWtScale() = 1.0f/Tsys;
+  currWtScale()*=correff_; // reduce by correlator efficiency (per ant)
+  currWtScale()*=nyquist_;
 
-
-  cout << "Tsys = " << Tsys << endl;
-  cout << "currWtScale() = " << currWtScale() << endl;
+  //  cout << "Tsys = " << Tsys << endl;
+  //  cout << "currWtScale() = " << currWtScale() << endl;
 
 }
 

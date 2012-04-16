@@ -796,7 +796,6 @@ mystep = 27
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    os.system('rm -rf '+name+'_mom-central*')
     os.system('rm -rf test-M100line.*')
     clean(
 	vis='M100all_lores.ms.contsub',

@@ -29,7 +29,9 @@
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
+#include <ms/MeasurementSets/MSDataDescIndex.h>
 #include <synthesis/MSVis/MSUtil.h>
+#include <casa/Arrays/ArrayMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -117,6 +119,87 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
  
   }
+  void MSUtil::getFreqRangeInSpw( Double& freqStart,
+				  Double& freqEnd, const Vector<Int>& spw, const Vector<Int>& start,
+				  const Vector<Int>& nchan,
+				  const MeasurementSet& ms, 
+				  const MFrequency::Types freqframe,
+				  const Int fieldId){
+    
+
+    freqStart=C::dbl_max;
+    freqEnd=0.0;
+    Vector<Double> t;
+    ROScalarColumn<Double> (ms,MS::columnName(MS::TIME)).getColumn(t);
+    Vector<Int> ddId;
+    Vector<Int> fldId;
+    ROScalarColumn<Int> (ms,MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
+    ROScalarColumn<Int> (ms,MS::columnName(MS::FIELD_ID)).getColumn(fldId);
+    ROMSFieldColumns fieldCol(ms.field());
+    ROMSDataDescColumns ddCol(ms.dataDescription());
+    ROMSSpWindowColumns spwCol(ms.spectralWindow());
+    ROScalarMeasColumn<MEpoch> timeCol(ms, MS::columnName(MS::TIME));
+    Vector<Double> ddIdD(ddId.shape());
+    convertArray(ddIdD, ddId);
+    ddIdD+= 1.0; //no zero id
+    //we have to do this as one can have multiple dd for the same time. 
+    t*=ddIdD;
+    Vector<uInt>  uniqIndx;
+    uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+    MDirection dir =fieldCol.phaseDirMeas(fieldId);
+    MSDataDescIndex mddin(ms.dataDescription());
+    MFrequency::Types obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(0));
+    MEpoch ep;
+    timeCol.get(0, ep);
+    String observatory;
+    MPosition obsPos;
+    /////observatory position
+    ROMSColumns msc(ms);
+    if (ms.observation().nrow() > 0) {
+      observatory = msc.observation().telescopeName()(msc.observationId()(0));
+    }
+    if (observatory.length() == 0 || 
+	!MeasTable::Observatory(obsPos,observatory)) {
+      // unknown observatory, use first antenna
+      obsPos=msc.antenna().positionMeas()(0);
+    }
+    //////
+    MeasFrame frame(ep, obsPos, dir);
+    
+						
+    for (uInt ispw =0 ; ispw < spw.nelements() ; ++ispw){
+      Double freqStartObs=C::dbl_max;
+      Double freqEndObs=0.0;
+      Vector<Double> chanfreq=spwCol.chanFreq()(ispw);
+      Vector<Double> chanwid=spwCol.chanWidth()(ispw);
+      Vector<Int> ddOfSpw=mddin.matchSpwId(spw[ispw]);
+      for (Int ichan=start[ispw]; ichan<nchan[ispw]; ++ichan){ 
+	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan]))) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan]);
+	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan]))) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan]);    
+      }
+      obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(spw[ispw])));
+      MFrequency::Convert toframe(obsMFreqType,
+				  MFrequency::Ref(freqframe, frame));
+      for (uInt j=0; j< nTimes; ++j){
+	if((fldId[uniqIndx[j]] ==fieldId) && anyEQ(ddOfSpw, ddId[uniqIndx[j]])){
+	  timeCol.get(uniqIndx[j], ep);
+	  frame.resetEpoch(ep);
+	  Double freqTmp=toframe(Quantity(freqStartObs, "Hz")).get("Hz").getValue();
+	  if(freqStart > freqTmp)  freqStart=freqTmp;
+	  if(freqEnd < freqTmp)  freqEnd=freqTmp;
+	  freqTmp=toframe(Quantity(freqEndObs, "Hz")).get("Hz").getValue();
+	  if(freqStart > freqTmp)  freqStart=freqTmp;
+	  if(freqEnd < freqTmp)  freqEnd=freqTmp;
+
+	}
+      }
+
+    }
+
+
+  }
+
+
 
 
 } //# NAMESPACE CASA - END

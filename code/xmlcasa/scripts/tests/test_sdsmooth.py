@@ -118,9 +118,9 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
     test02-03 --- kernel = 'boxcar' w/ and w/o kwidth param
     test04-05 --- kernel = 'gaussian' w/ and w/o kwidth param
     test06    --- overwrite = True
-    test07    --- kernel = 'regrid' with chwidth in channel unit
-    test08    --- kernel = 'regrid' with chwidth in frequency unit
-    test09    --- kernel = 'regrid' with chwidth in velocity unit
+    test07,10 --- kernel = 'regrid' with chwidth in channel unit
+    test08,11 --- kernel = 'regrid' with chwidth in frequency unit
+    test09,12 --- kernel = 'regrid' with chwidth in velocity unit
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -176,7 +176,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 61.521829228644677,
                   'baserms': 0.17469978332519531}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test02(self):
         """Test 2: kernel = 'boxcar'"""
@@ -193,7 +193,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 62.508279566880944,
                   'baserms': 0.15886218845844269}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test03(self):
         """Test 3: kernel = 'boxcar' + kwidth = 16"""
@@ -212,7 +212,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 65.946254391136108,
                   'baserms': 0.096009217202663422}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
 
     def test04(self):
@@ -230,7 +230,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 63.315141667417912,
                   'baserms': 0.14576216042041779}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test05(self):
         """Test 5: kernel = 'gaussian' + kwidth = 16"""
@@ -249,7 +249,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 68.064315277502047,
                   'baserms': 0.074664078652858734}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
     def test06(self):
         """Test 6: Test overwrite=True"""
@@ -281,7 +281,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
                   'lineeqw': 63.315141667417912,
                   'baserms': 0.14576216042041779}
         testval = self._getStats(outfile)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
 
 
     def test07(self):
@@ -309,7 +309,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.916985,
                  "incr": 24416.931915037214}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")
@@ -353,7 +353,7 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.916985,
                  "incr": 24416.931914787496}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")
@@ -397,7 +397,154 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         refsc = {"ch0": 44049935561.917,
                  "incr": 24416.931942994266}
         testval = self._getStats(outfile,self.reglinech,self.regbasech)
-        self._compareDictVal(refdic, testval)
+        self._compareDictVal(testval, refdic)
+        # spectral coordinate check
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
+    def test10(self):
+        """Test 10: kernel = 'regrid' + negative chanwidth in channel unit"""
+        tid="10"
+        unit='channel'
+        scan = sd.scantable(self.infile, average=False)
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        del scan
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = str(-self.regridw)
+
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        ### reference values ( ASAP r2435 + CASA r18782)
+        refdic = {'linemax': 1.9440968036651611,
+                  'linemaxpos': 1285.0,
+                  'lineeqw': 15.466022935853511,
+                  'baserms': 0.16496795415878296}
+        refsc = {"ch0": 44099917021.547066,
+                 "incr": -24416.931915037214}
+        nnew = int(numpy.ceil(nch_old/float(self.regridw)))
+        reglinech = []
+        regbasech = []
+        for chans in self.reglinech:
+            reglinech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        for chans in self.regbasech:
+            regbasech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        testval = self._getStats(outfile,reglinech,regbasech)
+        self._compareDictVal(testval, refdic)
+        # spectral coordinate check
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
+    def test11(self):
+        """Test11: kernel = 'regrid' + negative chanwidth in frequency unit"""
+        tid="11"
+        unit="Hz"
+        # get channel number and width in input data
+        scan = sd.scantable(self.infile, average=False)
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        del scan
+        chw_new = chw_old*(-self.regridw)
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        ### reference values ( ASAP r2435 + CASA r18782)
+        refdic = {'linemax': 1.9440968036651611,
+                  'linemaxpos': 1285.0,
+                  'lineeqw': 15.466022935853511,
+                  'baserms': 0.16496795415878296}
+        refsc = {"ch0": 44099917021.547066,
+                 "incr": -24416.931914787496}
+        nnew = int(numpy.ceil(nch_old/float(self.regridw)))
+        reglinech = []
+        regbasech = []
+        for chans in self.reglinech:
+            reglinech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        for chans in self.regbasech:
+            regbasech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        testval = self._getStats(outfile,reglinech,regbasech)
+        self._compareDictVal(testval, refdic)
+        # spectral coordinate check
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
+
+    def test12(self):
+        """Test 12: kernel = 'regrid' + positive chanwidth in velocity unit"""
+        tid="12"
+        unit="km/s"
+        # get channel number and width in input data
+        scan = sd.scantable(self.infile, average=False)
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        del scan
+        chw_new = chw_old*(-self.regridw)
+
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        ### reference values ( ASAP r2435 + CASA r18782)
+        refdic = {'linemax': 1.9440964460372925,
+                  'linemaxpos': 1285.0,
+                  'lineeqw': 15.466027743114028,
+                  'baserms': 0.16496789455413818}
+        refsc = {"ch0": 44099917021.547066,
+                 "incr": -24416.931942994266}
+        nnew = int(numpy.ceil(nch_old/float(self.regridw)))
+        reglinech = []
+        regbasech = []
+        for chans in self.reglinech:
+            reglinech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        for chans in self.regbasech:
+            regbasech.append([nnew-1-chans[0],nnew-1-chans[1]])
+        testval = self._getStats(outfile,reglinech,regbasech)
+        self._compareDictVal(testval, refdic)
         # spectral coordinate check
         scan = sd.scantable(outfile, average=False)
         scan.set_unit("Hz")

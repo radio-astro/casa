@@ -113,7 +113,7 @@ void MultiRectTool::disable() {
 	return;
     }
 
-    void MultiRectTool::moved(const WCMotionEvent &ev) {
+    void MultiRectTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type &selected_regions ) {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -135,8 +135,9 @@ void MultiRectTool::disable() {
 	    // return;
 	}
 
+	int size = selected_regions.size( );
 	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
-	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -356,9 +357,9 @@ void MultiRectTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-    void MultiRectTool::draw(const WCRefreshEvent &/*ev*/) {
+    void MultiRectTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type &selected_regions) {
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter )
-	    (*iter)->draw( );
+	    (*iter)->draw( selected_regions.size( ) > 0 );
     }
 
 void MultiRectTool::reset(Bool skipRefresh) {

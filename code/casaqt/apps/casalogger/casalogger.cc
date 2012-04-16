@@ -69,6 +69,7 @@ int main( int argc, char ** argv )
 
     // std::cerr << "Logviewer wants: " << mylog << std::endl;
     LogViewer mw(mylog);
+    mw.setAttribute(Qt::WA_ShowWithoutActivating);
     mw.show();
 
     return a.exec();

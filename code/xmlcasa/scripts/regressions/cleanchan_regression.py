@@ -257,6 +257,7 @@ for te in tests:
                       imagename=rt+'_'+te['name'],
                       cell="6arcsec",imsize=[n,n],
                       spw=spw,
+                      imagermode='',
                       mode=te['mode'],veltype=vtype,
                       start=sta,width=wid,nchan=nchan,
                       interpolation=interp,

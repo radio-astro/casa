@@ -673,6 +673,7 @@ vis       = uvcontsubfile
 imagename = outdirty
 field     = '0'
 spw       = '0'
+imagermode = ''
 mode      = 'channel'
 nchan     = 1
 start     = 32
@@ -753,6 +754,7 @@ vis       = uvcontsubfile
 imagename = outname
 field     = '0'
 spw       = '0'
+imagermode = ''
 mode      = 'channel'
 nchan     = 64
 start     = 32
@@ -1025,7 +1027,7 @@ print "Canonical regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
 canonical_results['dirty_image_rms'] = {}
-canonical_results['dirty_image_rms']['value'] = 0.000588262734707
+canonical_results['dirty_image_rms']['value'] = 0.000342
 
 canonical_results['clean_image_max'] = {}
 canonical_results['clean_image_max']['value'] = 0.0231359191239

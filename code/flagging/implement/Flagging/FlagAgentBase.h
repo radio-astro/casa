@@ -44,7 +44,10 @@ public:
 		CORRECTED,
 		MODEL,
 		RESIDUAL,
-		RESIDUAL_DATA
+		RESIDUAL_DATA,
+		CPARAM,
+		PARAMERR,
+		SNR
 	};
 
 	enum iteration {

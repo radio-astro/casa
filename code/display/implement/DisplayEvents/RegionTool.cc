@@ -26,14 +26,15 @@
 //# $Id$
 #include <display/DisplayEvents/RegionTool.h>
 #include <display/Display/WorldCanvas.h>
+#include <display/DisplayErrors.h>
 
 namespace casa {
-    void RegionTool::keyPressed(const WCPositionEvent &ev) {  }
+    void RegionTool::keyPressed(const WCPositionEvent &/*ev*/) {  }
     void RegionTool::keyReleased(const WCPositionEvent &) {  }
     void RegionTool::otherKeyPressed(const WCPositionEvent &) {  }
     void RegionTool::otherKeyReleased(const WCPositionEvent &) {  }
-    void RegionTool::moved(const WCMotionEvent &) {  }
-    void RegionTool::draw(const WCRefreshEvent &) {  }
+    void RegionTool::moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {  }
+    void RegionTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {  }
 
 #define CHECK_MOUSE_STATE(STATE)					\
 	if ( state & viewer::Region::STATE ) {				\

@@ -1022,7 +1022,7 @@ class immath_test2(unittest.TestCase):
         except:
             success = False
             errors += "\nError: Failed to create polarization intensity image."
-            
+        self.assertTrue(success,errors)
         try:
             # linear polarization intensity
             outfile = 'linear_pol_intensity_test'
@@ -1038,7 +1038,7 @@ class immath_test2(unittest.TestCase):
         except:
             success = False
             errors
-    
+        self.assertTrue(success,errors)
         imList = ['pol_test_Q.im', 'pol_test_U.im']
         try:
             results = immath( imagename=imList, outfile='pol_test2', mode='pola' )

@@ -174,6 +174,8 @@ for the beam size both in the plane of the sky and along the $w$ axis.
   If you have already set MS's and selected data and msname="" then 
   the calulation is done for the field(s) selected in selectvis.
 
+If the parameter {\tt getfreqrange=True} then the reverse is requested. You set {\tt spwselection} to be the range of data selection you want to use and you'll get the range of frequency covered in the frame you set. 
+
 </description>
 <input>
 
@@ -205,6 +207,15 @@ for the beam size both in the plane of the sky and along the $w$ axis.
        <description>fieldid to use when msname is not empty otherwise ignored and field selected in selectvis is used</description>
        <value>0</value>
      </param>
+     <param type="bool" name="getfreqrange">
+     <description>if set then freqrange is returned in the frame requested for the data selected</description>
+     <value>false</value>
+     </param>
+     <param type="string" name="spwselection">
+       <description>if getfreqrange=True then this is needed to find the range of frequency in the frame requested</description>
+       <value></value>
+     </param>
+     
 </input>
 <example>
 In this example, we are interested in an image cube which span 20.0682GHz to 20.1982 in LSRK  which will have a channel resolution of 3.9MHz. The field we are interested is field 4 of each of the ms.
@@ -225,10 +236,23 @@ selinfo=im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e
 Thus from the first ms a spw selection like  '4:19~127, 5:0~22'  is all that is needed. 
 Similarly from the second ms.
 
-###if you need this info without needing to chaneg the state of the imager tool 
+###if you need this info without needing to change the state of the imager tool 
 then you can it as follows
 
 im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e3, freqframe="LSRK", msname="test1.ms", fieldid=4)
+
+
+####now if you want to see what frequency range is covered, in the frame 
+####defined by freqframe, in spwselection you want to use
+im.selectvis(vis='test3.ms', spw='0:20~210')
+im.advisechansel(getfreqrange=True, freqframe="LSRK")
+### the output will be something
+ {'freqend': 346020345384.64178, 'freqstart': 345683852920.1723}
+
+###and if you just want to use it as a helper function without touching the state 
+###of imager
+
+im.advisechansel(msname='test3.ms', getfreqrange=True, spwselection='0:20~210')
 
 
 </example>

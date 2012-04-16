@@ -1,5 +1,5 @@
-//# polygon.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Polygon.cc: non-GUI polygon region
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -35,6 +35,7 @@
 
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <display/DisplayErrors.h>
 
 namespace casa {
     namespace viewer {
@@ -146,7 +147,7 @@ namespace casa {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;
-		draw( );		// this draw may not be necessary (?)...
+		draw( other_selected );		// this draw may not be necessary (?)...
 		if ( other_selected == false ) {
 		    // mark flag as this is the region (how to mix in other shapes)
 		    // of interest for statistics updates...
@@ -154,7 +155,7 @@ namespace casa {
 		}
 	    } else if ( selected_ == true ) {
 		selected_ = false;
-		draw( );		// this draw may not be necessary (?)...
+		draw( other_selected );		// this draw may not be necessary (?)...
 		result |= MouseRefresh;
 	    }
 	    return result;

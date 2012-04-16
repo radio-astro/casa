@@ -410,6 +410,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
             gain=0.15,
             threshold="0.0mJy",
             psfmode="hogbom",
+            imagermode='',
             interactive=False,
             mask=[298,298,302,302],
             nchan=-1, start=0, width=1,

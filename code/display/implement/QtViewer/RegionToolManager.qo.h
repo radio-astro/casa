@@ -55,7 +55,7 @@ namespace casa {
 	                    public WCRefreshEH {
 	    Q_OBJECT
 	    public:
-
+		typedef viewer::Region::region_list_type region_list_type;
 		enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool };
 
 		RegionToolManager( QtRegionSourceFactory *rsf, PanelDisplay *pd );
@@ -73,7 +73,6 @@ namespace casa {
 		void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
 
 	    private:
-		typedef std::set<viewer::Region*> region_list_type;
 		typedef std::pair<double,double> linear_point_type;
 		PanelDisplay *pd;
 		typedef std::map<ToolTypes,RegionTool*> tool_map;
@@ -94,6 +93,7 @@ namespace casa {
 		viewer::Region::PointInfo moving_handle_info;
 		viewer::Region *moving_handle_region;
 
+		// returns new region marked state...
 		bool add_mark_select( RegionTool::State &state );
 		void clear_mark_select( RegionTool::State &state );
 		bool setup_moving_regions( RegionTool::State &state );

@@ -83,7 +83,7 @@ def simobserve(
         # convert "alma;0.4arcsec" to an actual configuration
         # can only be done after reading skymodel, so here, we just string parse
         if str.upper(antennalist[0:4]) == "ALMA":
-            foo=antennalist[0:4]+"_"+antennalist[5:]
+            foo=antennalist.replace(';','_')
         elif len(antennalist) > 0:
             foo=antennalist
         else:
@@ -259,18 +259,40 @@ def simobserve(
 
         # convert "alma;0.4arcsec" to an actual configuration
         if str.upper(antennalist[0:4]) == "ALMA":
-            tail = antennalist[5:]
-            if util.isquantity(tail,halt=False):
-                resl = qa.convert(tail,"arcsec")['value']                
-                if os.path.exists(repodir):
-                    confnum = (2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
-                    confnum = max(1,min(28,confnum))
-                    conf = str(int(round(confnum)))
-                    if len(conf) < 2: conf = '0' + conf
-                    antennalist = repodir + "alma.out" + conf + ".cfg"
-                    msg("converted resolution to antennalist "+antennalist)
-                else:
-                    msg("failed to find antenna configuration repository at "+repodir,priority="warn")
+
+            # test for cycle 1
+            q = re.compile('.*CYCLE.?1.?;(.*)')
+            qq = q.match(antennalist.upper())
+            if qq:
+                z = qq.groups()
+                tail=z[0]
+                tail=tail.lower()
+                if util.isquantity(tail,halt=False):
+                    resl = qa.convert(tail,"arcsec")['value']                
+                    if os.path.exists(repodir):
+                        confnum = (1.044-6.733*pl.log10(resl*qa.convert(model_center,"GHz")['value']/345.))
+                        confnum = max(1,min(6,confnum))
+                        conf = str(int(round(confnum)))
+                        antennalist = repodir + "alma_cycle1_" + conf + ".cfg"
+                        msg("converted resolution to antennalist "+antennalist)
+                    else:
+                        msg("failed to find antenna configuration repository at "+repodir,priority="warn")
+
+            else: # assume FS
+                tail = antennalist[5:]
+                if util.isquantity(tail,halt=False):
+                    resl = qa.convert(tail,"arcsec")['value']                
+                    if os.path.exists(repodir):
+                        confnum = (2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
+                        confnum = max(1,min(28,confnum))
+                        conf = str(int(round(confnum)))
+                        if len(conf) < 2: conf = '0' + conf
+                        antennalist = repodir + "alma.out" + conf + ".cfg"
+                        msg("converted resolution to antennalist "+antennalist)
+                    else:
+                        msg("failed to find antenna configuration repository at "+repodir,priority="warn")
+                        
+
 
         # Search order is fileroot/ -> specified path -> repository
         if len(antennalist) > 0:

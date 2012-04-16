@@ -138,7 +138,7 @@ LogViewer::LogViewer(QString logFile, QWidget *parent)
     //qDebug() << "========";
     logView->scrollToBottom();
     logView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-
+    logView->setTextElideMode(Qt::ElideLeft);
     QSettings settings("NRAO", "casa");
     resize(settings.value("logSize", QSize(800, 300)).toSize());
 

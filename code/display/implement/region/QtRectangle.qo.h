@@ -109,7 +109,7 @@ namespace casa {
 		// unified selection and manipulation of the various region types...
 		void mark( bool set=true ) { QtRegion::mark( set ); }
 		bool marked( ) const { return QtRegion::marked( ); }
-		void mark_toggle( ) { QtRegion::mark_toggle( ); }
+		bool mark_toggle( ) { return QtRegion::mark_toggle( ); }
 
 		void output( ds9writer &out ) const;
 

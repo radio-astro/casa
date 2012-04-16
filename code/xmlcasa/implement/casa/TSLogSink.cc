@@ -97,6 +97,7 @@ TSLogSink::TSLogSink (const LogFilterInterface& filter)
 // the aiprc file, else it defaults to the old standby.
 //
 void TSLogSink::setLogSink(String logname){
+   
    if(!logname.size()){
       String logfileKey="user.logfile";
       String logname2;

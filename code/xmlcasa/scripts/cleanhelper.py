@@ -577,19 +577,21 @@ class cleanhelper:
         # * It appears somewhat duplicating with makemaskimage 
         #   but it is necessary to create a maskimage for
         #   each field at this point...
-        if self.usespecframe=='': 
-            maskframe=self.dataspecframe
-        else:
-            maskframe=self.usespecframe
+        #if self.usespecframe=='': 
+        #    maskframe=self.dataspecframe
+        #else:
+        #    maskframe=self.usespecframe
+        #print "Frame : ", maskframe
+        #print "dataframe : ", self.dataspecframe , "   useframe : ", self.usespecframe
         for k in range(len(self.imagelist)):
             if(not (os.path.exists(self.maskimages[self.imagelist[k]]))):
                 ia.fromimage(outfile=self.maskimages[self.imagelist[k]],
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
-                mcsys=ia.coordsys().torecord()
-                mcsys['spectral2']['conversion']['system']=maskframe
-                ia.setcoordsys(mcsys)
+                #mcsys=ia.coordsys().torecord()
+                #mcsys['spectral2']['conversion']['system']=maskframe
+                #ia.setcoordsys(mcsys)
                 ia.done(verbose=False)
 
         # take out extra []'s
@@ -863,7 +865,7 @@ class cleanhelper:
         if self.csys['spectral2']['conversion']['system']!=maskframe:
             self.csys['spectral2']['conversion']['system']=maskframe
         ia.setcoordsys(self.csys)
-        ##ia.setcoordsys(mycsys.torecord())
+        #ia.setcoordsys(mycsys.torecord())
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :

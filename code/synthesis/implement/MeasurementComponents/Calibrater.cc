@@ -1672,9 +1672,13 @@ Bool Calibrater::genericGatherAndSolve() {
 	    //	    svc_p->printActivity(n,slotidx(thisSpw),vi.fieldId(),thisSpw,nGood);	      
 	    
 	  }
-	  else 
+	  else {
 	    // report where this failure occured
 	    svc_p->currMetaNote();
+	    if (svc_p->freqDepPar())
+	      // We must record a flagged solution for this channel
+	      svc_p->keep1(ich);
+	  }
 	  
 	} // parameter channels
 
@@ -2750,7 +2754,7 @@ Bool Calibrater::smooth(const String& infile,
 
     }
     else
-      throw(AipsError("This type does not support smoothing."));
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
 
   } catch (AipsError x) {
    
@@ -2847,7 +2851,7 @@ Bool Calibrater::smooth(const String& infile,
 
     }
     else
-      throw(AipsError("This type does not support smoothing."));
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
 
   } catch (AipsError x) {
    

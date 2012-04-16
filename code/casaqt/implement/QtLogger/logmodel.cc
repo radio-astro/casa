@@ -253,6 +253,10 @@ void LogModel::appendData(const QString &data)
                              }
                         }
 
+            //use textelide property instead
+            //QString dt = date.right(8).append(' ').append(date.left(10));
+            //date = dt;
+
 			// qDebug() << "date=" << date << "\t";
 			// qDebug() << "priority=" << priority << "\t";
 			// qDebug() << "origin=" << origin << "\t";

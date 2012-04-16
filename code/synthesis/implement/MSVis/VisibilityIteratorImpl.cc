@@ -29,6 +29,7 @@
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -2385,6 +2386,37 @@ VisibilityIteratorReadImpl::slicesToMatrices (Vector<Matrix<Int> > & matv,
         }
     }
 }
+
+
+void VisibilityIteratorReadImpl::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe) const {
+  Int nMS = msIter_p.numMS ();
+  freqStart=C::dbl_max;
+  freqEnd = 0.0;
+            
+  for (Int msId=0; msId < nMS; ++msId){
+
+    Vector<Int> spws =  msChannels_p.spw_p[msId];
+    Vector<Int> starts = msChannels_p.start_p[msId];
+    Vector<Int> nchan = msChannels_p.width_p[msId];
+    Vector<Int> incr = msChannels_p.inc_p[msId];
+    nchan=nchan*incr;
+    Vector<uInt>  uniqIndx;
+    Vector<Int> fldId;
+    ROScalarColumn<Int> (msIter_p.ms (msId), MS::columnName (MS::FIELD_ID)).getColumn (fldId);
+    uInt nFields = GenSort<Int>::sort (fldId, Sort::Ascending, Sort::QuickSort | Sort::NoDuplicates);
+    for (uInt indx=0; indx< nFields; ++indx){
+      Int fieldid=fldId(indx);
+      Double tmpFreqStart; 
+      Double tmpFreqEnd;
+      MSUtil::getFreqRangeInSpw(tmpFreqStart, tmpFreqEnd, spws, starts, nchan, msIter_p.ms(msId), freqframe, fieldid);
+      if(freqStart > tmpFreqStart) freqStart=tmpFreqStart;
+      if(freqEnd < tmpFreqEnd) freqEnd=tmpFreqEnd;
+    }
+  }
+
+}
+
+
 
 void
 VisibilityIteratorReadImpl::getSpwInFreqRange (Block<Vector<Int> > & spw,

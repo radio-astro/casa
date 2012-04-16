@@ -23,6 +23,7 @@
 #include <sys/param.h>
 #include <xmlcasa/utils/CasapyWatcher.h>
 #include <casa/OS/File.h>
+#include <casa/BasicMath/Random.h>
 #include <casa/System/Aipsrc.h>
 
 using namespace std;
@@ -53,14 +54,17 @@ logsink::logsink()
   globalsink = false;
   logname = theLogName ;
   //version();
-
+  
    string tmpname = "" ;
-      String logfileKey="logfile.default";
+      String logfileKey="logfile.no.default";
       String logname2;
       if(!Aipsrc::find(logname2, logfileKey)){
          tmpname = "casapy.log";
       } else {
-         tmpname = logname2;
+         //tmpname = logname2;
+         ACG g(7326458, 98);
+         tmpname = "/tmp/"+String::toString(g.asuInt());
+         //tmpname = "null";
       }
    //std::cout << "logfile.default: " << tmpname << std::endl;
    if(tmpname != "null") {
@@ -264,14 +268,18 @@ bool logsink::setglobal(const bool isglobal)
 bool logsink::setlogfile(const std::string& filename)
 {
    bool rstat(true);
+
    string tmpname = filename ;
    if(!filename.size()){
-      String logfileKey="user.logfile";
+      String logfileKey="logfile.no.default";
       String logname2;
       if(!Aipsrc::find(logname2, logfileKey)){
          tmpname = "casapy.log";
       } else {
-         tmpname = logname2;
+         //tmpname = logname2;
+         ACG g(7326458, 98);
+         tmpname = "/tmp/"+String::toString(g.asuInt());
+         //tmpname = "null";
       }
    }
    if(tmpname != "null") {
@@ -281,7 +289,7 @@ bool logsink::setlogfile(const std::string& filename)
    }
    else
       thelogsink = new NullLogSink();
-      
+
    //
    // Also set for any watchers.
    CasapyWatcher::logChanged_(logname);

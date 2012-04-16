@@ -141,7 +141,6 @@ from flagdata2_pg import flagdata2_pg as flagdata2
 from tflagdata_pg import tflagdata_pg as tflagdata
 from tflagcmd_pg import tflagcmd_pg as tflagcmd
 from importevla_pg import importevla_pg as importevla
-#from importevla2_pg import importevla2_pg as importevla2
 from split_pg import split_pg as split
 from importvla_pg import importvla_pg as importvla
 from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
@@ -164,6 +163,7 @@ from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
 #from polcal_pg import polcal_pg as polcal
 
 from clearcal_pg import clearcal_pg as clearcal
+from delmod_pg import delmod_pg as delmod
 from bandpass_pg import bandpass_pg as bandpass
 #from clearplot_pg import clearplot_pg as clearplot
 from listvis_pg import listvis_pg as listvis

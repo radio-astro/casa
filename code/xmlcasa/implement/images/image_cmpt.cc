@@ -1,15 +1,3 @@
-/***
- * Framework independent implementation file for image...
- *
- * Implement the image component here.
- *
- * // image_cmpt.cc: defines image class which implements functionality
- * // for the image component
- *
- * @author
- * @version
- ***/
-
 #include <iostream>
 #include <memory>
 #include <sys/wait.h>
@@ -118,9 +106,9 @@ namespace casac {
 const String image::_class = "image";
 
 image::image() :
-	_log(new LogIO()), _image(new ImageAnalysis()) {
-	try {
-		*_log << _ORIGIN;
+_log(new LogIO()), _image(new ImageAnalysis()) {
+try {
+    *_log << _ORIGIN;
 	} catch (AipsError x) {
 		//*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 		//		<< LogIO::POST;
@@ -291,42 +279,42 @@ image* image::imagecalc(
 	const string& outfile, const string& pixels,
 	const bool overwrite
 ) {
-	LogIO log = _log.get() == 0 ? LogIO() : *_log;
-	log << _ORIGIN;
 	try {
 		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
-		return new ::casac::image(ia->imagecalc(outfile, pixels, overwrite));
-	} catch (AipsError x) {
-		//log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		//	<< LogIO::POST;
+		return new image(ia->imagecalc(outfile, pixels, overwrite));
+	}
+	catch (AipsError x) {
 		RETHROW(x);
 	}
 }
 
-image* image::imageconcat(const string& outfile, const variant& infiles,
-		const int axis, const bool relax, const bool tempclose,
-		const bool overwrite) {
+image* image::imageconcat(
+	const string& outfile, const variant& infiles,
+	const int axis, const bool relax, const bool tempclose,
+	const bool overwrite
+) {
 	try {
-		if (_log.get() == 0) {
-			_log.reset(new LogIO());
-		};
-		*_log << _ORIGIN;
-		_image.reset(new ImageAnalysis());
 		Vector<String> inFiles;
 		if (infiles.type() == ::casac::variant::BOOLVEC) {
 			inFiles.resize(0); // unset
-		} else if (infiles.type() == ::casac::variant::STRING) {
+		}
+		else if (infiles.type() == ::casac::variant::STRING) {
 			sepCommaEmptyToVectorStrings(inFiles, infiles.toString());
-		} else if (infiles.type() == variant::STRINGVEC) {
+		}
+		else if (infiles.type() == variant::STRINGVEC) {
 			inFiles = toVectorString(infiles.toStringVec());
-		} else {
+		}
+		else {
 			*_log << "Unrecognized infiles datatype" << LogIO::EXCEPTION;
 		}
-		return new ::casac::image(_image->imageconcat(outfile, inFiles, axis,
-				relax, tempclose, overwrite));
-	} catch (AipsError x) {
-		//*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		//		<< LogIO::POST;
+		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
+		return new image(
+			ia->imageconcat(
+				outfile, inFiles, axis,	relax, tempclose, overwrite
+			)
+		);
+	}
+	catch (AipsError x) {
 		RETHROW(x);
 	}
 }

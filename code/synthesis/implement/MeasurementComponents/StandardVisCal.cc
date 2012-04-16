@@ -847,15 +847,17 @@ void BJones::fillChanGaps() {
 	ArrayIterator<Bool> fliter(fl,itax,False);
 	Array<Bool> sok;
 	while (!soliter.pastEnd()) {
-	  sok=!fliter.array();
+	  Array<Bool> thfl(fliter.array());
+	  sok.assign(!thfl);
 	  fillChanGapArray(soliter.array(),sok);
+	  thfl=!sok;  // sok is revised (shapes necessarily match)
 	  soliter.next();
 	  fliter.next();
 	}
 	
 	// record result...	
 	ctiter.setcparam(p);
-	ctiter.setflag(!sok);
+	ctiter.setflag(fl);
       }
       ctiter.next();
     }
