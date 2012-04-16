@@ -3044,20 +3044,23 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
       uInt rows = tmpin[itable]->nrow() ;
       uInt freqnrows = tmpin[itable]->frequencies().table().nrow() ;
+      freqIDCol.attach( tmpin[itable]->table(), "FREQ_ID" ) ;
+      //ifnoCol.attach( tmpin[itable]->table(), "IFNO" ) ;
       for ( uInt irow = 0 ; irow < rows ; irow++ ) {
 	if ( freqid[itable].size() == freqnrows ) {
 	  break ;
 	}
 	else {
-	  freqIDCol.attach( tmpin[itable]->table(), "FREQ_ID" ) ;
-	  ifnoCol.attach( tmpin[itable]->table(), "IFNO" ) ;
 	  uInt id = freqIDCol( irow ) ;
 	  if ( freqid[itable].size() == 0 || count( freqid[itable].begin(), freqid[itable].end(), id ) == 0 ) {
 	    //os << "itable = " << itable << ": IF " << id << " is included in the list" << LogIO::POST ;
 	    vector<double> abcissa = tmpin[itable]->getAbcissa( irow ) ;
+	    double lbedge, rbedge;
 	    freqid[itable].push_back( id ) ;
-	    iffreq[itable].push_back( abcissa[0] - 0.5 * ( abcissa[1] - abcissa[0] ) ) ;
-	    iffreq[itable].push_back( abcissa[abcissa.size()-1] + 0.5 * ( abcissa[1] - abcissa[0] ) ) ;
+	    lbedge = abcissa[0] - 0.5 * ( abcissa[1] - abcissa[0] );
+	    rbedge = abcissa[abcissa.size()-1] + 0.5 * ( abcissa[1] - abcissa[0] );
+	    iffreq[itable].push_back( min(lbedge, rbedge) ) ;
+	    iffreq[itable].push_back( max(lbedge, rbedge) ) ;
 	  }
 	}
       }
@@ -3142,14 +3145,11 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 
     // Grouping continuous IF groups (without frequency gap)
     // freqgrp: list of IF group indexes in each frequency group
-    // freqrange: list of minimum and maximum frequency in each frequency group
     // freqgrp[numgrp][nummember]
     // freqgrp: [[ifgrp00, ifgrp01, ifgrp02, ...],
     //           [ifgrp10, ifgrp11, ifgrp12, ...],
     //           ...
     //           [ifgrpn0, ifgrpn1, ifgrpn2, ...]]
-    // freqrange[numgrp*2]
-    // freqrange: [min_grp0, max_grp0, min_grp1, max_grp1, ...]
     vector< vector<uInt> > freqgrp ;
     double freqrange = 0.0 ;
     uInt grpnum = 0 ;
@@ -3387,43 +3387,72 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	int nchan = abcissa.size() ;
 	double resol = abcissa[1] - abcissa[0] ;
 	//os << "abcissa range  : [" << abcissa[0] << "," << abcissa[nchan-1] << "]" << LogIO::POST ;
-	if ( minfreq <= abcissa[0] ) 
-	  nminchan = 0 ;
+	uInt imin, imax;
+	int sigres;
+	if ( resol >= 0. ) {
+	  imin = 0;
+	  imax = nchan - 1 ;
+	  sigres = 1 ;
+	} else {
+	  imin = nchan - 1 ;
+	  imax = 0 ;
+	  sigres = -1 ;
+	  resol = abs(resol) ;
+	}
+	if ( minfreq <= abcissa[imin] ) 
+	  nminchan = imin ;
 	else {
 	  //double cfreq = ( minfreq - abcissa[0] ) / resol ;
-	  double cfreq = ( minfreq - abcissa[0] + 0.5 * resol ) / resol ;
-	  nminchan = int(cfreq) + ( ( cfreq - int(cfreq) <= 0.5 ) ? 0 : 1 ) ;
+	  double cfreq = ( minfreq - abcissa[imin] + 0.5 * resol ) / resol ;
+	  nminchan = imin + sigres * (int(cfreq) + ( ( cfreq - int(cfreq) <= 0.5 ) ? 0 : 1 )) ;
 	}
-	if ( maxfreq >= abcissa[abcissa.size()-1] )
-	  nmaxchan = abcissa.size() - 1 ;
+	if ( maxfreq >= abcissa[imax] )
+	  nmaxchan = imax;
 	else {
 	  //double cfreq = ( abcissa[abcissa.size()-1] - maxfreq ) / resol ;
-	  double cfreq = ( abcissa[abcissa.size()-1] - maxfreq + 0.5 * resol ) / resol ;
-	  nmaxchan = abcissa.size() - 1 - int(cfreq) - ( ( cfreq - int(cfreq) >= 0.5 ) ? 1 : 0 ) ;
+	  double cfreq = ( abcissa[imax] - maxfreq + 0.5 * resol ) / resol ;
+	  nmaxchan = imax - sigres * (int(cfreq) +( ( cfreq - int(cfreq) >= 0.5 ) ? 1 : 0 )) ;
 	}
-	//os << "channel range (" << irow << "): [" << nminchan << "," << nmaxchan << "]" << LogIO::POST ;
+	//os << "freqrange = [" << abcissa[nminchan] << ", " << abcissa[nmaxchan] << "]"<< LogIO::POST; 
+	if ( nmaxchan < nminchan ) {
+	  int tmp = nmaxchan ;
+	  nmaxchan = nminchan ;
+	  nminchan = tmp ;
+	}
 	if ( nmaxchan > nminchan ) {
 	  newin[itable]->reshapeSpectrum( nminchan, nmaxchan, irow ) ;
 	  int newchan = nmaxchan - nminchan + 1 ;
-	  if ( count( freqIdUpdate.begin(), freqIdUpdate.end(), freqIdVec[itable][irow] ) == 0 && newchan < nchan )
+	  if ( count( freqIdUpdate.begin(), freqIdUpdate.end(), freqIdVec[itable][irow] ) == 0 && newchan < nchan ) {
 	    freqIdUpdate.push_back( freqIdVec[itable][irow] ) ;
+
+	    // Update before nminchan is lost
+	    uInt freqId = freqIdVec[itable][irow] ;
+	    Double refpix ;
+	    Double refval ;
+	    Double increment ;
+	    newin[itable]->frequencies().getEntry( refpix, refval, increment, freqId ) ; 
+	    //refval = refval - ( refpix - nminchan ) * increment ;
+	    refval = abcissa[nminchan] ;
+	    refpix = 0 ;
+	    newin[itable]->frequencies().setEntry( refpix, refval, increment, freqId ) ;
+	  }
 	}
 	else {
 	  throw(AipsError("Failed to pick up common part of frequency range.")) ;
 	}
       }
-      for ( uInt i = 0 ; i < freqIdUpdate.size() ; i++ ) {
-	uInt freqId = freqIdUpdate[i] ;
-	Double refpix ;
-	Double refval ;
-	Double increment ;
+//       for ( uInt i = 0 ; i < freqIdUpdate.size() ; i++ ) {
+// 	uInt freqId = freqIdUpdate[i] ;
+// 	Double refpix ;
+// 	Double refval ;
+// 	Double increment ;
 	
-	// update row
-	newin[itable]->frequencies().getEntry( refpix, refval, increment, freqId ) ; 
-	refval = refval - ( refpix - nminchan ) * increment ;
-	refpix = 0 ;
-	newin[itable]->frequencies().setEntry( refpix, refval, increment, freqId ) ;
-      }    
+// 	// update row
+// 	newin[itable]->frequencies().getEntry( refpix, refval, increment, freqId ) ; 
+// 	refval = refval - ( refpix - nminchan ) * increment ;
+// 	refpix = 0 ;
+// 	newin[itable]->frequencies().setEntry( refpix, refval, increment, freqId ) ;
+//       }    
     }
 
     
@@ -3460,10 +3489,13 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	    //os << "GROUP " << igrp << " (" << tableid << "," << rowid << "): nchan = " << nchan << " (minchan = " << minchan << ")" << LogIO::POST ; 
 	    if ( nchan < minchan ) {
 	      minchan = nchan ;
-	      maxdnu = dnu ;
+	      maxdnu = abs(dnu) ;
 	      newin[tableid]->frequencies().getEntry( refpixref, refvalref, refinc, rowid ) ;
 	      refreqid = rowid ;
 	      reftable = tableid ;
+	      // Spectra are reversed when dnu < 0
+	      if (dnu < 0)
+		refpixref = minchan - 1 -refpixref ;
 	    }
 	  }
 	}
@@ -3478,7 +3510,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  //os << "tableid = " << tableid << " rowid = " << rowid << ": " << LogIO::POST ;
 	  //os << "   regridChannel applied to " ;
 	  //if ( tableid != reftable ) 
-          refreqid = newin[tableid]->frequencies().addEntry( refpixref, refvalref, refinc ) ;
+          refreqid = newin[tableid]->frequencies().addEntry( refpixref, refvalref, maxdnu ) ;
 	  for ( uInt irow = 0 ; irow < newin[tableid]->table().nrow() ; irow++ ) {
 	    uInt tfreqid = freqIdVec[tableid][irow] ;
 	    if ( tfreqid == rowid ) {	  
@@ -3499,7 +3531,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  uInt index = distance( freqIdVec[tableid].begin(), iter ) ;
 	  vector<double> abcissa = newin[tableid]->getAbcissa( index ) ;
 	  minchan = abcissa.size() ;
-	  maxdnu = abcissa[1] - abcissa[0] ;
+	  maxdnu = abs( abcissa[1] - abcissa[0]) ;
 	}
       }
       for ( uInt i = 0 ; i < freqgrp.size() ; i++ ) {
@@ -3537,7 +3569,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 
     // combine frequency group
     os << "Combine spectra based on frequency grouping" << LogIO::POST ;
-    os << "IFNO is renumbered as frequency group ID (see above)" << LogIO::POST ;
+    //os << "IFNO is renumbered as frequency group ID (see above)" << LogIO::POST ;
+    os << "IFNO is renumbered as IF group ID (see above)" << LogIO::POST ;
     vector<string> coordinfo = tmpout->getCoordInfo() ;
     oldinfo[0] = coordinfo[0] ;
     coordinfo[0] = "Hz" ;
@@ -3569,7 +3602,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	if ( count( freqgrp[igrp].begin(), freqgrp[igrp].end(), ifno ) > 0 ) {
 	  vector<double> abcissa = tmpout->getAbcissa( irow ) ;
 	  double bw = ( abcissa[1] - abcissa[0] ) * abcissa.size() ;
-	  int nchan = (int)( bw / gmaxdnu[igrp] ) ;
+	  int nchan = (int) abs( bw / gmaxdnu[igrp] ) ;
+	  // All spectra will have positive frequency increments
 	  tmpout->regridChannel( nchan, gmaxdnu[igrp], irow ) ;
 	  break ;
 	}
@@ -3592,7 +3626,6 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     Block<String> cols(1);
     cols[0] = String("POLNO") ;
     TableIterator iter( tab, cols ) ;
-    bool done = false ;
     vector< vector<uInt> > sizes( freqgrp.size() ) ;
     while( !iter.pastEnd() ) {
       vector< vector<Float> > specout( freqgrp.size() ) ;
@@ -3643,21 +3676,18 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 // 	} 
 //       }
       // get a list of number of channels for each frequency group member
-      if ( !done ) {
-        for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
-          sizes[igrp].resize( freqgrp[igrp].size() ) ;
-          for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
-            for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
-              uInt ifno = ifnoCol( irow ) ;
-              if ( ifno == freqgrp[igrp][imem] ) {
-                Vector<Float> spec = specCols( irow ) ;
-                sizes[igrp][imem] = spec.nelements() ;
-                break ;
-              }                
-            }
-          }
-        }
-        done = true ;
+      for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
+	sizes[igrp].resize( freqgrp[igrp].size() ) ;
+	for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
+	  for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
+	    uInt ifno = ifnoCol( irow ) ;
+	    if ( ifno == freqgrp[igrp][imem] ) {
+	      Vector<Float> spec = specCols( irow ) ;
+	      sizes[igrp][imem] = spec.nelements() ;
+	      break ;
+	    }
+	  }
+	}
       }
       // combine spectra
       for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
@@ -3704,7 +3734,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
           Vector<uChar> newflag( flagout[igrp] ) ;
           specColOut.put( irow, newspec ) ;
           flagColOut.put( irow, newflag ) ;
-          // IFNO renumbering
+          // IFNO renumbering (renumbered as frequency group ID)
           ifnoColOut.put( irow, igrp ) ; 
         }
       }
@@ -3715,19 +3745,23 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
       uInt index = 0 ;
       uInt pixShift = 0 ;
+
       while ( freqgrp[igrp][index] != gmemid[igrp] ) {
 	pixShift += sizes[igrp][index++] ;
       }
       for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
-	if ( ifnoColOut( irow ) == gmemid[igrp] && !updated[igrp] ) {
+	//if ( ifnoColOut( irow ) == gmemid[igrp] && !updated[igrp] ) {
+	if ( ifnoColOut( irow ) == igrp && !updated[igrp] ) {
 	  uInt freqidOut = freqidColOut( irow ) ;
 	  //os << "freqgrp " << igrp << " freqidOut = " << freqidOut << LogIO::POST ;
 	  double refpix ;
 	  double refval ;
 	  double increm ;
 	  out->frequencies().getEntry( refpix, refval, increm, freqidOut ) ;
+	  if (increm < 0)
+	    refpix = sizes[igrp][index] - 1 - refpix ; // reversed
 	  refpix += pixShift ;
-	  out->frequencies().setEntry( refpix, refval, increm, freqidOut ) ;
+	  out->frequencies().setEntry( refpix, refval, gmaxdnu[igrp], freqidOut ) ;
 	  updated[igrp] = true ;
 	}
       }

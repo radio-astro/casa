@@ -598,6 +598,7 @@ set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 #
 # libraries and executables
 #
+set( ASAPPYLIB _asap )
 set( ASAPLIB asap )
 set( PYRAPLIB pyrap )
 set( ATNFLIB atnf )
