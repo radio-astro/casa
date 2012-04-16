@@ -77,7 +77,7 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
   }
 }
 
-void MWCRulerlineTool::moved(const WCMotionEvent &ev) {
+void MWCRulerlineTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
   if (!itsActive) return;
   itsX2 = ev.pixX(); itsY2 = ev.pixY();
   refresh();
@@ -89,7 +89,7 @@ void MWCRulerlineTool::keyReleased(const WCPositionEvent &ev) {
 
   reset();
 }
-void MWCRulerlineTool::draw(const WCRefreshEvent &) {
+void MWCRulerlineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
   // draws a line from initial to final mouse position,
   // when the button is down.
   if (!itsActive) return;

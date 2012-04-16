@@ -89,8 +89,12 @@ namespace casa {
 		const region_list_type &new_marked_regions = state.regions(viewer::Region::PointInside);
 		for ( region_list_type::iterator it=new_marked_regions.begin( );
 		      it != new_marked_regions.end( ); ++it ) {
-		    (*it)->mark_toggle( );
-		    marked_regions.insert(*it);
+		    if ( (*it)->mark_toggle( ) ) {
+			(*it)->selectedInCanvas( );
+			marked_regions.insert(*it);
+		    } else {
+			marked_regions.erase(*it);
+		    }
 		}
 		state.refresh( );
 		return true;
@@ -330,7 +334,7 @@ namespace casa {
 		return;
 	    }
 
-	    if ( moving_handle ) {
+	    if ( moving_handle && marked_regions.size( ) == 0 ) {
 
 		if ( ! wc->inDrawArea(x,y) ) return;
 
@@ -358,7 +362,7 @@ namespace casa {
 	    }
 
 	    for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it )
-		(*it).second->moved(ev);
+		(*it).second->moved(ev,marked_regions);
 	}
 
 	void RegionToolManager::operator()(const WCRefreshEvent& ev) {
@@ -366,7 +370,7 @@ namespace casa {
 		 ev.reason() == Display::BackCopiedToFront &&
 		 ev.worldCanvas( )->pixelCanvas()->drawBuffer()==Display::FrontBuffer  ) {
 		for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it )
-		    (*it).second->draw(ev);
+		    (*it).second->draw(ev,marked_regions);
 	    }
 	}
 

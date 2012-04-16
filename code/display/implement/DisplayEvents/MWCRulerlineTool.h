@@ -86,14 +86,14 @@ class MWCRulerlineTool : public MultiWCTool, public DTVisible {
   // these maintain the state of the pan vector and order it to be drawn
   // via refresh().
   // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev);
+  virtual void keyPressed(const WCPositionEvent &/*ev*/);
+  virtual void keyReleased(const WCPositionEvent &/*ev*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
   // </group>
 
   // draw the distance vector on a PixelCanvas.  (To be called only by the
   // base class refresh event handler).
-  virtual void draw(const WCRefreshEvent &);
+  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
 
  private:
   // Should we respond to mouse movement and button release?  Should

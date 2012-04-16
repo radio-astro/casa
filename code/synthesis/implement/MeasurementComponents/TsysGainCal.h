@@ -118,7 +118,7 @@ public:
 
   virtual ~EVLAGainTsys();
 
-  // Return the type enum (for now, pretend we are B)
+  // Return the type enum (for now, pretend we are G)
   virtual Type type() { return VisCal::G; };
 
   // EVLA Gain and Tsys are Float parameters
@@ -147,6 +147,9 @@ protected:
   // The parameter array is not (just) the Jones matrix element array
   virtual Bool trivialJonesElem() { return False; };
 
+  // Local version to extract integration time and bandwidth
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,
+                        Bool avoidACs=True);
   
   // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();
@@ -168,6 +171,14 @@ private:
 
   // Tcal storage
   Cube<Float> tcals_;
+
+  // Digital factors for the EVLA
+  Float correff_;      // net corr efficiency (lossy)
+  Float frgrotscale_;  // fringe rotation scale (lossless)
+  Float nyquist_;      // 2*dt*dv
+
+  // Effective per-chan BW, per spw for weight calculation
+  Vector<Double> effChBW_;
 
 };
 

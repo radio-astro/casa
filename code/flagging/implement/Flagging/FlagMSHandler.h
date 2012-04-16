@@ -67,6 +67,10 @@ public:
 	// Provide table name (for flag version)
 	String getTableName();
 
+	// Check if a given column is available in the MS
+	// (typically for checking existence of CORRECTED_DATA
+	bool checkIfColumnExists(String column);
+
 private:
 
 	// Mapping functions

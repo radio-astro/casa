@@ -2781,7 +2781,7 @@ Bool Calibrater::smooth(const String& infile,
 
     }
     else
-      throw(AipsError("This type does not support smoothing."));
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
 
   } catch (AipsError x) {
    
@@ -2878,7 +2878,7 @@ Bool Calibrater::smooth(const String& infile,
 
     }
     else
-      throw(AipsError("This type does not support smoothing."));
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
 
   } catch (AipsError x) {
    

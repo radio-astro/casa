@@ -109,11 +109,11 @@ class WCCrosshairTool : public WCTool, public DTVisible {
   // namely double clicking the key, they will pass control on to the
   // doubleInside and doubleOutside functions.
   // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev);
-  virtual void refresh(const WCRefreshEvent &ev);
+  virtual void keyPressed(const WCPositionEvent &/*ev*/);
+  virtual void keyReleased(const WCPositionEvent &/*ev*/);
+  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void refresh(const WCRefreshEvent &/*ev*/);
   // </group>
 
   // Functions special to the crosshair event handling: called when

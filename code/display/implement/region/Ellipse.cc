@@ -145,7 +145,7 @@ namespace casa {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;
-		draw( );
+		draw( other_selected );
 		if ( other_selected == false ) {
 		    // mark flag as this is the region (how to mix in other shapes)
 		    // of interest for statistics updates...
@@ -153,7 +153,7 @@ namespace casa {
 		}
 	    } else if ( selected_ == true ) {
 		selected_ = false;
-		draw( );
+		draw( other_selected );
 		result |= MouseRefresh;
 	    }
 	    return result;

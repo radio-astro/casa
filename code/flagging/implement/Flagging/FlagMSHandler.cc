@@ -848,5 +848,14 @@ FlagMSHandler::getTableName()
 	return originalMeasurementSet_p->tableName();
 }
 
+// -----------------------------------------------------------------------
+// Check what data columns exist
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::checkIfColumnExists(String column)
+{
+	return originalMeasurementSet_p->tableDesc().isColumn(column);
+}
+
 } //# NAMESPACE CASA - END
 
