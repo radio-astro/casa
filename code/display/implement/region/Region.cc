@@ -39,6 +39,8 @@
 #include <math.h>
 #include <algorithm>
 
+#define SEXAGPREC 9
+
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
     fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", file, line, func );
 }
@@ -422,14 +424,14 @@ namespace casa {
 		    // D.M.S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
-		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
-		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,8);
+		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    // H:M:S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
-		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,8);
+		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
 		x = as_string(result_x);
@@ -445,14 +447,14 @@ namespace casa {
 		    // D.M.S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
-		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,8);
+		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
-		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,8);
+		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
 		    // H:M:S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
-		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,8);
+		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
 		y = as_string(result_y);
