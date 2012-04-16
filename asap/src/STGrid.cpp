@@ -1057,7 +1057,32 @@ void STGrid::setupGrid( Int &nx,
     Quantum<Double> ycen = qh.asQuantumDouble() ;
     center_(0) = xcen.getValue( "rad" ) ;
     center_(1) = ycen.getValue( "rad" ) ;
+    double base = 0.5 * (xmin + xmax) ;
+    int maxrotate = 1 ;
+    int nelem = 2 * maxrotate + 1 ;
+    double *sep = new double[nelem] ;
+    for ( int i = 0 ; i < nelem ; i++ )
+      sep[i] = abs(base - center_[0] - (i-maxrotate) * C::_2pi) ;
+//     os << "sep[0]=" << sep[0] << endl  
+//        << "sep[1]=" << sep[1] << endl
+//        << "sep[2]=" << sep[2] << LogIO::POST ;
+    int idx = 0 ;
+    base = sep[0] ;
+    int nrotate = 0 ;
+    while ( idx < nelem ) {
+      if ( base > sep[idx] ) {
+        base = sep[idx] ;
+        nrotate = idx ;
+      }
+      idx++ ;
+    }
+    delete sep ;
+    nrotate -= maxrotate ;
+//     os << "nrotate = " << nrotate << LogIO::POST ;
+    center_[0] += nrotate * C::_2pi ;
   }
+//   os << "xmin=" << xmin << LogIO::POST ;
+//   os << "center_=" << center_ << LogIO::POST ;
 
 
   nx_ = nx ;

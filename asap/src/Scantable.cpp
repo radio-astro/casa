@@ -70,6 +70,8 @@
 #include "STUpgrade.h"
 #include "Scantable.h"
 
+#define debug 1
+
 using namespace casa;
 
 namespace asap {
@@ -1913,14 +1915,16 @@ void asap::Scantable::regridSpecChannel( double dnu, int nChan )
       factor = dnu/oldincr ;
       firstTime[currId] = false ;
       freqTable_.getEntry( refpix, refval, increment, currId ) ;
-      /***
-       * need to shift refpix to 0
-       ***/
+
       //refval = refval - ( refpix + 0.5 * (1 - factor) ) * increment ;
-      refpix = (refpix + 0.5)/factor - 0.5;
+      if (factor > 0 ) {
+	refpix = (refpix + 0.5)/factor - 0.5;
+      } else {
+	refpix = (abcissa.size() - 0.5 - refpix)/abs(factor) - 0.5;
+      }
       freqTable_.setEntry( refpix, refval, increment*factor, currId ) ;
-      os << "ID" << currId << ": channel width (Orig) = " << oldincr << " [" << freqTable_.getUnitString() << "], scale factor = " << factor << LogIO::POST ;
-      os << "     frequency increment (Orig) = " << increment << "-> (New) " << increment*factor << LogIO::POST ;
+      //os << "ID" << currId << ": channel width (Orig) = " << oldincr << " [" << freqTable_.getUnitString() << "], scale factor = " << factor << LogIO::POST ;
+      //os << "     frequency increment (Orig) = " << increment << "-> (New) " << increment*factor << LogIO::POST ;
     }
   }
 }
@@ -1986,222 +1990,305 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   vector<double> abcissa = getAbcissa( irow ) ;
   int oldsize = abcissa.size() ;
   double olddnu = abcissa[1] - abcissa[0] ;
-  int ichan = 0 ;
+  //int ichan = 0 ;
   double wsum = 0.0 ;
   Vector<double> zi( nChan+1 ) ;
   Vector<double> yi( oldsize + 1 ) ;
-  zi[0] = abcissa[0] - 0.5 * olddnu ;
-  for ( int ii = 1 ; ii < nChan ; ii++ )
-    zi[ii] = zi[0] + dnu * ii ;
-  zi[nChan] = zi[nChan-1] + dnu ;
   yi[0] = abcissa[0] - 0.5 * olddnu ;
   for ( int ii = 1 ; ii < oldsize ; ii++ )
     yi[ii] = 0.5* (abcissa[ii-1] + abcissa[ii]) ;
   yi[oldsize] = abcissa[oldsize-1] \
     + 0.5 * (abcissa[oldsize-1] - abcissa[oldsize-2]) ;
-  if ( dnu > 0.0 ) {
-    for ( int ii = 0 ; ii < nChan ; ii++ ) {
-      double zl = zi[ii] ;
-      double zr = zi[ii+1] ;
-      for ( int j = ichan ; j < oldsize ; j++ ) {
-        double yl = yi[j] ;
-        double yr = yi[j+1] ;
-        if ( yl <= zl ) {
-          if ( yr <= zl ) {
-            continue ;
-          }
-          else if ( yr <= zr ) {
-	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * ( yr - zl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( yr - zl ) ;
-	      wsum += ( yr - zl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-          }
-          else {
-	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * dnu ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * dnu ;
-	      wsum += dnu ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-            ichan = j ;
-            break ;
-          }
-        }
-        else if ( yl < zr ) {
-          if ( yr <= zr ) {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * ( yr - yl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( yr - yl ) ;
-              wsum += ( yr - yl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-          }
-          else {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * ( zr - yl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( zr - yl ) ;
-	      wsum += ( zr - yl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-            ichan = j ;
-            break ;
-          }
-        }
-        else {
-          ichan = j - 1 ;
-          break ;
-        }
+  //zi[0] = abcissa[0] - 0.5 * olddnu ;
+  zi[0] = ((olddnu*dnu > 0) ? yi[0] : yi[oldsize]) ;
+  for ( int ii = 1 ; ii < nChan ; ii++ )
+    zi[ii] = zi[0] + dnu * ii ;
+  zi[nChan] = zi[nChan-1] + dnu ;
+  // Access zi and yi in ascending order
+  int izs = ((dnu > 0) ? 0 : nChan ) ;
+  int ize = ((dnu > 0) ? nChan : 0 ) ;
+  int izincr = ((dnu > 0) ? 1 : -1 ) ;
+  int ichan =  ((olddnu > 0) ? 0 : oldsize ) ;
+  int iye = ((olddnu > 0) ? oldsize : 0 ) ;
+  int iyincr = ((olddnu > 0) ? 1 : -1 ) ;
+  //for ( int ii = izs ; ii != ize ; ii+=izincr ){
+  int ii = izs ;
+  while (ii != ize) {
+    // always zl < zr
+    double zl = zi[ii] ;
+    double zr = zi[ii+izincr] ;
+    // Need to access smaller index for the new spec, flag, and tsys.
+    // Values between zi[k] and zi[k+1] should be stored in newspec[k], etc.
+    int i = min(ii, ii+izincr) ;
+    //for ( int jj = ichan ; jj != iye ; jj+=iyincr ) {
+    int jj = ichan ;
+    while (jj != iye) {
+      // always yl < yr
+      double yl = yi[jj] ;
+      double yr = yi[jj+iyincr] ;
+      // Need to access smaller index for the original spec, flag, and tsys.
+      // Values between yi[k] and yi[k+1] are stored in oldspec[k], etc.
+      int j = min(jj, jj+iyincr) ;
+      if ( yr <= zl ) {
+	jj += iyincr ;
+	continue ;
       }
-      if ( wsum != 0.0 ) {
-        newspec[ii] /= wsum ;
-	if (regridTsys) newtsys[ii] /= wsum ;
+      else if ( yl <= zl ) {
+	if ( yr < zr ) {
+	  if (!oldflag[j]) {
+	    newspec[i] += oldspec[j] * ( yr - zl ) ;
+	    if (regridTsys) newtsys[i] += oldtsys[j] * ( yr - zl ) ;
+	    wsum += ( yr - zl ) ;
+	  }
+	  newflag[i] = newflag[i] && oldflag[j] ;
+	}
+	else {
+	  if (!oldflag[j]) {
+	    newspec[i] += oldspec[j] * abs(dnu) ;
+	    if (regridTsys) newtsys[i] += oldtsys[j] * abs(dnu) ;
+	    wsum += abs(dnu) ;
+	  }
+	  newflag[i] = newflag[i] && oldflag[j] ;
+	  ichan = jj ;
+	  break ;
+	}
       }
-      wsum = 0.0 ;
+      else if ( yl < zr ) {
+	if ( yr <= zr ) {
+	  if (!oldflag[j]) {
+	    newspec[i] += oldspec[j] * ( yr - yl ) ;
+	    if (regridTsys) newtsys[i] += oldtsys[j] * ( yr - yl ) ;
+	    wsum += ( yr - yl ) ;
+	  }
+	  newflag[i] = newflag[i] && oldflag[j] ;
+	}
+	else {
+	  if (!oldflag[j]) {
+	    newspec[i] += oldspec[j] * ( zr - yl ) ;
+	    if (regridTsys) newtsys[i] += oldtsys[j] * ( zr - yl ) ;
+	    wsum += ( zr - yl ) ;
+	  }
+	  newflag[i] = newflag[i] && oldflag[j] ;
+	  ichan = jj ;
+	  break ;
+	}
+      }
+      else {
+	ichan = jj - iyincr ;
+	break ;
+      }
+      jj += iyincr ;
     }
-  }
-  else if ( dnu < 0.0 ) {
-    for ( int ii = 0 ; ii < nChan ; ii++ ) {
-      double zl = zi[ii] ;
-      double zr = zi[ii+1] ;
-      for ( int j = ichan ; j < oldsize ; j++ ) {
-        double yl = yi[j] ;
-        double yr = yi[j+1] ;
-        if ( yl >= zl ) {
-          if ( yr >= zl ) {
-            continue ;
-          }
-          else if ( yr >= zr ) {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * abs( yr - zl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( yr - zl ) ;
-	      wsum += abs( yr - zl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-          }
-          else {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * abs( dnu ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( dnu ) ;
-	      wsum += abs( dnu ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-            ichan = j ;
-            break ;
-          }
-        }
-        else if ( yl > zr ) {
-          if ( yr >= zr ) {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * abs( yr - yl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( yr - yl ) ;
-	      wsum += abs( yr - yl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-          }
-          else {
- 	    if (!oldflag[j]) {
-	      newspec[ii] += oldspec[j] * abs( zr - yl ) ;
-	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( zr - yl ) ;
-	      wsum += abs( zr - yl ) ;
-	    }
-	    newflag[ii] = newflag[ii] && oldflag[j] ;
-            ichan = j ;
-            break ;
-          }
-        }
-        else {
-          ichan = j - 1 ;
-          break ;
-        }
-      }
-      if ( wsum != 0.0 ) {
-        newspec[ii] /= wsum ;
-	if (regridTsys) newtsys[ii] /= wsum ;
-      }
-      wsum = 0.0 ;
+    if ( wsum != 0.0 ) {
+      newspec[i] /= wsum ;
+      if (regridTsys) newtsys[i] /= wsum ;
     }
+    wsum = 0.0 ;
+    ii += izincr ;
   }
-//   //ofs << "olddnu = " << olddnu << ", dnu = " << dnu << endl ;
-//   pile += dnu ;
-//   wedge = olddnu * ( refChan + 1 ) ;
-//   while ( wedge < pile ) {
-//     newspec[0] += olddnu * oldspec[refChan] ;
-//     newflag[0] = newflag[0] || oldflag[refChan] ;
-//     //ofs << "channel " << refChan << " is included in new channel 0" << endl ;
-//     refChan++ ;
-//     wedge += olddnu ;
-//     wsum += olddnu ;
-//     //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
-//   }
-//   frac = ( wedge - pile ) / olddnu ;
-//   wsum += ( 1.0 - frac ) * olddnu ;
-//   newspec[0] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
-//   newflag[0] = newflag[0] || oldflag[refChan] ;
-//   //ofs << "channel " << refChan << " is partly included in new channel 0" << " with fraction of " << ( 1.0 - frac ) << endl ;
-//   //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
-//   newspec[0] /= wsum ;
-//   //ofs << "newspec[0] = " << newspec[0] << endl ;
-//   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-
-//   /***
-//    * ichan = 1 - nChan-2
-//    ***/
-//   for ( int ichan = 1 ; ichan < nChan - 1 ; ichan++ ) {
-//     pile += dnu ;
-//     newspec[ichan] += frac * olddnu * oldspec[refChan] ;
-//     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-//     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << frac << endl ;
-//     refChan++ ;
-//     wedge += olddnu ;
-//     wsum = frac * olddnu ;
-//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
-//     while ( wedge < pile ) {
-//       newspec[ichan] += olddnu * oldspec[refChan] ;
-//       newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-//       //ofs << "channel " << refChan << " is included in new channel " << ichan << endl ;
-//       refChan++ ;
-//       wedge += olddnu ;
-//       wsum += olddnu ;
-//       //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+//   if ( dnu > 0.0 ) {
+//     for ( int ii = 0 ; ii < nChan ; ii++ ) {
+//       double zl = zi[ii] ;
+//       double zr = zi[ii+1] ;
+//       for ( int j = ichan ; j < oldsize ; j++ ) {
+//         double yl = yi[j] ;
+//         double yr = yi[j+1] ;
+//         if ( yl <= zl ) {
+//           if ( yr <= zl ) {
+//             continue ;
+//           }
+//           else if ( yr <= zr ) {
+// 	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * ( yr - zl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( yr - zl ) ;
+// 	      wsum += ( yr - zl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//           }
+//           else {
+// 	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * dnu ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * dnu ;
+// 	      wsum += dnu ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//             ichan = j ;
+//             break ;
+//           }
+//         }
+//         else if ( yl < zr ) {
+//           if ( yr <= zr ) {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * ( yr - yl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( yr - yl ) ;
+//               wsum += ( yr - yl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//           }
+//           else {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * ( zr - yl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * ( zr - yl ) ;
+// 	      wsum += ( zr - yl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//             ichan = j ;
+//             break ;
+//           }
+//         }
+//         else {
+//           ichan = j - 1 ;
+//           break ;
+//         }
+//       }
+//       if ( wsum != 0.0 ) {
+//         newspec[ii] /= wsum ;
+// 	if (regridTsys) newtsys[ii] /= wsum ;
+//       }
+//       wsum = 0.0 ;
 //     }
-//     frac = ( wedge - pile ) / olddnu ;
-//     wsum += ( 1.0 - frac ) * olddnu ;
-//     newspec[ichan] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
-//     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-//     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << ( 1.0 - frac ) << endl ;
-//     //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
-//     newspec[ichan] /= wsum ;
-//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << endl ;
 //   }
-
-//   /***
-//    * ichan = nChan-1
-//    ***/
-//   // NOTE: Assumed that all spectra have the same bandwidth
-//   pile += dnu ;
-//   newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
-//   newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
-//   //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
-//   refChan++ ;
-//   wedge += olddnu ;
-//   wsum = frac * olddnu ;
-//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
-//   for ( int jchan = refChan ; jchan < oldsize ; jchan++ ) {
-//     newspec[nChan-1] += olddnu * oldspec[jchan] ;
-//     newflag[nChan-1] = newflag[nChan-1] || oldflag[jchan] ;
-//     wsum += olddnu ;
-//     //ofs << "channel " << jchan << " is included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
-//     //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+//   else if ( dnu < 0.0 ) {
+//     for ( int ii = 0 ; ii < nChan ; ii++ ) {
+//       double zl = zi[ii] ;
+//       double zr = zi[ii+1] ;
+//       for ( int j = ichan ; j < oldsize ; j++ ) {
+//         double yl = yi[j] ;
+//         double yr = yi[j+1] ;
+//         if ( yl >= zl ) {
+//           if ( yr >= zl ) {
+//             continue ;
+//           }
+//           else if ( yr >= zr ) {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * abs( yr - zl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( yr - zl ) ;
+// 	      wsum += abs( yr - zl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//           }
+//           else {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * abs( dnu ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( dnu ) ;
+// 	      wsum += abs( dnu ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//             ichan = j ;
+//             break ;
+//           }
+//         }
+//         else if ( yl > zr ) {
+//           if ( yr >= zr ) {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * abs( yr - yl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( yr - yl ) ;
+// 	      wsum += abs( yr - yl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//           }
+//           else {
+//  	    if (!oldflag[j]) {
+// 	      newspec[ii] += oldspec[j] * abs( zr - yl ) ;
+// 	      if (regridTsys) newtsys[ii] += oldtsys[j] * abs( zr - yl ) ;
+// 	      wsum += abs( zr - yl ) ;
+// 	    }
+// 	    newflag[ii] = newflag[ii] && oldflag[j] ;
+//             ichan = j ;
+//             break ;
+//           }
+//         }
+//         else {
+//           ichan = j - 1 ;
+//           break ;
+//         }
+//       }
+//       if ( wsum != 0.0 ) {
+//         newspec[ii] /= wsum ;
+// 	if (regridTsys) newtsys[ii] /= wsum ;
+//       }
+//       wsum = 0.0 ;
+//     }
 //   }
-//   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
-//   newspec[nChan-1] /= wsum ;
-//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
+// //   //ofs << "olddnu = " << olddnu << ", dnu = " << dnu << endl ;
+// //   pile += dnu ;
+// //   wedge = olddnu * ( refChan + 1 ) ;
+// //   while ( wedge < pile ) {
+// //     newspec[0] += olddnu * oldspec[refChan] ;
+// //     newflag[0] = newflag[0] || oldflag[refChan] ;
+// //     //ofs << "channel " << refChan << " is included in new channel 0" << endl ;
+// //     refChan++ ;
+// //     wedge += olddnu ;
+// //     wsum += olddnu ;
+// //     //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
+// //   }
+// //   frac = ( wedge - pile ) / olddnu ;
+// //   wsum += ( 1.0 - frac ) * olddnu ;
+// //   newspec[0] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
+// //   newflag[0] = newflag[0] || oldflag[refChan] ;
+// //   //ofs << "channel " << refChan << " is partly included in new channel 0" << " with fraction of " << ( 1.0 - frac ) << endl ;
+// //   //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
+// //   newspec[0] /= wsum ;
+// //   //ofs << "newspec[0] = " << newspec[0] << endl ;
+// //   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
 
-//   // ofs.close() ;
+// //   /***
+// //    * ichan = 1 - nChan-2
+// //    ***/
+// //   for ( int ichan = 1 ; ichan < nChan - 1 ; ichan++ ) {
+// //     pile += dnu ;
+// //     newspec[ichan] += frac * olddnu * oldspec[refChan] ;
+// //     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+// //     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << frac << endl ;
+// //     refChan++ ;
+// //     wedge += olddnu ;
+// //     wsum = frac * olddnu ;
+// //     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+// //     while ( wedge < pile ) {
+// //       newspec[ichan] += olddnu * oldspec[refChan] ;
+// //       newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+// //       //ofs << "channel " << refChan << " is included in new channel " << ichan << endl ;
+// //       refChan++ ;
+// //       wedge += olddnu ;
+// //       wsum += olddnu ;
+// //       //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+// //     }
+// //     frac = ( wedge - pile ) / olddnu ;
+// //     wsum += ( 1.0 - frac ) * olddnu ;
+// //     newspec[ichan] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
+// //     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+// //     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << ( 1.0 - frac ) << endl ;
+// //     //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
+// //     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+// //     newspec[ichan] /= wsum ;
+// //     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << endl ;
+// //   }
+
+// //   /***
+// //    * ichan = nChan-1
+// //    ***/
+// //   // NOTE: Assumed that all spectra have the same bandwidth
+// //   pile += dnu ;
+// //   newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
+// //   newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
+// //   //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
+// //   refChan++ ;
+// //   wedge += olddnu ;
+// //   wsum = frac * olddnu ;
+// //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+// //   for ( int jchan = refChan ; jchan < oldsize ; jchan++ ) {
+// //     newspec[nChan-1] += olddnu * oldspec[jchan] ;
+// //     newflag[nChan-1] = newflag[nChan-1] || oldflag[jchan] ;
+// //     wsum += olddnu ;
+// //     //ofs << "channel " << jchan << " is included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
+// //     //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+// //   }
+// //   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
+// //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+// //   newspec[nChan-1] /= wsum ;
+// //   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
+
+// //   // ofs.close() ;
 
   specCol_.put( irow, newspec ) ;
   flagsCol_.put( irow, newflag ) ;
