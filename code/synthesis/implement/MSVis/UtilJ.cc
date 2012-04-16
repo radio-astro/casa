@@ -13,7 +13,6 @@
 #include <casa/aips.h>
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
-#include <casa/Utilities/CasaThreadNeutrality.h>
 #include <sys/time.h>
 #include <execinfo.h>
 #include <algorithm>
@@ -29,14 +28,6 @@ using namespace casa;
 namespace casa {
 
 namespace utilj {
-
-// Leave a tag to allow manual verification of build setting
-
-#if defined (CASA_THREAD_NEUTRAL)
-      String CasaThreadNeutral = "CasaThreadNeutral:YES";
-#else
-      String CasaThreadNeutral = "CasaThreadNeutral:NO";
-#endif // defined (CASA_THREAD_NEUTRAL)
 
 String
 formatV (const String & formatString, va_list vaList)
