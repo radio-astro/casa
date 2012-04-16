@@ -82,12 +82,13 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_STGrid.cpp
      ${SRCDIR}/python_asap.cpp )
 
-add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} ${ASAP_PYSRCS} )
+add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} )
+add_library( ${ASAPPYLIB} SHARED ${ASAP_PYSRCS} )
 
 # library name must be _asap.so
-set_target_properties( ${ASAPLIB}
+set_target_properties( ${ASAPPYLIB}
                        PROPERTIES
-                       PREFIX _
+                       PREFIX ""
                        SUFFIX .so )
 
 target_link_libraries( ${ASAPLIB} 
@@ -96,14 +97,19 @@ target_link_libraries( ${ASAPLIB}
                        ${ATNFLIB} 
                        #${CASACORE_LIBRARIES} 
                        ${WCSLIB} )
+target_link_libraries( ${ASAPPYLIB} 
+                       ${ASAPLIB} )
 
-add_dependencies( inst ${ASAPLIB} )
+add_dependencies( inst ${ASAPLIB} 
+                       ${ASAPPYLIB} )
 
 # install directory
 install( TARGETS ${ASAPLIB}
+         LIBRARY DESTINATION ${LIB_INSTALL_DIR} )
+install( TARGETS ${ASAPPYLIB}
          LIBRARY DESTINATION ${PYTHON_INSTALL_DIR} )
-if( NOT STANDALONE )
-  execute_process(
-    COMMAND ln -Fs ../${PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ${CMAKE_INSTALL_PREFIX}/lib/_${ASAPLIB}.so
-    OUTPUT_VARIABLE stuff)
-endif()
+#if( NOT STANDALONE )
+#  execute_process(
+#    COMMAND ln -Fs ../${PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ${CMAKE_INSTALL_PREFIX}/lib/_${ASAPLIB}.so
+#    OUTPUT_VARIABLE stuff)
+#endif()
