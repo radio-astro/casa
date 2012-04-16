@@ -2558,30 +2558,34 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
 	      
 	      amp=abs(vb.visCube()(icorr,ich,irow));
 	      if (amp>0.0f) {
-		
-		if (apmode()=="P")
+		if (apmode()=="P") {
 		  // we will scale by amp to make data phase-only
 		  cor=Complex(amp,0.0);
+		  // keep track for weight adjustment
+		  ampCorr(icorr)+=abs(cor); // amp;
+		  n(icorr)++;
+		}
 		else if (apmode()=="A")
 		  // we will scale by "phase" to make data amp-only
 		  cor=vb.visCube()(icorr,ich,irow)/amp;
 		
-		// Apply the complex scaling and count
+		// Apply the complex scaling
 		vb.visCube()(icorr,ich,irow)/=cor;
-		ampCorr(icorr)+=amp;
-		n(icorr)++;
 	      }
 	    } // icorr
 	  } // !*fl
 	} // ich
 	// Make appropriate weight adjustment
-	for (Int icorr=0;icorr<nCorr;icorr++)
-	  if (n(icorr)>0)
-	    // weights adjusted by square of the mean(amp)
-	    vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
-	  else
-	    // weights now zero
-	    vb.weightMat()(icorr,irow)=0.0f;
+	//  Only for phase-only since only it rescales data
+	if (apmode()=="P") {
+	  for (Int icorr=0;icorr<nCorr;icorr++)
+	    if (n(icorr)>0)
+	      // weights adjusted by square of the mean(amp)
+	      vb.weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
+	    else
+	      // weights now zero
+	      vb.weightMat()(icorr,irow)=0.0f;
+	}
       } // !*flR
     } // irow
 
