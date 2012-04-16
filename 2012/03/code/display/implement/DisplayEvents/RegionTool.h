@@ -90,8 +90,8 @@ namespace casa {
 	    void keyReleased(const WCPositionEvent &);
 	    void otherKeyPressed(const WCPositionEvent &);
 	    void otherKeyReleased(const WCPositionEvent &);
-	    void moved(const WCMotionEvent &);
-	    void draw(const WCRefreshEvent &);
+	    void moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/);
+	    void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
 
 	    // this is a non-const function because a non-const RegionTool ptr is
 	    // returned in 'state' which can then be used for setting the state of

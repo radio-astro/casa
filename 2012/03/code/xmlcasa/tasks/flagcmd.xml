@@ -6,6 +6,8 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagcmd" category="data editing">
+        <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
+        <shortdescription>*******            USE THE TASK tflagcmd             *******\n</shortdescription>
         <shortdescription>Flagging task based on flagging commands</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,

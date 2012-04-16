@@ -475,7 +475,7 @@
           mode='quack' quackmode='end' quackinterval=1.0
           mode='shadow'
 
-        Any other mode can also use selection (see the help of tflagger):
+        Any other mode can also use selection (see the help of tflagdata):
 
           mode='shadow' antenna='ea01,ea02,ea03'
           mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
@@ -556,7 +556,7 @@
 
      ------- FLAG COMMAND SYNTAX -------
 
-        The command syntax is based on the tflagger parameters.
+        The command syntax is based on the tflagdata parameters.
 
         Basic Syntax Rules
         
@@ -593,18 +593,18 @@
           basic "manual" operation, ie. flag the data meeting the selection
           
         
-        2. Modes specific parameters with default values (for further details, refer to the task tflagger).
+        2. Modes specific parameters with default values (for further details, refer to the task tflagdata).
           
           2.1 Mode clip.
-              correlation='ABS_ALL'
               datacolumn='DATA'
               clipminmax=[]  
               clipoutside=True
               channelavg=False  
+              clipzeros=False
               
           2.2 Mode shadow.
               tolerance=0.0
-              recalcuvw=False
+              addantenna=''
               
           2.3 Mode quack.
               quackinterval=0.0     
@@ -618,7 +618,6 @@
           2.5 Mode tfcrop.
               ntime='scan'
               combinescans=False
-              correlation='ABS_ALL'
               datacolumn='DATA' 
               timecutoff=4.0 
               freqcutoff=3.0
@@ -632,15 +631,27 @@
           2.6 Mode extend.
               ntime='scan'
               combinescans=False
-              extendpols=False
+              extendpols=True
               growtime=90.0
               growfreq=90.0
-              growaround=True
+              growaround=False
               flagneartime=False
               flagnearfreq=False
+ 
+           2.7 Mode rflag.
+              ntime='scan'
+              combinescans=False
+              datacolumn='DATA'
+              winsize=3
+              timedev=''
+              freqdev=''
+              timedevscale=5.0
+              freqdevscale=5.0
+              spectralmax=1000000.0
+              spectralmin=0.0
               
-          2.7 Mode unflag.
-          2.8 Mode manual.
+          2.8 Mode unflag.
+          2.9 Mode manual.
               
               
         3. Basic elaboration options for online and interface use

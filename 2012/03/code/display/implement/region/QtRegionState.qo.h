@@ -74,7 +74,11 @@ namespace casa {
 		/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
 		void mark( bool set=true ) { region_mark->setChecked( set ); }
 		bool marked( ) const { return region_mark->isChecked( ); }
-		void mark_toggle( ) { region_mark->setChecked(region_mark->isChecked( ) ? false : true); }
+		bool mark_toggle( ) {
+		    bool newstate = region_mark->isChecked( ) ? false : true;
+		    region_mark->setChecked( newstate );
+		    return newstate;
+		}
 
 		void nowVisible( );
 

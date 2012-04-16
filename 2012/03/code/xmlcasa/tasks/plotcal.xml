@@ -30,6 +30,9 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>chan</value>
 			<value>freq</value>
 			<value>antenna</value>
+			<value>antenna1</value>
+			<value>antenna2</value>
+			<value>scan</value>
 			<value>amp</value>
 			<value>phase</value>
 			<value>real</value>
@@ -37,6 +40,7 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>snr</value>
 			<value>tsys</value>
 			<value>delay</value>
+			<value>spgain</value>
 			</allowed>
 		</param>
 
@@ -51,8 +55,12 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>imag</value>
 			<value>snr</value>
 			<value>antenna</value>
+			<value>antenna1</value>
+			<value>antenna2</value>
+			<value>scan</value>
 			<value>tsys</value>
 			<value>delay</value>
+			<value>spgain</value>
 			</allowed>
 		</param>
 
@@ -181,10 +189,10 @@ solutions may be iterated through antennas/spw/fields during one execution.
 		default: none; example: caltable='ngc5921.gcal'
 	        The type of calibration table is determined automatically.
 	xaxis -- Value to plot on the x axis
-		Options: 'time','chan','freq','antenna','amp','phase','real','imag','snr'
+		Options: 'time','scan','chan','freq','antenna','amp','phase','real','imag','snr'
 		Default: cal type dependent, usually 'time'
 	yaxis -- Value to plot on the y-axis
-		Options: 'amp','phase','real','imag','snr','antenna','tsys','delay'
+		Options: 'amp','phase','real','imag','snr','antenna','tsys','delay','spgain'
 		Default: cal type dependent, usually 'amp'
 	poln -- Polarization (or combination) to plot
 	        default: '' (RL); all polarizations

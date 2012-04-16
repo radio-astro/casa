@@ -373,20 +373,22 @@ FlagReport FlagAgentRFlag::getReport()
 	if ((doflag_p==false))
 	{
 		// Plot reports (should be returned if params were calculated and display is activated)
-		FlagReport noiseStd = getReportCore(	field_spw_noise_histogram_sum_p,
-												field_spw_noise_histogram_sum_squares_p,
-												field_spw_noise_histogram_counts_p,
-												field_spw_noise_map_p,
-												totalRep,
-												"Time analysis",
-												noiseScale_p);
-		FlagReport scutofStd = getReportCore(	field_spw_scutof_histogram_sum_p,
-												field_spw_scutof_histogram_sum_squares_p,
-												field_spw_scutof_histogram_counts_p,
-												field_spw_scutof_map_p,
-												totalRep,
-												"Spectral analysis",
-												scutofScale_p);
+		FlagReport plotRepCont(String("list"),agentName_p);
+		getReportCore(	field_spw_noise_histogram_sum_p,
+						field_spw_noise_histogram_sum_squares_p,
+						field_spw_noise_histogram_counts_p,
+						field_spw_noise_map_p,
+						plotRepCont,
+						"Time analysis",
+						noiseScale_p);
+		getReportCore(	field_spw_scutof_histogram_sum_p,
+						field_spw_scutof_histogram_sum_squares_p,
+						field_spw_scutof_histogram_counts_p,
+						field_spw_scutof_map_p,
+						plotRepCont,
+						"Spectral analysis",
+						scutofScale_p);
+
 		// Threshold reports (should be returned if params were calculated)
 		Record threshList;
 		Int nEntriesNoise = field_spw_noise_map_p.size();
@@ -428,21 +430,18 @@ FlagReport FlagAgentRFlag::getReport()
 			  totalRep.addReport(returnThresh);
 		}
 
-
 		// Add the plot-reports last. Display needs plot-reports to be at the end of the list
-                // Should be fixed in the display agent....
-		if(doplot_p==true && nEntriesNoise>0)
+		// Should be fixed in the display agent....
+		if(doplot_p==true)
 		{
-		         totalRep.addReport(noiseStd);
+			Int nReports = plotRepCont.nReport();
+			for (Int report_idx=0; report_idx<nReports; report_idx++)
+			{
+				FlagReport report_i;
+				Bool valid = plotRepCont.accessReport(report_idx,report_i);
+				if (valid) totalRep.addReport(report_i);
+			}
 		}
-
-		if(doplot_p==true && nEntriesScutof>0)
-		{
-		         totalRep.addReport(scutofStd);
-		}
-
-
-
 	}
 
 

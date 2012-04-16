@@ -458,7 +458,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
     Vector<Double> mfin=fin(!tflgi).getCompressedArray();
 
     if (mfin.nelements()==0) {
-      cout << ifpar << " All chans flagged!" << endl;
+      //   cout << ifpar << " All chans flagged!" << endl;
       // Everything flagged this par
       //  Just flag, zero and go on to the next one
       fflgi.set(True);

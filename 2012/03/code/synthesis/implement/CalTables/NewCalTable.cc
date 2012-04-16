@@ -311,6 +311,12 @@ void NewCalTable::copyMemCalSubtable(const Table & otherCalsubtable, Table & cal
         calSubtable = otherCalsubtable;
     }
 }
+
+//----------------------------------------------------------------------------
+Bool NewCalTable::isComplex() {
+  return (this->keywordSet().asString("ParType")=="Complex");
+}
+
 //----------------------------------------------------------------------------
 Record NewCalTable::getRowMain (const Int& jrow)
 {

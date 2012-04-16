@@ -100,7 +100,8 @@ void WCTool::operator()(const WCPositionEvent &ev) {
 }
 
 void WCTool::operator()(const WCMotionEvent &ev) {
-  moved(ev);
+  static viewer::Region::region_list_type empty;
+  moved(ev,empty);
 }
  
 void WCTool::operator()(const WCRefreshEvent &ev) {
@@ -119,7 +120,7 @@ void WCTool::otherKeyPressed(const WCPositionEvent &) {
 void WCTool::otherKeyReleased(const WCPositionEvent &) {
 }
 
-void WCTool::moved(const WCMotionEvent &) {
+void WCTool::moved(const WCMotionEvent &, const viewer::Region::region_list_type &) {
 }
 
 void WCTool::refresh(const WCRefreshEvent &) {

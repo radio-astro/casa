@@ -113,17 +113,17 @@ class MWCRectTool : public MultiWCTool, public DTVisible {
   // appearance and action.  When the rectangle is ready and double-click
   // is received, the doubleInside/Outside routine will be invoked.
   // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev);
+  virtual void keyPressed(const WCPositionEvent &/*ev*/);
+  virtual void keyReleased(const WCPositionEvent &/*ev*/);
+  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
   // </group>
 
   // draw the rectangle (if any) on the object's currently active WC.
   // Only to be called by the base class refresh event handler.  Derived
   // objects should use refresh() if they need to redraw, but even that
   // is normally handled automatically.
-  virtual void draw(const WCRefreshEvent&);
+  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
 
   // Output callback functions--to be overridden in derived class.
   // Called when there is a double click inside/outside the rectangle
