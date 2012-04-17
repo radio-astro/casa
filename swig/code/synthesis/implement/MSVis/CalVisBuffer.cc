@@ -131,29 +131,34 @@ void CalVisBuffer::enforceAPonData(const String& apmode)
 	      amp=abs(visCube()(icorr,ich,irow));
 	      if (amp>0.0f) {
 		
-		if (apmode=="P")
+		if (apmode=="P") {
 		  // we will scale by amp to make data phase-only
 		  cor=Complex(amp,0.0);
+		  // keep track for weight adjustment
+		  ampCorr(icorr)+=abs(cor);
+		  n(icorr)++;
+		}
 		else if (apmode=="A")
 		  // we will scale by "phase" to make data amp-only
 		  cor=visCube()(icorr,ich,irow)/amp;
 		
-		// Apply the complex scaling and count
+		// Apply the complex scaling
 		visCube()(icorr,ich,irow)/=cor;
-		ampCorr(icorr)+=amp;
-		n(icorr)++;
 	      }
 	    } // icorr
 	  } // !*fl
 	} // ich
 	// Make appropriate weight adjustment
-	for (Int icorr=0;icorr<nCor;icorr++)
-	  if (n(icorr)>0)
-	    // weights adjusted by square of the mean(amp)
-	    weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
-	  else
-	    // weights now zero
-	    weightMat()(icorr,irow)=0.0f;
+	//  (only required for phase-only, since only it rescales data)
+	if (apmode=="P") {
+	  for (Int icorr=0;icorr<nCor;icorr++)
+	    if (n(icorr)>0)
+	      // weights adjusted by square of the mean(amp)
+	      weightMat()(icorr,irow)*=square(ampCorr(icorr)/Float(n(icorr)));
+	    else
+	      // weights now zero
+	      weightMat()(icorr,irow)=0.0f;
+	}
       } // !*flR
     } // irow
 
