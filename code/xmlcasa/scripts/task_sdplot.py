@@ -205,6 +205,17 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    ssel=sel.__str__()
             del sel
 
+            ##### workaround for ghost plotter in CASA 3.4 #####
+            figmgr = sd.plotter._plotter.figmgr
+            if figmgr and not _pylab_helpers.Gcf.has_fignum(figmgr.num):
+                    _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+                    sd.plotter._plotter.quit()
+            elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
+               and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
+                    sd.plotter._plotter.quit()
+                    _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+                    sd.plotter._plotter.quit()
+            ######################################################
 	    # Reload plotter if necessary
             sd.plotter._assert_plotter(action="reload")
 
