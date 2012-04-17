@@ -1034,7 +1034,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
-		if (dataColumn_p.compare("CPARAM") == 0)
+		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
 			dataReference_p = DATA;
 

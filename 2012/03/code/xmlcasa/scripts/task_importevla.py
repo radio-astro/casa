@@ -120,9 +120,15 @@ def importevla(
 
         execute_string = execute_string + ' ' + asdm + ' ' + viso
         casalog.post('Running the asdm2MS standalone invoked as:')
-        # print execute_string
+        # Print execute_string
         casalog.post(execute_string)
-        os.system(execute_string)
+        
+        # Catch the return status and exit on failure
+        ret_status = os.system(execute_string)
+        if ret_status != 0:
+            casalog.post('asdm2MS failed to execute with exit error '+str(ret_status), 'SEVERE')
+            raise Exception, 'ASDM conversion error, please check if it is a valid ASDM.'
+        
         if compression:
             visover = viso
             viso = visover.replace('.ms','.compressed.ms')
@@ -210,7 +216,6 @@ def importevla(
             flagz['applied'] = False
             flagz['antenna'] = ''
             flagz['mode'] = 'clip'
-            # Add to myflagz
 
             # Flag cross-hands too
             if flagpol:
@@ -224,17 +229,13 @@ def importevla(
             else:
 
                 flagz['reason'] = 'CLIP_ZERO_RR'
-#            flagz['cmd'] = "mode='clip' cliprange='0~" + str(cliplevel) \
-#                + "' clipexpr='ABS_RR'"
                 flagz['command'] = \
                     'mode=clip clipzeros=True correlation=ABS_RR'
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
-            #
+            
                 flagz['reason'] = 'CLIP_ZERO_LL'
-#            flagz['cmd'] = "mode='clip' cliprange='0~" + str(cliplevel) \
-#                + "' clipexpr='ABS_LL'"
                 flagz['command'] = \
                     'mode=clip clipzeros=True correlation=ABS_LL'
                 flagz['id'] = 'ZERO_LL'
@@ -255,7 +256,6 @@ def importevla(
             flagh['applied'] = False
             flagh['antenna'] = ''
             flagh['mode'] = 'shadow'
-            # Add to myflagz
             flagh['reason'] = 'SHADOW'
 
             scmd = 'mode=shadow tolerance=' + str(tolerance)
@@ -305,6 +305,7 @@ def importevla(
                 # Initialize the agents
                 tflocal.init()
 
+                # Backup the flags
                 if flagbackup:
                     fh.backupFlags(tflocal, 'importevla')
 
@@ -331,7 +332,6 @@ def importevla(
                
         # Save the flag commads to an ASCII file 
         if savecmds:
-#            sflags = allkeys.__len__()
 
             if nflags > 0:         
                 # Save the cmds to a file

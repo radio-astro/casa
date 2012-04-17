@@ -850,7 +850,7 @@ gain = 0.1
 
 # Do a simple Clark clean
 psfmode = 'clark'
-
+imagermode = ''
 # If desired, you can do a Cotton-Schwab clean
 # but will have only marginal improvement for this data
 #alg = 'csclean'

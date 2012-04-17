@@ -90,8 +90,13 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             else:
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum before smoothing
+                            # reset plotter
+                            sd.plotter._plotter.quit()
+                            visible = sd.plotter._visible
+                            sd.plotter.__init__(visible=visible)
+                            sd.plotter.set_linestyles(linewidth=1,refresh=False)
                             # each IF is separate panel, pols stacked
-                            sd.plotter.set_mode(stacking='p',panelling='i')
+                            sd.plotter.set_mode(stacking='p',panelling='i',refresh=False)
                             sd.plotter.plot(s)
                             # somehow I need to put text() twice in order to the second
                             # text() actually displays on the plot...
@@ -125,8 +130,13 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum after smoothing
+                            # reset plotter
+                            sd.plotter._plotter.quit()
+                            visible = sd.plotter._visible
+                            sd.plotter.__init__(visible=visible)
+                            sd.plotter.set_linestyles(linewidth=1,refresh=False)
                             # each IF is separate panel, pols stacked
-                            sd.plotter.set_mode(stacking='p',panelling='i')
+                            sd.plotter.set_mode(stacking='p',panelling='i',refresh=False)
                             sd.plotter.plot(s)
                             sd.plotter.text(0.0, 1.0,'', coords='relative')
                             sd.plotter.text(0.0, 1.0,'Smoothed spectra', coords='relative')
