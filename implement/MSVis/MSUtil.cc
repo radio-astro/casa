@@ -173,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Vector<Double> chanfreq=spwCol.chanFreq()(ispw);
       Vector<Double> chanwid=spwCol.chanWidth()(ispw);
       Vector<Int> ddOfSpw=mddin.matchSpwId(spw[ispw]);
-      for (Int ichan=start[ispw]; ichan<nchan[ispw]; ++ichan){ 
+      for (Int ichan=start[ispw]; ichan<start[ispw]+nchan[ispw]; ++ichan){ 
 	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan]))) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan]);
 	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan]))) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan]);    
       }
