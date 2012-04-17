@@ -207,9 +207,9 @@ String LogMessage::toTermString() const
   message.gsub("\n", continuationHeader);
 
   ostringstream os;
-  //os << header << "\n" << message;
-  String pr = toString(priority());
-  os << pr.resize(6, ' ') << "   " << message;
+  os << header << "\n" << message;
+  //String pr = toString(priority());
+  //os << pr.resize(6, ' ') << "   " << message;
   return os;
 }
 
