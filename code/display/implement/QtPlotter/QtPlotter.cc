@@ -187,6 +187,7 @@ QtPlotter::QtPlotter(QWidget *parent, const char *name)
     if (name != 0){
       pc->plotPolyLines(name);
     }
+
    
 }
 
