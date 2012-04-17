@@ -209,13 +209,14 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             sd.plotter._assert_plotter(action="reload")
 
 	    # Set subplot layout
-	    if subplot > -1:
-		    if subplot < 11:
-			    casalog.post(("Invalid subplot value, %d, is ignored. It should be in between 11 and 99." % subplot),priority="WARN")
-		    else:
-			    row = int(subplot/10)
-			    col = (subplot % 10)
-			    sd.plotter.set_layout(rows=row,cols=col,refresh=False)
+            if subplot > 10:
+                    row = int(subplot/10)
+                    col = (subplot % 10)
+                    sd.plotter.set_layout(rows=row,cols=col,refresh=False)
+	    else:
+                    if subplot > -1:
+                            casalog.post(("Invalid subplot value, %d, is ignored. It should be in between 11 and 99." % subplot),priority="WARN")
+                    sd.plotter.set_layout(refresh=False)
 
 	    # Set subplot margins
 	    if margin != sd.plotter._margins:
