@@ -1243,6 +1243,10 @@ for src in srclist:
         # Use chose clean style
         psfmode = clnalg
         csclean = usecsclean
+        imagermode=''
+        if csclean:
+          imagermode='csclean'
+        
         
         imsize = [clnimsize,clnimsize]
         cell = [clncell,clncell]

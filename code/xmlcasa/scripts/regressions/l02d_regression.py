@@ -281,7 +281,7 @@ print '--Image 1mm continuum--'
 ## Get a first image the target source in 1 mm continuum emission:
 default('clean')
 clean(vis='l.1mm.split.ms',imagename='l.1mm',
-      psfmode='clark',niter=100,gain=0.1,nchan=1,start=0,width=1,
+      psfmode='clark',imagermode='',niter=100,gain=0.1,nchan=1,start=0,width=1,
       spw='0~3',field='0',stokes='I',interpolation='nearest',
       weighting='natural',
       cell=[0.2,0.2],imsize=[128,128],mode='mfs')
@@ -478,7 +478,7 @@ splitsrctime=time.time()
 #Image target source in 3mm continuum emission
 default('clean')
 clean(vis='l2.3mmconta.split.ms',imagename='l2.3mmcont',
-      psfmode='clark',niter=100,gain=0.1,nchan=1,start=0,width=1,
+      psfmode='clark',imagermode='',niter=100,gain=0.1,nchan=1,start=0,width=1,
       spw='0~5',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.4,0.4],imsize=[256,256],mode='mfs')
@@ -598,7 +598,7 @@ print '--Image 1mm continuum--'
 ## Get a first image the target source in 1 mm continuum emission:
 default('clean')
 clean(vis='l2.1mma.split.ms',imagename='l2.1mm',
-      psfmode='clark',niter=100,gain=0.1,nchan=1,start=0,width=1,
+      psfmode='clark',imagermode='',niter=100,gain=0.1,nchan=1,start=0,width=1,
       spw='0~3',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.2,0.2],imsize=[128,128],mode='mfs')
@@ -648,7 +648,7 @@ concat(concatvis='l02d.ch3oh.split.ms',vis='l2.ch3oh.split.ms',
 #image target source in 3mm continuum emission
 default('clean')
 clean(vis='l02d.3mmcont.split.ms',imagename='l02d.3mmcont',
-      psfmode='clark',niter=1000,gain=0.1,nchan=1,start=0,width=1,
+      psfmode='clark',imagermode='',niter=1000,gain=0.1,nchan=1,start=0,width=1,
       spw='0~5',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.6,0.6],imsize=[128,128],mode='mfs',threshold=0.7)
@@ -656,7 +656,7 @@ clean(vis='l02d.3mmcont.split.ms',imagename='l02d.3mmcont',
 #image target source in 1mm continuum emission
 default('clean')
 clean(vis='l02d.1mmcont.split.ms',imagename='l02d.1mmcont',
-      psfmode='clark',niter=1000,gain=0.1,nchan=1,start=0,width=1,
+      psfmode='clark',imagermode='',niter=1000,gain=0.1,nchan=1,start=0,width=1,
       spw='0~3',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.2,0.2],imsize=[128,128],mode='mfs',threshold=4.)
@@ -664,7 +664,7 @@ clean(vis='l02d.1mmcont.split.ms',imagename='l02d.1mmcont',
 #image target source in 3mm c34s (2-1) line
 default('clean')
 clean(vis='l02d.c34s.split.ms',imagename='l02d.c34s',
-      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=20,width=3,
+      psfmode='clark',imagermode='',niter=1000,gain=0.1,nchan=160,start=20,width=3,
       spw='0',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.6,0.6],imsize=[128,128],mode='channel',threshold=25.)
@@ -672,7 +672,7 @@ clean(vis='l02d.c34s.split.ms',imagename='l02d.c34s',
 #image target source in 3mm ch3oh 
 default('clean')
 clean(vis='l02d.ch3oh.split.ms',imagename='l02d.ch3oh',
-      psfmode='clark',niter=1000,gain=0.1,nchan=160,start=20,width=3,
+      psfmode='clark',imagermode='',niter=1000,gain=0.1,nchan=160,start=20,width=3,
       spw='0',field='0',stokes='I',
       weighting='natural',interpolation='nearest',
       cell=[0.6,0.6],imsize=[128,128],mode='channel',threshold=18.)

@@ -70,39 +70,28 @@ def checktable(msname, thename, theexpectation):
 
 myname = 'importevla_ut'
 
-# default ASDM dataset name
-#origname = 'TOSR0001_sb1308595_1.55294.83601028935'
-origname = 'X_osro_013.55979.93803716435'
-
-#asdmname = 'tosr0001'
-asdmname = 'xosro'
-
-# Link SDM to local directory
-if(not os.path.exists(asdmname)):
-    datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importevla/'
-    os.system('ln -s '+datapath+origname+' '+asdmname)
-
 
 class importevla_test(unittest.TestCase):
     
     def setUp(self):
-        res = None
+#        res = None
 
+        origname = 'X_osro_013.55979.93803716435'
+        asdmname = 'xosro'
+        if (not os.path.exists(asdmname)):
+            datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importevla/'
+            os.system('ln -s '+datapath+origname+' '+asdmname)
+            
         self.asdm = asdmname
 
         default(importevla)
         
-    def tearDown(self):
-        pass
-        visname = self.asdm+'.ms'
-        if os.path.exists(visname):
-            os.system('rm -rf '+visname+'*')
                 
     def test1(self):
-        '''Importevla2 test1: Good input asdm'''
+        '''Importevla test1: Good input asdm'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
-        msname = self.asdm+'.ms'
+        msname = 'xosro1.ms'
 #        self.res = importevla(asdm=self.asdm, scans='3')
         self.res = importevla(asdm=self.asdm, vis=msname, scans='2')
         print myname, ": Success! Now checking output ..."
@@ -304,7 +293,7 @@ class importevla_test(unittest.TestCase):
         '''importevla: Save online flags to FLAG_CMD and file; do not apply'''
 
         # Use default msname and outfile
-        msname = self.asdm+'.ms'
+        msname = 'xosro4.ms'
         cmdfile = msname.replace('.ms','_cmd.txt')
         if os.path.exists(msname):
             os.system('rm -rf '+msname)
@@ -390,8 +379,7 @@ class importevla_test(unittest.TestCase):
         
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],6090624)
-
-        
+                
 
 class cleanup(unittest.TestCase):
 
@@ -399,11 +387,11 @@ class cleanup(unittest.TestCase):
         pass
     
     def tearDown(self):
-        os.system('rm -rf '+asdmname)
         os.system('rm -rf *applied*ms*')
         os.system('rm -rf *online*ms*')
         os.system('rm -rf *zeros*ms*')
-        pass
+        os.system('rm -rf *xosro*.ms*')
+#        pass
            
     def test1a(self):
         '''Importevla: Cleanup'''

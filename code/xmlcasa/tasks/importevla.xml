@@ -103,7 +103,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="savecmds">
         <description>Save flag commands to an ASCII file</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="string" name="outfile" subparam="true">
@@ -140,10 +140,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </when>
 
             <when param="savecmds">
-                <equals type="bool" value="True">
+                <equals type="bool" value="False"/>
+                            <equals type="bool" value="True">
                     <default param="outfile"><value type="string"></value></default>
                 </equals>
-                <equals type="bool" value="False"/>
             </when>
 
     </constraints>

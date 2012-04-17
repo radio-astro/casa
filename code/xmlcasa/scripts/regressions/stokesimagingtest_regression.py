@@ -159,6 +159,7 @@ def runstokes(msname="Point/point_linXY.ms", imname='sctest',stokes='IQ'):
              niter              =  100,
              gain               =  0.5,
              psfmode            =  "clark",
+             imagermode         =  '',
              multiscale       = [],
              imsize             =  [100],
              cell               =  ['10.0arcsec', '10.0arcsec'],

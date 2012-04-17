@@ -172,6 +172,7 @@ default(taskname)
 vis = msfile
 imagename = testdir+'D-1scale'
 field = '1'
+imagermode = ''
 niter = 4000
 imsize = 512
 cell = '2arcsec'
@@ -200,6 +201,7 @@ default(taskname)
 vis = msfile
 imagename = testdir+'D-3scale'
 field = '1'
+imagermode=''
 niter = 2000
 imsize = 512
 multiscale = [0,5,15]
@@ -230,6 +232,7 @@ vis = msfile
 imagename = testdir+'D-1scale_mos'
 phasecenter = '1'
 field = '1,2,3'
+imagermode=''
 niter = 4000
 imsize = 512
 imagermode = 'mosaic'
