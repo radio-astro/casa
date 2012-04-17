@@ -5,6 +5,9 @@ import asap as sd
 import pylab as pl
 #import Tkinter as Tk
 from asap import _to_list
+###### workaroud #####
+from matplotlib import _pylab_helpers
+######################
 
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
