@@ -1483,17 +1483,15 @@ image* image::transpose(
 			break;
 		default:
 			*_log << "Unsupported type for order parameter " << order.type()
-					<< ". Supported types are a non-negative integer,a single "
+					<< ". Supported types are a non-negative integer, a single "
 					<< "string containing all digits or a list of strings which "
-					<< "unambiguously match the image axis names"
+					<< "unambiguously match the image axis names."
 					<< LogIO::EXCEPTION;
 		}
 		return new image(
 			transposer->transpose(), False
 		);
 	} catch (AipsError x) {
-		//*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		//		<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -2487,8 +2485,6 @@ image* image::regrid(
 		);
 		return new image(pImOut.get());
 	} catch (AipsError x) {
-		//*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		//		<< LogIO::POST;
 		RETHROW(x);
 	}
 }

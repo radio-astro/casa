@@ -17,7 +17,6 @@ the same coordinate structure.
 		<description>Name of the source image</description>
 		<value></value>
 	</param>
-
 	<param type="any" name="template">
         <any type="variant"/>
 		<description>A dictionary, refcode, or name of an image that provides the output shape and coordinate system</description>
@@ -37,7 +36,17 @@ the same coordinate structure.
         <description>The pixel axes to regrid. -1 => all.</description>
          <value>-1</value>
      </param>
-
+     <param type="intArray" name="shape" subparam="true">
+        <description>Shape of the output image. Only used if template is an image. If not specified (-1), the output image shape is set equal to the input image shape.</description>
+        <value>-1</value>
+     </param>
+     <constraints>
+        <when param="template">
+            <notequals type="string" value="get">
+                <default param="shape"><value type="intArray">-1</value></default>
+            </notequals>
+        </when>
+     </constraints>
 </input>
 <example>
 
@@ -53,6 +62,9 @@ template    Dictionary, reference code, or imagename defining the new
             'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
             and 'SUPERGAL'.
             default: 'get'; example: template='orion_j2000.im'
+shape       Shape of the output image. Only used if template is an image.
+            If not specified (-1), the output image shape is set equal to
+            the input image shape.
 output      Name for the regridded image
             default: imagename + '.regridded'; example: imagename='orion_shifted.im'
 asvelocity  Regrid spectral axis with respect to velocity, not frequency?
