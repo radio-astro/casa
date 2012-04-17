@@ -27,6 +27,7 @@ class asaplotgui(asaplotbase):
         del v['self']
 
         asaplotbase.__init__(self, **v)
+        _pylab_helpers.Gcf.destroy(0)
         self.window = Tk.Tk()
         #def dest_callback():
         #    print "dest_callback"
