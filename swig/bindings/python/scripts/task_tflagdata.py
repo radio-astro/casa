@@ -184,7 +184,7 @@ def tflagdata(vis,
                 # default
                 correlation = "ABS_ALL"
                 
-            agent_pars['datacolumn'] = datacolumn
+            agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
             agent_pars['clipzeros'] = clipzeros
@@ -255,7 +255,7 @@ def tflagdata(vis,
                 
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans            
-            agent_pars['datacolumn'] = datacolumn
+            agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['timecutoff'] = timecutoff
             agent_pars['freqcutoff'] = freqcutoff
             agent_pars['timefit'] = timefit
@@ -283,7 +283,7 @@ def tflagdata(vis,
 
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans   
-            agent_pars['datacolumn'] = datacolumn
+            agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['winsize'] = winsize
             agent_pars['timedevscale'] = timedevscale
             agent_pars['freqdevscale'] = freqdevscale
@@ -449,7 +449,7 @@ def tflagdata(vis,
                 agent_pars['reportdisplay'] = True
                 
             # jagonzal: CAS-3966 Add datacolumn to display agent parameters
-            agent_pars['datacolumn'] = datacolumn
+            agent_pars['datacolumn'] = datacolumn.upper()
             tflocal.parseagentparameters(agent_pars)
             
             # Disable saving the parameters to avoid inconsistencies

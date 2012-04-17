@@ -304,10 +304,14 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
 
             # Plot final spectrum
             if ( abs(plotlevel) > 0 ):
+                    # reset plotter
+                    sd.plotter._plotter.quit()
+                    visible = sd.plotter._visible
+                    sd.plotter.__init__(visible=visible)
                     # each IF is separate panel, pols stacked
+                    sd.plotter.set_mode(stacking='p',panelling='i',refresh=False)
+                    sd.plotter.set_histogram(hist=True,linewidth=1,refresh=False)
                     sd.plotter.plot(spave)
-                    sd.plotter.set_mode(stacking='p',panelling='i')
-                    sd.plotter.set_histogram(hist=True)
                     #sd.plotter.axhline(color='r',linewidth=2)
                     if ( plotlevel < 0 ):
                             # Hardcopy - currently no way w/o screen display first
