@@ -399,7 +399,13 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
             // single source case
             fillFieldTable(nField);
         }
-        fillExtraTables();
+
+        //this is uselessly slow thus replace it
+        //fillExtraTables();
+        fillPointingTable();
+        fillSourceTable();
+
+
         fixEpochReferences();
 
         if (!haveAn) {
@@ -3264,7 +3270,7 @@ void MSFitsInput::fillSourceTable() {
 
     itsLog << LogOrigin("MSFitsInput", "fillSourceTable") << LogIO::NORMAL
             << "Filling SOURCE table." << LogIO::POST;
-    Int numRow = 0;
+    Int numRow = 1;
     if (numRow > 0) {
         String tName = ms_p.tableName();
         //cout << "ms name=" << tName << endl;
