@@ -92,6 +92,7 @@
 #include <casa/System/ProgressMeter.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MeasurementSets/MSSummary.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
 
@@ -3155,7 +3156,7 @@ void MSFitsInput::fillObservationTable(ConstFitsKeywordList& kwl) {
     msObsCol.scheduleType().put(0, "");
     msObsCol.project().put(0, "");
 
-    Double epoch = (kw = kwl(FITS::EPOCH)) ? kw->asDouble() : 2000;
+    //Double epoch = (kw = kwl(FITS::EPOCH)) ? kw->asDouble() : 2000;
 
     String date;
     date = (kw = kwl(FITS::DATE_OBS)) ? kw->asString() : "";
@@ -3260,81 +3261,168 @@ void MSFitsInput::fillPointingTable() {
 }
 
 void MSFitsInput::fillSourceTable() {
-    // fill the source table. run though the main table look for new spectralwindows
-    // and add source table entries for each field/spw combination
 
     itsLog << LogOrigin("MSFitsInput", "fillSourceTable") << LogIO::NORMAL
             << "Filling SOURCE table." << LogIO::POST;
+    Int numRow = 0;
+    if (numRow > 0) {
+        String tName = ms_p.tableName();
+        //cout << "ms name=" << tName << endl;
+        MSSummary mss(&ms_p, tName);
 
-    Int nrow = ms_p.nrow();
-    Int lastFieldId = -1;
-    Int lastDDId = -1;
-    Double lastTime = 0;
-    Vector<Int> fieldId = msc_p->fieldId().getColumn();
-    Vector<Int> ddId = msc_p->dataDescId().getColumn();
+        Record mainRec;
+        mss.listMain(itsLog, mainRec);
+        //cout << "mainRec=\n" << mainRec << endl;
+        //cout << "num of scans=" << mainRec.nfields() << endl;
 
-    ProgressMeter meter(0.0, nrow * 1.0, "UVFITS Filler", "rows copied", "",
-            "", True, nrow / 100);
+        //Record fieldRec;
+        //mss.listField(itsLog, fieldRec, True);
+        //cout << "fieldRec=\n" << fieldRec << endl;
+        //cout << "num of fields=" << fieldRec.nfields() << endl;
 
-    for (Int i = 0; i < nrow; i++) {
-        if (fieldId(i) != lastFieldId || (ddId(i) != lastDDId)) {
-            lastFieldId = fieldId(i);
-            if (i > 0)
-                lastTime = msc_p->time()(i - 1);
-            Array<Double> pointingDir = msc_p->field().phaseDir()(lastFieldId);
-            String name = msc_p->field().name()(lastFieldId);
-            //Int numPoly = msc_p->field().numPoly()(lastFieldId);
-            Double time = msc_p->time()(i);
+        ProgressMeter meter(0.0, mainRec.nfields() * 1.0, "UVFITS Filler",
+                "rows copied", "", "", True, mainRec.nfields() * 300 / 100);
 
-            lastDDId = ddId(i);
-            Int spwId = msc_p->dataDescription().spectralWindowId()(lastDDId);
-            // now check if we've seen this field for this spectral window
-            // Use indexed access to the SOURCE sub-table
-            MSSourceIndex sourceIndex(ms_p.source());
-            sourceIndex.sourceId() = lastFieldId;
-            sourceIndex.spectralWindowId() = spwId;
-            Vector<uInt> rows = sourceIndex.getRowNumbers();
-            if (rows.nelements() == 0) {
-                ms_p.source().addRow();
-                Int j = ms_p.source().nrow() - 1;
-                MSSourceColumns & mss = msc_p->source();
-                mss.sourceId().put(j, lastFieldId);
-                msc_p->field().sourceId().put(lastFieldId, lastFieldId);
-                mss.name().put(j, name);
-                Matrix<Double> phaseDir =
-                        msc_p->field().phaseDir()(lastFieldId);
-                Vector<Double> srcDir = phaseDir.column(0), rate(2);
-                if (phaseDir.ncolumn() > 1)
-                    rate = phaseDir.column(1);
-                else
-                    rate = 0.0;
-                mss.direction().put(j, srcDir);
-                mss.properMotion().put(j, rate);
-                mss.time().put(j, time);
-                mss.interval().put(j, DBL_MAX);
-                mss.spectralWindowId().put(j, spwId);
-                Vector<Double> sysVel(1);
-                sysVel(0) = 0.;
-                mss.sysvel().put(j, sysVel);
-                mss.numLines().put(j, 1);
-                Vector<String> transition(1);
-                transition(0) = "";
-                mss.transition().put(j, transition);
-                Vector<Double> restFreqs(1);
-                restFreqs(0) = restfreq_p;
-                if (restFreqs(0) <= 0.0) {
-                    // put in the reference freq as default for the rest frequency
-                    restFreqs(0)
-                            = msc_p->spectralWindow().refFrequency()(spwId);
+        for (uInt i = 0; i < mainRec.nfields() - 5; i++) {
+            Int fnum = mainRec.fieldNumber(String("scan_").append(
+                    String::toString(i + 1)));
+            Record rec = mainRec.subRecord(fnum).subRecord(String('0'));
+            //cout << "subRecord=\n" << rec << endl;
+
+            Double time1 = rec.asDouble("BeginTime");
+            Double time2 = rec.asDouble("IntegrationTime");
+            Int fid = rec.asInt("FieldId");
+            String name = rec.asString("FieldName");
+
+            //Int numPoly = ;
+            Vector<Int> spwIds = rec.asArrayInt("SpwIds");
+
+            //cout << "time=" << time << " fid=" << fid << " name=" << name
+            //        << " spwIds=" << spwIds << endl;
+            for (uInt spwId = 0; spwId < spwIds.nelements(); spwId++) {
+                MSSourceIndex sourceIndex(ms_p.source());
+                sourceIndex.sourceId() = fid;
+                sourceIndex.spectralWindowId() = spwIds(spwId);
+
+                Vector<uInt> rows = sourceIndex.getRowNumbers();
+                if (rows.nelements() == 0) {
+                    ms_p.source().addRow();
+                    Int j = ms_p.source().nrow() - 1;
+                    MSSourceColumns & msc = msc_p->source();
+                    msc.sourceId().put(j, fid);
+                    msc.name().put(j, name);
+                    Matrix<Double> phaseDir = msc_p->field().phaseDir()(fid);
+                    Vector<Double> srcDir = phaseDir.column(0);
+                    Vector<Double> rate(2);
+                    if (phaseDir.ncolumn() > 1)
+                        rate = phaseDir.column(1);
+                    else
+                        rate = 0.0;
+                    msc.direction().put(j, srcDir);
+                    msc.properMotion().put(j, rate);
+                    msc.time().put(j, time1 * C::day);
+                    msc.interval().put(j,time2);
+                    msc.spectralWindowId().put(j, spwId);
+                    Vector<Double> sysVel(1);
+                    sysVel(0) = 0.;
+                    msc.sysvel().put(j, sysVel);
+                    msc.numLines().put(j, 1);
+                    Vector<String> transition(1);
+                    transition(0) = "";
+                    msc.transition().put(j, transition);
+                    Vector<Double> restFreqs(1);
+                    restFreqs(0) = restfreq_p;
+                    if (restFreqs(0) <= 0.0) {
+                        restFreqs(0) = msc_p->spectralWindow().refFrequency()(
+                                spwId);
+                    }
+                    msc.restFrequency().put(j, restFreqs);
+                    msc.calibrationGroup().put(j, -1);
+                    //String code = msc_p->field().c.code().asString();
+                    msc.code().put(j, msc_p->field().code()(fid));
+
                 }
-                mss.restFrequency().put(j, restFreqs);
-                mss.calibrationGroup().put(j, -1);
-
+                //meter.update((i + 1) * 1.0);
             }
         }
-        meter.update((i + 1) * 1.0);
     }
+    else {
 
+        //////////////////this is uselessly slow
+        // fill the source table. run though the main table look for new spectralwindows
+        // and add source table entries for each field/spw combination
+        Int nrow = ms_p.nrow();
+        Int lastFieldId = -1;
+        Int lastDDId = -1;
+        Double lastTime = 0;
+        Vector<Int> fieldId = msc_p->fieldId().getColumn();
+        Vector<Int> ddId = msc_p->dataDescId().getColumn();
+
+        ProgressMeter meter(0.0, nrow * 1.0, "UVFITS Filler", "rows copied",
+                "", "", True, nrow / 100);
+
+        for (Int i = 0; i < nrow; i++) {
+            if (fieldId(i) != lastFieldId || (ddId(i) != lastDDId)) {
+                lastFieldId = fieldId(i);
+                if (i > 0)
+                    lastTime = msc_p->time()(i - 1);
+                Array<Double> pointingDir = msc_p->field().phaseDir()(
+                        lastFieldId);
+                String name = msc_p->field().name()(lastFieldId);
+                //Int numPoly = msc_p->field().numPoly()(lastFieldId);
+                Double time = msc_p->time()(i);
+
+                lastDDId = ddId(i);
+                Int spwId = msc_p->dataDescription().spectralWindowId()(
+                        lastDDId);
+                // now check if we've seen this field for this spectral window
+                // Use indexed access to the SOURCE sub-table
+                MSSourceIndex sourceIndex(ms_p.source());
+                sourceIndex.sourceId() = lastFieldId;
+                sourceIndex.spectralWindowId() = spwId;
+                Vector<uInt> rows = sourceIndex.getRowNumbers();
+                if (rows.nelements() == 0) {
+                    ms_p.source().addRow();
+                    Int j = ms_p.source().nrow() - 1;
+                    MSSourceColumns & mss = msc_p->source();
+                    mss.sourceId().put(j, lastFieldId);
+                    msc_p->field().sourceId().put(lastFieldId, lastFieldId);
+                    mss.name().put(j, name);
+                    Matrix<Double> phaseDir = msc_p->field().phaseDir()(
+                            lastFieldId);
+                    Vector<Double> srcDir = phaseDir.column(0), rate(2);
+                    if (phaseDir.ncolumn() > 1)
+                        rate = phaseDir.column(1);
+                    else
+                        rate = 0.0;
+                    mss.direction().put(j, srcDir);
+                    mss.properMotion().put(j, rate);
+                    mss.time().put(j, time);
+                    mss.interval().put(j, DBL_MAX);
+                    mss.spectralWindowId().put(j, spwId);
+                    Vector<Double> sysVel(1);
+                    sysVel(0) = 0.;
+                    mss.sysvel().put(j, sysVel);
+                    mss.numLines().put(j, 1);
+                    Vector<String> transition(1);
+                    transition(0) = "";
+                    mss.transition().put(j, transition);
+                    Vector<Double> restFreqs(1);
+                    restFreqs(0) = restfreq_p;
+                    if (restFreqs(0) <= 0.0) {
+                        // put in the reference freq as default for the rest frequency
+                        restFreqs(0) = msc_p->spectralWindow().refFrequency()(
+                                spwId);
+                    }
+                    mss.restFrequency().put(j, restFreqs);
+                    mss.calibrationGroup().put(j, -1);
+
+                }
+            }
+            meter.update((i + 1) * 1.0);
+        }
+        //////////////////this is uselessly slow
+    }
 
 }
 
