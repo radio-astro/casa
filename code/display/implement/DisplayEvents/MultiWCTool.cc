@@ -224,7 +224,7 @@ void MultiWCTool::keyPressed(const WCPositionEvent &ev) {  }
 void MultiWCTool::keyReleased(const WCPositionEvent &) {  }
 void MultiWCTool::otherKeyPressed(const WCPositionEvent &) {  }
 void MultiWCTool::otherKeyReleased(const WCPositionEvent &) {  }
-  void MultiWCTool::moved(const WCMotionEvent & /*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) { }
+void MultiWCTool::moved(const WCMotionEvent & /*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) { }
 void MultiWCTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {  }
 
 

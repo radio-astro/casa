@@ -110,7 +110,7 @@ namespace casa {
 		else if (w>= 9 && h>= 9) s = 3;
 
 		double xdx, ydy;
-		screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
+		try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
 		handle_delta_x = xdx - blc_x;
 		handle_delta_y = ydy - blc_y;
 
