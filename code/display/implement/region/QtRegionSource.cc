@@ -298,8 +298,9 @@ namespace casa {
 	    MDirection trcmd = MDirection::Convert(MDirection(corners[1].getAngle("rad"),ann_cstype), cstype)();
 	    casa::Quantum<casa::Vector<double> > trcq = trcmd.getAngle("rad");
 	    std::vector<std::pair<double,double> > pts(2);
-	    world_to_linear( wc,blcq.getValue( )(0),blcq.getValue( )(1),trcq.getValue( )(0),trcq.getValue( )(1),
-			     pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	    try { world_to_linear( wc,blcq.getValue( )(0),blcq.getValue( )(1),trcq.getValue( )(0),trcq.getValue( )(1),
+				   pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	    } catch(...) { return; }
 
 	    // create the rectangle...
 	    const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( Region::RectRegion );
@@ -330,7 +331,7 @@ namespace casa {
 	    const double yradius = (x_is_major ? minor_radius : major_radius);
 
 	    std::vector<std::pair<double,double> > pts(2);
-	    world_to_linear(wc,center[0]-xradius,center[1]-yradius,center[0]+xradius,center[1]+yradius, pts[0].first, pts[0].second, pts[1].first, pts[1].second);
+	    try { world_to_linear(wc,center[0]-xradius,center[1]-yradius,center[0]+xradius,center[1]+yradius, pts[0].first, pts[0].second, pts[1].first, pts[1].second); } catch(...) { return; }
 	    
 	    // create the ellipse...
 	    const RegionCreator::creator_list_type &ellipse_creators = RegionCreator::findCreator( Region::EllipseRegion );
@@ -354,7 +355,7 @@ namespace casa {
 	    casa::Vector<double> point = dir_point.getAngle("rad").getValue( );
 	    
 	    std::vector<std::pair<double,double> > pts(2);
-	    world_to_linear( wc, point[0], point[1], pts[0].first, pts[0].second );
+	    try { world_to_linear( wc, point[0], point[1], pts[0].first, pts[0].second ); } catch(...) { return; }
 	    pts[1] = pts[0];	// points also have two corners...
 
 	    // create the point...
@@ -380,7 +381,7 @@ namespace casa {
 	    for ( int i=0; i < corners.size( ); ++i ) {
 		MDirection corner = MDirection::Convert(corners[i], cstype)();
 		casa::Vector<double> point = corner.getAngle("rad").getValue( );
-		world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second );
+		try { world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second ); } catch(...) { return; }
 	    }
 
 	    // create the polygon...

@@ -83,7 +83,7 @@ void MultiRectTool::disable() {
 	itsLastPressTime = ev.timeOfEvent();
 
 	double linx1, liny1;
-	viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+	try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
 
 	// traverse in reverse order because the last region created is "on top"...
 	// check for click within a handle...
@@ -122,14 +122,14 @@ void MultiRectTool::disable() {
 	if ( ! itsCurrentWC->inDrawArea(x, y) ) return;
 
 	double linx, liny;
-	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
 	bool refresh_needed = false;
 	bool region_selected = false;
 	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize the rectangle
 	    double linx1, liny1;
-	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 	    resizing_region_handle = resizing_region->moveHandle( resizing_region_handle, linx1, liny1 );
 	    refresh_needed = true;
 	    // return;
@@ -149,7 +149,7 @@ void MultiRectTool::disable() {
 	if ( moving_regions.size( ) > 0 ) {
 	    // resize the rectangle
 	    double linx1, liny1;
-	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 	    double dx = linx1 - moving_linx_;
 	    double dy = liny1 - moving_liny_;
 	    for( rectanglelist::iterator iter = moving_regions.begin( ); iter != moving_regions.end( ); ++iter ) {
@@ -226,7 +226,7 @@ void MultiRectTool::disable() {
 
 	    Int x = ev.pixX(), y = ev.pixY();
 	    double linx1, liny1;
-	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 
 	    rectanglelist selected_regions;
 	    for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
@@ -256,7 +256,7 @@ void MultiRectTool::disable() {
 #if DUMP_STATISTICS_TO_TERMINAL
 	Int x = ev.pixX(), y = ev.pixY();
 	double linx1, liny1;
-	viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 	    if ( (*iter)->clickWithin( linx1, liny1 ) )
 		(*iter)->
@@ -294,7 +294,7 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	moving_regions.clear( );		// ensure that moving state is clear...
 
 	double linx, liny;
-	viewer::screen_to_linear( wc, x, y, linx, liny );
+	try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
 
 	bool refresh_needed = false;
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ) {
@@ -308,22 +308,24 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 			iter = xi;
 		    } else {
 			double dx=0, dy=0;
-			switch ( ev.key( ) ) {
-			    case Display::K_Left:
-				viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
-				break;
-			    case Display::K_Right:
-				viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
-				break;
-			    case Display::K_Down:
-				viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
-				break;
-			    case Display::K_Up:
-				viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
-				break;
-			    default:
-				break;
-			}
+			try {
+			    switch ( ev.key( ) ) {
+				case Display::K_Left:
+				    viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Right:
+				    viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Down:
+				    viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				    break;
+				case Display::K_Up:
+				    viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				    break;
+				default:
+				    break;
+			    }
+			} catch(...) { return; }
 			(*iter)->move( dx, dy );
 			refresh_needed = true;
 			++iter;
@@ -750,21 +752,8 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	if(!itsCurrentWC->pixToLin(lin, pixmax)) return;		// (unlikely)
 	if(wldOk) wldOk = itsCurrentWC->linToWorld(trc, lin);
 
-#if OLDSTUFF
-	if ( ! selected.isNull( ) ) {
-	    double linx1, liny1, linx2, liny2;
-	    viewer::screen_to_linear( itsCurrentWC, x1, y1, x2, y2, linx1, liny1, linx2, liny2 );
-	    selected->update( linx1, liny1, linx2, liny2 );
-	}
-#endif
-
 	DisplayData *dd = 0;
 	List<DisplayData*> *dds = pd_->displayDatas( );
-
-#if OLDSTUFF
-	if ( ! selected.isNull( ) )
-	    selected->clearstats( );
-#endif
 
 	std::string errMsg_;
 	std::map<String,bool> processed;
@@ -912,7 +901,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	itsCurrentWC = wc;
 
 	double linx, liny;
-	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
 	resizing_region = allocate_region( wc, linx, liny, linx, liny );
 	rectangles.push_back( resizing_region );
