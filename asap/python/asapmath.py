@@ -25,6 +25,7 @@ def average_time(*args, **kwargs):
         align:    align the spectra in velocity before averaging. It takes
                   the time of the first spectrum in the first scantable
                   as reference time.
+        compel:   True forces to average overwrapped IFs.
     Example:
         # return a time averaged scan from scana and scanb
         # without using a mask
@@ -162,9 +163,7 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
     Currently calps identify the scans as position switched data if source
     type enum is pson or psoff. The data must contains 'CAL' signal
     on/off in each integration. To identify 'CAL' on state, the source type 
-    enum of poncal and poffcal need to be present in the source name field.
-    (GBT MS data reading process to scantable automatically append these
-    id names to the source names)
+    enum of poncal and poffcal need to be present.
 
     Parameters:
         scantab:       scantable
@@ -624,9 +623,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
     Currently calfs identify the scans as frequency switched data if source
     type enum is fson and fsoff. The data must contains 'CAL' signal
     on/off in each integration. To identify 'CAL' on state, the source type 
-    enum of foncal and foffcal need to be present in the source name field.
-    (GBT MS data reading via scantable automatically append these
-    id names to the source names)
+    enum of foncal and foffcal need to be present.
 
     Parameters:
         scantab:       scantable
