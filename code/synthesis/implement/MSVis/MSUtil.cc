@@ -170,8 +170,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt ispw =0 ; ispw < spw.nelements() ; ++ispw){
       Double freqStartObs=C::dbl_max;
       Double freqEndObs=0.0;
-      Vector<Double> chanfreq=spwCol.chanFreq()(ispw);
-      Vector<Double> chanwid=spwCol.chanWidth()(ispw);
+      Vector<Double> chanfreq=spwCol.chanFreq()(spw[ispw]);
+      Vector<Double> chanwid=spwCol.chanWidth()(spw[ispw]);
       Vector<Int> ddOfSpw=mddin.matchSpwId(spw[ispw]);
       for (Int ichan=start[ispw]; ichan<start[ispw]+nchan[ispw]; ++ichan){ 
 	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan]))) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan]);
