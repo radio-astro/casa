@@ -524,7 +524,7 @@ namespace casa {
 
 		// get handle size in linear coordinates...
 		double xdx, ydy;
-		screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
+		try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
 		handle_delta_x = xdx - blc_x;
 		handle_delta_y = ydy - blc_y;
 
@@ -553,12 +553,11 @@ namespace casa {
 
 		    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
 			int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
-			try {
-			    linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
-					      _drawing_points_[i].second - handle_delta_y / 2.0,
-					      _drawing_points_[i].first + handle_delta_x / 2.0, 
-					      _drawing_points_[i].second + handle_delta_y / 2.0,
-					      h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
+						_drawing_points_[i].second - handle_delta_y / 2.0,
+						_drawing_points_[i].first + handle_delta_x / 2.0, 
+						_drawing_points_[i].second + handle_delta_y / 2.0,
+						h_blc_x, h_blc_y, h_trc_x, h_trc_y );
 			} catch(...) { return; }
 
 			pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );

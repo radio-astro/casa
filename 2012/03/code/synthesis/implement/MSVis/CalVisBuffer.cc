@@ -112,7 +112,8 @@ void CalVisBuffer::updateCoordInfo()
 void CalVisBuffer::enforceAPonData(const String& apmode)
 {
 
-  if (apmode!="AP") {
+  // ONLY if something to do
+  if (apmode=="A" || apmode=="P") {
     Int nCor(nCorr());
     Float amp(1.0);
     Complex cor(1.0);

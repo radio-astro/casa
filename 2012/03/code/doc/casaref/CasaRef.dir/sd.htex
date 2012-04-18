@@ -18,21 +18,24 @@ Synopsis
 
   \medskip\noindent\textbf{Important note}
 
-    {\bf To access sd tool from \casa, the user must execute asap\_init()} 
-    from the command-line interface of \casa. 
-    This command imports ASAP package as sd tool and makes single-dish 
-    tasks available.
+   In the latest release, single dish package is loaded at the start-up 
+   of CASA. Therefore, it is not necessary to load ASAP explicitly anymore.
 
-    As described above, the sd tool is originally a standalone software package, 
-    and it is actually an independent Python module named 'asap'. 
-    Thus, you can import sd tool without executing asap\_init().
-    It can be imported as usual Python module such as 
-
-    \begin{verbatim}
-    import asap as sd
-    \end{verbatim}
-
-    from command line interface of \casa.
+%    {\bf To access sd tool from \casa, the user must execute asap\_init()} 
+%    from the command-line interface of \casa. 
+%    This command imports ASAP package as sd tool and makes single-dish 
+%    tasks available.
+%
+%    As described above, the sd tool is originally a standalone software package, 
+%    and it is actually an independent Python module named 'asap'. 
+%    Thus, you can import sd tool without executing asap\_init().
+%    It can be imported as usual Python module such as 
+%
+%    \begin{verbatim}
+%    import asap as sd
+%    \end{verbatim}
+%
+%    from command line interface of \casa.
 
   \medskip\noindent\textbf{Data format}
 
@@ -127,6 +130,22 @@ Synopsis
     and elevation.
     See \ahlink{sd.opacity\_model}{sd:sd.opacity_model} for details.
 		
+  \medskip\noindent\textbf{Gridding}
+
+    The tool to convolve spectral data onto regularly spaced grid, 
+    \ahlink{sd.asapgrid}{sd:sd.asapgrid} is available. Currently, 
+    three convolution kernels, box, prolate-spheroidal, and gaussian, 
+    can be used for convolution. See \ahlink{sd.asapgrid}{sd:sd.asapgrid} 
+    for details.
+
+  \medskip\noindent\textbf{Logging}
+
+    Although logging system is integrated into \casa\ logger, sd tool has 
+    own logging functions so that you can use it instead of \casa\ logging 
+    functions. Log messages will be displayed in the \casa\ logger either 
+    you use logging functions for \casa\ or sd tool. 
+    See \ahlink{sd.asaplog}{sd:sd.asaplog} for details.
+ 
 
 Methods
 \begin{longtable}{ll}
@@ -258,7 +277,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-    asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.almacal(s,calmode='ps')
 \end{verbatim}
@@ -325,7 +343,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-    asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.apexcal(s,calmode='ps')
 \end{verbatim}
@@ -386,7 +403,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scana = sd.scantable('scana.asap')
         scanb = sd.scantable('scanb.asap')
         # return a time averaged scan from scana and scanb
@@ -411,9 +427,7 @@ scantable
     Currently calfs identify the scans as frequency switched data if source
     type enum is fson and fsoff. The data must contains 'CAL' signal
     on/off in each integration. To identify 'CAL' on state, the source type 
-    enum of foncal and foffcal need to be present in the source name field.
-    (GBT MS data reading via scantable automatically append these
-    id names to the source names)
+    enum of foncal and foffcal need to be present.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -455,7 +469,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('FLS3a_HI.asap')                 # load in the saved ASAP dataset with FLS3a
    scanns = s.getscannos()                         # get a list of the scan numbers in the scantable
    sn=list(scanns)
@@ -515,7 +528,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-    asap_init()
     s=sd.scantable('alma-scans.asap',average=False,getpt=True)
     scal=sd.calibrate(s,calmode='ps')
 \end{verbatim}
@@ -575,7 +587,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('IRC+10216_rawACSmod',False)#load the data without averaging     
    scal=sd.calnod(s,[229,230])             # Calibrate CS scans 
 \end{verbatim}
@@ -592,9 +603,7 @@ scantable
     Currently calps identify the scans as position switched data if source
     type enum is pson or psoff. The data must contains 'CAL' signal
     on/off in each integration. To identify 'CAL' on state, the source type 
-    enum of poncal and poffcal need to be present in the source name field.
-    (GBT MS data reading process to scantable automatically append these
-    id names to the source names)
+    enum of poncal and poffcal need to be present.
 
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
@@ -641,7 +650,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod',False)#load the data without averaging        
    scal=sd.calps(s,[24,25,26,27])          # Calibrate SiO scans  
 \end{verbatim}
@@ -665,7 +673,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    sd.commands()
    # Output will be as follows
    [The scan container]
@@ -747,7 +754,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s = sd.scantable('OrionS_rawACSmod',average=False)
    sel = sd.selector()
    # calibration scans
@@ -819,7 +825,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s = sd.scantable('OrionS_rawACSmod',average=False)
    sel = sd.selector()
    # calibration scans
@@ -874,7 +879,6 @@ string
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    rev=sd.get_revision()
    print rev
    '13018'
@@ -900,7 +904,6 @@ bool (False)
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    isasap=sd.is_asap_cli()
    print isasap
    False
@@ -925,7 +928,6 @@ bool (True)
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    iscasa=sd.is_casapy()
    print iscasa
    True
@@ -982,7 +984,6 @@ string array
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         files = sd.list_files("data/","sdfits")
         print files
         ['data/2001-09-01_0332_P363.sdfits',
@@ -1038,7 +1039,6 @@ string
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    sd.list_rcparameters()
    # output will be as follows
    # general
@@ -1086,7 +1086,6 @@ string
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    # no scantable is created yet
    scanlist=sd.list_scans()
    print scanlist
@@ -1134,7 +1133,6 @@ bool array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    a=[True,False,False]
    b=[True,True,False]
    sd.mask_and(a,b)
@@ -1177,7 +1175,6 @@ bool array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    a=[True,False,False]
    b=[True,True,False]
    sd.mask_or(a,b)
@@ -1214,7 +1211,6 @@ bool array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    a=[True,False,False]
    sd.mask_not(a)
    [False,True,True]
@@ -1250,7 +1246,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan1 = sd.scantable('scan1.asap')
         scan2 = sd.scantable('scan2.asap')
         myscans = [scan1, scan2]
@@ -1319,7 +1314,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s = sd.scantable('OrionS_rawACSmod',average=False)
    sel = sd.selector()
    # ON scan
@@ -1385,7 +1379,6 @@ group && \multicolumn{2}{p{3.36in}|}{Grouping for the rc}\\
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      # set scantable.save as 'SDFITS' and scantable.storage as 'disk'
      sd.rc('scantable',save='SDFITS', storage='disk')
      # set insitu as False
@@ -1454,7 +1447,6 @@ float array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('skydip.asap',average=False)
    sd.skydip(data=s,averagepol=True,plot=True)
 \end{verbatim}
@@ -1504,7 +1496,6 @@ string array
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      # assume that input MS contains data from 'DV01' and 'PM03'
      outfiles=sd.splitant('osfdata.ms',outprefix='test')
      print outfiles
@@ -1540,7 +1531,6 @@ any array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    x=[1,2,3,3,4]
    y=sd.unique(x)
    print y
@@ -1571,7 +1561,6 @@ string
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    msg=sd.welcome()
    print msg
    # output will be as follows
@@ -1658,7 +1647,6 @@ parallactify && \multicolumn{2}{p{3.36in}|}{Indicate that the data had been para
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      # create scantable from the data from the second antenna in Measurement Set
      s=sd.scantable('sddata.ms',average=False,getpt=True,antenna=1)
 \end{verbatim}
@@ -1747,6 +1735,8 @@ Methods
 
 	\ahlink{get\_restfreqs}{sd:sd.scantable.get_restfreqs} &Get the rest frequency(s) stored in the scantable \\
 
+	\ahlink{get\_rms}{sd:sd.scantable.get_rms} &Calculate rms of the spectrum \\
+
 	\ahlink{get\_row}{sd:sd.scantable.get_row} &Return a scantable with single row \\
 
 	\ahlink{get\_row\_selector}{sd:sd.scantable.get_row_selector} &Return a \ahlink{selector}{sd:sd.selector} object that only selects target row \\
@@ -1808,8 +1798,6 @@ Methods
 	\ahlink{nrow}{sd:sd.scantable.nrow} &Return a number of rows \\
 
 	\ahlink{nscan}{sd:sd.scantable.nscan} &Return a number of scans \\
-
-	\ahlink{old\_poly\_baseline}{sd:sd.scantable.old_poly_baseline} &Older version of baseline subtraction function \\
 
 	\ahlink{opacity}{sd:sd.scantable.opacity} &Apply an opacity correction \\
 
@@ -2011,7 +1999,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         bscan = scan.auto_cspline_baseline(npiece=3, insitu=False)
 \end{verbatim}
@@ -2118,7 +2105,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         scan2 = scan.auto_poly_baseline(order=7, insitu=False)
 \end{verbatim}
@@ -2334,7 +2320,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         scan2 = scan.auto_sinusoid_baseline(addwn='<=10', insitu=False)
 \end{verbatim}
@@ -2474,6 +2459,10 @@ align && \multicolumn{2}{p{3.36in}|}{Align the spectral in velocity before avera
 & &allowed: & bool \\
 & &Default: & False
 \\
+compel && \multicolumn{2}{p{3.36in}|}{True forces to average overwrapped IFs}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
 
 \hline
 \end{tabular}
@@ -2485,7 +2474,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         # time average the scantable without using a mask
         newscan = scan.average_time()
@@ -2565,7 +2553,6 @@ dictionary array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    s.chan2data(rowno=0,chan=0)
    ({'unit': 'channel', 'value': 0.0}, {'unit': 'K', 'value': 1.7028001546859741})
@@ -2722,7 +2709,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=True)
    # deep copy
    copiedscan=s.copy()
@@ -2777,7 +2763,6 @@ bool array
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=True)
         scan.set_unit('channel')
         # a)
@@ -2870,7 +2855,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         # return a scan baselined by a cubic spline consisting of 2 pieces (i.e., 1 internal knot),
         # also with 3-sigma clipping, iteration up to 4 times
@@ -3371,7 +3355,6 @@ string, string array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # get_direction() returns string expression of position
    s.get_direction(0)
@@ -3415,7 +3398,6 @@ float array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # get_direction() returns string expression of position
    s.get_direction(0)
@@ -3594,7 +3576,6 @@ integer array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # this is an example to show how get_mask_indices() works
    s.get_mask_indices(s.create_mask([1000,2000],[4000,5000]))
@@ -3644,7 +3625,6 @@ float array
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # this is an example to show how get_masklist() works
    s.get_masklist(s.create_mask([1000,2000],[4000,5000]))
@@ -3712,6 +3692,39 @@ ids && \multicolumn{2}{p{3.36in}|}{A list of MOLECULE\_ID for that rest frequenc
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 dictionary
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.scantable.get_rms
+\newpage
+\ahsdfunction{sd.scantable.get\_rms}{sd.scantable.get_rms}{Calculate rms of the spectrum}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Calculate rms of the spectrum. Mask can be specified.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+mask && \multicolumn{2}{p{3.36in}|}{Optional mask for calculation}\\
+& &allowed: & bool array \\
+& &Default: & 
+\\
+whichrow && \multicolumn{2}{p{3.36in}|}{Row number to be processed}\\
+& &allowed: & int \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+float
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -3819,7 +3832,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan=sd.scantable('data.asap')
         # get all scans containing the source '323p459'
         newscan = scan.get_scan('323p459')
@@ -3848,7 +3860,6 @@ selector
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         sel = scan.get_selection()
         sel.set_ifs(0)              # select IF 0
@@ -4067,7 +4078,6 @@ integer
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         beam = scan.getbeam(0) # get beam number for the first row
 \end{verbatim}
@@ -4120,7 +4130,6 @@ integer
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         cycle = scan.getcycle(0) # get cycle number for the first row
 \end{verbatim}
@@ -4155,7 +4164,6 @@ integer
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         ifno = scan.getifs(0) # get IF number for the first row
 \end{verbatim}
@@ -4226,7 +4234,6 @@ integer
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         polno = scan.getpol(0) # get polarization number for the first row
 \end{verbatim}
@@ -4279,7 +4286,6 @@ integer
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod')
         scanno = scan.getscan(0) # get scan number for the first row
 \end{verbatim}
@@ -4648,73 +4654,6 @@ integer
 \hfill \\
 
 
-%% sd.scantable.old_poly_baseline
-\newpage
-\ahsdfunction{sd.scantable.old\_poly\_baseline}{sd.scantable.old_poly_baseline}{Older version of baseline subtraction function}
-
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
-
-    Return a scan which has been baselined (all rows) by a polynomial.
- 
-    If insitu is True, or insitu is None and sd.rcParams['insitu'] is True, 
-    the method will not return the result, but apply operation on this scantable. 
-
-    You can verify and decide whether you apply the fit result or not, if plot argument is True.
-    In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
-    recommended for large dataset.
-
-    This is an older version of \ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline}. 
-    The only difference between them is its performance. For larger dataset, 
-    you must not use this method since it will be extremely slow.
- 
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
-\hline
-Inputs && \multicolumn{2}{p{3.36in}|}{}\\
-mask && \multicolumn{2}{p{3.36in}|}{An optional mask}\\
-& &allowed: & bool array \\
-& &Default: & None
-\\
-order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
-& &allowed: & integer \\
-& &Default: & 0
-\\
-plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual}\\
-& &allowed: & bool \\
-& &Default: & False
-\\
-uselin && \multicolumn{2}{p{3.36in}|}{Use linear polynomial fit}\\
-& &allowed: & bool \\
-& &Default: & False
-\\
-insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
-& &allowed: & bool \\
-& &Default: & None
-\\
-rows && \multicolumn{2}{p{3.36in}|}{row numbers of spectra to be processed}\\
-& &allowed: & integer, integer array \\
-& &Default: & None (all rows)
-\\
-
-\hline
-\end{tabular}
-
-\flushleft\vspace{.20in}\textbf {Returns}\newline
-scantable
-
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
-
-\begin{verbatim}
-        asap_init()
-        scan = sd.scantable('OrionS_rawACSmod_cal')
-        # return a scan baselined by a third order polynomial,
-        # not using a mask
-        bscan = scan.old_poly_baseline(order=3)
-\end{verbatim}
-
 
 %% sd.scantable.opacity
 \newpage
@@ -4878,7 +4817,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         # return a scan baselined by a third order polynomial,
         # not using a mask
@@ -4980,7 +4918,6 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.rotate_linpolphase(2.3)
 \end{verbatim}
@@ -5018,7 +4955,6 @@ angle && \multicolumn{2}{p{3.36in}|}{The angle (in dgree) to rotate (add) by}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.rotate_xyphase(2.3)
 \end{verbatim}
@@ -5079,7 +5015,6 @@ overwrite && \multicolumn{2}{p{3.36in}|}{Overwrite existing file}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.save('myscan.asap')
         scan.save('myscan.sdfits', 'SDFITS')
@@ -5158,7 +5093,6 @@ frame && \multicolumn{2}{p{3.36in}|}{An optional frame type}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.set_dirframe('GALAGTIC')
 \end{verbatim}
@@ -5280,7 +5214,6 @@ frame && \multicolumn{2}{p{3.36in}|}{An optional frame type}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.set_freqframe('BARY')
 \end{verbatim}
@@ -5372,7 +5305,6 @@ unit && \multicolumn{2}{p{3.36in}|}{Unit for rest frequency}\\
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          scan = sd.scantable('OrionS_rawACSmod_cal')
          # set the given restfrequency for the all currently selected IFs
          scan.set_restfreqs(freqs=1.4e9)
@@ -5421,7 +5353,6 @@ selection && \multicolumn{2}{p{3.36in}|}{A selector object}\\
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         sel = sd.selector()         # create a selection object
         self.set_scans([0, 3])    # select SCANNO 0 and 3
@@ -5682,7 +5613,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         # return a scan baselined by a combination of sinusoidal curves having
         # wave numbers in spectral window up to 10, 
@@ -5798,7 +5728,6 @@ float array
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.set_unit('channel')
         msk = scan.create_mask([100, 200], [500, 600])
@@ -5837,7 +5766,6 @@ float array
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         scan = sd.scantable('OrionS_rawACSmod_cal')
         scan.set_unit('channel')
         msk = scan.create_mask([100, 200], [500, 600])
@@ -5855,7 +5783,6 @@ float array
     Print a summary of the contents of this scantable.
     Optionally, output to the file specified.
 
-    The method returns raw string for summary if sd.rcParams['verbose'] is False.
  
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -6031,7 +5958,6 @@ rows && \multicolumn{2}{p{3.36in}|}{Row number selection}\\
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      # create a selector object
      sel=sd.selector()
      # These are equivalent if data is 'linear'
@@ -6334,7 +6260,6 @@ bool
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    # create selector without any selection
    sel=sd.selector()
    # is_empty() returns True
@@ -6367,7 +6292,6 @@ bool
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    # create selector without any selection
    sel=sd.selector()
    # is_empty() returns True
@@ -6502,7 +6426,6 @@ name && \multicolumn{2}{p{3.36in}|}{A string containing a source name or pattern
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         sel=sd.selector()
         # select all reference scans which start with "Orion"
         sel.set_name("Orion*_R")
@@ -6576,7 +6499,6 @@ pols && \multicolumn{2}{p{3.36in}|}{A list of integers of 0-3, or strings, e.g [
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          sel = sd.selector()
          # These are equivalent if data is 'linear'
          sel.set_polarisations(["XX","Re(XY)"])
@@ -6652,7 +6574,6 @@ query && \multicolumn{2}{p{3.36in}|}{TaQL selection string}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         sel=sd.selector()
         # select all off scans with integration times over 60 seconds.
         sel.set_query("SRCTYPE == PSOFF AND INTERVAL > 60.0")
@@ -6751,7 +6672,6 @@ tsysmax && \multicolumn{2}{p{3.36in}|}{The upper threshold}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         sel=sd.selector()
         # select all spectra with Tsys <= 500.0
         sel.set_tsys(tsysmax=500.0)
@@ -6788,7 +6708,6 @@ types && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    sel=sd.selector()
    # select only on-source scans of position switched observation
    sel.set_types(0)
@@ -6819,7 +6738,6 @@ types && \multicolumn{2}{p{3.36in}|}{A list of integers}\\
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 \begin{verbatim}
-        asap_init()
         s = sd.scantable('myscan.asap')
         s.set_cursor(thepol=1)        # select second pol
         f = sd.fitter()               # create fitter object
@@ -6908,7 +6826,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    f=sd.fitter()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    f.set_scan(s)
@@ -6942,7 +6859,6 @@ scantable
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    f=sd.fitter()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # you must set data as a scantable
@@ -6995,7 +6911,6 @@ estimate && \multicolumn{2}{p{3.36in}|}{Auto-compute an initial parameter set}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         s = sd.scantable('myscan.asap')
         s.set_cursor(thepol=1)        # select second pol (nb. 0-based)
         f = sd.fitter()
@@ -7338,7 +7253,6 @@ lorentz && \multicolumn{2}{p{3.36in}|}{Fit the number of lorentzian specified}\\
 \hfill \\
 
 \begin{verbatim}
-        asap_init()
         f=sd.fitter()
         # will fit a 3rd order polynomial via nonlinear method
         f.set_function(poly=3)  
@@ -7416,7 +7330,6 @@ component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    f=sd.fitter()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    f.set_scan(s)
@@ -7492,7 +7405,6 @@ component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    f=sd.fitter()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    f.set_scan(s)
@@ -7686,7 +7598,6 @@ filename && \multicolumn{2}{p{3.36in}|}{If specified, save as an ASCII table}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    f=sd.fitter()
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    f.set_scan(s)
@@ -7753,7 +7664,6 @@ name&& \multicolumn{2}{p{3.36in}|}{Name of the catalog}\\
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
 \begin{verbatim}
-        asap_init()
         l = sd.linecatalog('jpl_asap.tbl')
         # set name restriction
         l.set_name('NH3')
@@ -8066,7 +7976,6 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    l=sd.linecatalog('jpl_asap.tbl')
    l.set_name('NH3')
    l.summary()
@@ -8160,7 +8069,6 @@ smax && \multicolumn{2}{p{3.36in}|}{The upper bound}\\
 \hfill \\
 
 \begin{verbatim}
-       asap_init()
        fl=sd.linefinder()
        sc=sd.scantable('sddata.asap',average=False)
        # set data
@@ -9255,7 +9163,6 @@ scan && \multicolumn{2}{p{3.36in}|}{A scantable}\\
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    #create scantable
    s=sd.scantable('OrionS_rawACSmod_cal',average=False)
    # plot
@@ -9558,7 +9465,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          # two panels are visible on the plotter
          sd.plotter.set_ordinate(["First X-Axis","Second X-Axis"])
 \end{verbatim}
@@ -9598,7 +9504,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          sd.plotter.set_colors("red green blue")
          # If for example four lines are overlaid e.g I Q U V
          # 'I' will be 'red', 'Q' will be 'green', U will be 'blue'
@@ -9845,7 +9750,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \begin{verbatim}
          # If the data has two IFs/rest frequencies with index 0 and 1
          # for CO and SiO:
-         asap_init()
          sd.plotter.set_stacking('i')
          sd.plotter.set_legend(['CO','SiO'])
          sd.plotter.plot()
@@ -9893,7 +9797,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          sd.plotter.set_colors("black")
          sd.plotter.set_linestyles("line dashed dotted dashdot")
          # If for example four lines are overlaid e.g I Q U V
@@ -9939,7 +9842,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          select = sd.selector()
          select.setpolstrings("Pangle")
          sd.plotter.set_mask(mymask, select)
@@ -10032,7 +9934,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          # two panels are visible on the plotter
          sd.plotter.set_ordinate(["First Y-Axis","Second Y-Axis"])
 \end{verbatim}
@@ -10205,7 +10106,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-   asap_init()
    # these are equivalent
    sel=sd.selector(ifs=[0])
    sd.plotter.set_selection(sel)
@@ -10290,7 +10190,6 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 \hfill \\
 
 \begin{verbatim}
-         asap_init()
          # two panels are visible on the plotter
          sd.plotter.set_title(["First Panel","Second Panel"])
 \end{verbatim}
@@ -10371,7 +10270,6 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set the position of the
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      # create a scantable object
      s=sd.scantable('OrionS_rawACSmod',average=False)
      # get coordinate system
@@ -10636,7 +10534,6 @@ elevation&& \multicolumn{2}{p{3.36in}|}{Observatory elevation about sea level (i
 \hfill \\
 
 \begin{verbatim}
-     asap_init()
      o=sd.opacity_model(temperature=300.0,elevation=1300.0)
      tau=sd.get_opacities([1.0e11,1.1e11])
      print tau
@@ -10760,4 +10657,645 @@ humidity&& \multicolumn{2}{p{3.36in}|}{Air humidity at the observatory (fraction
 \hfill \\
 
 
+%%%%% sd.asapgrid
+\newpage
+\ahobject{sd.asapgrid}{Tool to convolve map data onto regularly spaced grid}
 
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    The asapgrid class is defined to convolve data onto regular
+    spatial grid. 
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+infile&& \multicolumn{2}{p{3.36in}|}{input data as a string or string list}\\
+& &allowed: & string, list of string\\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+asapgrid instance
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+       # create asapgrid instance with two input data
+       g = asapgrid( ['testimage1.asap','testimage2.asap'] )
+       # set IFNO if necessary
+       g.setIF( 0 )
+       # set POLNOs if necessary
+       g.setPolList( [0,1] )
+       # set SCANNOs if necessary
+       g.setScanList( [22,23,24] )
+       # define image with full specification
+       # you can skip some parameters (see help for defineImage)
+       g.defineImage( nx=12, ny=12, cellx='10arcsec', celly='10arcsec',
+                      center='J2000 10h10m10s -5d05m05s' )
+       # set convolution function
+       g.setFunc( func='sf', width=3 )
+       # enable min/max clipping
+       g.enableClip()
+       # or, disable min/max clipping
+       #g.disableClip()
+       # actual gridding
+       g.grid()
+       # save result
+       g.save( outfile='grid.asap' )
+       # plot result
+       g.plot( plotchan=1246, plotpol=-1, plotgrid=True, plotobs=True )
+\end{verbatim}
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{sd.asapgrid.defineImage}{sd:sd.asapgrid.defineImage} & Define spatial grid \\
+
+	\ahlink{sd.asapgrid.disableClip}{sd:sd.asapgrid.disableClip} & Disable min/max clipping \\
+
+	\ahlink{sd.asapgrid.enableClip}{sd:sd.asapgrid.enableClip} & Enable min/max clipping \\
+
+	\ahlink{sd.asapgrid.grid}{sd:sd.asapgrid.grid} & Do gridding \\
+
+	\ahlink{sd.asapgrid.plot}{sd:sd.asapgrid.plot} & Plot result \\
+
+	\ahlink{sd.asapgrid.save}{sd:sd.asapgrid.save} & Save result \\
+
+	\ahlink{sd.asapgrid.setData}{sd:sd.asapgrid.setData} & Set data to be processed \\
+
+	\ahlink{sd.asapgrid.setFunc}{sd:sd.asapgrid.setFunc} & Set convolution function \\
+
+	\ahlink{sd.asapgrid.setIF}{sd:sd.asapgrid.setIF} & Set IFNO to be processed \\
+
+	\ahlink{sd.asapgrid.setPolList}{sd:sd.asapgrid.setPolList} & Set polarizations to be processed \\
+
+	\ahlink{sd.asapgrid.setScanList}{sd:sd.asapgrid.setScanList} & Set scans to be processed \\
+
+	\ahlink{sd.asapgrid.setWeight}{sd:sd.asapgrid.setWeight} & Set weight type \\
+
+\end{longtable}
+
+
+%% sd.asapgrid.defineImage
+\newpage
+\ahfunction{sd.asapgrid.defineImage}{Define spatial grid}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Define spatial grid.
+    
+    First two parameters, nx and ny, define number of pixels of
+    the grid. If which of those is not specified, it will be set
+    to the same value as the other. If none of them are specified,
+    it will be determined from map extent and cell size.
+    
+    Next two parameters, cellx and celly, define size of pixel.
+    You should set those parameters as string, which is constructed
+    numerical value and unit, e.g. '0.5arcmin', or numerical value.
+    If those values are specified as numerical value, their units
+    will be assumed to 'arcmin'. If which of those is not specified,
+    it will be set to the same value as the other. If none of them
+    are specified, it will be determined from map extent and number
+    of pixels, or set to '1arcmin' if neither nx nor ny is set.
+    
+    The last parameter, center, define the central coordinate of
+    the grid. You should specify its value as a string, like,
+    
+       'J2000 05h08m50s -16d23m30s'
+    
+    or 
+    
+       'J2000 05:08:50 -16.23.30'
+    
+    You can omit equinox when you specify center coordinate. In that
+    case, J2000 is assumed. If center is not specified, it will be
+    determined from the observed positions of input data.
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+nx && \multicolumn{2}{p{3.36in}|}{number of pixels along x (R.A.) direction}\\
+& &allowed: & int \\
+& &Default: & -1
+\\
+ny && \multicolumn{2}{p{3.36in}|}{number of pixels along y (Dec.) direction}\\
+& &allowed: & int \\
+& &Default: & -1 
+\\
+cellx && \multicolumn{2}{p{3.36in}|}{size of pixel in x (R.A.) direction}\\
+& &allowed: & string, float\\
+& &Default: & ''
+\\
+celly && \multicolumn{2}{p{3.36in}|}{size of pixel in y (Dec.) direction.}\\
+& &allowed: & string, float\\
+& &Default: & ''
+\\
+center && \multicolumn{2}{p{3.36in}|}{central position of the grid}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.disableClip
+\newpage
+\ahfunction{sd.asapgrid.disableClip}{Disable min/max clipping}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Disable min/max clipping.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.enableClip
+\newpage
+\ahfunction{sd.asapgrid.enableClip}{Enable min/max clipping}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Enable min/max clipping.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.grid
+\newpage
+\ahfunction{sd.asapgrid.grid}{Do gridding}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Actual gridding which will be done based on several user inputs.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.plot
+\newpage
+\ahfunction{sd.asapgrid.plot}{Plot result}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Plot gridded data. Data must be saved using \ahlink{save}{sd:sd.asapgrid.save} method.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+plotchan && \multicolumn{2}{p{3.36in}|}{Which channel you want to plot. Default  is to average all the channels.}\\
+& &allowed: & int \\
+& &Default: & -1
+\\
+plotpol && \multicolumn{2}{p{3.36in}|}{Which polarization component you want to plot. Default is to average all the polarization components.}\\
+& &allowed: & int \\
+& &Default: & -1
+\\
+plotobs && \multicolumn{2}{p{3.36in}|}{Also plot observed position if True. Setting True for large amount of spectra might be time consuming.}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+plotgrid && \multicolumn{2}{p{3.36in}|}{Also plot grid center if True. Setting True for large number of grids might be time consuming.}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.save
+\newpage
+\ahfunction{sd.asapgrid.save}{Save result}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Save result. By default, output data name will be constructed
+   from first element of input data name list (e.g. 'input.asap.grid').
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+outfile && \multicolumn{2}{p{3.36in}|}{output data name}\\
+& &allowed: & string \\
+& &Default: & ''
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setData
+\newpage
+\ahfunction{sd.asapgrid.setData}{Set data to be processed}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Set data to be processed.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+infile && \multicolumn{2}{p{3.36in}|}{input data as a string or string list if you want to grid more than one data at once.}\\
+& &allowed: & string, string list \\
+& &Default: & ''
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setFunc
+\newpage
+\ahfunction{sd.asapgrid.setFunc}{Set convolution function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Set convolution function. Possible options are 'box' (Box-car,
+    default), 'sf' (prolate spheroidal), and 'gauss' (Gaussian).
+    Width of convolution function can be set using width parameter.
+    By default (-1), width is automatically set depending on each
+    convolution function. Default values for width are:
+    
+       'box': 1 pixel
+       'sf': 3 pixels
+       'gauss': 1 pixel (width is used as HWHM)
+    
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+func && \multicolumn{2}{p{3.36in}|}{Function type ('box', 'sf', 'gauss')}\\
+& &allowed: & string \\
+& &Default: & box
+\\
+width && \multicolumn{2}{p{3.36in}|}{Width of convolution function. Default (-1) is to choose pre-defined value for each convolution function.}\\
+& &allowed: & int \\
+& &Default: & -1
+\\
+
+\hline
+\end{tabular}
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setIF
+\newpage
+\ahfunction{sd.asapgrid.setIF}{Set IFNO to be processed}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+     Set IFNO to be processed. Currently, asapgrid allows to process
+     only one IFNO for one gridding run even if the data contains
+     multiple IFs. If you didn't specify IFNO, default value, which
+     is IFNO in the first spectrum, will be processed.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ifno && \multicolumn{2}{p{3.36in}|}{IFNO to be processed}\\
+& &allowed: & int \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setPolList
+\newpage
+\ahfunction{sd.asapgrid.setPolList}{Set polarizations to be processed}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+     Set list of polarization components you want to process.
+     If not specified, all POLNOs will be processed.
+
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+pollist && \multicolumn{2}{p{3.36in}|}{list of POLNOs to be processed}\\
+& &allowed: & int list \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setScanList
+\newpage
+\ahfunction{sd.asapgrid.setScanList}{Set scans to be processed}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+     Set list of scans you want to process. If not specified, all
+     scans will be processed.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+scanlist && \multicolumn{2}{p{3.36in}|}{list of SCANNOs to be processed}\\
+& &allowed: & int list \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asapgrid.setWeight
+\newpage
+\ahfunction{sd.asapgrid.setWeight}{Set weight type}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+     Set weight type. Possible options are 'uniform' (default),
+     'tint' (weight by integration time), 'tsys' (weight by
+     Tsys: 1/Tsys**2), and 'tintsys' (weight by integration time
+     as well as Tsys: tint/Tsys**2).
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+weightType && \multicolumn{2}{p{3.36in}|}{weight type ('uniform', 'tint', 'tsys', 'tintsys')}\\
+& &allowed: & string \\
+& &Default: & uniform
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%%%%% sd.asaplog
+\newpage
+\ahobject{sd.asaplog}{Wrapper object to allow for both casapy and asap logging}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Wrapper object to allow for both casapy and asap logging.
+    
+    Inside casapy this will connect to 'taskinit.casalog'. Otherwise it will
+    create its own casa log sink.
+    
+    .. note:: Do not instantiate a new one - use the :obj:'asaplog' instead.
+
+    In the ASAP logging system, log messages are accumulated to the 
+    log buffer when you post any message using 
+    \ahlink{sd.asaplog.push}{sd:sd.asaplog.push}. 
+    Buffered messages are flushed when you call 
+    \ahlink{sd.asaplog.post}{sd:sd.asaplog.post}.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{sd.asaplog.clear}{sd:sd.asaplog.clear} & Clear buffer \\
+	\ahlink{sd.asaplog.disable}{sd:sd.asaplog.disable} & Disable (or enable) logging \\
+	\ahlink{sd.asaplog.enable}{sd:sd.asaplog.enable} & Enable (or disable) logging \\
+	\ahlink{sd.asaplog.is\_enabled}{sd:sd.asaplog.is_enabled} & Query if logging is enabled \\
+	\ahlink{sd.asaplog.post}{sd:sd.asaplog.post} & Post message to the logger \\
+	\ahlink{sd.asaplog.push}{sd:sd.asaplog.push} & Push logs into the buffer \\
+
+\end{longtable}
+
+
+%% sd.asaplog.clear
+\newpage
+\ahfunction{sd.asaplog.clear}{Clear buffer}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Clear buffer. This is only effective for standalone ASAP.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.asaplog.disable
+\newpage
+\ahfunction{sd.asaplog.disable}{Disable (or enable) logging}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Disable (or enable) logging.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+flag && \multicolumn{2}{p{3.36in}|}{Set False to disable logging}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.asaplog.enable
+\newpage
+\ahfunction{sd.asaplog.enable}{Enable (or disable) logging}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Enable (or disable) logging.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+flag && \multicolumn{2}{p{3.36in}|}{Set True to enable logging}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asaplog.is_enabled
+\newpage
+\ahsdfunction{sd.asaplog.is\_enabled}{sd.asaplog.is_enabled}{Query if logging is enabled}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Query if logging is enabled.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+bool
+\hfill \\
+
+%% sd.asaplog.post
+\newpage
+\ahfunction{sd.asaplog.post}{Post message to the logger}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Post the messages to the logger. This will clear the buffered
+    logs.
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+level && \multicolumn{2}{p{3.36in}|}{The log level (severity). One of INFO, WARN, ERROR.}\\
+& &allowed: & string \\
+& &Default: & INFO
+\\
+origin && \multicolumn{2}{p{3.36in}|}{Origin of the log message.}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+%% sd.asaplog.push
+\newpage
+\ahfunction{sd.asaplog.push}{Push logs into the buffer}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Push logs into the buffer. post needs to be called to send them.
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+msg && \multicolumn{2}{p{3.36in}|}{the log message}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+newline && \multicolumn{2}{p{3.36in}|}{should we terminate with a newline}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\newpage

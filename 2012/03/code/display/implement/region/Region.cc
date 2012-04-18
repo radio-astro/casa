@@ -397,7 +397,7 @@ namespace casa {
 		bounding_width = fabs(p_trc_x-p_blc_x);
 		bounding_height = fabs(p_trc_y-p_blc_y);
 	    } else {
-		linear_offset_to_world_offset(wc_,fabs(trc_x-blc_x),fabs(trc_y-blc_y), viewer_to_casa(coord), bounding_units, bounding_width, bounding_height);
+		try { linear_offset_to_world_offset(wc_,fabs(trc_x-blc_x),fabs(trc_y-blc_y), viewer_to_casa(coord), bounding_units, bounding_width, bounding_height); } catch(...) { return; }
 	    }
 
 	    if ( coord == cvcs ) {
