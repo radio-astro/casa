@@ -749,9 +749,9 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvischan;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow)
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow)
   {
-#pragma omp for
+    //#pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
     locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
 	      locstor, 
@@ -786,7 +786,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   ixsub=1;
   iysub=1; 
-#ifdef HAS_OMP
+  /*#ifdef HAS_OMP
   Int nthreads=omp_get_max_threads();
   if (nthreads >3){
     ixsub=2;
@@ -796,7 +796,8 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
      ixsub=2;
      iysub=1; 
   }
-#endif
+  #endif
+  */
   x0=1;
   y0=1;
   nxsub=nx;
@@ -821,11 +822,11 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Bool gridcopy;
   if(useDoubleGrid_p){
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, datStorage, wgtStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csupp, nvispol, nvischan, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+    //#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, datStorage, wgtStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csupp, nvispol, nvischan, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
   
   {
     //cerr << "numthreads " << omp_get_num_threads() << endl;
-#pragma omp for nowait
+    //#pragma omp for nowait
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       //cerr << "thread id " << omp_get_thread_num() << endl;
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
@@ -871,10 +872,10 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else{
     Complex *gridstor=griddedData.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, datStorage, wgtStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csupp, nvispol, nvischan, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+    //#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, datStorage, wgtStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csupp, nvispol, nvischan, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
     {
       //cerr << "numthreads " << omp_get_num_threads() << endl;
-#pragma omp for nowait
+      //#pragma omp for nowait
       for(icounter=0; icounter < ixsub*iysub; ++icounter){
 	//cerr << "thread id " << omp_get_thread_num() << endl;
 	ix= (icounter+1)-((icounter)/ixsub)*ixsub;
@@ -1021,9 +1022,9 @@ void GridFT::get(VisBuffer& vb, Int row)
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvc;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) 
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) 
   {
-#pragma omp for
+    //#pragma omp for
   for (irow=startRow; irow<=endRow; ++irow){
     locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
 	      locstor, 
@@ -1065,7 +1066,7 @@ void GridFT::get(VisBuffer& vb, Int row)
 
 
     Int npart=1;
-#ifdef HAS_OMP
+    /*#ifdef HAS_OMP
     Int nthreads=omp_get_max_threads();
     if (nthreads >3){
       npart=4;
@@ -1073,11 +1074,12 @@ void GridFT::get(VisBuffer& vb, Int row)
     else if(nthreads >1){
      npart=2; 
     }
-#endif
+    #endif
+    */
     Int ix=0;
-#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(datStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
+    //#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(datStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
     { 
-#pragma omp for nowait
+      //#pragma omp for nowait
       for (ix=0; ix< npart; ++ix){
 	rbeg=ix*(nvisrow/npart)+1;
 	rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
