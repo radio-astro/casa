@@ -836,9 +836,9 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int * offstor=off.getStorage(del);
   const Double *dpstor=dphase.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
   {
-#pragma omp for
+    //#pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
     locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 	      locstor, 
@@ -850,7 +850,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
-  #ifdef HAS_OMP
+  /*  #ifdef HAS_OMP
   Int nthreads=omp_get_max_threads();
   if (nthreads >3){
     ixsub=2;
@@ -860,7 +860,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
      ixsub=2;
      iysub=1; 
   }
-#endif
+  #endif
+  */
   x0=1;
   y0=1;
   nxsub=nx;
@@ -886,9 +887,9 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!useDoubleGrid_p){
     Complex *gridstor=griddedData.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+    //#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
     {
-#pragma omp for nowait     
+      //#pragma omp for nowait     
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -940,9 +941,9 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else{
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+    //#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
     {
-#pragma omp for nowait     
+      //#pragma omp for nowait     
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -1107,9 +1108,9 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   const Int *cmapstor=chanMap.getStorage(del);
   const Int * suppstor=convSupport.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
   {
-#pragma omp for
+    //#pragma omp for
     for (irow=startRow; irow<=endRow; ++irow){
       locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 		locstor, 
@@ -1120,7 +1121,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   Int rbeg=startRow+1;
   Int rend=endRow+1;
   Int npart=1;
-#ifdef HAS_OMP
+  /*#ifdef HAS_OMP
   Int nthreads=omp_get_max_threads();
   if (nthreads >3){
     npart=4;
@@ -1128,11 +1129,12 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   else if(nthreads >1){
     npart=2; 
   }
-#endif
+  #endif
+  */
   Int ix=0;
-  #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
+  // #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
   {
-    #pragma omp for nowait
+    //#pragma omp for nowait
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
