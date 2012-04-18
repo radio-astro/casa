@@ -473,7 +473,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
             }
             //cout << "freqs.nelements()=" << freqs.nelements() << endl;
             Vector<Double> selChans(nchan);
-            for (uInt j = 0; j < nchan; j++) {
+            for (uInt j = 0; j < (uInt)nchan; j++) {
                 uInt k = chanstart + j * chanstep;
                 selChans(j) = freqs(k);
             }
