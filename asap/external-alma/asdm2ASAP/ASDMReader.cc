@@ -1271,6 +1271,10 @@ vector<float> ASDMReader::getOpacity()
       CalAtmosphereRow *atmrow = atmrows[row0] ;
       tau = atmrow->getTau() ;
     }
+    else {
+      tau.resize( 1 ) ;
+      tau[0] = 0.0 ;
+    }
   }
   else {
     tau.resize( 1 ) ;
