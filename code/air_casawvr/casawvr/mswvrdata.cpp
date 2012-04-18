@@ -77,8 +77,8 @@ namespace LibAIR {
     AntSet res=WVRAntennasFeedTab(ms);
     if (res.size() == 0)
     {
-      std::cout<<"Warning: No WVRs data found in Feed table (CSV-269 maybe?)"<<std::endl
-	       <<"Resorting to iterating the main table instead"<<std::endl;
+      //std::cout<<"Warning: No WVRs data found in Feed table (CSV-269 maybe?)"<<std::endl
+      //	       <<"Resorting to iterating the main table instead"<<std::endl;
       res=WVRAntennasMainTab(ms);
     }
     return res;

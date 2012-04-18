@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    return;
 		} else {
 		    double linx1, liny1;
-		    viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+		    try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
 		    building_polygon->addVertex( linx1, liny1, true );
 		    building_polygon->addVertex( linx1, liny1 );
 		    refresh( );
@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	double linx1, liny1;
-	viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+	try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
 
 	// constructing a polygon...
 	if ( memory::nullptr.check(building_polygon) == false ) {
@@ -226,7 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ( ! itsCurrentWC->inDrawArea(x, y) ) return;
 
 	double linx, liny;
-	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
 	if ( memory::nullptr.check(building_polygon) == false ) {
 	    building_polygon->addVertex( linx, liny, true );
@@ -239,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize the rectangle
 	    double linx1, liny1;
-	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 	    resizing_region_handle = resizing_region->moveHandle( resizing_region_handle, linx1, liny1 );
 	    refresh( );
 	    // refresh_needed = true;
@@ -261,7 +261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ( moving_regions.size( ) > 0 ) {
 	    // resize the rectangle
 	    double linx1, liny1;
-	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
 	    double dx = linx1 - moving_linx_;
 	    double dy = liny1 - moving_liny_;
 	    for( polygonlist::iterator iter = moving_regions.begin( ); iter != moving_regions.end( ); ++iter ) {
@@ -362,7 +362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    moving_regions.clear( );		// ensure that moving state is clear...
 
 	    double linx, liny;
-	    viewer::screen_to_linear( wc, x, y, linx, liny );
+	    try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
 
 	    bool refresh_needed = false;
 	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
@@ -376,22 +376,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    iter = xi;
 			} else {
 			    double dx=0, dy=0;
-			    switch ( ev.key( ) ) {
-				case Display::K_Left:
-				    viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
-				    break;
-				case Display::K_Right:
-				    viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
-				    break;
-				case Display::K_Down:
-				    viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
-				    break;
-				case Display::K_Up:
-				    viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
-				    break;
-				default:
-				    break;
-			    }
+			    try {
+				switch ( ev.key( ) ) {
+				    case Display::K_Left:
+					viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+					break;
+				    case Display::K_Right:
+					viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+					break;
+				    case Display::K_Down:
+					viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+					break;
+				    case Display::K_Up:
+					viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+					break;
+				    default:
+					break;
+				}
+			    } catch(...) { continue; }
 			    (*iter)->move( dx, dy );
 			    refresh_needed = true;
 			    ++iter;
@@ -557,7 +559,7 @@ bool MultiPolyTool::create( viewer::Region::RegionTypes region_type, WorldCanvas
 	itsCurrentWC = wc;
 
 	double linx, liny;
-	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 	building_polygon = (rfactory->polygon( wc, linx, liny ));
 	building_polygon->addVertex(linx,liny);
 	resizing_region_handle = 1;

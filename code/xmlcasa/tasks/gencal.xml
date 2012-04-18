@@ -24,7 +24,7 @@
 		</param>
 
 		<param type="string" name="caltype">
-			<description>The calibration type: \'amp\',\'ph\',\'sbd\',\'mbd\',\'antpos\',\'antposvla\'</description>
+			<description>The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\', \'antpos\',\'antposvla\', \'tsys\',\'evlagain\'</description>
 			<value></value>
                         <allowed kind="enum">
                             <value>amp</value>
@@ -73,6 +73,8 @@
         'mbd'= multi-band delay (phase-frequency slope over all spw)
         'antpos' = ITRF antenna position corrections
         'antposvla' = VLA-centric antenna position corrections 
+        'tsys' = Tsys from the SYSCAL table (ALMA)
+        'evlagain' = EVLA switched-power gains (experimental)
 
      The calibration specifications are not time-variable in the
      present implementation.  Calibration values can be assigned to
@@ -98,6 +100,13 @@
      site. For VLA position corrections in the VLA-centric frame, use 
      caltype='antposvla', and gencal will rotate them to ITRF before 
      storing them in the output caltable.
+
+     For Tsys (caltype='tsys', for ALMA) and EVLA switched power
+     corrections (caltype='evlagain'), the calibration parameters are
+     derived from information contained in MS subtables.  In these
+     cases, specification of spw, antenna, pol, and parameter will be
+     ignored.
+
 
      Keyword arguments:
 

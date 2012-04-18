@@ -219,7 +219,7 @@ namespace casa {
 	    if ( ! wc->inDrawArea(x,y) ) return;
 
 	    double linx, liny;
-	    viewer::screen_to_linear( wc, x, y, linx, liny );
+	    try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
 
 	    // checkPixel( ): inside, outside, handle
 	    RegionTool::State state(wc,linx,liny);
@@ -274,22 +274,24 @@ namespace casa {
 			const int pixel_step = 1;
 
 			double dx=0, dy=0;
-			switch ( ev.key( ) ) {
-			    case Display::K_Left:
-				screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
-				break;
-			    case Display::K_Right:
-				screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
-				break;
-			    case Display::K_Down:
-				screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
-				break;
-			    case Display::K_Up:
-				screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
-				break;
-			    default:
-				break;
-			}
+			try {
+			    switch ( ev.key( ) ) {
+				case Display::K_Left:
+				    screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Right:
+				    screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Down:
+				    screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				    break;
+				case Display::K_Up:
+				    screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				    break;
+				default:
+				    break;
+			    }
+			} catch(...) { return; }
 			
 			translate_moving_regions( wc, dx, dy );
 			wc->refresh( );
@@ -339,7 +341,7 @@ namespace casa {
 		if ( ! wc->inDrawArea(x,y) ) return;
 
 		double linx, liny;
-		viewer::screen_to_linear( wc, x, y, linx, liny );
+		try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
 
 		moving_handle_info.handle( ) = moving_handle_region->moveHandle( moving_handle_info.handle( ), linx, liny );
 		moving_handle_info.x( ) = linx;
@@ -351,7 +353,7 @@ namespace casa {
 	    } else if ( moving_regions.size( ) > 0 ) {
 
 		double linx, liny;
-		viewer::screen_to_linear( wc, x, y, linx, liny );
+		try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
 
 		double dx = linx - moving_ref_point.first;
 		double dy = liny - moving_ref_point.second;
@@ -402,9 +404,10 @@ namespace casa {
 				}
 
 				double lcx, lcy;
-				viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
+				try { viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy ); } catch(...) { continue; }
+
 				double px, py;
-				viewer::linear_to_pixel( wc, lcx, lcy, px, py );
+				try { viewer::linear_to_pixel( wc, lcx, lcy, px, py ); } catch(...) { continue; }
 
 				// region is outside of our pixel canvas area
 				if ( ! wc->inPC(px,py) ) continue;
@@ -437,11 +440,12 @@ namespace casa {
 				}
 
 				double lblcx, lblcy, ltrcx, ltrcy;
-				viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
-							 points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
-							 lblcx, lblcy, ltrcx, ltrcy );
+				try { viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
+							       points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
+							       lblcx, lblcy, ltrcx, ltrcy ); } catch(...) { continue; }
+
 				double pblcx, pblcy, ptrcx, ptrcy;
-				viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+				try { viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy ); } catch (...) { continue; }
 
 				// region is outside of our pixel canvas area
 				if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
@@ -502,11 +506,12 @@ namespace casa {
 				}
 
 				double lblcx, lblcy, ltrcx, ltrcy;
-				viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
-							 qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
-							 lblcx, lblcy, ltrcx, ltrcy );
+				try { viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
+							       qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
+							       lblcx, lblcy, ltrcx, ltrcy ); } catch(...) { continue; }
+
 				double pblcx, pblcy, ptrcx, ptrcy;
-				viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+				try { viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy ); } catch(...) { continue; }
 
 				// region is outside of our pixel canvas area
 				if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
@@ -542,9 +547,10 @@ namespace casa {
 				bool error = false;
 				for ( unsigned int i = 0; i < points.size( ); ++i ) {
 				    double lx, ly;
-				    viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
+				    try { viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly ); } catch(...) { continue; }
+
 				    double px, py;
-				    viewer::linear_to_pixel( wc, lx, ly, px, py );
+				    try { viewer::linear_to_pixel( wc, lx, ly, px, py ); } catch (...) { continue; }
 
 				    // region is outside of our pixel canvas area
 				    if ( ! wc->inPC(px,py) ) {

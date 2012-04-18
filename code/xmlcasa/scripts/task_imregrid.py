@@ -2,31 +2,30 @@ import os
 import shutil
 from taskinit import *
 
-def imregrid(imagename, template, output, asvelocity, axes):
-    casalog.origin('imregrid')
-    if hasattr(template, 'lower') and not template.lower() == "get":
-        # First check to see if the output file exists.  If it
-        # does then we abort.  CASA doesn't allow files to be
-        # over-written, just a policy.
-        if len(output) < 1:
-            output = imagename + '.regridded'
-            casalog.post("output was not specified - defaulting to\n\t"
-                     + output, 'INFO')
-        if os.path.exists(output):
-            raise Exception, 'Output destination ' + output + \
-              " exists.\nPlease remove it or change the output file name."
-    _myia = iatool.create()
-
+def imregrid(imagename, template, output, asvelocity, axes, shape):
     try:
+        casalog.origin('imregrid')
+        if hasattr(template, 'lower') and not template.lower() == "get":
+            # First check to see if the output file exists.  If it
+            # does then we abort.  CASA doesn't allow files to be
+            # over-written, just a policy.
+            if len(output) < 1:
+                output = imagename + '.regridded'
+                casalog.post("output was not specified - defaulting to\n\t"
+                     + output, 'INFO')
+            if os.path.exists(output):
+                raise Exception, 'Output destination ' + output + \
+                    " exists.\nPlease remove it or change the output file name."
+        _myia = iatool.create()
 
         # Figure out what the user wants.
         if not isinstance(template, dict):
             if template.lower() == 'get':
                 _myia.open(imagename)
                 csys = _myia.coordsys().torecord()
-                shap = _myia.shape()
+                shape = _myia.shape()
                 _myia.done()
-                return {'csys': csys, 'shap': shap}
+                return {'csys': csys, 'shap': shape}
             elif template.upper() in ('J2000', 'B1950', 'B1950_VLA',
                                       'GALACTIC', 'HADEC', 'AZEL',
                                       'AZELSW', 'AZELNE', 'ECLIPTIC',
@@ -34,7 +33,7 @@ def imregrid(imagename, template, output, asvelocity, axes):
                                       'SUPERGAL'):       
                 _myia.open(imagename)
                 csys = _myia.coordsys().torecord()
-                shap = _myia.shape()
+                shape = _myia.shape()
                 _myia.done()
 
                 newrefcode = template.upper()
@@ -65,15 +64,17 @@ def imregrid(imagename, template, output, asvelocity, axes):
 
                 _myia.open(template)
                 csys = _myia.coordsys().torecord()
-                shap = _myia.shape()
+                if (len(shape) == 1 and shape[0] == -1):
+                    _myia.open(imagename)
+                    shape = _myia.shape()
                 _myia.done()
         else:
             csys = template['csys']
-            shap = template['shap']
+            shape = template['shap']
 
         # The actual regridding.
         _myia.open(imagename)
-        _tmp = _myia.regrid(outfile=output, shape=shap, csys=csys, axes=axes, overwrite=True, asvelocity=asvelocity)
+        _tmp = _myia.regrid(outfile=output, shape=shape, csys=csys, axes=axes, overwrite=True, asvelocity=asvelocity)
         _myia.done()
         _tmp.done()
         return True
