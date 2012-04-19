@@ -88,19 +88,22 @@ CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
 calName      - This member function returns the new format calibration table
-               name private variable.
-msName       - This member function returns the associated MS name private
-               variable.
-visCal       - This member function returns the visibility calibration type
-               private variable.
+               name.
+msName       - This member function returns the associated MS name.
+visCal       - This member function returns the visibility calibration type.
 parType      - This member function returns the parameter type ("Complex" or
-               "Float") private variable.
-polBasis     - This member function returns the polarization basis ("L" or "C")
-               private variable.
-feed         - This member function returns the feeds private variable.
-time         - This member function returns the times private variable.
-spw          - This member function returns the spws private variable.
-numspw       - This member function returns the number of spws private variable.
+               "Float").
+polBasis     - This member function returns the polarization basis ("L" or "C").
+field        - This member function returns the field numbers.
+antenna      - This member function returns the antenna numbers.
+time         - This member function returns the times.
+feed         - This member function returns the feeds.
+numspw       - This member function returns the number of spectral windows.
+spw          - This member function returns the spectral windows.
+numChannel   - This member function returns the number of channels for each
+               spectral window.
+freq         - This member function returns the frequencies for each spectral
+               window.
 
 Class template public member functions:
 ---------------------------------------
@@ -116,42 +119,50 @@ unique<T> - This member function returns a unique vector from an input vector.
 
 Class private member functions:
 -------------------------------
-calNameGet  - This member function gets the new format calibration table name
-              from the new format calibration table.
-calNameSet  - This member function sets the new format calibration table name
-              private variable.
-msNameGet   - This member function gets the associated MS name from the new
-              format calibration table.
-msNameSet   - This member function sets the associated MS name private variable.
-visCalGet   - This member function gets the visibility calibration type from the
-              new format calibration table.
-visCalSet   - This member function sets the visibility calibration type private
-              variable.
-parTypeGet  - This member function gets the parameter type ("Complex" or
-              "Float") from the new format calibration table.
-parTypeSet  - This member function sets the parameter type ("Complex" or
-              "Float") private variable.
-polBasisGet - This member function gets the polarization basis ("L" or "C") from
-              the new format calibration table.
-polBasisSet - This member function sets the polarization basis ("L" or "C")
-              private variable.
-feedGet     - This member function gets the feeds from the new format
-              calibration table.
-feedSet     - This member function sets the feeds private variables.
-feedCheck   - This member function checks the input feed vector and returns the
-              fixed feed vector.
-timeGet     - This member function gets the times from the new format
-              calibration table.
-timeSet     - This member function sets the times private variables.
-timeCheck   - This member function checks the time range and returns the
-              corresponding time vector.
-spwGet      - This member function gets the spws from the new format calibration
-              table.
-spwSet      - This member function sets the spws private variables.
-spw_channel - This member functions checks the input spectral window and channel
-              vectors and returns the fixed spectral window and channel vectors.
-freq        - This member function creates the total frequency vector based on
-              the spectral window and channel vectors.
+calNameGet   - This member function gets the new format calibration table name
+               from the new format calibration table.
+calNameSet   - This member function sets the new format calibration table name
+               private variable.
+msNameGet    - This member function gets the associated MS name from the new
+               format calibration table.
+msNameSet    - This member function sets the associated MS name private
+               variable.
+visCalGet    - This member function gets the visibility calibration type from
+               the new format calibration table.
+visCalSet    - This member function sets the visibility calibration type private
+               variable.
+parTypeGet   - This member function gets the parameter type ("Complex" or
+               "Float") from the new format calibration table.
+parTypeSet   - This member function sets the parameter type ("Complex" or
+               "Float") private variable.
+polBasisGet  - This member function gets the polarization basis ("L" or "C")
+               from the new format calibration table.
+polBasisSet  - This member function sets the polarization basis ("L" or "C")
+               private variable.
+fieldGet     - This member function gets the field numbers from the new format
+               calibration table.
+fieldSet     - This member function sets the field numbers private variables.
+fieldCheck   - This member function checks the input field vector and returns
+               the fixed field vector.
+antennaGet   - This member function gets the antenna numbers from the new format
+               calibration table.
+antennaSet   - This member function sets the antenna numbers private variables.
+antennaCheck - This member function checks the input antenna vector and returns
+               the fixed antenna vector.
+timeGet      - This member function gets the times from the new format
+               calibration table.
+timeSet      - This member function sets the times private variables.
+timeCheck    - This member function checks the time range and returns the
+               corresponding time vector.
+feedGet      - This member function gets the feeds from the new format
+               calibration table.
+feedSet      - This member function sets the feeds private variables.
+feedCheck    - This member function checks the input feed vector and returns the
+               fixed feed vector.
+spwInfoGet   - This member function gets the spectral window information from
+               the new format calibration table.
+spwInfoSet   - This member function sets the spectral window information private
+               variables.
 
 Class template private member functions:
 ----------------------------------------
@@ -198,6 +209,13 @@ Modification history:
               parTypeSet(), polBasisSet(), feedGet(), feedSet(), timeGet(),
               timeSet(), spwGet(), and spwSet() added.  Public member functions
               feed(), time(), spw(), and numspw() added.
+2012 Apr 17 - Nick Elias, NRAO
+              Nested class CalAnalysis::SPW_INFO() added.  Private member
+              functions fieldGet(), fieldSet(), fieldCheck(), antennaGet(),
+              antennaSet(), antennaCheck(), spwInfoGet(), and spwInfoSet()
+              added.  Public member functions field(), antenna(), numChannel(),
+              and freq() added.  Private member functions spwGet(), spwSet(),
+              and spw_channel() removed.
 
 */
 
@@ -229,6 +247,8 @@ Modification history:
               Initial version.
 2012 Jan 25 - Nick Elias, NRAO
               Error checking added.
+2012 Apr 17 - Nick Elias, NRAO
+              Called new member functions to make this member function shorter.
 
 */
 
@@ -269,46 +289,16 @@ CalAnalysis::CalAnalysis( const String& oTableName ) {
   polBasisSet( polBasisGet( oTableName ) );
 
 
-  // Set the private variables correspnding the complete feed vector, the
-  // complete time vector, the complete spectral window vector, xxx
+  // Set the private variables corresponding to the field vector, antenna
+  // vector, time vector, feed vector, and spectral window information
 
-  feedSet( feedGet( oTableName ) );
+  fieldSet( fieldGet( oTableName ) );
+  antennaSet( antennaGet( oTableName ) );
   timeSet( timeGet( oTableName ) );
 
-  spwSet( spwGet( oTableName ) );
+  feedSet( feedGet( oTableName ) );
 
-
-  // Get the CHAN_FREQ column from the spectral window subtable
-
-  String oSPWName( oTableName + "/SPECTRAL_WINDOW" );
-  CTSpectralWindow oCalSPW( oSPWName, Table::Old );
-
-  ROArrayColumn<Double> oFreqACD( ROMSSpWindowColumns(oCalSPW).chanFreq() );
-
-
-  // Get the number of frequencies for each spectral window and the total number
-  // of frequencies
-
-  oNumFreq = Vector<uInt>( uiNumSPW );
-  for ( uInt s=0; s<uiNumSPW; s++ ) oNumFreq[s] = oFreqACD(s).nelements();
-
-  uiNumFreq = 0;
-  for ( uInt s=0; s<uiNumSPW; s++ ) uiNumFreq += oNumFreq[s];
-
-
-  // Create the total frequency vector
-
-  oFreq = Vector<Double>( uiNumFreq );
-
-  for ( uInt s=0,fMin=0,fMax=0; s<uiNumSPW; s++ ) {
-
-    if ( s > 0 ) fMin += oNumFreq[s-1];
-    fMax += oNumFreq[s];
-
-    Vector<Double> oFreqTemp( oFreqACD(s) );
-    for ( uInt f=fMin; f<fMax; f++ ) oFreq[f] = oFreqTemp[f-fMin];
-
-  }
+  spwInfoSet( spwInfoGet( oTableName ) );
 
 
   // Return
@@ -366,8 +356,7 @@ CalAnalysis::calName
 
 Description:
 ------------
-This member function returns the new format calibration table name private
-variable.
+This member function returns the new format calibration table.
 
 Inputs:
 -------
@@ -406,7 +395,7 @@ CalAnalysis::msName
 
 Description:
 ------------
-This member function returns the MS name private variable.
+This member function returns the MS name.
 
 Inputs:
 -------
@@ -444,7 +433,7 @@ CalAnalysis::visCal
 
 Description:
 ------------
-This member function returns the visibility calibration type private variable.
+This member function returns the visibility calibration type.
 
 Inputs:
 -------
@@ -483,8 +472,7 @@ CalAnalysis::parType
 
 Description:
 ------------
-This member function returns the parameter type ("Complex" or "Float") private
-variable.
+This member function returns the parameter type ("Complex" or "Float").
 
 Inputs:
 -------
@@ -522,8 +510,7 @@ CalAnalysis::polBasis
 
 Description:
 ------------
-This member function returns the polarization basis ("L" or "C") private
-variable.
+This member function returns the polarization basis ("L" or "C").
 
 Inputs:
 -------
@@ -557,11 +544,11 @@ String& CalAnalysis::polBasis( void ) const {
 
 /*
 
-CalAnalysis::feed
+CalAnalysis::field
 
 Description:
 ------------
-This member function returns the feeds private variable.
+This member function returns the field numbers.
 
 Inputs:
 -------
@@ -569,25 +556,25 @@ None.
 
 Outputs:
 --------
-The reference to the Vector<String> instance containing the feeds, returned via
+The reference to the Vector<uInt> instance containing the fields, returned via
 the function value.
 
 Modification history:
 ---------------------
-2012 Apr 04 - Nick Elias, NRAO
+2012 Apr 17 - Nick Elias, NRAO
               Initial version.
 
 */
 
 // -----------------------------------------------------------------------------
 
-Vector<String>& CalAnalysis::feed( void ) const {
+Vector<uInt>& CalAnalysis::field( void ) const {
 
-  // Copy the private variable containing the feeds and return it
+  // Copy the private variable containing the field numbers and return it
 
-  Vector<String>* poFeed = new Vector<String>( oFeed );
+  Vector<uInt>* poField = new Vector<uInt>( oField.copy() );
 
-  return( *poFeed );
+  return( *poField );
 
 }
 
@@ -595,11 +582,11 @@ Vector<String>& CalAnalysis::feed( void ) const {
 
 /*
 
-CalAnalysis::spw
+CalAnalysis::antenna
 
 Description:
 ------------
-This member function returns the spws private variable.
+This member function returns the antenna numbers.
 
 Inputs:
 -------
@@ -607,63 +594,25 @@ None.
 
 Outputs:
 --------
-The reference to the Vector<uInt> instance containing the spws, returned via
-the function value.
+The reference to the Vector<uInt> instance containing the antenna numbers,
+returned via the function value.
 
 Modification history:
 ---------------------
-2012 Apr 04 - Nick Elias, NRAO
+2012 Apr 17 - Nick Elias, NRAO
               Initial version.
 
 */
 
 // -----------------------------------------------------------------------------
 
-Vector<uInt>& CalAnalysis::spw( void ) const {
+Vector<uInt>& CalAnalysis::antenna( void ) const {
 
-  // Copy the private variable containing the spws and return it
+  // Copy the private variable containing the antenna numbers and return it
 
-  Vector<uInt>* poSPW = new Vector<uInt>( oSPW );
+  Vector<uInt>* poAntenna = new Vector<uInt>( oAntenna.copy() );
 
-  return( *poSPW );
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::numspw
-
-Description:
-------------
-This member function returns the number of spws private variable.
-
-Inputs:
--------
-None.
-
-Outputs:
---------
-The reference to the uInt variable containing the spws, returned via the
-function value.
-
-Modification history:
----------------------
-2012 Apr 04 - Nick Elias, NRAO
-              Initial version.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-uInt& CalAnalysis::numspw( void ) const {
-
-  // Copy the private variable containing the number of spws and return it
-
-  uInt* puiNumSPW = new uInt( uiNumSPW );
-
-  return( *puiNumSPW );
+  return( *poAntenna );
 
 }
 
@@ -675,7 +624,7 @@ CalAnalysis::time
 
 Description:
 ------------
-This member function returns the times private variable.
+This member function returns the times.
 
 Inputs:
 -------
@@ -699,9 +648,209 @@ Vector<Double>& CalAnalysis::time( void ) const {
 
   // Copy the private variable containing the times and return it
 
-  Vector<Double>* poTime = new Vector<Double>( oTime );
+  Vector<Double>* poTime = new Vector<Double>( oTime.copy() );
 
   return( *poTime );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::feed
+
+Description:
+------------
+This member function returns the feeds.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the Vector<String> instance containing the feeds, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<String>& CalAnalysis::feed( void ) const {
+
+  // Copy the private variable containing the feeds and return it
+
+  Vector<String>* poFeed = new Vector<String>( oFeed.copy() );
+
+  return( *poFeed );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::numspw
+
+Description:
+------------
+This member function returns the number of spectral windows.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the uInt variable containing the spectral windows, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+2012 Apr 17 - Nick Elias, NRAO
+              Modified to handle the SPW_INFO instance.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+uInt& CalAnalysis::numspw( void ) const {
+
+  // Copy the private variable containing the number of spectral windows and
+  // return it
+
+  uInt* puiNumSPW = new uInt( oSPWInfo.uiNumSPW );
+
+  return( *puiNumSPW );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::spw
+
+Description:
+------------
+This member function returns the spectral windows.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The reference to the Vector<uInt> instance containing the spectral windows,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+2012 Apr 17 - Nick Elias, NRAO
+              Modified to handle the SPW_INFO instance.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::spw( void ) const {
+
+  // Copy the private variable containing the spectral windows and return it
+
+  Vector<uInt>* poSPW = new Vector<uInt>( oSPWInfo.oSPW.copy() );
+
+  return( *poSPW );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::numChannel
+
+Description:
+------------
+This member function returns the number of channels for each spectral window.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The array of pointers to the Vector<uInt> instances containing the number of
+channels for each spectral window, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::numChannel( void ) const {
+
+  // Copy the private variable containing the number of channels for each
+  // spectral window and return it
+
+  Vector<uInt>* poNumChannel = new Vector<uInt>( oSPWInfo.oNumChannel.copy() );
+
+  return( *poNumChannel );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::freq
+
+Description:
+-----------
+This member function returns the frequencies for each spectral window.
+
+Inputs:
+-------
+None.
+
+Outputs:
+--------
+The array of pointers to the Vector<uInt> instances containing the frequencies
+for each spectral window, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<Vector<Double> > CalAnalysis::freq( void ) const {
+
+  // Copy the private variable containing the frequencies for each spectral
+  // window and return it
+
+  uInt uiNumSPW = oSPWInfo.uiNumSPW;
+
+  Vector<Vector<Double> > voFreq( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) voFreq[s] = oSPWInfo.voFreq[s].copy();
+
+  return( voFreq );
 
 }
 
@@ -1147,6 +1296,443 @@ void CalAnalysis::polBasisSet( const String& oPolBasisIn ) {
 
 /*
 
+CalAnalysis::fieldGet
+
+Description:
+------------
+This member function gets the field numbers from the new format calibration
+table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<uInt> instance containing the field numbers,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::fieldGet( const String& oTableName ) {
+
+  // Create a temporary field subtable instance and get the number of fields
+  // (the number of rows)
+
+  Table oTableField( oTableName+"/FIELD", Table::Old );
+  uInt uiNumRow = oTableField.nrow();
+
+
+  // Create the vector containing the field numbers and return it
+
+  Vector<uInt>* poField = new Vector<uInt>( uiNumRow );
+  indgen<uInt>( *poField, 0 );
+
+  return( *poField );
+
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::fieldSet
+
+Description:
+------------
+This member function sets the field numbers private variables.
+
+Inputs:
+-------
+oFieldIn - This reference to a Vector<uInt> instance contains the field numbers.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::fieldSet( const Vector<uInt>& oFieldIn ) {
+
+  // Set the number of fields and fields and return
+
+  uiNumField = oFieldIn.nelements();
+  oField = Vector<uInt>( oFieldIn.copy() );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::fieldCheck
+
+Description:
+------------
+This member function checks the input field vector and returns the fixed field
+vector.
+
+Inputs:
+-------
+oFieldIn - This reference to a Vector<uInt> instance contains the field numbers.
+
+Outputs:
+--------
+oFieldOut - This reference to the Vector<uInt> instance contains the checked and
+            fixed field numbers.
+The reference to the success Bool variable, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Bool CalAnalysis::fieldCheck( const Vector<uInt>& oFieldIn,
+    Vector<uInt>& oFieldOut ) const {
+
+  // Check the input field numbers
+
+  if ( oFieldIn.nelements() == 0 ) return( False );
+
+  for ( uInt f=0; f<oFieldIn.nelements(); f++ ) {
+    if ( !exists<uInt>( oFieldIn[f], oField ) ) return( False );
+  }
+
+
+  // Get the sorted unique field number vector
+
+  if ( oFieldOut.nelements() != 0 ) oFieldOut.resize();
+  oFieldOut = unique<uInt>( oFieldIn );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::antennaGet
+
+Description:
+------------
+This member function gets the antenna numbers from the new format calibration
+table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<uInt> instance containing the antenna numbers,
+returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<uInt>& CalAnalysis::antennaGet( const String& oTableName ) {
+
+  // Create a temporary antenna subtable instance and get the number of antennas
+  // (the number of rows)
+
+  Table oTableAntenna( oTableName+"/ANTENNA", Table::Old );
+  uInt uiNumRow = oTableAntenna.nrow();
+
+
+  // Create the vector containing the antenna numbers and return it
+
+  Vector<uInt>* poAntenna = new Vector<uInt>( uiNumRow );
+  indgen<uInt>( *poAntenna, 0 );
+
+  return( *poAntenna );
+
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::antennaSet
+
+Description:
+------------
+This member function sets the antenna numbers private variables.
+
+Inputs:
+-------
+oAntennaIn - This reference to a Vector<uInt> instance contains the antenna
+             numbers.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::antennaSet( const Vector<uInt>& oAntennaIn ) {
+
+  // Set the number of antennas and antennas and return
+
+  uiNumAntenna = oAntennaIn.nelements();
+  oAntenna = Vector<uInt>( oAntennaIn.copy() );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::antennaCheck
+
+Description:
+------------
+This member function checks the input antenna vector and returns the fixed
+antenna vector.
+
+Inputs:
+-------
+oAntennaIn - This reference to a Vector<uInt> instance contains the antenna
+             numbers.
+
+Outputs:
+--------
+oAntennaOut - This reference to the Vector<uInt> instance contains the checked
+              and fixed antenna numbers.
+The reference to the success Bool variable, returned via the function value.
+
+Modification history:
+---------------------
+2012 Apr 17 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Bool CalAnalysis::antennaCheck( const Vector<uInt>& oAntennaIn,
+    Vector<uInt>& oAntennaOut ) const {
+
+  // Check the input antenna numbers
+
+  if ( oAntennaIn.nelements() == 0 ) return( False );
+
+  for ( uInt a=0; a<oAntennaIn.nelements(); a++ ) {
+    if ( !exists<uInt>( oAntennaIn[a], oAntenna ) ) return( False );
+  }
+
+
+  // Get the sorted unique antenna number vector
+
+  if ( oAntennaOut.nelements() != 0 ) oAntennaOut.resize();
+  oAntennaOut = unique<uInt>( oAntennaIn );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::timeGet
+
+Description:
+------------
+This member function gets the times from the new format calibration table.
+
+Inputs:
+-------
+oTableName - This reference to a String instance contains the new format
+             calibration table name.
+
+Outputs:
+--------
+The reference to the Vector<Double> instance containing the times, returned via
+the function value.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Vector<Double>& CalAnalysis::timeGet( const String& oTableName ) {
+
+  // Create a temporary new format calibration table instance and its iterator
+  // instance
+
+  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
+
+  Block<String> oColIter( 3 );
+  oColIter[0] = String( "ANTENNA2" );
+  oColIter[1] = String( "ANTENNA1" );
+  oColIter[2] = String( "FIELD_ID" );
+
+  ROCTIter oNCTIter( oNCT, oColIter );
+  oNCTIter.reset();
+
+
+  // Get the times from the new format calibration table and return them
+
+  Vector<Double>* poTime =
+      new Vector<Double>( unique<Double>( oNCTIter.time() ) );
+
+  return( *poTime );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::timeSet
+
+Description:
+------------
+This member function sets the times private variables.
+
+Inputs:
+-------
+oTimeIn - This reference to a Vector<Double> instance contains the times.
+
+Outputs:
+--------
+None.
+
+Modification history:
+---------------------
+2012 Apr 04 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+void CalAnalysis::timeSet( const Vector<Double>& oTimeIn ) {
+
+  // Set the number of times and times and return
+
+  uiNumTime = oTimeIn.nelements();
+  oTime = Vector<Double>( oTimeIn.copy() );
+
+  return;
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
+CalAnalysis::timeCheck
+
+Description:
+------------
+This member function checks the time range and returns the corresponding time
+vector.
+
+Inputs:
+-------
+dStartTimeIn - This reference to a Double variable contains the start time.
+dStopTimeIn  - This reference to a Double variable contains the stop time.
+
+Outputs:
+--------
+oTimeOut - This reference to the Vector<Double> instance containing the time
+           stamps.
+The reference to the success Bool variable, returned via the function value.
+
+Modification history:
+---------------------
+2012 Jan 20 - Nick Elias, NRAO
+              Initial version.
+
+*/
+
+// -----------------------------------------------------------------------------
+
+Bool CalAnalysis::timeCheck( const Double& dStartTimeIn,
+    const Double& dStopTimeIn, Vector<Double>& oTimeOut ) const {
+
+  // Check the start and stop times
+
+  if ( dStartTimeIn > dStopTimeIn ) return( False );
+  if ( dStartTimeIn > oTime[uiNumTime-1] ) return( False );
+  if ( dStopTimeIn < oTime[0] ) return( False );
+
+
+  // Get the unique time values
+
+  if ( oTimeOut.nelements() != 0 ) oTimeOut.resize();
+
+  for ( uInt t=0,tOut=0; t<uiNumTime; t++ ) {
+    if ( oTime[t] >= dStartTimeIn && oTime[t] <= dStopTimeIn ) {
+      oTimeOut.resize( ++tOut, True );
+      oTimeOut[tOut-1] = oTime[t];
+    }
+  }
+
+  if ( oTimeOut.nelements() == 0 ) return( False );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// -----------------------------------------------------------------------------
+
+/*
+
 CalAnalysis::feedGet
 
 Description:
@@ -1293,7 +1879,7 @@ Bool CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
   }
 
 
-  // Get the sorted unique feed vector
+  // Get the unique feed vector
 
   if ( oFeedOut.nelements() != 0 ) oFeedOut.resize();
   oFeedOut = unique<String>( oFeedIn );
@@ -1305,6 +1891,10 @@ Bool CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
       oFeedOut[0] = "R";
       oFeedOut[1] = "L";
     }
+    if ( oFeedOut[0] == "Y" && oFeedOut[1] == "X" ) {
+      oFeedOut[0] = "X";
+      oFeedOut[1] = "Y";
+    }
   }
 
 
@@ -1318,11 +1908,12 @@ Bool CalAnalysis::feedCheck( const Vector<String>& oFeedIn,
 
 /*
 
-CalAnalysis::timeGet
+CalAnalysis::spwInfoGet
 
 Description:
 ------------
-This member function gets the times from the new format calibration table.
+This member function gets the spectral window information from the new format
+calibration table.
 
 Inputs:
 -------
@@ -1331,40 +1922,26 @@ oTableName - This reference to a String instance contains the new format
 
 Outputs:
 --------
-The reference to the Vector<Double> instance containing the times, returned via
-the function value.
+The reference to the SPW_INFO instance containing the spws, returned via the
+function value.
 
 Modification history:
 ---------------------
-2012 Apr 04 - Nick Elias, NRAO
+2012 Apr 17 - Nick Elias, NRAO
               Initial version.
 
 */
 
 // -----------------------------------------------------------------------------
 
-Vector<Double>& CalAnalysis::timeGet( const String& oTableName ) {
+CalAnalysis::SPW_INFO& CalAnalysis::spwInfoGet( const String& oTableName ) {
 
-  // Create a temporary new format calibration table instance and its iterator
-  // instance
+  // Get the spectral window information and return it
 
-  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
+  CalAnalysis::SPW_INFO* poSPWInfo;
+  poSPWInfo = new CalAnalysis::SPW_INFO( oTableName );
 
-  Block<String> oColIter( 3 );
-  oColIter[0] = String( "ANTENNA2" );
-  oColIter[1] = String( "ANTENNA1" );
-  oColIter[2] = String( "FIELD_ID" );
-
-  ROCTIter oNCTIter( oNCT, oColIter );
-  oNCTIter.reset();
-
-
-  // Get the times from the new format calibration table and return them
-
-  Vector<Double>* poTime =
-      new Vector<Double>( unique<Double>( oNCTIter.time() ) );
-
-  return( *poTime );
+  return( *poSPWInfo );
 
 }
 
@@ -1372,15 +1949,16 @@ Vector<Double>& CalAnalysis::timeGet( const String& oTableName ) {
 
 /*
 
-CalAnalysis::timeSet
+CalAnalysis::spwInfoSet
 
 Description:
 ------------
-This member function sets the times private variables.
+This member function sets the spectral window information private variables.
 
 Inputs:
 -------
-oTimeIn - This reference to a Vector<Double> instance contains the times.
+oSPWInfoIn - This reference to the SPW_INFO instance contains the spectral
+             window information.
 
 Outputs:
 --------
@@ -1388,341 +1966,20 @@ None.
 
 Modification history:
 ---------------------
-2012 Apr 04 - Nick Elias, NRAO
+2012 Apr 17 - Nick Elias, NRAO
               Initial version.
 
 */
 
 // -----------------------------------------------------------------------------
 
-void CalAnalysis::timeSet( const Vector<Double>& oTimeIn ) {
+void CalAnalysis::spwInfoSet( const CalAnalysis::SPW_INFO& oSPWInfoIn ) {
 
-  // Set the number of times and times and return
+  // Set the spectral window information and return
 
-  uiNumTime = oTimeIn.nelements();
-  oTime = Vector<Double>( oTimeIn.copy() );
+  oSPWInfo = CalAnalysis::SPW_INFO( oSPWInfoIn );
 
   return;
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::timeCheck
-
-Description:
-------------
-This member function checks the time range and returns the corresponding time
-vector.
-
-Inputs:
--------
-dStartTimeIn - This reference to a Double variable contains the start time.
-dStopTimeIn  - This reference to a Double variable contains the stop time.
-
-Outputs:
---------
-oTimeOut - This reference to the Vector<Double> instance containing the time
-           stamps.
-The reference to the success Bool variable, returned via the function value.
-
-Modification history:
----------------------
-2012 Jan 20 - Nick Elias, NRAO
-              Initial version.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-Bool CalAnalysis::timeCheck( const Double& dStartTimeIn,
-    const Double& dStopTimeIn, Vector<Double>& oTimeOut ) const {
-
-  // Check the start and stop times
-
-  if ( dStartTimeIn > oTime[uiNumTime-1] || dStopTimeIn < oTime[0] ) {
-    return( False );
-  }
-
-
-  // Get the unique and unsorted time values
-
-  if ( oTimeOut.nelements() != 0 ) oTimeOut.resize();
-
-  for ( uInt t=0,tOut=0; t<uiNumTime; t++ ) {
-    if ( oTime[t] >= dStartTimeIn && oTime[t] <= dStopTimeIn ) {
-      oTimeOut.resize( ++tOut, True );
-      oTimeOut[tOut-1] = oTime[t];
-    }
-  }
-
-
-  // Return True
-
-  return( True );
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::spwGet
-
-Description:
-------------
-This member function gets the spws from the new format calibration table.
-
-Inputs:
--------
-oTableName - This reference to a String instance contains the new format
-             calibration table name.
-
-Outputs:
---------
-The reference to the Vector<uInt> instance containing the spws, returned via
-the function value.
-
-Modification history:
----------------------
-2012 Apr 04 - Nick Elias, NRAO
-              Initial version.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-Vector<uInt>& CalAnalysis::spwGet( const String& oTableName ) {
-
-  // Create a temporary new format calibration table instance and its iterator
-  // instance
-
-  NewCalTable oNCT( oTableName, Table::Old, Table::Memory );
-
-  Block<String> oColIter( 3 );
-  oColIter[0] = String( "ANTENNA2" );
-  oColIter[1] = String( "ANTENNA1" );
-  oColIter[2] = String( "FIELD_ID" );
-
-  ROCTIter oNCTIter( oNCT, oColIter );
-  oNCTIter.reset();
-
-
-  // Get the spws from the new format calibration table, convert them from Int
-  // to uInt, and return them
-
-  Vector<Int> oSPWInt( unique<Int>( poNCTIter->spw() ) );
-
-  Vector<uInt>* poSPW = new Vector<uInt>( oSPWInt.nelements() );
-  convertArray<uInt,Int>( *poSPW, oSPWInt );
-
-  return( *poSPW );
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::spwSet
-
-Description:
-------------
-This member function sets the spws private variables.
-
-Inputs:
--------
-oSPWIn - This reference to a Vector<uInt> instance contains the spws.
-
-Outputs:
---------
-None.
-
-Modification history:
----------------------
-2012 Apr 04 - Nick Elias, NRAO
-              Initial version.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-void CalAnalysis::spwSet( const Vector<uInt>& oSPWIn ) {
-
-  // Set the number of spws and spws and return
-
-  uiNumSPW = oSPWIn.nelements();
-  oSPW = Vector<uInt>( oSPWIn.copy() );
-
-  return;
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::spw_channel
-
-Description:
-------------
-This member functions checks the input spectral window and start/stop channel
-vectors and returns the fixed spectral window and channel vectors.
-
-Inputs:
--------
-oSPWIn           - This reference to a Vector<uInt> instance contains the
-                   spectral window IDs.
-aoStartChannelIn - This reference to a Vector<uInt> instance contains the start
-                   channels for the spectral windows.
-aoStopChannelIn  - This reference to a Vector<uInt> instance contains the stop
-                   channels for the spectral windows.
-
-Outputs:
---------
-oSPWIn       - This Vector<uInt> instance contains the checked spectral window
-               IDs.
-aoChannelOut - This array of Vector<uInt> instances containing the checked
-               channel numbers.  Each element of the array corresponds to an
-               element of oSPWIn.
-The reference to the success Bool variable, returned via the function value.
-
-Modification history:
----------------------
-2012 Jan 20 - Nick Elias, NRAO
-              Initial version.
-2012 Mar 14 - Nick Elias, NRAO
-              I replaced the array of vectors containing the channel numbers
-              with an array of start channels and an array of stop channels (the
-              index corresponds to spectral window).
-
-*/
-
-// -----------------------------------------------------------------------------
-
-Bool CalAnalysis::spw_channel( const Vector<uInt>& oSPWIn,
-    const Vector<uInt>& aoStartChannelIn, const Vector<uInt>& aoStopChannelIn,
-    Vector<uInt>& oSPWOut, Vector<uInt>* aoChannelOut ) const {
-
-  // Check the input spectral window and start/stop channel values
-
-  uInt uiNumSPWIn = oSPWIn.nelements();
-  if ( uiNumSPWIn == 0 ) return( False );
-
-  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
-    if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
-    if ( aoStartChannelIn[s] > aoStopChannelIn[s] ) return( False );
-  }
-
-
-  // Get the unique and unsorted spectral window values.  If there are duplicate
-  // values, return False.
-
-  if ( oSPWOut.nelements() != 0 ) oSPWOut.resize();
-  oSPWOut = unique<uInt>( oSPWIn );
-
-  uInt uiNumSPWOut = oSPWOut.nelements();
-  if ( uiNumSPWOut != uiNumSPWIn ) return( False );
-
-
-  // Get the unique and unsorted channel values
-
-  if ( aoChannelOut == NULL ) {
-    aoChannelOut = new Vector<uInt> [uiNumSPWOut];
-  }
-
-  for ( uInt s=0; s<uiNumSPWOut; s++ ) {
-    uInt uiNumChannel = aoStopChannelIn[s] - aoStartChannelIn[s] + 1;
-    aoChannelOut[s].resize( uiNumChannel, False );
-    indgen<uInt>( aoChannelOut[s], aoStartChannelIn[s] );
-  }
-
-
-  // Return True
-
-  return( True );
-
-}
-
-// -----------------------------------------------------------------------------
-
-/*
-
-CalAnalysis::freq
-
-Description:
-------------
-This member function creates the total frequency vector based on the spectral
-window and channel vectors.
-
-NB: The spectral window and channel vectors should already be checked by the
-CalAnalysis::spw_channel() function before feeding them to this function.
-
-Inputs:
--------
-oSPWIn      - This reference to a Vector<uInt> instance contains the spectral
-              window IDs.
-aoChannelIn - This array of Vector<uInt> instances containing the channel
-              numbers.  Each element of the array corresponds to an element of
-              oSPWIn.
-
-Outputs:
---------
-oFreqOut - This reference to the Vector<Double> instance contains the
-           frequencies.
-The reference to the success Bool variable, returned via the function value.
-
-Modification history:
----------------------
-2012 Jan 20 - Nick Elias, NRAO
-              Initial version.
-
-*/
-
-// -----------------------------------------------------------------------------
-
-Bool CalAnalysis::freq( const Vector<uInt>& oSPWIn,
-    const Vector<uInt>* const aoChannelIn, Vector<Double>& oFreqOut ) const {
-
-  // Check the input spectral window and channel values
-
-  uInt uiNumSPWIn = oSPWIn.nelements();
-  if ( uiNumSPWIn == 0 ) return( False );
-
-  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
-
-    if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
-
-    for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
-      if ( aoChannelIn[s][c] >= oNumFreq[oSPWIn[s]] ) return( False );
-    }
-
-  }
-
-
-  // Get the frequency values
-
-  if ( oFreqOut.nelements() != 0 ) oFreqOut.resize();
-  uInt uiNumFreqOut = 0;
-
-  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
-
-    uInt fStart = 0;
-    for ( uInt s2=0; s2<oSPWIn[s]; s2++ ) fStart += oNumFreq[s2];
-
-    for ( uInt c=0; c<aoChannelIn[s].nelements(); c++ ) {
-      oFreqOut.resize( ++uiNumFreqOut, True );
-      oFreqOut[uiNumFreqOut-1] = oFreq[aoChannelIn[s][c]+fStart];
-    }
-
-  }
-
-
-  // Return True
-
-  return( True );
 
 }
 
@@ -1848,6 +2105,190 @@ CalAnalysis& CalAnalysis::operator=( const CalAnalysis& oCalAnalysis ) {
 
 // -----------------------------------------------------------------------------
 // End of CalAnalysis class
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Start of CalAnalysis::SPW_INFO nested class public member functions
+// -----------------------------------------------------------------------------
+
+CalAnalysis::SPW_INFO::SPW_INFO( const String& oTableName ) {
+
+  String oSPWName( oTableName + "/SPECTRAL_WINDOW" );
+  CTSpectralWindow oCalSPW( oSPWName, Table::Old );
+  ROArrayColumn<Double> oFreqACD( ROMSSpWindowColumns(oCalSPW).chanFreq() );
+
+  bValid = True;
+
+  uiNumSPW = oFreqACD.nrow();
+
+  oSPW = Vector<uInt>( uiNumSPW );
+  indgen<uInt>( oSPW, 0 );
+
+  oNumChannel = Vector<uInt>( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) oNumChannel[s] = oFreqACD( s ).nelements();
+
+  voFreq = Vector<Vector<Double> >( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) voFreq[s] = oFreqACD( s );
+
+  return;
+
+}
+
+// --- //
+
+CalAnalysis::SPW_INFO::SPW_INFO( const SPW_INFO& oSPWInfoIn ) {
+
+  bValid = oSPWInfoIn.bValid;
+
+  uiNumSPW = oSPWInfoIn.uiNumSPW;
+  oSPW = oSPWInfoIn.oSPW.copy();
+
+  oNumChannel = oSPWInfoIn.oNumChannel.copy();
+
+  voFreq = Vector<Vector<Double> >( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) voFreq[s] = oSPWInfoIn.voFreq[s].copy();
+
+  return;
+
+}
+
+// --- //
+
+CalAnalysis::SPW_INFO::SPW_INFO( void ) {
+  bValid = False;
+  uiNumSPW = 0;
+  oSPW = Vector<uInt>();
+  oNumChannel = Vector<uInt>();
+  voFreq = Vector<Vector<Double> >();
+  return;
+}
+
+// --- //
+
+CalAnalysis::SPW_INFO::~SPW_INFO( void ) {}
+
+// --- //
+
+CalAnalysis::SPW_INFO& CalAnalysis::SPW_INFO::subset(
+    const Vector<uInt>& oSPWIn, const Vector<uInt>& oStartChannelIn,
+    const Vector<uInt>& oStopChannelIn ) {
+
+  uInt uiNumSPWIn = oSPWIn.nelements();
+
+  CalAnalysis::SPW_INFO* poSPWInfo = new CalAnalysis::SPW_INFO();
+
+  Vector<uInt>* poSPWOut = new Vector<uInt>();
+  if ( !spwCheck( oSPWIn, *poSPWOut ) ) {
+    delete poSPWOut;
+    return( *poSPWInfo );
+  }
+  if ( poSPWOut->nelements() != uiNumSPWIn ) {
+    delete poSPWOut;
+    return( *poSPWInfo );
+  }
+  delete poSPWOut;
+
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+    if ( oStartChannelIn[s] > oStopChannelIn[s] ) return( *poSPWInfo );
+  }
+
+  poSPWInfo->bValid = True;
+
+  poSPWInfo->uiNumSPW = uiNumSPWIn;
+  poSPWInfo->oSPW = oSPWIn.copy();
+
+  poSPWInfo->oNumChannel = Vector<uInt>( uiNumSPWIn );
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+    poSPWInfo->oNumChannel[s] = oStopChannelIn[s] - oStartChannelIn[s] + 1;
+  }
+
+  poSPWInfo->voFreq = Vector<Vector<Double> >( uiNumSPWIn );
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+    poSPWInfo->voFreq[s] = Vector<Double>( poSPWInfo->oNumChannel[s] );
+    for ( uInt c=oStartChannelIn[s]; c<=oStopChannelIn[s]; c++ ) {
+      poSPWInfo->voFreq[s][c] = voFreq[oSPWIn[s]][c];
+    }
+  }
+
+  return( *poSPWInfo );
+
+}
+
+// --- //
+
+Bool& CalAnalysis::SPW_INFO::freq( const Vector<uInt>& oSPWIn,
+    const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
+    Vector<Double>& oFreqOut ) {
+
+  CalAnalysis::SPW_INFO oSPWInfoSub(
+      subset( oSPWIn, oStartChannelIn, oStopChannelIn ) );
+
+  Bool *pbValid = new Bool;
+
+  if ( !oSPWInfoSub.bValid ) {
+    *pbValid = False;
+    return( *pbValid );
+  }
+
+  if ( oFreqOut.nelements() != 0 ) oFreqOut.resize();
+
+  for ( uInt s=0; s<oSPWInfoSub.uiNumSPW; s++ ) {
+    uInt uiNumChannel0 = oFreqOut.nelements();
+    uInt uiNumChannel = oSPWInfoSub.oNumChannel[s];
+    oFreqOut.resize( uiNumChannel0+uiNumChannel, True );
+    for ( uInt c=0; c<uiNumChannel; c++ ) {
+      oFreqOut[c+uiNumChannel0] = oSPWInfoSub.voFreq[s][c];
+    }
+  }
+
+  *pbValid = True;
+
+  return( *pbValid );
+
+}
+
+// --- //
+
+Bool CalAnalysis::SPW_INFO::spwCheck( const Vector<uInt>& oSPWIn,
+    Vector<uInt>& oSPWOut ) {
+
+  uInt uiNumSPWIn = oSPWIn.nelements();
+
+  if ( uiNumSPWIn == 0 ) return( False );
+
+  for ( uInt s=0; s<uiNumSPWIn; s++ ) {
+    if ( !exists<uInt>( oSPWIn[s], oSPW ) ) return( False );
+  }
+
+  if ( oSPWOut.nelements() != 0 ) oSPWOut.resize();
+  oSPWOut = unique<uInt>( oSPWIn );
+
+  return( True );
+
+}
+
+// --- //
+
+CalAnalysis::SPW_INFO& CalAnalysis::SPW_INFO::operator=(
+    const CalAnalysis::SPW_INFO& oSPWInfoIn ) {
+
+  if ( this != &oSPWInfoIn ) {
+    bValid = oSPWInfoIn.bValid;
+    uiNumSPW = oSPWInfoIn.uiNumSPW;
+    oSPW = oSPWInfoIn.oSPW.copy();
+    oNumChannel = oSPWInfoIn.oNumChannel.copy();
+    voFreq = Vector<Vector<Double> >( uiNumSPW );
+    for ( uInt s=0; s<uiNumSPW; s++ ) {
+      voFreq[s] = oSPWInfoIn.voFreq[s].copy();
+    }
+  }
+
+  return( *this );
+
+}
+
+// -----------------------------------------------------------------------------
+// End of CalAnalysis::SPW_INFO nested class public member functions
 // -----------------------------------------------------------------------------
 
 };

@@ -82,6 +82,7 @@ namespace casa {
 // Start of CalAnalysis class definition
 // -----------------------------------------------------------------------------
 
+
 /*
 
 CalAnalysis
@@ -128,19 +129,22 @@ CalAnalysis  - This constructor gets information from the new format calibration
                table for further processing by the stats<T>() function.
 ~CalAnalysis - This destructor deallocates the internal memory of an instance.
 calName      - This member function returns the new format calibration table
-               name private variable.
-msName       - This member function returns the associated MS name private
-               variable.
-visCal       - This member function returns the visibility calibration type
-               private variable.
+               name.
+msName       - This member function returns the associated MS name.
+visCal       - This member function returns the visibility calibration type.
 parType      - This member function returns the parameter type ("Complex" or
-               "Float") private variable.
-polBasis     - This member function returns the polarization basis ("L" or "C")
-               private variable.
-feed         - This member function returns the feeds private variable.
-time         - This member function returns the times private variable.
-spw          - This member function returns the spws private variable.
-numspw       - This member function returns the number of spws private variable.
+               "Float").
+polBasis     - This member function returns the polarization basis ("L" or "C").
+field        - This member function returns the field numbers.
+antenna      - This member function returns the antenna numbers.
+time         - This member function returns the times.
+feed         - This member function returns the feeds.
+numspw       - This member function returns the number of spectral windows.
+spw          - This member function returns the spectral windows.
+numChannel   - This member function returns the number of channels for each
+               spectral window.
+freq         - This member function returns the frequencies for each spectral
+               window.
 
 Class template public member functions:
 ---------------------------------------
@@ -156,42 +160,50 @@ unique<T> - This member function returns a unique vector from an input vector.
 
 Class private member functions:
 -------------------------------
-calNameGet  - This member function gets the new format calibration table name
-              from the new format calibration table.
-calNameSet  - This member function sets the new format calibration table name
-              private variable.
-msNameGet   - This member function gets the associated MS name from the new
-              format calibration table.
-msNameSet   - This member function sets the associated MS name private variable.
-visCalGet   - This member function gets the visibility calibration type from the
-              new format calibration table.
-visCalSet   - This member function sets the visibility calibration type private
-              variable.
-parTypeGet  - This member function gets the parameter type ("Complex" or
-              "Float") from the new format calibration table.
-parTypeSet  - This member function sets the parameter type ("Complex" or
-              "Float") private variable.
-polBasisGet - This member function gets the polarization basis ("L" or "C") from
-              the new format calibration table.
-polBasisSet - This member function sets the polarization basis ("L" or "C")
-              private variable.
-feedGet     - This member function gets the feeds from the new format
-              calibration table.
-feedSet     - This member function sets the feeds private variables.
-feedCheck   - This member function checks the input feed vector and returns the
-              fixed feed vector.
-timeGet     - This member function gets the times from the new format
-              calibration table.
-timeSet     - This member function sets the times private variables.
-timeCheck   - This member function checks the time range and returns the
-              corresponding time vector.
-spwGet      - This member function gets the spws from the new format calibration
-              table.
-spwSet      - This member function sets the spws private variables.
-spw_channel - This member functions checks the input spectral window and channel
-              vectors and returns the fixed spectral window and channel vectors.
-freq        - This member function creates the total frequency vector based on
-              the spectral window and channel vectors.
+calNameGet   - This member function gets the new format calibration table name
+               from the new format calibration table.
+calNameSet   - This member function sets the new format calibration table name
+               private variable.
+msNameGet    - This member function gets the associated MS name from the new
+               format calibration table.
+msNameSet    - This member function sets the associated MS name private
+               variable.
+visCalGet    - This member function gets the visibility calibration type from
+               the new format calibration table.
+visCalSet    - This member function sets the visibility calibration type private
+               variable.
+parTypeGet   - This member function gets the parameter type ("Complex" or
+               "Float") from the new format calibration table.
+parTypeSet   - This member function sets the parameter type ("Complex" or
+               "Float") private variable.
+polBasisGet  - This member function gets the polarization basis ("L" or "C")
+               from the new format calibration table.
+polBasisSet  - This member function sets the polarization basis ("L" or "C")
+               private variable.
+fieldGet     - This member function gets the field numbers from the new format
+               calibration table.
+fieldSet     - This member function sets the field numbers private variables.
+fieldCheck   - This member function checks the input field vector and returns
+               the fixed field vector.
+antennaGet   - This member function gets the antenna numbers from the new format
+               calibration table.
+antennaSet   - This member function sets the antenna numbers private variables.
+antennaCheck - This member function checks the input antenna vector and returns
+               the fixed antenna vector.
+timeGet      - This member function gets the times from the new format
+               calibration table.
+timeSet      - This member function sets the times private variables.
+timeCheck    - This member function checks the time range and returns the
+               corresponding time vector.
+feedGet      - This member function gets the feeds from the new format
+               calibration table.
+feedSet      - This member function sets the feeds private variables.
+feedCheck    - This member function checks the input feed vector and returns the
+               fixed feed vector.
+spwInfoGet   - This member function gets the spectral window information from
+               the new format calibration table.
+spwInfoSet   - This member function sets the spectral window information private
+               variables.
 
 Class template private member functions:
 ----------------------------------------
@@ -238,6 +250,13 @@ Modification history:
               parTypeSet(), polBasisSet(), feedGet(), feedSet(), timeGet(),
               timeSet(), spwGet(), and spwSet() added.  Public member functions
               feed(), time(), spw(), and numspw() added.
+2012 Apr 17 - Nick Elias, NRAO
+              Nested class CalAnalysis::SPW_INFO() added.  Private member
+              functions fieldGet(), fieldSet(), fieldCheck(), antennaGet(),
+              antennaSet(), antennaCheck(), spwInfoGet(), and spwInfoSet()
+              added.  Public member functions field(), antenna(), numChannel(),
+              and freq() added.  Private member functions spwGet(), spwSet(),
+              and spw_channel() removed.
 
 */
 
@@ -247,13 +266,35 @@ class CalAnalysis {
 
   public:
 
-    // Real/Amplitude/Phase enums.
+    // Real/Amplitude/Phase enums
     typedef enum RAP {
       INIT=-1, REAL=0, AMPLITUDE, PHASE
     } RAP;
 
+    // SPW_INFO nested class
+    class SPW_INFO {
+      public:
+        Bool bValid;
+        uInt uiNumSPW;
+        Vector<uInt> oSPW;
+        Vector<uInt> oNumChannel;
+        Vector<Vector<Double> > voFreq;
+        SPW_INFO( const String& oTableName );
+        SPW_INFO( const SPW_INFO& oSPWInfoIn );
+        SPW_INFO( void );
+        ~SPW_INFO( void );
+        SPW_INFO& subset( const Vector<uInt>& oSPWIn,
+            const Vector<uInt>& oStartChannelIn,
+            const Vector<uInt>& oStopChannelIn );
+        Bool& freq( const Vector<uInt>& oSPWIn,
+            const Vector<uInt>& oStartChannelIn,
+            const Vector<uInt>& oStopChannelIn, Vector<Double>& oFreqIn );
+        Bool spwCheck( const Vector<uInt>& oSPWIn, Vector<uInt>& oSPWOut );
+        SPW_INFO& operator=( const SPW_INFO& oSPWInfoIn );
+    };
+
     // OUTPUT nested class (allowed T: CalStats::NONE, CalStatsFitter::FIT,
-    // or CalStatsHist::HIST), used to hold the vector output of stats<T>().
+    // or CalStatsHist::HIST), used to hold the vector output of stats<T>()
     template <typename T>
     class OUTPUT {
       public:
@@ -279,11 +320,19 @@ class CalAnalysis {
     String& parType( void ) const;
     String& polBasis( void ) const;
 
-    // Get the feeds, times, spws, number of spws, xxx
-    Vector<String>& feed( void ) const;
+    // Get the fields, antennas, times, and feeds
+    // spectral windows
+    Vector<uInt>& field( void ) const;
+    Vector<uInt>& antenna( void ) const;
     Vector<Double>& time( void ) const;
-    Vector<uInt>& spw( void ) const;
+    Vector<String>& feed( void ) const;
+
+    // Get the number of spectral windows, spectral windows, number of channels
+    // for each spectral window, and frequencies for each spectral window
     uInt& numspw( void ) const;
+    Vector<uInt>& spw( void ) const;
+    Vector<uInt>& numChannel( void ) const;
+    Vector<Vector<Double> > freq( void ) const;
 
     // Calculate statistics for the specified fields, antennas, time range,
     // feeds, spectral windows, and channels (allowed T: CalStats::NONE gets
@@ -302,7 +351,7 @@ class CalAnalysis {
     template <typename T>
     static Bool& exists( const T& tValue, const Vector<T>& oValue );
 
-    // Function to return unsorted unique values of a vector
+    // Function to return sorted unique values of a vector
     template <typename T>
     static Vector<T>& unique( const Vector<T>& oVector );
 
@@ -313,55 +362,62 @@ class CalAnalysis {
     ROCTIter* poNCTIter;
     
     // Get calibration table name and set the private variable
+    String oCalName;
     String& calNameGet( const String& oTableName );
-    String oCalName; void calNameSet( const String& oCalNameIn );
+    void calNameSet( const String& oCalNameIn );
 
     // Get associated MS name and set the private variable
+    String oMSName;
     String& msNameGet( const String& oTableName );
-    String oMSName; void msNameSet( const String& oMSNameIn );
+    void msNameSet( const String& oMSNameIn );
 
     // Get visibility calibration type and set the private variable
+    String oVisCal;
     String& visCalGet( const String& oTableName );
-    String oVisCal; void visCalSet( const String& oVisCalIn );
+    void visCalSet( const String& oVisCalIn );
 
     // Get parameter column type and set the private variable
+    String oParType;
     String& parTypeGet( const String& oTableName );
-    String oParType; void parTypeSet( const String& oParTypeIn );
+    void parTypeSet( const String& oParTypeIn );
 
     // Get polarization basis and set the private variable
+    String oPolBasis;
     String& polBasisGet( const String& oTableName );
-    String oPolBasis; void polBasisSet( const String& oPolBasisIn );
+    void polBasisSet( const String& oPolBasisIn );
 
-    // Get the feeds and set the private variables
-    Vector<String>& feedGet( const String& oTableName );
-    uInt uiNumFeed; Vector<String> oFeed;
-    void feedSet( const Vector<String>& oFeedIn );
+    // Get field numbers and set the private variables
+    uInt uiNumField; Vector<uInt> oField;
+    Vector<uInt>& fieldGet( const String& oTableName );
+    void fieldSet( const Vector<uInt>& oFieldIn );
+    Bool fieldCheck( const Vector<uInt>& oFieldIn,
+        Vector<uInt>& oFieldOut ) const;
+
+    // Get antenna numbers and set the private variables
+    uInt uiNumAntenna; Vector<uInt> oAntenna;
+    Vector<uInt>& antennaGet( const String& oTableName );
+    void antennaSet( const Vector<uInt>& oAntennaIn );
+    Bool antennaCheck( const Vector<uInt>& oAntennaIn,
+        Vector<uInt>& oAntennaOut ) const;
 
     // Get the times and set the private variables
-    Vector<Double>& timeGet( const String& oTableName );
     uInt uiNumTime; Vector<Double> oTime;
+    Vector<Double>& timeGet( const String& oTableName );
     void timeSet( const Vector<Double>& oTimeIn );
-
-    // Get the spws and set the private variables
-    Vector<uInt>& spwGet( const String& oTableName );
-    uInt uiNumSPW; Vector<uInt> oSPW;
-    void spwSet( const Vector<uInt>& oSPWIn );
-
-    uInt uiNumFreq;
-    Vector<uInt> oNumFreq;
-    Vector<Double> oFreq;
-
-    // These functions check the inputs against possible values and return
-    // unsorted unique values
-    Bool feedCheck( const Vector<String>& oFeedIn,
-        Vector<String>& oFeedOut ) const;
     Bool timeCheck( const Double& dStartTimeIn, const Double& dStopTimeIn,
         Vector<Double>& oTimeOut ) const;
-    Bool spw_channel( const Vector<uInt>& oSPWIn,
-        const Vector<uInt>& oStartChannelIn, const Vector<uInt>& oStopChannelIn,
-        Vector<uInt>& oSPWOut, Vector<uInt>* aoChannelOut ) const;
-    Bool freq( const Vector<uInt>& oSPWIn,
-        const Vector<uInt>* const aoChannelIn, Vector<Double>& oFreqOut ) const;
+
+    // Get the feeds and set the private variables
+    uInt uiNumFeed; Vector<String> oFeed;
+    Vector<String>& feedGet( const String& oTableName );
+    void feedSet( const Vector<String>& oFeedIn );
+    Bool feedCheck( const Vector<String>& oFeedIn,
+        Vector<String>& oFeedOut ) const;
+
+    // Get the spectral window information and set the private variables
+    SPW_INFO oSPWInfo; uInt uiNumFreq; Vector<Double> oFreq;
+    SPW_INFO& spwInfoGet( const String& oTableName );
+    void spwInfoSet( const SPW_INFO& oSPWInfoIn );
 
     // This function sorts the input feed x frequency(spw) x row(spw,time) cube
     // (from ROCTIter) to feed x frequency x time (for CalStats)
@@ -505,8 +561,8 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     const Vector<uInt>& oStopChannelIn, const CalStats::AXIS& eAxisIterUserID,
     const RAP& eRAP, const Double& dJumpMax, const CalStats::ARG<T>& oArg ) {
 
-  // Initialize the output vector containing statistics versus field ID, antenna
-  // 1, and antenna 2
+  // Initialize the output vector containing statistics for each field ID,
+  // antenna 1, and antenna 2
 
   uInt uiNumOutput = 0;
 
@@ -514,21 +570,68 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
       new Vector<CalAnalysis::OUTPUT<T> >();
 
 
-  // Check the inputs
+  // Check the fields and create a new field vector
 
-  if ( oAntenna1In.nelements() != oAntenna2In.nelements() ) {
+  Vector<uInt> oFieldNew;
+
+  if ( !fieldCheck( oFieldIn, oFieldNew ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Antenna ID vectors have different lengths"
-        << LogIO::POST;
+    log << LogIO::WARN << "One or more invalid fields" << LogIO::POST;
     return( *poOutput );
   }
 
-  if ( dStartTimeIn > dStopTimeIn ) {
+
+  // Check the antennas and create the new antenna vectors
+
+  Vector<uInt> oAntenna1New;
+  Vector<uInt> oAntenna2New;
+
+  if ( !antennaCheck( oAntenna1In, oAntenna1New ) ) {
     LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Start time is larger than the stop time"
-        << LogIO::POST;
+    log << LogIO::WARN << "One or more invalid antenna 1" << LogIO::POST;
     return( *poOutput );
   }
+
+  if ( !antennaCheck( oAntenna2In, oAntenna2New ) ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "One or more invalid antenna 2" << LogIO::POST;
+    return( *poOutput );
+  }
+
+
+  // Check the time range and create the corresponding time vector
+
+  Vector<Double> oTimeNew;
+
+  if ( !timeCheck( dStartTimeIn, dStopTimeIn, oTimeNew ) ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid start and/or stop times" << LogIO::POST;
+    return( *poOutput );
+  }
+
+
+  // Check the feeds and create the new feed vector
+
+  Vector<String> oFeedNew;
+
+  if ( !feedCheck( oFeedIn, oFeedNew ) ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid feed(s)" << LogIO::POST;
+    return( *poOutput );
+  }
+
+
+  // Check the spectral window info and create the new spectral window instance
+
+  Vector<Double> oFreqNew;
+
+  if ( !oSPWInfo.freq( oSPWIn, oStartChannelIn, oStopChannelIn, oFreqNew ) ) {
+    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
+    log << LogIO::WARN << "Invalid spectral window information" << LogIO::POST;
+  }
+
+
+  // Check the user-defined iteration axis and jump parameter
 
   if ( eAxisIterUserID != CalStats::FREQUENCY &&
        eAxisIterUserID != CalStats::TIME ) {
@@ -545,54 +648,14 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
   }
 
 
-  // Check the feeds, time range, spectral windows, and channels, then create
-  // the temporary vectors.  The temporary total frequency vector is also
-  // created.
-
-  Vector<String> oFeedTemp = Vector<String>();
-  Bool bFeed = feedCheck( oFeedIn, oFeedTemp );
-  if ( !bFeed ) {
-    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Invalid feed ID(s)" << LogIO::POST;
-    return( *poOutput );
-  }
-
-  Vector<Double> oTimeTemp = Vector<Double>();
-  Bool bTime = timeCheck( dStartTimeIn, dStopTimeIn, oTimeTemp );
-  if ( !bTime ) {
-    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Invalid time range" << LogIO::POST;
-    return( *poOutput );
-  }
-
-  Vector<uInt> oSPWTemp = Vector<uInt>();
-  Vector<uInt>* aoChannelTemp = new Vector<uInt> [oSPWIn.nelements()];
-  Bool bSPW_Channel = spw_channel( oSPWIn, oStartChannelIn, oStopChannelIn,
-      oSPWTemp, aoChannelTemp );
-  if ( !bSPW_Channel ) {
-    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Invalid spectral window(s) and/or channels"
-        << LogIO::POST;
-    return( *poOutput );
-  }
-
-  Vector<Double> oFreqTemp = Vector<Double>();
-  Bool bFreq = freq( oSPWTemp, aoChannelTemp, oFreqTemp );
-  if ( !bFreq ) {
-    LogIO log( LogOrigin( "CalAnalysis", "stats<T>()", WHERE ) );
-    log << LogIO::WARN << "Invalid frequencies" << LogIO::POST;
-    return( *poOutput );
-  }
-
-
   // Calculate statistics for each field, antenna1, and antenna2 that are
   // found in the input parameters
 
   while ( !poNCTIter->pastEnd() ) {
 
-    if ( !exists<uInt>( poNCTIter->field()[0], oFieldIn ) ||
-         !exists<uInt>( poNCTIter->antenna1()[0], oAntenna1In ) ||
-         !exists<uInt>( poNCTIter->antenna2()[0], oAntenna2In ) ) {
+    if ( !exists<uInt>( poNCTIter->field()[0], oFieldNew ) ||
+         !exists<uInt>( poNCTIter->antenna1()[0], oAntenna1New ) ||
+         !exists<uInt>( poNCTIter->antenna2()[0], oAntenna2New ) ) {
       poNCTIter->next();
       continue;
     }
@@ -602,7 +665,7 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
     poOutput->operator[](uiNumOutput-1).uiField = poNCTIter->field()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna1 = poNCTIter->antenna1()[0];
     poOutput->operator[](uiNumOutput-1).uiAntenna2 = poNCTIter->antenna2()[0];
-    poOutput->operator[](uiNumOutput-1).oSPW = oSPWTemp;
+    poOutput->operator[](uiNumOutput-1).oSPW = oSPWInfo.oSPW;
     poOutput->operator[](uiNumOutput-1).oStartChan = oStartChannelIn;
     poOutput->operator[](uiNumOutput-1).oStopChan = oStopChannelIn;
 
@@ -611,24 +674,23 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
     if ( oParType == String("Float") ) {
       Cube<Float> oParamF = select<Float>( parse<Float>(poNCTIter->fparam()),
-          oFeedTemp, oFreqTemp, oTimeTemp );
+          oFeedNew, oFreqNew, oTimeNew );
       oParamD.resize( oParamF.shape(), 0.0 );
       convertArray<Double,Float>( oParamD, oParamF.copy() );
     } else {
       Cube<Complex> oParamC = select<Complex>(
-          parse<Complex>(poNCTIter->cparam()), oFeedTemp, oFreqTemp,
-          oTimeTemp );
+          parse<Complex>(poNCTIter->cparam()), oFeedNew, oFreqNew, oTimeNew );
       oParamDC.resize( oParamC.shape(), 0.0 );
       convertArray<DComplex,Complex>( oParamDC, oParamC.copy() );
     }
 
     Cube<Float> oParamErr = select<Float>( parse<Float>(poNCTIter->paramErr()),
-        oFeedTemp, oFreqTemp, oTimeTemp );
+        oFeedNew, oFreqNew, oTimeNew );
     Cube<Double> oParamErrD( oParamErr.shape(), 0.0 );
     convertArray<Double,Float>( oParamErrD, oParamErr );
 
-    Cube<Bool> oFlag = select<Bool>( parse<Bool>(poNCTIter->flag()), oFeedTemp,
-        oFreqTemp, oTimeTemp );
+    Cube<Bool> oFlag = select<Bool>( parse<Bool>(poNCTIter->flag()), oFeedNew,
+        oFreqNew, oTimeNew );
 
     CalStats* poCS = NULL;
 
@@ -637,15 +699,15 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
       switch ((uInt) eRAP) {
         case (uInt) REAL:
           poCS = (CalStats*) new CalStatsReal( oParamD, oParamErrD, oFlag,
-              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID );
+              oFeedNew, oFreqNew, oTimeNew, eAxisIterUserID );
           break;
 	case (uInt) AMPLITUDE:
 	  poCS = (CalStats*) new CalStatsAmp( oParamDC, oParamErrD, oFlag,
-              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True );
+              oFeedNew, oFreqNew, oTimeNew, eAxisIterUserID, True );
           break;
 	case (uInt) PHASE:
 	  poCS = (CalStats*) new CalStatsPhase( oParamDC, oParamErrD, oFlag,
-              oFeedTemp, oFreqTemp, oTimeTemp, eAxisIterUserID, True,
+              oFeedNew, oFreqNew, oTimeNew, eAxisIterUserID, True,
               dJumpMax );
           break;
         default:
@@ -842,6 +904,8 @@ Cube<T>& CalAnalysis::parse( const Cube<T>& oCubeIn ) const {
 
   // Initialize the output cube
 
+  uInt uiNumFreq = sum( oSPWInfo.oNumChannel );
+
   Cube<T>* poCubeOut = new Cube<T>( uiNumFeed, uiNumFreq, uiNumTime, (T) 0 );
 
 
@@ -851,16 +915,16 @@ Cube<T>& CalAnalysis::parse( const Cube<T>& oCubeIn ) const {
 
   uInt uiFreqStart = 0;
 
-  for ( uInt s=0; s<uiNumSPW; s++ ) {
+  for ( uInt s=0; s<oSPWInfo.uiNumSPW; s++ ) {
 
     IPosition oInStart( 3, 0, 0, s*uiNumTime );
-    IPosition oInDelta( 3, uiNumFeed, oNumFreq[s], uiNumTime );
+    IPosition oInDelta( 3, uiNumFeed, oSPWInfo.oNumChannel[s], uiNumTime );
     Slicer oIn( oInStart, oInDelta );
 
-    if ( s > 0 ) uiFreqStart += oNumFreq[s-1];
+    if ( s > 0 ) uiFreqStart += oSPWInfo.oNumChannel[s-1];
 
     IPosition oOutStart( 3, 0, uiFreqStart, 0 );
-    IPosition oOutDelta( 3, uiNumFeed, oNumFreq[s], uiNumTime );
+    IPosition oOutDelta( 3, uiNumFeed, oSPWInfo.oNumChannel[s], uiNumTime );
     Slicer oOut( oOutStart, oOutDelta );
 
     poCubeOut->operator()(oOut) = oCubeIn(oIn);
