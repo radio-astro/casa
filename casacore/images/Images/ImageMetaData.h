@@ -77,8 +77,9 @@ class ImageMetaData {
 
     public:
         template <class T> ImageMetaData(const ImageInterface<T>& image) :
-			itsInfo(image.imageInfo()), itsUnits(image.units()),
-            itsCoordinates(image.coordinates()), itsShape(image.shape()) {}
+			_info(image.imageInfo()), _units(image.units()),
+            _coordinates(image.coordinates()), _shape(image.shape()) {
+        }
 
         // Get the axis number of the spectral axis of this image (0-based).
         Int spectralAxisNumber() const; 
@@ -172,10 +173,10 @@ class ImageMetaData {
         Bool getDirectionPixelArea(Quantity& pixelArea) const;
 
     private:
-        const ImageInfo itsInfo;
-        const Unit itsUnits;
-        const CoordinateSystem& itsCoordinates;
-        const IPosition itsShape;
+        const ImageInfo _info;
+        const Unit _units;
+        const CoordinateSystem& _coordinates;
+        const IPosition _shape;
 
 
 };
