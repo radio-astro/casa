@@ -18,8 +18,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
-                s = "File '%s' not found." % (filename)
-                raise Exception, s
+                errstr = "File '%s' not found." % (filename)
+                raise Exception, errstr
 
             # Default file name
             if ( outfile == '' ):
@@ -30,18 +30,18 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             outfilename = os.path.expanduser(outfilename)
             if not overwrite and (outform!='ascii' and outform!='ASCII'):
                 if os.path.exists(outfilename):
-                    s = "Output file '%s' exist." % (outfilename)
-                    raise Exception, s
+                    errstr = "Output file '%s' exist." % (outfilename)
+                    raise Exception, errstr
 
-            s=sd.scantable(infile,average=False,antenna=antenna)
-            if not (isinstance(s,Scantable)):
+            sorg=sd.scantable(infile,average=False,antenna=antenna)
+            if not (isinstance(sorg,Scantable)):
                     raise Exception, 'infile=%s is not found' % infile
 
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
                     casalog.post( "Initial Scantable:" )
                     #casalog.post( s._summary() )
-                    s._summary()
+                    sorg._summary()
 
 
             # A scantable selection
@@ -67,12 +67,20 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
             try:
                 #Apply the selection
-                s.set_selection(sel)
+                sorg.set_selection(sel)
                 del sel
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
                 return
+
+            # Copy scantable when usign disk storage not to modify
+            # the original table.
+            if sd.rcParams['scantable.storage'] == 'disk':
+                    s = sorg.copy()
+            else:
+                    s = sorg
+            del sorg
 
             #Average within each scan
             if scanaverage:
@@ -82,11 +90,11 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
             # Smooth the spectrum
             if kernel=='' or kernel=='none':
-                s = "kernel need to be specified"
-                raise Exception, s
+                errstr = "kernel need to be specified"
+                raise Exception, errstr
             elif kernel!='hanning' and kwidth<=0:
-                s = "kernel should be > 0"
-                raise Exception, s
+                errstr = "kernel should be > 0"
+                raise Exception, errstr
             else:
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum before smoothing
@@ -109,8 +117,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
                     if kernel == 'regrid':
                             if not qa.isquantity(chanwidth):
-                                    s = "Invalid quantity chanwidth "+chanwidth
-                                    raise Exception, s
+                                    errstr = "Invalid quantity chanwidth "+chanwidth
+                                    raise Exception, errstr
                             qchw = qa.quantity(chanwidth)
                             oldUnit = s.get_unit()
                             if qchw['unit'] in ("", "channel", "pixel"):
@@ -119,8 +127,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                                qa.compare(chanwidth,"1m/s"):
                                     s.set_unit(qchw['unit'])
                             else:
-                                    s = "Invalid dimension of quantity chanwidth "+chanwidth
-                                    raise Exception, s
+                                    errstr = "Invalid dimension of quantity chanwidth "+chanwidth
+                                    raise Exception, errstr
                             casalog.post( "Regridding spectra in width "+chanwidth )
                             s.regrid_channel(width=qchw['value'],plot=verify,insitu=True)
                             s.set_unit(oldUnit)
@@ -160,9 +168,6 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             else:
                     outform = 'ASAP'
                     smfile = project
-
-            if overwrite and os.path.exists(outfilename):
-                    os.system('rm -rf %s' % outfilename)
 
             s.save(smfile,outform,overwrite)
             if outform!='ASCII':
