@@ -1623,7 +1623,7 @@ ia.done()
 
  
    <method type="function" name="fromascii">
-   <shortdescription>Construct a \casa\ image by conversion from an ascii file</shortdescription>
+   <shortdescription>This function converts a pre-existing ascii file into a \casa\ image. </shortdescription>
    
 <input>
   
@@ -1666,77 +1666,102 @@ ia.done()
 <returns type="bool"/>
 <description>
 
-This function is used to convert an ascii disk file to a \casa\
-\imagefile.  If {\stfaf outfile} is given, the image is written to the
-specified disk file.  If {\stfaf outfile} is unset, the Image \tool\
-is associated with a temporary image.  This temporary image may be in
-memory or on disk, depending on its size.  When you close the Image
+This function is used to create a \casa\
+\image from a pre-existing ASCII file. You might want to use this if you
+just want to create a quick image to use to see what various image analysis methods
+do. The image analysis tool on
+which the method is called will always reference the created image if
+this method is successful. Thus, calling open() on that tool is not necessary, but
+if the tool is already open, referencing another image, that reference will be
+silently destroyed and replaced with a reference to the image created by
+fromascii().
+If {\stfaf outfile} is given, the image is also written to the
+specified disk file.  If {\stfaf outfile} is unset, the image analysis tool
+on which this method was called references a temporary image.  This temporary
+image may be in
+memory or on disk, depending on its size.  When you close the image analysis
 \tool\ (with the <link
-anchor="images:image.close.function">close</link> function) this
+anchor="images:image.close.function">close</link> function) the
 temporary image is deleted.
 
 You must specify the shape of the image.  The image must be stored
-in the ascii file, one row at a time.  This row must be of the
-correct length and there must be the correct number of rows.
-For example, let us say the shape of your image is 
-{\cf [nx,ny,nz] = [3,4,2]}, then
-the image should be stored as 
+in the ascii file. If the shape of the image having N axes is to be
+[s_0, s_1, s_2, ..., s_(N-1)],
+where s_i is the integral number of pixels along axis number i, the file must have
+(s_1 * s_2 * ... * s_(N-1)) rows and each row must have s_0 numerical
+values delimited by the value specified by the sep parameter, or spaces if sep is
+not specified. Pixel locations are incremented by row number in such a way that the second
+axis changes fastest. As an example, say we want to create an image with
+shape=[3,4,2]. There must be 4*2 = 8 rows in the ascii file, and each row must have
+3 space-delimited numerical values. The first row represents values of pixels
+[0, 0, 0], [1, 0, 0], and [2, 0, 0]. The second row represents values of pixels [0, 1, 0],
+[1, 1, 0], and [2, 1, 0]. The fifth row represents values of pixels [0, 0, 1], [1, 0, 1],
+and [2, 0, 1]. The sixth values of pixels [0, 1, 1], [1, 1, 1], and [2, 1, 1,]. And so on.
 
+To further illustrate, say this is our file:
 
-1 1 1                   # row 1; y = 1, z = 1
-2 2 2                   # row 2; y = 2, z = 1
-3 3 3                   # row 3; y = 3, z = 1
-4 4 4                   # row 4; y = 4, z = 1
-1.5 1.5 1.5             # row 5; y = 1, z = 2
-2.5 2.5 2.5             # row 6; y = 2, z = 2
-3.5 3.5 3.5             # row 7; y = 3, z = 2
-4.5 4.5 4.5             # row 8; y = 4, z = 2
+1 2 3
+4 5 6
+7 8 9
+10 11 12
+13 14 15
+16 17 18
+19 20 21
+22 23 24
 
+When read with ia.fromascii(), ary = ia.getchunk() would return the following array:
+ary[0, 0, 0] = 1
+ary[1, 0, 0] = 2
+ary[2, 0, 0] = 3
+ary[0, 1, 0] = 4
+ary[1, 1, 0] = 5
+ary[2, 1, 0] = 6
+ary[0, 2, 0] = 7
+ary[1, 2, 0] = 8
+ary[2, 2, 0] = 9
+ary[0, 3, 0] = 10
+ary[1, 3, 0] = 11
+ary[2, 3, 0] = 12
+ary[0, 0, 1] = 13
+ary[1, 0, 1] = 14
+ary[2, 0, 1] = 15
+ary[0, 1, 1] = 16
+ary[1, 1, 1] = 17
+ary[2, 1, 1] = 18
+ary[0, 2, 1] = 19
+ary[1, 2, 1] = 20
+ary[2, 2, 1] = 21
+ary[0, 3, 1] = 22
+ary[1, 3, 1] = 23
+ary[2, 3, 1] = 24
 
-The Coordinate System, provided as a <link
-anchor="images:coordsys">Coordsys</link> {\tool} converted to a record
+The coordinate system, provided as a <link
+anchor="images:coordsys">coordsys</link> {\tool} converted to a record
 with coordsys torecord, is optional.  If you provide it, it must be
 dimensionally consistent with the pixels array you give (see also
 <link anchor="images:image.coordsys.function">coordsys</link>).
 
-If you don't provide the Coordinate System (unset), a default Coordinate System
+If you don't provide the coordinate system, a default coordinate system
 is made for you.  If {\stfaf linear=F} (the default) then it is a
 standard RA/DEC/Stokes/Spectral Coordinate System depending exactly upon
 the shape of the {\stfaf pixels} array (Stokes axis must be no longer
 than 4 pixels and you may find the spectral axis coming out before the
 Stokes axis if say, {\cf shape=[64,64,32,4]}).  Extra dimensions are
-given linear coordinates.  If {\stfaf linear=T} then you get a linear
-Coordinate System. 
+given linear coordinates.  If {\stfaf linear=T}, then all axes are linear
+in the resulting coordinate system.
 
 </description>
 
 <example>
-The ascii image file shown above can be read as
-an image this way:
 
 """
-#
-print "\t----\t fromascii Ex 1 \t----"
-a = [[[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]],
-     [[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]],
-     [[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]]]
-ia.fromarray('outimage.im',a,overwrite=true)
-ia.toASCII('myimage.ascii',overwrite=true)     # write ascii image file
-ia.close()                                     # then read ascii image file
-ia.fromascii('myimage.app', 'myimage.ascii', shape=[3,4,2], overwrite=true)
-ia.toASCII('myimage2.ascii',overwrite=true)
-ia.close()
-#!diff myimage.ascii myimage2.ascii
-#
+# say the above file presented above is stored in a file
+# named image.txt
+ia.fromascii(outfile="myimage.im", infile='image.txt', shape=[3,4,2], overwrite=true)
+# should return [3, 4, 2]
+ia.shape()
+# call other ia methods then close the tool
+ia.done()
 """
 
 </example>

@@ -1082,6 +1082,8 @@ def getLinePars(cmdline, mlist=[]):
                 dicpars['observation'] = xval
 
             elif xkey == "mode":
+                if xval == 'manualflag':
+                    xval = 'manual'
                 dicpars['mode'] = xval
 
             elif mlist != []:
@@ -1374,7 +1376,9 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
     ''' Setup the parameters of each agent and call the tflagger tool
         myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
-        apply --> it's a boolean to control whether to apply or unapply the flags'''
+        apply --> it's a boolean to control whether to apply or unapply the flags
+        writeflags --> used by mode=rflag only
+        display --> used by mode='rflag only'''
 
 
     if not myflagcmd.__len__() >0:

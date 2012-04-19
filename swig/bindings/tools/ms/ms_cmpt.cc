@@ -3026,11 +3026,18 @@ ms::uvsub(Bool reverse)
        return rstat;
      }
 
+     // Ensure CORRECTED_DATA exists and is initialized
+     //   (no-op if CORRECTED_DATA already present)
+     VisSetUtil::addScrCols(*itsMS,False,True,True,False);
+
+
+     // Open VisSet w/out triggering scr cols
+     //  because CORRECTED_DATA has already been added above and
+     //  MODEL_DATA is either present or automatic in VSU::UVSub
      Block<int> noSort;
      Matrix<Int> allChannels;
      Double intrvl = 0;
-
-     VisSet vs(*itsMS, noSort, allChannels, intrvl);
+     VisSet vs(*itsMS, noSort, allChannels,False, intrvl, False,False);
      VisSetUtil::UVSub(vs, reverse);
 
      rstat = True;

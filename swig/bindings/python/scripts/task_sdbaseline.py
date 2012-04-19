@@ -3,6 +3,7 @@ from taskinit import *
 
 import asap as sd
 from asap._asap import Scantable
+from asap import _to_list
 import pylab as pl
 
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
@@ -32,18 +33,57 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				s = "Output file '%s' exist." % (outfilename)
 				raise Exception, s
 		
-		s=sd.scantable(infile,average=False,antenna=antenna)
+		sorg=sd.scantable(infile,average=False,antenna=antenna)
 		
 		if ( abs(plotlevel) > 1 ):
 			casalog.post( "Initial Raw Scantable:" )
 			#casalog.post( s._summary() )
-			s._summary()
+			sorg._summary()
 		
 		# check if the data contains spectra
-		if (s.nchan()==1):
+		if (sorg.nchan()==1):
 			s = "Cannot process the input data. It contains only single channel data."
 			raise Exception, s
-		
+
+		# A scantable selection
+		# Scan selection
+		scans = _to_list(scanlist,int) or []
+
+		# IF selection
+		ifs = _to_list(iflist,int) or []
+
+		# Select polarizations
+		pols = _to_list(pollist,int) or []
+
+		# Actual selection
+		sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
+
+		# Select source names
+		if ( field != '' ):
+			sel.set_name(field)
+			# NOTE: currently can only select one
+			# set of names this way, will probably
+			# need to do a set_query eventually
+
+
+		try:
+			#Apply the selection
+			sorg.set_selection(sel)
+			del sel
+		except Exception, instance:
+			casalog.post( str(instance), priority = 'ERROR' )
+			casalog.post( 'No output written.' )
+			return
+
+		# Copy scantable when usign disk storage not to modify
+		# the original table.
+		if sd.rcParams['scantable.storage'] == 'disk': #and infile != outfile:
+			s = sorg.copy()
+		else:
+			s = sorg
+		del sorg
+                ###############################
+
 		# get telescope name
 		#'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
 		antennaname = s.get_antennaname()
@@ -151,53 +191,6 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		else:
 			casalog.post( 'Using current doppler convention' )
 		
-		# Select scan and field
-		sel = sd.selector()
-		
-		# Set up scanlist
-		if ( type(scanlist) == list ):
-			# is a list
-			scans = scanlist
-		else:
-			# is a single int, make into list
-			scans = [ scanlist ]
-		# Now select them
-		if ( len(scans) > 0 ):
-			sel.set_scans(scans)
-		
-		# Select source names
-		if ( field != '' ):
-			sel.set_name(field)
-			# NOTE: currently can only select one
-			# set of names this way, will probably
-			# need to do a set_query eventually
-		
-		# Select IFs
-		if ( type(iflist) == list ):
-			# is a list
-			ifs = iflist
-		else:
-			# is a single int, make into list
-			ifs = [ iflist ]
-		if ( len(ifs) > 0 ):
-			# Do any IF selection
-			sel.set_ifs(ifs)
-		
-		# Select polarizations
-		if (type(pollist) == list):
-			pols = pollist
-		else:
-			pols = [pollist]
-		if(len(pols) > 0 ):
-			sel.set_polarisations(pols)
-		
-		try:
-			#Apply the selection
-			s.set_selection(sel)
-		except Exception, instance:
-			casalog.post( str(instance), priority = 'ERROR' )
-			return
-		del sel
 		
 		scanns = s.getscannos()
 		sn=list(scanns)
@@ -310,18 +303,18 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				
 			if (maskmode == 'auto'):
 				if (blfunc == 'poly'):
-					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 				elif (blfunc == 'cspline'):
-					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 				elif (blfunc == 'sinusoid'):
-					s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 			else:
 				if (blfunc == 'poly'):
-					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 				elif (blfunc == 'cspline'):
-					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 				elif (blfunc == 'sinusoid'):
-					s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
+					s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
 				
 			# the above 14 lines will eventually shrink into the following 2 commands:
 			#
@@ -386,8 +379,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			outform = 'ASAP'
 			spefile = project
 		
-		if overwrite and os.path.exists(outfilename):
-			os.system('rm -rf %s' % outfilename)
+		#if overwrite and os.path.exists(outfilename):
+		#	os.system('rm -rf %s' % outfilename)
 		
                 s.save(spefile,outform,overwrite)
 		if outform != 'ASCII': casalog.post( "Wrote output "+outform+" file "+spefile )

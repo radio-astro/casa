@@ -37,12 +37,13 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (list,manual,clip,shadow,quack,elevation,\
-tfcrop,rflag,extend,unflag,summary)</description>
+                <description>Flagging mode (list/manual/clip/shadow/quack/elevation/\
+tfcrop/rflag/extend/unflag/summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
                     <value>manual</value>
+                    <value>manualflag</value>
                     <value>clip</value>
                     <value>shadow</value>
                     <value>quack</value>
@@ -321,16 +322,17 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
 
             <!-- APPLYFLAGS parameters -->
-            <param type="bool" name="applyflags">
-                <description>Run and apply flags based on the parameters or the list given in inpfile</description>
-                <value>True</value>
-            </param>
-            <param type="bool" name="writeflags" subparam="true">
-                <description>Write Flags to the MS</description>
-                <value>True</value>
+            <param type="string" name="action">
+                    <description>Action to perform in MS and/or in inpfile (none/apply/calculate)</description>
+                    <value>apply</value>
+                    <allowed kind="enum">
+                    <value>apply</value>
+                    <value>calculate</value>
+                    <value></value>
+                    </allowed>
             </param>
             <param type="string" name="display" subparam="true">
-                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <description>Display data and/or end-of-MS reports at runtime (data/report/both).</description>
                 <value type="string"></value>
             </param>
             <param type="bool" name="flagbackup" subparam="true">
@@ -341,7 +343,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
             <!-- SAVEPARS parameter -->
             <param type="bool" name="savepars">
-                <description>Save the current parameters to the MS or to a file</description>
+                <description>Save the current parameters to the FLAG_CMD table or to a file</description>
                 <value>False</value>
             </param>
             <param type="string" name="outfile" subparam="true">
@@ -535,12 +537,15 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     </equals>
                 </when>
 
-                <when param="applyflags">
-                    <equals type="bool" value="True">
-                        <default param="writeflags"><value type="bool">True</value></default>
+                <when param="action">
+                    <equals value="apply">
                         <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">True</value></default>
                     </equals>
+                    <equals value="calculate">
+                        <default param="display"><value type="string"></value></default>
+                    </equals>
+                    <equals value=""></equals>            
                 </when>
                                
                <when param="savepars">
@@ -572,28 +577,28 @@ The task will flag a subset of data based on the following modes of operation:
     Keyword arguments:
     vis -- Name of input visibility file
         default: '' (none) 
-        example: vis='ngc5921.ms'
+        example: vis='uid___A002_X1e366e_X357.ms'
 
         Any flagging will only be applied to the specified selection.
 
               antenna -- Select data based on baseline
-                    default: '' (all); example: antenna='5&amp;6' baseline 5-6
-                    antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
-                    antenna='5' # all cross-correlation baselines between antenna 5 and all other 
-								  available antennas
-                    antenna='5,6' # all baselines with antennas 5 and 6
-                    antenna='1&amp;&amp;1' # only the auto-correlation baselines for antenna 1
-                    antenna='1&amp;&amp;*' # cross and auto-correlation baselines between antenna 1
+                    default: '' (all); example: antenna='DV04&amp;DV06' baseline DV04-DV06
+                    antenna='DV04&amp;DV06;DV07&amp;DV10' #baselines DV04-DV06 and DV07-DV10
+                    antenna='DV06' # all cross-correlation baselines between antenna DV06 and all other 
+                                  available antennas
+                    antenna='DV04,DV06' # all baselines with antennas DV04 and DV06
+                    antenna='DV06&amp;&amp;DV06' # only the auto-correlation baselines for antenna DV06
+                    antenna='DV04&amp;&amp;*' # cross and auto-correlation baselines between antenna DV04
                                              and all other available antennas
-                    antenna='1~7&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
-											       in range 1~7
+                    antenna='DV04~DV07&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
+                                                   in range DV04~DV07
 
               spw -- Select data based on spectral window and channels
                     default: '' (all); example: spw='1'
                     spw='&lt;2' #spectral windows less than 2
                     spw='&gt;1' #spectral windows greater than 1
-                    spw='0:0~10' # first 10 channels from spw 0
-                    spw='0:0~5;56~60' # multiple separated channel chunks.
+                    spw='1:0~10' # first 10 channels from spw 1
+                    spw='1:0~5;120~128' # multiple separated channel chunks.
 
                     Note : For modes clip, tfcrop and rflag, channel-ranges can be excluded 
                     from flagging by selecting ranges such as spw='0:0~5;10~63'. This is a way to
@@ -601,7 +606,7 @@ The task will flag a subset of data based on the following modes of operation:
 
               correlation -- Correlation types or expression.
                     default: '' (all correlations or 'ABS_ALL' for modes clip and tfcrop);
-                    example: correlation='RR,LL' or
+                    example: correlation='XX,YY' or
                     options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
                              any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'WVR'
                              'WVR' refers to the water vapour radiometer of ALMA data.
@@ -1064,28 +1069,17 @@ The task will flag a subset of data based on the following modes of operation:
                     s['flagged']                : amount of flagged data
         
 
-    applyflags -- Run the task to produce flags or not. 
-           default: True
-           options: True/False
-                When set to False, the underlying tool will not be executed and no
-                flags will be produced. No data selection will be done either. This
-                is useful when used together with parameter savepars to only save the
-                current parameters (or list of parameters) to the FLAG_CMD sub-table or
-                to an external file. 
+    action -- Action to perform in MS or in the input list of parameters. 
+        options: 'none', 'apply','calculate'
+        default: 'apply'
 
-        writeflags -- Choose whether or not to write flags to the MS 
-               default: True
-               options: True/False
-                    The tflagdata task can be run in 'writeflags=False' mode just to inspect the data,
-                    or to try different parameters and converge on a set that works for a particular
-                    dataset. Use the display parameter to inspect the data.
-                Note: this parameter is disabled when mode='summary'.
-                 
-        display -- Display data and/or end-of-MS reports at run-time.        
-               	   default: 'none'
-               	   options: 'none', 'data', 'report', 'both'
+        'apply' -- Apply the flags to the MS.
+        
+               display -- Display data and/or end-of-MS reports at run-time.        
+                   default: 'none'
+                   options: 'none', 'data', 'report', 'both'
 
-                  	 'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+                     'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
 
                       This option opens a GUI to show the 2D time-freq planes of
                       the data with old and new flags, for all correlations per baseline.
@@ -1095,15 +1089,31 @@ The task will flag a subset of data based on the following modes of operation:
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 
-                  	'report' --> displays end-of-MS reports on the screen.
+                    'report' --> displays end-of-MS reports on the screen.
 
-                  	'both' --> displays data per chunk and end-of-MS reports on the screen
-                                 
-        flagbackup -- Automatically backup flags before running the tool.
+                    'both' --> displays data per chunk and end-of-MS reports on the screen
+
+               flagbackup -- Automatically backup flags before running the tool.
                             Flagversion names are chosen automatically, and are based on the
                             mode being used.
                    default: True
                    options: True/False                    
+        
+        'calculate' -- Only calculate the flags but do not write them to the MS. This is
+                     useful if used together with the display to analyse the results before
+                     writing to the MS.
+
+               display -- Display data and/or end-of-MS reports at run-time. See extended description
+                          above. 
+                   default: 'none'
+                   options: 'none', 'data', 'report', 'both'
+                   
+        ' ' -- When set to empty, the underlying tool will not be executed and no flags
+                will be produced. No data selection will be done either. This is useful
+                when used together with the parameter savepars to only save the current
+                parameters (or list of parameters) to the FLAG_CMD sub-table or to an
+                external file.  
+                 
 
     savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
                 default: False
@@ -1153,7 +1163,7 @@ The task will flag a subset of data based on the following modes of operation:
 
         tflagdata(vis='my.ms',mode='clip',clipzeros=True)
         
-    9) Flag only auto-correlations.
+    9) Flag only auto-correlations using the antenna selection.
        
         tflagdata(vis=self.vis, mode='manual', antenna='*&amp;&amp;&amp;')
             
