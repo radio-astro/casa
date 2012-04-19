@@ -1091,6 +1091,12 @@ The task will flag a subset of data based on the following modes of operation:
                     'report' --> displays end-of-MS reports on the screen.
 
                     'both' --> displays data per chunk and end-of-MS reports on the screen
+
+               flagbackup -- Automatically backup flags before running the tool.
+                            Flagversion names are chosen automatically, and are based on the
+                            mode being used.
+                   default: True
+                   options: True/False                    
         
         'calculate' -- Only calculate the flags but do not write them to the MS. This is
                      useful if used together with the display to analyse the results before
@@ -1102,34 +1108,11 @@ The task will flag a subset of data based on the following modes of operation:
                    options: 'none', 'data', 'report', 'both'
                    
         ' ' -- When set to empty, the underlying tool will not be executed and no flags
-                        will be produced. No data selection will be done either. This is useful
-                        when used together with the parameter savepars to only save the current
-                        parameters (or list of parameters) to the FLAG_CMD sub-table or to an
-                        external file.  
+                will be produced. No data selection will be done either. This is useful
+                when used together with the parameter savepars to only save the current
+                parameters (or list of parameters) to the FLAG_CMD sub-table or to an
+                external file.  
                  
-        display -- Display data and/or end-of-MS reports at run-time.        
-               	   default: 'none'
-               	   options: 'none', 'data', 'report', 'both'
-
-                  	 'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
-
-                      This option opens a GUI to show the 2D time-freq planes of
-                      the data with old and new flags, for all correlations per baseline.
-                      -- The GUI allows stepping through all baselines (prev/next) in
-                      the current chunk (set by 'ntime'), and stepping to the next-chunk.
-                      -- The 'tflagdata' task can be quit from the GUI, in case it becomes
-                      obvious that the current set of parameters is just wrong.
-                      -- There is an option to stop the display but continue flagging.
-
-                  	'report' --> displays end-of-MS reports on the screen.
-
-                  	'both' --> displays data per chunk and end-of-MS reports on the screen
-                                 
-        flagbackup -- Automatically backup flags before running the tool.
-                            Flagversion names are chosen automatically, and are based on the
-                            mode being used.
-                   default: True
-                   options: True/False                    
 
     savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
                 default: False
