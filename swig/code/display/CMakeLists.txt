@@ -336,6 +336,7 @@ casa_add_library( display
   implement/QtPlotter/QtDrawColors.cc
   implement/QtPlotter/QtDrawSettings.cc
   implement/QtPlotter/QtDrawer.cc
+  implement/QtPlotter/Util.cc
   implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/QtWCBox.cc

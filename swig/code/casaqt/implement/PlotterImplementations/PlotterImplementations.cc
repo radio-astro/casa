@@ -64,6 +64,7 @@ String PlotterImplementations::implementationAbout(Plotter::Implementation i,
     return ss.str();
 }
 
+
 String
 PlotterImplementations::implementationVersion(Plotter::Implementation i) {
     switch(i) {

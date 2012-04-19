@@ -716,9 +716,9 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 	agents_list_p.tableSummary();
 	if (writeflags)
 		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
-	else
-		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
-			<< LogIO::POST;
+//	else
+//		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
+//			<< LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();

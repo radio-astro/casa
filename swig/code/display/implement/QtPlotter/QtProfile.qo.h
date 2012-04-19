@@ -181,6 +181,50 @@ private:
    void messageFromProfile(QString &msg);
    void setCollapseVals(const Vector<Float> &spcVals);
 
+   /**
+    * Initializes the settings in the "Set Position"
+    * tab.
+    */
+   void initSpectrumPosition();
+   void setTitle( const QString& shape );
+   void copyToLastEvent( const String& c, const Vector<Double> &px,
+   	    		const Vector<Double> &py,
+   	    		const Vector<Double> &wx,
+   	    		const Vector<Double> &wy );
+   void setPlotType( int wcArraySize );
+   bool checkCube();
+   void assignCoordinate(const String& c);
+   void initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
+   			const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
+   			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
+   void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
+   								const Vector<double> &wxv, const Vector<double> &wyv );
+   bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv );
+   bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
+   void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
+									const Vector<double> wxv, const Vector<double> wyv );
+   void pageUpdate( int selectionIndex, int unitIndex );
+   bool populatePixels( QList<int> &pixelX, QList<int> &pixelY,
+   			const QList<double> &worldX, const QList<double> &worldY ) const ;
+   bool populateWorlds( const QList<int> &pixelX, const QList<int> &pixelY,
+      			QList<double> &worldX, QList<double> &worldY );
+   void fillPointWorld( QList<double> &worldX, QList<double> &worldY ) const;
+   void fillPointPixel( QList<int> &pixelX, QList<int>&pixelY ) const;
+   bool fillBoxPixel( QList<int> &pixelX, QList<int>&pixelY );
+   bool fillBoxWorld( QList<double> &worldX, QList<double> & worldY );
+   bool fillBasedOnBoxSpecification(  const double*  const firstXPix, const double * const firstYPix,
+   		const double* const secondXPix, const double* const secondYPix,
+   		double* const blcxPix, double* const blcyPix,
+   		double* const trcxPix, double* const trcYPix );
+   double spinToRadians( bool dec, QSpinBox *degSpinBox,
+   		QSpinBox* minSpinBox, QLineEdit* secSpinBox) const;
+   void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
+   		QLabel* const x2Label, QLabel* const y2Label );
+
+   Int scaleAxis();
+   void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
+
+   //Conversion
    QString getRaDec(double x, double y);
 
    ImageAnalysis* analysis;
@@ -190,6 +234,7 @@ private:
    SpectralFitter    *fitter;
 
    QHash<QString, ImageAnalysis*> *over;
+   const String WORLD_COORDINATES;
    String coordinate;
    String coordinateType;
    String xaxisUnit;
@@ -246,8 +291,26 @@ private:
    	QString shape_;
    };
 
+
    typedef std::map<int,spectra_info> SpectraInfoMap;
    SpectraInfoMap spectra_info_map;
+
+   //Used for spectrum positioning
+   enum PositionTypeIndex { POINT, BOX, END_POSITION_TYPE };
+   enum UnitIndex {RADIAN, PIXEL, END_UNIT };
+   QIntValidator* pixelValidator;
+   QDoubleValidator* secValidator;
+   enum StackPages { POINT_PIXEL, POINT_RA_DEC, BOX_PIXEL, BOX_RA_DEC };
+   enum BoxSpecificationIndex { TL_WIDTH_LENGTH, CENTER_WIDTH_LENGTH, TL_BR, BL_TR,
+	   TL_WIDTH_LENGTH_WORLD, CENTER_WIDTH_LENGTH_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
+   QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
+
+
+   private slots:
+   	    void setPosition();
+   		void locationSelectionTypeChanged( int index );
+   		void locationUnitsChanged( int index );
+   		void boxSpecChanged( int index );
 
 };
 

@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 QtViewerBase::QtViewerBase( bool is_server) :
-	qdps_(), msbtns_(), datatypeNames_(N_DT+1), server_(is_server), 
+	qdps_(), msbtns_(),  server_(is_server), datatypeNames_(N_DT+1),
 	displaytypeNames_(N_DS+1), dataDisplaysAs_(N_DT+1) {
 
   // Initialize some (conceptually constant) data for datatype and
@@ -128,7 +128,7 @@ void QtViewerBase::dpDestroyed_(QObject* dying) {
 
         
 
-void QtViewerBase::dpHidden_(QtDisplayPanel* qdp) {
+void QtViewerBase::dpHidden_(QtDisplayPanel* /*qdp*/) {
   // Connected by this class, (only) to QDPs' dpHidden() signals
   // (for checking on open QDPs).
   //

@@ -56,6 +56,10 @@
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
 
+#include <QtCore/QPoint>
+#include <QtGui/QToolTip>
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -500,10 +504,15 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
     trackingRec.define(qdd->name(), qdd->trackingInfo(ev));  }
   
   
-  if(trackingRec.nfields()>0u) emit trackingInfo(trackingRec);  }
+  if(trackingRec.nfields()>0u){
+	  processTracking( trackingRec, ev );
+  }
+
+
+}
   
 
- 
+
   
 void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
   // Similar to above, but this is a Qt slot triggered by an internal
@@ -530,9 +539,29 @@ void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
   Record trackingRec;
   trackingRec.define(qdd->name(), qdd->trackingInfo(ev));
   
-  if(trackingRec.nfields()>0u) emit trackingInfo(trackingRec);  }
+  if(trackingRec.nfields()>0u){
+	  processTracking(trackingRec, ev );
+  }
+}
 
-  
+void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionEvent& ev ) {
+	/*WorldCanvas* worldCanvas = ev.worldCanvas();
+	int sizeY = worldCanvas -> canvasYSize();
+	//uInt offsetY;
+	//String const attributeName( "canvasYAttribute");
+	//worldCanvas -> getAttributeValue( attributeName, offsetY );
+	QPoint loc( ev.pixX(), sizeY - ev.pixY());
+	//qDebug() << "Ofset is " << offsetY;
+	String displayText;
+
+	for(uInt i=0; i<trackingRec.nfields(); i++) {
+
+	    String recordField = trackingRec.asString(i);
+	    displayText.append( recordField );
+	}
+	QToolTip::showText( loc, displayText.c_str() );*/
+	emit trackingInfo(trackingRec);
+}
     
  
 Bool QtDisplayPanel::myWC_(const WorldCanvas* wc) {
@@ -1851,8 +1880,8 @@ void QtDisplayPanel::next_() {
 //#dk Limiting animation range not really supported yet.
 //    (Remember, these should call goToX_(), if necessary
 //     to put current frame within new range).
-void QtDisplayPanel::setEndZFrame(Int frm) {  }
-void QtDisplayPanel::setEndBFrame(Int frm) {  }
+void QtDisplayPanel::setEndZFrame(Int /*frm*/) {  }
+void QtDisplayPanel::setEndBFrame(Int /*frm*/) {  }
 
 
 

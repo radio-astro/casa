@@ -144,7 +144,7 @@ namespace casa {
 
 	    double wx,wy;
 	    if ( sys == PHYSICAL ) {
-		pixel_to_linear(wc_,v[0],v[1],wx,wy);
+		try { pixel_to_linear(wc_,v[0],v[1],wx,wy); } catch(...) { return result; }
 	    } else if ( sys == WCS ) {
 		casa::Vector<double> pts(2);
 		pts[0] = v[0];
@@ -184,7 +184,7 @@ namespace casa {
 	    double lx, ly;
 
 	    if ( sys == PHYSICAL ) {
-		pixel_offset_to_linear_offset( wc_, d, 0, lx, ly );
+		try { pixel_offset_to_linear_offset( wc_, d, 0, lx, ly ); } catch(...) { return 0; }
 	    } else if ( sys == WCS ) {
 		switch ( frame ) {
 		    case FK5:
@@ -218,7 +218,7 @@ namespace casa {
 
 	    // find out how to decide what coordinate system the ds9 file uses...
 
-	    pixel_offset_to_linear_offset( wc_, v[0], v[1], lx, ly );
+	    try { pixel_offset_to_linear_offset( wc_, v[0], v[1], lx, ly ); } catch(...) { return result; }
 	    result[0] = lx;
 	    result[1] = ly;
 	    return result;

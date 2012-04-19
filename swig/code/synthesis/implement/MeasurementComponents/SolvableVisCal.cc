@@ -2540,7 +2540,8 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
 
   // TBD: migrate this to VisEquation?
 
-  if (apmode()!="AP") {
+  // ONLY if something to do
+  if (apmode()=="A" || apmode()=="P") {
     Int nCorr(vb.corrType().nelements());
     Float amp(1.0);
     Complex cor(1.0);

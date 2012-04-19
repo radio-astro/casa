@@ -95,7 +95,7 @@ namespace casa {
 		virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y )
 								{ return kernel_->point(region_creator,wc,x,y); }
 	  
-		RegionSource( RegionCreator *rc, const shared_kernel_ptr_type &k ) : region_creator(rc), kernel_(k) { }
+		RegionSource( RegionCreator *rc, const shared_kernel_ptr_type &k ) :  kernel_(k), region_creator(rc) { }
 		RegionSource( const RegionSource &other ) : kernel_(other.kernel_), region_creator(other.region_creator) { }
 
 		void revokeRegion( Region *r ) { kernel_->revokeRegion(r); }
