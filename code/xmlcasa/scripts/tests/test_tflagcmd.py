@@ -132,6 +132,13 @@ class test_manual(test_base):
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
+    def test_compatibility(self):
+        input = "observation='1' mode='manualflag'"
+        filename = create_input(input)
+        
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+
 class test_alma(test_base):
     # Test various selections for alma data 
 

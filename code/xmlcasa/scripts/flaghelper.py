@@ -1083,6 +1083,8 @@ def getLinePars(cmdline, mlist=[]):
                 dicpars['observation'] = xval
 
             elif xkey == "mode":
+                if xval == 'manualflag':
+                    xval = 'manual'
                 dicpars['mode'] = xval
 
             elif mlist != []:

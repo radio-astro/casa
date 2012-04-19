@@ -149,7 +149,7 @@ def tflagdata(vis,
             writeflags = False
                                          
         # Default mode
-        if mode == '':
+        if mode == '' or mode == 'manualflag':
             mode = 'manual'
         
         # Read in the list of commands

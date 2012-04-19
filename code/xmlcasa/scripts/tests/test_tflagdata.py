@@ -671,8 +671,8 @@ class test_selections(test_base):
         self.setUp_ngc5921()
 
     def test_scan(self):
-        '''tflagdata: scan selection'''
-        tflagdata(vis=self.vis, scan='3', savepars=False)
+        '''tflagdata: scan selection and manualflag compatibility'''
+        tflagdata(vis=self.vis, scan='3', mode='manualflag', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
         
         # feed not implemented flagdata(vis=vis, feed='27')
@@ -864,7 +864,7 @@ class test_list(test_base):
     def test_list1(self):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
-        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"\
+        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manualflag\n"\
                 "#scan='4'"
         filename = 'list1.txt'
         create_input(input, filename)
