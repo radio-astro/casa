@@ -4,6 +4,7 @@ import os
 import filecmp
 from tasks import *
 from taskinit import *
+from __main__ import default
 
 #
 # Test of tflagdata modes
@@ -51,6 +52,8 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_ngc5921(self):
@@ -64,6 +67,7 @@ class test_base(unittest.TestCase):
                          '/data/regression/ngc5921/ngc5921.fits', \
                          self.vis)
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_flagdatatest_alma(self):
@@ -78,6 +82,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_data4tfcrop(self):
@@ -92,6 +97,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_shadowdata2(self):
@@ -106,6 +112,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         
     def setUp_multi(self):
@@ -120,6 +127,7 @@ class test_base(unittest.TestCase):
                       "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
 
@@ -167,7 +175,7 @@ class test_rflag(test_base):
         
     def test_rflag1(self):
         '''tflagdata:: Test1 of mode = rflag : automatic thresholds'''
-        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], writeflags=True);
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[]);
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 42866)
         self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
@@ -176,7 +184,7 @@ class test_rflag(test_base):
     def test_rflag2(self):
         '''tflagdata:: Test2 of mode = rflag : partially-specified thresholds'''
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
-                       freqdev=0.5, writeflags=True);
+                       freqdev=0.5);
         res = tflagdata(vis=self.vis, mode='summary',spw='9,10,11')
         self.assertEqual(res['flagged'], 52411)
         self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
@@ -186,17 +194,17 @@ class test_rflag(test_base):
         '''tflagdata:: Test3 of mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', writeflags=False);
+                      freqdev='fdevfile.txt', action='calculate');
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', writeflags=True);
+                      freqdev='fdevfile.txt', action='apply');
         res1 = tflagdata(vis=self.vis, mode='summary')
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
         #      Also test the 'savepars' when timedev and freqdev are specified differently...
         tflagdata(vis=self.vis,mode='unflag');
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
-                      freqdev=[],writeflags=False,savepars=True,outfile='outcmd.txt');
-        tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt',writeflags=True);
+                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
+        tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt');
         res2 = tflagdata(vis=self.vis, mode='summary')
 
         #print res1['flagged'], res2['flagged']
@@ -716,11 +724,11 @@ class test_selections(test_base):
         ret = tflagdata(vis=self.vis, ntime = 0, savepars=False)
         self.assertNotEqual(type(ret), dict, 'Return type of task should be None')
         
-    def test_writeflags(self):
-        '''tflagdata: writeflags = False'''
-        tflagdata(vis=self.vis, antenna='2,3,4', writeflags=False)
+    def test_action(self):
+        '''tflagdata: action = calculate'''
+        tflagdata(vis=self.vis, antenna='2,3,4', action='calculate')
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 0, 'Nothing should be flagged when writeflags=False')
+        self.assertEqual(res['flagged'], 0, 'Nothing should be flagged when action=calculate')
         
 
 class test_selections_alma(test_base):
@@ -862,7 +870,7 @@ class test_list(test_base):
         create_input(input, filename)
         
         # apply and don't save to MS. Ignore comment line
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, applyflags=True)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, action='apply')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 0)
         self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
@@ -878,7 +886,7 @@ class test_list(test_base):
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
             
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, applyflags=False, outfile='myflags.txt')
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, action='', outfile='myflags.txt')
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
         res = tflagdata(vis=self.vis, mode='summary')
@@ -909,7 +917,7 @@ class test_list(test_base):
         # Delete any rows from FLAG_CMD
         tflagcmd(vis=self.vis, action='clear', clearall=True)
         
-        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, applyflags=False, 
+        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='', 
                  savepars=True)
         
         tflagcmd(vis=self.vis, action='apply')
@@ -927,7 +935,7 @@ class test_list(test_base):
         create_input(input, filename)
 
         # Save to FLAG_CMD
-        tflagdata(vis=self.vis, mode='list', inpfile=filename, applyflags=False, savepars=True)
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True)
         
         # Run in tflagcmd and select by reason
         tflagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')

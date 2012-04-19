@@ -64,8 +64,7 @@ def tflagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
-             applyflags,           # run or not the tool
-             writeflags,
+             action,           # run or not the tool
              display,
              flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or
@@ -139,7 +138,16 @@ def tflagdata(vis,
         # List of parameters to save to outfile when mode != list
         sel_pars = ''
         
+        # By default, write flags to the MS
+        writeflags = True
         
+        # Only the apply action writes to the MS
+        # action=apply     --> write to the MS
+        # action=calculate --> do not write to the MS
+        # action=''        --> do not run the tool and do not write to the MS
+        if action != 'apply':
+            writeflags = False
+                                         
         # Default mode
         if mode == '':
             mode = 'manual'
@@ -370,12 +378,13 @@ def tflagdata(vis,
             vrows = flagcmd.keys()
             casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
 
-
-                                  
                           
-        ##########  Only save the parameters and exit; applyflags = False        
-        if not applyflags and savepars:
-
+        ##########  Only save the parameters and exit; action = ''        
+        if action == '' and savepars == False:
+            casalog.post('Parameter action=\'\' is meaningful with savepars=True. No action to perform!', 'WARN')
+            return 0
+        
+        if action == '' and savepars == True:
             fh.writeFlagCmd(vis, flagcmd, vrows, False, outfile)  
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')
@@ -384,7 +393,7 @@ def tflagdata(vis,
             return 0
 
         
-        ######### From now on it is assumed that applyflags = True
+        ######### From now on it is assumed that action = apply or calculate
         
         # Select the data and parse the agent's parameters
         if mode != 'list':
@@ -471,6 +480,10 @@ def tflagdata(vis,
         # Run the tool
         casalog.post('Running the testflagger tool')
         summary_stats_list = tflocal.run(writeflags, True)
+        
+        # Inform the user that end of MS summary was not written to the MS
+        if not writeflags:
+            casalog.post("Flags are not written to the MS. (action=\'calculate\')")
 
 
         # Now, deal with all the modes that return output.

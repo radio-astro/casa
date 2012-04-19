@@ -37,8 +37,8 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (list,manual,clip,shadow,quack,elevation,\
-tfcrop,rflag,extend,unflag,summary)</description>
+                <description>Flagging mode (list/manual/clip/shadow/quack/elevation/\
+tfcrop/rflag/extend/unflag/summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
@@ -321,16 +321,17 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
 
             <!-- APPLYFLAGS parameters -->
-            <param type="bool" name="applyflags">
-                <description>Run and apply flags based on the parameters or the list given in inpfile</description>
-                <value>True</value>
-            </param>
-            <param type="bool" name="writeflags" subparam="true">
-                <description>Write Flags to the MS</description>
-                <value>True</value>
+            <param type="string" name="action">
+                    <description>Action to perform in MS and/or in inpfile (none/apply/calculate)</description>
+                    <value>apply</value>
+                    <allowed kind="enum">
+                    <value>apply</value>
+                    <value>calculate</value>
+                    <value></value>
+                    </allowed>
             </param>
             <param type="string" name="display" subparam="true">
-                <description>Display data and/or end-of-MS reports at runtime (data, report, both).</description>
+                <description>Display data and/or end-of-MS reports at runtime (data/report/both).</description>
                 <value type="string"></value>
             </param>
             <param type="bool" name="flagbackup" subparam="true">
@@ -341,7 +342,7 @@ tfcrop,rflag,extend,unflag,summary)</description>
 
             <!-- SAVEPARS parameter -->
             <param type="bool" name="savepars">
-                <description>Save the current parameters to the MS or to a file</description>
+                <description>Save the current parameters to the FLAG_CMD table or to a file</description>
                 <value>False</value>
             </param>
             <param type="string" name="outfile" subparam="true">
@@ -535,12 +536,15 @@ tfcrop,rflag,extend,unflag,summary)</description>
                     </equals>
                 </when>
 
-                <when param="applyflags">
-                    <equals type="bool" value="True">
-                        <default param="writeflags"><value type="bool">True</value></default>
+                <when param="action">
+                    <equals value="apply">
                         <default param="display"><value type="string"></value></default>
                         <default param="flagbackup"><value type="bool">True</value></default>
                     </equals>
+                    <equals value="calculate">
+                        <default param="display"><value type="string"></value></default>
+                    </equals>
+                    <equals value=""></equals>            
                 </when>
                                
                <when param="savepars">
@@ -1064,22 +1068,44 @@ The task will flag a subset of data based on the following modes of operation:
                     s['flagged']                : amount of flagged data
         
 
-    applyflags -- Run the task to produce flags or not. 
-           default: True
-           options: True/False
-                When set to False, the underlying tool will not be executed and no
-                flags will be produced. No data selection will be done either. This
-                is useful when used together with parameter savepars to only save the
-                current parameters (or list of parameters) to the FLAG_CMD sub-table or
-                to an external file. 
+    action -- Action to perform in MS or in the input list of parameters. 
+        options: 'none', 'apply','calculate'
+        default: 'apply'
 
-        writeflags -- Choose whether or not to write flags to the MS 
-               default: True
-               options: True/False
-                    The tflagdata task can be run in 'writeflags=False' mode just to inspect the data,
-                    or to try different parameters and converge on a set that works for a particular
-                    dataset. Use the display parameter to inspect the data.
-                Note: this parameter is disabled when mode='summary'.
+        'apply' -- Apply the flags to the MS.
+        
+               display -- Display data and/or end-of-MS reports at run-time.        
+                   default: 'none'
+                   options: 'none', 'data', 'report', 'both'
+
+                     'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
+
+                      This option opens a GUI to show the 2D time-freq planes of
+                      the data with old and new flags, for all correlations per baseline.
+                      -- The GUI allows stepping through all baselines (prev/next) in
+                      the current chunk (set by 'ntime'), and stepping to the next-chunk.
+                      -- The 'tflagdata' task can be quit from the GUI, in case it becomes
+                      obvious that the current set of parameters is just wrong.
+                      -- There is an option to stop the display but continue flagging.
+
+                    'report' --> displays end-of-MS reports on the screen.
+
+                    'both' --> displays data per chunk and end-of-MS reports on the screen
+        
+        'calculate' -- Only calculate the flags but do not write them to the MS. This is
+                     useful if used together with the display to analyse the results before
+                     writing to the MS.
+
+               display -- Display data and/or end-of-MS reports at run-time. See extended description
+                          above. 
+                   default: 'none'
+                   options: 'none', 'data', 'report', 'both'
+                   
+        ' ' -- When set to empty, the underlying tool will not be executed and no flags
+                        will be produced. No data selection will be done either. This is useful
+                        when used together with the parameter savepars to only save the current
+                        parameters (or list of parameters) to the FLAG_CMD sub-table or to an
+                        external file.  
                  
         display -- Display data and/or end-of-MS reports at run-time.        
                	   default: 'none'
