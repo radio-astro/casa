@@ -350,9 +350,11 @@ protected:
   void setLogMember (const LoggerHolder& logger)
     { log_p = logger; }
 
+  /*
   // Set the image info variable.
   void setImageInfoMember (const ImageInfo& imageInfo)
     { imageInfo_p = imageInfo; }
+    */
 
   // Set the coordinate system variable.
   void setCoordsMember (const CoordinateSystem& coords)

@@ -66,7 +66,7 @@ CurvedImage2D<T>::CurvedImage2D (const ImageInterface<T>& image,
   cSysOut.setObsInfo(itsImagePtr->coordinates().obsInfo());
 //
   setCoordsMember (cSysOut);
-  setImageInfoMember (itsImagePtr->imageInfo());
+  setImageInfo (itsImagePtr->imageInfo());
   setMiscInfoMember (itsImagePtr->miscInfo());
   setUnitMember (itsImagePtr->units());
   logger().addParent (itsImagePtr->logger());

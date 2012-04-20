@@ -489,7 +489,7 @@ void HDF5Image<T>::restoreImageInfo (const RecordInterface& rec)
       os << LogIO::WARN << "Failed to restore the ImageInfo because " 
          << error << LogIO::POST;
     } else {
-      setImageInfoMember (info);
+    	ImageInterface<T>::setImageInfo (info);
     }
   }
 }
