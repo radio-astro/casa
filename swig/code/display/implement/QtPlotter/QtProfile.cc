@@ -1440,26 +1440,30 @@ void QtProfile::doLineFit(){
 	}
 
 	// do the fit
-	fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg);
-
-	if (fitter->getStatus() == SpectralFitter::SUCCESS){
-		// get the fit values
-		Vector<Float> z_xfit, z_yfit;
-		fitter->getFit(z_xval, z_xfit, z_yfit);
-
-		// report problems
-		if (z_yfit.size()<1){
-			msg = String("There exist no fit values!");
-			*itsLog << LogIO::WARN << msg << LogIO::POST;
-			profileStatus->showMessage(QString(msg.c_str()));
-			return;
-		}
-
-		// overplot the fit values
-		QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
-		pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+	//Bool ok = fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg);
+	if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)){
+		msg = String("Data could not be fitted!");
+		profileStatus->showMessage(QString(msg.c_str()));
 	}
-	profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
+	else{
+		if (fitter->getStatus() == SpectralFitter::SUCCESS){
+			// get the fit values
+			Vector<Float> z_xfit, z_yfit;
+			fitter->getFit(z_xval, z_xfit, z_yfit);
+			// report problems
+			if (z_yfit.size()<1){
+				msg = String("There exist no fit values!");
+				*itsLog << LogIO::WARN << msg << LogIO::POST;
+				profileStatus->showMessage(QString(msg.c_str()));
+				return;
+			}
+
+			// overplot the fit values
+			QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
+			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+		}
+		profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
+	}
 
 	return;
 }
@@ -1525,10 +1529,8 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 			   const QList<double> &world_x, const QList<double> &world_y,
 			   const QList<int> &pixel_x, const QList<int> &pixel_y,
 			   const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
-
     if (!isVisible()) return;
     if (!analysis) return;
-
     /*for ( int i = 0; i < world_x.size(); i++ ){
     	qDebug() << "World x=" << world_x[i] << " y=" << world_y[i];
     }
@@ -1588,7 +1590,6 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     ok = setErrorPlotting( wxv, wyv);
 
     Int ordersOfM = scaleAxis();
-
     // plot the graph
     pixelCanvas->clearData();
     pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
@@ -1609,10 +1610,8 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     if (!isVisible()) return;
 
     if (!analysis) return;
-
     SpectraInfoMap::iterator it = spectra_info_map.find(id_);
     if ( it == spectra_info_map.end( ) ) return;
-
     QString shape = it->second.shape( );
 
     String c(WORLD_COORDINATES);
@@ -1909,20 +1908,23 @@ bool QtProfile::exportASCIISpectrum(QString &fn)
        << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-    ts << "#yLabel: " << "(" << yUnitPrefix << yUnit << ") "<< plotMode->currentText() << "\n";
+    ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
     if (z_eval.size() > 0)
-        ts << "#eLabel: " << "(" << yUnitPrefix << yUnit << ") " << errorMode->currentText() << "\n";
+        ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+
+    // get the scale factor
+    Float scaleFactor=pow(10.,-ordersOfM_);
 
     ts.setRealNumberNotation(QTextStream::ScientificNotation);
 
     if (z_eval.size() > 0){
     	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << z_yval(i) << "    "  << z_eval(i) << "\n";
+    		ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
     	}
     }
     else {
     	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << z_yval(i) << "\n";
+    		ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
     	}
     }
 
@@ -1933,7 +1935,7 @@ bool QtProfile::exportASCIISpectrum(QString &fn)
       CurveData data = *(pixelCanvas->getCurveData(k));
       int j = data.size() / 2;
       for (int m = 0; m < j; m++) {
-         ts << data[2 * m] << " " << data[2 * m + 1] << "\n";
+         ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
       }
     }
 
@@ -2536,8 +2538,11 @@ QString QtProfile::getRaDec(double x, double y) {
 			} else {
 			    // express factor as character
 			    switch(-ordersOfM){ // note the sign!
-				case -9:
+				case -12:
 				    yUnitPrefix = "p";
+				    break;
+				case -9:
+				    yUnitPrefix = "n";
 				    break;
 				case -6:
 				    yUnitPrefix = "u";
@@ -2552,7 +2557,7 @@ QString QtProfile::getRaDec(double x, double y) {
 				    yUnitPrefix = "M";
 				    break;
 				case 9:
-				    yUnitPrefix = "M";
+				    yUnitPrefix = "G";
 				    break;
 				default:
 				    ostringstream oss;
