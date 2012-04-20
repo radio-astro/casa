@@ -591,7 +591,7 @@ void FITSImage::setup()
 // set ImageInterface data
 
    setCoordsMember (cSys);
-   setImageInfoMember (imageInfo);
+   setImageInfo (imageInfo);
 
 // Set FITSImage data
 

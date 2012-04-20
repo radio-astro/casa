@@ -205,9 +205,9 @@ ImageInterface<T>* SubImage<T>::cloneII() const
 template<class T>
 void SubImage<T>::setMembers (const ImageInterface<T>& image)
 {
-  this->setImageInfoMember (image.imageInfo());
-  this->setMiscInfoMember (image.miscInfo());
-  this->setUnitMember (image.units());
+  setImageInfo (image.imageInfo());
+  setMiscInfoMember (image.miscInfo());
+  setUnitMember (image.units());
   logger().addParent (image.logger());
 }
 

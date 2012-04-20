@@ -68,7 +68,7 @@ ImageExpr<T>::ImageExpr (const LatticeExpr<T>& latticeExpr,
                          dynamic_cast<const LELImageCoord*>(pLattCoord);
   AlwaysAssert (pImCoord != 0, AipsError);
   setCoordsMember (pImCoord->coordinates());
-  setImageInfoMember (pImCoord->imageInfo());
+  this->setImageInfo (pImCoord->imageInfo());
   unit_p = pImCoord->unit();
 }
 

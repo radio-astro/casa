@@ -178,7 +178,7 @@ void ImageConcat<T>::setImage (ImageInterface<T>& image, Bool relax)
    if (nIm==0) {
       ImageInterface<T>::setCoordinateInfo(image.coordinates());
       this->setUnitMember (image.units());
-      this->setImageInfoMember (image.imageInfo());
+      setImageInfo (image.imageInfo());
       this->setMiscInfoMember (image.miscInfo());
       this->setCoordinates();
    } else {

@@ -843,7 +843,7 @@ void PagedImage<T>::restoreImageInfo (const TableRecord& rec)
     ImageInfo info;
     Bool ok = info.fromRecord (error, rec.asRecord("imageinfo"));
     if (ok) {
-      setImageInfoMember (info);
+      ImageInterface<T>::setImageInfo (info);
     } else {
       LogIO os;
       os << LogIO::WARN << "Failed to restore the ImageInfo in image " << name()

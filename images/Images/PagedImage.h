@@ -441,7 +441,7 @@ protected:
   using ImageInterface<T>::setMiscInfoMember;
   using ImageInterface<T>::setLogMember;
   using ImageInterface<T>::setUnitMember;
-  using ImageInterface<T>::setImageInfoMember;
+  // using ImageInterface<T>::setImageInfoMember;
 };
 
 
