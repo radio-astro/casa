@@ -1197,13 +1197,15 @@ The task will flag a subset of data based on the following modes of operation:
 
         tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
 
-    12) Save the interface parameters to the FLAG_CMD sub-table of the MS. Apply flags in
-		tflagcmd.
+    12) Save the interface parameters to the FLAG_CMD sub-table of the MS. Add a reason
+        to the flag command. This cmdreason will be added to the REASON column of the
+        FLAG_CMD sub-table. Apply flags in tflagcmd.
 
         tflagdata('my.ms', mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                  correlation='ABS_XX,XY', action='', savepars=True)
+                  correlation='ABS_XX,XY', action='', savepars=True, cmdreason='CLIPXX_XY')
 
-        tflagcmd('my.ms', action='apply')
+        > Select based on the reason.
+        tflagcmd('my.ms', action='apply', reason='CLIPXX_XY')
 
     13) Flag antennas that are shadowed by antennas not present in the MS.
 
