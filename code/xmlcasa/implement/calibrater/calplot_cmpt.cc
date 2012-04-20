@@ -41,6 +41,9 @@ calplot::calplot()
 
 calplot::~calplot()
 {
+
+  this->done();
+
    try {
       if(itsLog)
          delete itsLog;
