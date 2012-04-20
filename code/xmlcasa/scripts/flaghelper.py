@@ -864,13 +864,14 @@ def writeCMD(msfile, flagcmd, writeflags, outfile):
     return nadd
 
 
-def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
+def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
     '''
     Writes the flag commands to FLAG_CMD or to an ASCII file
     msfile  -->   MS
     myflags -->  dictionary of commands read from inputfile (from readFromTable, etc.)
     vrows   -->  list of valid rows from myflags dictionary to save
     applied -->  value to update APPLIED column of FLAG_CMD
+    add_reason --> reason to add to output (replace input reason, if any)
     outfile -->  if not empty, save to it
         Returns the number of commands written to output
     '''
@@ -886,7 +887,8 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
     if outfile != '':                          
         ffout = open(outfile, 'a')
         
-        try:
+        try:                            
+            
             for key in myflags.keys():
                 # Remove leading and trailing white spaces
                 cmdline = myflags[key]['command'].strip()
@@ -897,10 +899,25 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
                     cmdline = cmdline + ' addantenna=' + str(addantenna)
                                                         
                 reason = myflags[key]['reason']
-                if reason != '':
-                    print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
+                
+                # There is no reason in input
+                if reason == '':
+                    # Add new reason to output
+                    if add_reason != '':
+                        print >> ffout, '%s reason=\'%s\'' %(cmdline, add_reason)
+                    else:
+                        print >> ffout, '%s' %cmdline
+                    
+                # There is reason in input    
                 else:
-                    print >> ffout, '%s' %cmdline
+                    # Output reason is empty
+                    if add_reason == '':
+                        print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
+                        
+                    else:
+                        # Replace input reason with new reason
+                        print >> ffout, '%s reason=\'%s\'' %(cmdline, add_reason)
+                                
         except:
             raise Exception, 'Error writing lines to file ' \
                 + outfile
@@ -935,7 +952,10 @@ def writeFlagCmd(msfile, myflags, vrows, applied, outfile):
             cmd_list.append(command)
             tim_list.append(myflags[key]['time'])
             intv_list.append(myflags[key]['interval'])
-            reas_list.append(myflags[key]['reason'])
+            if add_reason != '':
+                reas_list.append(add_reason)
+            else:
+                reas_list.append(myflags[key]['reason'])
             typ_list.append(myflags[key]['type'])
             sev_list.append(myflags[key]['severity'])
             lev_list.append(myflags[key]['level'])
