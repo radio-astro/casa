@@ -29,10 +29,12 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   field2skycat.py
   find_autocorr.py
   gaincal_unflag_nearest.py
+  getazel.py
   __init__.py
   lsms.py
   make_labelled_ms.py
   pixelmask2cleanmask.py
+  plotazel.py
   psplit.py
   taskutil.py
   listshapes.py
