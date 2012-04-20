@@ -155,6 +155,7 @@ FlagAgentBase::initialize()
    filterChannels_p = false;
    filterRows_p = false;
    filterPols_p = false;
+   flagAutoCorrelations_p = false;
 
 	// Initialize state
    terminationRequested_p = false;
@@ -283,6 +284,13 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	else if (mode.compare("display")==0)
 	{
 		FlagAgentDisplay* agent = new FlagAgentDisplay(dh,config,writePrivateFlags);
+		return agent;
+	}
+	// Autocorr
+	else if (mode.compare("autocorr")==0)
+	{
+		config.define("autocorr",(Bool)True);
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
 	else
@@ -874,7 +882,7 @@ FlagAgentBase::setAgentParameters(Record config)
 	{
 		agentName_p = "FlagAgentUnknown";
 	}
-        logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	exists = config.fieldNumber ("nThreads");
 	if (exists >= 0)
@@ -1069,6 +1077,14 @@ FlagAgentBase::setAgentParameters(Record config)
 		*logger_p << logLevel_p << " data column is " << dataColumn_p << LogIO::POST;
 	}
 
+	exists = config.fieldNumber ("autocorr");
+	if (exists >= 0)
+	{
+		flagAutoCorrelations_p = config.asBool("autocorr");
+		if (flagAutoCorrelations_p) filterRows_p=true;
+	}
+	*logger_p << logLevel_p << " autocorr is " << flagAutoCorrelations_p << LogIO::POST;
+
 	return;
 }
 
@@ -1136,6 +1152,12 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				v = uvw(row_i)(1);
 				uvDistance = sqrt(u*u + v*v);
 				if (!find(uvwList_p,uvDistance)) continue;
+			}
+
+			// Check autocorrelations
+			if (flagAutoCorrelations_p)
+			{
+				if (visibilityBuffer_p->get()->antenna1()[row_i] != visibilityBuffer_p->get()->antenna2()[row_i]) continue;
 			}
 
 			// If all the filters passed, add the row to the list
