@@ -975,7 +975,52 @@ class test_list(test_base):
         self.assertEqual(res['scan']['4']['flagged'], 95256)
         self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
         
+    def test_reason1(self):
+        '''tflagdata: add_reason to FLAG_CMD'''
+        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        tflagdata(vis=self.vis, mode='manual', scan='1,3', savepars=True, cmdreason='SCAN_1_3',
+                  action='')
+        
+        # Apply flag cmd
+        tflagcmd(vis=self.vis, action='apply', reason='SCAN_1_3')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1330182, 'Only scans 1 and 3 should be flagged')
+        
+    def test_reason2(self):
+        '''tflagdata: add_reason to text file'''
+        tflagdata(vis=self.vis, mode='clip', scan='4', clipminmax=[0,5], savepars=True, 
+                  cmdreason='CLIPSCAN4', outfile='reason2.txt', action='')
 
+        tflagdata(vis=self.vis, mode='clip', scan='2~3', clipminmax=[0,5], savepars=True, 
+                  cmdreason='CLIPSCAN2_3', outfile='reason2.txt', action='')
+
+        # Apply flag cmd
+        tflagdata(vis=self.vis, mode='list', inpfile='reason2.txt',reason='CLIPSCAN2_3')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 69568)
+        
+    def test_reason3(self):
+        '''tflagdata: replace input reason with add_reason'''
+        # creat input list
+        input = "mode='manual' scan='1' reason='SCAN_1'\n"\
+                "mode='manual' scan='2'\n"\
+                "scan='3' reason='SCAN_3'\n"\
+                "scan='4' reason=''"
+        filename = 'input3.txt'
+        create_input(input, filename)
+        
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='reason3.txt',
+                  cmdreason='MANUALFLAG', action='')
+        
+        # Apply the flag cmds
+        tflagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1663578)
+        
+        
+        
         
 class test_clip(test_base):
     """tflagdata:: Test of mode = 'clip'"""

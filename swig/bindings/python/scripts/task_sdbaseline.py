@@ -4,6 +4,7 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 from asap import _to_list
+from asap.scantable import is_scantable
 import pylab as pl
 
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
@@ -77,12 +78,12 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 
 		# Copy scantable when usign disk storage not to modify
 		# the original table.
-		if sd.rcParams['scantable.storage'] == 'disk': #and infile != outfile:
+		if is_scantable(infile) and \
+                       sd.rcParams['scantable.storage'] == 'disk':
 			s = sorg.copy()
 		else:
 			s = sorg
 		del sorg
-                ###############################
 
 		# get telescope name
 		#'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -129,11 +130,11 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				eta = telescopeparm[1]
 				casalog.post( "Use phys.diam D = %5.1f m" % (D) )
 				casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
-				s.convert_flux(eta=eta,d=D)
+				s.convert_flux(eta=eta,d=D,insitu=True)
 			elif ( len(telescopeparm) > 0 ):
 				jypk = telescopeparm[0]
 				casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
-				s.convert_flux(jyperk=jypk)
+				s.convert_flux(jyperk=jypk,insitu=True)
 			else:
 				casalog.post( "Empty telescope list" )
 		
@@ -157,11 +158,11 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				casalog.post( "At rest frequency %5.3f GHz" % (rf) )
 				D = 104.9 # 100m x 110m
 				casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
-				s.convert_flux(eta=eta,d=D)
+				s.convert_flux(eta=eta,d=D,insitu=True)
 				
 				casalog.post( "Successfully converted fluxunit to "+fluxunit )
 			elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
-				s.convert_flux()
+				s.convert_flux(insitu=True)
 			
 			else:
 				# Unknown telescope type
@@ -378,9 +379,6 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		else:
 			outform = 'ASAP'
 			spefile = project
-		
-		#if overwrite and os.path.exists(outfilename):
-		#	os.system('rm -rf %s' % outfilename)
 		
                 s.save(spefile,outform,overwrite)
 		if outform != 'ASCII': casalog.post( "Wrote output "+outform+" file "+spefile )

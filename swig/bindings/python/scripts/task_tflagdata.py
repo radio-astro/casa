@@ -67,7 +67,8 @@ def tflagdata(vis,
              action,           # run or not the tool
              display,
              flagbackup,
-             savepars,      # save the current parameters to FLAG_CMD  or
+             savepars,      # save the current parameters to FLAG_CMD  or to a file
+             cmdreason,     # reason to save to flag cmd
              outfile):      # output file to save flag commands
 
     # Global parameters
@@ -385,7 +386,7 @@ def tflagdata(vis,
             return 0
         
         if action == '' and savepars == True:
-            fh.writeFlagCmd(vis, flagcmd, vrows, False, outfile)  
+            fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile)  
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')
             else:
@@ -544,10 +545,10 @@ def tflagdata(vis,
                 casalog.post('Saving parameters to '+outfile)
                                       
             if mode != 'list':     
-                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, outfile)  
+                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
             else:
                 valid_rows = list2save.keys()
-                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, outfile)        
+                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
             
         # Destroy the tool
         tflocal.done()

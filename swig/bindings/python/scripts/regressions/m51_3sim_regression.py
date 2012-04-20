@@ -10,6 +10,8 @@ modelname="m51ha.model"
 if os.path.exists(modelname):
     shutil.rmtree(modelname)
 
+noise=False # add noise
+
 projname = "m51c"
 
 startTime = time.time()
@@ -63,7 +65,9 @@ totaltime = '3600s'
 
 antennalist="alma;0.5arcsec"
 
-#thermalnoise = 'tsys-manual'  #w/ noise 
+if noise:
+    thermalnoise = 'tsys-atm'  #w/ noise 
+    user_pwv=3.0
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -110,7 +114,9 @@ sdantlist = cfgdir+'aca.tp.cfg'
 sdant = 0
 #antennalist=""
 
-#thermalnoise = 'tsys-manual'  #w/ noise 
+if noise:
+    thermalnoise = 'tsys-atm'  #w/ noise 
+    user_pwv=3.0
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -158,7 +164,9 @@ totaltime = '3' # times through the map
 
 antennalist="aca.i.cfg"
 
-#thermalnoise = 'tsys-manual'  #w/ noise 
+if noise:
+    thermalnoise = 'tsys-atm'  #w/ noise 
+    user_pwv=3.0
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -186,7 +194,10 @@ project = projname
 # clean ACA with SD model
 
 image = True
-vis = '$project.aca.i.ms,$project.aca.tp.sd.ms'  #w/ noise
+if noise:
+    vis = '$project.aca.i.noisy.ms,$project.aca.tp.sd.noisy.ms'  #w/ noise
+else:
+    vis = '$project.aca.i.ms,$project.aca.tp.sd.ms'  #w/ noise
 imsize = [512,512]
 #imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'
@@ -216,7 +227,10 @@ project = projname
 # clean ALMA with ACA+SD model
 
 image = True
-vis = '$project.alma_0.5arcsec.ms'
+if noise:
+    vis = '$project.alma_0.5arcsec.noisy.ms'
+else:
+    vis = '$project.alma_0.5arcsec.ms'
 imsize = [512,512]
 #imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'

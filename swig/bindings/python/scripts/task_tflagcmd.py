@@ -218,11 +218,11 @@ def tflagcmd(
                     else:
                         casalog.post('Saving commands to FLAG_CMD')
                         fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
-                                applied=False, outfile='')
+                                applied=False, add_reason='', outfile='')
                 else:
                     casalog.post('Saving commands to ' + outfile)
                     fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
-                                    applied=False, outfile=outfile)
+                                    applied=False, add_reason='', outfile=outfile)
         elif action == 'apply' or action == 'unapply':
 
             # Apply/Unapply the flag commands to the data
@@ -300,7 +300,7 @@ def tflagcmd(
                             casalog.post('Saving commands to FLAG_CMD')
                             fh.writeFlagCmd(vis, myflagcmd,
                                     vrows=valid_rows, applied=apply,
-                                    outfile='')
+                                    add_reason='', outfile='')
                     else:
 
                     # Save to a file
@@ -313,7 +313,7 @@ def tflagcmd(
                                 + outfile)
                         fh.writeFlagCmd(vis, myflagcmd,
                                 vrows=valid_rows, applied=apply,
-                                outfile=outfile)
+                                add_reason='', outfile=outfile)
                 else:
 
                 # Do not save cmds but maybe update APPLIED

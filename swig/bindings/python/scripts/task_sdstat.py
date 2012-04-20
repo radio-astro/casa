@@ -4,6 +4,8 @@ from taskinit import *
 from get_user import get_user
 
 import asap as sd
+from asap import _to_list
+from asap.scantable import is_scantable
 import pylab as pl
 
 def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
@@ -35,7 +37,48 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                 raise Exception, s
 
             #load the data without averaging
-            s=sd.scantable(infile,average=False,antenna=antenna)
+            s = sd.scantable(infile,average=False,antenna=antenna)
+
+            # collect data to restore
+            fluxunit_org = s.get_fluxunit()
+            specunit_org = s.get_unit()
+            coord = s._getcoordinfo()
+            frame_org = coord[1]
+            doppler_org = coord[2]
+            del coord
+            
+            restore = (frame != '') or (doppler != '') or \
+                     (fluxunit != '' and fluxunit != fluxunit_org)\
+                     or (specunit != '' and specunit != specunit_org)
+            restore = restore and is_scantable(infile) and \
+                     sd.rcParams['scantable.storage'] == 'disk'
+
+            # A scantable selection
+            # Scan selection
+            scans = _to_list(scanlist,int) or []
+
+            # IF selection
+            ifs = _to_list(iflist,int) or []
+
+            # Select polarizations
+            pols = _to_list(pollist,int) or []
+
+            # Actual selection
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
+
+            # Select source names
+            if ( field != '' ):
+                    sel.set_name(field)
+                    # NOTE: currently can only select one
+                    # set of names this way, will probably
+                    # need to do a set_query eventually
+
+            try:
+                #Apply the selection
+                s.set_selection(sel)
+            except Exception, instance:
+                casalog.post( str(instance), priority = 'ERROR' )
+                return
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -62,7 +105,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
             # fix the fluxunit if necessary
             # No way to query scantable to find what telescope is
             # so rely on user input
-
+            stmp = None
             if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
                             if ( fluxunit != '' ):
                                     if ( fluxunit == fluxunit_now ):
@@ -89,12 +132,12 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                             #print "Use ap.eff. eta = %5.3f " % (eta)
                             casalog.post( "Use phys.diam D = %5.1f m" % (D) )
                             casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
-                            s.convert_flux(eta=eta,d=D)
+                            stmp = s.convert_flux(eta=eta,d=D,insitu=False)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
                             #print "Use gain = %6.4f Jy/K " % (jypk)
                             casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
-                            s.convert_flux(jyperk=jypk)
+                            stmp = s.convert_flux(jyperk=jypk,insitu=False)
                     else:
                             #print "Empty telescopeparm list"
                             casalog.post( "Empty telescopeparm list" )
@@ -124,17 +167,25 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                             D = 104.9 # 100m x 110m
                             #print "Assume phys.diam D = %5.1f m" % (D)
                             casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
-                            s.convert_flux(eta=eta,d=D)
+                            stmp = s.convert_flux(eta=eta,d=D,insitu=False)
 
                             #print "Successfully converted fluxunit to "+fluxunit
                             casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART'] ):
-                            s.convert_flux()
+                            stmp = s.convert_flux(insitu=False)
 
                     else:
                             # Unknown telescope type
                             #print "Unknown telescope - cannot convert"
                             casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
+            if stmp:
+                    # Restore flux unit in original table before deleting
+                    if restore:
+                            s.set_fluxunit(fluxunit_org)
+                            restore = False
+                    del s
+                    s = stmp
+                    del stmp
 
 
             # set default spectral axis unit
@@ -163,56 +214,6 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                     #print 'Using current doppler convention'
                     casalog.post( 'Using current doppler convention' )
 
-            # Prepare a selection
-            sel=sd.selector()
-
-            # Scan selection
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
-            if ( len(scans) > 0 ):
-                    sel.set_scans(scans)
-
-            # Select source names
-            if ( field != '' ):
-                    sel.set_name(field)
-                    # NOTE: currently can only select one
-                    # set of names this way, will probably
-                    # need to do a set_query eventually
-
-            # IF selection
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
-            if ( len(ifs) > 0 ):
-                    # Do any IF selection
-                    sel.set_ifs(ifs)
-
-            # polarization selection
-            if (type(pollist) == list):
-              pols = pollist
-            else:
-              pols = [pollist]
-
-            if(len(pols) > 0 ):
-              sel.set_polarisations(pols)
-
-
-            try:
-                #Apply the selection
-                s.set_selection(sel)
-                del sel
-            except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority = 'ERROR' )
-                return
-
 	    # Warning for multi-IF data
 	    if len(s.getifnos()) > 1:
 		#print '\nWarning - The scantable contains multiple IF data.'
@@ -228,13 +229,13 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                     if ( not os.path.exists(outfile) or overwrite ):
                             sd.rcParams['verbose']=True
 
-	    ### Start mod: 2009/09/03 kana ###
+
 	    format=format.replace(' ','')
 	    formstr=format
 	    if len(format)==0:
 		casalog.post("Invalid format string. Using the default 3.3f.")
 		formstr='3.3f'
-	    ### End mod ######################
+
             # Interactive mask
             if interactive:
                     # Interactive masking
@@ -615,8 +616,16 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                             #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
                             casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
 
-            # Final clean up
-            del s
+            ## Restore header information in the table
+            #if restore:
+            #        s.set_fluxunit(fluxunit_org)
+            #        s.set_unit(specunit_org)
+            #        s.set_doppler(doppler_org)
+            #        s.set_freqframe(frame_org)
+            #        restore = False
+            #
+            ## Final clean up
+            #del s
 
             #return retValue
             return retValue
@@ -628,5 +637,17 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
         finally:
+                try:
+                        # Restore header information in the table
+                        if restore:
+                                casalog.post( "Restoreing header information in %s " % infile )
+                                s.set_fluxunit(fluxunit_org)
+                                s.set_unit(specunit_org)
+                                s.set_doppler(doppler_org)
+                                s.set_freqframe(frame_org)
+                        # Final clean up
+                        del s
+                except:
+                        pass
                 casalog.post('')
 

@@ -26,9 +26,64 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                 raise Exception, s
 
             #load the data  without averaging
-            s=sd.scantable(infile,average=False,antenna=antenna)
+            sorg = sd.scantable(infile,average=False,antenna=antenna)
 
+            # Select scan and field
+            sel = sd.selector()
 
+            # Set up scanlist
+            if ( type(scanlist) == list ):
+                    # is a list
+                    scans = scanlist
+            else:
+                    # is a single int, make into list
+                    scans = [ scanlist ]
+            # Now select them
+            if ( len(scans) > 0 ):
+                    sel.set_scans(scans)
+
+            # Select source names
+            if ( field != '' ):
+                    sel.set_name(field)
+                    # NOTE: currently can only select one
+                    # set of names this way, will probably
+                    # need to do a set_query eventually
+
+            # Select IFs
+            if ( type(iflist) == list ):
+                    # is a list
+                    ifs = iflist
+            else:
+                    # is a single int, make into list
+                    ifs = [ iflist ]
+            if ( len(ifs) > 0 ):
+                    # Do any IF selection
+                    sel.set_ifs(ifs)
+
+            # Select polarization
+            if ( type(pollist) == list ):
+                    # is a list
+                    pols = pollist
+            else:
+                    pols = [ polist ] 
+            if ( len(pols) > 0 ):
+                    sel.set_polarisations(pols)
+            try:
+               # Apply the selection (if any)
+                    sorg.set_selection(sel)
+            except Exception, instance:
+                #print '***Error***',instance
+                casalog.post( str(instance), priority = 'ERROR' )
+                return
+            del sel
+
+	    # Copy the original data (CAS-3987)
+	    if (rcParams['scantable.storage'] == 'disk'):
+		    s = sorg.copy()
+	    else:
+		    s = sorg
+	    del sorg
+	    
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
             antennaname = s.get_antennaname()
@@ -74,55 +129,6 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
             else:
                     #print 'Using current doppler convention'
                     casalog.post( 'Using current doppler convention' )
-
-            # Select scan and field
-            sel = sd.selector()
-
-            # Set up scanlist
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
-            # Now select them
-            if ( len(scans) > 0 ):
-                    sel.set_scans(scans)
-
-            # Select source names
-            if ( field != '' ):
-                    sel.set_name(field)
-                    # NOTE: currently can only select one
-                    # set of names this way, will probably
-                    # need to do a set_query eventually
-
-            # Select IFs
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
-            if ( len(ifs) > 0 ):
-                    # Do any IF selection
-                    sel.set_ifs(ifs)
-
-            # Select polarization
-            if ( type(pollist) == list ):
-                    # is a list
-                    pols = pollist
-            else:
-                    pols = [ polist ] 
-            if ( len(pols) > 0 ):
-                    sel.set_polarisations(pols)
-            try:
-               # Apply the selection (if any)
-                    s.set_selection(sel)
-            except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority = 'ERROR' )
-                return
-            del sel
 
             # convert flux
             # set flux unit string (be more permissive than ASAP)
