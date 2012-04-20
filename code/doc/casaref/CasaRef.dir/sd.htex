@@ -16,26 +16,42 @@ Synopsis
   The sd tool is a top level object and it contains various 
   sub tools as well as a number of functions.
 
-  \medskip\noindent\textbf{Important note}
+  In the latest release, single dish package is loaded at the start-up 
+  of CASA. Therefore, it is not necessary to load ASAP explicitly anymore.
+  
 
-   In the latest release, single dish package is loaded at the start-up 
-   of CASA. Therefore, it is not necessary to load ASAP explicitly anymore.
+  \medskip\noindent\textbf{Environment Variables}
 
-%    {\bf To access sd tool from \casa, the user must execute asap\_init()} 
-%    from the command-line interface of \casa. 
-%    This command imports ASAP package as sd tool and makes single-dish 
-%    tasks available.
-%
-%    As described above, the sd tool is originally a standalone software package, 
-%    and it is actually an independent Python module named 'asap'. 
-%    Thus, you can import sd tool without executing asap\_init().
-%    It can be imported as usual Python module such as 
-%
-%    \begin{verbatim}
-%    import asap as sd
-%    \end{verbatim}
-%
-%    from command line interface of \casa.
+    There are several environment variables that controls global behavior 
+    of the tool. Those are stored in Python dictionary {\tt sd.rcParams}.
+    By modifying {\tt sd.rcParams}, you can change some basic behavior of 
+    the tool.
+    See \ahlink{sd.list\_rcparameters}{sd:sd.list_rcparameters} for complete 
+    list of environment variables.
+
+  \medskip\noindent\textbf{Important Note}
+
+    User must use {\tt sd.rcParams[scantable.storage']='disk'} with care 
+    when you call any tool level functions since some functions may overwrite 
+    original data even if you set {\tt sd.rcParams['insitu']=False}, 
+    which tells the system not to overwrite original data (in contrast, 
+    setting {\tt sd.rcParams['insitu']} to True forces to overwrite original 
+    data). Relevant methods, which may overwrite original data in the above 
+    case, are as follows:
+
+    \begin{itemize}
+       \item \ahlink{sd.average\_time}{sd:sd.average_time}
+       \item \ahlink{sd.merge}{sd:sd.merge}
+       \item four operations of \ahlink{sd.scantable}{sd:sd.scantable} instance with scalar or array
+       \item \ahlink{sd.scantable.add}{sd:sd.scantable.add}
+       \item \ahlink{sd.scantable.clip}{sd:sd.scantable.clip}
+       \item \ahlink{sd.scantable.flag}{sd:sd.scantable.flag}
+       \item \ahlink{sd.scantable.flag\_nans}{sd:sd.scantable.flag_nans}
+       \item \ahlink{sd.scantable.flag\_row}{sd:sd.scantable.flag_row}
+       \item \ahlink{sd.scantable.scale}{sd:sd.scantable.scale}
+       \item \ahlink{sd.scantable.recalc\_azel}{sd:sd.scantable.recalc_azel}
+       \item any setter functions of \ahlink{sd.scantable}{sd:sd.scantable} class (both {\tt set\_xxx} and {\tt \_setxxx} functions)
+    \end{itemize}
 
   \medskip\noindent\textbf{Data format}
 
@@ -1753,6 +1769,8 @@ Methods
 
 	\ahlink{get\_tsys}{sd:sd.scantable.get_tsys} &Get a list of system temperatures \\
 
+	\ahlink{get\_tsysspectrum}{sd:sd.scantable.get_tsysspectrum} &Get a list of channel-dependent system temperatures \\
+
 	\ahlink{get\_unit}{sd:sd.scantable.get_unit} &Get the default unit of spectral axis \\
 
 	\ahlink{get\_weather}{sd:sd.scantable.get_weather} &Get the weather informations \\
@@ -1808,6 +1826,8 @@ Methods
 	\ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline} &Perform a baseline subtraction using polynomial function \\
 
 	\ahlink{recalc\_azel}{sd:sd.scantable.recalc_azel} &Recalculate azimuth and elevation for each sky position \\
+
+	\ahlink{regrid\_channel}{sd:sd.scantable.regrid_channel} &Regrid the spectra by the specified channel width \\
 
 	\ahlink{resample}{sd:sd.scantable.resample} &Perform a binning \\
 
@@ -3990,6 +4010,35 @@ float array
 \hfill \\
 
 
+%% sd.scantable.get_tsysspectrum
+\newpage
+\ahsdfunction{sd.scantable.get\_tsysspectrum}{sd.scantable.get_tsysspectrum}{Get a list of channel-dependent system temperatures}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return the channel-dependent System temperatures.
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+row && \multicolumn{2}{p{3.36in}|}{The rowno to get the information for}\\
+& &allowed: & integer \\
+& &Default: & -1 (all rows)
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+float array
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
 %% sd.scantable.get_unit
 \newpage
 \ahsdfunction{sd.scantable.get\_unit}{sd.scantable.get_unit}{Get the default unit of spectral axis}
@@ -4838,6 +4887,44 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.scantable.regrid_channel
+\newpage
+\ahsdfunction{sd.scantable.regrid\_channel}{sd.scantable.regrid_channel}{Regrid the spectra by the specified channel width}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Regrid the spectra by the specified channel width. 
+
+    Plot option is not implemented yet.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+width && \multicolumn{2}{p{3.36in}|}{The channel width of regridded spectra in the current spectral unit}\\
+& &allowed: & float \\
+& &Default: & 5.0
+\\
+plot && \multicolumn{2}{p{3.36in}|}{plot original data and regredded spectra (not implemented yet)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None
+\\
+
+\hline
+\end{tabular}
+
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
