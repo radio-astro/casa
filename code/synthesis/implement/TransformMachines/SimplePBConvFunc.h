@@ -107,10 +107,10 @@ namespace casa{
       {throw(AipsError("SimplePBConvFunc::makeAverageRes() called"));};
 
       //Serialization
-      Bool toRecord(RecordInterface& outRec);
+     virtual  Bool toRecord(RecordInterface& outRec);
       //From record 
       //set calcfluxneeded to True if flux scale need to be computed
-      Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
+      virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;

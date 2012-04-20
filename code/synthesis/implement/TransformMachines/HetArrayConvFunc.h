@@ -82,8 +82,8 @@ namespace casa{
     // slice flux scale images 
     virtual void sliceFluxScale(const Int npol);
     //Serialization
-    Bool toRecord(RecordInterface& rec);
-    Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxscale=False);
+   virtual Bool toRecord(RecordInterface& rec);
+   virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxscale=False);
 
     //----------------------------------------------
 
