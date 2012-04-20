@@ -18,7 +18,7 @@ gl=sys._getframe(stacklevel).f_globals
 
 # Short description
 def description():
-    return "Simulates a single 12m ALMA pointing from a model image. No noise, imaged."
+    return "Simulates a single 12m ALMA pointing from a model image. noise, imaged."
 
 
 def data():
@@ -36,5 +36,5 @@ def run(fetch=False):
     if not gl['regstate']:
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
-    return ['psim2/psim2.alma.out20.image','psim2/psim2.alma.out20.diff']
+    return ['psim2/psim2.alma.out20.noisy.image','psim2/psim2.alma.out20.noisy.diff']
 
