@@ -44,9 +44,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
-NewCalTable::NewCalTable()
+NewCalTable::NewCalTable() :
+  Table()
 {
-// Default null constructor for calibration table; do nothing for now
+  // Form CTDesc from parameters
+  String parTypeStr("Complex");
+
+  CTDesc nctd(parTypeStr,"unknown","unknown","unknown");
+
+  // Form underlying generic Table according to the CTDesc
+  SetupNewTable calMainTab("nullNewCalTable.tempMemCalTable",nctd.calMainDesc(),Table::New);
+  Table tab(calMainTab, Table::Memory, 0, False); 
+  *this = tab;
+  
+  // Set the table info record
+  this->setTableInfo();
 };
 
 //----------------------------------------------------------------------------
