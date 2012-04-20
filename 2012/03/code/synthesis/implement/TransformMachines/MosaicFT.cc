@@ -1277,8 +1277,10 @@ Bool MosaicFT::toRecord(String&  error,
   if(!FTMachine::toRecord(error, outRec, withImage))
     return False;
   
-  if(sj_p)
+  if(sj_p){
     outRec.define("telescope", sj_p->telescope());
+    cerr <<" Telescope " << sj_p->telescope() << endl;
+  }
   outRec.define("uvscale", uvScale);
   outRec.define("uvoffset", uvOffset);
   outRec.define("cachesize", Int64(cachesize));
@@ -1303,6 +1305,7 @@ Bool MosaicFT::toRecord(String&  error,
   outRec.define("stokes", stokes_p);
   if(!pbConvFunc_p.null()){
     Record subRec;
+    cerr << "Doing pbconvrec " << endl;
     pbConvFunc_p->toRecord(subRec);
     outRec.defineRecord("pbconvfunc", subRec);
   }
@@ -1374,10 +1377,15 @@ Bool MosaicFT::fromRecord(String& error,
     Record subRec=inRec.asRecord("pbconvfunc");
     String elname=subRec.asString("name");
     // if we are predicting only ...no need to estimate fluxscale
-    if(elname=="HetArrayConvFunc")
+    if(elname=="HetArrayConvFunc"){
+    
       pbConvFunc_p=new HetArrayConvFunc(subRec, !toVis_p);
-    else
+    }
+    else{
       pbConvFunc_p=new SimplePBConvFunc(subRec, !toVis_p);
+      if(!sj_p)
+	throw(AipsError("Failed to recovermosaic FTmachine;\n If you are seeing this message when try to get model vis \n then either try to reset the model or use scratch column for now"));
+    }
   }
   else{
     pbConvFunc_p=0;

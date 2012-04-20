@@ -147,6 +147,9 @@ extern "C" {
     if(tp_p ==NULL)
       throw(AipsError("PlotCal is hopelessly disabled! Restart casapy"));
 
+    // Because previous resets might have unset this...
+    tp_p->setResetCallBack("PlotCal",resetCallBack_p);
+
     // Create/discern the cal table
     createCalTab(tabName);
 
@@ -163,6 +166,7 @@ extern "C" {
     //break the link with original table
     tabSel_p=Table();
     tab_p=Table();
+    ct_p = NewCalTable();
     tabName_p="";
     msName_p="";
 
