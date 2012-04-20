@@ -75,8 +75,8 @@ class sdplot_test_plot(unittest.TestCase):
         default(sdplot)
 
     def tearDown(self):
-        if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
+        #if (os.path.exists(self.infile)):
+        #    shutil.rmtree(self.infile)
         #if self.fig and (os.path.exists(self.fig)):
         #    os.remove(self.fig)
         if self.oldgui:

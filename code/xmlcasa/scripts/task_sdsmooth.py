@@ -4,6 +4,7 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 from asap import _to_list
+from asap.scantable import is_scantable
 
 def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
 
@@ -76,7 +77,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
             # Copy scantable when usign disk storage not to modify
             # the original table.
-            if sd.rcParams['scantable.storage'] == 'disk':
+            if is_scantable(infile) and \
+                   sd.rcParams['scantable.storage'] == 'disk':
                     s = sorg.copy()
             else:
                     s = sorg
