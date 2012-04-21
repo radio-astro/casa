@@ -513,6 +513,9 @@ FlagAgentBase::runCore()
 		// If any row was flag, then we have to flush the flagRow
 		if (flagRow_p) flagDataHandler_p->flushFlagRow_p = true;
 
+		// jagonzal: CAS-3913 We have to reset flagRow
+		flagRow_p = false;
+
 		// If any flag was raised, then we have to flush the flagCube
 		if (visBufferFlags_p>0) flagDataHandler_p->flushFlags_p = true;
 
@@ -1082,8 +1085,8 @@ FlagAgentBase::setAgentParameters(Record config)
 	{
 		flagAutoCorrelations_p = config.asBool("autocorr");
 		if (flagAutoCorrelations_p) filterRows_p=true;
+		*logger_p << logLevel_p << " autocorr is " << flagAutoCorrelations_p << LogIO::POST;
 	}
-	*logger_p << logLevel_p << " autocorr is " << flagAutoCorrelations_p << LogIO::POST;
 
 	return;
 }
@@ -1514,9 +1517,13 @@ FlagAgentBase::iterateRows()
 		flagRow = computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()), flagsMap,*rowIter);
 		if (flagRow)
 		{
-			flagsMap.applyFlagRow(*rowIter);
+			flagsMap.applyFlagInRow(*rowIter);
 			visBufferFlags_p += flagsMap.flagsPerRow();
-			if ((filterChannels_p == false) and (filterPols_p == false)) flagRow_p = true;
+			if ((filterChannels_p == false) and (filterPols_p == false))
+			{
+				flagsMap.applyFlagRow(*rowIter);
+				flagRow_p = true;
+			}
 		}
 
 		// Increment row index
