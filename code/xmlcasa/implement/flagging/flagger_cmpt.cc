@@ -41,7 +41,7 @@ flagger::flagger()
 	flagger_p = new Flagger();
 	
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 
@@ -53,7 +53,7 @@ flagger::~flagger()
     {
         done();
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -74,7 +74,7 @@ flagger::open(const std::string& msname)
         }
 	return new ::casac::record();
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -104,7 +104,7 @@ flagger::setdata(
         }
 	return rstat;
     } catch (AipsError x) {
-	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -165,7 +165,7 @@ flagger::setmanualflags(
 	return false;
 	
     } catch (AipsError x) {
-	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -181,7 +181,7 @@ flagger::printflagselection()
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -198,7 +198,7 @@ flagger::clearflagselection(const int index)
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -216,7 +216,7 @@ flagger::getautoflagparams(const std::string& algorithm)
         }
         return rstat;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -233,7 +233,7 @@ flagger::setautoflag(const std::string& algorithm, const ::casac::record& parame
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -264,7 +264,7 @@ flagger::setflagsummary(const std::string& field, const std::string& spw, const 
         return false;
 
     } catch (AipsError x) {
-	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -308,7 +308,7 @@ flagger::setshadowflags(const std::string& field,
         return false;
 
     } catch (AipsError x) {
-	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -353,7 +353,7 @@ flagger::setelevationflags(const std::string& field,
         return false;
 
     } catch (AipsError x) {
-	//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 }
@@ -373,7 +373,7 @@ flagger::setqueryflag(const std::string& field, const std::string& spw, const st
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -392,7 +392,7 @@ flagger::setextendflag(const std::string& field, const std::string& spw, const s
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -409,7 +409,7 @@ flagger::run(const bool trial, const bool reset)
 	}
         return rstat;
     } catch (AipsError x) {
-        //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
         RETHROW(x);
     }
 }
@@ -428,7 +428,7 @@ flagger::writeflagstodisk()
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -447,7 +447,7 @@ flagger::help(const std::string& names)
         }
         return false;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -469,7 +469,7 @@ flagger::done()
         }
         return true;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -485,7 +485,7 @@ flagger::saveflagversion(const std::string& versionname, const std::string& comm
         }
         return False;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -504,7 +504,7 @@ flagger::restoreflagversion(const std::vector<std::string>& versionname, const s
         }
         return False;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -523,7 +523,7 @@ flagger::deleteflagversion(const std::vector<std::string>& versionname)
         }
         return False;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -547,7 +547,7 @@ flagger::getflagversionlist(const bool printflags)
         }
         return result;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
