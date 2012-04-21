@@ -77,8 +77,8 @@ quanta::quantumHolderFromVar(const ::casac::variant& theVar){
       delete ptrRec;
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return qh;
@@ -98,8 +98,8 @@ quanta::recordFromQuantity(const casa::Quantity q)
 	      << LogIO::POST;
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: "
-//	    << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+	    << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return r;
@@ -119,8 +119,8 @@ quanta::recordFromQuantity(const Quantum<Vector<Double> >& q)
               << LogIO::POST;
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: "
-     //       << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+            << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return r;
@@ -797,7 +797,7 @@ quanta::done(const bool kill)
     //    itsLog=0;
     rstat = true;
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -834,8 +834,8 @@ quanta::isquantity(const ::casac::variant& v)
       delete ptrRec;
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
