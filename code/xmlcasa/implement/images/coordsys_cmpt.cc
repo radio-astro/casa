@@ -2949,8 +2949,8 @@ coordsys::torecord()
     // Put it in a ::casac::record
     rstat = fromRecord(rec.asRecord("CoordinateSystem"));
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: "
-    //	    << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+    	    << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -2989,8 +2989,8 @@ coordsys::subimage(const ::casac::variant& neworigin, const std::vector<int>& ne
     // Put it in a ::casac::record
     rstat = fromRecord(rec.asRecord("CoordinateSystem"));
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: "
-    //	    << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+    	    << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -3192,7 +3192,7 @@ record* coordsys::toworldmany(const variant& value) {
 		rstat = fromRecord(tmpRec);
 	}
 	catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 
