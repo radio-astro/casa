@@ -67,7 +67,7 @@ deconvolver::open(const std::string& dirty, const std::string& psf, bool warn)
     itsDeconv->open(String(dirty), String(psf), warn);
     return true;
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -82,7 +82,7 @@ deconvolver::reopen()
 
     return true;
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -99,7 +99,7 @@ deconvolver::close()
     //itsDeconv->setPGPlotter(*itsPlotter);
     return true;
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -119,7 +119,7 @@ deconvolver::summary()
 
     return itsDeconv->summary();
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -142,7 +142,7 @@ deconvolver::boxmask(const std::string& mask, const std::vector<int>& blc, const
 			      fill, out);
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -218,7 +218,7 @@ deconvolver::regionmask(const std::string& mask, const ::casac::record& region,
       delete pRegion;
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -242,7 +242,7 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
     return itsDeconv->clipimage(String(clippedimage), String(inputimage), 
 				thresh);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -258,7 +258,7 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
 
     }
     catch  (AipsError x) {
-      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
     }
     
@@ -282,7 +282,7 @@ deconvolver::clarkclean(const int niter, const double gain, const ::casac::varia
 				 speedup, maxnumpix, maxnummajcycles, 
 				 maxnummineriter);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -298,7 +298,7 @@ deconvolver::dirtyname()
 
     return itsDeconv->dirtyname();
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -315,7 +315,7 @@ deconvolver::psfname()
 
     return itsDeconv->psfname();
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return "";
@@ -329,7 +329,7 @@ deconvolver::make(const std::string& image, const bool async)
 
     return itsDeconv->make(String(image));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -343,7 +343,7 @@ deconvolver::convolve(const std::string& convolvemodel, const std::string& model
 
     return itsDeconv->convolve(String(convolvemodel), String(model));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
  
@@ -370,7 +370,7 @@ deconvolver::makegaussian(const std::string& gaussianimage, const ::casac::varia
     return itsDeconv->makegaussian(String(gaussianimage), maj, min, pa, 
 				   normalize);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -410,7 +410,7 @@ deconvolver::clean(const std::string& algorithm, const int niter, const double g
     return itsDeconv->clean(String(algorithm), niter, gain, thresh, 
 			    displayprogress, String(model), String(mask));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   
@@ -426,7 +426,7 @@ deconvolver::setscales(const std::string& scalemethod, const int nscales, const 
       convertArray(vec, Vector<Double>(uservector));
     return itsDeconv->setscales(String(scalemethod), nscales, vec);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -440,7 +440,7 @@ deconvolver::ft(const std::string& model, const std::string& transform, const bo
 
     return itsDeconv->ft(String(model), String(transform));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -466,7 +466,7 @@ deconvolver::restore(const std::string& model, const std::string& image, const :
 
     return itsDeconv->restore(String(model), String(image), maj, min, pa);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -480,7 +480,7 @@ deconvolver::residual(const std::string& model, const std::string& image, const 
   try {
     return itsDeconv->residual(String(model), String(image));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -510,7 +510,7 @@ deconvolver::smooth(const std::string& model, const std::string& image, const ::
     return itsDeconv->smooth(String(model), String(image), maj, min, pa, 
 			     normalize);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -535,7 +535,7 @@ deconvolver::mem(const std::string& entropy, const int niter, const ::casac::var
 			  displayprogress, String(model), String(prior), 
 			  String(mask), imageplane);
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return false;
@@ -566,7 +566,7 @@ deconvolver::makeprior(const std::string& prior, const std::string& templateimag
     return itsDeconv->makeprior(String(prior), String(templateimage), lcf, lct,
 				hcf, hct, Vector<Int>(blc), Vector<Int>(trc));
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }    
   return false;
