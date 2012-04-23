@@ -37,7 +37,7 @@ testflagger::testflagger()
 		testflagger_p = new TestFlagger();
 
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -50,7 +50,7 @@ testflagger::~testflagger()
 		done();
 
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -67,7 +67,7 @@ testflagger::done()
 
 		return true;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -87,7 +87,7 @@ testflagger::open(const std::string& msname, const double ntime)
 
 		return false;
 	} catch(AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -132,7 +132,7 @@ testflagger::selectdata(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -152,7 +152,7 @@ testflagger::parseagentparameters(const ::casac::record& aparams)
 
 		return false;
 	} catch(AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -168,7 +168,7 @@ testflagger::init()
 
 		return false;
 	} catch(AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -188,7 +188,7 @@ testflagger::init()
 
 		return rstat;
 	} catch(AipsError x){
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -216,7 +216,7 @@ testflagger::getflagversionlist(const bool printflags)
 		}
 		return result;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -232,7 +232,7 @@ testflagger::printflagselection()
 		}
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -249,7 +249,7 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 		}
 		return False;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -269,7 +269,7 @@ testflagger::restoreflagversion(const std::vector<std::string>& versionname,
         }
         return False;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -288,7 +288,7 @@ testflagger::deleteflagversion(const std::vector<std::string>& versionname)
         }
         return False;
     } catch (AipsError x) {
-            //*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+            *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
     }
 }
@@ -325,7 +325,7 @@ testflagger::parsemanualparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -368,7 +368,7 @@ testflagger::parseclipparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -408,7 +408,7 @@ testflagger::parsequackparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -447,7 +447,7 @@ testflagger::parseelevationparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -497,7 +497,7 @@ testflagger::parsetfcropparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -543,7 +543,7 @@ testflagger::parseextendparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -583,7 +583,7 @@ testflagger::parsesummaryparameters(
 
 		return false;
 	} catch (AipsError x) {
-		//*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }

@@ -263,6 +263,58 @@ del ca
 
 <!-- *********************************************************************** -->
 
+<method type="function" name="field">
+
+<shortdescription>
+Get fields in the calibration table.
+</shortdescription>
+
+<description>
+Get fields in the calibration table.
+</description>
+
+<returns type="stringArray">
+  <shortdescription>Fields</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+field = ca.field()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="antenna">
+
+<shortdescription>
+Get antennas in the calibration table.
+</shortdescription>
+
+<description>
+Get antennas in the calibration table.
+</description>
+
+<returns type="stringArray">
+  <shortdescription>Antennas</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+antenna = ca.antenna()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
 <method type="function" name="feed">
 
 <shortdescription>
@@ -315,6 +367,32 @@ del ca
 
 <!-- *********************************************************************** -->
 
+<method type="function" name="numspw">
+
+<shortdescription>
+Get the number of spectral windows in the calibration table.
+</shortdescription>
+
+<description>
+Get the number of spectral windows in the calibration table.
+</description>
+
+<returns type="int">
+  <shortdescription>Number of spectral windows</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+numspw = ca.numspw()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
 <method type="function" name="spw">
 
 <shortdescription>
@@ -345,24 +423,50 @@ del ca
 
 <!-- *********************************************************************** -->
 
-<method type="function" name="numspw">
+<method type="function" name="numchannel">
 
 <shortdescription>
-Get the number of spectral windows in the calibration table.
+Get the number of channels per spectral window in the calibration table.
 </shortdescription>
 
 <description>
-Get the number of spectral windows in the calibration table.
+Get the number of channels per spectral window in the calibration table.
 </description>
 
-<returns type="int">
-  <shortdescription>Number of spectral windows</shortdescription>
+<returns type="intArray">
+  <shortdescription>Number of channels</shortdescription>
 </returns>
 
 <example>
 ca = calanalysis()
 ca.open( '{caltable name}' )
-numspw = ca.numspw()
+numChannel = ca.numchannel()
+ca.close()
+del ca
+</example>
+
+</method>
+
+<!-- *********************************************************************** -->
+
+<method type="function" name="freq">
+
+<shortdescription>
+Get the frequencies per spectral window in the calibration table.
+</shortdescription>
+
+<description>
+Get the frequencies per spectral window in the calibration table.
+</description>
+
+<returns type="record">
+  <shortdescription>Frequencies</shortdescription>
+</returns>
+
+<example>
+ca = calanalysis()
+ca.open( '{caltable name}' )
+freq = ca.freq()
 ca.close()
 del ca
 </example>

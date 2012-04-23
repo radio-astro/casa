@@ -35,7 +35,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Inputs/Input.h>
 #include <casa/Arrays/IPosition.h>
-#include <display/QtPlotter/QtCanvas.qo.h>
+//#include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/Display/PanelDisplay.h>
@@ -132,7 +132,10 @@ public slots:
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
 	void changeFrame(const QString &text);
-	void changeCoordinateType(const QString &text);
+
+	void changeCoordinateType( const QString & text );
+
+	void changeTopAxisCoordinateType( const QString & text );
 	virtual void closeEvent ( QCloseEvent *);
 	void resetProfile(ImageInterface<Float>* img, const char *name = 0);
 	void wcChanged( const String,
@@ -181,10 +184,7 @@ private:
    void messageFromProfile(QString &msg);
    void setCollapseVals(const Vector<Float> &spcVals);
 
-   /**
-    * Initializes the settings in the "Set Position"
-    * tab.
-    */
+
    void initSpectrumPosition();
    void setTitle( const QString& shape );
    void copyToLastEvent( const String& c, const Vector<Double> &px,
@@ -199,7 +199,9 @@ private:
    			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
    void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
    								const Vector<double> &wxv, const Vector<double> &wyv );
-   bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv );
+   bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
+		   const String& coordinateType, const String& xAxisUnit,
+		   Vector<Float> &z_xval, Vector<Float> &z_yval);
    bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
    void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 									const Vector<double> wxv, const Vector<double> wyv );
@@ -220,6 +222,8 @@ private:
    		QSpinBox* minSpinBox, QLineEdit* secSpinBox) const;
    void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
    		QLabel* const x2Label, QLabel* const y2Label );
+   void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
+
 
    Int scaleAxis();
    void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
@@ -306,11 +310,14 @@ private:
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
 
 
+
    private slots:
    	    void setPosition();
    		void locationSelectionTypeChanged( int index );
    		void locationUnitsChanged( int index );
    		void boxSpecChanged( int index );
+   		void changeTopAxis();
+   		void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
 
 };
 

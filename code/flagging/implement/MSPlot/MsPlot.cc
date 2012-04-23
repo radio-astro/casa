@@ -1360,8 +1360,9 @@ MsPlot::reset( Bool resetMS )
        //# only cause errors if they are enabled here.
        if ( itsMS != NULL ) { 
           delete itsMS; 
-          itsMS = NULL; 
+          //itsMS = NULL; 
        }
+       itsMS = new MeasurementSet();
 
        //# Need to make sure the flagging columns are set to the ususal
        //#ones.

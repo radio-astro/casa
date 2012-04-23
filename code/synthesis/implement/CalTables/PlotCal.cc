@@ -147,6 +147,9 @@ extern "C" {
     if(tp_p ==NULL)
       throw(AipsError("PlotCal is hopelessly disabled! Restart casapy"));
 
+    // Because previous resets might have unset this...
+    tp_p->setResetCallBack("PlotCal",resetCallBack_p);
+
     // Create/discern the cal table
     createCalTab(tabName);
 
@@ -163,6 +166,7 @@ extern "C" {
     //break the link with original table
     tabSel_p=Table();
     tab_p=Table();
+    ct_p = NewCalTable();
     tabName_p="";
     msName_p="";
 
@@ -309,7 +313,7 @@ Bool PlotCal::selectCal(const String& antenna,
   Bool spwSel=False;
   Bool timeSel=False;
   
-  if (msName_p=="" || !Table::isReadable(msName_p)) {
+  if ( msName_p=="" || !Table::isReadable(msName_p) ) {
     cout << "Note: Either your CalTable pre-dates name-based selection, or" << endl;
     cout << "      does not (yet) support selection, or the MS associated" << endl;
     cout << "      with this cal table does not exist.  All antennas," << endl;
@@ -1244,9 +1248,11 @@ Int PlotCal::multiTables(const Table& tablein,
       MSstartChan_p=0;
 
       TableRecord tr(ct_p.keywordSet());
-      if (tr.isDefined("MSName"))
+      if (tr.isDefined("MSName")) {
+	// Ensure this is a local filename
 	msName_p=tr.asString("MSName");
-      
+	msName_p=Path(msName_p).baseName();
+      }
     }
     else {
 
@@ -1282,19 +1288,25 @@ Int PlotCal::multiTables(const Table& tablein,
 	ROScalarColumn<String> msNameCol(cdtab,"MS_NAME");
 	msName_p = msNameCol(0);
 
-	// Add cal table relative path to the ms name
-	msName_p = Path(tabName_p).dirName() + "/" + msName_p;
-	
-	// get the full (presumed) absolute path to the MS, so Table doesn't
-	//  get it wrong
-	msName_p = Path(msName_p).absoluteName();
-
-	//	cout << "msName_p = " << msName_p << endl;
-
       }  // nCalDesc_p>0
     } // CAL_DESC readable
     } // isNCT_p
 
+
+    if (msName_p!="") {
+      // Add cal table relative path to the ms name
+      msName_p = Path(tabName_p).dirName() + "/" + msName_p;
+      
+      // get the full (presumed) absolute path to the MS, so Table doesn't
+      //  get it wrong
+      msName_p = Path(msName_p).absoluteName();
+      
+      // Try current directory, if MS not co-located with the caltable:
+      if (!Table::isReadable(msName_p)) {
+	String baseName=Path(msName_p).baseName();
+	msName_p=Path(baseName).absoluteName();
+      }
+    }
 
   }
 

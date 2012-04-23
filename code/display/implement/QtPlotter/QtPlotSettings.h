@@ -34,21 +34,51 @@ class QtPlotSettings
 {
 public:
     QtPlotSettings();
-
-    void scroll(int dx, int dy);
     void adjust();
-    double spanX() const { return maxX - minX; }
+    void zoomOut( double zoomFactor );
+    void zoomIn( double zoomFactor );
+    void scroll(int dx, int dy);
+    enum AxisIndex {xBottom, xTop, END_AXIS_INDEX };
+    double spanX( AxisIndex index ) const {
+    	return maxX[static_cast<int>(index)] - minX[static_cast<int>(index)];
+    }
     double spanY() const { return maxY - minY; }
-    
-    double minX;
-    double maxX;
-    int numXTicks;
+    double getMinX( AxisIndex index ) const {
+    	return minX[static_cast<int>(index)];
+    }
+    void setMinX( AxisIndex index, double value );
+    double getMaxX( AxisIndex index ) const {
+    	return maxX[static_cast<int>(index)];
+    }
+    void setMaxX( AxisIndex index, double value );
+    double getMinY() const {
+    	return minY;
+    }
+    void setMinY( double value );
+    double getMaxY() const {
+    	return maxY;
+    }
+
+    void setMaxY( double value );
+    int getNumTicksX( AxisIndex index ) const {
+    	return numXTicks[index];
+    }
+    int getNumTicksY() const {
+    	return numYTicks;
+    }
+   // void setXAxesBounds( double min, double max );
+   // void setYAxesBounds( double min, double max );
+
+
+private:
+
+    void adjustAxis(double &min, double &max, int &numTicks);
+    double minX[END_AXIS_INDEX];
+    double maxX[END_AXIS_INDEX];
+    int numXTicks[END_AXIS_INDEX];
     double minY;
     double maxY;
     int numYTicks;
-
-private:
-    void adjustAxis(double &min, double &max, int &numTicks);
 };
 
 

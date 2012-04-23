@@ -4,6 +4,7 @@ import os
 import filecmp
 from tasks import *
 from taskinit import *
+from __main__ import default
 
 #
 # Test of tflagcmd task. It uses tflagdata to unflag and summary
@@ -54,6 +55,7 @@ class test_base(unittest.TestCase):
                          self.vis)
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(tflagcmd)
 
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -68,6 +70,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(tflagcmd)
 
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
@@ -82,6 +85,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(tflagcmd)
 
         
     def setUp_evla(self):
@@ -97,6 +101,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(tflagcmd)
         
     def setUp_shadowdata(self):
         self.vis = "shadowtest_part.ms"
@@ -111,6 +116,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(tflagcmd)
         
         
 class test_manual(test_base):
@@ -121,6 +127,13 @@ class test_manual(test_base):
         
     def test_observation(self):
         input = "observation='1'"
+        filename = create_input(input)
+        
+        tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+
+    def test_compatibility(self):
+        input = "observation='1' mode='manualflag'"
         filename = create_input(input)
         
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)

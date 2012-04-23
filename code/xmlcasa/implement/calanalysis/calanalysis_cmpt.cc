@@ -17,7 +17,7 @@ using namespace casa;
 
 namespace casac {
 
-// --- ///
+// --- //
 
 calanalysis::calanalysis() {
 
@@ -29,181 +29,259 @@ calanalysis::calanalysis() {
 
 }
 
-// --- ///
+// --- //
 
 calanalysis::~calanalysis() {
 
   //  If the CalAnalysis instance is valid deallocate it and return
 
-  if ( poCA != NULL ) {
-    delete poCA;
-    poCA = NULL;
-  }
+  if ( poCA == NULL ) return;
+
+  delete poCA;
+  poCA = NULL;
 
   return;
 
 }
 
-// --- ///
+// --- //
 
 bool calanalysis::open( const std::string& caltable ) {
 
-  // Allocate the CalAnalysis instance and return true
-
-  poCA = new CalAnalysis( String(caltable) );
-
-  return( true );
-
-}
-
-// --- ///
-
-bool calanalysis::close() {
-
-  // Deallocate the CalAnalysis instance and return true
+  // Is a file already open?
 
   if ( poCA != NULL ) {
-    delete poCA;
-    poCA = NULL;
+    LogIO log( LogOrigin( "CalAnalysis", "CalAnalysis()", WHERE ) );
+    log << LogIO::WARN << "File " << poCA->calName() << " is already open"
+        << LogIO::POST;
+    return( false );
+  }
+
+
+  // Allocate the CalAnalysis instance and return true
+
+  try {
+    poCA = new CalAnalysis( String(caltable) );
+  }
+  catch( AipsError oAE ) {
+    LogIO log( LogOrigin( "CalAnalysis", "CalAnalysis()", WHERE ) );
+    log << LogIO::WARN << oAE.getMesg() << LogIO::POST;
+    return( false );
   }
 
   return( true );
 
 }
 
-// --- ///
+// --- //
+
+bool calanalysis::close() {
+
+  // Deallocate the CalAnalysis instance and return true
+
+  if ( poCA == NULL ) return( false );
+
+  delete poCA;
+  poCA = NULL;
+
+  return( true );
+
+}
+
+// --- //
 
 std::string calanalysis::calname() {
 
   // If the CalAnalysis instance is valid return the caltable name otherwise
   // return a null string
 
-  if ( poCA != NULL ) {
-    return( poCA->calName() );
-  } else {
-    return( string() );
-  }
+  if ( poCA == NULL ) return( string() );
+
+  return( poCA->calName() );
 
 }
 
-// --- ///
+// --- //
 
 std::string calanalysis::msname() {
 
   // Return the associated caltable name
 
-  if ( poCA != NULL ) {
-    return( poCA->msName() );
-  } else {
-    return( string() );
-  }
+  if ( poCA == NULL ) return( string() );
+
+  return( poCA->msName() );
 
 }
 
-// --- ///
+// --- //
 
 std::string calanalysis::viscal() {
 
   // Return the caltable type (B, G, T, etc.)
 
-  if ( poCA != NULL ) {
-    return( poCA->visCal() );
-  } else {
-    return( string() );
-  }
+  if ( poCA == NULL ) return( string() );
+
+  return( poCA->visCal() );
 
 }
 
-// --- ///
+// --- //
 
 std::string calanalysis::partype() {
 
   // If the CalAnalysis instance is valid return "Complex" for a CPARAM column
   // or "Float" for a PARAM colum, otherwise a null string
 
-  if ( poCA != NULL ) {
-    return( poCA->parType() );
-  } else {
-    return( string() );
-  }
+  if ( poCA == NULL ) return( string() );
+
+  return( poCA->parType() );
 
 }
 
-// --- ///
+// --- //
 
 std::string calanalysis::polbasis() {
 
   // If the CalAnalysis instance is valid return the polarization basis otherwise
   // return a null string
 
-  if ( poCA != NULL ) {
-    return( poCA->polBasis() );
-  } else {
-    return( string() );
-  }
+  if ( poCA == NULL ) return( string() );
 
-  return( string() );
+  return( poCA->polBasis() );
 
 }
 
-// --- ///
+// --- //
+
+std::vector<std::string> calanalysis::field( void ) {
+
+  if ( poCA == NULL ) return( std::vector<std::string>() );
+
+  Vector<uInt> oField( poCA->field() );
+  uInt uiNumField = oField.nelements();
+
+  std::vector<std::string> field( uiNumField );
+  for ( uInt f=0; f<uiNumField; f++ ) field[f] = uint2string( oField[f] );
+
+  return( field );
+
+}
+
+// --- //
+
+std::vector<std::string> calanalysis::antenna( void ) {
+
+  if ( poCA == NULL ) return( std::vector<std::string>() );
+
+  Vector<uInt> oAntenna( poCA->antenna() );
+  uInt uiNumAntenna = oAntenna.nelements();
+
+  std::vector<std::string> antenna( uiNumAntenna );
+  for ( uInt a=0; a<uiNumAntenna; a++ ) antenna[a] = uint2string( oAntenna[a] );
+
+  return( antenna );
+
+}
+
+// --- //
 
 std::vector<std::string> calanalysis::feed( void ) {
 
-  if ( poCA != NULL ) {
-    Vector<String> oFeed( poCA->feed() ); uInt uiNumFeed = oFeed.nelements();
-    std::vector<std::string> feed( uiNumFeed );
-    for ( uInt f=0; f<uiNumFeed; f++ ) feed[f] = oFeed[f];
-    return( feed );
-  } else {
-    return( std::vector<std::string>() );
-  }
+  if ( poCA == NULL ) return( std::vector<std::string>() );
+
+  Vector<String> oFeed( poCA->feed() );
+  uInt uiNumFeed = oFeed.nelements();
+
+  std::vector<std::string> feed( uiNumFeed );
+  for ( uInt f=0; f<uiNumFeed; f++ ) feed[f] = oFeed[f];
+
+  return( feed );
 
 }
 
-// --- ///
+// --- //
 
 std::vector<double> calanalysis::time( void ) {
 
-  if ( poCA != NULL ) {
-    Vector<Double> oTime( poCA->time() ); uInt uiNumTime = oTime.nelements();
-    std::vector<double> time( uiNumTime );
-    for ( uInt t=0; t<uiNumTime; t++ ) time[t] = oTime[t];
-    return( time );
-  } else {
-    return( std::vector<double>() );
-  }
+  if ( poCA == NULL ) return( std::vector<double>() );
+
+  Vector<Double> oTime( poCA->time() );
+  uInt uiNumTime = oTime.nelements();
+
+  std::vector<double> time( uiNumTime );
+  for ( uInt t=0; t<uiNumTime; t++ ) time[t] = oTime[t];
+
+  return( time );
 
 }
 
-// --- ///
-
-std::vector<std::string> calanalysis::spw( void ) {
-
-  if ( poCA != NULL ) {
-    Vector<uInt> oSPW( poCA->spw() ); uInt uiNumSPW = oSPW.nelements();
-    std::vector<std::string> spw( uiNumSPW );
-    for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = uint2string( oSPW[s] );
-    return( spw );
-  } else {
-    return( std::vector<std::string>() );
-  }
-
-}
-
-// --- ///
+// --- //
 
 int calanalysis::numspw() {
 
-  if ( poCA != NULL ) {
-    return( poCA->numspw() );
-  } else {
-    return( 0 );
-  }
+  if ( poCA == NULL ) return( 0 );
+
+  return( poCA->numspw() );
 
 }
 
-// --- ///
+// --- //
+
+std::vector<std::string> calanalysis::spw( void ) {
+
+  if ( poCA == NULL ) return( std::vector<std::string>() );
+
+  Vector<uInt> oSPW( poCA->spw() );
+  uInt uiNumSPW = oSPW.nelements();
+
+  std::vector<std::string> spw( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = uint2string( oSPW[s] );
+
+  return( spw );
+
+}
+
+
+// --- //
+
+std::vector<int> calanalysis::numchannel() {
+
+  if ( poCA == NULL ) return( std::vector<int>() );
+
+  Vector<uInt> oNumChannel( poCA->numChannel() );
+  uInt uiNumSPW = oNumChannel.nelements();
+
+  std::vector<int> numchannel( uiNumSPW );
+  for ( uInt s=0; s<uiNumSPW; s++ ) numchannel[s] = (int) oNumChannel[s];
+
+  return( numchannel );
+
+}
+
+
+// --- //
+
+::casac::record* calanalysis::freq() {
+
+  ::casac::record* poRecord = new ::casac::record();
+
+  if ( poCA == NULL ) return( poRecord );
+
+  Vector<Vector<Double> > voFreq( poCA->freq() );
+  uInt uiNumSPW = voFreq.nelements();
+
+  for ( uInt s=0; s<uiNumSPW; s++ ) {
+    std::vector<double> freq( voFreq[s].nelements() );
+    for ( uInt c=0; c<voFreq[s].nelements(); c++ ) freq[c] = voFreq[s][c];
+    poRecord->insert( std::string( uint2string(s) ), freq );
+  }
+
+  return( poRecord );
+
+}
+
+
+// --- //
 
 ::casac::record* calanalysis::get( const std::vector<std::string>& field,
   const std::vector<std::string>& antenna1,
@@ -421,7 +499,7 @@ int calanalysis::numspw() {
 
 }
 
-// --- ///
+// --- //
 
 ::casac::record* calanalysis::fit( const std::vector<std::string>& field,
   const std::vector<std::string>& antenna1,
@@ -717,7 +795,7 @@ int calanalysis::numspw() {
 
 }
 
-// --- ///
+// --- //
 
 std::string calanalysis::uint2string(const unsigned int &number) {
    stringstream ss;

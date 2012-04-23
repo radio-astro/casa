@@ -50,7 +50,10 @@ antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 refdate="2012/06/21/03:25:00"
 totaltime="1200s"
 
-noise_thermal="tsys-atm"
+thermalnoise="tsys-atm"
+#tau0=0.
+#t_ground=0.
+#t_sky=0.
 user_pwv=0.5
 
 verbose=True
@@ -87,21 +90,20 @@ endProc = time.clock()
 
 test_name_ppd = """simdata observation of Wolf & D'Angelo's protoplanetary disk"""
 
-ppdso_im=ia.open(project+"/"+project + '.alma.out20.image')
+ppdso_im=ia.open(project+"/"+project + '.alma.out20.noisy.image')
 ppdso_stats=ia.statistics()
 ia.close()
 
 # 20100428
-refstats = { 'flux': 0.0363,
-             'max': 5.44e-04,
-#             'min': -0.633e-05,
-             'min': -0.9e-05,  # 20120110
-             'rms': 1.84e-04,
-             'sigma': 1.27e-04 }
+refstats = { 'flux': 0.0358,
+             'max': 6.65e-04,
+             'min': -2.5e-04, 
+             'rms': 2.02e-04,
+             'sigma': 1.51e-04 }
 
 reftol   = {'flux':  0.05,
             'max':   0.1,
-            'min':   0.15,
+            'min':   0.1,
             'rms':   0.1,
             'sigma': 0.1}
 

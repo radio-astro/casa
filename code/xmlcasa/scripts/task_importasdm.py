@@ -397,13 +397,13 @@ def importasdm(
                         tflocal.done()
                         
                         # Save to FLAG_CMD table. APPLIED is set to True.
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '')       
+                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       
                         
                     else:
                         casalog.post('Will not apply flags (apply_flags=False), use tflagcmd to apply')
                     
                         # Write to FLAG_CMD, APPLIED is set to False
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '')
+                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', '')
                     
                     # Save the flag cmds to an ASCII file
                     if savecmds:
@@ -411,7 +411,7 @@ def importasdm(
                         if outfile == '': 
                             outfile = viso.replace('.ms','_cmd.txt')
                             
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, outfile)
+                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', outfile)
                         casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
                     
                 else:

@@ -175,7 +175,7 @@ protected:
     void wheelEvent(QWheelEvent *event);
     void focusInEvent(QFocusEvent *event);
 
-protected:
+private:
     void updateRubberBandRegion();
     void refreshPixmap();    
     void drawGrid(QPainter *painter);
