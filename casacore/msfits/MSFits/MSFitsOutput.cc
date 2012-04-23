@@ -88,7 +88,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
         const MeasurementSet& ms, const String& column, Int startchan,
         Int nchan, Int stepchan, Bool writeSysCal, Bool asMultiSource,
         Bool combineSpw, Bool writeStation, Double sensitivity,
-        const Bool padWithFlags) {
+        const Bool padWithFlags, Int avgchan) {
     ROMSObservationColumns obsCols(ms.observation());
     if (obsCols.nrow() > 0 && (obsCols.telescopeName()(0) == "WSRT"
             || obsCols.telescopeName()(0) == "LOFAR")) {
@@ -96,6 +96,8 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
                 startchan, nchan, stepchan, writeSysCal, asMultiSource,
                 combineSpw, writeStation, sensitivity);
     }
+    cout << " nchan=" << nchan << " startchan=" << startchan 
+         << " stepchan=" << stepchan << " avgchan=" << avgchan << endl; 
     LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
     const uInt nrow = ms.nrow();
     String msfile = ms.tableName();
@@ -196,7 +198,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     Double refFreq, chanbw;
     FitsOutput* fitsOutput = writeMain(refPixelFreq, refFreq, chanbw, outfile,
             ms, column, spwidMap, nrspw, startchan, nchan, stepchan,
-            fieldidMap, asMultiSource, combineSpw, padWithFlags);
+            fieldidMap, asMultiSource, combineSpw, padWithFlags, avgchan);
 
     Bool ok = (fitsOutput != 0);
     if (!ok) {
@@ -304,7 +306,9 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
         Double& chanbw, const String &outFITSFile, const MeasurementSet &rawms,
         const String &column, const Block<Int>& spwidMap, Int nrspw,
         Int chanstart, Int nchan, Int chanstep, const Block<Int>& fieldidMap,
-        Bool asMultiSource, const Bool combineSpw, Bool padWithFlags) {
+        Bool asMultiSource, const Bool combineSpw, Bool padWithFlags, Int avgchan) {
+    if (avgchan < 0)
+       avgchan = 1;
     FitsOutput *outfile = 0;
     LogIO os(LogOrigin("MSFitsOutput", "writeMain"));
     const uInt nrow = rawms.nrow();
@@ -1029,6 +1033,9 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     Vector<Float> realcorr(numcorr0);
     Vector<Float> imagcorr(numcorr0);
     Vector<Float> wgtaver(numcorr0);
+    Vector<Float> realcorrf(numcorr0);
+    Vector<Float> imagcorrf(numcorr0);
+    Vector<Float> wgtaverf(numcorr0);
     Int old_nspws_found = -1; // Just for debugging curiosity.
     while (tbfrownr < nrow) {
         if (outrownr >= nOutRow) { // Shouldn't happen, but just in case...
@@ -1129,8 +1136,13 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
             realcorr.set(0);
             imagcorr.set(0);
             wgtaver.set(0);
+            realcorrf.set(0);
+            imagcorrf.set(0);
+            wgtaverf.set(0);
             Int chancounter = 0;
-            for (Int k = chanstart; k < (nchan * chanstep + chanstart); k++) {
+            cout << "chanstart=" << chanstart << " nchan=" << nchan 
+                 << " chanstep=" << chanstep << " avgchan=" << avgchan << endl;
+            for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
                 //cout << "row = " << tbfrownr << " "
                 //   << outptr << " " << optr << " " << outptr-optr << " ";
                 //   << "ddi = " << m << " (" << inspwinid(i) << ") "
@@ -1144,44 +1156,50 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 //   << inwttmp.shape()  << " "
                 //   << inflagtmp.shape()  << " "
                 //   << endl;
-                if (chancounter == chanstep) {
-                    realcorr.set(0);
-                    imagcorr.set(0);
-                    wgtaver.set(0);
-                    chancounter = 0;
-                }
-                ++chancounter;
-                for (Int j = 0; j < numcorr0; j++) {
-                    Int offset = indptr[j] + k * numcorr0;
-
-                    if (!fptr[offset]) {
-                        realcorr[j] += iptr[offset].real() * wptr[offset];
-                        imagcorr[j] += iptr[offset].imag() * wptr[offset];
-                        wgtaver[j] += wptr[offset];
+                if (chancounter != avgchan) {
+                    for (Int j = 0; j < numcorr0; j++) {
+                        Int offset = indptr[j] + k * numcorr0;
+                        //cout << "j=" << j << " real=" << iptr[offset].real()
+                        //     << " imag=" << iptr[offset].imag() << endl;
+                        if (!fptr[offset]) {
+                            realcorr[j] += iptr[offset].real() * wptr[offset];
+                            imagcorr[j] += iptr[offset].imag() * wptr[offset];
+                            wgtaver[j] += wptr[offset];
+                        }
+                        else {
+                            realcorrf[j] += iptr[offset].real() * wptr[offset];
+                            imagcorrf[j] += iptr[offset].imag() * wptr[offset];
+                            wgtaverf[j] += wptr[offset];
+                        }
+                        //cout << "j=" << j << " k=" << k 
+                        //     << " real=" << realcorr[j] << " image=" << imagcorr[j] 
+                        //     << " offset=" << offset << " chancounter=" << chancounter << endl; 
                     }
-
-                    if (chancounter == chanstep) {
+                    ++chancounter;
+                }
+                if (chancounter == avgchan) {
+                    for (Int j = 0; j < numcorr0; j++) {
                         if (wgtaver[j] > 0) {
                             outptr[0] = realcorr[j] / wgtaver[j];
                             outptr[1] = imagcorr[j] / wgtaver[j];
                             outptr[2] = wgtaver[j];
                         } else {
-                            //outptr[0]=0.0;
-                            //outptr[1]=0.0;
-                            outptr[0] = realcorr[j];
-                            outptr[1] = imagcorr[j];
-                            outptr[2] = -wgtaver[j];
+                            outptr[0] = realcorrf[j] / wgtaverf[j];
+                            outptr[1] = imagcorrf[j] / wgtaverf[j];
+                            outptr[2] = -wgtaverf[j];
                         }
                         if (rowFlag) {
-                            // FLAGged
                             outptr[2] = -wgtaver[j];
                         }
-                        //else {
-                        //  // NOT FLAGged
-                        //  outptr[2] = wgtaver[j];
-                        //}
                         outptr += 3;
                     }
+                    realcorr.set(0);
+                    imagcorr.set(0);
+                    wgtaver.set(0);
+                    realcorrf.set(0);
+                    imagcorrf.set(0);
+                    wgtaverf.set(0);
+                    chancounter = 0;
                 }
             }
 
