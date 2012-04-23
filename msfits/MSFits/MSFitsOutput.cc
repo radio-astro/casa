@@ -1096,6 +1096,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 rowFlag = inrowflag(rownr);
                 indataflag.get(rownr, inflagtmp); // FLAG
 
+
                 // WEIGHT_SPECTRUM (defaults to WEIGHT)
                 Bool getwt = True;
                 if (hasWeightArray) {
@@ -1106,9 +1107,15 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                     }
                 }
                 if (getwt) {
+                    //weight_spectrum may not exist but flag and data always will.
+                    IPosition shp = indatatmp.shape();
+                    Int nchan = shp(1); // either num of channels of num of lags
+                    cout << "shp1=" << shp << " shp2=" << inflagtmp.shape() 
+                         << " nchan=" << nchan << endl;
+                    if (nchan < 1) nchan = 1;
                     const Vector<Float> wght = inweightscalar(rownr);
                     for (Int p = 0; p < numcorr0; p++) {
-                        inwttmp.row(p) = wght(p);
+                        inwttmp.row(p) = wght(p) / nchan;
                     }
                 }
                 /*
@@ -1140,6 +1147,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
             imagcorrf.set(0);
             wgtaverf.set(0);
             Int chancounter = 0;
+            Int flagcounter = 0;
             //cout << "chanstart=" << chanstart << " nchan=" << nchan 
             //     << " chanstep=" << chanstep << " avgchan=" << avgchan << endl;
             for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
@@ -1165,6 +1173,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                             realcorr[j] += iptr[offset].real() * wptr[offset];
                             imagcorr[j] += iptr[offset].imag() * wptr[offset];
                             wgtaver[j] += wptr[offset];
+                            flagcounter++;
                         }
                         else {
                             realcorrf[j] += iptr[offset].real() * wptr[offset];
@@ -1182,14 +1191,16 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                         if (wgtaver[j] > 0) {
                             outptr[0] = realcorr[j] / wgtaver[j];
                             outptr[1] = imagcorr[j] / wgtaver[j];
-                            outptr[2] = wgtaver[j];
+                            outptr[2] = wgtaver[j] / flagcounter;
                         } else {
                             outptr[0] = realcorrf[j] / wgtaverf[j];
                             outptr[1] = imagcorrf[j] / wgtaverf[j];
-                            outptr[2] = -wgtaverf[j];
+                            outptr[2] = -wgtaverf[j] / avgchan;
                         }
                         if (rowFlag) {
-                            outptr[2] = -wgtaver[j];
+                            //calculate the average even if row flagged, just in case
+                            //unflag the row and it has some reasonable data there
+                            outptr[2] = -abs(outptr[2]);
                         }
                         outptr += 3;
                     }
@@ -1200,6 +1211,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                     imagcorrf.set(0);
                     wgtaverf.set(0);
                     chancounter = 0;
+                    flagcounter = 0;
                 }
             }
 
