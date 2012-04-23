@@ -447,7 +447,8 @@ FlagMSHandler::generateIterator()
 		if (slurp_p) rwVisibilityIterator_p->slurp();
 
 		// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
-		applyChannelSelection(rwVisibilityIterator_p);
+		// CAS-3959: Channel selection is now going to be handled at the FlagAgent level
+		// applyChannelSelection(rwVisibilityIterator_p);
 
 		if ((mapScanStartStop_p) or (groupTimeSteps_p and asyncio_enabled_p))
 		{
@@ -480,7 +481,8 @@ FlagMSHandler::generateIterator()
 			if (slurp_p) roVisibilityIterator_p->slurp();
 
 			// Apply channel selection
-			applyChannelSelection(roVisibilityIterator_p);
+			// CAS-3959: Channel selection is now going to be handled at the FlagAgent level
+			// applyChannelSelection(roVisibilityIterator_p);
 
 			// Set row blocking to a huge number
 			*logger_p << LogIO::NORMAL <<  "Setting row blocking to maximum number of rows in all the chunks swapped: " << maxChunkRows << LogIO::POST;

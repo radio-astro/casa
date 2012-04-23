@@ -318,7 +318,7 @@ def importevla(
                 tflocal.done()
                 
                 # Save the flags to FLAG_CMD and update the APPLIED column
-                fh.writeFlagCmd(viso, allflags, allkeys, True, '')
+                fh.writeFlagCmd(viso, allflags, allkeys, True, '', '')
                 
             else:
 
@@ -327,7 +327,7 @@ def importevla(
         else :
             casalog.post('Will not apply flags (applyflags=False), use tflagcmd to apply')
             if nflags > 0:
-                fh.writeFlagCmd(viso, allflags, allkeys, False, '')
+                fh.writeFlagCmd(viso, allflags, allkeys, False, '', '')
 
                
         # Save the flag commads to an ASCII file 
@@ -339,7 +339,7 @@ def importevla(
                     # Save to standard filename
                     outfile = viso.replace('.ms','_cmd.txt')
                     
-                fh.writeFlagCmd(viso, allflags, allkeys, False, outfile)
+                fh.writeFlagCmd(viso, allflags, allkeys, False, '', outfile)
                 
                 casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
         

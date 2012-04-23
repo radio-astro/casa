@@ -387,7 +387,8 @@ void NewCalTable::setMetaInfo(const String& msName)
   CTSpectralWindow calspwtab(this->spectralWindow());
   TableCopy::copyRows(calspwtab,msspwtab);
 
-  this->rwKeywordSet().define(RecordFieldId("MSName"),Path(msName).absoluteName());
+  // Record only the basename of the MS 
+  this->rwKeywordSet().define(RecordFieldId("MSName"),Path(msName).baseName());
 }
 //----------------------------------------------------------------------------
 Bool NewCalTable::conformant(const TableDesc& tabDesc)

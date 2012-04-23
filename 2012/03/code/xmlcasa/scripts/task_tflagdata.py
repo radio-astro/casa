@@ -64,11 +64,11 @@ def tflagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
-             applyflags,           # run or not the tool
-             writeflags,
+             action,           # run or not the tool
              display,
              flagbackup,
-             savepars,      # save the current parameters to FLAG_CMD  or
+             savepars,      # save the current parameters to FLAG_CMD  or to a file
+             cmdreason,     # reason to save to flag cmd
              outfile):      # output file to save flag commands
 
     # Global parameters
@@ -139,9 +139,18 @@ def tflagdata(vis,
         # List of parameters to save to outfile when mode != list
         sel_pars = ''
         
+        # By default, write flags to the MS
+        writeflags = True
         
+        # Only the apply action writes to the MS
+        # action=apply     --> write to the MS
+        # action=calculate --> do not write to the MS
+        # action=''        --> do not run the tool and do not write to the MS
+        if action != 'apply':
+            writeflags = False
+                                         
         # Default mode
-        if mode == '':
+        if mode == '' or mode == 'manualflag':
             mode = 'manual'
         
         # Read in the list of commands
@@ -370,13 +379,14 @@ def tflagdata(vis,
             vrows = flagcmd.keys()
             casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
 
-
-                                  
                           
-        ##########  Only save the parameters and exit; applyflags = False        
-        if not applyflags and savepars:
-
-            fh.writeFlagCmd(vis, flagcmd, vrows, False, outfile)  
+        ##########  Only save the parameters and exit; action = ''        
+        if action == '' and savepars == False:
+            casalog.post('Parameter action=\'\' is meaningful with savepars=True. No action to perform!', 'WARN')
+            return 0
+        
+        if action == '' and savepars == True:
+            fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile)  
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')
             else:
@@ -384,7 +394,7 @@ def tflagdata(vis,
             return 0
 
         
-        ######### From now on it is assumed that applyflags = True
+        ######### From now on it is assumed that action = apply or calculate
         
         # Select the data and parse the agent's parameters
         if mode != 'list':
@@ -392,6 +402,8 @@ def tflagdata(vis,
                                baseline=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
+            # jagonzal: CAS-3966 Handle channel selection at the FlagAgent level
+            agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
             if (not tflocal.parseagentparameters(agent_pars)):
                 casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
@@ -471,6 +483,10 @@ def tflagdata(vis,
         # Run the tool
         casalog.post('Running the testflagger tool')
         summary_stats_list = tflocal.run(writeflags, True)
+        
+        # Inform the user that end of MS summary was not written to the MS
+        if not writeflags:
+            casalog.post("Flags are not written to the MS. (action=\'calculate\')")
 
 
         # Now, deal with all the modes that return output.
@@ -531,10 +547,10 @@ def tflagdata(vis,
                 casalog.post('Saving parameters to '+outfile)
                                       
             if mode != 'list':     
-                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, outfile)  
+                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
             else:
                 valid_rows = list2save.keys()
-                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, outfile)        
+                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
             
         # Destroy the tool
         tflocal.done()

@@ -289,8 +289,10 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         tid="07"
         unit='channel'
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
+        scan.set_unit(oldunit)
         del scan
         
         outfile = self.outroot+tid+'.asap'
@@ -330,10 +332,12 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         unit="Hz"
         # get channel number and width in input data
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
         fx = scan._getabcissa(0)
         chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
         del scan
         chw_new = chw_old*self.regridw
         
@@ -374,10 +378,12 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         unit="km/s"
         # get channel number and width in input data
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
         fx = scan._getabcissa(0)
         chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
         del scan
         chw_new = chw_old*self.regridw
 
@@ -416,8 +422,10 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         tid="10"
         unit='channel'
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
+        scan.set_unit(oldunit)
         del scan
         
         outfile = self.outroot+tid+'.asap'
@@ -463,10 +471,12 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         unit="Hz"
         # get channel number and width in input data
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
         fx = scan._getabcissa(0)
         chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
         del scan
         chw_new = chw_old*(-self.regridw)
         
@@ -514,10 +524,12 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         unit="km/s"
         # get channel number and width in input data
         scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
         scan.set_unit(unit)
         nch_old = scan.nchan(scan.getif(0))
         fx = scan._getabcissa(0)
         chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
         del scan
         chw_new = chw_old*(-self.regridw)
 

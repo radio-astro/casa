@@ -3124,7 +3124,7 @@ void SolvableVisCal::createMemCalTable() {
 
   // Set up description
   String partype = ((parType()==VisCalEnum::COMPLEX) ? "Complex" : "Float");
-  CTDesc caltabdesc(partype,msName(),typeName(),"unknown");
+  CTDesc caltabdesc(partype,Path(msName()).baseName(),typeName(),"unknown");
   ct_ = new NewCalTable("tempNCT.tab",caltabdesc,Table::Scratch,Table::Memory);
   ct_->setMetaInfo(msName());
 

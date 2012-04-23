@@ -4,6 +4,8 @@ import re
 from taskinit import *
 
 import asap as sd
+from asap import _to_list
+from asap.scantable import is_scantable
 import pylab as pl
 
 
@@ -28,39 +30,43 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
 
             filenames = _sdmath_parse(expr)
 
-            sel = sd.selector()
+            # Force return new table (WORKAROUND for bugs in STMath)
+            oldInsitu = sd.rcParams['insitu']
+            if sd.rcParams['scantable.storage'] == 'disk':
+                    sd.rcParams['insitu'] = False
+            
+            # A scantable selection
+            # Scan selection
+            scans = _to_list(scanlist,int) or []
 
-            #Select scans
-            if (type(scanlist) == list ):
-              scans = scanlist
-            else:
-              scans = [scanlist]
+            # IF selection
+            ifs = _to_list(iflist,int) or []
 
-            if ( len(scans) > 0 ):
-              sel.set_scans(scans)
-            #Select source
-            if (field != '' ):
-              sel.set_name(field)
+            # Select polarizations
+            pols = _to_list(pollist,int) or []
 
-            #Select IFs
-            if (type(iflist) == list):
-              ifs = iflist
-            else:
-              ifs = [iflist]
+            # Actual selection
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
 
-            if (len(ifs) > 0 ):
-              sel.set_ifs(ifs)
+            # Select source names
+            if ( field != '' ):
+                    sel.set_name(field)
+                    # NOTE: currently can only select one
+                    # set of names this way, will probably
+                    # need to do a set_query eventually
 
-            #Select Polarizations
-            if (type(pollist) == list):
-              pols = pollist
-            else:
-              pols = [pollist]
 
-            if(len(pols) > 0 ):
-              sel.set_polarisations(pols)
+            scandic={}
+            # Lists of header info to restore
+            restorebase = sd.rcParams['scantable.storage'] == 'disk' and \
+                          ( (fluxunit != '') or (specunit != '') or \
+                            (frame != '') or (doppler != '') )
+            restorescans = []
+            spunitlist = []
+            flunitlist = []
+            framelist = []
+            dopplerlist = []
 
-            scandic={} 
             for i in range(len(filenames)):
                skey='s'+str(i)
                isfactor = None
@@ -82,19 +88,29 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                if not isfactor:
                   # scantable
                   scandic[skey]=sd.scantable(filenames[i],average=False,antenna=antenna)
+                  thisscan = scandic[skey]
+                  # back up header info
+                  if restorebase and is_scantable(filenames[i]):
+                          restorescans.append(thisscan)
+                          spunitlist.append(thisscan.get_unit())
+                          flunitlist.append(thisscan.get_fluxunit())
+                          coord = thisscan._getcoordinfo()
+                          framelist.append(coord[1])
+                          dopplerlist.append(coord[2])
+                          del coord
                   # apply set_fluxunit, selection
                   # if fluxunit is not given, use first spetral data's flux unit 
                   if fluxunit=='':
-                     fluxunit=scandic[skey].get_fluxunit()
-                  scandic[skey].set_fluxunit(fluxunit)
+                     fluxunit=thisscan.get_fluxunit()
+                  thisscan.set_fluxunit(fluxunit)
                   if frame!='':
-                     scandic[skey].set_freqframe(frame)
+                     thisscan.set_freqframe(frame)
                   if ( doppler != '' ):
                      ddoppler=doppler.upper()
-                     scandic[skey].set_doppler(ddoppler)
+                     thisscan.set_doppler(ddoppler)
                   try:
                      #Apply the selection
-                     scandic[skey].set_selection(sel)
+                     thisscan.set_selection(sel)
                   except Exception, instance:
                      #print '***Error***',instance
                      #print 'No output written.'
@@ -117,8 +133,20 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                regex=re.compile('[\',\"]%s[\',\"]' % filenames[i])
                #expr=regex.sub('',expr)
                expr=regex.sub("scandic['%s']" % skey ,expr)
-            expr="tmpout="+expr 
+            expr="tmpout="+expr
             exec(expr)
+
+            # Restore header information in the table
+            for i in range(len(restorescans)):
+                    thisscan = restorescans[i]
+                    thisscan.set_fluxunit(flunitlist[i])
+                    thisscan.set_unit(spunitlist[i])
+                    thisscan.set_doppler(dopplerlist[i])
+                    thisscan.set_freqframe(framelist[i])
+            casalog.post( "Restored header information of input tables" )
+            # Final clean up
+            del restorescans, scandic
+
             outform=outform.upper()
             if (outform == 'MS'):
                outform = 'MS2'
@@ -132,6 +160,24 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                 casalog.post( str(instance), priority = 'ERROR' )
                 return
         finally:
+                try:
+                        # Restore header information in the table
+                        for i in range(len(restorescans)):
+                                        thisscan = restorescans[i]
+                                        thisscan.set_fluxunit(flunitlist[i])
+                                        thisscan.set_unit(spunitlist[i])
+                                        thisscan.set_doppler(dopplerlist[i])
+                                        thisscan.set_freqframe(framelist[i])
+                        casalog.post( "Restored header information of input tables" )
+                        # Final clean up
+                        del restorescans, scandic
+                except:
+                        pass
+                # Put back insitu (WORKAROUND for bugs in STMath)
+                try:
+                        sd.rcParams['insitu'] = oldInsitu
+                except:
+                        pass
                 casalog.post('')
 
 
