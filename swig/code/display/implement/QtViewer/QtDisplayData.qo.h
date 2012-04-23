@@ -291,7 +291,15 @@ class QtDisplayData : public QObject {
   //# to connect to QtViewerBase::ddRemoved() instead).
 //# void dying(QtDisplayData*);
   
+  // (mkApr2012) axisChanged and axisChangedProfile have the identical
+  // functionality, to send out the names of the current x/y/z axes.
+  // The profiler needs to be notified first such subsequent  plot
+  // request from regions are accepted. For that reason there is the
+  // signal axisChangedProfile which connects to the profiler and is
+  // emitted prior to axisChanged (in QtDisplayData::checkAxis())
   void axisChanged(String, String, String, std::vector<int> );
+  void axisChangedProfile(String, String, String, std::vector<int> );
+
   void spectrumChanged(String spcTypeUnit, String spcRval, String spcSys);
 
   void statsReady(const String&);

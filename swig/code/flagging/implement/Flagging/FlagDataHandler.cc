@@ -2523,6 +2523,13 @@ FlagMapper::applyFlag(uInt pol, uInt channel, uInt row)
 void
 FlagMapper::applyFlagRow(uInt row)
 {
+	// Flag row
+	(*this.*applyFlagRow_p)(row);
+}
+
+void
+FlagMapper::applyFlagInRow(uInt row)
+{
 	// Flag cube
 	for (uInt chan_i=0;chan_i<reducedLength_p(0);chan_i++)
 	{
@@ -2534,9 +2541,6 @@ FlagMapper::applyFlagRow(uInt row)
 			}
 		}
 	}
-
-	// Flag row
-	(*this.*applyFlagRow_p)(row);
 }
 
 

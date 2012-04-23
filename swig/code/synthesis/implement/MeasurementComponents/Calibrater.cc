@@ -1447,27 +1447,23 @@ Bool Calibrater::solve() {
       throw(AipsError("Please run setsolve before attempting to solve."));
 
     // Handle specified caltable
-    if (False && svc_p) {
-      
+    if (True && svc_p) {
+
       /*      
       cout << "name: " << svc_p->calTableName() << endl;
       cout << boolalpha;
       cout << "append?   " << svc_p->append() << endl;
       cout << "opened?   " << Table::isOpened(svc_p->calTableName()) << endl;
       cout << "readable? " << Table::isReadable(svc_p->calTableName()) << endl;
-      cout << "writable? " << Table::isWritable(svc_p->calTableName()) << endl;
+      //      cout << "writable? " << Table::isWritable(svc_p->calTableName()) << endl;
       cout << "canDelete? " << Table::canDeleteTable(svc_p->calTableName(),True) << endl;
       */
 
-
-      // If we are not appending, and the cal table exists,
-      //   then it better be deletable
-      if (!svc_p->append() &&
-	  Table::isReadable(svc_p->calTableName()) &&
-	  !Table::canDeleteTable(svc_p->calTableName()) ) {
-	//cout << "Table CAN'T be deleted!!!!!" << endl;
-	
-	throw(AipsError("Specified caltable ("+svc_p->calTableName()+") exists and\n cannot be replaced because it appears to be open somewhere."));
+      // If table exists (readable) and not deletable
+      //   we have to abort (append=T requires deletable)
+      if ( Table::isReadable(svc_p->calTableName()) &&
+	   !Table::canDeleteTable(svc_p->calTableName()) ) {
+	throw(AipsError("Specified caltable ("+svc_p->calTableName()+") exists and\n cannot be replaced (or appended to) because it appears to be open somewhere (Quit plotcal?)."));
       }
     }
 
@@ -2178,15 +2174,29 @@ void Calibrater::fluxscale(const String& infile,
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
-//  Vector<Int> tranidx(0);
 
   if (refFields.length()>0)
     refidx=getFieldIdx(refFields);
   else
     throw(AipsError("A reference field must be specified!"));
 
-  if (tranFields.length()>0)
+  if (tranFields.length()>0) {
     tranidx=getFieldIdx(tranFields);
+  } else {
+    Table oFieldTable( infile+"/FIELD" );
+    uInt uiNumField = oFieldTable.nrow();
+    uInt uiNumFieldRef = refidx.nelements();
+    uInt uiNumFieldTrans = 0;
+    for ( uInt f1=0; f1<uiNumField; f1++ ) {
+      uInt f2;
+      for ( f2=0; f2<uiNumFieldRef; f2++ ) if ( f1 == refidx[f2] ) break;
+      if ( f2 >= uiNumFieldRef ) {
+        uiNumFieldTrans++;
+        tranidx.resize( uiNumFieldTrans, True );
+	tranidx[uiNumFieldTrans-1] = f1;
+      }
+    }
+  }
 
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
