@@ -89,6 +89,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
          npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
+         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
@@ -812,7 +813,7 @@ void QtProfile::changeTopAxisCoordinateType( const QString & /*text*/ ){
 
 
 void QtProfile::changeCoordinateType(const QString &text) {
-    coordinateType = String(text.toStdString());
+    //coordinateType = String(text.toStdString());
 
 	xpos = "";
 	ypos = "";
@@ -2598,118 +2599,121 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
-		QHashIterator<QString, ImageAnalysis*> i(*over);
-		while (i.hasNext() && stateMProf) {
-		 i.next();
-		 QString ky = i.key();
-		 ImageAnalysis* ana = i.value();
-		 Vector<Float> xval(100);
-		 Vector<Float> yval(100);
 
-		 switch (itsPlotType)
-		 {
-		 case QtProfile::PMEAN:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+		if ( over != NULL ){
+			QHashIterator<QString, ImageAnalysis*> i(*over);
+
+			while (i.hasNext() && stateMProf) {
+				i.next();
+				QString ky = i.key();
+				ImageAnalysis* ana = i.value();
+				Vector<Float> xval(100);
+				Vector<Float> yval(100);
+
+				switch (itsPlotType)
+				{
+				case QtProfile::PMEAN:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEAN, 0);
-			 break;
-		 case QtProfile::PMEDIAN:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PMEDIAN:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEDIAN, 0);
-			 break;
-		 case QtProfile::PSUM:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PSUM:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::PSUM, 0);
-			 break;
-		 case QtProfile::PFLUX:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PFLUX:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::PFLUX, 0);
-			 break;
+					break;
 			 //case QtProfile::PVRMSE:
 			 //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 			 //			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 			 //			(Int)QtProfile::RMSE, 0);
 			 // break;
-		 default:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+				default:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEAN, 0);
-			 break;
-		 }
+					break;
+				}
 
-		 if (ok) {
-			 if(ordersOfM!=0){
-				 // correct display y axis values
-				 for (uInt i = 0; i < yval.size(); i++) {
-					 yval(i) *= pow(10.,ordersOfM);
-				 }
-			 }
-			 Vector<Float> xRel(yval.size());
-			 Vector<Float> yRel(yval.size());
-			 Int count = 0;
-			 if (stateRel) {
-				 ky = ky+ "_rel.";
-				 for (uInt i = 0; i < yval.size(); i++) {
-					 uInt k = z_yval.size() - 1;
-					 //cout << xval(i) << " - " << yval(i) << endl;
-					 //cout << z_xval(0) << " + " << z_xval(k) << endl;
-					 if (coordinateType.contains("elocity")) {
-						 if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
-							 for (uInt j = 0; j < k; j++) {
-								 //cout << z_xval(j) << " + "
-								 //     << z_yval(j) << endl;
-								 if (xval(i) <= z_xval(j) &&
-										 xval(i) > z_xval(j + 1)) {
-									 float s = z_xval(j + 1) - z_xval(j);
-									 if (s != 0) {
-										 xRel(count) = xval(i);
-										 yRel(count)= yval(i) -
-												 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-														 (z_yval(j + 1) - z_yval(j)));
-										 count++;
-										 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-										 //           (z_yval(j + 1) - z_yval(j)));
+				if (ok) {
+					if(ordersOfM!=0){
+						// correct display y axis values
+						for (uInt i = 0; i < yval.size(); i++) {
+							yval(i) *= pow(10.,ordersOfM);
+						}
+					}
+					Vector<Float> xRel(yval.size());
+					Vector<Float> yRel(yval.size());
+					Int count = 0;
+					if (stateRel) {
+						ky = ky+ "_rel.";
+						for (uInt i = 0; i < yval.size(); i++) {
+							uInt k = z_yval.size() - 1;
+							//cout << xval(i) << " - " << yval(i) << endl;
+							//cout << z_xval(0) << " + " << z_xval(k) << endl;
+							if (coordinateType.contains("elocity")) {
+								if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+								 for (uInt j = 0; j < k; j++) {
+									 //cout << z_xval(j) << " + "
+									 //     << z_yval(j) << endl;
+									 if (xval(i) <= z_xval(j) &&
+											 xval(i) > z_xval(j + 1)) {
+										 float s = z_xval(j + 1) - z_xval(j);
+										 if (s != 0) {
+											 xRel(count) = xval(i);
+											 yRel(count)= yval(i) -
+													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
+															 (z_yval(j + 1) - z_yval(j)));
+											 count++;
+											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											 //           (z_yval(j + 1) - z_yval(j)));
 
+										 }
+										 break;
 									 }
-									 break;
+								 }
+							 }
+						 }
+						 else {
+							 if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+								 for (uInt j = 0; j < k; j++) {
+									 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+										 float s = z_xval(j + 1) - z_xval(j);
+										 if (s != 0) {
+											 xRel(count) = xval(i);
+											 yRel(count)= yval(i) -
+													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
+															 (z_yval(j + 1) - z_yval(j)));
+											 count++;
+											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											 //           (z_yval(j + 1) - z_yval(j)));
+										 }
+										 break;
+									 }
 								 }
 							 }
 						 }
 					 }
-					 else {
-						 if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
-							 for (uInt j = 0; j < k; j++) {
-								 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
-									 float s = z_xval(j + 1) - z_xval(j);
-									 if (s != 0) {
-										 xRel(count) = xval(i);
-										 yRel(count)= yval(i) -
-												 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-														 (z_yval(j + 1) - z_yval(j)));
-										 count++;
-										 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-										 //           (z_yval(j + 1) - z_yval(j)));
-									 }
-									 break;
-								 }
-							 }
-						 }
-					 }
+					 xRel.resize(count, True);
+					 yRel.resize(count, True);
+					 pixelCanvas->addPolyLine(xRel, yRel, ky);
 				 }
-				 xRel.resize(count, True);
-				 yRel.resize(count, True);
-				 pixelCanvas->addPolyLine(xRel, yRel, ky);
+				 else {
+					 pixelCanvas->addPolyLine(xval, yval, ky);
+				 }
 			 }
-			 else {
-				 pixelCanvas->addPolyLine(xval, yval, ky);
-			 }
-		 }
+			}
+
 		}
-
-
 	}
 
 	void QtProfile::storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
