@@ -24,34 +24,71 @@
 //#
 
 #include <display/QtPlotter/QtPlotSettings.h>
-
+#include <assert.h>
+#include <QtGui>
 namespace casa { 
 
 QtPlotSettings::QtPlotSettings()
 {
-    minX = 0.0;
-    maxX = 10.0;
-    numXTicks = 5;
+	const int TICK_MIN = 0;
+	const int TICK_MAX = 10;
+	const int TICK_COUNT = 5;
+	for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
+		AxisIndex axisIndex = static_cast<AxisIndex>(i);
+		minX[axisIndex] = TICK_MIN;
+		maxX[axisIndex] = TICK_MAX;
+		numXTicks[axisIndex] = TICK_COUNT;
+	}
 
-    minY = 0.0;
-    maxY = 10.0;
-    numYTicks = 5;
+    minY = TICK_MIN;
+    maxY = TICK_MAX;
+    numYTicks = TICK_COUNT;
 }
 
 void QtPlotSettings::scroll(int dx, int dy)
 {
-    double stepX = spanX() / numXTicks;
-    minX += dx * stepX;
-    maxX += dx * stepX;
+	for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
+		AxisIndex axisIndex = static_cast<AxisIndex>(i);
+		double stepX = spanX( axisIndex ) / numXTicks[i];
+		minX[i] += dx * stepX;
+		maxX[i] += dx * stepX;
+	}
 
     double stepY = spanY() / numYTicks;
     minY += dy * stepY;
     maxY += dy * stepY;
 }
 
-void QtPlotSettings::adjust()
-{
-    adjustAxis(minX, maxX, numXTicks);
+void QtPlotSettings::zoomOut( double zoomFactor ){
+	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
+		AxisIndex axisIndex = static_cast<AxisIndex>(i);
+		int prevSpanX = spanX(axisIndex);
+		minX[i] = minX[i] - zoomFactor * prevSpanX;
+		maxX[i] = maxX[i] + zoomFactor * prevSpanX;
+	}
+	int prevSpanY = spanY();
+	minY = minY - zoomFactor * prevSpanY;
+	maxY = maxY + zoomFactor * prevSpanY;
+	adjust();
+}
+
+void QtPlotSettings::zoomIn( double zoomFactor ){
+	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
+		AxisIndex axisIndex = static_cast<AxisIndex>(i);
+		int prevSpanX = spanX( axisIndex );
+		minX[i] = minX[i] + zoomFactor * prevSpanX;
+		maxX[i] = maxX[i] - zoomFactor * prevSpanX;
+	}
+	int prevSpanY = spanY();
+	minY = minY + zoomFactor * prevSpanY;
+	maxY = maxY - zoomFactor * prevSpanY;
+	adjust();
+}
+
+void QtPlotSettings::adjust(){
+	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
+		adjustAxis(minX[i], maxX[i], numXTicks[i]);
+	}
     adjustAxis(minY, maxY, numYTicks);
 }
 
@@ -66,12 +103,40 @@ void QtPlotSettings::adjustAxis(double &min, double &max,
         step *= 5;
     else if (2 * step < grossStep)
         step *= 2;
-
     numTicks = (int)(ceil(max / step) - floor(min / step));
     min = floor(min / step) * step;
     max = ceil(max / step) * step;
 }
 
+void QtPlotSettings::setMinX( AxisIndex index, double value ){
+ 	minX[static_cast<int>(index)] = value;
+}
+
+void QtPlotSettings::setMaxX( AxisIndex index, double value ){
+     maxX[static_cast<int>(index)] = value;
+}
+
+void QtPlotSettings::setMinY( double value ){
+     minY = value;
+}
+
+void QtPlotSettings::setMaxY( double value ){
+  	maxY = value;
+}
+
+/*void QtPlotSettings::setXAxesBounds( double min, double max ){
+	assert( min <= max );
+	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
+		minX[i] = min;
+		maxX[i] = max;
+	}
+}*/
+
+/*void QtPlotSettings::setYAxesBounds( double min, double max ){
+	assert( min <= max );
+	minY = min;
+	maxY = max;
+}*/
 
 
 }

@@ -38,6 +38,7 @@
 
 #include <display/QtPlotter/QtPlotSettings.h>
 
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -78,27 +79,27 @@ public:
 
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
+	void setTopAxisRange(const Vector<Float> &xValues );
 	CurveData* getCurveData(int);
 	ErrorData* getCurveError(int id);
 	QString getCurveName(int);
 	int getLineCount();
-	void clearCurve(int id = -1);
-	void clearData();
+	//void clearCurve(int id = -1);
+	void clearCurve();
 	void setDataRange();
 	void setImageMode(bool);
-	void setPixmap(const QImage&);
+	//void setPixmap(const QImage&);
 	QPixmap* graph();
 	void drawBackBuffer(QPainter *);
+
+	//Plotting curves
 	void plotPolyLines(QString);
-	void plotPolyLine(const Vector<Int>&, const Vector<Int>&);
+	template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
-	void plotPolyLine(const Vector<Double>&, const Vector<Double>&);
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="");
-	void plotPolyLine(const Matrix<Int> &verts);
-	void plotPolyLine(const Matrix<Float> &verts);
-	void plotPolyLine(const Matrix<Double> &verts);
+	template<class T> void plotPolyLine(const Matrix<T> &verts);
 	// template<class T>
 	// void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
 	// void drawImage(const Matrix<uInt> &data);
@@ -114,8 +115,9 @@ public:
 	void setTitle(const QString &text, int fontSize = 12,   int iclr = 1,
 			const QString &font = "Helvetica [Cronyx]");
 	QString getTitle(){return title.text;};
+
 	void setXLabel(const QString &text, int fontSize = 10,  int iclr = 1,
-			const QString &font = "Helvetica [Cronyx]");
+			const QString &font = "Helvetica [Cronyx]", QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
 	void setYLabel(const QString &text, int fontSize = 10,  int iclr = 1,
 			const QString &font = "Helvetica [Cronyx]");
 	void setWelcome(const QString &text, int fontSize = 14, int iclr = 1,
@@ -162,18 +164,23 @@ protected:
 	void defaultZoomIn();
 	void defaultZoomOut();
 
+private:
+	void adjustExtremes( double* const min, double* const max ) const;
 	enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
-	GraphLabel xLabel;
+	GraphLabel xLabel[2];
 	GraphLabel yLabel;
 	GraphLabel welcome;
+
 
 	std::map<int, QString> legend;
 	std::map<int, CurveData> curveMap;
 	std::map<int, ErrorData> errorMap;
 	std::vector<QtPlotSettings> zoomStack;
 	std::map<int, CurveData> markerStack;
+	std::pair<double,double> topAxisRange;
+
 	int curZoom;
 	int curMarker;
 	bool rubberBandIsShown;
