@@ -691,18 +691,17 @@ casac::record* calibrater::fluxscale(
 			     tranidx,
 			     oListFile);
 
-
     // Associate the field IDs with the field numbers
 
     String oName( "NAME" );
 
     Table oFieldTable( itsMS->fieldTableName() );
     ROScalarColumn<String> oFieldColumn( oFieldTable, oName );
-    Vector<String> oFieldID( oFieldColumn.getColumn() );
+    Vector<String> oFieldName( oFieldColumn.getColumn() );
 
     Table oSPWTable( itsMS->spectralWindowTableName() );
     ROScalarColumn<String> oSPWColumn( oSPWTable, oName );
-    Vector<String> oSPWID( oSPWColumn.getColumn() );
+    Vector<String> oSPWName( oSPWColumn.getColumn() );
 
 
     // New code used to return a record containing the field names, the spectral
@@ -710,26 +709,31 @@ casac::record* calibrater::fluxscale(
     // frequencies
 
     uInt uiNumSPW = oFluxD.fd.shape()[0];
-    uInt uiNumTran = tranidx.nelements();
+    uInt uiNumTranMax = oFluxD.fd.shape()[1];
 
     Record oRecord;
-    oRecord.define( "spwID", oSPWID );
+    Vector<Int> spwids(uiNumSPW); indgen(spwids);
+    oRecord.define( "spwID", Vector<Int>(spwids) );
+    oRecord.define( "spwName", Vector<String>(oSPWName) );
+    oRecord.define( "freq", Vector<Double>(oFluxD.freq) );
 
-    for ( uInt t=0; t<uiNumTran; t++ ) {
+    IPosition oStart( 2, 0, 0 );
+    IPosition oEnd( 2, uiNumSPW-1, 0 );
+    for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
-      Record oSubRecord;
+      oStart(1)=oEnd(1)=t;
 
-      IPosition oStart( 2, 0, tranidx[t] );
-      IPosition oEnd( 2, uiNumSPW-1, tranidx[t] );
-
-      oSubRecord.define( "fieldID", oFieldID[tranidx[t]] );
-      oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
-      oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
-      oSubRecord.define( "freq", Vector<Double>(uiNumSPW,-1.0) );
-      oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
-
-      oRecord.defineRecord( String::toString<Int>(tranidx[t]), oSubRecord );
-
+      if (allNE(oFluxD.numSol(oStart,oEnd),-1)) {
+	
+	Record oSubRecord;
+	
+	oSubRecord.define( "fieldName", oFieldName[t] );
+	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
+	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
+	oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
+	
+	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
+      }
     }
 
     poOutput = fromRecord( oRecord );
