@@ -363,7 +363,7 @@ void HDF5Image<T>::restoreAll()
   Record rec = HDF5Record::readRecord (*map_p.file(), "coordinfo");
   CoordinateSystem* restoredCoords = CoordinateSystem::restore(rec, "coords");
   AlwaysAssert(restoredCoords != 0, AipsError);
-  setCoordsMember (*restoredCoords);
+  this->setCoordsMember (*restoredCoords);
   delete restoredCoords;
   // Restore the image info.
   rec = HDF5Record::readRecord (*map_p.file(), "imageinfo");
@@ -395,14 +395,14 @@ void HDF5Image<T>::restoreMiscInfo (const RecordInterface& rec)
 {
   if (rec.isDefined("miscinfo")  &&
       rec.dataType("miscinfo") == TpRecord) {
-    setMiscInfoMember (rec.asRecord ("miscinfo"));
+    this->setMiscInfoMember (rec.asRecord ("miscinfo"));
   }
 }
 
 template<class T> 
 Bool HDF5Image<T>::setMiscInfo (const RecordInterface& newInfo)
 {
-  setMiscInfoMember (newInfo);
+  this->setMiscInfoMember (newInfo);
   HDF5Record::writeRecord (*map_p.file(), "miscinfo", newInfo);
   return True;
 }
@@ -410,7 +410,7 @@ Bool HDF5Image<T>::setMiscInfo (const RecordInterface& newInfo)
 template<class T> 
 Bool HDF5Image<T>::setUnits(const Unit& newUnits) 
 {
-  setUnitMember (newUnits);
+  this->setUnitMember (newUnits);
   Record rec;
   rec.define("units", newUnits.getName());
   HDF5Record::writeRecord (*map_p.file(), "unitinfo", rec);
@@ -453,7 +453,7 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
       retval = Unit(unitName);
     }
   }
-  setUnitMember (retval);
+  this->setUnitMember (retval);
 }
 
 
@@ -501,7 +501,7 @@ void HDF5Image<T>::removeRegion (const String& name,
 {
   // Remove the default mask if it is the region to be removed.
   if (name == getDefaultMask()) {
-    setDefaultMask (String());
+    this->setDefaultMask (String());
   }
   ImageInterface<T>::removeRegion (name, type, throwIfUnknown);
 }

@@ -205,9 +205,9 @@ ImageInterface<T>* SubImage<T>::cloneII() const
 template<class T>
 void SubImage<T>::setMembers (const ImageInterface<T>& image)
 {
-  setImageInfo (image.imageInfo());
-  setMiscInfoMember (image.miscInfo());
-  setUnitMember (image.units());
+  this->setImageInfo (image.imageInfo());
+  this->setMiscInfoMember (image.miscInfo());
+  this->setUnitMember (image.units());
   logger().addParent (image.logger());
 }
 
@@ -223,7 +223,7 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
   const AxesMapping& axesMap = itsSubLatPtr->getAxesMap();
   AlwaysAssert (!axesMap.isReordered(), AipsError);
   if (!axesMap.isRemoved()) {
-    setCoordsMember (coords);
+    this->setCoordsMember (coords);
   } else {
     const IPosition& map = axesMap.getToNew();
     const uInt naxes = map.nelements();
@@ -242,7 +242,7 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
 
     CoordinateSystem crdOut;
     CoordinateUtil::dropRemovedAxes(crdOut, crd);
-    setCoordsMember (crdOut);
+    this->setCoordsMember (crdOut);
   }
 }
 

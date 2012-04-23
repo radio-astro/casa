@@ -76,7 +76,7 @@ PagedImage<T>::PagedImage (const TiledShape& shape,
 {
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  setTableType();
+  this->setTableType();
 }
 
 template <class T> 
@@ -117,7 +117,7 @@ void PagedImage<T>::makePagedImage (const TiledShape& shape,
   map_p = PagedArray<T> (shape, tab, "map", rowNumber);
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  setTableType();
+  this->setTableType();
 }
 
 template <class T> 
@@ -133,7 +133,7 @@ PagedImage<T>::PagedImage (const TiledShape& shape,
   map_p = PagedArray<T> (shape, tab, "map", rowNumber);
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  setTableType();
+  this->setTableType();
 }
 
 template <class T> 
@@ -239,7 +239,7 @@ void PagedImage<T>::restoreAll (const TableRecord& rec)
   // Restore the coordinates.
   CoordinateSystem* restoredCoords = CoordinateSystem::restore(rec, "coords");
   AlwaysAssert(restoredCoords != 0, AipsError);
-  setCoordsMember (*restoredCoords);
+  this->setCoordsMember (*restoredCoords);
   delete restoredCoords;
   // Restore the image info.
   restoreImageInfo (rec);
@@ -496,14 +496,14 @@ void PagedImage<T>::restoreMiscInfo (const TableRecord& rec)
 {
   if (rec.isDefined("miscinfo")  &&
       rec.dataType("miscinfo") == TpRecord) {
-    setMiscInfoMember (rec.asRecord ("miscinfo"));
+    this->setMiscInfoMember (rec.asRecord ("miscinfo"));
   }
 }
 
 template<class T> 
 Bool PagedImage<T>::setMiscInfo (const RecordInterface& newInfo)
 {
-  setMiscInfoMember (newInfo);
+  this->setMiscInfoMember (newInfo);
   Table& tab = table();
   reopenRW();
   if (! tab.isWritable()) {
@@ -554,7 +554,7 @@ void PagedImage<T>::open_logtable()
 {
   // Open logtable as readonly if main table is not writable.
   Table& tab = table();
-  setLogMember (LoggerHolder (name() + "/logtable", tab.isWritable()));
+  this->setLogMember (LoggerHolder (name() + "/logtable", tab.isWritable()));
   // Insert the keyword if possible and if it does not exist yet.
   if (tab.isWritable()  &&  ! tab.keywordSet().isDefined ("logtable")) {
     tab.rwKeywordSet().defineTable("logtable", Table(name() + "/logtable"));
@@ -564,7 +564,7 @@ void PagedImage<T>::open_logtable()
 template<class T> 
 Bool PagedImage<T>::setUnits(const Unit& newUnits) 
 {
-  setUnitMember (newUnits);
+  this->setUnitMember (newUnits);
   reopenRW();
   Table& tab = table();
   if (! tab.isWritable()) {
@@ -617,7 +617,7 @@ void PagedImage<T>::restoreUnits (const TableRecord& rec)
       retval = Unit(unitName);
     }
   }
-  setUnitMember (retval);
+  this->setUnitMember (retval);
 }
 
 
@@ -629,7 +629,7 @@ void PagedImage<T>::removeRegion (const String& name,
   reopenRW();
   // Remove the default mask if it is the region to be removed.
   if (name == getDefaultMask()) {
-    setDefaultMask (String());
+    this->setDefaultMask (String());
   }
   ImageInterface<T>::removeRegion (name, type, throwIfUnknown);
 }
