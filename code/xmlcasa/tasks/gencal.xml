@@ -133,6 +133,8 @@
                  'antpos' = antenna position corrections (m) (3 real
                             ITRF offset parameters per antenna; spw, pol
                             selection will be ignored)
+                            With antenna='', this triggers an automated lookup
+                            of antenna positions for EVLA.
                  'antposvla' = antenna position corrections (m) specified
                                in the old VLA-centric coordinate system
                  'tsys' = Tsys from the SYSCAL table (ALMA)
@@ -228,11 +230,11 @@
               3.  See the above example for caltype='ph' for details
               of the sign convention adopted when applying delay corrections.
 
-       gencal(vis='test.ms',caltable='test.G',caltype='antpos')
+       gencal(vis='test.ms',caltable='test.G',caltype='antpos',antenna='')
      
          --> *** Currently EVLA observations only ***
              Antenna position corrections will be retrieved automatically
-             over internet to generate the caltable.
+             over internet to generate the caltable with antenna=''.
 
        gencal(vis='test.ms',caltable='test.G',caltype='antpos',
               antenna='ea09,ea10',
