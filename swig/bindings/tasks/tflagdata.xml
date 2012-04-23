@@ -23,7 +23,7 @@
             the given file.
             
             The available flagging modes are: manual, clip, shadow, quack,
-            elevation, tfcrop, extend, unflag and summary.
+            elevation, tfcrop, extend, unflag, summary and autocorr
 
             The current flags an be automatically backed up before applying new flags
             if the parameter flagbackup is set. Previous flag versions can be recovered 
@@ -38,7 +38,7 @@
 
             <param type="string" name="mode">
                 <description>Flagging mode (list/manual/clip/shadow/quack/elevation/\
-tfcrop/rflag/extend/unflag/summary)</description>
+tfcrop/rflag/extend/unflag/summary/autocorr)</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
@@ -53,6 +53,7 @@ tfcrop/rflag/extend/unflag/summary)</description>
                     <value>extend</value>
                     <value>unflag</value>
                     <value>summary</value>
+                    <value>autocorr</value>                    
                 </allowed>
             </param>
 
@@ -539,6 +540,19 @@ tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
                     </equals>
+                    <equals value="autocorr">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>                    
+                    </equals>                    
                 </when>
 
                 <when param="action">
@@ -577,7 +591,8 @@ The task will flag a subset of data based on the following modes of operation:
     rflag       = automatic detection of outliers based on sliding-window RMS filters
     extend      = extend and/or grow flags beyond what the basic algorithms detect
     summary     = report the amount of flagged data
-    unflag      = unflag the specified data.
+    unflag      = unflag the specified data
+    autocorr    = flag only autocorrelations
 
     Keyword arguments:
     vis -- Name of input visibility file
@@ -657,7 +672,7 @@ The task will flag a subset of data based on the following modes of operation:
 
     mode -- Mode of operation.
         options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
-                 'unflag', 'summary'
+                 'unflag', 'summary', 'autocorr'
         default: 'manual'
 
         list -- Flag according to the data selection and flag commands specified in the input list.
@@ -1072,6 +1087,8 @@ The task will flag a subset of data based on the following modes of operation:
                      Then s will be a dictionary which contains
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
+                    
+        autocorr -- Flag only autocorrelations according to the data selection specified.
         
 
     action -- Action to perform in MS or in the input list of parameters. 

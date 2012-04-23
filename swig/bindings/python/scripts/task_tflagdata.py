@@ -402,6 +402,8 @@ def tflagdata(vis,
                                baseline=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
+            # jagonzal: CAS-3966 Handle channel selection at the FlagAgent level
+            agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
             if (not tflocal.parseagentparameters(agent_pars)):
                 casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')

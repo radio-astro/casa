@@ -63,7 +63,7 @@ vpmanager::saveastable(const std::string& tablename)
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -80,7 +80,7 @@ vpmanager::loadfromtable(const std::string& tablename)
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -99,7 +99,7 @@ vpmanager::summarizevps(const bool verbose)
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -134,7 +134,7 @@ vpmanager::setcannedpb(const std::string& telescope, const std::string& othertel
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -190,7 +190,7 @@ vpmanager::setpbairy(const std::string& telescope, const std::string& otherteles
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -236,7 +236,7 @@ vpmanager::setpbcospoly(const std::string& telescope, const std::string& otherte
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -289,7 +289,7 @@ vpmanager::setpbgauss(const std::string& telescope, const std::string& othertele
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -335,7 +335,7 @@ vpmanager::setpbinvpoly(const std::string& telescope, const std::string& otherte
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -381,7 +381,7 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -402,7 +402,7 @@ vpmanager::setpbimage(const std::string& telescope, const std::string& othertele
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -448,7 +448,7 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
 
   } catch  (AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   itsVPM->release();
@@ -571,7 +571,7 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
 
   } catch(AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   
@@ -630,7 +630,7 @@ int vpmanager::numvps(const std::string& telescope,
 
   } catch(AipsError x) {
     itsVPM->release();
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -715,7 +715,7 @@ vpmanager::getvp(const std::string& telescope,
     }
 
   } catch(AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
@@ -1087,7 +1087,7 @@ vpmanager::createantresp(const std::string& imdir,
     rstat = True;
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rstat;
@@ -1188,7 +1188,7 @@ vpmanager::getrespimagename(const std::string& telescope,
     rval = functionImageName;
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   return rval;

@@ -64,8 +64,8 @@ simulator::open(const std::string& ms)
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -91,8 +91,8 @@ simulator::openfromms(const std::string& ms)
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -114,8 +114,8 @@ simulator::close()
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -139,8 +139,8 @@ Bool rstat(False);
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -161,8 +161,8 @@ try {
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -182,8 +182,8 @@ simulator::summary()
       rstat=itsSim->summary();
    
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -221,8 +221,8 @@ simulator::settimes(const ::casac::variant& integrationtime, const bool usehoura
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -264,8 +264,8 @@ Bool rstat(False);
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -346,8 +346,8 @@ Bool rstat(False);
 
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -369,8 +369,8 @@ simulator::setlimits(const double shadowlimit, const ::casac::variant& elevation
 
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -391,8 +391,8 @@ simulator::setauto(const double autocorrwt)
     
 
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
 
@@ -428,8 +428,8 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
               << LogIO::POST;
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -451,8 +451,8 @@ simulator::setknownconfig(const std::string& arrayname)
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -475,8 +475,8 @@ Bool rstat(False);
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -507,8 +507,8 @@ simulator::setfield(const std::string& sourcename, const ::casac::variant& sourc
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -546,8 +546,8 @@ Bool rstat(False);
    
    
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-    //	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+    	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -590,8 +590,8 @@ Bool rstat(False);
    
    
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-	//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+		   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -612,8 +612,8 @@ simulator::setdata(const std::vector<int>& spwid, const std::vector<int>& fieldi
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -635,8 +635,8 @@ simulator::predict(const std::vector<std::string>& modelImage, const std::string
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -669,8 +669,8 @@ simulator::setoptions(const std::string& ftmachine, const int cache,
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -703,8 +703,8 @@ simulator::setvp(const bool dovp, const bool usedefaultvp,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -729,8 +729,8 @@ simulator::corrupt(const bool avoidauto)
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -750,8 +750,8 @@ simulator::reset()
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -776,8 +776,8 @@ simulator::setbandpass(const std::string& mode, const std::string& table,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -810,8 +810,8 @@ simulator::setapply(const std::string& table,
 			       interp,calwt,spwmap,opacity);
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -840,8 +840,8 @@ simulator::settrop(const std::string& mode, const std::string& table,
     // RI TODO or do we have it pass through here to VC::setApply? 
       
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
  return rstat;  
@@ -868,8 +868,8 @@ simulator::setgain(const std::string& mode, const std::string& table,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -895,8 +895,8 @@ simulator::setpointingerror(const std::string& epjtablename,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -926,8 +926,8 @@ simulator::setleakage(const std::string& mode, const std::string& table,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }
   
@@ -957,8 +957,8 @@ simulator::oldsetnoise(const std::string& mode, const std::string& table,
     
     
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }  
  return rstat;
@@ -1006,8 +1006,8 @@ simulator::setnoise(const std::string& mode,
 			     trx, tground, tcmb, OTF, senscoeff);
     }    
  } catch  (AipsError x) {
-   //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	   << LogIO::POST;
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
     RETHROW(x);
  }  
  return rstat;
@@ -1032,8 +1032,8 @@ simulator::setpa(const std::string& mode, const std::string& table,
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   
@@ -1056,8 +1056,8 @@ simulator::setseed(const int seed)
     
     
   } catch  (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
     RETHROW(x);
   }
   

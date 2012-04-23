@@ -236,8 +236,8 @@ utils::removetable(const std::vector<std::string> &tablenames)
        }
   }
     } catch (AipsError x) {
-       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-       //<< LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+       << LogIO::POST;
        RETHROW(x);
   }
   return rstat;

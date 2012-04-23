@@ -103,7 +103,7 @@ tableplot::tableplot()
 		//TP->attachGuiBinder(PyBind);
 
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -117,7 +117,7 @@ tableplot::~tableplot()
 		done();
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -164,7 +164,7 @@ tableplot::open(const std::vector<std::string>& tabnames)
                 
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -190,7 +190,7 @@ tableplot::setgui(const bool gui)
 	    alive = 0;
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
    return True;
@@ -212,7 +212,7 @@ tableplot::savefig( const std::string& filename,
                 String( orientation ), String( papertype ), 
 		String( facecolor ), String( edgecolor ) );
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
    return True;
@@ -262,7 +262,7 @@ tableplot::selectdata(const std::string& taqlstring)
 	if(TP->setTableT(SelTABS,TabNames,SelStr)==-1) return False;
 	
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
    return True;
@@ -318,7 +318,7 @@ tableplot::plotdata(const ::casac::record& poption, const std::vector<std::strin
         TP->changeGuiButtonState("iternext","disabled");
 	
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
   return True;
@@ -336,7 +336,7 @@ tableplot::replot()
 	TP->rePlot();
 	
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
   return True;
@@ -391,7 +391,7 @@ tableplot::iterplotstart(const ::casac::record& poption, const std::vector<std::
         TP->changeGuiButtonState("iternext","enabled");
 
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -413,7 +413,7 @@ tableplot::iterplotnext()
 
 
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -431,7 +431,7 @@ tableplot::iterplotstop( const bool rmplotter )
                 TP->changeGuiButtonState("iternext","disabled");
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -453,7 +453,7 @@ tableplot::markregions(const int nrows, const int ncols, const int panel,const s
 		if(TP->markRegions(nrows,ncols,panel,regionvec) == -1) return False;
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -472,7 +472,7 @@ tableplot::flagdata()
 		TP->flagData(FLAG);
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -490,7 +490,7 @@ tableplot::unflagdata()
 		TP->flagData(UNFLAG);
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -517,7 +517,7 @@ tableplot::locatedata(const std::vector<std::string>& columnlist)
 		INFO.resize(0);
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -531,7 +531,7 @@ tableplot::clearplot(const int nrows, const int ncols, const int panel)
 		if(TP->clearPlot(nrows,ncols,panel) == -1) return False;
 	
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -546,7 +546,7 @@ tableplot::clearflags(const bool roottable)
 		TP->clearAllFlags( (Bool)roottable );
 	
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -562,7 +562,7 @@ tableplot::saveflagversion(const std::string& versionname, const std::string& co
 		TP->saveFlagVersion( String(versionname), String(comment), String(merge) );
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -581,7 +581,7 @@ tableplot::restoreflagversion(const std::vector<std::string>& versionname, const
 		TP->restoreFlagVersion( verlist, String(merge) );
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -601,7 +601,7 @@ tableplot::getflagversionlist()
 			cout << versionlist[i] << endl;
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -620,7 +620,7 @@ tableplot::deleteflagversion(const std::vector<std::string>& versionname)
 		TP->deleteFlagVersion( verlist );
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;
@@ -660,7 +660,7 @@ tableplot::done()
 		}
 		
 	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 	return True;

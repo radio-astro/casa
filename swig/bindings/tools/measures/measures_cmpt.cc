@@ -72,8 +72,8 @@ measures::dirshow(const ::casac::record& v)
       outStr = os.str();
     }
   } catch (AipsError(x)) {
-    //*itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
+	    << LogIO::POST;
     RETHROW(x);
   }
   return outStr;
@@ -1912,8 +1912,8 @@ measures::doframe(const String &in) {
     };
     frame_p->set(*pcomet_p);
   } catch (AipsError (x)) {
-    //*itsLog << LogIO::SEVERE << error << "Exception Reports: " << x.getMesg()
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << error << "Exception Reports: " << x.getMesg()
+	    << LogIO::POST;
     RETHROW(x);
     return false;
   }
@@ -1975,8 +1975,8 @@ measures::doframe(const MeasureHolder &in) {
       return True;
     };
   } catch (AipsError(x)) {
-    //*itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
+	    << LogIO::POST;
     RETHROW(x);
   }
   return False;
@@ -2009,8 +2009,8 @@ measures::showframe()
       s = oss.str();
     }
   } catch (AipsError(x)) {
-    //*itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
-//	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
+	    << LogIO::POST;
     RETHROW(x);
   }
   return s;
@@ -2853,8 +2853,8 @@ measures::casaQuantityFromVar(const ::casac::variant& theVar){
       retval=qh.asQuantity();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -2882,8 +2882,8 @@ measures::casaMeasureHolderFromVar(const ::casac::variant& theVar){
       delete ptrRec;
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return mh;
@@ -2903,8 +2903,8 @@ measures::casacRec2MeasureHolder(casa::MeasureHolder& mh,
     delete ptrRec;
     rstat = mh.isMeasure();
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
 return rstat;
@@ -2935,8 +2935,8 @@ measures::casaMDirectionFromVar(const ::casac::variant& theVar){
       retval = mh.asMDirection();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -2967,8 +2967,8 @@ measures::casaMDopplerFromVar(const ::casac::variant& theVar){
       retval = mh.asMDoppler();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -2999,8 +2999,8 @@ measures::casaMEpochFromVar(const ::casac::variant& theVar){
       retval = mh.asMEpoch();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3031,8 +3031,8 @@ measures::casaMFrequencyFromVar(const ::casac::variant& theVar){
       retval = mh.asMFrequency();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3063,8 +3063,8 @@ measures::casaMPositionFromVar(const ::casac::variant& theVar){
       retval = mh.asMPosition();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3095,8 +3095,8 @@ measures::casaMRadialVelocityFromVar(const ::casac::variant& theVar){
       retval = mh.asMRadialVelocity();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3127,8 +3127,8 @@ measures::casaMBaselineFromVar(const ::casac::variant& theVar){
       retval = mh.asMBaseline();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3159,8 +3159,8 @@ measures::casaMuvwFromVar(const ::casac::variant& theVar){
       retval = mh.asMuvw();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
@@ -3191,8 +3191,8 @@ measures::casaMEarthMagneticFromVar(const ::casac::variant& theVar){
       retval = mh.asMEarthMagnetic();
     }
   } catch (AipsError x) {
-    //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-     //       << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return retval;
