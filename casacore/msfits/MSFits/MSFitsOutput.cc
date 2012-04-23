@@ -96,8 +96,8 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
                 startchan, nchan, stepchan, writeSysCal, asMultiSource,
                 combineSpw, writeStation, sensitivity);
     }
-    cout << " nchan=" << nchan << " startchan=" << startchan 
-         << " stepchan=" << stepchan << " avgchan=" << avgchan << endl; 
+    //cout << " nchan=" << nchan << " startchan=" << startchan 
+    //     << " stepchan=" << stepchan << " avgchan=" << avgchan << endl; 
     LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
     const uInt nrow = ms.nrow();
     String msfile = ms.tableName();
@@ -1140,8 +1140,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
             imagcorrf.set(0);
             wgtaverf.set(0);
             Int chancounter = 0;
-            cout << "chanstart=" << chanstart << " nchan=" << nchan 
-                 << " chanstep=" << chanstep << " avgchan=" << avgchan << endl;
+            //cout << "chanstart=" << chanstart << " nchan=" << nchan 
+            //     << " chanstep=" << chanstep << " avgchan=" << avgchan << endl;
             for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
                 //cout << "row = " << tbfrownr << " "
                 //   << outptr << " " << optr << " " << outptr-optr << " ";
