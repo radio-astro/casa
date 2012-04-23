@@ -1,4 +1,5 @@
 import os
+import numpy
 from taskinit import *
 
 def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
@@ -119,7 +120,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 					execute_string += ' --tie '
 					execute_string += '\"'+str(src)+'\"'
 					if not (i==len(tie)-1):
-						execute_string += ','
+						execute_string += ' '
 
 		if (not reversespw==''):
 			spws = ms.msseltoindex(vis=vis,spw=reversespw)['spw']
@@ -162,7 +163,16 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		casalog.post(execute_string)
 		print execute_string
 
-        	rval = os.system(execute_string)
+		templogfile = 'wvrgcal_tmp_'+str(numpy.random.randint(1E6,1E8))
+
+        	rval = os.system(execute_string + " > "+ templogfile)
+
+		fp = file(templogfile)
+		loglines = fp.readlines()
+		fp.close()
+		for ll in loglines:
+			casalog.post(ll.expandtabs())
+		os.system('rm -rf '+templogfile)
 
 		if(rval == 0):
 			return True
