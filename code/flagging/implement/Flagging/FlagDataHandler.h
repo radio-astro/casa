@@ -445,6 +445,7 @@ public:
 	void applyFlag(uInt chan, uInt row);
 	void applyFlag(uInt pol, uInt channel, uInt row);
 	void applyFlagRow(uInt row);
+	void applyFlagInRow(uInt row);
 
 	Bool getOriginalFlags(uInt chan, uInt row);
 	Bool getModifiedFlags(uInt chan, uInt row);

@@ -5,6 +5,7 @@ import asap as sd
 import pylab as pl
 #import Tkinter as Tk
 from asap import _to_list
+from asap.scantable import is_scantable
 ###### workaroud #####
 from matplotlib import _pylab_helpers
 ######################
@@ -31,15 +32,56 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 if os.path.exists(outfilename):
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
+            isScantable = is_scantable(infile)
 
-            isScantable=False
-            if os.path.isdir(filename) and \
-            (not os.path.exists(filename+'/table.f1') and \
-             os.path.exists(filename+'/table.info')):
-                isScantable=True
+            #load the data without time/pol averaging
+            sorg = sd.scantable(infile,average=scanaverage,antenna=antenna)
 
-            #load the data without averaging
-            s=sd.scantable(infile,average=scanaverage,antenna=antenna)
+            doCopy = (frame != '') or (doppler != '') or (restfreq != '') or \
+                     (fluxunit != '' and fluxunit != sorg.get_fluxunit())\
+                     or (specunit != '' and specunit != sorg.get_unit())
+            doCopy = doCopy and isScantable
+
+            # A scantable selection
+            # Scan selection
+            scans = _to_list(scanlist,int) or []
+
+            # IF selection
+            ifs = _to_list(iflist,int) or []
+
+            # Select polarizations
+            pols = _to_list(pollist,int) or []
+
+            # Beam selection
+            beams = _to_list(beamlist,int) or []
+
+            # Actual selection
+            sel = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
+
+            # Select source names
+            if ( field != '' ):
+                    sel.set_name(field)
+                    # NOTE: currently can only select one
+                    # set of names this way, will probably
+                    # need to do a set_query eventually
+
+            try:
+                #Apply the selection
+                sorg.set_selection(sel)
+            except Exception, instance:
+                casalog.post( str(instance), priority = 'ERROR' )
+                return
+	    # For printing header information
+	    ssel=sel.__str__()
+            del sel
+
+            # Copy scantable when usign disk storage not to modify
+            # the original table.
+            if doCopy and sd.rcParams['scantable.storage'] == 'disk':
+                    s = sorg.copy()
+            else:
+                    s = sorg
+            del sorg
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -84,11 +126,11 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                             eta = telescopeparm[1]
                             casalog.post( "Use phys.diam D = %5.1f m" % (D) )
                             casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
-                            s.convert_flux(eta=eta,d=D)
+                            s.convert_flux(eta=eta,d=D,insitu=True)
                     elif ( len(telescopeparm) > 0 ):
                             jypk = telescopeparm[0]
                             casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
-                            s.convert_flux(jyperk=jypk)
+                            s.convert_flux(jyperk=jypk,insitu=True)
                     else:
                             casalog.post( "Empty telescope list" )
 
@@ -112,11 +154,11 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                             casalog.post( "At rest frequency %5.3f GHz" % (rf) )
                             D = 104.9 # 100m x 110m
                             casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
-                            s.convert_flux(eta=eta,d=D)
+                            s.convert_flux(eta=eta,d=D,insitu=True)
 
                             casalog.post( "Successfully converted fluxunit to "+fluxunit )
                     elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
-                            s.convert_flux()
+                            s.convert_flux(insitu=True)
 
                     else:
                             # Unknown telescope type
@@ -132,24 +174,12 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             if ( specunit == 'km/s' and restfreq != '' ):
                     if ( type(restfreq) == float ):
                             fval = restfreq
+                    elif qa.compare(restfreq, 'Hz'):
+                            qrfhz = qa.convert(restfreq, 'Hz')
+                            fval = qrfhz['value']
                     else:
-                            # string with/without unit
-                            rf=restfreq.rstrip('Hz')
-                            if ( rf[len(rf)-1] == 'T' ):
-                                    #THz
-                                    fval = float(rf.rstrip('T'))*1.0e12
-                            elif ( rf[len(rf)-1] == 'G' ):
-                                    #GHz
-                                    fval = float(rf.rstrip('G'))*1.0e9
-                            elif ( rf[len(rf)-1] == 'M' ):
-                                    #MHz
-                                    fval = float(rf.rstrip('M'))*1.0e6
-                            elif ( rf[len(rf)-1] == 'k' ):
-                                    #kHz
-                                    fval = float(rf.rstrip('k'))*1.0e3
-                            else:
-                                    #Hz
-                                    fval = float(rf)
+                            errstr = "Invalid rest frequency %s. Must be in the unit of '*Hz' " % restfreq
+                            raise Exception, errstr
                     casalog.post( 'Set rest frequency to %d Hz' %(fval) )
                     s.set_restfreqs(freqs=fval)
 
@@ -174,50 +204,20 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             else:
                     casalog.post( 'Using current doppler convention' )
 
-            # A scantable selection
-            # Scan selection
-            scans = _to_list(scanlist,int) or []
-
-            # IF selection
-            ifs = _to_list(iflist,int) or []
-
-            # Select polarizations
-            pols = _to_list(pollist,int) or []
-
-            # Beam selection
-            beams = _to_list(beamlist,int) or []
-
-            # Actual selection
-            sel = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
-
-            # Select source names
-            if ( field != '' ):
-                    sel.set_name(field)
-                    # NOTE: currently can only select one
-                    # set of names this way, will probably
-                    # need to do a set_query eventually
-
-
-            try:
-                #Apply the selection
-                s.set_selection(sel)
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                return
-	    # For printing header information
-	    ssel=sel.__str__()
-            del sel
 
             ##### workaround for ghost plotter in CASA 3.4 #####
-            figmgr = sd.plotter._plotter.figmgr
-            if figmgr and not _pylab_helpers.Gcf.has_fignum(figmgr.num):
-                    _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-                    sd.plotter._plotter.quit()
-            elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
-               and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
-                    sd.plotter._plotter.quit()
-                    _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-                    sd.plotter._plotter.quit()
+            figmgr = None
+            if hasattr(sd.plotter._plotter,'figmgr'):
+                    figmgr = sd.plotter._plotter.figmgr
+            if figmgr:
+                    if not _pylab_helpers.Gcf.has_fignum(figmgr.num):
+                            _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+                            sd.plotter._plotter.quit()
+                    elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
+                             and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
+                            sd.plotter._plotter.quit()
+                            _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+                            sd.plotter._plotter.quit()
             ######################################################
 	    # Reload plotter if necessary
 	    if not sd.plotter._plotter or sd.plotter._plotter.is_dead:

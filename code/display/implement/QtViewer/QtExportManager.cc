@@ -115,7 +115,7 @@ QtExportManager::QtExportManager(QtDisplayPanelGui* panel,
   leaveOpen_->setToolTip("Uncheck to close this window after "
     "data and export action.\n"
     "Use 'Save as...' button/menu on Display Panel to show it again.");
-  leaveOpen_->setChecked(True);
+  leaveOpen_->setChecked(false);
 
   dir_=QDir(QDir::current());
   dir_.setFilter(QDir::AllDirs | //QDir::NoSymLinks |
@@ -124,6 +124,7 @@ QtExportManager::QtExportManager(QtDisplayPanelGui* panel,
 
   connect(updateButton_, SIGNAL(clicked()), SLOT(buildFileList()));
   connect(dirLineEdit_,  SIGNAL(returnPressed()), SLOT(exportData()));
+  connect(saveButton_,   SIGNAL(clicked()), SLOT(exportData()));
   connect(treeWidget_,   SIGNAL(itemSelectionChanged()), SLOT(changeItemSelection()));
   connect(browseButton_, SIGNAL(clicked()), this, SLOT(browseOutFilePath()));
 }

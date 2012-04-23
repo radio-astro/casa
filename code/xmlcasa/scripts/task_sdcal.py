@@ -337,7 +337,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                     spefile = project
 
             if overwrite and os.path.exists(outfilename):
-               os.system('rm -rf %s' % outfilename)
+	            os.system('rm -rf %s' % outfilename)
 
             spave.save(spefile,outform,overwrite)
             if outform!='ASCII':

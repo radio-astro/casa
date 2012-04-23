@@ -22,7 +22,7 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                 raise Exception, s
 
 	    if (outfile != ''):
-	        project = outfile
+	        project = outfile.rstrip('/')
 	    else:
 	        project = infile.rstrip('/')
 	        if not overwrite:
@@ -31,11 +31,17 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             outfilename = os.path.expandvars(project)
             outfilename = os.path.expanduser(outfilename)
             if not overwrite and os.path.exists(outfilename):
-		    s = "Output file '%s' exist." % (outfilename)
+		    s = "Output file '%s' exists." % (outfilename)
                     raise Exception, s
 
-            s = sd.scantable(infile,average=False,antenna=antenna)
+            sorg = sd.scantable(infile,average=False,antenna=antenna)
 
+	    # Copy the original data (CAS-3987)
+	    if (sd.rcParams['scantable.storage'] == 'disk') and (project != infile.rstrip('/')):
+		    s = sorg.copy()
+	    else:
+		    s = sorg
+	    del sorg
 
             #check the format of the infile
             if isinstance(infile, str):
@@ -47,6 +53,16 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
               else:
                   format = 'SDFITS'
 
+	    # Check the formats of infile and outfile are identical when overwrite=True.
+	    # (CAS-3096). If not, print warning message and exit.
+	    outformat = outform.upper()
+	    if (outformat == 'MS'): outformat = 'MS2'
+	    if overwrite and (project == infile.rstrip('/')) and (outformat != format):
+		    msg = "The input and output data format must be identical when "
+		    msg += "their names are identical and overwrite=True. "
+		    msg += "%s and %s given for input and output, respectively." % (format, outformat)
+	            raise Exception, msg
+	    
             # Do at least one
 	    docmdflag = True
 	    if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip):
@@ -356,8 +372,9 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     outform = 'ASAP'
                     spefile = project
 
-            if overwrite and os.path.exists(outfilename):
-                    os.system('rm -rf %s' % outfilename)
+	    # Commented out on 19 Apr 2012. (CAS-3986)
+            #if overwrite and os.path.exists(outfilename):
+            #        os.system('rm -rf %s' % outfilename)
             
             #put back original spectral unit
             s.set_unit(unit_in) 

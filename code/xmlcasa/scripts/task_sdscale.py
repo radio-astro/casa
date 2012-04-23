@@ -76,6 +76,9 @@ def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
             if scaletsys:
                     oldtsys=s._row_callback(s._gettsys, "Original Tsys")
                     #print "Scaled spectra and Tsys by "+str(factor)
+            del s
+	    
+            if scaletsys:
                     casalog.post( "Scaled spectra and Tsys by "+str(factor) )
                     newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
             else:
@@ -86,7 +89,7 @@ def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
             s2.save(outfile, format, overwrite)
             #print "Wrote scaled data to %s file, %s " % (format, outfile)
             casalog.post( "Wrote scaled data to %s file, %s " % (format, outfile) )
-            del s,s2
+            del s2
 
             # DONE
 
