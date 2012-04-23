@@ -73,7 +73,7 @@ public:
     Matrix<Double> fd;
     Matrix<Double> fderr;
     Matrix<Int> numSol;
-    Matrix<Double> freq;
+    Vector<Double> freq;
   } fluxScaleStruct;
 
   SolvableVisCal(VisSet& vs);
