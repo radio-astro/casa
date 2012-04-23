@@ -1381,7 +1381,7 @@ void QtDisplayPanelGui::showImageProfile() {
 		    	profile_ = new QtProfile(img, pdd->name().c_str());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
 				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 			connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 					profile_, SLOT(changeSpectrum(String, String, String )));
