@@ -178,7 +178,7 @@ void ImageConcat<T>::setImage (ImageInterface<T>& image, Bool relax)
    if (nIm==0) {
       ImageInterface<T>::setCoordinateInfo(image.coordinates());
       this->setUnitMember (image.units());
-      setImageInfo (image.imageInfo());
+      this->setImageInfo (image.imageInfo());
       this->setMiscInfoMember (image.miscInfo());
       this->setCoordinates();
    } else {
@@ -263,7 +263,7 @@ void ImageConcat<T>::setImage (ImageInterface<T>& image, Bool relax)
 
 // Update the coordinates in the ImageCOncat object now we are happy all is well
 
-      setCoordinates();
+      this->setCoordinates();
    }
 
 // Add parent history
@@ -310,7 +310,7 @@ void ImageConcat<T>::setLattice(MaskedLattice<T>& lattice)
    isImage_p(nIm) = False;
    isContig_p = False;
 //
-   setCoordinates();
+   this->setCoordinates();
 } 
 
 
