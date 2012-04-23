@@ -204,7 +204,7 @@ String LogMessage::toTermString() const
 	
   String continuationHeader = "\n\t";
   String message = String(message_p); // copy
-  message.gsub("\n", continuationHeader);
+  //message.gsub("\n", continuationHeader);
 
   ostringstream os;
   os << header << "\n" << message;

@@ -405,7 +405,7 @@ void MIRIADImage::setup()
    // set ImageInterface data
 
    setCoordsMember (cSys);
-   setImageInfoMember (imageInfo);
+   setImageInfo (imageInfo);
 
    setUnitMember(brightnessUnit);
 
