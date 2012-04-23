@@ -723,7 +723,11 @@ public:
   
   QtDisplayPanel() {  }		// (not intended for use)  
   
-    
+  /**
+   * Sends a signal containing information about the data pinpointed by the mouse
+   * & displays flyover information about the data.
+   */
+  void processTracking( const Record& trackingRec, const WCMotionEvent& ev );
   
   //# DATA
     

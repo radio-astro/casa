@@ -180,7 +180,7 @@ Bool SpectralFitter::fit(const Vector<Float> &spcVals,
 	else{
 		_fitStatus=SpectralFitter::FAILED;
 	   msg = "Fitter did not converge in " + String::toString(_fit.getNumberIterations()) + " iterations";
-	  *_log << LogIO::NORMAL  << msg << LogIO::POST;
+	   *_log << LogIO::NORMAL  << msg << LogIO::POST;
 	   return False;
 	}
 
@@ -261,11 +261,25 @@ Bool SpectralFitter::_prepareData(const Vector<Float> &xVals, const Vector<Float
 		Vector<Double> one(eVals.size(), 1.0);
 		Vector<Double> deVals(eVals.size(), 0.0);
 		convertArray(deVals, eVals);
-		if (min(eVals(IPosition(1, startIndex), IPosition(1, endIndex)))<0.0)
-			return False;
-		weightVals(IPosition(1, startIndex), IPosition(1, endIndex)) = one(IPosition(1, startIndex), IPosition(1, endIndex)) / deVals(IPosition(1, startIndex), IPosition(1, endIndex));
-	}
 
+		// find the minimum of the error values
+		Double minVal=min(eVals(IPosition(1, startIndex), IPosition(1, endIndex)));
+
+		// a value smaller zero make no sense
+		if (minVal<0.0){
+			return False;
+		}
+		// if the error is zero, discard all errors
+		else if (minVal==0.0){
+			String msg = String("The error array contains values=0.0 ==> ALL error values are discarded!");
+			*_log << LogIO::WARN << msg << LogIO::POST;
+			weightVals.resize(0);
+		}
+		// compute the weights
+		else {
+			weightVals(IPosition(1, startIndex), IPosition(1, endIndex)) = one(IPosition(1, startIndex), IPosition(1, endIndex)) / deVals(IPosition(1, startIndex), IPosition(1, endIndex));
+		}
+	}
 	return True;
 }
 

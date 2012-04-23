@@ -132,6 +132,7 @@ ru :
 	$(QT4ROOT)/bin/uic-qt4 -o QtAnnotatorGui.ui.h QtAnnotatorGui.ui
 	$(QT4ROOT)/bin/uic-qt4 -o QtRegionMgr.ui.h QtRegionMgr.ui
 
+
 qt : ru
 	$(QT4ROOT)/bin/moc-qt4 -o QtDataOptionsPanel.moc.cc QtDataOptionsPanel.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o QtDisplayDataGui.moc.cc QtDisplayDataGui.qo.h
