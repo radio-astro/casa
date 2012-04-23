@@ -268,7 +268,8 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
         }
 	*/
         specCol.get(k, spec);
-        tsysCol.get(k, tsys);
+        //tsysCol.get(k, tsys);
+        tsys.assign( tsysCol(k) );
         intCol.get(k, inter);
         mjdCol.get(k, time);
         // spectrum has to be added last to enable weighting by the other values
@@ -2199,6 +2200,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
 {
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& tab = in->table();
+  Table& outtab = out->table();
   Unit fluxUnit(tab.keywordSet().asString("FluxUnit"));
   Unit K(String("K"));
   Unit JY(String("Jy"));
@@ -2235,8 +2237,8 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
     ostringstream oss;
     oss << "Jy/K = " << jyperk;
     pushLog(String(oss));
-    Vector<Float> factors(tab.nrow(), factor);
-    scaleByVector(tab,factors, false);
+    Vector<Float> factors(outtab.nrow(), factor);
+    scaleByVector(outtab,factors, false);
   } else if ( etaap > 0.0) {
     if (d < 0) {
       Instrument inst =
@@ -2253,8 +2255,8 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
     if ( tokelvin ) {
       factor = 1.0 / factor;
     }
-    Vector<Float> factors(tab.nrow(), factor);
-    scaleByVector(tab, factors, False);
+    Vector<Float> factors(outtab.nrow(), factor);
+    scaleByVector(outtab, factors, False);
   } else {
 
     // OK now we must deal with automatic look up of values.
@@ -3098,7 +3100,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     string groupmode = "OR" ;
     uInt sizecr = 0 ;
     if ( groupmode == "AND" ) 
-      sizecr = 2 ;
+      sizecr = 1 ;
     else if ( groupmode == "OR" ) 
       sizecr = 0 ;
 
@@ -3603,16 +3605,12 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
       }
     }
     // combine spectra
-    ArrayColumn<Float> specColOut ;
-    specColOut.attach( out->table(), "SPECTRA" ) ;
-    ArrayColumn<uChar> flagColOut ;
-    flagColOut.attach( out->table(), "FLAGTRA" ) ;
-    ScalarColumn<uInt> ifnoColOut ;
-    ifnoColOut.attach( out->table(), "IFNO" ) ;
-    ScalarColumn<uInt> polnoColOut ;
-    polnoColOut.attach( out->table(), "POLNO" ) ;
-    ScalarColumn<uInt> freqidColOut ;
-    freqidColOut.attach( out->table(), "FREQ_ID" ) ;
+    ArrayColumn<Float> specColOut( out->table(), "SPECTRA" ) ;
+    ArrayColumn<uChar> flagColOut( out->table(), "FLAGTRA" ) ;
+    ArrayColumn<Float> tsysColOut( out->table(), "TSYS" ) ;
+    ScalarColumn<uInt> ifnoColOut( out->table(), "IFNO" ) ;
+    ScalarColumn<uInt> polnoColOut( out->table(), "POLNO" ) ;
+    ScalarColumn<uInt> freqidColOut( out->table(), "FREQ_ID" ) ;
 //     MDirection::ScalarColumn dirColOut ;
 //     dirColOut.attach( out->table(), "DIRECTION" ) ;
     Table &tab = tmpout->table() ;
@@ -3620,15 +3618,19 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     cols[0] = String("POLNO") ;
     TableIterator iter( tab, cols ) ;
     vector< vector<uInt> > sizes( freqgrp.size() ) ;
+    vector<uInt> totalsizes( freqgrp.size(), 0 ) ;
+    ArrayColumn<Float> specCols ;
+    ArrayColumn<uChar> flagCols ;
+    ArrayColumn<Float> tsysCols ;
+    ScalarColumn<uInt> polnos ;
+    vector< Vector<Float> > specout( freqgrp.size() ) ;
+    vector< Vector<uChar> > flagout( freqgrp.size() ) ;
+    vector< Vector<Float> > tsysout( freqgrp.size() ) ;
     while( !iter.pastEnd() ) {
-      vector< vector<Float> > specout( freqgrp.size() ) ;
-      vector< vector<uChar> > flagout( freqgrp.size() ) ;
-      ArrayColumn<Float> specCols ;
       specCols.attach( iter.table(), "SPECTRA" ) ;
-      ArrayColumn<uChar> flagCols ;
       flagCols.attach( iter.table(), "FLAGTRA" ) ;
+      tsysCols.attach( iter.table(), "TSYS" ) ;
       ifnoCol.attach( iter.table(), "IFNO" ) ;
-      ScalarColumn<uInt> polnos ;
       polnos.attach( iter.table(), "POLNO" ) ;
 //       MDirection::ScalarColumn dircol ;
 //       dircol.attach( iter.table(), "DIRECTION" ) ;
@@ -3669,19 +3671,26 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 // 	} 
 //       }
       // get a list of number of channels for each frequency group member
-      for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
-	sizes[igrp].resize( freqgrp[igrp].size() ) ;
-	for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
-	  for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
-	    uInt ifno = ifnoCol( irow ) ;
-	    if ( ifno == freqgrp[igrp][imem] ) {
-	      Vector<Float> spec = specCols( irow ) ;
-	      sizes[igrp][imem] = spec.nelements() ;
-	      break ;
-	    }
-	  }
-	}
+      if ( totalsizes[0] == 0 ) {
+        for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
+          sizes[igrp].resize( freqgrp[igrp].size() ) ;
+          for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
+            for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
+              uInt ifno = ifnoCol( irow ) ;
+              if ( ifno == freqgrp[igrp][imem] ) {
+                Vector<Float> spec = specCols( irow ) ;
+                sizes[igrp][imem] = spec.nelements() ;
+                totalsizes[igrp] += sizes[igrp][imem] ;
+                break ;
+              }
+            }
+          }
+          specout[igrp].resize( totalsizes[igrp] ) ;
+          flagout[igrp].resize( totalsizes[igrp] ) ;
+          tsysout[igrp].resize( totalsizes[igrp] ) ;
+        }
       }
+
       // combine spectra
       for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
         uInt polout = polnoColOut( irow ) ;
@@ -3695,6 +3704,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
               break ;
             }
           }
+          IPosition startpos( 1, 0 ) ;
+          IPosition endpos( 1, 0 ) ;
           for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
             for ( uInt jrow = 0 ; jrow < iter.table().nrow() ; jrow++ ) {
               uInt ifno = ifnoCol( jrow ) ;
@@ -3709,24 +3720,28 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
               //if ( ifno == freqgrp[igrp][imem] && allNearAbs( tdir, direction, tol ) ) {
 //               if ( ifno == freqgrp[igrp][imem] && dd <= tol ) {
               if ( ifno == freqgrp[igrp][imem] ) {
+                endpos[0] = startpos[0] + sizes[igrp][imem] - 1 ;
                 Vector<Float> spec = specCols( jrow ) ;
                 Vector<uChar> flag = flagCols( jrow ) ;
-                vector<Float> svec ;
-                spec.tovector( svec ) ;
-                vector<uChar> fvec ;
-                flag.tovector( fvec ) ;
+                Vector<Float> tsys = tsysCols( jrow ) ;
                 //os << "spec.size() = " << svec.size() << " fvec.size() = " << fvec.size() << LogIO::POST ;
-                specout[igrp].insert( specout[igrp].end(), svec.begin(), svec.end() ) ;
-                flagout[igrp].insert( flagout[igrp].end(), fvec.begin(), fvec.end() ) ;
+                specout[igrp]( startpos, endpos ) = spec ;
+                flagout[igrp]( startpos, endpos ) = flag ;
+                if ( spec.size() == tsys.size() ) {
+                  tsysout[igrp]( startpos, endpos ) = tsys ;
+                }
+                else {
+                  tsysout[igrp]( startpos, endpos ) = tsys[0] ;
+                }
                 //os << "specout[" << igrp << "].size() = " << specout[igrp].size() << LogIO::POST ;
+                startpos[0] += sizes[igrp][imem] ;
               }
             }
           }
           // set SPECTRA and FRAGTRA
-          Vector<Float> newspec( specout[igrp] ) ;
-          Vector<uChar> newflag( flagout[igrp] ) ;
-          specColOut.put( irow, newspec ) ;
-          flagColOut.put( irow, newflag ) ;
+          specColOut.put( irow, specout[igrp] ) ;
+          flagColOut.put( irow, flagout[igrp] ) ;
+          tsysColOut.put( irow, tsysout[igrp] ) ;
           // IFNO renumbering (renumbered as frequency group ID)
           ifnoColOut.put( irow, igrp ) ; 
         }
