@@ -1879,9 +1879,13 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow )
   // reshape specCol_ and flagCol_
   Vector<Float> oldspec = specCol_( irow ) ;
   Vector<uChar> oldflag = flagsCol_( irow ) ;
+  Vector<Float> oldtsys = tsysCol_( irow ) ;
   uInt newsize = nmax - nmin + 1 ;
-  specCol_.put( irow, oldspec( Slice( nmin, newsize, 1 ) ) ) ;
-  flagsCol_.put( irow, oldflag( Slice( nmin, newsize, 1 ) ) ) ;
+  Slice slice( nmin, newsize, 1 ) ;
+  specCol_.put( irow, oldspec( slice ) ) ;
+  flagsCol_.put( irow, oldflag( slice ) ) ;
+  if ( oldspec.size() == oldtsys.size() )
+    tsysCol_.put( irow, oldtsys( slice ) ) ;
 
   return ;
 }
