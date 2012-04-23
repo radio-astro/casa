@@ -2174,15 +2174,29 @@ void Calibrater::fluxscale(const String& infile,
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
-//  Vector<Int> tranidx(0);
 
   if (refFields.length()>0)
     refidx=getFieldIdx(refFields);
   else
     throw(AipsError("A reference field must be specified!"));
 
-  if (tranFields.length()>0)
+  if (tranFields.length()>0) {
     tranidx=getFieldIdx(tranFields);
+  } else {
+    Table oFieldTable( infile+"/FIELD" );
+    uInt uiNumField = oFieldTable.nrow();
+    uInt uiNumFieldRef = refidx.nelements();
+    uInt uiNumFieldTrans = 0;
+    for ( uInt f1=0; f1<uiNumField; f1++ ) {
+      uInt f2;
+      for ( f2=0; f2<uiNumFieldRef; f2++ ) if ( f1 == refidx[f2] ) break;
+      if ( f2 >= uiNumFieldRef ) {
+        uiNumFieldTrans++;
+        tranidx.resize( uiNumFieldTrans, True );
+	tranidx[uiNumFieldTrans-1] = f1;
+      }
+    }
+  }
 
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,

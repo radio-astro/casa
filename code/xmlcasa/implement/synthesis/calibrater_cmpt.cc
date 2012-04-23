@@ -691,16 +691,6 @@ casac::record* calibrater::fluxscale(
 			     tranidx,
 			     oListFile);
 
-/*    
-    // Do something about output
-    //  fluxd.reference(fd.reform(IPosition(1,fd.nelements())));
-    fluxd = std::vector<double>();
-    for (uInt j=0; j<fluxScaleFactor.ncolumn(); j++) {
-      for (uInt i=0; i<fluxScaleFactor.nrow(); i++) {
-	fluxd.push_back(fluxScaleFactor(i,j));
-      }
-    }
-*/
 
     // Associate the field IDs with the field numbers
 
