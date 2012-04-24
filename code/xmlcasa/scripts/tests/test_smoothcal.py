@@ -18,11 +18,11 @@ Unit tests for task smoothcal. It tests the following parameters:
     Other tests: check the values of column smoothed GAIN against reference.
 '''
 class smoothcal_test(unittest.TestCase):
-    
+
     # Input and output names
     msfile = 'ngc1333_ut.ms'
-    gcal = 'ngc1333_ut.gcal'
-    ref = 'ngc1333_ut.ref'
+    gcal = 'ngc1333_ut_nct.gcal'   # New format caltables
+    ref = 'ngc1333_ut_nct.ref'     # 
     res = None
     out = 'smoothcal_test'
 
@@ -31,10 +31,8 @@ class smoothcal_test(unittest.TestCase):
         default(smoothcal)
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/smoothcal/'
         shutil.copytree(datapath+self.msfile, self.msfile)
-#        shutil.copytree(datapath+self.gcal, self.gcal)
-#        shutil.copytree(datapath+self.ref, self.ref)
-        caltabconvert(caltabold=datapath+self.gcal,vis=self.msfile,caltabnew=self.gcal)
-        caltabconvert(caltabold=datapath+self.ref,vis=self.msfile,caltabnew=self.ref)
+        shutil.copytree(datapath+self.gcal, self.gcal)
+        shutil.copytree(datapath+self.ref, self.ref)
     
     def tearDown(self):
         if (os.path.exists(self.msfile)):
@@ -122,7 +120,6 @@ class smoothcal_test(unittest.TestCase):
         refcol = self.getvarcol(self.ref, 'CPARAM')
         smcol = self.getvarcol(self.out, 'CPARAM')
         nrows = len(refcol)
-        print 'nrows=',nrows
         EPS = 1e-5;  # Logical "zero"
         # Loop over every row,pol and get the data
         for i in range(1,nrows,1) :
