@@ -70,8 +70,8 @@ namespace casa {
 
 		void regionCenter( double &x, double &y ) const;
 
-		void closeFigure( );
-		virtual void polygonComplete( ) = 0;
+		void closeFigure( bool signal_complete=true );
+		virtual void polygonComplete( ) DISPLAY_PURE_VIRTUAL(Polygon::polyognComplete,);
 
 		void addVertex( double x, double y, bool rewrite_last_point=false );
 

@@ -168,10 +168,13 @@ namespace casa {
 		// need to be able to retrieve our peer (the non-GUI dependent)
 		// Region class pointer...
 		virtual Region *fetch_my_region( ) DISPLAY_PURE_VIRTUAL(Region::fetch_my_region,0);
+		/* virtual void fetch_region_details( Region::RegionTypes &/\*type*\/, */
+		/*                                    std::vector<std::pair<int,int> > &/\*pixel_pts*\/, */
+		/* 				   std::vector<std::pair<double,double> > &/\*world_pts*\/ ) const */
+		/* 				DISPLAY_PURE_VIRTUAL(QtRegion::fetch_region_details,); */
 		virtual void fetch_region_details( Region::RegionTypes &/*type*/,
 		                                   std::vector<std::pair<int,int> > &/*pixel_pts*/,
-						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const
-						DISPLAY_PURE_VIRTUAL(Region::fetch_region_details,);
+						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const { }
 
 
 
