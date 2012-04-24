@@ -51,7 +51,7 @@ def importvla(archivefiles,vis,
                 ok &= tflocal.saveflagversion('Original',
                                            comment='Original flags at import into CASA',
                                            merge='replace')
-                ok &= myfg.done();
+                ok &= tflocal.done();
         except Exception, instance:
 		print '*** Error writing initial flag version of %s:' % vis
 		raise Exception, instance
