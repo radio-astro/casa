@@ -30,7 +30,8 @@ class wvrgcal_test(unittest.TestCase):
            'wvrgcalctest_sourceflag1.W',
            'wvrgcalctest_sourceflag2.W',
            'wvrgcalctest_statsource.W',
-           'wvrgcalctest_nsol.W']
+           'wvrgcalctest_nsol.W',
+           'wvrgcalctest_disperse.W']
 
 ## 2   'wvrgcalctest.W': '',
 ## 3   'wvrgcalctest_toffset.W': '--toffset -1', ........................ test3
@@ -47,7 +48,7 @@ class wvrgcal_test(unittest.TestCase):
 ## 14   'wvrgcalctest_sourceflag2.W':'--sourceflag 0455-462 --sourceflag 0132-169 --segsource', ...test9
 ## 15   'wvrgcalctest_statsource.W':'--statsource 0455-462', ..............test10
 ## 16   'wvrgcalctest_nsol.W':'--nsol 5' ..................................test11
-## 17   'wvrgcalctest_disperse.W':'--disperse', .......................... test12 - disabled
+## 17   'wvrgcalctest_disperse.W':'--disperse', .......................... test12
 
 
     out = 'mycaltable.wvr'
@@ -332,15 +333,15 @@ class wvrgcal_test(unittest.TestCase):
             self.rval = self.compTables(self.ref[16], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
-##     def test12(self):
-##         '''Test 12:  wvrgcal4quasar_10s.ms, disperse, segsource False'''
-##         myvis = self.vis_g
-##         os.system('cp -R ' + myvis + ' myinput.ms')
-##         os.system('rm -rf '+self.out)
-##         self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True, segsource=False, toffset=0.)
-##         if(self.rval):
-##             self.rval = self.compTables(self.ref[9], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
-##         self.assertTrue(self.rval)
+    def test12(self):
+        '''Test 12:  wvrgcal4quasar_10s.ms, disperse'''
+        myvis = self.vis_g
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('rm -rf '+self.out)
+        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True)
+        if(self.rval):
+            self.rval = self.compTables(self.ref[17], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
+        self.assertTrue(self.rval)
 
 
 def suite():

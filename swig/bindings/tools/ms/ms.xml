@@ -1056,16 +1056,16 @@ the ms definition itself. -->
      <value></value>
      </param>
     
-     <param type="int" direction="in" name="nchan">
+     <!--param type="int" direction="in" name="nchan">
      <description>number of channels in output, default of -1 implies 
      all</description>
      <value>-1</value>
-     </param>	
+     </param-->	
     
-     <param type="int" direction="in" name="start">
+     <!--param type="int" direction="in" name="start">
      <description>Start channel in input data</description>
      <value>0</value>
-     </param>	
+     </param-->	
     
      <param type="int" direction="in" name="width">
      <description>number of input channels to average</description>
@@ -1187,14 +1187,12 @@ the ms definition itself. -->
     This is a rather WSRT-specific operation at the moment and may not
     work correctly for measurement sets from other telescopes.
 
-    The three parameters 'start', 'nchan', 'width' are for channel
-    averaging while outputing the data to the fits file. The default
-    values of -1 will copy the channels of the input as is.  'start'
-    is input channel number that will be the first channel of the
-    output. 'nchan' is the number of channels wanted in the output
-    data. 'width' is the number of channels of the input data to make
-    1 channel of the output data. Hence (nchan*width+start) should
-    not be larger than the number of channels in the original data.
+    The width argument is for channel averaging while outputing the 
+    data to the fits file. The default values of 1 will copy the 
+    channels of the input as is. The start channel number is the 
+    first channel of the spw expression. The number of output channels
+    is determined by spw expression and the width. The width is the 
+    number of channels of the input data to make 1 channel of the output data. 
   </description>
 
   <example>

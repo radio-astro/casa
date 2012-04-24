@@ -128,7 +128,18 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				execute_string += ' --reversespw '+str(id)
 
 		if disperse:
+			dispdirpath = os.getenv('WVRGCAL_DISPDIR', '')
+			if not os.path.exists(dispdirpath+'/libair-ddefault.csv'):
+				path1 = dispdirpath
+				dispdirpath = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/wvrgcal"
+				if not os.path.exists(dispdirpath+'/libair-ddefault.csv'):
+					raise Exception, "Dispersion table libair-ddefault.csv not found in path "\
+					      +"given by WVRGCAL_DISPDIR nor in \""+dispdirpath+"\""
+				
+				os.setenv('WVRGCAL_DISPDIR', dispdirpath)
+				
 			execute_string+= ' --disperse'
+			casalog.post('Using dispersion table '+dispdirpath+'/libair-ddefault.csv')
 
 		if cont:
 			if not segsource:

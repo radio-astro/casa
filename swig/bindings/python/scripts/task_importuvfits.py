@@ -2,14 +2,18 @@ import os
 from taskinit import *
 
 def importuvfits(fitsfile, vis, antnamescheme=None):
-    """Convert a UVFITS file to a CASA visibility data set (MS):
+    """
+
+    Convert a UVFITS file to a CASA visibility data set (MS):
 
     Keyword arguments:
     fitsfile -- Name of input UV FITS file
         default: <unset>; example='3C273XC1.fits'
     vis -- Name of output visibility file (MS)
         default: <unset>; example: vis='3C273XC1.ms'
+
     """
+
     #Python script
 
     ok = True
@@ -35,16 +39,18 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
     except Exception, instance:
         casalog.post("Failed to updated HISTORY table", 'WARN')
 
-    if not ok:
-        return;
+    #if not ok:
+    #    return;
+
+    #sleep(1)
     # save original flagversion
-    try:
-        tflocal = tftool()
-        ok &= tflocal.open(vis)
-        ok &= tflocal.saveflagversion('Original',
-                       comment='Original flags at import into CASA',
-                       merge='replace')
-        ok &= tflocal.done()
-    except Exception, instance: 
-        casalog.post('Failed to save original flags', 'WARN')
-        raise Exception #, instance
+    #try:
+        #tflocal = tftool()
+        #ok &= tflocal.open(vis)
+        #ok &= tflocal.saveflagversion('Original',
+                       #comment='Original flags at import into CASA',
+                       #merge='replace')
+        #ok &= tflocal.done()
+    #except Exception, instance: 
+        #casalog.post('Failed to save original flags', 'WARN')
+        #raise Exception #, instance
