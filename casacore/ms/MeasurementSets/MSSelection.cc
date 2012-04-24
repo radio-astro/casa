@@ -71,7 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwIDs_p(), scanIDs_p(), arrayIDs_p(), ddIDs_p(), observationIDs_p(), baselineIDs_p(),
     selectedTimesList_p(), selectedUVRange_p(),selectedUVUnits_p(),
     selectedPolMap_p(Vector<Int>(0)), selectedSetupMap_p(Vector<Vector<Int> >(0)),
-    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000), mssErrHandler_p(NULL)
+    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000), mssErrHandler_p(NULL), 
+    isMS_p(True), toTENCalled_p(False)
   {
     clear();
   }
@@ -98,7 +99,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwIDs_p(), scanIDs_p(),ddIDs_p(),baselineIDs_p(), selectedTimesList_p(),
     selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
     selectedSetupMap_p(Vector<Vector<Int> >(0)),
-    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000), mssErrHandler_p(NULL)
+    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000), mssErrHandler_p(NULL), 
+    isMS_p(True), toTENCalled_p(False)
   {
     //
     // Do not initialize the private string variables directly. Instead
@@ -137,6 +139,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const String& observationExpr)
   {
     ms_p=msLike.asMS();
+    isMS_p=msLike.isMS();
+    toTENCalled_p=False;
     //
     // Do not initialize the private string variables
     // directly. Instead using the setExpr* methods to do that so that
@@ -284,6 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       this->polnExpr_p    = other.polnExpr_p;
       this->stateExpr_p   = other.stateExpr_p;
       this->exprOrder_p   = other.exprOrder_p;
+      this->isMS_p        = other.isMS_p;
     }
     
     return *this;
@@ -293,13 +298,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   TableExprNode MSSelection::getTEN(const MeasurementSet*ms)
   {
+
+    // if (ms!=NULL) {resetTEN();toTableExprNode(ms);}
+    // else if (ms_p==NULL) throw(MSSelectionError("MSSelection::getTEN() called without setting the MS"));
+    // else toTableExprNode(ms_p); 
+
+    if (isMS_p==False)
+      {
+	if (toTENCalled_p==True) return fullTEN_p;
+	else 
+	  throw(MSSelectionError("MSSelection::getTEN() called before calling MSSelection::toTableExprNode()"));
+      }
+
     if (ms==NULL) 
       if (ms_p==NULL)
 	throw(MSSelectionError("MSSelection::getTEN() called without setting the MS"));
       else toTableExprNode(ms_p); 
     else {resetTEN();toTableExprNode(ms);}
+
+
     return fullTEN_p;
-    
   }
   
   //----------------------------------------------------------------------------
@@ -369,6 +387,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const MeasurementSet* MSSelection::getMS(MSSelectableTable* msLike)
   {
     const MeasurementSet *ms=msLike->asMS();
+    isMS_p=msLike->isMS();
     
     //
     // When msLike is CTInterface, msLike->asMS() will return NULL.
@@ -402,6 +421,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     const MeasurementSet *ms=getMS(msLike);
     resetMS(*ms);
+    toTENCalled_p=True;
     //    ms_p = msLike->asMS();
 
 
@@ -467,7 +487,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						colAsTEN, spwExpr_p,
 						spwIDs_p, chanIDs_p) == 0)
 			node = *(msSpwGramParseNode());
-		}
+		    }
 		  break;
 		}
 	      case SCAN_EXPR:
@@ -522,6 +542,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      case POLN_EXPR:
 		{
+		  // This expression is a pure in-row selection.  No
+		  // need to add to the tree of TENs (the condition
+		  // variable).
 		  if (polnExpr_p != "")
 		    {
 		      msPolnGramParseCommand(ms, 
@@ -553,6 +576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// value of the wild-card fields in the time expression. 
 	//
 	const TableExprNode *timeNode = 0x0;
+	TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::TIME));
 	selectedTimesList_p.resize(2,0);
 	if(timeExpr_p != "" &&
 	   msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
@@ -560,13 +584,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Add the time-expression TEN to the condition
 	//
-	if(timeNode && !timeNode->isNull()) {
-	  if(condition.isNull()) {
-	    condition = *timeNode;
-	  } else {
-	    condition = condition && *timeNode;
+	if(timeNode && !timeNode->isNull()) 
+	  {
+	    if(condition.isNull()) 
+	      condition = *timeNode;
+	    else 
+	      condition = condition && *timeNode;
 	  }
-	}
 	
 	fullTEN_p = condition;
       }
@@ -771,7 +795,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void MSSelection::runErrorHandler()
   {
     MSSelectionAntennaParseError msAntException(String(""));
-    //    cerr << "runEH" << endl;
     MSAntennaParse::thisMSAErrorHandler->handleError(msAntException);
   }
 

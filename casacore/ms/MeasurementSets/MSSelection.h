@@ -209,13 +209,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna1List(const MeasurementSet* ms=NULL) 
-    {if (antenna1IDs_p.nelements() <= 0) getTEN(ms); return antenna1IDs_p;}
+    {// if (antenna1IDs_p.nelements() <= 0) 
+	getTEN(ms); return antenna1IDs_p;}
     
     // Accessor for the list of antenna-2 of the selected baselines.
     // Antennas affected by the baseline negation operator have the
     // antenna IDs multiplied by -1.
     inline Vector<Int> getAntenna2List(const MeasurementSet* ms=NULL) 
-    {if (antenna2IDs_p.nelements() <= 0) getTEN(ms); return antenna2IDs_p;}
+    {// if (antenna2IDs_p.nelements() <= 0) 
+	getTEN(ms); return antenna2IDs_p;}
     
     // Accessor for the list of selected baselines.  The list is a Nx2
     // Matrix with one row per baseline containing the antenna IDs of
@@ -239,7 +241,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Accessor for the list of selected field IDs.
     inline Vector<Int> getFieldList(const MeasurementSet* ms=NULL) 
-    {if (fieldIDs_p.nelements() <= 0) getTEN(ms); return fieldIDs_p;}
+    {// if (fieldIDs_p.nelements() <= 0) 
+	getTEN(ms); return fieldIDs_p;}
 
     // Accessor for the list of selected state Obs_Modes.
     inline Vector<Int> getStateObsModeList(const MeasurementSet* ms=NULL) 
@@ -264,7 +267,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Accessor for the list of the selected Spectral Window IDs.
     inline Vector<Int> getSpwList(const MeasurementSet* ms=NULL) 
-    {if (spwIDs_p.nelements() <= 0) getTEN(ms); return spwIDs_p;}
+    {// if (spwIDs_p.nelements() <= 0) 
+	getTEN(ms); return spwIDs_p;}
     
     // Accessor for the table (as a nx4 Matrix) of the selected
     // Spectral Windows and associated ranges of selected channels.
@@ -293,7 +297,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Accessor for the list of the selected Data Description IDs.
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
     {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p;}
-    
+
+    //
+    // The key in the ordered map returned by getPolMap() is the
+    // pol. ID. The value is a vector containing the list of in-row
+    // indices to pick out the selected polarizations (or
+    // equivalently, the list of indices for the vector in the
+    // corrType column of the POLARIZATION sub-table). These are also
+    // what the user intended (i.e., e.g. not all DD IDs due to user
+    // POL expression might be selected due to SPW expressions).
+    //
     inline OrderedMap<Int, Vector<Int> > getPolMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedPolMap_p;};
 
@@ -418,6 +431,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap_p;
     Int maxScans_p, maxObs_p, maxArray_p;
     MSSelectionErrorHandler* mssErrHandler_p;
+    Bool isMS_p,toTENCalled_p;
   };
   
 } //# NAMESPACE CASA - END
