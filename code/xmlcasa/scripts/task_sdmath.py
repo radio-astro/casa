@@ -145,7 +145,10 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                     thisscan.set_freqframe(framelist[i])
             casalog.post( "Restored header information of input tables" )
             # Final clean up
-            del restorescans, scandic
+            del restorescans, scandic, thisscan
+            # vars() or locals() must be called to update local symbol table to remove
+            # unwanted scantable instances from that symbol table 
+            vars()
 
             outform=outform.upper()
             if (outform == 'MS'):
