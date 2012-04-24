@@ -47,10 +47,10 @@ namespace casa {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	    }
-	    closeFigure( );
+	    closeFigure(false);
 	}
 
-	void Polygon::closeFigure( ) {
+	void Polygon::closeFigure( bool signal_complete ) {
 	    closed = true;
 	    unsigned int size = _ref_points_.size( );
 	    if ( size > 1 && _ref_points_[size-1].first == _ref_points_[size-2].first &&
@@ -60,7 +60,8 @@ namespace casa {
 	    }
 	    update_reference_bounds_rectangle( );
 	    update_drawing_bounds_rectangle( );
-	    polygonComplete( );
+	    if ( signal_complete )
+		polygonComplete( );  // pure-virtual when called from Polygon ctor
 	}
 
 	void Polygon::addVertex( double x, double y, bool rewrite_last_point ) {

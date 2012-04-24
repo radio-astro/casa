@@ -1351,16 +1351,6 @@
           <string>b1950</string>
          </property>
         </item>
-        <item>
-         <property name="text">
-          <string>galactic</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>ecliptic</string>
-         </property>
-        </item>
        </widget>
       </widget>
      </widget>
@@ -1453,7 +1443,7 @@
         </rect>
        </property>
        <property name="toolTip">
-        <string>save region(s) to file...</string>
+        <string>load region(s) from file...</string>
        </property>
        <property name="text">
         <string>load now</string>
