@@ -1110,8 +1110,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                     //weight_spectrum may not exist but flag and data always will.
                     IPosition shp = indatatmp.shape();
                     Int nchan = shp(1); // either num of channels of num of lags
-                    cout << "shp1=" << shp << " shp2=" << inflagtmp.shape() 
-                         << " nchan=" << nchan << endl;
+                    //cout << "shp1=" << shp << " shp2=" << inflagtmp.shape() 
+                    //     << " nchan=" << nchan << endl;
                     if (nchan < 1) nchan = 1;
                     const Vector<Float> wght = inweightscalar(rownr);
                     for (Int p = 0; p < numcorr0; p++) {
