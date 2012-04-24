@@ -96,6 +96,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0), newCollapseVals(True)
 {
     setupUi(this);
+    functionTabs->removeTab(2);
     initPlotterResource();
 
     setWindowTitle(QString("Spectral Profile - ").append(name));
