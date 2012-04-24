@@ -100,6 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<nDDIDRows;i++)
       mapDDID2SpwID(i) = msDataDescSubTable.spectralWindowId()(i);
 
+
     for(uInt n=0;n<SpwIds.nelements();n++)
       {
 	Found = False;
@@ -298,6 +299,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Mesg << "No Spw ID(s) matched specifications ";
 	throw(MSSelectionSpwError(Mesg.str()));
       }
+
+    idList.assign(uniqueIDList);
 
     return tten;
   }
