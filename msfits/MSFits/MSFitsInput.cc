@@ -1918,177 +1918,181 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
     ant.position().rwKeywordSet().define("ARRAY_POSITION", arrayXYZ);
 }
 
-void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW) {
-
-    //  cout << "fSWT type: " << MFrequency::showType(freqsys_p) << endl;
-
-    MSSpWindowColumns& msSpW(msc_p->spectralWindow());
-    MSDataDescColumns& msDD(msc_p->dataDescription());
-    ;
-    Int iFreq = getIndex(coordType_p, "FREQ");
-    Int nChan = nPixel_p(iFreq);
-    // assume spectral line, make source table to allow restfreq to be entered
-        if (nChan > 33)
-            addSourceTable_p = True;
-
-    MSPolarizationColumns& msPol(msc_p->polarization());
-    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
-    // fill out the polarization info (only single entry allowed in fits input)
-    ms_p.polarization().addRow();
-    msPol.numCorr().put(0, nCorr);
-    msPol.corrType().put(0, corrType_p);
-    msPol.corrProduct().put(0, corrProduct_p);
-    msPol.flagRow().put(0, False);
 
 
-    //  Table fqTab=bt.fullTable("",Table::Scratch);
-    Table fqTab = bt.fullTable();
-    Int nRow = fqTab.nrow();
-    ROScalarColumn<Int> colFrqSel(fqTab, "FRQSEL");
-    Matrix<Double> ifFreq(nIF_p, nRow);
-    Matrix<Float> chWidth(nIF_p, nRow);
-    Matrix<Float> totalBandwidth(nIF_p, nRow);
-    // The type of the column changes according to the number of entries
-    if (nIF_p == 1) {
-        ROScalarColumn<Double> colIFFreq(fqTab, "IF FREQ");
-        ROScalarColumn<Float> colChWidth(fqTab, "CH WIDTH");
-        ROScalarColumn<Float> colTotalBandwidth(fqTab, "TOTAL BANDWIDTH");
-        for (Int i = 0; i < nRow; i++) {
-            ifFreq(0, i) = colIFFreq(i);
-            chWidth(0, i) = colChWidth(i);
-            totalBandwidth(0, i) = colTotalBandwidth(i);
-        }
+void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW)
+{
+
+  //cout << "fSWT type: " << MFrequency::showType(freqsys_p) << endl;
+
+  MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+  MSDataDescColumns& msDD(msc_p->dataDescription());
+  MSPolarizationColumns& msPol(msc_p->polarization());
+  Int iFreq = getIndex(coordType_p, "FREQ");
+  Int nChan = nPixel_p(iFreq);
+  Int nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
+  // assume spectral line, make source table to allow restfreq to be entered
+  if (nChan>33) addSourceTable_p=True; 
+
+  // fill out the polarization info (only single entry allowed in fits input)
+  ms_p.polarization().addRow();
+  msPol.numCorr().put(0,nCorr);
+  msPol.corrType().put(0,corrType_p);
+  msPol.corrProduct().put(0,corrProduct_p);
+  msPol.flagRow().put(0,False);
+
+  //  Table fqTab=bt.fullTable("",Table::Scratch);
+  Table fqTab=bt.fullTable();
+  Int nRow=fqTab.nrow();
+  ROScalarColumn<Int> colFrqSel(fqTab,"FRQSEL");
+  Matrix<Double> ifFreq(nIF_p,nRow);
+  Matrix<Float> chWidth(nIF_p,nRow);
+  Matrix<Float> totalBandwidth(nIF_p,nRow);
+  // The type of the column changes according to the number of entries
+  //cout << "nIF_p=" << nIF_p << endl;
+  if (nIF_p==1) {
+    ROScalarColumn<Double> colIFFreq(fqTab,"IF FREQ");
+    ROScalarColumn<Float> colChWidth(fqTab,"CH WIDTH");
+    ROScalarColumn<Float> colTotalBandwidth(fqTab,"TOTAL BANDWIDTH");
+    for (Int i=0; i<nRow; i++) {
+      ifFreq(0,i)=colIFFreq(i);
+      chWidth(0,i)=colChWidth(i);
+      totalBandwidth(0,i)=colTotalBandwidth(i);
+    }
+  } else {
+    ROArrayColumn<Double> colIFFreq(fqTab,"IF FREQ");
+    ROArrayColumn<Float> colChWidth(fqTab,"CH WIDTH");
+    ROArrayColumn<Float> colTotalBandwidth(fqTab,"TOTAL BANDWIDTH");
+    try{
+      colIFFreq.getColumn(ifFreq);
+      colChWidth.getColumn(chWidth);
+      colTotalBandwidth.getColumn(totalBandwidth);
+    }catch(AipsError x) {
+      itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable")
+             << LogIO::DEBUG1 << x.getMesg() << LogIO::POST;
+    }
+    catch(...) {
+      itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable")
+             << LogIO::DEBUG1 << "unknown Error"  << LogIO::POST;
+    }
+  }
+
+  for (Int spw=0; spw<nSpW; spw++) {
+    ms_p.spectralWindow().addRow();
+    ms_p.dataDescription().addRow();
+    
+    msDD.spectralWindowId().put(spw,spw);
+    msDD.polarizationId().put(spw,0);
+    msDD.flagRow().put(spw,False);
+    Int ifc=0;
+    Int freqGroup = 0;
+    if (nIF_p>0) {
+      ifc=spw%nIF_p;
+      freqGroup = spw/nIF_p;
+    }
+    Int fqRow=spw/max(1,nIF_p);
+    if (fqRow != colFrqSel(fqRow)-1) 
+      itsLog << LogIO::SEVERE << "Trouble interpreting FQ table, id's may be wrong" << LogIO::POST; 
+    msSpW.name().put(spw,"none");
+    msSpW.ifConvChain().put(spw,ifc);
+    msSpW.numChan().put(spw,nChan);
+    Double refChan = refPix_p(iFreq);
+    // using data from FQ table
+    Double refFreq=refVal_p(iFreq)+ifFreq(ifc,fqRow);
+
+    Double chanBandwidth=chWidth(ifc,fqRow);
+    //TT debug
+    Vector<Double> chanFreq(nChan),resolution(nChan);
+    for (Int i=0; i < nChan; i++) {
+      chanFreq(i)= refFreq + (i+1-refChan) * chanBandwidth;
+    }
+    resolution=abs(chanBandwidth);
+
+    //if altrval (and altrpix) fits keywords exist use
+    //recalucalated values instead of the data form FQ table
+    if (useAltrval) {
+
+      refFreq = refFreq_p;
+      chanFreq = chanFreq_p;
+    }
+    msSpW.chanFreq().put(spw,chanFreq);
+    msSpW.chanWidth().put(spw,resolution); 
+    msSpW.effectiveBW().put(spw,resolution);
+    msSpW.refFrequency().put(spw,refFreq);
+    msSpW.resolution().put(spw,resolution);
+    msSpW.totalBandwidth().put(spw,totalBandwidth(ifc,fqRow));
+    if (chanBandwidth>0) {
+      msSpW.netSideband().put(spw,1);
     } else {
-        ROArrayColumn<Double> colIFFreq(fqTab, "IF FREQ");
-        ROArrayColumn<Float> colChWidth(fqTab, "CH WIDTH");
-        ROArrayColumn<Float> colTotalBandwidth(fqTab, "TOTAL BANDWIDTH");
-        colIFFreq.getColumn(ifFreq);
-        colChWidth.getColumn(chWidth);
-        colTotalBandwidth.getColumn(totalBandwidth);
+      msSpW.netSideband().put(spw,-1);
     }
-
-    for (Int spw = 0; spw < nSpW; spw++) {
-        ms_p.spectralWindow().addRow();
-        ms_p.dataDescription().addRow();
-
-        msDD.spectralWindowId().put(spw, spw);
-        msDD.polarizationId().put(spw, 0);
-        msDD.flagRow().put(spw, False);
-        Int ifc = 0;
-        Int freqGroup = 0;
-        if (nIF_p > 0) {
-            ifc = spw % nIF_p;
-            freqGroup = spw / nIF_p;
-        }
-        Int fqRow = spw / max(1, nIF_p);
-        if (fqRow != colFrqSel(fqRow) - 1)
-            itsLog << LogOrigin("MSFitsInput", "fillSpectralWindowTable")
-                   << LogIO::SEVERE
-                    << "Trouble interpreting FQ table, id's may be wrong"
-                    << LogIO::POST;
-        msSpW.name().put(spw, "none");
-        msSpW.ifConvChain().put(spw, ifc);
-        msSpW.numChan().put(spw, nChan);
-        Double refChan = refPix_p(iFreq);
-        // using data from FQ table
-        Double refFreq = refVal_p(iFreq) + ifFreq(ifc, fqRow);
-
-        Double chanBandwidth = chWidth(ifc, fqRow);
-        //TT debug
-        Vector<Double> chanFreq(nChan), resolution(nChan);
-        for (Int i = 0; i < nChan; i++) {
-            chanFreq(i) = refFreq + (i + 1 - refChan) * chanBandwidth;
-        }
-        resolution = abs(chanBandwidth);
-
-        //if altrval (and altrpix) fits keywords exist use
-        //recalucalated values instead of the data form FQ table
-        if (useAltrval) {
-
-            refFreq = refFreq_p;
-            chanFreq = chanFreq_p;
-        }
-        msSpW.chanFreq().put(spw, chanFreq);
-        msSpW.chanWidth().put(spw, resolution);
-        msSpW.effectiveBW().put(spw, resolution);
-        msSpW.refFrequency().put(spw, refFreq);
-        msSpW.resolution().put(spw, resolution);
-        msSpW.totalBandwidth().put(spw, totalBandwidth(ifc, fqRow));
-        if (chanBandwidth > 0) {
-            msSpW.netSideband().put(spw, 1);
-        } else {
-            msSpW.netSideband().put(spw, -1);
-        }
-        msSpW.freqGroup().put(spw, freqGroup);
-        msSpW.freqGroupName().put(spw, "none");
-        msSpW.flagRow().put(spw, False);
-        // set the reference frames for frequency
-        msSpW.measFreqRef().put(spw, freqsys_p);
-    }
+    msSpW.freqGroup().put(spw,freqGroup);
+    msSpW.freqGroupName().put(spw,"none");
+    msSpW.flagRow().put(spw,False);
+    // set the reference frames for frequency
+    msSpW.measFreqRef().put(spw,freqsys_p);
+  }
 }
 
-void MSFitsInput::fillSpectralWindowTable() {
+void MSFitsInput::fillSpectralWindowTable()
+{
+  MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+  MSDataDescColumns& msDD(msc_p->dataDescription());
+  MSPolarizationColumns& msPol(msc_p->polarization());
+  Int iFreq = getIndex(coordType_p, "FREQ");
+  Int nChan = nPixel_p(iFreq);
+  Int nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
+  // assume spectral line, make source table to allow restfreq to be entered
+  if (nChan>33) addSourceTable_p=True; 
 
-    MSPolarizationColumns& msPol(msc_p->polarization());
-    Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
-    // fill out the polarization info (only single entry allowed in fits input)
-    ms_p.polarization().addRow();
-    msPol.numCorr().put(0, nCorr);
-    msPol.corrType().put(0, corrType_p);
-    msPol.corrProduct().put(0, corrProduct_p);
-    msPol.flagRow().put(0, False);
+  // fill out the polarization info (only single entry allowed in fits input)
+  ms_p.polarization().addRow();
+  msPol.numCorr().put(0,nCorr);
+  msPol.corrType().put(0,corrType_p);
+  msPol.corrProduct().put(0,corrProduct_p);
+  msPol.flagRow().put(0,False);
 
-    Int spw = 0;
+  Int spw=0;
+  ms_p.spectralWindow().addRow();
+  ms_p.dataDescription().addRow();
 
-    MSDataDescColumns& msDD(msc_p->dataDescription());
-    ms_p.dataDescription().addRow();
-    msDD.spectralWindowId().put(spw, spw);
-    msDD.polarizationId().put(spw, 0);
-    msDD.flagRow().put(spw, False);
+  msDD.spectralWindowId().put(spw,spw);
+  msDD.polarizationId().put(spw,0);
+  msDD.flagRow().put(spw,False); 
 
-    MSSpWindowColumns& msSpW(msc_p->spectralWindow());
-
-    Int iFreq = getIndex(coordType_p, "FREQ");
-    Int nChan = nPixel_p(iFreq);
-
-    // assume spectral line, make source table to allow restfreq to be entered
-    if (nChan > 33)
-        addSourceTable_p = True;
-
-    ms_p.spectralWindow().addRow();
-    msSpW.name().put(spw, "none");
-    msSpW.ifConvChain().put(spw, 0);
-    msSpW.numChan().put(spw, nChan);
-    Double refChan = refPix_p(iFreq);
-    Double refFreq = refVal_p(iFreq);
-    Double chanBandwidth = delta_p(iFreq);
-    Vector<Double> chanFreq(nChan), resolution(nChan);
-    for (Int i = 0; i < nChan; i++) {
-        chanFreq(i) = refFreq + (i + 1 - refChan) * chanBandwidth;
-    }
-    resolution = chanBandwidth;
-    //if altrval (and altrpix) fits keywords exist use
-    //recalucalated values
-    if (useAltrval) {
-        refFreq = refFreq_p;
-        chanFreq = chanFreq_p;
-    }
-    msSpW.chanFreq().put(spw, chanFreq);
-    msSpW.chanWidth().put(spw, resolution);
-    msSpW.effectiveBW().put(spw, resolution);
-    msSpW.refFrequency().put(spw, refFreq);
-    msSpW.resolution().put(spw, resolution);
-    msSpW.totalBandwidth().put(spw, abs(nChan * chanBandwidth));
-    if (chanBandwidth > 0) {
-        msSpW.netSideband().put(spw, 1);
-    } else {
-        msSpW.netSideband().put(spw, -1);
-    }
-    msSpW.freqGroup().put(spw, 0);
-    msSpW.freqGroupName().put(spw, "none");
-    msSpW.flagRow().put(spw, False);
-    // set the reference frames for frequency
-    msSpW.measFreqRef().put(spw, freqsys_p);
+  msSpW.name().put(spw,"none");
+  msSpW.ifConvChain().put(spw,0);
+  msSpW.numChan().put(spw,nChan);
+  Double refChan = refPix_p(iFreq);
+  Double refFreq=refVal_p(iFreq);
+  Double chanBandwidth=delta_p(iFreq);
+  Vector<Double> chanFreq(nChan),resolution(nChan);
+  for (Int i=0; i < nChan; i++) {
+    chanFreq(i)= refFreq + (i+1-refChan) * chanBandwidth;
+  }
+  resolution=chanBandwidth;
+  //if altrval (and altrpix) fits keywords exist use
+  //recalucalated values
+  if (useAltrval) {
+    refFreq = refFreq_p;
+    chanFreq = chanFreq_p;
+  }
+  msSpW.chanFreq().put(spw,chanFreq);
+  msSpW.chanWidth().put(spw,resolution);
+  msSpW.effectiveBW().put(spw,resolution);
+  msSpW.refFrequency().put(spw,refFreq);
+  msSpW.resolution().put(spw,resolution);
+  msSpW.totalBandwidth().put(spw,abs(nChan*chanBandwidth));
+  if (chanBandwidth>0) {
+    msSpW.netSideband().put(spw,1);
+  } else {
+    msSpW.netSideband().put(spw,-1);
+  }
+  msSpW.freqGroup().put(spw,0);
+  msSpW.freqGroupName().put(spw,"none");
+  msSpW.flagRow().put(spw,False);
+  // set the reference frames for frequency
+  msSpW.measFreqRef().put(spw,freqsys_p);
 }
 
 // Returns the Direction Measure reference for UVW and other appropriate columns
