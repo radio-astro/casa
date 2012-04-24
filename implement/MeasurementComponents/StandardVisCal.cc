@@ -794,8 +794,6 @@ void BJones::normalize() {
     }
   }
 
-  cout << "End of BJones::normalize()" << endl;
-
 }
 
 void BJones::globalPostSolveTinker() {
@@ -3163,6 +3161,9 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
   Vector<Int> nChunkPerSol;
   Int nSol = sizeUpSolve(vs,nChunkPerSol);
 
+  // Create the Caltable
+  createMemCalTable();
+
   // The iterator, VisBuffer
   VisIter& vi(vs.iter());
   VisBuffer vb(vi);
@@ -3230,6 +3231,12 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
     Int thisSpw=spwMap()(svb.spectralWindow());
     slotidx(thisSpw)++;
 
+    // We are actually solving for all channels simultaneously
+    solveCPar().reference(solveAllCPar());
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
+
     // Fill solveCPar() with 1, nominally, and flagged
     solveCPar()=Complex(1.0);
     solveParOK()=False;
@@ -3242,7 +3249,8 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    keep(slotidx(thisSpw));
+    //    keep(slotidx(thisSpw));
+    keepNCT();
     
   }
   
@@ -3262,7 +3270,8 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
     // globalPostSolveTinker();
 
     // write the table
-    store();
+    //    store();
+    storeNCT();
   }
 
 }
