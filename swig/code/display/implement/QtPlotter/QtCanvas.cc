@@ -49,7 +49,7 @@ QtCanvas::~QtCanvas()
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent), 
-          title(), xLabel(), yLabel(), welcome()
+          title(), yLabel(), welcome()
 {    
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
@@ -110,11 +110,8 @@ void QtCanvas::defaultZoomOut()
     std::vector<QtPlotSettings>::iterator it;
     it = zoomStack.begin();
 
-	settings.minX = prevSettings.minX - (double)FRACZOOM/100.0*prevSettings.spanX();
-	settings.maxX = prevSettings.maxX + (double)FRACZOOM/100.0*prevSettings.spanX();
-	settings.minY = prevSettings.minY - (double)FRACZOOM/100.0*prevSettings.spanY();
-	settings.maxY = prevSettings.maxY + (double)FRACZOOM/100.0*prevSettings.spanY();
-	settings.adjust();
+    double zoomFactor = (double)FRACZOOM/100.0;
+    settings.zoomOut( zoomFactor );
 
 	//zoomStack.resize(zoomStack.size() + 1);
 	it = zoomStack.insert ( it , settings);
@@ -146,11 +143,8 @@ void QtCanvas::defaultZoomIn()
 	QtPlotSettings prevSettings = zoomStack[curZoom];
 	QtPlotSettings settings;
 
-	settings.minX = prevSettings.minX + (double)FRACZOOM/100.0*prevSettings.spanX();
-	settings.maxX = prevSettings.maxX - (double)FRACZOOM/100.0*prevSettings.spanX();
-	settings.minY = prevSettings.minY + (double)FRACZOOM/100.0*prevSettings.spanY();
-	settings.maxY = prevSettings.maxY - (double)FRACZOOM/100.0*prevSettings.spanY();
-	settings.adjust();
+	double zoomFactor = (double)FRACZOOM/100.0;
+	settings.zoomIn( zoomFactor );
 
 	//zoomStack.resize(curZoom + 1);
 	zoomStack.push_back(settings);
@@ -185,15 +179,15 @@ QString QtCanvas::getCurveName(int id)
 {
     return legend[id];
 }
-void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
-                                    const QString& lbl)
-{
-    curveMap[id] = data;
-    errorMap[id] = error;
-    legend[id]   = lbl;
 
+void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
+                                    const QString& lbl){
+    curveMap[id]     = data;
+    errorMap[id]     = error;
+    legend[id]       = lbl;
     refreshPixmap();
 }
+
 void QtCanvas::setDataRange()
 {
 	if (autoScaleX == 0 && autoScaleY == 0)
@@ -239,24 +233,19 @@ void QtCanvas::setDataRange()
 	}
 
 	QtPlotSettings settings;
+	adjustExtremes( &xmin, &xmax );
+	adjustExtremes( &ymin, &ymax );
 
-	if (fabs(xmax - xmin) < 0.0001)
-	{
-		xmax = xmax + 0.00001;
-		xmin = xmin - 0.00001;
-	}
-	if (fabs(ymax - ymin) < 0.0001)
-	{
-		ymax = ymax + 0.00001;
-		ymin = ymin - 0.00001;
-	}
+	//Store the results in the plot settings
 	if (autoScaleX) {
-		settings.minX = xmin;
-		settings.maxX = xmax;
+		settings.setMinX(QtPlotSettings::xBottom, xmin);
+		settings.setMaxX(QtPlotSettings::xBottom, xmax);
+		settings.setMinX(QtPlotSettings::xTop, topAxisRange.first );
+		settings.setMaxX(QtPlotSettings::xTop, topAxisRange.second );
 	}
 	if (autoScaleY) {
-		settings.minY = ymin;
-		settings.maxY = ymax;
+		settings.setMinY(ymin);
+		settings.setMaxY(ymax);
 	}
 	settings.adjust();
 
@@ -270,24 +259,35 @@ void QtCanvas::setDataRange()
 	}
 }
 
-void QtCanvas::clearData()
+void QtCanvas::clearCurve()
 {
     curveMap.clear();
     legend.clear();
 }
 
-void QtCanvas::clearCurve(int id)
-{
-    if (id == -1) {
-       curveMap.clear();
-       legend.clear();
-    }
-    else {
-       curveMap.erase(id);
-       legend.erase(id);
-    }
-    refreshPixmap();
+void QtCanvas::setTopAxisRange(const Vector<Float> &values ){
+	double min = 1000000000000000000000000.;
+	double max = -min;
+	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
+		if ( values[i] < min ){
+			min = values[i];
+		}
+		if ( values[i] > max ){
+			max = values[i];
+		}
+	}
+	adjustExtremes( &min, &max );
+	topAxisRange.first = min;
+	topAxisRange.second = max;
+	QtPlotSettings currentSettings = zoomStack[curZoom];
+	currentSettings.setMinX(QtPlotSettings::xTop, min );
+	currentSettings.setMaxX( QtPlotSettings::xTop, max );
+	currentSettings.adjust();
+	zoomStack[curZoom] = currentSettings;
+	refreshPixmap();
 }
+
+
 
 QSize QtCanvas::minimumSizeHint() const
 {
@@ -325,11 +325,12 @@ void QtCanvas::paintEvent(QPaintEvent *event)
 		QtPlotSettings settings = zoomStack[curZoom];
 		QRect rect(MARGIN, MARGIN,
 				width() - 2 * MARGIN, height() - 2 * MARGIN);
-
-		double dxStart = xRangeStart - settings.minX;
-		double dxEnd   = xRangeEnd   - settings.minX;
-		double xStart = rect.left() + (dxStart * (rect.width()-1) / settings.spanX());
-		double xEnd   = rect.left() + (dxEnd   * (rect.width()-1) / settings.spanX());
+		double xAxisMin = settings.getMinX(QtPlotSettings::xBottom );
+		double dxStart = xRangeStart - xAxisMin;
+		double dxEnd   = xRangeEnd   - xAxisMin;
+		double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
+		double xStart = rect.left() + (dxStart * (rect.width()-1) / xAxisSpan );
+		double xEnd   = rect.left() + (dxEnd   * (rect.width()-1) / xAxisSpan );
 
 		xRangeRect.setLeft((int)(xStart));
 		xRangeRect.setRight((int)(xEnd));
@@ -357,8 +358,8 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 {
 	if ( xcursor.isValid( ) ){
 		QtPlotSettings currSettings = zoomStack[curZoom];
-		double dx = currSettings.spanX() / (width() - 2 * MARGIN);
-		double channelSelectValue = currSettings.minX + dx * (event->pos().x()-MARGIN);
+		double dx = currSettings.spanX(QtPlotSettings::xBottom) / (width() - 2 * MARGIN);
+		double channelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN);
 		emit channelSelect(channelSelectValue);
 		return;
 	}
@@ -393,16 +394,17 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 		QtPlotSettings prevSettings = zoomStack[curZoom];
 		QtPlotSettings settings;
 
-		double dx = prevSettings.spanX() / (width() - 2 * MARGIN);
+		double dx = prevSettings.spanX(QtPlotSettings::xBottom) / (width() - 2 * MARGIN);
 		double dy = prevSettings.spanY() / (height() - 2 * MARGIN);
-		x = (int)(prevSettings.minX + dx * x);
-		y = (int)(prevSettings.maxY - dy * y);
+		x = (int)(prevSettings.getMinX(QtPlotSettings::xBottom) + dx * x);
+		y = (int)(prevSettings.getMaxY() - dy * y);
 		//cout << "x=" << x << " y=" << y << endl;
 
 		std::map<int, CurveData>::const_iterator it = markerStack.begin();
 
 		while (it != markerStack.end())
 		{
+
 			int id = (*it).first;
 			const CurveData &data = (*it).second;
 			//cout << " " << data[0] << " " << data[2]
@@ -439,10 +441,12 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 			//QRect rect = xRangeRect.normalized();
 			// zero the coordinates on the plot region
 			//rect.translate(-MARGIN, -MARGIN);
+
 			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX() / double(width() - 2 * (MARGIN));
-			xRangeStart = currSettings.minX + dx * double(xRectStart-MARGIN);
-			xRangeEnd   = currSettings.minX + dx * double(xRectEnd-MARGIN);
+			double dx = currSettings.spanX(QtPlotSettings::xBottom) / double(width() - 2 * (MARGIN));
+			double currMinX = currSettings.getMinX(QtPlotSettings::xBottom);
+			xRangeStart = currMinX + dx * double(xRectStart-MARGIN);
+			xRangeEnd   = currMinX + dx * double(xRectEnd-MARGIN);
 			if (xRangeStart<xRangeEnd)
 				emit xRangeChanged(xRangeStart, xRangeEnd);
 			else
@@ -481,11 +485,11 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 
 			// zero the coordinates on the plot region
 			//rect.translate(-MARGIN, -MARGIN);
-
 			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX() / (width() - 2 * MARGIN);
-			xRangeStart = currSettings.minX + dx * (xRectStart-MARGIN);
-			xRangeEnd   = currSettings.minX + dx * (xRectEnd-MARGIN);
+			double dx = currSettings.spanX(QtPlotSettings::xBottom) / (width() - 2 * MARGIN);
+			double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
+			xRangeStart = currMinX + dx * (xRectStart-MARGIN);
+			xRangeEnd   = currMinX + dx * (xRectEnd-MARGIN);
 
 			if (xRangeStart<xRangeEnd)
 				emit xRangeChanged(xRangeStart, xRangeEnd);
@@ -538,12 +542,17 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 			QtPlotSettings prevSettings = zoomStack[curZoom];
 			QtPlotSettings settings;
 
-			double dx = prevSettings.spanX() / (width() - 2 * MARGIN);
+			for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
+				QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(i);
+				double dx = prevSettings.spanX(axisIndex) / (width() - 2 * MARGIN);
+				double prevMinX = prevSettings.getMinX( axisIndex );
+				settings.setMinX( axisIndex, prevMinX + dx * rect.left() );
+				settings.setMaxX( axisIndex, prevMinX + dx * rect.right() );
+			}
 			double dy = prevSettings.spanY() / (height() - 2 * MARGIN);
-			settings.minX = prevSettings.minX + dx * rect.left();
-			settings.maxX = prevSettings.minX + dx * rect.right();
-			settings.minY = prevSettings.maxY - dy * rect.bottom();
-			settings.maxY = prevSettings.maxY - dy * rect.top();
+			double prevMaxY = prevSettings.getMaxY();
+			settings.setMinY( prevMaxY - dy * rect.bottom() );
+			settings.setMaxY( prevMaxY - dy * rect.top() );
 			//qDebug() << "min-x: " << settings.minX << " max-x: " << settings.maxX;
 			settings.adjust();
 			if (curveMap.size() != 0) {
@@ -628,18 +637,11 @@ void QtCanvas::wheelEvent(QWheelEvent *event)
     refreshPixmap();
 }
 
-void QtCanvas::updateRubberBandRegion()
-{
-    // QRect rect = rubberBandRect.normalized();
-    // update(rect.left(), rect.top(), rect.width(), 1);
-    // update(rect.left(), rect.top(), 1, rect.height());
-    // update(rect.left(), rect.bottom(), rect.width(), 1);
-    // update(rect.right(), rect.top(), 1, rect.height());
+void QtCanvas::updateRubberBandRegion(){
     update();
 }
 
-void QtCanvas::updatexRangeBandRegion()
-{
+void QtCanvas::updatexRangeBandRegion(){
     update();
 }
 
@@ -671,8 +673,11 @@ void QtCanvas::drawBackBuffer(QPainter *painter)
 {
     QRect rect(MARGIN, MARGIN,  width() - 2 * MARGIN, height() - 2 * MARGIN);
     QtPlotSettings settings = zoomStack[curZoom];
-    QRect src((int)settings.minX, (int)settings.minY,
-              (int)settings.maxX, (int)settings.maxY);
+    int minX = (int)(settings.getMinX(QtPlotSettings::xBottom));
+    int maxX = (int)(settings.getMaxX(QtPlotSettings::xBottom));
+    int maxY = (int)(settings.getMaxY());
+    int minY = (int)(settings.getMinY());
+    QRect src( minX, minY, maxX, maxY) ;
     painter->drawPixmap(rect, backBuffer, src);
 }
 
@@ -684,30 +689,42 @@ void QtCanvas::drawGrid(QPainter *painter)
     QPen quiteDark(QPalette::Dark);
     QPen light(QPalette::Highlight);
 
-    for (int i = 0; i <= settings.numXTicks; ++i)
-    {
-        int x = rect.left() + (i * (rect.width() - 1)
-                               / settings.numXTicks);
-        double label = settings.minX + (i * settings.spanX()
-                                        / settings.numXTicks);
-        if (abs(label) < 0.00000005) label = 0.f;                                
-        //painter->setPen(quiteDark);
-        if (showGrid){
-           painter->setPen(quiteDark);
-           painter->drawLine(x, rect.top(), x, rect.bottom());
-        }
-        painter->setPen(light);
-        painter->drawLine(x, rect.bottom(), x, rect.bottom() + 5);
-        painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
+   for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
+        QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(j);
+        int xTickCount = settings.getNumTicksX( axisIndex );
+        for (int i = 0; i <= xTickCount; ++i) {
+        	int x = rect.left() + (i * (rect.width() - 1) / xTickCount );
+
+        	//painter->setPen(quiteDark);
+        	if (showGrid && axisIndex == QtPlotSettings::xBottom){
+        		painter->setPen(quiteDark);
+        		painter->drawLine(x, rect.top(), x, rect.bottom());
+        	}
+        	painter->setPen(light);
+        	if ( axisIndex == QtPlotSettings::xBottom ){
+        		painter->drawLine(x, rect.bottom(), x, rect.bottom() + 5);
+        	}
+        	else if ( axisIndex == QtPlotSettings::xTop ){
+        		painter->drawLine(x, rect.top(), x, rect.top() - 5);
+        	}
+
+        	double label = settings.getMinX(axisIndex) + (i * settings.spanX(axisIndex) / xTickCount);
+        	if (abs(label) < 0.00000005) label = 0.f;
+        	const int AXIS_LABEL_OFFSET = 5;
+        	int yPosition = rect.bottom() + AXIS_LABEL_OFFSET;
+        	if ( axisIndex == QtPlotSettings::xTop ){
+        		yPosition = rect.top() - 4 * AXIS_LABEL_OFFSET;
+        	}
+        	painter->drawText(x - 50, yPosition, 100, 15,
                           Qt::AlignHCenter | Qt::AlignTop,
                           QString::number(label));
+        }
     }
-    for (int j = 0; j <= settings.numYTicks; ++j)
+    int tickCountY = settings.getNumTicksY();
+    for (int j = 0; j <= tickCountY; ++j)
     {
-        int y = rect.bottom() - (j * (rect.height() - 1)
-                                 / settings.numYTicks);
-        double label = settings.minY + (j * settings.spanY()
-                                        / settings.numYTicks);
+        int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
+        double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
 
         if (abs(label) < 0.00000005) label = 0.f;                                 
         //painter->setPen(quiteDark);
@@ -728,33 +745,39 @@ void QtCanvas::drawGrid(QPainter *painter)
 }
 void QtCanvas::drawTicks(QPainter *painter)
 {
-    QRect rect(MARGIN, MARGIN,
-               width() - 2 * MARGIN, height() - 2 * MARGIN);
-    QtPlotSettings settings = zoomStack[curZoom];
-    QPen quiteDark(QPalette::Dark);
-    QPen light(QPalette::Highlight);
+	QtPlotSettings settings = zoomStack[curZoom];
+	QPen quiteDark(QPalette::Dark);
+	QPen light(QPalette::Highlight);
+	for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
+		int startY = MARGIN;
+		if ( j == QtPlotSettings::xTop ){
+			startY = height() - MARGIN;
+		}
+		QRect rect(MARGIN, startY,
+				   width() - 2 * MARGIN, height() - 2 * MARGIN);
 
-    for (int i = 0; i <= settings.numXTicks; ++i)
-    {
-        int x = rect.left() + (i * (rect.width() - 1)
-                               / settings.numXTicks);
-        double label = settings.minX + (i * settings.spanX()
-                                        / settings.numXTicks);
-        if (abs(label) < 0.00000005) label = 0.f;                                
-        painter->setPen(quiteDark);
-        painter->drawLine(x, rect.top(), x, rect.top() + 5);
-        painter->setPen(light);
-        painter->drawLine(x, rect.bottom() - 5, x, rect.bottom());
-        painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
-                          Qt::AlignHCenter | Qt::AlignTop,
-                          QString::number(label));
-    }
-    for (int j = 0; j <= settings.numYTicks; ++j)
-    {
-        int y = rect.bottom() - (j * (rect.height() - 1)
-                                 / settings.numYTicks);
-        double label = settings.minY + (j * settings.spanY()
-                                        / settings.numYTicks);
+
+		QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(j);
+		int tickCountX = settings.getNumTicksX( axisIndex );
+		for (int i = 0; i <= tickCountX; ++i){
+			int x = rect.left() + (i * (rect.width() - 1) / tickCountX );
+			double label = settings.getMinX(axisIndex) + (i * settings.spanX(axisIndex)
+													/ tickCountX);
+			if (abs(label) < 0.00000005) label = 0.f;
+			painter->setPen(quiteDark);
+			painter->drawLine(x, rect.top(), x, rect.top() + 5);
+			painter->setPen(light);
+			painter->drawLine(x, rect.bottom() - 5, x, rect.bottom());
+			painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
+							  Qt::AlignHCenter | Qt::AlignTop,
+							  QString::number(label));
+		}
+	}
+	QRect rect(MARGIN, MARGIN, width() - 2 * MARGIN, height() - 2 * MARGIN);
+	int tickCountY = settings.getNumTicksY();
+    for (int j = 0; j <= tickCountY; ++j){
+        int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
+        double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
         if (abs(label) < 0.00000005) label = 0.f;                                  
         painter->setPen(quiteDark);
         painter->drawLine(rect.right() - 5, y, rect.right(), y);
@@ -769,6 +792,7 @@ void QtCanvas::drawTicks(QPainter *painter)
     //painter->setPen(Qt::red);
     //painter->drawRect(rubberBandRect);
 }
+
 void QtCanvas::drawLabels(QPainter *painter)
 {
     QFont ft(painter->font());
@@ -778,12 +802,20 @@ void QtCanvas::drawLabels(QPainter *painter)
     painter->setFont(QFont(title.fontName, title.fontSize));
     painter->drawText(MARGIN, 8, width() - 2 * MARGIN, MARGIN / 2,
                           Qt::AlignHCenter | Qt::AlignTop, title.text);
-                          
-    painter->setPen(xLabel.color);                  
-    painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));                          
-    painter->drawText(MARGIN, height() - MARGIN / 2, width() - 2 * MARGIN, MARGIN / 2,
-                          Qt::AlignHCenter | Qt::AlignTop, xLabel.text);
-                                          
+
+
+    for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
+    	QtPlotSettings::AxisIndex a = static_cast<QtPlotSettings::AxisIndex>(i);
+    	painter->setPen(xLabel[a].color);
+    	painter->setFont(QFont(xLabel[a].fontName, xLabel[a].fontSize));
+    	int yPosition = height() - MARGIN / 2;
+    	if ( a == QtPlotSettings::xTop ){
+    		yPosition = MARGIN / 3 ;
+    	}
+    	painter->drawText(MARGIN, yPosition,
+    		width() - 2 * MARGIN, MARGIN / 2,
+            Qt::AlignHCenter | Qt::AlignTop, xLabel[a].text);
+    }
     QPainterPath text;     
     QFont font(yLabel.fontName, yLabel.fontSize); 
     QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text); 
@@ -848,20 +880,18 @@ void QtCanvas::drawRects(QPainter *painter)
         for (int j = (int)data[3]; j < (int)data[1]; j++) {
 	      (*pMask)(i, h - j) = 0;
 	}
-	       
-	double dx1 = data[0] - settings.minX;
-        double dy1 = data[1] - settings.minY;
-        double dx2 = data[2] - settings.minX;
-        double dy2 = data[3] - settings.minY;
 	
-        double x1 = rect.left() + (dx1 * (rect.width() - 1)
-                                   / settings.spanX());
-        double y1 = rect.bottom() - (dy1 * (rect.height() - 1)
-                                     / settings.spanY());
-        double x2 = rect.left() + (dx2 * (rect.width() - 1)
-                                   / settings.spanX());
-        double y2 = rect.bottom() - (dy2 * (rect.height() - 1)
-                                     / settings.spanY());
+	double dx1 = data[0] - settings.getMinX(QtPlotSettings::xBottom);
+    double dy1 = data[1] - settings.getMinY();
+    double dx2 = data[2] - settings.getMinX(QtPlotSettings::xBottom );
+    double dy2 = data[3] - settings.getMinY();
+
+    double spanX = settings.spanX( QtPlotSettings::xBottom );
+    double spanY = settings.spanY();
+    double x1 = rect.left() + (dx1 * (rect.width() - 1) / spanX );
+    double y1 = rect.bottom() - (dy1 * (rect.height() - 1) / spanY );
+    double x2 = rect.left() + (dx2 * (rect.width() - 1) / spanX );
+    double y2 = rect.bottom() - (dy2 * (rect.height() - 1) / spanY );
 
         points.addRect((int)x1, (int)y1, (int)(x2 - x1), (int)(y2 - y1));
        
@@ -882,12 +912,12 @@ void QtCanvas::drawxRange(QPainter *painter)
 
     QRect rect(MARGIN, MARGIN,
                width() - 2 * MARGIN, height() - 2 * MARGIN);
-    double dxStart = xRangeStart - settings.minX;
-    double dxEnd   = xRangeEnd - settings.minX;
-    double xStart = rect.left() + (dxStart * (rect.width() - 1)
-    		/ settings.spanX());
-    double xEnd = rect.left() + (dxEnd * (rect.width() - 1)
-    		/ settings.spanX());
+    double minX = settings.getMinX(QtPlotSettings::xBottom);
+    double dxStart = xRangeStart - minX;
+    double dxEnd   = xRangeEnd - minX;
+    double spanX = settings.spanX(QtPlotSettings::xBottom);
+    double xStart = rect.left() + (dxStart * (rect.width() - 1) / spanX);
+    double xEnd = rect.left() + (dxEnd * (rect.width() - 1) / spanX );
 
     xRangeRect.setBottom(MARGIN);
 	xRangeRect.setTop(height()-MARGIN-1);
@@ -897,31 +927,7 @@ void QtCanvas::drawxRange(QPainter *painter)
     painter->drawRect(xRangeRect.normalized());
 }
 
-/*
-QColor QtCanvas::getLinearColor(double d)
-{
-    double middle = 0.4;
-    if (d > 1)
-        return QColor(0, 0, 255);
-    if (d < 0)
-        return QColor(255, 0, 0);
-    double r, g, b;
-    if (d < 0.4)
-    {
-        r = 255 * (middle - d) / middle;
-        g = 255 * d / middle;
-        b = 0;
-    }
-    else
-    {
-        r = 0;
-        g = 255 * ( 1 - d) / (1 - middle);
-        b = (d - middle) * 255 / (1 - middle);
-    }
-    //std::cout << "r=" << r << " g=" << g << " b=" << b << std::endl;
-    return QColor((int)r, (int)g, (int)b);
-}
-*/
+
 
 QColor QtCanvas::getDiscreteColor(const int &d)
 {
@@ -1014,11 +1020,10 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 colorFolds[id] = getDiscreteColor(id);
 
    	 if (maxPoints == 1) {
-
-   		 double dx = data[0] - settings.minX;
-   		 double dy = data[1] - settings.minY;
+   		 double dx = data[0] - settings.getMinX(QtPlotSettings::xBottom);
+   		 double dy = data[1] - settings.getMinY();
    		 double x = rect.left() + (dx * (rect.width() - 1)
-   				 / settings.spanX());
+   				 / settings.spanX(QtPlotSettings::xBottom));
    		 double y = rect.bottom() - (dy * (rect.height() - 1)
    				 / settings.spanY());
    		 if (fabs(x) < 32768 && fabs(y) < 32768)
@@ -1042,12 +1047,12 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    		 if (plotError && (error.size() > 0)){
 
-   			 double dx = data[0] - settings.minX;
-   			 double dy = data[1] - settings.minY;
+   			 double dx = data[0] - settings.getMinX(QtPlotSettings::xBottom);
+   			 double dy = data[1] - settings.getMinY();
    			 double de = error[0];
 
    			 double x = rect.left() + (dx * (rect.width() - 1)
-   					 / settings.spanX());
+   					 / settings.spanX(QtPlotSettings::xBottom));
    			 double yl = rect.bottom() - ((dy-de) * (rect.height() - 1)
    					 / settings.spanY());
    			 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
@@ -1064,10 +1069,10 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 else {
    		 for (int i = 0; i < maxPoints; ++i)
    		 {
-   			 double dx = data[2 * i] - settings.minX;
-   			 double dy = data[2 * i + 1] - settings.minY;
+   			 double dx = data[2 * i] - settings.getMinX(QtPlotSettings::xBottom);
+   			 double dy = data[2 * i + 1] - settings.getMinY();
    			 double x = rect.left() + (dx * (rect.width() - 1)
-   					 / settings.spanX());
+   					 / settings.spanX(QtPlotSettings::xBottom));
    			 double y = rect.bottom() - (dy * (rect.height() - 1)
    					 / settings.spanY());
    			 if (fabs(x) < 32768 && fabs(y) < 32768)
@@ -1082,11 +1087,11 @@ void QtCanvas::drawCurves(QPainter *painter)
    		 if (plotError && (error.size() > 0)){
    			 for (int i = 0; i < maxPoints; ++i)
    			 {
-   				 double dx = data[2 * i] - settings.minX;
-   				 double dy = data[2 * i + 1] - settings.minY;
+   				 double dx = data[2 * i] - settings.getMinX(QtPlotSettings::xBottom);
+   				 double dy = data[2 * i + 1] - settings.getMinY();
    				 double de = error[i];
    				 double x = rect.left() + (dx * (rect.width() - 1)
-   						 / settings.spanX());
+   						 / settings.spanX(QtPlotSettings::xBottom));
    				 double yl = rect.bottom() - ((dy-de) * (rect.height() - 1)
    						 / settings.spanY());
    				 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
@@ -1105,7 +1110,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 painter->drawPath(points);
 
    	 if (siz > 1) {
-   		 painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));
+   		 painter->setFont(QFont(xLabel[QtPlotSettings::xBottom].fontName, xLabel[QtPlotSettings::xBottom].fontSize));
    		 painter->drawText(MARGIN + 4, MARGIN + (5 + id * 15),
    				 width() - 2 * MARGIN, MARGIN / 2,
    				 Qt::AlignLeft | Qt::AlignTop, legend[id]);
@@ -1199,8 +1204,6 @@ void QtCanvas::plotPolyLines(QString path)
 void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
                             const QString& lb)
 {
-
-    //qDebug() << "plot poly line float";
     //for (int i=0; i< x.nelements(); i++)
        //cout << x(i) << " " << y(i) << endl;
     Int xl, yl, el;
@@ -1224,24 +1227,8 @@ void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, cons
     return;
 }
 
-void QtCanvas::plotPolyLine(const Vector<Int> &x, const Vector<Int> &y)
-{
-    //qDebug() << "plot poly line int";
-    Int xl, yl;
-    x.shape(xl);
-    y.shape(yl);
-    CurveData data;
-    for (int i = 0; i < min(xl, yl); i++) {
-        data.push_back(x[i]);
-        data.push_back(y[i]);
-    }
-    setCurveData(0, data);
 
-    setDataRange();
-    return;
-}
-
-void QtCanvas::plotPolyLine(const Vector<Double> &x, const Vector<Double>&y)
+template<class T> void QtCanvas::plotPolyLine(const Vector<T> &x, const Vector<T>&y)
 {
 	//qDebug() << "plot poly line double";
 	//for (int i=0; i< x.nelements(); i++)
@@ -1260,7 +1247,7 @@ void QtCanvas::plotPolyLine(const Vector<Double> &x, const Vector<Double>&y)
 	return;
 }
 
-void QtCanvas::plotPolyLine(const Matrix<Double> &x)
+template<class T> void QtCanvas::plotPolyLine(const Matrix<T> &x)
 {
 
 	Int xl, yl;
@@ -1295,206 +1282,19 @@ void QtCanvas::plotPolyLine(const Matrix<Double> &x)
 	return;
 }
 
-void QtCanvas::plotPolyLine(const Matrix<Int> &x)
-{
-	Int xl, yl;
-	x.shape(xl, yl);
-	int nr = xl / 2;
-	int nc = yl / 2;
-	int n = min (nr, nc);
-	if (n > 0) {
-		//  CurveData *data = new CurveData[n];
-		std::vector<CurveData> data;
-		if (n < nr) {
-			for (int i = 0; i < n; i++) {
-				for (int j = 0; j < xl; j++) {
-					data[i].push_back(x(j, 2 * i));
-					data[i].push_back(x(j, 2 * i + 1));
-				}
-				setCurveData(i, data[i]);
-			}
-		}
-		else {
-			for (int i = 0; i < n; i++) {
-				for (int j = 0; j < yl; j++) {
-					data[i].push_back(x(2 * i, j));
-					data[i].push_back(x(2 * i + 1, j));
-				}
-				setCurveData(i, data[i]);
-			}
-		}
-		//delete [] data;
-	}
 
-	setDataRange();
-	return;
-}
 
-void QtCanvas::plotPolyLine(const Matrix<Float> &x)
-{
-
-	Int xl, yl;
-	x.shape(xl, yl);
-	int nr = xl / 2;
-	int nc = yl / 2;
-	int n = min (nr, nc);
-	if (n > 0) {
-		//  CurveData *data = new CurveData[n];
-		std::vector<CurveData> data;
-		if (n < nr) {
-			for (int i = 0; i < n; i++) {
-				for (int j = 0; j < xl; j++) {
-					data[i].push_back(x(j, 2 * i));
-					data[i].push_back(x(j, 2 * i + 1));
-				}
-				setCurveData(i, data[i]);
-			}
-		}
-		else {
-			for (int i = 0; i < n; i++) {
-				for (int j = 0; j < yl; j++) {
-					data[i].push_back(x(2 * i, j));
-					data[i].push_back(x(2 * i + 1, j));
-				}
-				setCurveData(i, data[i]);
-			}
-		}
-		//delete [] data;
-	}
-
-	setDataRange();
-	return;
-}
-/*
-//template<class T>
-void QtCanvas::drawImage(const Matrix<uInt> &data, Matrix<uInt>
-*mask)
-{
-    pMask = mask; 
-    Int w = data.nrow();
-    Int h = data.ncolumn();
-
-    QImage im = QImage(w, h, QImage::Format_RGB32);
-    uInt max = 0;
-    uInt min = 100000000;
-    for (int y=0; y<h; y++)
-    {
-        for (int x=0; x<w; x++)
-        {
-            if (min > data(x, y))
-                min = data(x, y);
-            if (max < data(x, y))
-                max = data(x, y);
-        }
-    }
-    uInt swap = 0;
-    if (min > max)
-    {
-        swap = max;
-        max = min;
-        min = swap;
-    }
-    else if (min == max)
-    {
-        if (min > 0)
-        {
-            min--;
-        }
-        else
-        {
-            max++;
-        }
-    }
-    swap = max - min;
-
-    for (int y=0; y<h; y++)
-    {
-        for (int x=0; x<w; x++)
-        {
-            QRgb qrgb =   getLinearColor((double)data(x, y) / swap).rgb();
-            im.setPixel(x, h - y - 1, qrgb);
-            //std::cout << "r=" << qRed(qrgb) << " g=" << qGreen(qrgb) << " b="
-            //<< qBlue(qrgb) << std::endl;
-        }
-    }
-
-    setPixmap(im);
-    //setDataRange();
-
-    setImageMode(true);
-    
-    return;
-}
-void QtCanvas::drawImage(const Matrix<uInt> &data)
-{
-     pMask = 0;
-
-    Int w = data.nrow();
-    Int h = data.ncolumn();
-
-    QImage im = QImage(w, h, QImage::Format_RGB32);
-    uInt max = 0;
-    uInt min = 100000000;
-    for (int y=0; y<h; y++)
-    {
-        for (int x=0; x<w; x++)
-        {
-            if (min > data(x, y))
-                min = data(x, y);
-            if (max < data(x, y))
-                max = data(x, y);
-        }	
-    }
-
-    uInt swap = 0;
-    if (min > max)
-    {
-        swap = max;
-        max = min;
-        min = swap;
-    }
-    else if (min == max)
-    {
-        if (min > 0)
-        {
-            min--;
-        }
-        else
-        {
-            max++;
-        }
-    }
-    swap = max - min;
-      
-    for (int y=0; y<h; y++)
-    {
-        for (int x=0; x<w; x++)
-        {
-            QRgb qrgb =   getLinearColor((double)data(x, y) /
-                                         swap).rgb();
-            im.setPixel(x,  h - y - 1, qrgb);
-            //std::cout << "r=" << qRed(qrgb) << " g=" << qGreen(qrgb) << "
-            //b=" << qBlue(qrgb) << std::endl;
-        }
-    }
-
-    setPixmap(im);
-    //setDataRange();
-
-    setImageMode(true);
-    return;
-}
-*/
-void QtCanvas::setPixmap(const QImage &data)
+/*void QtCanvas::setPixmap(const QImage &data)
 {
     //std::cout << "pixmap w=" << pixmap.width() << " h=" << pixmap.height() <<
     //" pixmap isNull()=" << pixmap.isNull() << std::endl;
     backBuffer = QPixmap::fromImage(data);
     QtPlotSettings settings;
-    settings.minX = 0;
-    settings.maxX = backBuffer.width();
-    settings.minY = 0;
-    settings.maxY = backBuffer.height();
+
+
+    settings.setXAxesBounds(0, backBuffer.width() );
+    settings.setYAxesBounds(0, backBuffer.height() );
+
     settings.adjust();
     setPlotSettings(settings);
     //QImage img = backBuffer.toImage();
@@ -1502,7 +1302,7 @@ void QtCanvas::setPixmap(const QImage &data)
     //std::cout << "x=" << i << " y=" << j << " pixmap data=" << hex <<
     //img.pixel(i, j) << dec << std::endl;
     refreshPixmap();
-}
+}*/
 void QtCanvas::setImageMode(bool b)
 {
     imageMode = b;
@@ -1528,12 +1328,12 @@ void QtCanvas::setTitle(const QString &text, int fontSize, int iclr, const QStri
  	title.fontSize = fontSize;
  	title.color = getDiscreteColor(iclr);
 }
-void QtCanvas::setXLabel(const QString &text, int fontSize, int iclr, const QString &font)
+void QtCanvas::setXLabel(const QString &text, int fontSize, int iclr, const QString &font, QtPlotSettings::AxisIndex axisIndex )
 { 
-	xLabel.text = text;
- 	xLabel.fontName = font;
- 	xLabel.fontSize = fontSize;
- 	xLabel.color = getDiscreteColor(iclr);
+	xLabel[axisIndex].text = text;
+ 	xLabel[axisIndex].fontName = font;
+ 	xLabel[axisIndex].fontSize = fontSize;
+ 	xLabel[axisIndex].color = getDiscreteColor(iclr);
 }
 void QtCanvas::setYLabel(const QString &text, int fontSize, int iclr, const QString &font)
 { 
@@ -1553,5 +1353,15 @@ QPixmap* QtCanvas::graph()
 {
    return &pixmap;
 }
+
+void QtCanvas::adjustExtremes( double* const min, double* const max ) const {
+	const float BOUND = 0.0001f;
+	const float ADJUSTMENT = 0.00001f;
+	if ( fabs(*max - *min) < BOUND ){
+		*max = *max + ADJUSTMENT;
+		*min = *min - ADJUSTMENT;
+	}
+}
+
 
 }

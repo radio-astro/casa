@@ -448,7 +448,7 @@ void QtDrawCanvas::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void QtDrawCanvas::focusInEvent(QFocusEvent *event)
+void QtDrawCanvas::focusInEvent(QFocusEvent * /*event*/)
 {
     emit gotFocus();
     //refreshPixmap();

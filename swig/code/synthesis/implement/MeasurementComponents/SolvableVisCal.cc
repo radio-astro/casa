@@ -5544,30 +5544,6 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
 
   Int nMSFld; fldNames.shape(nMSFld);
 
-
-  /* NEWCALTABLE
-
-  // assemble complete list of available fields
-  Vector<Int> fldList;
-  for (Int iSpw=0;iSpw<nSpw();iSpw++) {
-    Int currlen;
-    fldList.shape(currlen);
-
-    if (cs().nTime(iSpw) > 0) {
-
-      //      cout << "cs().fieldId(iSpw) = " << cs().fieldId(iSpw) << endl;
-
-      Vector<Int> thisFldList; thisFldList=cs().fieldId(iSpw);
-      Int nThisFldList=genSort(thisFldList,(Sort::QuickSort | Sort::NoDuplicates));
-      thisFldList.resize(nThisFldList,True);
-      fldList.resize(currlen+nThisFldList,True);
-      for (Int ifld=0;ifld<nThisFldList;ifld++) {
-        fldList(currlen+ifld) = thisFldList(ifld);
-      }
-    }
-  }
-  */
-
   // Assemble available field list from the NewCalTable
   ROCTMainColumns mcols(*ct_);
   Vector<Int> fldList;
@@ -5576,6 +5552,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
   fldList.resize(nFldList,True);
 
   Int nFld=max(fldList)+1;
+
+  Vector<Double> solFreq(nSpw(),-1.0);
 
   try {
 
@@ -5735,6 +5713,13 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
       Int iFld(ctiter.thisField());
       Int iAnt(ctiter.thisAntenna1());
 
+      if (solFreq(iSpw)<0.0) {
+	Vector<Double> freq;
+	ctiter.freq(freq);
+	uInt nFrq=freq.nelements();
+	solFreq(iSpw)=freq(nFrq/2);
+      }
+	
       if (MGOK[iFld]==NULL) {
 	// First time this field, allocate ant/spw matrices
 	MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),False);
@@ -6066,6 +6051,7 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     oFluxScaleStruct.fd = fd.copy();
     oFluxScaleStruct.fderr = fderr.copy();
     oFluxScaleStruct.numSol = numSol.copy();
+    oFluxScaleStruct.freq = solFreq.copy();
 
     // quit if no scale factors found
     if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));

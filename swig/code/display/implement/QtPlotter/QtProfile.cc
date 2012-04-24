@@ -89,9 +89,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
          npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
+         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
-         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
          itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0), newCollapseVals(True)
 {
@@ -123,13 +123,12 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     // read the preferred ctype from casarc
     QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
     if (pref_ctype.size()>0){
-      // change to the preferred ctype
-    	int ctypeindex= ctype->findText(pref_ctype);
-    	if (ctypeindex > -1)
-    		ctype->setCurrentIndex(ctypeindex);
+    	// change to the preferred ctype
+    	updateAxisUnitCombo( pref_ctype, bottomAxisCType );
+    	updateAxisUnitCombo( pref_ctype, topAxisCType );
     }
 
-    ctypeUnit = String(ctype->currentText().toStdString());
+    ctypeUnit = String(bottomAxisCType->currentText().toStdString());
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
     collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
     fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
@@ -140,8 +139,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
     spcRef->setCurrentIndex(frameindex);
 
-    connect(ctype, SIGNAL(currentIndexChanged(const QString &)),
+    connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCoordinateType(const QString &)));
+    connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
+    		this, SLOT(changeTopAxisCoordinateType(const QString &)));
     connect(spcRef, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeFrame(const QString &)));
 
@@ -177,15 +178,16 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(clean, SIGNAL(clicked()),
             this, SLOT(plotMainCurve()));
 
-
     pixelCanvas->setTitle("");
     pixelCanvas->setWelcome("assign a mouse button to\n"
                    "'crosshair' or 'rectangle' or 'polygon'\n"
                    "click/press+drag the assigned button on\n"
                    "the image to get a spectral profile");
 
-    QString lbl = ctype->currentText();
-    pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
+    QString lbl = bottomAxisCType->currentText();
+    pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xBottom );
+    lbl = topAxisCType->currentText();
+    pixelCanvas->setXLabel( lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xTop );
 
     yUnit = QString(img->units().getName().chars());
     pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
@@ -570,6 +572,8 @@ bool QtProfile::populateWorlds(const QList<int> &pixelX, const QList<int> &pixel
 	return success;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
 {
   MFrequency::Types freqtype;
@@ -798,36 +802,38 @@ void QtProfile::changeFrame(const QString &text) {
 	changeCoordinateType(QString(ctypeUnit.c_str()));
 }
 
+void QtProfile::updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex ){
+	QString lbl = text;
+	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]", axisIndex );
+}
+
+void QtProfile::changeTopAxisCoordinateType( const QString & /*text*/ ){
+	changeCoordinateType( bottomAxisCType -> currentText() );
+}
+
+
 void QtProfile::changeCoordinateType(const QString &text) {
     //coordinateType = String(text.toStdString());
-    //qDebug() << "coordinate:" << text;
-    //Double x1, y1;
-    //getProfileRange(x1, y1, coordinate.chars());
-    //qDebug() << "coordinate:" << QString(coordinate.chars())
-    //           << "profile Range:" << x1 << y1;
-    xpos = "";
-    ypos = "";
-    position = QString("");
-    profileStatus->showMessage(position);
-    pixelCanvas->clearCurve();
 
+	xpos = "";
+	ypos = "";
+	position = QString("");
+	profileStatus->showMessage(position);
+	pixelCanvas->clearCurve();
 
-    ctypeUnit = String(text.toStdString());
-    getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
-    collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
-    fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+	ctypeUnit = String(text.toStdString());
+	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+	collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+	fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
-    QString lbl = text;
-    pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
+	pixelCanvas->setPlotSettings(QtPlotSettings());
+    updateXAxisLabel( text, QtPlotSettings::xBottom );
 
-    pixelCanvas->setPlotSettings(QtPlotSettings());
-
-    //cout << "put to rc.viewer: " << text.toStdString() << endl;
-    rc.put( "viewer." + rcid() + ".freqcoord.type", text.toStdString());
-
-    if(lastPX.nelements() > 0){ // update display with new coord type
-   	 wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
-    }
+	//cout << "put to rc.viewer: " << text.toStdString() << endl;
+	rc.put( "viewer." + rcid() + ".freqcoord.type", text.toStdString());
+	if(lastPX.nelements() > 0){ // update display with new coord type
+		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+	}
 
 }
 
@@ -887,19 +893,19 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
 	if (pref_ctype.size()>0){
 		// change to the preferred ctype
-		int ctypeindex= ctype->findText(pref_ctype);
-		if (ctypeindex > -1)
-			ctype->setCurrentIndex(ctypeindex);
+		updateAxisUnitCombo( pref_ctype, bottomAxisCType );
+		updateAxisUnitCombo( pref_ctype, topAxisCType );
 	}
 
-	ctypeUnit = String(ctype->currentText().toStdString());
+	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 	collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 	fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
-	QString lbl = ctype->currentText();
-	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]");
-
+	QString lbl = bottomAxisCType->currentText();
+	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xBottom );
+	lbl = topAxisCType->currentText();
+	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xTop );
 	// re-set the rest
 	//frequence or wavelength
 	//cSysRval = "";
@@ -987,7 +993,7 @@ void QtProfile::wcChanged( const String c,
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
 	//Get Profile Flux density v/s coordinateType
-	bool ok = assignFrequencyProfile( wxv,wyv);
+	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 	if ( !ok ){
 	    return;
 	}
@@ -1015,8 +1021,7 @@ void QtProfile::wcChanged( const String c,
     }
 
     // plot the graph
-    pixelCanvas->clearData();
-    pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+   plotMainCurve();
 
     addImageAnalysisGraph( wxv,wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
@@ -1284,16 +1289,11 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		if (index > -1)
 			spcRef->setCurrentIndex(index);
 	}
-	if (qSpcTypeUnit != ctype->currentText()){
+
+	if (qSpcTypeUnit != bottomAxisCType->currentText()){
 		// if necessary, change the unit and the spectral quantity
-		int index = ctype->findText(qSpcTypeUnit);
-		if (index > -1){
-			ctype->setCurrentIndex(index);
-		}
-		else {
-	   	 //
-	    	*itsLog << LogIO::WARN << "Can not switch profile to spectral quantity and unit: \"" << qSpcTypeUnit.toStdString() << "\"!" << LogIO::POST;
-		}
+		updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
+
 	}
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
@@ -1303,6 +1303,16 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		if(lastPX.nelements() > 0){ // update display with new rest frequency/wavelength
 			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
 		}
+	}
+}
+void QtProfile::updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo ){
+	int index = axisUnitCombo->findText( textToMatch );
+	if (index > -1){
+		axisUnitCombo->setCurrentIndex(index);
+	}
+	else {
+		//
+		*itsLog << LogIO::WARN << "Can not switch profile to spectral quantity and unit: \"" << textToMatch.toStdString() << "\"!" << LogIO::POST;
 	}
 }
 
@@ -1421,7 +1431,7 @@ void QtProfile::doLineFit(){
 	//Int polyN = Int(fitPolyN->value());
 	//if (polyN>-1)
 	//	doFitPoly=True;
-	Int polyN;
+	Int polyN = 0;
 	if (fitPolyN->currentText()==QString("poly 0")){
 		doFitPoly=True;
 		polyN=0;
@@ -1468,9 +1478,28 @@ void QtProfile::doLineFit(){
 	return;
 }
 
+void QtProfile::changeTopAxis(){
+	if ( lastWX.size() > 0 ){
+		Vector<Float> xValues (lastWX.size());
+		Vector<Float> yValues (lastWY.size());
+		QString text = topAxisCType ->currentText();
+		updateXAxisLabel( text, QtPlotSettings::xTop );
+		String xUnits = String(text.toStdString());
+		String coordinateType;
+		String cTypeUnit;
+		getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+		assignFrequencyProfile( lastWX, lastWY, coordinateType, cTypeUnit, xValues, yValues  );
+		pixelCanvas -> setTopAxisRange(xValues);
+	}
+	else {
+		*itsLog << LogIO::WARN << "Data is not loaded." << LogIO::POST;
+	}
+}
+
 void QtProfile::plotMainCurve(){
-	pixelCanvas->clearData();
-	pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+	pixelCanvas -> clearCurve();
+	changeTopAxis();
+	pixelCanvas -> plotPolyLine(z_xval, z_yval, z_eval, fileName);
 }
 
 void QtProfile::emitChannelSelect( float xval ) {
@@ -1531,13 +1560,6 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 			   const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
     if (!isVisible()) return;
     if (!analysis) return;
-    /*for ( int i = 0; i < world_x.size(); i++ ){
-    	qDebug() << "World x=" << world_x[i] << " y=" << world_y[i];
-    }
-    for ( int i = 0; i < pixel_x.size(); i++ ){
-    	qDebug() << "Pixel x=" << pixel_x[i] << " y=" << pixel_y[i];
-    }*/
-
     spectra_info_map[id_] = shape;
     String c(WORLD_COORDINATES);
 
@@ -1560,7 +1582,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 
     copyToLastEvent( c, px, py, wx, wy );
 
-    setPlotType( wx.size() );
+    setPlotType( static_cast<int>(wx.size()) );
 
     assignCoordinate( c );
 
@@ -1582,7 +1604,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     	setPositionStatus( pxv, pyv, wxv, wyv );
     }
     //Get Profile Flux density v/s coordinateType
-    bool ok = assignFrequencyProfile( wxv,wyv);
+    bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval, z_yval);
     if ( !ok ){
     	return;
     }
@@ -1591,8 +1613,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 
     Int ordersOfM = scaleAxis();
     // plot the graph
-    pixelCanvas->clearData();
-    pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+    plotMainCurve();
 
     addImageAnalysisGraph( wxv, wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
@@ -1656,7 +1677,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     setPositionStatus( pxv,pyv,wxv,wyv );
 
     //Get Profile Flux density v/s coordinateType
-     bool ok = assignFrequencyProfile( wxv,wyv);
+     bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
      if ( !ok ){
      	return;
      }
@@ -1667,8 +1688,7 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     Int ordersOfM = scaleAxis();
 
     // plot the graph
-    pixelCanvas->clearData();
-    pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+    plotMainCurve();
 
     addImageAnalysisGraph( wxv, wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
@@ -2221,6 +2241,8 @@ QString QtProfile::getRaDec(double x, double y) {
    return raDec;
 }
 
+
+
 	void QtProfile::setTitle( const QString& shape ){
 		if ( shape == "point" ) {
 			pixelCanvas->setTitle("Single Point Profile");
@@ -2366,9 +2388,10 @@ QString QtProfile::getRaDec(double x, double y) {
 		profileStatus->showMessage(position);
 	}
 
-	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv ){
+	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
+			const String& coordinateType, const String& xaxisUnit,
+			Vector<Float> &z_xval, Vector<Float> &z_yval){
 		Bool ok = False;
-
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
@@ -2576,118 +2599,121 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
-		QHashIterator<QString, ImageAnalysis*> i(*over);
-		while (i.hasNext() && stateMProf) {
-		 i.next();
-		 QString ky = i.key();
-		 ImageAnalysis* ana = i.value();
-		 Vector<Float> xval(100);
-		 Vector<Float> yval(100);
 
-		 switch (itsPlotType)
-		 {
-		 case QtProfile::PMEAN:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+		if ( over != NULL ){
+			QHashIterator<QString, ImageAnalysis*> i(*over);
+
+			while (i.hasNext() && stateMProf) {
+				i.next();
+				QString ky = i.key();
+				ImageAnalysis* ana = i.value();
+				Vector<Float> xval(100);
+				Vector<Float> yval(100);
+
+				switch (itsPlotType)
+				{
+				case QtProfile::PMEAN:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEAN, 0);
-			 break;
-		 case QtProfile::PMEDIAN:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PMEDIAN:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEDIAN, 0);
-			 break;
-		 case QtProfile::PSUM:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PSUM:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::PSUM, 0);
-			 break;
-		 case QtProfile::PFLUX:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					break;
+				case QtProfile::PFLUX:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::PFLUX, 0);
-			 break;
+					break;
 			 //case QtProfile::PVRMSE:
 			 //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 			 //			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 			 //			(Int)QtProfile::RMSE, 0);
 			 // break;
-		 default:
-			 ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+				default:
+					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					 (Int)QtProfile::MEAN, 0);
-			 break;
-		 }
+					break;
+				}
 
-		 if (ok) {
-			 if(ordersOfM!=0){
-				 // correct display y axis values
-				 for (uInt i = 0; i < yval.size(); i++) {
-					 yval(i) *= pow(10.,ordersOfM);
-				 }
-			 }
-			 Vector<Float> xRel(yval.size());
-			 Vector<Float> yRel(yval.size());
-			 Int count = 0;
-			 if (stateRel) {
-				 ky = ky+ "_rel.";
-				 for (uInt i = 0; i < yval.size(); i++) {
-					 uInt k = z_yval.size() - 1;
-					 //cout << xval(i) << " - " << yval(i) << endl;
-					 //cout << z_xval(0) << " + " << z_xval(k) << endl;
-					 if (coordinateType.contains("elocity")) {
-						 if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
-							 for (uInt j = 0; j < k; j++) {
-								 //cout << z_xval(j) << " + "
-								 //     << z_yval(j) << endl;
-								 if (xval(i) <= z_xval(j) &&
-										 xval(i) > z_xval(j + 1)) {
-									 float s = z_xval(j + 1) - z_xval(j);
-									 if (s != 0) {
-										 xRel(count) = xval(i);
-										 yRel(count)= yval(i) -
-												 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-														 (z_yval(j + 1) - z_yval(j)));
-										 count++;
-										 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-										 //           (z_yval(j + 1) - z_yval(j)));
+				if (ok) {
+					if(ordersOfM!=0){
+						// correct display y axis values
+						for (uInt i = 0; i < yval.size(); i++) {
+							yval(i) *= pow(10.,ordersOfM);
+						}
+					}
+					Vector<Float> xRel(yval.size());
+					Vector<Float> yRel(yval.size());
+					Int count = 0;
+					if (stateRel) {
+						ky = ky+ "_rel.";
+						for (uInt i = 0; i < yval.size(); i++) {
+							uInt k = z_yval.size() - 1;
+							//cout << xval(i) << " - " << yval(i) << endl;
+							//cout << z_xval(0) << " + " << z_xval(k) << endl;
+							if (coordinateType.contains("elocity")) {
+								if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+								 for (uInt j = 0; j < k; j++) {
+									 //cout << z_xval(j) << " + "
+									 //     << z_yval(j) << endl;
+									 if (xval(i) <= z_xval(j) &&
+											 xval(i) > z_xval(j + 1)) {
+										 float s = z_xval(j + 1) - z_xval(j);
+										 if (s != 0) {
+											 xRel(count) = xval(i);
+											 yRel(count)= yval(i) -
+													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
+															 (z_yval(j + 1) - z_yval(j)));
+											 count++;
+											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											 //           (z_yval(j + 1) - z_yval(j)));
 
+										 }
+										 break;
 									 }
-									 break;
+								 }
+							 }
+						 }
+						 else {
+							 if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+								 for (uInt j = 0; j < k; j++) {
+									 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+										 float s = z_xval(j + 1) - z_xval(j);
+										 if (s != 0) {
+											 xRel(count) = xval(i);
+											 yRel(count)= yval(i) -
+													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
+															 (z_yval(j + 1) - z_yval(j)));
+											 count++;
+											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											 //           (z_yval(j + 1) - z_yval(j)));
+										 }
+										 break;
+									 }
 								 }
 							 }
 						 }
 					 }
-					 else {
-						 if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
-							 for (uInt j = 0; j < k; j++) {
-								 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
-									 float s = z_xval(j + 1) - z_xval(j);
-									 if (s != 0) {
-										 xRel(count) = xval(i);
-										 yRel(count)= yval(i) -
-												 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-														 (z_yval(j + 1) - z_yval(j)));
-										 count++;
-										 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-										 //           (z_yval(j + 1) - z_yval(j)));
-									 }
-									 break;
-								 }
-							 }
-						 }
-					 }
+					 xRel.resize(count, True);
+					 yRel.resize(count, True);
+					 pixelCanvas->addPolyLine(xRel, yRel, ky);
 				 }
-				 xRel.resize(count, True);
-				 yRel.resize(count, True);
-				 pixelCanvas->addPolyLine(xRel, yRel, ky);
+				 else {
+					 pixelCanvas->addPolyLine(xval, yval, ky);
+				 }
 			 }
-			 else {
-				 pixelCanvas->addPolyLine(xval, yval, ky);
-			 }
-		 }
+			}
+
 		}
-
-
 	}
 
 	void QtProfile::storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,

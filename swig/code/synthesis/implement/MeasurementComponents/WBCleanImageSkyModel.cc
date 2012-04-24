@@ -196,6 +196,14 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	   os << "Calculating initial residual images..." << LogIO::POST;
 	   solveResiduals(se,(numberIterations()<1)?True:False);
 	}
+	else
+	{
+	  if(numbermajorcycles_p>0) 
+	    {
+	      os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
+	      solveResiduals(se,(numberIterations()<1)?True:False);
+	    }
+	}
 
 	/* Initialize the MultiTermMatrixCleaners */
 	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
@@ -641,6 +649,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 	}
 
     }//end of field loop
+  os << "Converting final residuals to 'coefficient residuals', for restoration" << LogIO::POST;
 
 }//end of calculateCoeffResiduals
 
@@ -955,6 +964,7 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
 	  if(work_p[i]){delete work_p[i]; work_p[i]=0;}
 	  if(fluxScale_p[i]){delete fluxScale_p[i]; fluxScale_p[i]=0;}
 	}
+
     }
   
   psf_p.resize(length,True);
@@ -965,7 +975,7 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
   work_p.resize(length,True);
   fluxScale_p.resize(length,True);
   
-  if(length > originallength) // Add extra arrays
+  if(length > originallength) // Add extra arrays  // TODO : This part can go - I think !!!
     {
       for(Int i = originallength; i < length; ++i)
 	{
@@ -983,6 +993,9 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
 	  image_p[i] = imptr;
 	}
     }
+
+  ///cout << "Memory held by ImageSkyModel : " << 6*length << " float + " << 1*length << " complex images " << endl;
+
   return True;
 }
 
