@@ -45,6 +45,7 @@
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
 #include <display/QtViewer/QtWCBox.h>
+#include <display/QtViewer/Preferences.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -60,7 +61,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
 		   regionDock_(0), use_new_regions(true),
 		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0),
-		   controlling_dd(0) {
+		   controlling_dd(0), preferences(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
@@ -130,6 +131,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		    ddMenu_->addSeparator();
     dpSaveAct_    = ddMenu_->addAction("&Save Panel State...");
     dpRstrAct_    = ddMenu_->addAction("Restore Panel State...");
+		    ddMenu_->addSeparator();
+    ddPreferencesAct_ = ddMenu_->addAction("Preferences...");
 		    ddMenu_->addSeparator();
     dpCloseAct_   = ddMenu_->addAction("&Close Panel");
     dpQuitAct_    = ddMenu_->addAction("&Quit Viewer");
@@ -546,6 +549,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
     connect(ddOpenAct_,  SIGNAL(triggered()),  SLOT(showDataManager()));
     connect(ddSaveAct_,  SIGNAL(triggered()),  SLOT(showExportManager()));
+    connect(ddPreferencesAct_, SIGNAL(triggered()), SLOT(showPreferences()));
     // connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
     connect(dpNewAct_,   SIGNAL(triggered()),  SLOT(createNewPanel()));
     connect(dpOptsAct_,  SIGNAL(triggered()),  SLOT(showCanvasManager()));
@@ -1060,6 +1064,13 @@ void QtDisplayPanelGui::hideExportManager() {
   if(qem_==0) return;
   qem_->hide();  }
 
+
+void QtDisplayPanelGui::showPreferences( ) {
+    if ( preferences == 0 ) 
+	preferences = new viewer::Preferences( );
+    preferences->showNormal( );
+    preferences->raise( );
+}
 
     
 void QtDisplayPanelGui::showDataOptionsPanel() {
