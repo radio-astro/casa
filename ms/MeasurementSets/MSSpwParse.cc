@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<nDDIDRows;i++)
       mapDDID2SpwID(i) = msDataDescSubTable.spectralWindowId()(i);
 
-
+    
     for(uInt n=0;n<SpwIds.nelements();n++)
       {
 	Found = False;
@@ -240,10 +240,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else k+=3;
       }
 
-    nSpw=chanList.shape()[0];
-    spwIds.resize(nSpw);
-    for (Int i=0;i<nSpw;i++)
-      spwIds[i] = chanList(i,0);
+    // nSpw=chanList.shape()[0];
+    // spwIds.resize(nSpw);
+    // for (Int i=0;i<nSpw;i++)
+    //   spwIds[i] = chanList(i,0);
   }
   //
   //------------------------------------------------------------------
@@ -300,7 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw(MSSelectionSpwError(Mesg.str()));
       }
 
-    idList.assign(uniqueIDList);
+    //    idList.assign(uniqueIDList);
 
     return tten;
   }
