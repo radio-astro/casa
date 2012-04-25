@@ -39,6 +39,10 @@
 namespace casa {
     namespace viewer {
 
+	static const char casa_ext[] = ".crtf";
+	static const char ds9_ext[] = ".reg";
+	static const char *default_ext = casa_ext;
+
 	QtRegionState::freestat_list *QtRegionState::freestats = 0;
 
 	void QtRegionState::init( ) {
@@ -427,16 +431,29 @@ namespace casa {
 		return;
 	    }
 
+	    bool found = false;
 	    QFileInfo fi(path);
-	    if ( ! fi.exists( ) ) {
-		char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
-		sprintf( buf, "file '%s' does not exist", path.toAscii( ).constData( ) );
-		load_filename->clear( );
-		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
-		load_now->setFocus(Qt::OtherFocusReason);
-		free(buf);
-		return;
+	    if ( fi.exists( ) ) {
+		found = true;
 	    } else {
+		if ( load_file_type->currentText( ).compare("CASA region file") == 0 ) {
+		    QString newpath = path + casa_ext;
+		    QFileInfo nfi(newpath);
+		    if ( nfi.exists( ) ) {
+			path = newpath;
+			found = true;
+		    }
+		} else if ( load_file_type->currentText( ).compare("DS9 region file") == 0 ) {
+		    QString newpath = path + ds9_ext;
+		    QFileInfo nfi(newpath);
+		    if ( nfi.exists( ) ) {
+			path = newpath;
+			found = true;
+		    }
+		}
+	    }
+
+	    if ( found ) {
 		int fd = open( path.toAscii( ).constData( ), O_RDONLY );
 		if ( fd == -1 ) {
 		    char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
@@ -449,15 +466,20 @@ namespace casa {
 		} else {
 		    ::close(fd);
 		}
+	    } else {
+		char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
+		sprintf( buf, "file '%s' does not exist", path.toAscii( ).constData( ) );
+		load_filename->clear( );
+		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+		load_now->setFocus(Qt::OtherFocusReason);
+		free(buf);
+		return;
 	    }
 
 	    bool handled = false;
 	    emit loadRegions( handled, path, load_file_type->currentText( ) );
 	}
 
-	static const char casa_ext[] = ".crtf";
-	static const char ds9_ext[] = ".reg";
-	static const char *default_ext = casa_ext;
 	void QtRegionState::update_default_file_extension(const QString &txt) {
 	    if ( txt.compare("CASA region file") == 0 ) {
 		default_ext = casa_ext;

@@ -122,7 +122,7 @@ namespace casa {
 	}
 
 	std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
-	    QtPolygon *result = new QtPolygon( this, wc, pts, true );
+	    QtPolygon *result = new QtPolygon( this, wc, pts, false );
 
 	    // save Region to RegionSource mapping for later revocation...
 	    creator_of_region[result] = rc;
