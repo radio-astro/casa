@@ -1538,6 +1538,9 @@ Bool Calibrater::genericGatherAndSolve() {
   Vector<Bool> unsolspw(vi.numberSpw());	
   unsolspw.set(False);		       
 
+  // Manage verbosity of partial channel averaging
+  Vector<Bool> verb(vi.numberSpw(),True);
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
@@ -1556,7 +1559,6 @@ Bool Calibrater::genericGatherAndSolve() {
 
 	// Collapse each timestamp in this chunk according to VisEq
 	//  with calibration and averaging
-	Bool verb(True);
 	for (vi.origin(); vi.more(); vi++) {
 	  
 	  // Force read of the field Id
@@ -1581,10 +1583,16 @@ Bool Calibrater::genericGatherAndSolve() {
 	      svc_p->fsolint()!="none" &&
 	      svc_p->fintervalCh()>0.0) {
 	    //	    cout << "svc_p->currSpw() = " << svc_p->currSpw() << endl;
-	    if (verb) cout << "vb.numberChan() = " << vb.nChannel();
+	    if (verb(spw)) 
+	      logSink() << " Reducing nchan in spw " 
+			<< spw
+			<< " from " << vb.nChannel();
 	    vb.channelAve(svc_p->chanAveBounds(spw));
-	    if (verb) cout << "-->" << vb.nChannel() << endl;
-	    verb=False;  // suppress future verbosity
+	    if (verb(spw)) {
+	      logSink() << " to " 
+			<< vb.nChannel() << LogIO::POST;
+	      verb(spw)=False;  // suppress future verbosity in this spw
+	    }
 	  }
 	  
 	  // Accumulate collapsed vb in a time average
@@ -3217,7 +3225,20 @@ Vector<Int> Calibrater::getSpwIdx(const String& spws) {
 
   MSSelection mssel;
   mssel.setSpwExpr(spws);
-  return mssel.getSpwList(mssel_p);
+
+  /*
+  cout << "mssel.getSpwList(mssel_p) = " << mssel.getSpwList(mssel_p) << endl;
+  cout << "mssel.getChanList(mssel_p) = " << mssel.getChanList(mssel_p) << endl;  cout << "Vector<Int>() = " << Vector<Int>() << endl;
+  */
+
+  // Use getChanList (column 0 for spw) because it is 
+  //  more reliable about the number and order of specified spws.
+  //  return mssel.getSpwList(mssel_p);
+  Matrix<Int> chanmat=mssel.getChanList(mssel_p);
+  if (chanmat.nelements()>0) 
+    return chanmat.column(0);
+  else
+    return Vector<Int>();
 
 }
 

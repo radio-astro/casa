@@ -1077,15 +1077,13 @@ void SolvableVisCal::setSolve(const Record& solve)
   }
 
   // Handle fsolint format
-  if (upcase(fsolint()).contains("NONE")) {
+  if (upcase(fsolint()).contains("NONE") || !freqDepPar()) {
     fsolint()="none";
     fintervalCh_.set(0.0); 
     fintervalHz_=-1.0;
   }
   else {
-    if (!freqDepPar()) 
-      cout << "Ignoring freq-dep solint because " << typeName() << " isn't channel-dependent." << endl;
-    else {
+    if (freqDepPar()) {
       // Try to parse it
       if (upcase(fsolint()).contains("CH")) {
 	String fsolintstr=upcase(fsolint());
@@ -1119,10 +1117,12 @@ void SolvableVisCal::setSolve(const Record& solve)
 	} // Hz vs. Ch via Quantum
       } // parse by Quantum
     } // freqDepPar
+    /*
     cout << "Freq-dep solint: " << fsolint() 
 	 << " Ch=" << fintervalCh_ 
 	 << " Hz=" << fintervalHz() 
 	 << endl;
+    */
   } // user set something
 
   if (solve.isDefined("preavg"))
@@ -1188,6 +1188,7 @@ String SolvableVisCal::solveinfo() {
     << ": table="      << calTableName()
     << " append="     << append()
     << " solint="     << solint()
+    << (freqDepPar() ? (","+fsolint()) : "")
     //    << " t="          << interval()
     //    << " preavg="     << preavg()
     << " refant="     << "'" << refantName << "'" // (id=" << refant() << ")"
@@ -1367,7 +1368,7 @@ void SolvableVisCal::setSpecify(const Record& specify) {
 
     logSink() << "Loading existing " << typeName()
 	      << " table: " << calTableName()
-	      << "."
+	      << " (to be updated)."
 	      << LogIO::POST;
 
     // Open it
@@ -1462,7 +1463,7 @@ void SolvableVisCal::specify(const Record& specify) {
   Vector<Int> pols;
   Vector<Double> parameters;
 
-  Int Nspw(1);
+  Int nUserSpw(1);
   Int Ntime(1);
   Int Nant(0);
   Int Npol(1);
@@ -1474,6 +1475,7 @@ void SolvableVisCal::specify(const Record& specify) {
 
   if (specify.isDefined("caltype")) {
     String caltype=specify.asString("caltype");
+    logSink() << "Generating '" << caltype << "' corrections." << LogIO::POST;
     if (upcase(caltype).contains("PH"))
       apmode()="P";
     else
@@ -1491,15 +1493,16 @@ void SolvableVisCal::specify(const Record& specify) {
   if (specify.isDefined("spw")) {
     // TBD: the spws (in order) identifying the solutions
     spws=specify.asArrayInt("spw");
-    cout << "spws = " << spws << endl;
-    Nspw=spws.nelements();
-    if (Nspw<1) {
+    nUserSpw=spws.nelements();
+    if (nUserSpw<1) {
       // None specified, so loop over all, repetitively
-      //  (We need to optimize this...)
-      cout << "Specified parameters repeated on all spws." << endl;
+      //  (We ought to optimize this...)
+      logSink() << 
+	"Specified parameter(s) (per antenna and pol) repeated on all spws." 
+		<< LogIO::POST;
       repspw=True;
-      Nspw=nSpw();
-      spws.resize(Nspw);
+      nUserSpw=nSpw();
+      spws.resize(nUserSpw);
       indgen(spws);
     }
   }
@@ -1512,6 +1515,9 @@ void SolvableVisCal::specify(const Record& specify) {
     Nant=antennas.nelements();
     if (Nant<1) {
       // Use specified values for _all_ antennas implicitly
+      logSink() << 
+	"Specified parameter(s) (per spw and pol) repeated on all antennas." 
+		<< LogIO::POST;
       Nant=1;   // For the antenna loop below
       ip0(2)=0;
       ip1(2)=nAnt()-1;
@@ -1551,6 +1557,9 @@ void SolvableVisCal::specify(const Record& specify) {
     Npol=pols.nelements();
     if (Npol<1) {
       // No pol axis specified
+      logSink() << 
+	"Specified parameter(s) (per spw and antenna) repeated on all polarizations." 
+		<< LogIO::POST;
       Npol=1;
       ip0(0)=0;
       ip1(0)=nPar()-1;
@@ -1563,26 +1572,25 @@ void SolvableVisCal::specify(const Record& specify) {
   }
   if (specify.isDefined("parameter")) {
     // TBD: the actual cal values
-
     parameters=specify.asArrayDouble("parameter");
-
   }
-
   Int nparam=parameters.nelements();
 
   // Test for correct number of specified parameters
   //  Either all params are enumerated, or one is specified
   //  for all, [TBD:or a polarization pair is specified for all]
   //  else throw
-  if (nparam!=(repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) && 
+  if (nparam!=(repspw ? (Ntime*Nant*Npol) : (nUserSpw*Ntime*Nant*Npol)) && 
       nparam!=1 )                // one for all
     //      (Npol==2 && nparam%2!=0) )  // poln pair for all
     throw(AipsError("Inconsistent number of parameters specified."));
-  
-  Int ipar(0);
-  for (Int ispw=0;ispw<Nspw;++ispw) {
 
-    currSpw()=spws(ispw);
+
+  // Fill in user-specifed parameters in order
+  Int ipar(0);
+  for (Int iUspw=0;iUspw<nUserSpw;++iUspw) {
+
+    currSpw()=spws(iUspw);
 
     // reset par index if we are repeating for all spws
     if (repspw) ipar=0;
@@ -1597,7 +1605,17 @@ void SolvableVisCal::specify(const Record& specify) {
 	if (Npol>1)
 	  ip1(0)=ip0(0)=pols(ipol);
 	
-	cout << "ip0,ip1 = " << ip0 << " " << ip1 << endl;
+	// Report details as compactly as possible
+	if (!repspw || iUspw==0)
+	  logSink() << "spwId=" 
+		    << (repspw ? "<all>" : String::toString(currSpw()) )
+		    << " antId=" 
+		    << (antennas.nelements()>0 ? String::toString(antennas(iant)) : "<all>")
+		    << " polId=" 
+		    << (pols.nelements()>0 ? String::toString(pols(ipol)) : "<all>")
+		    << " parameter= " << parameters(ipar)
+		    << "   (ip0,ip1 = " << ip0 << "," << ip1 << ")"
+		    << LogIO::POST;
 
 	switch(parType()) {
 	case VisCalEnum::COMPLEX: {
@@ -1629,13 +1647,20 @@ void SolvableVisCal::specify(const Record& specify) {
 	++ipar;
 	ipar = ipar%nparam;
 
-	// Keep this result
-	keepNCT();
+
+      } // ipol
+    } // iant
+
+  } // iUspw
 
 
-      }
-    }
+  // Now write keep _all_ spws
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    // Keep this result
+    currSpw()=ispw;
+    keepNCT();
   }
+
 }
 
 
