@@ -172,8 +172,13 @@ def makeDict(cmdlist, myreason='any'):
             flagd['reason'] = reason 
             
             # Remove reason from command line   
-            newline = command.rstrip()
-            command = purgeParameter(newline, 'reason')
+            command = command.rstrip()
+            newline = purgeParameter(command, 'reason')
+            
+            # Remove any empty parameter (CAS-4015)
+            command = purgeEmptyPars(newline)
+            command = command.strip()
+            
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
@@ -1113,6 +1118,7 @@ def getLinePars(cmdline, mlist=[]):
                     if xkey == m:
                         dicpars[m] = xval
                         
+    casalog.post(':getLinePars::dicpars=%s'%dicpars, 'DEBUG')         
             
     return dicpars
 
@@ -1350,7 +1356,7 @@ def purgeEmptyPars(cmdline):
             if xval == '':
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   
