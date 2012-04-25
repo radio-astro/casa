@@ -515,9 +515,9 @@ def tflagdata(vis,
                                 if(key==rflagid):  
                                     # If timedev,freqdev are missing from cmdline, add empty ones.
                                     if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
-                                        cmdline = cmdline + "timedev=[] ";
+                                        cmdline = cmdline + " timedev=[] ";
                                     if( not cmdline.__contains__('freqdev=') ):
-                                        cmdline = cmdline + "freqdev=[] ";
+                                        cmdline = cmdline + " freqdev=[] ";
                                     # Pull out timedev, freqdev strings from flagcmd
                                     rflagpars = fh.getLinePars(cmdline , ['timedev','freqdev']);
                                     ##print "cmdline : ", cmdline
