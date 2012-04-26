@@ -33,6 +33,14 @@
 namespace casa {
     namespace viewer {
 
+	// Fields in the table are:
+	//
+	//     NODE or LEAF   |   TYPE (N=node, L=leaf)   |   Default Value   |   Tool Tip   |   Validation Type
+	//
+	// Note that NODEs do not have default values or validation types because they do not actually
+	// represent something that the user can set, but may represent something worth providing
+	// intermediate tool tips for the user...
+	//
 	const char *Preferences::init_state[] = { 
 	  "viewer.dpg", "N", "", "preferences for main Viewer Display Panel", "",
 	  "viewer.dpg.position", "N", "", "viewer dock panel positions", "",
