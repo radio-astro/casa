@@ -422,6 +422,102 @@ class ScaleUranusByChan(SplitChecker):
                                                          [2.83933783+0.j]]),
                  0.0001)
 
+class Uranus_newmodel(SplitChecker):
+    """ Test new models, Bulter-JPL-Horizons 1012"""
+    need_to_initialize = True
+    inpms = 'unittest/setjy/2528.ms'
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Uranus')."
+            sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2012', usescratch=True,  async=False)
+        except Exception, e:
+            print "Error running setjy(field='Uranus')"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            tb.close()
+            raise e
+        else:
+            record['wvr'] = tb.getcell('MODEL_DATA', 0)
+            record['auto3'] = tb.getcell('MODEL_DATA', 10)
+            record['long3'] = tb.getcell('MODEL_DATA', 11)
+            record['auto4'] = tb.getcell('MODEL_DATA', 2)
+            record['med4'] = tb.getcell('MODEL_DATA', 4)
+            record['long4'] = tb.getcell('MODEL_DATA', 3)
+            tb.close()
+            record['history'] = get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+            print "History record=",record['history']
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_history_Uranus(self):
+        """Flux density in HISTORY (Uranus)?"""
+        check_history(self.records['']['history'], ["Uranus:", "V=0.0] Jy"])
+
+    def test_wvr(self):
+        """WVR spw"""
+        #check_eq(self.records['']['wvr'], numpy.array([[26.40653229+0.j,
+        #                                                26.40653229+0.j]]),
+        check_eq(self.records['']['wvr'], numpy.array([[25.427332964+0.j,
+                                                        25.427332964+0.j]]),
+                 0.0001)
+    def test_auto3(self):
+        """Zero spacing of spw 3"""
+        #check_eq(self.records['']['auto3'], numpy.array([[65.80638885+0.j],
+        #                                                 [65.80638885+0.j]]),
+        check_eq(self.records['']['auto3'], numpy.array([[66.761640046+0.j],
+                                                         [66.761640046+0.j]]),
+                 0.0001)
+    #def test_long3(self):
+    #    """Long spacing of spw 3"""
+    #    check_eq(self.records['']['long3'], numpy.array([[4.76111794+0.j],
+    #                                                     [4.76111794+0.j]]),
+    #             0.0001)
+    def test_auto4(self):
+        """Zero spacing of spw 4"""
+    #    check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
+    #                                                     [69.33396912+0.j]]),
+        check_eq(self.records['']['auto4'], numpy.array([[70.434192297+0.j],
+                                                         [70.434192297+0.j]]),
+                 0.0001)
+    #def test_med4(self):
+    #    """Medium spacing of spw 4"""
+    #    check_eq(self.records['']['med4'], numpy.array([[38.01076126+0.j],
+    #                                                    [38.01076126+0.j]]),
+    #             0.0001)
+    #def test_long4(self):
+    #    """Long spacing of spw 4"""
+    #    check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
+    #                                                     [2.83933783+0.j]]),
+    #             0.0001)
+
+
+
+
 class selectobs(SplitChecker):
     """Test CAS-3320"""
     need_to_initialize = True
@@ -485,6 +581,73 @@ class selectobs(SplitChecker):
         """Was obsID 2 left alone?"""
         check_eq(self.records[''][2], 1.0+0.0j, 0.003)
 
+class selectobs_newmodel(SplitChecker):
+    """Test CAS-3320 with new model"""
+    need_to_initialize = True
+    inpms = 'unittest/setjy/multiobs.ms'  # 3 concatted observations of Titan
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Titan', observation=1)."
+            sjran = setjy(self.inpms, field='Titan', spw='',
+                          selectdata=True, observation=1,
+                          modimage='',
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2012', usescratch=True, async=False)
+        except Exception, e:
+            print "Error running setjy(field='Titan', observation=1)"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            tb.close()
+            raise e
+        else:
+            record[0] = tb.getcell('MODEL_DATA', 0)[0, 0]
+            #record[1] = tb.getcell('MODEL_DATA', 666)[0]
+            record[1] = tb.getcell('MODEL_DATA', 671)[0]
+            record[2] = tb.getcell('MODEL_DATA', 950)[0, 0]
+            tb.close()
+        # for debugging
+        #os.system('cp -r '+self.inpms+' saved.ms')
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_obs0(self):
+        """Was obsID 0 left alone?"""
+        check_eq(self.records[''][0], 1.0+0.0j, 0.003)
+
+    def test_obs1(self):
+        """Was obsID 1 set?"""
+        check_eq(self.records[''][1],
+                 numpy.array([ 1.26222515+0.08705679j,  1.26524138+0.00132824j,
+                               1.26244164-0.08440888j,  1.25383842-0.16976045j]), 0.003)
+
+    def test_obs2(self):
+        """Was obsID 2 left alone?"""
+        check_eq(self.records[''][2], 1.0+0.0j, 0.003)
+
+
             
 def suite():
-    return [setjy_test_modimage, Uranus, ScaleUranusByChan, selectobs]
+    return [setjy_test_modimage, Uranus, ScaleUranusByChan, Uranus_newmodel, selectobs, selectobs_newmodel]
