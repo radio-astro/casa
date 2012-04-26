@@ -138,6 +138,14 @@ class test_manual(test_base):
         
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        
+    def test_autocorr(self):
+        '''tflagcmd: autocorr=True'''
+        self.setUp_ngc5921()
+        tflagcmd(vis=self.vis, inpmode='cmd', command=['autocorr=True'], action='apply')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 203994, 'Should flag only the auto-correlations')
+        
 
 class test_alma(test_base):
     # Test various selections for alma data 
@@ -159,6 +167,19 @@ class test_alma(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
         self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
+    def test_cmd(self):
+        '''tflagcmd: inpmode=cmd with empty parameter'''
+        
+        # Test the correct parsing with empty parameter such as antenna=''
+        tflagcmd(vis=self.vis, inpmode='cmd', 
+                 command=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
+                 action='apply', savepars=False)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 80184)
+        self.assertEqual(res['scan']['4']['flagged'], 48132)
+        self.assertEqual(res['flagged'], 160392)
+        
+             
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''
         # Remove any cmd from table

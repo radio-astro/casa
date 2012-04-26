@@ -172,8 +172,13 @@ def makeDict(cmdlist, myreason='any'):
             flagd['reason'] = reason 
             
             # Remove reason from command line   
-            newline = command.rstrip()
-            command = purgeParameter(newline, 'reason')
+            command = command.rstrip()
+            newline = purgeParameter(command, 'reason')
+            
+            # Remove any empty parameter (CAS-4015)
+            command = purgeEmptyPars(newline)
+            command = command.strip()
+            
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
@@ -186,6 +191,8 @@ def makeDict(cmdlist, myreason='any'):
                 
     except:
         raise Exception, 'Cannot create dictionary'
+    
+    casalog.post(':makeDict::myflagd=%s'%myflagd,'DEBUG')
     
     return myflagd
 
@@ -1113,6 +1120,7 @@ def getLinePars(cmdline, mlist=[]):
                     if xkey == m:
                         dicpars[m] = xval
                         
+    casalog.post(':getLinePars::dicpars=%s'%dicpars, 'DEBUG')         
             
     return dicpars
 
@@ -1226,6 +1234,10 @@ def readNtime(params):
 def fixType(params):
     '''Give correct types to non-string parameters'''
 
+    # manual parameter
+    if params.has_key('autocorr'):
+        params['autocorr'] = eval(params['autocorr'].capitalize())
+        
     # quack parameters
     if params.has_key('quackmode') and not params['quackmode'] in ['beg'
             , 'endb', 'end', 'tail']:
@@ -1350,7 +1362,7 @@ def purgeEmptyPars(cmdline):
             if xval == '':
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   
@@ -1407,7 +1419,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
         return
     
     # Parameters for each mode
-    manualpars = []
+    manualpars = ['autocorr']
+    unflagpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['tolerance', 'addantenna']
@@ -1487,7 +1500,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
                 modepars = getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):
                 mode = 'unflag'
-                modepars = getLinePars(cmdline,manualpars)
+                modepars = getLinePars(cmdline,unflagpars)
             elif cmdline.__contains__('rflag'):
                 mode = 'rflag'
                 modepars = getLinePars(cmdline,rflagpars)

@@ -203,14 +203,15 @@ void PlotMSVBAverager::finalizeAverage()
     //    avBuf_p.nRow()=0;
 
     //    cout << avBuf_p.nRow() << endl;
-
     //    cout << "nBln = " << nBln << " (" << nBlnMax_p << ")" << endl;
     //    cout << "vbWtSum_p = " << vbWtSum_p << endl;
     //    cout << "avBuf_p.flagRow() = " << avBuf_p.flagRow() << endl;
     //    cout << "avBuf_p.antenna1() = " << avBuf_p.antenna1() << endl;
     //    cout << "avBuf_p.antenna2() = " << avBuf_p.antenna2() << endl;
+
     // Should not be able to reach here
     // (there is always at least one good baseline, even if flagged)
+
     throw(AipsError("Big problem in finalizeAverage!"));
   }
 };
@@ -400,6 +401,16 @@ void PlotMSVBAverager::simpAccumulate (VisBuffer& vb)
   Double vbWt(0.0);  // will accumulate this VBs total data weight
   Float *wt;
 
+  // Ensure weights strictly positive
+  // assumes chanIndepWt_p=True
+  Matrix<Float> wMat;
+  wMat.reference(vb.weightMat());
+  if (anyLT(wMat,FLT_MIN)) {
+    //    cout << "Tiny wt: " << min(wMat);
+    wMat(wMat<FLT_MIN)=FLT_MIN;
+    //    cout  << " --> " << min(wMat) << endl;
+  }
+
   for (Int ibln=0;ibln<vb.nRow();++ibln) {
 
     // Calculate row from antenna numbers with the hash function.
@@ -551,6 +562,17 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
 
   Double vbWt(0.0);  // will accumulate this VBs total data weight
   Float *wt;
+
+  // Ensure weights strictly positive
+  // assumes chanIndepWt_p=True
+  Matrix<Float> wMat;
+  wMat.reference(vb.weightMat());
+  if (anyLT(wMat,FLT_MIN)) {
+    //    cout << "Tiny wt: " << min(wMat);
+    wMat(wMat<FLT_MIN)=FLT_MIN;
+    //    cout  << " --> " << min(wMat) << endl;
+  }
+
   for (Int ibln=0;ibln<vb.nRow();++ibln) {
 
     // The antennas in the baseline
