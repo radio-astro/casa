@@ -23,7 +23,7 @@
             the given file.
             
             The available flagging modes are: manual, clip, shadow, quack,
-            elevation, tfcrop, extend, unflag, summary and autocorr
+            elevation, tfcrop, extend, unflag.
 
             The current flags an be automatically backed up before applying new flags
             if the parameter flagbackup is set. Previous flag versions can be recovered 
@@ -38,7 +38,7 @@
 
             <param type="string" name="mode">
                 <description>Flagging mode (list/manual/clip/shadow/quack/elevation/\
-tfcrop/rflag/extend/unflag/summary/autocorr)</description>
+tfcrop/rflag/extend/unflag/summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
