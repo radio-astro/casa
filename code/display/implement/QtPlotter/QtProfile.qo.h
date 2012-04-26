@@ -127,7 +127,8 @@ public slots:
 	void left();
 	void right();
 	void preferences();
-	void setPreferences(int stateAutoX, int stateAutoY, int showGrid, int stateMProf, int stateRel);
+	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
+			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis);
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -223,7 +224,10 @@ private:
    void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
    		QLabel* const x2Label, QLabel* const y2Label );
    void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
-
+   /**
+    *
+    */
+   void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 
    Int scaleAxis();
    void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
@@ -260,10 +264,10 @@ private:
    int stateMProf;
    int stateRel;
 
-   Vector<Double> lastPX, lastPY;
-   Vector<Double> lastWX, lastWY;
    Vector<Float> z_xval;
    Vector<Float> z_yval;
+   Vector<Double> lastPX, lastPY;
+   Vector<Double> lastWX, lastWY;
    Vector<Float> z_eval;
    QString region;
 
@@ -305,8 +309,8 @@ private:
    QIntValidator* pixelValidator;
    QDoubleValidator* secValidator;
    enum StackPages { POINT_PIXEL, POINT_RA_DEC, BOX_PIXEL, BOX_RA_DEC };
-   enum BoxSpecificationIndex { TL_WIDTH_LENGTH, CENTER_WIDTH_LENGTH, TL_BR, BL_TR,
-	   TL_WIDTH_LENGTH_WORLD, CENTER_WIDTH_LENGTH_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
+   enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
+	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
 
 

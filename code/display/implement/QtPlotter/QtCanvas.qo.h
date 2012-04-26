@@ -129,6 +129,13 @@ public:
 	int getAutoScaleY( ) {return autoScaleY;}
 	int getShowGrid( )   {return showGrid;}
 	void setPlotError(int a)  {plotError = a; setDataRange();}
+	void setShowTopAxis( bool showAxis );
+	void setShowToolTips( bool toolTipsVisible ){ showToolTips = toolTipsVisible; }
+	bool getShowTopAxis() const { return showTopAxis; }
+	bool getShowToolTips() const { return showToolTips; }
+	void setToolTipYUnit( const QString& yUnit ){ toolTipYUnit = yUnit; }
+	void setToolTipXUnit( const QString& xUnit ){ toolTipXUnit = xUnit; }
+
 
 public slots:
    void zoomIn();
@@ -142,7 +149,6 @@ signals:
 protected:
 	void paintEvent(QPaintEvent *event);
 	void resizeEvent(QResizeEvent *event);
-
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
@@ -153,7 +159,6 @@ protected:
 protected:
 	void updateRubberBandRegion();
 	void updatexRangeBandRegion();
-	void refreshPixmap();
 	void drawGrid(QPainter *painter);
 	void drawTicks(QPainter *painter);
 	void drawLabels(QPainter *painter);
@@ -163,9 +168,77 @@ protected:
 	void drawxRange(QPainter *painter);
 	void defaultZoomIn();
 	void defaultZoomOut();
+	void refreshPixmap();
 
 private:
+	/**
+	 * Attempts to display a tool tip indicated a data point corresponding
+	 * to the mouse position, if there is such a point.
+	 */
+	void displayToolTip( QMouseEvent* event ) const;
+
+	/**
+	 * Adjusts the min and the max when they are a little too close
+	 * together.
+	 */
 	void adjustExtremes( double* const min, double* const max ) const;
+
+	/**
+	 * Maps a y pixel coordinate to a world y value.
+	 * @param pixelPosition the y-coordinate in pixels.
+	 * @return double the corresponding world y value.
+	 */
+	double getDataY( int pixelPosition ) const;
+
+	/**
+	 * Maps an x pixel coordinate to a world x value.
+	 * @param pixelPosition the x-coordinate in pixels.
+	 * @return double the corresponding world x value.
+	 */
+	double getDataX( int pixelPosition ) const;
+
+	/**
+	 * Looks for a data point corresponding to the world
+	 * cooordinates (x,y).  Returns an empty string if there
+	 * is no close match.
+	 * @param x an world x-coordinate.
+	 * @param y a world y-coordinate.
+	 * @return a String containing the curve data point that is a close
+	 * 		match to the passed in coordinates or an empty string if there
+	 * 		is no good match.
+	 */
+	QString findCoords( double x, double y ) const;
+
+	/**
+	 * Returns the height of the standard drawing rectangle.
+	 */
+	int getRectHeight() const;
+
+	/**
+	 * Returns the width of the standard drawing rectangle.
+	 */
+	int getRectWidth() const;
+
+	/**
+	 * Returns the bottom pixel coordinate for the standard drawing rectangle.
+	 */
+	int getRectBottom() const;
+
+	/**
+	 * Returns the standard left pixel coordinate for the standard drawing rectangle.
+	 */
+	int getRectLeft() const;
+
+	/**
+	 * Returns the appropriate x-Axis tick label corresponding to the tick
+	 * identified by the given index and axis.
+	 * @param index the index number of the tick withen a given axis.
+	 * @param tickCount the number of ticks on the axis.
+	 * @param axisIndex, an identifier for the axis (currently, top or bottom).
+	 * @return the appropriate axis label for the tick.
+	 */
+	QString getXTickLabel( int index, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const;
+
 	enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
@@ -206,6 +279,10 @@ private:
 	int xRectStart;
 	int xRectEnd;
 
+	bool showToolTips;
+	bool showTopAxis;
+	QString toolTipXUnit;
+	QString toolTipYUnit;
 };
 
 }

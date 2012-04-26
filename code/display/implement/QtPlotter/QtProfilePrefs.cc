@@ -44,7 +44,8 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 			this, SLOT(close()));
 }
 
-QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, int stateGrid, int stateMProf, int stateRel)
+QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
+		int stateGrid, int stateMProf, int stateRel, bool showToolTips, bool showTopAxis)
 :QDialog(parent)
 {
 	// paint the GUI
@@ -55,6 +56,8 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, 
 	autoScaleY->setChecked(stateAutoY);
 	showGrid->setChecked(stateGrid);
 	multiProf->setChecked(stateMProf);
+	toolTipsCheckBox -> setChecked(showToolTips );
+	topAxisCheckBox -> setChecked( showTopAxis );
 	if (stateMProf){
 		relative->setChecked(stateRel);
 	}
@@ -72,7 +75,8 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, 
 }
 
 void QtProfilePrefs::accepted(){
-	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(), (int)multiProf->checkState(), (int)relative->checkState()) ;
+	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
+			(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(), topAxisCheckBox->checkState() ) ;
 	close();
 }
 
