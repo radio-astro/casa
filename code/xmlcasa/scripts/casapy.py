@@ -123,7 +123,9 @@ casa = { 'build': {
              'root': None
          },
          'flags': { },
-         'files': { },
+         'files': { 
+             'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+         },
          'state' : { 'startup': True }
        }
 
@@ -253,7 +255,8 @@ while len(a) > 0:
     else :
         casa['flags'][c] = ''
 
-
+if casa['flags'].has_key('--logfile') :
+    casa['files']['logfile'] = casa['flags']['--logfile']
 
 if casa['flags'].has_key('--help') :
 	print "Options are: "
@@ -428,8 +431,8 @@ showconsole = False
 thelogfile = ''
 
 showconsole = casa['flags'].has_key('--log2term')
-if casa['flags'].has_key('--logfile') :
-    thelogfile = casa['flags']['--logfile']
+if casa['files'].has_key('logfile') :
+    thelogfile = casa['files']['logfile']
 if casa['flags'].has_key('--nologfile') :
     thelogfile = 'null'
 
