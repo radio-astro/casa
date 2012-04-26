@@ -208,24 +208,6 @@ msplot::closeMS( )
     casa::Bool rstat(casa::False);
     if ( ! checkForOpenMS() ) return rstat;
 
-    TableCache &cache = PlainTable::tableCache();
-    Int ntb = cache.ntable();
-    if (ntb > 0)
-       *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";  
-    for (Int i = ntb - 1; i > -1; i--) {
-       String nm = cache(i)->tableName();
-       try {
-           cache.remove(nm);
-           *itsLog << nm << "\n";
-       }
-       catch (casa::AipsError x) {
-	*itsLog << casa::LogIO::SEVERE 
-	    	<< "msplot: " << x.getMesg() << casa::LogIO::POST;
-       }
-    }
-    if (ntb > 0)
-       *itsLog << casa::LogIO::POST;
-
     Vector<String> lockedTables = Table::getLockedTables();
     Int nlc = lockedTables.nelements();
     if (nlc > 0)
@@ -241,11 +223,12 @@ msplot::closeMS( )
     }
     if (nlc > 0)
        *itsLog << casa::LogIO::POST;
-    Table::relinquishAutoLocks(True);
 
     try {
 	if( itsMsPlot != NULL ) {
 	    itsMsPlot->reset( True );
+      delete itsMsPlot;
+      itsMsPlot = NULL;
 	}
         Table::relinquishAutoLocks(True);
 	rstat = True;
@@ -253,11 +236,9 @@ msplot::closeMS( )
 	*itsLog << casa::LogIO::SEVERE 
 	    	<< "msplot::locatedata()] Exception Reported: " 
 	    	<< ae.getMesg() << casa::LogIO::POST;
-	//RETHROW( ae );
     }
-        Table::relinquishAutoLocks(True);
 
-    return rstat;
+    return rstat; 
 }
 
 
@@ -279,10 +260,29 @@ msplot::done()
   //    itsMsPlot = NULL;
   //}
   Table::relinquishAutoLocks(True);
-  debugFnExit( Fn );
-  //return rstat;
 
-  return closeMS();
+  Bool rstat = closeMS();
+
+    TableCache &cache = PlainTable::tableCache();
+    Int ntb = cache.ntable();
+    if (ntb > 0)
+       *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";  
+    for (Int i = ntb - 1; i > -1; i--) {
+       String nm = cache(i)->tableName();
+       try {
+           cache.remove(nm);
+           *itsLog << nm << "\n";
+       }
+       catch (casa::AipsError x) {
+	*itsLog << casa::LogIO::SEVERE 
+	    	<< "msplot: " << x.getMesg() << casa::LogIO::POST;
+       }
+    }
+    if (ntb > 0)
+       *itsLog << casa::LogIO::POST;
+
+  debugFnExit( Fn );
+  return rstat;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -667,7 +667,7 @@ msplot::avedata( const std::string& chanavemode,
   try {
      if (!itsMsPlot->average(  String( chanavemode ),
                                String( corravemode ),
-                               String( datacolumn ),
+                               String( "data" ),
                                String( averagemode ),
                                String( averagechan ),
 			       String( averagetime ),
@@ -718,7 +718,7 @@ msplot::checkplotxy( const std::string& x,
 
     try {
 	casa::Vector<casa::String> l_iteration = casa::toVectorString( iteration );
-	if ( itsMsPlot->plotxy( True, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
+if ( itsMsPlot->plotxy( True, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
 	    rstat = casa::True;
     } catch (casa::AipsError ae ) {
 	*itsLog << casa::LogIO::SEVERE << "[ msplot::checkplotxy() ] Exception Reported: " 
