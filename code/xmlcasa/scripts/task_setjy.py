@@ -1,6 +1,8 @@
 from glob import glob
 import os
 import sys
+import shutil
+from setjy_helper import * 
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -95,13 +97,23 @@ def setjy(vis=None, field=None, spw=None,
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
 
-      myim.setjy(field=field, spw=spw, modimage=modimage,
+      # split the process for solar system objects
+      if standard=="Butler-JPL-Horizons 2012":
+        casalog.post("Using Butler-JPL-Horizons 2012")
+
+        setjyutil=ss_setjy_helper(myim,vis,casalog)
+        setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
+                         timerange=timerange,observation=str(observation), scan=scan)
+      else:
+        myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan)
-      myim.close()
+        myim.close()
   except Exception, instance:
-    print '*** Error ***',instance
+    #print '*** Error ***',instance
+    casalog.post('%s' % instance,'SEVERE')
+    retval = False
   return retval
 
 def better_glob(pats):
@@ -213,3 +225,5 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
     mytb.close()
     retval = st.nrows()
   return retval
+
+

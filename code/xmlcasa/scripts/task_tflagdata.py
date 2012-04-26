@@ -9,7 +9,8 @@ debug = False
 
 def tflagdata(vis,
              mode,
-             inpfile,       # mode list parameter
+             autocorr,      # mode manual parameter
+             inpfile,       # mode list parameters
              reason,
              spw,           # data selection parameters
              field,
@@ -162,9 +163,11 @@ def tflagdata(vis,
                      casalog.post('Input file is empty', 'ERROR')
                      
                 flaglist = fh.readFile(inpfile)
+                casalog.post('%s'%flaglist,'DEBUG')
                 
                 # Make a FLAG_CMD compatible dictionary. Select by reason if requested
                 flagcmd = fh.makeDict(flaglist, reason)
+                casalog.post('%s'%flagcmd,'DEBUG')
                 
                 # Update the list of commands with the selection
                 flaglist = []
@@ -185,6 +188,7 @@ def tflagdata(vis,
                          + ' lines from file ' + inpfile)
                              
         elif mode == 'manual':
+            agent_pars['autocorr'] = autocorr
             casalog.post('Manual mode is active')
             
         elif mode == 'clip':
@@ -402,7 +406,7 @@ def tflagdata(vis,
                                baseline=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
-            # jagonzal: CAS-3966 Handle channel selection at the FlagAgent level
+            # CAS-3966 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
             if (not tflocal.parseagentparameters(agent_pars)):
@@ -515,9 +519,9 @@ def tflagdata(vis,
                                 if(key==rflagid):  
                                     # If timedev,freqdev are missing from cmdline, add empty ones.
                                     if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
-                                        cmdline = cmdline + "timedev=[] ";
+                                        cmdline = cmdline + " timedev=[] ";
                                     if( not cmdline.__contains__('freqdev=') ):
-                                        cmdline = cmdline + "freqdev=[] ";
+                                        cmdline = cmdline + " freqdev=[] ";
                                     # Pull out timedev, freqdev strings from flagcmd
                                     rflagpars = fh.getLinePars(cmdline , ['timedev','freqdev']);
                                     ##print "cmdline : ", cmdline
