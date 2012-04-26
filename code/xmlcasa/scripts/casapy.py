@@ -256,7 +256,9 @@ while len(a) > 0:
         casa['flags'][c] = ''
 
 if casa['flags'].has_key('--logfile') :
-    casa['files']['logfile'] = casa['flags']['--logfile']
+    casa['files']['logfile'] = casa['flags']['--logfile']	## user specifies a log file
+if casa['flags'].has_key('--nologfile') :
+    casa['files'].pop('logfile')				## user indicates no log file
 
 if casa['flags'].has_key('--help') :
 	print "Options are: "
