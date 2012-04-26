@@ -191,6 +191,8 @@ def makeDict(cmdlist, myreason='any'):
     except:
         raise Exception, 'Cannot create dictionary'
     
+    casalog.post(':makeDict::myflagd=%s'%myflagd,'DEBUG')
+    
     return myflagd
 
 
@@ -1231,6 +1233,10 @@ def readNtime(params):
 def fixType(params):
     '''Give correct types to non-string parameters'''
 
+    # manual parameter
+    if params.has_key('autocorr'):
+        params['autocorr'] = eval(params['autocorr'].capitalize())
+        
     # quack parameters
     if params.has_key('quackmode') and not params['quackmode'] in ['beg'
             , 'endb', 'end', 'tail']:
@@ -1412,7 +1418,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
         return
     
     # Parameters for each mode
-    manualpars = []
+    manualpars = ['autocorr']
+    unflagpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['tolerance', 'addantenna']
@@ -1492,7 +1499,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
                 modepars = getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):
                 mode = 'unflag'
-                modepars = getLinePars(cmdline,manualpars)
+                modepars = getLinePars(cmdline,unflagpars)
             elif cmdline.__contains__('rflag'):
                 mode = 'rflag'
                 modepars = getLinePars(cmdline,rflagpars)

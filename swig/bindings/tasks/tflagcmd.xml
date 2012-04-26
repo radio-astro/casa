@@ -313,7 +313,7 @@
               antenna vs. time.  Most useful for showing the online
               flags.
 
-              outfile -- output plot file
+              plotfile -- output plot file
                    default: '' (plot to matplotlib window)
 
                    WARNING: will only reliably plot individual flags
