@@ -54,7 +54,7 @@ WCCSAxisLabeller::WCCSAxisLabeller() :
   useWCCS(False), 
   itsAbsolute(True),
   itsWorldAxisLabels(True),
-  itsDoVelocity(True),
+  itsSpecAxisType(WCCSAxisLabeller::VELO),
   itsZIndex(-1),
   itsHasCoordinateSystem(False),
   itsSpectralUnit("km/s"),
@@ -571,18 +571,23 @@ String WCCSAxisLabeller::axisText(Int worldAxis, WorldCanvas* wc) const
     if (itsWorldAxisLabels) {
 
 // We must avoid making a unit from the String 'pixels'
-
        Unit pVU(itsSpectralUnit);
        Unit HZ("Hz");
        Unit KMS("km/s");
+       Unit NM("m");
        if (pVU==KMS) {
+          prefUnit = itsSpectralUnit;
+          unitString = " (" + prefUnit + ")";
+          if (prefUnit=="" || prefUnit==" " || prefUnit=="_") unitString = " ";
+          base = freqType + " " + itsSpectralQuantity + " " + unitString;
+       } else if (pVU==NM) {
           prefUnit = itsSpectralUnit;
           unitString = " (" + prefUnit + ")";
           if (prefUnit=="" || prefUnit==" " || prefUnit=="_") unitString = " ";
           base = freqType + " " + itsSpectralQuantity + " " + unitString;
        } else if (pVU==HZ) {
           base = freqType + String(" ") + base0 + unitString;
-       } else {
+        } else {
           base = freqType + String(" ") + base0 + unitString; 
        }
     } else {
@@ -665,8 +670,21 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
 // Indicate whether we are asking for kms or Hz conformant spectral units
 
    static Unit KMS(String("km/s"));
+   static Unit HZ(String("Hz"));
+   static Unit NM(String("nm"));
    Unit t(itsSpectralUnit);
-   itsDoVelocity = (t==KMS);
+   if (t==HZ) {
+   	itsSpecAxisType = WCCSAxisLabeller::FREQ;
+   }
+   else if (t==KMS){
+   	itsSpecAxisType = WCCSAxisLabeller::VELO;
+   }
+   else if (t==NM){
+   	if (itsSpectralTypeUnit.contains("air wavelength"))
+   		itsSpecAxisType = WCCSAxisLabeller::AWAV;
+   	else
+   		itsSpecAxisType = WCCSAxisLabeller::WAVE;
+   }
 }
 
 

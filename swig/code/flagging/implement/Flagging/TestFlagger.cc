@@ -992,7 +992,7 @@ TestFlagger::isModeValid(String mode)
 			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
 			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
 			mode.compare("unflag") == 0 or mode.compare("summary") == 0
-			or mode.compare("display") == 0 or mode.compare("autocorr") == 0) {
+			or mode.compare("display") == 0) {
 
 		ret = true;
 	}
