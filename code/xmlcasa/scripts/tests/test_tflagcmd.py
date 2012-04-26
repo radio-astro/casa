@@ -139,6 +139,12 @@ class test_manual(test_base):
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
         
+    def test_autocorr(self):
+        '''tflagcmd: autocorr=True'''
+        self.setUp_ngc5921()
+        tflagcmd(vis=self.vis, inpmode='cmd', command=['autocorr=True'], action='apply')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 203994, 'Should flag only the auto-correlations')
         
 
 class test_alma(test_base):

@@ -53,10 +53,17 @@ tfcrop/rflag/extend/unflag/summary/autocorr)</description>
                     <value>extend</value>
                     <value>unflag</value>
                     <value>summary</value>
-                    <value>autocorr</value>                    
                 </allowed>
             </param>
 
+            <!-- MANUAL parameters -->
+            <param type="any" name="autocorr" subparam="true">
+                 <description>Flag auto-correlations</description>
+                 <any type="variant" limittypes="bool boolArray"/>
+                  <value type="bool">False</value>
+            </param>
+
+            <!-- LIST parameters -->
             <param type="string" name="inpfile" subparam="true">
                 <description>Input file with list of commands to run</description>
                 <value></value>
@@ -370,6 +377,7 @@ tfcrop/rflag/extend/unflag/summary/autocorr)</description>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="autocorr"><value type="bool">False</value></default>
                     </equals>
                     <equals value="list">
                         <default param="inpfile"><value type="string"></value></default>
@@ -540,19 +548,6 @@ tfcrop/rflag/extend/unflag/summary/autocorr)</description>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
                     </equals>
-                    <equals value="autocorr">
-                        <default param="field"><value type="string"></value></default>
-                        <default param="spw"><value type="string"></value></default>
-                        <default param="antenna"><value type="string"></value></default>
-                        <default param="timerange"><value type="string"></value></default>
-                        <default param="correlation"><value type="string"></value></default>
-                        <default param="scan"><value type="string"></value></default>
-                        <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
-                        <default param="array"><value type="string"></value></default>
-                        <default param="uvrange"><value type="string"></value></default>
-                        <default param="observation"><value type="string"></value></default>                    
-                    </equals>                    
                 </when>
 
                 <when param="action">
@@ -592,7 +587,6 @@ The task will flag a subset of data based on the following modes of operation:
     extend      = extend and/or grow flags beyond what the basic algorithms detect
     summary     = report the amount of flagged data
     unflag      = unflag the specified data
-    autocorr    = flag only autocorrelations
 
     Keyword arguments:
     vis -- Name of input visibility file
@@ -672,7 +666,7 @@ The task will flag a subset of data based on the following modes of operation:
 
     mode -- Mode of operation.
         options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
-                 'unflag', 'summary', 'autocorr'
+                 'unflag', 'summary'
         default: 'manual'
 
         list -- Flag according to the data selection and flag commands specified in the input list.
@@ -711,7 +705,13 @@ The task will flag a subset of data based on the following modes of operation:
 
 
         manual -- Flag according to the data selection specified.
-                  This is the default mode (used when the mode is not specified)
+                  This is the default mode (used when the mode is not specified).
+                  
+                autocorr -- Flag only the auto-correlations. Note that this parameter is only
+                            active when set to True. If set to False it does NOT mean "do not
+                            flag auto-correlations".
+                    default: False
+                    options: True,False
                   
         clip -- Clip data according to values of the following subparameters.
                     
@@ -1088,7 +1088,6 @@ The task will flag a subset of data based on the following modes of operation:
                     s['total']                  : total number of data
                     s['flagged']                : amount of flagged data
                     
-        autocorr -- Flag only autocorrelations according to the data selection specified.
         
 
     action -- Action to perform in MS or in the input list of parameters. 
@@ -1192,10 +1191,14 @@ The task will flag a subset of data based on the following modes of operation:
 
         tflagdata('my.ms',mode='clip',clipzeros=True)
         
-    9) Flag only auto-correlations using the antenna selection.
+    9a) Flag only auto-correlations using the autocorr parameter.
+       
+        tflagdata('my.ms', autocorr=True)
+            
+    9b) Flag only auto-correlations using the antenna selection.
        
         tflagdata('my.ms', mode='manual', antenna='*&amp;&amp;&amp;')
-            
+
     10a) Flag based on selected reasons from a file.
        
     	> cat flags.txt
