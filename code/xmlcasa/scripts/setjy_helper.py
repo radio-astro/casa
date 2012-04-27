@@ -142,8 +142,8 @@ class ss_setjy_helper:
 	import solar_system_setjy as ss_setjy
 	retdict={}
 	#for src in srcnames:
-	for i in validfids:
-          src=srcnames[i]
+	for vfid in validfids:
+          src=srcnames[vfid]
 	  #print "srcnames=", src 
 	  #print "mjd=",inparams[src]['mjds'] 
 	  #print "freq=",inparams[src]['freqlist']
