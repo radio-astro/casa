@@ -72,7 +72,7 @@ namespace casa {
 
 
     QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent, const std::list<std::string> &args ) :
-		QtDisplayPanelGui( v, parent, "iclean", args ), in_interact_mode(false), interact_id(0), maskdd_(0), imagedd_(0) {
+		QtDisplayPanelGui( v, parent, "iclean", args ), in_interact_mode(false), interact_id(0), imagedd_(0), maskdd_(0) {
 
 	std::string tmp;
 	if ( rc.get("viewer.iclean.dimensions",tmp) == false ) resize(700,900);

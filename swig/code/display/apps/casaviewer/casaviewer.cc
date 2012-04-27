@@ -25,8 +25,9 @@
 //#
 //# $Id$
 
+#include <ios>
+#include <iostream>
 #include <casa/aips.h>
-#include <casa/iostream.h>
 #include <casa/Inputs/Input.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
@@ -36,6 +37,9 @@
 #include <sys/wait.h>
 #include <display/Display/StandAloneDisplayApp.h>
 	// (Configures pgplot for stand-alone Display Library apps).
+
+#include <casa/Logging/StreamLogSink.h>
+#include <casa/Logging/LogSink.h>
 
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
@@ -58,7 +62,8 @@ static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &inital_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start);
+			     bool &without_gui, bool &persistent, bool &casapy_start,
+			     char *&logfile_path );
 static void start_manager_root( const char *origname, int numargs, char **args,
 				const char *dbusname, bool without_gui, pid_t root_pid );
 static void launch_server( const char *origname, int numargs, char **args,
@@ -105,6 +110,7 @@ int main( int argc, const char *argv[] ) {
     bool persistent = false;
     bool casapy_start = false;
     char *dbus_name = 0;
+    char *logfile_path = 0;
     bool initial_run = false;
 
 
@@ -114,7 +120,20 @@ int main( int argc, const char *argv[] ) {
     signal( SIGTERM, exiting_server );
 
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
-    		server_startup, without_gui, persistent, casapy_start);
+		     server_startup, without_gui, persistent, casapy_start,
+		     logfile_path );
+
+    //
+    // setup casa logging's global sink, if the user supplied a path...
+    //
+    if ( logfile_path ) {
+	FILE *file = fopen(logfile_path,"a");
+	if ( file ) {
+	    fclose(file);
+	    casa::LogSinkInterface *sink = new casa::StreamLogSink(new ofstream(logfile_path,std::ios_base::app));
+	    casa::LogSink::globalSink(sink);
+	}
+    }
 
     if ( (server_startup || without_gui) && initial_run ) {
 	launch_server( argv[0], numargs, args, dbus_name, without_gui,
@@ -290,7 +309,8 @@ int main( int argc, const char *argv[] ) {
 // of args, and the last arg (not included in numargs count) is null (for execvp)
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &initial_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start) {
+			     bool &without_gui, bool &persistent, bool &casapy_start,
+			     char *&logfile_path ) {
 
     without_gui = false;
     persistent = false;
@@ -335,6 +355,17 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
 	    casapy_start = true;
+	} else if ( ! strncmp(argv[x],"--casalogfile",13) ) {
+	    if ( argv[x][13] == '=' ) {
+		char *file = strdup( &argv[x][14] );
+		if ( strlen(file) <= 0 ) {
+		    free( file );
+		} else {
+		    logfile_path = file;
+		}
+	    } else if ( x + 1 < argc ) {
+		logfile_path = strdup(argv[++x]);
+	    }
 	}
     }
 

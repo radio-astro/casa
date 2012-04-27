@@ -96,7 +96,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0), newCollapseVals(True)
 {
     setupUi(this);
+
     initPlotterResource();
+
+    functionTabs->setCurrentIndex( 0 );
 
     setWindowTitle(QString("Spectral Profile - ").append(name));
     setBackgroundRole(QPalette::Dark);
@@ -130,6 +133,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
     ctypeUnit = String(bottomAxisCType->currentText().toStdString());
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+    pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
     collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
     fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
@@ -190,7 +194,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     pixelCanvas->setXLabel( lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xTop );
 
     yUnit = QString(img->units().getName().chars());
-    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
+    setPixelCanvasYUnits( yUnitPrefix, yUnit );
 
     pixelCanvas->setAutoScaleX(true);
     pixelCanvas->setAutoScaleY(true);
@@ -244,11 +248,11 @@ void QtProfile::initSpectrumPosition(){
 	boxSpecLabel -> setVisible( false );
 
 	std::map<BoxSpecificationIndex,QString> boxSpecificationMap;
-	boxSpecificationMap[TL_WIDTH_LENGTH] = "Top Left Corner, Width, Length";
-	boxSpecificationMap[CENTER_WIDTH_LENGTH] = "Center, Width, Length";
+	boxSpecificationMap[TL_LENGTH_HEIGHT] = "Top Left Corner, Length, Height";
+	boxSpecificationMap[CENTER_LENGTH_HEIGHT] = "Center, Length, Height";
 	boxSpecificationMap[TL_BR]="Top Left Corner, Bottom Right Corner";
 	boxSpecificationMap[BL_TR]="Bottom Left Corner, Top Right Corner";
-	for ( int i = TL_WIDTH_LENGTH; i < END_SPEC; i++ ){
+	for ( int i = TL_LENGTH_HEIGHT; i < END_SPEC; i++ ){
 		boxSpecCombo -> addItem( boxSpecificationMap[static_cast<BoxSpecificationIndex>(i)]);
 	}
 
@@ -262,24 +266,24 @@ void QtProfile::initSpectrumPosition(){
 	QList<QString> labelCenterWidthLengthList;
     QList<QString> labelTlcBrcList;
 	QList<QString> labelBlcTrcList;
-	labelTlcWidthLengthList << Util::toHTML("TLC X:") << Util::toHTML("TLC Y:") << Util::toHTML("Width:") << Util::toHTML("Length:");
-	labelCenterWidthLengthList << Util::toHTML("Center X:") << Util::toHTML("Center Y:") << Util::toHTML("Width:") << Util::toHTML("Length:");
+	labelTlcWidthLengthList << Util::toHTML("TLC X:") << Util::toHTML("TLC Y:") << Util::toHTML("Length:") << Util::toHTML("Height:");
+	labelCenterWidthLengthList << Util::toHTML("Center X:") << Util::toHTML("Center Y:") << Util::toHTML("Length:") << Util::toHTML("Height:");
 	labelTlcBrcList << Util::toHTML("TLC X:") << Util::toHTML("TLC Y:") << Util::toHTML("BRC X:") << Util::toHTML("BRC Y:");
 	labelBlcTrcList << Util::toHTML("BLC X:") << Util::toHTML("BLC Y:") << Util::toHTML("TRC X:") << Util::toHTML("TRC Y:");
 	QList<QString> labelTlcWidthLengthListW;
 	QList<QString> labelCenterWidthLengthListW;
 	QList<QString> labelTlcBrcListW;
 	QList<QString> labelBlcTrcListW;
-	labelTlcWidthLengthListW << Util::toHTML("TLC RA:") << Util::toHTML("TLC DEC:") << Util::toHTML("Width:") << Util::toHTML("Length:");
-	labelCenterWidthLengthListW << Util::toHTML("Center RA:") << Util::toHTML("Center DEC:") << Util::toHTML("Width:") << Util::toHTML("Length:");
+	labelTlcWidthLengthListW << Util::toHTML("TLC RA:") << Util::toHTML("TLC DEC:") << Util::toHTML("Length:") << Util::toHTML("Height:");
+	labelCenterWidthLengthListW << Util::toHTML("Center RA:") << Util::toHTML("Center DEC:") << Util::toHTML("Length:") << Util::toHTML("Height:");
 	labelTlcBrcListW << Util::toHTML("TLC RA:") << Util::toHTML("TLC DEC:") << Util::toHTML("BRC RA:") << Util::toHTML("BRC DEC:");
 	labelBlcTrcListW << Util::toHTML("BLC RA:") << Util::toHTML("BLC DEC:") << Util::toHTML("TRC RA:") << Util::toHTML("TRC DEC:");
-	boxLabelMap[TL_WIDTH_LENGTH] = labelTlcWidthLengthList;
-	boxLabelMap[CENTER_WIDTH_LENGTH] = labelCenterWidthLengthList;
+	boxLabelMap[TL_LENGTH_HEIGHT] = labelTlcWidthLengthList;
+	boxLabelMap[CENTER_LENGTH_HEIGHT] = labelCenterWidthLengthList;
 	boxLabelMap[TL_BR] = labelTlcBrcList;
 	boxLabelMap[BL_TR] = labelBlcTrcList;
-	boxLabelMap[TL_WIDTH_LENGTH_WORLD] = labelTlcWidthLengthListW;
-	boxLabelMap[CENTER_WIDTH_LENGTH_WORLD] = labelCenterWidthLengthListW;
+	boxLabelMap[TL_LENGTH_HEIGHT_WORLD] = labelTlcWidthLengthListW;
+	boxLabelMap[CENTER_LENGTH_HEIGHT_WORLD] = labelCenterWidthLengthListW;
 	boxLabelMap[TL_BR_WORLD] = labelTlcBrcListW;
 	boxLabelMap[BL_TR_WORLD] = labelBlcTrcListW;
 
@@ -382,7 +386,7 @@ void QtProfile::setPosition(){
 			success = populatePixels( pixelX, pixelY, worldX, worldY );
 		}
 		else if ( page == BOX_PIXEL ){
-			bool success = fillBoxPixel( pixelX, pixelY );
+			success = fillBoxPixel( pixelX, pixelY );
 			if ( success ){
 				success = populateWorlds( pixelX, pixelY, worldX, worldY );
 			}
@@ -403,7 +407,7 @@ void QtProfile::setPosition(){
 		}
 	}
 	else {
-		 *itsLog << LogIO::WARN << "Image is not loaded" << LogIO::POST;
+		 //*itsLog << LogIO::WARN << "Image is not loaded" << LogIO::POST;
 	}
 }
 
@@ -453,13 +457,13 @@ bool QtProfile::fillBasedOnBoxSpecification(  const double*  const firstXPix, co
 		double* const trcXPix, double* const trcYPix ) {
 	int index = boxSpecCombo -> currentIndex();
 	bool valid = true;
-	if ( index == TL_WIDTH_LENGTH ){
+	if ( index == TL_LENGTH_HEIGHT ){
 		*blcXPix = *firstXPix;
-		*blcYPix = *firstYPix;
+		*blcYPix = *firstYPix - *secondYPix;
 		*trcXPix = *firstXPix + *secondXPix;
-		*trcYPix = *firstYPix + *secondYPix;
+		*trcYPix = *firstYPix;
 	}
-	else if ( index == CENTER_WIDTH_LENGTH ){
+	else if ( index == CENTER_LENGTH_HEIGHT ){
 		double halfWidth = *secondXPix / 2;
 		double halfLength = *secondYPix / 2;
 		*blcXPix = *firstXPix - halfWidth;
@@ -484,7 +488,7 @@ bool QtProfile::fillBasedOnBoxSpecification(  const double*  const firstXPix, co
 	}
 	if ( *blcXPix > *trcXPix || *blcYPix > *trcYPix ){
 		QMessageBox::warning(this, tr("Spectral Profile"),
-					"Error in setting the position:\n Please check that the box is specified correctly.",
+				"Error in setting the position:\n Please check that the box is specified correctly.",
 					QMessageBox::Close);
 		valid = false;
 	}
@@ -562,10 +566,13 @@ bool QtProfile::populateWorlds(const QList<int> &pixelX, const QList<int> &pixel
 		}
 		else {
 			String errorMessage = cSys.errorMessage();
-			QString errorStr = QString( errorMessage.c_str());
+			*itsLog << LogIO::WARN << errorMessage <<LogIO::POST;
+			QString errorMsg = "Please check that the coordinates (";
+			errorMsg.append( QString::number( pixelX[i]) + ", ");
+			errorMsg.append( QString::number( pixelY[i]) + ")");
+			errorMsg.append( " are correct.");
 			QMessageBox::warning(this, tr("Spectral Profile"),
-			                                "Error in setting the position:\n"
-			                                   + errorStr, QMessageBox::Close);
+			                              errorMsg, QMessageBox::Close);
 			break;
 		}
 	}
@@ -758,23 +765,31 @@ void QtProfile::down()
 
 void QtProfile::preferences()
 {
-	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), pixelCanvas->getShowGrid(),stateMProf, stateRel);
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int)),
-			this, SLOT(setPreferences(int, int, int, int, int)));
+	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), 
+		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool)),
+			this, SLOT(setPreferences(int, int, int, int, int, bool, bool)));
 	profilePrefs->showNormal();
 }
 
-void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel){
+void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
+				bool showToolTips, bool showTopAxis ){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
 	pixelCanvas->setAutoScaleX(inAutoX);
 	pixelCanvas->setAutoScaleY(inAutoY);
 	pixelCanvas->setShowGrid(showGrid);
+	pixelCanvas->setShowToolTips( showToolTips );
+	pixelCanvas->setShowTopAxis( showTopAxis );
+	topAxisCType -> setEnabled( showTopAxis );
+	
 	stateMProf=inMProf;
 	stateRel  = inRel;
-	if (update)
+	if (update){
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
+	}
+
 }
 
 void QtProfile::setPlotError(int st)
@@ -827,6 +842,7 @@ void QtProfile::changeCoordinateType(const QString &text) {
 	fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
 
 	pixelCanvas->setPlotSettings(QtPlotSettings());
+	pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
     updateXAxisLabel( text, QtPlotSettings::xBottom );
 
 	//cout << "put to rc.viewer: " << text.toStdString() << endl;
@@ -918,7 +934,8 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
-	pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
+	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+
 
 	xpos = "";
 	ypos = "";
@@ -1491,9 +1508,7 @@ void QtProfile::changeTopAxis(){
 		assignFrequencyProfile( lastWX, lastWY, coordinateType, cTypeUnit, xValues, yValues  );
 		pixelCanvas -> setTopAxisRange(xValues);
 	}
-	else {
-		*itsLog << LogIO::WARN << "Data is not loaded." << LogIO::POST;
-	}
+
 }
 
 void QtProfile::plotMainCurve(){
@@ -1603,6 +1618,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     if ( pxv.size() > 0 ){
     	setPositionStatus( pxv, pyv, wxv, wyv );
     }
+
     //Get Profile Flux density v/s coordinateType
     bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval, z_yval);
     if ( !ok ){
@@ -2592,9 +2608,13 @@ QString QtProfile::getRaDec(double x, double y) {
 		    } else{ // no correction
 			yUnitPrefix = "";
 		    }
+		    setPixelCanvasYUnits( yUnitPrefix, yUnit );
+		  return ordersOfM;
+	}
 
-		    pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
-		    return ordersOfM;
+	void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
+		pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
+		pixelCanvas -> setToolTipYUnit( yUnitPrefix + yUnit );
 	}
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){

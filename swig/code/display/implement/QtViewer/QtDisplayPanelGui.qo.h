@@ -253,6 +253,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void regionMoved(Qt::DockWidgetArea);
   virtual void mousetoolbarMoved(bool);
 
+  // note that 'key' is prefixed with something like "viewer.dpg."...
+  // for both get and put...
+  std::string getrc( const std::string &key );
+  void putrc( const std::string &key, const std::string &val );
 
  signals:
 
