@@ -200,22 +200,37 @@ msplot::closeMS( )
     casa::Bool rstat(casa::False);
     if ( ! checkForOpenMS() ) return rstat;
 
-    try {
-	// We want to reset the MS so we send True into this method.
-	if( itsMsPlot != NULL ) {
-	    itsMsPlot->reset( True );
-	}
-	
-	rstat = True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
-	    	<< "msplot::locatedata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
-	//RETHROW( ae );
+    Vector<String> lockedTables = Table::getLockedTables();
+    Int nlc = lockedTables.nelements();
+    if (nlc > 0)
+       *itsLog << casa::LogIO::DEBUG2 << "msplot unlock tables: \n";
+    for (Int i=0; i<nlc; ++i) {
+       try {
+       *itsLog << lockedTables(i) << "\n";
+       }
+       catch (casa::AipsError x) {
+       *itsLog << casa::LogIO::WARN
+               << "msplot: " << x.getMesg() << casa::LogIO::POST;
+       }
     }
+    if (nlc > 0)
+       *itsLog << casa::LogIO::POST;
+    Table::relinquishAutoLocks(True);
 
-    debugFnExit( Fn );
-    return rstat;
+    try {
+       // We want to reset the MS so we send True into this method.
+       if( itsMsPlot != NULL ) {
+           itsMsPlot->reset( True );
+       }
+       Table::relinquishAutoLocks(True);
+       rstat = True;
+     } catch (casa::AipsError ae ) {
+        *itsLog << casa::LogIO::SEVERE
+                << ae.getMesg() << casa::LogIO::POST;
+     }
+
+     debugFnExit( Fn );
+     return rstat;
 }
 
 
@@ -246,16 +261,18 @@ msplot::done()
     TableCache &cache = PlainTable::tableCache();
     Int ntb = cache.ntable();
     if (ntb > 0)
-       *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";
+       *itsLog << casa::LogIO::DEBUG2 << "msplot clear cache: \n";
     for (Int i = ntb - 1; i > -1; i--) {
        String nm = cache(i)->tableName();
+       if (!nm.contains("scratch")) {
        try {
            cache.remove(nm);
            *itsLog << nm << "\n";
        }
        catch (casa::AipsError x) {
-        *itsLog << casa::LogIO::SEVERE
+        *itsLog << casa::LogIO::WARN
                 << "msplot: " << x.getMesg() << casa::LogIO::POST;
+       }
        }
     }
     if (ntb > 0)
