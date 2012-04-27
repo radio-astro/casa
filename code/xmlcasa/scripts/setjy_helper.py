@@ -154,8 +154,10 @@ class ss_setjy_helper:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
-	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs)
+	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
+               ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
 	    fluxes.append(subfluxes)    
+            #print "fluxes=",fluxes 
 
 	  # ------------------------------------------------------------------------
 	  # For testing with hardcoded values without calling solar_system_fd()...
