@@ -33,11 +33,14 @@
 #include <display/region/QtRegionState.qo.h>
 #include <display/ds9/ds9writer.h>
 #include <display/DisplayErrors.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
 namespace casa {
     namespace viewer {
-	QtRegionDock::QtRegionDock( QWidget* parent ) : QDockWidget(parent), Ui::QtRegionDock( ),
-							current_dd(0), current_tab_state(-1,-1) {
+	QtRegionDock::QtRegionDock( QtDisplayPanelGui *d, QWidget* parent ) :
+					QDockWidget(parent), Ui::QtRegionDock( ),
+					dpg(d), current_dd(0), current_tab_state(-1,-1),
+					dismissed(false) {
 	    setupUi(this);
 
 	    // there are two standard Qt, dismiss icons...
@@ -63,8 +66,6 @@ namespace casa {
 	    connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 	    connect( regions, SIGNAL(currentChanged(int)), SLOT(emit_region_stack_change(int)) );
 
-	    hide( );
-
 	}
   
 	QtRegionDock::~QtRegionDock() {  }
@@ -82,7 +83,10 @@ namespace casa {
 	    connect( state, SIGNAL(loadRegions(bool&,const QString &,const QString &)), SIGNAL(loadRegions(bool&,const QString &,const QString&)) );
 	    connect( this, SIGNAL(region_stack_change(QWidget*)), state, SLOT(stackChange(QWidget*)) );
 
-	    if ( ! isVisible( ) ) show( );
+	    // not needed if the dock starts out as visible (or in user control)
+	    // if ( ! isVisible( ) && dismissed == false ) {
+	    // 	show( );
+	    // }
 	}
 
 	int QtRegionDock::indexOf(QtRegionState *state) const {
@@ -102,6 +106,11 @@ namespace casa {
 	void QtRegionDock::selectRegion(QtRegionState *state) {
 	    regions->setCurrentWidget(state);
 	    state->nowVisible( );
+	}
+
+	void QtRegionDock::dismiss( ) {
+	    hide( );
+	    dismissed = true;
 	}
 
 	void QtRegionDock::change_stack( int index ) {
@@ -214,12 +223,20 @@ namespace casa {
 	}
 
 	void QtRegionDock::handle_visibility( bool visible ) {
-	    // this is a dangling "improvement"...
-	    //fprintf( stderr, "!!!!!!!!!!!!!!! visibility: %s !!!!!!!!!!!!!!!\n", visible ? "is visible" : "is not visible" );
+	    if ( visible && dismissed ) {
+		dismissed = false;
+		dpg->putrc( "visible.regiondock", "true" );
+	    }
 	}
 
 	void QtRegionDock::emit_region_stack_change( int index ) {
 	    emit region_stack_change(regions->widget(index));
+	}
+
+	void QtRegionDock::closeEvent ( QCloseEvent * event ) {
+	    dismissed = true;
+	    QDockWidget::closeEvent(event);
+	    dpg->putrc( "visible.regiondock", "false" );
 	}
     }
 }

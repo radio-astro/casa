@@ -53,6 +53,7 @@ namespace casa {
 	  "viewer.dpg.position.regions", "L", "right", "in which dock (left, right, top, bottom) should the region panel be shown", "L/R/T/B",
 	  "viewer.dpg.datamgr.show_lel", "L", "false", "include LEL expression dialog in the viewer's Data Manager", "T/F",
 	  "viewer.dpg.datamgr.leave_up", "L", "false", "leave the viewer's Data Manager up after opening a data object", "T/F",
+	  "viewer.dpg.visible.regiondock", "L", "true", "should the dock widget for regions be visible", "T/F",
 
 	  "viewer.iclean", "N", "", "preferences for interactive clean panel", "",
 	  "viewer.iclean.position", "N", "", "interactive clean dock panel positions", "",
@@ -65,6 +66,7 @@ namespace casa {
 	  "viewer.iclean.position.regions", "L", "right", "in which dock (left, right, top, bottom) should the region panel be shown", "L/R/T/B",
 	  "viewer.iclean.datamgr.show_lel", "L", "false", "include LEL expression dialog in the viewer's Data Manager", "T/F",
 	  "viewer.iclean.datamgr.leave_up", "L", "false", "leave the viewer's Data Manager up after opening a data object", "T/F",
+	  "viewer.iclean.visible.regiondock", "L", "true", "should the dock widget for regions be visible", "T/F",
 
 	  "viewer.prf", "N", "", "spectral profile tool preferences", "",
 	  "viewer.prf.error.type", "L", "rmse", "error units for the spectral profile tool", "unchecked",
