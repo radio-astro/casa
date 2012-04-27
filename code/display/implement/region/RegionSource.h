@@ -105,6 +105,8 @@ namespace casa {
 		QtRegionDock *dock( ) { return kernel_->dock( ); }
 		int numFrames( ) const { return kernel_->numFrames( ); }
 
+		virtual ~RegionSource( ) { }
+
 	    private:
 		shared_kernel_ptr_type kernel_;
 		RegionCreator *region_creator;
