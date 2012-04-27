@@ -76,7 +76,7 @@
 
                 <param type="string" name="action">
                         <description>Action to perform in MS and/or in inpfile (apply/unapply/list/plot/clear/extract)</description>
-                        <value>list</value>
+                        <value>apply</value>
                         <allowed kind="enum">
                         <value>apply</value>
                         <value>unapply</value>
@@ -140,13 +140,13 @@
                     </when>
 
                     <when param="action">
-                            <equals value="list"></equals>
                             <equals value="apply">
                                     <default param="flagbackup"><value>True</value></default>
                             </equals>
                             <equals value="unapply">
                                     <default param="flagbackup"><value>True</value></default>
                             </equals>
+                            <equals value="list"></equals>
                             <equals value="plot">
                                     <default param="plotfile"><value type="string"></value></default>
                             </equals>

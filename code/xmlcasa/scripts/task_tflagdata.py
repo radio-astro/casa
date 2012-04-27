@@ -137,8 +137,6 @@ def tflagdata(vis,
         # Get the parameters for the mode
         agent_pars = {}
 
-        # List of parameters to save to outfile when mode != list
-        sel_pars = ''
         
         # By default, write flags to the MS
         writeflags = True
@@ -178,8 +176,6 @@ def tflagdata(vis,
                 # List of command keys in dictionary
                 vrows = flagcmd.keys()
                 
-#                casalog.post('Read the following lines from file', 'DEBUG')
-#                casalog.post('%s',flagcmd,'DEBUG')
 
             except:
                 raise Exception, 'Error reading the input file '+inpfile
@@ -190,6 +186,7 @@ def tflagdata(vis,
         elif mode == 'manual':
             agent_pars['autocorr'] = autocorr
             casalog.post('Manual mode is active')
+
             
         elif mode == 'clip':
 
@@ -217,16 +214,7 @@ def tflagdata(vis,
                 agent_pars['clipminmax'] = clipminmax
                 
             casalog.post('Clip mode is active')
-            
-            # Replace the white spaces
-            expr = delspace(correlation, '_')
-            correlation = expr     
-            cliprange = delspace(str(clipminmax), '')
-            
-            sel_pars = sel_pars+' datacolumn='+datacolumn+\
-                       ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
-                       ' channelavg='+str(channelavg)+' clipzeros='+str(clipzeros)
-            
+                        
         elif mode == 'shadow':
             agent_pars['tolerance'] = tolerance
             
@@ -242,24 +230,18 @@ def tflagdata(vis,
                                                                
             casalog.post('Shadow mode is active')
             
-            sel_pars = sel_pars+' tolerance='+str(tolerance)+\
-                        ' addantenna='+str(addantenna).replace(' ','')
-
         elif mode == 'quack':
             agent_pars['quackmode'] = quackmode
             agent_pars['quackinterval'] = quackinterval
             agent_pars['quackincrement'] = quackincrement
             casalog.post('Quack mode is active')
             
-            sel_pars = sel_pars+' quackmode='+str(quackmode)+' quackinterval='+str(quackinterval)+\
-                       ' quackincrement='+str(quackincrement)
 
         elif mode == 'elevation':
             agent_pars['lowerlimit'] = lowerlimit
             agent_pars['upperlimit'] = upperlimit
             casalog.post('Elevation mode is active')
             
-            sel_pars = sel_pars+' lowerlimit='+str(lowerlimit)+' upperlimit='+str(upperlimit)
 
         elif mode == 'tfcrop':
             if correlation == '':
@@ -279,15 +261,6 @@ def tflagdata(vis,
             agent_pars['halfwin'] = halfwin
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
-            expr = delspace(correlation, '_')
-            correlation = expr
-            
-            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+\
-                      '\" datacolumn='+datacolumn+\
-                      ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
-                      ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
-                      ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
-                      ' halfwin='+str(halfwin)
                       
         elif mode == 'rflag':
             if correlation == '':
@@ -319,14 +292,6 @@ def tflagdata(vis,
 
             casalog.post('Rflag mode is active')
 
-            expr = delspace(correlation, '_')
-            correlation = expr
-
-            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+\
-                    ' winsize='+str(winsize)+' timedev='+(str(timedev)).replace(' ','')+\
-                    ' freqdev='+(str(freqdev)).replace(' ','')+' timedevscale='+str(timedevscale)+\
-                    ' freqdevscale='+str(freqdevscale)+' spectralmax='+str(spectralmax)+\
-                    ' spectralmin='+str(spectralmin)
 
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
@@ -339,10 +304,6 @@ def tflagdata(vis,
             agent_pars['flagnearfreq'] = flagnearfreq
             casalog.post('Extend mode is active')
             
-            sel_pars = sel_pars+' ntime='+str(ntime)+' combinescans='+str(combinescans)+' extendpols='+\
-                       str(extendpols)+' growtime='+str(growtime)+' growfreq='+\
-                       str(growfreq)+' growaround='+str(growaround)+' flagneartime='+str(flagneartime)+\
-                       ' flagnearfreq='+str(flagnearfreq)
             
         elif mode == 'unflag':      
             casalog.post('Unflag mode is active')                
@@ -357,6 +318,37 @@ def tflagdata(vis,
             savepars = False
             casalog.post('Summary mode is active')
 
+
+        # Purge the empty parameters from the selection string
+        # Create a flagcmd dictionary of the interface parameters
+        if mode != 'list' and mode != 'summary':
+
+            # Selection parameters
+            sel_pars = []
+            
+            # Replace an empty space, in case there is one
+            expr = delspace(correlation, '_')
+            sel_pars = ' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
+                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
+                    ' correlation='+expr+' intent='+intent+' observation='+str(observation)
+                   
+            # Add the agent's parameters to the same string 
+            for k in agent_pars.keys():
+                # Remove any white space from the string value
+                nospace = delspace(str(agent_pars[k]),'')
+                sel_pars = sel_pars + ' ' + k + '=' + nospace
+                
+            # Remove empty paramters from the string
+            flaglist = fh.purgeEmptyPars(sel_pars) 
+            
+            # Create a dictionary according to the FLAG_CMD structure
+            flagcmd = fh.makeDict([flaglist])
+            
+            # Number of commands in dictionary
+            vrows = flagcmd.keys()
+            casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
+
+
         # Setup global parameters in the agent's dictionary
         apply = True
                     
@@ -369,20 +361,6 @@ def tflagdata(vis,
         agent_pars['name'] = agent_name
         agent_pars['mode'] = mode
         agent_pars['apply'] = apply      
-
-        # Purge the empty parameters from the selection string
-        if mode != 'list' and mode != 'summary':
-            sel_pars = sel_pars+' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
-                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+correlation+' intent='+intent+' observation='+str(observation)
-                    
-            flaglist = fh.purgeEmptyPars(sel_pars) 
-            flagcmd = fh.makeDict([flaglist])
-            
-            # Number of commands in dictionary
-            vrows = flagcmd.keys()
-            casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
-
                           
         ##########  Only save the parameters and exit; action = ''        
         if action == '' and savepars == False:
