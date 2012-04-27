@@ -52,7 +52,9 @@ scripts/regression_utility.py
 scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
+scripts/setjy_helper.py
 scripts/simutil.py
+scripts/solar_system_setjy.py
 scripts/TablePlotQt4Agg.py
 scripts/TablePlotTkAgg.py
 scripts/task_accum.py

@@ -409,6 +409,11 @@
 			<value></value>
 		</param>
 
+		<param type="bool" name="end">
+			<description>Quit plotting?</description>
+			<value>False</value>
+		</param>
+
                 <constraints>
 			<when param="yaxis">
 				<equals value="amp">
@@ -755,6 +760,9 @@
 	    default: '' = do not save figure; 
             example: figfile='myPlot.png' save figure to png file
                      figfile='myPlot.txt' append plotted xy to an ascii file
+	 end -- File name to save the plotted figure to.
+	    default: False = do not quit, keep plotting; 
+            example: end=True no more plotting to do
 
          Hints on using plotxy (see section 3.4 in cookbook)
 

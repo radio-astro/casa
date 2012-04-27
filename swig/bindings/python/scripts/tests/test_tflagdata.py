@@ -636,6 +636,11 @@ class test_selections(test_base):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         tflagdata(vis=self.vis, correlation='LL,RR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+        
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', correlation='NORM_RR,LL', clipminmax=[0.,3.])
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 204979)
 #        flagdata(vis=self.vis, correlation='LL RR')
 #        flagdata(vis=self.vis, correlation='LL ,, ,  ,RR')
 #        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
@@ -691,18 +696,18 @@ class test_selections_alma(test_base):
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
 
     def test_abs_wvr(self):
-        '''tflagdata: clip ABS WVR'''
+        '''tflagdata: clip ABS_WVR'''
         tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
-        '''tflagdata: clip ABS I. Do not flag WVR'''
+        '''tflagdata: clip ABS_I. Do not flag WVR'''
         tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagdata: clip ABS ALL. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS_ALL', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
 
@@ -929,10 +934,10 @@ class test_list(test_base):
         
     def test_reason2(self):
         '''tflagdata: add_reason to text file'''
-        tflagdata(vis=self.vis, mode='clip', scan='4', clipminmax=[0,5], savepars=True, 
+        tflagdata(vis=self.vis, mode='clip', scan='4', clipminmax=[0, 5], savepars=True, 
                   cmdreason='CLIPSCAN4', outfile='reason2.txt', action='')
 
-        tflagdata(vis=self.vis, mode='clip', scan='2~3', clipminmax=[0,5], savepars=True, 
+        tflagdata(vis=self.vis, mode='clip', scan='2~3', clipminmax=[ 0, 5], savepars=True, 
                   cmdreason='CLIPSCAN2_3', outfile='reason2.txt', action='')
 
         # Apply flag cmd

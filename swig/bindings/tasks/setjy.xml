@@ -25,8 +25,11 @@
        setjy need only be run on the calibrator sources with a known flux
        density and/or model.
 
-       Solar System Objects are supported via the 'Butler-JPL-Horizons
-       2010' standard.  Currently they are modeled as uniform
+       For Solar System Objects, model determination was updated and it is 
+       available vis the 'Bulter-JPL-Horizons 2012' standard.
+       <!--Solar System Objects are supported via the 'Butler-JPL-Horizons
+       2010' standard.  -->
+       Currently they are modeled as uniform
        temperature disks based on their ephemerides at the time of
        observation (note that this may oversimplify objects, in
        particular asteroids). Specify the name of the object in the
@@ -79,8 +82,8 @@
 			<value></value>
 		</param>
 
-		<param type="bool" name="listmodimages">
-		  <description>List the available modimages</description>
+		<param type="bool" name="listmodels">
+		  <description>List the available modimages for VLA calibrators or Tb models for Solar System objects</description>
 		  <value>False</value>
 		</param>
 
@@ -111,6 +114,7 @@
 			<value>Baars</value>
 			<value>Perley 90</value>
 			<value>Perley-Taylor 95</value>
+                        <value>Butler-JPL-Horizons 2012</value>
                         <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
@@ -273,10 +277,14 @@
            components instead of an image that has been convolved with a
            clean beam.
 
-    listmodimages -- If True, do nothing but list candidates for modimage
-           that are present on the system.  It looks for *.im* *.mod* in .,
+    listmodels -- If True, do nothing but list candidates for modimage
+           (for extragalactic calibrators) that are present on the system.  It looks for *.im* *.mod* in .,
            CalModels, and CalModels directories in the casa['dirs']['data']
            tree.  It does not check whether they are appropriate for the MS!
+           If standard='Butler-JPL-Horizons 2012', Tb models (frequency-depended
+           brightness temperature models) for Solar System objects used in the 
+           standard.  For standard='Butler-JPL-Horizons 2010', the recognized
+           Solar System objects are listed. 
 
     scalebychan=False
             This determines whether the fluxdensity set in the model is
@@ -331,10 +339,12 @@
             default: 'Perley-Butler 2010'; example: standard='Baars'
             Options: 'Baars','Perley 90','Perley-Taylor 95',
                'Perley-Taylor 99', 'Perley-Butler 2010',
-               and 'Butler-JPL-Horizons 2010'.
-            All but the last one are for extragalactic calibrators,
-            and the final one is for Solar System objects.  Recognized Solar
-            System objects are: 
+               and 'Butler-JPL-Horizons 2012'. 
+            All but the last two are for extragalactic calibrators,
+            and the final two are for Solar System objects.  
+            The 'Butler-JPL-Horizons 2012' standard is recommended over 
+            'Butler-JPL-Horizons 2010' as the former uses updated models.
+            Recognized Solar System objects are: 
 
 	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune, Pluto**
 	       
