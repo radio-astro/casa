@@ -330,12 +330,19 @@ namespace casa {
 		int hy2 = y2 - s;
 		int hy3 = y2;	// set handle coordinates
 		if (s) {
-		  pushDrawingEnv( Region::SolidLine);
-		  pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-		  pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-		  pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-		  pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		  popDrawingEnv( );
+		    pushDrawingEnv( Region::SolidLine);
+		    if ( marked( ) ) {
+			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    } else {
+			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    }
+		    popDrawingEnv( );
 		}
 
 	    }
