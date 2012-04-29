@@ -292,7 +292,6 @@ def tflagdata(vis,
 
             casalog.post('Rflag mode is active')
 
-
         elif mode == 'extend':
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans                            
@@ -420,7 +419,7 @@ def tflagdata(vis,
                 casalog.post('%s'%unionpars);
                 
             tflocal.selectdata(unionpars);
-            
+
             # Parse the parameters for each agent in the list
             list2save = fh.setupAgent(tflocal, flagcmd, [], apply, writeflags, display)
 
@@ -477,48 +476,7 @@ def tflagdata(vis,
 
         ## Pull out RFlag outputs. There will be outputs only if writeflags=False
         if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
-            if type(summary_stats_list) is dict:
-                nreps = summary_stats_list['nreport']
-                for rep in range(0,nreps):
-                    repname = 'report'+str(rep)
-                    if summary_stats_list[repname]['type'] == "rflag":
-                        # Pull out the rflag threshold dictionary. This has a 'name' in it.
-                        rflag_thresholds = summary_stats_list[repname]
-                        ##print rflag_thresholds
-                        # Get the rflag id, to later construct a 'name' from to match the above.
-                        rflagid = 0
-                        if mode=='list':
-                            rflagid = int( rflag_thresholds['name'].replace('Rflag_','') )
-                        # Go through the flagcmd list, to find the 'rflags'.....
-                        for key in flagcmd.keys():
-                            cmdline = flagcmd[key]['command'];
-                            if cmdline.__contains__('rflag'):
-                                # Check for match between input flagcmd and output threshold, via the rflag id
-                                if(key==rflagid):  
-                                    # If timedev,freqdev are missing from cmdline, add empty ones.
-                                    if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
-                                        cmdline = cmdline + " timedev=[] ";
-                                    if( not cmdline.__contains__('freqdev=') ):
-                                        cmdline = cmdline + " freqdev=[] ";
-                                    # Pull out timedev, freqdev strings from flagcmd
-                                    rflagpars = fh.getLinePars(cmdline , ['timedev','freqdev']);
-                                    ##print "cmdline : ", cmdline
-                                    ##print "rflagpars : ", rflagpars
-                                    # Write RFlag thresholds to these file names. 
-                                    newtimedev,newfreqdev = fh.writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
-                                    ## Modify the flagcmd string, so that savepars sees the contents of the file
-                                    if( rflagpars['timedev'].__contains__('[') ):
-                                        oldstring = 'timedev='+str(rflagpars['timedev'])
-                                        newstring = 'timedev='+str(newtimedev).replace(' ','')
-                                        ##print "time : replacing " , oldstring , newstring
-                                        cmdline = cmdline.replace( oldstring, newstring );
-                                    if( rflagpars['freqdev'].__contains__('[') ):
-                                        oldstring = 'freqdev='+str(rflagpars['freqdev'])
-                                        newstring = 'freqdev='+str(newfreqdev).replace(' ','')
-                                        ##print "freq : replacing " , oldstring , newstring
-                                        cmdline = cmdline.replace( oldstring, newstring );
-                                    flagcmd[key]['command'] = cmdline;
-
+            fh.extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd)
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  

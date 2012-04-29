@@ -449,861 +449,861 @@ if bench:
    tstutl.note('Total time for axis plot (non-average): %.2f sec.' % (importtime - startTime),'INFO',this) 
 
 
-##############################################################################
-# 3. plotxy for possible iterationss                                         #
-##############################################################################
-iterList = ['field', 'antenna', 'baseline', 'scan']#, 'feed'], 'corr']
-
-default(taskname)
-dataset='NGC5921.ms'
-vis=testdata+'/'+dataset
-averagemode='scalar'
-xaxis='time'
-yaxis='phase'
-timebin='90'
-width='16'
-showflags=False
-interactive=manual
-subplot=121
-
-tstutl.note('########## possible iterations (averaged) ##########','INFO',this)
-
-for k in range(len(iterList)):
-   iteration=iterList[k]
-   selectplot=True
-   title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ 'sec average)'
-   figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_iter_'+iteration
-   figfile=plotfile(figname)
-   tstutl.note('plot iteratrion: '+iteration+' '+title,'INFO',this) 
-   plotxy()
-   if (manual==True):
-      raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-iteration=''
-subplot=111
-
-'''
-tstutl.note('########## possible iterations (non-averaged) ##########','INFO',this)
-#if 3c129 is in repository, add this for non -averaged
-plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
-xaxis='uvdist',yaxis='amp', multicolor='both', iteration='field')
-if (manual==True):
-   raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
-xaxis='uvdist',yaxis='amp', multicolor='both', iteration='baseline')
-if (manual==True):
-   raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
-xaxis='uvdist',yaxis='amp', multicolor='both', iteration='scan')
-if (manual==True):
-   raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
-xaxis='uvdist',yaxis='amp', multicolor='both', iteration='feed')
-if (manual==True):
-   raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
-xaxis='uvdist',yaxis='amp', multicolor='both', iteration='antenna', field='0')
-if (manual==True):
-   raw_input('mouse click on NEXT to iterate, press a key when done') 
-
-'''
-# Record axis plot time
-if bench:
-   importtime=time.time()
-   tstutl.note('Total time for iteration plot (averaged): %.2f sec.' % (importtime - startTime),'INFO',this) 
-
-
-##############################################################################
-# 4. plotxy average detail calculationn                                      #
-##############################################################################
-
-binList = ['0', '20', '30', '40', '50', '60', '70']
-colorList = ['green', 'blue', 'yellow', 'pink', 'black', 'black', 'black']
-symList = ['o', 'o', 'o', 'o', 'x', 'x', 'x']
-
-tstutl.note('########## average detail calculation ##########','INFO',this)
-
-default(taskname)
-dataset='3C84.ms'
-vis=testdata+'/'+dataset
-yaxis='phase'
-xaxis='time'
-interactive=manual
-
-#select a small section of data
-selectdata=true
-field='0'
-correlation='RR'
-spw='0:5~6'
-scan=''
-feed=''
-array=''
-uvrange=''
-antenna='4&8'
-timerange='10:39:00~10:40:00'
-
-#plot the data
-averagemode = 'vector'
-width = '1'
-timebin = '0'
-overplot = false
-plotsymbol = '.'
-plotcolor = 'red'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-#channel average by 2, timeaverage 0-70
-width='2'
-
-for k in range(len(binList)):
-   timebin=binList[k]
-   overplot=true
-   plotsymbol=symList[k]
-   plotcolor=colorList[k]
-   title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-   figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin
-   figfile=plotfile(figname)
-   tstutl.note('plot '+title,'INFO',this) 
-   plotxy()
-
-##############################################################################
-# 5. plotxy for multi spectral windows                                      #
-##############################################################################
-
-tstutl.note('########## multi spectral windows ##########','INFO',this)
-
-default(taskname)
-dataset='testPhase_sdm.ms'
-vis=testdata+'/'+dataset
-field=''
-selectdata=true
-correlation=''
-antenna=''
-timerange=''
-yaxis='amp'
-xaxis='channel'
-averagemode='vector'
-overplot=false
-plotsymbol='.'
-#plotcolor='green'
-interactive=manual
-
-#plot the data
-averagemode = 'vector'
-width = '1'
-timebin = '0'
-overplot = false
-plotsymbol = '.'
-plotcolor = 'red'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_chan'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-width = '2'
-timebin = '60'
-spw = '0,1,2,3'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=0,1,2,3'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '4,5'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=4,5'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '6,7'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=6,7'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '0,1,2,3'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=0,1,2,3'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '4,5'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=4,5'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '6,7'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average) spw=6,7'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=6,7'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-averagemode = 'vector'
-width='1'
-timebin='0'
-xaxis='channel'
-overplot=false
-plotsymbol='.'
-plotcolor='red'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_chan'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '0,1,2,3'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=0,1,2,3'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '4,5'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=4,5'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '6,7'
-xaxis='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=6,7'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-#tstutl.note('test of non-average freq conversion disabled','WARN',this) 
-spw = '0,1,2,3'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=0,1,2,3'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '4,5'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=4,5'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw = '6,7'
-xaxis='frequency'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=6,7'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-##############################################################################
-# 6. plotxy multi scan                                                       #
-##############################################################################
-
-tstutl.note('########## multi scan ##########','INFO',this)
-
-default(taskname)
-dataset='g19_12coall.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-selectdata = true
-correlation = ''
-spw = ''
-antenna = ''
-timerange = ''
-yaxis = 'amp'
-averagemode = 'vector'
-width = '1'
-timebin = '0'
-subplot=111
-overplot = false
-plotsymbol = '.'
-plotcolor = 'green'
-
-field = '2'
-width='2'
-selectplot=true
-
-crossscans=false
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=false
-xaxis='time'
-timebin='600'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-xaxis='time'
-timebin='600'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=false
-timebin='60000'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-timebin='60000'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-timebin='60000'
-antenna='2&3'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1,antenna=2&3'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1,antenna=2&3'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-#test cross baselines
-default(taskname)
-dataset='NGC5921.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-selectdata = true
-xaxis='time'
-yaxis='amp'
-datacolumn='data'
-iteration=''
-selectdata=True
-antenna=''
-timerange=''
-correlation='RR'
-scan=''
-feed=''
-array=''
-uvrange=''
-spw='0:50'
-field='2'
-crossscans=False
-averagemode='vector'
-width='4'
-
-timebin='600'
-crossbls=True
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=False
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,corssbls=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-timebin='6000'
-crossbls=True
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=False
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,corssbls=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-timebin='60000'
-crossbls=True
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=False
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossblss=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-
-##############################################################################
-# 8. plotxy multi spw multi scan                                             #
-##############################################################################
-
-tstutl.note('########## multi spws multi scan ##########','INFO',this)
-
-default(taskname)
-dataset='n4826_16apr98.ms'
-vis=testdata+'/'+dataset
-selectdata = true
-correlation = ''
-spw = ''
-antenna = ''
-timerange = ''
-yaxis = 'amp'
-averagemode = 'vector'
-width = '1'
-timebin = '0'
-subplot=111
-overplot = false
-plotsymbol = '.'
-plotcolor = 'green'
-interactive=manual
-
-selectplot=true
-
-crossscans=false
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) crossscans=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-field = '2'
-spw='2'
-
-crossscans=false
-xaxis='time'
-width='2'
-timebin='6000'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-xaxis='time'
-timebin='6000'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=false
-timebin='60000'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=0'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-timebin='60000'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-timebin='60000'
-antenna='2'
-width='4'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=true
-field='4'
-width='16'
-antenna='2&3'
-xaxis='time'
-timebin='6000'
-connect='channel'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,3,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,antenna=2,3,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossscans=false
-timebin='6000'
-xaxis='time'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,3,crossscans=1'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,antenna=2,3,crossscans=1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-##############################################################################
-# 9. plotxy data selection                                                   #
-##############################################################################
-
-tstutl.note('########## data selection ##########','INFO',this)
-
-default(taskname)
-dataset='testPhase_sdm.ms'
-vis=testdata+'/'+dataset
-xaxis='channel'
-yaxis='amp'
-datacolumn='data'
-averagemode ='vector'
-timebin='100'
-crossscans=False
-interactive=manual
-
-width='4'
-field=''
-spw='4:3~51^2,5:7~15^9'
-selectdata=True
-antenna='1&2'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'carat'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-default(taskname)
-dataset='NGC5921.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-xaxis='uvdist'
-yaxis='amp'
-datacolumn='data'
-averagemode='vector'
-timebin='100'
-width='4'
-selectdata=true
-uvrange='1~2klambda,3~4klambda'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvrange'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-timebin='0'
-width='1'
-selectdata=true
-uvrange='1~2klambda,3~4klambda'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvrange'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-#test plotrange 
-default(taskname)
-dataset='NGC5921.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-xaxis='time'
-yaxis='amp'
-datacolumn='data'
-averagemode='vector'
-timebin='0'
-width='1'
-plotrange=['09:50:24, 10:30:20', 0.02, 0.20]
-selectdata=false
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_plotrangetime'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-plotrange=''
-selectdata=false
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_plotrangedefault'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-'''
-#test selection based on corr type
-default(taskname)
-dataset='uid___X1eb_Xa885_X1.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-xaxis='channel'
-yaxis='amp'
-datacolumn='data'
-averagemode='vector'
-timebin='all'
-width='1'
-crossscans=true
-crossbls=false
-spw='0'
-selectdata=true
-antenna='*&&*'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_all_corr'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=true
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_all_corr_crossbls'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=false
-antenna='*&*'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_cross_corr'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-antenna='*&&&'
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_self_corr'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-crossbls=true
-title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_self_corr_crossbls'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-'''
-
-##############################################################################
-# 10. other issues                                                           #
-##############################################################################
-
-tstutl.note('########## other issues ##########','INFO',this)
-
-default(taskname)
-dataset='polcal_20041110_cband_vla_calaips.ms'
-vis=testdata+'/'+dataset
-interactive=manual
-xaxis="uvdist"
-yaxis="phase"
-datacolumn="data"
-iteration=""
-selectdata=True
-antenna=""
-field="0137+331"
-uvrange=""
-timerange="02:37:19~02:37:22"
-correlation="RR"
-scan=""
-feed=""
-array=""
-averagemode="vector"
-width="1"
-timebin="0.001"
-crossscans=False
-plotsymbol="."
-plotcolor="blue"
-markersize=5.0
-linewidth=1.0
-connect="none"
-plotrange=[0,600,-180,180]
-multicolor="corr"
-selectplot=True
-overplot=False
-newplot=False
-clearpanel="Auto"
-skipnrows=1
-xlabels=""
-ylabels=""
-fontsize=10.0
-windowsize=1.0
-showflags=False
-interactive=manual
-
-
-spw=""
-subplot=121
-overplot=false
-title='spw=,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw="0,1"
-subplot=122
-overplot=false
-title='spw=0,1,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist_spw01'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='0'
-subplot=121
-overplot=false
-plotcolor='red'
-title='spw=0,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='1'
-subplot=122
-overplot=false
-title='spw=1,averaged,uvdist'
-plotcolor='blue'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='1'
-subplot=121
-overplot=false
-title='spw=1,averaged,uvdist'
-plotcolor='blue'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='0'
-subplot=121
-overplot=true
-plotcolor='red'
-title='spw=0-1,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist0over1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='0'
-subplot=122
-overplot=false
-plotcolor='red'
-title='spw=0,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='1'
-subplot=122
-overplot=true
-plotcolor='blue'
-title='spw=1-0,averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1over0'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-timebin='0'
-width='1'
-spw='0,1'
-subplot=121
-overplot=false
-plotcolor='blue'
-title='spw=1,0,non-averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='0'
-subplot=122
-overplot=false
-plotcolor='blue'
-title='spw=1,0,non-averaged,uvdist'
-#figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
-#figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-spw='1'
-subplot=122
-overplot=true
-plotcolor='red'
-title='spw=1,0,non-averaged,uvdist'
-figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1over1'
-figfile=plotfile(figname)
-tstutl.note('plot '+title,'INFO',this) 
-plotxy()
-
-##############################################################################
-# 11. use mp tool for average plotxys                                        #
-##############################################################################
-dataset='NGC5921.ms'
-vis=testdata+'/'+dataset
-mp.open(vis)
-
-tstutl.note('########## use mp tool (averaged) ##########','INFO',this)
-
-plotList = ['vischannel', 'visfreq', 'vistime', 'uvdist', 
-            'uvcoverage', 'viscorr', 'visvelocity', 'hourangle', 
-            'azimuth', 'elevation', 'parallacticangle', 'weight'
-           ]
-width='4'
-timebin='90'
-averagemode='vector'
-avevel=false
-for k in range(len(plotList)):
-   plotname=plotList[k]
-   if (plotname=='visvelocity'):
-      avevel=true
-   mp.setdata()
-   mp.avedata(averagemode='vector', averagetime=timebin, averagechan=width, averagevel=avevel)
-   title=dataset+' '+plotname+' ('+width+' chan '+timebin+ ' sec average)'
-   figname=dataset+'_'+plotname+'_'+width+'_'+timebin+'.png'
-   figfile=plotfile(figname)
-   tstutl.note('plot '+title,'INFO',this) 
-   mp.plot(plotname)
-   mp.savefig(figfile)
-
-mp.closeMS()
-mp.close()
-
+###################################################################################
+###### 3. plotxy for possible iterationss                                         #
+###################################################################################
+#####iterList = ['field', 'antenna', 'baseline', 'scan']#, 'feed'], 'corr']
+#####
+#####default(taskname)
+#####dataset='NGC5921.ms'
+#####vis=testdata+'/'+dataset
+#####averagemode='scalar'
+#####xaxis='time'
+#####yaxis='phase'
+#####timebin='90'
+#####width='16'
+#####showflags=False
+#####interactive=manual
+#####subplot=121
+#####
+#####tstutl.note('########## possible iterations (averaged) ##########','INFO',this)
+#####
+#####for k in range(len(iterList)):
+#####   iteration=iterList[k]
+#####   selectplot=True
+#####   title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ 'sec average)'
+#####   figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_iter_'+iteration
+#####   figfile=plotfile(figname)
+#####   tstutl.note('plot iteratrion: '+iteration+' '+title,'INFO',this) 
+#####   plotxy()
+#####   if (manual==True):
+#####      raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####iteration=''
+#####subplot=111
+#####
+#####'''
+#####tstutl.note('########## possible iterations (non-averaged) ##########','INFO',this)
+######if 3c129 is in repository, add this for non -averaged
+#####plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
+#####xaxis='uvdist',yaxis='amp', multicolor='both', iteration='field')
+#####if (manual==True):
+#####   raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
+#####xaxis='uvdist',yaxis='amp', multicolor='both', iteration='baseline')
+#####if (manual==True):
+#####   raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
+#####xaxis='uvdist',yaxis='amp', multicolor='both', iteration='scan')
+#####if (manual==True):
+#####   raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
+#####xaxis='uvdist',yaxis='amp', multicolor='both', iteration='feed')
+#####if (manual==True):
+#####   raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####plotxy(vis='data/3c129_6cm.ms', selectdata=True, correlation='RR LL',
+#####xaxis='uvdist',yaxis='amp', multicolor='both', iteration='antenna', field='0')
+#####if (manual==True):
+#####   raw_input('mouse click on NEXT to iterate, press a key when done') 
+#####
+#####'''
+###### Record axis plot time
+#####if bench:
+#####   importtime=time.time()
+#####   tstutl.note('Total time for iteration plot (averaged): %.2f sec.' % (importtime - startTime),'INFO',this) 
+#####
+#####
+###################################################################################
+###### 4. plotxy average detail calculationn                                      #
+###################################################################################
+#####
+#####binList = ['0', '20', '30', '40', '50', '60', '70']
+#####colorList = ['green', 'blue', 'yellow', 'pink', 'black', 'black', 'black']
+#####symList = ['o', 'o', 'o', 'o', 'x', 'x', 'x']
+#####
+#####tstutl.note('########## average detail calculation ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='3C84.ms'
+#####vis=testdata+'/'+dataset
+#####yaxis='phase'
+#####xaxis='time'
+#####interactive=manual
+#####
+######select a small section of data
+#####selectdata=true
+#####field='0'
+#####correlation='RR'
+#####spw='0:5~6'
+#####scan=''
+#####feed=''
+#####array=''
+#####uvrange=''
+#####antenna='4&8'
+#####timerange='10:39:00~10:40:00'
+#####
+######plot the data
+#####averagemode = 'vector'
+#####width = '1'
+#####timebin = '0'
+#####overplot = false
+#####plotsymbol = '.'
+#####plotcolor = 'red'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+######channel average by 2, timeaverage 0-70
+#####width='2'
+#####
+#####for k in range(len(binList)):
+#####   timebin=binList[k]
+#####   overplot=true
+#####   plotsymbol=symList[k]
+#####   plotcolor=colorList[k]
+#####   title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####   figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin
+#####   figfile=plotfile(figname)
+#####   tstutl.note('plot '+title,'INFO',this) 
+#####   plotxy()
+#####
+###################################################################################
+###### 5. plotxy for multi spectral windows                                      #
+###################################################################################
+#####
+#####tstutl.note('########## multi spectral windows ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='testPhase_sdm.ms'
+#####vis=testdata+'/'+dataset
+#####field=''
+#####selectdata=true
+#####correlation=''
+#####antenna=''
+#####timerange=''
+#####yaxis='amp'
+#####xaxis='channel'
+#####averagemode='vector'
+#####overplot=false
+#####plotsymbol='.'
+######plotcolor='green'
+#####interactive=manual
+#####
+######plot the data
+#####averagemode = 'vector'
+#####width = '1'
+#####timebin = '0'
+#####overplot = false
+#####plotsymbol = '.'
+#####plotcolor = 'red'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_chan'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####width = '2'
+#####timebin = '60'
+#####spw = '0,1,2,3'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=0,1,2,3'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '4,5'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=4,5'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '6,7'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=6,7'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '0,1,2,3'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=0,1,2,3'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '4,5'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=4,5'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '6,7'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average) spw=6,7'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=6,7'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####averagemode = 'vector'
+#####width='1'
+#####timebin='0'
+#####xaxis='channel'
+#####overplot=false
+#####plotsymbol='.'
+#####plotcolor='red'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_chan'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '0,1,2,3'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=0,1,2,3'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '4,5'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=4,5'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '6,7'
+#####xaxis='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'chan_spw=6,7'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+######tstutl.note('test of non-average freq conversion disabled','WARN',this) 
+#####spw = '0,1,2,3'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=0,1,2,3'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=0,1,2,3'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '4,5'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=4,5'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=4,5'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw = '6,7'
+#####xaxis='frequency'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) spw=6,7'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'freq_spw=6,7'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+###################################################################################
+###### 6. plotxy multi scan                                                       #
+###################################################################################
+#####
+#####tstutl.note('########## multi scan ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='g19_12coall.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####selectdata = true
+#####correlation = ''
+#####spw = ''
+#####antenna = ''
+#####timerange = ''
+#####yaxis = 'amp'
+#####averagemode = 'vector'
+#####width = '1'
+#####timebin = '0'
+#####subplot=111
+#####overplot = false
+#####plotsymbol = '.'
+#####plotcolor = 'green'
+#####
+#####field = '2'
+#####width='2'
+#####selectplot=true
+#####
+#####crossscans=false
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=false
+#####xaxis='time'
+#####timebin='600'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####xaxis='time'
+#####timebin='600'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=false
+#####timebin='60000'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####timebin='60000'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####timebin='60000'
+#####antenna='2&3'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,crossscans=1,antenna=2&3'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,crossscans=1,antenna=2&3'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+######test cross baselines
+#####default(taskname)
+#####dataset='NGC5921.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####selectdata = true
+#####xaxis='time'
+#####yaxis='amp'
+#####datacolumn='data'
+#####iteration=''
+#####selectdata=True
+#####antenna=''
+#####timerange=''
+#####correlation='RR'
+#####scan=''
+#####feed=''
+#####array=''
+#####uvrange=''
+#####spw='0:50'
+#####field='2'
+#####crossscans=False
+#####averagemode='vector'
+#####width='4'
+#####
+#####timebin='600'
+#####crossbls=True
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=False
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,corssbls=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####timebin='6000'
+#####crossbls=True
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=False
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,corssbls=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####timebin='60000'
+#####crossbls=True
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crosssbls=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=False
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average) field=2,RR,crossbls=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,RR,crossblss=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####
+###################################################################################
+###### 8. plotxy multi spw multi scan                                             #
+###################################################################################
+#####
+#####tstutl.note('########## multi spws multi scan ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='n4826_16apr98.ms'
+#####vis=testdata+'/'+dataset
+#####selectdata = true
+#####correlation = ''
+#####spw = ''
+#####antenna = ''
+#####timerange = ''
+#####yaxis = 'amp'
+#####averagemode = 'vector'
+#####width = '1'
+#####timebin = '0'
+#####subplot=111
+#####overplot = false
+#####plotsymbol = '.'
+#####plotcolor = 'green'
+#####interactive=manual
+#####
+#####selectplot=true
+#####
+#####crossscans=false
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) crossscans=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####field = '2'
+#####spw='2'
+#####
+#####crossscans=false
+#####xaxis='time'
+#####width='2'
+#####timebin='6000'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####xaxis='time'
+#####timebin='6000'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=false
+#####timebin='60000'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=0'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####timebin='60000'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####timebin='60000'
+#####antenna='2'
+#####width='4'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=true
+#####field='4'
+#####width='16'
+#####antenna='2&3'
+#####xaxis='time'
+#####timebin='6000'
+#####connect='channel'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,3,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,antenna=2,3,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossscans=false
+#####timebin='6000'
+#####xaxis='time'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' '+timebin+ ' sec average) field=2,spw=2,antenna=2,3,crossscans=1'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_'+'field=2,spw=2,antenna=2,antenna=2,3,crossscans=1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+###################################################################################
+###### 9. plotxy data selection                                                   #
+###################################################################################
+#####
+#####tstutl.note('########## data selection ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='testPhase_sdm.ms'
+#####vis=testdata+'/'+dataset
+#####xaxis='channel'
+#####yaxis='amp'
+#####datacolumn='data'
+#####averagemode ='vector'
+#####timebin='100'
+#####crossscans=False
+#####interactive=manual
+#####
+#####width='4'
+#####field=''
+#####spw='4:3~51^2,5:7~15^9'
+#####selectdata=True
+#####antenna='1&2'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'carat'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####default(taskname)
+#####dataset='NGC5921.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####xaxis='uvdist'
+#####yaxis='amp'
+#####datacolumn='data'
+#####averagemode='vector'
+#####timebin='100'
+#####width='4'
+#####selectdata=true
+#####uvrange='1~2klambda,3~4klambda'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvrange'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####timebin='0'
+#####width='1'
+#####selectdata=true
+#####uvrange='1~2klambda,3~4klambda'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvrange'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+######test plotrange 
+#####default(taskname)
+#####dataset='NGC5921.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####xaxis='time'
+#####yaxis='amp'
+#####datacolumn='data'
+#####averagemode='vector'
+#####timebin='0'
+#####width='1'
+#####plotrange=['09:50:24, 10:30:20', 0.02, 0.20]
+#####selectdata=false
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_plotrangetime'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####plotrange=''
+#####selectdata=false
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_plotrangedefault'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####'''
+######test selection based on corr type
+#####default(taskname)
+#####dataset='uid___X1eb_Xa885_X1.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####xaxis='channel'
+#####yaxis='amp'
+#####datacolumn='data'
+#####averagemode='vector'
+#####timebin='all'
+#####width='1'
+#####crossscans=true
+#####crossbls=false
+#####spw='0'
+#####selectdata=true
+#####antenna='*&&*'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_all_corr'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=true
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_all_corr_crossbls'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=false
+#####antenna='*&*'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_cross_corr'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####antenna='*&&&'
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_self_corr'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####crossbls=true
+#####title=dataset+' '+yaxis+' vs '+xaxis+' ('+width+' chan '+timebin+ ' sec average)'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_2antenna_self_corr_crossbls'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####'''
+#####
+###################################################################################
+###### 10. other issues                                                           #
+###################################################################################
+#####
+#####tstutl.note('########## other issues ##########','INFO',this)
+#####
+#####default(taskname)
+#####dataset='polcal_20041110_cband_vla_calaips.ms'
+#####vis=testdata+'/'+dataset
+#####interactive=manual
+#####xaxis="uvdist"
+#####yaxis="phase"
+#####datacolumn="data"
+#####iteration=""
+#####selectdata=True
+#####antenna=""
+#####field="0137+331"
+#####uvrange=""
+#####timerange="02:37:19~02:37:22"
+#####correlation="RR"
+#####scan=""
+#####feed=""
+#####array=""
+#####averagemode="vector"
+#####width="1"
+#####timebin="0.001"
+#####crossscans=False
+#####plotsymbol="."
+#####plotcolor="blue"
+#####markersize=5.0
+#####linewidth=1.0
+#####connect="none"
+#####plotrange=[0,600,-180,180]
+#####multicolor="corr"
+#####selectplot=True
+#####overplot=False
+#####newplot=False
+#####clearpanel="Auto"
+#####skipnrows=1
+#####xlabels=""
+#####ylabels=""
+#####fontsize=10.0
+#####windowsize=1.0
+#####showflags=False
+#####interactive=manual
+#####
+#####
+#####spw=""
+#####subplot=121
+#####overplot=false
+#####title='spw=,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw="0,1"
+#####subplot=122
+#####overplot=false
+#####title='spw=0,1,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist_spw01'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='0'
+#####subplot=121
+#####overplot=false
+#####plotcolor='red'
+#####title='spw=0,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='1'
+#####subplot=122
+#####overplot=false
+#####title='spw=1,averaged,uvdist'
+#####plotcolor='blue'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='1'
+#####subplot=121
+#####overplot=false
+#####title='spw=1,averaged,uvdist'
+#####plotcolor='blue'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='0'
+#####subplot=121
+#####overplot=true
+#####plotcolor='red'
+#####title='spw=0-1,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist0over1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='0'
+#####subplot=122
+#####overplot=false
+#####plotcolor='red'
+#####title='spw=0,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='1'
+#####subplot=122
+#####overplot=true
+#####plotcolor='blue'
+#####title='spw=1-0,averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1over0'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####timebin='0'
+#####width='1'
+#####spw='0,1'
+#####subplot=121
+#####overplot=false
+#####plotcolor='blue'
+#####title='spw=1,0,non-averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='0'
+#####subplot=122
+#####overplot=false
+#####plotcolor='blue'
+#####title='spw=1,0,non-averaged,uvdist'
+######figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist'
+######figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+#####spw='1'
+#####subplot=122
+#####overplot=true
+#####plotcolor='red'
+#####title='spw=1,0,non-averaged,uvdist'
+#####figname=dataset+'-'+yaxis+'_'+xaxis+'_'+width+'_'+timebin+'_uvdist1over1'
+#####figfile=plotfile(figname)
+#####tstutl.note('plot '+title,'INFO',this) 
+#####plotxy()
+#####
+###################################################################################
+###### 11. use mp tool for average plotxys                                        #
+###################################################################################
+#####dataset='NGC5921.ms'
+#####vis=testdata+'/'+dataset
+#####mp.open(vis)
+#####
+#####tstutl.note('########## use mp tool (averaged) ##########','INFO',this)
+#####
+#####plotList = ['vischannel', 'visfreq', 'vistime', 'uvdist', 
+#####            'uvcoverage', 'viscorr', 'visvelocity', 'hourangle', 
+#####            'azimuth', 'elevation', 'parallacticangle', 'weight'
+#####           ]
+#####width='4'
+#####timebin='90'
+#####averagemode='vector'
+#####avevel=false
+#####for k in range(len(plotList)):
+#####   plotname=plotList[k]
+#####   if (plotname=='visvelocity'):
+#####      avevel=true
+#####   mp.setdata()
+#####   mp.avedata(averagemode='vector', averagetime=timebin, averagechan=width, averagevel=avevel)
+#####   title=dataset+' '+plotname+' ('+width+' chan '+timebin+ ' sec average)'
+#####   figname=dataset+'_'+plotname+'_'+width+'_'+timebin+'.png'
+#####   figfile=plotfile(figname)
+#####   tstutl.note('plot '+title,'INFO',this) 
+#####   mp.plot(plotname)
+#####   mp.savefig(figfile)
+#####
+#####mp.closeMS()
+#####mp.close()
+#####
 ##############################################################################
 # 12. diff png files                                                         #
 ##############################################################################

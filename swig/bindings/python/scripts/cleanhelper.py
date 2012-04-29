@@ -2190,7 +2190,7 @@ class cleanhelper:
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
                               start=start,width=width,phasec=inphasec, restfreq=restf,
                               outframe=self.usespecframe,veltype=veltype)
-        print newfreqs
+        #print newfreqs
         descendingnewfreqs=False
         if type(newfreqs)==list:
           if newfreqs[1]-newfreqs[0] < 0:

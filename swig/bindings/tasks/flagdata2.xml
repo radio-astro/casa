@@ -47,7 +47,7 @@
 
         <param type="bool" name="selectdata">
                <description>Data selection parameters, which will affect all modes (antenna, timerange etc)</description>
-               <value>False</value>
+               <value>True</value>
         </param>
             <param type="any" name="spw" subparam="true">
                    <description>spectral-window/frequency/channel</description>
