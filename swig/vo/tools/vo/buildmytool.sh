@@ -30,7 +30,7 @@ verbose "Casa root directory: $CASAROOT"
 CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
 verbose "Casa architecture: $CASAARCH"
 
-VOCLIENTROOT="/iraf/iraf/vendor/voclient"
+VOCLIENTROOT="/Users/wyoung/voclient"
 
 SAXONJAR="$CASAARCH/lib/saxon8.jar"
 if [[ ! -e ${SAXONJAR} ]]; then
@@ -58,10 +58,10 @@ CASABUILDROOT=${CASAARCH}
 PLUGROOT="../.."
 CASAINCLUDE=${CASAROOT}"/bindings"
 EXTRAINCDIRS="\".\", \"${VOCLIENTROOT}/include\""
-PYINCLUDE="/opt/casa/darwin11/Library/Frameworks/Python.framework/Headers"
+PYINCLUDE="/opt/casa/darwin12/Library/Python.framework/Headers"
 EXTRALIBDIRS="\"${VOCLIENTROOT}/lib\""
-EXTRALIBS="\"VOCLient\", \"tools\""
-${SAXON} ./${MYPACK}.xml ${CASAROOT}/bindings//install/casa2swigxml.xsl > ${INFOFILE}
+EXTRALIBS="\"VO\", \"tools\""
+${SAXON} ./${MYPACK}.xml ${CASAROOT}/bindings/install/casa2swigxml.xsl > ${INFOFILE}
 sed -i -e "s/exmlns/xmlns/" ${INFOFILE} 
 ${SAXON} ${INFOFILE} ${CASAROOT}/bindings/install/casa2c++h.xsl > ${MYPACK}_cmpt.h
 sed -i -e "s/<?xml version=.*//" ${MYPACK}_cmpt.h

@@ -38,9 +38,10 @@ vo::sesame(const std::vector<std::string> &targets)
   
   for(int i=0; i<targets.size(); i++){
     Sesame sr = vao::sesame::nameResolver(const_cast<char *>(targets[i].c_str()));
-    rstat.push_back(vao::sesame::resolverPos(sr));
+    rstat.push_back(string(vao::sesame::resolverPos(sr)));
     cerr << "Arg " << i << " " << rstat[i] << endl;
   }
+  cerr << rstat.size() << endl;
   return (rstat);
 }
 //
@@ -104,19 +105,6 @@ vo::registry(const string &keywords,
 	  char *rtype = vao::registry::resGetStr(res, "ServiceType", i);
 	  char *sname = vao::registry::resGetStr(res, "ShortName", i);
 	  char *clev = vao::registry::resGetStr(res, "ContentLevel", i);
-	  /*
-	  cerr << endl << "-------------------------------" <<endl;
-	  cerr << "(" << i << " of " << nresources << ")";
-	  if(title)
-	     cerr << "\t" << title << endl;
-	  if(surl)
-	     cerr << "Service URL: " << surl << endl;
-	  if(sname)
-	     cerr << "Short Name: " << sname;
-	  if(rtype)
-	     cerr << "\tService Type: " << rtype << endl;
-	  cerr << "ContentLevel: " <<  (clev ? clev : "none provided") << endl;
-	  */
 	  record subrec;
 	  if(title)subrec.insert("title", string(title));
 	  if(surl)subrec.insert("surl", string(surl));
@@ -125,10 +113,6 @@ vo::registry(const string &keywords,
 	  if(clev)subrec.insert("clev", string(clev));
 	  ostringstream oss;
 	  oss << i << ends;
-	  //rstat.insert(oss.str(), subrec);
-	  //vector<casac::record>::iterator it;
-	  //it = rstat.begin();
-	  //rstat.insert(it, subrec);
 	  rstat.push_back(subrec);
 	  if(title)delete title;
 	  if(surl)delete surl;
