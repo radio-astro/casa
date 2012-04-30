@@ -308,13 +308,18 @@ class test_flagmanager(test_base):
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 4)
         tflocal.done()
+        
+        newname = 'Ha! The best version ever!'
 
-        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', 
+        flagmanager(vis=self.vis, mode='rename', oldname='tflagdata_2', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 4)
         tflocal.done()
+        
+        self.assertTrue(os.path.exists('flagdatatest.ms.flagversions/flags.'+newname),
+                        'Flagversion file does not exist: flags.'+newname)
 
     def test2m(self):
         """flagmanager test2m: Create, then restore autoflag"""
@@ -336,7 +341,7 @@ class test_flagmanager(test_base):
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
-        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+        flagmanager(vis=self.vis, mode='restore', versionname='tflagdata_3')
         restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
 
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
@@ -987,7 +992,7 @@ class cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf ngc5921.ms*')
-        os.system('rm -rf flagdatatest.ms*')
+#        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
         os.system('rm -rf multiobs.ms*')
         os.system('rm -rf flagdatatest-alma.ms*')
