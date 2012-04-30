@@ -1089,17 +1089,17 @@ fitsimage.done()
 </method>
 
    <method type="function" name="imagecalc">
-   <shortdescription>Construct a \casa\ image via the image calculator</shortdescription>
+   <shortdescription>Perform mathematical calculations on an image or images.</shortdescription>
    
 <input>
   
      <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
+     <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
      <value></value>
      </param>
   
      <param type="string" direction="in" name="pixels">
-     <description>LEL expression.  Default is empty expression.</description>
+     <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
      <value></value>
      </param>
   
@@ -1112,125 +1112,131 @@ fitsimage.done()
 
 <description> 
 
-This function is used to evaluate a mathematical expression involving
-existing \imagefiles, assigning the result to the newly created output
-image.  The syntax of the expression supplied via the {\stfaf pixels}
-argument (in what is called the Lattice Expression Language, or LEL) is
+This method is used to evaluate a mathematical expression involving
+existing images.  The syntax of the expression supplied via the pixels
+parameter (in what is called the Lattice Expression Language, or LEL) is
 explained in detail in \htmladdnormallink{note
-223}{../../notes/223/223.html}.
+223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich 
+mathematical language with allows all manner of mathematical operations
+to be applied to images.
 
 Any image files embedded in the expression may be native \casa\ or
-\fits\ (but not yet Miriad) \imagefiles.  Look
-\htmlref{here}{IMAGES:FOREIGNIMAGES} for more information on foreign
-images. 
+\fits\ (but not yet Miriad) images.
 
-If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
-returned by this function actually references all of the input files
-in the expression.  So if you deleted any of the input image disk
-files, it would render this \tool\ useless.  When you destry this
-on-the-fly \tool\ (with the <link
-anchor="images:image.done.function">done</link> function), the
-reference connections are broken.
+If successful, this method always returns an image analysis tool that
+references the image resulting from the calculation. This returned tool
+should always be captured and closed as soon as the user is done with it
+to free up system resources (eg, memory). The image analysis tool on which
+the method is called (eg the ia tool when one runs ia.imagecalc()) remains
+unaltered, eg it still refers to the same image it did prior to the imagecalc()
+call.
 
-If you make a reference \tool, the expression is re-evaluated every time
-you use it.   So it takes no extra storage, but takes longer
-to access the pixel values (they must be recomputed).
+Values of the returned tool are evaluated "on demand". That is, only when a method
+is run on the returned tool are the necessary values computed. And in fact, the
+values have to be reevaluated for each operation (method call). This means that
+there is a small performance hit for using the returned tool rather than the image
+written to disk and that none of the images which were used in the expression
+should be deleted while the returned tool is in use because they must be accessed
+for calculating the expression each time an operation of the returned tool is
+performed. These limitations do not apply to the ouput image if one is specified
+with the outfile parameter; it is a genuine CASA image with
+numerical values. If outfile is blank, no ouput image is written (although
+the resulting image can still be accessed via the returned image analysis tool
+as described below).
+
+Normally you should just write the image, close the returned
+tool, and open the results image with the default ia tool and operate on it. If
+you are interested in conserving disk space, you don't need to keep the result of
+the calculation around for very long, and/or you are only going to do a small 
+number of operations on the result image, should you set outfile="".
+
 
 </description>
 
 <example>
 
+
+
 """
-#
-print "\t----\t imagecalc Ex 1 \t----"
+# Suppose aF and bF are images with single precision and we want
+# to determine the result of the following expression:
+# aF + min(float($\pi$, mean(bF))
+#  
+# In this case, the images aF and bF do not need to have the same shapes and
+# coordinates, because only the mean(bF) results in the mean of all pixel
+# values in bF.  If aF has single precision pixel values, the resulting image
+# will as well. This expression first computes the scalar value of the minimum
+# of $\pi$ and the mean of the pixel values of bF. That scalar is then
+# added to the value of each pixel in aF. In the code below, the
+# result is written to image cF which can be accessed immediately
+# via the returned image analysis tool captured in the variable myim.
+# If the expression is masked, that mask will be copied to the new image.
+
+# create images of different sizes to operate on
 ia.fromshape('aF',[10,10],overwrite=true)
 ia.fromshape('bF',[10,20,30],overwrite=true)
-myim= ia.imagecalc(outfile='cF', pixels='aF + min(float(pi()), mean(bF))',
-                   overwrite=true)
+# close the ia tool to free up resources
+ia.done()
+# at each pixel in bF, take the minimum of that pixel value and pi and add
+# the resulting value to the corresponding pixel in af
+# note that only the subset of pixels in bF that correspond to those in aF
+# are used; the resulting image has the same size as the smaller image, aF,
+# used in the input
+myim = ia.imagecalc(outfile='cF', pixels='aF + min(float(pi()), mean(bF))',
+                 overwrite=true)
+# confirm the resulting image has the same size as aF, should be [10, 10]
+myim.shape()
+# close the myim tool to free up system resources
 myim.done()
-ia.close()
-#
 """
-
-
-Suppose {\sff aF} and {\sff bF} are \imagefiles\ with single precision
-data.  They do not need to have conforming shapes and coordinates,
-because only the mean of {\sff bF} is used.  Note that {\tt pi} is
-explicitly converted to single precision, because {\cf pi()} results in
-a Double.  If that was not done, the expression result would be a Double
-with the effect that all data of {\sff aF} had to be converted to
-Double.  So this expression first computes a scalar, the minimum of
-$\pi$ and the mean of the \imagefile\ {\sff bF}.    That scalar is then
-added to the value of each pixel in the \imagefile\ {\sff aF}.  The
-resultant is put in the \imagefile\ called {\sff cF} to which access is
-provided via the \imagetool\ called {\stf myim}.
-
-If the expression is masked, that mask will be copied to the new image.
-
 </example>
 
 <example>
 
 """
-#
-print "\t----\t imagecalc Ex 2 \t----"
+# The following example shows the use of the two min() LEL functions. One takes a
+# single argument and will return a scalar representing the minimum pixel value
+# of that entire image. The other takes two arguments (either an image and a
+# scalar or two images of conforming shapes) and returns an image for which
+# the minimum has been calculated on a pixel by pixel basis for the input
+# image(s).
+
+# create an image to operate on 
 ia.fromshape('aF',[10,10],overwrite=true)
+# give it interesting values
+ia.addnoise()
+# free up system resources
+ia.done()
+# do the calculation and write results to image cF
 myim=ia.imagecalc('cF', 'min(aF, (min(aF)+max(aF))/2)', overwrite=true)
+# do whatever stuff you want with myim and the close it to free
+# up system resources
 myim.done()
-ia.close()
-#
 """
-
-
-This example shows that there are 2 {\cf min} functions.  One with a
-single argument returning the minimum value of that image.  The other
-with 2 arguments returning an image containing {\sff aF} data clipped at
-the value of the 2nd argument. 
-
 </example>
 
 <example>
-
 """
-#
-print "\t----\t imagecalc Ex 3 \t----"
+# Here's an example of a more complicated function. Currently
+# ia.fromshape() only creates real-valued images so the real()
+# function is not particularly exciting in this case but illustrates
+# possibilities. Trigonometric functions such as sin() assume the
+# pixel values are in radians.
 ia.fromshape('aD',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('aF',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('bF',[10,10],overwrite=true)
+ia.addnoise()
 ia.fromshape('aC',[10,10],overwrite=true)
+ia.addnoise()
+ia.done()
 myim = ia.imagecalc('eF', 'sin(aD)+(aF*2)+min(bF)+real(aC)', overwrite=true)
 myim.done()
-ia.close()
-#
 """
 
-This shows a mixed type expression.  The real part of the Complex image
-{\sff aC}  is used in an expression that otherwise uses Float
-type.  The result of the expression is written out to the
-disk file called {\sff eF}.
 </example>
 
-<example>
-
-"""
-#
-print "\t----\t imagecalc Ex 4 \t----"
-ia.fromshape('aD',[10,10],overwrite=true)
-ia.fromshape('aF',[10,10],overwrite=true)
-ia.fromshape('bF',[10,10],overwrite=true)
-ia.fromshape('aC',[10,10],overwrite=true)
-myim = ia.imagecalc(pixels='sin(aD)+(aF*2)+min(bF)+real(aC)')
-myim.done()
-ia.close()
-#
-"""
-
-This shows a mixed type expression.  The real part of the Complex image
-{\sff aC}  is used in an expression that otherwise uses Float
-type.  The result of the expression is not written out to disk
-in this case.  It is evaluated each time it is needed.
-</example>
 </method>
 
 <method type="function" name="collapse">
@@ -1337,8 +1343,8 @@ wild cards accepted.  Default is empty string.</description>
      </param>
   
      <param type="int" direction="in" name="axis">
-	     <description>Concatenation pixel axis.  Default is spectral axis if there is one.</description>
-     <value>-10</value>
+	     <description>Concatenation pixel axis. Use ia.coordsys().names() to get a list of axes. A negative value means use the spectral axis if there is one, if not an exception is thrown.</description>
+     <value>-1</value>
      </param>
   
      <param type="bool" direction="in" name="relax">
@@ -1364,10 +1370,21 @@ This function is used to concatenate two or more input \casa\
 images into one output image.  For example, if you have two image cubes
 which are contiguous along one axis (say a spectral axis) and you would
 like to glue them together along this axis, then this function is the
-appropriate thing to use. 
+appropriate thing to use.
+
+The axis parameter is used to specify which zero-based axis the images
+should be concatenated along. A negative value indicates that the
+spectral axis should be used. If a negative value is given but there is no
+spectral axis, an exception will be thrown. The zero-based order of the
+axes of an image can be determined from ia.coordsys().names().
+
+If successful, this method will return an image analysis tool referencing
+the concatenated image. Even if it is not wanted, the returned tool should
+be captured and closed as soon as the user is finished with it to free up
+system resources (eg memory).
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-lfy Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
 created by the function actually references all of the input files.
 So if you deleted any of the input image disk files, it would render
 this \tool\ useless.  When you destroy this tool (with the <link
@@ -1388,8 +1405,7 @@ pixel, reference value etc) for the non-concatenation axes must be the
 same or an error will result. 
 
 The input disk image files may be in native \casa, \fits, or Miriad
-formats.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+formats.
 
 The contiguous criterion and coordinate descriptor equality criteria can
 be relaxed by setting {\stfaf relax=T} whereupon only warnings will be
@@ -1417,8 +1433,9 @@ comma delimiters, it is not possible because an expression such as
 ``cena.b'') would confuse such parsing (you would get two files of name
 {\sff cena.\{a} and {\sff b\}}. 
 
-You can look at the Coordinate System of the output image with
-<link anchor="images:image.summary.function">summary</link> to make sure it's correct.
+You can look at the coordinate system of the output image using the 
+<link anchor="images:image.summary.function">ia.summary()</link> tool method
+to ensure it's correct.
 
 The argument {\stfaf tempclose} is, by default, True.  This means that
 all internal reference copies of the input images are  kept closed until
@@ -1431,55 +1448,55 @@ you might use {\stfaf tempclose=F}.  This will leave all internal
 reference copies permanently open, but performance, if you don't hit the
 file limit, will be better.
 
+This method requires multiple images which are specified with the infiles
+parameter. Therefore calling ia.open() is not necessary, although calling
+imageconcat() using an already open image analysis tool will work and the state
+of that tool (eg the image it references) will not be changed.
+
 </description>
 <example>
 
 """
-#
-print "\t----\t imageconcat Ex 1 \t----"
+# Create three images to concatenate together.
 ia.fromshape('im.1',[10,10,10],overwrite=T)
 ia.fromshape('im.2',[10,10,10],overwrite=T)
 ia.fromshape('im.3',[10,10,10],overwrite=T)
+ia.done()
+# now concatenate.
+# The three images have the same shape along the axes not to be
+# concatenated as they must. relax=T means that the contiguity
+# constraint along the concatenated axis is not imposed (if it were
+# the call would fail because the spectral axes of the input images
+# are not contiguous).
 bigim = ia.imageconcat(outfile='bigimage', infiles='im.1 im.2 im.3',
                        axis=2, relax=T, tempclose=F, overwrite=T)
+# be sure to call done() on the return tool to free up system resources.
 bigim.done()
-ia.close()
-#
 """
 
-The \imagefiles\ {\sff im1}, {\sff im2}, and {\sff im3} are concatenated along
-the third axis to form the output \imagefile\ {\sff bigimage}.
-Only warnings are issued if axis descriptors mismatch.
-Access to the output image is provided via the \tool\ called {\stf bigim}.
 </example>
 
 <example>
 
 """
 #
-print "\t----\t imageconcat Ex 2 \t----"
+# All images whose file names begin with {\sff im.} that reside in
+# the current directory are concatenated along the spectral axis if
+# there is one. All image coordinate descriptors must match.  If any
+# input image does not have a spectral axis an error will
+# result.  Because an oufile is not specified, the returned image analysis
+# tool captured in the variable named bigim just references the input images;
+# this call does not create a persistent result image.
 bigim = ia.imageconcat(infiles="im.*",relax=T)
 bigim.done()
-ia.close()
-#
 """
-
-All images whose file names begin with {\sff im} and terminate with
-any valid filename extension that reside in the current directory <!--
-given by the translation of the environment variable {\tt \$ADATA} -->
-are concatenated along the spectral axis if there is one.  The image
-must be contiguous along the spectral axis and all image coordinate
-descriptors must match.  If there is no spectral axis an error will
-result.  Because an output file name is not given, the Image tool just
-references the input files, it does not copy them.
-
 </example>
 </method>
 
  
  
    <method type="function" name="fromarray">
-   <shortdescription>Construct a \casa\ image from an array</shortdescription>
+   <shortdescription>Construct a \casa\ image from a numerical (integer or float) array</shortdescription>
    
 <input>
   
@@ -1518,66 +1535,91 @@ references the input files, it does not copy them.
 
 <description>
 
-This function converts an array of any size into a \casa\
-\imagefile. 
+This function converts a numerical (integer or float) numpy array of any size and
+dimensionality into a \casa\ image. 
 
-If {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the Image \tool\ is associated
-with a temporary image.  This temporary image may be in memory or on
-disk, depending on its size.  <!-- When you destroy the Image \tool\ 
-(with the <link anchor="images:image.close.function">close</link> function) this
-temporary image is deleted.-->  When you close the Image \tool\
-with the close function this temporary image is deleted.
+The image analysis tool on which this method is called will reference the created image;
+if this tool referenced another image before this call, that image will no longer be referenced
+by the tool after the creation of the new image. If you would rather have a new image analysis
+tool returned, keeping the one on which this method is called unaltered, use newimagefromarray()
+instead. If {\stfaf outfile} is given, the image is written to disk, if not, the image tool on
+which this method was called will reference a temporary image (either in memory or on disk, 
+depending on its size) that will be deleted when the tool
+is closed.
 
 At present, no matter what type the {\stfaf pixels} array is, a
-real-valued image will be written (the input pixels will be converted to
-Float).  In the future, Complex images will be supported.
+float-valued image will be written.
 
-The Coordinate System, provided as a <link
-anchor="images:coordsys">Coordsys</link> \tool  (converted to a record)
-is optional.  If you provide it, it must be dimensionally consistent
-with the pixels array you give (see also <link
-anchor="images:image.coordsys.function">coordsys</link>).
+The coordinate system, provided as a <link
+anchor="images:coordsys">coordsys</link> \tool converted to a record
+is optional.  If you provide it, it must have the same number of dimensions
+as the pixels array (see also <link anchor="images:image.coordsys.function">coordsys</link>).
+Call the naxes() method on the coordinate system tool to see how many dimensions the coordinate
+system has. A coordinate system can be created from scratch using the coordinate system (cs) tool and
+methods therein, but often users prefer to use a coordinate system from an already existing image.
+This can be gotten using ia.coordsys() which returns a coordinate system tool. A torecord() call
+on that tool will result in a python dictionary describing the coordinate system which is the
+necessary format for the csys input parameter of ia.fromarray().
 
-If you don't provide the Coordinate System (unset), a default Coordinate System
-is made for you.  If {\stfaf linear=F} (the default) then it is a
-standard RA/DEC/Stokes/Spectral Coordinate System depending exactly upon
+If csys is not specified, a default coordinate system
+is created.  If {\stfaf linear=F} (the default) the created coordinate system will have
+standard RA/DEC/Stokes/Spectral Coordinate axes depending upon
 the shape of the {\stfaf pixels} array (Stokes axis must be no longer
-than 4 pixels and you may find the spectral axis coming out before the
+than 4 pixels and you may find the spectral axis preceding the
 Stokes axis if say, {\cf shape=[64,64,32,4]}).  Extra dimensions are
-given linear coordinates.  If {\stfaf linear=T} then you get a linear
-Coordinate System. 
+given linear coordinates.  If {\stfaf linear=T}, then all the resulting coordinates
+are linear with the axes represent lengths. In this case each axis will have a value
+of 0.0 at its center pixel. The increment of each axis will be 1.0 km.
+
+The method returns True if creation of the image was successful, False otherwise,
+so you can check programmatically if the image creation was successful.
 
 </description>
 <example>
 
 """
-#
-print "\t----\t fromarray Ex 1 \t----"
-ia.fromarray(outfile='test.data', pixels=ia.makearray(0, [64, 64, 4, 128]),
-             overwrite=true)
-mycs = ia.coordsys(axes=[0,1])
-ia.close()
-ia.fromarray(pixels=ia.makearray(1.0, [32, 64]), csys=mycs.torecord())
-mycs.done()
-ia.close()
-#
+# make an image with a default RA/Dec/Stokes/Frequency coordinate system
+# having all pixels set to 2.5.
+ary = ia.makearray(v=2.5, shape=[64, 64, 4, 128])
+# the ia tool does not need to reference an image in this case (ie open()
+# need not have been called), if it does reference another image, that reference
+# will be lost and replaced with a reference to the newly created image.
+res = ia.fromarray(outfile='test.data', pixels=ary, overwrite=true)
+if res:
+    # perform operations on the newly created image if desired and make sure
+    # to close it when done to free up system resources (eg memory)
+    ia.shape()
+ia.done()
 """
 
+</example>
 
-The first example creates a zero-filled \imagefile\ named {\sff
-test.data} which is of shape [64,64,4,128].  If you examine the header with
-{\stff ia.summary()} you will see the default RA/DEC/Stokes/Frequency coordinate information. 
-In the second example, a Coordinate System describing the first two axes
-of the image {\sff test.data} is created and used to create a 2D
-temporary image.
+<example>
+"""
+    
+# create an image using the coordinate system from another image
+ia.open("myexistingimage.im")
+
+mycs = ia.coordsys()
+# the number of dimensions in the array and the coordinate system must
+# be the same. For this example to work, mycs.naxes() must return 4.
+ia.done()
+ary = ia.makearray(v=2.5, shape=[64, 64, 4, 128])
+res = ia.fromarray(pixels=ary, csys=mycs.torecord())
+mycs.done()
+if (res):
+    # do things with the newly created temporary image before closing it
+    ia.shape()
+ia.done()
+
+"""
 
 </example>
 </method>
 
  
    <method type="function" name="fromascii">
-   <shortdescription>Construct a \casa\ image by conversion from an ascii file</shortdescription>
+   <shortdescription>This function converts a pre-existing ascii file into a \casa\ image. </shortdescription>
    
 <input>
   
@@ -1621,77 +1663,102 @@ temporary image.
 <returns type="bool"/>
 <description>
 
-This function is used to convert an ascii disk file to a \casa\
-\imagefile.  If {\stfaf outfile} is given, the image is written to the
-specified disk file.  If {\stfaf outfile} is unset, the Image \tool\
-is associated with a temporary image.  This temporary image may be in
-memory or on disk, depending on its size.  When you close the Image
+This function is used to create a \casa\
+\image from a pre-existing ASCII file. You might want to use this if you
+just want to create a quick image to use to see what various image analysis methods
+do. The image analysis tool on
+which the method is called will always reference the created image if
+this method is successful. Thus, calling open() on that tool is not necessary, but
+if the tool is already open, referencing another image, that reference will be
+silently destroyed and replaced with a reference to the image created by
+fromascii().
+If {\stfaf outfile} is given, the image is also written to the
+specified disk file.  If {\stfaf outfile} is unset, the image analysis tool
+on which this method was called references a temporary image.  This temporary
+image may be in
+memory or on disk, depending on its size.  When you close the image analysis
 \tool\ (with the <link
-anchor="images:image.close.function">close</link> function) this
+anchor="images:image.close.function">close</link> function) the
 temporary image is deleted.
 
 You must specify the shape of the image.  The image must be stored
-in the ascii file, one row at a time.  This row must be of the
-correct length and there must be the correct number of rows.
-For example, let us say the shape of your image is 
-{\cf [nx,ny,nz] = [3,4,2]}, then
-the image should be stored as 
+in the ascii file. If the shape of the image having N axes is to be
+[s_0, s_1, s_2, ..., s_(N-1)],
+where s_i is the integral number of pixels along axis number i, the file must have
+(s_1 * s_2 * ... * s_(N-1)) rows and each row must have s_0 numerical
+values delimited by the value specified by the sep parameter, or spaces if sep is
+not specified. Pixel locations are incremented by row number in such a way that the second
+axis changes fastest. As an example, say we want to create an image with
+shape=[3,4,2]. There must be 4*2 = 8 rows in the ascii file, and each row must have
+3 space-delimited numerical values. The first row represents values of pixels
+[0, 0, 0], [1, 0, 0], and [2, 0, 0]. The second row represents values of pixels [0, 1, 0],
+[1, 1, 0], and [2, 1, 0]. The fifth row represents values of pixels [0, 0, 1], [1, 0, 1],
+and [2, 0, 1]. The sixth values of pixels [0, 1, 1], [1, 1, 1], and [2, 1, 1,]. And so on.
 
+To further illustrate, say this is our file:
 
-1 1 1                   # row 1; y = 1, z = 1
-2 2 2                   # row 2; y = 2, z = 1
-3 3 3                   # row 3; y = 3, z = 1
-4 4 4                   # row 4; y = 4, z = 1
-1.5 1.5 1.5             # row 5; y = 1, z = 2
-2.5 2.5 2.5             # row 6; y = 2, z = 2
-3.5 3.5 3.5             # row 7; y = 3, z = 2
-4.5 4.5 4.5             # row 8; y = 4, z = 2
+1 2 3
+4 5 6
+7 8 9
+10 11 12
+13 14 15
+16 17 18
+19 20 21
+22 23 24
 
+When read with ia.fromascii(), ary = ia.getchunk() would return the following array:
+ary[0, 0, 0] = 1
+ary[1, 0, 0] = 2
+ary[2, 0, 0] = 3
+ary[0, 1, 0] = 4
+ary[1, 1, 0] = 5
+ary[2, 1, 0] = 6
+ary[0, 2, 0] = 7
+ary[1, 2, 0] = 8
+ary[2, 2, 0] = 9
+ary[0, 3, 0] = 10
+ary[1, 3, 0] = 11
+ary[2, 3, 0] = 12
+ary[0, 0, 1] = 13
+ary[1, 0, 1] = 14
+ary[2, 0, 1] = 15
+ary[0, 1, 1] = 16
+ary[1, 1, 1] = 17
+ary[2, 1, 1] = 18
+ary[0, 2, 1] = 19
+ary[1, 2, 1] = 20
+ary[2, 2, 1] = 21
+ary[0, 3, 1] = 22
+ary[1, 3, 1] = 23
+ary[2, 3, 1] = 24
 
-The Coordinate System, provided as a <link
-anchor="images:coordsys">Coordsys</link> {\tool} converted to a record
+The coordinate system, provided as a <link
+anchor="images:coordsys">coordsys</link> {\tool} converted to a record
 with coordsys torecord, is optional.  If you provide it, it must be
 dimensionally consistent with the pixels array you give (see also
 <link anchor="images:image.coordsys.function">coordsys</link>).
 
-If you don't provide the Coordinate System (unset), a default Coordinate System
+If you don't provide the coordinate system, a default coordinate system
 is made for you.  If {\stfaf linear=F} (the default) then it is a
 standard RA/DEC/Stokes/Spectral Coordinate System depending exactly upon
 the shape of the {\stfaf pixels} array (Stokes axis must be no longer
 than 4 pixels and you may find the spectral axis coming out before the
 Stokes axis if say, {\cf shape=[64,64,32,4]}).  Extra dimensions are
-given linear coordinates.  If {\stfaf linear=T} then you get a linear
-Coordinate System. 
+given linear coordinates.  If {\stfaf linear=T}, then all axes are linear
+in the resulting coordinate system.
 
 </description>
 
 <example>
-The ascii image file shown above can be read as
-an image this way:
 
 """
-#
-print "\t----\t fromascii Ex 1 \t----"
-a = [[[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]],
-     [[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]],
-     [[ 1. ,  1.5],
-      [ 2. ,  2.5],
-      [ 3. ,  3.5],
-      [ 4. ,  4.5]]]
-ia.fromarray('outimage.im',a,overwrite=true)
-ia.toASCII('myimage.ascii',overwrite=true)     # write ascii image file
-ia.close()                                     # then read ascii image file
-ia.fromascii('myimage.app', 'myimage.ascii', shape=[3,4,2], overwrite=true)
-ia.toASCII('myimage2.ascii',overwrite=true)
-ia.close()
-#!diff myimage.ascii myimage2.ascii
-#
+# say the above file presented above is stored in a file
+# named image.txt
+ia.fromascii(outfile="myimage.im", infile='image.txt', shape=[3,4,2], overwrite=true)
+# should return [3, 4, 2]
+ia.shape()
+# call other ia methods then close the tool
+ia.done()
 """
 
 </example>
