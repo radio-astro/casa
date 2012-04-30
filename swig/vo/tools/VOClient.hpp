@@ -130,9 +130,9 @@ RegResult   regExecute (RegQuery query){return voc_regExecute(query);}
 char	   *regExecuteRaw (RegQuery query){return voc_regExecuteRaw(query);}
 
 int	    resGetCount (RegResult res){return voc_resGetCount(res);}
-char	   *resGetStr (RegResult res, char *attribute, int index){return resGetStr(res, attribute, index);}
-double	    resGetFloat (RegResult res, char *attribute, int index){return resGetFloat(res, attribute, index);}
-int	    resGetInt (RegResult res, char *attribute, int index){return resGetInt(res, attribute, index);}
+char	   *resGetStr (RegResult res, char *attribute, int index){return voc_resGetStr(res, attribute, index);}
+double	    resGetFloat (RegResult res, char *attribute, int index){return voc_resGetFloat(res, attribute, index);}
+int	    resGetInt (RegResult res, char *attribute, int index){return voc_resGetInt(res, attribute, index);}
 
 };
 

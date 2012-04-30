@@ -57,8 +57,9 @@ SWIGFILE=${MYPACK}.i
 CASABUILDROOT=${CASAARCH}
 PLUGROOT="../.."
 CASAINCLUDE=${CASAROOT}"/bindings"
+BOOSTROOT=/opt/casa/darwin11/include
 EXTRAINCDIRS="\".\", \"${VOCLIENTROOT}/include\""
-PYINCLUDE="/opt/casa/darwin12/Library/Python.framework/Headers"
+PYINCLUDE="/opt/casa/darwin11/Library/Frameworks/Python.framework/Headers"
 EXTRALIBDIRS="\"${VOCLIENTROOT}/lib\""
 EXTRALIBS="\"VO\", \"tools\""
 ${SAXON} ./${MYPACK}.xml ${CASAROOT}/bindings/install/casa2swigxml.xsl > ${INFOFILE}
@@ -92,6 +93,7 @@ echo "                       include_dirs=[\"${CASABUILDROOT}/include/casacore\"
 echo "                                     \"${CASABUILDROOT}/include/casacode\"," >> setup.py
 echo "                                     \"${CASAINCLUDE}\"," >> setup.py
 echo "                                     \"${PLUGROOT}\"," >> setup.py
+echo "                                     \"${BOOSTROOT}\"," >> setup.py
 echo "                                     \".\"," >> setup.py
 echo "                                     \"${PYINCLUDE}\"," >> setup.py
 echo "                                     ${EXTRAINCDIRS}]," >> setup.py

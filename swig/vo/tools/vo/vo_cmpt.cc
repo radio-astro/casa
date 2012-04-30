@@ -84,26 +84,30 @@ vo::registry(const string &keywords,
   std::vector<casac::record> rstat;
   stringstream sql;
   if(service == string("CONE")){
-	  sql << "cone" << ends;
-	  // sql << "ResourceType like '%cone%'" << ends;
+	  ////sql << "cone" << ends;
+	  sql << "ResourceType like '%cone%'" << ends;
   }else if(service == string("SIAP")){
-	  sql << "siap" << ends;
-	  //sql << "ResourceType like '%siap%'" << ends;
+	  //sql << "siap" << ends;
+	  sql << "ResourceType like '%siap%'" << ends;
   }else if(service == string("TABULAR")){
-	  sql << "tabular" << ends;
-	  //sql << "ResourceType like '%tabular%'" << ends;
+	  //sql << "tabular" << ends;
+	  sql << "ResourceType like '%tabular%'" << ends;
   }
   cerr << sql.str() << endl;
   int orValues(0);
-  RegResult res = vao::registry::regSearch(const_cast<char *>(keywords.c_str()), const_cast<char *>(sql.str().c_str()), orValues);
+  RegResult res = vao::registry::regSearch(const_cast<char *>(sql.str().c_str()), const_cast<char *>(keywords.c_str()), orValues);
   int nresources = vao::registry::resGetCount(res);
   cerr << "Number of reources: " << nresources << endl;
   string serviceURL("ServiceUrl");
   for(int i=0;i<nresources;i++){
 	  char *title = vao::registry::resGetStr(res, "Title", i);
-	  char *surl = vao::registry::resGetStr(res, const_cast<char*>(serviceURL.c_str()), i);
+	  //cerr << title << endl;
+	  char *surl = vao::registry::resGetStr(res, "ServiceURL", i);
+	  //cerr << surl << endl;
 	  char *rtype = vao::registry::resGetStr(res, "ServiceType", i);
+	  //cerr << rtype << endl;
 	  char *sname = vao::registry::resGetStr(res, "ShortName", i);
+	  //cerr << sname << endl;
 	  char *clev = vao::registry::resGetStr(res, "ContentLevel", i);
 	  record subrec;
 	  if(title)subrec.insert("title", string(title));
@@ -111,8 +115,9 @@ vo::registry(const string &keywords,
 	  if(rtype)subrec.insert("rtype", string(rtype));
 	  if(sname)subrec.insert("sname", string(sname));
 	  if(clev)subrec.insert("clev", string(clev));
-	  ostringstream oss;
-	  oss << i << ends;
+	  //ostringstream oss;
+	  //oss << i << ends;
+	  //cerr << i << " " << string(sname) << endl;
 	  rstat.push_back(subrec);
 	  if(title)delete title;
 	  if(surl)delete surl;
