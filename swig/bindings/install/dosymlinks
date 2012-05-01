@@ -1,0 +1,57 @@
+#!/bin/bash
+if [[ -L "$0"  ]]; then
+   real_me=$(stat -f %Y "$0")
+   myDir=$(dirname "$real_me")
+   echo -n '==>  '
+else
+   myDir=$(dirname "$0")
+fi
+prefix=$(dirname "${myDir}")
+CASAROOT=${prefix}/..
+appSig=$(defaults read "${CASAROOT}/Info" CFBundleIdentifier)
+thisVersion=$(awk '{print $1}' "${CASAROOT}/Resources/VERSION")
+setupMode=$(defaults read "${appSig}" "casa.setup.mode")
+updateCasa="false"
+
+savedVersion=$(defaults read "${appSig}" "casa.version")
+if [ -n ${savedVersion} ]; then
+	if [ "${savedVersion}" != "${thisVersion}" ]; then
+            updateCasa="true"
+	fi
+else
+   updateCasa="true"
+fi
+
+updateCasa="true"
+
+if [ "${updateCasa}" = "true" ]; then
+   cmdlineLinks=$(defaults read "${appSig}" "casa.setup.linkdir")
+   if [ -n "${cmdlineLinks}" ]; then
+	   message="Update your CASA symbolic links?"
+   else
+	   # Haven't setup command line symbolic links yet
+	   message="Please enter in a directory in your PATH that you wish to install CASA symbolic links"
+   fi
+   linkdir=`/usr/bin/osascript 2>/dev/null <<EOT
+tell application "System Events"
+  activate
+  set myReply to text returned of (display dialog "${message}" with title "CASA shell environment setup" default answer "/usr/bin" buttons {"Create Symlinks", "Cancel"} default button 1)
+end tell
+EOT`
+   linksGoHere=${linkdir}
+   if [ -n ${linksGoHere} ]; then
+	   if [ -d ${linksGoHere} ]; then
+	      if [ -w ${linksGoHere} ]; then
+		      echo "Create the symbolic links ${linksGoHere}"
+	      else
+		      echo "Create the symbolic links as administrator ${linksGoHere}"
+	      fi
+	   else
+	      echo "${linksGoHere} is not a directory!"
+	   fi
+   fi
+   echo $appSig
+   echo $thisVersion
+   echo $setupMode
+   echo $?
+fi
