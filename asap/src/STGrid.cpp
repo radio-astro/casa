@@ -1649,6 +1649,7 @@ string STGrid::saveData( string outfile )
   ArrayColumn<Double> directionCol( tab, "DIRECTION" ) ;
   ArrayColumn<Float> spectraCol( tab, "SPECTRA" ) ;
   ScalarColumn<uInt> polnoCol( tab, "POLNO" ) ;
+  ScalarColumn<uInt> scannoCol( tab, "SCANNO" ) ;
   Int irow = 0 ;
   Vector<Float> sp( nchan_ ) ;
   Bool bsp, bdata ;
@@ -1657,6 +1658,7 @@ string STGrid::saveData( string outfile )
   const Float *wdata_p = data_p ;
   long step = nx_ * ny_ * npol_ ;
   long offset ;
+  uInt scanno = 0 ;
   for ( Int iy = 0 ; iy < ny_ ; iy++ ) {
     dir(1) = center_(1) - ( cpix(1) - (Double)iy ) * celly_ ;
     for ( Int ix = 0 ; ix < nx_ ; ix++ ) {
@@ -1676,8 +1678,10 @@ string STGrid::saveData( string outfile )
         spectraCol.put( irow, sp ) ;
         directionCol.put( irow, dir ) ;
         polnoCol.put( irow, pollist_[ipol] ) ;
+        scannoCol.put( irow, scanno ) ;
         irow++ ;
       }
+      scanno++ ;
     }
   }
   data_.freeStorage( data_p, bdata ) ;
@@ -1730,7 +1734,6 @@ void STGrid::fillMainColumns( Table &tab )
 
   // fill columns
   Int nrow = tab.nrow() ;
-  ScalarColumn<uInt> scannoCol( tab, "SCANNO" ) ;
   ScalarColumn<uInt> ifnoCol( tab, "IFNO" ) ;
   ScalarColumn<uInt> freqIdCol( tab, "FREQ_ID" ) ;
   ScalarColumn<uInt> molIdCol( tab, "MOLECULE_ID" ) ;
@@ -1752,7 +1755,6 @@ void STGrid::fillMainColumns( Table &tab )
   ScalarColumn<Double> timeCol( tab, "TIME" ) ;
   ScalarColumn<Double> intervalCol( tab, "INTERVAL" ) ;
   for ( Int i = 0 ; i < nrow ; i++ ) {
-    scannoCol.put( i, (uInt)i ) ;
     ifnoCol.put( i, (uInt)ifno_ ) ;
     freqIdCol.put( i, freqId ) ;
     molIdCol.put( i, molId ) ;
