@@ -336,16 +336,17 @@ using namespace casac;
 }
 
 %typemap(out) StringVec {
-   $result = ::map_array($1.value, $1.shape);
-/*
+   //$result = ::map_array($1.value, $1.shape);
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
-*/
 }
 
 %typemap(out) std::vector<std::string> {
-   $result = casac::map_vector($1);
+   //$result = casac::map_vector($1);
+   $result = PyList_New($1.size());
+   for(int i=0;i<$1.size();i++)
+      PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
 %typemap(out) std::vector<int> {

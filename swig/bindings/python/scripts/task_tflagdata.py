@@ -455,11 +455,9 @@ def tflagdata(vis,
         tflocal.init()
 
         # Backup the existing flags before applying new ones
-        # TODO: backup for the list
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-#            backupFlags(tflocal, mode)
-            fh.backupFlags(tflocal, mode)
+            fh.backupFlags(tflocal, 'tflagdata')
         
         # Run the tool
         casalog.post('Running the testflagger tool')
