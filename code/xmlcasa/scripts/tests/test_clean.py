@@ -725,7 +725,7 @@ class clean_multiterm_multifield_test(unittest.TestCase):
                         modelimage=[ ['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'] , ['testmodels/inmodel1.model.tt0','testmodels/inmodel1.model.tt1' ] ],
                         imsize=[ [100,100] , [50,50] ],
                         phasecenter = [0 ,'J2000 19h58m34.032 +40d57m20.763' ],
-                        interactive=True,
+                        interactive=False,
                         npercycle=10,
                         cell="8.0arcsec",
                         weighting="briggs",
