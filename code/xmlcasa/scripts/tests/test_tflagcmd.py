@@ -19,10 +19,14 @@ def test_eq(result, total, flagged):
     assert result['flagged'] == flagged, \
            "%s flags set; %s expected" % (result['flagged'], flagged)
 
-def create_input(str_text):
+def create_input(str_text,fname=''):
     '''Save the string in a text file'''
     
-    inp = 'tflagcmd.txt'
+    if fname=='':
+        inp = 'tflagcmd.txt'
+    else:
+        inp=fname
+
     cmd = str_text
     
     # remove file first
@@ -118,6 +122,21 @@ class test_base(unittest.TestCase):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         default(tflagcmd)
         
+    def setUp_data4rflag(self):
+        self.vis = "Four_ants_3C286.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        default(tflagdata)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+
         
 class test_manual(test_base):
     '''Test manual selections'''
@@ -138,6 +157,14 @@ class test_manual(test_base):
         
         tflagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        
+    def test_autocorr(self):
+        '''tflagcmd: autocorr=True'''
+        self.setUp_ngc5921()
+        tflagcmd(vis=self.vis, inpmode='cmd', command=['autocorr=True'], action='apply')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 203994, 'Should flag only the auto-correlations')
+        
 
 class test_alma(test_base):
     # Test various selections for alma data 
@@ -159,6 +186,19 @@ class test_alma(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
         self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
+    def test_cmd(self):
+        '''tflagcmd: inpmode=cmd with empty parameter'''
+        
+        # Test the correct parsing with empty parameter such as antenna=''
+        tflagcmd(vis=self.vis, inpmode='cmd', 
+                 command=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
+                 action='apply', savepars=False)
+        res = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 80184)
+        self.assertEqual(res['scan']['4']['flagged'], 48132)
+        self.assertEqual(res['flagged'], 160392)
+        
+             
     def test_extract(self):
         '''tflagcmd: action = extract and apply clip on WVR'''
         # Remove any cmd from table
@@ -428,7 +468,100 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
-         
+
+
+# Test rflag inputs with filenames, as well as inline thresholds.
+# rflag does not generate output thresholds for action='apply'.
+class test_rflag(test_base):
+
+    def setUp(self):
+        self.setUp_data4rflag()
+
+    def test_rflaginputs(self):
+        """tflagcmd:: Test of rflag threshold-inputs of both types (file and inline)
+        """
+
+        # (1) and (2) are the same as test_tflagdata[test_rflag3].
+        # -- (3),(4),(5) should produce the same answers as (1) and (2)
+        #
+        # (1) Test input/output files, through the task, mode='rflag'
+        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+        #              freqdev='fdevfile.txt', action='calculate');
+        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+        #              freqdev='fdevfile.txt', action='apply');
+        #res1 = tflagdata(vis=self.vis, mode='summary')
+        #print "(1) Finished tflagdata : test 1 : ", res1['flagged']
+
+
+        # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
+        #      and then read back in via list mode. 
+        #      Also test the 'savepars' when timedev and freqdev are specified differently...
+        #tflagdata(vis=self.vis,mode='unflag');
+        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+        #              freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
+        #os.system('cat outcmd.txt')
+        #tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt');
+        #res2 = tflagdata(vis=self.vis, mode='summary')
+        #print "(2) Finished tflagdata : test 2 : ", res2['flagged']
+
+
+        # (3) tflagcmd : Send in the same text files produces/used in (1)
+        input1 = "{'name':'Rflag','timedev':[[1.0,9.0,0.038859],[1.0,10.0,0.162833]]}\n"
+        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.076993],[1.0,10.0,0.196925]]}\n"
+        filename1 = create_input(input1,'tdevfile.txt')
+        filename2 = create_input(input2,'fdevfile.txt')
+
+        commlist=['mode=rflag spw=9,10 timedev='+filename1+' freqdev='+filename2]
+
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagcmd(vis=self.vis, inpmode='cmd', command=commlist, action='apply')
+        res3 = tflagdata(vis=self.vis, mode='summary')
+        print "(3) Finished flagcmd test : using tdevfile, fdevfile in the cmd (test 1)) : ", res3['flagged']
+
+
+        # (4) Give the values directly in the cmd input.....
+        commlist=['mode=rflag spw=9,10 timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
+                          freqdev=[[1.0,9.0,0.076993],[1.0,10.0,0.196925]]']
+
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagcmd(vis=self.vis, inpmode='cmd', command=commlist, action='apply')
+        res4 = tflagdata(vis=self.vis, mode='summary')
+
+        print "(4) Finished flagcmd test : using cmd arrays : ", res4['flagged']
+
+
+        # (5) Use the outcmd.txt file generated by (2). 
+        #       i.e. re-run the threshold-generation of (2) with savepars=True
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
+        tflagcmd(vis=self.vis, inpmode='file', inpfile='outcmd.txt');
+        res5 = tflagdata(vis=self.vis, mode='summary')
+        print "(5) Finished flagcmd test : using outcmd.txt from tflagdata (test 2) : ", res5['flagged']
+
+        self.assertEqual(res3['flagged'],res4['flagged']);
+        self.assertEqual(res3['flagged'],res5['flagged']);
+        self.assertEqual(res3['flagged'], 39665)
+
+    def test_rflagauto(self):
+        """tflagcmd:: Test of rflag with defaults
+        """
+        # (6) tflagcmd AUTO. Should give same answers as test_tflagdata[test_rflag1]
+        tflagdata(vis=self.vis,mode='unflag');
+        tflagcmd(vis=self.vis, inpmode='cmd', command=['mode=rflag spw=9,10'], action='apply')
+        res6 = tflagdata(vis=self.vis, mode='summary')
+        print "(6) Finished flagcmd test : auto : ", res6['flagged']
+
+        #(7) tflagdata AUTO (same as test_tflagdata[test_rflag1])
+        #tflagdata(vis=self.vis,mode='unflag');
+        #tflagdata(vis=self.vis, mode='rflag', spw='9,10');
+        #res7 = tflagdata(vis=self.vis, mode='summary')
+        #print "\n---------------------- Finished tflagdata test : auto : ", res7['flagged']
+
+        self.assertEqual(res6['flagged'], 42866)
+
+
+#################################################
         
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -451,6 +584,7 @@ def suite():
             test_savepars,
             test_XML,
             test_shadow,
+            test_rflag,
             cleanup]
         
         

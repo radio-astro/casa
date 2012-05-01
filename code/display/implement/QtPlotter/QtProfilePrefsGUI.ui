@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>179</width>
-    <height>199</height>
+    <height>281</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QCheckBox" name="autoScaleX">
      <property name="text">
-      <string>x auto scale</string>
+      <string>x Auto Scale</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -27,7 +27,7 @@
    <item>
     <widget class="QCheckBox" name="autoScaleY">
      <property name="text">
-      <string>y auto scale</string>
+      <string>y Auto Scale</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -37,7 +37,7 @@
    <item>
     <widget class="QCheckBox" name="showGrid">
      <property name="text">
-      <string>show grid</string>
+      <string>Show Grid</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -47,7 +47,7 @@
    <item>
     <widget class="QCheckBox" name="multiProf">
      <property name="text">
-      <string>overlay</string>
+      <string>Overlay</string>
      </property>
      <property name="checked">
       <bool>true</bool>
@@ -57,7 +57,27 @@
    <item>
     <widget class="QCheckBox" name="relative">
      <property name="text">
-      <string>relative</string>
+      <string>Relative</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="toolTipsCheckBox">
+     <property name="text">
+      <string>Tooltips</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="topAxisCheckBox">
+     <property name="text">
+      <string>Top Axis</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

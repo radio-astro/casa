@@ -191,8 +191,9 @@ MsPlot::~MsPlot()
     if ( itsTablePlot != NULL ) { 
         //# Tell TablePlot I don't exist anymore
         itsTablePlot->clearResetCallBack("MsPlot");
-   /*delete itsTablePlot;*/ 
-   itsTablePlot=NULL; 
+        //itsTablePlot->clearPlot();
+        //delete itsTablePlot; 
+        itsTablePlot=NULL; 
     }
     if ( itsTable != NULL ) { delete itsTable; itsTable = NULL; }
 

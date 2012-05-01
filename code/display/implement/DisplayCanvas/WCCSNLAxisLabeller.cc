@@ -98,12 +98,14 @@ extern "C" {
 //
   Int WCCSNLAxisLabellerLongAxis = -1;         
   Int WCCSNLAxisLabellerLatAxis = -1;
-  Int WCCSNLAxisLabellerVelAxis = -1;
+  Int WCCSNLAxisLabellerSpecAxis = -1;
+  WCCSAxisLabeller::SpecAxisType WCCSNLAxisLabellerSpecAxisType = WCCSAxisLabeller::FREQ;
   Int WCCSNLAxisLabellerSpecCoordIdx = -1;
   SpectralCoordinate WCCSNLAxisLabellerSpecCoord;
   Bool WCCSNLAxisLabellerAbsolute = True;
   Bool WCCSNLAxisLabellerWorldLabels = True;
   Double WCCSNLAxisLabellerVelRef = 0.0;
+  Double WCCSNLAxisLabellerWavRef = 0.0;
   Double WCCSNLAxisLabellerFreqRef = 0.0;
   Vector<Double> WCCSNLAxisLabellerRefPix(2);
   Int WCCSNLAxisLabellerUIBase = 1;
@@ -195,34 +197,71 @@ extern "C" {
    	 vWorldIn[1] = world[1];
 
 // If we are doing relative labels, first convert to absolute world
-// If we are showing velocity labels, use a relative world 
-// coordinate of 0, and then handle velocity afterwards
+// If we are showing velocity/wavelength/air wavelength labels,
+// use a relative world coordinate of 0, and then handle velocity
+// afterwards
 
-   	 if (WCCSNLAxisLabellerVelAxis != -1) {
-   		 vWorldIn[WCCSNLAxisLabellerVelAxis] = 0.0;
+   	 if (WCCSNLAxisLabellerSpecAxis != -1) {
+   		 vWorldIn[WCCSNLAxisLabellerSpecAxis] = 0.0;
    	 }
    	 if (!WCCSNLAxisLabellerAbsolute) {
    		 WCCSNLAxisLabellerCoordinateSystem->makeWorldAbsolute(vWorldIn);
    	 }
 
-// Now we must overwrite the velocity value with the absolute frequency
+// Now we must overwrite the input velocity/wavelength/air wavelength
+// value with the absolute frequency
 
-   	 if (WCCSNLAxisLabellerVelAxis != -1) {
-   		 velocity = world[WCCSNLAxisLabellerVelAxis];
-   		 if (!WCCSNLAxisLabellerAbsolute) {
+   	 if (WCCSNLAxisLabellerSpecAxis != -1) {
+   		 if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::VELO){
+   			 velocity = world[WCCSNLAxisLabellerSpecAxis];
+   			 if (!WCCSNLAxisLabellerAbsolute) {
 
-// Convert relative to absolute velocity ; rel = abs - ref
+   				 // Convert relative to absolute velocity ; rel = abs - ref
+   				 velocity += WCCSNLAxisLabellerVelRef;
+   			 }
 
-   			 velocity += WCCSNLAxisLabellerVelRef;
+   			 // Convert absolute velocity to absolute frequency
+   			 if (!WCCSNLAxisLabellerSpecCoord.velocityToFrequency(frequency, velocity)) {
+   				 err = 2;
+   				 break;
+   			 } else {
+   				 vWorldIn[WCCSNLAxisLabellerSpecAxis] = frequency;
+   			 }
    		 }
+   		 else if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::WAVE){
+      		 Vector<Double> wav(1), freq(1);
+      		 wav(0) = world[WCCSNLAxisLabellerSpecAxis];
+      		 if (!WCCSNLAxisLabellerAbsolute) {
 
-// Convert absolute velocity to absolute frequency
-
-   		 if (!WCCSNLAxisLabellerSpecCoord.velocityToFrequency(frequency, velocity)) {
+      			 // Convert relative to absolute wavelength ; rel = abs - ref
+      			 wav(0) += WCCSNLAxisLabellerWavRef;
+      		 }
+   			 // Convert absolute wavelength to absolute frequency
+      		 if (!WCCSNLAxisLabellerSpecCoord.wavelengthToFrequency(freq, wav)) {
+      			 err = 2;
+      			 break;
+      		 } else {
+      			 vWorldIn[WCCSNLAxisLabellerSpecAxis] = freq(0);
+      		 }
+   		 }
+   		 else if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::AWAV){
+      		 Vector<Double> wav(1), freq(1);
+      		 wav(0) = world[WCCSNLAxisLabellerSpecAxis];
+      		 if (!WCCSNLAxisLabellerAbsolute) {
+   			 // Convert relative to absolute air wavelength ; rel = abs - ref
+      			 wav(0) += WCCSNLAxisLabellerWavRef;
+      		 }
+   			 // Convert absolute air wavelength to absolute frequency
+      		 if (!WCCSNLAxisLabellerSpecCoord.airWavelengthToFrequency(freq, wav)) {
+      			 err = 2;
+      			 break;
+      		 } else {
+      			 vWorldIn[WCCSNLAxisLabellerSpecAxis] = freq(0);
+      		 }
+   		 }
+   		 else{
    			 err = 2;
    			 break;
-   		 } else {
-   			 vWorldIn[WCCSNLAxisLabellerVelAxis] = frequency;
    		 }
    	 }
 
@@ -255,7 +294,7 @@ extern "C" {
              break;
    		 }
 //cerr << "  pixel, world out = " << vPixelOut << " , " << vWorldOut << endl;
-//cerr << "  WCCSNLAxisLabellerVelAxis = " << WCCSNLAxisLabellerVelAxis << endl;
+//cerr << "  WCCSNLAxisLabellerSpecAxis = " << WCCSNLAxisLabellerSpecAxis << endl;
 
 
 
@@ -334,17 +373,17 @@ cerr << "Calling toWorld with " << endl;
 cerr << "  pixel, world = " << vPixelIn;
 */
    	 if (WCCSNLAxisLabellerCoordinateSystem->toWorld(vWorldOut, vPixelIn)) {
-//cerr << "vWorldOut: " <<vWorldOut << " WCCSNLAxisLabellerVelAxis: "<< WCCSNLAxisLabellerVelAxis << endl;
-   		 if (WCCSNLAxisLabellerVelAxis != -1) {
-   			 frequency = vWorldOut[WCCSNLAxisLabellerVelAxis];
+//cerr << "vWorldOut: " <<vWorldOut << " WCCSNLAxisLabellerSpecAxis: "<< WCCSNLAxisLabellerSpecAxis << endl;
+   		 if (WCCSNLAxisLabellerSpecAxis != -1) {
+   			 frequency = vWorldOut[WCCSNLAxisLabellerSpecAxis];
    		 }
 
 // Now if needed, make relative.  We use the reference value
-// for the spectral axis if velocity conversions are happening
+// for the spectral axis if velocity or wavelength conversions are happening
 
    		 if (!WCCSNLAxisLabellerAbsolute) {
-   			 if (WCCSNLAxisLabellerVelAxis != -1) {
-   				 vWorldOut[WCCSNLAxisLabellerVelAxis] = WCCSNLAxisLabellerFreqRef;
+   			 if (WCCSNLAxisLabellerSpecAxis != -1) {
+   				 vWorldOut[WCCSNLAxisLabellerSpecAxis] = WCCSNLAxisLabellerFreqRef;
    			 }
    			 WCCSNLAxisLabellerCoordinateSystem->makeWorldRelative(vWorldOut);
    		 }
@@ -356,20 +395,52 @@ cerr << "  pixel, world = " << vPixelIn;
 
 // Overwrite the value for the spectral axis if doing velocity conversions
 
-   		 if (WCCSNLAxisLabellerVelAxis != -1) {
+   		 if (WCCSNLAxisLabellerSpecAxis != -1) {
+   			 if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::VELO){
 
-// Convert absolute frequency to absolute velocity
+   				 // Convert absolute frequency to absolute velocity
+   				 if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velocity, frequency)) {
+   					 err = 3;
+   				 } else {
+   					 world[WCCSNLAxisLabellerSpecAxis] = velocity;
+   				 }
 
-   			 if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velocity, frequency)) {
-   				 err = 3;
-   			 } else {
-   				 world[WCCSNLAxisLabellerVelAxis] = velocity;
+   				 // Now make relative if required; rel = abs - ref
+   				 if (!WCCSNLAxisLabellerAbsolute) {
+   					 world[WCCSNLAxisLabellerSpecAxis] -= WCCSNLAxisLabellerVelRef;
+   				 }
    			 }
+   			 else if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::WAVE){
 
-// Now make relative if required; rel = abs - ref
+   				 Vector<Double> wav(1), freq(1);
+      			 freq(0) = frequency;
+   				 // Convert absolute frequency to absolute wavelength
+      			 if (!WCCSNLAxisLabellerSpecCoord.frequencyToWavelength (wav, freq)) {
+      				 err = 3;
+      			 } else {
+      				 world[WCCSNLAxisLabellerSpecAxis] = wav(0);
+      			 }
 
-   			 if (!WCCSNLAxisLabellerAbsolute) {
-   				 world[WCCSNLAxisLabellerVelAxis] -= WCCSNLAxisLabellerVelRef;
+   				 // Now make relative if required; rel = abs - ref
+   				 if (!WCCSNLAxisLabellerAbsolute) {
+   					 world[WCCSNLAxisLabellerSpecAxis] -= WCCSNLAxisLabellerWavRef;
+   				 }
+   			 }
+   			 else if (WCCSNLAxisLabellerSpecAxisType==WCCSAxisLabeller::AWAV){
+
+   				 Vector<Double> wav(1), freq(1);
+      			 freq(0) = frequency;
+   				 // Convert absolute frequency to absolute air wavelength
+      			 if (!WCCSNLAxisLabellerSpecCoord.frequencyToAirWavelength (wav, freq)) {
+      				 err = 3;
+      			 } else {
+      				 world[WCCSNLAxisLabellerSpecAxis] = wav(0);
+      			 }
+
+   				 // Now make relative if required; rel = abs - ref
+   				 if (!WCCSNLAxisLabellerAbsolute) {
+   					 world[WCCSNLAxisLabellerSpecAxis] -= WCCSNLAxisLabellerWavRef;
+   				 }
    			 }
    		 }
    	 } else {
@@ -530,34 +601,57 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 			switch(cSys.type(i)) {
 			case Coordinate::SPECTRAL: {
 
-				// itsDoVelocity just tells us that the user has asked for
-				// a km/s conformant spectral unit in the labeller (the CS state
-				// is already set).  We now need to see if either of the first two display axes are
-				// in fact Spectral.   specAxis = 0 or 1 will then
-				// trigger velocity conversions
-				if (itsDoVelocity) {
+				// frequency values can be directly used; velocities and
+				// wavelength values must be specially treated in nlfunc
+				// if they are displayed as x- or y-axis; if this is the case,
+				// the axis and the type (velocity/wavelength/air wavelength)
+				// is stored
+				if (itsSpecAxisType != WCCSAxisLabeller::FREQ) {
 					specAxis = cSys.worldAxes(i)[0];
 					if (specAxis>1) {
-						specAxis = -1;     // Neither of display axes is spectral
+						specAxis = -1;     // neither of display axes (x/y) are spectral
 					}
+					WCCSNLAxisLabellerSpecAxisType = itsSpecAxisType;
 				}
+
 
 // nlfunc needs these
 
 				WCCSNLAxisLabellerSpecCoordIdx = i;
 				WCCSNLAxisLabellerSpecCoord = cSys.spectralCoordinate(i);
 
-// We are going to need the velocity at the reference value
-// so we can convert relative velocity back to frequency
 
+				// We are going to need the velocity/wavelength/air wavelength
+				// at the reference value so we can convert
+				// relative velocity/wavelength/air wavelength back to frequency
 				if (specAxis != -1) {
-					Double velRef;
-					if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velRef,
-							WCCSNLAxisLabellerSpecCoord.referenceValue()[0])) {
-						return False;
+					if (itsSpecAxisType == WCCSAxisLabeller::VELO){
+						Double velRef;
+						if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velRef,
+								WCCSNLAxisLabellerSpecCoord.referenceValue()[0])) {
+							return False;
+						}
+						WCCSNLAxisLabellerVelRef = velRef;
+						WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
 					}
-					WCCSNLAxisLabellerVelRef = velRef;
-					WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
+					else if (itsSpecAxisType == WCCSAxisLabeller::WAVE){
+						Vector<Double> wavRef(1), freqRef(1);
+						freqRef(0)=WCCSNLAxisLabellerSpecCoord.referenceValue()[0];
+						if (!WCCSNLAxisLabellerSpecCoord.frequencyToWavelength (wavRef, freqRef)) {
+							return False;
+						}
+						WCCSNLAxisLabellerWavRef = wavRef(0);
+						WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
+					}
+					else if (itsSpecAxisType == WCCSAxisLabeller::AWAV){
+						Vector<Double> wavRef(1), freqRef(1);
+						freqRef(0)=WCCSNLAxisLabellerSpecCoord.referenceValue()[0];
+						if (!WCCSNLAxisLabellerSpecCoord.frequencyToAirWavelength (wavRef, freqRef)) {
+							return False;
+						}
+						WCCSNLAxisLabellerWavRef = wavRef(0);
+						WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
+					}
 				}
 			}
 			break;
@@ -565,15 +659,15 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 				break;
 			}
 		}
-//
-		WCCSNLAxisLabellerVelAxis = specAxis;
-		WCCSNLAxisLabellerAbsolute = itsAbsolute;      // From WCCSAxisLabeller
+
+// Required in nlfunc
+		WCCSNLAxisLabellerSpecAxis    = specAxis;
+		WCCSNLAxisLabellerAbsolute    = itsAbsolute;      // From WCCSAxisLabeller
 		WCCSNLAxisLabellerWorldLabels = itsWorldAxisLabels;
-		WCCSNLAxisLabellerUIBase = uiBase();
+		WCCSNLAxisLabellerUIBase      = uiBase();
 		// Determines whether 'Absolute Pixel' labelling is from 0 or 1.
 
 // Set up the toMix world ranges
-
 		const uInt nWorld = cSys.nWorldAxes();
 		WCCSNLAxisLabellerWorldMin.resize(nWorld);
 		WCCSNLAxisLabellerWorldMax.resize(nWorld);
@@ -581,7 +675,6 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 		WCCSNLAxisLabellerWorldMax = cSys.worldMixMax();
 
 // Get some other bits and pieces
-
 		Vector<Double> refPixel = cSys.referencePixel();
 		WCCSNLAxisLabellerRefPix[0] = refPixel[0];
 		WCCSNLAxisLabellerRefPix[1] = refPixel[1];
@@ -589,13 +682,11 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 // Set first two axes as having a world coordinate specified.
 // The rest have a pixel coordinate given by the removed pixel 
 // axes replacement value
-
 		WCCSNLAxisLabellerWorldAxes.resize(nWorld);
 		WCCSNLAxisLabellerWorldAxes = False;
 		WCCSNLAxisLabellerWorldAxes[0] = WCCSNLAxisLabellerWorldAxes[1] = True;
 
 // Assign reference to CS for nlfunc
-
 		WCCSNLAxisLabellerCoordinateSystem = &cSys;
 //
 		float blc[2];

@@ -172,8 +172,13 @@ def makeDict(cmdlist, myreason='any'):
             flagd['reason'] = reason 
             
             # Remove reason from command line   
-            newline = command.rstrip()
-            command = purgeParameter(newline, 'reason')
+            command = command.rstrip()
+            newline = purgeParameter(command, 'reason')
+            
+            # Remove any empty parameter (CAS-4015)
+            command = purgeEmptyPars(newline)
+            command = command.strip()
+            
             flagd['command'] = command
             flagd['interval'] = interval
             flagd['level'] = level
@@ -186,6 +191,8 @@ def makeDict(cmdlist, myreason='any'):
                 
     except:
         raise Exception, 'Cannot create dictionary'
+    
+    casalog.post(':makeDict::myflagd=%s'%myflagd,'DEBUG')
     
     return myflagd
 
@@ -1113,6 +1120,7 @@ def getLinePars(cmdline, mlist=[]):
                     if xkey == m:
                         dicpars[m] = xval
                         
+    casalog.post(':getLinePars::dicpars=%s'%dicpars, 'DEBUG')         
             
     return dicpars
 
@@ -1226,6 +1234,10 @@ def readNtime(params):
 def fixType(params):
     '''Give correct types to non-string parameters'''
 
+    # manual parameter
+    if params.has_key('autocorr'):
+        params['autocorr'] = eval(params['autocorr'].capitalize())
+        
     # quack parameters
     if params.has_key('quackmode') and not params['quackmode'] in ['beg'
             , 'endb', 'end', 'tail']:
@@ -1350,7 +1362,7 @@ def purgeEmptyPars(cmdline):
             if xval == '':
                 continue
             else:
-                newstr = newstr+' '+xkey+'='+xval+' '
+                newstr = newstr+xkey+'='+xval+' '
             
     else:
         casalog.post('String of parameters is empty','WARN')   
@@ -1407,7 +1419,8 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
         return
     
     # Parameters for each mode
-    manualpars = []
+    manualpars = ['autocorr']
+    unflagpars = []
     clippars = ['clipminmax', 'clipoutside','datacolumn', 'channelavg', 'clipzeros']
     quackpars = ['quackinterval','quackmode','quackincrement']
     shadowpars = ['tolerance', 'addantenna']
@@ -1487,10 +1500,22 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
                 modepars = getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):
                 mode = 'unflag'
-                modepars = getLinePars(cmdline,manualpars)
+                modepars = getLinePars(cmdline,unflagpars)
             elif cmdline.__contains__('rflag'):
                 mode = 'rflag'
                 modepars = getLinePars(cmdline,rflagpars)
+
+                ##### 
+                ### According to 'shadow' file handling, this code should be here...
+                ###  but, it's already done inside fixType. 
+                #####
+                #if( type(modepars['timedev']) == str and writeflags == True):
+                #    timedev = readRFlagThresholdFile(modepars['timedev'],'timedev')
+                #    modepars['timedev'] = timedev
+                #if( type(modepars['freqdev']) == str and writeflags == True):
+                #    freqdev = readRFlagThresholdFile(modepars['freqdev'],'freqdev')
+                #    modepars['freqdev'] = freqdev
+
                 # Add the writeflags and display parameters
                 modepars['writeflags'] = writeflags
                 modepars['display'] = display
@@ -1893,4 +1918,65 @@ def convertStringToDict(instr=''):
     except Exception, instance:
         casalog.post("*** Error converting string %s to dictionary : \'%s\'" % (instr,instance),'ERROR');
     return thedict;
+##############################################
+
+def extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
+    """
+    Function to pull out 'rflag' output from the long dictionary, and 
+    (1) write the output files with thresholds. If the filename is specified, use it.
+          If filename is not specified, make one up.
+    (2) modify entries in 'cmdline' so that it is ready for savepars. 
+          This is to ensure that 'savepars' saves the contents of the threshold-files
+          and not just the file-names. It has to save it in the form that tflagdata 
+          accepts inline : e.g.  timedev=[[1,10,0.1],[1,11,0.07]] . This way, the user
+          need not keep track of threshold text files if they use 'savepars' with action='apply'.
+    """
+    if type(summary_stats_list) is dict:
+        nreps = summary_stats_list['nreport']
+        for rep in range(0,nreps):
+            repname = 'report'+str(rep)
+            if summary_stats_list[repname]['type'] == "rflag":
+                # Pull out the rflag threshold dictionary. This has a 'name' in it.
+                rflag_thresholds = summary_stats_list[repname]
+                ##print rflag_thresholds
+                # Get the rflag id, to later construct a 'name' from to match the above.
+                rflagid = 0
+                if mode=='list':
+                    rflagid = int( rflag_thresholds['name'].replace('Rflag_','') )
+                # Go through the flagcmd list, to find the 'rflags'.....
+                for key in flagcmd.keys():
+                    cmdline = flagcmd[key]['command'];
+                    if cmdline.__contains__('rflag'):
+                        # Check for match between input flagcmd and output threshold, via the rflag id
+                        if(key==rflagid):  
+                            # If timedev,freqdev are missing from cmdline, add empty ones.
+                            if( not cmdline.__contains__('timedev=') ):  # aah. don't confuse it with timedevscale
+                                cmdline = cmdline + " timedev=[] ";
+                            if( not cmdline.__contains__('freqdev=') ):
+                                cmdline = cmdline + " freqdev=[] ";
+                            # Pull out timedev, freqdev strings from flagcmd
+                            rflagpars = getLinePars(cmdline , ['timedev','freqdev','writeflags']);
+                            ##print "cmdline : ", cmdline
+                            ##print "rflagpars : ", rflagpars
+                            # Write RFlag thresholds to these file names. 
+                            newtimedev,newfreqdev = writeRFlagThresholdFile(rflag_thresholds, rflagpars['timedev'], rflagpars['freqdev'], rflagid)
+                            ## Modify the flagcmd string, so that savepars sees the contents of the file
+                            if( rflagpars['timedev'].__contains__('[') ):
+                                oldstring = 'timedev='+str(rflagpars['timedev'])
+                                newstring = 'timedev='+str(newtimedev).replace(' ','')
+                                ##print "time : replacing " , oldstring , newstring
+                                cmdline = cmdline.replace( oldstring, newstring );
+                            if( rflagpars['freqdev'].__contains__('[') ):
+                                oldstring = 'freqdev='+str(rflagpars['freqdev'])
+                                newstring = 'freqdev='+str(newfreqdev).replace(' ','')
+                                ##print "freq : replacing " , oldstring , newstring
+                                cmdline = cmdline.replace( oldstring, newstring );
+                            # Remove writeflags from the cmd to prevent it from going into savepars
+                            oldstring = 'writeflags='+str(rflagpars['writeflags'])
+                            cmdline = cmdline.replace( oldstring, "" );
+                            
+                            flagcmd[key]['command'] = cmdline;
+
+
+
 ##############################################

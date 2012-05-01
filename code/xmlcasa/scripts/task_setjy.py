@@ -1,12 +1,14 @@
 from glob import glob
 import os
 import sys
+import shutil
+from setjy_helper import * 
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, observation=None,
-          modimage=None, listmodimages=None,
+          modimage=None, listmodels=None,
           scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
           standard=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
@@ -14,17 +16,34 @@ def setjy(vis=None, field=None, spw=None,
   try:
     casalog.origin('setjy')
 
-    if listmodimages:
-      casalog.post("Listing modimage candidates (listmodimages == True).")
+    if listmodels:
+      casalog.post("Listing modimage candidates (listmodels == True).")
       if vis:
         casalog.post("%s is NOT being modified." % vis)
-      lsmodims('.', modpat='*.im* *.mod*')
-      calmoddirs = findCalModels()
-      for d in calmoddirs:
-        lsmodims(d)
+
+      if standard=='Butler-JPL-Horizons 2012':
+        ssmoddirs = findCalModels(target='SolarSystemModels',
+                  roots=[casa['dirs']['data']],
+                  exts=['.im','.ms','tab'])
+        if ssmoddirs==set([]):
+          casalog.post("No models were found. Missing SolarSystemModels in the CASA data directory","WARN")           
+        for d in ssmoddirs:
+          lsmodims(d,modpat='*Tb.dat', header='Tb models of solar system objects available for %s' % standard) 
+      elif standard=='Butler-JPL-Horizons 2010':
+        availmodellist=['Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune', 'Pluto',
+                        'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan','Triton',
+                        'Ceres', 'Pallas', 'Vesta', 'Juno', 'Victoria', 'Davida']
+        print "Solar system objects recognized by %s:" % standard
+        print availmodellist 
+      else:
+        lsmodims('.', modpat='*.im* *.mod*')
+        calmoddirs = findCalModels()
+        ssmoddirs=None
+        for d in calmoddirs:
+          lsmodims(d)
     else:
       if not os.path.isdir(vis):
-        casalog.post(vis + " must be a valid MS unless listmodimages is True.",
+        casalog.post(vis + " must be a valid MS unless listmodels is True.",
                      "SEVERE")
         return False
 
@@ -95,13 +114,28 @@ def setjy(vis=None, field=None, spw=None,
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
 
-      myim.setjy(field=field, spw=spw, modimage=modimage,
+      # split the process for solar system objects
+      if standard=="Butler-JPL-Horizons 2012":
+        casalog.post("Using Butler-JPL-Horizons 2012")
+        ssmoddirs = findCalModels(target='SolarSystemModels',
+                  roots=[casa['dirs']['data']],
+                  exts=['.im','.ms','tab'])
+        if ssmoddirs==set([]):
+          raise Exception, "Missing Tb models in the data directory"
+
+        setjyutil=ss_setjy_helper(myim,vis,casalog)
+        setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
+                         timerange=timerange,observation=str(observation), scan=scan)
+      else:
+        myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan)
-      myim.close()
+        myim.close()
   except Exception, instance:
-    print '*** Error ***',instance
+    #print '*** Error ***',instance
+    casalog.post('%s' % instance,'SEVERE')
+    retval = False
   return retval
 
 def better_glob(pats):
@@ -213,3 +247,5 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
     mytb.close()
     retval = st.nrows()
   return retval
+
+

@@ -35,6 +35,7 @@
 namespace casa {
 
     class QtDisplayData;
+    class QtDisplayPanelGui;
 
     namespace viewer {
 
@@ -45,7 +46,7 @@ namespace casa {
 	    Q_OBJECT
 	    public:
 
-		QtRegionDock( QWidget* parent=0 );
+		QtRegionDock( QtDisplayPanelGui *, QWidget* parent=0 );
 		~QtRegionDock();
 
 		void addRegion(QtRegionState*,int index = -1);
@@ -59,6 +60,8 @@ namespace casa {
 
 		std::pair<int,int> &tabState( ) { return current_tab_state; }
 		std::map<std::string,int> &coordState( ) { return current_coord_state; }
+
+		void dismiss( );
 
 	    signals:
 		void deleteRegion(QtRegionState*);
@@ -79,10 +82,15 @@ namespace casa {
 		void handle_visibility(bool);
 		void emit_region_stack_change( int );
 
+	    protected:
+		void closeEvent ( QCloseEvent * event );
+
 	    private:
+		QtDisplayPanelGui *dpg;
 		QtDisplayData *current_dd;
 		std::pair<int,int> current_tab_state;
 		std::map<std::string,int> current_coord_state;
+		bool dismissed;
 
 	};
     }

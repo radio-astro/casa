@@ -243,17 +243,24 @@ class simutil:
         stats=ia.statistics(robust=True,verbose=False,list=False)
         im_min=stats['min']*toJypix
         plarr=pl.zeros(1)
+        badim=False
         if type(im_min)==type([]) or type(im_min)==type(plarr):
-            if len(im_min)<1: im_min=0.
+            if len(im_min)<1: 
+                badim=True
+                im_min=0.
         im_max=stats['max']*toJypix
-        if type(im_max)==type([]) or type(im_min)==type(plarr):
-            if len(im_max)<1: im_max=1.
+        if type(im_max)==type([]) or type(im_max)==type(plarr):
+            if len(im_max)<1: 
+                badim=True
+                im_max=1.
         imsize=ia.shape()[0:2]
         reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
         stats=ia.statistics(region=reg1,verbose=False,list=False)
         im_rms=stats['rms']*toJypix
-        if type(im_rms)==type([]) or type(im_min)==type(plarr):
-            if len(im_rms)==0: im_rms=0.
+        if type(im_rms)==type([]) or type(im_rms)==type(plarr):
+            if len(im_rms)==0: 
+                badim=True
+                im_rms=0.
         data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
         data_array=pl.array(data_array)
         tdata_array=pl.transpose(data_array)
@@ -270,17 +277,21 @@ class simutil:
             yextent=[-yextent,yextent]
         # remove top .5% of pixels:
         nbin=200
-        imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
-        ii=0
-        lowcounts=imhist['counts'][ii]
-        while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
-            ii=ii+1
-        lowvalue=imhist['values'][ii]
-        ii=nbin-1
-        highcounts=imhist['counts'][ii]
-        while imhist['counts'][ii]>0.995*highcounts and ii>0 and 0.995*highcounts>lowcounts: 
-            ii=ii-1
-        highvalue=imhist['values'][ii]
+        if badim:
+            highvalue=im_max
+            lowvalue=im_min
+        else:
+            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
+            ii=0
+            lowcounts=imhist['counts'][ii]
+            while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
+                ii=ii+1
+            lowvalue=imhist['values'][ii]
+            ii=nbin-1
+            highcounts=imhist['counts'][ii]
+            while imhist['counts'][ii]>0.995*highcounts and ii>0 and 0.995*highcounts>lowcounts: 
+                ii=ii-1
+            highvalue=imhist['values'][ii]
         if disprange != None:
             if type(disprange)==type([]):
                 if len(disprange)>0:

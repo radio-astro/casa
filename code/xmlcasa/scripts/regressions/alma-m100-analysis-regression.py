@@ -198,12 +198,14 @@ if(mystep in thesteps):
         print "We use canned tsys tables instead."
 
     if(makeplots):
-        for spw in ['1','3','5','7']:
+        for spw in ['9','11','13','15']:
             for name in basename:
                 plotcal(caltable='cal-tsys_'+name+'.fdm', xaxis='freq', yaxis='amp',
                         spw=spw, subplot=721, overplot=False,
                         iteration='antenna', plotrange=[0, 0, 40, 180], plotsymbol='.',
                         figfile='cal-tsys_per_spw_'+spw+'_'+name+'.png')
+
+exit
 
     timing()
 

@@ -625,6 +625,28 @@ class clean_multiterm_multifield_test(unittest.TestCase):
     inmodeldir = 'testmodels';
     modim2=['testmodels/inmodel0.model.tt0','testmodels/inmodel1.model.tt1']
 
+    # Check which data cols exist on disk
+    def checkdatacols(self,vis=''):
+        tb.open(vis)
+        colnames = tb.colnames()
+        print 'data : ', colnames.count('DATA'), '  model : ', colnames.count('MODEL_DATA'),  ' corrected : ', colnames.count('CORRECTED_DATA')
+        #os.system('du -khs '+vis)
+        return [ colnames.count('DATA') , colnames.count('MODEL_DATA') , colnames.count('CORRECTED_DATA') ]
+
+    # Delete model and corrected columns.
+    def delmodelcorrcols(self,vis=''):
+        tb.open(vis, nomodify=False);
+        colnames = tb.colnames()
+        remcols = []
+        if colnames.count('CORRECTED_DATA'):
+            remcols.append('CORRECTED_DATA')
+
+        if colnames.count('MODEL_DATA'):
+            remcols.append('MODEL_DATA')
+
+        tb.removecols(remcols);
+        tb.close();
+
     def setUp(self):
         self.res = None
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/multiterm_multifield_data/'
@@ -652,7 +674,7 @@ class clean_multiterm_multifield_test(unittest.TestCase):
 	        shutil.rmtree(self.img[1]+imext)
 
     def testMultiTermOutlier(self):
-        """Clean test3 (multi-term+multi-field : CAS-2664) : test task param input with nterms=2 and outlier file and with user-specified mask and model"""
+        """Clean testMTOutlier1 (multi-term+multi-field : CAS-2664) : test task param input with nterms=2 and outlier file and with user-specified mask and model"""
 
         # Run clean with outlier file
         self.res= clean(vis=self.msfile,
@@ -688,45 +710,186 @@ class clean_multiterm_multifield_test(unittest.TestCase):
         self.assertTrue(all(stat01['minpos']==numpy.array([50,50,0,0])) and
                  all(stat11['minpos']==numpy.array([15,15,0,0])))
 
-### Uncomment after CAS-3688 gets fixed, so that this can run in the same casapy session.
-### It will test re-running clean twice, in different ways.
-#    def testMultiTermLists(self):
-#        """Clean test3 (multi-term+multi-field) : test task param input with nterms=2 and inline lists for modelimages and masks"""
-#
-#        # Run clean with inline lists
-#        self.res= clean(vis=self.msfile,
-#                        imagename=self.img,
-#                        mode="mfs",
-#                        nterms=2,
-#                        niter=10,
-#                        mask=[ 'circle[[50pix , 50pix] ,15pix ]' , 'circle[[15pix , 15pix] ,8pix ]' ], 
-#                        modelimage=[ ['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'] , ['testmodels/inmodel1.model.tt0','testmodels/inmodel1.model.tt1' ] ],
-#                        imsize=[ [100,100] , [50,50] ],
-#                        phasecenter = [0 ,'J2000 19h58m34.032 +40d57m20.763' ],
-#                        interactive=True,
-#                        npercycle=10,
-#                        cell="8.0arcsec",
-#                        weighting="briggs",
-#                        pbcor=False,
-#                        minpb=0.1)
-#
-#        self.assertEqual(self.res,None)
-#
-#        # quick check on the peaks apear at the location as expected
-#        for img in self.img:
-#              self.assertTrue(os.path.exists(img+".image.tt0"))
-#              self.assertTrue(os.path.exists(img+".image.tt1"))
-#        stat00 = imstat(self.img[0]+'.model.tt0')
-#        stat10 = imstat(self.img[1]+'.model.tt0')
-#        stat01 = imstat(self.img[0]+'.model.tt1')
-#        stat11 = imstat(self.img[1]+'.model.tt1')
-#
-#        self.assertTrue(all(stat00['maxpos']==numpy.array([50,50,0,0])) and
-#                 all(stat10['maxpos']==numpy.array([15,15,0,0])))
-#        self.assertTrue(all(stat01['minpos']==numpy.array([50,50,0,0])) and
-#                 all(stat11['minpos']==numpy.array([15,15,0,0])))
+## Uncomment after CAS-3688 gets fixed, so that this can run in the same casapy session.
+## It will test re-running clean twice, in different ways.
+    def testMultiTermLists(self):
+        """Clean testMTOutlier2 (multi-term+multi-field) : test task param input with nterms=2 and inline lists for modelimages and masks"""
 
+        # Run clean with inline lists
+        self.res= clean(vis=self.msfile,
+                        imagename=self.img,
+                        mode="mfs",
+                        nterms=2,
+                        niter=10,
+                        mask=[ 'circle[[50pix , 50pix] ,15pix ]' , 'circle[[15pix , 15pix] ,8pix ]' ], 
+                        modelimage=[ ['testmodels/inmodel0.model.tt0','testmodels/inmodel0.model.tt1'] , ['testmodels/inmodel1.model.tt0','testmodels/inmodel1.model.tt1' ] ],
+                        imsize=[ [100,100] , [50,50] ],
+                        phasecenter = [0 ,'J2000 19h58m34.032 +40d57m20.763' ],
+                        interactive=True,
+                        npercycle=10,
+                        cell="8.0arcsec",
+                        weighting="briggs",
+                        pbcor=False,
+                        minpb=0.1)
 
+        self.assertEqual(self.res,None)
+
+        # quick check on the peaks apear at the location as expected
+        for img in self.img:
+              self.assertTrue(os.path.exists(img+".image.tt0"))
+              self.assertTrue(os.path.exists(img+".image.tt1"))
+        stat00 = imstat(self.img[0]+'.model.tt0')
+        stat10 = imstat(self.img[1]+'.model.tt0')
+        stat01 = imstat(self.img[0]+'.model.tt1')
+        stat11 = imstat(self.img[1]+'.model.tt1')
+
+        self.assertTrue(all(stat00['maxpos']==numpy.array([50,50,0,0])) and
+                 all(stat10['maxpos']==numpy.array([15,15,0,0])))
+        self.assertTrue(all(stat01['minpos']==numpy.array([50,50,0,0])) and
+                 all(stat11['minpos']==numpy.array([15,15,0,0])))
+
+    def testMultiTermOutlierUvsub(self):
+        """Clean testMTOutlier3 (multi-term+multi-field+uvsub) : test task param input with nterms=2, inline lists for outlier fields, clean with niter=0 to predict a model, and uvsub to subtract outliers.
+        """
+
+        msname = self.msfile
+
+        usescratch = False
+        testmschange = True  # Calculate models on one ms, subtract from another
+
+        # State-checker...
+        rstate = True
+        
+        print '(0) Start with only data column'
+        self.delmodelcorrcols(msname);
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,0,0] )
+
+        ## (1) Run clean with imsize=100, one field, 2 terms.
+        os.system('rm -rf try_uvsub_1*');
+        clean(vis = msname, \
+                  imagename = 'try_uvsub_1', \
+                  imsize=100,\
+                  mask = 'circle[[50pix , 50pix] ,8pix ]',\
+                  cell='8.0arcsec',\
+                  niter=10, \
+                  gain=0.5, \
+                  interactive=False, \
+                  npercycle=5,\
+                  psfmode='hogbom',\
+                  weighting='briggs',\
+                  nterms=2,\
+                  usescratch=usescratch);
+
+        print '(1) After first run'
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,int(usescratch),0] )
+        if rstate==False:
+            print 'FAIL : usescratch=', usescratch, '  in clean'
+        self.assertTrue( rstate )
+
+        ## (2) Run clean with two fields, 100, 50, both with 2 terms
+        os.system('rm -rf try_uvsub_2*');
+        clean(vis = msname, \
+                  imagename = [ 'try_uvsub_2_main', 'try_uvsub_2_outlier' ], \
+                  imsize=[ [100,100], [50,50] ], \
+                  phasecenter = [ 0 , 'J2000 19h58m34.032 +40d57m20.763' ], \
+                  mask = ['circle[[50pix , 50pix] ,8pix ]' , 'circle[[15pix , 15pix] ,8pix ]'],\
+                  cell=['8.0arcsec'],\
+                  niter=10, \
+                  gain=0.5, \
+                  interactive=False, \
+                  npercycle=5,\
+                  psfmode='hogbom',\
+                  weighting='briggs',\
+                  nterms=2,\
+                  usescratch=usescratch);
+        
+        print '(2) After the multi-field run'
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,int(usescratch),0] )
+        if rstate==False:
+            print 'FAIL : usescratch=', usescratch, '  in clean'
+        self.assertTrue( rstate )
+            
+        if testmschange == True:
+            self.delmodelcorrcols(msname);
+            print '(2.5) Deleting model col again'
+            rstate = rstate &  ( self.checkdatacols(msname) == [1,0,0] )
+            if rstate==False:
+                print 'FAIL : Error in deleting columns'
+                
+        ## (3) Run clean with niter=0 and only the second field model (2 terms)
+        clean(vis = msname, \
+                  imagename = 'try_uvsub_2_outlier', \
+                  imsize=[50,50],\
+                  phasecenter='J2000 19h58m34.032 +40d57m20.763' ,\
+                  mask = 'circle[[15pix , 15pix] ,8pix ]',\
+                  cell=['8.0arcsec'],\
+                  niter=0, \
+                  weighting='briggs',\
+                  nterms=2,\
+                  usescratch=usescratch);
+        
+        print '(3) After the niter=0 prediction run with usescratch=', usescratch
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,int(usescratch),0] )
+        if rstate==False:
+            print 'FAIL : usescratch=', usescratch, '  in clean'
+        self.assertTrue( rstate )
+            
+        ## (4) uvsub
+        uvsub(vis = msname)   
+
+        print '(4) After uvsub'
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,int(usescratch),1] )
+        if rstate==False:
+            print 'FAIL : uvsub scratch-column construction. Should be ', [1,int(usescratch),1]
+        self.assertTrue( rstate )
+            
+        ## (5) Repeat (1) and sidelobes from the faraway source should have gone.
+        os.system('rm -rf try_uvsub_3*');
+        clean(vis = msname, \
+                  imagename = 'try_uvsub_3', \
+                  imsize=100,\
+                  mask =  'circle[[50pix , 50pix] ,8pix ]',\
+                  cell='8.0arcsec',\
+                  niter=10, \
+                  gain=0.5, \
+                  interactive=False, \
+                  npercycle=5,\
+                  psfmode='hogbom',\
+                  weighting='briggs',\
+                  nterms=2,\
+                  usescratch=usescratch);
+        
+        print '(5) Finished second clean run'
+        rstate = rstate &  ( self.checkdatacols(msname) == [1,int(usescratch),1] )
+        if rstate==False:
+            print 'FAIL : usescratch in clean'
+        self.assertTrue( rstate )
+            
+        print '(6) Check that try_uvsub_3.image.tt0  looks like try_uvsub_2_main.image.tt0  and not have huge circles of try_uvsub_1.image.tt0 in the top right corner'
+
+        stat1 = imstat('try_uvsub_1.image.tt0')
+        stat2 = imstat('try_uvsub_2_main.image.tt0')
+        stat3 = imstat('try_uvsub_3.image.tt0')
+        
+        print "Peak positions : ", stat1['maxpos'] , stat2['maxpos'] , stat3 ['maxpos']
+        
+        rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
+        rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
+        rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
+        
+        statcorner1 = imstat('try_uvsub_1.image.tt0', box='70,70,99,99')
+        statcorner2 = imstat('try_uvsub_2_main.image.tt0', box='70,70,99,99')
+        statcorner3 = imstat('try_uvsub_3.image.tt0', box='70,70,99,99')
+        
+        print "Corner RMS : ", statcorner1['rms'] , statcorner2['rms'] , statcorner3 ['rms']
+        
+        rstate = rstate & (statcorner1['rms'] > 0.049 and statcorner1['rms'] < 0.05)
+        rstate = rstate & (statcorner2['rms'] > 0.0021 and statcorner2['rms'] < 0.0022)
+        rstate = rstate & (statcorner3['rms'] > 0.0021 and statcorner3['rms'] < 0.0022)
+        
+        self.assertTrue( rstate )
+        
+#########################################################
 
 class clean_multims_test(unittest.TestCase):
     # unit tests for multiple ms inputs

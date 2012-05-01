@@ -156,6 +156,7 @@ def tflagcmd(
                 myflagcmd = myflags
 
             listmode = 'online'
+            
         else:
 
             # command strings
@@ -168,6 +169,9 @@ def tflagcmd(
 
             listmode = ''
 
+
+        casalog.post('Flagcmd dictionary is: %s'%myflagcmd, 'DEBUG')
+        
         # Specific for some actions
         # Get the commands as a list of strings with reason back in
         # TODO: maybe this is not needed anymore!!!!!!!!!!!!!!!
@@ -200,7 +204,7 @@ def tflagcmd(
         #
         casalog.post('Executing action = ' + action)
 
-        # TODO: check row selection
+        # TODO: add row selection
         # List the flag commands from inpfile on the screen
         # and save them or not to outfile
         if action == 'list':
@@ -224,6 +228,7 @@ def tflagcmd(
                     casalog.post('Saving commands to ' + outfile)
                     fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
                                     applied=False, add_reason='', outfile=outfile)
+                    
         elif action == 'apply' or action == 'unapply':
 
             # Apply/Unapply the flag commands to the data

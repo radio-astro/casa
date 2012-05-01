@@ -38,7 +38,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="bool" name="selectdata">
       <description>Other data selection parameters</description>
-      <value>False</value>
+      <value>True</value>
     </param>
     
     <param type="string" name="timerange" subparam="true">

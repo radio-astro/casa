@@ -91,7 +91,7 @@ clean(vis='2229.cont2.ms',imagename='2229.cont2',mode='channel',
       psfmode='hogbom',niter=6000,gain=0.1,threshold=8.,mask='',
       nchan=1,start=0,width=1,field='0',spw='0',
       imsize=[256,256],cell=[0.5,0.5],
-      weighting='briggs',robust=0.5)
+      weighting='briggs',robust=0.5,imagermode='')
 cleantime1 = time.time()
 print '--Clean src cont--'
 default('clean')
@@ -99,7 +99,7 @@ clean(vis='ngc7538d.cont.ms',imagename='ngc7538d.cont',mode='channel',
       psfmode='hogbom',niter=5000,gain=0.1,threshold=3.,mask='',
       nchan=1,start=0,width=1,field='0',spw='0',
       imsize=[1024,1024],cell=[0.5,0.5],
-      weighting='briggs',robust=0.5)
+      weighting='briggs',robust=0.5,imagermode='')
 cleantime2 = time.time()
 print '--Clean src line--'
 default('clean')
@@ -107,7 +107,7 @@ clean(vis='ngc7538d.line.ms',imagename='ngc7538d.cube',mode='channel',
       psfmode='hogbom',niter=5000,gain=0.1,threshold=30.,mask='',
       nchan=48,start=2,width=1,field='0',spw='0',
       imsize=[128,128],cell=[4.,4.],
-      weighting='briggs',robust=2.,
+      weighting='briggs',robust=2.,imagermode='',
       uvtaper=True, outertaper=['12.0arcsec','12.0arcsec', '0deg'])
 cleantime3 = time.time()
 # -- Not done in old regression but should be
@@ -148,7 +148,7 @@ thistest_imrms=statistics['rms'][0]
 cal_max=2.413
 src_max=18.3638
 im_max=0.2606
-im_rms=0.0114
+im_rms=0.0124
 
 
 diff_cal=abs((cal_max-thistest_cal)/cal_max)

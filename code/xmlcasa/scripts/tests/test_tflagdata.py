@@ -280,94 +280,6 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
 
-#        # This MS seems to give wrong results with the old flagdata
-#        # compared to tflagdata. Will remove this test and use a different
-#        # MS
-#
-#class test_shadow_ngc5921(test_base):
-#    """More test of mode = 'shadow'"""
-#    def setUp(self):
-#        self.setUp_ngc5921()
-
-#    def test_CAS2399(self):
-#        
-#        tflagdata(vis = self.vis, mode='unflag')
-#        tflagdata(vis = self.vis,mode = "shadow",diameter = 35)
-#        allbl = tflagdata(vis = self.vis,mode = "summary")
-#
-#        # Sketch of what is being shadowed:
-#        #
-#        #  A23 shadowed by A1
-#        #
-#        #  A13 shadowed by A2 shadowed by A9
-#        #
-#        
-#        # Now remove baseline 2-13   (named 3-14)
-#        outputvis = "missing-baseline.ms"
-#        os.system("rm -rf " + outputvis)
-#        split(vis = self.vis, 
-#              outputvis = outputvis,
-#              datacolumn = "data",
-#              antenna = "!3&&14")
-#        
-#        tflagdata(vis = outputvis, mode='unflag')
-#        tflagdata(vis = outputvis,mode = "shadow",diameter = 35)
-#        
-#        missingbl = tflagdata(vis = outputvis,mode = "summary")
-#
-#        # With baseline based flagging, A13 will not get flagged
-#        # when the baseline is missing
-#        #
-#        # With antenna based flagging, A13 should be flagged
-#        
-#        assert allbl['antenna']['3']['flagged'] > 1000
-#        assert allbl['antenna']['24']['flagged'] > 1000
-#        
-#        assert missingbl['antenna']['3']['flagged'] > 1000
-#        assert missingbl['antenna']['24']['flagged'] == allbl['antenna']['24']['flagged']
-#        
-#        assert allbl['antenna']['14']['flagged'] > 1000
-#        # When the baseline is missing, the antenna is not flagged as before
-#        assert missingbl['antenna']['14']['flagged'] < 1000
-#        
-#        # For antenna based flagging, it should be (to be uncommented when CAS-2399
-#        # is solved):
-#        #assert missingbl['antenna']['14']['flagged'] > 1000
-
-#    def test1(self):
-#        tflagdata(vis = self.vis, mode = "shadow", diameter = 50)
-#
-#        s = flagdata(vis = self.vis, mode = "summary")['antenna']
-#
-#        assert s['1']['flagged'] == 58968; assert s['1']['total'] == 203994
-#        assert s['10']['flagged'] == 117432; assert s['10']['total'] == 203994
-#        assert s['11']['flagged'] == 175392; assert s['11']['total'] == 203994
-#        assert s['12']['flagged'] == 58968; assert s['12']['total'] == 203994
-#        assert s['13']['flagged'] == 203994; assert s['13']['total'] == 203994
-#        assert s['14']['flagged'] == 203994; assert s['14']['total'] == 203994
-#        assert s['15']['flagged'] == 152838; assert s['15']['total'] == 203994
-#        assert s['16']['flagged'] == 58968; assert s['16']['total'] == 203994
-#        assert s['17']['flagged'] == 57960; assert s['17']['total'] == 200718
-#        assert s['18']['flagged'] == 58968; assert s['18']['total'] == 203994
-#        assert s['19']['flagged'] == 58968; assert s['19']['total'] == 203994
-#        assert s['2']['flagged'] == 203994; assert s['2']['total'] == 203994
-#        assert s['20']['flagged'] == 58968; assert s['20']['total'] == 203994
-#        assert s['21']['flagged'] == 58968; assert s['21']['total'] == 203994
-#        assert s['22']['flagged'] == 58968; assert s['22']['total'] == 203994
-#        assert s['24']['flagged'] == 203994; assert s['24']['total'] == 203994
-#        assert s['25']['flagged'] == 58968; assert s['25']['total'] == 203994
-#        assert s['26']['flagged'] == 58968; assert s['26']['total'] == 203994
-#        assert s['27']['flagged'] == 58968; assert s['27']['total'] == 203994
-#        assert s['28']['flagged'] == 58968; assert s['28']['total'] == 203994
-#        assert s['3']['flagged'] == 203994; assert s['3']['total'] == 203994
-#        assert s['4']['flagged'] == 87570; assert s['4']['total'] == 203994
-#        assert s['5']['flagged'] == 163674; assert s['5']['total'] == 203994
-#        assert s['6']['flagged'] == 58968; assert s['6']['total'] == 203994
-#        assert s['7']['flagged'] == 58968; assert s['7']['total'] == 203994
-#        assert s['8']['flagged'] == 58968; assert s['8']['total'] == 203994
-#        assert s['9']['flagged'] == 58968; assert s['9']['total'] == 203994
-
-
 class test_flagmanager(test_base):
     
     def setUp(self):
@@ -396,13 +308,18 @@ class test_flagmanager(test_base):
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 4)
         tflocal.done()
+        
+        newname = 'Ha! The best version ever!'
 
-        flagmanager(vis=self.vis, mode='rename', oldname='unflag_2', versionname='Ha! The best version ever!', 
+        flagmanager(vis=self.vis, mode='rename', oldname='tflagdata_2', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 4)
         tflocal.done()
+        
+        self.assertTrue(os.path.exists('flagdatatest.ms.flagversions/flags.'+newname),
+                        'Flagversion file does not exist: flags.'+newname)
 
     def test2m(self):
         """flagmanager test2m: Create, then restore autoflag"""
@@ -424,7 +341,7 @@ class test_flagmanager(test_base):
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
-        flagmanager(vis=self.vis, mode='restore', versionname='manual_2')
+        flagmanager(vis=self.vis, mode='restore', versionname='tflagdata_3')
         restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
 
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
@@ -472,7 +389,6 @@ class test_msselection(test_base):
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
-
         baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10", basecnt=True)['baseline'].keys()
         assert "9&&9" not in baselines
         assert "9&&10" in baselines
@@ -496,8 +412,8 @@ class test_msselection(test_base):
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
         
-    def test_autocorr(self):
-        '''tflagdata: flag only auto-correlations'''
+    def test_autocorr1(self):
+        '''tflagdata: flag only auto-correlations with antenna selection'''
         tflagdata(vis=self.vis, mode='manual', antenna='5&&&')
         s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['5&&5']['flagged'] == 7560
@@ -509,6 +425,36 @@ class test_msselection(test_base):
         s = tflagdata(vis = self.vis, mode="summary")
         self.assertEqual(s['flagged'], 7560)
 
+    def test_autocorr2(self):
+        '''tflagdata: flag auto-corrs with parameter'''
+        tflagdata(vis=self.vis, autocorr=True)
+        s = tflagdata(vis = self.vis, mode="summary")
+        self.assertEqual(s['flagged'], 203994)
+        
+    def test_autocorr3(self):
+        '''tflagdata: flag auto-corrs in list mode'''
+        # creat input list
+        input = "scan='1' mode='manual' autocorr=true reason='AUTO'\n"\
+                "scan='3' autocorr=True reason='AUTO'\n"\
+                "scan='4' reason='ALL'"
+        filename = 'listauto.txt'
+        create_input(input, filename)
+        
+        # select only the autocorr reasons to flag
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, reason='AUTO', action='apply')
+        s = tflagdata(vis = self.vis, mode="summary", basecnt=True)
+        self.assertEqual(s['scan']['4']['flagged'], 0)
+        self.assertEqual(s['baseline']['9&&28']['flagged'], 0)
+        self.assertEqual(s['baseline']['9&&9']['flagged'], 3528)
+        
+        # select only the third line scan=4
+        tflagdata(vis=self.vis, mode='list', inpfile=filename, reason='ALL', action='apply')
+        s = tflagdata(vis = self.vis, mode="summary", basecnt=True)
+        self.assertEqual(s['scan']['4']['flagged'], 95256)
+        self.assertEqual(s['baseline']['9&&28']['flagged'], 252)
+        self.assertEqual(s['baseline']['9&&9']['flagged'], 3780)
+        self.assertEqual(s['flagged'], 190386)
+                
 
 class test_statistics_queries(test_base):
 
@@ -695,6 +641,11 @@ class test_selections(test_base):
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         tflagdata(vis=self.vis, correlation='LL,RR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+        
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', correlation='NORM_RR,LL', clipminmax=[0.,3.])
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 204979)
 #        flagdata(vis=self.vis, correlation='LL RR')
 #        flagdata(vis=self.vis, correlation='LL ,, ,  ,RR')
 #        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
@@ -750,18 +701,18 @@ class test_selections_alma(test_base):
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
 
     def test_abs_wvr(self):
-        '''tflagdata: clip ABS WVR'''
+        '''tflagdata: clip ABS_WVR'''
         tflagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
-        '''tflagdata: clip ABS I. Do not flag WVR'''
+        '''tflagdata: clip ABS_I. Do not flag WVR'''
         tflagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''tflagdata: clip ABS ALL. Do not flag WVR'''
-        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS_ALL', savepars=False)
+        tflagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(tflagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
 
@@ -988,10 +939,10 @@ class test_list(test_base):
         
     def test_reason2(self):
         '''tflagdata: add_reason to text file'''
-        tflagdata(vis=self.vis, mode='clip', scan='4', clipminmax=[0,5], savepars=True, 
+        tflagdata(vis=self.vis, mode='clip', scan='4', clipminmax=[0, 5], savepars=True, 
                   cmdreason='CLIPSCAN4', outfile='reason2.txt', action='')
 
-        tflagdata(vis=self.vis, mode='clip', scan='2~3', clipminmax=[0,5], savepars=True, 
+        tflagdata(vis=self.vis, mode='clip', scan='2~3', clipminmax=[ 0, 5], savepars=True, 
                   cmdreason='CLIPSCAN2_3', outfile='reason2.txt', action='')
 
         # Apply flag cmd
@@ -1041,7 +992,7 @@ class cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf ngc5921.ms*')
-        os.system('rm -rf flagdatatest.ms*')
+#        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
         os.system('rm -rf multiobs.ms*')
         os.system('rm -rf flagdatatest-alma.ms*')

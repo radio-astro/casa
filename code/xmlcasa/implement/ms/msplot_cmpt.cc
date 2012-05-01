@@ -43,6 +43,7 @@
 #include <tables/Tables/PlainTable.h>
 #include <tables/Tables/TableCache.h>
 
+
 // msplot include files
 //#include <xmlcasa/ms/msplot_private.h>
 #include <msplot_cmpt.h>
@@ -57,15 +58,8 @@ msplot::msplot():
     itsMsPlot(0)
 {
     itsLog = new casa::LogIO();
-    try{ 
+    
     itsMsPlot = new casa::MsPlot();
-    }
-    catch(AipsError x){
-     Table::relinquishAutoLocks(True);
-      *itsLog << casa::LogIO::SEVERE 
-	      << "[ msplot::msplot()]: " 
-	      << x.getMesg() << casa::LogIO::POST;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -76,7 +70,6 @@ msplot::~msplot()
   if ( itsLog != NULL ) { delete itsLog; itsLog = NULL; }
 
   if ( itsMsPlot != NULL ) { delete itsMsPlot; itsMsPlot = NULL; }
-  Table::relinquishAutoLocks(True);
   
   debugFnExit( "~msplot()" );
 }
@@ -103,7 +96,6 @@ msplot::open(const std::string& msname, const bool dovel,
   catch ( casa::AipsError ae) {
       // TODO decide whether we print another message or
       // if we shoule assume a message was already displayed.
-      Table::relinquishAutoLocks(True);
       *itsLog << casa::LogIO::SEVERE 
 	      << "[ msplot::open()] Exception Reported: " 
 	      << ae.getMesg() << casa::LogIO::POST;
@@ -140,7 +132,6 @@ msplot::clearplot( const int subplot )
 	*itsLog << casa::LogIO::SEVERE 
 	    	<< "[msplot::clearplot()] Exception Reported... \n " 
 	    	<< ae.getMesg() << casa::LogIO::POST;
-        Table::relinquishAutoLocks(True);
 	//RETHROW( ae );
     }
 
@@ -155,7 +146,7 @@ msplot::emperorsNewClose()
 {
     String Fn = "reset()";
     debugFnEntry( Fn );
-    Table::relinquishAutoLocks(True);
+
     debugFnExit( Fn );
     return True;
 }
@@ -180,8 +171,7 @@ msplot::reset( )
     } catch (casa::AipsError ae ) {
 	*itsLog << casa::LogIO::SEVERE 
 	    	<< "msplot::locatedata()] Exception Reported: " 
-	     	<< ae.getMesg() << casa::LogIO::POST;
-        Table::relinquishAutoLocks(True);
+	    	<< ae.getMesg() << casa::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -204,39 +194,23 @@ msplot::reset( )
 bool
 msplot::closeMS( )
 {
+    String Fn = "resetMS()";
+    debugFnEntry( Fn );
 
     casa::Bool rstat(casa::False);
     if ( ! checkForOpenMS() ) return rstat;
 
-    TableCache &cache = PlainTable::tableCache();
-    Int ntb = cache.ntable();
-    if (ntb > 0)
-       *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";  
-    for (Int i = ntb - 1; i > -1; i--) {
-       String nm = cache(i)->tableName();
-       try {
-           cache.remove(nm);
-           *itsLog << nm << "\n";
-       }
-       catch (casa::AipsError x) {
-	*itsLog << casa::LogIO::SEVERE 
-	    	<< "msplot: " << x.getMesg() << casa::LogIO::POST;
-       }
-    }
-    if (ntb > 0)
-       *itsLog << casa::LogIO::POST;
-
     Vector<String> lockedTables = Table::getLockedTables();
     Int nlc = lockedTables.nelements();
     if (nlc > 0)
-       *itsLog << casa::LogIO::NORMAL << "msplot unlock tables: \n";  
-    for (uInt i=0; i<nlc; ++i) {
+       *itsLog << casa::LogIO::DEBUG2 << "msplot unlock tables: \n";
+    for (Int i=0; i<nlc; ++i) {
        try {
-	*itsLog << lockedTables(i) << "\n";
+       *itsLog << lockedTables(i) << "\n";
        }
        catch (casa::AipsError x) {
-	*itsLog << casa::LogIO::SEVERE 
-	    	<< "msplot: " << x.getMesg() << casa::LogIO::POST;
+       *itsLog << casa::LogIO::WARN
+               << "msplot: " << x.getMesg() << casa::LogIO::POST;
        }
     }
     if (nlc > 0)
@@ -244,20 +218,19 @@ msplot::closeMS( )
     Table::relinquishAutoLocks(True);
 
     try {
-	if( itsMsPlot != NULL ) {
-	    itsMsPlot->reset( True );
-	}
-        Table::relinquishAutoLocks(True);
-	rstat = True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
-	    	<< "msplot::locatedata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
-	//RETHROW( ae );
-    }
-        Table::relinquishAutoLocks(True);
+       // We want to reset the MS so we send True into this method.
+       if( itsMsPlot != NULL ) {
+           itsMsPlot->reset( True );
+       }
+       Table::relinquishAutoLocks(True);
+       rstat = True;
+     } catch (casa::AipsError ae ) {
+        *itsLog << casa::LogIO::SEVERE
+                << ae.getMesg() << casa::LogIO::POST;
+     }
 
-    return rstat;
+     debugFnExit( Fn );
+     return rstat;
 }
 
 
@@ -278,11 +251,36 @@ msplot::done()
   //    delete itsMsPlot;
   //    itsMsPlot = NULL;
   //}
-  Table::relinquishAutoLocks(True);
   debugFnExit( Fn );
   //return rstat;
 
-  return closeMS();
+  Table::relinquishAutoLocks(True);
+
+  Bool rstat = closeMS();
+
+    TableCache &cache = PlainTable::tableCache();
+    Int ntb = cache.ntable();
+    if (ntb > 0)
+       *itsLog << casa::LogIO::DEBUG2 << "msplot clear cache: \n";
+    for (Int i = ntb - 1; i > -1; i--) {
+       String nm = cache(i)->tableName();
+       if (!nm.contains("scratch")) {
+       try {
+           cache.remove(nm);
+           *itsLog << nm << "\n";
+       }
+       catch (casa::AipsError x) {
+        *itsLog << casa::LogIO::WARN
+                << "msplot: " << x.getMesg() << casa::LogIO::POST;
+       }
+       }
+    }
+    if (ntb > 0)
+       *itsLog << casa::LogIO::POST;
+
+  debugFnExit( Fn );
+  return rstat;
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +290,6 @@ msplot::close()
 {
   String Fn = "close()";
   debugFnEntry( Fn );
-  Table::relinquishAutoLocks(True);
   
   debugFnExit( Fn );
   //done or close cause switch between tool/task crash

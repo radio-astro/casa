@@ -286,13 +286,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		FlagAgentDisplay* agent = new FlagAgentDisplay(dh,config,writePrivateFlags);
 		return agent;
 	}
-	// Autocorr
-	else if (mode.compare("autocorr")==0)
-	{
-		config.define("autocorr",(Bool)True);
-		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
-		return agent;
-	}
 	else
 	{
 		cerr << "FlagAgentFactory::" << __FUNCTION__ << " Mode " << mode << " not supported" << endl;

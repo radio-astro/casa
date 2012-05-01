@@ -47,6 +47,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class WCCSAxisLabeller : public WCAxisLabeller {
 
  public:
+	enum SpecAxisType { // taken from the FITS spectral coordinate type codes
+		 FREQ,
+		 VELO,
+		 WAVE,
+		 AWAV,
+	 };
 
   // Constructor
   WCCSAxisLabeller();
@@ -132,7 +138,7 @@ class WCCSAxisLabeller : public WCAxisLabeller {
  protected:
   Bool itsAbsolute;
   Bool itsWorldAxisLabels;
-  mutable Bool itsDoVelocity;
+  mutable WCCSAxisLabeller::SpecAxisType itsSpecAxisType;
   Int itsZIndex;
 
   // Set spectral state onto given CS
