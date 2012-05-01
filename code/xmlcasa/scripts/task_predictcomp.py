@@ -1,12 +1,13 @@
 from taskinit import casalog, cltool, imtool, metool, qa
 from plotcomp import plotcomp
+from predictcomp_helper import *
 import pylab as pl
 import os
 
 def predictcomp(objname=None, standard=None, epoch=None,
                 minfreq=None, maxfreq=None, nfreqs=None, prefix=None,
                 antennalist=None, showplot=None, savefig=None, symb=None,
-                include0amp=None, include0bl=None):
+                include0amp=None, include0bl=None, blunit=None, bl0flux=None):
     """
     Writes a component list named clist to disk and returns a dict of
     {'clist': clist,
@@ -54,6 +55,8 @@ def predictcomp(objname=None, standard=None, epoch=None,
     include0amp: Force the lower limit of the amplitude axis to 0.
                  Default: False
     include0bl: Force the lower limit of the baseline length axis to 0.
+    blunit: Unit of the baseline length 
+    bl0flux: show zero baseline flux
     """
     retval = False
     try:
@@ -97,8 +100,12 @@ def predictcomp(objname=None, standard=None, epoch=None,
         else:
             casalog.post('Error creating a local im instance.', 'SEVERE')
             return False
-        clist = myim.predictcomp(objname, standard, mepoch, freqs.tolist(), prefix)
-
+        #print "FREQS=",freqs
+        if standard=='Butler-JPL-Horizons 2012':
+            clist = predictSolarObjectCompList(objname, mepoch, freqs.tolist(), prefix)
+        else:
+            clist = myim.predictcomp(objname, standard, mepoch, freqs.tolist(), prefix)
+        #print "created componentlist =",clist
         if os.path.isdir(clist):
             # The spw0 is useless here, but it is added by FluxStandard for the sake of setjy.
             casalog.post('The component list was saved to ' + clist)
@@ -109,16 +116,25 @@ def predictcomp(objname=None, standard=None, epoch=None,
                       'epoch': mepoch,
                       'freqs (GHz)': 1.0e-9 * freqs,
                       'antennalist': antennalist}
+            #print "retval=",retval 
             mycl = cltool.create()
             mycl.open(clist)
             comp = mycl.getcomponent(0)
+            zeroblf=comp['flux']['value']
+            if standard=='Butler-JPL-Horizons 2012':
+              f0=comp['spectrum']['frequency']['m0']['value']
+            else:
+              f0=retval['freqs (GHz)'][0]
+            casalog.post("Zero baseline flux %s @ %sGHz " % (zeroblf, f0),'INFO')
             mycl.close(False)               # False prevents the stupid warning.
             for k in ('shape', 'spectrum'):
                 retval[k] = comp[k]
             if antennalist:
                 retval['savedfig'] = savefig
+                if not bl0flux:
+                  zeroblf=[0.0]
                 retval.update(plotcomp(retval, showplot, wantdict=True, symb=symb,
-                                       include0amp=include0amp, include0bl=include0bl))
+                                       include0amp=include0amp, include0bl=include0bl, blunit=blunit, bl0flux=zeroblf[0]))
             else:
                 retval['savedfig'] = None
         else:
