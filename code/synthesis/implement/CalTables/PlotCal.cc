@@ -469,7 +469,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
      calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
-     calType_p=="D" || calType_p=="X" || calType_p=="EVLAGAIN")
+     calType_p=="D" || calType_p=="X" || calType_p=="EVLAGAIN" || calType_p=="TSYS")
     return doPlot();
 
   else if(calType_p=="K")
@@ -650,12 +650,15 @@ void PlotCal::getAxisTaQL(const String& axis,
 	  else 
 	    taql = "(REAL("+GAINcol()+"[2,"+chansel+"]/"+GAINcol()+"[4,"+chansel+"]))";
 	}
-        else {
+        else if (calType_p.contains("TSYS")) {
   	  if (isNCT_p) 
 	    taql = "(FPARAM[1,"+chansel+"]/FPARAM[2,"+chansel+"])";
 	  else 
 	    taql = "(REAL("+GAINcol()+"[1,"+chansel+"]/"+GAINcol()+"[2,"+chansel+"]))";
 	}
+	else
+	  throw(AipsError("Tsys plot not supported for specified caltable."));
+
 	label = "Tsys POLN ratio";
       }
       else if (axis.contains("SPGAIN")) {
@@ -676,8 +679,9 @@ void PlotCal::getAxisTaQL(const String& axis,
 	if (calType_p=="M" || calType_p=="A" || 
 	    calType_p=="MF" || 
 	    calType_p=="BPOLY" || 
-	    calType_p=="GSPLINE")
-	  throw(AipsError("Baseline-based calibration types don't support SNR plots."));
+	    calType_p=="GSPLINE" ||
+	    calType_p=="EVLAGAIN" || calType_p.contains("TSYS"))
+	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR[1,]/SNR[2,])";
 	label = "Solution SNR POLN Ratio";
       }
@@ -743,8 +747,8 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Delay (nsec)";
       }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLAGAIN")
-	  throw(AipsError("Baseline-based calibration types don't support SNR plots."));
+	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLAGAIN" || calType_p.contains("TSYS"))
+	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR["+polsel+",])";
 	label = "Solution SNR";
       }
@@ -784,8 +788,22 @@ Bool PlotCal::doPlot(){
       yAxis_p="AMP";
     else if (calType_p=="EVLAGAIN")
       yAxis_p="SPGAIN";
+    else if (calType_p=="TSYS")
+      yAxis_p="TSYS";
     else
       yAxis_p="AMP";
+  }
+
+  // AMP means TSYS for TSYS
+  if (calType_p=="TSYS") {
+    if (xAxis_p=="AMP") xAxis_p="TSYS";
+    if (yAxis_p=="AMP") yAxis_p="TSYS";
+  }
+
+  // AMP means SPGAIN for EVLAGAIN
+  if (calType_p=="EVLAGAIN") {
+    if (xAxis_p=="AMP") xAxis_p="SPGAIN";
+    if (yAxis_p=="AMP") yAxis_p="SPGAIN";
   }
 
   // Get meta info for labels/locate
@@ -1184,6 +1202,9 @@ Int PlotCal::multiTables(const Table& tablein,
     if (subType[1].contains("EVLAGAIN")) {
       calType_p="EVLAGAIN";
     }
+    else if (subType[1].contains("TSYS")) {
+      calType_p="TSYS";
+    }
     else if(subType[0].contains("G")){
       if (tab_p.tableInfo().subType()=="GSPLINE")
 	calType_p="GSPLINE";
@@ -1276,7 +1297,7 @@ Int PlotCal::multiTables(const Table& tablein,
 	
 	MSstartChan_p.resize(nCalDesc_p);
 	MSstartChan_p=0;
-	if (calType_p=="B" || calType_p=="MF") {
+	if (calType_p=="B" || calType_p=="MF" || calType_p=="TSYS") {
 	  ROArrayColumn<Int> stchancol(cdtab,"CHAN_RANGE");
 	  Array<Int> stchan=stchancol.getColumn();
 	  for (Int i=0;i<nCalDesc_p;++i) {
@@ -1680,7 +1701,7 @@ Int PlotCal::multiTables(const Table& tablein,
       mss.toTableExprNode(&cti);
 
 
-      if ((calType_p == "B") || (calType_p == "BPOLY")) {
+      if ((calType_p == "B") || (calType_p == "BPOLY") || (calType_p == "TSYS")) {
 	chanId.resize();
 	chanId=mss.getChanList();
       }
@@ -1699,7 +1720,7 @@ Int PlotCal::multiTables(const Table& tablein,
       chanId.resize(); 
 
       mssel.setSpwExpr(spw);
-      if ((calType_p == "B") || (calType_p == "BPOLY"))
+      if ((calType_p == "B") || (calType_p == "BPOLY") || (calType_p == "TSYS"))
 	  chanId=mssel.getChanList(&ms);
 
       return mssel.getSpwList(&ms);

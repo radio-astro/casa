@@ -22,7 +22,7 @@ solutions may be iterated through antennas/spw/fields during one execution.
 		</param>
 
 		<param type="string" name="xaxis">
-			<description>Value to plot along x axis (time,chan,freq...see pdoc)</description>
+			<description>Value to plot along x axis (time,chan,freq, antenna,antenna1,antenna2,scan, amp,phase,real,imag,snr, tsys,delay,spgain)</description>
 			<value></value>
 			<allowed kind="enum">
 			<value></value>
@@ -45,7 +45,7 @@ solutions may be iterated through antennas/spw/fields during one execution.
 		</param>
 
 		<param type="string" name="yaxis">
-			<description>Value to plot along y axis (amp,phase,real,imag,snr,antenna)</description>
+			<description>Value to plot along y axis (amp,phase,real,imag,snr, antenna,antenna1,antenna2,scan, tsys,delay,spgain)</description>
 			<value></value>
 			<allowed kind="enum">
 			<value></value>
