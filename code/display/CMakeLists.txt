@@ -74,6 +74,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtViewerBase.qo.h
   implement/QtViewer/QtViewerPrintGui.qo.h
   implement/QtViewer/QtViewer.qo.h
+  implement/QtViewer/Preferences.qo.h
   implement/RegionShapes/DS9FileWriter.qo.h
   implement/RegionShapes/QtNewRegionShape.qo.h
   implement/RegionShapes/QtRegionShapeManager.qo.h
@@ -122,6 +123,7 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/region/QtRegionState.ui
   implement/region/QtImageRegionStats.ui
   implement/region/QtMsRegionStats.ui
+  implement/QtViewer/Preferences.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
@@ -363,6 +365,7 @@ casa_add_library( display
   implement/QtViewer/QtViewerBase.cc
   implement/QtViewer/QtViewer.cc
   implement/QtViewer/QtViewerPrintGui.cc
+  implement/QtViewer/Preferences.cc
   implement/RegionShapes/DS9FileReader.cc
   implement/RegionShapes/DS9FileWriter.cc
   implement/RegionShapes/QtNewRegionShape.cc
