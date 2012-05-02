@@ -401,9 +401,9 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
         }
 
         //this is uselessly slow thus replace it
-        //fillExtraTables();
-        fillPointingTable();
-        fillSourceTable();
+        fillExtraTables();
+        //fillPointingTable();
+        //fillSourceTable();
 
 
         fixEpochReferences();
