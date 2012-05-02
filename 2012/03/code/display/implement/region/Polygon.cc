@@ -547,22 +547,30 @@ namespace casa {
 		if (s) {
 		    // draw handles of outline rectangle for resizing whole polygon...
 		    pushDrawingEnv( Region::SolidLine);
-		    pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-		    pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-		    pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-		    pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    if ( marked( ) ) {
+			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    } else {
+			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
 
-		    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
-			int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
-			try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
-						_drawing_points_[i].second - handle_delta_y / 2.0,
-						_drawing_points_[i].first + handle_delta_x / 2.0, 
-						_drawing_points_[i].second + handle_delta_y / 2.0,
-						h_blc_x, h_blc_y, h_trc_x, h_trc_y );
-			} catch(...) { return; }
+			for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
+			    int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
+			    try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
+						    _drawing_points_[i].second - handle_delta_y / 2.0,
+						    _drawing_points_[i].first + handle_delta_x / 2.0, 
+						    _drawing_points_[i].second + handle_delta_y / 2.0,
+						    h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			    } catch(...) { return; }
 
-			pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			    pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+			}
 		    }
+
 		    popDrawingEnv( );
 		}
 	    }

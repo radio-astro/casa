@@ -19,6 +19,7 @@
 #
 
 casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
+  almahelpers.py
   benchmark.py
   checknan.py
   checkdataformat.py

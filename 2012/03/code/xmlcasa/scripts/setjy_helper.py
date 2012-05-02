@@ -54,9 +54,11 @@ class ss_setjy_helper:
 	mytb.open(self.vis+'/FIELD')
 	if len(fieldids)==0:
 	  fieldids = range(mytb.nrows())
-	srcnames=[]
+	#srcnames=[]
+	srcnames={}
 	for fid in fieldids:
-	  srcnames.append(mytb.getcell('NAME',int(fid)))
+	  #srcnames.append(mytb.getcell('NAME',int(fid)))
+	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
 	mytb.close() 
 	# need to get a list of time
 	# but for now for test just get a time centroid of the all scans
@@ -92,6 +94,7 @@ class ss_setjy_helper:
 	  trange=myms.range('time')
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
+
 	  tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
