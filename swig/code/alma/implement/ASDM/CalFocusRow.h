@@ -146,7 +146,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "1.61", branch "HEAD"
+    \brief Generated from model's revision "1.62", branch "HEAD"
 */
 
 namespace asdm {
@@ -168,7 +168,7 @@ typedef void (CalFocusRow::*CalFocusAttributeFromText) (const string& s);
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "1.62", branch "HEAD"
  *
  */
 class CalFocusRow {
@@ -1397,6 +1397,14 @@ void peakIntensityWasFixedFromBin( EndianIStream& eis);
 	  * in which the attributes are written in the binary serialization.
 	  */
 	 static CalFocusRow* fromBin(EndianIStream& eis, CalFocusTable& table, const std::vector<std::string>& attributesSeq);	 
+ 
+ 	 /**
+ 	  * Parses a string t and assign the result of the parsing to the attribute of name attributeName.
+ 	  *
+ 	  * @param attributeName the name of the attribute whose value is going to be defined.
+ 	  * @param t the string to be parsed into a value given to the attribute of name attributeName.
+ 	  */
+ 	 void fromText(const std::string& attributeName, const std::string&  t);
      /// @endcond			
 
 private:
@@ -1939,8 +1947,6 @@ void peakIntensityErrorFromText (const string & s);
 void peakIntensityWasFixedFromText (const string & s);
 	
 	
-	
-	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.

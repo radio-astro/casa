@@ -112,7 +112,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalSeeing.h
-    \brief Generated from model's revision "1.61", branch "HEAD"
+    \brief Generated from model's revision "1.62", branch "HEAD"
 */
 
 namespace asdm {
@@ -134,7 +134,7 @@ typedef void (CalSeeingRow::*CalSeeingAttributeFromText) (const string& s);
 /**
  * The CalSeeingRow class is a row of a CalSeeingTable.
  * 
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "1.62", branch "HEAD"
  *
  */
 class CalSeeingRow {
@@ -824,6 +824,14 @@ void outerScaleRMSFromBin( EndianIStream& eis);
 	  * in which the attributes are written in the binary serialization.
 	  */
 	 static CalSeeingRow* fromBin(EndianIStream& eis, CalSeeingTable& table, const std::vector<std::string>& attributesSeq);	 
+ 
+ 	 /**
+ 	  * Parses a string t and assign the result of the parsing to the attribute of name attributeName.
+ 	  *
+ 	  * @param attributeName the name of the attribute whose value is going to be defined.
+ 	  * @param t the string to be parsed into a value given to the attribute of name attributeName.
+ 	  */
+ 	 void fromText(const std::string& attributeName, const std::string&  t);
      /// @endcond			
 
 private:
@@ -1142,8 +1150,6 @@ void outerScaleFromText (const string & s);
 void outerScaleRMSFromText (const string & s);
 	
 	
-	
-	void fromText(const std::string& attributeName, const std::string&  t);
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
