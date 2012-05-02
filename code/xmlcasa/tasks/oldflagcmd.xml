@@ -5,9 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagcmd" category="data editing">
-        <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
-        <shortdescription>*******            USE THE TASK tflagcmd             *******\n </shortdescription>
+<task type="function" name="oldflagcmd" category="data editing">
         <shortdescription>Flagging task based on flagging commands</shortdescription>
         <description>
         The task will select a subset of data explicitly for flagging,
@@ -225,7 +223,7 @@
         AntennaID lists and flags with spw selection.  Does not yet
         handle baselines and correlation specified flags.
 
-        The flagcmd task will flag data based on commands input based on flagmode :
+        The oldflagcmd task will flag data based on commands input based on flagmode :
             table = input from FLAG_CMD table in MS
             file  = input from flagging command file "flagfile"
             cmd   = input from "command" list of strings
@@ -508,7 +506,7 @@
           flagmode = 'table'
           optype = 'apply'
 
-        This is the default setup of flagcmd
+        This is the default setup of oldflagcmd
 
         To merely save to FLAG_CMD but not apply, then
         
@@ -605,11 +603,11 @@
         These commands can be in a flagging file, e.g. "myflags.txt"
         and input using flagmode='file', e.g.
 
-          flagcmd(vis='myvis.ms',flagmode='file',flagfile='myflags.txt')
+          oldflagcmd(vis='myvis.ms',flagmode='file',flagfile='myflags.txt')
 
         or input from the interface
 
-          flagcmd(vis='myvis.ms',flagmode='cmd',
+          oldflagcmd(vis='myvis.ms',flagmode='cmd',
                   command=["mode='shadow'",
                            "mode='clip' cliprange='0~1E-10' clipexpr='ABS_RR'",
                            "mode='clip' cliprange='0~1E-10' clipexpr='ABS_LL'",
@@ -619,7 +617,7 @@
 
      -- Optypes --
 
-        The optype parameter controls what flagcmd will actually do with the
+        The optype parameter controls what oldflagcmd will actually do with the
         flags:
 
         * optype = 'apply'
@@ -708,13 +706,13 @@
           python.  This will allow a power-user to manipulate these
           flags directly (e.g. for plotting etc.).  For example,
 
-          myflagd = flagcmd(vis=msfile,useapplied=T,optype='extract')
+          myflagd = oldflagcmd(vis=msfile,useapplied=T,optype='extract')
 
           will extract all the flags (including those already applied)
           in the FLAG_CMD MS table.
 
           NOTE: There is no extant description of the format of this
-          dictionary, as it is an internal device used by the flagcmd
+          dictionary, as it is an internal device used by the oldflagcmd
           task. This optype is provided for the convenience of
           advanced users.
 

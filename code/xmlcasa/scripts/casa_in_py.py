@@ -135,7 +135,7 @@ cu = __utilstool__.create()
 
 
 from imstat_pg import imstat_pg as imstat
-from flagcmd_pg import flagcmd_pg as flagcmd
+from oldflagcmd_pg import oldflagcmd_pg as oldflagcmd
 from flagdata_pg import flagdata_pg as flagdata
 from flagdata2_pg import flagdata2_pg as flagdata2
 from tflagdata_pg import tflagdata_pg as tflagdata

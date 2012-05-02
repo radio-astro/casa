@@ -4,9 +4,9 @@ import os
 import sys
 
 debug = False
-def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuff=None,antenna=None,reason=None,useapplied=None,optype=None,flagsort=None,outfile=None,flagbackup=None,reset=None,clearall=None,rowlist=None,setcol=None,setval=None):
+def oldflagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuff=None,antenna=None,reason=None,useapplied=None,optype=None,flagsort=None,outfile=None,flagbackup=None,reset=None,clearall=None,rowlist=None,setcol=None,setval=None):
 	#
-	# Task flagcmd
+	# Task oldflagcmd
 	#    Reads flag commands from file or string and applies to MS
 	# v1.0 Created STM 2010-08-31 (3.1.0) from flagdata
 	# v2.0 Updated STM 2010-09-16 (3.1.0) add Flag.xml reading
@@ -46,18 +46,10 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	except:
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
-        casalog.origin('flagcmd')
+        casalog.origin('oldflagcmd')
         
-	# DEPRECATE THIS TASK
-	casalog.post('***********************************************************','WARN')
-	casalog.post('  THIS TASK (flagcmd) IS OBSOLETE AND WILL BE DEPRECATED', 'WARN')
-	casalog.post('','WARN')
-	casalog.post('		USE THE TASK tflagcmd', 'WARN')
-	casalog.post('***********************************************************','WARN')
-	casalog.post('','WARN')
-
 	
-	casalog.post('You are using flagcmd v4.2 Updated STM 2012-03-01')
+	casalog.post('You are using oldflagcmd v4.2 Updated STM 2012-03-01')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -353,14 +345,14 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 	if msopened and not (optype=='list' or optype=='plot' or optype=='extract'):
 	    try:
 		mslocal.open(vis,nomodify=False)
-		mslocal.writehistory(message='taskname = flagcmd', origin='flagcmd')
-		mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagcmd')
-		mslocal.writehistory(message='flagmode = "' + str(flagmode) + '"', origin='flagcmd')
+		mslocal.writehistory(message='taskname = oldflagcmd', origin='oldflagcmd')
+		mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='oldflagcmd')
+		mslocal.writehistory(message='flagmode = "' + str(flagmode) + '"', origin='oldflagcmd')
 		if flagmode == 'file':
-			mslocal.writehistory(message='flagfile = "' + str(flagfile) + '"', origin='flagcmd')
+			mslocal.writehistory(message='flagfile = "' + str(flagfile) + '"', origin='oldflagcmd')
 		elif flagmode=='cmd':
 			for cmd in command:
-				mslocal.writehistory(message='command  = "' + str(cmd) + '"', origin='flagcmd')
+				mslocal.writehistory(message='command  = "' + str(cmd) + '"', origin='oldflagcmd')
 		mslocal.close()
 	    except:
 		casalog.post('Cannot open vis for history, ignoring','WARN')
@@ -748,7 +740,7 @@ def backup_cmdflags(fglocal, mode):
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
         fglocal.saveflagversion(versionname=versionname,
-                           comment='flagcmd autosave before ' + mode + ' on ' + time_string,
+                           comment='oldflagcmd autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
 
 #===============================================================================
