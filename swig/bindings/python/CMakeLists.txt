@@ -46,6 +46,7 @@ scripts/parameter_check.py
 scripts/parameter_dictionary.py
 scripts/plotcomp.py
 scripts/pointcal.py
+scripts/predictcomp_helper.py
 scripts/regression.py
 scripts/regressframe.py
 scripts/regression_utility.py
@@ -87,7 +88,7 @@ scripts/task_find.py
 scripts/task_fixplanets.py
 scripts/task_fixvis.py
 scripts/task_flagautocorr.py
-scripts/task_flagcmd.py
+scripts/task_oldflagcmd.py
 scripts/task_flagdata.py
 scripts/task_flagdata2.py
 scripts/task_flagmanager.py

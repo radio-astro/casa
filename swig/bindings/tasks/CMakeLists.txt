@@ -28,7 +28,7 @@ find.xml
 fixplanets.xml
 fixvis.xml
 flagautocorr.xml
-flagcmd.xml
+oldflagcmd.xml
 flagdata.xml
 flagdata2.xml
 flagmanager.xml

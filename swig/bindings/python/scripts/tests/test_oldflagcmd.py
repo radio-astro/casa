@@ -5,7 +5,7 @@ from tasks import *
 from taskinit import *
 
 #
-# Test of flagcmd task. It uses flagdata2 to unflag and summary
+# Test of oldflagcmd task. It uses flagdata2 to unflag and summary
 #
 
 def test_eq(result, total, flagged):
@@ -20,7 +20,7 @@ def test_eq(result, total, flagged):
 def create_input(str_text):
     '''Save the string in a text file'''
     
-    inp = 'flagcmd.txt'
+    inp = 'oldflagcmd.txt'
     cmd = str_text
     
     # remove file first
@@ -81,7 +81,7 @@ class test_manualflag(test_base):
         input = "observation='1'"
         filename = create_input(input)
         
-        flagcmd(vis=self.vis, flagmode='file', flagfile=filename, optype='apply')
+        oldflagcmd(vis=self.vis, flagmode='file', flagfile=filename, optype='apply')
         test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 28500)
 
 class test_selections_alma(test_base):
@@ -91,13 +91,13 @@ class test_selections_alma(test_base):
         self.setUp_flagdatatest_alma()
     
     def test_intent(self):
-        '''Flagcmd: test scan intent selection'''
+        '''oldflagcmd: test scan intent selection'''
         
         input = "intent='CAL*POINT*'"
         filename = create_input(input)
         
         # flag POINTING CALIBRATION scans 
-        flagcmd(vis=self.vis, flagmode='file', flagfile=filename, optype='apply')
+        oldflagcmd(vis=self.vis, flagmode='file', flagfile=filename, optype='apply')
         test_eq(flagdata2(vis=self.vis,summary=True, selectdata=True, antenna='2'), 377280, 26200)
                 
     
@@ -112,7 +112,7 @@ class cleanup(test_base):
 
 
     def test1(self):
-        '''flagcmd: Cleanup'''
+        '''oldflagcmd: Cleanup'''
         pass
 
 

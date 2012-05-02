@@ -6,7 +6,7 @@ def gencal(vis=None,caltable=None,caltype=None,
            spw=None,antenna=None,pol=None,
            parameter=None):
 
-       """ Externally specify calibration soltuions af various types
+       """ Externally specify calibration solutions af various types
        """
 
        #Python script
@@ -27,14 +27,13 @@ def gencal(vis=None,caltable=None,caltype=None,
                 import correct_ant_posns as getantposns 
                 # correct_ant_posns returns a list , [return_code, antennas, offsets]
                 antenna_offsets=getantposns.correct_ant_posns(vis,False)
-                if len(antenna_offsets)==0:
-                   # no offsets were found
-                   raise Exception, 'No offsets found. The caltable is not created'
-                if antenna_offsets[0] == 0:
-                   antenna = antenna_offsets[1]
-                   parameter = antenna_offsets[2] 
+                if (len(antenna_offsets)==3 &
+                    antenna_offsets[0]==0 &
+                    len(antenna_offsets[1])>0 ) :
+                       antenna = antenna_offsets[1]
+                       parameter = antenna_offsets[2] 
                 else:
-                   raise Exception, 'No lookup information'
+                   raise Exception, 'No offsets found. No caltable created.'
               
               cb.specifycal(caltable=caltable,time="",spw=spw,antenna=antenna,pol=pol,
                             caltype=caltype,parameter=parameter)
@@ -42,7 +41,7 @@ def gencal(vis=None,caltable=None,caltype=None,
               cb.close()
 
        except Exception, instance:
-              #print '*** Error ***',instance
+              print '*** Error ***',instance
               cb.close()
               raise Exception, instance
 
