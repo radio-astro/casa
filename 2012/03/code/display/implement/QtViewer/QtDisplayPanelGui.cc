@@ -26,6 +26,8 @@
 //#
 //# $Id: QtDisplayPanelGui.cc,v 1.12 2006/10/10 21:59:19 dking Exp $
 
+#include <algorithm>
+#include <string> 
 #include <casa/BasicSL/String.h>
 #include <display/Utilities/StringUtil.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
@@ -45,6 +47,7 @@
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
 #include <display/QtViewer/QtWCBox.h>
+#include <display/QtViewer/Preferences.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -52,15 +55,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 bool QtDisplayPanelGui::logger_did_region_warning = false;;
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
-		   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0), qfb_(0),
-		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
+		   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
+		   colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0), 
 		   qsm_(0), qst_(0),
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
-		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
-		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
-		   regionDock_(0), use_new_regions(true),
-		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0),
-		   controlling_dd(0) {
+		   profileDD_(0),
+		   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+		   regionDock_(0), rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
+		   showdataoptionspanel_enter_count(0),
+		   controlling_dd(0), preferences(0), autoDDOptionsShow(True) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
@@ -70,14 +73,17 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     const char default_dock_location[] = "right";
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
+    std::transform(apos.begin(), apos.end(), apos.begin(), ::tolower);
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.animator", default_dock_location );
     }
     std::string tpos = rc.get("viewer." + rcid() + ".position.cursor_tracking");
+    std::transform(tpos.begin(), tpos.end(), tpos.begin(), ::tolower);
     if ( tpos != "bottom" && tpos != "right" && tpos != "left" && tpos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", default_dock_location );
     }
     std::string rpos = rc.get("viewer." + rcid() + ".position.regions");
+    std::transform(rpos.begin(), rpos.end(), rpos.begin(), ::tolower);
     if ( rpos != "bottom" && rpos != "right" && rpos != "left" && rpos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.regions", default_dock_location );
     }
@@ -87,8 +93,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// This must be created here, because the process of (a) constructing a QtDisplayPanel,
 	// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 	// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
-	regionDock_  = new viewer::QtRegionDock();
-	connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
+	regionDock_  = new viewer::QtRegionDock(this);
+	connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );	
+	std::string shown = getrc("visible.regiondock");
+	std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
+	if ( shown == "false" ) regionDock_->dismiss( );
     }
 
     qdp_ = new QtDisplayPanel(this,0,args);
@@ -130,6 +139,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		    ddMenu_->addSeparator();
     dpSaveAct_    = ddMenu_->addAction("&Save Panel State...");
     dpRstrAct_    = ddMenu_->addAction("Restore Panel State...");
+		    ddMenu_->addSeparator();
+    ddPreferencesAct_ = ddMenu_->addAction("Preferences...");
 		    ddMenu_->addSeparator();
     dpCloseAct_   = ddMenu_->addAction("&Close Panel");
     dpQuitAct_    = ddMenu_->addAction("&Quit Viewer");
@@ -194,6 +205,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
   
     std::string mbpos = rc.get("viewer." + rcid() + ".position.mousetools");
+    std::transform(mbpos.begin(), mbpos.end(), mbpos.begin(), ::tolower);
     mouseToolBar_ = new QtMouseToolBar(v_->mouseBtns(), qdp_);
 		    mouseToolBar_->setObjectName("Mouse Toolbar");
 		    mouseToolBar_->setAllowedAreas( (Qt::ToolBarArea) ( Qt::LeftToolBarArea | Qt::TopToolBarArea |
@@ -234,6 +246,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		       customToolBar2->toggleViewAction()->setVisible(False);
        
     std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
+    std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
     animDockWidget_  = new QDockWidget();
 		       animDockWidget_->setObjectName("Animator");
 		       addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
@@ -251,6 +264,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// They are declared/defined in QtAnimatorGui.ui[.h].
    
     std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
+    std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
     trkgDockWidget_  = new QDockWidget();
 		       trkgDockWidget_->setObjectName("Position Tracking");
 		       addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
@@ -280,6 +294,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 //  ------------------------------------------------------------------------------------------
     if ( regionDock_ ) {
 	std::string rgnloc = rc.get("viewer." + rcid() + ".position.regions");
+	std::transform(rgnloc.begin(), rgnloc.end(), rgnloc.begin(), ::tolower);
 	addDockWidget( rgnloc == "right" ? Qt::RightDockWidgetArea :
 			rgnloc == "left" ? Qt::LeftDockWidgetArea :
 			rgnloc == "top" ? Qt::TopDockWidgetArea :
@@ -546,6 +561,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
     connect(ddOpenAct_,  SIGNAL(triggered()),  SLOT(showDataManager()));
     connect(ddSaveAct_,  SIGNAL(triggered()),  SLOT(showExportManager()));
+    connect(ddPreferencesAct_, SIGNAL(triggered()), SLOT(showPreferences()));
     // connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
     connect(dpNewAct_,   SIGNAL(triggered()),  SLOT(createNewPanel()));
     connect(dpOptsAct_,  SIGNAL(triggered()),  SLOT(showCanvasManager()));
@@ -1061,6 +1077,13 @@ void QtDisplayPanelGui::hideExportManager() {
   qem_->hide();  }
 
 
+void QtDisplayPanelGui::showPreferences( ) {
+    if ( preferences == 0 ) 
+	preferences = new viewer::Preferences( );
+    preferences->showNormal( );
+    preferences->raise( );
+}
+
     
 void QtDisplayPanelGui::showDataOptionsPanel() {
     //  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
@@ -1188,6 +1211,13 @@ void QtDisplayPanelGui::mousetoolbarMoved(bool) {
     } else if ( toolBarArea(mouseToolBar_) == Qt::BottomToolBarArea ) {
 	rc.put( "viewer." + rcid() + ".position.mousetools", "bottom" );
     }
+}
+
+std::string QtDisplayPanelGui::getrc( const std::string &key ) {
+    return rc.get( "viewer." + rcid() + "." + key );
+}
+void QtDisplayPanelGui::putrc( const std::string &key, const std::string &val ) {
+    rc.put( "viewer." + rcid() + "." + key, val );
 }
 
 
@@ -1381,7 +1411,7 @@ void QtDisplayPanelGui::showImageProfile() {
 		    	profile_ = new QtProfile(img, pdd->name().c_str());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+			connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
 				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 			connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 					profile_, SLOT(changeSpectrum(String, String, String )));

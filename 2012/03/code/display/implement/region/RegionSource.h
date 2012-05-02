@@ -102,7 +102,7 @@ namespace casa {
 
 		shared_kernel_ptr_type kernel( ) { return kernel_; }
 
-		QtRegionDock *dock( ) { kernel_->dock( ); }
+		QtRegionDock *dock( ) { return kernel_->dock( ); }
 		int numFrames( ) const { return kernel_->numFrames( ); }
 
 	    private:

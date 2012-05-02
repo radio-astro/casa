@@ -49,6 +49,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+    namespace viewer {
+	class Preferences;
+    }
+
 class String;
 class QtViewer;
 class QtViewerPrintGui;
@@ -197,6 +201,8 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   virtual void showDataOptionsPanel();
   virtual void hideDataOptionsPanel();
+
+  virtual void showPreferences( );
   
   virtual void removeAllDDs();
   
@@ -247,6 +253,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void regionMoved(Qt::DockWidgetArea);
   virtual void mousetoolbarMoved(bool);
 
+  // note that 'key' is prefixed with something like "viewer.dpg."...
+  // for both get and put...
+  std::string getrc( const std::string &key );
+  void putrc( const std::string &key, const std::string &val );
 
  signals:
 
@@ -415,14 +425,13 @@ class QtDisplayPanelGui : public QtPanelBase,
   // everyone.
   Bool colorBarsVertical_;  
   
-  FileBox* qfb_;
   QtViewer* v_;		 	//# (Same viewer as qdp_'s)
   QtDisplayPanel* qdp_;  	//# Central Widget this window operates.
   QtViewerPrintGui* qpm_;	//# Print dialog for this display panel.
   QtCanvasManager* qcm_;	//# display panel options window.
   //QtAnnotatorGui* qap_;
   MakeMask* qap_;
-
+  FileBox* qfb_;
   MakeRegion* qmr_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
@@ -439,8 +448,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
-	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_,
-          *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_, 
+          *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -467,6 +476,8 @@ class QtDisplayPanelGui : public QtPanelBase,
     
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
+
+  viewer::Preferences *preferences;
 
  private slots:
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
