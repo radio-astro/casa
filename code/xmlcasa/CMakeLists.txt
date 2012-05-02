@@ -196,6 +196,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/parameter_dictionary.py
   scripts/plotcomp.py
   scripts/pointcal.py
+  scripts/predictcomp_helper.py
   scripts/qtcasapy.py
   scripts/regression.py
   scripts/regressframe.py

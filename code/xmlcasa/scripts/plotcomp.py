@@ -6,7 +6,8 @@ import shutil
 import tempfile
 
 def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
-             include0amp=False, include0bl=False):
+             include0amp=False, include0bl=False, blunit='', bl0flux=0.0):
+
     """
     Given a dict including
     
@@ -35,6 +36,8 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
 
     include0amp: Force the lower limit of the amplitude axis to 0.
     include0bl: Force the lower limit of the baseline length axis to 0.
+    blunit: unit of the baseline length (='' used the unit in the data or klambda)
+    bl0flux: Zero baseline flux
     """
     def failval():
         """
@@ -100,6 +103,9 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
                 riset[t]['str'] = mepoch_to_str(riset[t]['utc'])
             casalog.post(objname + " rises at %s and sets at %s." % (riset['rise']['str'],
                                                                      riset['set']['str']))
+            tmeridian=(riset['rise']['utc']['m0']['value']+riset['set']['utc']['m0']['value'])/2.
+            casalog.post(objname + ': meridian passage at ' + qa.time(str(tmeridian)+'d'))
+
         if approx:
             riset['NOTE'] = approx
         if not azel['m1']['value'] > 0.0:
@@ -164,16 +170,24 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         data = mytb.getcol('DATA')[0]       # Again, only 1 polarization for now. 
         data = abs(data)
         baselines = mytb.getcol('UVW')[:2,:]  # Drop w.
-        blunit = mytb.getcolkeywords('UVW')['QuantumUnits']
+        datablunit = mytb.getcolkeywords('UVW')['QuantumUnits']
         mytb.close()
         #print "Got the data and baselines"
         shutil.rmtree(tempms)
 
-        if blunit[1] != blunit[0]:
-            casalog.post('The baseline units are mismatched!: %s' % blunit,
+        if datablunit[1] != datablunit[0]:
+            casalog.post('The baseline units are mismatched!: %s' % datablunit,
                          'SEVERE')
             return failval()
-        blunit = blunit[0]
+        datablunit = datablunit[0]
+        # uv dist unit in klambda or m
+        if datablunit == 'm' and blunit=='klambda':
+            kl = qa.constants('C')['value']/(compdict['freqs (GHz)'][0]*1e6)
+            blunit = 'k$\lambda$'
+        else:
+            blunit = datablunit
+            kl = 1.0
+        #baselines = pl.hypot(baselines[0]/kl, baselines[1]/kl)
         baselines = pl.hypot(baselines[0], baselines[1])
 
         if not showplot:
@@ -187,20 +201,29 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         for freqnum in xrange(nfreqs):
             freq = compdict['freqs (GHz)'][freqnum]
             casalog.post("Plotting " + str(freq) + " GHz.")
-            pl.plot(baselines, data[freqnum], symb, label="%.3g GHz" % freq)
+            pl.plot(baselines/kl, data[freqnum], symb, label="%.3g GHz" % freq)
+            #pl.plot(baselines, data[freqnum], symb, label="%.3g GHz" % freq)
         pl.xlabel("Baseline length (" + blunit + ")")
         pl.ylabel("Visibility amplitude (Jy)")
         if include0amp:
             pl.ylim(ymin=0.0)
         if include0bl:
             pl.xlim(xmin=0.0)
-        pl.suptitle(objname + " (predicted)", fontsize=14)
+        pl.suptitle(objname + " (predicted by %s)" % compdict['standard'], fontsize=14)
+        #pl.suptitle(objname + " (predicted)", fontsize=14)
 
         # Unlike compdict['antennalist'], antennalist might have had repodir
         # prefixed to it.
         pl.title('at ' + epstr + ' for ' + compdict['antennalist'], fontsize=10)
-        
-        pl.legend(loc='best', title='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs)
+        titletxt='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs
+        # for comparison of old and new models - omit azeldegs as all in az~0
+        if bl0flux > 0.0:
+            if len(compdict['freqs (GHz)']) == 1:
+                titletxt+='\n bl0 flux:%.3f Jy' % bl0flux
+            else:
+                titletxt+='\n bl0 flux:%.3f Jy @ %s GHz' % (bl0flux, compdict['freqs (GHz)'][0]) 
+        pl.legend(loc='best', title=titletxt)
+        #pl.legend(loc='best', title='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs)
         pl.ion()
         pl.draw()
         if compdict.get('savedfig'):

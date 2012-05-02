@@ -45,7 +45,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 
 	<param type="bool" name="selectdata">
 		<description>Other data selection parameters</description>
-		<value>False</value>
+		<value>True</value>
 	</param>
 
 	<param type="string" name="timerange" subparam="true">

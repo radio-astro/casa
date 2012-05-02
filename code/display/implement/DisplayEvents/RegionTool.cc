@@ -104,7 +104,7 @@ namespace casa {
 	}
     }
 
-    const viewer::Region::PointInfo &RegionTool::State::state( viewer::Region *region ) {
+    viewer::Region::PointInfo RegionTool::State::state( viewer::Region *region ) {
 	region_map_type::iterator st_it = state_map.find(region);
 	return st_it != state_map.end( ) ? (*st_it).second : viewer::Region::PointInfo(0,0,viewer::Region::PointOutside);
     }

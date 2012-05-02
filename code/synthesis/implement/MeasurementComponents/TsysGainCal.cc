@@ -181,6 +181,7 @@ void StandardTsys::specify(const Record&) {
 
   // Keep a count of the number of Tsys found per spw/ant
   Matrix<Int> tsyscount(nSpw(),nAnt(),0);
+  Matrix<Int> negTsys(nSpw(),nAnt(),0);
 
   Block<String> columns(2);
   columns[0] = "TIME";
@@ -246,7 +247,16 @@ void StandardTsys::specify(const Record&) {
       // Increment tsys counter
       ++tsyscount(ispw,thisant);
 
+      negTsys(ispw,thisant)+=ntrue(currtsys<FLT_MIN);
+
+
     }
+    // Flag any Tsys<=0.0
+    
+    LogicalArray mask((solveAllRPar()<FLT_MIN));
+    MaskedArray<Bool> negs(solveAllParOK(),mask);
+    negs=False;
+
     keepNCT();
 
     sysCalIter.next();
@@ -256,15 +266,24 @@ void StandardTsys::specify(const Record&) {
   // Assign scan and fieldid info
   assignCTScanField(*ct_,msName());
 
-  logSink() << "Tsys counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  logSink() << "Tsys spectra counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
     Vector<Int> tsyscountspw(tsyscount.row(ispw));
-    if (sum(tsyscountspw)>0)
+    if (sum(tsyscountspw)>0) {
       logSink() << "Spw " << ispw << ": " << tsyscountspw 
-		<< " (" << sum(tsyscountspw) << ")" 
-		<< LogIO::POST;
-    else
-      logSink() << "Spw " << ispw << ": NONE." << LogIO::POST;
+		<< " (=" << sum(tsyscountspw) << " spectra;" 
+		<< " " << nChanParList()(ispw) << " chans per spectra)" 
+      		<< LogIO::POST;
+      for (Int iant=0;iant<nAnt();++iant) {
+        if (negTsys(ispw,iant)>0)
+	  logSink() << "  (Found/flagged " << negTsys(ispw,iant) 
+                    << " spurious negative (or zero) Tsys channels for ant id=" 
+                    << iant << " in spw " << ispw << ".)"
+		    << LogIO::POST;
+      }
+    }
+    //    else
+    //      logSink() << "Spw " << ispw << ": NONE." << LogIO::POST;
   }
 
 }
