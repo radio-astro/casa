@@ -85,7 +85,7 @@ another visibility file.
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="gaintable">
+	<param type="stringArray" name="gaintable" mustexist="true">
 		<description>Gain calibration table(s) to apply on the fly</description>
 		<value></value>
 	</param>
