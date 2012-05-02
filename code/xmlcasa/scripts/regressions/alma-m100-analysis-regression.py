@@ -205,8 +205,6 @@ if(mystep in thesteps):
                         iteration='antenna', plotrange=[0, 0, 40, 180], plotsymbol='.',
                         figfile='cal-tsys_per_spw_'+spw+'_'+name+'.png')
 
-exit
-
     timing()
 
 
