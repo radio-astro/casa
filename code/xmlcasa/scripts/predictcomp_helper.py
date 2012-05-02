@@ -25,6 +25,9 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
       maxf = freq+freqinc
       freqlist.append([minf,maxf]) 
     #mepoch = myme.epoch('UTC', epoch)
+    if epoch['m0']['value']==0.0:
+        casalog.post('Invalid epoch, '+str(epoch['m0']['value'])+str(epoch['m0']['unit']),'SEVERE');
+        raise Exception, "Error"
     epochv = epoch['m0']['value'] 
 
 
@@ -41,7 +44,9 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
     
     reterr=testerrs(errcodes[0],objname) 
     if reterr == 2: 
-        raise Exception, "error"
+        #raise Exception, "Error" 
+        casalog.post("Flux densities cannot be determined","SEVERE")
+        raise Exception
 
     dirstring = [dirs[0]['refer'],qa.tos(dirs[0]['m0']),qa.tos(dirs[0]['m1'])]
     # setup componentlists
