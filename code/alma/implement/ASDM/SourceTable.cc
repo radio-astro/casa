@@ -476,7 +476,8 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 	
 		
 	void SourceTable::addWithoutCheckingUnique(SourceRow * x) {
-		SourceRow * dummy = add(x);
+	  //SourceRow * dummy = add(x);
+	  SourceRow * dummy = checkAndAdd(x);
 	}
 	
 
