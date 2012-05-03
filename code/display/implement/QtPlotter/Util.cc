@@ -58,7 +58,3 @@ namespace casa {
 		return deg;
 	}
 }
-
-int main(){
-	cout << "Hi" << endl;
-}
