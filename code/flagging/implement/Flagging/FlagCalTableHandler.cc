@@ -735,13 +735,27 @@ Cube<Complex>& CTBuffer::visCube()
 {
 	if (!CTVisCubeOK_p)
 	{
-		Cube<Complex> tmp = calIter_p->cparam();
-		cparam_p.resize(tmp.shape(),False);
-		cparam_p = tmp;
+		Cube<Float> tmp = calIter_p->fparam();
+
+		// Transform Cube<Float> into Cube<Complex>
+		Cube<Complex> tmpTrans(tmp.shape());
+		for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
+		{
+			for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
+			{
+				for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
+				{
+					tmpTrans(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
+				}
+			}
+		}
+
+		fparam_p.resize(tmpTrans.shape(),False);
+		fparam_p = tmpTrans;
 		CTVisCubeOK_p = True;
 	}
 
-	return cparam_p;
+	return fparam_p;
 }
 
 Cube<Complex>& CTBuffer::correctedVisCube()

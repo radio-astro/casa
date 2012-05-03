@@ -79,8 +79,9 @@ private:
 	Vector<Int> channel_p;
 	Vector<Double> frequency_p;
 	Cube<Complex> cparam_p;
-	Cube<Complex> paramerr_p;
-	Cube<Complex> snr_p;
+	Cube<Complex> fparam_p;   // This is in reality a Cube<Float>
+	Cube<Complex> paramerr_p; // This is in reality a Cube<Float>
+	Cube<Complex> snr_p;      // This is in reality a Cube<Float>
 	Int nRow_p;
 	Int nRowChunk_p;
 	Int nChannel_p;
