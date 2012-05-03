@@ -9,8 +9,38 @@ import time
 from taskinit import *
 import ast
 
+'''
+A set of helper functions for the tasks tflagdata and flagcmd.
+I/O functions:
+    readFile
+    readXML
+    makeDict
+    readAntennaList
+    writeAntennaList
+    writeFlagCmd
+    writeRflagThresholdFile
+    
+Parameter handling
+    compressSelectionList
+    fixType
+    getLinePars
+    getNumPar
+    getReason
+    getSelectionPars
+    getUnion
+    purgeEmptyPars
+    purgeParameter
+    setupAgent
+    
+Others
+    backupFlags
+    convertDictToString
+    convertStringToDict
+    extractAntennaInfo
+    extractRflagOutputFromSummary
+    
+'''
 ###some helper tools
-#mslocal = casac.homefinder.find_home_by_name('msHome').create()
 tb=casac.table()
 
 debug = False
@@ -59,6 +89,7 @@ def makeDict(cmdlist, myreason='any'):
        and select by reason if any is given
     
        cmdlist --> list of parameters to go into the COMMAND column
+       myreason --> reason to select from
        
        Returns a dictionary with the the selected rows with the following 
        structure and default values:
@@ -198,7 +229,7 @@ def makeDict(cmdlist, myreason='any'):
 
 
 def readXML(sdmfile, mytbuff):
-#
+    '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
 #                into returned dictionary as flag command strings
 #      sdmfile (string)  path to SDM containing Antenna.xml and Flag.xml
@@ -234,6 +265,8 @@ def readXML(sdmfile, mytbuff):
 #   polmode =  1 use polarization type
 #
 #   CURRENT DEFAULT: Use spw names, flag pols
+    '''
+
     spwmode = 1
     polmode = 1
 
@@ -491,7 +524,9 @@ def readXML(sdmfile, mytbuff):
 
 def getUnion(mslocal, vis, cmddict):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
-       cmdlist --> list of strings with parameters and values (par=val)
+       vis --> MS
+       cmddict --> dictionary of parameters and values (par=val) such as the one
+                   returned by makeDict()
     '''
     
     # Dictionary of parameters to return
@@ -787,92 +822,11 @@ def compressSelectionList(mslocal=None, vis='',dicpars={}):
     return;
 
 
-def writeCMD(msfile, flagcmd, writeflags, outfile):
-    ''' Reads a list of parameters and save it to the FLAG_CMD table or to a text file.
-        When saving in the FLAG_CMD table, it will also update the APPLIED column with the
-        writeflags value.
-        Returns the number of flag commands written'''
-    
-    
-    nadd = 0
-    try:
-        import pylab as pl
-    except ImportError, e:
-        print 'failed to load pylab:\n', e
-        return -1
-
-    # Create lists for each column in the FLAG_CMD table
-    # TODO: How about the TIME column? How to calculate it?
-    tim_list = [0.0]
-    intv_list = [0.0]
-    reas_list = ['']        
-    typ_list = ['FLAG']
-    sev_list = [0]
-    lev_list = [0]
-    app_list = [writeflags]           
-    
-    casalog.post("Flag command to save is %s"%flagcmd, 'DEBUG')    
-
-    if outfile != '':
-        
-        # Append to a text file                
-        ffout = open(outfile, 'a')
-
-        try:
-            for line in flagcmd:
-                print >> ffout, '%s' % line
-        except:
-            nadd = -1
-            raise Exception, 'Error writing parameters to file ' \
-                + outfile
-        ffout.close()
-        return nadd
-    
-    # Save to the FLAG_CMD table    
-    cmdline = []
-    cmdline.append(flagcmd)
-    nadd = cmdline.__len__()
-    mstable = msfile + '/FLAG_CMD'
-    try:
-        tb.open(mstable, nomodify=False)
-    except:
-        tb.close()
-        raise Exception, 'Error opening FLAG_CMD table ' + mstable        
-    
-    nrows = int(tb.nrows())
-    
-    # Add blank rows
-    if (debug):
-        print pl.array(cmdline)
-        
-    tb.addrows(nadd)
-    
-    # Now fill them in
-    tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
-    tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('COMMAND', pl.array(cmdline), startrow=nrows,
-              nrow=nadd)
-    
-    # Other columns
-    tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
-    tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
-              nrow=nadd)
-    tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
-              nrow=nadd)
-    tb.close()
-
-
-    return nadd
-
 
 def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
     '''
     Writes the flag commands to FLAG_CMD or to an ASCII file
+    
     msfile  -->   MS
     myflags -->  dictionary of commands read from inputfile (from readFromTable, etc.)
     vrows   -->  list of valid rows from myflags dictionary to save
@@ -1009,7 +963,7 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
 
 def getReason(cmdline):
     '''Get the reason values from a line with strings
-       -> cmdline is a string with parameters
+       cmdline --> a string with parameters
           returns a string with reason values.
     '''
             
@@ -1046,9 +1000,10 @@ def getReason(cmdline):
 
 def getLinePars(cmdline, mlist=[]):
     '''Get a dictionary of all selection parameters from a line:
-       -> cmdline is a string with parameters
-       -> mlist is a list of the mode parameters to add to the
-          returned dictionary.
+       cmdline --> a string with parameters
+       mlist --> a list of mode's parameters to add to the output dictionary
+          
+        Returns a  dictionary.
     '''
             
     # Dictionary of parameters to return
@@ -1125,7 +1080,7 @@ def getLinePars(cmdline, mlist=[]):
 
 def getSelectionPars(cmdline):
     '''Get a dictionary of all selection parameters from a line:
-       -> cmdline is a string with parameters
+       cmdline --> a string with parameters
     '''
             
     # Dictionary of parameters to return
@@ -1231,7 +1186,8 @@ def readNtime(params):
 
 
 def fixType(params):
-    '''Give correct types to non-string parameters'''
+    '''Give correct types to non-string parameters
+       The types are defined in the XML file of the task tflagdata'''
 
     # manual parameter
     if params.has_key('autocorr'):
@@ -1336,7 +1292,8 @@ def fixType(params):
 
 def purgeEmptyPars(cmdline):
     '''Remove empty parameters from a string:
-       -> cmdline is a string with parameters
+       cmdline --> a string with parameters
+       
        returns a string containing only parameters with values
     '''
     newstr = ''
@@ -1370,8 +1327,10 @@ def purgeEmptyPars(cmdline):
 
 
 def purgeParameter(cmdline, par):
-    '''Remove parameter par from a string:
-       -> cmdline is a string with a parameter to be removed
+    '''Remove parameter from a string:
+       cmdline --> a string with a parameter to be removed
+       par --> the parameter to be removed from the string
+       
        returns a string containing the remaining parameters
     '''
                
@@ -1405,7 +1364,8 @@ def purgeParameter(cmdline, par):
     return newstr
 
 def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
-    ''' Setup the parameters of each agent and call the tflagger tool
+    ''' Setup the parameters of each agent and call the testflagger tool
+    
         myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
         apply --> it's a boolean to control whether to apply or unapply the flags
@@ -1604,13 +1564,13 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
 
 
 def backupFlags(tflocal, prename):
-
-        # Create names like this:
-        # before_tflagcmd_1,
-        # before_tflagcmd_2,
-        #
-        # Generally  before_<mode>_<i>, where i is the smallest
-        # integer giving a name, which does not already exist
+    '''
+         Create names like this:
+         flags.flagcmd_1,
+         flags.tflagdata_1,
+        
+        Generally  <task>_<i>, where i is the smallest
+        integer giving a name, which does not already exist'''
         
     prefix = prename
     existing = tflocal.getflagversionlist(printflags=False)
@@ -1903,7 +1863,7 @@ def readRFlagThresholdFile(infile='',inkey=''):
 ##############################################
 ## Note - replace all arrays by lists before coming here.
 def convertDictToString(indict={}):
-    # Convert to string
+    '''Convert dictionary to string'''
     thestr = str(indict);
     # Remove newlines and spaces from this string.
     thestr = thestr.replace('\n','');
@@ -1911,6 +1871,7 @@ def convertDictToString(indict={}):
     return thestr;
 ##############################################
 def convertStringToDict(instr=''):
+    '''Convert string to dictionary'''
     instr = instr.replace('\n','');
     try:
         thedict = ast.literal_eval(instr)

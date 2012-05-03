@@ -172,11 +172,17 @@
     setjy need only be run on the calibrator sources with a known flux
     density and/or model.
 
-    Solar System Objects are supported via the 'Butler-JPL-Horizons 2010'
-    standard.  Currently they are modeled as uniform temperature disks based
+    <!--Solar System Objects are supported via the 'Butler-JPL-Horizons 2010'
+    standard.  -->
+    Solar System Objects are supported via the 'Butler-JPL-Horizons 2012' 
+    standard. This uses new brightness temperature models and a new flux
+    calculation code that replace the 'Butler-JPL-Horizons 2010' standard.
+    The older 'Butler-JPL-Horizons 2010' standard is still available
+    for comparison. Users may want to use predictcomp task to see the differeces. 
+    Currently they are modeled as uniform temperature disks based
     on their ephemerides at the time of observation (note that this may
     oversimply objects, in particular asteroids).  The object name is
-    obtained from the 'field' parameter.  Recognized objects are listed
+    obtained from the 'field' parameter. Recognized objects are listed
     below, under 'standard'.
 
     Note that fluxdensity, modimage, and standard interact in a possibly
@@ -344,9 +350,11 @@
             and the final two are for Solar System objects.  
             The 'Butler-JPL-Horizons 2012' standard is recommended over 
             'Butler-JPL-Horizons 2010' as the former uses updated models.
-            Recognized Solar System objects are: 
-
-	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune, Pluto**
+            Recognized Solar System objects (for 'Butler-JPL-Horizons 2012') are: 
+             
+               <!-- this for the 2010 one  
+	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune, Pluto** -->
+	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune
 	       
 	       Moons: Jupiter: Io, Europa, Ganymede, Callisto
                    Saturn:  Titan <!-- Mimas, Enceladus, Tethys, Dione,  
@@ -355,11 +363,12 @@
                    <!-- Uranus moons:  Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia,
                                   Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, 
                                   Rosalind, Belinda, Puck -->
-                   Neptune: Triton 
+                   <!-- for the 2010 
+                   Neptune: Triton -->
                    <!-- Pluto moon:    Charon -->
 	       
-            Asteroids: Ceres, Pallas***, Vesta***, Juno***, Victoria***,
-	               Davida***
+            Asteroids: Ceres, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
+	               Davida*** -->
 
             * Venus (and Jupiter and Earth, for that matter) is probably too
               resolved for most (sub)mm observations with interferometers.
@@ -367,11 +376,13 @@
               may not capture the details of spectral lines (like day-night
               differences).
 
+           <!-- for the 2010 standard 
             ** Pluto alone.  No allowance is made for the possibility of Charon
               being in the field.  It is in the planet category for historical
               reasons.
+            -->
 
-            *** not recommended (The temperature is not yet adjusted for
+            **  not recommended (The temperature is not yet adjusted for
                 varying distance from the Sun.  The model data can be scaled
                 after running setjy, but it is an involved process.)
 

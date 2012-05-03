@@ -88,7 +88,7 @@ scripts/task_find.py
 scripts/task_fixplanets.py
 scripts/task_fixvis.py
 scripts/task_flagautocorr.py
-scripts/task_oldflagcmd.py
+scripts/task_flagcmd.py
 scripts/task_flagdata.py
 scripts/task_flagdata2.py
 scripts/task_flagmanager.py
@@ -126,6 +126,7 @@ scripts/task_listsdm.py
 scripts/task_listvis.py
 scripts/taskmanager.py
 scripts/task_mosaic.py
+scripts/task_oldflagcmd.py
 scripts/task_peel.py
 scripts/task_plotants.py
 scripts/task_plotcal.py
@@ -167,7 +168,6 @@ scripts/task_splattotable.py
 scripts/task_split.py
 scripts/task_statwt.py
 scripts/task_testconcat.py
-scripts/task_tflagcmd.py
 scripts/task_tflagdata.py
 scripts/task_uvcontsub.py
 scripts/task_uvcontsub2.py

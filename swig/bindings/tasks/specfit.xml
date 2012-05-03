@@ -568,18 +568,6 @@ from the zeroth pixel in the specified region. goodfwhmrange is expressed in ter
 given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
 ranges, the entire solution is considered to be invalid.
 
-LIMITING RANGES FOR SOLUTION PARAMETERS
-In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
-nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
-One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
-parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
-that might be fit; choosing ranges on a component by component basis is not supported. If specified,
-an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
-that parameter.  goodamprange is expressed in terms of image brightness units. goodcenterrange is expressed in terms of pixels
-from the zeroth pixel in the specified region. goodfwhmrange is expressed in terms of pixels (only non-negative values should be
-given for FWHM range endpoints). In the case of a multiple-PCF fit, if any of the corresponding solutions are outside the specified
-ranges, the entire solution is considered to be invalid.
-
 In addition, solutions for which the absolute value of the ratio of the amplitude error to the amplitude exceeds 100 or the
 ratio of the FWHM error to the FWHM exceeds 100 are automatically marked as invalid.
 

@@ -136,7 +136,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 					raise Exception, "Dispersion table libair-ddefault.csv not found in path "\
 					      +"given by WVRGCAL_DISPDIR nor in \""+dispdirpath+"\""
 				
-				os.setenv('WVRGCAL_DISPDIR', dispdirpath)
+				os.putenv('WVRGCAL_DISPDIR', dispdirpath)
 				
 			execute_string+= ' --disperse'
 			casalog.post('Using dispersion table '+dispdirpath+'/libair-ddefault.csv')

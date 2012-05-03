@@ -28,7 +28,7 @@ find.xml
 fixplanets.xml
 fixvis.xml
 flagautocorr.xml
-oldflagcmd.xml
+flagcmd.xml
 flagdata.xml
 flagdata2.xml
 flagmanager.xml
@@ -63,6 +63,7 @@ listobs.xml
 listsdm.xml
 listvis.xml
 mosaic.xml
+oldflagcmd.xml
 peel.xml
 plotants.xml
 plotcal.xml
@@ -104,7 +105,6 @@ splattotable.xml
 split.xml
 statwt.xml
 testconcat.xml
-tflagcmd.xml
 uvcontsub.xml
 uvcontsub2.xml
 uvcontsub3.xml

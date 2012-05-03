@@ -399,7 +399,7 @@ def importasdm(
                         fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       
                         
                     else:
-                        casalog.post('Will not apply flags (apply_flags=False), use tflagcmd to apply')
+                        casalog.post('Will not apply flags (apply_flags=False), use flagcmd to apply')
                     
                         # Write to FLAG_CMD, APPLIED is set to False
                         fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', '')

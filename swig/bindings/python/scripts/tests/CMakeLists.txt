@@ -35,9 +35,9 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_exportasdm.py
   test_fixplanets.py
   test_fixvis.py
+  test_flagcmd.py
   test_flagdata.py
   test_flagdata2.py
-  test_oldflagcmd.py
   test_getchunk.py
   test_gencal.py
   test_hanningsmooth.py
@@ -80,6 +80,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_listvis.py
   test_measures.py
   test_msmoments.py
+  test_oldflagcmd.py
   test_partition.py
   test_pcasa.py
   test_plotants.py
@@ -116,7 +117,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_split.py
   test_statwt.py
   test_testconcat.py
-  test_tflagcmd.py
   test_tflagdata.py
   test_uvcontsub.py
   test_uvcontsub3.py
