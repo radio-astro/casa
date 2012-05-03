@@ -423,7 +423,7 @@ TestFlagger::parseAgentParameters(Record agent_params)
 				// compose the full expression
 				String func = function;
 				String pol = allpol->at(i);
-				String exp = func.append(" ");
+				String exp = func.append("_");
 				exp = func.append(pol);
 
 				// Save the record to a list of agents
@@ -1011,7 +1011,8 @@ bool
 TestFlagger::parseManualParameters(String field, String spw, String array,
 								   String feed, String scan, String antenna,
 								   String uvrange,  String timerange, String correlation,
-								   String intent, String observation, Bool apply)
+								   String intent, String observation, Bool autocorr,
+								   Bool apply)
 {
 
 	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
@@ -1037,6 +1038,8 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
 	agent_record.define("name", agent_name);
+
+	agent_record.define("autocorr", autocorr);
 
 	// Call the main method
 	parseAgentParameters(agent_record);

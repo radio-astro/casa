@@ -179,7 +179,7 @@ public:
 	// Parse parameters for manual
 	bool parseManualParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
-       	    String intent, String observation, Bool apply);
+       	    String intent, String observation, Bool autocorr, Bool apply);
 
 	// Parse parameters for clip
 	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
