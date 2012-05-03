@@ -239,7 +239,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_fixplanets.py
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
-  scripts/task_oldflagcmd.py
+  scripts/task_flagcmd.py
   scripts/task_flagdata.py
   scripts/task_flagdata2.py
   scripts/task_flagmanager.py
@@ -277,6 +277,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
+  scripts/task_oldflagcmd.py
   scripts/task_peel.py
   scripts/task_plotants.py
   scripts/task_plotcal.py
@@ -318,7 +319,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_split.py
   scripts/task_statwt.py
   scripts/task_testconcat.py
-  scripts/task_tflagcmd.py
   scripts/task_tflagdata.py
   scripts/task_uvcontsub.py
   scripts/task_uvcontsub2.py
@@ -374,7 +374,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/fixplanets.xml
   tasks/fixvis.xml
   tasks/flagautocorr.xml
-  tasks/oldflagcmd.xml
+  tasks/flagcmd.xml
   tasks/flagdata.xml
   tasks/flagdata2.xml
   tasks/flagmanager.xml
@@ -409,6 +409,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listsdm.xml
   tasks/listvis.xml
   tasks/mosaic.xml
+  tasks/oldflagcmd.xml
   tasks/peel.xml
   tasks/plotants.xml
   tasks/plotcal.xml
@@ -450,7 +451,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/split.xml
   tasks/statwt.xml
   tasks/testconcat.xml
-  tasks/tflagcmd.xml
   tasks/tflagdata.xml
   tasks/uvcontsub.xml
   tasks/uvcontsub2.xml

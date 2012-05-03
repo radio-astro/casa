@@ -7,7 +7,7 @@ import flaghelper as fh
 debug = False
 
 
-def tflagcmd(
+def flagcmd(
     vis=None,
     inpmode=None,
     inpfile=None,
@@ -28,7 +28,7 @@ def tflagcmd(
     ):
 
     #
-    # Task tflagcmd
+    # Task flagcmd
     #    Reads flag commands from file or string and applies to MS
 
     try:
@@ -36,7 +36,7 @@ def tflagcmd(
     except:
         raise Exception, 'Failed to load xml.dom.minidom into python'
 
-    casalog.origin('tflagcmd')
+    casalog.origin('flagcmd')
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome'
             ).create()
@@ -45,8 +45,8 @@ def tflagcmd(
 
     # MS HISTORY
 #    mslocal.open(vis, nomodify=False)
-#    mslocal.writehistory(message='taskname = tflagcmd',
-#                         origin='tflagcmd')
+#    mslocal.writehistory(message='taskname = flagcmd',
+#                         origin='flagcmd')
     mslocal.open(vis, nomodify=False)
 
     try:
@@ -284,7 +284,7 @@ def tflagcmd(
 
             # Backup the flags before running
             if flagbackup:
-                fh.backupFlags(tflocal, 'tflagcmd')
+                fh.backupFlags(tflocal, 'flagcmd')
 
             # Run the tool
             stats = tflocal.run(True, preserve_order)
@@ -366,19 +366,19 @@ def tflagcmd(
     # write history
     try:
         mslocal.open(vis, nomodify=False)
-        mslocal.writehistory(message='taskname = tflagcmd',
-                             origin='tflagcmd')
+        mslocal.writehistory(message='taskname = flagcmd',
+                             origin='flagcmd')
         mslocal.writehistory(message='vis      = "' + str(vis) + '"',
-                             origin='testflagcmd')
+                             origin='flagcmd')
         mslocal.writehistory(message='inpmode = "' + str(inpmode) + '"'
-                             , origin='tflagcmd')
+                             , origin='flagcmd')
         if inpmode == 'file':
             mslocal.writehistory(message='inpfile = "' + str(inpfile)
-                                 + '"', origin='tflagcmd')
+                                 + '"', origin='flagcmd')
         elif inpmode == 'cmd':
             for cmd in command:
                 mslocal.writehistory(message='command  = "' + str(cmd)
-                        + '"', origin='tflagcmd')
+                        + '"', origin='flagcmd')
         mslocal.close()
     except:
         casalog.post('Cannot open vis for history, ignoring', 'WARN')
@@ -1136,37 +1136,6 @@ def listFlagCmd(
         lfout.close()
 
 
-def backupCmd(tflocal, cmdlist):
-
-        # Create names like this:
-        # before_tflagcmd_1,
-        # before_tflagcmd_2,
-        #
-        # Generally  before_<mode>_<i>, where i is the smallest
-        # integer giving a name, which does not already exist
-
-    prefix = 'tflagcmd'
-    existing = tflocal.getflagversionlist(printflags=True)
-
-    # remove comments from strings
-    existing = [x[0:x.find(' : ')] for x in existing]
-    i = 1
-    while True:
-        versionname = prefix + '_' + str(i)
-
-        if not versionname in existing:
-            break
-        else:
-            i = i + 1
-
-    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
-
-    casalog.post('Saving current flags to ' + versionname
-                 + ' before applying new flags')
-
-    tflocal.saveflagversion(versionname=versionname,
-                            comment='tflagcmd autosave on '
-                            + time_string, merge='replace')
 
 
 def selectFlags(

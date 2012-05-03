@@ -20,10 +20,10 @@ test_cvel                       dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixvis                     dpetry@nrao.edu
 test_fixplanets                 dpetry@nrao.edu
+test_flagcmd                    scastro@eso.org
 test_flagdata                   jkern@nrao.edu
 test_flagdata2                  scastro@eso.org
 test_tflagdata                  scastro@eso.org
-test_tflagcmd                  scastro@eso.org
 test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org

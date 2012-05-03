@@ -5,7 +5,7 @@
     xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-    <task type="function" name="tflagdata" category="editing" visibility="experimental">
+    <task type="function" name="tflagdata" category="editing">
         <shortdescription> All-purpose flagging task based on data-selections and flagging modes/algorithms</shortdescription>
         <description>
             This task has two main types of operation. One type
@@ -23,7 +23,7 @@
             the given file.
             
             The available flagging modes are: manual, clip, shadow, quack,
-            elevation, tfcrop, extend, unflag.
+            elevation, tfcrop, rflag, extend, unflag and summary.
 
             The current flags an be automatically backed up before applying new flags
             if the parameter flagbackup is set. Previous flag versions can be recovered 
@@ -37,8 +37,8 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (list/manual/clip/shadow/quack/elevation/\
-tfcrop/rflag/extend/unflag/summary)</description>
+                <description>Flagging mode (list/manual/clip/shadow/quack/\
+elevation/tfcrop/rflag/extend/unflag/summary)</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
@@ -57,9 +57,8 @@ tfcrop/rflag/extend/unflag/summary)</description>
             </param>
 
             <!-- MANUAL parameters -->
-            <param type="any" name="autocorr" subparam="true">
+            <param type="bool" name="autocorr" subparam="true">
                  <description>Flag auto-correlations</description>
-                 <any type="variant" limittypes="bool boolArray"/>
                   <value type="bool">False</value>
             </param>
 
@@ -541,7 +540,7 @@ tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
                         <default param="minrel"><value type="double">0.0</value></default>
-                         <default param="maxrel"><value type="double">1.0</value></default>
+                        <default param="maxrel"><value type="double">1.0</value></default>
                         <default param="minabs"><value type="int">0</value></default>
                         <default param="maxabs"><value type="int">-1</value></default>
                         <default param="spwchan"><value type="bool">False</value></default>
@@ -1208,9 +1207,9 @@ The task will flag a subset of data based on the following modes of operation:
         
         tflagdata('my.ms', mode='list', inpfile='flags.txt', reason='MYREASON')
 
-    10b) The same result of 10a can be achieved using the task tflagcmd.
+    10b) The same result of 10a can be achieved using the task flagcmd.
 
-		tflagcmd('my.ms', inpmode='file', inpfile='flags.txt', action='apply', reason='MYREASON')
+		flagcmd('my.ms', inpmode='file', inpfile='flags.txt', action='apply', reason='MYREASON')
             
     11) Automatic flagging using 'rflag', using auto-thresholds, and specifying 
           a threshold scale-factor to use for flagging.
@@ -1219,13 +1218,13 @@ The task will flag a subset of data based on the following modes of operation:
 
     12) Save the interface parameters to the FLAG_CMD sub-table of the MS. Add a reason
         to the flag command. This cmdreason will be added to the REASON column of the
-        FLAG_CMD sub-table. Apply flags in tflagcmd.
+        FLAG_CMD sub-table. Apply flags in flagcmd.
 
         tflagdata('my.ms', mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
                   correlation='ABS_XX,XY', action='', savepars=True, cmdreason='CLIPXX_XY')
 
         > Select based on the reason.
-        tflagcmd('my.ms', action='apply', reason='CLIPXX_XY')
+        flagcmd('my.ms', action='apply', reason='CLIPXX_XY')
 
     13) Flag antennas that are shadowed by antennas not present in the MS.
 
@@ -1264,8 +1263,8 @@ The task will flag a subset of data based on the following modes of operation:
         > You can edit the online_flags.txt to add other flagging commands or apply it directly.
          tflagdata('asdm.ms', mode='list', inpfile='online_flags.txt')
 
-        > The same result can be achieved using the task tflagcmd.
-         tflagcmd('asdm.ms', inpmode='file', inpfile='online_flags.txt', action='apply')
+        > The same result can be achieved using the task flagcmd.
+         flagcmd('asdm.ms', inpmode='file', inpfile='online_flags.txt', action='apply')
 
 
 ---- SYNTAX FOR COMMANDS GIVEN IN A FILE ----

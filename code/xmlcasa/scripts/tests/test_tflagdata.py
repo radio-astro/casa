@@ -852,7 +852,7 @@ class test_list(test_base):
         create_input(input, filename)
 
         # Delete any rows from FLAG_CMD
-        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag from list and save to FLAG_CMD
         tflagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True)
@@ -860,18 +860,18 @@ class test_list(test_base):
         # Verify
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
-        tflagcmd(vis=self.vis, action='list', savepars=True, outfile='myflags.txt', useapplied=True)
+        flagcmd(vis=self.vis, action='list', savepars=True, outfile='myflags.txt', useapplied=True)
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
         
     def test_list4(self):
-        '''tflagdata: save without running and apply in tflagcmd'''
+        '''tflagdata: save without running and apply in flagcmd'''
         # Delete any rows from FLAG_CMD
-        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        flagcmd(vis=self.vis, action='clear', clearall=True)
         
         tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='', 
                  savepars=True)
         
-        tflagcmd(vis=self.vis, action='apply')
+        flagcmd(vis=self.vis, action='apply')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2524284)
 
@@ -888,8 +888,8 @@ class test_list(test_base):
         # Save to FLAG_CMD
         tflagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True)
         
-        # Run in tflagcmd and select by reason
-        tflagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
+        # Run in flagcmd and select by reason
+        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
         
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
@@ -928,12 +928,12 @@ class test_list(test_base):
         
     def test_reason1(self):
         '''tflagdata: add_reason to FLAG_CMD'''
-        tflagcmd(vis=self.vis, action='clear', clearall=True)
+        flagcmd(vis=self.vis, action='clear', clearall=True)
         tflagdata(vis=self.vis, mode='manual', scan='1,3', savepars=True, cmdreason='SCAN_1_3',
                   action='')
         
         # Apply flag cmd
-        tflagcmd(vis=self.vis, action='apply', reason='SCAN_1_3')
+        flagcmd(vis=self.vis, action='apply', reason='SCAN_1_3')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1330182, 'Only scans 1 and 3 should be flagged')
         
@@ -992,7 +992,7 @@ class cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf ngc5921.ms*')
-#        os.system('rm -rf flagdatatest.ms*')
+        os.system('rm -rf flagdatatest.ms*')
         os.system('rm -rf missing-baseline.ms')
         os.system('rm -rf multiobs.ms*')
         os.system('rm -rf flagdatatest-alma.ms*')
