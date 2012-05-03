@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-        <tool name="testflagger" module="testflagger">
+<tool name="testflagger" module="testflagger">
 <code>
 	<include>xmlcasa/flagging/testflagger_forward.h</include>
 <private>
@@ -14,12 +14,116 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </private>
 </code>
 
-        <shortdescription>Refactored tool for manual and automated flagging</shortdescription>
+        <shortdescription>Tool for manual and automated flagging</shortdescription>
        
 <description>
 The {\tt testflagger} tool performs manual as well as automatic synthesis
 flagging operations within casapy. The {\tt testflagger} tool can operate on
 one measurement set at a time.  
+
+  \medskip\noindent\textbf{Open the Measurement Set and Attach it to the Tool}
+
+   The first thing to do is to open the ms and attach it to the testflagger tool.
+   Use the tf.open method, which requires the MS name and optionally the time interval,
+   over which to buffer data before running the algorithm. The time interval is set by 
+   default to 0.0, which means a 'scan' length. The 'ntime' parameter is important for
+   the modes tfcrop, rflag and extend.
+
+  \medskip\noindent\textbf{Select the Data}
+
+   Once the MS is open, the next step is to select the data. This step will use the MS
+   selection tool to select the portion of the MS given by the parameters. There are two ways 
+   of selecting the data: 
+
+   1) by creating a Python dictionary which internally will be transformed into a record
+      containing the selection parameters.
+      
+      Select the whole MS.
+      tf.selectdata()
+
+      Select a portion of the MS using a dictionary.
+      myrecord={}
+      myrecord['scan']='1~3'
+      myrecord['spw']='0:1~10'
+      tf.selectdata(myrecord)
+
+    2) by parsing the parameters names.
+
+      tf.selectdata(scan='1~3', spw='0:1~10')
+         
+
+  \medskip\noindent\textbf{Parse the Parameters for the Flagging Mode(s)}
+
+   Each flagging mode is called an agent. The available agents are: manual, clip, quack,
+   shadow, elevation, tfcrop, rflag, extend, unflag and summary. Each one of these agents
+   may or may not take configuration parameters and data selection parameters. Once the desired 
+   flagging modes are chosen, it is time to give the configuration parameters to the tool. Ommited
+   parameters will take default values as defined in each agent. There are
+   two ways of parsing the agent's parameters.
+
+   1) Using the general method tf.parseagentparameters().
+
+      Construct a dictionary with the parameters for each agent. Each agent's
+      parameters should go to a different 'key' of the dictionary. Example:
+
+      # Create a shadow agent:
+      myagents = {}
+      myagents['mode'] = 'shadow'
+      parseagentparameters(myagents)
+      
+      # Add a manual agent to the same internal list of agents.
+      myagents = {}
+      myagents['mode'] = 'manual'
+      myagents['scan'] = '1~3,18~20'
+      parseagentparameters(myagents)
+
+      # Add a clip agent to flag the zero-value data.
+      myagents = {}
+      myagents['mode'] = 'clip'
+      myagents['clipzeros'] = True
+      parseagentparameters(myagents)
+
+    2) The other way to parse agent's parameters is to use the convenience functions.
+       The above example would become:
+
+      # Create a shadow agent:
+      parseshadowparameters()
+      
+      # Add a manual agent to the same internal list of agents.
+      parsemanualparameters(scan='1~3,18~20')
+
+      # Add a clip agent to flag the zero-value data.
+      parseclipparameters(clipzeros=True)
+
+
+  \medskip\noindent\textbf{Initialize the Agents}
+
+   The above step creates a list of the agents that the tool will use to process the data.
+   This step will check several parameters and apply constraints. It will set the iteration approach
+   to COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY if the agent is either tfcrop or extend and combinescans
+   is set to True. Otherwise it will set it to COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY.
+
+   If the list contain agents that set ntime more than once, this method will get the maximum value
+   of ntime and use it for all agents.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </description>
 
 <!-- ********************************************************************** -->
@@ -92,8 +196,8 @@ All data selection parameters follow the ms-selection syntax.
      <param type="any" name="config"> 
      <any type="record"/>
      <description>The record (dictionary) config may be given or not. If it is not given, 
-     \n the whole MS will be selected. The record may contain any data selection parameters 
-     \n supported by MSSelection such as\n:
+     \n and no specific parameter is given either, the whole MS will be selected. The record 
+     \n may contain any data selection parameters supported by MSSelection such as:\n
      </description>     
      </param>
 
@@ -138,7 +242,7 @@ All data selection parameters follow the ms-selection syntax.
      </param>
 
      <param type="string" name="correlation">
-     <description>\tCorrelations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
      <value>""</value>
      </param>
 
@@ -148,7 +252,7 @@ All data selection parameters follow the ms-selection syntax.
      </param>
      
      <param type="string" name="observation">
-     <description>\tObservation Id : example : '2~4' </description>
+     <description>Observation Id : example : '2~4' </description>
      <value>""</value>
      </param>
 
@@ -224,8 +328,8 @@ tf.parseAgentParameters(myrecord)
    <method type="function" name="init">
    <shortdescription>Initialize the agents</shortdescription>
    
-<description>This method will initialize the agents and create a list of agents.
-with their parameters. It takes no parameters.
+<description>This method will initialize the agents and create a list of agents
+with their specific parameters. It takes no parameters.
 </description>
 
 <input>
@@ -422,6 +526,11 @@ for the manual mode.
      <value>""</value>
      </param>
 
+     <param type="bool" name="autocorr">
+     <description>\tParameter to flag only auto-correlations. Default: </description>
+     <value>false</value>
+     </param>
+     
      <param type="bool" name="apply">
      <description>\tParameter to flag or unflag the data. Default: </description>
      <value>true</value>
@@ -431,6 +540,7 @@ for the manual mode.
      
 </input>
 <example>
+tf.parsemanualparameters(autocorr=True)
 </example>
 
 <returns type="bool"/> 
@@ -440,7 +550,7 @@ for the manual mode.
 
    <method type="function" name="parseclipparameters">
    <shortdescription>Parses data selection parameters and specific parameters
-   for the clip mode.
+for the clip mode.
     </shortdescription>
 
 <input>
@@ -540,6 +650,11 @@ for the manual mode.
      
 </input>
 <example>
+The correlation parameter can be used with an operator for the clip mode.
+The operator should be written only once and it will affect all the polarizations
+given in the string. See the example below:
+
+tf.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='ABS_XX,XY')
 </example>
 
 <returns type="bool"/> 
@@ -634,6 +749,7 @@ for the quack mode.
      
 </input>
 <example>
+tf.parsequackparameters(scan='1~3', quackmode='beg', quackinterval=1)
 </example>
 
 <returns type="bool"/> 
@@ -725,6 +841,8 @@ for the elevation mode.
      
 </input>
 <example>
+To unflag, set the apply parameter.
+tf.parseelevationparameters(upperlimit=50.,lowerlimit=10.0, apply=False)
 </example>
 
 <returns type="bool"/> 
@@ -851,6 +969,11 @@ for the time and frequency mode.
      
 </input>
 <example>
+The correlation parameter can be used with an operator for the tfcrop mode.
+The operator should be written only once and it will affect all the polarizations
+given in the string. See the example below:
+
+tf.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY')
 </example>
 
 <returns type="bool"/> 
@@ -965,6 +1088,7 @@ for the extend mode.
      
 </input>
 <example>
+tf.parseextendparameters(extendpols=True)
 </example>
 
 <returns type="bool"/> 
@@ -975,7 +1099,7 @@ for the extend mode.
 
    <method type="function" name="parsesummaryparameters">
    <shortdescription>Parses data selection parameters and specific parameters
-for the manual mode.
+for the summary mode.
     </shortdescription>
 
 <input>
@@ -1055,6 +1179,7 @@ for the manual mode.
      
 </input>
 <example>
+tf.parsesummaryparameters(spwchan=True, basecnt=True)
 </example>
 
 <returns type="bool"/> 
