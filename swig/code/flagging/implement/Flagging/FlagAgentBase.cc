@@ -920,73 +920,6 @@ FlagAgentBase::setAgentParameters(Record config)
 			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
 			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
 	{
-		// Check if user provided an expression
-		exists = config.fieldNumber ("correlation");
-		if (exists >= 0)
-		{
-			expression_p = config.asString("correlation");
-		}
-		else
-		{
-			expression_p = "ABS ALL";
-		}
-
-		expression_p.upcase();
-
-		// Check if expression is one of the supported operators
-		if ((expression_p.find("REAL") == string::npos) and
-				(expression_p.find("IMAG") == string::npos) and
-				(expression_p.find("ARG") == string::npos) and
-				(expression_p.find("ABS") == string::npos) and
-				(expression_p.find("NORM") == string::npos))
-		{
-			expression_p = "ABS " + expression_p;
-			*logger_p 	<< LogIO::WARN
-						<< " Unsupported visibility expression: " << expression_p
-						<< ", selecting ABS ALL by default. "
-						<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
-						<< LogIO::POST;
-		}
-
-		// Replace "ALL" by applicable correlations
-		if (expression_p.find("ALL") != string::npos)
-		{
-			if (expression_p.find("REAL") != string::npos)
-			{
-				expression_p = String("REAL ");
-			}
-			else if (expression_p.find("IMAG") != string::npos)
-			{
-				expression_p = String("IMAG ");
-			}
-			else if (expression_p.find("ARG") != string::npos)
-			{
-				expression_p = String("ARG ");
-			}
-			else if (expression_p.find("ABS") != string::npos)
-			{
-				expression_p = String("ABS ");
-			}
-			else if (expression_p.find("NORM") != string::npos)
-			{
-				expression_p = String("NORM ");
-			}
-
-			expression_p += flagDataHandler_p->corrProducts_p->at(0);
-
-			for (uInt corr_i=1;corr_i<flagDataHandler_p->corrProducts_p->size();corr_i++)
-			{
-				expression_p += String(",") + flagDataHandler_p->corrProducts_p->at(corr_i);
-			}
-		}
-
-		expression_p.upcase();
-
-		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
-
-		// Request to pre-load spw and corrType
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 		exists = config.fieldNumber ("datacolumn");
 		if (exists >= 0)
@@ -1038,7 +971,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
-		else if (dataColumn_p.compare("CPARAM") == 0)
+		else if (dataColumn_p.compare("FPARAM") == 0)
 		{
 			dataReference_p = DATA;
 
@@ -1071,6 +1004,102 @@ FlagAgentBase::setAgentParameters(Record config)
 		}
 
 		*logger_p << logLevel_p << " data column is " << dataColumn_p << LogIO::POST;
+
+		// Check if user provided an expression
+		exists = config.fieldNumber ("correlation");
+		if (exists >= 0)
+		{
+			expression_p = config.asString("correlation");
+		}
+		else
+		{
+			expression_p = "ABS ALL";
+		}
+
+		expression_p.upcase();
+
+		if (	(dataColumn_p.compare("FPARAM") == 0) or
+				(dataColumn_p.compare("PARAMERR") == 0) or
+				(dataColumn_p.compare("SNR") == 0) )
+		{
+			// Check if expression is one of the supported operators
+			if (	(expression_p.find("IMAG") != string::npos) or
+					(expression_p.find("ARG") != string::npos) or
+					(expression_p.find("ABS") != string::npos) or
+					(expression_p.find("NORM") != string::npos))
+			{
+				*logger_p 	<< LogIO::WARN
+							<< " Unsupported visibility expression: " << expression_p
+							<< ", selecting REAL ALL by default. "
+							<< " Keep in mind that complex operators are not supported for FPARAM/PARAMERR/SNR"
+							<< LogIO::POST;
+				expression_p = "REAL ALL";
+			}
+			else if (expression_p.find("REAL") == string::npos)
+			{
+				expression_p = "REAL " + expression_p;
+			}
+		}
+		else
+		{
+			// Check if expression is one of the supported operators
+			if ((expression_p.find("REAL") == string::npos) and
+					(expression_p.find("IMAG") == string::npos) and
+					(expression_p.find("ARG") == string::npos) and
+					(expression_p.find("ABS") == string::npos) and
+					(expression_p.find("NORM") == string::npos))
+			{
+				expression_p = "ABS ALL";
+				*logger_p 	<< LogIO::WARN
+							<< " Unsupported visibility expression: " << expression_p
+							<< ", selecting ABS ALL by default. "
+							<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
+							<< LogIO::POST;
+			}
+		}
+
+
+		// Replace "ALL" by applicable correlations
+		if (expression_p.find("ALL") != string::npos)
+		{
+			if (expression_p.find("REAL") != string::npos)
+			{
+				expression_p = String("REAL ");
+			}
+			else if (expression_p.find("IMAG") != string::npos)
+			{
+				expression_p = String("IMAG ");
+			}
+			else if (expression_p.find("ARG") != string::npos)
+			{
+				expression_p = String("ARG ");
+			}
+			else if (expression_p.find("ABS") != string::npos)
+			{
+				expression_p = String("ABS ");
+			}
+			else if (expression_p.find("NORM") != string::npos)
+			{
+				expression_p = String("NORM ");
+			}
+
+			expression_p += flagDataHandler_p->corrProducts_p->at(0);
+
+			for (uInt corr_i=1;corr_i<flagDataHandler_p->corrProducts_p->size();corr_i++)
+			{
+				expression_p += String(",") + flagDataHandler_p->corrProducts_p->at(corr_i);
+			}
+		}
+
+		expression_p.upcase();
+
+		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
+
+		// Request to pre-load spw and corrType
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+
+
 	}
 
 	exists = config.fieldNumber ("autocorr");
@@ -1890,7 +1919,7 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 			rightVisCube = &(visibilityBuffer_p->get()->modelVisCube());
 			break;
 		}
-		case CPARAM:
+		case FPARAM:
 		{
 			leftVisCube = &(visibilityBuffer_p->get()->visCube());
 			break;

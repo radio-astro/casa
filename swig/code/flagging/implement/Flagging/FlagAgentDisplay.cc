@@ -369,7 +369,24 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
     
     // Build the Plot Window for the first time
     if(dataDisplay_p && dataplotter_p==NULL) buildDataPlotWindow();
-    
+
+    // Adding this block of code as a fix for CAS-4052.
+    // J.G. : If you find a better way to do this, please change this...
+    if(dataDisplay_p==True && dataplotter_p!=NULL)
+      {
+	Int nrows;
+	if(showBandpass_p==True) nrows=3;
+	else nrows=2;
+
+	if(panels_p.nelements() != nPolarizations_p*nrows)
+	  {
+	    //cout << "Wrong number of panels !" << endl;
+	    dataplotter_p->done(); 
+	    dataplotter_p=NULL;
+	    buildDataPlotWindow(); 
+	  }
+      }
+
     // Initialize Plot Arrays and other vars
     Float runningsum=0, runningflag=0,runningpreflag=0;
     Vector<Float> vecflagdat(0), vecdispdat(0);

@@ -36,14 +36,14 @@
       <arg direction="out" type="v" />
     </method>
 
-    <method name="load" >
+    <method name="load" timeout="0x7fffffff/1000.0">
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="s" name="displaytype" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="in" type="d" name="scaling" />
       <arg direction="out" type="v" />
     </method>
-    <method name="reload" >
+    <method name="reload" timeout="0x7fffffff/1000.0">
       <arg direction="in" type="i" name="panel_or_data" />
       <arg direction="out" type="v" />
     </method>
@@ -52,13 +52,13 @@
       <arg direction="out" type="v" />
     </method>
 
-    <method name="restore">
+    <method name="restore" timeout="0x7fffffff/1000.0">
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
 
-    <method name="panel">
+    <method name="panel" timeout="0x7fffffff/1000.0">
       <arg direction="in" type="s" name="type" />
       <arg direction="in" type="b" name="hidden" />
       <arg direction="out" type="v" />

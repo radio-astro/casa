@@ -2873,8 +2873,9 @@ namespace asdm {
 
 	void Parser::toXML(string data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
-		
-		buf.append(boost::property_tree::xml_parser::encode_char_entities(data));
+	
+		if (data.size()>0)
+			buf.append(boost::property_tree::xml_parser::encode_char_entities(data));
 		
 		buf.append(" </" + name + "> ");
 	}
@@ -2889,8 +2890,9 @@ namespace asdm {
 		buf.append(" ");
 		for (unsigned int i = 0; i < data.size(); ++i) {
 	
-			buf.append("\"");	
-			buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i]));
+			buf.append("\"");
+			if (data[i].size()>0)	
+				buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i]));
 			buf.append("\"");
 		
 			buf.append(" ");
@@ -2908,8 +2910,9 @@ namespace asdm {
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 	
-				buf.append("\"");	
-				buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j]));
+				buf.append("\"");
+				if(data[i][j].size()>0)	
+					buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j]));
 				buf.append("\"");
 		
 				buf.append(" ");
@@ -2931,8 +2934,9 @@ namespace asdm {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 	
-					buf.append("\"");	
-					buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k]));
+					buf.append("\"");
+					if (data[i][j][k].size() > 0)	
+						buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k]));
 					buf.append("\"");
 		
 					buf.append(" ");
@@ -2958,8 +2962,9 @@ namespace asdm {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 					for (unsigned int l = 0; l < data[i][j][k].size(); l++) {
 	
-						buf.append("\"");	
-						buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k][l]));
+						buf.append("\"");
+						if (data[i][j][k][l].size() > 0)	
+							buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k][l]));
 						buf.append("\"");
 		
 						buf.append(" ");

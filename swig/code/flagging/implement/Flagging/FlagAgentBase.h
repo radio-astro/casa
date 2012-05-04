@@ -45,7 +45,7 @@ public:
 		MODEL,
 		RESIDUAL,
 		RESIDUAL_DATA,
-		CPARAM,
+		FPARAM,
 		PARAMERR,
 		SNR
 	};
