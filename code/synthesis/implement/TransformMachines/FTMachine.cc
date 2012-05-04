@@ -230,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert(directionIndex>=0, AipsError);
     DirectionCoordinate
       directionCoord=coords.directionCoordinate(directionIndex);
-    
+  
     // get the first position of moving source
     if(fixMovingSource_p){
       
@@ -753,13 +753,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       MDirection phasecenter=mImage_p;
       if(fixMovingSource_p){
-      
+       
       //First convert to HA-DEC or AZEL for parallax correction
 	MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
 	MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
 	MDirection::Ref outref(mImage_p.getRef().getType(), mFrame_p);
 	MDirection sourcenow=MDirection::Convert(tmphadec, outref)();
-	phasecenter.set(MVDirection(phasecenter.getAngle()-firstMovingDir_p.getAngle()+sourcenow.getAngle()));
+	//cerr << "Rotating to fixed moving source " << MVDirection(phasecenter.getAngle()-firstMovingDir_p.getAngle()+sourcenow.getAngle()) << endl;
+	phasecenter.set(MVDirection(phasecenter.getAngle()+firstMovingDir_p.getAngle()-sourcenow.getAngle()));
 	
     }
 
@@ -1342,15 +1343,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> lsrFreq(0);
     Bool condoo=False;
     
+    //cerr << "doConve " << spw << "   " << doConversion_p[spw] << " freqframeval " << freqFrameValid_p << endl;
     
-    if(freqFrameValid_p){
-      vb.lsrFrequency(spw, lsrFreq, condoo);
-      doConversion_p[spw]=condoo;
-    }
-    else{
-      lsrFreq=vb.frequency();
-      doConversion_p[spw]=False;
-    }
+    vb.lsrFrequency(spw, lsrFreq, condoo, !freqFrameValid_p);
+    doConversion_p[spw]=condoo;
+    
     if(lsrFreq.nelements() ==0){
       return False;
     }
@@ -1367,11 +1364,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       f(0)=lsrFreq[chan];
       if(spectralCoord_p.toPixel(c, f)) {
 	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
-	//cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+	//cerr << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
 	/////////////
 	//c(0)=pixel;
 	//spectralCoord_p.toWorld(f, c);
-	// cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+	//cerr << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
 	////////////////
 	if(pixel>-1&&pixel<nchan) {
 	  chanMap(chan)=pixel;
@@ -1387,7 +1384,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
     }
-    
     
     multiChanMap_p[spw].resize();
     multiChanMap_p[spw]=chanMap;
