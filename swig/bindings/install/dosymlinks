@@ -19,7 +19,7 @@ updateCasa="false"
 linkthese=$(/usr/libexec/PlistBuddy -c "Print :MakeLinks" "${CASAROOT}/Info.plist" | awk '/^ /{print $0}')
 #echo "Executeables to link" ${linkthese}
 
-savedVersion=$(defaults read "${appSig}" "casa.version")
+savedVersion=$(defaults read "${appSig}" "casa.version" 2>/dev/null)
 if [ -n ${savedVersion} ]; then
 	if [ "${savedVersion}" != "${thisVersion}" ]; then
             updateCasa="true"
@@ -28,10 +28,10 @@ else
    updateCasa="true"
 fi
 
-#updateCasa="true"
+updateCasa="true"
 
 if [ "${updateCasa}" = "true" ]; then
-   cmdlineLinks=$(defaults read "${appSig}" "casa.setup.linkdir")
+   cmdlineLinks=$(defaults read "${appSig}" "casa.setup.linkdir" 2>/dev/null)
    if [ -n "${cmdlineLinks}" ]; then
 	   message="Update your CASA symbolic links?"
    else
