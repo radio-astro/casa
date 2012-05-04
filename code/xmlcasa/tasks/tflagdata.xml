@@ -627,7 +627,7 @@ The task will flag a subset of data based on the following modes of operation:
                     
                     Note that the operators ABS,ARG,RE, etc are written only once as the first value.
                     if more than one correlation is given, the operator will be applied to all of them.
-					
+                    
                     The expression is used only in modes clip, tfcrop and rflag.         
 
               field -- Select data based on field id(s) or name(s)
@@ -669,38 +669,38 @@ The task will flag a subset of data based on the following modes of operation:
         default: 'manual'
 
         list -- Flag according to the data selection and flag commands specified in the input list.
-	            Each input line may contain data selection parameters and any parameter
-	            specific to the mode given in the line. Default values will be used for
-	            the parameters that are not present in the line. Each line will be taken 
-	            as a command to the task. If data is pre-selected using any of the selection 
-	            parameters, then flagging will apply only to that subset of the MS.
-	              
-	            The summary mode is not allowed in the input list.
-	              
-	            For optimization, the task will create a union of the data selection parameters
-	            present in the list and select only that portion of the MS.
+                Each input line may contain data selection parameters and any parameter
+                specific to the mode given in the line. Default values will be used for
+                the parameters that are not present in the line. Each line will be taken 
+                as a command to the task. If data is pre-selected using any of the selection 
+                parameters, then flagging will apply only to that subset of the MS.
                   
-	           inpfile -- Input ASCII file containing a list of commands to the task.
-	              default: ''
-	              Example: the following commands can be put in a file and given to the task.
-	              
-	                 scan=1~3 mode=manual
-	                 mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
-	                 spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0 spw=9
-	                 mode=extend extendpols=True
-		
-	           reason -- select flag commands based on REASON(s) 
-	               default: 'any' (all flags regardless of reason)
-	                        can be a string, or list of strings
-	               example: reason='FOCUS_ERROR'
-	                        reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
-	
-	               NOTE: what is within the string is literally
-	               matched, e.g. reason='' matches only blank reasons, 
-	               and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
-	               matches this compound reason string only
-	                 
-	              See the syntax for writing flag commands at the end of this help.                  
+                The summary mode is not allowed in the input list.
+                  
+                For optimization, the task will create a union of the data selection parameters
+                present in the list and select only that portion of the MS.
+                  
+               inpfile -- Input ASCII file containing a list of commands to the task.
+                  default: ''
+                  Example: the following commands can be put in a file and given to the task.
+                  
+                     scan=1~3 mode=manual
+                     mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
+                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0 spw=9
+                     mode=extend extendpols=True
+        
+               reason -- select flag commands based on REASON(s) 
+                   default: 'any' (all flags regardless of reason)
+                            can be a string, or list of strings
+                   example: reason='FOCUS_ERROR'
+                            reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+    
+                   NOTE: what is within the string is literally
+                   matched, e.g. reason='' matches only blank reasons, 
+                   and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+                   matches this compound reason string only
+                     
+                  See the syntax for writing flag commands at the end of this help.                  
 
 
         manual -- Flag according to the data selection specified.
@@ -768,8 +768,8 @@ The task will flag a subset of data based on the following modes of operation:
                    default: 0.0
 
                addantenna -- It can be either a file name with additional antenna names, positions 
-		                 and diameters, or a Python dictionary with the same information. 
-						 You can use the flaghelper functions to create the dictionary from a file.  
+                         and diameters, or a Python dictionary with the same information. 
+                         You can use the flaghelper functions to create the dictionary from a file.  
                    default: ''
                    
                    To create a dictionary inside casapy.
@@ -812,7 +812,7 @@ The task will flag a subset of data based on the following modes of operation:
                  time, frequency, and correlation in a second step (via mode='extend)
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before 
-						running the algorithm. 
+                        running the algorithm. 
                     options: 'scan' or any other float value or string containing the units.
                     default: 'scan'
                     example: '1.5min'
@@ -828,15 +828,15 @@ The task will flag a subset of data based on the following modes of operation:
                     options: 'DATA','CORRECTED','MODEL', 'RESIDUAL, "RESIDUAL_DATA"
 
                timecutoff -- Flag threshold in time. Flag all data-points further than N-stddev 
-						     from the fit. This threshold catches time-varying RFI spikes (
-							 narrow and broad-band), but will not catch RFI that is persistent in time.
+                             from the fit. This threshold catches time-varying RFI spikes (
+                             narrow and broad-band), but will not catch RFI that is persistent in time.
                     default: 4.0
                           Flagging is done in upto 5 iterations. The stddev calculation is adaptive and 
                           converges to a value that reflects only the data and no RFI. At each iteration,
                           the same relative threshold is applied to detect flags. (Step (3) of the algorithm).
 
                freqcutoff -- Flag threshold in frequency. Flag all data-points further than N-stddev 
-							 from the fit.
+                             from the fit.
                     default: 3.0
                         Same as timecutoff, but along the frequency-dimension. This threshold catches
                         narrow-band RFI that may or may not be persistent in time. 
@@ -845,7 +845,7 @@ The task will flag a subset of data based on the following modes of operation:
                     default: 'line'
                     options: 'line', 'poly'
                       A 'line' fit is a robust straight-line fit across the entire timerange (defined 
-					  by 'ntime').
+                      by 'ntime').
                       A 'poly' fit is a robust piece-wise polynomial fit across the timerange.
                       Note: A robust fit is computed in upto 5 iterations. At each iteration, the stddev
                             between the data and the fit is computed, values beyond N-stddev are flagged,
@@ -862,7 +862,7 @@ The task will flag a subset of data based on the following modes of operation:
                         Same as for the 'timefit' parameter.
                         Choose 'line' only if you are operating on bandpass-corrected data, or residuals, 
                         and expect that the bandshape is linear. The 'poly' option works better on 
-					    uncalibrated bandpasses with narrow-band RFI spikes.   
+                        uncalibrated bandpasses with narrow-band RFI spikes.   
 
                maxnpieces -- Maxinum number of pieces to allow in the piecewise-polynomial fits 
                     default: 7
@@ -921,33 +921,32 @@ The task will flag a subset of data based on the following modes of operation:
                    -- calculate the deviation of each channel from this avg, and the median-deviation
                    -- flag if deviation is larger than freqdevscale x medianDev
 
-                   Example usage : 
+                 Example usage : 
 
-                    (1) Calculate thresholds automatically per scan, and use them to find flags.
-                         Specify scale-factor for time-analysis thresholds, use default for frequency.
+                  (1) Calculate thresholds automatically per scan, and use them to find flags.
+                      Specify scale-factor for time-analysis thresholds, use default for frequency.
 
-                          tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+                      tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0)
  
-                    (2) Supply noise-estimates to be used with default scale-factors. 
+                  (2) Supply noise-estimates to be used with default scale-factors. 
   
-                          tflagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, 
-									writeflags=True);
+                      tflagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, action='calculate)
 
-                    (3) Two-passes. This replicates the usage pattern in AIPS.
+                  (3) Two-passes. This replicates the usage pattern in AIPS.
 
-                         -- The first pass saves commands in an output text files, with auto-calculated 
-						    thresholds. Thresholds are returned from rflag only when writeflags=False 
-							(calc-only mode). The user can edit this file before doing the second pass, 
-							but the python-dictionary structure must be preserved.
-                         -- The second pass applies these commands (writeflags=True).
+                      -- The first pass saves commands in an output text files, with auto-calculated 
+                         thresholds. Thresholds are returned from rflag only when action='calculate'. 
+                         The user can edit this file before doing the second pass, 
+                         but the python-dictionary structure must be preserved.
+                      -- The second pass applies these commands (action='apply').
 
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
-									freqdev='fdevfile.txt', writeflags=False);
+                                    freqdev='fdevfile.txt', action='calculate')
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
-									freqdev='fdevfile.txt', writeflags=True);
+                                    freqdev='fdevfile.txt', action='apply')
             
                         Note : The rflag algorithm was originally developed by Eric Greisen in 
-								AIPS (31DEC11).
+                                AIPS (31DEC11).
                         AIPS documentation : Section E.5 of the AIPS cookbook
                         (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
                         http://www.aips.nrao.edu/cook.html#CEE )
@@ -975,22 +974,22 @@ The task will flag a subset of data based on the following modes of operation:
                     Examples : 
                          timedev = 0.5 : Use this noise-estimate to calculate flags. Do not recalculate.
                          timedev = [ [1,9,0.2], [1,10,0.5] ] :  Use noise-estimate of 0.2 for field 1, 
-												spw 9, and noise-estimate of 0.5 for field 1, spw 10.
+                                   spw 9, and noise-estimate of 0.5 for field 1, spw 10.
                          timedev = [] : Auto-calculate noise estimates.
                 
                     
                freqdev -- spectral noise estimate ( scutoff in AIPS ).
-                               This step depends on having a relatively-flat bandshape.
-                               Same parameter-options as 'timedev'. 
+                          This step depends on having a relatively-flat bandshape.
+                          Same parameter-options as 'timedev'. 
                     default: []
                      
 
                timedevscale -- For Step 1 (time analysis), flag a point if local rms around it 
-                                        is larger than  'timedevscale' x 'timedev'   ( fparm(0) in AIPS )
+                               is larger than  'timedevscale' x 'timedev'   ( fparm(0) in AIPS )
                     default: 5.0
                     
                freqdevscale -- For Step 2 (spectral analysis), flag a point if local rms around it
-                                       is larger than 'freqdevscale' x 'freqdev'     ( fparm(10) in AIPS )
+                               is larger than 'freqdevscale' x 'freqdev'     ( fparm(10) in AIPS )
                     default: 5.0
 
                spectralmax -- Flag whole spectrum if 'freqdev' is greater than spectralmax ( fparm(6) in AIPS )
@@ -1006,7 +1005,7 @@ The task will flag a subset of data based on the following modes of operation:
                         regardless of which algorithm created them.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
-						the algorithm.
+                        the algorithm.
                      options: 'scan' or any other float value or string containing the units.
                      default: 'scan'
                      example: '1.5min'
@@ -1022,13 +1021,13 @@ The task will flag a subset of data based on the following modes of operation:
                       options: True/False
 
                growtime -- For any channel, flag the entire timerange in the current 2D chunk (
-						   set by 'ntime') if more than X% of the timerange is already flagged.
+                           set by 'ntime') if more than X% of the timerange is already flagged.
                       default: 90.0
                       options: 0.0 - 100.0
                          This option catches the low-intensity parts of time-persistent RFI.
 
                growfreq -- For any timestep, flag all channels in the current 2D chunk (set by 
-						   data-selection) if more than X% of the channels are already flagged.
+                           data-selection) if more than X% of the channels are already flagged.
                       default: 90.0
                       options: 0.0 - 100.0
                          This option catches broad-band RFI that is partially identified by earlier steps.
@@ -1084,8 +1083,8 @@ The task will flag a subset of data based on the following modes of operation:
                         s = tflagdata(..., mode='summary')
 
                      Then s will be a dictionary which contains
-                    s['total']                  : total number of data
-                    s['flagged']                : amount of flagged data
+                    s['total']   : total number of data
+                    s['flagged'] : amount of flagged data
                     
         
 
@@ -1140,9 +1139,9 @@ The task will flag a subset of data based on the following modes of operation:
                 options: True/False
 
                 cmdreason -- A string containing a reason to save to the FLAG_CMD table or to an 
-							  output text file given by the outfile sub-parameter. If the input 
-						      contains any reason, they will be replaced with this one. At the 
-							  moment it is not possible to add more than one reason.
+                             output text file given by the outfile sub-parameter. If the input 
+                             contains any reason, they will be replaced with this one. At the 
+                             moment it is not possible to add more than one reason.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
                 
@@ -1152,7 +1151,13 @@ The task will flag a subset of data based on the following modes of operation:
                     
     
 ---- EXAMPLES ----
+
+    NOTE: The vector mode of the previous flagdata task can be achieved by using the
+          flagcmd task, inpmode='cmd'. Example:
+    
+       flagcmd('my.ms', inpmode='cmd', command=["mode='clip' clipzeros=True","mode='shadow'])
         
+
     1) Manually flag scans 1~3 and save the parameters to the FLAG_CMD sub-table.
     
         tflagdata('my.ms', scan='1~3, mode='manual', savepars=True)
@@ -1163,10 +1168,10 @@ The task will flag a subset of data based on the following modes of operation:
             
     3) Flag all commands from the list given in flags.txt.
     
-    	> cat flags.txt
-    	scan='1~3' mode='manual'
-    	spw='9' mode='tfcrop' correlation='ABS_RR,LL' ntime=51.0
-    	mode='extend' extendpols=True
+        > cat flags.txt
+        scan='1~3' mode='manual'
+        spw='9' mode='tfcrop' correlation='ABS_RR,LL' ntime=51.0
+        mode='extend' extendpols=True
     
         tflagdata('my.ms', mode='list', inpfile='flags.txt')
 
@@ -1186,7 +1191,7 @@ The task will flag a subset of data based on the following modes of operation:
     
         tflagdata('my.ms',mode='clip',clipminmax=[0,50], correlation='ABS_WVR')
 
-	8) Clip only zero-value data.
+    8) Clip only zero-value data.
 
         tflagdata('my.ms',mode='clip',clipzeros=True)
         
@@ -1200,21 +1205,21 @@ The task will flag a subset of data based on the following modes of operation:
 
     10a) Flag based on selected reasons from a file.
        
-    	> cat flags.txt
-    	scan='1~3' mode='manual' reason='MYREASON'
-    	spw='9' mode='clip' clipzeros=True reason='CLIPZEROS'
-    	mode='manual' scan='4' reason='MYREASON'
+        > cat flags.txt
+        scan='1~3' mode='manual' reason='MYREASON'
+        spw='9' mode='clip' clipzeros=True reason='CLIPZEROS'
+        mode='manual' scan='4' reason='MYREASON'
         
         tflagdata('my.ms', mode='list', inpfile='flags.txt', reason='MYREASON')
 
     10b) The same result of 10a can be achieved using the task flagcmd.
 
-		flagcmd('my.ms', inpmode='file', inpfile='flags.txt', action='apply', reason='MYREASON')
+        flagcmd('my.ms', inpmode='file', inpfile='flags.txt', action='apply', reason='MYREASON')
             
     11) Automatic flagging using 'rflag', using auto-thresholds, and specifying 
           a threshold scale-factor to use for flagging.
 
-        tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+        tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,action='apply')
 
     12) Save the interface parameters to the FLAG_CMD sub-table of the MS. Add a reason
         to the flag command. This cmdreason will be added to the REASON column of the
@@ -1242,7 +1247,7 @@ The task will flag a subset of data based on the following modes of operation:
           name=VLA10
           diameter=25.0
           position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]    
-	       
+           
 
          tflagdata('my.vis', mode='shadow', tolerance=10.0, addantenna='ant.txt')
 
