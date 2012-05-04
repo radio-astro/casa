@@ -183,6 +183,8 @@ class viewertool(object):
             raise error
 
     def __invoke( self, dt, t, func, *args, **kwargs ):
+        ## set maximum dbus timeout...
+        kwargs['timeout'] = 0x7fffffff / 1000.0
         try:
             result = func(*args,**kwargs)
         except dbus.DBusException, e:
