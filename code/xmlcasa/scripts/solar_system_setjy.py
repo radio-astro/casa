@@ -226,13 +226,14 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
         for jj in range(len(frequencies)):
             if (capitalized_source_name != 'Mars'):
                 estatuses.append(pstatuses[jj])
-                Tb = Tbs[ii]
-                dTb = dTbs[ii]
+                Tb = Tbs[jj]
+                dTb = dTbs[jj]
             else:
                 estatuses.append(mstatuses[ii][jj])
                 Tb = Tbs[ii][jj]
                 dTb = dTbs[ii][jj]
             if (estatuses[-1] == 0):
+                #casalog.post('Tb=%s for Freq=%s' % (Tb,frequencies[jj]))
                 flux_density = Tb * 1.0e26 * pi * Req * Rpap / (DD*DD)
 # mean apparent planet radius, in arcseconds (used if we ever
 # calculate the primary beam reduction)
