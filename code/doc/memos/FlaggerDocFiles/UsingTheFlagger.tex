@@ -389,7 +389,58 @@ mode='clip'  spw = '5'  clipminmix=[0.0, 1e+5]
 
 
 \subsection{Comparison of RFI with 1s vs 10s integrations}
-In order to reduce dataset sizes, data can be averaged during the observation. However, with integration-times of anything larger than few seconds, there is the risk of smearing out the RFI and losing a larger fraction of the data to RFI.   With the G55 dataset, we have a hand-flagged 10s averaged version, as well as the original 1s version, and a comparison of tfcrop or rflag on both datasets would be instructive.
+In order to reduce dataset sizes, data can be averaged during the observation. However, with integration-times of anything larger than few seconds, there is the risk of smearing out the RFI and losing a larger fraction of the data to RFI.   
+
+The following is the result of a few autoflag tests on an L-Band D-config 7-hour dataset (G55.7+3.4), for which we have a version with 1sec integrations,a 10s averaged version (with and without pre-applying online flags).
+
+%, and a set of flags created by hand on one of the 10sec averaged versions. 
+
+Figures \ref{Fig:compare_1} and \ref{Fig:compare_2} show the percentage of data flagged per frequency-channel for the 1sec and 10sec datasets respectively, showing a few\% less data flagged in the 10sec dataset.  Figures \ref{Fig:compare_3} and \ref{Fig:compare_4} show the percentage flagged per antenna and scan (each scan is 1.5 minutes long), and show a difference of about 1\% in the amount of data flagged by 'rflag', indicating that there is no practical loss of data due to smearing out of the RFI during the 1sec-to-10sec averaging. 
+Figure  \ref{Fig:compare_5} is the result of applying online flags on the 1-sec data before averaging to 10-sec and running rflag. Comparing with the previous plots, this saves about 1\% to 2\% of the flagged data. 
+
+Figure  \ref{Fig:compare_6} shows plots of the un-calibrated data for the first two cases (1sec and 10sec), to demonstrate that 'rflag' has identified RFI correctly in both cases. Note that the 1-sec data were averaged for the purpose of plotting (after flagging).
+
+These quick tests and summaries show that from the point of view of RFI-identification and flagging, there is no advantage of recording data at a 1-sec for D-Config and L-Band. In general, it should suffice if averaging rules follow time-smearing limits at any given configuration.
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.anttime.G55.1s.freqplot.png}
+\caption{Plots of the percentage flagged per channel :  Dataset with 1sec timesteps.}
+\label{Fig:compare_1}
+\end{figure}
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.anttime.G55.averaged.10s.freqplot.png}
+\caption{Plots of the percentage flagged per channel : Dataset with 10sec timesteps.}
+\label{Fig:compare_2}
+\end{figure}
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.anttime.G55.1s.scanplot.png}
+\caption{Dataset with 1sec timesteps : Plots of the percentage flagged per antenna and scan. Each scan is about 1.5 minutes long. Flagging includes online flags followed by rflag running per scan. The left panel shows the percentage flagged per antenna, over all scans.}
+\label{Fig:compare_3}
+\end{figure}
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.anttime.G55.averaged.10s.scanplot.png}
+\caption{Dataset with 10sec timesteps : Plots of the percentage flagged per antenna and scan. Each scan is about 1.5 minutes long. Flagging includes online flags followed by rflag running per scan. The data was completely unflagged before averaging to 10sec, to simulate averaging within the correlator.}
+\label{Fig:compare_4}
+\end{figure}
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.anttime.G55.10s.scanplot.png}
+\caption{Dataset with 10sec timesteps, with online flags applied before averaging from 1sec to 10sec.  Plots of the percentage flagged per antenna and scan. Each scan is about 1.5 minutes long. Comparing with the previous two plots, again, there is very little gain (about 2\% of data) of applying online flags before averaging to 10sec. }
+\label{Fig:compare_5}
+\end{figure}
+
+
+\begin{figure}
+\includegraphics[scale=0.5]{plot.spectrum.ea11.spw9.1s.png}
+\includegraphics[scale=0.5]{plot.spectrum.ea11.spw9.avg10s.png}
+\caption{Data amplitude vs frequency (flagged points are in red) for SPW=9, scan 7, and antenna EA11.  (FIRST) : Result of rflag run on 1sec timestep data, and averaged to 10s only during plotting.  (SECOND) : Result of rflag run on 10sec timestep data.}
+\label{Fig:compare_6}
+\end{figure}
+
+
 
 \subsection{Comparison of autoflag methods}
 What are the advantages and disadvantages ?  What types of RFI are the defaults of tfcrop and rflag optimized for ?  
@@ -405,9 +456,9 @@ What are the advantages and disadvantages ?  What types of RFI are the defaults 
 When does it help, when does it hurt.... 
 
 \subsection{Is auto-flagging good-enough for imaging ?}
-A comparison of images and flag-summary counts,  with only autoflag runs, and with more careful hand-flagging. This can be done per SPW, to illustrate how the methods perform with different types of RFI
+A comparison of images and flag-summary counts,  with only autoflag runs, and with more careful hand-flagging. 
 
-This can be done for either 3C286 or G55... or both...
+
 
 
 
