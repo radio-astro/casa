@@ -1,0 +1,7 @@
+#!/bin/bash
+for pack in dal sesame registry message skybot
+do
+cd ${pack}
+../buildmytool.sh ${pack}
+cd ..
+done
