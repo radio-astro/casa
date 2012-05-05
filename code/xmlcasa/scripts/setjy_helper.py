@@ -316,7 +316,7 @@ def testerrs(errcode,srcname):
     return = 1 partly ok
     return = 2 all bad - should not proceed to set component
     """
-    from taskinit import *
+    from taskinit import casalog 
     errcount = 0
     for ec in errcode:
       if ec != 0:
