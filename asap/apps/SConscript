@@ -20,4 +20,3 @@ for cpp in cpps:
     if len(myenv["makedist"]):
         myenv.QInstall("#/$stagedir/bin", prog)
 
-myenv.Alias('install', installs)

@@ -26,6 +26,10 @@ class asaplot(asaplotbase):
         self.window = None
         self.canvas = FigureCanvasAgg(self.figure)
         self.figmgr = FigureManagerBase(self.canvas,1)
+        # This seems necessary when using Gcf, as this is done in
+        # pyplot.figure. Otherwise this can cause atexit errors at cleanup
+        
+        self.figmgr._cidgcf = None
         _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr
 
     def map(self):

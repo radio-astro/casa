@@ -102,24 +102,13 @@ opts.AddVariables(
 
 env = Environment( toolpath = ['./scons'],
                    tools = ["default", "archiver", "utils",
-                            "quietinstall"],
+                            "quietinstall", "casaoptions", "casa"],
                    ENV = { 'PATH' : os.environ[ 'PATH' ],
                           'HOME' : os.environ[ 'HOME' ] },
                    options = opts)
 
 Help(opts.GenerateHelpText(env))
 env.SConsignFile()
-
-casacoretooldir = os.path.join(env["casacoreroot"],"share",
-				   "casacore")
-if not os.path.exists(casacoretooldir):
-    print "Could not find casacore scons tools"
-    Exit(1)
-
-# load casacore specific build flags
-env.Tool('casaoptions', [casacoretooldir])
-opts.Update(env)
-env.Tool('casa', [casacoretooldir])
 
 if not env.GetOption('clean'):
     conf = Configure(env)
@@ -148,10 +137,10 @@ if not env.GetOption('clean'):
                                    'boost/python.hpp', language='c++'): 
         Exit(1)
 
-    conf.env.AddCustomPackage('pyrap')
-    if conf.CheckLib(conf.env["pyraplib"], language='c++', autoadd=0): 
+#    conf.env.AddCustomPackage('pyrap')
+    if False and conf.CheckLib(conf.env["pyraplib"], language='c++', autoadd=0): 
         conf.env.Append(CPPFLAGS=['-DHAVE_LIBPYRAP'])
-        conf.env.PrependUnique(LIBS=env['pyraplib'])
+#        conf.env.PrependUnique(LIBS=env['pyraplib'])
     else:
         conf.env.AppendUnique(CPPPATH=[conf.env["numpyincdir"]])
         # numpy 1.0 uses config.h; numpy >= 1.1 uses numpyconfig.h
@@ -187,7 +176,7 @@ if not env.GetOption('clean'):
     conf.env.CheckFortran(conf)
     if not conf.CheckLib('stdc++', language='c++'): Exit(1)
     if conf.env["alma"]:
-        conf.env.Append(CPPFLAGS=['-DUSE_ALMA'])
+        conf.env.Append(CPPFLAGS=['-DUSE_CASAPY'])
     if not conf.env.get("moduledir"):
         mdir = get_moduledir(conf.env.get("prefix"))
         if env["PLATFORM"] == "darwin":
@@ -195,7 +184,7 @@ if not env.GetOption('clean'):
         conf.env["moduledir"] =  mdir
     env = conf.Finish()
 
-env["version"] = "4.0.x"
+env["version"] = "4.1.x"
 
 if env['mode'] == 'release':
     if env["PLATFORM"] != "darwin":
@@ -225,28 +214,8 @@ def test_str(target, source, env):
 taction = Action(test_module, test_str)
 env.AddPostAction(so, taction)
 
-# install targets
-installs = []
-installs.append(env.Install("$moduledir/asap", so))
-installs.append(env.Install("$moduledir/asap", env.SGlob("python/*.py")))
-installs.append(env.Install("$prefix/bin", 
-                            ["bin/asap", "bin/asap_update_data"]))
-installs.append(env.Install("$moduledir/asap/data", "share/ipythonrc-asap"))
-installs.append(env.Install("$moduledir/asap/data", "share/ipy_user_conf.py"))
-env.Alias('install', installs)
-
-# install aips++ data repos
-rootdir = None
-outdir =  os.path.join(env["moduledir"],'asap','data')
-sources = ['ephemerides','geodetic']
-if os.path.exists("/nfs/aips++/data"):
-    rootdir = "/nfs/aips++/data"
-elif os.path.exists("data"):
-    rootdir = "./data"
-if rootdir is not None:
-    ofiles, ifiles = env.WalkDirTree(outdir, rootdir, sources)
-    data =  env.InstallAs(ofiles, ifiles)
-    env.Alias('install', data)
+setup_py = None
+env.Alias('install', setup_py)
 
 # make binary distribution
 if len(env["makedist"]):
@@ -259,20 +228,6 @@ if len(env["makedist"]):
     env.QInstall("$stagedir/debian", env.SGlob("packaging/debian/*") )
     env.QInstall("$stagedir/asap/data", "share/ipythonrc-asap")
     env.QInstall("$stagedir/asap/data", "share/ipy_user_conf.py")
-    if rootdir is not None:
-        # This creates a directory Using data table... - disabled
-        #env.Command("Using data tables in %s" % rootdir,
-        #           '', env.MessageAction)
-        outdir =  os.path.join(env["stagedir"],'asap','data')
-        ofiles, ifiles = env.WalkDirTree(outdir, rootdir, sources)
-        env.QInstallAs(ofiles, ifiles)
-    else:
-        env.Command("No data tables available. Use 'asap_update_data' after install",
-                    '', env.MessageAction)
-#    arch = env.Archiver(os.path.join("dist",
-#				     env["stagedir"]+"_"+env["makedist"]),
-#                        env["stagedir"])
-#    env.AddPostAction(arch, Delete("$stagedir"))
 
 if env["apps"]:
     env.SConscript("apps/SConscript")

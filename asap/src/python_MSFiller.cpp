@@ -45,6 +45,7 @@ namespace asap {
         .def("open", &MSFillerWrapper::open)
         .def("fill", &MSFillerWrapper::fill)
         .def("close", &MSFillerWrapper::close)
+        .def("setreferenceexpr", &MSFillerWrapper::setReferenceRegex)
       ;
     };
 

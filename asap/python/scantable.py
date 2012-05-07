@@ -435,25 +435,17 @@ class scantable(Scantable):
                          Default - no file output
 
         """
-#         info = Scantable._summary(self)
         if filename is not None:
             if filename is "":
                 filename = 'scantable_summary.txt'
             from os.path import expandvars, isdir
             filename = expandvars(filename)
-#             if not isdir(filename):
-#                 data = open(filename, 'w')
-#                 data.write(info)
-#                 data.close()
-#             else:
             if isdir(filename):
                 msg = "Illegal file name '%s'." % (filename)
                 raise IOError(msg)
         else:
             filename = ""
         Scantable._summary(self, filename)
-#         info = Scantable._summary(self, filename)
-#         return page(info)
 
     def get_spectrum(self, rowno):
         """Return the spectrum for the current row in the scantable as a list.
@@ -3334,14 +3326,13 @@ class scantable(Scantable):
 
         """
         varlist = vars()
-        basesel = self.get_selection()
         stype = -1
-        if sourcetype.lower().startswith("r"):
+        if sourcetype.lower().startswith("r") or sourcetype.lower() == "off":
             stype = 1
-        elif sourcetype.lower().startswith("s"):
+        elif sourcetype.lower().startswith("s") or sourcetype.lower() == "on":
             stype = 0
         else:
-            raise ValueError("Illegal sourcetype use s(ource) or r(eference)")
+            raise ValueError("Illegal sourcetype use s(ource)/on or r(eference)/off")
         if matchtype.lower().startswith("p"):
             matchtype = "pattern"
         elif matchtype.lower().startswith("r"):
@@ -3352,7 +3343,8 @@ class scantable(Scantable):
         if isinstance(match, selector):
             sel = match
         else:
-            sel.set_query("SRCNAME == %s('%s')" % (matchtype, match))
+            sel.set_query("SRCNAME=%s('%s')" % (matchtype, match))
+        self.set_selection(sel)
         self._setsourcetype(stype)
         self._add_history("set_sourcetype", varlist)
 
@@ -3687,11 +3679,11 @@ class scantable(Scantable):
                 r = msfiller( tbl )
             else:
                 r = filler( tbl )
-                rx = rcParams['scantable.reference']
-                r.setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             r.open(name, opts)
+            rx = rcParams['scantable.reference']
+            r.setreferenceexpr(rx)
             r.fill()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')

@@ -40,7 +40,9 @@ d1_7.poly_baseline(msk,1)
 
 # merge the two scans back together into a new scantable
 plotscans = merge(d1_5,d1_7)
-print plotscans.summary()
+toggle_verbose()
+plotscans.summary()
+toggle_verbose()
 del d1_5,d1_7,data_1665
 # Plot the results
 plotter.set_mode('p','s')
