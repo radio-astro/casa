@@ -19,9 +19,9 @@ namespace casac {
 
 // --- //
 
-calanalysis::calanalysis() {
+calanalysis::calanalysis( void ) {
 
-  // Initialize the CalAnalysis pointer and return
+  // Initialize the pointer to the CalAnalysis() instance and return
 
   poCA = NULL;
 
@@ -31,9 +31,9 @@ calanalysis::calanalysis() {
 
 // --- //
 
-calanalysis::~calanalysis() {
+calanalysis::~calanalysis( void ) {
 
-  //  If the CalAnalysis instance is valid deallocate it and return
+  //  If the CalAnalysis instance is non-NULL deallocate it and return
 
   if ( poCA == NULL ) return;
 
@@ -48,7 +48,7 @@ calanalysis::~calanalysis() {
 
 bool calanalysis::open( const std::string& caltable ) {
 
-  // Is a file already open?
+  // Is a calibration table already open?
 
   if ( poCA != NULL ) {
     LogIO log( LogOrigin( "CalAnalysis", "CalAnalysis()", WHERE ) );
@@ -63,6 +63,7 @@ bool calanalysis::open( const std::string& caltable ) {
   try {
     poCA = new CalAnalysis( String(caltable) );
   }
+
   catch( AipsError oAE ) {
     LogIO log( LogOrigin( "CalAnalysis", "CalAnalysis()", WHERE ) );
     log << LogIO::WARN << oAE.getMesg() << LogIO::POST;
@@ -75,7 +76,7 @@ bool calanalysis::open( const std::string& caltable ) {
 
 // --- //
 
-bool calanalysis::close() {
+bool calanalysis::close( void ) {
 
   // Deallocate the CalAnalysis instance and return true
 
@@ -90,12 +91,16 @@ bool calanalysis::close() {
 
 // --- //
 
-std::string calanalysis::calname() {
+std::string calanalysis::calname( void ) {
 
   // If the CalAnalysis instance is valid return the caltable name otherwise
   // return a null string
 
-  if ( poCA == NULL ) return( string() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "calname()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( string() );
+  }
 
   return( poCA->calName() );
 
@@ -103,11 +108,15 @@ std::string calanalysis::calname() {
 
 // --- //
 
-std::string calanalysis::msname() {
+std::string calanalysis::msname( void ) {
 
   // Return the associated caltable name
 
-  if ( poCA == NULL ) return( string() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "msname()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( string() );
+  }
 
   return( poCA->msName() );
 
@@ -115,11 +124,15 @@ std::string calanalysis::msname() {
 
 // --- //
 
-std::string calanalysis::viscal() {
+std::string calanalysis::viscal( void ) {
 
   // Return the caltable type (B, G, T, etc.)
 
-  if ( poCA == NULL ) return( string() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "viscal()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( string() );
+  }
 
   return( poCA->visCal() );
 
@@ -127,12 +140,16 @@ std::string calanalysis::viscal() {
 
 // --- //
 
-std::string calanalysis::partype() {
+std::string calanalysis::partype( void ) {
 
   // If the CalAnalysis instance is valid return "Complex" for a CPARAM column
   // or "Float" for a PARAM colum, otherwise a null string
 
-  if ( poCA == NULL ) return( string() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "partype()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( string() );
+  }
 
   return( poCA->parType() );
 
@@ -140,12 +157,16 @@ std::string calanalysis::partype() {
 
 // --- //
 
-std::string calanalysis::polbasis() {
+std::string calanalysis::polbasis( void ) {
 
-  // If the CalAnalysis instance is valid return the polarization basis otherwise
-  // return a null string
+  // If the CalAnalysis instance is valid return the polarization basis
+  // otherwise return a null string
 
-  if ( poCA == NULL ) return( string() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "polbasis()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( string() );
+  }
 
   return( poCA->polBasis() );
 
@@ -153,15 +174,61 @@ std::string calanalysis::polbasis() {
 
 // --- //
 
-std::vector<std::string> calanalysis::field( void ) {
+int calanalysis::numfield( void ) {
 
-  if ( poCA == NULL ) return( std::vector<std::string>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numfield()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of fields
+
+  return( poCA->field().nelements() );
+
+}
+
+// --- //
+
+std::vector<std::string> calanalysis::field( const bool name ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "field()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get the fields, either by name or number
 
   Vector<uInt> oField( poCA->field() );
   uInt uiNumField = oField.nelements();
 
   std::vector<std::string> field( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) field[f] = uint2string( oField[f] );
+
+  if ( name ) {
+
+    Table oTable( poCA->calName()+String("/FIELD"), Table::Old );
+    ROScalarColumn<String> oROSC( oTable, String("NAME") );
+
+    Vector<String> oFieldString;
+    oROSC.getColumn( oFieldString, True );
+
+    for ( uInt f=0; f<uiNumField; f++ ) field[f] = oFieldString[f];
+
+  } else {
+
+    for ( uInt f=0; f<uiNumField; f++ ) field[f] = uint2string( oField[f] );
+
+  }
+
+
+  // Return the fields
 
   return( field );
 
@@ -169,15 +236,63 @@ std::vector<std::string> calanalysis::field( void ) {
 
 // --- //
 
-std::vector<std::string> calanalysis::antenna( void ) {
+int calanalysis::numantenna( void ) {
 
-  if ( poCA == NULL ) return( std::vector<std::string>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numantenna()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of antennas
+
+  return( poCA->antenna().nelements() );
+
+}
+
+// --- //
+
+std::vector<std::string> calanalysis::antenna( const bool name ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "antenna()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get the antennas, either by name or number
 
   Vector<uInt> oAntenna( poCA->antenna() );
   uInt uiNumAntenna = oAntenna.nelements();
 
   std::vector<std::string> antenna( uiNumAntenna );
-  for ( uInt a=0; a<uiNumAntenna; a++ ) antenna[a] = uint2string( oAntenna[a] );
+
+  if ( name ) {
+
+    Table oTable( poCA->calName()+String("/ANTENNA"), Table::Old );
+    ROScalarColumn<String> oROSC( oTable, String("NAME") );
+
+    Vector<String> oAntennaString;
+    oROSC.getColumn( oAntennaString, True );
+
+    for ( uInt a=0; a<uiNumAntenna; a++ ) antenna[a] = oAntennaString[a];
+
+  } else {
+
+    for ( uInt a=0; a<uiNumAntenna; a++ ) {
+      antenna[a] = uint2string( oAntenna[a] );
+    }
+
+  }
+
+
+  // Return the antennas
 
   return( antenna );
 
@@ -185,9 +300,141 @@ std::vector<std::string> calanalysis::antenna( void ) {
 
 // --- //
 
+int calanalysis::numantenna1( void ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numantenna1()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of antenna 1s
+
+  return( poCA->antenna1().nelements() );
+
+}
+
+// --- //
+
+std::vector<std::string> calanalysis::antenna1( const bool name ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "antenna1()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get all of the antenna numbers
+
+  std::vector<std::string> antenna( this->antenna(name) );
+
+
+  // Load the antenna 1 names of numbers and return them
+
+  Vector<uInt> oAntenna1( poCA->antenna1() );
+  uInt uiNumAntenna1 = oAntenna1.nelements();
+
+  std::vector<std::string> antenna1( uiNumAntenna1 );
+
+  for ( uInt a1=0; a1<uiNumAntenna1; a1++ ) {
+    antenna1[a1] = antenna[oAntenna1[a1]];
+  }
+
+  return( antenna1 );
+
+}
+
+// --- //
+
+int calanalysis::numantenna2( void ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numantenna2()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of antenna 2s
+
+  return( poCA->antenna2().nelements() );
+
+}
+
+// --- //
+
+std::vector<std::string> calanalysis::antenna2( const bool name ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "antenna2()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get all of the antenna numbers
+
+  std::vector<std::string> antenna( this->antenna(name) );
+
+
+  // Load the antenna 2 names of numbers and return them
+
+  Vector<Int> oAntenna2( poCA->antenna2() );
+  uInt uiNumAntenna2 = oAntenna2.nelements();
+
+  std::vector<std::string> antenna2( uiNumAntenna2 );
+
+  for ( uInt a2=0; a2<uiNumAntenna2; a2++ ) {
+    antenna2[a2] = antenna[oAntenna2[a2]];
+  }
+
+  return( antenna2 );
+
+}
+
+// --- //
+
+int calanalysis::numfeed( void ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numfeed()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of feeds
+
+  return( poCA->feed().nelements() );
+
+}
+
+// --- //
+
 std::vector<std::string> calanalysis::feed( void ) {
 
-  if ( poCA == NULL ) return( std::vector<std::string>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "feed()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get the feeds and return them
 
   Vector<String> oFeed( poCA->feed() );
   uInt uiNumFeed = oFeed.nelements();
@@ -201,9 +448,37 @@ std::vector<std::string> calanalysis::feed( void ) {
 
 // --- //
 
+int calanalysis::numtime( void ) {
+
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numtime()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of times
+
+  return( poCA->time().nelements() );
+
+}
+
+// --- //
+
 std::vector<double> calanalysis::time( void ) {
 
-  if ( poCA == NULL ) return( std::vector<double>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "time()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<double>() );
+  }
+
+
+  // Get the times and return them
 
   Vector<Double> oTime( poCA->time() );
   uInt uiNumTime = oTime.nelements();
@@ -217,9 +492,18 @@ std::vector<double> calanalysis::time( void ) {
 
 // --- //
 
-int calanalysis::numspw() {
+int calanalysis::numspw( void ) {
 
-  if ( poCA == NULL ) return( 0 );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numspw()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( 0 );
+  }
+
+
+  // Return the number of spectral windows
 
   return( poCA->numspw() );
 
@@ -227,26 +511,61 @@ int calanalysis::numspw() {
 
 // --- //
 
-std::vector<std::string> calanalysis::spw( void ) {
+std::vector<std::string> calanalysis::spw( const bool name ) {
 
-  if ( poCA == NULL ) return( std::vector<std::string>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "spw()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<std::string>() );
+  }
+
+
+  // Get the spectral windows, either by name or number
 
   Vector<uInt> oSPW( poCA->spw() );
   uInt uiNumSPW = oSPW.nelements();
 
   std::vector<std::string> spw( uiNumSPW );
-  for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = uint2string( oSPW[s] );
+
+  if ( name ) {
+
+    Table oTable( poCA->calName()+String("/SPECTRAL_WINDOW"), Table::Old );
+    ROScalarColumn<String> oROSC( oTable, String("NAME") );
+
+    Vector<String> oSPWString;
+    oROSC.getColumn( oSPWString, True );
+
+    for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = oSPWString[s];
+
+  } else {
+
+    for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = uint2string( oSPW[s] );
+
+  }
+
+
+  // Return the spectral windows
 
   return( spw );
 
 }
 
-
 // --- //
 
-std::vector<int> calanalysis::numchannel() {
+std::vector<int> calanalysis::numchannel( void ) {
 
-  if ( poCA == NULL ) return( std::vector<int>() );
+  // Is the CalAnalysis instance valid?
+
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "numchannel()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( std::vector<int>() );
+  }
+
+
+  // Get the numbers of channels and return them
 
   Vector<uInt> oNumChannel( poCA->numChannel() );
   uInt uiNumSPW = oNumChannel.nelements();
@@ -258,14 +577,22 @@ std::vector<int> calanalysis::numchannel() {
 
 }
 
-
 // --- //
 
-::casac::record* calanalysis::freq() {
+::casac::record* calanalysis::freq( void ) {
+
+  // Is the CalAnalysis instance valid?
 
   ::casac::record* poRecord = new ::casac::record();
 
-  if ( poCA == NULL ) return( poRecord );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "CalAnalysis", "freq()", WHERE ) );
+    log << LogIO::WARN << "Open caltable first" << LogIO::POST;
+    return( poRecord );
+  }
+
+
+  // Get the frequencies and return them
 
   Vector<Vector<Double> > voFreq( poCA->freq() );
   uInt uiNumSPW = voFreq.nelements();
@@ -280,107 +607,41 @@ std::vector<int> calanalysis::numchannel() {
 
 }
 
-
 // --- //
 
-::casac::record* calanalysis::get( const std::vector<std::string>& field,
-  const std::vector<std::string>& antenna1,
-  const std::vector<std::string>& antenna2, const double starttime,
-  const double stoptime, const std::vector<std::string>& feed,
-  const std::vector<std::string>& spw, const std::vector<int>& startchan,
-  const std::vector<int>& stopchan, const std::string& axis,
-  const std::string& ap, const double jumpmax ) {
+::casac::record* calanalysis::get( const ::casac::variant& field,
+    const ::casac::variant& antenna, const ::casac::variant& timerange,
+    const ::casac::variant& spw, const ::casac::variant& feed,
+    const std::string& axis, const std::string& ap, const bool norm,
+    const bool unwrap, const double jumpmax ) {
 
-  // Initialize the field parameter
+  // Initialize the output dictionary
 
-  uInt uiNumField = field.size();
-  Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
+  ::casac::record* poRecord = new ::casac::record();
 
 
-  // Initialize the antenna parameters
+  // If there is no CalAnalysis() instance, return without doing anything
 
-  uInt uiNumAntenna1 = antenna1.size();
-  uInt uiNumAntenna2 = antenna2.size();
-
-  if ( uiNumAntenna1 != uiNumAntenna2 ) {
-    throw( AipsError( "Number of antenna1 must be the same as antenna2" ) );
-  }
-
-  Vector<uInt> oAntenna1( uiNumAntenna1 );
-  for ( uInt a=0; a<uiNumAntenna1; a++ ) {
-    oAntenna1[a] = (uInt) atoi( antenna1[a].c_str() );
-  }
-
-  Vector<uInt> oAntenna2( uiNumAntenna2 );
-  for ( uInt a=0; a<uiNumAntenna2; a++ ) {
-    oAntenna2[a] = (uInt) atoi( antenna2[a].c_str() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "calanalysis", "get()", WHERE ) );
+    log << LogIO::WARN << "Open calibration analysis tool first"
+        << LogIO::POST;
+    return( poRecord );
   }
 
 
-  // Initialize the time parameters
+  // Parse the input variables and return the populated INPUT nested class
 
-  Double dStartTime = starttime;
-  Double dStopTime = stoptime;
+  CalAnalysis::INPUT oInput;
 
+  Bool bInput = parseInput( field, antenna, timerange, spw, feed, axis, ap,
+      norm, unwrap, jumpmax, oInput );
 
-  // Initialize the feed parameter
-
-  uInt uiNumFeed = feed.size();
-  Vector<String> oFeed( uiNumFeed );
-  for ( uInt f=0; f<uiNumFeed; f++ ) oFeed[f] = feed[f];
-
-
-  // Initialize the spectral window and channel parameters
-
-  uInt uiNumSPW = spw.size();
-
-  if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
-    String oError( "The number of startchan and/or stopchan must be the " );
-    oError += "same as the number of spw";
-    throw( AipsError( oError ) );
+  if ( !bInput ) {
+    LogIO log( LogOrigin( "calanalysis", "get()", WHERE ) );
+    log << LogIO::WARN << "Invalid input(s)" << LogIO::POST;
+    return( poRecord );
   }
-
-  Vector<uInt> oSPW( uiNumSPW );
-  Vector<uInt> oStartChan( uiNumSPW );
-  Vector<uInt> oStopChan( uiNumSPW );
-
-  for ( uInt s=0; s<uiNumSPW; s++ ) {
-    oSPW[s] = (uInt) atoi( spw[s].c_str() );
-    oStartChan[s] = (uInt) startchan[s];
-    oStopChan[s] = (uInt) stopchan[s];
-  }
-
-
-  // Initialize the user-defined iteration axis parameter
-
-  CalStats::AXIS eAxisIterUserID = CalStats::INIT;
-  if ( axis == "FREQ" ) {
-    eAxisIterUserID = CalStats::FREQUENCY;
-  } else if ( axis == "TIME" ) {
-    eAxisIterUserID = CalStats::TIME;
-  } else {
-    throw( AipsError( "Invalid axis ('FREQ' or 'TIME')" ) );
-  }
-
-
-  // Initialize the real, amplitude, phase parameter
-
-  CalAnalysis::RAP eRAP = CalAnalysis::INIT;
-  if ( ap == "REAL" ) {
-    eRAP = CalAnalysis::REAL;
-  } else if ( ap == "AMPLITUDE" ) {
-    eRAP = CalAnalysis::AMPLITUDE;
-  } else if ( ap == "PHASE" ) {
-    eRAP = CalAnalysis::PHASE;
-  } else {
-    throw( AipsError( "Invalid data type ('REAL', 'AMPLITUDE', or 'PHASE')" ) );
-  }
-
-
-  // Initialize the initial jump parameter
-
-  Double dJumpMax = jumpmax;
 
 
   // Initialize the arguments (NONE)
@@ -393,100 +654,57 @@ std::vector<int> calanalysis::numchannel() {
   Vector<CalAnalysis::OUTPUT<CalStats::NONE> > oOutput;
 
   try {
-    oOutput = poCA->stats<CalStats::NONE>( oField, oAntenna1, oAntenna2,
-        dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, dJumpMax, oArg );
+    oOutput = poCA->stats<CalStats::NONE>( oInput, oArg );
   }
+
   catch( AipsError oAipsError ) {
-    throw( oAipsError );
+    LogIO log( LogOrigin( "calanalysis", "get()", WHERE ) );
+    log << LogIO::WARN << oAipsError.getMesg() << LogIO::POST;
+    return( poRecord );
   }
+
+
+  // Initialize the number of outputs and the iteration number.  The final
+  // iteration number should be identical to the number of outputs times the
+  // number of rows times the number of columns.  Each row and column represents
+  // an iteration in the CalStats() instance.
 
   uInt uiNumOutput = oOutput.nelements();
 
-
-  // Initialize the iteration number and the output record.  The final iteration
-  // number is the number of keys/elements in the output record.
-
   uInt uiNumIter = 0;
-  ::casac::record* poRecOutput = new ::casac::record();
 
 
   // Load the output record with the caltable data.  Each iteration corresponds
-  // to a single field, antenna1, antenna2, feed, and frequency/time.
+  // to a single field, antenna1, antenna2, feed, and frequency or time.
 
   for ( uInt o=0; o<uiNumOutput; o++ ) {
 
     uInt uiNumRow = oOutput[o].oOut.shape()[0];
     uInt uiNumCol = oOutput[o].oOut.shape()[1];
 
-    for ( uInt r=0; r<uiNumRow; r++ ) {
-      for ( uInt c=0; c<uiNumCol; c++ ) {
+    for ( uInt row=0; row<uiNumRow; row++ ) {
+      for ( uInt col=0; col<uiNumCol; col++ ) {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiField).c_str() );
-        oRecIter.insert( std::string("field"), oField );
+        Bool bWriteInput = writeInput( oOutput[o], row, col, oRecIter );
 
-        std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
-        oRecIter.insert( std::string("antenna1"), oAntenna1 );
-
-        std::string oAntenna2( String::toString(oOutput[o].uiAntenna2).c_str() );
-        oRecIter.insert( std::string("antenna2"), oAntenna2 );
-
-        oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startChan"), startchan );
-	oRecIter.insert( std::string("stopChan"), stopchan );
-
-        std::string oFeedKey( "feed" );
-	std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
-	oRecIter.insert( oFeedKey, oFeedValue );
-
-        std::string oAxisIterKey;
-        CalStats::AXIS eAxisIter = oOutput[o].oOut(r,c).oAxes.eAxisIterUserID;
-	if ( eAxisIter == CalStats::FREQUENCY ) {
-          oAxisIterKey = std::string( "frequency" );
-        } else {
-          oAxisIterKey = std::string( "time" );
-        }
-        double dAxisIterValue = (double)oOutput[o].oOut(r,c).oAxes.dAxisIterUser;
-        oRecIter.insert( oAxisIterKey, dAxisIterValue );
-
-        uInt uiNumAbs = oOutput[o].oOut(r,c).oData.oAbs.nelements();
-
-        std::string oAxisNonIterKey;
-        CalStats::AXIS eAxisNonIter = oOutput[o].oOut(r,c).oAxes.eAxisNonIterID;
-	if ( eAxisNonIter == CalStats::FREQUENCY ) {
-          oAxisNonIterKey = std::string( "frequency" );
-        } else {
-          oAxisNonIterKey = std::string( "time" );
-        }
-        std::vector<double> oAbs( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oAbs[a] = oOutput[o].oOut(r,c).oData.oAbs[a];
+        if ( !bWriteInput ) {
+          LogIO log( LogOrigin( "calanalysis", "get()", WHERE ) );
+          log << LogIO::WARN << "Error writing inputs" << LogIO::POST;
+          return( poRecord );
 	}
-        oRecIter.insert( std::string("abscissa"), oAxisNonIterKey );
-        oRecIter.insert( oAxisNonIterKey, oAbs );
 
-        std::vector<double> oValue( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
+        Bool bWriteData = writeData( oOutput[o], row, col, oRecIter );
+
+        if ( !bWriteData ) {
+          LogIO log( LogOrigin( "calanalysis", "get()", WHERE ) );
+          log << LogIO::WARN << "Error writing data" << LogIO::POST;
+          return( poRecord );
 	}
-        oRecIter.insert( string("value"), oValue );
 
-        std::vector<double> oValueErr( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
-	}
-        oRecIter.insert( string("valueErr"), oValueErr );
-
-        std::vector<bool> oFlag( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-	  oFlag[a] = oOutput[o].oOut(r,c).oData.oFlag[a];
-	}
-        oRecIter.insert( string("flag"), oFlag );
-
-        std::string oNumIter( String::toString(uiNumIter).c_str() );
-        poRecOutput->insert( oNumIter, oRecIter );
+        std::string sNumIter( String::toString(uiNumIter).c_str() );
+        poRecord->insert( sNumIter, oRecIter );
 
         uiNumIter++;
 
@@ -495,91 +713,48 @@ std::vector<int> calanalysis::numchannel() {
 
   }
 
-  return( poRecOutput );
+
+  // Return the record
+
+  return( poRecord );
 
 }
 
 // --- //
 
-::casac::record* calanalysis::fit( const std::vector<std::string>& field,
-  const std::vector<std::string>& antenna1,
-  const std::vector<std::string>& antenna2, const double starttime,
-  const double stoptime, const std::vector<std::string>& feed,
-  const std::vector<std::string>& spw, const std::vector<int>& startchan,
-  const std::vector<int>& stopchan, const std::string& axis,
-  const std::string& order, const std::string& type, const bool weight,
-  const std::string& ap, const double jumpmax ) {
+::casac::record* calanalysis::fit( const ::casac::variant& field,
+    const ::casac::variant& antenna, const ::casac::variant& timerange,
+    const ::casac::variant& spw, const ::casac::variant& feed,
+    const std::string& axis, const std::string& ap, const bool norm,
+    const bool unwrap, const double jumpmax, const std::string& order,
+    const std::string& type, const bool weight ) {
 
-  // Initialize the field parameter
+  // Initialize the output dictionary
 
-  uInt uiNumField = field.size();
-  Vector<uInt> oField( uiNumField );
-  for ( uInt f=0; f<uiNumField; f++ ) oField[f] = (uInt) atoi(field[f].c_str());
+  ::casac::record* poRecord = new ::casac::record();
 
 
-  // Initialize the antenna parameters
+  // If there is no CalAnalysis() instance, return without doing anything
 
-  uInt uiNumAntenna1 = antenna1.size();
-  uInt uiNumAntenna2 = antenna2.size();
-
-  if ( uiNumAntenna1 != uiNumAntenna2 ) {
-    throw( AipsError( "Number of antenna1 must be the same as antenna2" ) );
-  }
-
-  Vector<uInt> oAntenna1( uiNumAntenna1 );
-  for ( uInt a=0; a<uiNumAntenna1; a++ ) {
-    oAntenna1[a] = (uInt) atoi( antenna1[a].c_str() );
-  }
-
-  Vector<uInt> oAntenna2( uiNumAntenna2 );
-  for ( uInt a=0; a<uiNumAntenna2; a++ ) {
-    oAntenna2[a] = (uInt) atoi( antenna2[a].c_str() );
+  if ( poCA == NULL ) {
+    LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+    log << LogIO::WARN << "Open calibration analysis tool first"
+        << LogIO::POST;
+    return( poRecord );
   }
 
 
-  // Initialize the time parameters
+  // Parse the input variables and return the populated INPUT nested class
 
-  Double dStartTime = starttime;
-  Double dStopTime = stoptime;
+  CalAnalysis::INPUT oInput;
 
+  Bool bInput = parseInput( field, antenna, timerange, spw, feed, axis, ap,
+      norm, unwrap, jumpmax, oInput );
 
-  // Initialize the feed parameter
-
-  uInt uiNumFeed = feed.size();
-  Vector<String> oFeed( uiNumFeed );
-  for ( uInt f=0; f<uiNumFeed; f++ ) oFeed[f] = feed[f];
-
-
-  // Initialize the spectral window and channel parameters
-
-  uInt uiNumSPW = spw.size();
-
-  if ( startchan.size() != uiNumSPW || stopchan.size() != uiNumSPW ) {
-    String oError( "The number of startchan and/or stopchan must be the same " );
-    oError += "as the number of spw";
-    throw( AipsError( oError ) );
-  }
-
-  Vector<uInt> oSPW( uiNumSPW );
-  Vector<uInt> oStartChan( uiNumSPW );
-  Vector<uInt> oStopChan( uiNumSPW );
-
-  for ( uInt s=0; s<uiNumSPW; s++ ) {
-    oSPW[s] = (uInt) atoi( spw[s].c_str() );
-    oStartChan[s] = (uInt) startchan[s];
-    oStopChan[s] = (uInt) stopchan[s];
-  }
-
-
-  // Initialize the user-defined iteration axis parameter
-
-  CalStats::AXIS eAxisIterUserID = CalStats::INIT;
-  if ( axis == "FREQ" ) {
-    eAxisIterUserID = CalStats::FREQUENCY;
-  } else if ( axis == "TIME" ) {
-    eAxisIterUserID = CalStats::TIME;
-  } else {
-    throw( AipsError( "Invalid axis ('FREQ' or 'TIME')" ) );
+  if ( !bInput ) {
+    LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+    log << LogIO::WARN << "Invalid input(s)" << LogIO::POST;
+    return( poRecord );
   }
 
 
@@ -587,48 +762,13 @@ std::vector<int> calanalysis::numchannel() {
 
   CalStats::ARG<CalStatsFitter::FIT> oArg;
 
-  if ( order == "AVERAGE" ) {
-    oArg.eOrder = CalStatsFitter::AVERAGE;
-  } else if ( order == "LINEAR" ) {
-    oArg.eOrder = CalStatsFitter::LINEAR;
-  } else if ( order == "QUADRATIC" ) {
-    oArg.eOrder = CalStatsFitter::QUADRATIC;
-  } else {
-    throw( AipsError( "Invalid order ('AVERAGE', 'LINEAR', or 'QUADRATIC')" ) );
+  Bool bArg = parseArg( order, type, weight, oArg );
+
+  if ( !bArg ) {
+    LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+    log << LogIO::WARN << "Invalid fit argument(s)" << LogIO::POST;
+    return( poRecord );
   }
-
-  if ( type == "LSQ" ) {
-    oArg.eType = CalStatsFitter::LSQ;
-  } else if ( type == "ROBUST" ) {
-    oArg.eType = CalStatsFitter::ROBUST;
-  } else {
-    throw( AipsError( "Invalid type ('LSQ', 'ROBUST')" ) );
-  }
-
-  if ( order == "QUADRATIC" && type == "ROBUST" ) {
-    throw( AipsError( "Robust quadratic fit unavailable" ) );
-  }
-
-  oArg.eWeight = (CalStatsFitter::WEIGHT) weight;
-
-
-  // Initialize the real, amplitude, phase parameter
-
-  CalAnalysis::RAP eRAP = CalAnalysis::INIT;
-  if ( ap == "REAL" ) {
-    eRAP = CalAnalysis::REAL;
-  } else if ( ap == "AMPLITUDE" ) {
-    eRAP = CalAnalysis::AMPLITUDE;
-  } else if ( ap == "PHASE" ) {
-    eRAP = CalAnalysis::PHASE;
-  } else {
-    throw( AipsError( "Invalid data type ('REAL', 'AMPLITUDE', or 'PHASE')" ) );
-  }
-
-
-  // Initialize the initial jump parameter
-
-  Double dJumpMax = jumpmax;
 
 
   // Call the CalAnalysis::stats<T>() member function for getting and fitting
@@ -636,153 +776,65 @@ std::vector<int> calanalysis::numchannel() {
   Vector<CalAnalysis::OUTPUT<CalStatsFitter::FIT> > oOutput;
 
   try {
-    oOutput = poCA->stats<CalStatsFitter::FIT>( oField, oAntenna1, oAntenna2,
-        dStartTime, dStopTime, oFeed, oSPW, oStartChan, oStopChan,
-        eAxisIterUserID, eRAP, dJumpMax, oArg );
+    oOutput = poCA->stats<CalStatsFitter::FIT>( oInput, oArg );
   }
+
   catch( AipsError oAipsError ) {
-    throw( oAipsError );
+    LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+    log << LogIO::WARN << oAipsError.getMesg() << LogIO::POST;
+    return( poRecord );
   }
+
+
+  // Initialize the number of outputs and the iteration number.  The final
+  // iteration number should be identical to the number of outputs times the
+  // number of rows times the number of columns.  Each row and column represents
+  // an iteration in the CalStats() instance.
 
   uInt uiNumOutput = oOutput.nelements();
 
-
-  // Initialize the iteration number and the output record.  The final iteration
-  // number is the number of keys/elements in the output record.
-
   uInt uiNumIter = 0;
-  ::casac::record* poRecOutput = new ::casac::record();
 
 
   // Load the output record with the caltable data.  Each iteration corresponds
-  // to a single field, antenna1, antenna2, feed, and frequency/time.
+  // to a single field, antenna1, antenna2, feed, and frequency or time.
 
   for ( uInt o=0; o<uiNumOutput; o++ ) {
 
     uInt uiNumRow = oOutput[o].oOut.shape()[0];
     uInt uiNumCol = oOutput[o].oOut.shape()[1];
 
-    for ( uInt r=0; r<uiNumRow; r++ ) {
-      for ( uInt c=0; c<uiNumCol; c++ ) {
+    for ( uInt row=0; row<uiNumRow; row++ ) {
+      for ( uInt col=0; col<uiNumCol; col++ ) {
 
         ::casac::record oRecIter;
 
-        std::string oField( String::toString(oOutput[o].uiField).c_str() );
-        oRecIter.insert( std::string("field"), oField );
+        Bool bWriteInput = writeInput( oOutput[o], row, col, oRecIter );
 
-        std::string oAntenna1( String::toString(oOutput[o].uiAntenna1).c_str() );
-        oRecIter.insert( std::string("antenna1"), oAntenna1 );
+        if ( !bWriteInput ) {
+          LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+          log << LogIO::WARN << "Error writing inputs" << LogIO::POST;
+          return( poRecord );
+	}
 
-        std::string oAntenna2( String::toString(oOutput[o].uiAntenna2).c_str() );
-        oRecIter.insert( std::string("antenna2"), oAntenna2 );
+        Bool bWriteData = writeData( oOutput[o], row, col, oRecIter );
 
-        oRecIter.insert( std::string("spw"), spw );
-        oRecIter.insert( std::string("startChan"), startchan );
-	oRecIter.insert( std::string("stopChan"), stopchan );
+        if ( !bWriteData ) {
+          LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+          log << LogIO::WARN << "Error writing data" << LogIO::POST;
+          return( poRecord );
+	}
 
-        std::string oFeedKey( "feed" );
-        std::string oFeedValue( oOutput[o].oOut(r,c).oAxes.sFeed.c_str() );
-        oRecIter.insert( oFeedKey, oFeedValue );
+        Bool bWriteFit = writeFit( oArg, oOutput[o], row, col, oRecIter );
 
-        std::string oAxisIterKey;
-        CalStats::AXIS eAxisIter = oOutput[o].oOut(r,c).oAxes.eAxisIterUserID;
-        if ( eAxisIter == CalStats::FREQUENCY ) {
-          oAxisIterKey = std::string( "frequency" );
-        } else {
-          oAxisIterKey = std::string( "time" );
-        }
-        double dAxisIterValue = (double)oOutput[o].oOut(r,c).oAxes.dAxisIterUser;
-        oRecIter.insert( oAxisIterKey, dAxisIterValue );
+        if ( !bWriteFit ) {
+          LogIO log( LogOrigin( "calanalysis", "fit()", WHERE ) );
+          log << LogIO::WARN << "Error writing fit" << LogIO::POST;
+          return( poRecord );
+	}
 
-        uInt uiNumAbs = oOutput[o].oOut(r,c).oData.oAbs.nelements();
-
-        std::string oAxisNonIterKey;
-        CalStats::AXIS eAxisNonIter = oOutput[o].oOut(r,c).oAxes.eAxisNonIterID;
-        if ( eAxisNonIter == CalStats::FREQUENCY ) {
-          oAxisNonIterKey = std::string( "frequency" );
-        } else {
-          oAxisNonIterKey = std::string( "time" );
-        }
-        std::vector<double> oAbs( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oAbs[a] = oOutput[o].oOut(r,c).oData.oAbs[a];
-        }
-        oRecIter.insert( std::string("abscissa"), oAxisNonIterKey );
-        oRecIter.insert( oAxisNonIterKey, oAbs );
-
-        std::vector<double> oValue( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValue[a] = oOutput[o].oOut(r,c).oData.oValue[a];
-        }
-        oRecIter.insert( std::string("value"), oValue );
-
-        std::vector<double> oValueErr( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oValueErr[a] = oOutput[o].oOut(r,c).oData.oValueErr[a];
-        }
-        oRecIter.insert( std::string("valueErr"), oValueErr );
-
-        std::vector<bool> oFlag( uiNumAbs );
-        for ( uInt a=0; a<uiNumAbs; a++ ) {
-          oFlag[a] = oOutput[o].oOut(r,c).oData.oFlag[a];
-        }
-        oRecIter.insert( std::string("flag"), oFlag );
-
-        oRecIter.insert( std::string("order"), order );
-        oRecIter.insert( std::string("type"), type );
-        oRecIter.insert( std::string("weight"), weight );
-
-        bool valid = oOutput[o].oOut(r,c).oT.bValid;
-        oRecIter.insert( std::string("validFit"), valid );
-
-        double redchi2 = oOutput[o].oOut(r,c).oT.dRedChi2;
-        oRecIter.insert( std::string("redChi2"), redchi2 );
-
-        uInt uiNumPars = oOutput[o].oOut(r,c).oT.oPars.nelements();
-        std::vector<double> oPars( uiNumPars );
-        for ( uInt p=0; p<uiNumPars; p++ ) {
-          oPars[p] = oOutput[o].oOut(r,c).oT.oPars[p];
-        }
-        oRecIter.insert( std::string("pars"), oPars );
-
-        std::vector<double> oVars( uiNumPars );
-
-        for ( uInt p=0; p<uiNumPars; p++ ) {
-          oVars[p] = oOutput[o].oOut(r,c).oT.oCovars(p,p);
-        }
-        oRecIter.insert( std::string("vars"), oVars );
-
-        std::vector<double> oCovars( uiNumPars * (uiNumPars-1) / 2 );
-        for ( uInt pr=0,p=0; pr<uiNumPars; pr++ ) {
-          for ( uInt pc=pr+1; pc<uiNumPars; pc++ ) {
-            oCovars[p] = oOutput[o].oOut(r,c).oT.oCovars(pr,pc);
-            p++;
-          }
-        }
-        oRecIter.insert( std::string("covars"), oCovars );
-
-        uInt uiNumData = oOutput[o].oOut(r,c).oT.oModel.nelements();
-
-        std::vector<double> oModel( uiNumData );
-        for ( uInt d=0; d<uiNumData; d++ ) {
-          oModel[d] = oOutput[o].oOut(r,c).oT.oModel[d];
-        }
-        oRecIter.insert( std::string("model"), oModel );
-
-        std::vector<double> oRes( uiNumData );
-        for ( uInt d=0; d<uiNumData; d++ ) {
-          oRes[d] = oOutput[o].oOut(r,c).oT.oRes[d];
-        }
-        oRecIter.insert( std::string("res"), oRes );
-
-        Double dResVar = oOutput[o].oOut(r,c).oT.dResVar;
-        oRecIter.insert( std::string("resVar"), dResVar );
-
-        Double dResMean = oOutput[o].oOut(r,c).oT.dResMean;
-        oRecIter.insert( std::string("resMean"), dResMean );
-
-        std::string oNumIter( String::toString(uiNumIter).c_str() );
-        poRecOutput->insert( oNumIter, oRecIter );
+        std::string sNumIter( String::toString(uiNumIter).c_str() );
+        poRecord->insert( sNumIter, oRecIter );
 
         uiNumIter++;
 
@@ -791,7 +843,10 @@ std::vector<int> calanalysis::numchannel() {
 
   }
 
-  return( poRecOutput );
+
+  // Return the record
+
+  return( poRecord );
 
 }
 
@@ -802,5 +857,680 @@ std::string calanalysis::uint2string(const unsigned int &number) {
    ss << number;
    return( ss.str() );
 }
+
+// --- //
+
+Bool calanalysis::parseInput( const ::casac::variant& field,
+    const ::casac::variant& antenna, const ::casac::variant& timerange,
+    const ::casac::variant& spw, const ::casac::variant& feed,
+    const std::string& axis, const std::string& ap, const bool& norm,
+    const bool& unwrap, const double& jumpmax, CalAnalysis::INPUT& oInput ) {
+
+  // Parse the field variant
+
+  Bool bField = parseField( field, oInput.oField );
+
+  if ( !bField ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid field(s)" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the antenna variant
+
+  Bool bAntenna = parseAntenna( antenna, oInput.oAntenna1, oInput.oAntenna2 );
+
+  if ( !bAntenna ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid antenna(s)" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the time range variant
+
+  Bool bTimeRange = parseTimeRange( timerange, oInput.dStartTime,
+      oInput.dStopTime, oInput.oTime );
+
+  if ( !bTimeRange ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid time(s)" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the spw variant
+
+  Bool bSPW = parseSPW( spw, oInput.oSPW, oInput.oChannel );
+
+  if ( !bSPW ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid spw(s) or channel(s)" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the feed variant
+
+  Bool bFeed = parseFeed( feed, oInput.oFeed );
+
+  if ( !bFeed ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid feed(s)" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the user-defined iteration axis string
+
+  Bool bAxis = parseAxis( axis, oInput.eAxisIterUserID );
+
+  if ( !bAxis ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid user-defined iteration axis" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the (real, amplitude, phase) RAP
+
+  Bool bRAP = parseRAP( ap, oInput.eRAP );
+
+  if ( !bRAP ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid amplitude/phase parameter" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Set the amplitude normalization and phase unwrapping boolean
+
+  oInput.bNorm = norm;
+
+  oInput.bUnwrap = unwrap;
+
+
+  // Parse the jumpmax double
+
+  Bool bJumpMax = parseJumpMax( jumpmax, oInput.dJumpMax );
+
+  if ( !bJumpMax ) {
+    LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
+    log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseField( const ::casac::variant& field,
+    Vector<uInt>& oField ) {
+
+  // Initialize the instances required for calibration table selection
+
+  NewCalTable oNCT( poCA->calName(), Table::Old );
+  CTInterface oNCTI( oNCT );
+
+  MSSelection oMSS;
+
+
+  // Convert the input variant into a String instance, trim it, and set it to
+  // "*" if it is equal to ""
+
+  String oFieldString( toCasaString( field ) );
+  oFieldString.trim();
+
+  if ( oFieldString == String("") ) oFieldString = String( "*" );
+
+
+  // Get the field selection
+
+  try {
+
+    oMSS.setFieldExpr( oFieldString );
+    oMSS.toTableExprNode( &oNCTI );
+
+    Vector<Int> oFieldTemp( oMSS.getFieldList() );
+    oField.resize( oFieldTemp.nelements(), False );
+
+    convertArray<uInt,Int>( oField, oFieldTemp );
+
+  }
+
+  catch ( AipsError oAE ) {
+    oField.resize();
+    return( False );
+  }
+
+
+  // Check the length of the output vector
+
+  if ( oField.nelements() == 0 ) return( False );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseAntenna( const ::casac::variant& antenna,
+    Vector<uInt>& oAntenna1, Vector<Int>& oAntenna2 ) {
+
+  // Initialize the instances required for calibration table selection
+
+  NewCalTable oNCT( poCA->calName(), Table::Old );
+  CTInterface oNCTI( oNCT );
+
+  MSSelection oMSS;
+
+
+  // Convert the input variant into a String instance, trim it, and set it to
+  // "*" if it is equal to ""
+
+  String oAntennaString( toCasaString( antenna ) );
+  oAntennaString.trim();
+
+  if ( oAntennaString == String("") ) oAntennaString = String( "*" );
+
+
+  // Get the antenna1 and antenna2 selections
+
+  try {
+
+    oMSS.setAntennaExpr( oAntennaString );
+    oMSS.toTableExprNode( &oNCTI );
+
+    Vector<Int> oAntenna1Temp( oMSS.getAntenna1List() );
+    oAntenna1.resize( oAntenna1Temp.nelements(), False );
+
+    convertArray<uInt,Int>( oAntenna1, oAntenna1Temp );
+
+    oAntenna2.resize();
+    oAntenna2 = oMSS.getAntenna2List();
+
+  }
+
+  catch ( AipsError oAE ) {
+    oAntenna1.resize();
+    oAntenna2.resize();
+    return( False );
+  }
+
+
+  // Check the lengths of the output vectors
+
+  if ( oAntenna1.nelements() == 0 || oAntenna2.nelements() == 0 ) {
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseTimeRange( const ::casac::variant& timerange,
+    Double& dStartTime, Double& dStopTime, Vector<Double>& oTime ) {
+
+  // Initialize the instances required for calibration table selection
+
+  NewCalTable oNCT( poCA->calName(), Table::Old );
+  CTInterface oNCTI( oNCT );
+
+  MSSelection oMSS;
+
+
+  // Convert the input variant to a String instance and trim it
+
+  String oTimeRangeString( toCasaString( timerange ) );
+  oTimeRangeString.trim();
+
+
+  // Get the start time and stop time selections
+
+  Vector<Double> oTimeRange;
+
+  if ( oTimeRangeString != String("") ) {
+
+    oTimeRange = timerange.toDoubleVec();
+
+    if ( oTimeRange.nelements() != 2 ) {
+      dStartTime = 0.0;
+      dStopTime = 0.0;
+      return( False );
+    }
+
+    dStartTime = oTimeRange[0];
+    dStopTime = oTimeRange[1];
+
+  } else {
+
+    oTimeRange = poCA->time();
+
+    dStartTime = oTimeRange[0];
+    dStopTime = oTimeRange[oTimeRange.nelements()-1];
+
+  }
+
+
+  // Get all of the times corresponding to the time range
+
+  Vector<Double> oTimeTemp( poCA->time() );
+  oTime.resize();
+
+  for ( uInt tt=0, uiNumTime=0; tt<oTimeTemp.nelements(); tt++ ) {
+    if ( oTimeTemp[tt] >= dStartTime && oTimeTemp[tt] <= dStopTime ) {
+      oTime.resize( ++uiNumTime, True );
+      oTime[uiNumTime-1] = oTimeTemp[tt];
+    }
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseSPW( const ::casac::variant& spw,
+    Vector<uInt>& oSPW, Vector<Vector<uInt> >& oChannel ) {
+
+  // Initialize the instances required for calibration table selection
+
+  NewCalTable oNCT( poCA->calName(), Table::Old );
+  CTInterface oNCTI( oNCT );
+
+  MSSelection oMSS;
+
+
+  // Convert the input variant into a String instance, trim it, and set it to
+  // "*" if it is equal to ""
+
+  String oSPWString( toCasaString( spw ) );
+  oSPWString.trim();
+
+  if ( oSPWString == String("") ) oSPWString = String( "*" );
+
+
+  // Get the spectral windows and corresponding channels.  Duplicate spectral
+  // windows and channels are removed and the remaining are sorted.
+
+  uInt uiNumSPW;
+
+  try {
+
+    oMSS.setSpwExpr( oSPWString );
+    oMSS.toTableExprNode( &oNCTI );
+
+    Vector<Int> oSPWTemp( oMSS.getSpwList() );
+    oSPW.resize( oSPWTemp.nelements() );
+    convertArray<uInt,Int>( oSPW, oSPWTemp );
+
+    Matrix<Int> oChanListTemp( oMSS.getChanList() );
+    Matrix<uInt> oChanList( oChanListTemp.shape() );
+    convertArray<uInt,Int>( oChanList, oChanListTemp );
+
+    uiNumSPW = oSPW.nelements();
+
+    Vector<Int> oSPWRev( max(oSPW)+1, -1 );
+    for ( uInt s=0; s<uiNumSPW; s++ ) oSPWRev[oSPW[s]] = (Int) s;
+
+    uInt uiNumRow = oChanList.shape()[0];
+    Vector<Vector<uInt> > oChannelTemp( uiNumSPW );
+
+    for ( uInt r=0; r<uiNumRow; r++ ) {
+      uInt uiSPW = (uInt) oSPWRev[oChanList(r,0)];
+      uInt uiStart = oChanList(r,1);
+      uInt uiStop = oChanList(r,2);
+      uInt uiStep = oChanList(r,3);
+      for ( uInt c=uiStart; c<=uiStop; c+=uiStep ) {
+        uInt uiNumChannel = oChannelTemp[uiSPW].nelements();
+        oChannelTemp[uiSPW].resize( uiNumChannel+1, True );
+        oChannelTemp[uiSPW][uiNumChannel] = c;
+      }
+    }
+
+    oChannel.resize( uiNumSPW );
+    for ( uInt s=0; s<uiNumSPW; s++ ) {
+      oChannel[s] = CalAnalysis::unique<uInt>( oChannelTemp[s] );
+    }
+
+  }
+
+  catch ( AipsError oAE ) {
+    oSPW.resize();
+    oChannel.resize();
+    return( False );
+  }
+
+
+  // Check the lengths of the vectors
+
+  if ( oSPW.nelements() == 0 ) return( False );
+
+  uInt uiNumChannelAll = 0;
+  for ( uInt s=0; s<uiNumSPW; s++ ) uiNumChannelAll += oChannel[s].nelements();
+  if ( uiNumChannelAll == 0 ) return( False );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseFeed( const ::casac::variant& feed,
+    Vector<String>& oFeed ) {
+
+  // Initialize the instances required for calibration table selection
+
+  NewCalTable oNCT( poCA->calName(), Table::Old );
+  CTInterface oNCTI( oNCT );
+
+  MSSelection oMSS;
+
+
+  // Convert the input variant to a String instance and trim it
+
+  String oFeedString( toCasaString( feed ) );
+  oFeedString.trim();
+
+
+  // If the input is the String("") default, get all feeds
+
+  if ( oFeedString == String("") ) {
+    oFeed.resize();
+    oFeed = poCA->feed();
+    return( True );
+  }
+
+
+  // Get the feeds
+
+  try {
+
+    String* aoFeed = new String [10000]; // Arbitrarily large
+    uInt uiNumFeed = split( oFeedString, aoFeed, 10000, ',' );
+    if ( uiNumFeed > 10000 ) {
+      delete [] aoFeed;
+      oFeed.resize();
+      return( False );
+    }
+
+    Vector<String> oFeedTemp( uiNumFeed );
+
+    for ( uInt f=0; f<uiNumFeed; f++ ) {
+      aoFeed[f].trim(); aoFeed[f].upcase();
+      if ( !CalAnalysis::exists<String>( aoFeed[f], poCA->feed() ) ) {
+        delete [] aoFeed;
+        oFeed.resize();
+        return( False );
+      }
+      oFeedTemp[f] = aoFeed[f];
+    }
+
+    delete [] aoFeed;
+
+    oFeed.resize();
+    oFeed = CalAnalysis::unique<String>( oFeedTemp );
+
+    if ( oFeed.nelements() != 1 && oFeed.nelements() != 2 ) {
+      oFeed.resize();
+      return( False );
+    }
+
+  }
+
+  catch ( AipsError oAE ) {
+    oFeed.resize();
+    return( False );
+  }
+
+
+  // Return the length of the vector
+
+  if ( oFeed.nelements() == 0 ) return( False );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseAxis( const std::string& axis,
+    CalStats::AXIS& eAxisIterUserID ) {
+
+  // Convert the input string to an uppercase CASA string of length 1
+
+  String axisTemp( toCasaString( axis ) );
+  axisTemp.trim();
+  if ( axisTemp == "" ) axisTemp = "T";
+  axisTemp.upcase(); axisTemp = axisTemp[0];
+
+
+  // Get the user-defined iteration axis
+
+  eAxisIterUserID = CalStats::INIT;
+
+  if ( axisTemp == "F" ) {
+    eAxisIterUserID = CalStats::FREQUENCY;
+  } else if ( axisTemp == "T" ) {
+    eAxisIterUserID = CalStats::TIME;
+  } else {
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseRAP( const std::string& ap, CalAnalysis::RAP& eRAP ) {
+
+  // Convert the input string to an uppercase CASA string of length 1
+
+  String apTemp( toCasaString( ap ) );
+  apTemp.trim();
+  if ( apTemp == "" ) apTemp = "A";
+  apTemp.upcase(); apTemp = apTemp[0];
+
+
+  // Get the (real, amplitude, phase) RAP
+
+  eRAP = CalAnalysis::INIT;
+
+  if ( partype() == "Float" ) {
+    eRAP = CalAnalysis::REAL;
+  } else if ( partype() == "Complex" ) {
+    if ( apTemp == "A" ) {
+      eRAP = CalAnalysis::AMPLITUDE;
+    } else if ( apTemp == "P" ) {
+      eRAP = CalAnalysis::PHASE;
+    } else {
+      return( False );
+    }
+  } else {
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseJumpMax( const double& jumpmax, Double& dJumpMax ) {
+
+  // Get the maximum phase jump
+
+  dJumpMax = jumpmax;
+
+  if ( dJumpMax < 0.0 ) return( False );
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseArg( const std::string& order, const std::string& type,
+    const bool& weight, CalStats::ARG<CalStatsFitter::FIT>& oArg ) {
+
+  // Parse the fit order string
+
+  Bool bOrder = parseOrder( order, oArg.eOrder );
+
+  if ( !bOrder ) {
+    LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
+    log << LogIO::WARN << "Invalid fit order" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the fit type string
+
+  Bool bType = parseType( type, oArg.eType );
+
+  if ( !bType ) {
+    LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
+    log << LogIO::WARN << "Invalid fit type" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Parse the fit weight boolean
+
+  Bool bWeight = parseWeight( weight, oArg.eWeight );
+
+  if ( !bWeight ) {
+    LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
+    log << LogIO::WARN << "Invalid fit weight" << LogIO::POST;
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseOrder( const std::string& order,
+    CalStatsFitter::ORDER& eOrder ) {
+
+  // Convert the input string to an uppercase CASA string of length 1
+
+  String orderTemp( toCasaString( order ) );
+  orderTemp.trim();
+  if ( orderTemp == "" ) orderTemp = "A";
+  orderTemp.upcase(); orderTemp = orderTemp[0];
+
+
+  // Get the fit order
+
+  eOrder = CalStatsFitter::ORDER_INIT;
+
+  if ( orderTemp == "A" ) {
+    eOrder = CalStatsFitter::AVERAGE;
+  } else if ( orderTemp == "L" ) {
+    eOrder = CalStatsFitter::LINEAR;
+  } else if ( orderTemp == "Q" ) {
+    eOrder = CalStatsFitter::QUADRATIC;
+  } else {
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseType( const std::string& type,
+    CalStatsFitter::TYPE& eType ) {
+
+  // Convert the input string to an uppercase CASA string of length 1
+
+  String typeTemp( toCasaString( type ) );
+  typeTemp.trim();
+  if ( typeTemp == "" ) typeTemp = "L";
+  typeTemp.upcase(); typeTemp = typeTemp[0];
+
+
+  // Get the fit type
+
+  eType = CalStatsFitter::TYPE_INIT;
+
+  if ( typeTemp == "L" ) {
+    eType = CalStatsFitter::LSQ;
+  } else if ( typeTemp == "R" ) {
+    eType = CalStatsFitter::ROBUST;
+  } else {
+    return( False );
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+// --- //
+
+Bool calanalysis::parseWeight( const bool& weight,
+    CalStatsFitter::WEIGHT& eWeight ) {
+
+  // Get the fit weight
+
+  if ( weight ) {
+    eWeight = CalStatsFitter::YES;
+  } else {
+    eWeight = CalStatsFitter::NO;
+  }
+
+
+  // Return True
+
+  return( True );
+
+}
+
+#include <xmlcasa/calanalysis/calanalysis_template.h>
 
 } // casac namespace

@@ -7,7 +7,7 @@ CalStatsDATA.cc
 
 Description:
 ------------
-This file contains member functions for the CalStats::DATA class.
+This file contains member functions for the nested CalStats::DATA class.
 
 Classes:
 --------
@@ -33,7 +33,7 @@ Modification history:
 namespace casa {
 
 // -----------------------------------------------------------------------------
-// Start of CalStats::DATA class
+// Start of CalStats::DATA nested class
 // -----------------------------------------------------------------------------
 
 /*
@@ -221,7 +221,7 @@ CalStats::DATA& CalStats::DATA::operator=( const CalStats::DATA& oDataIn ) {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// End of CalStats::DATA class
+// End of CalStats::DATA nested class
 // -----------------------------------------------------------------------------
 
 };

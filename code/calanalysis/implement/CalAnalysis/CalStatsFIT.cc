@@ -7,7 +7,7 @@ CalStatsFIT.cc
 
 Description:
 ------------
-This file contains member functions for the CalStatsFitter::FIT class.
+This file contains member functions for the nested CalStatsFitter::FIT class.
 
 Classes:
 --------
@@ -34,7 +34,7 @@ Modification history:
 namespace casa {
 
 // -----------------------------------------------------------------------------
-// Start of CalStatsFitter::FIT class
+// Start of CalStatsFitter::FIT nested class
 // -----------------------------------------------------------------------------
 
 /*
@@ -244,7 +244,7 @@ CalStatsFitter::FIT& CalStatsFitter::FIT::operator=(
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// End of CalStatsFitter::FIT class
+// End of CalStatsFitter::FIT nested class
 // -----------------------------------------------------------------------------
 
 };
