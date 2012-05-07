@@ -177,8 +177,9 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    return False
 
 	try :
+          scriptstr=['']
           saveinputs = self.__globals__['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
+          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__,scriptstr=scriptstr)
           if async :
 	    count = 0
 	    keybase =  time.strftime("%y%m%d.%H%M%S")
@@ -193,11 +194,13 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    self.rkey = key
 	    self.__async__[key] = result
           else :
+              cmdstr=scriptstr[1]
               tname = '<xsl:value-of select="$taskname"/>'
               spaces = ' '*(18-len(tname))
               casalog.post('')
               casalog.post('##########################################')
               casalog.post('##### Begin Task: ' + tname + spaces + ' #####')
+              casalog.post(scriptstr[1], 'INFO')
               casalog.post('')
               result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
               casalog.post('')
