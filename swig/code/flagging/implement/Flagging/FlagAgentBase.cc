@@ -718,6 +718,8 @@ FlagAgentBase::setDataSelection(Record config)
 				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
 				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 
+				*logger_p << LogIO::DEBUG1 << " selected antenna1 list is " << antenna1List_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " selected antenna2 list is " << antenna2List_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " selected baselines are " << baselineList_p << LogIO::POST;
 			}
 		}
@@ -1162,9 +1164,13 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			}
 
 			// Check baseline
-			if (baselineList_p.size())
+			if (baselineList_p.size() and (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET))
 			{
 				if (!find(baselineList_p,visibilityBuffer_p->get()->antenna1()[row_i],visibilityBuffer_p->get()->antenna2()[row_i])) continue;
+			}
+			else if (antenna1List_p.size() and (flagDataHandler_p->tableTye_p == FlagDataHandler::CALIBRATION_TABLE))
+			{
+				if (!find(antenna1List_p,visibilityBuffer_p->get()->antenna1()[row_i])) continue;
 			}
 
 			// Check uvw range

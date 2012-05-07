@@ -39,6 +39,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 	originalMeasurementSet_p = NULL;
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
+	tableTye_p = MEASUREMENT_SET;
 }
 
 

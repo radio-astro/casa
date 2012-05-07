@@ -755,6 +755,12 @@ public:
 		ARRAY_FIELD
 	};
 
+	enum tableType {
+
+		MEASUREMENT_SET=0,
+		CALIBRATION_TABLE
+	};
+
 	// Default constructor
 	// NOTE: Time interval 0 groups all time steps together in one chunk.
 	FlagDataHandler(string msname, uShort iterationApproach = SUB_INTEGRATION, Double timeInterval = 0);
@@ -844,6 +850,7 @@ public:
 	bool flushFlagRow_p;
 	uInt64 chunkCounts_p;
 	uInt64 msCounts_p;
+	uShort tableTye_p;
 
 	// Visibility Buffer
 	// WARNING: The attach mechanism only works with pointers or

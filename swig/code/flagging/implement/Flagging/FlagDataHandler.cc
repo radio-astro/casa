@@ -146,6 +146,9 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	scanStartStopMap_p = NULL;
 	fieldNames_p = NULL;
 
+	// Initialize table characteristics
+	tableTye_p = MEASUREMENT_SET;
+
 	// Initialize FlagDataHanler-FlagAgents state
 	flushFlags_p = false;
 	flushFlagRow_p = false;

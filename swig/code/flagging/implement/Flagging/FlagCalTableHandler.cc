@@ -39,6 +39,7 @@ FlagCalTableHandler::FlagCalTableHandler(string tablename, uShort iterationAppro
 	calTableInterface_p = NULL;
 	calBuffer_p = NULL;
 	calIter_p = NULL;
+	tableTye_p = CALIBRATION_TABLE;
 }
 
 
