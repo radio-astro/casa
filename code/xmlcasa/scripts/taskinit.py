@@ -84,6 +84,8 @@ __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
+catool = casac.homefinder.find_home_by_name( 'calanalysisHome' )
+ca = catool.create()
 
 def gentools(tools=None):
 	"""
