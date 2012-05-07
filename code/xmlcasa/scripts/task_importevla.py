@@ -321,7 +321,7 @@ def importevla(
                 casalog.post('There are no flags to apply')
                 
         else :
-            casalog.post('Will not apply flags (applyflags=False), use tflagcmd to apply')
+            casalog.post('Will not apply flags (applyflags=False), use flagcmd to apply')
             if nflags > 0:
                 fh.writeFlagCmd(viso, allflags, allkeys, False, '', '')
 

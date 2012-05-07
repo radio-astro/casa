@@ -54,7 +54,7 @@ namespace casa {
 		    region_list_type &regions( ) { return all_regions; }
 		    region_list_type &regions( RegionTool *tool );
 		    region_list_type &regions( viewer::Region::PointLocation loc );
-		    const viewer::Region::PointInfo &state( viewer::Region *region );
+		    viewer::Region::PointInfo state( viewer::Region *region );
 
 		    double x( ) const { return x_; }
 		    double y( ) const { return y_; }

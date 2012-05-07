@@ -196,6 +196,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/parameter_dictionary.py
   scripts/plotcomp.py
   scripts/pointcal.py
+  scripts/predictcomp_helper.py
   scripts/qtcasapy.py
   scripts/regression.py
   scripts/regressframe.py
@@ -276,6 +277,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
+  scripts/task_oldflagcmd.py
   scripts/task_peel.py
   scripts/task_plotants.py
   scripts/task_plotcal.py
@@ -317,7 +319,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_split.py
   scripts/task_statwt.py
   scripts/task_testconcat.py
-  scripts/task_tflagcmd.py
   scripts/task_tflagdata.py
   scripts/task_uvcontsub.py
   scripts/task_uvcontsub2.py
@@ -408,6 +409,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listsdm.xml
   tasks/listvis.xml
   tasks/mosaic.xml
+  tasks/oldflagcmd.xml
   tasks/peel.xml
   tasks/plotants.xml
   tasks/plotcal.xml
@@ -449,7 +451,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/split.xml
   tasks/statwt.xml
   tasks/testconcat.xml
-  tasks/tflagcmd.xml
   tasks/tflagdata.xml
   tasks/uvcontsub.xml
   tasks/uvcontsub2.xml

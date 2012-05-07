@@ -120,11 +120,18 @@ namespace casa {
 		    public:
 			PointInfo( double x, double y, unsigned int location, unsigned int handle=0 ) :
 							x_(x), y_(y), location_(location), handle_(handle) { }
-			PointInfo( const PointInfo &other) : location_(other.location_), handle_(other.handle_) { }
+			PointInfo( const PointInfo &other) : x_(other.x_), y_(other.y_), location_(other.location_), handle_(other.handle_) { }
 			unsigned int handle( ) const { return handle_; }
 			unsigned int &handle( ) { return handle_; }
 			unsigned int location( ) const { return location_; }
 			unsigned int operator&( PointLocation mask ) const { return location_ & mask; }
+			const PointInfo &operator=( const PointInfo &other ) {
+			    x_ = other.x_;
+			    y_ = other.y_;
+			    location_ = other.location_;
+			    handle_ = other.handle_;
+			    return *this;
+			}
 			double x( ) const { return x_; }
 			double y( ) const { return y_; }
 			double &x( ) { return x_; }

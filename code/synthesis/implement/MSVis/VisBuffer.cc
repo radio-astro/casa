@@ -676,10 +676,11 @@ void VisBuffer::formStokes()
 }
 
 void
-VisBuffer::lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert) const
+VisBuffer::lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert,
+			const Bool ignoreconv) const
 {
     CheckVisIter ();
-    visIter_p->lsrFrequency(spw, freq, convert);
+    visIter_p->lsrFrequency(spw, freq, convert, ignoreconv);
 }
 
 
@@ -2321,6 +2322,7 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
       String modelkey=String("definedmodel_field_")+String::toString(fieldId());
       Bool hasmodkey=visIter_p->ms().keywordSet().isDefined(modelkey);
       if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
+	cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 	if(visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) ==-1){
 	  if(hasmodkey){
 	    String whichrec=visIter_p->ms().keywordSet().asString(modelkey);

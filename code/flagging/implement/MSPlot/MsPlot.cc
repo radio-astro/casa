@@ -55,6 +55,9 @@
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSIter.h>
+#include <tables/Tables/PlainTable.h>
+#include <tables/Tables/TableCache.h>
+
 
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MFrequency.h>
@@ -187,6 +190,7 @@ MsPlot::~MsPlot()
 {
     String fnname = "~MsPlot";
 
+    
     //#if ( itsPyBinder != NULL ) { delete itsPyBinder; itsPyBinder = NULL; }
     if ( itsTablePlot != NULL ) { 
         //# Tell TablePlot I don't exist anymore
@@ -1359,11 +1363,19 @@ MsPlot::reset( Bool resetMS )
        //# Make sure all of the buttons are disabled after a reset.
        //# We no longer have a measurement set, so the buttons will
        //# only cause errors if they are enabled here.
+
+       try{
+          Table::relinquishAutoLocks(True);
+       }
+       catch (casa::AipsError x) {
+           cout << "msplot: " << x.getMesg() << endl;
+       }
+       //cout << "itsMS====" << itsMS << endl;
        if ( itsMS != NULL ) { 
           delete itsMS; 
-          //itsMS = NULL; 
+          itsMS = NULL; 
        }
-       itsMS = new MeasurementSet();
+       //itsMS = new MeasurementSet();
 
        //# Need to make sure the flagging columns are set to the ususal
        //#ones.

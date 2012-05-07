@@ -2538,7 +2538,7 @@ VisibilityIteratorReadImpl::lsrFrequency (Vector<Double> & freq) const
 
 void
 VisibilityIteratorReadImpl::lsrFrequency (const Int & spw, Vector<Double> & freq,
-        Bool & convert)
+					  Bool & convert, const Bool ignoreconv)
 {
     // This method is not good for conversion between frames which are extremely
     // time dependent over the course of the observation e.g topo to lsr unless
@@ -2566,7 +2566,7 @@ VisibilityIteratorReadImpl::lsrFrequency (const Int & spw, Vector<Double> & freq
     MDirection dir = msIter_p.phaseCenter ();
 
     lsrFrequency (spw, freq, convert, channels_p.start_p, channels_p.width_p, channels_p.inc_p,
-                  channels_p.nGroups_p, chanFreqs, obsMFreqTypes, ep, obsPos, dir);
+                  channels_p.nGroups_p, chanFreqs, obsMFreqTypes, ep, obsPos, dir, ignoreconv);
 
 }
 
@@ -2582,7 +2582,7 @@ VisibilityIteratorReadImpl::lsrFrequency (const Int & spw,
                                           const ROScalarColumn<Int> & obsMFreqTypes,
                                           const MEpoch & ep,
                                           const MPosition & obsPos,
-                                          const MDirection & dir)
+                                          const MDirection & dir, const Bool ignoreconv)
 {
 
     Vector<Double> chanFreq (0);
@@ -2605,6 +2605,8 @@ VisibilityIteratorReadImpl::lsrFrequency (const Int & spw,
     //    }
 
     convert = obsMFreqType != MFrequency::LSRK; // make this parameter write-only
+    // user requested no conversion
+    if(ignoreconv) convert=False;
 
     for (Int i = 0; i < chanWidth[spw]; i++) {
         Int inc = chanInc[spw] <= 0 ? 1 : chanInc[spw] ;

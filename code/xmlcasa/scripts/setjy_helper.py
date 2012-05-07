@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import odict
+import numpy
 
 class ss_setjy_helper:
     def __init__(self,imtool, vis, casalog=None):
@@ -54,9 +55,11 @@ class ss_setjy_helper:
 	mytb.open(self.vis+'/FIELD')
 	if len(fieldids)==0:
 	  fieldids = range(mytb.nrows())
-	srcnames=[]
+	#srcnames=[]
+	srcnames={}
 	for fid in fieldids:
-	  srcnames.append(mytb.getcell('NAME',int(fid)))
+	  #srcnames.append(mytb.getcell('NAME',int(fid)))
+	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
 	mytb.close() 
 	# need to get a list of time
 	# but for now for test just get a time centroid of the all scans
@@ -92,12 +95,14 @@ class ss_setjy_helper:
 	  trange=myms.range('time')
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
+
 	  tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
-	  selspws= myms.msselectedindices()['spw']
+          # somehow it gives you duplicated ids .... so need to uniquify
+	  selspws= list(set(myms.msselectedindices()['spw']))
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
@@ -154,8 +159,10 @@ class ss_setjy_helper:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
+            #print "%s for spw%s freqs=%s" % (src, i,freqlist[i])
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
                ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
+            #print "ss_fd returns fluxes=", subfluxes
 	    fluxes.append(subfluxes)    
             #print "fluxes=",fluxes 
 
@@ -213,7 +220,6 @@ class ss_setjy_helper:
         
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
-		#print "setting tabular spect"
 		#print "freqlist[j]=",freqlist[j]
 		#print "fluxes[j][0]=",fluxes[j][0]
 		#print "framelist[j]=",framelist[j]
@@ -291,7 +297,10 @@ class ss_setjy_helper:
 	    origin='setjy'
 	    priority='INFO'
 	    time=lasttime
-	    mytb.putcell('APPLICATION',rown,appl)
+            emptystrarr=numpy.array([''])
+	    mytb.putcell('APP_PARAMS', rown, [''])
+	    mytb.putcell('CLI_COMMAND',rown, [''])
+	    mytb.putcell('APPLICATION',rown, appl)
 	    mytb.putcell('MESSAGE',rown, msg)
 	    mytb.putcell('OBSERVATION_ID',rown, -1)
 	    mytb.putcell('ORIGIN',rown,origin)
@@ -307,18 +316,19 @@ def testerrs(errcode,srcname):
     return = 1 partly ok
     return = 2 all bad - should not proceed to set component
     """
+    from taskinit import casalog 
     errcount = 0
     for ec in errcode:
       if ec != 0:
         errcount += 1
       if ec == 1:
-         raise ValueError("The model for %s is not supported" % srcname)
+         casalog.post("The model for %s is not supported" % srcname, 'WARN')
       elif ec == 2:
-         raise ValueError("Unsupported freuquency range")
+         casalog.post("Unsupported freuquency range",'WARN')
       elif ec == 3:
-         raise ValueError("Tb model not found")
+         casalog.post("Tb model not found",'WARN')
       elif ec == 4:
-         raise ValueError("The ephemeris table is not found or the time is out of range")
+         casalog.post("The ephemeris table is not found or the time is out of range",'WARN')
     if errcount == len(errcode):
       return 2
     if errcount != 0:

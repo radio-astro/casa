@@ -34,6 +34,7 @@
 	      <value>Perley 90</value>
 	      <value>Perley-Taylor 95</value>
 	      <value>Butler-JPL-Horizons 2010</value>
+	      <value>Butler-JPL-Horizons 2012</value>
 	    </allowed>
 	  </param>
 	  <!-- <param type="bool" name="listknownobjs">
@@ -84,6 +85,18 @@
 	    <description>Force the baseline axis to start at 0?</description>
 	    <value>False</value>
 	  </param>
+	  <param type="string" name="blunit" subparam="True">
+	    <description>unit of the baseline axis</description>
+	    <value></value>
+	    <allowed kind="enum">
+	    <value></value>
+	    <value>klambda</value>
+	    </allowed>
+	  </param>
+	  <param type="bool" name="showbl0flux" subparam="True">
+	    <description>Print the zero baseline flux ?</description>
+	    <value>False</value>
+	  </param>
 
 	  <constraints>
 	    <when param="antennalist">
@@ -93,6 +106,8 @@
                 <default param="symb"><value type="string">,</value></default>
 		<default param="include0amp"><value>False</value></default>
 		<default param="include0bl"><value>False</value></default>
+		<default param="blunit"><value type="string"></value></default>
+		<default param="showbl0flux"><value>False</value></default>
 	      </notequals>
 	    </when>
 	  </constraints>
@@ -153,6 +168,14 @@
                        'myplot.png' (save to myplot.png)
     symb: One of matplotlib's codes for plot symbols: .:,o^v&lt;&gt;s+xDd234hH|_
           Default: ',':  The smallest points I could find.
+    include0amp: Force the amplitude axis to start at 0?
+                 Default: False
+    include0bl: Force the baseline axis to start at 0?
+                Default: False
+    blunit: unit of the baseline axis ('' or 'klambda')
+            Default:''=use a unit in the data
+    showbl0flux: Print the zero baseline flux? 
+                 Default: False 
 
      
 </example>
