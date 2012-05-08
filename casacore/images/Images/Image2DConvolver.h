@@ -95,50 +95,50 @@ template <class T> class Image2DConvolver
 {
 public:
 
-// Constructor 
-   Image2DConvolver ();
+	// Constructor
+	Image2DConvolver ();
 
-// Copy constructor.  Uses reference semantics.
-   Image2DConvolver(const Image2DConvolver<T> &other);
+	// Copy constructor.  Uses reference semantics.
+	Image2DConvolver(const Image2DConvolver<T> &other);
 
-// Destructor
-  ~Image2DConvolver();
+	// Destructor
+	~Image2DConvolver();
 
-// Assignment operator. Uses reference semantics.
-   Image2DConvolver &operator=(const Image2DConvolver<T> &other);
+	// Assignment operator. Uses reference semantics.
+	Image2DConvolver &operator=(const Image2DConvolver<T> &other);
 
-// Convolve.   If the output image needs a mask and doesn't have one,
-// it will be given one if possible.  The miscInfo, imageInfo,
-// units and logger will be copied from the input to the output
-// unless you indicate not to (copyMiscellaneous).  
-   void convolve(LogIO& os, 
-                 ImageInterface<T>& imageOut, 
-                 ImageInterface<T>& imageIn, 
-                 VectorKernel::KernelTypes kernelType,
-                 const IPosition& pixelAxes,
-                 const Vector<Quantum<Double> >& parameters,
-                 Bool autoScale, Double scale,
-                 Bool copyMiscellaneous=True);
+	// Convolve.   If the output image needs a mask and doesn't have one,
+	// it will be given one if possible.  The miscInfo, imageInfo,
+	// units and logger will be copied from the input to the output
+	// unless you indicate not to (copyMiscellaneous).
+	void convolve(
+		LogIO& os,
+		ImageInterface<T>& imageOut,
+		const ImageInterface<T>& imageIn,
+		const VectorKernel::KernelTypes kernelType,
+		const IPosition& pixelAxes,
+		const Vector<Quantity>& parameters,
+		const Bool autoScale, Double scale,
+		const Bool copyMiscellaneous=True
+	);
 
 private:
 
-// Check kernel parameters
-   void checkKernelParameters(LogIO& os, VectorKernel::KernelTypes kernelType,
-                              const Vector<Quantum<Double> >& parameters) const;
-//
-   void dealWithRestoringBeam (LogIO& os, 
-                               String& brightnessUnitOut,
-                               Vector<Quantum<Double> >& beamOut,
-                               Array<T>& kernelArray,
-                               T kernelVolume,
-                               VectorKernel::KernelTypes kernelType,
-                               const Vector<Quantum<Double> >& parameters,
-                               const IPosition& axes,
-                               const CoordinateSystem& cSys,
-                               const ImageInfo& imageInfo,
-                               const Unit& brightnessUnit,
-                               Bool autoscale, Double scale) const;
-//
+	void checkKernelParameters(
+		LogIO& os, VectorKernel::KernelTypes kernelType,
+		const Vector<Quantum<Double> >& parameters
+	) const;
+
+	void _dealWithRestoringBeam (
+		LogIO& os, String& brightnessUnitOut, Vector<Quantity>& beamOut,
+		Array<T>& kernelArray, const T kernelVolume,
+		const VectorKernel::KernelTypes kernelType,
+		const Vector<Quantity>& parameters,
+		const IPosition& axes, const CoordinateSystem& cSys,
+		const ImageInfo& imageInfo, const Unit& brightnessUnit,
+		const Bool autoscale, const Double scale
+	) const;
+
    T fillKernel (Matrix<T>& kernelMatrix,
                  VectorKernel::KernelTypes kernelType,
                  const IPosition& kernelShape,

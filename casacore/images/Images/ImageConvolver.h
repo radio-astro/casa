@@ -134,24 +134,24 @@ enum ScaleTypes {
 // <group>
    void convolve(LogIO& os, 
                  ImageInterface<T>& imageOut, 
-                 ImageInterface<T>& imageIn, 
+                 const ImageInterface<T>& imageIn,
                  const ImageInterface<T>& kernel,
-                 ScaleTypes scaleType, Double scale,
-                 Bool copyMiscellaneous, Bool warnOnly);
+                 const ScaleTypes scaleType, const Double scale,
+                 const Bool copyMiscellaneous, const Bool warnOnly);
    void convolve(LogIO& os, 
                  ImageInterface<T>& imageOut, 
-                 ImageInterface<T>& imageIn, 
+                 const ImageInterface<T>& imageIn,
                  const Lattice<T>& kernel,
-                 ScaleTypes scaleType,
-                 Double scale,
-                 Bool copyMiscellaneous);
+                 const ScaleTypes scaleType,
+                 const Double scale,
+                 const Bool copyMiscellaneous);
    void convolve(LogIO& os, 
                  ImageInterface<T>& imageOut, 
-                 ImageInterface<T>& imageIn, 
+                 const ImageInterface<T>& imageIn,
                  const Array<T>& kernel,
-                 ScaleTypes scaleType,
-                 Double scale,
-                 Bool copyMiscellaneous);
+                 const ScaleTypes scaleType,
+                 const Double scale,
+                 const Bool copyMiscellaneous);
 // </group>
 
 private:

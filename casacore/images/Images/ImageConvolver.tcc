@@ -45,6 +45,8 @@
 #include <lattices/Lattices/LatticeExprNode.h>
 #include <casa/iostream.h>
 
+#include <memory>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -78,7 +80,7 @@ ImageConvolver<T> &ImageConvolver<T>::operator=(const ImageConvolver<T> &other)
 template <class T>
 void ImageConvolver<T>::convolve(LogIO& os,  
                                  ImageInterface<T>& imageOut,
-                                 ImageInterface<T>& imageIn,
+                                 const ImageInterface<T>& imageIn,
                                  const ImageInterface<T>& kernel,
                                  ScaleTypes scaleType, Double scale,
                                  Bool copyMiscellaneous, Bool warnOnly)
@@ -97,7 +99,7 @@ void ImageConvolver<T>::convolve(LogIO& os,
 template <class T>
 void ImageConvolver<T>::convolve(LogIO& os,  
                                  ImageInterface<T>& imageOut,
-                                 ImageInterface<T>& imageIn,
+                                 const ImageInterface<T>& imageIn,
                                  const Array<T>& kernel,
                                  ScaleTypes scaleType, Double scale,
                                  Bool copyMiscellaneous)
@@ -111,7 +113,7 @@ void ImageConvolver<T>::convolve(LogIO& os,
 template <class T>
 void ImageConvolver<T>::convolve(LogIO& os,  
                                  ImageInterface<T>& imageOut,
-                                 ImageInterface<T>& imageIn,
+                                 const ImageInterface<T>& imageIn,
                                  const Lattice<T>& kernel,
                                  ScaleTypes scaleType, Double scale,
                                  Bool copyMiscellaneous)
@@ -134,6 +136,7 @@ void ImageConvolver<T>::convolve(LogIO& os,
     Lattice<T>* pNewKernel = 0;
     LatticeUtilities::addDegenerateAxes (pNewKernel, kernel, inShape.nelements());
 
+    std::auto_ptr<Lattice<T> > pnkMgr(pNewKernel);
 // Normalize kernel.  
   
     LatticeExprNode node;
@@ -186,10 +189,6 @@ void ImageConvolver<T>::convolve(LogIO& os,
     ImageInfo ii = imageOut.imageInfo();
     ii.removeRestoringBeam();
     imageOut.setImageInfo (ii);
-
-// Clean up
-
-    delete pNewKernel;
 }
 
 template <class T>
