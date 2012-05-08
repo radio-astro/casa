@@ -9,7 +9,8 @@ with links from each 'class' box/section to the relevant doxygen code-doc pages.
 \paragraph{Main Classes}
 
 \begin{enumerate}
-\item \htmladdnormallink{TestFlagger}{XXX} : The top-level Flagger class that connects all of the following together, and defines the C++ user-interface for the flagger.  This is the class used by the tool layer.
+\item \htmladdnormallink{TestFlagger}{XXX} : The top-level Flagger class that connects all of the following together, 
+and defines the C++ user-interface for the flagger.  This is the class used by the tool layer.
 
 \item \htmladdnormallink{FlagDataHandler}{http://www.eso.org/~jagonzal/Flagging-3.4-Docs/html/classcasa_1_1FlagDataHandler.html} : A top level class defining the data handling interface for the flagging module. 
 
@@ -21,7 +22,9 @@ List of available Flag Agents :
 \begin{enumerate}
 \item \htmladdnormallink{FlagAgentManual}{XXX} :  Flag/Unflag based on data-selections.  
 The only processing done by this agent is to set the flags for all data it sees to 
-True if the operation is to flag, and to False to unflag.  {\red how is the flag vs unflag signalled ?}
+True if the operation is to flag, and to False to unflag. A boolean parameter
+apply determines whether to flag (apply=True) or unflag (apply=False). By
+default it is set to True.
 
 \item \htmladdnormallink{FlagAgentQuack}{XXX} :  Flag time-ranges at the beginning and/or end of scans. 
 Uses the YYY iteration-mode. 
@@ -72,7 +75,7 @@ for end-of-MS reports.
 %  \linesnumbered
   \dontprintsemicolon
   \vspace{0.5cm} 
-  \KwData{Pre-selected Measurment Set}
+  \KwData{Pre-selected Measurement Set}
   \KwIn{List of Flag Commands}
   \KwOut{Flags updated in-place + summaries/reports}
   \vspace{0.5cm} 
@@ -137,7 +140,7 @@ The goal is to read data once, apply multiple flag commands, and write flags onc
 
 \begin{enumerate}
 \item  Manual-flag commands read only meta-data.
-\item  Shadow,elevation read meta-data + processing to calculate uvw, azel.
+\item  Shadow, elevation read meta-data + processing to calculate uvw, azel.
 \item  Clip reads visibilities.
 \item  tfcrop and rflag read visibilities and flags
 \item Extend, summary read flags
@@ -274,16 +277,155 @@ Two types of datasets : wideband continuum single-pointing,   spectral-line mosa
 \begin{enumerate}
 \item    Examples how to use the the new flagging framework from the tool.
 
-\item    Explain what things can only be done from the tool level 
+The following is a typical way of using the tflagger tool to perform flagging.
+
+Open the MS or a calibration file and attach it to the tool. The function
+takes three arguments, the MS or CAL table, the iteration approach to use and the time interval. 
+Only the MS is mandatory to use. By default it will use the
+FlagDataHandler::SUB_INTEGRATION iteration approach and 0.0 seconds as the time interval.
+
+\begin{verbatim}
+    tf.open('my.ms')
+\end{verbatim}
+
+Select the data where to flag. If left blank, the whole MS will be selected. This step
+will use the MS Selection class. There are two functions to perform the
+selection. One takes a Python dictionary (Record in C++) of the parameters, the
+other takes the individual parameters as arguments.
+
+\begin{verbatim}
+  1) First method:
+    selection={}
+    selection['spw']="0:1~10"
+    selection=['scan']="1"
+    tf.selectdata(selection)
+
+  2) Second method:
+    tf.selectdata(spw="0:1~10", scan="1")
+\end{verbatim}
+
+Now it is time to build a list of the agents that we want to run to process the data. This
+step will create a list of all the agents that will be executed to flag/unflag the data.
+This method can be called multiple times. Every call should contain the desired parameters of
+the agent and optionally data selection parameters. When data selection parameters are present,
+the agent will only loop through that portion of the data.
+
+This method will check if the requested agent (mode) is known from the following list
+(manual, clip, quack, shadow, elevation, tfcrop, rflag, extend, unflag and summary). If
+empty or unknown, it will give a warning and return.
+
+If any tfcrop, rflag or extend mode is present, this method will calculate the maximum value
+of time interval (ntime) from these agents. The maximum value will be used for
+all the agents in the list.
+
+A similar situation will happen with the combinescans parameter. If any of the combinescans is
+True, it will be taken as True to all agents.
+
+Async I/O will be activated if any of the modes clip, tfcrop or rflag is requested.
+
+Only for the tfcrop agent, if a correlation ALL is requested, this method will create one
+agent for each available polarization in the MS. For example, if the MS contains polarizations
+XX and YY and the parameter is correlation="ABS_ALL", then there will be two tfcrop agents,
+one with correlation="ABS_XX" and the other with correlation="ABS_YY". The apply parameter
+is set by default to True to apply the flags.
+
+\begin{verbatim}
+     agent_pars = {}
+     agent_pars["mode"] = "clip"
+     agent_pars["clipzeros"] = true
+     agent_pars["apply"] = true
+     tf.parseagentparameters(agent_pars)
+
+     agent_pars = {}
+     agent_pars["mode"] = "manual"
+     agent_pars["autocorr"] = true
+     tf.parseagentparameters(agent_pars)
+
+     agent_pars = {}
+     agent_pars["mode"] = "summary"
+     agent_pars["basecnt"] = true
+     tf.parseagentparameters(agent_pars)
+\end{verbatim}
+
+There are convenience functions to parse the agent's parameters, one specific for each agent.
+The above calls can be done instead using these functions.
+
+\begin{verbatim}
+     tf.parseclipparameters(clipzeros=true, apply=true)
+     tf.parsemanualparameters(autocorr=true)
+     tf.parsesummaryparameters(basecnt=true)
+\end{verbatim}
+
+In either one of the cases, three agents will be created. We need to initialize the agents, which
+will call the constructor of each one of them and set the parameters that were given in the previous
+calls. Some basic checks will be performed at this stage for types and values of the parameters.
+
+If any tfcrop, rflag, extend or display agent is in the list, the iteration approach will be
+set to a different value depending on whether combinescans is true or not. When True, the
+iteration approach will be set to FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY, otherwise
+to FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY.
+
+This method will create agents and add them to a FlagAgentList. If for any reason, the call to
+FlagAgentBase::create(fdh_p, agent_rec) fails, an error message will be displayed. Any agents previously
+added to the FlagAgentList will remain there. A subsequent call to this method can be done to add
+more agents to the same FlagAgentList.
+
+\begin{verbatim}
+     tf.init()
+\end{verbatim}
+
+The next step in the chain is to actually process the flags and write them or
+not to the MS. The run method takes two parameters, writeflags and sequential.
+The parameter writeflags controls whether to write the flags or not to the MS.
+By default it is set to True. Setting writeflags to False is useful when one
+wants to run the tool together with the display agent to see what is going to be
+flagged before deciding to write or not to the MS. The sequential parameter
+controls if the order of the agent's list is to be preserved or not. If set to
+False, the order will not be preserved and the framework may execute the agent's list in parallel.
+By default sequential is set to True.
+
+The run method gathers several reports, depending on wich agents are run. The display and summary agents
+produce reports that can be retrieved from calling the run method. The reports are returned via a Python
+dictionary. When executed from the task, only the report of the
+last summary in the list will be returned. If executed from the tool level,
+multiple reports are allowed for the summary agent.
+
+In the previous example, only one summary agent was added to the list, therefore
+two reports will be returned in the dictionary. The first report contains the
+summaries per field, spw, scan, correlation, etc. The second report
+\ldots\ldots\ldots\ldots
+
+\begin{verbatim}
+     my_reports = tf.run()
+\end{verbatim}
+ 
+\item    The following are only possible in the tool.
+
+Run multiple summary agents in a list. In order to do this, add as many summary
+agents are desired when parsing the agent's parameters. You can do this by
+calling the tf.parseagentparameters() several times before calling tf.init().
+
+Determine to run the agents in sequential or in parallel. Set the 'sequential'
+parameter of the run method to True or False to control this.
+
+Flag CAL tables in currently only possible in the tool. Give a CAL table name
+when calling the tf.open() method instead of a MS.
 
 \item    Explain the heuristics applied for the automatic activation of async I/O and parallel run
 \end{enumerate}
 
-\subsubsection{flaghelper class}
+\subsubsection{flaghelper functions}
+
+This Python file contains many helper functions for tflagdata and flacmd. The
+functions can be imported inside casapy.
+
+\begin{verbatim}
+     import flaghelper as fh
+\end{verbatim}
 
 \subsubsection{tflagdata task}
 
-\subsubsection{tflagcmd task}
+\subsubsection{flagcmd task}
 
 
 
