@@ -633,11 +633,11 @@ class test_bpass(test_base):
 	tflocal.done() 
 
         assert summary['report0']['total'] == 1248000.0
-	assert summary['report0']['flagged'] == 63861.0
-	assert summary['report0']['correlation']['Sol1']['flagged'] == 32193.0
+	assert abs(summary['report0']['flagged'] - 63861.0) <= 5
 	assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-	assert summary['report0']['correlation']['Sol2']['flagged'] == 31668.0
+	assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 32193.0) <= 5
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+	assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 31668.0) <=5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
 	"""TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
@@ -658,11 +658,11 @@ class test_bpass(test_base):
 	tflocal.done() 
 
         assert summary['report0']['total'] == 1248000.0
-	assert summary['report0']['flagged'] == 73564.0
-	assert summary['report0']['correlation']['Sol1']['flagged'] == 36782.0
+	assert abs(summary['report0']['flagged'] - 73564.0) <= 5
 	assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-	assert summary['report0']['correlation']['Sol2']['flagged'] == 36782.0
+	assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 36782.0) <= 5
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+	assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 36782.0) <= 5
 
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
 	"""TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
