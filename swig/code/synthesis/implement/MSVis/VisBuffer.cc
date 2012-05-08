@@ -2322,7 +2322,7 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
       String modelkey=String("definedmodel_field_")+String::toString(fieldId());
       Bool hasmodkey=visIter_p->ms().keywordSet().isDefined(modelkey);
       if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
-	cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
+	//cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 	if(visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) ==-1){
 	  if(hasmodkey){
 	    String whichrec=visIter_p->ms().keywordSet().asString(modelkey);

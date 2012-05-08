@@ -20,19 +20,39 @@ the visibilities, before they are considered for flagging
 
 \subsubsection{Manual Flag/Unflag}
 
-Selection-based flagging and unflagging can be done via the \htmladdnormallink{MSSelection syntax}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection/msselection.html}.  This flagging mode is meant for marking subsets of the data that are known to be unfit for calibration or imaging.  Some examples are online flags from the data-recording system, known frequency ranges with strong RFI, etc.
+Selection-based flagging and unflagging can be done via the \htmladdnormallink{MSSelection syntax}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection/msselection.html}.  
+This flagging mode is meant for marking subsets of the data that are known to be
+unfit for calibration or imaging. Some examples are online flags from the data-recording system, known frequency ranges 
+with strong RFI, etc. It is also possible to use the parameter 'autocorr' to
+flag only auto-correlations in the MS.
 
 \subsubsection{Quack}
 
-Data at scan edges can sometimes be unusable for some antennas or baselines (for example, if some antennas take longer than others to slew to a new target, but the signal correlation and recording starts before all antennas are ready), and it is often useful to flag these edges.The 'quack' mode allows the user to specify time-ranges from the beginning and/or end of all selected scans. 
+Data at scan edges can sometimes be unusable for some antennas or baselines (for example, if some antennas take longer 
+than others to slew to a new target, but the signal correlation and recording starts before all antennas are ready), and it 
+is often useful to flag these edges.The 'quack' mode allows the user to specify time-ranges from the beginning and/or end of 
+all selected scans. 
 
 \subsubsection{Elevation}
 
-Data taken when the antennas are pointed at low elevations can sometimes be unusable and require flagging.  Reasons for flagging data at low elevations include increased shadowing between antennas, increased sensitivity to RFI from the horizon,  elevation-dependent antenna-gain variations, corrupted specra due to looking through a longer path-length through the atmosphere, etc.  At high elevations, one problem could be increased pointing errors when an Alt-Az antenna tracks a source near the Zenith.    The 'elevation' mode allows the user to specify elevation-ranges to be flagged, for the selected data.
+Data taken when the antennas are pointed at low elevations can sometimes be unusable and require flagging.  Reasons for 
+flagging data at low elevations include increased shadowing between antennas, increased sensitivity to RFI from the horizon, 
+elevation-dependent antenna-gain variations, corrupted spectra due to looking
+through a longer path-length through the atmosphere, etc.  At high elevations, one problem could be increased pointing 
+errors when an Alt-Az antenna tracks a source near the Zenith. The 'elevation'
+mode allows the user to specify elevation-ranges to be flagged, for the selected data.
 
 \subsubsection{Clip}
 
-Strong outliers can be flagged using a simple threshold (range).  If a valid data range is known $a-priori$,  clipping can be done as the first step before basic calibration or other editing.   The 'clip' mode allows the user to specify a range, and clip all values either within or outside the range. Values are defined as expressions that involve data columns and correlation-selections (for example, ABS_I or REAL_RR,LL, etc).   NaNs and Infs are always included in the clipping, and optionally, exact zeros too.   Early EVLA data-sets occasionally have exact zeros in parts of the data where the backend-system is overloaded, and NaNs and Infs have sometimes been reported when data is converted between packages and formats.
+Strong outliers can be flagged using a simple threshold (range). If a valid data
+range is known $a-priori$, clipping can be done as the first step before basic calibration or other editing.
+The 'clip' mode allows the user to specify a range, and clip all values either within or outside the range. 
+Values are defined as expressions that involve data columns and correlation-selections (for example, ABS_I or REAL_RR,LL, etc).
+NaNs and Infs are always included in the clipping. By default, if no range for
+clipping is given, it will flag only NaNs and Infs. Optionally, exact zeros can
+flagged using the clipzeros parameter. Early EVLA data-sets occasionally have
+exact zeros in parts of the data where the backend-system is overloaded, and NaNs and Infs have sometimes been 
+reported when data is converted between packages and formats.
 
 
 \subsubsection{Shadow}
@@ -74,8 +94,8 @@ for shadow-flag differences to become significant.
 
 Note : Antennas that are not part of the MS ANTENNA subtable can be included in the calculation of
 shadow flags by specifying a list of positions and diameters in an external file.   Note however that
-the calculations will not account for the fact that antennas not part of the observation, but still
-physically present on the ground, may not be pointing in the same direction as all the others
+the calculations will not account for the fact that antennas not part of
+the observation, but still physically present on the ground, may not be pointing in the same direction as all the others
 (as is assumed in the calculations).  If desired, the antenna diameters in the external file could
 be adjusted accordingly.
 
@@ -304,13 +324,120 @@ it is easier to detect than in other correlations.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{List of flag commands (tflagdata, tflagcmd)}
-\subsubsection{Apply/ un-apply}
-\subsubsection{Managing flag-command files}
+\subsection{List of flag commands (tflagdata, flagcmd)}
 \label{Sec:FlagCmdLists}
-\paragraph{Using flag-command files}
-\paragraph{Using (and mis-using) the FLAGCMD subtable}
+There are two flagging tasks in version 3.4 of CASA. The main task tflagdata is
+a replacement for the old flagdata/flagdata2/testautoflag/flagautocorr. This
+task can take parameters input from the interface as well as input from an
+external text file. This is the so-called list mode. All the flagging commands
+that apply to an MS can be combined into one single text file and read in for
+processing. Only the summary mode is not allowed in list mode to avoid
+confusion when several summaries are present in the list. The user can run
+tflagdata separated to get the summary of the list. 
 
+The other task, flagcmd is a replacement for the previous version of flagcmd. It
+has a re-factored interface and it can do much more than the previous version.
+All the flagging modes available in tflagdata are also allowed in flagcmd
+(except again for the summary mode). Several input modes are available: table,
+file, xml and cmd. Actions to perform on the input are: apply, unapply, list,
+clear, plot and extract.
+
+\subsubsection{Apply/ un-apply}
+It is possible to truly unapply flag commands in flagcmd. In order to guarantee that only the data selected in 
+the commands is unapplied, the framework will first unapply the selected rows
+and then re-apply the overlapping data that got unapplied in the first pass. This is a true unapply action, but it will take longer to
+process because it will re-apply all the remaining commands that have the
+column APPLIED set to True inside the FLAG_CMD sub-table of the MS.
+
+\subsubsection{Managing flag-commands in the flagcmd task}
+Flag commands can be given as input to the flagcmd task in several ways. The
+default is the 'table' which will have the flag commands inside the FLAG_CMD
+sub-table of the MS in a column called COMMAND.
+
+The other input, as already detailed above is the 'file' mode, which will have
+the flag commands in a text file.
+
+The 'xml' input is meant to be used for the online flags from the Flag.xml file
+in the MS. It also assumes that the Antenna.xml file is present.
+
+The last input mode will input the flag commands from a list of Python strings.
+
+For all the input modes, the action='list' can be used to list the flags
+commands on the screen and optionally to save them to an external output file
+when the parameter savepars is set to True.
+
+When the action='apply' is used in the inpmode table, the flags will be applied
+to the MS and the APPLIED column will be updated to True. On the other hand,
+when action='unapply' the APPLIED column will be set to False for all selected
+table rows.
+
+\paragraph{Using flag-commands}
+The example below shows how to setup and run tflagdata in list mode, using a
+flag-command file.
+
+\begin{verbatim}
+# Create an input text file with all the flag commands to apply to the MS.
+> cat flags.txt
+ mode='manual' autocorr=True
+ scan='1~3' mode='manual'
+ mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
+ mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
+ mode='extend' extendpols=True
+
+# Pass the input to the task
+  tflagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
+ 
+# Get a summary
+  tflagdata(vis='uid.ms', mode='summary')
+
+\end{verbatim}
+
+Similarly, one can use the flagcmd task to execute the same commands using
+either the 'file' or the 'cmd' inpmode options. 
+
+\begin{enumerate}
+\item Input commands from an ASCII file.
+\begin{verbatim}
+# Create an input text file with all the flag commands to apply to the MS.
+> cat flags.txt
+ mode='manual' autocorr=True
+ mode='shadow'
+ mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
+ mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
+ mode='extend' extendpols=True
+
+# Pass the input to the task
+  flagcmd(vis='uid.ms', inpmode='file', inpfile='flags.txt', action='apply')
+ 
+\end{verbatim}
+
+\item Input commands via a list of strings.
+\begin{verbatim}
+# Create a Python string called mycmd.
+  flagcmd(vis='uid.ms', inpmode='cmd',
+          command=["mode='manual' autocorr=True",
+                   "mode='shadow'",
+                   "mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'", 
+                   "mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0",
+                   "mode='extend' extendpols=True"], action='apply')
+ 
+ 
+\end{verbatim}
+\end{enumerate}
+
+\paragraph{Using (and mis-using) the FLAG_CMD subtable}
+The FLAG_CMD sub-table is meant to store only meta-data selections such as
+online flags. Using it to save other parameters (from modes such as clip, quack,
+shadow, etc.) is possible but carries a risk that in future releases these
+these parameters or their default values are renamed or changed.
+Use it at your own risk! There will be no automatic way to rename any parameter that changes in the
+future.
+
+Keeping the state of the flags stored in the FLAG_CMD sub-table is also not
+guaranteed. The state can get out-of-sync very easily with the interchangeable
+use of all flagging tasks such as tflagdata, flagcmd, and interactive
+flagging using plotms. Note that plotms does not write to the FLAG_CMD
+sub-table.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -338,17 +465,18 @@ Here are some examples of flag report displays on two datasets.
 \item Percentage of data flagged vs baseline-length : To assess expected sensitivities for different spatial scales, since local RFI correlates better on shorter baselines than longer ones.
 \end{enumerate}
 
-\subsubsection{Data Display + writeflags}
+\subsubsection{Data Display + action='calculate'}
 In order to visualize some of the RFI present in the data, and to verify if flagging
 commands are having the desired effect,  there is an option to 
 visualize the data and flags at run-time, and navigate between baselines in the 
 current chunk, as well as in the forward-direction across scans and spws.   
 
 The intended usage of the display is to run the flagger on small subsets of the data (sub-selections)
-with writeflags=False, and display='data', and inspect the flagging results.  An option to
-quit at any stage allows the user to change input parameters and try again until the
-desired flagging results are obtained.  Then, the display can be turned off, writeflags set to
-True, and the program run again on a larger section of the data.
+with action='calculate', and display='data', and inspect the flagging results. 
+An option to quit at any stage allows the user to change input parameters and try again until the
+desired flagging results are obtained.  Then, the display can be turned off,
+action set to 'apply', and the program run again on a larger section of the
+data.
 
 
 \subsection{Flagging Calibration-Tables}
@@ -360,7 +488,7 @@ True, and the program run again on a larger section of the data.
 \subsection{Obtaining summaries per reason}
 Attach the tool script that does this.
 
-\subsection{FLAGCMD subtable vs flag-command text files}
+\subsection{FLAGCMD sub-table vs flag-command text files}
 Point to section \ref{Sec:FlagCmdLists}
 
 
@@ -371,7 +499,7 @@ If commands touch different data-selections, running them together will not help
 
 \begin{enumerate}
 \item The following sequence of operations will benefit from being run together, 
-because they all access spw 9,  clip and rflag read visibilities, and rflag and extend read flags:
+because they all access spw 9, clip and rflag read visibilities, and rflag and extend read flags:
 
 mode='manual'  spw='9:0~3;61~63' \\
 mode='clip'  clipminmix=[0.0, 1e+5] \\

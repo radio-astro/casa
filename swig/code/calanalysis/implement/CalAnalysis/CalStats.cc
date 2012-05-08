@@ -254,10 +254,6 @@ CalStats::CalStats( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
   IPosition oShapeValueErr( oValueErr.shape() );
   IPosition oShapeFlag( oFlag.shape() );
 
-  if ( allEQ( oFlag, True ) ) {
-    throw( AipsError( "All data flagged" ) );
-  }
-
   if ( oShapeValue != oShapeValueErr || oShapeValue != oShapeFlag ) {
     throw( AipsError( "Input cubes have different shapes" ) );
   }
@@ -303,8 +299,8 @@ CalStats::CalStats( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
 
 
   // Form the shape of the statistics cube.  To appease the ArrayIterator<T>
-  // template used elsewhere in this class, the fit axis is included as a
-  // degenerate axis (length=1).
+  // template used elsewhere in this class, the fit (non-iteration) axis is
+  // included as a degenerate axis (length=1).
 
   oStatsShape = IPosition( 3, 1 );
 

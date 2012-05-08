@@ -710,7 +710,13 @@ CalStatsFitter::FIT& CalStatsFitter::robustFit( const Vector<Double>& oAbs,
   Vector<Double> oModel = Vector<Double>( dSlope*oAbs + dMedian );
   Vector<Double> oRes = Vector<Double>( oValue - oModel );
 
-  Vector<Bool> oFlagTrim( fabs(oRes) >= dTrim*avdev(oRes) );
+  Vector<Bool> oFlagTrim;
+  if ( !(Bool) eWeight ) {
+    oFlagTrim = fabs(oRes) >= dTrim*avdev(oRes);
+  } else {
+    oFlagTrim = fabs(oRes/oValueErr) >= dTrim*avdev(oRes/oValueErr);
+  }
+
   oFlag = oFlag || oFlagTrim;
 
 

@@ -20,6 +20,7 @@
 
 casa_add_library( calanalysis
   implement/CalAnalysis/CalAnalysis.cc
+  implement/CalAnalysis/CalAnalysisSPW_INFO.cc
   implement/CalAnalysis/CalStats.cc
   implement/CalAnalysis/CalStatsAXES.cc
   implement/CalAnalysis/CalStatsDATA.cc

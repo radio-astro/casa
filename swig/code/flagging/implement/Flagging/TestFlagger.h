@@ -57,9 +57,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="VisBuffer:description">FlagDataHandler</linkto>
-//   <li> <linkto class="FlagMapper:description">FlagMSHandler</linkto>
-//   <li> <linkto class="VisMapper:description">FlagCalTableHandler</linkto>
+//   <li> <linkto class="FlagDataHandler:description">FlagDataHandler</linkto>
+//   <li> <linkto class="FlagMSHandlerr:description">FlagMSHandler</linkto>
+//   <li> <linkto class="FlagCalTableHandler:description">FlagCalTableHandler</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -140,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     agent_pars.define("mode", "summary");
 //     agent_pars.define("basecnt", true);
 //     tf->parseAgentParameters(agent_pars);
-
+//
 // // There are convenience functions to parse the agent's parameters, one specific for each agent.
 // // The above calls can be done instead using these functions.
 //
@@ -148,7 +148,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     tf->parseManualParameters(autocorr=true);
 //     tf->parseSummaryParameters(basecnt=true);
 //
-// // In either one of the cases, three agents will be created. We need to initialize the agents, which
+// // In either one of the cases, three agents will be created.
+// //
+// // NOTE: it is possible to add multiple summary agents to the list and gather a list of summary
+// // reports when executing the tool.
+//
+// // We need to initialize the agents, which
 // // will call the constructor of each one of them and set the parameters that were given in the previous
 // // calls. Some basic checks will be performed at this stage for types and values of the parameters.
 //
@@ -164,28 +169,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //     tf->initAgents();
 //
-// // The next step in the chain is to actually process the flags and write them or not to the MS.
+// // The next step in the chain is to actually process the flags and write them or
+// // not to the MS. The run method takes two parameters, writeflags and sequential.
+// // The parameter writeflags controls whether to write the flags or not to the MS.
+// // By default it is set to True. Setting writeflags to False is useful when one
+// // wants to run the tool together with the display agent to see what is going to be
+// // flagged before deciding to write or not to the MS. The sequential parameter
+// // controls if the order of the agent's list needs to be preserved or not. If set to False,
+// // the order will not be preserved and the framework may execute the agent's list in parallel.
+// // By default sequential is set to True.
 //
-//     tf->run()
-//        Record opt(Record::Variable);
-//        // build record of flagging agents to be run
-//        Record selopt( testflagger.defaultAgents().asRecord("select") );
-//        selopt.define(RF_POLICY,"RESET");
-//        selopt.define(RF_AUTOCORR,True);
-//        Record agents(Record::Variable);
-//        agents.defineRecord("select",selopt);
-//        // perform the flagging
-//        testflagger.run(agents,opt);
+// // The run method gathers several reports, depending on which agents are run. The display and summary agents
+// // produce reports that can be retrieved from calling the run method. The reports are returned via a Record
+// // that may contain multiple reports at the same time.
+
+//     Record myReports;
+//     myReports = tf->run();
+//
+// // To destroy the tool, call a method to execute the destructor.
+//
+//     tf->done();
+//
 // </srcblock>
 // </example>
 //
 // <motivation>
-// We need an automated flagging tool. Existing tools (MSFlagger and flagger.g)
-// were too slow. Hence, Flagger was developed.
+// To flag data using different algorithms.
 // </motivation>
 //
 
-// TODO: write the above comments
 
 class TestFlagger
 {
@@ -225,7 +237,7 @@ protected:
 	// Display agent parameters
 	FlagAgentDisplay *displayAgent_p;
 
-	// variables for initFlagDataHandler and initAgents
+	// variables for initAgents
 	FlagDataHandler *fdh_p;
 	std::vector<Record> agents_config_list_p;
 	std::vector<Record> agents_config_list_copy_p;
@@ -320,10 +332,10 @@ private:
 
 	TestFlagger& operator=(const TestFlagger &)  {return *this;};
 
-	// Maximum between two number
+	// Maximum between two numbers
 	void getMax(Double value);
 
-	// Check if mode is valid agains a list of known modes
+	// Check if mode is valid against a list of known modes
 	bool isModeValid(String mode);
 
 	// Sink used to store history
