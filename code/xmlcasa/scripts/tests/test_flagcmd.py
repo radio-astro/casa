@@ -507,7 +507,7 @@ class test_rflag(test_base):
 
         # (3) flagcmd : Send in the same text files produces/used in (1)
         input1 = "{'name':'Rflag','timedev':[[1.0,9.0,0.038859],[1.0,10.0,0.162833]]}\n"
-        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.076993],[1.0,10.0,0.196925]]}\n"
+        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]}\n"
         filename1 = create_input(input1,'tdevfile.txt')
         filename2 = create_input(input2,'fdevfile.txt')
 
@@ -521,7 +521,7 @@ class test_rflag(test_base):
 
         # (4) Give the values directly in the cmd input.....
         commlist=['mode=rflag spw=9,10 timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
-                          freqdev=[[1.0,9.0,0.076993],[1.0,10.0,0.196925]]']
+                          freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
 
         tflagdata(vis=self.vis,mode='unflag');
         flagcmd(vis=self.vis, inpmode='cmd', command=commlist, action='apply')
@@ -541,7 +541,7 @@ class test_rflag(test_base):
 
         self.assertEqual(res3['flagged'],res4['flagged']);
         self.assertEqual(res3['flagged'],res5['flagged']);
-        self.assertEqual(res3['flagged'], 39665)
+        self.assertEqual(res3['flagged'], 39504.0)
 
     def test_rflagauto(self):
         """flagcmd:: Test of rflag with defaults
@@ -558,7 +558,7 @@ class test_rflag(test_base):
         #res7 = tflagdata(vis=self.vis, mode='summary')
         #print "\n---------------------- Finished tflagdata test : auto : ", res7['flagged']
 
-        self.assertEqual(res6['flagged'], 42866)
+        self.assertEqual(res6['flagged'], 42728.0)
 
 
 #################################################
