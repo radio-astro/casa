@@ -148,10 +148,15 @@ one measurement set at a time.
 
   myreports = tf.run(writeflags=True)
   
-  The dictionary returned 'myreports' will contain four reports from the two summary agents that were
-  added previously.
+  The dictionary returned in 'myreports' will contain four reports from the two summary agents that were
+  added previously. The first report is the normal summary for each selection parameter. The second report
+  gives the antenna positions for plotting.
 
+ \medskip\noindent\textbf{Destroy the tool}
 
+  Do not forget to destroy and close the tool at the end.
+  
+  tf.done()
 
 </description>
 

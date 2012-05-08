@@ -699,7 +699,9 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 		while (fdh_p->nextBuffer())
 		{
 
-			// Apply or unapply the flags, in sequential or in parallel
+			// Apply or unapply the flags, in sequential or in parallel.
+			// By default it is set to True, which will preserve the order
+			// in which the agents are added to the list.
 			agents_list_p.apply(sequential);
 
 			// Flush flags to MS
