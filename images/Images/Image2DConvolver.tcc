@@ -79,93 +79,80 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
    return *this;
 }
 
+template <class T> void Image2DConvolver<T>::convolve(
+	LogIO& os, ImageInterface<T>& imageOut,
+	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
+	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
+	const Bool autoScale, Double scale, const Bool copyMiscellaneous
+) {
+	if (parameters.nelements() != 3) {
+		os << "The world parameters vector must be of length 3" << LogIO::EXCEPTION;
+	}
+	if (pixelAxes.nelements() != 2) {
+		os << "You must give two pixel axes to convolve" << LogIO::EXCEPTION;
+	}
+	const Int nDim = imageIn.ndim();
+	if (pixelAxes(0)<0 || pixelAxes(0)>=nDim ||
+		pixelAxes(1)<0 || pixelAxes(1)>=nDim) {
+		os << "The pixel axes " << pixelAxes << " are illegal" << LogIO::EXCEPTION;
+	}
+	if (nDim < 2) {
+		os << "The image axes must have at least 2 pixel axes" << LogIO::EXCEPTION;
+	}
+	const IPosition& inShape = imageIn.shape();
+	const IPosition& outShape = imageOut.shape();
+	if (!inShape.isEqual(outShape)) {
+		os << "Input and output images must have the same shape" << LogIO::EXCEPTION;
+	}
 
-template <class T>
-void Image2DConvolver<T>::convolve(LogIO& os,  
-                                   ImageInterface<T>& imageOut,
-                                   ImageInterface<T>& imageIn,
-                                   VectorKernel::KernelTypes kernelType,
-                                   const IPosition& pixelAxes,
-                                   const Vector<Quantum<Double> >& parameters,   
-                                   Bool autoScale, Double scale,
-                                   Bool copyMiscellaneous)
-{
-// Checks
+	// Generate Kernel Array (height unity)
 
-   if (parameters.nelements() != 3) {
-      os << "The world parameters vector must be of length 3" << LogIO::EXCEPTION;
-   }                        
-   if (pixelAxes.nelements() != 2) {
-      os << "You must give two pixel axes to convolve" << LogIO::EXCEPTION;
-   }                        
-   const Int nDim = imageIn.ndim();
-   if (pixelAxes(0)<0 || pixelAxes(0)>=nDim ||
-       pixelAxes(1)<0 || pixelAxes(1)>=nDim) {
-      os << "The pixel axes " << pixelAxes << " are illegal" << LogIO::EXCEPTION;
-   }
-//
-   if (nDim < 2) {
-      os << "The image axes must have at least 2 pixel axes" << LogIO::EXCEPTION;
-   }
-//
-   const IPosition& inShape = imageIn.shape();
-   const IPosition& outShape = imageOut.shape();
-   if (!inShape.isEqual(outShape)) {
-      os << "Input and output images must have the same shape" << LogIO::EXCEPTION;
-   }
+	Array<T> kernel;
+	T kernelVolume = makeKernel(os, kernel, kernelType, parameters, pixelAxes, imageIn);
 
-// Generate Kernel Array (height unity)
+	// Figure out output image restoring beam (if any), output units and scale
+	// factor for convolution kernel array
 
-   Array<T> kernel;
-   T kernelVolume = makeKernel(os, kernel, kernelType, parameters, pixelAxes, imageIn);
+	Vector<Quantity> beamOut;
+	const CoordinateSystem& cSys = imageIn.coordinates();
+	const ImageInfo& imageInfo = imageIn.imageInfo();
+	const Unit& brightnessUnit = imageIn.units();
+	String brightnessUnitOut;
+	_dealWithRestoringBeam(
+		os, brightnessUnitOut, beamOut, kernel, kernelVolume,
+		kernelType, parameters, pixelAxes, cSys, imageInfo,
+		brightnessUnit, autoScale, scale
+	);
 
-// Figure out output image restoring beam (if any), output units and scale
-// factor for convolution kernel array
+	// Convolve.  We have already scaled the convolution kernel (with some
+	// trickery cleverer than what ImageConvolver can do) so no more scaling
 
-   Vector<Quantum<Double> > beamOut;
-   const CoordinateSystem& cSys = imageIn.coordinates();
-   const ImageInfo& imageInfo = imageIn.imageInfo();
-   const Unit& brightnessUnit = imageIn.units();
-   String brightnessUnitOut;
-//
-  dealWithRestoringBeam (os, brightnessUnitOut, beamOut, kernel, kernelVolume, 
-                          kernelType, parameters,
-                          pixelAxes, cSys, imageInfo, brightnessUnit,
-                          autoScale, scale);
-
-// Convolve.  We have already scaled the convolution kernel (with some 
-// trickery cleverer than what ImageConvolver can do) so no more scaling
-
-   Double scale2 = 1.0;
-   ImageConvolver<T> aic;
-   aic.convolve (os, imageOut, imageIn, kernel, ImageConvolver<T>::NONE, 
-                 scale2, copyMiscellaneous);
-
-// Overwrite some bits and pieces in the output image to do with the
-// restoring beam  and image units
-
-   imageOut.setUnits(brightnessUnitOut);
-   ImageInfo iiOut = imageOut.imageInfo();
-//
-   Bool holdsOneSkyAxis;
-   Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
-   if (hasSky && beamOut.nelements()==3) {
-      iiOut.setRestoringBeam(beamOut);
-      imageOut.setImageInfo(iiOut);
-   } else {
-    
-// If one of the axes is in the sky plane, we must
-// delete the restoring beam as it is no longer meaningful
-
-      if (holdsOneSkyAxis) {
-         os << LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
-         os << "The output image does not have a valid spatial restoring beam" << LogIO::POST; 
-         iiOut.removeRestoringBeam();
-         imageOut.setImageInfo(iiOut);
-      }
-   }
+	ImageConvolver<T> aic;
+	aic.convolve(
+		os, imageOut, imageIn, kernel, ImageConvolver<T>::NONE,
+		1.0, copyMiscellaneous
+	);
+	// Overwrite some bits and pieces in the output image to do with the
+	// restoring beam  and image units
+	imageOut.setUnits(brightnessUnitOut);
+	ImageInfo iiOut = imageOut.imageInfo();
+	Bool holdsOneSkyAxis;
+	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+	if (hasSky && beamOut.nelements() == 3) {
+		iiOut.setRestoringBeam(beamOut);
+		imageOut.setImageInfo(iiOut);
+	}
+	else {
+		// If one of the axes is in the sky plane, we must
+		// delete the restoring beam as it is no longer meaningful
+		if (holdsOneSkyAxis) {
+			os << LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
+			os << "The output image does not have a valid spatial restoring beam" << LogIO::POST;
+			iiOut.removeRestoringBeam();
+			imageOut.setImageInfo(iiOut);
+		}
+	}
 }
-
 
 // Private functions
 
@@ -219,196 +206,183 @@ T Image2DConvolver<T>::makeKernel(LogIO& os, Array<T>& kernelArray,
 }
 
 
-template <class T>
-void Image2DConvolver<T>::dealWithRestoringBeam (LogIO& os, 
-                                                 String& brightnessUnitOut,
-                                                 Vector<Quantum<Double> >& beamOut,
-                                                 Array<T>& kernelArray, 
-                                                 T kernelVolume,
-                                                 VectorKernel::KernelTypes,
-                                                 const Vector<Quantum<Double> >& parameters,
-                                                 const IPosition& pixelAxes,
-                                                 const CoordinateSystem& cSys,
-                                                 const ImageInfo& imageInfo,
-                                                 const Unit& brightnessUnitIn,
-                                                 Bool autoScale, Double scale) const
-{
-// Find out if convolution axes hold the sky.  Scaling from
-// Jy/beam and Jy/pixel only really makes sense if this is True
+template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
+	LogIO& os, String& brightnessUnitOut,
+	Vector<Quantity>& beamOut, Array<T>& kernelArray,
+	const T kernelVolume, const VectorKernel::KernelTypes,
+	const Vector<Quantity>& parameters,
+	const IPosition& pixelAxes, const CoordinateSystem& cSys,
+	const ImageInfo& imageInfo, const Unit& brightnessUnitIn,
+	const Bool autoScale, const Double scale
+) const {
+	// Find out if convolution axes hold the sky.  Scaling from
+	// Jy/beam and Jy/pixel only really makes sense if this is True
+	Bool holdsOneSkyAxis;
+	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+	if (hasSky) {
+		os << "You are convolving the sky" << LogIO::POST;
+	}
+	else {
+		os << "You are not convolving the sky" << LogIO::POST;
+	}
+	// Generate an array holding the restoring beam if needed
+	Vector<Quantity> beamIn = imageInfo.restoringBeam();
+	beamOut.resize(0);
+	String bUnitIn = upcase(brightnessUnitIn.getName());
+	const Vector<Double>& refPix = cSys.referencePixel();
+	if (hasSky && bUnitIn == "JY/PIXEL") {
+		// Easy case.  Peak of convolution kernel must be unity
+		// and output units are Jy/beam.  All other cases require
+		// numerical convolution of beams
+		brightnessUnitOut = "Jy/beam";
+		beamOut.resize(3);
+		// Exception already generated if only one of major and minor in pixel units
+		if (parameters(0).getFullUnit().getName() == "pix") {
+			Vector<Double> pixelParameters(5);
+			pixelParameters(0) = refPix(pixelAxes(0));
+			pixelParameters(1) = refPix(pixelAxes(1));
+			pixelParameters(2) = parameters(0).getValue();
+			pixelParameters(3) = parameters(1).getValue();
+			pixelParameters(4) = parameters(2).getValue(Unit("rad"));
+			Vector<Quantum<Double> > worldParameters;
+			ImageUtilities::pixelWidthsToWorld(
+				os, worldParameters, pixelParameters,
+				cSys, pixelAxes, False
+			);
+			beamOut(0) = worldParameters(0);
+			beamOut(1) = worldParameters(1);
+		}
+		else {
+			beamOut(0) = parameters(0);
+			beamOut(1) = parameters(1);
+		}
+		beamOut(2) = parameters(2);                // Input p.a. is positive N->E
+		if (!autoScale) {
+			T t = static_cast<T>(scale);
+			kernelArray *= t;
+			os << LogIO::WARN << "Autoscaling is recommended for Jy/pixel convolution"
+				<< LogIO::POST;
+		}
+	}
+	else {
+		// Is there an input restoring beam and are we convolving the sky to which it
+		// pertains ?  If not, all we can do is use user scaling or normalize the convolution
+		// kernel to unit volume.  There is no point to convolving the input beam either as it pertains
+		// only to the sky
+		if (hasSky && bUnitIn==String("JY/BEAM") && beamIn.nelements() == 3) {
 
-   Bool holdsOneSkyAxis;
-   Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
-   if (hasSky) {
-      os << "You are convolving the sky" << LogIO::POST;
-   } else {
-      os << "You are not convolving the sky" << LogIO::POST;
-   }
+			// Convert restoring beam parameters to pixels.  Output pa is pos +x -> +y in pixel frame.
 
-// Generate an array holding the restoring beam if needed
+			Vector<Quantity> wParameters(5);
+			const Vector<Double> refVal = cSys.referenceValue();
+			const Vector<String> units = cSys.worldAxisUnits();
+			Int wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(0));
+			wParameters(0) = Quantity(refVal(wAxis), units(wAxis));
+			wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
+			wParameters(1) = Quantity(refVal(wAxis), units(wAxis));
+			for (uInt i=0; i<3; i++) {
+				wParameters(i+2) = beamIn(i);
+			}
+			Vector<Double> dParameters;
+			ImageUtilities::worldWidthsToPixel(
+				os, dParameters, wParameters, cSys, pixelAxes, False
+			);
          
-   Vector<Quantum<Double> > beamIn = imageInfo.restoringBeam();
-   beamOut.resize(0);
-                             
-// Get brightness units
-         
-   String bUnitIn = upcase(brightnessUnitIn.getName());
-//
-   const Vector<Double>& refPix = cSys.referencePixel();
-   if (hasSky && bUnitIn==String("JY/PIXEL")) {
+			// Create 2-D beam array shape
 
-// Easy case.  Peak of convolution kernel must be unity
-// and output units are Jy/beam.  All other cases require
-// numerical convolution of beams
+			IPosition dummyAxes(2, 0, 1);
+			IPosition beamShape = shapeOfKernel(
+				VectorKernel::GAUSSIAN,
+				dParameters, 2, dummyAxes
+			);
 
-      brightnessUnitOut = String("Jy/beam");
-      beamOut.resize(3);
-
-// Exception already generated if only one of major and minor in pixel units
-
-      if (parameters(0).getFullUnit().getName()==String("pix")) {
-         Vector<Double> pixelParameters(5);
-         pixelParameters(0) = refPix(pixelAxes(0));
-         pixelParameters(1) = refPix(pixelAxes(1));
-         pixelParameters(2) = parameters(0).getValue();
-         pixelParameters(3) = parameters(1).getValue();
-         pixelParameters(4) = parameters(2).getValue(Unit("rad"));
-         Vector<Quantum<Double> > worldParameters;
-//
-         ImageUtilities::pixelWidthsToWorld (os, worldParameters, pixelParameters, 
-                                             cSys, pixelAxes, False);
-//
-         beamOut(0) = worldParameters(0);
-         beamOut(1) = worldParameters(1);
-      } else {
-         beamOut(0) = parameters(0);
-         beamOut(1) = parameters(1);
-      }
-      beamOut(2) = parameters(2);                // Input p.a. is positive N->E
-//
-      if (!autoScale) {
-         T t = static_cast<T>(scale);
-         kernelArray *= t;
-         os << LogIO::WARN << "Autoscaling is recommended for Jy/pixel convolution" << LogIO::POST;
-      }
-   } else {
-         
-// Is there an input restoring beam and are we convolving the sky to which it
-// pertains ?  If not, all we can do is use user scaling or normalize the convolution
-// kernel to unit volume.  There is no point to convolving the input beam either as it pertains
-// only to the sky
-          
-      if (hasSky && bUnitIn==String("JY/BEAM") && beamIn.nelements()==3) {
-
-// Convert restoring beam parameters to pixels.  Output pa is pos +x -> +y in pixel frame.
-
-         Vector<Quantum<Double> > wParameters(5);
-         const Vector<Double> refVal = cSys.referenceValue();
-         const Vector<String> units = cSys.worldAxisUnits();
-         Int wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(0));
-         wParameters(0) = Quantum<Double>(refVal(wAxis), units(wAxis));
-         wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
-         wParameters(1) = Quantum<Double>(refVal(wAxis), units(wAxis));
-         for (uInt i=0; i<3; i++) {
-            wParameters(i+2) = beamIn(i);
-         }
-         Vector<Double> dParameters;
-         ImageUtilities::worldWidthsToPixel (os, dParameters, wParameters, cSys, pixelAxes, False);
-         
-// Create 2-D beam array shape
-
-         IPosition dummyAxes(2, 0, 1);
-         IPosition beamShape = shapeOfKernel (VectorKernel::GAUSSIAN,
-                                              dParameters, 2, dummyAxes);
-
-// Create beam Matrix and fill with height unity
+			// Create beam Matrix and fill with height unity
    
-         Matrix<T> beamMatrixIn(beamShape(0), beamShape(1));
-         fillKernel (beamMatrixIn, VectorKernel::GAUSSIAN, beamShape, 
-                     dummyAxes, dParameters);
+			Matrix<T> beamMatrixIn(beamShape(0), beamShape(1));
+			fillKernel(
+				beamMatrixIn, VectorKernel::GAUSSIAN, beamShape,
+                dummyAxes, dParameters
+			);
 
-// Get 2-D version of convolution kenrel
+			// Get 2-D version of convolution kenrel
 
-         Array<T> kernelArray2 = kernelArray.nonDegenerate (pixelAxes);
-         Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
+			Array<T> kernelArray2 = kernelArray.nonDegenerate(pixelAxes);
+			Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
          
-// Convolve input restoring beam array by convolution kernel array
+			// Convolve input restoring beam array by convolution kernel array
 
-         Matrix<T> beamMatrixOut;
-         Convolver<T> conv(beamMatrixIn, kernelMatrix.shape());   // matrixIn     = input restoring beam
-         conv.linearConv(beamMatrixOut, kernelMatrix);                
-            
-// Scale kernel
+			Matrix<T> beamMatrixOut;
+			Convolver<T> conv(beamMatrixIn, kernelMatrix.shape());   // matrixIn     = input restoring beam
+			conv.linearConv(beamMatrixOut, kernelMatrix);
 
-         T maxValOut = max(beamMatrixOut);
-         if (autoScale) {
-            brightnessUnitOut = String("Jy/beam");
-            kernelArray /= maxValOut;
-         } else {
-            T t = static_cast<T>(scale);
-            kernelArray *= t;
-         }
+			// Scale kernel
 
-// Fit output beam matrix with a Gaussian, for better or worse
-// Fit2D is not templated.  So all our templating is useless
-// other than for Float until I template Fit2D
+			T maxValOut = max(beamMatrixOut);
+			if (autoScale) {
+				brightnessUnitOut = "Jy/beam";
+				kernelArray /= maxValOut;
+			}
+			else {
+				T t = static_cast<T>(scale);
+				kernelArray *= t;
+			}
 
-         Fit2D fitter(os);
-         const uInt n = beamMatrixOut.shape()(0);
-//
-         Vector<Double> bParameters = fitter.estimate(Fit2D::GAUSSIAN, beamMatrixOut);
-         Vector<Bool> bParameterMask(bParameters.nelements(), True);
-         bParameters(1) = (n-1)/2;          // x centre
-         bParameters(2) = bParameters(1);    // y centre
-/*
-         bParameterMask(1) = False;         // dont allow centre to float in fit
-         bParameterMask(2) = False;
-*/
+			// Fit output beam matrix with a Gaussian, for better or worse
+			// Fit2D is not templated.  So all our templating is useless
+			// other than for Float until I template Fit2D
 
-// Set range so we don't include too many pixels in fit which will make it very slow
+			Fit2D fitter(os);
+			const uInt n = beamMatrixOut.shape()(0);
+			Vector<Double> bParameters = fitter.estimate(Fit2D::GAUSSIAN, beamMatrixOut);
+			Vector<Bool> bParameterMask(bParameters.nelements(), True);
+			bParameters(1) = (n-1)/2;          // x centre
+			bParameters(2) = bParameters(1);    // y centre
 
-         fitter.addModel (Fit2D::GAUSSIAN, bParameters, bParameterMask);
-         Array<Float> sigma;
-         fitter.setIncludeRange(maxValOut/10.0, maxValOut+0.1);
-         Fit2D::ErrorTypes error = fitter.fit (beamMatrixOut, sigma);
-         if (error==Fit2D::NOCONVERGE ||
-             error==Fit2D::FAILED ||
-             error==Fit2D::NOGOOD) {
-            os << "Failed to fit the output beam" << LogIO::EXCEPTION;
-         }
-         Vector<Double> bSolution = fitter.availableSolution();
+			// Set range so we don't include too many pixels in fit which will make it very slow
 
-// Convert to world units. Ho hum.
+			fitter.addModel (Fit2D::GAUSSIAN, bParameters, bParameterMask);
+			Array<Float> sigma;
+			fitter.setIncludeRange(maxValOut/10.0, maxValOut+0.1);
+			Fit2D::ErrorTypes error = fitter.fit (beamMatrixOut, sigma);
+			if (
+				error == Fit2D::NOCONVERGE ||
+				error == Fit2D::FAILED ||
+				error == Fit2D::NOGOOD
+			) {
+				os << "Failed to fit the output beam" << LogIO::EXCEPTION;
+			}
+			Vector<Double> bSolution = fitter.availableSolution();
+
+			// Convert to world units. Ho hum.
                             
-         Vector<Double> pixelParameters(5);
-         pixelParameters(0) = refPix(pixelAxes(0));
-         pixelParameters(1) = refPix(pixelAxes(1));
-         pixelParameters(2) = bSolution(3);
-         pixelParameters(3) = bSolution(4);
-         pixelParameters(4) = bSolution(5);
-//
-         ImageUtilities::pixelWidthsToWorld (os, beamOut, pixelParameters, cSys, pixelAxes, False);
-      } else {
-         if (autoScale) {
-    
-// Conserve flux is the best we can do
-            
-            kernelArray /= kernelVolume;
-         } else {
-            T t = static_cast<T>(scale);
-            kernelArray *= t;
-         }
-      }
-   }
-
-// Put beam position angle into range +/- 180 in case it has eluded us so far
-
-    if (beamOut.nelements()==3) {
-       MVAngle pa(beamOut(2).getValue(Unit("rad")));
-       pa();
-       beamOut(2) = Quantum<Double>(pa.degree(), Unit("deg"));
-    }
+			Vector<Double> pixelParameters(5);
+			pixelParameters(0) = refPix(pixelAxes(0));
+			pixelParameters(1) = refPix(pixelAxes(1));
+			pixelParameters(2) = bSolution(3);
+			pixelParameters(3) = bSolution(4);
+			pixelParameters(4) = bSolution(5);
+			ImageUtilities::pixelWidthsToWorld(
+				os, beamOut, pixelParameters, cSys, pixelAxes, False
+			);
+		}
+		else {
+			if (autoScale) {
+				// Conserve flux is the best we can do
+				kernelArray /= kernelVolume;
+			}
+			else {
+				T t = static_cast<T>(scale);
+				kernelArray *= t;
+			}
+		}
+	}
+	// Put beam position angle into range +/- 180 in case it has eluded us so far
+	if (beamOut.nelements() == 3) {
+		MVAngle pa(beamOut(2).getValue(Unit("rad")));
+		pa();
+		beamOut(2) = Quantity(pa.degree(), Unit("deg"));
+	}
 }
-
 
 template <class T>
 void Image2DConvolver<T>::checkKernelParameters(LogIO& os, 
