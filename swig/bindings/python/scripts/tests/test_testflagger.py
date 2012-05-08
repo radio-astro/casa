@@ -22,7 +22,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
-	self.unflag_CalTable()
+	self.unflag_table()
 
 
     def setUp_tsys_case(self):
@@ -38,10 +38,42 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
 
-        self.unflag_CalTable()
+        self.unflag_table()
 
 
-    def unflag_CalTable(self):
+    def setUp_4Ants(self):
+        self.vis = "Four_ants_3C286.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+
+        self.unflag_table()
+
+
+    def setUp_CAS_4052(self):
+        self.vis = "TwoSpw.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+
+        self.unflag_table()
+
+
+    def unflag_table(self):
 
 	tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
 	tflocal.open(self.vis)
@@ -601,11 +633,11 @@ class test_bpass(test_base):
 	tflocal.done() 
 
         assert summary['report0']['total'] == 1248000.0
-	assert summary['report0']['flagged'] == 63861.0
-	assert summary['report0']['correlation']['Sol1']['flagged'] == 32193.0
+	assert abs(summary['report0']['flagged'] - 63861.0) <= 5
 	assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-	assert summary['report0']['correlation']['Sol2']['flagged'] == 31668.0
+	assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 32193.0) <= 5
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+	assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 31668.0) <=5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
 	"""TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
@@ -626,11 +658,11 @@ class test_bpass(test_base):
 	tflocal.done() 
 
         assert summary['report0']['total'] == 1248000.0
-	assert summary['report0']['flagged'] == 73564.0
-	assert summary['report0']['correlation']['Sol1']['flagged'] == 36782.0
+	assert abs(summary['report0']['flagged'] - 73564.0) <= 5
 	assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-	assert summary['report0']['correlation']['Sol2']['flagged'] == 36782.0
+	assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 36782.0) <= 5
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+	assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 36782.0) <= 5
 
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
 	"""TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
@@ -657,12 +689,72 @@ class test_bpass(test_base):
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
 
 
+class test_display(test_base):
+    """TestFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
+
+    def test_display_data_single_channel_selection(self):
+	"""TestFlagger:: Check nominal behaviour for single spw:chan selection """
+	self.setUp_4Ants()
+	tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+	tflocal.open(self.vis)
+	tflocal.selectdata()
+	agentUnflag={'apply':True,'mode':'unflag'}
+	agentManual={'apply':True,'mode':'manual','spw':'*:20~40'}
+	agentSummary={'apply':True,'mode':'summary'}
+	agentDisplay={'mode':'display','datadisplay':True,'pause':False}
+	tflocal.parseagentparameters(agentUnflag)
+	tflocal.parseagentparameters(agentManual)
+	tflocal.parseagentparameters(agentSummary)
+	tflocal.parseagentparameters(agentDisplay)
+	tflocal.init()
+	summary = tflocal.run(writeflags=True)
+	tflocal.done()
+
+    def test_display_data_multiple_channel_selection(self):
+	"""TestFlagger:: Check behaviour for multiple spw:chan selection """
+	self.setUp_4Ants()
+	tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+	tflocal.open(self.vis)
+	tflocal.selectdata()
+	agentUnflag={'apply':True,'mode':'unflag'}
+	agentManual={'apply':True,'mode':'manual','spw':'*:10~20;30~40'}
+	agentSummary={'apply':True,'mode':'summary'}
+	agentDisplay={'mode':'display','datadisplay':True,'pause':False}
+	tflocal.parseagentparameters(agentUnflag)
+	tflocal.parseagentparameters(agentManual)
+	tflocal.parseagentparameters(agentSummary)
+	tflocal.parseagentparameters(agentDisplay)
+	tflocal.init()
+	summary = tflocal.run(writeflags=True)
+	tflocal.done()
+
+    def test_display_data_different_corrs_per_spw(self):
+	"""TestFlagger:: Check behaviour when the number of correlation products changes between SPWs """
+	self.setUp_CAS_4052()
+	tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+	tflocal.open(self.vis)
+	tflocal.selectdata()
+	agentUnflag={'apply':True,'mode':'unflag'}
+	agentManual={'apply':True,'mode':'manual','spw':'*:100~200;300~400'}
+	agentSummary={'apply':True,'mode':'summary'}
+	agentDisplay={'mode':'display','datadisplay':True,'pause':False}
+	tflocal.parseagentparameters(agentUnflag)
+	tflocal.parseagentparameters(agentManual)
+	tflocal.parseagentparameters(agentSummary)
+	tflocal.parseagentparameters(agentDisplay)
+	tflocal.init()
+	summary = tflocal.run(writeflags=True)
+	tflocal.done()
+
+
 # Dummy class which cleans up created files
 class cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys*')
+	os.system('rm -rf Four_ants_3C286.ms*')
+	os.system('rm -rf TwoSpw.ms*')
 
     def test1(self):
         '''TestFlagger: Cleanup'''
@@ -672,5 +764,6 @@ class cleanup(test_base):
 def suite():
     return [test_tsys,
             test_bpass,
+	    test_display,
             cleanup]
 

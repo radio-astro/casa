@@ -1667,7 +1667,7 @@ ia.done()
 <description>
 
 This function is used to create a \casa\
-\image from a pre-existing ASCII file. You might want to use this if you
+image from a pre-existing ASCII file. You might want to use this if you
 just want to create a quick image to use to see what various image analysis methods
 do. The image analysis tool on
 which the method is called will always reference the created image if

@@ -6,8 +6,8 @@ import pdb
 import shutil
 import string
 import time
-from taskinit import *
 import ast
+from taskinit import casalog,qa
 
 '''
 A set of helper functions for the tasks tflagdata and flagcmd.
@@ -42,6 +42,7 @@ Others
 '''
 ###some helper tools
 tb=casac.table()
+
 
 debug = False
 

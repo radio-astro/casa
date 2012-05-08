@@ -82,6 +82,7 @@ casalog =  casac.logsink()
 __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 at = casac.atmosphere()
+ca = casac.calanalysis()
 
 def gentools(tools=None):
 	"""

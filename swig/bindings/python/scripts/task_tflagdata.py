@@ -318,31 +318,53 @@ def tflagdata(vis,
             casalog.post('Summary mode is active')
 
 
-        # Purge the empty parameters from the selection string
-        # Create a flagcmd dictionary of the interface parameters
+        # Create a flagcmd dictionary of the interface parameters to save
+        # when savepars = True
         if mode != 'list' and mode != 'summary':
 
-            # Selection parameters
-            sel_pars = []
+            # CAS-4063: remove any white space in the values of the
+            # selection parameters before creating the string.
             
-            # Replace an empty space, in case there is one
-            expr = delspace(correlation, '_')
-            sel_pars = ' mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
-                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
-                    ' correlation='+expr+' intent='+intent+' observation='+str(observation)
-                   
+            # Create a dictionary of the selection parameters
+            seldic = {}
+            seldic['field'] = field
+            seldic['spw'] = spw
+            seldic['array'] = array
+            seldic['feed'] = feed
+            seldic['scan'] = scan
+            seldic['antenna'] = antenna
+            seldic['uvrange'] = uvrange
+            seldic['timerange'] = timerange
+            seldic['intent'] = intent
+            seldic['observation'] = str(observation)
+            
+            # String to hold the selection parameters
+            sel_pars = []
+            sel_pars = ' mode='+mode
+            if correlation != '':
+                # Replace an empty space, in case there is one
+                expr = delspace(correlation, '_')
+                sel_pars = sel_pars +' correlation=' + expr
+            
+            # Include only parameters with values in the string
+            # Remove the white spaces from the values
+            for k in seldic.keys():
+                if seldic[k] != '':
+                    # Delete any space in the value
+                    val = delspace(seldic[k], '')
+                    sel_pars = sel_pars +' ' + k + '=' + val
+                               
             # Add the agent's parameters to the same string 
             for k in agent_pars.keys():
-                # Remove any white space from the string value
-                nospace = delspace(str(agent_pars[k]),'')
-                sel_pars = sel_pars + ' ' + k + '=' + nospace
+                if agent_pars[k] != '':
+                    # Remove any white space from the string value
+                    nospace = delspace(str(agent_pars[k]),'')
+                    sel_pars = sel_pars + ' ' + k + '=' + nospace
                 
-            # Remove empty paramters from the string
-            flaglist = fh.purgeEmptyPars(sel_pars) 
             
             # Create a dictionary according to the FLAG_CMD structure
-            flagcmd = fh.makeDict([flaglist])
-            
+            flagcmd = fh.makeDict([sel_pars])
+                        
             # Number of commands in dictionary
             vrows = flagcmd.keys()
             casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
@@ -352,7 +374,8 @@ def tflagdata(vis,
         apply = True
                     
         # Correlation does not go in selectdata, but in the agent's parameters
-        agent_pars['correlation'] = correlation.upper()
+        if correlation != '':
+            agent_pars['correlation'] = correlation.upper()
         
         
         # Hold the name of the agent

@@ -683,6 +683,7 @@ else()
   endif()
   set( casacode_libs
        alma 
+       calanalysis
        casadbus
        casaqt
        dish
