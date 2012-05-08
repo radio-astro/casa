@@ -106,8 +106,11 @@ public:
 
 // Copy MiscInfo, ImageInfo, brightness unit and logger (history) from in to out
    template <typename T, typename U>
-   static void copyMiscellaneous (ImageInterface<T>& out,
-                                  const ImageInterface<U>& in);
+   static void copyMiscellaneous (
+		  ImageInterface<T>& out,
+		  const ImageInterface<U>& in,
+		  const Bool copyImageInfo = True
+   );
 
 // Copy a mask from one image to another
    static void copyMask (ImageInterface<Float>& out,
@@ -118,12 +121,14 @@ public:
 // Add one degenerate axis for each of the specified coordinate types.
 // If the outfile string is given the new image is a PagedImage.
 // If the outfile string is empty, the new image is a TempImage.
-   static void addDegenerateAxes (LogIO& os,
-                                  PtrHolder<ImageInterface<Float> >& outImage,
-                                  ImageInterface<Float>& inImage,
-                                  const String& outFile, Bool direction, 
-                                  Bool spectral, const String& stokes, 
-                                  Bool linear, Bool tabular, Bool overwrite);
+   static void addDegenerateAxes (
+		   LogIO& os,
+		   PtrHolder<ImageInterface<Float> >& outImage,
+		   const ImageInterface<Float>& inImage,
+		   const String& outFile, Bool direction,
+		   Bool spectral, const String& stokes,
+		   Bool linear, Bool tabular, Bool overwrite
+   );
 
 // Function to bin up (average data) one axis of an N-D MaskedArray. The interface
 // is pretty specific to a particular application. It's here because

@@ -666,62 +666,60 @@ void ImageUtilities::worldWidthsToPixel (LogIO& os,
 
 
 
-Bool ImageUtilities::pixelWidthsToWorld (LogIO& os, 
-                                         Vector<Quantum<Double> >& wParameters,
-                                         const Vector<Double>& pParameters,
-                                         const CoordinateSystem& cSys, 
-                                         const IPosition& pixelAxes, 
-                                         Bool doRef)
-//
-// pixel parameters: x, y, major, minor, pa (rad)
-// world parameters: major, minor, pa
-//
-{
-   if (pixelAxes.nelements()!=2) {
-      os << "You must give two pixel axes" << LogIO::EXCEPTION;
-   }
-   if (pParameters.nelements()!=5) {
-      os << "The parameters vector must be of length 5" << LogIO::EXCEPTION;
-   }
-//
-   Int c0, axis0, c1, axis1;
-   cSys.findPixelAxis(c0, axis0, pixelAxes(0));
-   cSys.findPixelAxis(c1, axis1, pixelAxes(1));
-   Bool flipped = False;
-   if (cSys.type(c1)==Coordinate::DIRECTION  && cSys.type(c0)==Coordinate::DIRECTION) {
-      if (c0==c1) {
-         flipped = skyPixelWidthsToWorld(os, wParameters, cSys, pParameters, pixelAxes, doRef);
-      } else {
-         os << "Cannot yet handle axes from different DirectionCoordinates" << LogIO::EXCEPTION;
-      }
-   } else {
-      wParameters.resize(3);
-
-// Major/minor 
-
-      Quantum<Double> q0 = pixelWidthToWorld (os, pParameters(4), pParameters(2),
-                                              cSys, pixelAxes);
-      Quantum<Double> q1 = pixelWidthToWorld (os, pParameters(4), pParameters(3),
-                                              cSys, pixelAxes);
-//
-      if (q0.getValue() < q1.getValue(q0.getFullUnit())) {
-         flipped = True;
-         wParameters(0) = q1;
-         wParameters(1) = q0;
-      } else {
-         wParameters(0) = q0;
-         wParameters(1) = q1;
-      }
-
-// Position angle; radians; +x -> +y
-
-      wParameters(2).setValue(pParameters(4));
-      wParameters(2).setUnit(Unit("rad"));
-   }
-   return flipped;
-}  
-   
-
+Bool ImageUtilities::pixelWidthsToWorld(
+	LogIO& os, Vector<Quantity>& wParameters,
+	const Vector<Double>& pParameters, const CoordinateSystem& cSys,
+	const IPosition& pixelAxes, Bool doRef
+) {
+	// pixel parameters: x, y, major, minor, pa (rad)
+	// world parameters: major, minor, pa
+	if (pixelAxes.nelements() != 2) {
+		os << "You must give two pixel axes" << LogIO::EXCEPTION;
+	}
+	if (pParameters.nelements() != 5) {
+		os << "The parameters vector must be of length 5" << LogIO::EXCEPTION;
+	}
+	Int c0, axis0, c1, axis1;
+	cSys.findPixelAxis(c0, axis0, pixelAxes(0));
+	cSys.findPixelAxis(c1, axis1, pixelAxes(1));
+	Bool flipped = False;
+	if (
+		cSys.type(c1) == Coordinate::DIRECTION
+		&& cSys.type(c0) == Coordinate::DIRECTION
+	) {
+		if (c0 == c1) {
+			flipped = skyPixelWidthsToWorld(os, wParameters, cSys, pParameters, pixelAxes, doRef);
+		}
+		else {
+			os << "Cannot handle axes from different DirectionCoordinates" << LogIO::EXCEPTION;
+		}
+	}
+	else {
+		wParameters.resize(3);
+		// Major/minor
+		Quantity q0 = pixelWidthToWorld(
+			os, pParameters(4), pParameters(2),
+			cSys, pixelAxes
+		);
+		Quantity q1 = pixelWidthToWorld(
+			os, pParameters(4), pParameters(3),
+			cSys, pixelAxes
+		);
+		if (q0.getValue() < q1.getValue(q0.getFullUnit())) {
+			flipped = True;
+			wParameters(0) = q1;
+			wParameters(1) = q0;
+		}
+		else {
+			wParameters(0) = q0;
+			wParameters(1) = q1;
+		}
+		// Position angle; radians; +x -> +y
+		wParameters(2).setValue(pParameters(4));
+		wParameters(2).setUnit(Unit("rad"));
+	}
+	return flipped;
+}
 
 Bool ImageUtilities::skyPixelWidthsToWorld (LogIO& os, 
                                             Vector<Quantum<Double> >& wParameters,
@@ -896,7 +894,7 @@ Quantum<Double> ImageUtilities::pixelWidthToWorld (LogIO& os,
 
 void ImageUtilities::addDegenerateAxes(
 	LogIO& os, PtrHolder<ImageInterface<Float> >& outImage,
-	ImageInterface<Float>& inImage, const String& outFile,
+	const ImageInterface<Float>& inImage, const String& outFile,
 	Bool direction, Bool spectral, const String& stokes,
 	Bool linear, Bool tabular, Bool overwrite
 ) {
@@ -911,48 +909,40 @@ void ImageUtilities::addDegenerateAxes(
 	IPosition shape = inImage.shape();
 	CoordinateSystem cSys = inImage.coordinates();
 	IPosition keepAxes = IPosition::makeAxisPath(shape.nelements());
-	Int afterCoord;
 	uInt nExtra = 0;
 	if (direction) {
-		afterCoord = -1;
-		Int iC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
-		if (iC<0) {
+		if (! cSys.hasDirectionCoordinate()) {
 			CoordinateUtil::addDirAxes(cSys);
 			nExtra += 2;
-		} else {
+		}
+		else {
 			os << "Image already contains a DirectionCoordinate" << LogIO::EXCEPTION;
 		}
 	}
-
 	if (spectral) {
-		afterCoord = -1;
-		Int iC = cSys.findCoordinate(Coordinate::SPECTRAL, afterCoord);
-		if (iC<0) {
+		if (! cSys.hasSpectralAxis()) {
 			CoordinateUtil::addFreqAxis(cSys);
 			nExtra++;
-		} else {
+		}
+		else {
 			os << "Image already contains a SpectralCoordinate" << LogIO::EXCEPTION;
 		}
 	}
-
-	if (!stokes.empty()) {
-		afterCoord = -1;
-		Int iC = cSys.findCoordinate(Coordinate::STOKES, afterCoord);
-		if (iC<0) {
+	if (! stokes.empty()) {
+		if (! cSys.hasPolarizationCoordinate()) {
 			Vector<Int> which(1);
 			String tmp = upcase(stokes);
 			which(0) = Stokes::type(tmp);
 			StokesCoordinate sc(which);
 			cSys.addCoordinate(sc);
 			nExtra++;
-		} else {
+		}
+		else {
 			os << "Image already contains a StokesCoordinate" << LogIO::EXCEPTION;
 		}
 	}
 	if (linear) {
-		afterCoord = -1;
-		Int iC = cSys.findCoordinate(Coordinate::LINEAR, afterCoord);
-		if (iC<0) {
+		if (! cSys.hasLinearCoordinate()) {
 			Vector<String> names(1);
 			Vector<String> units(1);
 			Vector<Double> refVal(1);
@@ -969,30 +959,31 @@ void ImageUtilities::addDegenerateAxes(
 			LinearCoordinate lc(names, units, refVal, incr, pc, refPix);
 			cSys.addCoordinate(lc);
 			nExtra++;
-		} else {
+		}
+		else {
 			os << "Image already contains a LinearCoordinate" << LogIO::EXCEPTION;
 		}
 	}
-
 	if (tabular) {
-		afterCoord = -1;
+		Int afterCoord = -1;
 		Int iC = cSys.findCoordinate(Coordinate::TABULAR, afterCoord);
 		if (iC<0) {
 			TabularCoordinate tc;
 			cSys.addCoordinate(tc);
 			nExtra++;
-		} else {
+		}
+		else {
 			os << "Image already contains a TabularCoordinate" << LogIO::EXCEPTION;
 		}
 	}
-
 	if (nExtra > 0) {
 		uInt n = shape.nelements();
 		shape.resize(n+nExtra,True);
 		for (uInt i=0; i<nExtra; i++) {
 			shape(n+i) = 1;
 		}
-	} else {
+	}
+	else {
 		os << "No degenerate axes specified" << LogIO::EXCEPTION;
 	}
 	if (outFile.empty()) {
@@ -1024,24 +1015,15 @@ void ImageUtilities::addDegenerateAxes(
 	SubImage<Float> subImage(*pOutImage, True, axesSpecifier);
 
 	// Copy masks (directly, can't do via SubImage)
-
 	if (nMasks > 0) {
 		for (uInt i=0; i<nMasks; i++) {
 			ImageUtilities::copyMask(*pOutImage, inImage, maskNames(i), maskNames(i),
 					axesSpecifier);
 		}
 	}
-
-	// Copy data
-
 	subImage.copyData(inImage);
-
-	// Copy miscellaneous
-
 	ImageUtilities::copyMiscellaneous(*pOutImage, inImage);
 }
-
-
 
 void ImageUtilities::copyMask (ImageInterface<Float>& out,
                                const ImageInterface<Float>& in,

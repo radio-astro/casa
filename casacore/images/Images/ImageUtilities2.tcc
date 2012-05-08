@@ -51,12 +51,14 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <typename T, typename U> 
-void ImageUtilities::copyMiscellaneous (ImageInterface<T>& out,
-                                        const ImageInterface<U>& in)
-{
+template <typename T, typename U> void ImageUtilities::copyMiscellaneous(
+	ImageInterface<T>& out, const ImageInterface<U>& in,
+	const Bool copyImageInfo
+) {
     out.setMiscInfo(in.miscInfo());
-    out.setImageInfo(in.imageInfo());
+    if (copyImageInfo) {
+    	out.setImageInfo(in.imageInfo());
+    }
     out.setUnits(in.units());
     out.appendLog(in.logger());
 }
