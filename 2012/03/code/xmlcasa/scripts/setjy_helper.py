@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import odict
+import numpy
 
 class ss_setjy_helper:
     def __init__(self,imtool, vis, casalog=None):
@@ -100,7 +101,8 @@ class ss_setjy_helper:
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
-	  selspws= myms.msselectedindices()['spw']
+          # somehow it gives you duplicated ids .... so need to uniquify
+	  selspws= list(set(myms.msselectedindices()['spw']))
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
@@ -145,8 +147,8 @@ class ss_setjy_helper:
 	import solar_system_setjy as ss_setjy
 	retdict={}
 	#for src in srcnames:
-	for i in validfids:
-          src=srcnames[i]
+	for vfid in validfids:
+          src=srcnames[vfid]
 	  #print "srcnames=", src 
 	  #print "mjd=",inparams[src]['mjds'] 
 	  #print "freq=",inparams[src]['freqlist']
@@ -157,8 +159,12 @@ class ss_setjy_helper:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
-	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs)
+            #print "%s for spw%s freqs=%s" % (src, i,freqlist[i])
+	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
+               ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
+            #print "ss_fd returns fluxes=", subfluxes
 	    fluxes.append(subfluxes)    
+            #print "fluxes=",fluxes 
 
 	  # ------------------------------------------------------------------------
 	  # For testing with hardcoded values without calling solar_system_fd()...
@@ -292,7 +298,10 @@ class ss_setjy_helper:
 	    origin='setjy'
 	    priority='INFO'
 	    time=lasttime
-	    mytb.putcell('APPLICATION',rown,appl)
+            emptystrarr=numpy.array([''])
+	    mytb.putcell('APP_PARAMS', rown, [''])
+	    mytb.putcell('CLI_COMMAND',rown, [''])
+	    mytb.putcell('APPLICATION',rown, appl)
 	    mytb.putcell('MESSAGE',rown, msg)
 	    mytb.putcell('OBSERVATION_ID',rown, -1)
 	    mytb.putcell('ORIGIN',rown,origin)

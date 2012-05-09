@@ -664,6 +664,7 @@ void QtDisplayData::checkAxis() {
 			Int haxis = rec.subRecord("haxis1").asInt("value");
 			hidden.push_back(haxis);
 		}
+		emit axisChangedProfile(xaxis, yaxis, zaxis, hidden);
 		emit axisChanged(xaxis, yaxis, zaxis, hidden);
 
 		// get the spectral type, units, rest frequency/wavelength

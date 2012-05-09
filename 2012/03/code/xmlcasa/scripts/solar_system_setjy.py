@@ -29,7 +29,7 @@ from math import exp, pi, cos, sin,sqrt
 from os import environ, listdir
 from taskinit import gentools 
 
-def solar_system_fd (source_name, MJDs, frequencies):
+def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
     '''
     find flux density for solar system bodies:
         Venus - Butler et al. 2001
@@ -142,7 +142,6 @@ def solar_system_fd (source_name, MJDs, frequencies):
         if file.split('_')[0] == capitalized_source_name:
             files.append(file)
     file_OK = 0
-    #print "accessing ephemeris data"
 # ephemeris tables have the following keywords:
 # GeoDist, GeoLat, GeoLong, MJD0, NAME, VS_CREATE, VS_DATE, VS_TYPE,
 # VS_VERSION, dMJD, earliest, latest, meanrad, obsloc, radii, rot_per
@@ -187,7 +186,6 @@ def solar_system_fd (source_name, MJDs, frequencies):
            casalog.post("No triaxial radii in the ephemeris table, using the mean radius instead", "INFO")
        else:
            casalog.post("Cannot find the radius of "+source_name+" in the ephemeris table","SEVERE")
-
     distances = tb.getcol('Rho').tolist()
     times = tb.getcol('MJD').tolist()
     RAs = tb.getcol('RA').tolist()

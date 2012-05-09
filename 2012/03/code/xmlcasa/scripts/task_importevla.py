@@ -12,7 +12,6 @@ def importevla(
     compression=None,
     asis=None,
     scans=None,
-    switchedpower=None,
     verbose=None,
     overwrite=None,
     online=None,
@@ -94,9 +93,6 @@ def importevla(
                       + casalog.logfile() + '"')
         if compression:
             execute_string = execute_string + ' --compression'
-        if switchedpower:
-            execute_string = execute_string \
-                + ' --process-syspower --process-caldevice'
         if verbose:
             execute_string = execute_string + ' --verbose'
         if not overwrite and os.path.exists(viso):
@@ -325,7 +321,7 @@ def importevla(
                 casalog.post('There are no flags to apply')
                 
         else :
-            casalog.post('Will not apply flags (applyflags=False), use tflagcmd to apply')
+            casalog.post('Will not apply flags (applyflags=False), use flagcmd to apply')
             if nflags > 0:
                 fh.writeFlagCmd(viso, allflags, allkeys, False, '', '')
 

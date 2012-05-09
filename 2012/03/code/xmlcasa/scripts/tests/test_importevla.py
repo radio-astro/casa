@@ -307,11 +307,11 @@ class importevla_test(unittest.TestCase):
         res = tflagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0)
         
-        # Apply only row 213 using tflagcmd
+        # Apply only row 213 using flagcmd
         # The command in row 213 is the following:
         # antenna='ea06' timerange='2012/02/22/22:30:55.200~2012/02/22/22:35:08.199' 
         # spw='EVLA_X#A0C0#0' correlation='LL,LR,RL
-        tflagcmd(vis=msname, action='apply', tablerows=213)
+        flagcmd(vis=msname, action='apply', tablerows=213)
         
         # Check flags. RR should no be flagged
         res = tflagdata(vis=msname, mode='summary')

@@ -307,6 +307,7 @@ testflagger::parsemanualparameters(
 		const std::string& correlation,
 		const std::string& intent,
 		const std::string& observation,
+		const bool autocorr,
 		const bool apply)
 {
 
@@ -319,7 +320,7 @@ testflagger::parsemanualparameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
-					String(intent), String(observation), Bool(apply));
+					String(intent), String(observation), Bool(autocorr), Bool(apply));
 
 		}
 
