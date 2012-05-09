@@ -191,19 +191,28 @@ void EGainCurve::setApply(const Record& applypar) {
 
       spwOK_(currSpw())=True;
 
-    } 
-    /*
-else {
+    }
+    else {
 
-      { ostringstream o;
-	o<< "Could not find gain curve data for Spw="
-	 << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz)";
+      ostringstream o;
+      o<< "Could not find gain curve data for Spw="
+       << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz) "
+       << "Using unit gaincurve.";
+      message.message(o);
+      logSink().post(message);
 
-	throw(AipsError(o.str()));
-      }
+      // We used to punt here
+      //throw(AipsError(o.str()));
+
+      // Use unity
+      currRPar().resize(nPar(),1,nAnt());
+      currRPar().set(0.0);
+      currRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
+      currRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
+      currParOK().resize(nPar(),1,nAnt());
+      currParOK()=True;
 
     }
-    */
 
   } // ispw
 
@@ -219,7 +228,7 @@ else {
 
 }
 
-void EGainCurve::guessPar(VisBuffer& vb) {
+void EGainCurve::guessPar(VisBuffer&) {
 
   throw(AipsError("Spurious attempt to guess EGainCurve for solving!"));
 
@@ -251,6 +260,13 @@ void EGainCurve::calcAllJones() {
   // Nominally no gain curve effect
   currJElem()=Complex(1.0);
   currJElemOK()=False;
+
+  /*
+  cout << "currSpw() = " << currSpw() << endl;
+  cout << "   spwMap() = " << spwMap() << endl;
+  cout << "   currRPar().shape() = " << currRPar().shape() << endl;
+  cout << "   currRPar() = " << currRPar() << endl;
+  */
 
   Complex* J=currJElem().data();
   Bool*    JOk=currJElemOK().data();

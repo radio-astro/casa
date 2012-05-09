@@ -117,9 +117,9 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	*logger_p << logLevel_p << " spectralmin is " << spectralmin_p << LogIO::POST;
 
 	// AIPS RFlag OPTYPE (type of operation for spectral analysis)
-	String optype("RMEAN");
-	optype_p = ROBUST_MEAN;
-	spectralAnalysis_p = &FlagAgentRFlag::robustMean;
+	String optype("MEDIAN");
+	optype_p = MEDIAN;
+	spectralAnalysis_p = &FlagAgentRFlag::simpleMedian;
 	exists = config.fieldNumber ("optype");
 	if (exists >= 0)
 	{
@@ -215,13 +215,17 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpBool )
-	        {
-			 throw( AipsError ( "Parameter 'writeflags' must be of type 'bool'" ) );
-	        }
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'writeflags' must be of type 'bool'" ) );
+		}
 		
 		writeflags = config.asBool("writeflags");
 		*logger_p << LogIO::NORMAL << " writeflags is: " << writeflags << LogIO::POST;
+	}
+	else if (display == String("report"))
+	{
+		writeflags = False;
 	}
 
 	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
