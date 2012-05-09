@@ -25,6 +25,9 @@ test_image.im/logtable/table.dat
 test_image.im/logtable/table.f0
 test_image.im/logtable/table.info
 test_image.im/logtable/table.lock
+test_image2dconvolver_convolved.fits
+test_image2dconvolver.fits
+
 )
 
 foreach (file ${datafiles})
@@ -49,6 +52,7 @@ tFITSExtImage
 tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
+tImage2DConvolver
 tImageAnalysis
 tImageAnalysis2
 tImageConcat
