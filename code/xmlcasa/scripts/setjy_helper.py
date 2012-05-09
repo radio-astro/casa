@@ -220,7 +220,6 @@ class ss_setjy_helper:
         
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
-		#print "setting tabular spect"
 		#print "freqlist[j]=",freqlist[j]
 		#print "fluxes[j][0]=",fluxes[j][0]
 		#print "framelist[j]=",framelist[j]
@@ -317,18 +316,19 @@ def testerrs(errcode,srcname):
     return = 1 partly ok
     return = 2 all bad - should not proceed to set component
     """
+    from taskinit import casalog 
     errcount = 0
     for ec in errcode:
       if ec != 0:
         errcount += 1
       if ec == 1:
-         raise ValueError("The model for %s is not supported" % srcname)
+         casalog.post("The model for %s is not supported" % srcname, 'WARN')
       elif ec == 2:
-         raise ValueError("Unsupported freuquency range")
+         casalog.post("Unsupported freuquency range",'WARN')
       elif ec == 3:
-         raise ValueError("Tb model not found")
+         casalog.post("Tb model not found",'WARN')
       elif ec == 4:
-         raise ValueError("The ephemeris table is not found or the time is out of range")
+         casalog.post("The ephemeris table is not found or the time is out of range",'WARN')
     if errcount == len(errcode):
       return 2
     if errcount != 0:

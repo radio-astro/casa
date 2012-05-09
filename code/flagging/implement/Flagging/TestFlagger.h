@@ -166,7 +166,7 @@ public:
 	bool initAgents();
 
 	// Run the tool and write the flags to the MS
-	Record run(Bool writeflags, Bool sequential);
+	Record run(Bool writeflags, Bool sequential=true);
 
 	// Flag backup methods
 	bool printFlagSelections();
