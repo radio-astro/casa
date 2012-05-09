@@ -71,6 +71,7 @@ if [ $? == 0 ]; then
 	done
 	cd ..
     done
+    echo "Don't forget to check if the file data/alma/wvrgcal/libair-ddefault.csv needs updating as well!"
 else
     echo You should be in directory air_casawvr to run this script.
 fi
