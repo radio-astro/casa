@@ -35,7 +35,7 @@
 #include <Base64.h>
 
 #include <Parser.h>
- 
+#include <boost/property_tree/detail/xml_parser_utils.hpp>
 #include <OutOfBoundsException.h>
 #include <NumberFormatException.h>
 #include <BooleanWrapper.h>
@@ -144,7 +144,7 @@ namespace asdm {
 			throw  ConversionException("Error: Missing field \"" + 
 					name + "\" or invalid syntax",tableName);
 		*/
-		return xmlField;
+		return boost::property_tree::xml_parser::decode_char_entities(xmlField);
 	}
 
 	vector<string> Parser::get1DString(const string &name, const string &tableName, const string &xmlDoc)
@@ -170,7 +170,7 @@ namespace asdm {
 			value[0] = t.nextToken();
 			for (int i = 1; i < dim0; ++i) {
 				t.nextToken(); // the space		
-				value[i] = t.nextToken();
+				value[i] = boost::property_tree::xml_parser::decode_char_entities(t.nextToken());
 			}
 			if (t.hasMoreTokens()) {
 				throw ConversionException("Error: Field \"" + 
@@ -212,7 +212,7 @@ namespace asdm {
 			for (int i = 0; i < dim0; ++i) {
 				v_aux.clear();
 				for (int j = 0; j < dim1; ++j) {
-					v_aux.push_back( t.nextToken());
+					v_aux.push_back( boost::property_tree::xml_parser::decode_char_entities(t.nextToken()));
 					if (i != dim0 - 1 || j != dim1 - 1)
 						t.nextToken(); // the space
 				}
@@ -261,7 +261,7 @@ namespace asdm {
 				for (int j = 0; j < dim1; ++j) {
 					v_aux.clear();
 					for (int k = 0; k < dim2; ++k) {
-						v_aux.push_back( t.nextToken());
+						v_aux.push_back( boost::property_tree::xml_parser::decode_char_entities(t.nextToken()));
 						if (i != dim0 - 1 || j != dim1 - 1 || k != dim2 - 1)
 							t.nextToken(); // the space
 					}
@@ -2873,8 +2873,9 @@ namespace asdm {
 
 	void Parser::toXML(string data, const string &name, string &buf) {
 		buf.append("<" + name + "> ");
-		
-		buf.append(data);
+	
+		if (data.size()>0)
+			buf.append(boost::property_tree::xml_parser::encode_char_entities(data));
 		
 		buf.append(" </" + name + "> ");
 	}
@@ -2889,8 +2890,9 @@ namespace asdm {
 		buf.append(" ");
 		for (unsigned int i = 0; i < data.size(); ++i) {
 	
-			buf.append("\"");	
-			buf.append(data[i]);
+			buf.append("\"");
+			if (data[i].size()>0)	
+				buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i]));
 			buf.append("\"");
 		
 			buf.append(" ");
@@ -2908,8 +2910,9 @@ namespace asdm {
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 	
-				buf.append("\"");	
-				buf.append(data[i][j]);
+				buf.append("\"");
+				if(data[i][j].size()>0)	
+					buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j]));
 				buf.append("\"");
 		
 				buf.append(" ");
@@ -2931,8 +2934,9 @@ namespace asdm {
 			for (unsigned int j = 0; j < data[i].size(); ++j) {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 	
-					buf.append("\"");	
-					buf.append(data[i][j][k]);
+					buf.append("\"");
+					if (data[i][j][k].size() > 0)	
+						buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k]));
 					buf.append("\"");
 		
 					buf.append(" ");
@@ -2958,8 +2962,9 @@ namespace asdm {
 				for (unsigned int k = 0; k < data[i][j].size(); ++k) {
 					for (unsigned int l = 0; l < data[i][j][k].size(); l++) {
 	
-						buf.append("\"");	
-						buf.append(data[i][j][k][l]);
+						buf.append("\"");
+						if (data[i][j][k][l].size() > 0)	
+							buf.append(boost::property_tree::xml_parser::encode_char_entities(data[i][j][k][l]));
 						buf.append("\"");
 		
 						buf.append(" ");
