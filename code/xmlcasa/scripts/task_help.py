@@ -9,7 +9,6 @@ def startup():
     help taskname          - Full help for task
     toolhelp               - One line summary of available tools
     help par.parametername - Full help for parameter name
-    Single Dish sd* tasks are available after asap_init() is run   
 ___________________________________________________________________"""
 
 def taskhelp(scrap=None):
@@ -64,7 +63,6 @@ def tasklist():
     """ List tasks, organized by catagory """
     print 'Available tasks, organized by category (experimental tasks in parens ()'
     print '  deprecated tasks in curly brackets {}).'
-    print '  Single Dish sd* tasks are available after asap_init() is run. '
     print ''
     for i in range(0,3):
         col1 = thecats[i*4]
