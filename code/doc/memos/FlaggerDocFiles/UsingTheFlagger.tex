@@ -47,7 +47,8 @@ mode allows the user to specify elevation-ranges to be flagged, for the selected
 Strong outliers can be flagged using a simple threshold (range). If a valid data
 range is known $a-priori$, clipping can be done as the first step before basic calibration or other editing.
 The 'clip' mode allows the user to specify a range, and clip all values either within or outside the range. 
-Values are defined as expressions that involve data columns and correlation-selections (for example, ABS_I or REAL_RR,LL, etc).
+Values are defined as expressions that involve data columns and
+correlation-selections (for example, ABS\_I or REAL\_RR,LL, etc).
 NaNs and Infs are always included in the clipping. By default, if no range for
 clipping is given, it will flag only NaNs and Infs. Optionally, exact zeros can
 flagged using the clipzeros parameter. Early EVLA data-sets occasionally have
@@ -316,7 +317,9 @@ it is easier to detect than in other correlations.
 
 \begin{figure}
 \includegraphics[scale=0.8]{flag.extension.png}
-\caption{This screenshot represents a run where 'tfcrop' was run only on 'ABS_RR' (top row) and followed by an extension along time and correlations (bottom row). }
+\caption{This screenshot represents a run where 'tfcrop' was run only on
+'ABS\_RR' (top row) and followed by an extension along time and correlations
+(bottom row). }
 \end{figure}
 
 
@@ -347,11 +350,11 @@ It is possible to truly unapply flag commands in flagcmd. In order to guarantee 
 the commands is unapplied, the framework will first unapply the selected rows
 and then re-apply the overlapping data that got unapplied in the first pass. This is a true unapply action, but it will take longer to
 process because it will re-apply all the remaining commands that have the
-column APPLIED set to True inside the FLAG_CMD sub-table of the MS.
+column APPLIED set to True inside the FLAG\_CMD sub-table of the MS.
 
-\subsubsection{Managing flag-commands in the flagcmd task}
+\subsubsection{Using flag-commands in the flagcmd task}
 Flag commands can be given as input to the flagcmd task in several ways. The
-default is the 'table' which will have the flag commands inside the FLAG_CMD
+default is the 'table' which will have the flag commands inside the FLAG\_CMD
 sub-table of the MS in a column called COMMAND.
 
 The other input, as already detailed above is the 'file' mode, which will have
@@ -371,31 +374,26 @@ to the MS and the APPLIED column will be updated to True. On the other hand,
 when action='unapply' the APPLIED column will be set to False for all selected
 table rows.
 
-\paragraph{Using flag-commands}
-The example below shows how to setup and run tflagdata in list mode, using a
-flag-command file.
-
-\begin{verbatim}
-# Create an input text file with all the flag commands to apply to the MS.
-> cat flags.txt
- mode='manual' autocorr=True
- scan='1~3' mode='manual'
- mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
- mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
- mode='extend' extendpols=True
-
-# Pass the input to the task
-  tflagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
- 
-# Get a summary
-  tflagdata(vis='uid.ms', mode='summary')
-
-\end{verbatim}
-
-Similarly, one can use the flagcmd task to execute the same commands using
-either the 'file' or the 'cmd' inpmode options. 
+\paragraph{Examples}
 
 \begin{enumerate}
+\item Input commands from the FLAG\_CMD sub-table. 
+
+\begin{figure}
+\includegraphics[scale=0.8]{flagcmd_screenshot.png}
+\caption{Screenshot of the FLAG_CMD sub-table of a MS with flag commands for the
+online flags. }
+\end{figure}
+
+\begin{verbatim}
+# Apply only the flag commands that contain reason='CORRELATOR_DATA_INVALID'.
+The default action for flagcmd is to apply the flag commands from a table input,
+therefore it is not necessary to specify inpmode='table' and action='apply'.
+
+ flagcmd(vis='uid.ms', reason='CORRELATOR_DATA_INVALID')
+  
+\end{verbatim}
+
 \item Input commands from an ASCII file.
 \begin{verbatim}
 # Create an input text file with all the flag commands to apply to the MS.
@@ -425,18 +423,94 @@ either the 'file' or the 'cmd' inpmode options.
 \end{verbatim}
 \end{enumerate}
 
+\subsubsection{Using flag-commands in the tflagdata task}
+
+\paragraph{Examples}
+
+\begin{enumerate}
+\item Run tflagdata in list mode, using a flag-command file.
+
+\begin{verbatim}
+# Create an input text file with all the flag commands to apply to the MS.
+> cat flags.txt
+ mode='manual' autocorr=True
+ scan='1~3' mode='manual'
+ mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
+ mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
+ mode='extend' extendpols=True
+
+# Pass the input to the task
+  tflagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
+ 
+# Get a summary
+  tflagdata(vis='uid.ms', mode='summary')
+
+\end{verbatim}
+
+\item Select by reason in list mode.
+
+\begin{verbatim}
+# Apply only the flag commands that contain reason='BAD_ANT'. Let's say the
+input file contains the following flag commands.
+
+> cat flags.txt
+  antenna='DV06' reason='BAD_ANT'
+  mode='clip' clipzeros=True reason='CLIPZEROS'
+  mode='shadow' reason='SHADOW'
+  antenna='DV01' timerange='2012/02/01:09:14:0~09:54:0' reason='BAD_ANT'
+  antenna='DV10;DV23' timerange='2012/02/01:09:15:0~09:54:0' reason='BAD_ANT'
+  
+ # We want to apply the above flag commands in three different MSs, but in the
+ first step we only want to flag the bad antennas, so we will select the cmds
+ by the reason given in the file.
+ 
+   tflagdata(vis='uid1.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+
+   tflagdata(vis='uid2.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+
+   tflagdata(vis='uid3.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+      
+\end{verbatim}
+
+\item Saving the parameters as flag commands, to a file.
+
+\begin{verbatim}
+# Sometimes we want to flag using the interface but would like to save those
+parameters to a file. It may also be useful to write along a reason for those
+flags.
+
+  tflagdata(vis='uid1.ms', mode='clip', clipzeros=True, savepars=True,
+            outfile='myflagcmd.txt', cmdreason='CLIPZEROS')
+  
+# This will flag all the zeros in the MS and save the parameters to
+'myflagcmd.txt' like below:
+
+> cat myflagcmd.txt
+mode='clip' correlation='ABS_ALL' clipoutside=True datacolumn='DATA'\
+channelavg=False clipzeros=True reason='CLIPZEROS'
+
+# NOTE: if the outfile is left empty (default case), the task will save the
+parameters to the FLAG_CMD sub-table.
+
+\end{verbatim}
+\end{enumerate}
+
+
 \paragraph{Using (and mis-using) the FLAG_CMD subtable}
-The FLAG_CMD sub-table is meant to store only meta-data selections such as
+The FLAG\_CMD sub-table is meant to store only meta-data selections such as
 online flags. Using it to save other parameters (from modes such as clip, quack,
 shadow, etc.) is possible but carries a risk that in future releases these
 these parameters or their default values are renamed or changed.
 Use it at your own risk! There will be no automatic way to rename any parameter that changes in the
 future.
 
-Keeping the state of the flags stored in the FLAG_CMD sub-table is also not
+Keeping the state of the flags stored in the FLAG\_CMD sub-table is also not
 guaranteed. The state can get out-of-sync very easily with the interchangeable
 use of all flagging tasks such as tflagdata, flagcmd, and interactive
-flagging using plotms. Note that plotms does not write to the FLAG_CMD
+flagging using plotms. Note that plotms does not write to the FLAG\_CMD
 sub-table.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -489,7 +563,7 @@ data.
 Attach the tool script that does this.
 
 \subsection{FLAGCMD sub-table vs flag-command text files}
-Point to section \ref{Sec:FlagCmdLists}
+See section \ref{Sec:FlagCmdLists}
 
 
 \subsection{Will batch modes make the flagging faster ?}
