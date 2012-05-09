@@ -156,6 +156,7 @@ class TsysFiller:
         self.specif = specif
         self.stab = self._select( self.specif )
         self.abcsp = self._constructAbcissa( self.specif )
+        self.extend = False
         if tsysif is None:
             self.tsysif = None
             self.abctsys = None
@@ -164,6 +165,9 @@ class TsysFiller:
             self.tsysif = tsysif
             self.ttab = self._select( self.tsysif )
             self.abctsys = self._constructAbcissa( self.tsysif )
+            if not self.__checkCoverage( self.abctsys, self.abcsp ):
+                raise Exception( "Invalid specification of SPW for Tsys: it must cover SPW for target" )
+        self.extend = self.__checkChannels( self.abctsys, self.abcsp )
         print 'spectral IFNO %s: corresponding Tsys IFNO is %s'%(self.specif,self.tsysif) 
 
     def __del__( self ):
@@ -196,13 +200,44 @@ class TsysFiller:
                 continue
             else:
                 abc = self._constructAbcissa( i )
-                if abc.min() <= self.abcsp.min() \
-                   and abc.max() >= self.abcsp.max():
+##                 if abc.min() <= self.abcsp.min() \
+##                    and abc.max() >= self.abcsp.max():
+                if self.__checkCoverage( abc, self.abcsp ):
                     self.tsysif = i
                     self.abctsys = abc
                     self.ttab = self._select( i )
                     break
-        
+
+    def __checkCoverage( self, a, b ):
+        """
+        Check frequency coverage
+        """
+        ea = self.__edge( a )
+        eb = self.__edge( b )
+        # 2012/05/09 TN
+        # This is workaround for the issue that frequency coverage
+        # doesn't match in LSRK frame although it exactly match in TOPO.
+        ret = ( ea[0] < eb[0] and ea[1] > eb[1] ) \
+              or ( abs((ea[0]-eb[0])/ea[0]) < 1.0e-5 \
+                   and abs((ea[1]-eb[1])/ea[1]) < 1.0e-5 )
+        return ret
+##         return (ea[0] <= eb[0] and ea[1] >= eb[1])
+
+    def __checkChannels( self, a, b ):
+        """
+        Check location of first and last channels
+        """
+        return ( a.min() > b.min() or a.max() < b.max() )
+
+    def __edge( self, abc ):
+        """
+        return left and right edge values.
+        """
+        incr = abc[1] - abc[0]
+        ledge = abc[0] - 0.5 * incr
+        redge = abc[-1] + 0.5 * incr
+        return (ledge,redge)
+    
     def _select( self, ifno, polno=None, beamno=0, scanno=None ):
         """
         Select data by IFNO, POLNO, BEAMNO, and SCANNO
@@ -541,6 +576,12 @@ class TsysFiller:
             atsys.append( self.getScanAveragedTsys( scan ) )
             caltime.append( self.getScanAveragedTsysTime( scan ) )
 
+        # extend tsys if necessary
+        if self.extend:
+            (abctsys,atsys)=self.__extend(self.abctsys,atsys)
+        else:
+            abctsys = self.abctsys
+
         # process all rows
         nrow = self.stab.nrows()
         cleat = 0
@@ -564,7 +605,7 @@ class TsysFiller:
                     tsys0 = atsys[idx-1]
                     tsys1 = atsys[idx]
                     tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
-            newtsys = interpolateInFrequency( self.abctsys,
+            newtsys = interpolateInFrequency( abctsys,
                                               tsys,
                                               self.abcsp,
                                               mode )            
@@ -573,6 +614,26 @@ class TsysFiller:
 
         tptab.close()
         del tptab
+
+    def __extend( self, a, b ):
+        """
+        Extend spectra
+        """
+        abctsys = numpy.zeros(len(a)+2,dtype=a.dtype)
+        incr = a[1] - a[0]
+        abctsys[0] = a[0] - 0.5 * incr
+        abctsys[-1] = a[-1] + 0.5 * incr
+        abctsys[1:-1] = a
+        print abctsys
+        atsys = numpy.zeros( (len(b),len(abctsys)), dtype=type(b[0][0]) )
+        for i in xrange(len(b)):
+            atsys[i][0] = b[i][0]
+            atsys[i][-1] = b[i][-1]
+            atsys[i][1:-1] = b[i]
+##             print 'len(atsys[%s]=%s'%(i,len(atsys[i]))
+##             print 'atsys[%s][0:3]=%s'%(i,atsys[i][0:3])
+##             print 'atsys[%s][-3:]=%s'%(i,atsys[i][-3:])
+        return (abctsys,atsys)
                 
     def _search( self, tcol, t, startpos=0 ):
         """

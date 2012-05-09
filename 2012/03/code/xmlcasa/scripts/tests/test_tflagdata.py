@@ -718,7 +718,8 @@ class test_selections_alma(test_base):
 
     def test_spw(self):
         '''tflagdata: flag various spw'''
-        tflagdata(vis=self.vis, mode='manual', spw='1,3,4', savepars=False)
+        # Test that a white space in the spw parameter is taken correctly
+        tflagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')

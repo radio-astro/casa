@@ -151,7 +151,7 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
                 else :
                     useSpw = j.calSpwId
         if useSpw == None : useSpw = i
-        applyCalSpwMap.append(useSpw)        
+        applyCalSpwMap.append(int(useSpw))        
     if trim :
         return trimSpwmap(applyCalSpwMap)
     else :
