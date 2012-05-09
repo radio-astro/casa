@@ -1012,6 +1012,7 @@ void QtProfile::wcChanged( const String c,
       Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
       if(pos>-1){
 	yUnit.remove(pos,5);
+        pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
       }
     }
 
@@ -1591,6 +1592,16 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     ok = setErrorPlotting( wxv, wyv);
 
     Int ordersOfM = scaleAxis();
+
+    // remove the "/beam" in case of plotting flux
+    if(itsPlotType==QtProfile::PFLUX){
+      Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
+      if(pos>-1){
+	yUnit.remove(pos,5);
+        pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12, 2, "Helvetica [Cronyx]");
+      }
+    }
+
     // plot the graph
     pixelCanvas->clearData();
     pixelCanvas->plotPolyLine(z_xval, z_yval, z_eval, fileName);
