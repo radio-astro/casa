@@ -1917,6 +1917,7 @@ bool QtProfile::exportASCIISpectrum(QString &fn)
     Float scaleFactor=pow(10.,-ordersOfM_);
 
     ts.setRealNumberNotation(QTextStream::ScientificNotation);
+    ts.setRealNumberPrecision(12);
 
     if (z_eval.size() > 0){
     	for (uInt i = 0; i < z_xval.size(); i++) {
