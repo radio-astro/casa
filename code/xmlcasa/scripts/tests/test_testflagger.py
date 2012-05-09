@@ -609,10 +609,10 @@ class test_bpass(test_base):
 	tflocal.done() 
 
         assert summary['report0']['total'] == 1248000.0
-	assert summary['report0']['flagged'] == 107590.0
-	assert summary['report0']['correlation']['Sol1']['flagged'] == 55003.0
+	assert summary['report0']['flagged'] == 184222.0
+	assert summary['report0']['correlation']['Sol1']['flagged'] == 93880.0
 	assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-	assert summary['report0']['correlation']['Sol2']['flagged'] == 52587.0
+	assert summary['report0']['correlation']['Sol2']['flagged'] == 90342.0
 	assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
 
     def test_tfcrop_paramerr_all_for_bpass_CalTable(self):
