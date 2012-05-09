@@ -57,7 +57,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> implement/TestFlagger
+//   <li> <linkto class="VisBuffer:description">FlagDataHandler</linkto>
+//   <li> <linkto class="FlagMapper:description">FlagMSHandler</linkto>
+//   <li> <linkto class="VisMapper:description">FlagCalTableHandler</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -71,10 +73,100 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <example>
-//        // open testflagger and attaches the MS
-//        MeasurementSet ms("test.MS2",Table::Update);
-//        TestFlagger testflagger(ms);
-//        // build record of global flagging options
+// <srcblock>
+// // The following is a typical way of using this class and its methods to perform flagging.
+//
+// // Open the MS or a calibration file and attach it to the tool. This will create an object of the
+// // FlagDataHandler (fdh) type. The constructor of the fdh takes three arguments,
+// // the MS or CAL table, the iteration approach to use and the time interval. Only the MS
+// // is mandatory to use. By default it will use the FlagDataHandler::SUB_INTEGRATION iteration
+// // approach and 0.0 seconds as the time interval.
+//
+//    TestFlagger *tf = new TestFlagger();
+//    tf->open('my.ms')
+//
+// // Select the data where to flag. If left blank, the whole MS will be selected. This step
+// // will use the MS Selection class. There are two methods to perform the selection. One takes
+// // a Record of the parameters, the other takes the individual parameters as arguments.
+//
+// // 1) First method:
+//    String spw = "0:1~10";
+//    String scan = "1";
+//    Record selection = Record();
+//    selection.define("spw", spw);
+//    selection.define("scan", scan);
+//    tf->selectData(selection);
+//
+// // 2) Second method:
+//    tf->selectData(spw=spw, scan=scan);
+//
+// // Now it is time to build a list of the agents that we want to run to process the data. This
+// // step will create a list of all the agents that will be executed to flag/unflag the data.
+// // This method can be called multiple times. Every call should contain the desired parameters of
+// // the agent and optionally data selection parameters. When data selection parameters are present,
+// // the agent will loop through only that portion of the data.
+//
+// // This method will check if the requested agent (mode) is known from the following list
+// // (manual, clip, quack, shadow, elevation, tfcrop, rflag, extend, unflag and summary). If
+// // empty or unknown, it will give a warning and return.
+//
+// // If any tfcrop, rflag or extend mode is present, this method will calculate the maximum value
+// // of time interval (ntime) from these agents. The maximum value will be used for all agents in
+// // the list.
+//
+// // A similar situation will happen with the combinescans parameter. If any of the combinescans is
+// // True, it will be taken as True to all agents.
+//
+// // Async I/O will be activated if any of the modes clip, tfcrop or rflag is requested.
+//
+// // Only for the tfcrop agent, if a correlation ALL is requested, this method will create one
+// // agent for each available polarization in the MS. For example, if the MS contains polarizations
+// // XX and YY and the parameter is correlation="ABS_ALL", then there will be two tfcrop agents,
+// // one with correlation="ABS_XX" and the other with correlation="ABS_YY". The apply parameter
+// // is set by default to True to apply the flags.
+//
+//     Record agent_pars = Record();
+//     agent_pars.define("mode", "clip");
+//     agent_pars.define("clipzeros", true);
+//     agent_pars.define("apply", true);
+//     tf->parseAgentParameters(agent_pars);
+//
+//     Record agent_pars = Record();
+//     agent_pars.define("mode", "manual");
+//     agent_pars.define("autocorr", true);
+//     tf->parseAgentParameters(agent_pars);
+//
+//     Record agent_pars = Record();
+//     agent_pars.define("mode", "summary");
+//     agent_pars.define("basecnt", true);
+//     tf->parseAgentParameters(agent_pars);
+
+// // There are convenience functions to parse the agent's parameters, one specific for each agent.
+// // The above calls can be done instead using these functions.
+//
+//     tf->parseClipParameters(clipzeros=true, apply=true);
+//     tf->parseManualParameters(autocorr=true);
+//     tf->parseSummaryParameters(basecnt=true);
+//
+// // In either one of the cases, three agents will be created. We need to initialize the agents, which
+// // will call the constructor of each one of them and set the parameters that were given in the previous
+// // calls. Some basic checks will be performed at this stage for types and values of the parameters.
+//
+// // If any tfcrop, rflag, extend or display agent is in the list, the iteration approach will be
+// // set to a different value depending on whether combinescans is true or not. When True, the
+// // iteration approach will be set to FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY, otherwise
+// // to FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY.
+//
+// // This method will create agents and add them to a FlagAgentList. If for any reason, the call to
+// // FlagAgentBase::create(fdh_p, agent_rec) fails, an error message will be displayed. Any agents previously
+// // added to the FlagAgentList will remain there. A subsequent call to this method can be done to add
+// // more agents to the same FlagAgentList.
+//
+//     tf->initAgents();
+//
+// // The next step in the chain is to actually process the flags and write them or not to the MS.
+//
+//     tf->run()
 //        Record opt(Record::Variable);
 //        // build record of flagging agents to be run
 //        Record selopt( testflagger.defaultAgents().asRecord("select") );
@@ -84,6 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        agents.defineRecord("select",selopt);
 //        // perform the flagging
 //        testflagger.run(agents,opt);
+// </srcblock>
 // </example>
 //
 // <motivation>
