@@ -161,10 +161,10 @@ class ss_setjy_helper:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
-            #print "%s for spw%s freqs=%s" % (src, i,freqlist[i])
+            self._casalog.post("Calling solar_system_fd: %s for spw%s freqs=%s" % (src, i,freqlist[i]),'INFO2')
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
                ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
-            #print "ss_fd returns fluxes=", subfluxes
+            self._casalog.post("ss_fd returns fluxes=%s" % subfluxes, 'INFO2')
 	    fluxes.append(subfluxes)    
             #print "fluxes=",fluxes 
 
@@ -199,7 +199,7 @@ class ss_setjy_helper:
 	    clpath='/tmp/'
 	    #clpath='./'
 	    for j in range(len(freqlist)):
-	      freqlabel = '%.3fGHz' % (reffreqs[j]/1.e9)
+	      freqlabel = '%.3fGHz' % (reffreqs[int(spwids[j])]/1.e9)
 	      tmlabel = '%.1fd' % (tc/86400.)
 	      clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
 	      clname = clpath+clabel+'.cl'
@@ -215,16 +215,18 @@ class ss_setjy_helper:
 	      else:
 		index= 0.0
 		sptype = 'constant'
+              self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
+                                  (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
 	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
 			 shape='disk', majoraxis=str(sizes[i][0])+'arcsec', minoraxis=str(sizes[i][1])+'arcsec', 
-			 positionangle=str(sizes[i][2])+'arcsec', freq=[framelist[j],str(reffreqs[j])+'Hz'], 
+			 positionangle=str(sizes[i][2])+'arcsec', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
 			 spectrumtype=sptype, index=index, label=clabel)
         
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
 		#print "freqlist[j]=",freqlist[j]
 		#print "fluxes[j][0]=",fluxes[j][0]
-		#print "framelist[j]=",framelist[j]
+	        #print "framelist[j]=",framelist[j]
 		if type(freqlist[j][0])==list and len(freqlist[j][0])>1:
 		  freqs=[]
 		  for fr in freqlist[j]:

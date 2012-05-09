@@ -177,8 +177,8 @@ class test_rflag(test_base):
         '''tflagdata:: Test1 of mode = rflag : automatic thresholds'''
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[]);
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 42866)
-        self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
+        self.assertEqual(res['flagged'], 42728.0)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 18411.0)
         self.assertEqual(res['spw']['7']['flagged'], 0)
 
     def test_rflag2(self):
@@ -209,7 +209,7 @@ class test_rflag(test_base):
 
         #print res1['flagged'], res2['flagged']
         self.assertEqual(res1['flagged'],res2['flagged']);
-        self.assertEqual(res1['flagged'], 39665)
+        self.assertEqual(res1['flagged'], 39504.0,)
 
 
 class test_shadow(test_base):

@@ -17,7 +17,7 @@ def setjy(vis=None, field=None, spw=None,
     casalog.origin('setjy')
 
     if listmodels:
-      casalog.post("Listing modimage candidates (listmodels == True).")
+      casalog.post("Listing model candidates (listmodels == True).")
       if vis:
         casalog.post("%s is NOT being modified." % vis)
 

@@ -143,8 +143,12 @@ def flagcmd(
             else:
                 flagtable = inpfile
 
-            # Actually parse table
-            myflags = fh.readXML(flagtable, mytbuff=tbuff)
+            # Actually parse table. Fail if Flag.xml or Antenna.xml is not found
+            try:
+                myflags = fh.readXML(flagtable, mytbuff=tbuff)            
+            except:
+                raise Exception
+
             casalog.post('%s' % myflags, 'DEBUG')
 
             # Construct flags per antenna, selecting by reason if desired
