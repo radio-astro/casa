@@ -34,13 +34,13 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
 #include <scimath/Mathematics/VectorKernel.h>
+#include <casa/Quanta/Quantum.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 template <class T> class ImageInterface;
 template <class T> class Matrix;
-template <class T> class Quantum;
 template <class T> class Vector;
 class String;
 class IPosition;
