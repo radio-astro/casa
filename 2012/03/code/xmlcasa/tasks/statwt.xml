@@ -6,11 +6,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="statwt" category="manipulation" visibility="experimental">
-  <shortdescription>Reweight visibilities according to their scatter</shortdescription>
 
-<description>
-<!-- THIS DOES NOT GET READ, PUT IT IN example! -->
-</description>
+  <shortdescription> Reweight visibilities according to their scatter (Experimental)</shortdescription>
+
 
 <input>
 	<param type="string" name="vis" mustexist="true">
