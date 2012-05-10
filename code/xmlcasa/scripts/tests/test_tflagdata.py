@@ -869,7 +869,8 @@ class test_list(test_base):
         # Delete any rows from FLAG_CMD
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
-        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='', 
+        # Test that action='none' is also accepted
+        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='none', 
                  savepars=True)
         
         flagcmd(vis=self.vis, action='apply')

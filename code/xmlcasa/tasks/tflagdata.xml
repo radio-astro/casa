@@ -335,6 +335,7 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                     <allowed kind="enum">
                     <value>apply</value>
                     <value>calculate</value>
+                    <value>none</value>
                     <value></value>
                     </allowed>
             </param>
@@ -558,6 +559,7 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="display"><value type="string"></value></default>
                     </equals>
                     <equals value=""></equals>            
+                    <equals value="none"></equals>            
                 </when>
                                
                <when param="savepars">
