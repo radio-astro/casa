@@ -277,11 +277,11 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
 
            <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
-                <value>90.0</value>
+                <value>50.0</value>
             </param>
             <param type="double" name="growfreq" subparam="true">
                 <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
-                <value>90.0</value>
+                <value>50.0</value>
             </param>
             <param type="bool" name="growaround" subparam="true">
                 <description>Flag data based on surrounding flags</description>
@@ -509,8 +509,8 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
                         <default param="extendpols"><value type="bool">True</value></default>
-                        <default param="growtime"><value type="double">90.0</value></default>
-                        <default param="growfreq"><value type="double">90.0</value></default>
+                        <default param="growtime"><value type="double">50.0</value></default>
+                        <default param="growfreq"><value type="double">50.0</value></default>
                         <default param="growaround"><value type="bool">False</value></default>
                         <default param="flagneartime"><value type="bool">False</value></default>
                         <default param="flagnearfreq"><value type="bool">False</value></default>                    

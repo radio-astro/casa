@@ -260,7 +260,7 @@ All data selection parameters follow the ms-selection syntax.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number : example : '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -530,7 +530,7 @@ for the manual mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -615,7 +615,7 @@ for the clip mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -729,7 +729,7 @@ for the quack mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -824,7 +824,7 @@ for the elevation mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -917,7 +917,7 @@ for the time and frequency mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -1049,7 +1049,7 @@ for the extend mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
@@ -1094,11 +1094,11 @@ for the extend mode.
 
    <param type="double" name="growtime">
         <description>\t Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100). Default: </description>
-        <value>0.0</value>
+        <value>50.0</value>
     </param>
     <param type="double" name="growfreq">
         <description>\t Flag all selected channels if more than X% of the frequency range is flagged(0-100). Default: </description>
-        <value>0.0</value>
+        <value>50.0</value>
     </param>
     <param type="bool" name="growaround">
         <description>Flag data based on surrounding flags. Default: </description>
@@ -1164,7 +1164,7 @@ for the summary mode.
      <value>""</value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\t Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value>""</value>
      </param>
