@@ -2,7 +2,6 @@ casa_add_tasks( tools casa_tasks
 accum.xml
 applycal.xml
 autoclean.xml
-testautoflag.xml
 bandpass.xml
 blcal.xml
 boxit.xml

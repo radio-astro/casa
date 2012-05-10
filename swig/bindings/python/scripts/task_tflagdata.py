@@ -384,12 +384,12 @@ def tflagdata(vis,
         agent_pars['mode'] = mode
         agent_pars['apply'] = apply      
                           
-        ##########  Only save the parameters and exit; action = ''        
-        if action == '' and savepars == False:
-            casalog.post('Parameter action=\'\' is meaningful with savepars=True. No action to perform!', 'WARN')
+        ##########  Only save the parameters and exit; action = ''     
+        if (action == '' or action == 'none') and savepars == False:
+            casalog.post('Parameter action=\'\' is only meaningful with savepars=True.', 'WARN')
             return 0
         
-        if action == '' and savepars == True:
+        if (action == '' or action == 'none') and savepars == True:
             fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile)  
             if outfile == '':
                 casalog.post('Saving parameters to FLAG_CMD')
@@ -403,7 +403,7 @@ def tflagdata(vis,
         # Select the data and parse the agent's parameters
         if mode != 'list':
             tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
-                               baseline=antenna, uvrange=uvrange, time=timerange, \
+                               antenna=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
             # CAS-3966 Handle channel selection at the FlagAgent level

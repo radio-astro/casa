@@ -74,7 +74,7 @@ class ss_setjy_helper:
 	fmeasrefcol=mytb.getcol('MEAS_FREQ_REF')
 	reffreqs=mytb.getcol('REF_FREQUENCY')
 	mytb.close()
-	
+
 	# store all parameters need to call solar_system_fd for all sources
 	inparams={}
         validfids = [] # keep track of valid fid that has data (after selection) 
@@ -203,7 +203,6 @@ class ss_setjy_helper:
 	      tmlabel = '%.1fd' % (tc/86400.)
 	      clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
 	      clname = clpath+clabel+'.cl'
-	      
 	      #clname = clpath+inlabel+'_dir'+'.cl' 
 	      
 	      if(os.path.exists(clname)):
@@ -217,9 +216,10 @@ class ss_setjy_helper:
 		sptype = 'constant'
               self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
                                   (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
-	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
+	      #mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
+	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirstring,
 			 shape='disk', majoraxis=str(sizes[i][0])+'arcsec', minoraxis=str(sizes[i][1])+'arcsec', 
-			 positionangle=str(sizes[i][2])+'arcsec', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
+			 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
 			 spectrumtype=sptype, index=index, label=clabel)
         
               # if it's list of fluxes try to put in tabular form
@@ -233,7 +233,9 @@ class ss_setjy_helper:
 		    freqs.append((fr[1]+fr[0])/2)
 		else:
 		  freqs=freqlist[j]
-		mycl.setspectrum(which=i, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
+                clind = mycl.length() - 1
+		mycl.setspectrum(which=clind, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
+	#	mycl.setspectrum(which=i, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
 			   tabularframe=framelist[j])
 	      mycl.rename(clname)
 	      #put in a record for log output

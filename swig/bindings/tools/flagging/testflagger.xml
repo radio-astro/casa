@@ -23,13 +23,14 @@ one measurement set at a time.
 
  \medskip\noindent\textbf{Open the Measurement Set and Attach it to the Tool}
 
-  The first thing to do is to open the ms and attach it to the testflagger tool.
+  The first thing to do is to open the Ms and attach it to the testflagger tool.
   Use the tf.open method, which requires the MS name and optionally the time interval,
   over which to buffer data before running the algorithm. The time interval is set by
   default to 0.0, which means a 'scan' length. The 'ntime' parameter is important for
-  the modes tfcrop, rflag and extend.
+  the modes tfcrop, rflag and extend. From version 3.4 on, it is also possible to
+  flag CAL tables. Give the CAL table name instead of the MS.
 
-  tf.open('uid_X002.ms')
+  \t tf.open('uid_X002.ms')
 
 
  \medskip\noindent\textbf{Select the Data}
@@ -38,7 +39,7 @@ one measurement set at a time.
   selection tool to select the portion of the MS given by the parameters. There are two ways
   of selecting the data:
 
-  1) by creating a Python dictionary which internally will be transformed into a record
+  1) Create a Python dictionary which internally will be transformed into a record
      containing the selection parameters.
 
      Select the whole MS.
@@ -50,7 +51,7 @@ one measurement set at a time.
      myrecord['spw']='0:1~10'
      tf.selectdata(myrecord)
 
-   2) by parsing the parameters names.
+   2) Parse the parameters names directly to the function.
 
      tf.selectdata(scan='1~3', spw='0:1~10')
 
@@ -258,7 +259,7 @@ All data selection parameters follow the ms-selection syntax.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number : example : '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -527,7 +528,7 @@ for the manual mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -612,7 +613,7 @@ for the clip mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -726,7 +727,7 @@ for the quack mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -821,7 +822,7 @@ for the elevation mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -914,7 +915,7 @@ for the time and frequency mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -1046,7 +1047,7 @@ for the extend mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
@@ -1091,11 +1092,11 @@ for the extend mode.
 
    <param type="double" name="growtime">
         <description>\tFlag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100). Default: </description>
-        <value>0.0</value>
+        <value>50.0</value>
     </param>
     <param type="double" name="growfreq">
         <description>\tFlag all selected channels if more than X% of the frequency range is flagged(0-100). Default: </description>
-        <value>0.0</value>
+        <value>50.0</value>
     </param>
     <param type="bool" name="growaround">
         <description>Flag data based on surrounding flags. Default: </description>
@@ -1161,7 +1162,7 @@ for the summary mode.
      <value></value>
      </param>   
 
-     <param type="string" name="baseline">
+     <param type="string" name="antenna">
      <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>

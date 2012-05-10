@@ -85,6 +85,8 @@ using namespace casac;
   /* Check if is a list */
   if (PyList_Check($input)) {
     int size = PyList_Size($input);
+    if(!$1)
+       $1 = new std::vector<std::string>(size);
     for (int i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyString_Check(o))
@@ -99,6 +101,8 @@ using namespace casac;
     }
   } else {
     if(PyString_Check($input)){
+       if(!$1)
+          $1 = new std::vector<std::string>(1);
        if(!$1->size())
          $1->push_back(PyString_AsString($input));
        else

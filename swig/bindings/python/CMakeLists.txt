@@ -62,7 +62,6 @@ scripts/task_accum.py
 scripts/task_applycal.py
 scripts/task_autoclean.py
 scripts/task_asdmsummary.py
-scripts/task_testautoflag.py
 scripts/task_bandpass.py
 scripts/task_blcal.py
 scripts/task_boxit.py
