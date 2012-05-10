@@ -24,6 +24,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   3C391polim.py
   accum_test.py
   alma-m100-analysis.py
+  alma-ngc3256-analysis.py
   asdm-imexport+analysis.py
   async-segfault.py
   calstat_test.py
