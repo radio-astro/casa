@@ -99,8 +99,6 @@ namespace casa {
 		disconnect( state, 0, this, 0 );
 	    }
 	    regions->removeWidget(state);
-
-	    if ( regions->count( ) <= 0 && isVisible( ) ) hide( );
 	}
 
 	void QtRegionDock::selectRegion(QtRegionState *state) {
