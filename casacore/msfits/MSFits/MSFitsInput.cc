@@ -402,6 +402,7 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
 
         //this is uselessly slow thus replace it
         fillExtraTables();
+
         //fillPointingTable();
         //fillSourceTable();
 
@@ -495,8 +496,7 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                     fqTab = &(*bt);
                 }
                 else if (type.contains("SU")) {
-                    Int nField = bt->nrows();
-                    fillFieldTable(*bt, nField);
+                    fillFieldTable(*bt);
                     setFreqFrameVar(*bt);
                     //in case spectral window was already filled
                     //if (haveSpW) {
@@ -548,7 +548,7 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
 
 void MSFitsInput::readFitsFile(Int obsType) {
     itsLog << LogOrigin("MSFitsInput", "readFitsFile")
-           << LogIO::NORMAL
+           << LogIO::DEBUG2
            << "hdutype=" << infile_p->hdutype()
            << LogIO::POST;
     if (infile_p->hdutype() == FITS::PrimaryGroupHDU) {
@@ -1932,7 +1932,8 @@ void MSFitsInput::fillSpectralWindowTable(BinaryTable& bt, Int nSpW)
   Int nChan = nPixel_p(iFreq);
   Int nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
   // assume spectral line, make source table to allow restfreq to be entered
-  if (nChan>33) addSourceTable_p=True; 
+  //if (nChan>33) addSourceTable_p=True; 
+  if (nChan>0) addSourceTable_p=True; 
 
   // fill out the polarization info (only single entry allowed in fits input)
   ms_p.polarization().addRow();
@@ -2043,7 +2044,8 @@ void MSFitsInput::fillSpectralWindowTable()
   Int nChan = nPixel_p(iFreq);
   Int nCorr = nPixel_p(getIndex(coordType_p,"STOKES"));
   // assume spectral line, make source table to allow restfreq to be entered
-  if (nChan>33) addSourceTable_p=True; 
+  //if (nChan>33) addSourceTable_p=True; 
+  if (nChan>0) addSourceTable_p=True; 
 
   // fill out the polarization info (only single entry allowed in fits input)
   ms_p.polarization().addRow();
@@ -2229,14 +2231,11 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
                     epochRef));
         }
 
-        /*
         // Get the time from the observation subtable. I have assumed that this bit
         // of the observation table has been filled by now.
         const Vector<Double> obsTimes = msc_p->observation().timeRange()(0);
 
         msField.time().put(fld, obsTimes(0));
-        */
-        msField.time().put(fld, obsTime(0));
         msField.numPoly().put(fld, numPoly);
         msField.delayDirMeasCol().put(fld, radecMeas);
         msField.phaseDirMeasCol().put(fld, radecMeas);
@@ -3436,22 +3435,129 @@ void MSFitsInput::fillSourceTable() {
 
 }
 
-void MSFitsInput::fillOtherUVTables(BinaryTable& bt, BinaryTable& fqTab) {
+void MSFitsInput::fillFieldTable(BinaryTable& bt) {
+    Int nField = bt.nrows();
+    MSFieldColumns& msField(msc_p->field());
+    // Table suTab=bt.fullTable("",Table::Scratch);
+    Table suTab = bt.fullTable();
+    ROScalarColumn<Int> id(suTab, "ID. NO.");
+    ROScalarColumn<String> name(suTab, "SOURCE");
+    ROScalarColumn<Int> qual(suTab, "QUAL");
+    Bool multiqual = False;
+    Int minqual, maxqual;
+    minMax(minqual, maxqual, qual.getColumn());
+    if (minqual != maxqual)
+        multiqual = True;
+    ROScalarColumn<String> code(suTab, "CALCODE");
+    // ROScalarColumn<Float> iflux(suTab,"IFLUX"); // etc Q, U, V (Jy)
+    ROScalarColumn<Double> ra(suTab, "RAEPO"); //degrees
+    ROScalarColumn<Double> dec(suTab, "DECEPO"); //degrees
+    ROScalarColumn<Double> raapp(suTab, "RAAPP"); //degrees
+    ROScalarColumn<Double> decapp(suTab, "DECAPP"); //degrees
+    ROScalarColumn<Double> epoch(suTab, "EPOCH"); //years
+    ROScalarColumn<Double> pmra(suTab, "PMRA"); //deg/day
+    ROScalarColumn<Double> pmdec(suTab, "PMDEC"); //deg/day
+    if (Int(suTab.nrow()) < nField) {
+        itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+               << LogIO::NORMAL
+                << "Input Source id's not sequential, adding empty rows in output"
+                << LogIO::POST;
+    }
+    Int outRow = -1;
 
-    //TableRecord btKeywords = bt.getKeywords();
+    //  ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+    //  ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+    //  cout << "restfreq = " << restfreq.getColumn() << endl;
+    //  cout << "sysvel   = " << sysvel.getColumn() << endl;
 
-    ConstFitsKeywordList kwl = bt.kwlist();
+    // set the DIRECTION MEASURE REFERENCE for appropriate columns
+    MDirection::Types epochRefZero = getDirectionFrame(epoch(0));
+    if (epochRefZero != epochRef_p)
+        itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+               << LogIO::WARN << "The direction measure reference code, "
+                << epochRefZero << "\n"
+                << "for the first field does not match the one from the FITS header, "
+                << epochRef_p
+                << ".\nThis might cause a problem for the reference frame"
+                << " of the output's UVW column." << LogIO::POST;
 
-    //FitsKeywordList pkw = kwl;
-    //cout << "UV table keywords:\n" << pkw << endl;
+    for (Int inRow = 0; inRow < (Int) suTab.nrow(); inRow++) {
+        Int fld = id(inRow) - 1;
+        // add empty rows until the row number in the output matches the source id
+        while (fld > outRow) {
+            // Append a flagged, empty row to the FIELD table
+            ms_p.field().addRow();
+            outRow++;
+            Vector<MDirection> nullDir(1);
+            nullDir(0).set(MVDirection(0.0, 0.0), MDirection::Ref(epochRefZero));
+            msField.phaseDirMeasCol().put(outRow, nullDir);
+            msField.delayDirMeasCol().put(outRow, nullDir);
+            msField.referenceDirMeasCol().put(outRow, nullDir);
+            msField.flagRow().put(outRow, True);
+        }
+        msField.sourceId().put(fld, fld); 
+        msField.code().put(fld, code(inRow));
+        String theFldName;
+        if (multiqual)
+            theFldName = name(inRow) + "_" + String::toString(qual(inRow));
+        else
+            theFldName = name(inRow);
+        msField.name().put(fld, theFldName);
+        Int numPoly = 0;
+        if (!nearAbs(pmra(inRow), 0.0) || !nearAbs(pmdec(inRow), 0.0)) {
+            numPoly = 1;
+        }
+        // The code below will write the direction in B1950 or J2000 coordinates if
+        // the direction is constant. However it will use apparent Coordinates (I
+        // am not sure if this means APP, JTRUE, BTRUE or what), if the proper
+        // motion is non-zero.  If the epoch in the incoming SU
+        // table is "-1" (via AIPS UVFITS, a planet tracked by the correlator), it
+        // will adopt the epochRefZero and use the ra/dec (not raapp/decapp).
+        // The handling of planets should be cleaned up (defect 3636).
+        // In all cases the time will be the date of the start of the observation.
+        MDirection::Types epochRef = MDirection::APP;
+        MVDirection refDir;
 
-    fillObservationTable(kwl);
-    fillHistoryTable(kwl);
+        if (numPoly == 0) {
+            if (near(epoch(inRow), 2000.0, 0.01)) {
+                epochRef = MDirection::J2000;
+            } else if (nearAbs(epoch(inRow), 1950.0, 0.01)) {
+                if (array_p == "VLA")
+                    epochRef = MDirection::B1950_VLA;
+                else
+                    epochRef = MDirection::B1950;
+            } else if (epoch(inRow) == -1.0) {
+                epochRef = epochRefZero;
+                itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+                       << " Assuming standard epoch " << " for " << name(inRow)
+                        << ".  Be aware that this may not be correct." << endl;
+            } else {
+                itsLog << LogOrigin("MSFitsInput", "fillFieldTable")
+                       << " Cannot handle epoch in SU table: " << epoch(inRow)
+                        << LogIO::EXCEPTION;
+            }
+            refDir = MVDirection(ra(inRow) * C::degree, dec(inRow) * C::degree);
 
-    getAxisInfo(kwl);
-    sortPolarizations();
-    fillPolarizationTable();
-    fillSpectralWindowTable(fqTab);
+        } else {
+            refDir = MVDirection(raapp(inRow) * C::degree, decapp(inRow)
+                    * C::degree);
+        }
+        Vector<MDirection> radecMeas(numPoly + 1);
+        radecMeas(0).set(refDir, MDirection::Ref(epochRef));
+        if (numPoly == 1) {
+            radecMeas(1).set(MVDirection(pmra(inRow) * C::degree / C::day,
+                    pmdec(inRow) * C::degree / C::day), MDirection::Ref(
+                    epochRef));
+        }
+
+        msField.time().put(fld, obsTime(0));
+        msField.numPoly().put(fld, numPoly);
+        msField.delayDirMeasCol().put(fld, radecMeas);
+        msField.phaseDirMeasCol().put(fld, radecMeas);
+        msField.referenceDirMeasCol().put(fld, radecMeas);
+        msField.flagRow().put(fld, False);
+    }
+
 
 }
 
