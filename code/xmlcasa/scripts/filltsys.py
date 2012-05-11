@@ -56,6 +56,8 @@ def fillTsys( filename, specif, tsysif=None, mode='linear' ):
             default: 'linear'
             options: 'linear',,'nearest','zero',
                      'slinear','quadratic','cubic'
+                     any integer specifying an order of
+                     spline interpolation
     """
     filler = TsysFiller( filename, specif, tsysif )
     polnos = filler.getPolarizations()
