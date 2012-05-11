@@ -392,7 +392,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	      //cerr << "in ftrec saving" << endl;
 	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 		throw(AipsError("Error in record saving:  "+error));
-	      vi.putModel(ftrec, False, (model>0 || incremental));
+	      vi.putModel(ftrec, False, ((model>0) || incremental || (cubeSlice > 0)));
 	    }
 	  }
 	}
@@ -806,7 +806,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 			//cerr << "in ftrec saving" << endl;
 			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 			  throw(AipsError("Error in saving model;  "+error));
-			wvi_p->putModel(ftrec, False, (model>0 || predictedComp || incremental));
+			wvi_p->putModel(ftrec, False, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
 		      }
 		    }
 		  }
