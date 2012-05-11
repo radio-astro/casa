@@ -69,7 +69,7 @@ class sdstat_unittest_base:
         del denom,testval,refval
         return (abs(rdiff) <= allowdiff)
 
-    def _to_list( self, input):
+    def _to_list( self, input ):
         """
         Convert input to a list
         If input is None, this method simply returns None.
@@ -153,7 +153,7 @@ class sdstat_unittest_base:
                                 msg="'%s' of spectrum %d is different." % (stat, i))
         
 
-    def _compareFiles(self, testfile, reffile):
+    def _compareFiles( self, testfile, reffile ):
         # test if baseline parameters are equal to the reference values
         # currently comparing every lines in the files
         self.assertTrue(os.path.exists(testfile),
@@ -166,7 +166,7 @@ class sdstat_unittest_base:
         
 
 
-class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
+class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
     """
     Basic unit tests for task sdstat. No interactive testing.
 
@@ -249,23 +249,23 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
                       'min_abscissa': {'value': 18.0, 'unit': 'channel'}}
 
     ### Actual test scripts ###
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdstat)
 
-    def tearDown(self):
+    def tearDown( self ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def test00(self):
+    def test00( self ):
         """Test 0: Default parameters"""
         result = sdstat()
         self.assertFalse(result)
 
-    def test01(self):
+    def test01( self ):
         """Test 1: Default parameters + valid input filename """
         tid="01"
         outfile = self.outroot+tid+self.outsuff
@@ -280,7 +280,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxchan_all)
 
 
-    def test02(self):
+    def test02( self ):
         """Test 2: fluxunit='K' """
         tid="02"
         fluxunit = 'K'
@@ -298,7 +298,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxchan_all)
 
 
-    def test03(self):
+    def test03( self ):
         """Test 3: fluxunit='Jy' """
         tid="03"
         fluxunit = 'Jy'
@@ -316,7 +316,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxchan_all)
 
 
-    def test04(self):
+    def test04( self ):
         """Test 4: specunit='channel' """
         tid="04"
         specunit = 'channel'
@@ -332,7 +332,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxchan_all)
 
 
-    def test05(self):
+    def test05( self ):
         """Test 5: specunit='GHz' """
         tid="05"
         specunit = 'GHz'
@@ -348,7 +348,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxfreq_all)
 
 
-    def test06(self):
+    def test06( self ):
         """Test 6: specunit='km/s' """
         tid="06"
         specunit = 'km/s'
@@ -364,7 +364,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxvelo_all)
 
 
-    def test07(self):
+    def test07( self ):
         """Test 7: maskllist (line) in specunit='channel' """
         tid="07"
         outfile = self.outroot+tid+self.outsuff
@@ -384,7 +384,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.minmaxchan_line2)
 
 
-    def test08(self):
+    def test08( self ):
         """Test 8: maskllist (line) in specunit='GHz' """
         tid="08"
         outfile = self.outroot+tid+self.outsuff
@@ -402,7 +402,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.ref_line2)
 
 
-    def test09(self):
+    def test09( self ):
         """Test 9: maskllist (line) in specunit='km/s' """
         tid="09"
         outfile = self.outroot+tid+self.outsuff
@@ -420,7 +420,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.ref_line2)
 
 
-    def test10(self):
+    def test10( self ):
         """Test 10: invert = True"""
         tid="07"
         outfile = self.outroot+tid+self.outsuff
@@ -440,7 +440,7 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         self._compareStats(currstat,self.ref_bl0)
         self._compareStats(currstat,self.minmaxchan_bl0)
 
-    def test11(self):
+    def test11( self ):
         """Test1: specify format """
         tid="11"
         reference = self.datapath+"refstat"+tid
@@ -459,20 +459,19 @@ class sdstat_basicTest(sdstat_unittest_base,unittest.TestCase):
         #self._compareStats(currstat,self.ref_allK)
         #self._compareStats(currstat,self.minmaxchan_all)
 
-class sdstat_storageTest(sdstat_unittest_base,unittest.TestCase):
+class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdstat. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
-    testMTsm  --- storage = 'memory', insitu = True
-    testMFsm  --- storage = 'memory', insitu = False
-    testDTsm  --- storage = 'disk', insitu = True
-    testDFsm  --- storage = 'disk', insitu = False
-    testMTrg  --- storage = 'memory', insitu = True
-    testMFrg  --- storage = 'memory', insitu = False
-    testDTrg  --- storage = 'disk', insitu = True
-    testDFrg  --- storage = 'disk', insitu = False
+    testMT  --- storage = 'memory', insitu = True
+    testMF  --- storage = 'memory', insitu = False
+    testDT  --- storage = 'disk', insitu = True
+    testDF  --- storage = 'disk', insitu = False
+
+    Note on handlings of disk storage:
+       Task script restores unit and frame information.
     """
     infile = 'OrionS_rawACSmod_calTPave.asap'
     outroot = sdstat_unittest_base.taskname+'_storage'
@@ -487,19 +486,19 @@ class sdstat_storageTest(sdstat_unittest_base,unittest.TestCase):
     minmaxchan_line2 = {'max_abscissa': {'value': 3048.0, 'unit': 'channel'}, 
                         'min_abscissa': {'value': 2951.0, 'unit': 'channel'}}
     
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdstat)
 
-    def tearDown(self):
+    def tearDown( self ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def testMT(self):
-        """Test MT: storage='memory' and insitu=T"""
+    def testMT( self ):
+        """Storage Test MT: storage='memory' and insitu=T"""
         tid="MT"
         outfile = self.outroot+tid+self.outsuff
         iflist = [2]
@@ -535,8 +534,8 @@ class sdstat_storageTest(sdstat_unittest_base,unittest.TestCase):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
 
-    def testMF(self):
-        """Test MF: storage='memory' and insitu=F"""
+    def testMF( self ):
+        """Storage Test MF: storage='memory' and insitu=F"""
         tid="MF"
         outfile = self.outroot+tid+self.outsuff
         iflist = [2]
@@ -572,8 +571,8 @@ class sdstat_storageTest(sdstat_unittest_base,unittest.TestCase):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
 
-    def testDT(self):
-        """Test DT: storage='disk' and insitu=T"""
+    def testDT( self ):
+        """Storage Test DT: storage='disk' and insitu=T"""
         tid="DT"
         outfile = self.outroot+tid+self.outsuff
         iflist = [2]
@@ -609,8 +608,8 @@ class sdstat_storageTest(sdstat_unittest_base,unittest.TestCase):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
 
-    def testDF(self):
-        """Test Df: storage='disk' and insitu=F"""
+    def testDF( self ):
+        """Storage Test DF: storage='disk' and insitu=F"""
         tid="DF"
         outfile = self.outroot+tid+self.outsuff
         iflist = [2]

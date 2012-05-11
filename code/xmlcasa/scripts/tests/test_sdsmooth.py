@@ -571,7 +571,7 @@ class sdsmooth_basicTest(sdsmooth_unittest_base,unittest.TestCase):
         self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
 
 
-class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
+class sdsmooth_storageTest( sdsmooth_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdsmooth. Test scantable sotrage and insitu
     parameters
@@ -585,6 +585,11 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
     testMFrg  --- storage = 'memory', insitu = False (regrid)
     testDTrg  --- storage = 'disk', insitu = True (regrid)
     testDFrg  --- storage = 'disk', insitu = False (regrid)
+
+    Note on handlings of disk storage:
+       Returns new table after smooth and regrid.
+       Returns new table after scantable.convert_flux.
+       Task script restores unit and frame information.
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_if2_calTPave_bl.asap'
@@ -608,19 +613,19 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
                "incr": 24416.931914787496}
 
 
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdsmooth)
 
-    def tearDown(self):
+    def tearDown( self ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def testMTsm(self):
-        """Test MTsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=T"""
+    def testMTsm( self ):
+        """Storage Test MTsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=T"""
         tid="MTsm"
         outfile = self.outroot+tid+'.asap'
         kernel = 'boxcar'
@@ -628,7 +633,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
@@ -645,8 +650,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         testval = self._getStats(outfile)
         self._compareDictVal(testval, self.smrefdic)
 
-    def testMFsm(self):
-        """Test MFsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=F"""
+    def testMFsm( self ):
+        """Storage Test MFsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=F"""
         tid="MFsm"
         outfile = self.outroot+tid+'.asap'
         kernel = 'boxcar'
@@ -654,7 +659,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = False
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
@@ -671,8 +676,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         testval = self._getStats(outfile)
         self._compareDictVal(testval, self.smrefdic)
 
-    def testDTsm(self):
-        """Test DTsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=T"""
+    def testDTsm( self ):
+        """Storage Test DTsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=T"""
         tid="DTsm"
         outfile = self.outroot+tid+'.asap'
         kernel = 'boxcar'
@@ -680,7 +685,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
@@ -697,8 +702,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         testval = self._getStats(outfile)
         self._compareDictVal(testval, self.smrefdic)
 
-    def testDFsm(self):
-        """Test DFsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=F"""
+    def testDFsm( self ):
+        """Storage Test DFsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=F"""
         tid="DFsm"
         outfile = self.outroot+tid+'.asap'
         kernel = 'boxcar'
@@ -706,7 +711,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = False
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile)
@@ -723,8 +728,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         testval = self._getStats(outfile)
         self._compareDictVal(testval, self.smrefdic)
 
-    def testMTrg(self):
-        """Test MTrg: kernel = 'regrid' on storage='memory' and insitu=T"""
+    def testMTrg( self ):
+        """Storage Test MTrg: kernel = 'regrid' on storage='memory' and insitu=T"""
         tid="MTrg"
         unit="Hz"
         # get channel number and width in input data
@@ -745,7 +750,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
@@ -775,8 +780,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
         self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
 
-    def testMFrg(self):
-        """Test MFrg: kernel = 'regrid' on storage='memory' and insitu=F"""
+    def testMFrg( self ):
+        """Storage Test MFrg: kernel = 'regrid' on storage='memory' and insitu=F"""
         tid="MFrg"
         unit="Hz"
         # get channel number and width in input data
@@ -797,7 +802,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = False
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
@@ -827,8 +832,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
         self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
 
-    def testDTrg(self):
-        """Test DTrg: kernel = 'regrid' on storage='disk' and insitu=T"""
+    def testDTrg( self ):
+        """Storage Test DTrg: kernel = 'regrid' on storage='disk' and insitu=T"""
         tid="DTrg"
         unit="Hz"
         # get channel number and width in input data
@@ -849,7 +854,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
@@ -879,8 +884,8 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
         self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
         self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
 
-    def testDFrg(self):
-        """Test DFrg: kernel = 'regrid' on storage='disk' and insitu=F"""
+    def testDFrg( self ):
+        """Storage Test DFrg: kernel = 'regrid' on storage='disk' and insitu=F"""
         tid="DFrg"
         unit="Hz"
         # get channel number and width in input data
@@ -901,7 +906,7 @@ class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = False
-        print "running test with storage='%s' and insitu=%s" % \
+        print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         initval = self._getStats(self.infile,self.linechan,self.basechan)
