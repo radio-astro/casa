@@ -910,12 +910,16 @@ FlagDataHandler::enableAsyncIO(Bool enable)
 			if (!tmp)
 			{
 				asyncio_enabled_p = false;
-				*logger_p << LogIO::WARN << " Asyncio disabled from FlagDataHandler .casarc settings" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1
+				          << " Asynchronous i/o not enabled for FlagDataHandler."
+				          << LogIO::POST;
 			}
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << " Asyncio disabled from VisibilityIterator .casarc settings" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1
+			          << " Asynchronous i/o not enabled for FlagDataHandler and CASA in general."
+  			          << LogIO::POST;
 		}
 	}
 	else
