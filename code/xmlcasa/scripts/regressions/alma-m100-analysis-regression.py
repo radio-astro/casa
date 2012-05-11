@@ -983,6 +983,14 @@ if(mystep in thesteps):
         casalog.post( 'ERROR: RMS in M100 central field image '+str(i)+' deviates from expectation by '+str(rmsmdev)+' percent.','WARN')
         passed = False
 
+    if not os.path.exists('M100-CO.mom0'):
+        casalog.post( 'ERROR: M100 line cube moment 0 map was not created!','WARN')
+        passed = False
+        
+    if not os.path.exists('M100-CO.mom1'):
+        casalog.post( 'ERROR: M100 line cube moment 1 map was not created!','WARN')
+        passed = False
+        
     if not passed:
         raise Exception, 'Results are different from expectations by more than 0.5 percent.'
 
