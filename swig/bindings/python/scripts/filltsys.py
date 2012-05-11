@@ -56,6 +56,8 @@ def fillTsys( filename, specif, tsysif=None, mode='linear' ):
             default: 'linear'
             options: 'linear',,'nearest','zero',
                      'slinear','quadratic','cubic'
+                     any integer specifying an order of
+                     spline interpolation
     """
     filler = TsysFiller( filename, specif, tsysif )
     polnos = filler.getPolarizations()
@@ -624,7 +626,7 @@ class TsysFiller:
         abctsys[0] = a[0] - 0.5 * incr
         abctsys[-1] = a[-1] + 0.5 * incr
         abctsys[1:-1] = a
-        print abctsys
+        #print abctsys
         atsys = numpy.zeros( (len(b),len(abctsys)), dtype=type(b[0][0]) )
         for i in xrange(len(b)):
             atsys[i][0] = b[i][0]
