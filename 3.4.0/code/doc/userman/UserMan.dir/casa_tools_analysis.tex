@@ -1,0 +1,201 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+
+\chapter{Image Analysis}
+\label{chapter:ia}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Open a file}
+\label{section:ia.open}
+
+To open an image file for analysis, use 
+the {\tt ia.open} method, e.g.: 
+\small
+\begin{verbatim}
+  ia.open('ngc5921_task.image')
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Get an image summary}
+\label{section:ia.summary}
+
+To get a summary of the properties of your image, use 
+the {\tt ia.summary} method, e.g.: 
+\small
+\begin{verbatim}
+  imhead(imagename='image.im')
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image statistics}
+\label{section:ia.stats}
+
+The {\tt ia.statistics} method computes statistics in a (region)
+of an image.
+
+\small
+\begin{verbatim}
+  CASA <50>: ia.open('ngc5921_task.image')
+  CASA <51>: ia.statistics() # Note: formatted output goes to the logger
+  {'return': True,
+   'statsout': {'blc': [0, 0, 0, 0],
+              'blcf': '15:24:08.404, +04.31.59.181, I, 1.41281e+09Hz',
+              'flux': [12.136708280654085],
+              'max': [0.12773475050926208],
+              'maxpos': [134, 134, 0, 38],
+              'maxposf': '15:21:53.976, +05.05.29.998, I, 1.41374e+09Hz',
+              'mean': [4.7899158775357123e-05],
+              'min': [-0.023951441049575806],
+              'minpos': [230, 0, 0, 15],
+              'minposf': '15:20:17.679, +04.31.59.470, I, 1.41317e+09Hz',
+              'npts': [3014656.0],
+              'rms': [0.00421889778226614],
+              'sigma': [0.0042186264443439979],
+              'sum': [144.399486397083],
+              'sumsq': [53.658156081703709],
+              'trc': [255, 255, 0, 45],
+              'trcf': '15:19:52.390, +05.35.44.246, I, 1.41391e+09Hz'}}
+\end{verbatim}
+\normalsize
+
+Restrict statistics to a region:
+
+\small
+\begin{verbatim}
+  CASA <60>: blc=[0,0,0,23]
+
+  CASA <61>: trc=[255,255,0,23]
+
+  CASA <62>: bbox=ia.setregion(blc,trc)
+
+  CASA <63>: ia.statistics(region=bbox)
+
+  0%....10....20....30....40....50....60....70....80....90....100%
+  Warning no plotter attached.  Attach a plotter to get plots
+    Out[63]: 
+  {'return': True,
+   'statsout': {'blc': [0, 0, 0, 23],
+              'blcf': '15:24:08.404, +04.31.59.181, I, 1.41337e+09Hz',
+              'flux': [0.21697188625158217],
+              'max': [0.061052091419696808],
+              'maxpos': [124, 132, 0, 23],
+              'maxposf': '15:22:04.016, +05.04.59.999, I, 1.41337e+09Hz',
+              'mean': [3.9390207550122095e-05],
+              'min': [-0.018510516732931137],
+              'minpos': [254, 20, 0, 23],
+              'minposf': '15:19:53.588, +04.36.59.216, I, 1.41337e+09Hz',
+              'npts': [65536.0],
+              'rms': [0.0040461532771587372],
+              'sigma': [0.0040459925613279676],
+              'sum': [2.5814766420048016],
+              'sumsq': [1.0729132921679772],
+              'trc': [255, 255, 0, 23],
+              'trcf': '15:19:52.390, +05.35.44.246, I, 1.41337e+09Hz'}}
+\end{verbatim}
+\normalsize
+
+You can also use the viewer to interactively obtain image statistics on a region:
+
+\small
+\begin{verbatim}
+  viewer('imagename.im')
+  # Now use the right mouse button (default for region setting)
+  # create a region and then double click inside to obtain statistics on that region
+  # Currently this supports a single plane only and the output goes to your casapy 
+  # terminal window as:
+
+  ngc5921_task.image
+
+  n           Std Dev     RMS         Mean        Variance    Sum
+  660         0.01262     0.0138      0.005622    0.0001592   3.711     
+  
+  Flux        Med |Dev|   Quartile    Median      Min         Max
+  0.3119      0.003758    0.004586    0.001434    -0.009671   0.06105   
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Moments}
+\label{section:ia.moments}
+
+Make $0^{th}$ and $1^{st}$ moment maps.  The example below takes an
+existing image cube ang generates $0^{th}$ and $1^{st}$ moment maps.
+No task yet exists to make moment masks so the examples below show you
+how to do this with the CASA tools: 
+
+\small
+\begin{verbatim}
+  ia.open('mosaic.image')           # Open the image you want and attach it to a tool called ia
+  ia.moments(outfile='mosaic.mom0', # Write the moment 0 map, mosaic.mom0, to disk
+     moments=0, axis=3,             # Take the zeroth moment over velocity (axis 3,0-based)
+     mask='indexin(4,[4:25])',      # Select channels 4-25
+                                    # Darn: mask axis input must be 1-based (4=velocity now).  
+     includepix=[0.09,100.0])       # Only include pixels above 0.09 Jy
+  ia.close()                        # Close the tool and detach from the MS
+\end{verbatim}
+\normalsize
+
+\small
+\begin{verbatim}
+  ia.open('mosaic.image')           # Open the image you want and attach it to a tool called ia
+  ia.moments(outfile='mosaic.mom1', # Write the moment 1 map, mosaic.mom1, to disk
+     moments=1, axis=3,             # Take the first moment over velocity (axis 3 - 0-based)
+     mask='indexin(4,[4:25])',      # Select channels 4-25, over velocity
+     includepix=[0.09,10.0])        # Only include pixels above 0.09 Jy
+  ia.close()                        # Close the tool and detach from the MS
+\end{verbatim}
+\normalsize
+
+{\bf Note: 4mar07} there is a bug with the moments in that it keeps
+the moment image locked so you can't look at it with the viewer.
+Type the following to clear all locks and then bring up the viewer: 
+\small
+\begin{verbatim}
+  tb.clearlocks()
+  viewer
+\end{verbatim}
+\normalsize
+Now the viewer will come up and you can look at the resulting image.  
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Math}
+\label{section:ia.math}
+
+Images can be scaled, manipulated and combined in various ways.  The
+most straightforward method is to use the {\tt imagecalc} tool to do a
+simple scaling: 
+
+\small
+\begin{verbatim}
+  ia.open('n75.im')                 # open the image called n75.im
+  ia.imagecalc(outfile='output.im', # divide the image by 2 and write new image 
+     pixels='infile.im/2')          #  to the file called output.im
+  ia.close()                        # close the tool. 
+\end{verbatim}
+\normalsize
+
+Now, say you have made a mosic that has uniform RMS across the image
+but the flux falls off as you move to the edge of the mosaic.  You
+wrote out a {\tt fluxscale} image called fluxscale.im that you can
+use to scale your mosaic to have the correct flux across the entire
+field (albiet it has increasing RMS noise as you go to the edge of the
+mosaic).  For example: 
+
+\small
+\begin{verbatim}
+  ia.open('mosaic.im')                 # open the image called mosaic.im
+  ia.imagecalc(outfile='mosaic.correctflux.im', # divide it by the fluxscale.im
+      pixels='(mosaic.image)*(fluxscale.im)');
+  ia.close()                        # close the tool. 
+\end{verbatim}
+\normalsize
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
