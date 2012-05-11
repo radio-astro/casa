@@ -3415,7 +3415,7 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 ImageInterface<Float>* ImageAnalysis::_regrid(
 	const String& outFile, const Vector<Int>& inshape,
 	const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
-	Record& Region, const String& mask, const String& methodU,
+	const Record& Region, const String& mask, const String& methodU,
 	const Int decimate, const Bool replicate,
 	const Bool doRefChange, const Bool dropDegenerateAxes,
 	const Bool overwrite, const Bool forceRegrid,
@@ -3463,8 +3463,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	if (dropDegenerateAxes)
 		axesSpecifier = AxesSpecifier(False);
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*pImage_p,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		*pImage_p, Region,
 		mask, itsLog, False, axesSpecifier, extendMask
 	);
 
@@ -3596,10 +3595,61 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 	}
 }
 
+ImageInterface<Float>* ImageAnalysis::regrid(
+	const String &outFile,
+	const ImageInterface<Float> *other,
+	const String &methodU, const Vector<Int> &inaxes,
+	const Record &Region, const String &mask,
+	const Int decimate,
+	const Bool replicate, const Bool doRefChange,
+	const Bool dropDegenerateAxes, const Bool overwrite,
+	const Bool forceRegrid, const Bool specAsVelocity,
+	const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
+
+	// must deal with default shape and dropDegenerateAxes
+	CoordinateSystem csys(other->coordinates( ));
+	Bool regridByVel = False;
+	if (
+		specAsVelocity && pImage_p->coordinates().hasSpectralAxis()
+		&& csys.hasSpectralAxis()
+	) {
+		if (inaxes.size() == 0) {
+			regridByVel = True;
+		}
+		else {
+			Int specAxis = pImage_p->coordinates().spectralAxisNumber();
+			for (uInt i=0; i<inaxes.size(); i++) {
+				if (inaxes[i] == specAxis) {
+					regridByVel = True;
+					break;
+				}
+			}
+		}
+	}
+
+	if (regridByVel) {
+		return _regridByVelocity(
+			outFile, other->shape().asVector( ), csys, inaxes,
+			Region, mask, methodU, decimate,
+			replicate, doRefChange, dropDegenerateAxes,
+			overwrite, forceRegrid, extendMask
+		);
+	}
+	else {
+		return _regrid(
+			outFile, other->shape().asVector( ), csys, inaxes, Region, mask, methodU,
+			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
+			forceRegrid, extendMask
+		);
+	}
+}
+
 ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	const String& outfile, const Vector<Int>& shape,
 	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
-    Record& region, const String& mask,
+    const Record& region, const String& mask,
     const String& method, const Int decimate,
     const Bool replicate, const Bool doref,
     const Bool dropdeg, const Bool overwrite,

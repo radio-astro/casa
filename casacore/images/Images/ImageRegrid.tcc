@@ -627,7 +627,7 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 			// Trouble with multiple Coordinates of this type here.
 
 			Int iCoordTo = cSysTo.findCoordinate(typeFrom, -1);
-			if (iCoordTo < 1) {
+			if (iCoordTo < 0) {
 				os << Coordinate::typeToString(typeFrom) << " coordinate is not present "
 					<< " in the output coordinate system, so it cannot be regridded"
 					<< endl;
