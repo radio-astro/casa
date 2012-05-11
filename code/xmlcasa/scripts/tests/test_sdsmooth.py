@@ -108,7 +108,7 @@ class sdsmooth_badinputs(sdsmooth_unittest_base,unittest.TestCase):
         self.assertFalse(res)
 
 
-class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
+class sdsmooth_basicTest(sdsmooth_unittest_base,unittest.TestCase):
     """
     Basic unit tests for task sdsmooth. No interactive testing.
 
@@ -571,5 +571,366 @@ class sdsmooth_test(sdsmooth_unittest_base,unittest.TestCase):
         self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
 
 
+class sdsmooth_storageTest(sdsmooth_unittest_base,unittest.TestCase):
+    """
+    Unit tests for task sdsmooth. Test scantable sotrage and insitu
+    parameters
+
+    The list of tests:
+    testMTsm  --- storage = 'memory', insitu = True (smooth)
+    testMFsm  --- storage = 'memory', insitu = False (smooth)
+    testDTsm  --- storage = 'disk', insitu = True (smooth)
+    testDFsm  --- storage = 'disk', insitu = False (smooth)
+    testMTrg  --- storage = 'memory', insitu = True (regrid)
+    testMFrg  --- storage = 'memory', insitu = False (regrid)
+    testDTrg  --- storage = 'disk', insitu = True (regrid)
+    testDFrg  --- storage = 'disk', insitu = False (regrid)
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_if2_calTPave_bl.asap'
+    outroot = sdsmooth_unittest_base.taskname+'_test'
+    linechan = [[2951,3088]]
+    basechan = [[500,2950],[3089,7692]]
+    regridw = 4
+    reglinech = [[737,772]]
+    regbasech = [[125,736],[773,1923]]
+
+    ### reference values ( ASAP r2435 + CASA r18782)
+    smrefdic = {'linemax': 1.8286358118057251,
+                'linemaxpos': 3047.0,
+                'lineeqw': 65.946254391136108,
+                'baserms': 0.096009217202663422}
+    rgrefdic = {'linemax': 1.9440968036651611,
+                'linemaxpos': 762.0,
+                'lineeqw': 15.466022935853511,
+                'baserms': 0.16496795415878296}
+    rgrefsc = {"ch0": 44049935561.916985,
+               "incr": 24416.931914787496}
+
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsmooth)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    def testMTsm(self):
+        """Test MTsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=T"""
+        tid="MTsm"
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'boxcar'
+        kwidth = 16
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,kwidth=kwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile)
+        self._compareDictVal(testval, self.smrefdic)
+
+    def testMFsm(self):
+        """Test MFsm: kernel = 'boxcar' + kwidth = 16 on storage='memory' and insitu=F"""
+        tid="MFsm"
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'boxcar'
+        kwidth = 16
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,kwidth=kwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile)
+        self._compareDictVal(testval, self.smrefdic)
+
+    def testDTsm(self):
+        """Test DTsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=T"""
+        tid="DTsm"
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'boxcar'
+        kwidth = 16
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,kwidth=kwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile)
+        self._compareDictVal(testval, self.smrefdic)
+
+    def testDFsm(self):
+        """Test DFsm: kernel = 'boxcar' + kwidth = 16 on storage='disk' and insitu=F"""
+        tid="DFsm"
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'boxcar'
+        kwidth = 16
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,kwidth=kwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile)
+        self._compareDictVal(testval, self.smrefdic)
+
+    def testMTrg(self):
+        """Test MTrg: kernel = 'regrid' on storage='memory' and insitu=T"""
+        tid="MTrg"
+        unit="Hz"
+        # get channel number and width in input data
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
+        del scan
+        chw_new = chw_old*self.regridw
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile,self.linechan,self.basechan)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile,self.linechan,self.basechan)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile,self.reglinech,self.regbasech)
+        self._compareDictVal(testval, self.rgrefdic)
+        # spectral coordinate check
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
+
+    def testMFrg(self):
+        """Test MFrg: kernel = 'regrid' on storage='memory' and insitu=F"""
+        tid="MFrg"
+        unit="Hz"
+        # get channel number and width in input data
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
+        del scan
+        chw_new = chw_old*self.regridw
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile,self.linechan,self.basechan)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile,self.linechan,self.basechan)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile,self.reglinech,self.regbasech)
+        self._compareDictVal(testval, self.rgrefdic)
+        # spectral coordinate check
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
+
+    def testDTrg(self):
+        """Test DTrg: kernel = 'regrid' on storage='disk' and insitu=T"""
+        tid="DTrg"
+        unit="Hz"
+        # get channel number and width in input data
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
+        del scan
+        chw_new = chw_old*self.regridw
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile,self.linechan,self.basechan)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile,self.linechan,self.basechan)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile,self.reglinech,self.regbasech)
+        self._compareDictVal(testval, self.rgrefdic)
+        # spectral coordinate check
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
+
+    def testDFrg(self):
+        """Test DFrg: kernel = 'regrid' on storage='disk' and insitu=F"""
+        tid="DFrg"
+        unit="Hz"
+        # get channel number and width in input data
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(self.infile, average=False)
+        oldunit = scan.get_unit()
+        scan.set_unit(unit)
+        nch_old = scan.nchan(scan.getif(0))
+        fx = scan._getabcissa(0)
+        chw_old = (fx[nch_old-1]-fx[0])/float(nch_old-1)
+        scan.set_unit(oldunit)
+        del scan
+        chw_new = chw_old*self.regridw
+        
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'regrid'
+        chanwidth = qa.tos(qa.quantity(chw_new,unit))
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        initval = self._getStats(self.infile,self.linechan,self.basechan)
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,chanwidth=chanwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Test input data
+        print "Comparing INPUT statistics before/after smoothing"
+        newinval = self._getStats(self.infile,self.linechan,self.basechan)
+        self._compareDictVal(newinval, initval)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        testval = self._getStats(outfile,self.reglinech,self.regbasech)
+        self._compareDictVal(testval, self.rgrefdic)
+        # spectral coordinate check
+        sd.rcParams['scantable.storage'] = 'memory'
+        scan = sd.scantable(outfile, average=False)
+        scan.set_unit("Hz")
+        sc_new = scan._getabcissa(0)
+        del scan
+        nch_new = len(sc_new)
+        ch0_new = sc_new[0]
+        incr_new = (sc_new[nch_new-1]-sc_new[0])/float(nch_new-1)
+        
+        self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
+        self.assertAlmostEqual((ch0_new-self.rgrefsc['ch0'])/self.rgrefsc['ch0'],0.,places=5)
+        self.assertAlmostEqual((incr_new-self.rgrefsc['incr'])/self.rgrefsc['incr'],0.,places=5)
+
+
 def suite():
-    return [sdsmooth_badinputs,sdsmooth_test]
+    return [sdsmooth_badinputs, sdsmooth_basicTest, sdsmooth_storageTest]
