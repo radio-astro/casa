@@ -75,6 +75,7 @@ casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageInputProcessor.
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageTransposer.cc )
+casa_add_assay( imageanalysis implement/ImageAnalysis/test/tRegrid.cc )
 
 casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis implement/IO/test/tProfileFitterEstimatesFileParser.cc )
