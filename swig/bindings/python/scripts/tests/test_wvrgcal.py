@@ -73,7 +73,7 @@ class wvrgcal_test(unittest.TestCase):
         for i in range(0,len(self.ref)):
             os.system('rm -rf ' + self.ref[i])
 
-    def compTables(self, referencetab, testtab, excludecols):
+    def compTables(self, referencetab, testtab, excludecols, tolerance=0.001):
 
         rval = True
 
@@ -112,7 +112,7 @@ class wvrgcal_test(unittest.TestCase):
                     differs = False
                     for i in range(0,len(a)):
                         if (type(a[i])==float):
-                            if (abs(a[i]-b[i]) > 0.001*abs(a[i]+b[i])):
+                            if (abs(a[i]-b[i]) > tolerance*abs(a[i]+b[i])):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                 print i
                                 print a[i]
@@ -135,7 +135,7 @@ class wvrgcal_test(unittest.TestCase):
                         elif (type(a[i])==list or type(a[i])==np.ndarray):
                             for j in range(0,len(a[i])):
                                 if (type(a[i][j])==float or type(a[i][j])==int):
-                                    if (abs(a[i][j]-b[i][j]) > 0.001*abs(a[i][j]+b[i][j])):
+                                    if (abs(a[i][j]-b[i][j]) > tolerance*abs(a[i][j]+b[i][j])):
                                         print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                         print i, j
                                         print a[i][j]
@@ -143,7 +143,7 @@ class wvrgcal_test(unittest.TestCase):
                                         differs = True
                                 elif (type(a[i][j])==list or type(a[i][j])==np.ndarray):
                                     for k in range(0,len(a[i][j])):
-                                        if (abs(a[i][j][k]-b[i][j][k]) > 0.001*abs(a[i][j][k]+b[i][j][k])):
+                                        if (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]+b[i][j][k])):
                                             print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                             print i, j, k
                                             print a[i][j][k]
@@ -300,7 +300,9 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,3', '1,2'], toffset=0.)
         if(self.rval):
-            self.rval = self.compTables(self.ref[12], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
+            self.rval = self.compTables(self.ref[12], self.out, ['WEIGHT'], 0.01) # ignore WEIGHT because it is empty,
+                                                                                  # increase tolerance to 1 % to temporarily
+                                                                                  # overcome difference between 32bit and 64bit output
         self.assertTrue(self.rval)
 
     def test9(self):

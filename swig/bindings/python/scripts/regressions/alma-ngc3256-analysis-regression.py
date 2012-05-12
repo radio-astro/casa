@@ -161,7 +161,7 @@ if(mystep in thesteps):
 		  tablein = 'cal-wvr-'+name+'.Wnew',
 		  caltable = 'cal-'+name+'.Wnew',
 		  smoothtype = 'mean',
-		  smoothtime = 6.048)
+		  smoothtime = 2.88) # the integration time
 
     if makeplots:
         for spw in ['1','3','5','7']:
@@ -236,14 +236,14 @@ if(mystep in thesteps):
     flagmanager(vis ='uid___A002_X1d54a1_X174_K_WVR.ms', mode = 'restore', versionname = 'Original')
        
     flagdata(vis='uid___A002_X1d54a1_X174_K_WVR.ms', mode='manualflag',
-             antenna='DV04', flagbackup = T, scan='5,9', spw='7')
+             antenna='DV04', flagbackup = T, scan='4,5,9', spw='7')
             
     for name in basename:
 
 	for field in ['Titan','1037*','NGC*']:
 		applycal(vis=name+'_K_WVR.ms', spw='1,3,5,7', 
                          flagbackup=F, field=field, gainfield=field,
-                         interp='linear', gaintable=['cal-tsys_'+name+'.calnew'])
+                         interp='linear,spline', gaintable=['cal-tsys_'+name+'.calnew'])
 
         os.system('rm -rf '+name+'_line.ms*')
 	split(vis=name+'_K_WVR.ms', outputvis=name+'_line.ms',
@@ -489,6 +489,10 @@ if(mystep in thesteps):
                        'range':[-0.004, 0.250], 'scaling':-2.5, 'colormap':'Rainbow 2'},
                out='result-phasecal_map.png', zoom=1)
 
+        imview(raster={'file': 'result-phasecal_cont.image.tt0', 'colorwedge':T,
+                       'colormap':'Rainbow 2'},
+               out='result-phasecal_map-lin.png', zoom=1)
+
     timing()
 
 # Apply calibration to flux calibrator
@@ -525,6 +529,10 @@ if(mystep in thesteps):
         imview(raster={'file': 'result-ampcal_cont.image', 'colorwedge':T,
                        'range':[-0.02, 0.250], 'scaling':-1.5, 'colormap':'Rainbow 2'},
                out='result-ampcal_map.png', zoom=1)
+
+        imview(raster={'file': 'result-ampcal_cont.image', 'colorwedge':T,
+                       'colormap':'Rainbow 2'},
+               out='result-ampcal_map-lin.png', zoom=1)
 
     timing()
 
