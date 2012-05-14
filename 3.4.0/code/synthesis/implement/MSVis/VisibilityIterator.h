@@ -694,7 +694,9 @@ public:
   // Convert the frequency from the observe frame to lsr frame.
   // Returns True in convert if given spw was not observed 
   // in the LSRK frame
-  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
+  //when ignoreconv=True...no conversion is done from data frame
+  //frequency is served as is
+  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=False);
   //assign a VisImagingWeight object to this iterator
   void useImagingWeight(const VisImagingWeight& imWgt);
   const VisImagingWeight & getImagingWeightGenerator () const;
