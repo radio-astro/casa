@@ -2589,6 +2589,11 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
+
+                if(over == NULL) {
+                  return;
+                }
+
 		QHashIterator<QString, ImageAnalysis*> i(*over);
 		while (i.hasNext() && stateMProf) {
 		 i.next();
