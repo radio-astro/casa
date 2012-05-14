@@ -309,6 +309,7 @@ mystep = 8
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    os.system('rm -rf cal-ngc3256.G1')
     gaincal(vis='ngc3256_line.ms', caltable='cal-ngc3256.G1', spw='*:40~80', field='1037*',
             selectdata=T, solint='int', refant=therefant, calmode='p')
 
