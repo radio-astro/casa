@@ -85,6 +85,22 @@ public:
   ROVisIteratorImpl & operator++(int);
   ROVisIteratorImpl & operator++();
 
+  // Selected spws and channel counts
+  virtual void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
+
+  // 
+  virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=False);
+
+
+  // The following throws an exception, because this isn't the
+  // language of channel selection in VisIterator
+  virtual void getChannelSelection(Block< Vector<Int> >&,
+				   Block< Vector<Int> >&,
+				   Block< Vector<Int> >&,
+				   Block< Vector<Int> >&,
+				   Block< Vector<Int> >&)
+  { throw(AipsError("ROVisIteratorImpl::getChannelSelection: you can't do that!")); };
+
   // Return channel numbers in selected VisSet spectrum
   // (i.e. disregarding possible selection on the iterator, but
   //  including the selection set when creating the VisSet)
@@ -586,6 +602,18 @@ ROVisIteratorImpl::setTileCache()
 }
 
 
+// Selected spws and channel counts
+void ROVisIterator::allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan)
+{
+  getReadImpl()->allSelectedSpectralWindows(spws,nvischan);
+}
+
+void ROVisIterator::lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv)
+{
+  getReadImpl()->lsrFrequency(spw,freq,convert,ignoreconv);
+}
+
+
 Int
 ROVisIterator::numberChan(Int spw) const
 {
@@ -707,6 +735,70 @@ void ROVisIteratorImpl::updateSlicer()
 
   setTileCache();
 }
+
+// 
+
+// Selected spws and channel counts
+void ROVisIteratorImpl::allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan) {
+
+  Vector<Int> ddids;
+  msColumns().dataDescId().getColumn(ddids);
+  Int ndd=genSort(ddids,(Sort::QuickSort | Sort::NoDuplicates));
+  ddids.resize(ndd,True);
+  //  cout << "ddids = " << ddids << endl;
+  Vector<Int> spwperdd;
+  msColumns().dataDescription().spectralWindowId().getColumn(spwperdd);
+  //  cout << "spwperdd = " << spwperdd << endl;
+  spws.resize(ndd);
+  nvischan.resize(numberSpw());
+  nvischan.set(-1);
+  for (Int idd=0;idd<ndd;++idd) {
+    spws(idd)=spwperdd(ddids(idd));
+    nvischan(spws(idd))=this->numberChan(spws(idd));
+  }
+
+}
+
+void ROVisIteratorImpl::lsrFrequency(const Int& spw, Vector<Double>& freq, 
+				     Bool& convert, const  Bool ignoreconv) {
+
+
+  MFrequency::Types obsMFreqType = (MFrequency::Types) msIter_p.msColumns ().spectralWindow ().measFreqRef ()(spw);
+  convert = obsMFreqType != MFrequency::LSRK; // make this parameter write-only
+  if (ignoreconv) convert=False;  // override if user says so
+
+  // Set up the frequency converter
+  MEpoch ep;
+  ROScalarMeasColumn<MEpoch>(msIter_p.table (), MS::columnName (MS::TIME)).get (curStartRow_p, ep); // Setting epoch to iteration's first one
+  MPosition obsPos = msIter_p.telescopePosition ();
+  MDirection dir = msIter_p.phaseCenter ();
+  MeasFrame frame (ep, obsPos, dir);
+  MFrequency::Convert tolsr (obsMFreqType,
+			     MFrequency::Ref (MFrequency::LSRK, frame));
+
+
+  // Get the requested spw's nominal frequencies (all of them)
+  //  (we will index these with channel ids later)
+  Vector<Double> chanFreq(0);
+  chanFreq = msIter_p.msColumns ().spectralWindow ().chanFreq ()(spw);
+
+  // The selected channel ids for the requested spw
+  Vector<Int> chans(0);
+  this->chanIds(chans,spw);
+  Int nchan=chans.nelements();
+
+  // Create output frequencies
+  freq.resize(nchan);
+  for (Int ich=0;ich<nchan;++ich) {
+    if (convert)
+      freq[ich]=tolsr(chanFreq(chans(ich))).getValue().getValue();
+    else
+      freq[ich]=chanFreq(chans(ich));
+
+  }
+
+}
+
 
 // (Alternative syntax for ROVisIter::chanIds)
 Vector<Int>& ROVisIteratorImpl::channel(Vector<Int>& chan) const

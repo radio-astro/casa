@@ -172,6 +172,20 @@ class ROVisIterator : public ROVisibilityIterator
   // Set up/return channel averaging bounds 
   Vector<Matrix<Int> >& setChanAveBounds(Float factor, Vector<Matrix<Int> >& bounds);
 
+  // Get selected spws and channel counts
+  void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
+  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=False);
+
+  // The following throws an exception, because this isn't the
+  // language of channel selection in VisIterator
+  void getChannelSelection(Block< Vector<Int> >&,
+                           Block< Vector<Int> >&,
+                           Block< Vector<Int> >&,
+                           Block< Vector<Int> >&,
+                           Block< Vector<Int> >&) 
+  { throw(AipsError("VisIterator::getChannelSelection: you can't do that!")); };
+
+
   // Return number of chans/corrs per spw/pol
   Int numberChan(Int spw) const;
   Int numberCorr(Int pol) const;
