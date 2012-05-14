@@ -212,7 +212,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 
 
 
-  void VisModelData::addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb){
+  void VisModelData::addModel(const Record& rec,  const Vector<Int>& /*msids*/, const VisBuffer& vb){
     
 
 
@@ -237,7 +237,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      for(uInt spi=0; spi < spws.nelements(); ++spi){
 		Int indx=-1;
 		Int ftindx=-1;
-		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (ftindex_p(spws[spi], fields[fi], vb.msId()) >= 0 )){
 		 
 		  indx=ftindex_p(spws[spi], fields[fi], vb.msId());
 		  ftindx=ftholder_p[indx].nelements();
@@ -287,7 +287,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	      for(uInt spi=0; spi < spws.nelements(); ++spi){
 		Int indx=-1;
 		Int clindx=-1;
-		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) > 0 )){
+		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) >= 0 )){
 		  indx=clindex_p(spws[spi], fields[fi], vb.msId());
 		  clindx=clholder_p[indx].nelements();
 		  Bool alreadyAdded=False;
@@ -384,6 +384,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       Bool allnull=True;
       for (uInt k=0; k < ft.nelements(); ++k){
 	if(!ft[k].null()){
+	  if(k >0) vb.setModelVisCube(Cube<Complex> (vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0)));
+    
 	  ft[k]->get(vb, -1);
 	  if(ft.nelements()>1 || incremental){
 	    tmpModel+=vb.modelVisCube();
