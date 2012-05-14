@@ -1321,10 +1321,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // through the data 
     // hoping the user made the right choice
     if (!anymatchChan && !anyTopo){
-      logIO() << "No overlap in frequency between image channels and selected data found "
-	      << " Check your data selection and image parameters" 
-	      << LogIO::EXCEPTION;
-      return False;
+      logIO() << "No overlap in frequency between image channels and selected data found for this FTMachine \n"
+	      << " Check your data selection and image parameters if you end up with a blank image" 
+	      << LogIO::WARN << LogIO::POST;
       
     }
     
