@@ -392,7 +392,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	      //cerr << "in ftrec saving" << endl;
 	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 		throw(AipsError("Error in record saving:  "+error));
-	      vi.putModel(ftrec, False, (model>0 || incremental));
+	      vi.putModel(ftrec, False, ((model>0) || incremental || (cubeSlice > 0)));
 	    }
 	  }
 	}
@@ -650,14 +650,16 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
+    ////if people want to use model but it isn't there
+
+    if(!noModelCol_p)
+      noModelCol_p=rvi_p->msColumns().modelData().isNull();
+
     ROVisibilityIterator * oldRvi = NULL;
     VisibilityIterator * oldWvi = NULL;
 
     configureAsyncIo (oldRvi, oldWvi);
 
-    ////if people want to use model but it isn't there
-    if(!noModelCol_p)
-      noModelCol_p=rvi_p->msColumns().modelData().isNull();
 
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
@@ -804,7 +806,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 			//cerr << "in ftrec saving" << endl;
 			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 			  throw(AipsError("Error in saving model;  "+error));
-			wvi_p->putModel(ftrec, False, (model>0 || predictedComp || incremental));
+			wvi_p->putModel(ftrec, False, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
 		      }
 		    }
 		  }
