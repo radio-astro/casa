@@ -312,6 +312,11 @@ Bool PlotCal::selectCal(const String& antenna,
   Bool fldSel=False;
   Bool spwSel=False;
   Bool timeSel=False;
+
+
+  // This will be revised below, if necessary
+  chanId_p.resize();
+
   
   if ( msName_p=="" || !Table::isReadable(msName_p) ) {
     cout << "Note: Either your CalTable pre-dates name-based selection, or" << endl;
@@ -856,7 +861,6 @@ Bool PlotCal::doPlot(){
   label_p.resize(3);
   plotTaQL_p.resize(2);
 
-
   getAxisTaQL(xAxis_p,plotTaQL_p(0),label_p(1));
   getAxisTaQL(yAxis_p,plotTaQL_p(1),label_p(2));
 
@@ -956,7 +960,7 @@ Bool PlotCal::doPlot(){
       }
 
       iterating_p=True;
-      
+
       Vector<String> labcol;
       Vector<Vector<Double> > labval;
       tp_p->iterMultiPlotNext(labcol,labval);
@@ -1691,6 +1695,9 @@ Int PlotCal::multiTables(const Table& tablein,
   // Get cal_desc indices (via MSSelection on spws)
   Vector<Int> PlotCal::getSpwIdx(const String& spw, Matrix<Int>& chanId) {
 
+    // This will be revised below, if necessary
+    chanId.resize();
+
     if (isNCT_p) {
 
       if (spw.length()<1) return Vector<Int>();
@@ -1700,9 +1707,7 @@ Int PlotCal::multiTables(const Table& tablein,
       mss.setSpwExpr(spw);
       mss.toTableExprNode(&cti);
 
-
       if ((calType_p == "B") || (calType_p == "BPOLY") || (calType_p == "TSYS")) {
-	chanId.resize();
 	chanId=mss.getChanList();
       }
       return mss.getSpwList();
@@ -1712,12 +1717,6 @@ Int PlotCal::multiTables(const Table& tablein,
     if (msName_p!="" && Table::isReadable(msName_p)) {
       MeasurementSet ms(msName_p);
       MSSelection mssel;
-      //
-      // Do this to keep it re-entrant.  Without this, if chanId has a
-      // finite shape, assignment to chanId below will generate an
-      // exception unless the new shape is same as the old shape.
-      //
-      chanId.resize(); 
 
       mssel.setSpwExpr(spw);
       if ((calType_p == "B") || (calType_p == "BPOLY") || (calType_p == "TSYS"))
