@@ -72,6 +72,7 @@ using namespace SubscanIntentMod;
 #include "SDMDataObject.h"
 
 #include "TableStreamReader.h"
+#include "asdm2MSGeneric.h"
 
 #include	"time.h"			/* <time.h> */
 #if	defined(__sysv__)
@@ -854,20 +855,6 @@ int scanNumber0, scanNumber1;
 
 map<int, set<int> > eb_scan_m;
 
-template<typename T>
-string displaySet(const set<T> &aSet) {
-  ostringstream oss;
-  oss << "{";
-  typename set<T>::const_iterator iter = aSet.begin();
-  if (iter != aSet.end())
-    oss << *iter++;
-   
-  while (iter != aSet.end())
-    oss << "," << *iter++;  
-  oss<< "}";
-  return oss.str();
-}
-
 /*
 ** Inserts all the integer values in the range [scanNumber0, scanNumber1] in the set referred 
 ** to by the global variable scan_s.
@@ -918,173 +905,6 @@ struct eb_scan_selection : public grammar<eb_scan_selection> {
     rule<ScannerT> const& start() const { return eb_scan_list ; }
   };
 };
-
-/*
-** Returns the intersection of two sets.
-**
-** @param T the base type of the two sets.
-** @param s1 the first set.
-** @param s2 the second set.
-** @return a set equal to the intersection of s1 and s2.
-*/
-template<typename T> 
-set<T> SetAndSet(const set<T>& s1, const set<T>& s2) {
-  set<T> result;
-  typename set<T>::iterator iter1_s, iter2_s;
-  for (iter1_s = s1.begin(); iter1_s != s1.end(); iter1_s++) {
-    if ((iter2_s = s2.find(*iter1_s)) != s2.end())
-      result.insert(*iter1_s);
-  }
-  return result;
-}
-
-//
-// A template function which returns true if and only there is at least
-// one element in the vector 'scans' for which the time interval
-// defined by its attributes startTime and endTime has a non empty
-// intersection with the time interval defined by the 'timeInterval'
-// attribute of the generic parameter of 'row' which is expected to 
-// have a method getTimeInterval which returns a TimeInterval object.
-//
-template<typename T>
-bool timeIntervalIntersectsAScan (T* row, const vector<ScanRow *>& scans) {
-  bool result = false;
-
-  int64_t currentScanStartTime, currentScanEndTime;
-  int64_t rowStartTime, rowEndTime;
-  for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
-    currentScanStartTime = (*iter)->getStartTime().get();
-    currentScanEndTime = (*iter)->getEndTime().get();
-
-    rowStartTime = row->getTimeInterval().getStart().get();
-    rowEndTime = rowStartTime + row->getTimeInterval().getDuration().get();
-    if (max(currentScanStartTime, rowStartTime) < min(currentScanEndTime, rowEndTime))
-      return true;
-  }
-  return result;
-}
-
-template<typename T>
-struct rowsInAScanbyTimeIntervalFunctor {
-private:
-  const vector<ScanRow *>&	scans;
-  vector<T *>			result;
-
-public:
-  rowsInAScanbyTimeIntervalFunctor(const vector<ScanRow *>& scans): scans(scans) {};
-  const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
-    if (ignoreTime) return rows;
-
-    for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-      if (timeIntervalIntersectsAScan (*iter, scans))
-	result.push_back(*iter);
-    }
-    return result;    
-  }
-};
-
-//
-// A template function which calls the template function timeIntervalIntersectsAScan for each
-// element of 'rows' by using the parameter 'scans' to determine if there is at least an intersection.
-// It returns a vector of T* containing copies of elements of 'rows' for which the function timeIntervalIntersectsAScan.
-// returns true.
-//
-template<typename T>
-vector<T *> rowsInAScanbyTimeInterval(const vector<T* >& rows, const vector<ScanRow *>& scans, bool midpoint) {
-  vector<T *> result ;
-  for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    if (timeIntervalIntersectsAScan (*iter, scans, midpoint))
-      result.push_back(*iter);
-  }
-  return result;
-}
-
-//
-// A template function which checks if there is at least one element scan of the vector scans for which
-// the time  contained by returned by row->getTime() is embedded in the time range defined in scan. 
-// Returns true there is such a scan.
-//
-template<typename T>
-bool timeIsInAScan(T* row, const vector<ScanRow *>& scans, bool midpoint) {
-  bool result = false;
-
-  int64_t currentScanStartTime, currentScanEndTime;
-  int64_t rowTime;
-  rowTime = row->getTime().get();
-  for (vector<ScanRow *>::const_iterator iter = scans.begin(); iter != scans.end(); iter++) {
-    currentScanStartTime = (*iter)->getStartTime().get();
-    currentScanEndTime = (*iter)->getEndTime().get();
-    if ((currentScanStartTime <= rowTime) && (rowTime < currentScanEndTime))
-      return true;
-  }
-  return result;
-}
-
-template<typename T>
-struct rowsInAScanbyTimeFunctor {
-private:
-  const vector<ScanRow *>&	scans;
-  bool				midpoint;
-  vector<T *>			result;
-
-public:
-  rowsInAScanbyTimeFunctor(const vector<ScanRow *>& scans, bool midpoint): scans(scans), midpoint(midpoint) {};
-  const vector<T *> & operator() (const vector<T *>& rows, bool ignoreTime=false) {
-    if (ignoreTime) return rows;
-
-    for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-      if (timeIsInAScan (*iter, scans, midpoint))
-	result.push_back(*iter);
-    }
-
-    return result;    
-  }
-};
-
-//
-// A template function which calls the template function timeIsInAScan for each
-// element of 'rows' by using the parameter 'scans' to determine if there is at 
-// least a scan which contains the 'time' attribute's value for each row.
-// It returns a vector of T* containing copies of elements of 'rows' for which the function 
-// timeIsInAScan returns true.
-//
-//
-template<typename T>
-vector<T *> rowsInAScanbyTime(const vector<T* >& rows, const vector<ScanRow *>& scans, bool midpoint) {
-  vector<T *> result ;
-  for (typename vector<T *>::const_iterator iter = rows.begin(); iter != rows.end(); iter++) {
-    if (timeIsInAScan (*iter, scans, midpoint))
-      result.push_back(*iter);
-  }
-  return result;
-}
-
-//
-// A boolean template functor which returns the value of the expression x.size() < y.
-template<typename T>
-struct size_lt {
-public: 
-  size_lt(unsigned int y) : y(y) {}
-  bool operator()(vector<T>& x) {return x.size() < y;}
-
-private:
-  unsigned int  y;
-};
-
-//
-// A template function which returns a string from an (expectedly) enumeration and its associated 
-// helper class.
-template<typename Enum, typename CEnum> 
-string stringValue(Enum literal) {
-  return CEnum::name(literal);
-}
-
-//
-// template function meant to return a value of type BasicType out of a value expected to be of one of the Physical Quantities type (Pressure, Speed ....)
-template<typename PhysicalQuantity, typename BasicType> 
-BasicType basicTypeValue (PhysicalQuantity value) {
-  return (BasicType) value.get();
-}
 
 map<int, int> swIdx2Idx ;                       // A map which associates old and new index of Spectral Windows before/after reordering.
 
@@ -1251,15 +1071,6 @@ int		ddIdx;
 map<MainRow*, int>     stateIdx2Idx;
 
 set<int> SwIdUsed;
-
-template<typename T>
-struct negateFunctor {
-public:
-  T operator() (const T& v) {
-    if ( v < 0.0 ) return v;
-    else return -v;
-  }
-};
 
 /** 
  * This function fills the MS Field table.
@@ -2137,7 +1948,7 @@ void fillMain_mt(MainRow*	r_p,
   if (debug) cout << "fillMain_mt : exiting" << endl;
 }
 
-void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
+void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
   if (debug) cout << "fillSysPower_aux : entering" << endl;
   vector<int>		antennaId;
   vector<int>		spectralWindowId;
@@ -2149,7 +1960,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
   vector<float>		switchedPowerSum;
   vector<float>		requantizerGain;
   
-  unsigned int        numReceptor0;
+  if (debug) cout << "fillSysPower_aux : resizing the arrays (" << sysPowers.size() << ") to populate the columns of the MS SYSPOWER table." << endl;
 
   antennaId.resize(sysPowers.size());
   spectralWindowId.resize(sysPowers.size());
@@ -2160,6 +1971,8 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
   /*
    * Prepare the mandatory attributes.
    */
+  if (debug) cout << "fillSysPower_aux : filling the arrays to populate the columns of the MS SYSPOWER table." << endl;
+
   transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
   transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
   transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
@@ -2169,74 +1982,33 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
   /*
    * Prepare the optional attributes.
    */
-  numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-  //
-  // Do we have a constant numReceptor all over the array numReceptor.
-  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-    errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-    error(errstream.str());
-  }
-  /*
-    else 
-    infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
-  */
-  
+ if (debug) cout << "fillSysPower_aux : working on the optional attributes." << endl;
+
+  unsigned int numReceptor0 = sysPowers[0]->getNumReceptor();
+  if (debug) cout << "fillSysPower_aux : numReceptor = " << numReceptor0 << endl;
+ 
   bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end()) {
-    
-    if (switchedPowerDifferenceExists0) {
-      //  infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-      switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
-    }
-    /*
-      else
-      infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-    */
+  if (switchedPowerDifferenceExists0) {
+    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
   }
-  else {
-    errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-    error(errstream.str());
-  }
-  
+
   bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end()) {
-	
-    if (switchedPowerSumExists0) {
-      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-      switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
-    }
-    /*
-      else
-      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-    */
-  }
-  else {
-    errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-    error(errstream.str());
+  if (switchedPowerSumExists0) {
+    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
   }
   
   bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end()) {
-    if (requantizerGainExists0) {
-      //infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-      requantizerGain.resize(numReceptor0 * sysPowers.size());
-      for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
-    }
-    /*
-      else
-      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-    */
-  }
-  else {
-    errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-    error(errstream.str());
+  if (requantizerGainExists0) {
+    requantizerGain.resize(numReceptor0 * sysPowers.size());
+    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
   }
 
-
-  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-       msIter != msFillers.end();
+  if (debug) cout << "fillSysPower_aux : about to append a slice to the MS SYSPOWER table." << endl;
+ 
+  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers_m.begin();
+       msIter != msFillers_m.end();
        ++msIter) {
     msIter->second->addSysPowerSlice(antennaId.size(),
 				     antennaId,
@@ -2248,8 +2020,9 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
 				     switchedPowerDifference,
 				     switchedPowerSum,
 				     requantizerGain);
-  }         
-  if (debug) cout << "fillSysPower : exiting" << endl;
+  }
+  infostream << "Appended " << sysPowers.size() << " rows to the MS SYSPOWER table." << endl;
+  if (debug) cout << "fillSysPower_aux : exiting" << endl;
 }
 
 /**
@@ -2258,9 +2031,10 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers) {
  * @param ds the ASDM dataset the ASDM SysPower table belongs to.
  * @param ignoreTime a boolean value to indicate if the selected scans are taken into account or if all the table is going to be processed.
  * @param selectedScanRow_v a vector of pointers on ScanRow used to determine which rows of SysPower are going to be processed.
+ * @param msFillers_m a map of ASDM2MSFillers depending on AtmosphericPhaseCorrection.
  *
  */
-void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const vector<ScanRow *>& selectedScanRow_v) {
+void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const vector<ScanRow *>& selectedScanRow_v, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
 
   if (debug) cout << "fillSysPower : entering" << endl;
 
@@ -2270,16 +2044,17 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
   info(infostream.str()); 
   
   if (sysPowerT.size() > 0 ) {
-    //
-    // We assume that there is an SysPower table , but we don't know yet if it's stored in a binary or an XML file.
-    // 
-    bool binFile = boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.bin")));
-    
     try {
+      // Prepare a row filter based on the time intervals of the selected scans.
       rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
-      
-      if (binFile) {
+
+      //
+      // We can assume that there is an SysPower table , but we don't know yet if it's stored in a binary or an XML file.
+      // 
+      if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.bin")))) {
+
 	if (debug) cout << "fillSysPower : working with SysPower.bin by successive slices." << endl;
+
 	TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
 	tsrSysPower.open(asdmDirectory);
 	// We can process the SysPower table by slice when it's stored in a binary file so let's do it.
@@ -2301,34 +2076,33 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
 	  errstream.str("");
   
 	  if (sysPowers.size() > 0)
-	    fillSysPower_aux(sysPowerRows);
+	    fillSysPower_aux(sysPowerRows, msFillers_m);
 	}
 	tsrSysPower.close();
       }
       
-      else {
-	// We must parse and load the entire SysPower table in memory when it's stored in an XML file.
-	if (debug) cout << "fillSysPower : working with SysPower.xml entirely parsed and loaded into memory." << endl;
-	const vector<SysPowerRow*>& sysPowerRows = sysPowerT.get();
-	infostream.str("");
-	infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
-	
-	if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
-	const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
-	if (!ignoreTime) 
-	  infostream << sysPowers.size() << " of them are in the selected exec blocks / scans";
-	
-	infostream << ")";	     
-	info(infostream.str());
-	
-	infostream.str("");
-	errstream.str("");
-	
-	if (sysPowers.size() > 0)
-	  fillSysPower_aux(sysPowers);
-      }
+      else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.xml")))) {
 
-      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+	if (debug) cout << "fillSysPower : working with SysPower.xml read with a TableSAXReader" << endl;
+
+	//
+	// Instantiate a TableSAXReader functor with T==SysPowerTable, R==SysPowerRow 
+	// and RFilter==rowsInAScanbyTimeIntervalFunctor<SysPowerRow>.
+	//
+	TableSAXReader<SysPowerTable, SysPowerRow, rowsInAScanbyTimeIntervalFunctor<SysPowerRow> >
+	  tableSAXReader(verbose,
+			 selector,
+			 &fillSysPower_aux,
+			 msFillers_m);
+	
+	// Execute the functor
+	tableSAXReader(asdmDirectory, ignoreTime);
+
+      }
+      else 
+	throw ConversionException ("fillSysPower: no file found for SysPower", "SysPower");
+
+      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers_m.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
       if (numMSSysPowers > 0) {
 	infostream.str("");
 	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
@@ -3562,7 +3336,7 @@ int main(int argc, char *argv[]) {
     int nHistory = historyT.size();
     infostream.str("");
     infostream << "The dataset has " << nHistory << " history(s)...";
-    rowsInAScanbyTimeFunctor<HistoryRow> selector(selectedScanRow_v, isEVLA);
+    rowsInAScanbyTimeFunctor<HistoryRow> selector(selectedScanRow_v);
 
     const vector<HistoryRow *>& v = selector(historyT.get(), ignoreTime);;
     if (!ignoreTime) 
@@ -3893,7 +3667,7 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "The dataset has " << sourceT.size() << " sources(s)...";
     rowsInAScanbyTimeIntervalFunctor<SourceRow> selector(selectedScanRow_v);
-
+    
     const vector<SourceRow *>& v = selector(sourceT.get(), ignoreTime);
     if (!ignoreTime) 
       infostream << v.size() << " of them in the selected scans ... ";
@@ -4011,7 +3785,6 @@ int main(int argc, char *argv[]) {
 	sysVel = DConverter::toVectorD<Speed>(r->getSysVel());
       }
    
-
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
@@ -4338,10 +4111,10 @@ int main(int argc, char *argv[]) {
 	    // coupledNoiseCal[0] = noiseCal
 	    // coupledNoiseCal[1] = noiseCal
 	    //
-	    infostream << "In the table CalDevice  there is no attribute 'coupledNoiseCal' but there an attribute 'noiseCal' in row #"
-		       << (unsigned int) (iter - calDevices.begin())
-		       << " which we are going to use to fill the MS NOISE_CAL by replicating its values."
-		       << endl;
+	    // infostream << "In the table CalDevice  there is no attribute 'coupledNoiseCal' but there an attribute 'noiseCal' in row #"
+	    // 	       << (unsigned int) (iter - calDevices.begin())
+	    // 	       << " which we are going to use to fill the MS NOISE_CAL by replicating its values."
+	    // 	       << endl;
 	  
 	    numReceptor = 2;
 	    coupledNoiseCal.resize(numReceptor);
@@ -4433,148 +4206,8 @@ int main(int argc, char *argv[]) {
  
   //
   // Process the SysPower table.
-#if 1 
   if ( processSysPower )
-    fillSysPower(dsName, ds, ignoreTime, selectedScanRow_v);
-#else
-  if ( processSysPower ) 
-    try {
-      const SysPowerTable& sysPowerT = ds->getSysPower();
-      infostream.str("");
-      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
-
-      if ( sysPowerT.size() > 0 ) { 
-	vector<int>		antennaId;
-	vector<int>		spectralWindowId;
-	vector<int>		feedId;
-	vector<double>	time;
-	vector<double>	interval;
-	vector<int>		numReceptor;
-	vector<float>	switchedPowerDifference;
-	vector<float>	switchedPowerSum;
-	vector<float>	requantizerGain;
-    
-	unsigned int        numReceptor0;
-	{
-	  info(infostream.str()); infostream.str("");
-	  rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
-      
-	  const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
-      
-	  if (!ignoreTime) 
-	    infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
-      
-	  info(infostream.str());
-      
-	  infostream.str("");
-	  errstream.str("");
-      
-	  antennaId.resize(sysPowers.size());
-	  spectralWindowId.resize(sysPowers.size());
-	  feedId.resize(sysPowers.size());
-	  time.resize(sysPowers.size());
-	  interval.resize(sysPowers.size());
-      
-	  /*
-	   * Prepare the mandatory attributes.
-	   */
-	  transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
-	  transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
-	  transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
-	  transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
-	  transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
-      
-	  /*
-	   * Prepare the optional attributes.
-	   */
-	  numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-	  //
-	  // Do we have a constant numReceptor all over the array numReceptor.
-	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-	    errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-	    error(errstream.str());
-	  }
-	  else 
-	    infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
-            
-	  bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
-	    if (switchedPowerDifferenceExists0) {
-	      infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-	      switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
-	    }
-	    else
-	      infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-	  else {
-	    errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-	    error(errstream.str());
-	  }
-      
-	  bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
-	    if (switchedPowerSumExists0) {
-	      infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	      switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
-	    }
-	    else
-	      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  else {
-	    errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-	    error(errstream.str());
-	  }
-      
-	  bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
-	    if (requantizerGainExists0) {
-	      infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	      requantizerGain.resize(numReceptor0 * sysPowers.size());
-	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
-	    }
-	    else
-	      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	  else {
-	    errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-	    error(errstream.str());
-	  }
-	}
-	info(infostream.str());
-        
-	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	     msIter != msFillers.end();
-	     ++msIter) {
-	  msIter->second->addSysPowerSlice(antennaId.size(),
-					   antennaId,
-					   spectralWindowId,
-					   feedId,
-					   time,
-					   interval,
-					   (unsigned int) numReceptor0,
-					   switchedPowerDifference,
-					   switchedPowerSum,
-					   requantizerGain);
-	}
-     
-	unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-	if (numMSSysPowers > 0) {
-	  infostream.str("");
-	  infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
-	  info(infostream.str());
-	}
-      } // end of filling SysPower by slice.
-    }
-    catch (ConversionException e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( std::exception & e) {
-      errstream.str("");
-      errstream << e.what();
-      error(errstream.str());      
-    }
-#endif
+    fillSysPower(dsName, ds, ignoreTime, selectedScanRow_v, msFillers);
 
   //
   // Load the weather table
