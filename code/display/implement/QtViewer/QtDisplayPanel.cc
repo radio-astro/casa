@@ -45,6 +45,7 @@
 #include <display/DisplayDatas/WedgeDD.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DParameterChoice.h>
+#include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <casa/IO/AipsIO.h>
 #include <tables/Tables/TableRecord.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
@@ -59,9 +60,14 @@
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
 
-
+#include <iostream>
+using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const int QtDisplayPanel::LEFT_MARGIN_SPACE_DEFAULT = 13;
+const int QtDisplayPanel::BOTTOM_MARGIN_SPACE_DEFAULT = 13;
+const int QtDisplayPanel::TOP_MARGIN_SPACE_DEFAULT = 4;
+const int QtDisplayPanel::RIGHT_MARGIN_SPACE_DEFAULT = 4;
 
 QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) : 
 		QWidget(parent),
@@ -69,11 +75,11 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		panel_(panel),
 		pd_(0), pc_(0),
 		qdds_(),
-		zoom_(0), panner_(0),
 		toolmgr(0),
+		zoom_(0), panner_(0),
 		ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
-		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		region_source_factory(0),
+		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
 		tracking_(True),
 		modeZ_(True),
@@ -86,9 +92,10 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0), 
                 extChan_(""), extPol_("")  ,
-                printStats(True), useRegion(False) {
+                printStats(True), useRegion(False),PGP_MARGIN_UNIT(65){
     
   setWindowTitle("Viewer Display Panel");
+
   bool use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 
   //pc_  = new QtPixelCanvas(this);
@@ -103,11 +110,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
   pd_ = new PanelDisplay(pc_,1,1);	// (PD default is 3 by 2...)
  
   // Increase margins...
-  
-  Record margins, chgdopts;
-  margins.define("leftmarginspacepg", 12);
-  margins.define("bottommarginspacepg", 9);
-  pd_->setOptions(margins, chgdopts);
+  initializeSettingsMap( true );
+  setPanelMargins( pd_);
 
   region_source_factory = new viewer::QtRegionSourceFactory(panel_);
   setupMouseTools_( use_new_regions );
@@ -442,7 +446,7 @@ Bool QtDisplayPanel::worldToLin(Vector<Double> &lin, const Vector<Double> &world
 	    wcs.getRight()->worldToLin(tmp,world);
 	    if ( tmp.nelements() != lin.nelements() )
 		return False;
-	    for ( int i=0; i < tmp.nelements(); ++i )
+	    for ( int i=0; i < static_cast<int>(tmp.nelements()); ++i )
 		if ( tmp[i] != lin[i] )
 		    return False;
 	}
@@ -544,7 +548,7 @@ void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
   }
 }
 
-void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionEvent& ev ) {
+void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionEvent& /*ev*/ ) {
 	/*WorldCanvas* worldCanvas = ev.worldCanvas();
 	int sizeY = worldCanvas -> canvasYSize();
 	//uInt offsetY;
@@ -587,11 +591,12 @@ void QtDisplayPanel::resizeEvent(QResizeEvent* ev) {
   
   QWidget::resizeEvent(ev);
   
-  QSize panelSize = ev->size(),
-       canvasSize = pc_->size();
+  QSize panelSize = ev->size();
+  QSize canvasSize = pc_->size();
   emit resized(panelSize, canvasSize);
   
-  release();  }
+  release();
+}
   
 
     
@@ -1094,7 +1099,6 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
   // signal) and updates its user interface accordingly.
   
   Record chgdOpts;
-  
   try {
     
     hold();
@@ -1105,7 +1109,6 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
     
     
     Bool needsRefresh = pd_->setOptions(opts, chgdOpts);
-    
         
     installEventHandlers_();
     
@@ -1152,8 +1155,6 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
   
   
 // COLOR BAR MANAGEMENT METHODS
-
-    
 void QtDisplayPanel::updateColorBarDDLists_() {
   // Update the List of registered DDs (in registration order) which
   // have color bar display activated and would draw if 'blink' selection
@@ -1165,35 +1166,34 @@ void QtDisplayPanel::updateColorBarDDLists_() {
   // (main) subpanel on which they appear (and then by registration order).
   // However, they are then reversed for horizontal colorbars, in order
   // to display top-to-bottom.
-  // A helper routine, called (only) by arrangeColorBars_().
   
   
   // Create new allColorBarDDs_ List (paring down from all registered DDs).  
-  
   allColorBarDDs_ = registeredDDs();
-  
   for(ListIter<QtDisplayData*> acbdds(allColorBarDDs_); !acbdds.atEnd(); ) {
-    
     QtDisplayData* cbdd = acbdds.getRight();
-    
-    if(cbdd->wouldDisplayColorBar() &&
-       pd_->conforms(cbdd->dd(), False, True, False)) acbdds++;	 // (keep).
-    else  acbdds.removeRight();  }				 // (remove).
+    bool wouldDisplay = cbdd->wouldDisplayColorBar();
+    bool conforms = pd_->conforms(cbdd->dd(), False, True, False);
+    if( wouldDisplay && conforms ){
+    	acbdds++;	 // (keep).
+    }
+    else {
+    	acbdds.removeRight();  // (remove).
+    }
 	// (Note: behavior is still somewhat anomalous if some raster DDs
 	// have different axes set from CSMaster DD (uncommon, no big deal.))
-  
+  }
+
   // Pare allColorBarDDs_ down further, into colorBarDDsToDisplay_ (the
   // latter will be in sub-panel order).
   
+  // 'Candidate List' of cbDDs to display; they will be removed
+  // from this temporary List if/when added to colorBarDDsToDisplay_.
   List<QtDisplayData*>     ccbDDs = allColorBarDDs_;
   ListIter<QtDisplayData*> ccbdds(ccbDDs);
-	// 'Candidate List' of cbDDs to display; they will be removed
-	// from this temporary List if/when added to colorBarDDsToDisplay_.
   
+  // Start from scratch by clearing away old list
   colorBarDDsToDisplay_ = List<QtDisplayData*>();
-	// Start from scratch by clearing away old list
-	// (NB: there is no List[Iter]::clear() method (!?)).
-
   ListIter<QtDisplayData*> cbdds(colorBarDDsToDisplay_);
   
   // We iterate first over subpanels so that in multipanel 'blink' displays
@@ -1201,32 +1201,40 @@ void QtDisplayPanel::updateColorBarDDLists_() {
   for(Int panel_i=0; panel_i<nPanels() ; panel_i++) {
     
     // Will any of the remaining candidate DDs display on this subpanel?
-    
     for(ccbdds.toStart(); !ccbdds.atEnd(); ) {
+    	QtDisplayData* ccbdd = ccbdds.getRight();
       
-      QtDisplayData* ccbdd = ccbdds.getRight();
+    	// 'True, False, False' == 'does DD conform to this sub-panel's
+    	// blink restriction (if any)?'  (dd's Coordinate compatibility
+    	// has already been tested farther above).
+    	if(pd_->conforms(ccbdd->dd(), True, False, False, panel_i)) {
       
-      // 'True, False, False' == 'does DD conform to this sub-panel's
-      // blink restriction (if any)?'  (dd's Coordinate compatibility
-      // has already been tested farther above).
-      if(pd_->conforms(ccbdd->dd(), True, False, False, panel_i)) {
-      
-        // dd will display.  Move it off the candidate list, onto the
-	// end of the list of DDs whose colorbars should also display.
-	
-        ccbdds.removeRight();
-	cbdds.addRight(ccbdd);
-	if(panel_->colorBarsVertical()) cbdds.toEnd();
-	else                        cbdds.toStart();  }
-		// In the horizontal case, colorbars are added to the start
-		// of colorBarDDsToDisplay_ rather than to the end, reversing
-		// this list from 'proper display order'.  Colorbar panels
-		// are created left-to-right or bottom-to-top, whereas
-		// colorbars are to display 'in proper order' either
-		// left-to-right or _top-to-bottom_.
+    		// dd will display.  Move it off the candidate list, onto the
+    		// end of the list of DDs whose colorbars should also display.
+    		ccbdds.removeRight();
+    		cbdds.addRight(ccbdd);
 
-      else ccbdds++;  }  }  }
-		// (ccbdd won't display on this subpanel; pass on it for now)
+    		// In the horizontal case, colorbars are added to the start
+    		// of colorBarDDsToDisplay_ rather than to the end, reversing
+    		// this list from 'proper display order'.  Colorbar panels
+    		// are created left-to-right or bottom-to-top, whereas
+    		// colorbars are to display 'in proper order' either
+    		// left-to-right or _top-to-bottom_.
+    		if(panel_->colorBarsVertical()){
+    			cbdds.toEnd();
+    		}
+    		else {
+    			cbdds.toStart();
+    		}
+    	}
+    	else {
+    		// (ccbdd won't display on this subpanel; pass on it for now)
+    		ccbdds++;
+    	}
+    }
+  }
+}
+
 
 
 
@@ -1238,48 +1246,51 @@ Int QtDisplayPanel::marginb_(QtDisplayData* dd, Float shrink) {
   // the returned margin allowance may also be less than ideal...).
   // A helper routine, called (only) by arrangeColorBars_().
   
-  Bool vertical = panel_->colorBarsVertical();
   Float charsz = dd->colorBarLabelSpaceAdj();
 	// 'pgp character size' times a user-settable adjustment factor.
-    
-  return max(0, Int(ceil(
-         (mrgna_+(vertical?11:6)*charsz) * shrink - mrgna_   )));  }
+  //const int verticalAdjustment = 11;
+  //const int horizontalAdjustment = 6;
+  int orientationAdjustment = 7;
+  float characterSpace = orientationAdjustment * charsz;
+  float mrgnbEstimate = (mrgna_+ characterSpace ) * shrink - mrgna_ ;
+  return max(0, Int(ceil( mrgnbEstimate )));
+}
 
 
     
-Float QtDisplayPanel::cbPanelSpace_(QtDisplayData* dd) {
-  // A helper routine, called (only) by arrangeColorBars_().
+Float QtDisplayPanel::cbPanelSpace_(QtDisplayData* dd ) {
   // Return the proportion of the PixelCanvas to use (whenever possible)
   // for dd's colorbar panel.  (This is allocated along the direction of
-  // the colorbar's thickness; the panel uses the entire PC size along the
-  // direction of the colorbar's length).  
+  // the colorbar's thickness. A different method will estimate the length
+	// of the color bar so that it matches the length of the graph as closely
+	//as possible).
 
   if ( ! dd->colorBar()->isDisplayable( ) ) {
 	return 0;
   }
 
+  // (Approx.) length in screen pixels that the colorbar will have.
+  	// (The 'length' of the color bar should match with its image).
   Float cblen = pclnsz_ - (lnmrgna_+lnmrgnb_)*marginUnit_;
-	// (Approx.) length in screen pixels that the colorbar will have.
-	// (All colorbars are given the same margins in their 'length'
-	// direction as the main image panel(s)), in an attempt (not always
-	// entirely successful) to align the colorbar with its image).
 
+  // An important parameter -- adjust if necessary:
+  	// the nominal thickness-to-length ratio for a colorbar.
   Float th4ln = .03;
-	// An important parameter -- adjust if necessary:
-	// the nominal thickness-to-length ratio for a colorbar.
 
-  th4ln *= dd->colorBarSizeAdj();
-	// Manual user option: an adjustment factor to the above.  
-  
+  // Manual user option: an adjustment factor to the above.
+  float userSizeAdj = dd->colorBarSizeAdj();
+  th4ln *= userSizeAdj;
+
+  // Thickness to give the colorbar itself, as a proportion of
+  	// PC size in the thickness direction.
   Float cbth = max(0., th4ln*cblen / pcthsz_);
-	// Thickness to give the colorbar itself, as a proportion of
-	// PC size in the thickness direction.
 
+  // Proportion of PC size (again, in the thickness direction)
+  	// to use for margins.
   Float cbmrg = (mrgna_ + marginb_(dd))*marginUnit_ / pcthsz_;
-	// Proportion of PC size (again, in the thickness direction)
-	// to use for margins.
 
-  return  cbth + cbmrg;  }
+  return  cbth + cbmrg;
+}
   
 
   
@@ -1293,17 +1304,21 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
   // needs to take.
   // Only the pcResizing_() slot should set resizing=True; in this case,
   // arrangeColorBars_ lets the PC take care of refresh.
-
   
+  // Store copy of the old List, for comparison.
   List<QtDisplayData*>  oldCBDDs = colorBarDDsToDisplay_;
-  	// Store copy of the old List, for comparison.
   
+  //If the number of plots displayed decreases, we can lose the color bar,
+  //if it is supposed to be displayed.  PlotCountChangedAdjustment corrects
+  //for that.
+  plotCountChangeAdjustment();
+
+  // Update colorBarDDsToDisplay_ (as well as allColorBarDDs_).
   updateColorBarDDLists_();
-	// Update colorBarDDsToDisplay_ (as well as allColorBarDDs_).
-  
+
+  // Alternate name for the newly-updated (definitive)
+  // member List (just for style).
   List<QtDisplayData*>& newCBDDs = colorBarDDsToDisplay_;
-		// Alternate name for the newly-updated (definitive)
-		// member List (just for style).
 
   Int totcbdds  = allColorBarDDs_.len();
   Int nOld      = oldCBDDs.len();  // (Also == (old) colorBarPanels_.len().)
@@ -1313,77 +1328,53 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
   ListIter<QtDisplayData*> newcbdds(newCBDDs);
   ListIter<QtDisplayData*> allcbdds(allColorBarDDs_);
   
-
-
   // Prepare field names and values for geometry/margin setting on the
   // color bar panels (according to whether colorbars are being placed
   // vertically or horizontally).
-  
   Bool vertical = panel_->colorBarsVertical();
+  initializeSettingsMap( vertical );
 
-  // field names for vertical bars  
-  
-  String origin="xorigin", size="xsize",
-         lengthsideorigin="yorigin", lengthsidesize="ysize",
-         margina = "leftmarginspacepg",
-         marginb = "rightmarginspacepg",
-         lengthsidemargina = "bottommarginspacepg",  
-         lengthsidemarginb = "topmarginspacepg";
-  
-  // field names for horizontal bars
-  
-  if(!vertical) {
-         origin="yorigin"; size="ysize";
-         lengthsideorigin="xorigin"; lengthsidesize="xsize";
-         margina = "bottommarginspacepg";
-         marginb = "topmarginspacepg";
-         lengthsidemargina = "leftmarginspacepg";  
-         lengthsidemarginb = "rightmarginspacepg";  }
-
-  
-  // Set up (preliminary) panel margin sizes.
-  
-  // (Experiment shows one 'pgp margin unit' (horizontal _or_ vertical) to
-  // be the width of a pgplot letter "X" of 'size 1', which is also about
-  // 1/65  of the shortest side the (_entire_) pc_ (not 1/40, as I thought
-  // some doc somewhere had said...).
-  // Also, the code in WorldCanvasHolder::executeSizeControl() which
-  // operationally defines this 'pgp margin unit' seems to be retrieving
-  // the _height_ rather than width of a letter "X".  (I do not understand
-  // that, since space for its width is actually what gets allocated....))
-  
+  //Store the width and height of the pixel canvas
   Int pcw = max(Int(pc_->width()),  1);  
   Int pch = max(Int(pc_->height()), 1);  
   
-  marginUnit_ = min(pcw, pch)/65.;
-	// (Approx.) screen pixels in one 'margin unit': 1/65 of
-	// the PixelCanvas's minimum dimension.
-  
+  // (Approx.) screen pixels in one 'margin unit'.  Please note that this
+  // number will change depending on how large the QtDisplayPanel GUI is.  Here
+  // we are using a constant, PGP_MARGIN_UNIT, to get an approximation for the
+  // sizes.
+
+   // Also, the code in WorldCanvasHolder::executeSizeControl() which
+   // operationally defines this 'pgp margin unit' seems to be retrieving
+   // the _height_ rather than width of a letter "X".  (I do not understand
+   // that, since space for its width is actually what gets allocated....))
+  marginUnit_ = min(pcw, pch)/(PGP_MARGIN_UNIT * 1.f);
+
+  //Set up preliminary margin sizes
   mrgna_ = 1,	// (fixed; others likely to be refined below).
   mrgnb_ = 11, lnmrgna_ = 7, lnmrgnb_ = 4;
 	// (mrgnb_ is reset farther below, according
 	// to each color bar's individual font size).
 
+  // Set margins which constrain the colorbar's long-side to those of
+  // the main Panel/WC.
   Bool notFound;
   Record mainPanelOpts = pd_->getOptions();
-  pd_->readOptionRecord(lnmrgna_, notFound, mainPanelOpts, lengthsidemargina);
-  pd_->readOptionRecord(lnmrgnb_, notFound, mainPanelOpts, lengthsidemarginb);
-	// Set margins which constrain the colorbar's long-side to those of
-	// the main Panel/WC.
-	// (Could be improved, because WC draw area, which ideally the color
-	// bar aligns with on its long side, often does not fill the
-	// WC area within the margins due to fixed aspect ratio.  Also,
-	// there may be more than one WC within the main panel).
-  
-  if(vertical) { pcthsz_ = pcw,  pclnsz_ = pch;  }
-  else         { pcthsz_ = pch,  pclnsz_ = pcw;  }
-	// PC size in pixels along the direction of the colorbar's
-	// thickness (pcthsz_) and length (pclnsz_).  The latter direction is
-	// called the _colorbar's_ 'length side'; 'lengthsidemargin's
-	// constrain the colorbar's length.  But note that this may or may
-	// not be the _PC's_ longer side.
-  
-  
+  pd_->readOptionRecord(lnmrgna_, notFound, mainPanelOpts, settingsMap[LENGTH_SIDE_MARGIN_A]);
+  pd_->readOptionRecord(lnmrgnb_, notFound, mainPanelOpts, settingsMap[LENGTH_SIDE_MARGIN_B]);
+
+  // PC size in pixels along the direction of the colorbar's
+  	// thickness (pcthsz_) and length (pclnsz_).  The latter direction is
+  	// called the _colorbar's_ 'length side'; 'lengthsidemargin's
+  	// constrain the colorbar's length.  But note that this may or may
+  	// not be the _PC's_ longer side.
+  if(vertical) {
+	  pcthsz_ = pcw;
+	  pclnsz_ = pch;
+  }
+  else         {
+	  pcthsz_ = pch;
+	  pclnsz_ = pcw;
+  }
   
   // How much space should be allowed for colorbars?  We want the area
   // allocated for them to remain unchanged during an animation (in either
@@ -1396,33 +1387,28 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
     
   // In "Normal" animation mode it's simple: all color bar DDs get a panel
   // to display their colorbar.
-  
   Int nMax;
-  
-  if(mode()=="Normal") nMax = totcbdds;
-  
+  if(mode()=="Normal") {
+	  nMax = totcbdds;
+  }
+  // In blink mode, it's more complicated: DDs which are always on anyway
+  // in blink mode and which display a colorbar always get a panel.  (At
+  // present no DDs fit this category, but colormapped contour DDs, e.g.,
+  // might do so if implemented).  Of the remaining CBDDs, up to one per
+  // main image subpanel can display.
   else {
-  
-    // In blink mode, it's more complicated: DDs which are always on anyway
-    // in blink mode and which display a colorbar always get a panel.  (At
-    // present no DDs fit this category, but colormapped contour DDs, e.g.,
-    // might do so if implemented).  Of the remaining CBDDs, up to one per
-    // main image subpanel can display.
-    
     Int nb=0;
     for(allcbdds.toStart();  !allcbdds.atEnd();  allcbdds++) {
-      if( pd_->isBlinkDD(allcbdds.getRight()->dd()) ) nb++;  }
-    
+      if( pd_->isBlinkDD(allcbdds.getRight()->dd()) ) nb++;
+    }
     Int nnb = totcbdds - nb;	// nnb, nb: number of non-blinking and
 				// blinking CBDDs.
-  
-    nMax = nnb + min(nPanels(), nb);  }
-  
+    nMax = nnb + min(nPanels(), nb);
+  }
   
   // [Try to] allocate space for the nMax largest colorbar panels, over
   // all colorbars that might display during an animation.  (Often, though
   // not always, all panels will have the same size).
-    
   // cbpszs: panel sizes in descending order.
   Vector<Float> cbpszs(totcbdds, 0.);
   Int i=0;
@@ -1430,11 +1416,15 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
     Float cbpsz = cbPanelSpace_(allcbdds.getRight());
     Int j=i;
     for(; j>0 && cbpszs[j-1]<cbpsz ; j--) cbpszs[j] = cbpszs[j-1];
-    cbpszs[j] = cbpsz;  }
+    cbpszs[j] = cbpsz;
+  }
     
   // totcbpsz: desired total PC proportion for cb panels.
-  Float totcbpsz = 0.;  for(Int i=0; i<nMax; i++) totcbpsz += cbpszs[i];
-  
+  Float totcbpsz = 0.;
+  for(Int i=0; i<nMax; i++){
+	  totcbpsz += cbpszs[i];
+  }
+
   // newmainpanelsz and totcbpsz are the proportions that will actually
   // be allocated for the main image display area and colorbar panels
   // respectively.  We'll always allocate at least 35% for main image
@@ -1445,164 +1435,145 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
   // not be completely filled (the simplest case is in blinking 2 images,
   // one with colorbar on, one off; the space for one colorbar will remain
   // in the display whichever image is showing).
-  
   Float  oldmainpanelsz = mainPanelSize_;	// (copy of old)
   Float& newmainpanelsz = mainPanelSize_;
-  
   totcbpsz = min(.65, totcbpsz);
   newmainpanelsz = 1. - totcbpsz;
-  
-  
   
   // Determine relative size that each new colorbar panel should finally
   // have. Only colorbars actually displayed at present need to be tested to
   // see if they all fit within totcbpsz.  (If not, they will all have to be
   // reduced by applying a shrinkfctr less than 1; this should occur rarely
   //, though).
-  
-  Vector<Float>  oldcbpszs;
-                 oldcbpszs = colorBarPanelSizes_;	// (copy of old)
+  Vector<Float>  oldcbpszs= colorBarPanelSizes_;	// (copy of old)
   Vector<Float>& newcbpszs = colorBarPanelSizes_;
   newcbpszs.resize(nNew);	// Prepare to recalculate the new
 				// (member) Vector of panel sizes.
+
+  // Total proportion of pc_ requested for colorbar panels
+  // displaying now (to check for for crowding of main pd_).
   Float requestedsz = 0.;
-	// Total proportion of pc_ requested for colorbar panels 
-	// displaying now (to check for for crowding of main pd_).
-  
   newcbdds.toStart();
   for(Int i=0;   i<nNew;   newcbdds++, i++) {
     QtDisplayData* dd = newcbdds.getRight();
     newcbpszs[i] = cbPanelSpace_(dd);
-    requestedsz += newcbpszs[i];  }
+    requestedsz += newcbpszs[i];
+  }
       
+  // Colorbars must be reduced in size so that they fit within
+  // totcbpsz (won't happen very often).
   Float shrinkfctr = 1.;
   if(requestedsz > totcbpsz) {
-    // Colorbars must be reduced in size so that they fit within
-    // totcbpsz (won't happen very often).
     shrinkfctr = totcbpsz/requestedsz;
-    for(Int i=0; i<nNew; i++) newcbpszs[i] *= shrinkfctr;  }
+    for(Int i=0; i<nNew; i++) newcbpszs[i] *= shrinkfctr;
+  }
     
-  
   // Determine whether the number or relative sizes of color bar panels and
   // main panel will change.  If 'placementChange' remains False, no change
   // will be needed to the relative placement ('geometry') of panels within
   // pc_.  (The colorbar panels' margins will be updated anyway, though,
   // just in case -- not an expensive operation if there's no change).
-  
+
+  // Whether the main panel itself will require resizing.
   Bool mainPlacementChange = oldmainpanelsz!=newmainpanelsz || reorient;
-	// Whether the main panel itself will require resizing.
-  
+
+  // whether colorbar panels will be resized.
   Bool placementChange = mainPlacementChange || nNew!=nOld;
   if(!placementChange) {
-    for(Int i=0; i<nNew; i++)  if(oldcbpszs[i]!=newcbpszs[i]) {
-      placementChange = True;  break;  }  }
-	// whether colorbar panels will be resized.
-
-
+    for(Int i=0; i<nNew; i++){
+    	if(oldcbpszs[i]!=newcbpszs[i]) {
+    		placementChange = True;
+    		break;
+    	}
+    }
+  }
 
   // All necessary information has now been gathered;
   // do the actual adjustments.
-  
-    
   hold();	// (suspend refresh of main pd_ and colorbar
 		// panels until all adjustments finished).
-      
   
   // Create or delete panels (PanelDisplays) for the colorbars, if
   // the required number of them has changed (nNewPanels!=nOldPanels).
-  
   ListIter<PanelDisplay*> cbps(colorBarPanels_);
   cbps.toEnd();
-  
   for(Int i=nNew;  i<nOld;  i++) {
     cbps--;
     delete cbps.getRight();	// Delete excess colorbar PanelDisplays...
-    cbps.removeRight();  }	// (old colorbar automatically unregistered)
+    cbps.removeRight();
+  }	// (old colorbar automatically unregistered)
     
   for(Int i=nOld;  i<nNew;  i++, cbps++) {    // ...or add needed new ones.
     PanelDisplay* cbp = new PanelDisplay(pc_, 1,1);
     cbp->hold();   // (consistent with hold() above -- uses same release()).   
-    cbps.addRight(cbp);  }
+    cbps.addRight(cbp);
+  }
   
   
   // Place main data DisplayPanel (pd_).
-  
-  Record geom;
   Float orgn = 0.,  siz = newmainpanelsz;
 
-	// Current relative position (and size) for panel placement;
-	// ranges from 0 (left edge of pc) to 1 (right edge)
-	// for vertical = True (otherwise 0 = bottom, 1 = top).
+  //Adjust the font size according to the number of panels we are displaying.
+  //We don't want a huge font when there are lots of plots or the user will only
+  //see axis labels, not the plots themselves.
+  setLabelFontSize();
 
+  //If there are lots of plots being displayed, we want smaller plot margins so
+  //that more screen real estate will be saved for the plots.
+  setMarginSize ();
+
+  // Current relative position (and size) for panel placement;
+  // ranges from 0 (left edge of pc) to 1 (right edge)
+  // for vertical = True (otherwise 0 = bottom, 1 = top).
   if(mainPlacementChange) {
-    pd_->getGeometry(geom);
-    geom.define(origin, orgn);  geom.define(lengthsideorigin, 0.f);
-    geom.define(size,   siz);   geom.define(lengthsidesize,   1.f);
-    pd_->setGeometry(geom);  }
-  
+	  setPanelGeometry( pd_, orgn, siz );
+  }
   
   // For each color bar [panel] in the new list.
-  
   cbps.toStart();  newcbdds.toStart();  oldcbdds.toStart();
-  
   for(Int i=0;    i<nNew;     i++, cbps++, newcbdds++) {
       
     // Assure that correct color bar DD is registered on each panel.
-    
     PanelDisplay*  cbp     = cbps.getRight();
     QtDisplayData* newdd   = newcbdds.getRight();
     WedgeDD*       newcb   = newdd->colorBar();
     
     if(i<nOld) {
-      
       QtDisplayData* olddd = oldcbdds.getRight();
       WedgeDD*       oldcb = olddd->colorBar();
-      
+      // Replace panel's color bar.
       if(olddd != newdd) {
         cbp->removeDisplayData(*oldcb);
-        cbp->addDisplayData(*newcb);  }		// Replace panel's color bar.
+        cbp->addDisplayData(*newcb);
+      }
+      oldcbdds++;
+    }
+    else {
+    	cbp->addDisplayData(*newcb);		// Add new panel's color bar.
+    }
     
-      oldcbdds++;  }
-      
-    else cbp->addDisplayData(*newcb);		// Add new panel's color bar.
-    
-  
     // Place/size the colorbar panels
     // (NB: QtViewerBase sets orientation onto the colorbars themselves).
-    
     if(placementChange) {
       orgn += siz;			 // Move origin past previous panel
       siz = min(newcbpszs[i], 1.-orgn);	 // and retrieve new panel's size.
-    
-      cbp->getGeometry(geom);
-      geom.define(origin, orgn);  geom.define(lengthsideorigin, 0.f);
-      geom.define(size,   siz);   geom.define(lengthsidesize,   1.f);
-      cbp->setGeometry(geom);  }
-    
+      setPanelGeometry( cbp, orgn, siz );
+    }
     
     // Set margins of color bar panels.
-    
     // 'Margin b' is where most color bar labelling occurs (to the right of
     // vertical colorbars, or above horizontal ones).  marginb_() tries to
     // allocate enough margin so that the labels fit, taking label character
     // size, color bar orientation and possible manual user adjustment into
     // account.
-    
     mrgnb_ = marginb_(newdd, shrinkfctr);
-    
-    Record margins, chgdOpts;
-    
-    margins.define(margina, mrgna_);
-    margins.define(marginb, mrgnb_);
-    margins.define(lengthsidemargina, lnmrgna_); 
-    margins.define(lengthsidemarginb, lnmrgnb_); 
-    
-    cbp->setOptions(margins, chgdOpts);  }	// (chgOpts ignored here)
+    // Set the long color bar margins to try to match the graph as closely
+    // as possible
+    setColorBarMargins( vertical, newmainpanelsz, cbp, resizing );
+  }
 
-  
   // Set or remove blank colorbar panel, as needed.  (Its sole purpose
   // is to assure that unused colorbar space (if any) is cleared).
-  
   if(placementChange) {
     orgn += siz;
     if(orgn>=1.) {
@@ -1610,29 +1581,198 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
     else {
       if(blankCBPanel_==0) { 
         blankCBPanel_ = new PanelDisplay(pc_, 1,1);
-        // No margins for blank panel.
-        Record margins, chgdOpts;
-        margins.define(margina, 0);
-        margins.define(marginb, 0);
-        margins.define(lengthsidemargina, 0); 
-        margins.define(lengthsidemarginb, 0); 
-        blankCBPanel_->setOptions(margins, chgdOpts);  }
-      
-      siz = 1.-orgn;
-      blankCBPanel_->getGeometry(geom);
-      geom.define(origin, orgn);  geom.define(lengthsideorigin, 0.f);
-      geom.define(size,   siz);   geom.define(lengthsidesize,   1.f);
-      blankCBPanel_->setGeometry(geom);  }  }
-      
-      
-  
+        setPanelMargins( blankCBPanel_, 0, 0, 0, 0 );
+        siz = 1.-orgn;
+        setPanelGeometry( blankCBPanel_, orgn, siz );
+      }
+    }
+  }
+
   if(!resizing) {	// (on resize, PC takes care of refresh).
-    if(mainPlacementChange) refresh();
-    else                    refreshCBPanels_();  }
+   if(mainPlacementChange){
+    	refresh();
+   }
+   else {
+    	refreshCBPanels_();
+   }
+  }
+  release();
+}
 
-  release();  }
+void QtDisplayPanel::plotCountChangeAdjustment(){
+	//Fixes a bug where if the number of plots displayed decreases,
+	//and the color bar is displayed, the color bar will not be drawn.
+	int newRowCount = pd_->getRowCount();
+	int newColumnCount = pd_->getColumnCount();
+	int oldCount = oldRowCount + oldColumnCount;
+	int newCount = newRowCount + newColumnCount;
+	oldRowCount = newRowCount;
+	oldColumnCount = newColumnCount;
+	//If the number number of plots decreases
+	if ( oldCount > newCount ){
+	    for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
+	    	//Determine if we are supposed to be displaying a color bar
+	    	QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
+	    	Record record = qtDisplayData->getOptions();
+	    	String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
+	    	if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
+	    		//We are supposed to be displaying a color bar, so make sure the
+	    		//flag is set that indicates the color bar is displayable
+	    		DisplayData* displayData = qtDisplayData->dd();
+	    		displayData->setDisplayState( DisplayData::DISPLAYED);
+	    	}
+	    }
+	}
+}
 
 
+void QtDisplayPanel::setPanelGeometry( PanelDisplay* pd, float orgn, float siz ){
+	Record geom;
+	pd->getGeometry(geom);
+	geom.define(settingsMap[ORIGIN], orgn);
+	geom.define(settingsMap[LENGTH_SIDE_ORIGIN], 0.f);
+	geom.define(settingsMap[SIZE],   siz);
+	geom.define(settingsMap[LENGTH_SIDE_SIZE],   1.f);
+	pd->setGeometry(geom);
+}
+
+void QtDisplayPanel::setLabelFontSize(  ){
+    //Try to set an appropriate axis font based on the number of
+	//plots we are displaying
+	float defaultAxisLabelSize = 1.7f;
+	int rowCount = pd_->getRowCount();
+	int columnCount = pd_->getColumnCount();
+	int divisions = max(rowCount, columnCount);
+	float adjustedAxisLabelSize = defaultAxisLabelSize /divisions;
+
+	//optns.define( QtDisplayData::WEDGE_LABEL_CHAR_SIZE, adjustedAxisLabelSize );
+	List<DisplayData*>* rdds = pd_->displayDatas();
+	if ( rdds -> len() > 0 ){
+		for (ListIter<DisplayData*> qdds(rdds); !qdds.atEnd(); qdds++) {
+			DisplayData* dd = qdds.getRight();
+			if ( dd != NULL ){
+				Record optns;
+				optns.define( WCAxisLabeller::LABEL_CHAR_SIZE,  adjustedAxisLabelSize );
+				Record chgdOptions;
+				dd->setOptions( optns, chgdOptions );
+			}
+		}
+	}
+}
+
+void QtDisplayPanel::setMarginSize( ){
+	//Try to set appropriate plot margins based on the number of
+	//plots that are displaying
+	int rowCount = pd_->getRowCount();
+	int columnCount = pd_->getColumnCount();
+	int leftMargin = LEFT_MARGIN_SPACE_DEFAULT / columnCount;
+	int rightMargin = RIGHT_MARGIN_SPACE_DEFAULT / columnCount;
+	int topMargin = TOP_MARGIN_SPACE_DEFAULT / rowCount;
+	int bottomMargin = BOTTOM_MARGIN_SPACE_DEFAULT / rowCount;
+	setPanelMargins( pd_, leftMargin, rightMargin, bottomMargin, topMargin );
+}
+
+void QtDisplayPanel::setPanelMargins( PanelDisplay* pd, int marginA, int marginB,
+			int lengthMarginA, int lengthMarginB){
+	//Store the panel margins.
+	Record margins, chgdOpts;
+	if ( marginA >= 0 ){
+		margins.define(settingsMap[MARGIN_A], marginA);
+	}
+	if ( marginB >= 0 ){
+		margins.define(settingsMap[MARGIN_B], marginB);
+	}
+	if ( lengthMarginA >= 0 ){
+		margins.define(settingsMap[LENGTH_SIDE_MARGIN_A], lengthMarginA);
+	}
+	if ( lengthMarginB >= 0 ){
+		margins.define(settingsMap[LENGTH_SIDE_MARGIN_B], lengthMarginB);
+	}
+    pd->setOptions(margins, chgdOpts);
+}
+
+void QtDisplayPanel::initializeSettingsMap( bool verticalBars ){
+	settingsMap.clear();
+	 // field names for vertical bars
+	  if ( verticalBars ){
+		  settingsMap[ORIGIN] = PanelDisplay::X_ORIGIN;
+		  settingsMap[SIZE] = PanelDisplay::X_SIZE;
+		  settingsMap[LENGTH_SIDE_ORIGIN] = PanelDisplay::Y_ORIGIN;
+		  settingsMap[LENGTH_SIDE_SIZE] = PanelDisplay::Y_SIZE;
+		  settingsMap[MARGIN_A]=WorldCanvas::LEFT_MARGIN_SPACE_PG;
+		  settingsMap[MARGIN_B] = WorldCanvas::RIGHT_MARGIN_SPACE_PG;
+		  settingsMap[LENGTH_SIDE_MARGIN_A]=WorldCanvas::BOTTOM_MARGIN_SPACE_PG;
+		  settingsMap[LENGTH_SIDE_MARGIN_B]=WorldCanvas::TOP_MARGIN_SPACE_PG;
+	  }
+	  else {
+	  //horizontal color bars
+		  settingsMap[ORIGIN] = PanelDisplay::Y_ORIGIN;
+		  settingsMap[SIZE] = PanelDisplay::Y_SIZE;
+		  settingsMap[LENGTH_SIDE_ORIGIN] = PanelDisplay::X_ORIGIN;
+		  settingsMap[LENGTH_SIDE_SIZE] = PanelDisplay::X_SIZE;
+		  settingsMap[MARGIN_A]=WorldCanvas::BOTTOM_MARGIN_SPACE_PG;
+		  settingsMap[MARGIN_B] = WorldCanvas::TOP_MARGIN_SPACE_PG;
+		  settingsMap[LENGTH_SIDE_MARGIN_A]=WorldCanvas::LEFT_MARGIN_SPACE_PG;
+		  settingsMap[LENGTH_SIDE_MARGIN_B]=WorldCanvas::RIGHT_MARGIN_SPACE_PG;
+	  }
+
+}
+
+
+void QtDisplayPanel::setColorBarMargins( bool vertical, float plotPercentage,
+		PanelDisplay* cbp, bool resizing ){
+
+	  //Estimate the new draw unit based on the new percent, and the
+	  //cached information.
+	  float cachedDrawUnit = pd_->getDrawUnit();
+	  float drawUnit = cachedDrawUnit;
+	  int pixelCanvasHeight = pc_->height();
+	  int pixelCanvasWidth = pc_->width();
+	  if ( resizing && oldPlotPercentage != 0){
+		  int newPixelSize = min(pixelCanvasHeight,pixelCanvasWidth);
+	  	  int oldPixelSize = min(oldPixelCanvasHeight, oldPixelCanvasWidth);
+	  	  drawUnit = (newPixelSize * plotPercentage)*cachedDrawUnit /( oldPixelSize * oldPlotPercentage );
+	  }
+
+	  //New side length of the plot
+	  float columnCount = pd_->getColumnCount();
+	  float rowCount = pd_->getRowCount();
+	  float adjustedHeight = pixelCanvasHeight / rowCount;
+	  float adjustedWidth = pixelCanvasWidth / columnCount;
+	  float sideLength = min( adjustedHeight, adjustedWidth) * plotPercentage;
+
+	  //Space left over between the plot and the edges of the pixel canvas
+	  float additionalSpace = 0;
+	  if ( vertical ){
+		  additionalSpace = pixelCanvasHeight - rowCount * sideLength;
+	  }
+	  else {
+		  additionalSpace = pixelCanvasWidth - columnCount * sideLength;
+	  }
+	  int additionalSpaceMargin = 5;
+	  if ( drawUnit != 0 ){
+		  additionalSpaceMargin = static_cast<int>(additionalSpace / (drawUnit*2));
+	  }
+
+	  //Add the additional space into both margins
+	  int excessTopSpace = additionalSpaceMargin - lnmrgnb_;
+	  int top = lnmrgnb_;
+	  if ( excessTopSpace > 0 ){
+		  top = top + additionalSpaceMargin;
+	  }
+
+	  int excessBottomSpace = additionalSpaceMargin - lnmrgna_;
+	  int bottom= lnmrgna_;
+	  if (excessBottomSpace > 0 ){
+		  bottom = bottom + additionalSpaceMargin;
+	  }
+
+	  setPanelMargins( cbp, mrgna_, mrgnb_, bottom, top);
+
+	  oldPlotPercentage = plotPercentage;
+	  oldPixelCanvasWidth = pixelCanvasWidth;
+	  oldPixelCanvasHeight = pixelCanvasHeight;
+}
 
 
 
@@ -1643,7 +1783,8 @@ void QtDisplayPanel::refreshCBPanels_() {
   for(ListIter<PanelDisplay*> cbps(colorBarPanels_); !cbps.atEnd(); cbps++) {
      cbps.getRight()->refresh();  } 
   
-  if(blankCBPanel_!=0) blankCBPanel_->refresh();  }
+  if(blankCBPanel_!=0) blankCBPanel_->refresh();
+}
   
 
 

@@ -102,7 +102,7 @@ public:
 	const Vector<Double> &trc( ) const { return zoom_.second; }
 	const colormap_state *colormap( const std::string &s ) const;
 
-    private:
+ private:
 	panel_state( const zoom_state &z_, const colormap_map &cm ) : zoom_(z_), colormaps_(cm) { }
 
 	zoom_state zoom_;
@@ -344,6 +344,16 @@ public:
 
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+
+  /**
+   * Estimates the length of the long side of the color bar (in pixels) based
+   * on the percentage of the pixel canvas the plot will have.
+   * @param plotPercentage the percentage of the pixel canvas that will be dedicated
+   * 		to the plot (as opposed to associated map color bars.
+   * @return an estimate of the color bar length, attempting to make the length
+   * 		of the color bar the same as the length of the plot square.
+   */
+  //int getColorBarLength( float plotPercentage ) const;
 
  public slots:
 
@@ -716,23 +726,6 @@ public:
   // to take action on QPC resizeEvents (based on QPC size) instead...))
   void resizeEvent(QResizeEvent* ev);
     
-  
- 
- 
- private:
-  
-  QtDisplayPanel() {  }		// (not intended for use)  
-  
-  /**
-   * Sends a signal containing information about the data pinpointed by the mouse
-   * & displays flyover information about the data.
-   */
-  void processTracking( const Record& trackingRec, const WCMotionEvent& ev );
-  
-  //# DATA
-    
-    
- protected:
  
   // central (unique) viewer object: for viewer-global state / methods.
   QtDisplayPanelGui *panel_;
@@ -936,6 +929,91 @@ public:
   void endLabelAndAxisCaching( QPainter &qp ) {
     pc_->endLabelAndAxisCaching( qp );  }
 
+
+ private:
+
+  /**
+   * Sends a signal containing information about the data pinpointed by the mouse
+   * & displays flyover information about the data.
+   */
+  void processTracking( const Record& trackingRec, const WCMotionEvent& ev );
+
+  /**
+   * Estimates appropriate margins for the color bars in the long direction.
+   * @param vertical True if the long side of the color bar is in the vertical direction.
+   * @param plotPercentage a float giving the approximate percentage of the screen real estate
+   *        that will be reserved for plots (as opposed to the color bars).
+   * @param cbp the PanelDisplay containing the color bar
+   * @param resizing a boolean that will be true if the calculation was triggered by the
+   * 	screen size changing.
+   */
+  void setColorBarMargins( bool vertical, float plotPercentage, PanelDisplay* cbp, bool resizing );
+
+  /**
+   * Stores the x-offset and side length of the passed in panel.
+   * @param pd the PanelDisplay whose geometry will be set.
+   * @param orgn the offset of the panel
+   * @param siz the side length of the panel.
+   */
+  void setPanelGeometry( PanelDisplay* pd, float orgn, float siz );
+
+  /**
+   * Sets the margins of the passed in panel to the indicated amounts.
+   * @param marginA in PGP plot units.
+   * @param marginB in PGP plot units.
+   * @param lengthMarginA in PGP plot units.
+   * @param lengthMarginB in PGP plot units.
+   */
+  void setPanelMargins( PanelDisplay* pd, int marginA =LEFT_MARGIN_SPACE_DEFAULT,
+		  int marginB = RIGHT_MARGIN_SPACE_DEFAULT,
+		  int lengthMarginA = BOTTOM_MARGIN_SPACE_DEFAULT,
+		  int lengthMarginB = TOP_MARGIN_SPACE_DEFAULT);
+  /*
+   * Attempts to set an appropriate font size for plot axis
+   * labels based on the number of plots that are displayed.
+   */
+  void setLabelFontSize(  );
+
+  /**
+   * Attempts to set appropriate plot margins based on the number of
+   * plots that are displayed.
+   */
+  void setMarginSize(  );
+
+  //# DATA
+  //An estimate for the number of pixels that correspond to one
+  //PGP plot unit.
+  const int PGP_MARGIN_UNIT;
+  enum ColorBarIndex {ORIGIN, SIZE, LENGTH_SIDE_ORIGIN, LENGTH_SIDE_SIZE, MARGIN_A,
+ 	  MARGIN_B, LENGTH_SIDE_MARGIN_A, LENGTH_SIDE_MARGIN_B};
+
+   std::map<ColorBarIndex,String> settingsMap;
+
+   /**
+    * Initializes the settings map based on whether the color bar is vertical
+    * or horizontal.
+    */
+   void initializeSettingsMap( bool vertical );
+
+   /**
+    * Fixes a bug where the color bar disappears if the number of
+    * plots that are displayed decreases.
+    */
+   void plotCountChangeAdjustment();
+
+   //Used for coming up with estimates for the new font and margin
+   //sizes.
+   float oldPlotPercentage;
+   int oldPixelCanvasHeight;
+   int oldPixelCanvasWidth;
+   int oldRowCount;
+   int oldColumnCount;
+
+   //Default sizes for the margins
+   static const int LEFT_MARGIN_SPACE_DEFAULT;
+   static const int BOTTOM_MARGIN_SPACE_DEFAULT;
+   static const int TOP_MARGIN_SPACE_DEFAULT;
+   static const int RIGHT_MARGIN_SPACE_DEFAULT;
 };
 
 

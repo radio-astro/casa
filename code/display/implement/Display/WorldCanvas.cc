@@ -55,9 +55,12 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <display/DisplayDatas/DisplayData.h>
 
-
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+const String WorldCanvas::LEFT_MARGIN_SPACE_PG = "leftmarginspacepg";
+const String WorldCanvas::RIGHT_MARGIN_SPACE_PG = "rightmarginspacepg";
+const String WorldCanvas::BOTTOM_MARGIN_SPACE_PG = "bottommarginspacepg";
+const String WorldCanvas::TOP_MARGIN_SPACE_PG = "topmarginspacepg";
 
 // Constructor.
 WorldCanvas::WorldCanvas(PixelCanvas * pc,
@@ -363,7 +366,7 @@ void WorldCanvas::operator()(const PCPositionEvent &pev) {
 
 // Refresh the WorldCanvas.
 void WorldCanvas::refresh(const Display::RefreshReason &reason,
-			  const Bool &explicitrequest) {
+			  const Bool & /*explicitrequest*/) {
 
   if(reason!=Display::BackCopiedToFront &&
      reason!=Display::ColorTableChange &&
@@ -789,6 +792,7 @@ void WorldCanvas::setDefaultOptions() {
   attBuffer.add(attString, Int(6));
   attString = "topMarginSpacePG";
   attBuffer.add(attString, Int(6));
+
   setAttributes(attBuffer);
 }
 Bool WorldCanvas::setOptions(const Record &rec, Record &) {
@@ -801,25 +805,25 @@ Bool WorldCanvas::setOptions(const Record &rec, Record &) {
 
   attString = "leftMarginSpacePG";
   getAttributeValue(attString, temp);
-  localchange = readOptionRecord(temp, error, rec, "leftmarginspacepg") 
+  localchange = readOptionRecord(temp, error, rec, LEFT_MARGIN_SPACE_PG)
                 || localchange;
   attBuffer.add(attString, temp);
   
   attString = "rightMarginSpacePG";
   getAttributeValue(attString, temp);
-  localchange = readOptionRecord(temp, error, rec, "rightmarginspacepg")
+  localchange = readOptionRecord(temp, error, rec, RIGHT_MARGIN_SPACE_PG)
                 || localchange;
   attBuffer.add(attString, temp);
 
   attString = "bottomMarginSpacePG";
   getAttributeValue(attString, temp);
-  localchange = readOptionRecord(temp, error, rec, "bottommarginspacepg")
+  localchange = readOptionRecord(temp, error, rec, BOTTOM_MARGIN_SPACE_PG)
                 || localchange;
   attBuffer.add(attString, temp);
 
   attString = "topMarginSpacePG";
   getAttributeValue(attString, temp);
-  localchange = readOptionRecord(temp, error, rec, "topmarginspacepg")
+  localchange = readOptionRecord(temp, error, rec, TOP_MARGIN_SPACE_PG)
                 || localchange;
   attBuffer.add(attString, temp);
 
@@ -836,7 +840,7 @@ Record WorldCanvas::getOptions() const {
   Int temp;
   
   Record leftmarginspacepg;
-  leftmarginspacepg.define("dlformat", "leftmarginspacepg");
+  leftmarginspacepg.define("dlformat", LEFT_MARGIN_SPACE_PG);
   leftmarginspacepg.define("listname", "Left margin space (PG chars)");
   leftmarginspacepg.define("ptype", "intrange");
   leftmarginspacepg.define("pmin", 0);
@@ -847,10 +851,10 @@ Record WorldCanvas::getOptions() const {
   leftmarginspacepg.define("value", temp);
   leftmarginspacepg.define("allowunset", False);
   leftmarginspacepg.define("context", "Margins");
-  rec.defineRecord("leftmarginspacepg", leftmarginspacepg);
+  rec.defineRecord(LEFT_MARGIN_SPACE_PG, leftmarginspacepg);
 
   Record bottommarginspacepg;
-  bottommarginspacepg.define("dlformat", "bottommarginspacepg");
+  bottommarginspacepg.define("dlformat", BOTTOM_MARGIN_SPACE_PG);
   bottommarginspacepg.define("listname", "Bottom margin space (PG chars)");
   bottommarginspacepg.define("ptype", "intrange");
   bottommarginspacepg.define("pmin", 0);
@@ -861,10 +865,10 @@ Record WorldCanvas::getOptions() const {
   bottommarginspacepg.define("value", temp);
   bottommarginspacepg.define("allowunset", False);
   bottommarginspacepg.define("context", "Margins");
-  rec.defineRecord("bottommarginspacepg", bottommarginspacepg);
+  rec.defineRecord(BOTTOM_MARGIN_SPACE_PG, bottommarginspacepg);
 
   Record rightmarginspacepg;
-  rightmarginspacepg.define("dlformat", "rightmarginspacepg");
+  rightmarginspacepg.define("dlformat", RIGHT_MARGIN_SPACE_PG);
   rightmarginspacepg.define("listname", "Right margin space (PG chars)");
   rightmarginspacepg.define("ptype", "intrange");
   rightmarginspacepg.define("pmin", 0);
@@ -875,10 +879,10 @@ Record WorldCanvas::getOptions() const {
   rightmarginspacepg.define("value", temp);
   rightmarginspacepg.define("allowunset", False);
   rightmarginspacepg.define("context", "Margins");
-  rec.defineRecord("rightmarginspacepg", rightmarginspacepg);
+  rec.defineRecord(RIGHT_MARGIN_SPACE_PG, rightmarginspacepg);
 
   Record topmarginspacepg;
-  topmarginspacepg.define("dlformat", "topmarginspacepg");
+  topmarginspacepg.define("dlformat", TOP_MARGIN_SPACE_PG);
   topmarginspacepg.define("listname", "Top margin space (PG chars)");
   topmarginspacepg.define("ptype", "intrange");
   topmarginspacepg.define("pmin", 0);
@@ -889,7 +893,7 @@ Record WorldCanvas::getOptions() const {
   topmarginspacepg.define("value", temp);
   topmarginspacepg.define("allowunset", False);
   topmarginspacepg.define("context", "Margins");
-  rec.defineRecord("topmarginspacepg", topmarginspacepg);
+  rec.defineRecord( TOP_MARGIN_SPACE_PG, topmarginspacepg);
   
   return rec;
 }
@@ -1549,7 +1553,7 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Vector<Double> &trc,
 				 const Matrix<Complex> &data,
-				 const Matrix<Bool> &mask,
+				 const Matrix<Bool> &/*mask*/,
 				 const Vector<Float> &levels,
 				 const Bool usePixelEdges) {
   switch (itsComplexToRealMethod) {
@@ -2212,7 +2216,7 @@ void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
                                 const Matrix<Float>& data,
                                 const Matrix<Bool>& mask,
                                 Int xPixelInc, Int yPixelInc,
-                                Float scale, Double xWorldInc, Double yWorldInc,
+                                Float scale, Double /*xWorldInc*/, Double /*yWorldInc*/,
                                 const String& markerType, Bool usePixelEdges) 
 {
    const IPosition& shp = data.shape();
@@ -2454,6 +2458,7 @@ void WorldCanvas::ctorInit() {
 void WorldCanvas::updateCanvasSizesOffsets() {
   Int pw=pixelCanvas()->width(), ph=pixelCanvas()->height();
 
+
   itsCanvasXOffset = uInt(max(0., .5+ itsFracXOffset*pw ));
   itsCanvasYOffset = uInt(max(0., .5+ itsFracYOffset*ph ));
   itsCanvasXSize   = uInt(max(0., .5+ (itsFracXOffset+itsFracXSize)*pw
@@ -2568,7 +2573,7 @@ Bool WorldCanvas::castingClippingConversion(Vector<Int> &pixelx,
 					    Vector<Bool> &validConversions,
 					    const Vector<Float> &worldx, 
 					    const Vector<Float> &worldy,
-					    const Bool linear) {
+					    const Bool /*linear*/) {
   if (worldx.nelements() != worldy.nelements()) {
     throw(AipsError("Non-conformant input to WorldCanvas::castingConversion"));
     //return False;
@@ -2900,6 +2905,8 @@ const std::list<DisplayData*> &WorldCanvas::displaylist( ) const {
   if ( wch == 0 ) return empty;
   return wch->displaylist( );
 }
+
+
 
 } //# NAMESPACE CASA - END
 

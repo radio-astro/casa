@@ -359,7 +359,7 @@ void MultiWCHolder::addAllDisplayDatas(WorldCanvasHolder &holder) {
   }
 }
 void MultiWCHolder::removeAllDisplayDatas(WorldCanvasHolder &holder,
-					  const Bool& permanent) {
+					  const Bool& /*permanent*/) {
   ListIter<DisplayData *> localDDLI(itsDDList);
   localDDLI.toStart();
   while (!localDDLI.atEnd()) {

@@ -24,6 +24,7 @@ endif
 #	$(QT4ROOT)/bin/moc -o QtProfile.moc.cc QtProfile.qo.h
 #	$(QT4ROOT)/bin/moc -o QtMWCTools.moc.cc QtMWCTools.qo.h
 
+
 qtclean :
 	rm -f *.ui.h *.qrc.cc *.moc.cc
 

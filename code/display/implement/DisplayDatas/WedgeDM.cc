@@ -45,7 +45,7 @@ WedgeDM::~WedgeDM() {
   cleanup();
 }
 
-Bool WedgeDM::drawIntoList(Display::RefreshReason reason,
+Bool WedgeDM::drawIntoList(Display::RefreshReason /*reason*/,
 				 WorldCanvasHolder &wcHolder) {
   // Locate the WorldCanvas to draw upon
   WorldCanvas *wc = wcHolder.worldCanvas();

@@ -38,6 +38,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String PanelDisplay::X_ORIGIN="xorigin";
+const String PanelDisplay::Y_ORIGIN = "yorigin";
+const String PanelDisplay::X_SIZE = "xsize";
+const String PanelDisplay::Y_SIZE = "ysize";
+
 // Constructor.
 PanelDisplay::PanelDisplay(PixelCanvas* pixelcanvas, 
 			   const Int nx, const Int ny,
@@ -56,8 +61,8 @@ PanelDisplay::PanelDisplay(PixelCanvas* pixelcanvas,
   itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
   itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
   itslpgm = 10;
-  itsrpgm = 4;
-  itstpgm = 4;
+  itsrpgm = 1; //4
+  itstpgm = 1; //4
   itsbpgm = 7;
   setGeometry(nx, ny, xOrigin, yOrigin, xSize, ySize, dx, dy, order);
 }
@@ -123,7 +128,7 @@ Record PanelDisplay::getOptions() const {
   Int temp;
   
   Record leftmarginspacepg;
-  leftmarginspacepg.define("dlformat", "leftmarginspacepg");
+  leftmarginspacepg.define("dlformat", WorldCanvas::LEFT_MARGIN_SPACE_PG);
   leftmarginspacepg.define("listname", "Left margin space (PG chars)");
   leftmarginspacepg.define("ptype", "intrange");
   leftmarginspacepg.define("pmin", 0);
@@ -134,10 +139,10 @@ Record PanelDisplay::getOptions() const {
   leftmarginspacepg.define("value", temp);
   leftmarginspacepg.define("allowunset", False);
   leftmarginspacepg.define("context", "Margins");
-  rec.defineRecord("leftmarginspacepg", leftmarginspacepg);
+  rec.defineRecord(WorldCanvas::LEFT_MARGIN_SPACE_PG, leftmarginspacepg);
 
   Record bottommarginspacepg;
-  bottommarginspacepg.define("dlformat", "bottommarginspacepg");
+  bottommarginspacepg.define("dlformat", WorldCanvas::BOTTOM_MARGIN_SPACE_PG);
   bottommarginspacepg.define("listname", "Bottom margin space (PG chars)");
   bottommarginspacepg.define("ptype", "intrange");
   bottommarginspacepg.define("pmin", 0);
@@ -148,10 +153,10 @@ Record PanelDisplay::getOptions() const {
   bottommarginspacepg.define("value", temp);
   bottommarginspacepg.define("allowunset", False);
   bottommarginspacepg.define("context", "Margins");
-  rec.defineRecord("bottommarginspacepg", bottommarginspacepg);
+  rec.defineRecord(WorldCanvas::BOTTOM_MARGIN_SPACE_PG, bottommarginspacepg);
 
   Record rightmarginspacepg;
-  rightmarginspacepg.define("dlformat", "rightmarginspacepg");
+  rightmarginspacepg.define("dlformat", WorldCanvas::RIGHT_MARGIN_SPACE_PG);
   rightmarginspacepg.define("listname", "Right margin space (PG chars)");
   rightmarginspacepg.define("ptype", "intrange");
   rightmarginspacepg.define("pmin", 0);
@@ -162,10 +167,10 @@ Record PanelDisplay::getOptions() const {
   rightmarginspacepg.define("value", temp);
   rightmarginspacepg.define("allowunset", False);
   rightmarginspacepg.define("context", "Margins");
-  rec.defineRecord("rightmarginspacepg", rightmarginspacepg);
+  rec.defineRecord(WorldCanvas::RIGHT_MARGIN_SPACE_PG, rightmarginspacepg);
 
   Record topmarginspacepg;
-  topmarginspacepg.define("dlformat", "topmarginspacepg");
+  topmarginspacepg.define("dlformat", WorldCanvas::TOP_MARGIN_SPACE_PG);
   topmarginspacepg.define("listname", "Top margin space (PG chars)");
   topmarginspacepg.define("ptype", "intrange");
   topmarginspacepg.define("pmin", 0);
@@ -176,7 +181,7 @@ Record PanelDisplay::getOptions() const {
   topmarginspacepg.define("value", temp);
   topmarginspacepg.define("allowunset", False);
   topmarginspacepg.define("context", "Margins");
-  rec.defineRecord("topmarginspacepg", topmarginspacepg);
+  rec.defineRecord(WorldCanvas::TOP_MARGIN_SPACE_PG, topmarginspacepg);
 
   Record nxpanels;
   nxpanels.define("dlformat", "nxpanels");
@@ -256,22 +261,22 @@ Bool PanelDisplay::setOptions(const Record& rec, Record& ) {
   // set distributed options
     
   attString = "leftMarginSpacePG";
-  localchange = readOptionRecord(itslpgm, error, rec, "leftmarginspacepg") 
+  localchange = readOptionRecord(itslpgm, error, rec, WorldCanvas::LEFT_MARGIN_SPACE_PG)
              || localchange;
   attBuffer.add(attString, itslpgm);
     
   attString = "rightMarginSpacePG";
-  localchange = readOptionRecord(itsrpgm, error, rec, "rightmarginspacepg")
+  localchange = readOptionRecord(itsrpgm, error, rec, WorldCanvas::RIGHT_MARGIN_SPACE_PG)
              || localchange;
   attBuffer.add(attString, itsrpgm);
     
   attString = "bottomMarginSpacePG";
-  localchange = readOptionRecord(itsbpgm, error, rec, "bottommarginspacepg")
+  localchange = readOptionRecord(itsbpgm, error, rec, WorldCanvas::BOTTOM_MARGIN_SPACE_PG)
              || localchange;
   attBuffer.add(attString, itsbpgm);
     
   attString = "topMarginSpacePG";
-  localchange = readOptionRecord(itstpgm, error, rec, "topmarginspacepg")
+  localchange = readOptionRecord(itstpgm, error, rec, WorldCanvas::TOP_MARGIN_SPACE_PG)
              || localchange;
   attBuffer.add(attString, itstpgm);
   setAttributes(attBuffer);
@@ -298,10 +303,10 @@ void PanelDisplay::getGeometry(Int& nx, Int& ny, Float& xOrigin,
 void PanelDisplay::getGeometry(RecordInterface& rec) const {
   rec.define("nxpanels", itsNX);
   rec.define("nypanels", itsNY);
-  rec.define("xorigin", itsXOrigin);
-  rec.define("yorigin", itsYOrigin);
-  rec.define("xsize", itsXSize);
-  rec.define("ysize", itsYSize);
+  rec.define(X_ORIGIN, itsXOrigin);
+  rec.define(Y_ORIGIN, itsYOrigin);
+  rec.define(X_SIZE, itsXSize);
+  rec.define(Y_SIZE, itsYSize);
   rec.define("xspacing", itsDX);
   rec.define("yspacing", itsDY);
 }
@@ -309,16 +314,16 @@ void PanelDisplay::getGeometry(RecordInterface& rec) const {
 
 void PanelDisplay::setGeometry(const RecordInterface& rec) {
   if (rec.isDefined("nxpanels") && rec.isDefined("nypanels") &&
-      rec.isDefined("xorigin") && rec.isDefined("yorigin") &&
-      rec.isDefined("xsize") && rec.isDefined("ysize") &&
+      rec.isDefined(X_ORIGIN) && rec.isDefined(Y_ORIGIN) &&
+      rec.isDefined(X_SIZE) && rec.isDefined(Y_SIZE) &&
       rec.isDefined("xspacing") && rec.isDefined("yspacing")) {
 
     Int nx,ny;
     Float xOrigin,yOrigin, xSize,ySize, dx,dy;
 
     rec.get("nxpanels", nx);     rec.get("nypanels", ny);
-    rec.get("xorigin", xOrigin); rec.get("yorigin", yOrigin);
-    rec.get("xsize", xSize);     rec.get("ysize", ySize);
+    rec.get(X_ORIGIN, xOrigin); rec.get(Y_ORIGIN, yOrigin);
+    rec.get(X_SIZE, xSize);     rec.get(Y_SIZE, ySize);
     rec.get("xspacing", dx);     rec.get("yspacing", dy);
 
     setGeometry(nx,ny, xOrigin,yOrigin, xSize,ySize, dx,dy, itsOrder);
@@ -389,7 +394,6 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
     static_cast<Float>(itsNX);
   Float yPanelSize = (itsYSize - static_cast<Float>(itsNY - 1) * itsDY) /
     static_cast<Float>(itsNY);
-
   itsWCHLI->toStart();
   itsWCLI->toStart();
 
@@ -624,6 +628,24 @@ MultiWCTool* PanelDisplay::getTool(const String& key) {
   if(!itsMWCTools.isDefined(key)) return 0;
   return itsMWCTools(key);
 }
+
+ float PanelDisplay::getDrawUnit(  ) const {
+	 float drawUnit = 0;
+	 itsWCHLI->toStart();
+	 if (!itsWCHLI->atEnd()) {
+		 WorldCanvasHolder* wch = itsWCHLI->getRight();
+		 drawUnit = wch->getDrawUnit();
+	 }
+	 return drawUnit;
+ }
+
+ int PanelDisplay::getColumnCount( ) const {
+	 return itsNX;
+ }
+
+ int PanelDisplay::getRowCount() const {
+	 return itsNY;
+ }
 
 } //# NAMESPACE CASA - END
 

@@ -551,13 +551,13 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
            mssel = new MeasurementSet(*itsMS);
          }
  
-         if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
+       /*  if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
                                           inchan, istep, writesyscal,
                                           multisource, combinespw,
                                           writestation, 1.0, padwithflags, iwidth)) {
            *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
-         }
+         }*/
 
 	 //Done...clear off the mssel
 	 if(mssel)

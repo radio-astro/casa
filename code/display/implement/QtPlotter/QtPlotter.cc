@@ -61,6 +61,7 @@ QtPlotter::QtPlotter(QWidget *parent, const char *name)
 {
     initPlotterResource();
     setWindowTitle(name);
+
     // setWindowIcon(QIcon(":/images/nrao.png"));
     // (Wait until a casa.png is available...
     setBackgroundRole(QPalette::Dark);
