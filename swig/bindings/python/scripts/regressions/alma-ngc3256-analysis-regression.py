@@ -868,10 +868,43 @@ if(mystep in thesteps):
         passed = False
 
     if not passed:
-        raise Exception, 'Results are different from expectations by more than 0.5 percent.'
+        casalog.post('Results are different from expectations by more than 0.5 percent.', 'WARN')
+    else:
+        casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
+        
+    pngfiles = ['cal-tsys_per_spw_1_uid___A002_X1d54a1_X174.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X5.png',
+                'cal-phase_vs_time_XX.G1.png',
+                'cal-phase_vs_time_YY.G1.png',
+                'bandpass.B1.png',
+                'cal-phase_vs_time_XX.G2.png',
+                'cal-phase_vs_time_YY.G2.png',
+                'cal-amp_vs_time_XX.G2.png',
+                'cal-amp_vs_time_YY.G2.png',
+                'result-phasecal_map.png',
+                'result-phasecal_map-lin.png',
+                'result-ampcal_map.png',
+                'result-ampcal_map-lin.png',
+                'result-ngc3256_cont.png',
+                'cal-phase_vs_time_XX_30_Gp.png',
+                'cal-phase_vs_time_YY_30_Gp.png',
+                'result-ngc3256_cont_sc1.png',
+                'result-CO_velfield.png',
+                'result-CO_map.png',
+                'result-CO_dispersion.png',
+                'result-CNhi_velfield.png',
+                'result-CNhi_map.png',
+                'result-CNlo_velfield.png',
+                'result-CNlo_map.png']
 
-    casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
-    
+    for pngfile in pngfiles:
+        if not os.path.exists(pngfile):
+            casalog.post('Plot file '+pngfile+' was not created!', 'WARN')
+            passed = False
+            
+    if not passed:
+        raise Exception, 'Regression failed.'
+
     print "Passed."
 
     timing()

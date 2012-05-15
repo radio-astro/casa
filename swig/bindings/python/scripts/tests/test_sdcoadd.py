@@ -377,6 +377,11 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     Note on handlings of disk storage:
        Task script restores unit and frame information.
        scantable.convert_flux returns new table.
+
+    Tested items:
+       1. Number of rows in (sub-)tables and list of IDs of output scantable.
+       2. Units and coordinates of output scantable.
+       3. units and coordinates of input scantables before/after run.
     """
     # a list of input scatables to merge
     inlist = ['orions_calSave_21.asap','orions_calSave_25.asap']
@@ -408,6 +413,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
     # helper functions of tests
     def _get_unit_coord( self, scanname ):
+        # Returns a dictionary which stores units and coordinates of a
+        # scantable, scanname. Returned dictionary stores spectral
+        # unit, flux unit, frequency frame, and doppler of scanname.
         self.assertTrue(os.path.exists(scanname),\
                         "'%s' does not exists." % scanname)
         self.assertTrue(is_scantable(scanname),\
@@ -422,6 +430,9 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         return retdict
 
     def _get_uclist( self, stlist ):
+        # Returns a list of dictionaries of units and coordinates of
+        # a list of scantables in stlist. This method internally calls
+        # _get_unit_coord(scanname).
         retlist = []
         for scanname in stlist:
             retlist.append(self._get_unit_coord(scanname))
@@ -442,7 +453,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         after = self._get_uclist(stlist)
         for i in range(len(stlist)):
-            print "Comparing units and coordinates of '%s' before/after run" %\
+            print "Comparing units and coordinates of '%s'" %\
                   stlist[i]
             self._compareDictVal(after[i],before[i])
 

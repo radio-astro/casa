@@ -51,7 +51,7 @@ class sdstat_unittest_base:
             vallist.append([chanval[schan],chanval[echan]])
         return vallist
 
-    def _isInAllowedRange( self, testval, refval, allowdiff=0.01 ):
+    def _isInAllowedRange( self, testval, refval, allowdiff=1.e-5 ):
         """
         Check if a test value is within permissive relative difference from refval.
         Returns a boolean.
@@ -107,14 +107,12 @@ class sdstat_unittest_base:
             sellist.append(fulllist[id])
         return sellist
 
-    def _compareStats( self, currstat, refstat, icomp=None, allowdiff=None, compstats=None ):
+    def _compareStats( self, currstat, refstat, icomp=None, allowdiff=1.e-5, compstats=None ):
         # compare statistic values
         if compstats:
             compstats = self._to_list(compstats)
         else:
             compstats = refstat.keys()
-        
-        allowdiff = 0.01
         
         # Task sdstat returns a dictionary of statistic values
         self.assertTrue(isinstance(refstat,dict),
