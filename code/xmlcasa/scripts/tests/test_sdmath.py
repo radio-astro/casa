@@ -15,6 +15,7 @@ import string
 asap_init()
 from sdmath import sdmath
 import asap as sd
+from asap.scantable import is_scantable
 
 #
 # Unit test of sdmath task.
@@ -107,6 +108,43 @@ class sdmath_unittest_base:
         f.close()
         #os.system('cat %s'%name)
                 
+    def _checkresult(self,r,l0,l1,op):
+        self._checkfile(r)
+        tb.open(r)
+        spr=tb.getcol('SPECTRA').transpose()
+        nrow=tb.nrows()
+        tb.close()
+        tb.open(l0)
+        spl0=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        self.assertEqual(spr.shape[0],spl0.shape[0],
+                         msg='number of rows mismatch')
+        self.assertEqual(spr.shape[1],spl0.shape[1],
+                         msg='number of channels mismatch')
+        tb.open(l1)
+        spl1=tb.getcol('SPECTRA').transpose()
+        tb.close()
+        self.assertEqual(spr.shape[0],spl1.shape[0],
+                         msg='number of rows mismatch')
+        self.assertEqual(spr.shape[1],spl1.shape[1],
+                         msg='number of channels mismatch')
+        if op=='+':
+            spl=spl0+spl1
+        elif op=='-':
+            spl=spl0-spl1
+        elif op=='*':
+            spl=spl0*spl1
+        else: # op=='/'
+            spl=spl0/spl1
+        print ''
+        for irow in xrange(nrow):
+            ret=numpy.allclose(spr[irow],spl[irow])
+            print 'irow=%s'%(irow)
+            print '   spr=%s'%(spr[irow])
+            print '   spl=%s'%(spl[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
+
 ###
 # Test on bad parameter settings
 ###
@@ -607,44 +645,309 @@ class sdmath_test3(unittest.TestCase,sdmath_unittest_base):
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
 
-    def _checkresult(self,r,l0,l1,op):
-        self._checkfile(r)
-        tb.open(r)
-        spr=tb.getcol('SPECTRA').transpose()
-        nrow=tb.nrows()
-        tb.close()
-        tb.open(l0)
-        spl0=tb.getcol('SPECTRA').transpose()
-        tb.close()
-        self.assertEqual(spr.shape[0],spl0.shape[0],
-                         msg='number of rows mismatch')
-        self.assertEqual(spr.shape[1],spl0.shape[1],
-                         msg='number of channels mismatch')
-        tb.open(l1)
-        spl1=tb.getcol('SPECTRA').transpose()
-        tb.close()
-        self.assertEqual(spr.shape[0],spl1.shape[0],
-                         msg='number of rows mismatch')
-        self.assertEqual(spr.shape[1],spl1.shape[1],
-                         msg='number of channels mismatch')
-        if op=='+':
-            spl=spl0+spl1
-        elif op=='-':
-            spl=spl0-spl1
-        elif op=='*':
-            spl=spl0*spl1
-        else: # op=='/'
-            spl=spl0/spl1
-        print ''
-        for irow in xrange(nrow):
-            ret=numpy.allclose(spr[irow],spl[irow])
-            print 'irow=%s'%(irow)
-            print '   spr=%s'%(spr[irow])
-            print '   spl=%s'%(spl[irow])
-            self.assertEqual(ret,True,
-                             msg='SPECTRA: data differ in row%s'%(irow))
+
+###
+# Test on scantable storage and insitu settings
+###
+class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
+    """
+    Test on scantable sotrage and insitu.
+
+    Test data, sdmath0.asap, is artificial data with the following
+    status:
+
+       - nrow = 2
+       - nchan = 4 for spectral data
+       - all spectral values are 1.0
+
+    Another test data, sdmath1.asap, is artificial data with the
+    following status:
+
+       - shape is identical with sdmath0.asap
+       - all spectral values are 0.1
+
+    The list of tests:
+    testMT  --- storage = 'memory', insitu = True
+    testMF  --- storage = 'memory', insitu = False
+    testDT  --- storage = 'disk', insitu = True
+    testDF  --- storage = 'disk', insitu = False
+
+    Note on handlings of disk storage:
+       Task script restores unit and frame information.
+
+    Tested items:
+       1. Test of output result by self._compare.
+       2. Units and coordinates of output scantable.
+       3. units and coordinates of input scantables before/after run.
+    """
+    # Input and output names
+    rawfile='sdmath0.asap'
+    rawfile1='sdmath1.asap'
+    inlist = [rawfile, rawfile1]
+    outprefix=sdmath_unittest_base.taskname+'.Tstorage'
+    outsuffix='.asap'
+
+    # specunit is ignored in current task script (CAS-4094)
+    #out_uc = {'spunit': 'GHz', 'flunit': 'Jy',\
+    #          'frame': 'LSRD', 'doppler': 'OPTICAL'}
+    out_uc = {'spunit': 'channel', 'flunit': 'Jy',\
+              'frame': 'LSRD', 'doppler': 'OPTICAL'}
+
+    def setUp( self ):
+        for infile in [self.rawfile, self.rawfile1]:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
+            shutil.copytree(self.datapath+infile, infile)
+        
+        default(sdmath)
+
+    def tearDown( self ):
+        for infile in [self.rawfile, self.rawfile1]:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
+
+    # helper functions of tests
+    def _get_unit_coord( self, scanname ):
+        # Returns a dictionary which stores units and coordinates of a
+        # scantable, scanname. Returned dictionary stores spectral
+        # unit, flux unit, frequency frame, and doppler of scanname.
+        self.assertTrue(os.path.exists(scanname),\
+                        "'%s' does not exists." % scanname)
+        self.assertTrue(is_scantable(scanname),\
+                        "Input table is not a scantable: %s" % scanname)
+        scan = sd.scantable(scanname, average=False,parallactify=False)
+        retdict = {}
+        retdict['spunit'] = scan.get_unit()
+        retdict['flunit'] = scan.get_fluxunit()
+        coord = scan._getcoordinfo()
+        retdict['frame'] = coord[1]
+        retdict['doppler'] = coord[2]
+        return retdict
+
+    def _get_uclist( self, stlist ):
+        # Returns a list of dictionaries of units and coordinates of
+        # a list of scantables in stlist. This method internally calls
+        # _get_unit_coord(scanname).
+        retlist = []
+        for scanname in stlist:
+            retlist.append(self._get_unit_coord(scanname))
+        #print retlist
+        return retlist
+
+    def _comp_unit_coord( self, stlist, before):
+        ### stlist: a list of scantable names
+        if isinstance(stlist,str):
+            stlist = [ stlist ]
+        ### before: a return value of _get_uclist() before run
+        if isinstance(before, dict):
+            before = [ before ]
+        if len(stlist) != len(before):
+            raise Exception("Number of scantables in list is different from reference data.")
+        self.assertTrue(isinstance(before[0],dict),\
+                        "Reference data should be (a list of) dictionary")
+
+        after = self._get_uclist(stlist)
+        for i in range(len(stlist)):
+            print "Comparing units and coordinates of '%s'" %\
+                  stlist[i]
+            self._compareDictVal(after[i],before[i])
+
+    def _compareDictVal( self, testdict, refdict, reltol=1.0e-5, complist=None ):
+        self.assertTrue(isinstance(testdict,dict) and \
+                        isinstance(refdict, dict),\
+                        "Need to specify two dictionaries to compare")
+        if complist:
+            keylist = complist
+        else:
+            keylist = refdict.keys()
+        
+        for key in keylist:
+            self.assertTrue(testdict.has_key(key),\
+                            msg="%s is not defined in the current results."\
+                            % key)
+            self.assertTrue(refdict.has_key(key),\
+                            msg="%s is not defined in the reference data."\
+                            % key)
+            testval = self._to_list(testdict[key])
+            refval = self._to_list(refdict[key])
+            self.assertTrue(len(testval)==len(refval),"Number of elemnets differs.")
+            for i in range(len(testval)):
+                if isinstance(refval[i],str):
+                    self.assertTrue(testval[i]==refval[i],\
+                                    msg="%s[%d] differs: %s (expected: %s) " % \
+                                    (key, i, str(testval[i]), str(refval[i])))
+                else:
+                    self.assertTrue(self._isInAllowedRange(testval[i],refval[i],reltol),\
+                                    msg="%s[%d] differs: %s (expected: %s) " % \
+                                    (key, i, str(testval[i]), str(refval[i])))
+            del testval, refval
+            
+
+    def _isInAllowedRange( self, testval, refval, reltol=1.0e-5 ):
+        """
+        Check if a test value is within permissive relative difference from refval.
+        Returns a boolean.
+        testval & refval : two numerical values to compare
+        reltol           : allowed relative difference to consider the two
+                           values to be equal. (default 0.01)
+        """
+        denom = refval
+        if refval == 0:
+            if testval == 0:
+                return True
+            else:
+                denom = testval
+        rdiff = (testval-refval)/denom
+        del denom,testval,refval
+        return (abs(rdiff) <= reltol)
+
+    def _to_list( self, input ):
+        """
+        Convert input to a list
+        If input is None, this method simply returns None.
+        """
+        import numpy
+        listtypes = (list, tuple, numpy.ndarray)
+        if input == None:
+            return None
+        elif type(input) in listtypes:
+            return list(input)
+        else:
+            return [input]
+
+    # Actual tests
+    def testMT( self ):
+        """Storage Test MT: Division of scalar on storage='memory' and insitu=T"""
+        # Operation with a numerical value calls stmath._unaryop()
+        tid = "MT"
+        op = '/'
+        ex = 'V0'+op+'V1'
+        factor = 2.0
+        v = {'V0': self.rawfile,
+             'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testMF( self ):
+        """Storage Test MF: Multiplication of 1D array of [nchan] on storage='memory' and insitu=F"""
+        # Operation with a numerical value calls stmath._arrayop()
+        tid = "MF"
+        op='*'
+        ex='V0'+op+'V1'
+        factor=[0.1,0.2,0.3,0.4]
+        v={'V0': self.rawfile,
+           'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+        
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testDT( self ):
+        """Storage Test DT: Subtraction of 2D array of [nrow,nchan] on storage='disk' and insitu=T"""
+        # Operation of 2-D array calls asapmath._array2dOp()
+        tid = "DT"
+        op='-'
+        ex='V0'+op+'V1'
+        factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
+        v={'V0': self.rawfile,
+           'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testDF( self ):
+        """Storage Test DF: Addition of two scantables on storage='disk' and insitu=F"""
+        # Operation of two scantables calls stmath._binaryop()
+        tid = "DF"
+        op='+'
+        ex='V0'+op+'V1'
+        v={'V0': self.rawfile,
+           'V1': self.rawfile1}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_uclist([self.rawfile, self.rawfile1])
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._checkresult(outfile,self.rawfile,self.rawfile1,op)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord([self.rawfile, self.rawfile1],initval)
         
 
 def suite():
     return [sdmath_test0,sdmath_test1,
-            sdmath_test2,sdmath_test3]
+            sdmath_test2,sdmath_test3,
+            sdmath_storageTest]
