@@ -914,6 +914,9 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.asap'
     outroot = sdbaseline_unittest_base.taskname+'_store'
+    mode = "list"
+    iflist = [2]
+    pollist = [1]
     
     blparamfile_suffix = '_blparam.txt'
     blreffile = sdbaseline_unittest_base.datapath+'refblparam02'
@@ -940,116 +943,100 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
     def testMT( self ):
         """Storage Test MT: storage='memory' and insitu=T"""
         tid = "MT"
-        infile = self.infile
         outfile = self.outroot+tid+".asap"
-        mode = "list"
-        iflist = [2]
-        pollist = [1]
 
-        initstat = self._getStats(infile)
+        initstat = self._getStats(self.infile)
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            iflist=iflist,pollist=pollist)
+        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
-        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
         # Test input data
-        newinstat = self._getStats(infile)
+        newinstat = self._getStats(self.infile)
         print "Comparing INPUT statistics before/after calculations"
         self._compareStats(newinstat,initstat)
 
     def testMF( self ):
         """Storage Test MF: storage='memory' and insitu=F"""
         tid = "MF"
-        infile = self.infile
         outfile = self.outroot+tid+".asap"
-        mode = "list"
-        iflist = [2]
-        pollist = [1]
 
-        initstat = self._getStats(infile)
+        initstat = self._getStats(self.infile)
 
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            iflist=iflist,pollist=pollist)
+        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
-        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
         # Test input data
-        newinstat = self._getStats(infile)
+        newinstat = self._getStats(self.infile)
         print "Comparing INPUT statistics before/after calculations"
         self._compareStats(newinstat,initstat)
 
     def testDT( self ):
         """Storage Test DT: storage='disk' and insitu=T"""
         tid = "DT"
-        infile = self.infile
         outfile = self.outroot+tid+".asap"
-        mode = "list"
-        iflist = [2]
-        pollist = [1]
 
-        initstat = self._getStats(infile)
+        initstat = self._getStats(self.infile)
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            iflist=iflist,pollist=pollist)
+        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
-        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
         # Test input data
-        newinstat = self._getStats(infile)
+        newinstat = self._getStats(self.infile)
         print "Comparing INPUT statistics before/after calculations"
         self._compareStats(newinstat,initstat)
 
     def testDF( self ):
         """Storage Test DF: storage='disk' and insitu=F"""
         tid = "DF"
-        infile = self.infile
         outfile = self.outroot+tid+".asap"
-        mode = "list"
-        iflist = [2]
-        pollist = [1]
 
-        initstat = self._getStats(infile)
+        initstat = self._getStats(self.infile)
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            iflist=iflist,pollist=pollist)
+        result = sdbaseline(infile=self.infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist)
 
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
-        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
         # Test input data
-        newinstat = self._getStats(infile)
+        newinstat = self._getStats(self.infile)
         print "Comparing INPUT statistics before/after calculations"
         self._compareStats(newinstat,initstat)
 
@@ -1058,24 +1045,21 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
         """Storage Test DTow:  infile=outfile on storage='disk' and insitu=T"""
         tid = "DTow"
         infile = self.infile
-        outfile = infile
-        mode = "list"
-        iflist = [2]
-        pollist = [1]
+        outfile = self.infile
         overwrite = True
 
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
-                            iflist=iflist,pollist=pollist,overwrite=True)
+        result = sdbaseline(infile=infile,maskmode=self.mode,outfile=outfile,
+                            iflist=self.iflist,pollist=self.pollist,overwrite=True)
 
         # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         print "Testing OUTPUT statistics and baseline parameters"
-        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareBLparam(outfile+self.blparamfile_suffix,self.blreffile)
         self._compareStats(outfile,self.refstat)
 
 
