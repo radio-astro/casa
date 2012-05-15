@@ -15,7 +15,164 @@ import asap as sd
 from sdbaseline import sdbaseline
 from sdstat import sdstat
 
-class sdbaseline_basictest(unittest.TestCase):
+class sdbaseline_unittest_base:
+    """
+    Base class for sdbaseline unit test
+    """
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+              '/data/regression/unittest/sdbaseline/'
+    taskname = "sdbaseline"
+
+    #complist = ['max','min','rms','median','stddev']
+
+    ### helper functions for tests ###
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertTrue(isthere,
+                         msg='Could not find, %s'%(name))
+
+    def _getStats( self, filename, ifno=None ):
+        if not ifno:
+            ifno=[]
+        self._checkfile(filename)
+        sd.rcParams['scantable.storage'] = 'memory'
+        retstat = sdstat(filename, iflist=ifno)
+        return retstat
+
+    def _compareStats( self, currstat, refstat, reltol=1.0e-5, complist=None ):
+        # test if the statistics of baselined spectra are equal to
+        # the reference values
+        printstat = False #True
+        # In case currstat is filename
+        if isinstance(currstat, str) and os.path.exists(currstat):
+            #print "calculating statistics from '%s'" % currstat
+            currstat = self._getStats(currstat)
+
+        self.assertTrue(isinstance(currstat,dict) and \
+                        isinstance(refstat, dict),\
+                        "Need to specify two dictionaries to compare")
+        if complist:
+            keylist = complist
+        else:
+            keylist = refstat.keys()
+            #keylist = self.complist
+        
+        for key in keylist:
+            self.assertTrue(currstat.has_key(key),\
+                            msg="%s is not defined in the current results."\
+                            % key)
+            self.assertTrue(refstat.has_key(key),\
+                            msg="%s is not defined in the reference data."\
+                            % key)
+            refval = refstat[key]
+            currval = currstat[key]
+            # Quantum values
+            if isinstance(refval,dict):
+                if refval.has_key('unit') and currval.has_key('unit'):
+                    if printstat:
+                        print "Comparing unit of '%s': %s (current run), %s (reference)" %\
+                              (key,currval['unit'],refval['unit'])
+                    self.assertEqual(refval['unit'],currval['unit'],\
+                                     "The units of '%s' differs: %s (expected: %s)" % \
+                                     (key, currval['unit'], refval['unit']))
+                    refval = refval['value']
+                    currval = currval['value']
+                else:
+                    raise Exception("Invalid quantum values. %s (current run) %s (reference)" %\
+                                    (str(currval),str(refval)))
+            currval = self._to_list(currval)
+            refval = self._to_list(refval)
+            if printstat:
+                print "Comparing '%s': %s (current run), %s (reference)" %\
+                      (key,str(currval),str(refval))
+            self.assertTrue(len(currval)==len(refval),"Number of elemnets in '%s' differs." % key)
+            for i in range(len(currval)):
+                if isinstance(refval[i],str):
+                    self.assertTrue(currval[i]==refval[i],\
+                                    msg="%s[%d] differs: %s (expected: %s) " % \
+                                    (key, i, str(currval[i]), str(refval[i])))
+                else:
+                    self.assertTrue(self._isInAllowedRange(currval[i],refval[i],reltol),\
+                                    msg="%s[%d] differs: %s (expected: %s) " % \
+                                    (key, i, str(currval[i]), str(refval[i])))
+            del currval, refval
+
+            
+    def _isInAllowedRange( self, testval, refval, reltol=1.e-5 ):
+        """
+        Check if a test value is within permissive relative difference from refval.
+        Returns a boolean.
+        testval & refval : two numerical values to compare
+        reltol           : allowed relative difference to consider the two
+                           values to be equal. (default 0.01)
+        """
+        denom = refval
+        if refval == 0:
+            if testval == 0:
+                return True
+            else:
+                denom = testval
+        rdiff = (testval-refval)/denom
+        del denom,testval,refval
+        return (abs(rdiff) <= reltol)
+
+    def _to_list( self, input ):
+        """
+        Convert input to a list
+        If input is None, this method simply returns None.
+        """
+        import numpy
+        listtypes = (list, tuple, numpy.ndarray)
+        if input == None:
+            return None
+        elif type(input) in listtypes:
+            return list(input)
+        else:
+            return [input]
+
+
+    def _compareBLparam( self, out, reference ):
+        # test if baseline parameters are equal to the reference values
+        # currently comparing every lines in the files
+        # TO DO: compare only "Fitter range" and "Baseline parameters"
+        self._checkfile(out)
+        self._checkfile(reference)
+        
+        blparse_out = BlparamFileParser( out )
+        blparse_out.parse()
+        coeffs_out = blparse_out.coeff()
+        rms_out = blparse_out.rms()
+        blparse_ref = BlparamFileParser( reference )
+        blparse_ref.parse()
+        coeffs_ref = blparse_ref.coeff()
+        rms_ref = blparse_ref.rms()
+        allowdiff = 0.01
+        print 'Check baseline parameters:'
+        for irow in xrange(len(rms_out)):
+            print 'Row %s:'%(irow)
+            print '   Reference rms  = %s'%(rms_ref[irow])
+            print '   Calculated rms = %s'%(rms_out[irow])
+            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
+            print '   Calculated coeffs = %s'%(coeffs_out[irow])
+            r0 = rms_ref[irow]
+            r1 = rms_out[irow]
+            rdiff = ( r1 - r0 ) / r0
+            self.assertTrue((abs(rdiff)<allowdiff),
+                            msg='row %s: rms is different'%(irow))
+            c0 = coeffs_ref[irow]
+            c1 = coeffs_out[irow]
+            for ic in xrange(len(c1)):
+                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                self.assertTrue((abs(rdiff)<allowdiff),
+                                msg='row %s: coefficient for order %s is different'%(irow,ic))
+        print ''
+#         self.assertTrue(listing.compare(out,reference),
+#                         'New and reference files are different. %s != %s. '
+#                         %(out,reference))
+
+
+class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
     """
     Basic unit tests for task sdbaseline. No interactive testing.
 
@@ -33,32 +190,30 @@ class sdbaseline_basictest(unittest.TestCase):
       sdcal(infile='temp.asap',timeaverage=True,
                 tweight='tintsys',outfile=self.infile)
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = 'sdbaseline_test'
-    blrefroot = datapath+'refblparam'
-    strefroot = datapath+'refstats'
+    outroot = sdbaseline_unittest_base.taskname+'_test'
+    blrefroot = sdbaseline_unittest_base.datapath+'refblparam'
+    strefroot = sdbaseline_unittest_base.datapath+'refstats'
 
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdbaseline)
 
-    def tearDown(self):
+    def tearDown( self ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def test00(self):
+    def test00( self ):
         """Test 0: Default parameters"""
         result = sdbaseline()
         self.assertFalse(result)
 
-    def testbl01(self):
+    def testbl01( self ):
         """Test 1: maskmode = 'auto'"""
         tid = "01"
         infile = self.infile
@@ -84,7 +239,7 @@ class sdbaseline_basictest(unittest.TestCase):
         self._compareStats(outfile,reference)
         #self._compareStats(outfile,self.strefroot+tid)
 
-    def testbl02(self):
+    def testbl02( self ):
         """Test 2: maskmode = 'list' and masklist=[] (all channels)"""
         tid = "02"
         infile = self.infile
@@ -109,73 +264,8 @@ class sdbaseline_basictest(unittest.TestCase):
         #self._compareStats(outfile,self.strefroot+tid)
 
 
-    def _compareBLparam(self,out,reference):
-        # test if baseline parameters are equal to the reference values
-        # currently comparing every lines in the files
-        # TO DO: compare only "Fitter range" and "Baseline parameters"
-        self.assertTrue(os.path.exists(out))
-        self.assertTrue(os.path.exists(reference),
-                        msg="Reference file doesn't exist: "+reference)
-#         self.assertTrue(listing.compare(out,reference),
-#                         'New and reference files are different. %s != %s. '
-#                         %(out,reference))
 
-    def _compareStats(self,outfile,reference):
-        # test if the statistics of baselined spectra are equal to
-        # the reference values
-        self.assertTrue(os.path.exists(outfile))
-        currstat = sdstat(infile=outfile)
-        self.assertTrue(isinstance(currstat,dict),
-                        msg="Failed to calculate statistics.")
-        f = open(outfile+'_stats','w')
-        f.write(str(currstat))
-        f.close()
-        del f
-
-        #self.assertTrue(os.path.exists(reference),
-        #                msg="Reference file doesn't exist: "+reference)
-        refstat = reference
-
-        print "Statistics of baselined spectra:\n",currstat
-        print "Reference values:\n",refstat
-        # compare statistic values
-        #compstats = ['max','min','mean','sum','rms']
-        compstats = ['max','min','rms','median','stddev']
-        allowdiff = 0.01
-        self.assertEqual(currstat['max_abscissa']['unit'],
-                         refstat['max_abscissa']['unit'],
-                         msg="The units of max_abscissa are different")
-        self.assertEqual(currstat['min_abscissa']['unit'],
-                         refstat['min_abscissa']['unit'],
-                         msg="The units of min_abscissa are different")
-        if isinstance(refstat['max'],list):
-            for i in xrange(len(refstat['max'])):
-                for stat in compstats:
-                    rdiff = (currstat[stat][i]-refstat[stat][i])/refstat[stat][i]
-                    self.assertTrue((abs(rdiff)<allowdiff),
-                                    msg="'%s' of spectrum %s are different." % (stat, str(i)))
-                self.assertEqual(currstat['max_abscissa']['value'][i],
-                                 refstat['max_abscissa']['value'][i],
-                                 msg="The max channels/frequencies/velocities of spectrum %s are different" % str(i))
-                self.assertEqual(currstat['min_abscissa']['value'][i],
-                                 refstat['min_abscissa']['value'][i],
-                                 msg="The min channels/frequencies/velocities of spectrum %s are different" % str(i))
-        else:
-            for stat in compstats:
-                rdiff = (currstat[stat]-refstat[stat])/refstat[stat]
-                self.assertTrue((abs(rdiff)<allowdiff),
-                                msg="'%s' of spectrum %s are different." % (stat, str(0)))
-            self.assertEqual(currstat['max_abscissa']['value'],
-                             refstat['max_abscissa']['value'],
-                             msg="The max channels/frequencies/velocities of spectrum %s are different" % str(0))
-            self.assertEqual(currstat['min_abscissa']['value'],
-                             refstat['min_abscissa']['value'],
-                             msg="The min channels/frequencies/velocities of spectrum %s are different" % str(0))
-
-
-
-
-class sdbaseline_masktest(unittest.TestCase):
+class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdbaseline. Test various mask selections.
     Polynominal baselining. No interactive testing.
@@ -195,14 +285,12 @@ class sdbaseline_masktest(unittest.TestCase):
       sdcal(infile='temp.asap',timeaverage=True,
                 tweight='tintsys',outfile=self.infile)
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
     #infile = 'OrionS_rawACSmod_calTave.asap'
     infile = 'OrionS_rawACSmod_calave.asap'
-    outroot = 'sdbaseline_masktest'
-    blrefroot = datapath+'refblparam_mask'
-    #strefroot = datapath+'refstats_mask'
+    outroot = sdbaseline_unittest_base.taskname+'_masktest'
+    blrefroot = sdbaseline_unittest_base.datapath+'refblparam_mask'
+    #strefroot = sdbaseline_unittest_base.datapath+'refstats_mask'
     tid = None
 
     # Channel range excluding bad edge
@@ -240,7 +328,7 @@ class sdbaseline_masktest(unittest.TestCase):
                     'baserms': 0.13150280714035034,
                     'basestd': 0.13151165843009949}
      
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
@@ -248,13 +336,14 @@ class sdbaseline_masktest(unittest.TestCase):
         default(sdbaseline)
 
 
-    def tearDown(self):
-        self._compareBLparam()
+    def tearDown( self ):
+        self._compareBLparam(self.outroot+self.tid+'.asap_blparam.txt',\
+                             self.blrefroot+self.tid)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
 
-    def testblmask01(self):
+    def testblmask01( self ):
         """Mask test 1: test masklist (list) with maskmode = 'auto'"""
         self.tid="01"
         infile = self.infile
@@ -273,12 +362,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        self._compareStats(testval,self.ref_pol0if0)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        self._compareStats(testval,self.ref_pol0if2)
 
-    def testblmask02(self):
+    def testblmask02( self ):
         """Mask test 2: test masklist (list) with maskmode = 'list'"""
         self.tid="02"
         infile = self.infile
@@ -297,9 +386,9 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        self._compareStats(testval,self.ref_pol0if2)
 
-    def testblmask03(self):
+    def testblmask03( self ):
         """Mask test 3: test masklist (string) with maskmode = 'auto'"""
         self.tid="03"
         infile = self.infile
@@ -320,12 +409,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        self._compareStats(testval,self.ref_pol0if0)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        self._compareStats(testval,self.ref_pol0if2)
 
-    def testblmask04(self):
+    def testblmask04( self ):
         """Mask test 4: test masklist (string) with maskmode = 'list'"""
         self.tid="04"
         infile = self.infile
@@ -352,12 +441,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0)
+        self._compareStats(testval,self.ref_pol0if0)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2)
+        self._compareStats(testval,self.ref_pol0if2)
 
-    def testblmask05(self):
+    def testblmask05( self ):
         """Mask test 5: test specunit='GHz' with masklist (list) and maskmode = 'auto'"""
         self.tid="05"
         infile = self.infile
@@ -379,9 +468,9 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2f)
+        self._compareStats(testval,self.ref_pol0if2f)
 
-    def testblmask06(self):
+    def testblmask06( self ):
         """Mask test 6: test specunit='GHz' with masklist (list) and maskmode = 'list'"""
         self.tid="06"
         infile = self.infile
@@ -403,9 +492,9 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2f)
+        self._compareStats(testval,self.ref_pol0if2f)
 
-    def testblmask07(self):
+    def testblmask07( self ):
         """Mask test 7: test specunit='GHz' with masklist (string) and maskmode = 'auto'"""
         self.tid="07"
         infile = self.infile
@@ -435,12 +524,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0f)
+        self._compareStats(testval,self.ref_pol0if0f)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2f)
+        self._compareStats(testval,self.ref_pol0if2f)
 
-    def testblmask08(self):
+    def testblmask08( self ):
         """Mask test 8: test specunit='GHz' with masklist (string) and maskmode = 'list'"""
         self.tid="08"
         infile = self.infile
@@ -470,12 +559,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0f)
+        self._compareStats(testval,self.ref_pol0if0f)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2f)
+        self._compareStats(testval,self.ref_pol0if2f)
 
-    def testblmask09(self):
+    def testblmask09( self ):
         """Mask test 9: test specunit='km/s' with masklist (list) and maskmode = 'auto'"""
         self.tid="09"
         infile = self.infile
@@ -497,9 +586,9 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2v)
+        self._compareStats(testval,self.ref_pol0if2v)
 
-    def testblmask10(self):
+    def testblmask10( self ):
         """Mask test 10: test specunit='km/s' with masklist (list) and maskmode = 'list'"""
         self.tid="10"
         infile = self.infile
@@ -521,9 +610,9 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2v)
+        self._compareStats(testval,self.ref_pol0if2v)
 
-    def testblmask11(self):
+    def testblmask11( self ):
         """Mask test 11: test specunit='km/s' with masklist (string) and maskmode = 'auto'"""
         self.tid="11"
         infile = self.infile
@@ -553,12 +642,12 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0v)
+        self._compareStats(testval,self.ref_pol0if0v)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2v)
+        self._compareStats(testval,self.ref_pol0if2v)
 
-    def testblmask12(self):
+    def testblmask12( self ):
         """Mask test 12: test specunit='km/s' with masklist (string) and maskmode = 'list'"""
         self.tid="12"
         infile = self.infile
@@ -588,19 +677,19 @@ class sdbaseline_masktest(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF0
         testval = self._getStats(outfile,self.blchan0,0)
-        self._compareDictVal(testval,self.ref_pol0if0v)
+        self._compareStats(testval,self.ref_pol0if0v)
         # Compare IF2
         testval = self._getStats(outfile,self.blchan2,2)
-        self._compareDictVal(testval,self.ref_pol0if2v)
+        self._compareStats(testval,self.ref_pol0if2v)
 
 
-    def _get_range_in_string(self,valrange):
+    def _get_range_in_string( self, valrange ):
         if isinstance(valrange, list) or isinstance(valrange, tuple):
             return str(valrange[0])+"~"+str(valrange[1])
         else:
             return False
 
-    def _get_chanval(self,file,chanrange,unit,spw=0,addedge=False):
+    def _get_chanval( self,file, chanrange, unit, spw=0, addedge=False ):
         mylist = []
         scan = sd.scantable(file, average=False)
         scan.set_unit(unit)
@@ -619,21 +708,7 @@ class sdbaseline_masktest(unittest.TestCase):
         del scan, nchan, edge, lval, sval
         return mylist
 
-    def _compareBLparam(self):
-        # test if baseline parameters are equal to the reference values
-        # currently comparing every lines in the files
-        # TO DO: compare only "Fitter range" and "Baseline parameters"
-        out = self.outroot+self.tid+'.asap_blparam.txt'
-        reference = self.blrefroot+self.tid
-        self.assertTrue(os.path.exists(out))
-        self.assertTrue(os.path.exists(reference),
-                        msg="Reference file doesn't exist: "+reference)
-#         self.assertTrue(listing.compare(out,reference),
-#                         'New and reference files are different. %s != %s. '
-#                         %(out,reference))
-
-
-    def _getStats(self,filename,basechan,ispw):
+    def _getStats( self, filename, basechan, ispw ):
         self.assertTrue(os.path.exists(filename),
                         msg=("Output file '%s' doesn't exist" % filename))
         linechan = [basechan[0][1]+1,basechan[1][0]-1]
@@ -655,19 +730,8 @@ class sdbaseline_masktest(unittest.TestCase):
         print 'Current run (IF',ispw,'):',retdic
         return retdic
  
-    def _compareDictVal(self,testdict,refdict,places=4):
-        for stat, refval in refdict.iteritems():
-            self.assertTrue(testdict.has_key(stat),
-                            msg = "'%s' is not defined in the current run" % stat)
-            allowdiff = 0.01
-            #print "Comparing '%s': %f (current run), %f (reference)" % \
-            #      (stat,testdict[stat],refval)
-            reldiff = (testdict[stat]-refval)/refval
-            self.assertTrue(reldiff < allowdiff,\
-                            msg="'%s' differs: %f (ref) != %f" % \
-                            (stat, refval, testdict[stat]))
 
-class sdbaseline_functest(unittest.TestCase):
+class sdbaseline_funcTest( unittest.TestCase ):
     """
     Unit tests for task sdbaseline. No interactive testing.
 
@@ -685,7 +749,8 @@ class sdbaseline_functest(unittest.TestCase):
     created 19/04/2011 by Wataru Kawasaki
     """
     # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+              '/data/regression/unittest/sdbaseline/'    
     # Input and output names
     infile_cspline  = 'Artificial_CubicSpline.asap'
     infile_sinusoid = 'Artificial_Sinusoid.asap'
@@ -693,7 +758,7 @@ class sdbaseline_functest(unittest.TestCase):
     outroot = 'sdbaseline_test'
     tid = None
 
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile_cspline):
             shutil.rmtree(self.infile_cspline)
         shutil.copytree(self.datapath+self.infile_cspline, self.infile_cspline)
@@ -703,13 +768,13 @@ class sdbaseline_functest(unittest.TestCase):
 
         default(sdbaseline)
 
-    def tearDown(self):
+    def tearDown( self ):
         if os.path.exists(self.infile_cspline):
             shutil.rmtree(self.infile_cspline)
         if os.path.exists(self.infile_sinusoid):
             shutil.rmtree(self.infile_sinusoid)
 
-    def testCSpline01(self):
+    def testCSpline01( self ):
         """Test CSpline01: Cubic spline fitting with maskmode = 'list'"""
         self.tid = "CSpline01"
         infile = self.infile_cspline
@@ -721,7 +786,7 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
-    def testCSpline02(self):
+    def testCSpline02( self ):
         """Test CSpline02: Cubic spline fitting with maskmode = 'auto'"""
         self.tid = "CSpline02"
         infile = self.infile_cspline
@@ -733,7 +798,7 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
-    def testSinusoid01(self):
+    def testSinusoid01( self ):
         """Test Sinusoid01: Sinusoidal fitting with maskmode = 'list'"""
         self.tid = "Sinusoid01"
         infile = self.infile_sinusoid
@@ -745,7 +810,7 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
-    def testSinusoid02(self):
+    def testSinusoid02( self ):
         """Test Sinusoid02: Sinusoidal fitting with maskmode = 'auto'"""
         self.tid = "Sinusoid02"
         infile = self.infile_sinusoid
@@ -757,7 +822,7 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
-    def checkRms(self, blparamfile, max_rms):
+    def checkRms( self, blparamfile, max_rms ):
         rms = 10000.0
         for line in open(blparamfile,'r'):
             items = line.split()
@@ -768,7 +833,7 @@ class sdbaseline_functest(unittest.TestCase):
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 
 
-class sdbaseline_multi_IF_test(unittest.TestCase):
+class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdbaseline. No interactive testing.
 
@@ -780,25 +845,23 @@ class sdbaseline_multi_IF_test(unittest.TestCase):
 
     created 24/02/2012 by Takeshi Nakazato
     """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdbaseline/'
     # Input and output names
     infile = 'testMultiIF.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = 'sdbaseline_test'
+    outroot = sdbaseline_unittest_base.taskname+'_multi'
     refblparamfile = 'refblparam_multiIF'
 
-    def setUp(self):
+    def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(sdbaseline)
 
-    def tearDown(self):
+    def tearDown( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
 
-    def test01multi(self):
+    def test01multi( self ):
         """test01multi: Test the task works with multi IF data"""
         infile = self.infile
         mode = "list"
@@ -830,100 +893,195 @@ class sdbaseline_multi_IF_test(unittest.TestCase):
                          'stddev': 1.4974949359893799}}
         # sdstat must run each IF separately
         for ifno in [5,7]:
-            self._compareStats(outfile,ifno,reference[ifno])
-        
-    def _compareBLparam(self,out,reference):
-        # test if baseline parameters are equal to the reference values
-        # currently comparing every lines in the files
-        # TO DO: compare only "Fitter range" and "Baseline parameters"
-        self.assertTrue(os.path.exists(out))
-        self.assertTrue(os.path.exists(reference),
-                        msg="Reference file doesn't exist: "+reference)
-        blparse_out = BlparamFileParser( out )
-        blparse_out.parse()
-        coeffs_out = blparse_out.coeff()
-        rms_out = blparse_out.rms()
-        blparse_ref = BlparamFileParser( reference )
-        blparse_ref.parse()
-        coeffs_ref = blparse_ref.coeff()
-        rms_ref = blparse_ref.rms()
-        allowdiff = 0.01
-        print 'Check baseline parameters:'
-        for irow in xrange(len(rms_out)):
-            print 'Row %s:'%(irow)
-            print '   Reference rms  = %s'%(rms_ref[irow])
-            print '   Calculated rms = %s'%(rms_out[irow])
-            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
-            print '   Calculated coeffs = %s'%(coeffs_out[irow])
-            r0 = rms_ref[irow]
-            r1 = rms_out[irow]
-            rdiff = ( r1 - r0 ) / r0
-            self.assertTrue((abs(rdiff)<allowdiff),
-                            msg='row %s: rms is different'%(irow))
-            c0 = coeffs_ref[irow]
-            c1 = coeffs_out[irow]
-            for ic in xrange(len(c1)):
-                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
-                self.assertTrue((abs(rdiff)<allowdiff),
-                                msg='row %s: coefficient for order %s is different'%(irow,ic))
-        print ''
-#         self.assertTrue(listing.compare(out,reference),
-#                         'New and reference files are different. %s != %s. '
-#                         %(out,reference))
+            currstat = self._getStats(outfile,[ifno])
+            self._compareStats(currstat,reference[ifno])
 
-    def _compareStats(self,outfile,ifno,reference):
-        # test if the statistics of baselined spectra are equal to
-        # the reference values
-        self.assertTrue(os.path.exists(outfile))
-        currstat = sdstat(infile=outfile,iflist=ifno)
-        self.assertTrue(isinstance(currstat,dict),
-                        msg="Failed to calculate statistics.")
+class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdbaseline. Test scantable sotrage and insitu
+    parameters
 
-        #self.assertTrue(os.path.exists(reference),
-        #                msg="Reference file doesn't exist: "+reference)
-        refstat = reference
+    The list of tests:
+    testMT   --- storage = 'memory', insitu = True
+    testMF   --- storage = 'memory', insitu = False
+    testDT   --- storage = 'disk', insitu = True
+    testDF   --- storage = 'disk', insitu = False
+    testDTow --- infile=outfile on storage = 'disk', insitu = True
 
-        print "Statistics of baselined spectra:\n",currstat
-        print "Reference values:\n",refstat
-        # compare statistic values
-        #compstats = ['max','min','mean','sum','rms']
-        compstats = ['max','min','rms','median','stddev']
-        allowdiff = 0.01
-        self.assertEqual(currstat['max_abscissa']['unit'],
-                         refstat['max_abscissa']['unit'],
-                         msg="The units of max_abscissa are different")
-        self.assertEqual(currstat['min_abscissa']['unit'],
-                         refstat['min_abscissa']['unit'],
-                         msg="The units of min_abscissa are different")
-        if isinstance(refstat['max'],list):
-            for i in xrange(len(refstat['max'])):
-                for stat in compstats:
-                    rdiff = (currstat[stat][i]-refstat[stat][i])/refstat[stat][i]
-                    self.assertTrue((abs(rdiff)<allowdiff),
-                                    msg="'%s' of spectrum %s are different." % (stat, str(i)))
-                self.assertEqual(currstat['max_abscissa']['value'][i],
-                                 refstat['max_abscissa']['value'][i],
-                                 msg="The max channels/frequencies/velocities of spectrum %s are different" % str(i))
-                self.assertEqual(currstat['min_abscissa']['value'][i],
-                                 refstat['min_abscissa']['value'][i],
-                                 msg="The min channels/frequencies/velocities of spectrum %s are different" % str(i))
-        else:
-            for stat in compstats:
-                rdiff = (currstat[stat]-refstat[stat])/refstat[stat]
-                self.assertTrue((abs(rdiff)<allowdiff),
-                                msg="'%s' of spectrum %s are different." % (stat, str(0)))
-            self.assertEqual(currstat['max_abscissa']['value'],
-                             refstat['max_abscissa']['value'],
-                             msg="The max channels/frequencies/velocities of spectrum %s are different" % str(0))
-            self.assertEqual(currstat['min_abscissa']['value'],
-                             refstat['min_abscissa']['value'],
-                             msg="The min channels/frequencies/velocities of spectrum %s are different" % str(0))
+    Note on handlings of disk storage:
+       Task script copies scantable after setting selection when storage='disk'
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_calave.asap'
+    outroot = sdbaseline_unittest_base.taskname+'_store'
     
+    blparamfile_suffix = '_blparam.txt'
+    blreffile = sdbaseline_unittest_base.datapath+'refblparam02'
+
+    # Reference statistic values of IF=2, POL=1
+    refstat =  {'rms': 3.4925737380981445,
+                'min': -226.3941650390625,
+                'max': 129.78572082519531,
+                'max_abscissa': {'value': 8186.0, 'unit': 'channel'},
+                'median': -0.025681495666503906,
+                'stddev': 3.4927871227264404,
+                'min_abscissa': {'value': 8187.0, 'unit': 'channel'}}
+
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(sdbaseline)
+
+    def tearDown( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def testMT( self ):
+        """Storage Test MT: storage='memory' and insitu=T"""
+        tid = "MT"
+        infile = self.infile
+        outfile = self.outroot+tid+".asap"
+        mode = "list"
+        iflist = [2]
+        pollist = [1]
+
+        initstat = self._getStats(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist)
+
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        print "Testing OUTPUT statistics and baseline parameters"
+        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareStats(outfile,self.refstat)
+        # Test input data
+        newinstat = self._getStats(infile)
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat)
+
+    def testMF( self ):
+        """Storage Test MF: storage='memory' and insitu=F"""
+        tid = "MF"
+        infile = self.infile
+        outfile = self.outroot+tid+".asap"
+        mode = "list"
+        iflist = [2]
+        pollist = [1]
+
+        initstat = self._getStats(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist)
+
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        print "Testing OUTPUT statistics and baseline parameters"
+        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareStats(outfile,self.refstat)
+        # Test input data
+        newinstat = self._getStats(infile)
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat)
+
+    def testDT( self ):
+        """Storage Test DT: storage='disk' and insitu=T"""
+        tid = "DT"
+        infile = self.infile
+        outfile = self.outroot+tid+".asap"
+        mode = "list"
+        iflist = [2]
+        pollist = [1]
+
+        initstat = self._getStats(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist)
+
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        print "Testing OUTPUT statistics and baseline parameters"
+        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareStats(outfile,self.refstat)
+        # Test input data
+        newinstat = self._getStats(infile)
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat)
+
+    def testDF( self ):
+        """Storage Test DF: storage='disk' and insitu=F"""
+        tid = "DF"
+        infile = self.infile
+        outfile = self.outroot+tid+".asap"
+        mode = "list"
+        iflist = [2]
+        pollist = [1]
+
+        initstat = self._getStats(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist)
+
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        print "Testing OUTPUT statistics and baseline parameters"
+        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareStats(outfile,self.refstat)
+        # Test input data
+        newinstat = self._getStats(infile)
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat)
+
+
+    def testDTow( self ):
+        """Storage Test DTow:  infile=outfile on storage='disk' and insitu=T"""
+        tid = "DTow"
+        infile = self.infile
+        outfile = infile
+        mode = "list"
+        iflist = [2]
+        pollist = [1]
+        overwrite = True
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,
+                            iflist=iflist,pollist=pollist,overwrite=True)
+
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        print "Testing OUTPUT statistics and baseline parameters"
+        self._compareBLparam(outfile+"_blparam.txt",self.blreffile)
+        self._compareStats(outfile,self.refstat)
 
 
 def suite():
-    return [sdbaseline_basictest, sdbaseline_masktest, sdbaseline_functest,
-            sdbaseline_multi_IF_test]
+    return [sdbaseline_basicTest, sdbaseline_maskTest, sdbaseline_funcTest,
+            sdbaseline_multi_IF_test, sdbaseline_storageTest]
 
 ### Utilities for reading blparam file
 class FileReader( object ):
