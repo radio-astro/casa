@@ -36,6 +36,7 @@
 
 #include <images/Images/ImageStatistics.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
+#include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
 
@@ -227,10 +228,12 @@ namespace casa {
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
 	    std::list<RegionInfo> *info = generate_dds_statistics( );
 	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+		if (memory::nullptr.check(stats))
+		  continue;
 		fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
 			 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
 			 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
-		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
 		size_t width = 0;
 		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
 		    size_t w = (*stats_iter).first.size( );
