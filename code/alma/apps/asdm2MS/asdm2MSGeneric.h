@@ -482,8 +482,6 @@ template <class	T, class R, class RFilter>
     return handler;
   }
 
-  ~TableSAXReader();
-
   static void error(const string & message) {
     throw asdm::ConversionException(message, T::name());
   }
