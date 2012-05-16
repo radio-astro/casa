@@ -1509,7 +1509,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
                 && arrayName != "EVLA") && allLE(abs(arraypos), 1000.0)));
 
         // EVLA wants full ITRF per antenna and arraypos=(0,0,0)
-        if (arrayName == "EVLA")
+        if (arrayName == "EVLA" || arrayName == "ALMA")
             arraypos.set(0.0);
 
         // Discern the position reference frame
