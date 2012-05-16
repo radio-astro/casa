@@ -64,10 +64,21 @@
 //#! 
 //#!//////////////////////////////////////////////////////////////////////////
 
+// Some method parameters are only used when LOG0 is set to one which means that
+// normally they generate compile warnings.  This macro will comment outthe enclosed
+// parameter when LOG0 is not one and will leave it alone when LOG0 == 1. (jjacobs)
+
+#if LOG0
+#    define IfLOG0(x)\
+    x
+#else
+#    define IfLOG0(x)\
+    /*x*/
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    
+
 ///////////////////////////////////////////////////////////////////////////////
 //#! All the wonderful docs, that will show up in the user reference
 //#! manual for this class.
@@ -1729,7 +1740,7 @@ class MSPlotConvertAveChanToFreq : public TPConvertBase
    };
 
    // Conversion along the Xaxis
-   Double Xconvert_col(Double x, Int row, Int tableId) {
+   Double Xconvert_col(Double x, Int IfLOG0(row), Int IfLOG0(tableId)) {
       String fnname = "Xconvert_col";
 #if LOG0
       static int a = 0;
@@ -1753,7 +1764,7 @@ class MSPlotConvertAveChanToFreq : public TPConvertBase
    };
 
    // Conversion along the Yaxis
-   Double Yconvert_col(Double y, Int row, Int tableId) {
+   Double Yconvert_col(Double y, Int IfLOG0(row), Int IfLOG0(tableId)) {
       String fnname = "Yconvert";
 #if LOG0
       static int b = 0;
@@ -1828,7 +1839,7 @@ class MSPlotConvertAveChanToChan : public TPConvertBase
    };
 
    // Conversion along the Xaxis
-   Double Xconvert_col(Double x, Int row, Int tableId) {
+   Double Xconvert_col(Double x, Int IfLOG0(row), Int IfLOG0(tableId)) {
       String fnname = "Xconvert";
 #if LOG0
       static int a = 0;
@@ -1853,7 +1864,7 @@ class MSPlotConvertAveChanToChan : public TPConvertBase
    };
 
    // Conversion along the Yaxis
-   Double Yconvert_col(Double y, Int row, Int tableId) {
+   Double Yconvert_col(Double y, Int IfLOG0(row), Int IfLOG0(tableId)) {
       String fnname = "Yconvert";
 #if LOG0
       static int b = 0;

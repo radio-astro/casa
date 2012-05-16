@@ -294,7 +294,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
       };
       
       casa::Bool
-      releasetable( Int nrows, Int ncols, Int panel, String tablename )
+      releasetable( Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename*/ )
       {
           String fnname = "releasetable";
 #if LOG2 
@@ -442,7 +442,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
      };
          
      casa::Bool
-     flagdata(String tablename) {
+     flagdata(String /*tablename*/) {
 #if LOG2 
          String fnname = "flagdata";
          log->FnEnter(fnname, clname);
@@ -452,7 +452,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
      }
 
       casa::Bool
-      flagdisplay(Int direction, Vector<String> collist,
+      flagdisplay(Int direction, Vector<String> /*collist*/,
                 Matrix<Double> infomat, Vector<String> cpol) {
           String fnname = "flagdisplay";
           //cout << "MSPlotMainMSCallback::flagdisplay flag=" << direction << endl;
@@ -618,8 +618,8 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
       }
 
       casa::Bool
-      flagdata(Int direction, Vector<String> collist,
-                Matrix<Double> infomat, Vector<String> cpol, Bool ave) {
+      flagdata(Int direction, Vector<String> /*collist*/,
+                Matrix<Double> infomat, Vector<String> cpol, Bool /*ave*/) {
           String fnname = "flagdata";
           //cout << "MSPlotMainMSCallback::flagdata flag=" << direction << endl;
          
@@ -897,7 +897,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
       }
 
       casa::Bool
-      printlocateinfo( Vector<String> collist,
+      printlocateinfo( Vector<String> /*collist*/,
                   Matrix<Double> infomat,Vector<String> cpol)
       {
           String fnname = "printlocateinfo";
@@ -1343,10 +1343,10 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
       };
       
       casa::Bool
-      releasetable( Int nrows,
-         Int ncols,
-         Int panel,
-         String tablename )
+      releasetable( Int /*nrows*/,
+         Int /*ncols*/,
+         Int /*panel*/,
+         String /*tablename */)
       {
           String fnname = "releasetable";
 #if LOG2
@@ -1442,7 +1442,7 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
      
 
       casa::Bool
-      flagdata(String tablename) {
+      flagdata(String /*tablename*/) {
 #if LOG2 
           String fnname = "flagdata";
           log->FnEnter(fnname, clname);
@@ -1452,8 +1452,8 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
       }
 
       casa::Bool
-      flagdata(Int direction, Vector<String> collist,
-                  Matrix<Double> infomat,Vector<String> cpol, Bool ave) {
+      flagdata(Int /*direction*/, Vector<String> /*collist*/,
+                  Matrix<Double> /*infomat*/,Vector<String> /*cpol*/, Bool /*ave*/) {
           String fnname = "flagdata";
           //cout << "MSPlotAntennaCallBack::flagdata" << endl;
 
@@ -1463,8 +1463,8 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
       }
       
       casa::Bool
-      printlocateinfo( Vector<String> collist,
-                  Matrix<Double> infomat,Vector<String> cpol)
+      printlocateinfo( Vector<String> /*collist*/,
+                  Matrix<Double> infomat,Vector<String> /*cpol*/)
       {
           String fnname = "printlocateinfo";
 #if LOG2 
@@ -1683,7 +1683,7 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
 
 
       casa::Bool
-      releasetable( Int nrows, Int ncols, Int panel, String tablename )
+      releasetable( Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename */)
       {
           String fnname = "releasetable";
 #if LOG2 
@@ -1782,7 +1782,7 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
      };
       
      casa::Bool
-     flagdata(String tablename) {
+     flagdata(String /*tablename*/) {
 #if LOG2 
          String fnname = "flagdata";
          log->FnEnter(fnname, clname);
@@ -1792,8 +1792,8 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
      }
 
       casa::Bool
-      flagdata(Int direction, Vector<String> collist,
-                  Matrix<Double> infomat,Vector<String> cpol, Bool ave) {
+      flagdata(Int /*direction*/, Vector<String> /*collist*/,
+                  Matrix<Double> /*infomat*/,Vector<String> /*cpol*/, Bool /*ave*/) {
           String fnname = "flagdata";
           //cout << "MSPlotUVWCallBack::flagdata" << endl;
          
@@ -1802,7 +1802,7 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
       }
      
      casa::Bool
-     printlocateinfo( Vector<String> collist,
+     printlocateinfo( Vector<String> /*collist*/,
                   Matrix<Double> infomat,Vector<String> cpol)
      {
          String fnname = "printlocateinfo";

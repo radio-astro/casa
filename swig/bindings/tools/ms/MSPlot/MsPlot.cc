@@ -444,7 +444,7 @@ MsPlot::getMeterToKlambdaConvertValue( uInt spwId )
   
 
     //#if ( spwId < 0 || spwId >= refFrequencies.nrow() )
-    if ( spwId < 0 || spwId >= itsRefFrequencies.nelements() )
+    if ( spwId >= itsRefFrequencies.nelements() )
     {
         String msg = String( "Unable to obtain reference frequency for " )
              + String( "spectral window " ) + String::toString( spwId )
@@ -3115,7 +3115,7 @@ MsPlot::defaultDataSelectString()
 //# itsTableVectorName) for use later.
 //#
 casa::Bool
-MsPlot::setSingleInputTable( const Vector<String>& sortOrder, 
+MsPlot::setSingleInputTable( const Vector<String>& /*sortOrder*/,
       const uInt spwId, 
       const uInt polId, 
       const Table table, 
