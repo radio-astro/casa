@@ -626,7 +626,9 @@ public:
     // Convert the frequency from the observe frame to lsr frame.
     // Returns True in convert if given spw was not observed
     // in the LSRK frame
-    virtual void lsrFrequency (const Int & spw, Vector<Double> & freq, Bool & convert);
+    // if ignoreconv=True then conversion from frame in data 
+    //is ignored by request
+    virtual void lsrFrequency (const Int & spw, Vector<Double> & freq, Bool & convert, const Bool ignoreconv=False); 
     //assign a VisImagingWeight object to this iterator
     virtual void useImagingWeight (const VisImagingWeight & imWgt);
     //return number  of Ant
@@ -654,7 +656,6 @@ public:
     MDirection getPhaseCenter () const;
     Vector<Float> getReceptor0Angle ();
     Vector<uInt> getRowIds () const;
-
     static void lsrFrequency (const Int & spw,
                               Vector<Double> & freq,
                               Bool & convert,
@@ -666,7 +667,8 @@ public:
                               const ROScalarColumn<Int> & obsMFreqTypes,
                               const MEpoch & ep,
                               const MPosition & obsPos,
-                              const MDirection & dir);
+                              const MDirection & dir,
+			      const Bool ignoreconv=False);
 
 protected:
 

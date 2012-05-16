@@ -674,13 +674,14 @@ void VisBuffer::formStokes()
     }
 }
 
+
 void
-VisBuffer::lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert) const
+VisBuffer::lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert,
+			const Bool ignoreconv) const
 {
     CheckVisIter ();
-    visIter_p->lsrFrequency(spw, freq, convert);
+    visIter_p->lsrFrequency(spw, freq, convert, ignoreconv);
 }
-
 
 void VisBuffer::formStokesWeightandFlag()
 {

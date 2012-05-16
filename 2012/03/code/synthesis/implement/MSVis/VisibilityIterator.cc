@@ -987,12 +987,14 @@ ROVisibilityIterator::lsrFrequency (Vector<Double>& freq) const
     return readImpl_p->lsrFrequency (freq);
 }
 
+
 void
-ROVisibilityIterator::lsrFrequency (const Int& spw, Vector<Double>& freq, Bool& convert)
+ROVisibilityIterator::lsrFrequency (const Int& spw, Vector<Double>& freq, Bool& convert, const Bool ignoreconv)
 {
     CheckImplementationPointerR ();
-    readImpl_p->lsrFrequency (spw, freq, convert);
+    readImpl_p->lsrFrequency (spw, freq, convert, ignoreconv);
 }
+
 
 void
 ROVisibilityIterator::lsrFrequency (const Int& spw,
