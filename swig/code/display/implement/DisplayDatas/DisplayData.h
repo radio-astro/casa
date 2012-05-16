@@ -339,7 +339,9 @@ public:
   virtual String showValue(const Vector<Double> &world) = 0;
 
 
-  virtual void setDisplayState( DisplayState s ) { displaystate = s; }
+  virtual void setDisplayState( DisplayState s ) {
+	  displaystate = s;
+  }
   virtual DisplayState getDisplayState( ) const { return displaystate; }
 
   virtual bool isDisplayable( ) const { return true; }

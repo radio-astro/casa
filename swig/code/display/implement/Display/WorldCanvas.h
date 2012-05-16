@@ -1025,7 +1025,13 @@ public:
 
   const std::list<DisplayData*> &displaylist( ) const;
 
+  static const String LEFT_MARGIN_SPACE_PG;
+  static const String RIGHT_MARGIN_SPACE_PG;
+  static const String BOTTOM_MARGIN_SPACE_PG;
+  static const String TOP_MARGIN_SPACE_PG;
+
  private:
+
 
   // Support for construction.
   void ctorInit();
@@ -1335,6 +1341,7 @@ public:
   // determine when the recursion is over. i.e, when the initial
   // refresh call is exiting
   uInt itsRef;
+
 };
 
 

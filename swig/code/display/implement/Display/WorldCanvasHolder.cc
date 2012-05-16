@@ -124,7 +124,7 @@ const uInt WorldCanvasHolder::nDisplayDatas() const {
 
 // Refreshing the WorldCanvas
 void WorldCanvasHolder::refresh(const Display::RefreshReason &reason,
-				const Bool &explicitrequest) {
+				const Bool &/*explicitrequest*/) {
   // NOTE - do not use low-level PixelCanvas routines here, eg. 
   // PixelCanvas::copyBackBufferToFrontBuffer.  If you do, you
   // can break other WorldCanvases writing to the same PC.
@@ -181,6 +181,7 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
     cpgsch(1.0);
     cpgscf(1);
     cpglen(3, "X", &xlen, &ylen);
+    drawUnit = ylen;
     wCanvas->releasePGPLOTdevice();
   }
   
@@ -226,6 +227,7 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   dSize = max(3, cSize - dOffset - space_t);
   drawArea.set("canvasDrawYOffset", uInt(dOffset));
   drawArea.set("canvasDrawYSize", uInt(dSize));	  
+
 
   wCanvas->setAttributes(drawArea);
 
@@ -386,7 +388,6 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   }
 
   // iteration one - do rasters:
-  int count = 0;
   dd = 0;
   for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 	iter != itsDisplayList.end(); ++iter, ++dd ) {
@@ -541,6 +542,9 @@ const uInt WorldCanvasHolder::nelements() {
   return maxNelements;
 }
 
+Float WorldCanvasHolder::getDrawUnit() const{
+	return drawUnit;
+}
 
 void WorldCanvasHolder::cleanup() {
     for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();

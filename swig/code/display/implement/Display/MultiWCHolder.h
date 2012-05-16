@@ -212,6 +212,7 @@ class MultiWCHolder {
   virtual void adjustBIndexName(AttributeBuffer& rstrs);
 
 
+
  private:
   
   // The list of WorldCanvasHolders that are managed by this
@@ -281,6 +282,7 @@ class MultiWCHolder {
   
   // Set restrictions on a particular WorldCanvasHolder.
   void installRestrictions(WorldCanvasHolder &holder);
+
 
 };
 

@@ -242,6 +242,7 @@ class WCAxisLabeller : public DisplayOptions {
     { return itsOptionsLineWidth; }
   // </group>
 
+  static const String LABEL_CHAR_SIZE;
  private:
 
   // global switch on or off

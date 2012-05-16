@@ -222,6 +222,11 @@ class WorldCanvasHolder : public WCRefreshEH,
   const std::list<DisplayData*> &displaylist( ) const
 	{ return itsDisplayList; }
 
+  /**
+   * Returns the current pgp draw unit, which depends on the x-range
+   * of the data currently being displayed.
+   */
+  Float getDrawUnit() const;
 private: 
 
   // The WorldCanvas that is held by this WorldCanvasHolder.
@@ -239,7 +244,7 @@ private:
   // just compared for equality.  The original DD may not even exist by the
   // time it is used).
   void* itsLastCSmaster;
-
+  Float drawUnit;
 
 };
 

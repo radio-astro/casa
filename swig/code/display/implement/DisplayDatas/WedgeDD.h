@@ -143,15 +143,18 @@ public:
   virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
 				Bool ignoreRefresh = False);
 
+  const static String WEDGE_PREFIX;
+
 protected:
 
-  // (Required) copy constructor.
-  WedgeDD(const WedgeDD &other);
 
-  // (Required) copy assignment.
-  void operator=(const WedgeDD &other);
 
 private:
+  // (Required) copy constructor.
+   WedgeDD(const WedgeDD &other);
+
+   // (Required) copy assignment.
+   void operator=(const WedgeDD &other);
   friend class WedgeDM;
   // Data minimum and maximum to set up the coordinate system
   Float itsMin, itsMax;

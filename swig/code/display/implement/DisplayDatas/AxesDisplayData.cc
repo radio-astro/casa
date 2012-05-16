@@ -34,6 +34,7 @@
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/DisplayDatas/AxesDisplayData.h>
 #include <display/DisplayDatas/AxesDisplayMethod.h>
+#include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <casa/System/AipsrcValue.h>
 
 
@@ -85,7 +86,7 @@ AxesDisplayData::AxesDisplayData() :
   Float defaultChrSz;
   AipsrcValue<Float>::find(defaultChrSz,"display.axislabels.charsize", 1.2f);
   itsParamCharacterSize
-    = new DParameterRange<Float>("labelcharsize", "character size",
+    = new DParameterRange<Float>(WCAxisLabeller::LABEL_CHAR_SIZE, "character size",
 				 "", 0.0, 4.0, 0.05,
 				 defaultChrSz, defaultChrSz,
 				 "axis_drawing_and_labels");

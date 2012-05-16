@@ -36,6 +36,7 @@
 #include <display/Display/DParameterRange.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
+#include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <vector>
 
@@ -155,7 +156,6 @@ class QtDisplayData : public QObject {
   // Return the number of the spectral axis within the DD's original
   // image lattice and coordinate system (-1 if none).
   //virtual Int spectralAxis();
-  
   virtual Int getAxisIndex(String axtype=String("Spectral"));
 
   //#  colorbar methods
@@ -164,11 +164,23 @@ class QtDisplayData : public QObject {
   // Would this QDD want to display a color bar if registered and
   // conformant for drawing?
   virtual Bool wouldDisplayColorBar() {
-    return hasColorBar() && colorBarDisplayOpt_->value() == "Yes";  }
+	bool displayColorBar = false;
+	if (colorBarDisplayOpt_->value() == WEDGE_YES){
+		displayColorBar = true;
+	}
+	bool wouldDisplayColorBar = hasColorBar() && displayColorBar;
+    return wouldDisplayColorBar;
+  }
 
       
   // Is a color bar WDD defined for this QDD?
-  virtual Bool hasColorBar() { return colorBar_!=0;  }
+  virtual Bool hasColorBar() {
+	  bool colorBarExists = false;
+	  if ( colorBar_!= 0 ){
+		  colorBarExists = true;
+	  }
+	  return colorBarExists;
+  }
   
   
   // User-requested adjustment to colorbar thickness (will probably
@@ -221,6 +233,8 @@ class QtDisplayData : public QObject {
  
   // force unlocking of paged images
   void unlock( );
+  static const String WEDGE_LABEL_CHAR_SIZE;
+  static const String WEDGE_YES;
 
  public slots:
   
@@ -238,6 +252,7 @@ class QtDisplayData : public QObject {
   // itself (e.g. via scripting or save-restore); that will assure that
   // the options gui does receive all option updates (via the optionsChanged
   // signal) and updates its user interface accordingly.
+
   virtual void setOptions(Record opts, Bool emitAll=False);
   void emitOptionsChanged( Record changedOpts );
   
@@ -352,7 +367,6 @@ class QtDisplayData : public QObject {
   static data_to_qtdata_map_type dd_source_map;
 
  private:
-  
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
 

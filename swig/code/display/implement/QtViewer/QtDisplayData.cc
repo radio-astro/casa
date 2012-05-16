@@ -37,6 +37,7 @@
 #include <display/DisplayDatas/LatticeAsContour.h>
 #include <display/DisplayDatas/LatticeAsVector.h>
 #include <display/DisplayDatas/LatticeAsMarker.h>
+#include <display/DisplayDatas/WedgeDD.h>
 #include <display/DisplayDatas/SkyCatOverlayDD.h>
 #include <casa/OS/Path.h>
 #include <images/Images/PagedImage.h>
@@ -81,8 +82,8 @@ template <typename T> class anylt {
 	operator bool( ) const { return tally_; }
 
     private:
-	bool tally_;
-	T rhs;
+		T rhs;
+		bool tally_;
 };
 
 template <typename T> class anyge {
@@ -99,6 +100,8 @@ template <typename T> class anyge {
 
 
 QtDisplayData::data_to_qtdata_map_type QtDisplayData::dd_source_map;
+const String QtDisplayData::WEDGE_LABEL_CHAR_SIZE = "wedgelabelcharsize";
+const String QtDisplayData::WEDGE_YES = "Yes";
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 			      String displayType, const viewer::DisplayDataOptions &ddo ) :
@@ -408,7 +411,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     colorBar_ = new WedgeDD(dd_);
     colorBar_->setColormap(clrMap_, 1.);
 
-    Vector<String> yesNo(2);     yesNo[0]="Yes";
+    Vector<String> yesNo(2);     yesNo[0]=WEDGE_YES;
                                  yesNo[1]="No";
     
     Vector<String> vertHor(2);   vertHor[0]="vertical";
@@ -416,7 +419,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     
     String orientation = panel_->colorBarsVertical()? vertHor[0] : vertHor[1];
     
-    colorBarDisplayOpt_ = new DParameterChoice("wedge",
+    colorBarDisplayOpt_ = new DParameterChoice(WedgeDD::WEDGE_PREFIX,
             "display color wedge?",
             "Whether to display a 'color bar' that indicates\n"
 	    "the current mapping of colors to data values.",
@@ -445,7 +448,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     // parameter during setOptions().  getOptions() uses the values
     // from colorBar_ (the WedgeDD)).
     colorBarCharSizeOpt_ = new DParameterRange<Float>(
-            "wedgelabelcharsize", "character size", "",
+            WEDGE_LABEL_CHAR_SIZE, "character size", "",
 	    0.2, 4.,  .05,  1.2, 1.2, "color_wedge");
     
     // Initialize colorBarCharSizeOpt_'s value from colorBar_.
@@ -614,12 +617,10 @@ Record QtDisplayData::getOptions() {
     // externally to WedgeDD.
     
     Record cbopts = colorBar()->getOptions();
-    
     colorBarDisplayOpt_->toRecord(opts);     // "wedge" field ("Yes" / "No").
     colorBarThicknessOpt_->toRecord(opts);   // "wedgethickness" (default 1.)
     colorBarLabelSpaceOpt_->toRecord(opts);  // "wedgelabelspace" (default 1.)
-    
-    opts.mergeField(cbopts, "wedgelabelcharsize",
+    opts.mergeField(cbopts, WEDGE_LABEL_CHAR_SIZE,
                     Record::OverwriteDuplicates);
 	// (Color bar panel thickness and character size are often changed
 	// together; putting this here keeps the options next to each other
@@ -637,11 +638,15 @@ Record QtDisplayData::getOptions() {
     
     for(uInt i=0; i<cbopts.nfields(); i++) {
       String fldname = cbopts.name(i);
-      if(fldname.before(5)=="wedge" && fldname!="wedgelabelcharsize") {
+      if(fldname.before(5)==WedgeDD::WEDGE_PREFIX && fldname!=WEDGE_LABEL_CHAR_SIZE) {
         opts.mergeField(cbopts, i, Record::OverwriteDuplicates);
-	opts.rwSubRecord(fldname).define("dlformat", fldname);  }  }  }
+	opts.rwSubRecord(fldname).define("dlformat", fldname);
+      }
+    }
+  }
 
-  return opts;  }
+  return opts;
+}
 
   
   
@@ -707,19 +712,17 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   Bool held=False;
   
   try { 
-  
     Bool needsRefresh = dd_->setOptions(opts, chgdOpts);
     Bool cbNeedsRefresh = False;
     
     if(usesClrMap_() && clrMapOpt_->fromRecord(opts)) {
       needsRefresh = cbNeedsRefresh = True;
-      setColormap_(clrMapOpt_->value());  }
+      setColormap_(clrMapOpt_->value());
+    }
+
 	// Also process change in colormap choice, if any.  This
 	// was left out of the setOptions interface on the DD level.
-    
-
     if(hasColorBar()) {
-    
       // Note: In addition to the five labelling options ("wedgeaxistext",
       // "wedgeaxistextcolor" "wedgelabelcharsize", "wedgelabellinewidth"
       // and "wedgelabelcharfont"), WedgeDD::setOptions() is sensitive
@@ -744,11 +747,13 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
       
       for(uInt i=0; i<opts.nfields(); i++) {
         String fldname = opts.name(i);
-        if( (fldname.before(5)=="wedge" && fldname!="wedge") ||
+        if( (fldname.before(5)==WedgeDD::WEDGE_PREFIX && fldname!=WedgeDD::WEDGE_PREFIX) ||
 	     fldname=="orientation" || fldname=="dataunit"   ||
 	     fldname=="powercycles" ) {		// (Forward these verbatum).
 
-          cbopts.mergeField(opts, i, Record::OverwriteDuplicates);  }  }
+          cbopts.mergeField(opts, i, Record::OverwriteDuplicates);
+        }
+      }
       
       
       // Priority for datamin and datamax definition: 
@@ -767,7 +772,6 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
         datamax = minMax[1];   maxNotFound=False;  }
       
       else {
-        
         dd_->readOptionRecord(datamin, minNotFound, chgdOpts, "datamin");
         dd_->readOptionRecord(datamax, maxNotFound, chgdOpts, "datamax");
     
@@ -775,69 +779,64 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
         dd_->readOptionRecord(minMax, notFound, opts, "minmaxhist");
         if(minMax.nelements()==2) {
           if(minNotFound) { datamin = minMax[0];  minNotFound=False;  }
-          if(maxNotFound) { datamax = minMax[1];  maxNotFound=False;  }  }
+          if(maxNotFound) { datamax = minMax[1];  maxNotFound=False;  }
+        }
         
-	else {
-          if(minNotFound) {
-            dd_->readOptionRecord(datamin, minNotFound, opts,
-	                         "datamin");  }
-          if(maxNotFound) { 
-            dd_->readOptionRecord(datamax, maxNotFound, opts,
-	                         "datamax");  }  }  }
-      
-      
-      if(!minNotFound) cbopts.define("datamin", datamin);
-      if(!maxNotFound) cbopts.define("datamax", datamax);
+        else {
+		  if(minNotFound) {
+			dd_->readOptionRecord(datamin, minNotFound, opts,
+							 "datamin");  }
+		  if(maxNotFound) {
+			dd_->readOptionRecord(datamax, maxNotFound, opts,
+							 "datamax");  }  }  }
 
-    
-      // "dataunit" won't normally be defined as a main DD options field,
-      // but the dd_ should send it out via chgdOpts if it has changed,
-      // so that the color bar can be labelled correctly.
-    
-      String dataunit;
-      dd_->readOptionRecord(dataunit, notFound, chgdOpts, "dataunit");
-      if(!notFound) {
-        if(dataunit=="_") dataunit="";
-        cbopts.define("dataunit", dataunit);  }
-      
-    
-    
-      
-      if(colorBar_->setOptions(cbopts, chgdcbopts)) cbNeedsRefresh = True;
-	// Beware: WedgeDD::setOptions() (unexpectedly, stupidly) alters
-	// cbopts, instead of keeping all its hacks internal.
-	// Don't expect the original cbopts after this call....
-	// (Note: chgdcbopts is ignored (unused) for colorbar).
-    
-    
-    
-      // Test for changes in these, recording any new values.
-      // Of these, WedgeDD processes only "wedgelabelcharsize"
-      // (colorBarCharSizeOpt_ -- it was merged into cbopts, above).
-      
-      Bool reorient = colorBarOrientationOpt_->fromRecord(opts);
-      Bool cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
-      Bool cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
-           cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
-           cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
-          
 
-      held=True;   panel_->viewer()->hold();
-	// (avoids redrawing more often than necessary)
-      
-      
-      // Trigger color bar and main panel rearrangement, if necessary.
-      
-      if(reorient) {
-	colorBarOrientationOpt_->toRecord(chgdOpts, True, True);
-		// Make sure user interface sees this change via chgdOpts.
-        Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
-        
-	panel_->setColorBarOrientation(orientation);  }
-    
-      else if(cbChg || (wouldDisplayColorBar() && cbSzChg)) {
-	emit colorBarChange();
-      }
+		  if(!minNotFound) cbopts.define("datamin", datamin);
+		  if(!maxNotFound) cbopts.define("datamax", datamax);
+
+
+		  // "dataunit" won't normally be defined as a main DD options field,
+		  // but the dd_ should send it out via chgdOpts if it has changed,
+		  // so that the color bar can be labelled correctly.
+
+		  String dataunit;
+		  dd_->readOptionRecord(dataunit, notFound, chgdOpts, "dataunit");
+		  if(!notFound) {
+			if(dataunit=="_") dataunit="";
+			cbopts.define("dataunit", dataunit);
+		  }
+
+	  	  if(colorBar_->setOptions(cbopts, chgdcbopts)){
+	  		  cbNeedsRefresh = True;
+	  	  }
+
+	  	  // Beware: WedgeDD::setOptions() (unexpectedly, stupidly) alters
+	  	  // cbopts, instead of keeping all its hacks internal.
+		  // Don't expect the original cbopts after this call....
+		  // (Note: chgdcbopts is ignored (unused) for colorbar).
+
+		  // Test for changes in these, recording any new values.
+		  // Of these, WedgeDD processes only "wedgelabelcharsize"
+		  // (colorBarCharSizeOpt_ -- it was merged into cbopts, above).
+		  Bool reorient = colorBarOrientationOpt_->fromRecord(opts);
+		  Bool cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
+		  Bool cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
+			   cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
+			   cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
+
+		  held=True;   panel_->viewer()->hold();
+		  // (avoids redrawing more often than necessary)
+
+		  // Trigger color bar and main panel rearrangement, if necessary.
+		  if(reorient) {
+			  colorBarOrientationOpt_->toRecord(chgdOpts, True, True);
+			  // Make sure user interface sees this change via chgdOpts.
+			  Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
+			  panel_->setColorBarOrientation(orientation);
+		  }
+		  else if(cbChg || (wouldDisplayColorBar() && cbSzChg) ) {
+			  emit colorBarChange();
+		  }
 
     }
     
@@ -861,18 +860,19 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
     if(cbNeedsRefresh) { emit colorBarChange(); }
     
     errMsg_ = "";		// Just lets anyone interested know that
-    emit optionsSet();  }	// options were set ok.  (QtDDGui will
+    emit optionsSet();
+  }	// options were set ok.  (QtDDGui will
 				// use it to clear status line, e.g.).
 
   catch (const casa::AipsError& err) {
     errMsg_ = err.getMesg();
-    //cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
+    cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
     if(held) { held=False;  panel_->viewer()->release();  }
     emit qddError(errMsg_);  }
   
   catch (...) { 
     errMsg_ = "Unknown error setting data options";
-    //cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
+    cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
     if(held) { held=False;  panel_->viewer()->release();  }
     emit qddError(errMsg_);  }
 
@@ -923,7 +923,8 @@ void QtDisplayData::setColorBarOrientation_() {
   Record orientation;
   orientation.define( "orientation",  panel_->colorBarsVertical()?
                                       "vertical" : "horizontal" );
-  setOptions(orientation);  }
+  setOptions(orientation);
+}
 
 void QtDisplayData::emitOptionsChanged( Record changedOpts ) {
     emit optionsChanged(changedOpts);
@@ -1144,7 +1145,7 @@ Int QtDisplayData::spectralAxis() {
           {
 	    // Check for Right Ascension and Declination 
 	     Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
-             AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
+             AlwaysAssert( axisincoord>=0 && axisincoord < static_cast<int>(axnames.nelements()), AipsError);
 	     if( axnames[axisincoord] == axtype )
 	     {
 	         return ax;
@@ -1547,7 +1548,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
 
     Int zPos = -1;
     Int hPos = -1;
-    for (Int k = 0; k < nm.nelements(); k++) {
+    for (Int k = 0; k < static_cast<int>(nm.nelements()); k++) {
        if (nm(k) == zaxis)
           zPos = k;
        if (nm(k) == haxis)
@@ -1663,7 +1664,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
     {
 	std::string desc = description( );
 	int pos = desc.find(" ");
-	if (pos != std::string::npos) pos += 1;
+	if (pos != static_cast<int>(std::string::npos)) pos += 1;
 	head = desc.substr(pos);
     }
 
@@ -2010,7 +2011,7 @@ Float QtDisplayData::colorBarLabelSpaceAdj() {
   Bool notFound;
   Record cbOpts = colorBar_->getOptions();
   colorBar_->readOptionRecord(charSz, notFound, cbOpts,
-				"wedgelabelcharsize");
+				WEDGE_LABEL_CHAR_SIZE);
     
   charSz = max(0., min(10.,  charSz));
     
@@ -2018,7 +2019,8 @@ Float QtDisplayData::colorBarLabelSpaceAdj() {
                 min(colorBarLabelSpaceOpt_->maximum(),
 	            colorBarLabelSpaceOpt_->value()));
 
-  return charSz * spAdj;  }
+  return charSz * spAdj;
+}
 
 
 ImageRegion* QtDisplayData::mouseToImageRegion(
