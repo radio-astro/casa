@@ -619,11 +619,9 @@ class test_selections(test_base):
     def test_scan(self):
         '''tflagdata: scan selection and manualflag compatibility'''
         tflagdata(vis=self.vis, scan='3', mode='manualflag', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
-        
-        # feed not implemented flagdata(vis=vis, feed='27')
-        # flagdata(vis=vis, unflag=True)
-
+        res = tflagdata(vis=self.vis, mode='summary', antenna='2')
+        self.assertEqual(res['flagged'],52416)
+                
     def test_antenna(self):
         '''tflagdata: antenna selection'''
         tflagdata(vis=self.vis, antenna='2', savepars=False)
