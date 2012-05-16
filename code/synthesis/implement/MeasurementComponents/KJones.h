@@ -174,6 +174,9 @@ public:
   virtual String typeName()     { return "KMBD Jones"; };
   virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
 
+  // Local setApply (to enforce KrefFreq_=0.0)
+  virtual void setApply(const Record& apply);
+
  
 };
 
