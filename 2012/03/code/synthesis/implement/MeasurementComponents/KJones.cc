@@ -100,6 +100,22 @@ void KJones::setApply(const Record& apply) {
   // Enforce calWt() = False for delays
   calWt()=False;
 
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  from the CalTable
+  MSSpectralWindow msSpw(ct_->spectralWindow());
+  MSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+
+  /// Re-assign KrefFreq_ according spwmap (if any)
+  if (spwMap().nelements()>0) {
+    Vector<Double> tmpfreqs;
+    tmpfreqs.assign(KrefFreqs_);
+    for (Int ispw=0;ispw<spwMap().nelements();++ispw)
+      if (spwMap()(ispw)>-1)
+	KrefFreqs_(ispw)=tmpfreqs(spwMap()(ispw));
+  }
+    
 }
 
 void KJones::setSolve(const Record& solve) {
@@ -717,7 +733,7 @@ KMBDJones::KMBDJones(VisSet& vs) :
   VisMueller(vs),         // virtual base
   KJones(vs)             // immediate parent
 {
-  if (prtlev()>2) cout << "K::K(vs)" << endl;
+  if (prtlev()>2) cout << "Kmbd::Kmbd(vs)" << endl;
 
   // For MBD, the ref frequencies are zero
   //  TBD: these should be in the caltable!!
@@ -731,7 +747,7 @@ KMBDJones::KMBDJones(const Int& nAnt) :
   KJones(nAnt)
 {
 
-  if (prtlev()>2) cout << "K::K(nAnt)" << endl;
+  if (prtlev()>2) cout << "Kmbd::Kmbd(nAnt)" << endl;
   // For MBD, the ref frequencies are zero
   //  TBD: these should be in the caltable!!
   KrefFreqs_.resize(nSpw());
@@ -740,12 +756,15 @@ KMBDJones::KMBDJones(const Int& nAnt) :
 }
 
 KMBDJones::~KMBDJones() {
-  if (prtlev()>2) cout << "K::~K()" << endl;
+  if (prtlev()>2) cout << "Kmbd::~Kmbd()" << endl;
 }
 
 
-
-
+void KMBDJones::setApply(const Record& apply) {
+  if (prtlev()>2) cout << "Kmbd::setApply()" << endl;
+  KJones::setApply(apply);
+  KrefFreqs_.set(0.0);  // MBD is ALWAYS ref'd to zero freq
+}
 
 
 // **********************************************************
@@ -858,14 +877,18 @@ void KAntPosJones::specify(const Record& specify) {
   if (specify.isDefined("parameter")) {
     // TBD: the actual cal values
     parameters=specify.asArrayDouble("parameter");
-
+    //    cout << "parameters = ]" << parameters << "[" << endl;
   }
 
   Int npar=parameters.nelements();
   
+  // Can't proceed of no parameters were specified
+  if (npar==0)
+    throw(AipsError("No antenna position corrections specified!"));
+
+  // Must be a multiple of 3
   if (npar%3 != 0)
     throw(AipsError("For antenna position corrections, 3 parameters per antenna are required."));
-
   
   //  cout << "Shapes = " << parameters.nelements() << " " 
   //       << Nant*3 << endl;
