@@ -29,6 +29,7 @@
 
 #include <casa/BasicSL/RegexBase.h>
 #include <algorithm>
+#include <stdarg.h>
 #include <casa/string.h>
 #include <casa/sstream.h>
 
@@ -102,9 +103,31 @@ Int String::toInt(const String& string) {
     instr >> var;
     if(instr.fail()) {
     	// making sure things get reset
-	    var = 0.0;
+	    var = 0;
     }
     return var;
+}
+
+String
+String::format (char * picture, ...)
+{
+    const int BufferSize = 16000;
+    char buffer [BufferSize];
+
+    va_list vaList;
+    va_start (vaList, picture);
+
+    int nUsed = vsnprintf (buffer, BufferSize, picture, vaList);
+
+    va_end (vaList);
+
+    String result = buffer;
+
+    if (nUsed >= BufferSize){
+        result += "*TRUNCATED*";
+    }
+
+    return result;
 }
 
 

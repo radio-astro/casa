@@ -591,6 +591,8 @@ class String : public string {
 
   static Int toInt(const String& string);
 
+  static String format (char * picture, ...);
+
   // Remove beginning and ending whitespace.
   void trim();
 
