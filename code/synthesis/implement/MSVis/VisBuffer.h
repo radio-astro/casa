@@ -448,8 +448,8 @@ public:
     //the following method is to convert the observed frequencies
     // This conversion may not be accurate for some frame
     // conversion like topo to lsr except if the spw is in the actual buffer
-
-    virtual void lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert) const;
+    //if ignoreconv=True..frequency is served as is in the data frame
+    virtual void lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert, const Bool ignoreconv=False) const;
 
     virtual Int numberCoh () const;
 
