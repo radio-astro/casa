@@ -52,6 +52,7 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
+	    connect( dock_, SIGNAL(deleteAllRegions( )), SLOT(revoke_region( )) );
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
 
@@ -193,10 +194,12 @@ namespace casa {
 	}
 	void QtRegion::refresh_canvas_event( ) { refresh( ); }
 
+	void QtRegion::revoke_region( ) {
+	    source_->revokeRegion(fetch_my_region( ));
+	}
+
 	void QtRegion::revoke_region( QtRegionState *redacted_state ) {
-	    if ( redacted_state == mystate ) {
-		source_->revokeRegion(fetch_my_region( ));
-	    }
+	    if ( redacted_state == mystate ) { revoke_region( ); }
 	}
 
 	static inline AnnotationBase::LineStyle viewer_to_annotation( Region::LineStyle ls ) {
