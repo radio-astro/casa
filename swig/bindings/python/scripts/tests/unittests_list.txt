@@ -8,9 +8,9 @@
 
 test_boxit                      dmehring@nrao.edu
 test_caltabconvert		nelias@nrao.edu
-test_clearstat                  scastro@eso.org
 test_clean                      kgolap@aoc.nrao.edu
 test_cleanhelper                ttsutsum@nrao.edu
+test_clearstat                  scastro@eso.org
 test_componentlist              dmehring@nrao.edu
 test_concat                     dpetry@eso.org
 test_conjugatevis               dpetry@eso.org
@@ -18,8 +18,8 @@ test_coordsys                   dmehring@nrao.edu
 test_csvclean                   kgolap@aoc.nrao.edu
 test_cvel                       dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
-test_fixvis                     dpetry@nrao.edu
 test_fixplanets                 dpetry@nrao.edu
+test_fixvis                     dpetry@nrao.edu
 test_flagcmd                    scastro@eso.org
 test_flagdata                   jkern@nrao.edu
 test_flagdata2                  scastro@eso.org
@@ -53,7 +53,7 @@ test_immoments                  dmehring@nrao.edu
 test_impbcor                    dmehring@nrao.edu
 test_importasdm                 dpetry@eso.org
 test_importasdm_sd              takeshi.nakazato@nao.ac.jp
-test_importevla                scastro@eso.org
+test_importevla                 scastro@eso.org
 test_importfitsidi              dpetry@eso.org
 test_imregrid                   jkern@nrao.edu
 test_imsmooth                   dmehring@nrao.edu
@@ -77,6 +77,9 @@ test_slsearch                   dmehring@nrao.edu
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
 test_sdcoadd                    kana.sugi@nao.ac.jp
+test_sdfit                      wataru.kawasaki@nao.ac.jp
+test_sdflag                     wataru.kawasaki@nao.ac.jp
+test_sdflagmanager              wataru.kawasaki@nao.ac.jp
 test_sdgrid                     takeshi.nakazato@nao.ac.jp
 test_sdimaging                  takeshi.nakazato@nao.ac.jp
 test_sdimprocess                takeshi.nakazato@nao.ac.jp
