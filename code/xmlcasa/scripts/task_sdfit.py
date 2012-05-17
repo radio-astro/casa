@@ -78,7 +78,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
             del sel
 
 	    # Copy the original data (CAS-3987)
-	    if (rcParams['scantable.storage'] == 'disk'):
+	    if (sd.rcParams['scantable.storage'] == 'disk'):
 		    s = sorg.copy()
 	    else:
 		    s = sorg
