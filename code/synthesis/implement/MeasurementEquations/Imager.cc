@@ -3879,12 +3879,18 @@ Bool Imager::clean(const String& algorithm,
 	ostringstream oos;
 	uInt nmessages = time_col.nrow();
 	for (uInt i=0; i < nmessages; i++) {
+	  try{
 	  String tmp=frmtTime(time_col(i));
 	  oos << tmp
 	      << "  HISTORY " << origin_col(i);
 	  oos << " " << cli_col(i) << " ";
 	  oos << message_col(i)
 	      << endl;
+	  }
+	  catch(exception& y){
+	    os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
+	  }
+
 	}
 	// String historyline(oos);
 	sink.postLocally(msg.message(oos.str()));
