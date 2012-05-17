@@ -137,7 +137,7 @@ uInt VisBuffGroupAcc::applyChanMask(std::map<Int, Vector<Bool>*>& chanmask)
         Vector<Bool> chm((*(chanmask[spw]))(Slice(chan0, nchan)));
         uInt nr = VBA_p[i]->aveCalVisBuff().nRow();
 
-        for(Int irow = 0; irow < nr; ++irow){
+        for(uInt irow = 0; irow < nr; ++irow){
           if(!fr(irow)){
             fc.reference(f.column(irow));
             fc = fc || chm;
