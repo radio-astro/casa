@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					filledFluxScale_p(False),doneMainConv_p(False),
 					convFunctionMap_p(-1), 
 					actualConvIndex_p(-1), convSize_p(0), 
-					convSupport_p(0), calcFluxScale_p(True) {
+					calcFluxScale_p(True), convSupport_p(0)  {
     //
 
      pbClass_p=PBMathInterface::COMMONPB;
@@ -83,14 +83,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
     nchan_p(-1),npol_p(-1),pointToPix_p(),
     directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), calcFluxScale_p(True) {
+    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), calcFluxScale_p(True), convSupport_p(0) {
     //
     pbClass_p=typeToUse;
 
   }
-  SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded): nchan_p(-1),npol_p(-1),pointToPix_p(),
-    directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-								  convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), calcFluxScale_p(calcfluxneeded){
+  SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
+  : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
+    doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0),
+    calcFluxScale_p(calcfluxneeded), convSupport_p(0)
+  {
     String err;
     fromRecord(err, rec, calcfluxneeded);
   }

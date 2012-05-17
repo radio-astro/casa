@@ -405,7 +405,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }
 
-    void MultiPolyTool::draw(const WCRefreshEvent &ev, const viewer::Region::region_list_type &selected_regions) {
+    void MultiPolyTool::draw(const WCRefreshEvent & /*ev*/, const viewer::Region::region_list_type &selected_regions) {
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter )
 	    (*iter)->draw( selected_regions.size( ) > 0 );
     }
@@ -508,7 +508,7 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
   return (nabove % 2);  }
 
 
-    void MultiPolyTool::checkPoint( WorldCanvas *wc, State &state ) {
+    void MultiPolyTool::checkPoint( WorldCanvas * /*wc*/, State &state ) {
 	for ( polygonlist::iterator iter = ((MultiPolyTool*) this)->polygons.begin(); iter != polygons.end(); ++iter ) {
 	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x( ), state.y( ) );
 	    // should consider introducing a cptr_ref which somehow allows creating a
@@ -525,7 +525,7 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 	return multi_poly_tool_region_set;
     }
 
-bool MultiPolyTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+bool MultiPolyTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
 			    const std::vector<std::pair<double,double> > &pts, const std::string &label,
 			    const std::string &font, int font_size, int font_style, const std::string &font_color,
 			    const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {

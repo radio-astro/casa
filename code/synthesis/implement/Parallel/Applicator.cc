@@ -67,7 +67,7 @@ Applicator::~Applicator()
   }
 }
 
-void Applicator::initThreads(Int argc, Char *argv[]){
+void Applicator::initThreads(Int /*argc*/, Char */*argv*/[]){
 
    // A no-op if not using MPI
 #ifdef HasMPI
@@ -105,7 +105,7 @@ void Applicator::initThreads(){
   return;
 }
 
-void Applicator::init(Int argc, Char *argv[])
+void Applicator::init(Int /*argc*/, Char */*argv*/[])
 {
 // Initialize the process and parallel transport layer
 //
@@ -218,7 +218,7 @@ Int Applicator::nextProcessDone(Algorithm &a, Bool &allDone)
 //
   Int rank = -1;
   allDone = True;
-  for (Int i=0; i<procStatus.nelements(); i++) {
+  for (uInt i=0; i<procStatus.nelements(); i++) {
     if (procStatus(i) == ASSIGNED) {
       if (isSerial()) {
 	// In the serial case, the controller can be assigned
@@ -334,10 +334,9 @@ Int Applicator::findFreeProc(Bool &lastOne)
 {
 // Search the process status list for the next free process
 // 
-  Int i = 0;
   Int freeProc = -1;
   Int nfree = 0;
-  for (i=0; i<procStatus.nelements(); i++) {
+  for (uInt i=0; i<procStatus.nelements(); i++) {
     if (procStatus(i) == FREE) {
       nfree++;
       if (freeProc < 0) freeProc = i;

@@ -107,7 +107,10 @@ namespace casa {
 			ait.close_container(eit);
 		    }
 		    vi.close_container(ait);
+		    break;
 		}
+	    default:
+	        break;
 	    }
 	}
 
@@ -172,7 +175,7 @@ namespace casa {
 
 	void show( const variant &v ) { show(v,0); }
 
-	std::map<std::string, DBus::Variant> *fromRecord( const Record &theRec ) {
+	std::map<std::string, DBus::Variant> *fromRecord( const Record & /*theRec*/ ) {
 	    std::map<std::string, DBus::Variant> *transcribedRec = new std::map<std::string, DBus::Variant>( );
 
 	    DBus::Variant result;

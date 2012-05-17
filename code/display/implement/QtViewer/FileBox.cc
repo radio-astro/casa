@@ -1008,15 +1008,15 @@ void FileBox::showHideAll() {
    reDraw();
 }
 
-void FileBox::colorAll(const QString& clr) {
+void FileBox::colorAll(const QString& /*clr*/) {
    //qDebug() << "colorAll" << clr;
    reDraw();
 }
 
-void FileBox::rotateBox(int cb) {
+void FileBox::rotateBox(int /*cb*/) {
 }
 
-void FileBox::newRegion_(String imgFilename) {
+void FileBox::newRegion_(String /*imgFilename*/) {
    //cout << "newRegion_" << imgFilename << endl;
    
    if (this->isVisible()){
@@ -1036,8 +1036,8 @@ void FileBox::newRegion_(String imgFilename) {
    reDraw();
 }
 
-void FileBox::drawRegion(Record mousereg, 
-                          WorldCanvasHolder *wch){
+void FileBox::drawRegion(Record /*mousereg*/,
+                          WorldCanvasHolder * /*wch*/){
     //cout << "drawRegion" << endl;
 }
 
@@ -1207,7 +1207,7 @@ void FileBox::doIt() {
 
 }
 
-void FileBox::closeEvent(QCloseEvent* event) {
+void FileBox::closeEvent(QCloseEvent* /*event*/) {
   //qDebug() << "closeEvent";
   emit hideFileBox();
 }

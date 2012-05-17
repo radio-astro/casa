@@ -74,8 +74,9 @@ namespace casa {
 	    _enabled = DBus::Timeout::enabled();
 	}
 
-	Watch::Watch(DBus::Watch::Internal *wi, Dispatcher *bd) : DBus::Watch(wi), _fd(Watch::descriptor()), _flags(0),
-									_disp(bd), _enabled(true), _state(0) {
+	Watch::Watch(DBus::Watch::Internal *wi, Dispatcher *bd)
+	: DBus::Watch(wi), _fd(Watch::descriptor()), _flags(0),
+          _enabled(true), _disp(bd), _state(0) {
 
 	    _disp->_mutex_w.lock();
 	    _disp->_watches.push_back(this);
