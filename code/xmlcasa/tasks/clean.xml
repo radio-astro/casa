@@ -399,7 +399,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--========================================================= -->
     <param type="bool" name="usescratch">
 	    <description>True if to save model visibilities in MODEL_DATA column</description>
-	    <value>False</value>
+	    <value>True</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="noise"  subparam="true">
