@@ -3554,8 +3554,10 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
 
   // Fill nChanParList from the Caltable
   //   (this may be revised by calcPar)
-  MSSpWindowColumns spwcol(ct_->spectralWindow());
-  nChanParList().assign(spwcol.numChan().getColumn());
+
+  // This should not be needed anymore (and it breaks portability)
+  //  ROMSSpWindowColumns spwcol(ct_->spectralWindow());
+  //  nChanParList().assign(spwcol.numChan().getColumn());
 
 }
 

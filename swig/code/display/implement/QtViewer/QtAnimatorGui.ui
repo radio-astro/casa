@@ -261,18 +261,18 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>0</width>
+                   <width>44</width>
                    <height>0</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>34</width>
+                   <width>44</width>
                    <height>24</height>
                   </size>
                  </property>
                  <property name="text">
-                  <string>0</string>
+                  <string/>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight</set>
@@ -289,7 +289,7 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>30</width>
+                   <width>45</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -297,7 +297,7 @@
                   <string>1</string>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignCenter</set>
+                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                  </property>
                 </widget>
                </item>
