@@ -251,10 +251,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Get the final image: do the Fourier transform and
     // grid-correct, then optionally normalize by the summed weights
     virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-    virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
-			      const Matrix<Double>& /*sumOfWts*/,
-			      Lattice<Float>& /*sensitivityImage*/,
-			      Bool /*fftNorm*/)
+    virtual void normalizeImage(Lattice<Complex>& skyImage,
+			      const Matrix<Double>& sumOfWts,
+			      Lattice<Float>& sensitivityImage,
+			      Bool fftNorm)
     {throw(AipsError("nPBWProjectFT::normalizeImage() called"));}
     
     // Get the final weights image
@@ -350,7 +350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     Bool Square=False);
     void correctAntiAliasing(Lattice<Complex>& cf);
     virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-    virtual void ComputeResiduals(VisBuffer & /*vb*/, Bool /*useCorrected*/) {};
+    virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
   protected:
     
