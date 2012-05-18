@@ -264,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void EPJones::guessPar(VisBuffer& vb)
+  void EPJones::guessPar(VisBuffer& /*vb*/)
   {
     pointPar_=0;
     //  solveRPar() = 0;
@@ -890,7 +890,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void EPJones::diffResiduals(VisIter& vi, VisEquation& ve, 
+  void EPJones::diffResiduals(VisIter& vi, VisEquation& /*ve*/,
 			      VisBuffer& residuals,
 			      VisBuffer& dAZVB,
 			      VisBuffer& dELVB,
