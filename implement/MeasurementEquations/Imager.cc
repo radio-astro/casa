@@ -491,12 +491,54 @@ Imager::~Imager()
 }
 
 
+pair<bool,bool>
+arrayLifecycleFilter (const void * object,
+                      const String & event,
+                      const IPosition & shapeNew,
+                      const void * storageNew,
+                      const IPosition & shapeOld,
+                      const void * storageOld,
+                      uInt elearrayementSize,
+                      const String & signature)
+{
+    pair<bool, bool> result (False, False);
+
+    if (storageNew != storageOld){
+        bool has3K = False;
+        for (uInt i = 0; i < shapeNew.nelements(); i++){
+            if (shapeNew[i] == 3000){
+                has3K = True;
+                break;
+            }
+        }
+
+        for (uInt i = 0; i < shapeOld.nelements(); i++){
+            if (shapeOld[i] == 3000){
+                has3K = True;
+                break;
+            }
+        }
+        if (has3K){
+            bool dumpStack = event == "ctor" || event == "op=" || event == "resize" ||
+                             event == "resizeDel" || event == "op=Del" || event == "ref" ||
+                             event == "refDel";
+            result = make_pair (True, dumpStack);
+        }
+    }
+
+    return result;
+}
+
 Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
 {
 
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::open",21);
 #endif
+
+#warning "Debug code here"
+  ArrayLifecycleTracker::enable (True, 1024*512); // >= 1/2 MB
+  ArrayLifecycleTracker::setFilter (arrayLifecycleFilter);
 
   LogIO os(LogOrigin("Imager", "open()", WHERE));
   
@@ -3463,6 +3505,7 @@ Bool Imager::smooth(const Vector<String>& model,
   return True;
 }
 
+
 // Clean algorithm
 Bool Imager::clean(const String& algorithm,
 		   const Int niter, 
@@ -3481,7 +3524,6 @@ Bool Imager::clean(const String& algorithm,
   traceEvent(1,"Entering Imager::clean",22);
 #endif
   Bool converged=True; 
-
 
 
   //ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
