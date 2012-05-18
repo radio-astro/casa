@@ -176,6 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    virtual void set(const Int x, const Int y, const Int pt);
 
 	    std::tr1::shared_ptr<viewer::Polygon> resizing_region;
+	    std::tr1::shared_ptr<viewer::Polygon> creating_region;
 
 	    // push/pop last vertex
 	    // <group>
