@@ -84,8 +84,8 @@ namespace casa {
 	    int exe_path_len = 2048;
 	    char *exe_path = (char*) malloc(sizeof(char) * exe_path_len);
 	    while ( char *p = strsep(&pathptr, ":") ) {
-		if ( (strlen(p) + arg0len + 4) > exe_path_len ) {
-		    while ( (strlen(p) + arg0len + 4) > exe_path_len ) { exe_path_len *= 2; }
+		if ( ((int) strlen(p) + arg0len + 4) > exe_path_len ) {
+		    while ( ((int) strlen(p) + arg0len + 4) > exe_path_len ) { exe_path_len *= 2; }
 		    exe_path = (char*) realloc(exe_path,exe_path_len);
 		}
 		sprintf(exe_path, "%s/%s", p, args.front( ).c_str( ));

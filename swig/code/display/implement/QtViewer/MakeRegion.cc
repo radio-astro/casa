@@ -281,7 +281,7 @@ void MakeRegion::changeAxis(String xa, String ya, String za, int ha) {
    reDraw();
 }
 
-void MakeRegion::closeEvent(QCloseEvent* event) {
+void MakeRegion::closeEvent(QCloseEvent* /*event*/) {
    //qDebug() << "closeEvent";
   emit hideRegionInImage();
 }
@@ -454,8 +454,8 @@ void MakeRegion::activate(Record rcd) {
    reDraw();
 }
 
-void MakeRegion::wcChanged(const String cType,
-               const Vector<Double> vx, const Vector<Double> vy) {
+void MakeRegion::wcChanged(const String /*cType*/,
+               const Vector<Double> /*vx*/, const Vector<Double> /*vy*/) {
     //cout << "wcChanged:" << cType << vx << vy << endl; 
     if (!isVisible()) 
        return;
@@ -940,15 +940,15 @@ void MakeRegion::showHideAll() {
    reDraw();
 }
 
-void MakeRegion::colorAll(const QString& clr) {
+void MakeRegion::colorAll(const QString& /*clr*/) {
    //qDebug() << "colorAll" << clr;
    reDraw();
 }
 
-void MakeRegion::rotateBox(int cb) {
+void MakeRegion::rotateBox(int /*cb*/) {
 }
 
-void MakeRegion::newRegion_(String imgFilename) {
+void MakeRegion::newRegion_(String /*imgFilename*/) {
    //cout << "newRegion_" << imgFilename << endl;
    
    if (this->isVisible()){
@@ -968,8 +968,8 @@ void MakeRegion::newRegion_(String imgFilename) {
    reDraw();
 }
 
-void MakeRegion::drawRegion(Record mousereg, 
-                          WorldCanvasHolder *wch){
+void MakeRegion::drawRegion(Record /*mousereg*/,
+                          WorldCanvasHolder * /*wch*/){
 }
 
 WCUnion* MakeRegion::unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg){

@@ -40,7 +40,8 @@ namespace casa {
 	return the_session;
     }
 
-    DBusSession::DBusSession( DBus::Connection &c ) : conn(c), ::DBus::ObjectProxy( c, DBUS_SERVER_PATH, DBUS_SERVER_NAME) { }
+    DBusSession::DBusSession( DBus::Connection &c )
+    : ::DBus::ObjectProxy( c, DBUS_SERVER_PATH, DBUS_SERVER_NAME), conn(c)  { }
     void DBusSession::NameOwnerChanged(const std::string&, const std::string&, const std::string&) { }
     void DBusSession::NameLost(const std::string&) { } 
     void DBusSession::NameAcquired(const std::string&) { }

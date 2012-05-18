@@ -329,7 +329,7 @@ void QtMinMaxEditor::reSet(QString value)
     repaint();
 }
 
-void QtMinMaxEditor::display2(int v1)
+void QtMinMaxEditor::display2(int /*v1*/)
 {  }
 
 void QtMinMaxEditor::display2()
@@ -625,7 +625,7 @@ QtBool::QtBool(QDomElement &ele, QWidget *parent) :
     nameLabel->setToolTip(ele.attribute("help"));
 }
 
-void QtBool::reSet(QString value)
+void QtBool::reSet(QString /*value*/)
 {
     repaint();
 }
@@ -764,7 +764,7 @@ QtPushButton::QtPushButton(QDomElement &ele, QWidget *parent)
     nameLabel->setToolTip(ele.attribute("help"));
 }
 
-void QtPushButton::reSet(QString value)
+void QtPushButton::reSet(QString /*value*/)
 {
     repaint();
 }
@@ -918,7 +918,7 @@ QtRegionEditor::QtRegionEditor(QDomElement &ele, QWidget *parent)
     nameLabel->setToolTip(ele.attribute("help"));
 }
 
-void QtRegionEditor::reSet(QString value)
+void QtRegionEditor::reSet(QString /*value*/)
 {
     repaint();
 }

@@ -47,6 +47,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	    // dismissRegion->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
 	    dismiss_region->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
+	    reset_regions->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
 
 	    // Qt Designer will not allow you to create an empty QStackedWidget (qt4.7)... all created
 	    // stacked widgets seem to have two elements... here we remove that elements (if they
@@ -63,6 +64,7 @@ namespace casa {
 	    connect( region_scroll, SIGNAL(valueChanged(int)), SLOT(change_stack(int)) );
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
+	    connect( reset_regions, SIGNAL(clicked(bool)), SLOT(delete_all_regions(bool)) );
 	    connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 	    connect( regions, SIGNAL(currentChanged(int)), SLOT(emit_region_stack_change(int)) );
 
@@ -141,12 +143,15 @@ namespace casa {
 	    if ( size <= 0 ) {
 		region_scroll->setEnabled(false);
 		dismiss_region->setEnabled(false);
+		reset_regions->setEnabled(false);
 	    } else if ( size == 1 ) {
 		region_scroll->setEnabled(false);
 		dismiss_region->setEnabled(true);
+		reset_regions->setEnabled(true);
 	    } else {
 		region_scroll->setEnabled(true);
 		dismiss_region->setEnabled(true);
+		reset_regions->setEnabled(true);
 	    }
 	    QWidget *current_widget = regions->currentWidget( );
 	    if ( current_widget == 0 ) {
@@ -170,6 +175,10 @@ namespace casa {
 
 	void QtRegionDock::delete_current_region(bool) {
 	    emit deleteRegion(dynamic_cast<QtRegionState*>(regions->currentWidget( )));
+	}
+
+	void QtRegionDock::delete_all_regions(bool) {
+	    emit deleteAllRegions( );
 	}
 
       void QtRegionDock::output_region_event( const QString &what, const QString &where, const QString &type, const QString &csys ) {

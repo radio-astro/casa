@@ -142,9 +142,27 @@ namespace casa {
 	    pc->callRefreshEventHandlers(Display::BackCopiedToFront);
 	}
 
-	void Region::draw( bool other_selected ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
+	bool Region::within_drawing_area( ) {
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    int sblcx, sblcy, strcx, strcy;
+	    linear_to_screen( wc_, blcx, blcy, trcx, trcy, sblcx, sblcy, strcx, strcy );
+	    return wc_->inDrawArea(sblcx,sblcy) && wc_->inDrawArea(strcx,strcy);
+	}
+
+	void Region::draw( bool other_selected ) {
+	    visible_ = true;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) {
+		visible_ = false;
+		return;
+	    }
+
+	    if ( ! within_drawing_area( ) ) {
+		visible_ = false;
+		return;
+	    }
+	    
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	    int new_z_index = wc_->zIndex( );

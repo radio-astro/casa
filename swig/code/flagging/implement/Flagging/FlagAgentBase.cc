@@ -928,9 +928,13 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			dataColumn_p = config.asString("datacolumn");
 		}
-		else
+		else if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
 		{
 			dataColumn_p = "data";
+		}
+		else
+		{
+			dataColumn_p = "fparam";
 		}
 
 		dataColumn_p.upcase();
@@ -1013,9 +1017,13 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			expression_p = config.asString("correlation");
 		}
-		else
+		else if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
 		{
 			expression_p = "ABS ALL";
+		}
+		else
+		{
+			expression_p = "REAL ALL";
 		}
 
 		expression_p.upcase();

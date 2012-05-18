@@ -205,7 +205,7 @@ bool
 FlagCalTableHandler::parseExpression(MSSelection &parser)
 {
 	logger_p->origin(LogOrigin("FlagCalTableHandler",__FUNCTION__,WHERE));
-	CTInterface tmpCTInterface(*selectedCalTable_p);
+	CTInterface tmpCTInterface(*originalCalTable_p);
 
 	try
 	{

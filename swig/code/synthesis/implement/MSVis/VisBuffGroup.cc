@@ -113,8 +113,8 @@ Bool VisBuffGroup::applyChanMask(Cube<Bool>& chanmaskedflags,
     uInt ncor = vb.nCorr();
 
     chanmaskedflags = vb.flagCube();
-    for(Int irow = 0; irow < nr; ++irow){
-      for(Int corr = 0; corr < ncor; ++corr){
+    for(uInt irow = 0; irow < nr; ++irow){
+      for(uInt corr = 0; corr < ncor; ++corr){
         if(!fr[irow]){
           //fc.reference(chanmaskedflags.xzPlane(corr).column(irow));
           fc.reference(chanmaskedflags.yzPlane(corr).column(irow));

@@ -157,6 +157,9 @@ namespace casa {
 					  const QString &x_units, const QString &y_units,
 					  const QString &width, const QString &height, const QString &bounding_units );
 		void refresh_zrange_event(int,int);
+		// revoke...
+		void revoke_region( );
+		// revoke if our state matches parameter...
 		void revoke_region(QtRegionState*);
 		void output(std::list<QtRegionState*>,RegionTextList&);
 		void output(std::list<QtRegionState*>,ds9writer&);
