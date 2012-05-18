@@ -351,6 +351,7 @@ FlagMSHandler::checkMaxMemory()
 {
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
+	maxChunkRows = 0;
 	double memoryNeeded = 0;
 	double maxMemoryNeeded = 0;
 	// visCube,flagCube
@@ -506,12 +507,14 @@ FlagMSHandler::generateIterator()
 		chunksInitialized_p = false;
 		buffersInitialized_p = false;
 		stopIteration_p = false;
+		processedRows = 0;
 	}
 	else
 	{
 		chunksInitialized_p = false;
 		buffersInitialized_p = false;
 		stopIteration_p = false;
+		processedRows = 0;
 	}
 
 	return true;
@@ -689,9 +692,11 @@ FlagMSHandler::nextBuffer()
 			}
 			corrs += "]";
 
+			Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
+
 			*logger_p << LogIO::NORMAL << 
 			  "------------------------------------------------------------------------------------ " << LogIO::POST;
-			*logger_p << "Chunk = " << chunkNo <<
+			*logger_p << "Chunk = " << chunkNo << " " << progress << "% "
 					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
 					", Array = " << visibilityBuffer_p->get()->arrayId() <<
 					", Scan = " << visibilityBuffer_p->get()->scan0() <<
@@ -699,7 +704,9 @@ FlagMSHandler::nextBuffer()
 					", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
 					", Channels = " << visibilityBuffer_p->get()->nChannel() <<
 					", Corrs = " << corrs <<
-					", Total Rows = " << visibilityBuffer_p->get()->nRowChunk() << LogIO::POST;
+					", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
+
+			processedRows += roVisibilityIterator_p->nRowChunk();
 		}
 	}
 
