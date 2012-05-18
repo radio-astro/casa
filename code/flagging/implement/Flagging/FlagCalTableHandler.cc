@@ -83,9 +83,9 @@ FlagCalTableHandler::open()
 	// File the baseline to Ant1xAnt2 map
 	String baseline;
 	std::pair<Int,Int> ant1ant2;
-	for (uInt ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
 	{
-		for (uInt ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
 		{
 			ant1ant2.first = ant1Idx;
 			ant1ant2.second = ant2Idx;
