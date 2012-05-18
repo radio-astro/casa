@@ -672,7 +672,10 @@ def init_plot( fitter, n, plotlevel):
                 n = 16
         
         # initialize plotter
-        if not fitter._p or fitter._p.is_dead:
+        from matplotlib import rc as rcp
+        rcp('lines', linewidth=1)
+        #if not fitter._p or fitter._p.is_dead:
+        if not (fitter._p and fitter._p._alive()):
                 from asap.asapplotter import new_asaplot
                 visible = False
                 if plotlevel > 0:

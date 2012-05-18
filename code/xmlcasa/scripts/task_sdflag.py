@@ -185,6 +185,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             #for row in range(ns):
             if docmdflag and ( abs(plotlevel) > 0 ):
+                    from matplotlib import rc as rcp
+                    rcp('lines', linewidth=1)
                     #sc=s.copy()
 		    # Plot final spectrum
                     np = nr
@@ -192,11 +194,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                             np = 16
 			    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
 
-                    if not myp or myp.is_dead:
-                        #if plotlevel > 0 and sd.rcParams['plotter.gui']:
-                        #    from asap.asaplotgui import asaplotgui as asaplot
-                        #else:
-                        #    from asap.asaplot import asaplot
+                    #if not myp or myp.is_dead:
+                    if not (myp and myp._alive()):
                         from asap.asapplotter import new_asaplot
                         if plotlevel > 0:
                             visible = sd.rcParams['plotter.gui']
@@ -265,7 +264,7 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
                     #Apply flag
                     if plotlevel > 0 and sd.rcParams['plotter.gui']:
-                            ans=raw_input("Apply %s (y/n)?: " % flgmode)
+                            ans=raw_input("Apply %s (y/N)?: " % flgmode)
                     else:
                             casalog.post("Applying selected flags")
                             ans = 'Y'
@@ -301,6 +300,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             anyflag = docmdflag
             if interactive:
+                    from matplotlib import rc as rcp
+                    rcp('lines', linewidth=1)
                     guiflagger = flagplotter(visible=True)
                     guiflagger._plotter.legend(loc=1)
                     guiflagger.plot(s)
@@ -320,11 +321,10 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     casalog.post( "Showing only the first spectrum..." )
                     #row=rowlist[0]
                     row=0
-                    if not myp or myp.is_dead:
-                        #if sd.rcParams['plotter.gui']:
-                        #    from asap.asaplotgui import asaplotgui as asaplot
-                        #else:
-                        #    from asap.asaplot import asaplot
+                    #if not myp or myp.is_dead:
+                    if not (myp and myp._alive()):
+                        from matplotlib import rc as rcp
+                        rcp('lines', linewidth=1)
                         from asap.asapplotter import new_asaplot
                         myp = new_asaplot(visible=sd.rcParams['plotter.gui'])
 
