@@ -778,7 +778,7 @@ public:
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
 	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
-	virtual bool checkIfColumnExists(String column) {return true;}
+	virtual bool checkIfColumnExists(String /*column*/) {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);
