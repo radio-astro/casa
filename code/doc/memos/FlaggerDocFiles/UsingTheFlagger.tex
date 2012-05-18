@@ -554,7 +554,309 @@ data.
 
 
 \subsection{Flagging Calibration-Tables}
-{\green  Anything specific to calibration tables.   } 
+
+\subsubsection{Ability to easily flag the new Calibration Table format}
+
+The new Calibration Table format can be handled by the TestFlagger tool in a
+transparent way, just like a Measurement Set Table. There is an open-time check
+that inspects the table type and uses the appropriate FlagDataHandler
+implementation for all the I/O operations:
+
+\begin{verbatim}
+
+CASA <2>: tf.open('X7ef.tsys')
+INFO	TestFlagger::open	Table type is Calibration
+  Out[2]: True
+
+\end{verbatim}
+
+In principle support for the new Calibration Table format has been introduced
+transparently, so it is possible to flag them using any of the already available
+modes for Measurement Sets. However, due to the nature of the data in
+calibration tables, it only makes sense to use the following flag agent groups:
+
+\begin{enumerate}
+
+\item Autoflagging (outliers detection) agents: clip, tfcrop, rflag:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentClip={'mode':'clip','clipzeros':True,'clipminmax':[0.,600.],'datacolumn':'FPARAM'}
+tf.parseagentparameters(agentClip)
+tf.init()
+tf.run()
+tf.done()
+
+\end{verbatim}
+
+\item Manualflagging (meta-data selections like antenna/time-range):
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+
+\end{verbatim}
+
+\item Auxiliary modes: unflag, summary, display
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentSummary={'mode':'summary'}
+tf.parseagentparameters(agentSummary)
+tf.init()
+summary = tf.run()
+tf.done()
+
+\end{verbatim}
+
+\end{enumerate}
+
+Notice that the parameters names and types are the same as described in the
+tflagdata command-line help.
+
+\subsubsection{Supported columns and expressions}
+
+\begin{enumerate}
+
+\item For the autoflagging agents (clip, tfcrop, rflag) it is possible to
+choose the column to operate with, using the 'datacolumn' parameter, being 'FPARAM',
+'PARAMERR' and 'SNR' the currently supported columns:
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'PARAMERR'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	data column is PARAMERR
+
+\end{verbatim}
+
+But notice that the default datacolumn is FPARAM:
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.]}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	data column is FPARAM
+
+\end{verbatim}
+
+\item And it is also possible to choose the element of interest to inspect for
+flagging, trough the correlation parameter, specifying a list of comma-separated
+elements or 'ALL' to select all the elements (which is also the default):
+
+\begin{verbatim}
+
+agentClip={'mode':'clip',clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1
+
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'ALL'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+
+\end{verbatim}
+
+Also notice that the default expression is 'ALL':
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.]}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+
+\end{verbatim}
+
+\end{enumerate}
+
+\subsubsection{Meta-Data selection}
+
+As far as meta-data selection is concerned, we are bounded to what MSSelection
+interface for Calibration Tables offers (currently only field, spw and antenna
+selections). There are two way to apply meta-data selections, with can be used
+independently or combined together:
+
+\begin{enumerate}
+
+\item FlagDataHandler selection (global): Create a sub-table with the selection
+to be used by all the agents. The data selection parameters have to be parsed
+trough the selectdata() method of the TestFlagger tool:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata(field='TW Hya')
+agentManual={'mode':'manual'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		
+\end{verbatim}
+
+\item Agent selection (specific to each agent): To restrict the rows that each
+agent inspect for flagging. The data selection parameters can be parsed as
+normal agent parameters:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		
+\end{verbatim}
+
+\item Combined selection : To iterate only trough a global selection, and at the
+same time have each agent inspecting a particular group of rows for flagging:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata(field='TW Hya')
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		 
+\end{verbatim}
+
+\end{enumerate}
+
+\subsubsection{Combining several modes in a single run}
+
+As with MeasurementSet tables, the re-factored flagger framework allows running
+several flagging agents at the same time, to reduce I/O overhead,  for instance:
+
+\begin{enumerate}
+
+\item Combination of tfcrop and rflag:
+
+\begin{verbatim}
+
+tf.open('cal.fewscans.bpass')
+tf.selectdata()
+agentRflag={'mode':'rflag','datacolumn':'PARAMERR','correlation':'Sol1'}
+agentTfcrop={'mode':'tfcrop','datacolumn':'PARAMERR','correlation':'Sol1'}
+tf.parseagentparameters(agentRflag)
+tf.parseagentparameters(agentTfcrop)
+tf.init()
+tf.run(writeflags=True)
+tf.done()
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-RFlag+TFCrop.png}
+\caption{Rflag and TFCrop agents combined in a single run applied on a EVLA
+band-pass calibration table}
+\label{Fig:EVLA Band Pass Cal Table RFlag+TFCrop applied combined}
+\end{figure}
+
+\item Unflag + Clip + Display
+
+\begin{verbatim}
+  
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
+agentDisplay={'mode':'display','datadisplay':True}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentClip)
+tf.parseagentparameters(agentDisplay)
+tf.init()
+tf.run(writeflags=True)
+tf.done()
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-Clip.png}
+\caption{Clipping agent operating on ALMA TSys CalTable (TW Hya Science
+Verification data)}
+\label{Fig:TW Hya CalTable Clip}
+\end{figure}
+
+\item Unflag + Manual Selection (channel edges) + Summary
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentManual={'mode':'manual','spw':'*:0~9;118~127'}
+agentDisplay={'mode':'display','datadisplay':True}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentManual)
+tf.parseagentparameters(agentDisplay)
+tf.init()
+tf.run(writeflags=True)
+tf.done() 
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-MultipleChannel.png}
+\caption{Clipping agent operating on ALMA TSys CalTable (TW Hya Science
+Verification data)}
+\label{Fig:TW Hya CalTable Clip}
+\end{figure}
+
+\item Unflag + Manual Selection (antenna) + Summary
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentManual={'mode':'manual','antenna':'DV09'}
+agentSummary={'mode':'summary'}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentManual)
+tf.parseagentparameters(agentSummary)
+tf.init()
+summary = tf.run(writeflags=True)
+tf.done() 
+
+CASA <12>: summary
+  Out[12]: 
+{'nreport': 2,
+ 'report0': {'antenna': {'DV04': {'flagged': 0.0, 'total': 14336.0},
+                         'DV06': {'flagged': 0.0, 'total': 14336.0},
+                         'DV07': {'flagged': 0.0, 'total': 14336.0},
+                         'DV08': {'flagged': 0.0, 'total': 14336.0},
+                         'DV09': {'flagged': 14336.0, 'total': 14336.0},
+                         'DV10': {'flagged': 0.0, 'total': 14336.0},
+                         'PM01': {'flagged': 0.0, 'total': 14336.0},
+                         'PM02': {'flagged': 0.0, 'total': 14336.0},
+                         'PM03': {'flagged': 0.0, 'total': 14336.0}},
+
+
+\end{verbatim}
+
+\end{enumerate}
 
 
 \section{Frequently Asked Questions}
