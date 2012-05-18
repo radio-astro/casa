@@ -696,7 +696,7 @@ FlagMSHandler::nextBuffer()
 
 			*logger_p << LogIO::NORMAL << 
 			  "------------------------------------------------------------------------------------ " << LogIO::POST;
-			*logger_p << "Chunk = " << chunkNo << " " << progress << "% "
+			*logger_p << "Chunk = " << chunkNo << " [" << progress << "%]"
 					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
 					", Array = " << visibilityBuffer_p->get()->arrayId() <<
 					", Scan = " << visibilityBuffer_p->get()->scan0() <<
