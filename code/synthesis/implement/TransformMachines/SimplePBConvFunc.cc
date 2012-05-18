@@ -490,9 +490,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	trial=5;
       }
 
-      if(trial < 15*convSampling) 
-	trial=( convSize_p > (30*convSampling)) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
+      // 
+      // CAS-4132 - temporary change to get the release out.
+      // if(trial < 15*convSampling) 
+      // trial=( convSize_p > (30*convSampling)) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
       
+      if (trial < 5) {
+        trial = 5;
+      }
+      // end CAS-4132
+
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
       }
