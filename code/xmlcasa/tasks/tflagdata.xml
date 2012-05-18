@@ -955,13 +955,18 @@ The task will flag a subset of data based on the following modes of operation:
                          thresholds. Thresholds are returned from rflag only when action='calculate'. 
                          The user can edit this file before doing the second pass, 
                          but the python-dictionary structure must be preserved.
+
                       -- The second pass applies these commands (action='apply').
 
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
                                     freqdev='fdevfile.txt', action='calculate')
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
                                     freqdev='fdevfile.txt', action='apply')
-            
+
+                        With action='calculate', display='report' will produce diagnostic plots 
+                        showing data-statistics and thresholds (the same thresholds as those
+                        written out to 'tdevfile.txt' and 'fdevfile.txt'). 
+           
                         Note : The rflag algorithm was originally developed by Eric Greisen in 
                                 AIPS (31DEC11).
                         AIPS documentation : Section E.5 of the AIPS cookbook
