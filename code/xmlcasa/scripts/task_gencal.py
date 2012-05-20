@@ -27,9 +27,9 @@ def gencal(vis=None,caltable=None,caltype=None,
                 import correct_ant_posns as getantposns 
                 # correct_ant_posns returns a list , [return_code, antennas, offsets]
                 antenna_offsets=getantposns.correct_ant_posns(vis,False)
-                if (len(antenna_offsets)==3 &
-                    antenna_offsets[0]==0 &
-                    len(antenna_offsets[1])>0 ) :
+                if ((len(antenna_offsets)==3) and
+                    (antenna_offsets[0]==0) and
+                    (len(antenna_offsets[1])>0) ) :
                        antenna = antenna_offsets[1]
                        parameter = antenna_offsets[2] 
                 else:
