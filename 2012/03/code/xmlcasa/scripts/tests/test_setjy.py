@@ -449,7 +449,7 @@ class Uranus_newmodel(SplitChecker):
             print "\nRunning setjy(field='Uranus')."
             sjran = setjy(self.inpms, field='Uranus', spw='', modimage='',
                           scalebychan=False, fluxdensity=-1,
-                          standard='Butler-JPL-Horizons 2012', usescratch=True,  async=False)
+                          standard='Butler-JPL-Horizons 2010', usescratch=True,  async=False)
         except Exception, e:
             print "Error running setjy(field='Uranus')"
             raise e
@@ -610,7 +610,7 @@ class selectobs_newmodel(SplitChecker):
                           selectdata=True, observation=1,
                           modimage='',
                           scalebychan=False, fluxdensity=-1,
-                          standard='Butler-JPL-Horizons 2012', usescratch=True, async=False)
+                          standard='Butler-JPL-Horizons 2010', usescratch=True, async=False)
         except Exception, e:
             print "Error running setjy(field='Titan', observation=1)"
             raise e
