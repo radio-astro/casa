@@ -534,9 +534,6 @@ namespace casa {
 	return QDBusVariant(0);
     }
 
-    QtDisplayPanelGui *create_panel( int id ) {
-    }
-
     QDBusVariant QtDBusViewerAdaptor::panel( const QString &type, bool hidden ) {
         int result = 0;
 	if ( type == "clean" ) {
