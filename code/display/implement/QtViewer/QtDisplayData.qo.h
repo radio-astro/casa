@@ -165,10 +165,13 @@ class QtDisplayData : public QObject {
   // conformant for drawing?
   virtual Bool wouldDisplayColorBar() {
 	bool displayColorBar = false;
-	if (colorBarDisplayOpt_->value() == WEDGE_YES){
-		displayColorBar = true;
+	bool wouldDisplayColorBar = false;
+	if ( colorBarDisplayOpt_ != NULL ){
+		if (colorBarDisplayOpt_->value() == WEDGE_YES){
+			displayColorBar = true;
+		}
+		wouldDisplayColorBar = hasColorBar() && displayColorBar;
 	}
-	bool wouldDisplayColorBar = hasColorBar() && displayColorBar;
     return wouldDisplayColorBar;
   }
 
