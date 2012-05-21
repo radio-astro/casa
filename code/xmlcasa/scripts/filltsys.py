@@ -514,10 +514,14 @@ class TsysFiller:
                 tsys1 = self.getTsys( rows[1] )
                 t = self.getSpecTime( irow )
                 tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
-            newtsys = interpolateInFrequency( self.abctsys,
-                                              tsys,
-                                              self.abcsp,
-                                              mode )
+            if len(tsys) == len(self.abctsys):
+                newtsys = interpolateInFrequency( self.abctsys,
+                                                  tsys,
+                                                  self.abcsp,
+                                                  mode )
+            else:
+                # Tsys seems to be channel-averaged
+                newtsys = tsys
             self.stab.putcell( 'TSYS', irow, newtsys )
             tptab.putcell( 'TSYS', irow, newtsys.mean() )
 
@@ -607,10 +611,13 @@ class TsysFiller:
                     tsys0 = atsys[idx-1]
                     tsys1 = atsys[idx]
                     tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
-            newtsys = interpolateInFrequency( abctsys,
-                                              tsys,
-                                              self.abcsp,
-                                              mode )            
+            if len(tsys) == len(self.abctsys):
+                newtsys = interpolateInFrequency( abctsys,
+                                                  tsys,
+                                                  self.abcsp,
+                                                  mode )
+            else:
+                newtsys = tsys
             self.stab.putcell( 'TSYS', irow, newtsys )
             tptab.putcell( 'TSYS', irow, newtsys.mean() )
 
