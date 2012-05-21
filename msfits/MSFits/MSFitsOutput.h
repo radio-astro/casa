@@ -116,7 +116,9 @@ private:
   static Bool writeFQ(FitsOutput *output, const MeasurementSet& ms, 
 		      const Block<Int>& spwidMap, Int nrspw,
 		      Double refFreq, Int refPixelFreq, 
-		      Double chanbw, Bool combineSpw);
+		      Double chanbw, Bool combineSpw, 
+                      Int chanstart = 0, Int nchan = -1, Int chanstep = 1, 
+                      Int avgchan = 1);
 
   // Write the AN table.
   static Bool writeAN(FitsOutput *output, const MeasurementSet& ms,
