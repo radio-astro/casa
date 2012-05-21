@@ -1878,4 +1878,41 @@ atmosphere::getTebbSky(const int nc, const int spwid, const Quantity& wh2o)
   return q;
 }
 
+int
+atmosphere::getTebbSkySpec(Quantity& tebbSky, const int spwid, const Quantity& wh2o)
+{
+  int nchan(-1);
+  bool userwh2o(false);
+  try {
+    if (pSkyStatus) {
+      nchan = pSpectralGrid->getNumChan(spwid);
+      (tebbSky.value).resize(nchan);
+      tebbSky.units="K";
+      Length new_wh2o;
+      if (wh2o.value[0] != -1) {
+	new_wh2o = Length(wh2o.value[0],wh2o.units);
+	userwh2o = true;
+      }
+      for (uInt i = 0; i < nchan; i++) {
+	if (userwh2o) {
+	(tebbSky.value)[i] =
+	  pSkyStatus->getTebbSky(spwid,i,new_wh2o).get(tebbSky.units);
+	} else {
+	(tebbSky.value)[i] =
+	  pSkyStatus->getTebbSky(spwid,i).get(tebbSky.units);
+	}
+      }
+    } else {
+      *itsLog << LogIO::WARN
+	      << "Please set spectral window(s) with initSpectralWindow first."
+	      << LogIO::POST;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return nchan;
+}
+
 } // casac namespace
