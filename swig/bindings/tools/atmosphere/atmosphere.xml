@@ -2351,6 +2351,64 @@ for s in range(at.getNumSpectralWindows()):
 </example>
 </method>
 
+ 
+   <method type="function" name="getTebbSkySpec">
+   <shortdescription>Returns equiv. BB Temp on each channel of a band</shortdescription>
+   
+<description>
+Gets the Equivalent Blackbody Temperatures in a spectral window spwid 
+for Water Vapor Column wh2o, the current Air Mass, and
+perfect Sky Coupling to the sky.
+</description>
+
+<output>
+
+     <param type="double"  name="tebbSky" units="K">
+     <description>the Equivalent Blackbody Temperatures in a band -
+        Quantum with a vector value and unit of K
+        </description>
+     </param>
+</output>
+<input>
+         <param type="int" direction="in" name="spwid">
+     <description>Spectral window (0-based)</description>
+     <value>0</value>
+     </param>
+     <param type="double" direction="in" name="wh2o" units="mm">
+     <description>User specified water column length in mm.  Default is not to use wh2o.</description>
+     <value>-1</value>
+     </param>
+</input>
+
+<returns type="int">The number of channels.</returns>
+
+<example>
+In [16]: sw=at.getWetOpacitySpec()
+
+In [17]: sw['tebbSky'].value
+Out[17]:
+[34.687910103670511,
+ 35.496193465331679,
+ 36.460355664151791,
+ 37.419146813713745,
+ 37.9452005127634,
+ 38.722631196093729,
+ 39.593561594172662,
+ 40.528694048924017]
+
+In [18]: sw['return']
+Out[18]: 8L
+
+Another example:
+for s in range(at.getNumSpectralWindows()):
+        print "band", s
+        tebbspec = at.getTebbSkySpec(s)
+        for i in range(at.getNumChan(s)):
+                print " - TebbSky %f [%s] " % (tebbspec['tebbSky'].value[i],tebbspec['tebbSky'].units)
+
+</example>
+</method>
+
 </tool>
 
 </casaxml>
