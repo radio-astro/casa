@@ -17,6 +17,7 @@
 
 #include <imageanalysis/Annotations/AnnAnnulus.h>
 
+#include <casa/Quanta/MVAngle.h>
 #include <images/Regions/WCDifference.h>
 #include <images/Regions/WCEllipsoid.h>
 
@@ -79,7 +80,6 @@ AnnAnnulus& AnnAnnulus::operator= (
     return *this;
 }
 
-
 MDirection AnnAnnulus::getCenter() const {
 	return _getConvertedDirections()[0];
 }
@@ -90,8 +90,9 @@ Vector<Quantity> AnnAnnulus::getRadii() const {
 
 ostream& AnnAnnulus::print(ostream &os) const {
 	_printPrefix(os);
-	os << "annulus [[" << _xcenter << ", " << _ycenter << "], ["
-		<< _innerRadius << ", " << _outerRadius << "]] ";
+	os << "annulus [[" << _printDirection(_xcenter, _ycenter) << "], ["
+		<< _toArcsec(_innerRadius) << ", "
+		<< _toArcsec(_outerRadius) << "]] ";
 	_printPairs(os);
 	return os;
 }

@@ -196,7 +196,7 @@ int main () {
 			AlwaysAssert(thrown, AipsError);
 		}
 		{
-			Quantity centerx(0.6, "arcmin");
+			Quantity centerx(-0.6, "arcmin");
 			Quantity centery(1.2, "arcmin");
 			Quantity mi(3, "arcmin");
 			Quantity ma(4, "arcmin");
@@ -221,6 +221,7 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			cout << ellipse << endl;
 
 			Quantity wDelX(4.964101615, "arcmin");
 			Quantity wDelY(4.598076211, "arcmin");
