@@ -101,7 +101,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum before smoothing
                             # reset plotter
-                            sd.plotter._plotter.quit()
+                            if sd.plotter._plotter:
+                                    sd.plotter._plotter.quit()
                             visible = sd.plotter._visible
                             sd.plotter.__init__(visible=visible)
                             sd.plotter.set_linestyles(linewidth=1,refresh=False)
@@ -141,7 +142,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     if ( abs(plotlevel) > 0 ):
                             # plot spectrum after smoothing
                             # reset plotter
-                            sd.plotter._plotter.quit()
+                            if sd.plotter._plotter:
+                                    sd.plotter._plotter.quit()
                             visible = sd.plotter._visible
                             sd.plotter.__init__(visible=visible)
                             sd.plotter.set_linestyles(linewidth=1,refresh=False)

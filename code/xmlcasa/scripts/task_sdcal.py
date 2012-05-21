@@ -305,7 +305,8 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             # Plot final spectrum
             if ( abs(plotlevel) > 0 ):
                     # reset plotter
-                    sd.plotter._plotter.quit()
+                    if sd.plotter._plotter:
+                            sd.plotter._plotter.quit()
                     visible = sd.plotter._visible
                     sd.plotter.__init__(visible=visible)
                     # each IF is separate panel, pols stacked
