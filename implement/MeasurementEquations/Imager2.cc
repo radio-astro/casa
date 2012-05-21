@@ -2079,19 +2079,30 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
     // which has a different representation for the image internally.
     Vector<String> residualNames(images_p.nelements());
     Vector<String> modelNames(images_p.nelements());
+    Vector<Bool> dofluxscale(images_p.nelements());
+    dofluxscale=False;
     for(uInt k=0; k < modelNames.nelements() ; ++k){
       residualNames[k]=residuals_p[k]->name();
       modelNames[k]=images_p[k]->name();
+      dofluxscale[k]=sm_p->doFluxScale(k);
     }
 
 
     Double availablemem=Double(HostInfo::memoryFree())*1024.0;
+    Bool nomemory=False;
+    Block<CountedPtr< TempImage<Float> > > tempfluximage(modelNames.nelements(), NULL);
     //The convolution needs in ram 3 complex x-y planes ...lets multiply it by 5 for safety
-    if((availablemem < Double(nx_p*ny_p)*15.0*8.0 ) && (ft_p->name() != "MosaicFT")){
+    if((availablemem < Double(nx_p*ny_p)*15.0*8.0 ) && (ft_p->name() != "MosaicFT") && !(doWideBand_p && ntaylor_p>1)){
       // very large for convolution ...destroy Skyequations to release memory
       // need to fix the convolution to be leaner
+      for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
+	   ++thismodel) {
+	tempfluximage[thismodel]=new TempImage<Float>(sm_p->fluxScale(thismodel).shape(), sm_p->fluxScale(thismodel).coordinates(), 10.0);
+	(tempfluximage[thismodel])->copyData(sm_p->fluxScale(thismodel));
+      }
       destroySkyEquation();
-
+      nomemory=True;
+      
     }
     
     Bool dorestore=False;
@@ -2131,7 +2142,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
 	    
-	    // this should go away...e
+	    // this should go away..
 	    //special casing like this gets hard to maintain
 	    // need to redo how interactive is done so that it is outside 
 	    //of this code 
@@ -2144,20 +2155,20 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    if(ft_p->name()=="MosaicFT")	      
 	      cutoffval=minPB_p*minPB_p;
 	    
-	    if (sm_p->doFluxScale(thismodel)) {
+	    if (dofluxscale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
 	      if(ft_p->name()=="MosaicFT")
 		se_p->getCoverageImage(thismodel, cover);
               else
-                  cover.copyData(sm_p->fluxScale(thismodel));
+		cover.copyData(nomemory ? (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel));
 	      if(scaleType_p=="NONE"){
 		if(dorestore){
 		  LatticeExpr<Float> le(iif(cover < minPB_p, 
-					    0.0,(restored/(sm_p->fluxScale(thismodel)))));
+					    0.0,(restored/(nomemory ?  (*tempfluximage[thismodel]) :  sm_p->fluxScale(thismodel)))));
 		  restored.copyData(le);
 		}
 		LatticeExpr<Float> le1(iif(cover < minPB_p, 
-					   0,(residIm/(sm_p->fluxScale(thismodel)))));
+					   0,(residIm/(nomemory ?  (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 		
 	      }
@@ -2193,7 +2204,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	       << thismodel << ", cannot restore image" << LogIO::POST;
 	  }
 	  
-	  if(residuals_p[thismodel]->ok()){
+	  if(!(residuals_p[thismodel].null()) && residuals_p[thismodel]->ok()){
 	    residuals_p[thismodel]->table().relinquishAutoLocks(True);
 	    residuals_p[thismodel]->table().unlock();
 	    //detaching residual so that other processes can use it
