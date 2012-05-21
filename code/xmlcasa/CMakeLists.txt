@@ -183,6 +183,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/dbusutil.py
   scripts/dict_to_table.py
   scripts/filecatalog.py
+  scripts/filltsys.py
   scripts/flaghelper.py
   scripts/get_user.py
   scripts/importarchive.py
@@ -192,6 +193,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/ngc5921_usecase.py
   scripts/odict.py
   scripts/parallel_go.py
+  scripts/parallelSplit.py
   scripts/parameter_check.py
   scripts/parameter_dictionary.py
   scripts/plotcomp.py
@@ -207,6 +209,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/setjy_helper.py
   scripts/simutil.py
   scripts/solar_system_setjy.py
+  scripts/testhelper.py
   scripts/TablePlotQt4Agg.py
   scripts/TablePlotTkAgg.py
   scripts/task_accum.py
@@ -276,6 +279,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listvis.py
   scripts/taskmanager.py
   scripts/task_mosaic.py
+  scripts/task_msmoments.py 
   scripts/task_oldflagcmd.py
   scripts/task_peel.py
   scripts/task_plotants.py
@@ -338,9 +342,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/vishead_util.py
   scripts/simple_cluster.py
   scripts/simple_summary.py
-  scripts/parallelSplit.py
-  scripts/filltsys.py
-  scripts/task_msmoments.py )
+  )
 
 casa_add_tasks( xmlcasa xmlcasa_tasks 
   tasks/accum.xml
