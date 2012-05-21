@@ -62,6 +62,9 @@ namespace casa {
 
 		AnnotationBase *annotation( ) const;
 
+		// points cannot be degenerate...
+		bool degenerate( ) const { return false; }
+
 	    protected:
 
 		static const int radius;

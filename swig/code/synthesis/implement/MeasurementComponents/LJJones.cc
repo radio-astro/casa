@@ -266,7 +266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void LJJones::guessPar(VisBuffer& vb)
+  void LJJones::guessPar(VisBuffer& /*vb*/)
   {
     pointPar_=0;
     //  solveRPar() = 0;
@@ -362,10 +362,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void LJJones::differentiate(VisBuffer& vb,
-			      Cube<Complex>& Mout,
-			      Array<Complex>& dMout,
-			      Matrix<Bool>& Mflg) 
+  void LJJones::differentiate(VisBuffer& /*vb*/,
+			      Cube<Complex>& /*Mout*/,
+			      Array<Complex>& /*dMout*/,
+			      Matrix<Bool>& /*Mflg*/)
   {
     /*
       Int nCorr(2); // TBD
@@ -446,8 +446,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void LJJones::differentiate(VisBuffer& vb,VisBuffer& dAZVB,VisBuffer& dELVB,
-			      Matrix<Bool>& Mflg) 
+  void LJJones::differentiate(VisBuffer& /*vb*/,VisBuffer& /*dAZVB*/,VisBuffer& /*dELVB*/,
+			      Matrix<Bool>& /*Mflg*/)
   {
     /*
     //
@@ -879,7 +879,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if (vbOk) 
 	  {
-	    Bool totalGoodSol(False);
+	    //Bool totalGoodSol(False);
 	    antgain.set(1.0);		    leakage.set(0.0);
 	    for (Int ich=nChanPar()-1;ich>-1;--ich) 
 	      {
@@ -933,11 +933,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-----------------------------------------------------------------------
   //  
-  void LJJones::diffResiduals(VisIter& vi, VisEquation& ve, 
-			      VisBuffer& residuals,
-			      VisBuffer& dAZVB,
-			      VisBuffer& dELVB,
-			      Matrix<Bool>& Mflg)
+  void LJJones::diffResiduals(VisIter& /*vi*/, VisEquation& /*ve*/,
+			      VisBuffer& /*residuals*/,
+			      VisBuffer& /*dAZVB*/,
+			      VisBuffer& /*dELVB*/,
+			      Matrix<Bool>& /*Mflg*/)
   {
     /*
       VisBuffAccumulator resAvgr(nAnt(),preavg(),False),

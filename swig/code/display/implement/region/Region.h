@@ -195,6 +195,9 @@ namespace casa {
 		Region( ) : wc_(0), selected_(false), visible_(true) { }
 		Region( WorldCanvas *wc );
 
+		// is this region degenerate?
+		virtual bool degenerate( ) const;
+
 		void setDrawingEnv( );
 		void resetDrawingEnv( );
 		void setTextEnv( );
@@ -277,6 +280,10 @@ namespace casa {
 		bool selected_;
 
 		bool visible_;
+
+		// Should this region be considered complete?
+		// Set to true by derived classes...
+		bool complete;
 
 	    private:
 		void set_line_style( LineStyle linestyle );

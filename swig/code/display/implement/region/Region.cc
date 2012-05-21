@@ -49,11 +49,22 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 namespace casa {
     namespace viewer {
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true) {
+	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false) {
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	    // }
+	}
+
+	bool Region::degenerate( ) const {
+	    // incomplete regions can not yet be found to be degenerate...
+	    if ( complete == false ) return false;
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    double pblcx, pblcy, ptrcx, ptrcy;
+	    linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy );
+	    // non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
+	    return (ptrcx - pblcx) < 1 && (ptrcy - pblcy) < 1;
 	}
 
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }

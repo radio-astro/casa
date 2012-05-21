@@ -842,6 +842,7 @@ public:
 	casa::asyncio::PrefetchColumns prefetchColumns_p;
 	// Iteration counters
 	uLong maxChunkRows;
+	uLong processedRows;
 	uShort chunkNo;
 	uShort bufferNo;
 

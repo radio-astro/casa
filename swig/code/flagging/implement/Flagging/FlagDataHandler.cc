@@ -122,6 +122,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	iteratorGenerated_p = false;
 	stopIteration_p = false;
 	maxChunkRows = 0;
+	processedRows = 0;
 	chunkNo = 0;
 	bufferNo = 0;
 
