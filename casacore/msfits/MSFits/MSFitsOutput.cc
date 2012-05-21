@@ -96,9 +96,9 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
                 startchan, nchan, stepchan, writeSysCal, asMultiSource,
                 combineSpw, writeStation, sensitivity);
     }
-    //cout << " nchan=" << nchan << " startchan=" << startchan 
-    //     << " stepchan=" << stepchan << " avgchan=" << avgchan << endl; 
     LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
+    os << LogIO::NORMAL << " nchan=" << nchan << " startchan=" << startchan 
+         << " stepchan=" << stepchan << " avgchan=" << avgchan << LogIO::POST; 
     const uInt nrow = ms.nrow();
     String msfile = ms.tableName();
     String outfile;
@@ -206,7 +206,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     } else {
         os << LogIO::NORMAL << "Writing AIPS FQ table" << LogIO::POST;
         ok = writeFQ(fitsOutput, ms, spwidMap, nrspw, refFreq, refPixelFreq,
-                chanbw, combineSpw);
+                chanbw, combineSpw, startchan, nchan, stepchan, avgchan);
     }
     if (!ok) {
         os << LogIO::SEVERE << "Could not write FQ table\n" << LogIO::POST;
@@ -514,22 +514,27 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
         refFreq = f0 + f0RefPix * bw0;
     } else {
         f0RefPix = 1 + nchan / 2;
-        if (f0RefPix == 1)
+        if (f0RefPix == 1) 
             // single-channel out
             refFreq = f0 + bw0 / 2.0 - delta / 2.0;
-        else
+        else 
             // multi-channel out  (f0RefPix is a *one* - based index!)
             refFreq = f0 + (f0RefPix - 1) * bw0;
     }
     refPixelFreq = f0RefPix;
 
-    /*
+     /* 
      cout << "Channel stuff: "
      << nchan << " "
      << chanstep << " "
      << chanstart << " "
+     << f0RefPix << " "
+     << f0 << " " 
+     << bw0 << " " 
+     << refFreq << endl;
      << refPixelFreq << endl;
      */
+     
 
     // OK, turn the stokes into FITS values.
     for (Int j = 0; j < numcorr0; j++) {
@@ -1325,7 +1330,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
 
 Bool MSFitsOutput::writeFQ(FitsOutput *output, const MeasurementSet &ms,
         const Block<Int>& spwidMap, Int nrspw, Double refFreq,
-        Int refPixelFreq, Double chanbw, Bool combineSpw) {
+        Int refPixelFreq, Double chanbw, Bool combineSpw,
+        Int chanstart, Int nchan, Int chanstep, Int avgchan) {
     LogIO os(LogOrigin("MSFitsOutput", "writeFQ"));
     MSSpectralWindow specTable(ms.spectralWindow());
     ROArrayColumn<Double> inchanfreq(specTable, MSSpectralWindow::columnName(
@@ -1388,6 +1394,11 @@ Bool MSFitsOutput::writeFQ(FitsOutput *output, const MeasurementSet &ms,
     RecordFieldPtr<Array<Float> > totbw(writer.row(), "TOTAL BANDWIDTH");
     RecordFieldPtr<Array<Int> > sideband(writer.row(), "SIDEBAND");
 
+    if (avgchan < 1)
+        avgchan = 1;
+    if (avgchan > nchan)
+        avgchan = nchan;
+
     IPosition inx(1, 0);
     for (uInt i = 0; i < nwin; i++) {
         if (i < spwidMap.nelements() && spwidMap[i] >= 0) {
@@ -1396,10 +1407,45 @@ Bool MSFitsOutput::writeFQ(FitsOutput *output, const MeasurementSet &ms,
             if (telescopeName == "IRAM PDB" || telescopeName == "IRAM_PDB") {
                 (*iffreq)(inx) = 0.0;
             } else {
-                (*iffreq)(inx) = freqs(refPixelFreq - 1) - refFreq;
+                os << LogIO::DEBUG2 << "refPixelFreq=" << refPixelFreq << " refFreq=" << refFreq
+                   //<< "\nfreqs=" << freqs 
+                   << LogIO::POST;
+                Int chancounter = 0;
+                Int nselectedchan = 0;
+                for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
+                    if (++chancounter == avgchan) {
+                       nselectedchan++;
+                       chancounter = 0;
+                    }
+                }
+                if (nselectedchan == 0)
+                    nselectedchan = 1;
+                Vector<Double> sfreq(nselectedchan);
+                Double frq = 0;
+                chancounter = 0;
+                nselectedchan = 0;
+                for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
+                    frq += freqs(k);
+                    chancounter++;
+                    if (chancounter == avgchan) {
+                       sfreq(nselectedchan) = frq / avgchan;   
+                       nselectedchan++;
+                       chancounter = 0;
+                       frq = 0;
+                    }
+                }
+                os << LogIO::DEBUG2 << "\nsfreq=" << sfreq 
+                   << LogIO::POST;
+                (*iffreq)(inx) = sfreq(refPixelFreq - 1) - refFreq;
             }
             if (freqs.nelements() > 1) {
-                if (doWsrt) {
+                if (telescopeName == "ALMA") {
+                    if (freqs(1) < freqs(0)) {
+                        (*ifwidth)(inx) = -abs(chanbw);
+                    } else {
+                        (*ifwidth)(inx) = abs(chanbw);
+                    }
+                } else if (doWsrt) {
                     (*ifwidth)(inx) = abs(chanbw);
                 } else {
                     (*ifwidth)(inx) = (chanbw);
@@ -1408,7 +1454,7 @@ Bool MSFitsOutput::writeFQ(FitsOutput *output, const MeasurementSet &ms,
                 (*ifwidth)(inx) = intotbw(i);
             }
             (*totbw)(inx) = intotbw(i);
-            if (doWsrt) {
+            if (doWsrt || telescopeName == "ALMA") {
                 if (freqs(1) < freqs(0)) {
                     (*sideband)(inx) = -1;
                 } else {
