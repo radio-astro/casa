@@ -151,8 +151,8 @@ Vector<MDirection> AnnCenterBox::getCorners() const {
 
 ostream& AnnCenterBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "centerbox [[" << _inpXCenter << ", " << _inpYCenter << "], ["
-		<< _inpXWidth << ", " << _inpYWidth << "]]";
+	os << "centerbox [[" << _printDirection(_inpXCenter, _inpYCenter) << "], ["
+		<< _toArcsec(_inpXWidth) << ", " << _toArcsec(_inpYWidth) << "]]";
 	_printPairs(os);
 	return os;
 }

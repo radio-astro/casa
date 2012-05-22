@@ -28,6 +28,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/EnvVar.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 #include <casa/namespace.h>
 
@@ -57,7 +58,9 @@ int main() {
 		String goodFile = parts[0]
 		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile.txt";
 		String goodFile2 = parts[0]
-				    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile2.txt";
+		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile2.txt";
+		String goodFile3 = parts[0]
+		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile3.txt";
 		delete [] parts;
 
 		RegionTextParser parser(
@@ -76,6 +79,32 @@ int main() {
 
 		cout << parser2.getLines().size() << endl;
 		AlwaysAssert(parser2.getLines().size() == 34, AipsError);
+
+		csys = CoordinateUtil::defaultCoords4D();
+		SpectralCoordinate sp = csys.spectralCoordinate();
+		cout << sp.referenceValue() << " "
+			<< sp.worldAxisUnits() << endl;
+
+		Double world, vel;
+		sp.toWorld(world, 1);
+		cout << "*** restfreq " << sp.restFrequencies() << endl;
+		sp.frequencyToVelocity(vel, world);
+		cout << "*** min " << world << endl;
+		cout << "*** min " << vel << endl;
+
+		sp.toWorld(world, 1998);
+		sp.frequencyToVelocity(vel, world);
+
+		cout << "*** max " << world << endl;
+		cout << "*** max " << vel << endl;
+
+		RegionTextParser parser3(
+			goodFile3, csys, IPosition(4, 200, 200, 4, 2000),
+			RegionTextParser::CURRENT_VERSION
+		);
+		for (uInt i=0; i<parser3.getLines().size(); i++) {
+			cout << parser3.getLines()[i] << endl;
+		}
 
 
     }

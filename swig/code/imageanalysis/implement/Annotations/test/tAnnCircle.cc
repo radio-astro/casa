@@ -114,7 +114,7 @@ int main () {
 			AlwaysAssert(thrown, AipsError);
 		}
 		{
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.02, "deg");
 			Quantity radius(30, "arcmin");
 			Quantity beginFreq, endFreq;
@@ -137,6 +137,7 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			cout << circle << endl;
 			/*
 			vector<Quantity> blc, trc;
 			circle.worldBoundingBox(blc, trc);

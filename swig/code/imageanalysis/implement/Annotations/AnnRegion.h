@@ -63,18 +63,6 @@ public:
 	// is this region an annotation only? ie just for graphical rendering?
 	Bool isAnnotationOnly() const;
 
-	// if freqRefFrame=="" -> use the reference frame of the coordinate system
-	// if dopplerString=="" -> use the doppler system associated with the coordinate system
-	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
-	// Tacitly does nothing if the coordinate system has no spectral axis
-	void setFrequencyLimits(
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame="",
-		const String& dopplerString="",
-		const Quantity& restfreq=Quantity(0, "Hz")
-	);
-
 	Vector<MFrequency> getFrequencyLimits() const;
 
 	Vector<Stokes::StokesTypes> getStokes() const;
@@ -157,6 +145,8 @@ protected:
 	// defined in the direction plane
 	void _setDirectionRegion(const ImageRegion& region);
 
+	//void _printPairs(ostream& os) const;
+
 private:
 
 	Bool _isAnnotationOnly;
@@ -170,6 +160,18 @@ private:
 	IPosition _imShape;
 	static const String _class;
 
+	// if freqRefFrame=="" -> use the reference frame of the coordinate system
+	// if dopplerString=="" -> use the doppler system associated with the coordinate system
+	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// Tacitly does nothing if the coordinate system has no spectral axis
+	void _setFrequencyLimits(
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq
+	);
+
 	WCBox _makeExtensionBox(
 		const Vector<Quantity>& freqRange,
 		const Vector<Stokes::StokesTypes>& stokesRange,
@@ -178,7 +180,11 @@ private:
 
 	void _checkAndConvertFrequencies();
 
-	void _init() const;
+	void _init();
+
+	String _printFreqRange() const;
+
+	static String _printFreq(const Quantity& freq);
 };
 
 // Just need a identifable expection class, compiler can generate implementation implicitly
