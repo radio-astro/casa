@@ -493,8 +493,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 Int istart=0;
          Int istep=1;
          Int iwidth=width;
-         if (spwS==String(""))
-             spwS="0";
+         //if (spwS==String(""))
+         //    spwS="0";
 	 Record selrec;
          try {
              selrec=itsMS->msseltoindex(spwS, fieldS);
