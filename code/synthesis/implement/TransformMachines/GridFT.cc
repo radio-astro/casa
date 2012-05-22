@@ -749,7 +749,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvischan;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow)
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)
   {
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
@@ -1021,7 +1021,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvc;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) 
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)
   {
 #pragma omp for
   for (irow=startRow; irow<=endRow; ++irow){
