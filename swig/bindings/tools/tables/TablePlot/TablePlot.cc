@@ -227,7 +227,6 @@ Bool TablePlot::setupTP()
 TablePlot::~TablePlot()
 {
    log->FnEnter( "~TabplePlot()", clname);
-   cerr << "Deleting TablePlot" << endl;
 
    //// This is a singleton class - and once created, it will get deleted when
    //// the process is exited from ( i.e. ctrl-D to exit from casapy )
