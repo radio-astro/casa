@@ -33,6 +33,135 @@ using namespace casa::async;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// <summary>
+// A top level class defining the interface for flagging agents
+// </summary>
+//
+// <use visibility=export>
+//
+// <prerequisite>
+//   <li> <linkto class="VisBuffer:description">FlagDataHandler</linkto>
+//   <li> <linkto class="VisBuffer:description">FlagReport</linkto>
+// </prerequisite>
+//
+// <etymology>
+// FlagAgentBase stands for a generic class, specific to the flagging operations
+// </etymology>
+//
+// <synopsis>
+//
+// This is a top-level class defining the interface for flagging agents.
+// There are various methods (virtual) that must be re-implemented by the specific derived
+// classes, depending on the implemented algorithm. Here we find three categories:
+//
+// - Iteration approach methods:
+//
+//   - computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+//     - For agents that only depend on meta-data for their flagging operations (for FlagAgentManual,FlagAgentElevation,FlagAgentShadow,FlagAgentQuack)
+//     - This iteration method can also be used by agents that have to inspect the already existing flags (for FlagAgentSummary, FlagAgentExtension)
+//
+//   - computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+//     - For agents that have to look into the visibility points, but regardless of their source baseline, like FlagAgentDisplay
+//
+//   - computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+//     - For agents that have to look into the visibility points grouped by baseline (FlagAgentTimeFreqCrop,FlagAgentRFlag)
+//
+//   - computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+//     - For agents that have to look into the visibility points grouped by baseline, allowing user-driven navigation (FlagAgentDisplay)
+//     - NOTE: This method has to be used in combination with iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+//
+// - Configuration methods:
+//
+//   - FlagAgentBase::FlagAgentBase
+//     - Even though each derived agent has its specific constructor, it is necessary to call the base class constructor to set:
+//       - The FlagDataHandler implementation pointer
+//       - The iteration approach: For this the FlagAgentBase class contains an enumeration FlagAgentBase::iteration with the following modes:
+//         - FlagAgentBase::ROWS: Iterate row by row and flag depending on the corresponding meta-data (for FlagAgentManual,FlagAgentQuack)
+//         - FlagAgentBase::ROWS_PREPROCESS_BUFFER: Iterate row by row doing a pre-processing common to all the rows of each chunk (for FlagAgentElevation, FlagAgentShadow, FlagAgentSummary)
+//         - FlagAgentBase::IN_ROWS: Iterate row by row and flag depending on the data column (for FlagAgentClipping)
+//         - FlagAgentBase::ANTENNA_PAIRS: Iterate per baselines and flag depending on the data column (for FlagAgentTimeFreqCrop, FlagAgentRFlag)
+//         - FlagAgentBase::ANTENNA_PAIRS_FLAGS: Iterate per baselines accessing the individual flag points (for  FlagAgentExtension)
+//         - FlagAgentBase::ANTENNA_PAIRS_INTERACTIVE: Iterate per baselines interactively accessing the data column (for FlagAgentDisplay)
+//
+//   - setAgentParameters(Record config)
+//     - To parse the agent-specific parameters, although there is also an implementation of
+//       this method in the base class which has to be called to handle the following parameters:
+//        - datacolumn: To specify the column in which the agent has to operate (see FlagAgentBase::datacolumn enumeration)
+//        - correlation: To specify the correlation to be inspected for flagging (this also includes visibility expressions)
+//        - meta-data selection parameters (field, spw, scan, baseline, etc): To feed the agent-level data selection engine (row filtering)
+//
+// - Information methods
+//
+//   - FlagReport getReport()
+//     - To return a specific report to be shown by the display agent, or containing accumulated information (e.g.: summaries, rflag tresholds)
+//
+// Additionally there are public non-virtual methods to:
+//
+// - Handle processing in 'background' mode (for parallel flagging)
+//   - start(): Start service (start thread run method)
+//   - terminate(): Terminate service (forcing run method to finish)
+//   - queueProcess(): To signal flagging of the current VisBuffer
+//   - completeProcess(): Wait until completion of flagging process for the current VisBuffer
+//
+// - Print out percentage of flags produced by chunk or in total
+//   - chunkSummary(): Accumulates statistics for each chunk
+//   - tableSummary(): Accumulates statistics across the entire table selection
+//
+// </synopsis>
+//
+// <motivation>
+// The motivation for the FlagAgentBase class is having all the iteration and filtering capabilities
+// grouped in one single class, with a common interface for all the agents w/o introducing anything
+// specific to the implementation of each algorithm, thus improving modularization and maintainability.
+// </motivation>
+//
+//
+// <example>
+// The top level interface of a flagging agent is quite simple once it is configured, this is due to
+// the fact that most of the complexity lies in the FlagDataHandler-FlagAgentBase interaction,
+// which is hidden from the application layer (already explained in the FlagDataHandler documentation).
+//
+// <srcblock>
+//
+// // Create FlagDataHandler
+// FlagDataHandler *dh = new FlagMSHandler(inputFile,iterationMode);
+//
+// // First of all define a configuration record (e.g.: quack)
+// Record agentConfig;
+// agentConfig.define("mode","quack");
+// agentConfig.define("quackinterval",(Double)20);
+//
+// // Use the factory method to create the agent, and put it into a FlagAgentList
+// FlagAgentList agentList;
+// FlagAgentBase *agent = FlagAgentBase::create(dh,agentConfig);
+// agentList.push_back(agent);
+//
+// // Iterate over chunks
+// while (dh->nextChunk())
+// {
+//    // Iterates over buffers
+//	  while (dh->nextBuffer())
+//    {
+//       // Apply agents on current VisBuffer
+//       agentList.apply();
+//
+//       // Flush flags (only effective if there is a write access to the flag cube)
+//       dh->flushFlags();
+//    }
+//
+//	// Print chunk stats from each agent
+//	agentList.chunkSummary();
+// }
+//
+// // Print total stats from each agent
+// agentList.tableSummary();
+//
+// // Stop flag agent
+// agentList.terminate();
+//
+// </srcblock>
+// </example>
+
 
 class FlagAgentBase : public casa::async::Thread {
 
