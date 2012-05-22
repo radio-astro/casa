@@ -395,7 +395,15 @@ std::vector<std::string> calanalysis::antenna2( const bool name ) {
   std::vector<std::string> antenna2( uiNumAntenna2 );
 
   for ( uInt a2=0; a2<uiNumAntenna2; a2++ ) {
-    antenna2[a2] = antenna[oAntenna2[a2]];
+    if ( oAntenna2[a2] != -1 ) {
+      antenna2[a2] = antenna[oAntenna2[a2]];
+    } else {
+      if ( name ) {
+        antenna2[a2] = std::string( "NoName" );
+      } else {
+        antenna2[a2] = std::string( "-1" );
+      }
+    }
   }
 
   return( antenna2 );
@@ -1056,7 +1064,11 @@ Bool calanalysis::parseAntenna( const ::casac::variant& antenna,
     convertArray<uInt,Int>( oAntenna1, oAntenna1Temp );
 
     oAntenna2.resize();
-    oAntenna2 = oMSS.getAntenna2List();
+    if ( poCA->antenna2()[0] != -1 ) {
+      oAntenna2 = oMSS.getAntenna2List();
+    } else {
+      oAntenna2 = Vector<Int>( 1, -1 );
+    }
 
   }
 
