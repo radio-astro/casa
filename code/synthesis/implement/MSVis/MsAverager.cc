@@ -46,6 +46,12 @@
 
 #define LOG2 0
 
+#if LOG2
+#define IfLog2(x) x
+#else
+#define IfLog2(x) /*x*/
+#endif
+
 namespace casa { 
 
 const String MsAverager::clname = "MsAverager";
@@ -1116,8 +1122,8 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
    return;
 }
 
-void MsAverager::putAveBuffer(Double bufTime, Int bufField, Int bufScan,
-                              Int bufArray, VisBuffer& aveBuff, Int nTime) {
+void MsAverager::putAveBuffer(Double IfLog2 (bufTime), Int IfLog2 (bufField), Int IfLog2 (bufScan),
+                              Int IfLog2 (bufArray), VisBuffer& aveBuff, Int nTime) {
 #if LOG2
    cout << " putAveBuffer: bufTime=" << bufTime
         << " bufField=" << bufField
@@ -1220,7 +1226,7 @@ void MsAverager::showColumnNames() {
    //MODEL_DATA, CORRECTED_DATA
 }
 
-void MsAverager::showAveMap(Matrix<Int> &rMap, Matrix<Int> &cMap) {
+void MsAverager::showAveMap(Matrix<Int> &/*rMap*/, Matrix<Int> &/*cMap*/) {
    //cout << "aveRowMap=" << std::setprecision(8) << rMap;
    //cout << "aveChanMap=" << std::setprecision(12) << cMap;
 }
@@ -1323,7 +1329,7 @@ void MsAverager::getXY(Vector<Double>& x, casa::Vector<Double>& y,
 }
 
 void MsAverager::initAveBuffer(Double bufTime, 
-                               VisBuffer& aveBuff, Int nAnt, Int nChan)
+                               VisBuffer& aveBuff, Int /*nAnt*/, Int nChan)
 {
 
   

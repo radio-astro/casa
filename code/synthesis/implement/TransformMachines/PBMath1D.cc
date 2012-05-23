@@ -620,7 +620,7 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 		const MDirection& pointDir,
 		const Quantity parAngle,
 		const BeamSquint::SquintType doSquint,
-		Float cutoff, const Int ipower)
+		Float /*cutoff*/, const Int ipower)
 {
   LogIO os(LogOrigin("PBMath1D", "apply"));
  
@@ -837,7 +837,7 @@ PBMath1D::apply(SkyComponent& in,
 		Bool conjugate,
 		Int iPower,
 		Float cutoff,
-		Bool forward) 
+		Bool /*forward*/)
 {
   // if ( doSquint == NONE ) we can deal with any polarisation representation
   // if ( doSquint == GOFIGURE) an exception is thrown if polarisation is not CIRCULAR
