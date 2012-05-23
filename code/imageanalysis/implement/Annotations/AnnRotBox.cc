@@ -142,10 +142,12 @@ void AnnRotBox::pixelCorners(vector<Double>& x, vector<Double>& y) const {
 
 ostream& AnnRotBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "rotbox [[" << _inputCenter[0].first << ", "
-		<< _inputCenter[0].second << "], [" << _inputWidths[0]
-		<< ", " << _inputWidths[1] << "], "
-		<< _positionAngle << "]";
+	os << "rotbox [["
+		<< _printDirection(_inputCenter[0].first, _inputCenter[0].second)
+		<< "], ["
+		<< _toArcsec(_inputWidths[0]) << ", "
+		<< _toArcsec(_inputWidths[1]) << "], "
+		<< _toDeg(_positionAngle) << "]";
 	_printPairs(os);
 	return os;
 }

@@ -572,11 +572,6 @@ private:
 // so that no specific specific table type implementation has to be done at the FlagAgent level.
 // </motivation>
 //
-// <todo>
-// CAS-3855: Allow specific ntime per flagging agent when running in list mode
-// CAS-3856: Improve handling of ALMA WVR data when using auto-flagging algorithms
-// </todo>
-//
 // <example>
 // <srcblock>
 //
@@ -613,6 +608,66 @@ private:
 // {
 //    fdh_p = new FlagCalTableHandler(msname_p, FlagDataHandler::COMPLETE_SCAN_UNMAPPED, timeInterval_p);
 // }
+//
+// // NOTE: It is also possible to independently set the iteration approach via the setIterationApproach
+// //       method which accepts the following modes, defined in the FlagDataHandler iteration enumeration
+// //
+// //       COMPLETE_SCAN_MAPPED:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
+// //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
+// //       COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       * Don't generate baseline maps
+// //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
+// //       COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
+// //       * Don't generate sub-integration maps
+// //       COMPLETE_SCAN_UNMAPPED:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       * Don't generate baseline maps
+// //       * Don't generate sub-integration maps
+// //       COMBINE_SCANS_MAPPED:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
+// //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
+// //       COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       * Don't generate baseline maps
+// //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
+// //       COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
+// //       * Don't generate sub-integration maps
+// //       COMBINE_SCANS_UNMAPPED:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       * Don't generate baseline maps
+// //       * Don't generate sub-integration maps
+// //       ANTENNA_PAIR:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, ANTENNA1, ANTENNA2, DATA_DESC_ID and TIME
+// //       - Group all time steps together, so that there is no sub-chunk iteration
+// //       * Don't generate baseline maps (they are not necessary because the chunks have constant ANTENNA1,ANTENNA2)
+// //       * Don't generate sub-integration maps
+// //       SUB_INTEGRATION:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Don't group all time steps together, so it is necessary to add an inner sub-chunk iteration loop
+// //       * Don't generate baseline maps (it is not possible because not all the rows corresponding to a given baseline are available)
+// //       * Don't generate sub-integration maps (they are not necessary because the sub-chunks have constant TIME)
+// //       ARRAY_FIELD:
+// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - Don't group all time steps together, so it is necessary to add an inner sub-chunk iteration loop
+// //       * Don't generate baseline maps (it is not possible because not all the rows corresponding to a given baseline are available)
+// //       * Don't generate sub-integration maps (they are not necessary because the sub-chunks have constant TIME)
+// //       * NOTE: This is the iteration approach used by the old flagger framework
 //
 // // Open table
 // fdh_p->open();
@@ -716,10 +771,16 @@ private:
 //      myAntennaPairMapIterator != flagDataHandler_p->getAntennaPairMap()->end();
 //      ++myAntennaPairMapIterator)
 // {
+//    // NOTE: The following code is also encapsulated in the FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2) code
+//
+//    // From the antenna map we can retrieve the rows corresponding to the baseline defined by the antenna pair
 //    vector<uInt> baselineRows = (*flagDataHandler_p->getAntennaPairMap())[std::make_pair(antennaPair.first,antennaPair.second)];
-//    // NOTE: This rows can be now inserted in the mapper classes
-//    //       (VisMapper and FlagMapper using the CubeView<T> template class)
-//    //       For further information check the FlagAgentBase documentation
+//
+//    // This rows can be now inserted in the mapper classes (VisMapper and FlagMapper using the CubeView<T> template class)
+//    VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
+//    FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
+//    setVisibilitiesMap(antennaRows,&visibilitiesMap);
+//    setFlagsMap(antennaRows,&flagsMap);
 // }
 //
 // // Finally, after flagging time, the FlagAgent can communicate to the FlagDataHandler
@@ -842,6 +903,7 @@ public:
 	casa::asyncio::PrefetchColumns prefetchColumns_p;
 	// Iteration counters
 	uLong maxChunkRows;
+	uLong processedRows;
 	uShort chunkNo;
 	uShort bufferNo;
 

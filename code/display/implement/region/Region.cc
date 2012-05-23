@@ -36,6 +36,7 @@
 
 #include <images/Images/ImageStatistics.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
+#include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
 
@@ -48,11 +49,22 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 namespace casa {
     namespace viewer {
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true) {
+	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false) {
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	    // }
+	}
+
+	bool Region::degenerate( ) const {
+	    // incomplete regions can not yet be found to be degenerate...
+	    if ( complete == false ) return false;
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    double pblcx, pblcy, ptrcx, ptrcy;
+	    linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy );
+	    // non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
+	    return (ptrcx - pblcx) < 1 && (ptrcy - pblcy) < 1;
 	}
 
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }
@@ -141,9 +153,27 @@ namespace casa {
 	    pc->callRefreshEventHandlers(Display::BackCopiedToFront);
 	}
 
-	void Region::draw( bool other_selected ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
+	bool Region::within_drawing_area( ) {
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    int sblcx, sblcy, strcx, strcy;
+	    linear_to_screen( wc_, blcx, blcy, trcx, trcy, sblcx, sblcy, strcx, strcy );
+	    return wc_->inDrawArea(sblcx,sblcy) && wc_->inDrawArea(strcx,strcy);
+	}
+
+	void Region::draw( bool other_selected ) {
+	    visible_ = true;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) {
+		visible_ = false;
+		return;
+	    }
+
+	    if ( ! within_drawing_area( ) ) {
+		visible_ = false;
+		return;
+	    }
+	    
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	    int new_z_index = wc_->zIndex( );
@@ -227,10 +257,12 @@ namespace casa {
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
 	    std::list<RegionInfo> *info = generate_dds_statistics( );
 	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+		if (memory::nullptr.check(stats))
+		  continue;
 		fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
 			 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
 			 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
-		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
 		size_t width = 0;
 		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
 		    size_t w = (*stats_iter).first.size( );

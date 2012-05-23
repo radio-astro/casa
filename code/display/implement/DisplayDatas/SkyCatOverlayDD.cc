@@ -37,6 +37,7 @@
 #include <casa/Utilities/Regex.h>
 #include <display/DisplayDatas/SkyCatOverlayDD.h>
 #include <display/DisplayDatas/SkyCatOverlayDM.h>
+#include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <display/Display/WorldCanvas.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -412,7 +413,7 @@ void SkyCatOverlayDD::constructParameters() {
 
   vstring.resize();
   itsParamCharacterSize 
-    = new DParameterRange<Float>("labelcharsize", "Character size",
+    = new DParameterRange<Float>(WCAxisLabeller::LABEL_CHAR_SIZE, "Character size",
 			       "Select the font size for text",
 			       0.0, 4.0, 0.05, 0.8, 0.8,
 			       "Label_properties");

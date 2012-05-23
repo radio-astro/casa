@@ -821,7 +821,7 @@ IPosition MSMoments<T>::getShape()
 }
 
 template<class T>
-Bool MSMoments<T>::smoothData (PtrHolder<MeasurementSet> &pSmoothedMS,
+Bool MSMoments<T>::smoothData (PtrHolder<MeasurementSet> & /*pSmoothedMS*/,
                                String& smoothName)
 {
   Int axMax = max( smoothAxes_p ) + 1 ;
@@ -848,8 +848,8 @@ Bool MSMoments<T>::smoothData (PtrHolder<MeasurementSet> &pSmoothedMS,
 }
 
 template<class T>
-Bool MSMoments<T>::whatIsTheNoise (T& noise,
-                                   MeasurementSet &ms)
+Bool MSMoments<T>::whatIsTheNoise (T& /*noise*/,
+                                   MeasurementSet & /*ms*/)
 {
   return True ;
 }

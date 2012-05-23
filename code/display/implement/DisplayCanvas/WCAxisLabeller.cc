@@ -42,6 +42,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String WCAxisLabeller::LABEL_CHAR_SIZE = "labelcharsize";
+
 WCAxisLabeller::WCAxisLabeller() {
   // set defaults from .aipsrc, if they exist there.
   // Otherwise, use the hard-coded values below as defaults.
@@ -128,7 +130,7 @@ Bool WCAxisLabeller::setOptions(const Record &rec, Record &)
   localchange = (readOptionRecord(itsOptionsLabelPos, error,
 					rec, "labelposition") || localchange);
   localchange = (readOptionRecord(itsOptionsCharSize, error,
-					rec, "labelcharsize") || localchange);
+					rec, LABEL_CHAR_SIZE) || localchange);
   localchange = (readOptionRecord(itsOptionsCharFont, error,
 					rec, "labelcharfont") || localchange);
   localchange = (readOptionRecord(itsOptionsLineWidth, error,
@@ -336,7 +338,7 @@ Record WCAxisLabeller::getOptions() const
   rec.defineRecord("labelposition", labelposition);
 
   Record labelcharsize;
-  labelcharsize.define("dlformat", "labelcharsize");
+  labelcharsize.define("dlformat", LABEL_CHAR_SIZE );
   labelcharsize.define("listname", "character size");
   labelcharsize.define("ptype", "floatrange");
   labelcharsize.define("pmin", Float(0.2));
@@ -346,7 +348,7 @@ Record WCAxisLabeller::getOptions() const
   labelcharsize.define("value", itsOptionsCharSize);
   labelcharsize.define("allowunset", False);
   labelcharsize.define("context", "axis_label_properties");
-  rec.defineRecord("labelcharsize", labelcharsize);
+  rec.defineRecord(LABEL_CHAR_SIZE, labelcharsize);
   
   Record labelcharfont;
   labelcharfont.define("dlformat", "labelcharfont");

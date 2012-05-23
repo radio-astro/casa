@@ -64,9 +64,11 @@ import casa
 
 # Modification history:
 # ---------------------
-# 2011 Jan 30 - Nick Elias, NRAO
+# 2012 Jan 30 - Nick Elias, NRAO
 #               Initial version.
-
+# 2012 Mar 26 - gmoellen: fixed header information
+# 2012 May 09 - gmoellen: added proper cal_desc_id->spw_id conversion
+#
 # ------------------------------------------------------------------------------
 
 def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
@@ -92,9 +94,13 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 
 	tbOld = casa.__tablehome__.create()
 	tbOld.open( caltabold )
-
 	nRow = tbOld.nrows()
 
+	# Get spwid map from old CAL_DESC subtable
+	tbCD = casa.__tablehome__.create()
+	tbCD.open( caltabold+'/CAL_DESC' )
+	spwmap=tbCD.getcol('SPECTRAL_WINDOW_ID')[0,:]
+	tbCD.close()
 
   	# Create the empty new-format caltable with the correct number of rows
 
@@ -115,7 +121,8 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 	tbNew.putcol( 'FLAG', tbOld.getcol( 'FLAG' ) )
 	tbNew.putcol( 'INTERVAL', tbOld.getcol( 'INTERVAL' ) )
 	tbNew.putcol( 'SNR', tbOld.getcol( 'SNR' ) )
-	tbNew.putcol( 'SPECTRAL_WINDOW_ID', tbOld.getcol( 'CAL_DESC_ID' ) )
+	# Map CAL_DESC_ID to SPECTRAL_WINDOW_ID:
+	tbNew.putcol( 'SPECTRAL_WINDOW_ID', spwmap[tbOld.getcol( 'CAL_DESC_ID' )] )
 	tbNew.putcol( 'TIME', tbOld.getcol( 'TIME' ) )
 	tbNew.putcol( 'WEIGHT', tbOld.getcol( 'FIT_WEIGHT' ) )
 

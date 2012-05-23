@@ -9,7 +9,6 @@ def startup():
     help taskname          - Full help for task
     toolhelp               - One line summary of available tools
     help par.parametername - Full help for parameter name
-    Single Dish sd* tasks are available after asap_init() is run   
 ___________________________________________________________________"""
 
 def taskhelp(scrap=None):
@@ -33,6 +32,7 @@ def toolhelp():
     print ' '
     print 'Available tools: \n'
     print ' at : Juan Pardo ATM library'
+    print ' ca : Calibration analysis utilities'
     print ' cb : Calibration utilities'
     print ' cl : Component list utilities'
     print ' cp : Cal solution plotting utilities'
@@ -45,15 +45,15 @@ def toolhelp():
     print ' me : Measures utilities'
     print ' ms : MeasurementSet (MS) utilties'
     print ' mp : MS plotting (data (amp/phase) versus other quantities)'
+    print ' qa : Quanta utilities'
     print ' pm : PlotMS utilities'
     print ' po : Imagepol utilities'
     print ' rg : Region manipulation utilities'
-    print ' tb : Table utilities (selection, extraction, etc)'
-    print ' tp : Table plotting utilities'
-    print ' qa : Quanta utilities'
     print ' sl : Spectral line import and search'
-    print ' tf : Test flagger utilities'
     print ' sm : Simulation utilities'
+    print ' tb : Table utilities (selection, extraction, etc)'
+    print ' tf : Test flagger utilities'
+    print ' tp : Table plotting utilities'
     print ' vp : Voltage pattern/primary beam utilties'
     print ' ---'
     print ' pl : pylab functions (e.g., pl.title, etc)'
@@ -64,7 +64,6 @@ def tasklist():
     """ List tasks, organized by catagory """
     print 'Available tasks, organized by category (experimental tasks in parens ()'
     print '  deprecated tasks in curly brackets {}).'
-    print '  Single Dish sd* tasks are available after asap_init() is run. '
     print ''
     for i in range(0,3):
         col1 = thecats[i*4]

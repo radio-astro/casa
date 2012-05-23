@@ -177,8 +177,8 @@ class test_rflag(test_base):
         '''tflagdata:: Test1 of mode = rflag : automatic thresholds'''
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[]);
         res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 42866)
-        self.assertEqual(res['antenna']['ea19']['flagged'], 18581)
+        self.assertEqual(res['flagged'], 42728.0)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 18411.0)
         self.assertEqual(res['spw']['7']['flagged'], 0)
 
     def test_rflag2(self):
@@ -209,7 +209,7 @@ class test_rflag(test_base):
 
         #print res1['flagged'], res2['flagged']
         self.assertEqual(res1['flagged'],res2['flagged']);
-        self.assertEqual(res1['flagged'], 39665)
+        self.assertEqual(res1['flagged'], 39504.0,)
 
 
 class test_shadow(test_base):
@@ -619,11 +619,9 @@ class test_selections(test_base):
     def test_scan(self):
         '''tflagdata: scan selection and manualflag compatibility'''
         tflagdata(vis=self.vis, scan='3', mode='manualflag', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 52416)
-        
-        # feed not implemented flagdata(vis=vis, feed='27')
-        # flagdata(vis=vis, unflag=True)
-
+        res = tflagdata(vis=self.vis, mode='summary', antenna='2')
+        self.assertEqual(res['flagged'],52416)
+                
     def test_antenna(self):
         '''tflagdata: antenna selection'''
         tflagdata(vis=self.vis, antenna='2', savepars=False)
@@ -718,7 +716,8 @@ class test_selections_alma(test_base):
 
     def test_spw(self):
         '''tflagdata: flag various spw'''
-        tflagdata(vis=self.vis, mode='manual', spw='1,3,4', savepars=False)
+        # Test that a white space in the spw parameter is taken correctly
+        tflagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
@@ -868,7 +867,8 @@ class test_list(test_base):
         # Delete any rows from FLAG_CMD
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
-        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='', 
+        # Test that action='none' is also accepted
+        tflagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='none', 
                  savepars=True)
         
         flagcmd(vis=self.vis, action='apply')

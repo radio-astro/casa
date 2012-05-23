@@ -80,8 +80,9 @@ Quantity AnnCircle::getRadius() const {
 
 ostream& AnnCircle::print(ostream &os) const {
 	_printPrefix(os);
-	os << "circle [[" << _inputCenter[0].first << ", "
-		<< _inputCenter[0].second << "], " << _inputRadius << "]";
+	os << "circle [["
+		<< _printDirection(_inputCenter[0].first, _inputCenter[0].second)
+		<< "], " << _toArcsec(_inputRadius) << "]";
 	_printPairs(os);
 	return os;
 }

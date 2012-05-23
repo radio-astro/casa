@@ -46,7 +46,7 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
+//#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -73,6 +73,7 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 namespace casa { 
 
 class QtProfilePrefs;
+class SpectralFitter;
 
 class QtProfile : public QMainWindow, Ui::QtProfileGUI
 {
@@ -154,6 +155,7 @@ public slots:
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 	void doImgCollapse();
 	void doLineFit();
+	void specLineFit();
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
 	void emitChannelSelect(float xval);
@@ -185,8 +187,14 @@ private:
    void messageFromProfile(QString &msg);
    void setCollapseVals(const Vector<Float> &spcVals);
 
-
+   /**
+    * Initializes the spectrum positioning tab.
+    */
    void initSpectrumPosition();
+   /**
+    * Initializes the spectrum fitting tab.
+    */
+   void initSpectrumFitting();
    void setTitle( const QString& shape );
    void copyToLastEvent( const String& c, const Vector<Double> &px,
    	    		const Vector<Double> &py,

@@ -369,8 +369,14 @@ class CalStats {
 // Start of ARG<T> specialized class templates
 // -----------------------------------------------------------------------------
 
+// Specialization for the CalStats::NONE() class.  It tells the
+// CalStats::stats<CalStats::NONE>() method just to return the data with no
+// processing.
 template <> class CalStats::ARG<CalStats::NONE> {};
 
+// Specialization for the CalStatsFitter::FIT() class.  It tells the
+// CalStats::stats<CalStatsFitter::FIT>() method to perform fits and return the
+// data and fit parameters.
 template <> class CalStats::ARG<CalStatsFitter::FIT> {
   public:
     CalStatsFitter::ORDER eOrder;
@@ -501,17 +507,20 @@ Matrix<CalStats::OUT<T> >& CalStats::stats( const CalStats::ARG<T>& oArg ) {
     oOut.oData.oAbs = Vector<Double>( oAbs );
     oOut.oData.oValue = Vector<Double>( oValue );
     oOut.oData.oValueErr = Vector<Double>( oValueErr );
-    oOut.oData.oFlag = Vector<Bool>( oFlag );
 
     try {
       oOut.oT = statsWrap<T>( oAbs, oValue, oValueErr, oFlag, oArg );
     }
+
     catch ( AipsError oAE ) {
       LogIO log( LogOrigin( "CalStats", "stats<T>()", WHERE ) );
       log << LogIO::WARN << oAE.getMesg() << ", iteration: "
           << oPos.asVector() << ", continuing ..." << LogIO::POST;
       oOut.oT = T();
     }
+
+    // The flag output vector is set here because robust fitting can change them
+    oOut.oData.oFlag = Vector<Bool>( oFlag );
 
     oOutIter.array() = Vector<CalStats::OUT<T> >( 1, oOut );
 

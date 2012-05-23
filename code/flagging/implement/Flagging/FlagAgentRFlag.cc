@@ -116,6 +116,51 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 
 	*logger_p << logLevel_p << " spectralmin is " << spectralmin_p << LogIO::POST;
 
+	// AIPS RFlag OPTYPE (type of operation for spectral analysis)
+	String optype("MEDIAN");
+	optype_p = MEDIAN;
+	spectralAnalysis_p = &FlagAgentRFlag::simpleMedian;
+	exists = config.fieldNumber ("optype");
+	if (exists >= 0)
+	{
+		if( config.type(exists) != TpString )
+		{
+			throw( AipsError ( "Parameter 'optype' must be of type 'string'" ) );
+		}
+
+		optype = config.asString("optype");
+		optype.upcase();
+
+		if (optype == String("MEDIAN"))
+		{
+			optype_p = MEDIAN;
+			spectralAnalysis_p = &FlagAgentRFlag::simpleMedian;
+			*logger_p << LogIO::NORMAL << " optype for spectral analysis is simple median" << LogIO::POST;
+		}
+		else if (optype == String("RMEDIAN"))
+		{
+			optype_p = ROBUST_MEDIAN;
+			*logger_p << LogIO::NORMAL << " optype for spectral analysis is robust median" << LogIO::POST;
+		}
+		else if (optype == String("MEAN"))
+		{
+			optype_p = MEAN;
+			*logger_p << LogIO::NORMAL << " optype for spectral analysis is simple mean" << LogIO::POST;
+		}
+		else if (optype == String("RMEAN"))
+		{
+			optype_p = ROBUST_MEAN;
+			spectralAnalysis_p = &FlagAgentRFlag::robustMean;
+			*logger_p << LogIO::NORMAL << " optype for spectral analysis is robust mean" << LogIO::POST;
+		}
+		else
+		{
+			optype_p = MEDIAN;
+			spectralAnalysis_p = &FlagAgentRFlag::simpleMedian;
+			*logger_p << LogIO::NORMAL << " optype for spectral analysis is simple median" << LogIO::POST;
+		}
+	}
+
 	// AIPS RFlag FPARM(9)
 	exists = config.fieldNumber ("timedevscale");
 	if (exists >= 0)
@@ -170,13 +215,17 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 	exists = config.fieldNumber ("writeflags");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpBool )
-	        {
-			 throw( AipsError ( "Parameter 'writeflags' must be of type 'bool'" ) );
-	        }
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'writeflags' must be of type 'bool'" ) );
+		}
 		
 		writeflags = config.asBool("writeflags");
 		*logger_p << LogIO::NORMAL << " writeflags is: " << writeflags << LogIO::POST;
+	}
+	else if (display == String("report"))
+	{
+		writeflags = False;
 	}
 
 	if( (writeflags == True) or (display == String("data")) or (display == String("both")) )
@@ -311,6 +360,16 @@ Double FlagAgentRFlag::mean(vector<Double> &data,vector<Double> &counts)
 	}
 
 	return avg;
+}
+
+void FlagAgentRFlag::noiseVsRef(vector<Double> &data, Double ref)
+{
+	for (size_t index = 0; index < data.size();index++)
+	{
+		data[index] -= ref;
+	}
+
+	return;
 }
 
 Double FlagAgentRFlag::median(vector<Double> &data)
@@ -448,7 +507,6 @@ FlagReport FlagAgentRFlag::getReport()
 
 	return totalRep;
 }
-
 
 FlagReport FlagAgentRFlag::getReportCore(	map< pair<Int,Int>,vector<Double> > &data,
 											map< pair<Int,Int>,vector<Double> > &dataSquared,
@@ -713,71 +771,18 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 		{
 			for (uInt pol_k=0;pol_k<(uInt) nPols;pol_k++)
 			{
-				// NOTE: To apply the robust coefficients we need some initial values of avg/std
-				//       In AIPS they simply use Std=1000 for the first iteration
-				//       I'm not very convinced with this but if we have to cross-validate...
-				AverageReal = 0;
-				AverageImag = 0;
-				StdReal = 1000.0;
-				StdImag = 1000.0;
 
-				for (uInt robustIter=0;robustIter<nIterationsRobust_p;robustIter++)
-				{
-					SumWeightReal = 0;
-					SumWeightImag = 0;
-					SumReal = 0;
-					SumRealSquare = 0;
-					SumImag = 0;
-					SumImagSquare = 0;
-
-					for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
-					{
-						// Ignore data point if it is already flagged or weight is <= 0
-						// NOTE: In our case visibilities come w/o weights, so we check only vs flags
-						if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
-
-						visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
-						if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
-						{
-							SumWeightReal += 1;
-							SumReal += visibility.real();
-							SumRealSquare += visibility.real()*visibility.real();
-						}
-
-						if (abs(visibility.imag()-AverageImag)<thresholdRobust_p[robustIter]*StdImag)
-						{
-							SumWeightImag += 1;
-							SumImag += visibility.imag();
-							SumImagSquare += visibility.imag()*visibility.imag();
-						}
-					}
-
-					if (SumWeightReal > 0)
-					{
-						AverageReal = SumReal / SumWeightReal;
-						SumRealSquare = SumRealSquare / SumWeightReal;
-						StdReal = SumRealSquare - AverageReal * AverageReal;
-						StdReal = sqrt(StdReal > 0?  StdReal:0);
-					}
-					else
-					{
-						AverageReal = 0;
-						StdReal = 1000.0;
-					}
-
-					if (SumWeightImag > 0)
-					{
-						AverageImag = SumImag / SumWeightImag;
-						SumImagSquare = SumImagSquare / SumWeightImag;
-						StdImag = SumImagSquare - AverageImag * AverageImag;
-						StdImag = sqrt(StdImag > 0?  StdImag:0);
-					}
-					else
-					{
-						AverageImag = 0;
-						StdImag = 1000.0;
-					}
-				}
+				(*this.*spectralAnalysis_p)(	timestep_i,
+												pol_k,
+												nChannels,
+												AverageReal,
+												AverageImag,
+												StdReal,
+												StdImag,
+												SumWeightReal,
+												SumWeightImag,
+												visibilities,
+												flags);
 
 				if (scutof==0)
 				{
@@ -845,34 +850,153 @@ void FlagAgentRFlag::computeAntennaPairFlagsCore(	pair<Int,Int> spw_field,
 		}
 	}
 
-	/*
-	// Extend flags across polarizations (AIPS 'compress stokes')
-	if ( 	(doflag_p == true) and (prepass_p == false) and
-			(noise > 0) or (scutof > 0)						 )
+	return;
+}
+
+void FlagAgentRFlag::robustMean(	uInt timestep_i,
+									uInt pol_k,
+									uInt nChannels,
+									Double &AverageReal,
+									Double &AverageImag,
+									Double &StdReal,
+									Double &StdImag,
+									Double &SumWeightReal,
+									Double &SumWeightImag,
+									VisMapper &visibilities,
+									FlagMapper &flags)
+{
+
+	// NOTE: To apply the robust coefficients we need some initial values of avg/std
+	//       In AIPS they simply use Std=1000 for the first iteration
+	//       I'm not very convinced with this but if we have to cross-validate...
+	AverageReal = 0;
+	AverageImag = 0;
+	StdReal = 1000.0;
+	StdImag = 1000.0;
+	SumWeightReal = 0;
+	SumWeightImag = 0;
+
+	// Temporal working variables
+	Complex visibility;
+	Double SumReal = 0;
+	Double SumRealSquare = 0;
+	Double SumImag = 0;
+	Double SumImagSquare = 0;
+
+	for (uInt robustIter=0;robustIter<nIterationsRobust_p;robustIter++)
 	{
-		for (uInt timestep_i=timeStart;timestep_i<=timeStop;timestep_i++)
+		SumWeightReal = 0;
+		SumWeightImag = 0;
+		SumReal = 0;
+		SumRealSquare = 0;
+		SumImag = 0;
+		SumImagSquare = 0;
+
+		for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 		{
-			for (uInt chan_j=0;chan_j<nChannels;chan_j++)
+			// Ignore data point if it is already flagged or weight is <= 0
+			// NOTE: In our case visibilities come w/o weights, so we check only vs flags
+			if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+
+			visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+			if (abs(visibility.real()-AverageReal)<thresholdRobust_p[robustIter]*StdReal)
 			{
-				for (uInt pol_k=0;pol_k<nPols;pol_k++)
-				{
-					if (flags.getModifiedFlags(pol_k,chan_j,timestep_i))
-					{
-						for (Int ineer_pol_k=0;ineer_pol_k<nPols;ineer_pol_k++)
-						{
-							if (!flags.getModifiedFlags(ineer_pol_k,chan_j,timestep_i))
-							{
-								flags.setModifiedFlags(ineer_pol_k,chan_j,timestep_i);
-								visBufferFlags_p += 1;
-							}
-						}
-						break;
-					}
-				}
+				SumWeightReal += 1;
+				SumReal += visibility.real();
+				SumRealSquare += visibility.real()*visibility.real();
+			}
+
+			if (abs(visibility.imag()-AverageImag)<thresholdRobust_p[robustIter]*StdImag)
+			{
+				SumWeightImag += 1;
+				SumImag += visibility.imag();
+				SumImagSquare += visibility.imag()*visibility.imag();
 			}
 		}
+
+		if (SumWeightReal > 0)
+		{
+			AverageReal = SumReal / SumWeightReal;
+			SumRealSquare = SumRealSquare / SumWeightReal;
+			StdReal = SumRealSquare - AverageReal * AverageReal;
+			StdReal = sqrt(StdReal > 0?  StdReal:0);
+		}
+		else
+		{
+			AverageReal = 0;
+			StdReal = 1000.0;
+		}
+
+		if (SumWeightImag > 0)
+		{
+			AverageImag = SumImag / SumWeightImag;
+			SumImagSquare = SumImagSquare / SumWeightImag;
+			StdImag = SumImagSquare - AverageImag * AverageImag;
+			StdImag = sqrt(StdImag > 0?  StdImag:0);
+		}
+		else
+		{
+			AverageImag = 0;
+			StdImag = 1000.0;
+		}
 	}
-	*/
+
+	return;
+}
+
+void FlagAgentRFlag::simpleMedian(	uInt timestep_i,
+									uInt pol_k,
+									uInt nChannels,
+									Double &AverageReal,
+									Double &AverageImag,
+									Double &StdReal,
+									Double &StdImag,
+									Double &SumWeightReal,
+									Double &SumWeightImag,
+									VisMapper &visibilities,
+									FlagMapper &flags)
+{
+	// NOTE: To apply the robust coefficients we need some initial values of avg/std
+	//       In AIPS they simply use Std=1000 for the first iteration
+	//       I'm not very convinced with this but if we have to cross-validate...
+	AverageReal = 0;
+	AverageImag = 0;
+	StdReal = 1000.0;
+	StdImag = 1000.0;
+	SumWeightReal = 0;
+	SumWeightImag = 0;
+
+	// Temporal working variables
+	Complex visibility = Complex(0,0);
+	vector<Double> realVisForMedian;
+	vector<Double> imagVisForMedian;
+	Double realMedian = 0;
+	Double imagMedian = 0;
+
+	for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
+	{
+		// Ignore data point if it is already flagged or weight is <= 0
+		// NOTE: In our case visibilities come w/o weights, so we check only vs flags
+		if (flags.getOriginalFlags(pol_k,chan_j,timestep_i)) continue;
+
+		visibility = visibilities.correlationProduct(pol_k,chan_j,timestep_i);
+		realVisForMedian.push_back(visibility.real());
+		imagVisForMedian.push_back(visibility.imag());
+		SumWeightReal += 1;
+		SumWeightImag += 1;
+	}
+
+	if (SumWeightReal)
+	{
+		AverageReal = median(realVisForMedian);
+		AverageImag = median(imagVisForMedian);
+
+		noiseVsRef(realVisForMedian,AverageReal);
+		noiseVsRef(imagVisForMedian,AverageImag);
+
+		StdReal = 1.4826 * median(realVisForMedian);
+		StdImag = 1.4826 * median(imagVisForMedian);
+	}
 
 	return;
 }

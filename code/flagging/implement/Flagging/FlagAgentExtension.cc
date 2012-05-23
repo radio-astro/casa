@@ -55,7 +55,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		extendpols_p = False;
+		extendpols_p = True;
 	}
 
 	*logger_p << logLevel_p << " extendpols is " << extendpols_p << LogIO::POST;
@@ -119,7 +119,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 	}
 	else
 	{
-		growaround_p = True;
+		growaround_p = False;
 	}
 
 	*logger_p << logLevel_p << " growaround is " << growaround_p << LogIO::POST;

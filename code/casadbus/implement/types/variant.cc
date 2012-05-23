@@ -1567,6 +1567,7 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 	    case DOUBLEVEC: return (*val.dv).size();
 	    case COMPLEXVEC: return (*val.cv).size();
 	    case STRINGVEC: return (*val.sv).size();
+	    default: break;
 	    }
 	    return 1;
 	}
@@ -1607,6 +1608,8 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 		case STRINGVEC:
 		    (*val.sv).resize(size);
 		    break;
+		case RECORD:
+		    break; // case not handled
 		}
 	    } else {
 		switch (typev) {
@@ -1615,6 +1618,7 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 		case DOUBLE:
 		case COMPLEX:
 		case STRING:
+		case RECORD:
 		    break;
 		case BOOLVEC:
 		    (*val.bv).resize(size);

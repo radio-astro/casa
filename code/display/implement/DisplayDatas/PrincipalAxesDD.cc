@@ -574,7 +574,7 @@ String PrincipalAxesDD::worldAxisCode(const uInt &worldaxisnum)
 }
 
 const uInt PrincipalAxesDD::nelements(const WorldCanvasHolder 
-				      &wcHolder) const 
+				      &/*wcHolder*/) const
 {
   return itsNumImages;
 }
@@ -1646,7 +1646,6 @@ Bool PrincipalAxesDD::labelAxes(const WCRefreshEvent &ev)
     throw(AipsError("PrincipalAxesDD::refreshEH - "
 		    "object in incorrect state"));
   }
-  
   setDisplayState( DisplayData::DISPLAYED );
 
   // not using internal labellers

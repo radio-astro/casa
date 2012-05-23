@@ -74,7 +74,7 @@ class ss_setjy_helper:
 	fmeasrefcol=mytb.getcol('MEAS_FREQ_REF')
 	reffreqs=mytb.getcol('REF_FREQUENCY')
 	mytb.close()
-	
+
 	# store all parameters need to call solar_system_fd for all sources
 	inparams={}
         validfids = [] # keep track of valid fid that has data (after selection) 
@@ -103,6 +103,8 @@ class ss_setjy_helper:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
+          # make sure it is int rather than numpy.int32, etc.
+          selspws = [int(ispw) for ispw in selspws]
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
@@ -159,10 +161,10 @@ class ss_setjy_helper:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
-            #print "%s for spw%s freqs=%s" % (src, i,freqlist[i])
+            self._casalog.post("Calling solar_system_fd: %s for spw%s freqs=%s" % (src, i,freqlist[i]),'INFO2')
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
                ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
-            #print "ss_fd returns fluxes=", subfluxes
+            self._casalog.post("ss_fd returns fluxes=%s" % subfluxes, 'INFO2')
 	    fluxes.append(subfluxes)    
             #print "fluxes=",fluxes 
 
@@ -197,11 +199,10 @@ class ss_setjy_helper:
 	    clpath='/tmp/'
 	    #clpath='./'
 	    for j in range(len(freqlist)):
-	      freqlabel = '%.3fGHz' % (reffreqs[j]/1.e9)
+	      freqlabel = '%.3fGHz' % (reffreqs[int(spwids[j])]/1.e9)
 	      tmlabel = '%.1fd' % (tc/86400.)
 	      clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
 	      clname = clpath+clabel+'.cl'
-	      
 	      #clname = clpath+inlabel+'_dir'+'.cl' 
 	      
 	      if(os.path.exists(clname)):
@@ -213,23 +214,28 @@ class ss_setjy_helper:
 	      else:
 		index= 0.0
 		sptype = 'constant'
-	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
+              self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
+                                  (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
+	      #mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
+	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirstring,
 			 shape='disk', majoraxis=str(sizes[i][0])+'arcsec', minoraxis=str(sizes[i][1])+'arcsec', 
-			 positionangle=str(sizes[i][2])+'arcsec', freq=[framelist[j],str(reffreqs[j])+'Hz'], 
+			 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
 			 spectrumtype=sptype, index=index, label=clabel)
         
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
 		#print "freqlist[j]=",freqlist[j]
 		#print "fluxes[j][0]=",fluxes[j][0]
-		#print "framelist[j]=",framelist[j]
+	        #print "framelist[j]=",framelist[j]
 		if type(freqlist[j][0])==list and len(freqlist[j][0])>1:
 		  freqs=[]
 		  for fr in freqlist[j]:
 		    freqs.append((fr[1]+fr[0])/2)
 		else:
 		  freqs=freqlist[j]
-		mycl.setspectrum(which=i, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
+                clind = mycl.length() - 1
+		mycl.setspectrum(which=clind, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
+	#	mycl.setspectrum(which=i, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
 			   tabularframe=framelist[j])
 	      mycl.rename(clname)
 	      #put in a record for log output

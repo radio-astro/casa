@@ -183,7 +183,8 @@ int main () {
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			}
+			catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -191,6 +192,23 @@ int main () {
 			AlwaysAssert(thrown, AipsError);
 		}
 		{
+			cout << __FILE__ << " " << __LINE__ << endl;
+			log << LogIO::NORMAL << "Test precision"
+				<< LogIO::POST;
+			Quantity centerx(-0.01, "deg");
+			Quantity centery(0.02, "deg");
+			Quantity inner(30, "arcsec");
+			Quantity outer(40, "arcsec");
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnAnnulus ann(
+				centerx, centery, inner, outer,
+				csys, shape, stokes
+			);
+			cout << ann << endl;
+		}
+		/*
+		{
+
 			Quantity centerx(0.6, "arcmin");
 			Quantity centery(1.2, "arcmin");
 			Quantity inner(3, "arcmin");
@@ -215,7 +233,7 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-			/*
+
 			vector<Quantity> wblc, wtrc;
 			annulus.worldBoundingBox(wblc, wtrc);
 			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+outer).getValue("arcmin")), AipsError);
@@ -233,14 +251,14 @@ int main () {
 			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
-			*/
-
 		}
+		*/
+		/*
 		{
 			log << LogIO::NORMAL
 				<< "Test center with no conversion"
 				<< LogIO::POST;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.02, "deg");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -309,7 +327,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test precessing from B1950 to J2000"
 				<< LogIO::POST;
-			Quantity centerx(0.05, "deg");
+			Quantity centerx(-0.8, "deg");
 			Quantity centery(0, "deg");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -585,6 +603,8 @@ int main () {
 			);
 		}
 		{
+			cout << __FILE__ << " " << __LINE__ << endl;
+
 			log << LogIO::NORMAL
 				<< "Test modified doppler definitions"
 				<< LogIO::POST;
@@ -707,12 +727,11 @@ int main () {
 			ostringstream oss;
 			annulus.print(oss);
 			cout << oss.str() << endl;
-
-
-
-
 		}
-	} catch (AipsError x) {
+
+		*/
+	}
+	catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;
 		return 1;
 	}

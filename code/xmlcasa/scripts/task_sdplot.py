@@ -7,7 +7,7 @@ import pylab as pl
 from asap import _to_list
 from asap.scantable import is_scantable
 ###### workaroud #####
-from matplotlib import _pylab_helpers
+#from matplotlib import _pylab_helpers
 ######################
 
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
@@ -205,19 +205,19 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     casalog.post( 'Using current doppler convention' )
 
 
-            ##### workaround for ghost plotter in CASA 3.4 #####
-            figmgr = None
-            if hasattr(sd.plotter._plotter,'figmgr'):
-                    figmgr = sd.plotter._plotter.figmgr
-            if figmgr:
-                    if not _pylab_helpers.Gcf.has_fignum(figmgr.num):
-                            _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-                            sd.plotter._plotter.quit()
-                    elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
-                             and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
-                            sd.plotter._plotter.quit()
-                            _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-                            sd.plotter._plotter.quit()
+            ##### workaround for plotter in CASA 3.4 #####
+            #figmgr = None
+            #if hasattr(sd.plotter._plotter,'figmgr'):
+            #        figmgr = sd.plotter._plotter.figmgr
+            #if figmgr:
+            #        if not _pylab_helpers.Gcf.has_fignum(figmgr.num):
+            #                _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+            #                sd.plotter._plotter.quit()
+            #        elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
+            #                 and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
+            #                sd.plotter._plotter.quit()
+            #                _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
+            #                sd.plotter._plotter.quit()
             ######################################################
 	    # Reload plotter if necessary
             sd.plotter._assert_plotter(action="reload")
@@ -391,7 +391,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 		    # legend position
 		    loc=1
 		    if plotstyle: loc=legendloc
-		    sd.plotter.set_legend(mode=loc)
+		    sd.plotter.set_legend(mode=loc,refresh=refresh)
 		    
 		    # The actual plotting
 		    sd.plotter.plot()

@@ -171,6 +171,20 @@ void MultiRectTool::disable() {
     }
 
     void MultiRectTool::keyReleased(const WCPositionEvent &ev) {
+
+	// avoid degenerate rectangles...
+	if ( memory::nullptr.check(creating_region) == false ) {
+	    if ( creating_region->degenerate( ) ) {
+		viewer::Region *nix = creating_region.get( );
+		rfactory->revokeRegion(nix);
+		if ( creating_region == resizing_region ) {
+		    resizing_region = memory::nullptr;
+		    resizing_region_handle = 0;
+		}
+	    }
+	    creating_region = memory::nullptr;
+	}
+
 	Bool wasActive = itsActive;
 	itsActive = False;
 	if ( rectangles.size( ) == 0 ) {
@@ -903,7 +917,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	double linx, liny;
 	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
-	resizing_region = allocate_region( wc, linx, liny, linx, liny );
+	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny );
 	rectangles.push_back( resizing_region );
 
 	if ( type( ) != POINTTOOL )

@@ -946,7 +946,7 @@ def tput(taskname=None, outfile=''):
 	outfile = myf['taskname']+'.last'
 	saveinputs(taskname, outfile)
 
-def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
+def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, scriptstr=['']):
     #parameter_printvalues(arg_names,arg_values,arg_types)
     """ Save current input values to file on disk for a specified task:
 
@@ -993,6 +993,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
         scriptstring='#'+str(taskname)+'('
 	if myparams == None :
 		myparams = {}
+        l=0
         for j in range(len(f)):
             k=f[j][0]
 	    if not myparams.has_key(k) and k != 'self' :
@@ -1019,8 +1020,16 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
             ### previous non-default settings sometimes."
             if(not myf['casaglobals']):
                 del myf[k]
+            l=l+1
+            if l%5==0:
+                scriptstring=scriptstring+'\n        '
+        scriptstring=scriptstring.rstrip()
+        scriptstring=scriptstring.rstrip('\n')
         scriptstring=scriptstring.rstrip(',')
         scriptstring=scriptstring+')'        
+        scriptstr.append(scriptstring)
+        scriptstring=scriptstring.replace('        ', '')
+        scriptstring=scriptstring.replace('\n', '')
         print >>taskparameterfile,scriptstring
         taskparameterfile.close()
     except TypeError, e:

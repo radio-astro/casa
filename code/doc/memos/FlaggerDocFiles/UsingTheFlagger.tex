@@ -20,19 +20,40 @@ the visibilities, before they are considered for flagging
 
 \subsubsection{Manual Flag/Unflag}
 
-Selection-based flagging and unflagging can be done via the \htmladdnormallink{MSSelection syntax}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection/msselection.html}.  This flagging mode is meant for marking subsets of the data that are known to be unfit for calibration or imaging.  Some examples are online flags from the data-recording system, known frequency ranges with strong RFI, etc.
+Selection-based flagging and unflagging can be done via the \htmladdnormallink{MSSelection syntax}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection/msselection.html}.  
+This flagging mode is meant for marking subsets of the data that are known to be
+unfit for calibration or imaging. Some examples are online flags from the data-recording system, known frequency ranges 
+with strong RFI, etc. It is also possible to use the parameter 'autocorr' to
+flag only auto-correlations in the MS.
 
 \subsubsection{Quack}
 
-Data at scan edges can sometimes be unusable for some antennas or baselines (for example, if some antennas take longer than others to slew to a new target, but the signal correlation and recording starts before all antennas are ready), and it is often useful to flag these edges.The 'quack' mode allows the user to specify time-ranges from the beginning and/or end of all selected scans. 
+Data at scan edges can sometimes be unusable for some antennas or baselines (for example, if some antennas take longer 
+than others to slew to a new target, but the signal correlation and recording starts before all antennas are ready), and it 
+is often useful to flag these edges.The 'quack' mode allows the user to specify time-ranges from the beginning and/or end of 
+all selected scans. 
 
 \subsubsection{Elevation}
 
-Data taken when the antennas are pointed at low elevations can sometimes be unusable and require flagging.  Reasons for flagging data at low elevations include increased shadowing between antennas, increased sensitivity to RFI from the horizon,  elevation-dependent antenna-gain variations, corrupted specra due to looking through a longer path-length through the atmosphere, etc.  At high elevations, one problem could be increased pointing errors when an Alt-Az antenna tracks a source near the Zenith.    The 'elevation' mode allows the user to specify elevation-ranges to be flagged, for the selected data.
+Data taken when the antennas are pointed at low elevations can sometimes be unusable and require flagging.  Reasons for 
+flagging data at low elevations include increased shadowing between antennas, increased sensitivity to RFI from the horizon, 
+elevation-dependent antenna-gain variations, corrupted spectra due to looking
+through a longer path-length through the atmosphere, etc.  At high elevations, one problem could be increased pointing 
+errors when an Alt-Az antenna tracks a source near the Zenith. The 'elevation'
+mode allows the user to specify elevation-ranges to be flagged, for the selected data.
 
 \subsubsection{Clip}
 
-Strong outliers can be flagged using a simple threshold (range).  If a valid data range is known $a-priori$,  clipping can be done as the first step before basic calibration or other editing.   The 'clip' mode allows the user to specify a range, and clip all values either within or outside the range. Values are defined as expressions that involve data columns and correlation-selections (for example, ABS_I or REAL_RR,LL, etc).   NaNs and Infs are always included in the clipping, and optionally, exact zeros too.   Early EVLA data-sets occasionally have exact zeros in parts of the data where the backend-system is overloaded, and NaNs and Infs have sometimes been reported when data is converted between packages and formats.
+Strong outliers can be flagged using a simple threshold (range). If a valid data
+range is known $a-priori$, clipping can be done as the first step before basic calibration or other editing.
+The 'clip' mode allows the user to specify a range, and clip all values either within or outside the range. 
+Values are defined as expressions that involve data columns and
+correlation-selections (for example, ABS\_I or REAL\_RR,LL, etc).
+NaNs and Infs are always included in the clipping. By default, if no range for
+clipping is given, it will flag only NaNs and Infs. Optionally, exact zeros can
+flagged using the clipzeros parameter. Early EVLA data-sets occasionally have
+exact zeros in parts of the data where the backend-system is overloaded, and NaNs and Infs have sometimes been 
+reported when data is converted between packages and formats.
 
 
 \subsubsection{Shadow}
@@ -74,8 +95,8 @@ for shadow-flag differences to become significant.
 
 Note : Antennas that are not part of the MS ANTENNA subtable can be included in the calculation of
 shadow flags by specifying a list of positions and diameters in an external file.   Note however that
-the calculations will not account for the fact that antennas not part of the observation, but still
-physically present on the ground, may not be pointing in the same direction as all the others
+the calculations will not account for the fact that antennas not part of
+the observation, but still physically present on the ground, may not be pointing in the same direction as all the others
 (as is assumed in the calculations).  If desired, the antenna diameters in the external file could
 be adjusted accordingly.
 
@@ -296,7 +317,9 @@ it is easier to detect than in other correlations.
 
 \begin{figure}
 \includegraphics[scale=0.8]{flag.extension.png}
-\caption{This screenshot represents a run where 'tfcrop' was run only on 'ABS_RR' (top row) and followed by an extension along time and correlations (bottom row). }
+\caption{This screenshot represents a run where 'tfcrop' was run only on
+'ABS\_RR' (top row) and followed by an extension along time and correlations
+(bottom row). }
 \end{figure}
 
 
@@ -304,13 +327,191 @@ it is easier to detect than in other correlations.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{List of flag commands (tflagdata, tflagcmd)}
-\subsubsection{Apply/ un-apply}
-\subsubsection{Managing flag-command files}
+\subsection{List of flag commands (tflagdata, flagcmd)}
 \label{Sec:FlagCmdLists}
-\paragraph{Using flag-command files}
-\paragraph{Using (and mis-using) the FLAGCMD subtable}
+There are two flagging tasks in version 3.4 of CASA. The main task tflagdata is
+a replacement for the old flagdata/flagdata2/testautoflag/flagautocorr. This
+task can take parameters input from the interface as well as input from an
+external text file. This is the so-called list mode. All the flagging commands
+that apply to an MS can be combined into one single text file and read in for
+processing. Only the summary mode is not allowed in list mode to avoid
+confusion when several summaries are present in the list. The user can run
+tflagdata separated to get the summary of the list. 
 
+The other task, flagcmd is a replacement for the previous version of flagcmd. It
+has a re-factored interface and it can do much more than the previous version.
+All the flagging modes available in tflagdata are also allowed in flagcmd
+(except again for the summary mode). Several input modes are available: table,
+file, xml and cmd. Actions to perform on the input are: apply, unapply, list,
+clear, plot and extract.
+
+\subsubsection{Apply/ un-apply}
+It is possible to truly unapply flag commands in flagcmd. In order to guarantee that only the data selected in 
+the commands is unapplied, the framework will first unapply the selected rows
+and then re-apply the overlapping data that got unapplied in the first pass. This is a true unapply action, but it will take longer to
+process because it will re-apply all the remaining commands that have the
+column APPLIED set to True inside the FLAG\_CMD sub-table of the MS.
+
+\subsubsection{Using flag-commands in the flagcmd task}
+Flag commands can be given as input to the flagcmd task in several ways. The
+default is the 'table' which will have the flag commands inside the FLAG\_CMD
+sub-table of the MS in a column called COMMAND.
+
+The other input, as already detailed above is the 'file' mode, which will have
+the flag commands in a text file.
+
+The 'xml' input is meant to be used for the online flags from the Flag.xml file
+in the MS. It also assumes that the Antenna.xml file is present.
+
+The last input mode will input the flag commands from a list of Python strings.
+
+For all the input modes, the action='list' can be used to list the flags
+commands on the screen and optionally to save them to an external output file
+when the parameter savepars is set to True.
+
+When the action='apply' is used in the inpmode table, the flags will be applied
+to the MS and the APPLIED column will be updated to True. On the other hand,
+when action='unapply' the APPLIED column will be set to False for all selected
+table rows.
+
+\paragraph{Examples}
+
+\begin{enumerate}
+\item Input commands from the FLAG\_CMD sub-table. 
+
+\begin{figure}
+\includegraphics[scale=0.8]{flagcmd_screenshot.png}
+\caption{Screenshot of the FLAG_CMD sub-table of a MS with flag commands for the
+online flags. }
+\end{figure}
+
+\begin{verbatim}
+# Apply only the flag commands that contain reason='CORRELATOR_DATA_INVALID'.
+The default action for flagcmd is to apply the flag commands from a table input,
+therefore it is not necessary to specify inpmode='table' and action='apply'.
+
+ flagcmd(vis='uid.ms', reason='CORRELATOR_DATA_INVALID')
+  
+\end{verbatim}
+
+\item Input commands from an ASCII file.
+\begin{verbatim}
+# Create an input text file with all the flag commands to apply to the MS.
+> cat flags.txt
+ mode='manual' autocorr=True
+ mode='shadow'
+ mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
+ mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
+ mode='extend' extendpols=True
+
+# Pass the input to the task
+  flagcmd(vis='uid.ms', inpmode='file', inpfile='flags.txt', action='apply')
+ 
+\end{verbatim}
+
+\item Input commands via a list of strings.
+\begin{verbatim}
+# Create a Python string called mycmd.
+  flagcmd(vis='uid.ms', inpmode='cmd',
+          command=["mode='manual' autocorr=True",
+                   "mode='shadow'",
+                   "mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'", 
+                   "mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0",
+                   "mode='extend' extendpols=True"], action='apply')
+ 
+ 
+\end{verbatim}
+\end{enumerate}
+
+\subsubsection{Using flag-commands in the tflagdata task}
+
+\paragraph{Examples}
+
+\begin{enumerate}
+\item Run tflagdata in list mode, using a flag-command file.
+
+\begin{verbatim}
+# Create an input text file with all the flag commands to apply to the MS.
+> cat flags.txt
+ mode='manual' autocorr=True
+ scan='1~3' mode='manual'
+ mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'
+ mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0
+ mode='extend' extendpols=True
+
+# Pass the input to the task
+  tflagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
+ 
+# Get a summary
+  tflagdata(vis='uid.ms', mode='summary')
+
+\end{verbatim}
+
+\item Select by reason in list mode.
+
+\begin{verbatim}
+# Apply only the flag commands that contain reason='BAD_ANT'. Let's say the
+input file contains the following flag commands.
+
+> cat flags.txt
+  antenna='DV06' reason='BAD_ANT'
+  mode='clip' clipzeros=True reason='CLIPZEROS'
+  mode='shadow' reason='SHADOW'
+  antenna='DV01' timerange='2012/02/01:09:14:0~09:54:0' reason='BAD_ANT'
+  antenna='DV10;DV23' timerange='2012/02/01:09:15:0~09:54:0' reason='BAD_ANT'
+  
+ # We want to apply the above flag commands in three different MSs, but in the
+ first step we only want to flag the bad antennas, so we will select the cmds
+ by the reason given in the file.
+ 
+   tflagdata(vis='uid1.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+
+   tflagdata(vis='uid2.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+
+   tflagdata(vis='uid3.ms', inpmode='list', inpfile='flags.txt',
+             reason='BAD_ANT')
+      
+\end{verbatim}
+
+\item Saving the parameters as flag commands, to a file.
+
+\begin{verbatim}
+# Sometimes we want to flag using the interface but would like to save those
+parameters to a file. It may also be useful to write along a reason for those
+flags.
+
+  tflagdata(vis='uid1.ms', mode='clip', clipzeros=True, savepars=True,
+            outfile='myflagcmd.txt', cmdreason='CLIPZEROS')
+  
+# This will flag all the zeros in the MS and save the parameters to
+'myflagcmd.txt' like below:
+
+> cat myflagcmd.txt
+mode='clip' correlation='ABS_ALL' clipoutside=True datacolumn='DATA'\
+channelavg=False clipzeros=True reason='CLIPZEROS'
+
+# NOTE: if the outfile is left empty (default case), the task will save the
+parameters to the FLAG_CMD sub-table.
+
+\end{verbatim}
+\end{enumerate}
+
+
+\paragraph{Using (and mis-using) the FLAG_CMD subtable}
+The FLAG\_CMD sub-table is meant to store only meta-data selections such as
+online flags. Using it to save other parameters (from modes such as clip, quack,
+shadow, etc.) is possible but carries a risk that in future releases these
+these parameters or their default values are renamed or changed.
+Use it at your own risk! There will be no automatic way to rename any parameter that changes in the
+future.
+
+Keeping the state of the flags stored in the FLAG\_CMD sub-table is also not
+guaranteed. The state can get out-of-sync very easily with the interchangeable
+use of all flagging tasks such as tflagdata, flagcmd, and interactive
+flagging using plotms. Note that plotms does not write to the FLAG\_CMD
+sub-table.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -338,21 +539,324 @@ Here are some examples of flag report displays on two datasets.
 \item Percentage of data flagged vs baseline-length : To assess expected sensitivities for different spatial scales, since local RFI correlates better on shorter baselines than longer ones.
 \end{enumerate}
 
-\subsubsection{Data Display + writeflags}
+\subsubsection{Data Display + action='calculate'}
 In order to visualize some of the RFI present in the data, and to verify if flagging
 commands are having the desired effect,  there is an option to 
 visualize the data and flags at run-time, and navigate between baselines in the 
 current chunk, as well as in the forward-direction across scans and spws.   
 
 The intended usage of the display is to run the flagger on small subsets of the data (sub-selections)
-with writeflags=False, and display='data', and inspect the flagging results.  An option to
-quit at any stage allows the user to change input parameters and try again until the
-desired flagging results are obtained.  Then, the display can be turned off, writeflags set to
-True, and the program run again on a larger section of the data.
+with action='calculate', and display='data', and inspect the flagging results. 
+An option to quit at any stage allows the user to change input parameters and try again until the
+desired flagging results are obtained.  Then, the display can be turned off,
+action set to 'apply', and the program run again on a larger section of the
+data.
 
 
 \subsection{Flagging Calibration-Tables}
-{\green  Anything specific to calibration tables.   } 
+
+\subsubsection{Ability to easily flag the new Calibration Table format}
+
+The new Calibration Table format can be handled by the TestFlagger tool in a
+transparent way, just like a Measurement Set Table. There is an open-time check
+that inspects the table type and uses the appropriate FlagDataHandler
+implementation for all the I/O operations:
+
+\begin{verbatim}
+
+CASA <2>: tf.open('X7ef.tsys')
+INFO	TestFlagger::open	Table type is Calibration
+  Out[2]: True
+
+\end{verbatim}
+
+In principle support for the new Calibration Table format has been introduced
+transparently, so it is possible to flag them using any of the already available
+modes for Measurement Sets. However, due to the nature of the data in
+calibration tables, it only makes sense to use the following flag agent groups:
+
+\begin{enumerate}
+
+\item Autoflagging (outliers detection) agents: clip, tfcrop, rflag:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentClip={'mode':'clip','clipzeros':True,'clipminmax':[0.,600.],'datacolumn':'FPARAM'}
+tf.parseagentparameters(agentClip)
+tf.init()
+tf.run()
+tf.done()
+
+\end{verbatim}
+
+\item Manualflagging (meta-data selections like antenna/time-range):
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+
+\end{verbatim}
+
+\item Auxiliary modes: unflag, summary, display
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentSummary={'mode':'summary'}
+tf.parseagentparameters(agentSummary)
+tf.init()
+summary = tf.run()
+tf.done()
+
+\end{verbatim}
+
+\end{enumerate}
+
+Notice that the parameters names and types are the same as described in the
+tflagdata command-line help.
+
+\subsubsection{Supported columns and expressions}
+
+\begin{enumerate}
+
+\item For the autoflagging agents (clip, tfcrop, rflag) it is possible to
+choose the column to operate with, using the 'datacolumn' parameter, being 'FPARAM',
+'PARAMERR' and 'SNR' the currently supported columns:
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'PARAMERR'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	data column is PARAMERR
+
+\end{verbatim}
+
+But notice that the default datacolumn is FPARAM:
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.]}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	data column is FPARAM
+
+\end{verbatim}
+
+\item And it is also possible to choose the element of interest to inspect for
+flagging, trough the correlation parameter, specifying a list of comma-separated
+elements or 'ALL' to select all the elements (which is also the default):
+
+\begin{verbatim}
+
+agentClip={'mode':'clip',clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1
+
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'ALL'}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+
+\end{verbatim}
+
+Also notice that the default expression is 'ALL':
+
+\begin{verbatim}
+
+agentClip={'mode':'clip','clipminmax':[0.,6.]}
+tf.parseagentparameters(agentClip)
+tf.init()
+...
+INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+
+\end{verbatim}
+
+\end{enumerate}
+
+\subsubsection{Meta-Data selection}
+
+As far as meta-data selection is concerned, we are bounded to what MSSelection
+interface for Calibration Tables offers (currently only field, spw and antenna
+selections). There are two way to apply meta-data selections, with can be used
+independently or combined together:
+
+\begin{enumerate}
+
+\item FlagDataHandler selection (global): Create a sub-table with the selection
+to be used by all the agents. The data selection parameters have to be parsed
+trough the selectdata() method of the TestFlagger tool:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata(field='TW Hya')
+agentManual={'mode':'manual'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		
+\end{verbatim}
+
+\item Agent selection (specific to each agent): To restrict the rows that each
+agent inspect for flagging. The data selection parameters can be parsed as
+normal agent parameters:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		
+\end{verbatim}
+
+\item Combined selection : To iterate only trough a global selection, and at the
+same time have each agent inspecting a particular group of rows for flagging:
+
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata(field='TW Hya')
+agentManual={'mode':'manual','antenna':'DV09'}
+tf.parseagentparameters(agentManual)
+tf.init()
+tf.run()
+tf.done() 
+		 
+\end{verbatim}
+
+\end{enumerate}
+
+\subsubsection{Combining several modes in a single run}
+
+As with MeasurementSet tables, the re-factored flagger framework allows running
+several flagging agents at the same time, to reduce I/O overhead,  for instance:
+
+\begin{enumerate}
+
+\item Combination of tfcrop and rflag:
+
+\begin{verbatim}
+
+tf.open('cal.fewscans.bpass')
+tf.selectdata()
+agentRflag={'mode':'rflag','datacolumn':'PARAMERR','correlation':'Sol1'}
+agentTfcrop={'mode':'tfcrop','datacolumn':'PARAMERR','correlation':'Sol1'}
+tf.parseagentparameters(agentRflag)
+tf.parseagentparameters(agentTfcrop)
+tf.init()
+tf.run(writeflags=True)
+tf.done()
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-RFlag+TFCrop.png}
+\caption{Rflag and TFCrop agents combined in a single run applied on a EVLA
+band-pass calibration table}
+\label{Fig:EVLA Band Pass Cal Table RFlag+TFCrop applied combined}
+\end{figure}
+
+\item Unflag + Clip + Display
+
+\begin{verbatim}
+  
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
+agentDisplay={'mode':'display','datadisplay':True}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentClip)
+tf.parseagentparameters(agentDisplay)
+tf.init()
+tf.run(writeflags=True)
+tf.done()
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-Clip.png}
+\caption{Clipping agent operating on ALMA TSys CalTable (TW Hya Science
+Verification data)}
+\label{Fig:TW Hya CalTable Clip}
+\end{figure}
+
+\item Unflag + Manual Selection (channel edges) + Summary
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentManual={'mode':'manual','spw':'*:0~9;118~127'}
+agentDisplay={'mode':'display','datadisplay':True}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentManual)
+tf.parseagentparameters(agentDisplay)
+tf.init()
+tf.run(writeflags=True)
+tf.done() 
+
+\end{verbatim}
+
+\begin{figure}
+\includegraphics[scale=0.5]{CalTable-MultipleChannel.png}
+\caption{Clipping agent operating on ALMA TSys CalTable (TW Hya Science
+Verification data)}
+\label{Fig:TW Hya CalTable Clip}
+\end{figure}
+
+\item Unflag + Manual Selection (antenna) + Summary
+\begin{verbatim}
+
+tf.open('X7ef.tsys')
+tf.selectdata()
+agentUnflag={'mode':'unflag'}
+agentManual={'mode':'manual','antenna':'DV09'}
+agentSummary={'mode':'summary'}
+tf.parseagentparameters(agentUnflag)
+tf.parseagentparameters(agentManual)
+tf.parseagentparameters(agentSummary)
+tf.init()
+summary = tf.run(writeflags=True)
+tf.done() 
+
+CASA <12>: summary
+  Out[12]: 
+{'nreport': 2,
+ 'report0': {'antenna': {'DV04': {'flagged': 0.0, 'total': 14336.0},
+                         'DV06': {'flagged': 0.0, 'total': 14336.0},
+                         'DV07': {'flagged': 0.0, 'total': 14336.0},
+                         'DV08': {'flagged': 0.0, 'total': 14336.0},
+                         'DV09': {'flagged': 14336.0, 'total': 14336.0},
+                         'DV10': {'flagged': 0.0, 'total': 14336.0},
+                         'PM01': {'flagged': 0.0, 'total': 14336.0},
+                         'PM02': {'flagged': 0.0, 'total': 14336.0},
+                         'PM03': {'flagged': 0.0, 'total': 14336.0}},
+
+
+\end{verbatim}
+
+\end{enumerate}
 
 
 \section{Frequently Asked Questions}
@@ -360,8 +864,8 @@ True, and the program run again on a larger section of the data.
 \subsection{Obtaining summaries per reason}
 Attach the tool script that does this.
 
-\subsection{FLAGCMD subtable vs flag-command text files}
-Point to section \ref{Sec:FlagCmdLists}
+\subsection{FLAGCMD sub-table vs flag-command text files}
+See section \ref{Sec:FlagCmdLists}
 
 
 \subsection{Will batch modes make the flagging faster ?}
@@ -371,7 +875,7 @@ If commands touch different data-selections, running them together will not help
 
 \begin{enumerate}
 \item The following sequence of operations will benefit from being run together, 
-because they all access spw 9,  clip and rflag read visibilities, and rflag and extend read flags:
+because they all access spw 9, clip and rflag read visibilities, and rflag and extend read flags:
 
 mode='manual'  spw='9:0~3;61~63' \\
 mode='clip'  clipminmix=[0.0, 1e+5] \\

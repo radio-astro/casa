@@ -260,7 +260,7 @@ void MakeMask::changeAxis(String xa, String ya, String za, std::vector<int> ha )
 
    reDraw();
 }
-void MakeMask::closeEvent(QCloseEvent* event) {
+void MakeMask::closeEvent(QCloseEvent* /*event*/) {
    //qDebug() << "closeEvent";
   emit hideRegionInFile();
 }
@@ -873,15 +873,15 @@ void MakeMask::showHideAll() {
    reDraw();
 }
 
-void MakeMask::colorAll(const QString& clr) {
+void MakeMask::colorAll(const QString& /*clr*/) {
    //qDebug() << "colorAll" << clr;
    reDraw();
 }
 
-void MakeMask::rotateBox(int cb) {
+void MakeMask::rotateBox(int /*cb*/) {
 }
 
-void MakeMask::newRegion_(String imgFilename) {
+void MakeMask::newRegion_(String /*imgFilename*/) {
    //cout << "newRegion_" << imgFilename << endl;
    
    if (this->isVisible()){
@@ -901,8 +901,8 @@ void MakeMask::newRegion_(String imgFilename) {
    reDraw();
 }
 
-void MakeMask::drawRegion(Record mousereg, 
-                          WorldCanvasHolder *wch){
+void MakeMask::drawRegion(Record /*mousereg*/,
+                          WorldCanvasHolder * /*wch*/){
 }
 
 WCUnion* MakeMask::unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg){

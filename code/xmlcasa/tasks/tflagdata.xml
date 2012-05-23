@@ -75,57 +75,57 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
             
             <!-- SELECTION parameters -->
             <param type="any" name="spw" subparam="true">
-                <description>spectral-window/frequency/channel</description>
+                <description>Spectral-window/frequency/channel: \'\' ==> all, spw=\'0:17~19\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="field" subparam="true">
-                <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                <description>Field names or field index numbers: \'\' ==> all, field=\'0~2,3C286\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="antenna" subparam="true">
-                <description>antenna/baselines: \'\'==>all, antenna =\'3,VA04\'</description>
+                <description>Antenna/baselines: \'\' ==> all, antenna =\'3,VA04\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="uvrange" subparam="true">
-                <description>uv range: \'\'==>all; uvrange =\'0~100klambda\', default units=meters</description>
+                <description>UV range: \'\' ==> all; uvrange =\'0~100klambda\', default units=meters</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
-            <param type="any" name="timerange" subparam="true"><description>time range: \'\'==>all,timerange=\'09:14:0~09:54:0\'</description>
+            <param type="any" name="timerange" subparam="true"><description>Time range: \'\' ==> all,timerange=\'09:14:0~09:54:0\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="correlation" subparam="true">
-                <description>Select data based on correlation</description>
+                <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="scan" subparam="true">
-                <description>scan numbers: \'\'==>all</description>
+                <description>Scan numbers: \'\' ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="intent" subparam="true">
-                <description>Select data based on observation intent: \'\'==>all</description>
-                <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
-            </param>
-            <param type="any" name="feed" subparam="true">
-                <description>multi-feed numbers: Not yet implemented</description>
+                <description>Observation intent: \'\' ==> all, intent=\'CAL*POINT*\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="array" subparam="true">
-                <description>(sub)array numbers: \'\'==>all</description>
+                <description>(Sub)array numbers: \'\' ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="observation" subparam="true">
-                <description>Select data based on observation ID: \'\'==>all</description>
+                <description>Observation ID: \'\' ==> all</description>
                 <any type="variant" limittypes="string int" />
+                <value type="string" />
+            </param>
+            <param type="any" name="feed" subparam="true">
+                <description>Multi-feed numbers: Not yet implemented</description>
+                <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
 
@@ -277,11 +277,11 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
 
            <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
-                <value>90.0</value>
+                <value>50.0</value>
             </param>
             <param type="double" name="growfreq" subparam="true">
                 <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
-                <value>90.0</value>
+                <value>50.0</value>
             </param>
             <param type="bool" name="growaround" subparam="true">
                 <description>Flag data based on surrounding flags</description>
@@ -335,6 +335,7 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                     <allowed kind="enum">
                     <value>apply</value>
                     <value>calculate</value>
+                    <value>none</value>
                     <value></value>
                     </allowed>
             </param>
@@ -372,10 +373,24 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="autocorr"><value type="bool">False</value></default>
+                    </equals>
+                    <equals value="manualflag">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="autocorr"><value type="bool">False</value></default>
                     </equals>
                     <equals value="list">
@@ -390,10 +405,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
@@ -408,10 +423,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="quackinterval"><value type="double">0.0</value></default>
                         <default param="quackmode"><value type="string">beg</value></default>
                         <default param="quackincrement"><value type="bool">False</value></default>                   
@@ -424,10 +439,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="tolerance"><value type="double">0.0</value></default>
                         <default param="addantenna"><value type="string"></value></default>
                     </equals>
@@ -439,10 +454,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="lowerlimit"><value type="double">0.0</value></default>
                         <default param="upperlimit"><value type="double">90.0</value></default>                    
                     </equals>
@@ -454,10 +469,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
@@ -478,10 +493,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>           
                         <default param="datacolumn"><value type="string">DATA</value></default>                                     
@@ -501,15 +516,15 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="ntime"><value type="string">scan</value></default>
                         <default param="combinescans"><value type="bool">False</value></default>
                         <default param="extendpols"><value type="bool">True</value></default>
-                        <default param="growtime"><value type="double">90.0</value></default>
-                        <default param="growfreq"><value type="double">90.0</value></default>
+                        <default param="growtime"><value type="double">50.0</value></default>
+                        <default param="growfreq"><value type="double">50.0</value></default>
                         <default param="growaround"><value type="bool">False</value></default>
                         <default param="flagneartime"><value type="bool">False</value></default>
                         <default param="flagnearfreq"><value type="bool">False</value></default>                    
@@ -522,10 +537,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>                    
+                        <default param="feed"><value type="string"></value></default>
                     </equals>
                     <equals value="summary">
                         <default param="field"><value type="string"></value></default>
@@ -535,10 +550,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="correlation"><value type="string"></value></default>
                         <default param="scan"><value type="string"></value></default>
                         <default param="intent"><value type="string"></value></default>
-                        <default param="feed"><value type="string"></value></default>
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
                         <default param="minrel"><value type="double">0.0</value></default>
                         <default param="maxrel"><value type="double">1.0</value></default>
                         <default param="minabs"><value type="int">0</value></default>
@@ -558,6 +573,7 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
                         <default param="display"><value type="string"></value></default>
                     </equals>
                     <equals value=""></equals>            
+                    <equals value="none"></equals>            
                 </when>
                                
                <when param="savepars">
@@ -656,12 +672,13 @@ The task will flag a subset of data based on the following modes of operation:
               intent -- Select data based on observation intent
                     default: '' (all); example: intent='*CAL*,*BAND*'
 
-              feed -- Selection based on the feed - NOT IMPLEMENTED YET
-
               array -- Selection based on the antenna array
 
               observation -- Selection based on the observation ID
                     default: '' (all); example: observation='1' or observation=1
+
+              feed -- Selection based on the feed - NOT IMPLEMENTED YET
+
 
     mode -- Mode of operation.
         options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
@@ -686,7 +703,7 @@ The task will flag a subset of data based on the following modes of operation:
                   
                      scan=1~3 mode=manual
                      mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
-                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0 spw=9
+                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0
                      mode=extend extendpols=True
         
                reason -- select flag commands based on REASON(s) 
@@ -938,13 +955,18 @@ The task will flag a subset of data based on the following modes of operation:
                          thresholds. Thresholds are returned from rflag only when action='calculate'. 
                          The user can edit this file before doing the second pass, 
                          but the python-dictionary structure must be preserved.
+
                       -- The second pass applies these commands (action='apply').
 
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
                                     freqdev='fdevfile.txt', action='calculate')
                           tflagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', 
                                     freqdev='fdevfile.txt', action='apply')
-            
+
+                        With action='calculate', display='report' will produce diagnostic plots 
+                        showing data-statistics and thresholds (the same thresholds as those
+                        written out to 'tdevfile.txt' and 'fdevfile.txt'). 
+           
                         Note : The rflag algorithm was originally developed by Eric Greisen in 
                                 AIPS (31DEC11).
                         AIPS documentation : Section E.5 of the AIPS cookbook
@@ -1022,13 +1044,13 @@ The task will flag a subset of data based on the following modes of operation:
 
                growtime -- For any channel, flag the entire timerange in the current 2D chunk (
                            set by 'ntime') if more than X% of the timerange is already flagged.
-                      default: 90.0
+                      default: 50.0
                       options: 0.0 - 100.0
                          This option catches the low-intensity parts of time-persistent RFI.
 
                growfreq -- For any timestep, flag all channels in the current 2D chunk (set by 
                            data-selection) if more than X% of the channels are already flagged.
-                      default: 90.0
+                      default: 50.0
                       options: 0.0 - 100.0
                          This option catches broad-band RFI that is partially identified by earlier steps.
 

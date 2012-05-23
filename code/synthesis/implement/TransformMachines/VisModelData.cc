@@ -384,6 +384,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       Bool allnull=True;
       for (uInt k=0; k < ft.nelements(); ++k){
 	if(!ft[k].null()){
+	  if(k >0) vb.setModelVisCube(Cube<Complex> (vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0)));
+    
 	  ft[k]->get(vb, -1);
 	  if(ft.nelements()>1 || incremental){
 	    tmpModel+=vb.modelVisCube();

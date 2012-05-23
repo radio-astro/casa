@@ -33,6 +33,7 @@
 
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
+#include <display/DisplayDatas/DisplayData.h>
 
 namespace casa {
     namespace viewer {
@@ -376,18 +377,20 @@ namespace casa {
 	    }
 	}
 
-	void RegionToolManager::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+	void RegionToolManager::loadRegions( const std::string &path, const std::string &/*datatype*/, const std::string &/*displaytype*/ ) {
 
 	    bool first_trip = true;
 	    ListIter<WorldCanvas* >* wcs = pd->wcs();
 	    for ( wcs->toStart(); ! wcs->atEnd(); wcs->step( ) ) {
 		WorldCanvas *wc = wcs->getRight();
 		if ( wc == 0 ) continue;
+		DisplayData *dd = wc->csMaster( );
+		if ( dd == 0 ) continue;
 		const CoordinateSystem &test = wc->coordinateSystem();
 		const Vector<String> &units = wc->worldAxisUnits( );
 		IPosition shape(2);
-		shape[0] = wc->canvasXSize( );
-		shape[1] = wc->canvasYSize( );
+		shape[0] = dd->dataShape( )(0);
+		shape[1] = dd->dataShape( )(1);
 		RegionTextList rlist( path, test, shape );
 		Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
 		for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
@@ -410,7 +413,10 @@ namespace casa {
 				try { viewer::linear_to_pixel( wc, lcx, lcy, px, py ); } catch(...) { continue; }
 
 				// region is outside of our pixel canvas area
-				if ( ! wc->inPC(px,py) ) continue;
+				if ( (int) px < 0 || (int) px > shape[0] ||
+				     (int) py < 0 || (int) py > shape[1] ) {
+				    continue;
+				}
 
 				std::vector<std::pair<double,double> > linear_pts(2);
 				linear_pts[0].first = lcx;
@@ -448,7 +454,12 @@ namespace casa {
 				try { viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy ); } catch (...) { continue; }
 
 				// region is outside of our pixel canvas area
-				if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
+				if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
+				     (int) pblcy < 0 || (int) pblcy > shape[1] ||
+				     (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
+				     (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+				    continue;
+				}
 
 				std::vector<std::pair<double,double> > linear_pts(2);
 				linear_pts[0].first = lblcx;
@@ -514,7 +525,12 @@ namespace casa {
 				try { viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy ); } catch(...) { continue; }
 
 				// region is outside of our pixel canvas area
-				if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
+				if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
+				     (int) pblcy < 0 || (int) pblcy > shape[1] ||
+				     (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
+				     (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+				    continue;
+				}
 
 				std::vector<std::pair<double,double> > linear_pts(2);
 				linear_pts[0].first = lblcx;
@@ -553,7 +569,8 @@ namespace casa {
 				    try { viewer::linear_to_pixel( wc, lx, ly, px, py ); } catch (...) { continue; }
 
 				    // region is outside of our pixel canvas area
-				    if ( ! wc->inPC(px,py) ) {
+				    if ( (int) px < 0 || (int) px > shape[0] ||
+					 (int) py < 0 || (int) py > shape[1] ) {
 					error = false;
 					break;
 				    }

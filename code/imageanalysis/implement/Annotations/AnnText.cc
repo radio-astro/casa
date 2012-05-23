@@ -80,9 +80,9 @@ String AnnText::getText() const {
 }
 
 ostream& AnnText::print(ostream &os) const {
-	os << "text [[" << _inputDirection[0].first
-	   << ", " << _inputDirection[0].second << "], \""
-	   << _text << "\"]";
+	os << "text [["
+		<< _printDirection(_inputDirection[0].first, _inputDirection[0].second)
+		<< "], \"" << _text << "\"]";
 	_printPairs(os);
 	return os;
 }

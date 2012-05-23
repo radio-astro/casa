@@ -33,10 +33,12 @@
 #include <display/DisplayDatas/WedgeDD.h>
 #include <display/DisplayDatas/WedgeDM.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
+#include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <display/Display/Attribute.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+const String WedgeDD::WEDGE_PREFIX = "wedge";
 
 WedgeDD::WedgeDD( DisplayData *image) :
   itsMin(0.0),
@@ -165,11 +167,11 @@ WedgeDD::~WedgeDD() {
 bool WedgeDD::isDisplayable( ) const {
     DisplayData::DisplayState idstate = DisplayData::UNDISPLAYED;
     try {
-	// ihandle_ will be null if our image has been deleted, and
-	// dereferencing the handle will throw an exception...
-	idstate = ihandle_->getDisplayState();
+    	// ihandle_ will be null if our image has been deleted, and
+    	// dereferencing the handle will throw an exception...
+    	idstate = ihandle_->getDisplayState();
     } catch( ... ) {
-	idstate = DisplayData::UNDISPLAYED;
+    	idstate = DisplayData::UNDISPLAYED;
     }
     return idstate == DisplayData::DISPLAYED ? true : false;
 }
@@ -203,7 +205,7 @@ const Unit WedgeDD::dataUnit() const {
   return unit;
 }
 
-String WedgeDD::showValue(const Vector<Double> &world) {
+String WedgeDD::showValue(const Vector<Double> &/*world*/) {
   String retval;
   // IMPLEMENT THIS
   return retval;
@@ -237,12 +239,12 @@ Bool WedgeDD::setOptions(Record &rec, Record &recOut) {
   // remove wedge prefix
   Vector<String> fnames(5);
   fnames(0) = "axistext";      fnames(1) = "axistextcolor";
-  fnames(2) = "labelcharsize"; fnames(3) = "labellinewidth";
+  fnames(2) = WCAxisLabeller::LABEL_CHAR_SIZE; fnames(3) = "labellinewidth";
   fnames(4) = "labelcharfont";
   
   Record rec2(rec);
   for (uInt i=0; i < fnames.nelements(); i++) {
-    String str = "wedge"+fnames(i);
+    String str = WEDGE_PREFIX+fnames(i);
     if (rec.isDefined(str)) {
       if (i == 0 || i==1) {
 	rec2.renameField("x"+fnames(i),str);
@@ -287,7 +289,7 @@ Record WedgeDD::getOptions() {
   // add "wedge" prefix to make these options unique
   Vector<String> fnames(5);
   fnames(0) = "axistext";      fnames(1) = "axistextcolor";
-  fnames(2) = "labelcharsize"; fnames(3) = "labellinewidth";
+  fnames(2) = WCAxisLabeller::LABEL_CHAR_SIZE; fnames(3) = "labellinewidth";
   fnames(4) = "labelcharfont";
   
   // severe hacking of the record, to distribute the options to both x
@@ -310,10 +312,10 @@ Record WedgeDD::getOptions() {
       lname.del(reg);
       tmp.define(String("listname"),lname);
     }
-    tmp.define(field,String("wedge"+fnames(i)));
+    tmp.define(field,String(WEDGE_PREFIX+fnames(i)));
     tmp.define(field2,String("color_wedge"));
     rec.defineRecord(prefix+fnames(i),tmp);
-    rec.renameField("wedge"+fnames(i),prefix+fnames(i));   
+    rec.renameField(WEDGE_PREFIX+fnames(i),prefix+fnames(i));
   }
   return rec;
 }

@@ -44,7 +44,7 @@ namespace casa {
 		typedef std::pair<double,double> pt;
 		typedef std::vector<pt> point_list;
 
-		Polygon( WorldCanvas *wc, double x1, double y1 ) : Region( wc ), closed(false),
+		Polygon( WorldCanvas *wc, double x1, double y1 ) : Region( wc ),
 				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
 				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
@@ -100,8 +100,6 @@ namespace casa {
 		const point_list &drawing_points( ) const { return _drawing_points_; }
 
 	    private:
-		bool closed;
-
 		bool within_vertex_handle( double x, double y ) const;
 
 		int move_sizing_rectangle_handle( int handle, double x, double y );

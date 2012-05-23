@@ -7,7 +7,7 @@ CalStatsAXES.cc
 
 Description:
 ------------
-This file contains member functions for the CalStats::AXES class.
+This file contains member functions for the nested CalStats::AXES class.
 
 Classes:
 --------
@@ -33,7 +33,7 @@ Modification history:
 namespace casa {
 
 // -----------------------------------------------------------------------------
-// Start of CalStats::AXES class
+// Start of CalStats::AXES nested class
 // -----------------------------------------------------------------------------
 
 /*
@@ -224,7 +224,7 @@ CalStats::AXES& CalStats::AXES::operator=( const CalStats::AXES& oAxes ) {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// End of CalStats::AXES class
+// End of CalStats::AXES nested class
 // -----------------------------------------------------------------------------
 
 };

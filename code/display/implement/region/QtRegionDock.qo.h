@@ -65,6 +65,7 @@ namespace casa {
 
 	    signals:
 		void deleteRegion(QtRegionState*);
+		void deleteAllRegions( );
 		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 		void saveRegions( std::list<QtRegionState*>, ds9writer & );
 		void loadRegions( bool &handled, const QString &path, const QString &type );
@@ -78,6 +79,7 @@ namespace casa {
 		void stack_changed(int);
 		void change_stack(int);
 		void delete_current_region(bool);
+		void delete_all_regions(bool);
 		void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
 		void handle_visibility(bool);
 		void emit_region_stack_change( int );

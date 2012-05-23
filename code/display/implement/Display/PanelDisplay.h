@@ -163,7 +163,34 @@ class PanelDisplay : public MultiWCHolder, public DisplayOptions {
   // Is the specified DisplayData the one in charge of coordinate
   // state of the Panel's WCs?
   virtual Bool isCSmaster(const DisplayData *dd) const;
-  
+
+  /**
+   * Returns the current mapping of PGP units to pixel units.
+   * This number varies depending on the data units of the plot.
+   */
+   float getDrawUnit(  ) const;
+
+   /**
+    * Returns the number of columns of plots that are currently
+    * being displayed.
+    */
+   int getColumnCount( ) const;
+
+   /**
+    * Returns the number of rows of plots that are currently
+    * being displayed.
+    */
+   int getRowCount() const;
+
+
+   static const String X_ORIGIN;
+   static const String Y_ORIGIN;
+   static const String X_SIZE;
+   static const String Y_SIZE;
+
+
+
+
 private:
 
   // The PixelCanvas on which the panels are laid.
@@ -210,6 +237,9 @@ private:
 
   // unSetup the Geometry.
   void unSetupGeometry();
+
+
+
 
 };
 

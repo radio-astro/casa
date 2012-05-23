@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 DisplayData::DisplayData() : 
   activeZIndex_(0), delTmpData_(False),
   rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),
-  itsColormap(0), itsColormapWeight(-1.0), displaystate(LIMBO),
+  displaystate(LIMBO),itsColormap(0), itsColormapWeight(-1.0),
   uiBase_(1) {
 };
 

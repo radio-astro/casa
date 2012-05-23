@@ -143,9 +143,9 @@ Char AnnSymbol::symbolToChar(const AnnSymbol::Symbol s) {
 }
 
 ostream& AnnSymbol::print(ostream &os) const {
-	os << "symbol [[" << _inputDirection[0].first << ", "
-		<< _inputDirection[0].second << "], "
-		<< _symbolChar << "]";
+	os << "symbol [["
+		<< _printDirection(_inputDirection[0].first, _inputDirection[0].second)
+		<< "], " << _symbolChar << "]";
 	_printPairs(os);
 	return os;
 }

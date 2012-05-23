@@ -30,6 +30,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class FlagAgentRFlag : public FlagAgentBase {
 
+	enum optype {
+
+		MEAN,
+		ROBUST_MEAN,
+		MEDIAN,
+		ROBUST_MEDIAN
+	};
+
 public:
 
 	FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
@@ -55,6 +63,9 @@ protected:
 	// Convenience function to compute median
 	Double median(vector<Double> &data);
 
+	//
+	void noiseVsRef(vector<Double> &data, Double ref);
+
 	// Convenience function to get simple averages
 	Double computeThreshold(vector<Double> &data, vector<Double> &dataSquared, vector<Double> &counts);
 
@@ -67,6 +78,31 @@ protected:
 										uInt centralTime,
 										VisMapper &visibilities,
 										FlagMapper &flags);
+
+	void robustMean(	uInt timestep_i,
+						uInt pol_k,
+						uInt nChannels,
+						Double &AverageReal,
+						Double &AverageImag,
+						Double &StdReal,
+						Double &StdImag,
+						Double &SumWeightReal,
+						Double &SumWeightImag,
+						VisMapper &visibilities,
+						FlagMapper &flags);
+
+	void simpleMedian(	uInt timestep_i,
+						uInt pol_k,
+						uInt nChannels,
+						Double &AverageReal,
+						Double &AverageImag,
+						Double &StdReal,
+						Double &StdImag,
+						Double &SumWeightReal,
+						Double &SumWeightImag,
+						VisMapper &visibilities,
+						FlagMapper &flags);
+
 	// Function to return histograms
 	FlagReport getReport();
 
@@ -93,6 +129,8 @@ private:
 	vector<Double> thresholdRobust_p;
 	Double spectralmin_p;
 	Double spectralmax_p;
+	uInt optype_p;
+	void (casa::FlagAgentRFlag::*spectralAnalysis_p)(uInt,uInt,uInt,Double&,Double&,Double&,Double&,Double&,Double&,VisMapper&,FlagMapper&);
 
 	// Store frequency to be used in Reports
 	map< pair<Int,Int>,vector<Double> > field_spw_frequency_p;

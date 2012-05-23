@@ -55,12 +55,15 @@
 #include <images/Images/ImageUtilities.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/Display/Options.h>
+#include <display/QtPlotter/SpecFitEstimateDialog.qo.h>
+#include <display/QtPlotter/GaussFitEstimate.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
 #include <QHash>
 #include <QWidget>
+#include <QDialog>
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <cmath>
@@ -97,8 +100,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 {
     setupUi(this);
 
+
     initPlotterResource();
 
+    functionTabs->removeTab(3);
     functionTabs->setCurrentIndex( 0 );
 
     setWindowTitle(QString("Spectral Profile - ").append(name));
@@ -114,8 +119,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
             this, SLOT(changeCollapseType(const QString &)));
     connect(collapseError, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCollapseError(const QString &)));
-    //changeCollapseType(collapseType->currentText());
-    //changeCollapseError(collapseError->currentText());
     changeCollapseType();
     changeCollapseError();
 
@@ -142,7 +145,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     spcRefFrame = String(MFrequency::showType(freqtype));
     Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
     spcRef->setCurrentIndex(frameindex);
-
+    specFitSettingsWidget -> setCanvas( pixelCanvas );
     connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCoordinateType(const QString &)));
     connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
@@ -223,6 +226,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
    	 *itsLog << LogIO::WARN << message << LogIO::POST;
     }
 }
+
 
 //----------------------------------------------------------------------------------
 //              Spectrum Positioning
@@ -1034,6 +1038,7 @@ void QtProfile::wcChanged( const String c,
       Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
       if(pos>-1){
 	yUnit.remove(pos,5);
+	setPixelCanvasYUnits( yUnitPrefix, yUnit);
       }
     }
 
@@ -1495,6 +1500,54 @@ void QtProfile::doLineFit(){
 	return;
 }
 
+void QtProfile::specLineFit(){
+
+	/**itsLog << LogOrigin("QtProfile", "SpectralLineFit");
+
+	// get the values
+	float startVal = chanMinLineEdit -> text().toFloat();
+	float endVal = chanMaxLineEdit -> text().toFloat();
+
+	bool doFitGauss = gaussRadioButton->isChecked();
+	bool doFitPoly = !doFitGauss;
+	int polyN = -1;
+	if ( !doFitPoly ){
+		polyN = polyOrderSpinBox->value();
+	}
+
+	// do the fit
+	String  msg;
+	if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)){
+		//msg = String("Data could not be fitted!");
+		profileStatus->showMessage(QString(msg.c_str()));
+	}
+	else{
+		if (fitter->getStatus() == SpectralFitter::SUCCESS){
+			// get the fit values
+			Vector<Float> z_xfit, z_yfit;
+			fitter->getFit(z_xval, z_xfit, z_yfit);
+			// report problems
+			if (z_yfit.size()<1){
+				msg = String("There exist no fit values!");
+				*itsLog << LogIO::WARN << msg << LogIO::POST;
+				profileStatus->showMessage(QString(msg.c_str()));
+				return;
+			}
+
+			// overplot the fit values
+			QString fitName = fileName + "FIT" + QString::number(startVal)
+				+ "-" + QString::number(endVal) + QString(xaxisUnit.c_str());
+			qDebug() << "Spec Line fit values are:";
+			for ( int i = 0; i < z_xfit.size(); i++ ){
+				qDebug() << "x="<<z_xfit[i] << " y=" <<z_yfit[i];
+			}
+			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+		}
+		profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
+	}*/
+}
+
+
 void QtProfile::changeTopAxis(){
 	if ( lastWX.size() > 0 ){
 		Vector<Float> xValues (lastWX.size());
@@ -1628,6 +1681,19 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     ok = setErrorPlotting( wxv, wyv);
 
     Int ordersOfM = scaleAxis();
+
+
+    //remove the "/beam" in case of plotting flux
+    if (itsPlotType==QtProfile::PFLUX){
+	Int pos = yUnit.indexOf("/beam", 0, Qt::CaseInsensitive);
+        if ( pos > -1 ){
+           yUnit.remove(pos,5);
+	   setPixelCanvasYUnits( yUnitPrefix, yUnit);
+	}
+    }
+
+
+
     // plot the graph
     plotMainCurve();
 

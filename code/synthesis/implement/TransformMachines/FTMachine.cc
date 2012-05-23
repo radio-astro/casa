@@ -1057,7 +1057,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     inRecord.get("douvwrotation", doUVWRotation_p);
    
-    inRecord.get("spwchanselflag", spwChanSelFlag_p);
+    //inRecord.get("spwchanselflag", spwChanSelFlag_p);
+    //We won't respect the chanselflag as the vister may have different selections
+    spwChanSelFlag_p.resize();
     inRecord.get("freqframevalid", freqFrameValid_p);
     inRecord.get("selectedspw", selectedSpw_p);
     inRecord.get("imagefreq", imageFreq_p);
@@ -1319,10 +1321,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // through the data 
     // hoping the user made the right choice
     if (!anymatchChan && !anyTopo){
-      logIO() << "No overlap in frequency between image channels and selected data found "
-	      << " Check your data selection and image parameters" 
-	      << LogIO::EXCEPTION;
-      return False;
+      logIO() << "No overlap in frequency between image channels and selected data found for this FTMachine \n"
+	      << " Check your data selection and image parameters if you end up with a blank image" 
+	      << LogIO::WARN << LogIO::POST;
       
     }
     
@@ -1552,7 +1553,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uInt nchan = vb.nChannel();
     uInt msid = vb.msId();
     uInt selspw = vb.spectralWindow();
-    Bool spwFlagIsSet=( (spwChanSelFlag_p.shape()(1) > selspw) && 
+    Bool spwFlagIsSet=( (spwChanSelFlag_p.nelements() > 0) && (spwChanSelFlag_p.shape()(1) > selspw) && 
 			(spwChanSelFlag_p.shape()(0) > msid) && 
 			(spwChanSelFlag_p.shape()(2) >=nchan));
     //cerr << "spwFlagIsSet " << spwFlagIsSet << endl;
