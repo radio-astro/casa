@@ -118,7 +118,7 @@ namespace casa{
     const Complex* __restrict__ convFuncV=cfs.data->getStorage(Dummy);
       
     Double *freq=vbs.freq_p.getStorage(Dummy);
-    Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
+    vbs.rowFlag_p.getStorage(Dummy);
 
     // Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
     // Matrix<Double>& uvw=vbs.uvw_p;
@@ -281,13 +281,13 @@ namespace casa{
     Bool Dummy;
     const Complex *gridStore = grid.getStorage(Dummy);
     Vector<Int> igrdpos(4);
-    const Int *iPosPtr = igrdpos.getStorage(Dummy);
-    Complex *convFunc=(*(convFuncStore_p.data)).getStorage(Dummy);
+    igrdpos.getStorage(Dummy);
+    (*(convFuncStore_p.data)).getStorage(Dummy);
     const Complex* __restrict__ convFuncV=convFuncStore_p.data->getStorage(Dummy);
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
+
     Matrix<Double>& uvw=vbs.uvw_p;
     Cube<Complex>&  visCube=vbs.visCube_p;
     Cube<Bool>&     flagCube=vbs.flagCube_p;
