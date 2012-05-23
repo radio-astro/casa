@@ -21,11 +21,12 @@
 # model calculations should be in the code (for those bodies that have
 # proper models) but for now, just live with the tabulated versions.
 #
+# fix for NaN value issue - 2012.05.17
 
 from numpy import searchsorted
 from scipy import array
 from scipy.interpolate import interp1d
-from math import exp, pi, cos, sin,sqrt
+from math import exp, pi, cos, sin,sqrt, isnan
 from os import environ, listdir
 from taskinit import gentools 
 
@@ -322,9 +323,19 @@ def Tb_Mars_int (MJDs, frequencies):
             for jj in range(nind-10, nind+10):
                 lMJD.append(modelMJDs[jj])
                 lTb.append(modelTbs[jj][ii])
-            mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
-            mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
-                        (1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)))
+        # background subtraction from model requested change
+        # from Bryan - 2012.05.17
+	#== old code
+        #    mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
+        #    mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
+        #                (1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)))
+	    mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
+        # note: here, when we have the planck results, get a proper
+        # estimate of the background temperature.
+	    Tbg = 2.72
+	    mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
+	           ((1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)) - \
+		   (1.0 / (exp(HH * freqs[ii] / (KK * Tbg)) - 1.0))))
         estatuses = []
         eTbs = []
         edTbs = []
@@ -372,10 +383,18 @@ def Tb_planet_int (source_name, frequency):
     freqs = []
     for line in ff:
         [freq,Tb] = line[:-1].split()
+        #Tbs.append(float(Tb))
+        #freqs.append(1.0e9*float(freq))
+        #fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
+        #            (1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)))
         Tbs.append(float(Tb))
-        freqs.append(1.0e9*float(freq))
-        fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
-                    (1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)))
+	freqs.append(1.0e9*float(freq))
+    # note: here, when we have the planck results, get a proper
+    # estimate of the background temperature.
+        Tbg = 2.72
+	fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
+	     ((1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)) - \
+             (1.0 / (exp(HH * freqs[-1] / (KK * Tbg)) - 1.0))))
     ff.close()
     #print "next freqs=",freqs, " frequency=",frequency
     if (frequency[0] < freqs[0] or frequency[1] > freqs[-1]):
@@ -409,6 +428,8 @@ def interpolate_list (freqs, Tbs, frequency):
     aTbs = array(Tbs[low:high])
     afreqs = array(freqs[low:high])
     func = interp1d (afreqs, aTbs, kind='cubic')
+    if isnan(func(frequency)):
+        func = interp1d(afreqs, aTbs, kind='linear')
     return [ 0, float(func(frequency)), 0.0 ]
 
 

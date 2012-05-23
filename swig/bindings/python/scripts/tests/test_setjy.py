@@ -482,15 +482,24 @@ class Uranus_newmodel(SplitChecker):
         """WVR spw"""
         #check_eq(self.records['']['wvr'], numpy.array([[26.40653229+0.j,
         #                                                26.40653229+0.j]]),
-        check_eq(self.records['']['wvr'], numpy.array([[25.427332964+0.j,
-                                                        25.427332964+0.j]]),
+        #check_eq(self.records['']['wvr'], numpy.array([[25.427332964+0.j,
+        #                                                25.427332964+0.j]]),
+        #         0.0001)
+        # new values 2012.05.23 (with the background subtraction)
+        check_eq(self.records['']['wvr'], numpy.array([[ 25.33798409+0.j,
+	                                                 25.33798409+0.j]]),
                  0.0001)
+
     def test_auto3(self):
         """Zero spacing of spw 3"""
         #check_eq(self.records['']['auto3'], numpy.array([[65.80638885+0.j],
         #                                                 [65.80638885+0.j]]),
-        check_eq(self.records['']['auto3'], numpy.array([[66.761640046+0.j],
-                                                         [66.761640046+0.j]]),
+        #check_eq(self.records['']['auto3'], numpy.array([[66.761640046+0.j],
+        #                                                 [66.761640046+0.j]]),
+        #         0.0001)
+        # new values 2012.05.23 (with the background subtraction)
+	check_eq(self.records['']['auto3'], numpy.array([[ 66.72530365+0.j],
+	                                                [ 66.72530365+0.j]]),
                  0.0001)
     #def test_long3(self):
     #    """Long spacing of spw 3"""
@@ -501,9 +510,14 @@ class Uranus_newmodel(SplitChecker):
         """Zero spacing of spw 4"""
     #    check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
     #                                                     [69.33396912+0.j]]),
-        check_eq(self.records['']['auto4'], numpy.array([[70.434192297+0.j],
-                                                         [70.434192297+0.j]]),
+    #    check_eq(self.records['']['auto4'], numpy.array([[70.434192297+0.j],
+    #                                                         [70.434192297+0.j]]),
+    #             0.0001)
+    # new values (with the background subtraction) -2012.05.21
+        check_eq(self.records['']['auto4'], numpy.array([[ 70.40153503+0.j],
+	                                                 [ 70.40153503+0.j]]),
                  0.0001)
+
     #def test_med4(self):
     #    """Medium spacing of spw 4"""
     #    check_eq(self.records['']['med4'], numpy.array([[38.01076126+0.j],
@@ -640,8 +654,12 @@ class selectobs_newmodel(SplitChecker):
     def test_obs1(self):
         """Was obsID 1 set?"""
         check_eq(self.records[''][1],
-                 numpy.array([ 1.26222515+0.08705679j,  1.26524138+0.00132824j,
-                               1.26244164-0.08440888j,  1.25383842-0.16976045j]), 0.003)
+        #         numpy.array([ 1.26222515+0.08705679j,  1.26524138+0.00132824j,
+        #                       1.26244164-0.08440888j,  1.25383842-0.16976045j]), 0.003)
+	# new values (now with the background subtraction)
+	        numpy.array([ 1.25815356+0.08671843j,  1.26115608+0.00126659j,
+	                      1.25836146-0.08419354j,  1.24978232-0.16926908j]),
+			      0.003)
 
     def test_obs2(self):
         """Was obsID 2 left alone?"""

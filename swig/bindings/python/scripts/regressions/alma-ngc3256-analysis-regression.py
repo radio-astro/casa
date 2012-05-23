@@ -827,8 +827,8 @@ if(mystep in thesteps):
     casalog.post("NGC3256 continuum, "+str(peakcont)+" ("+str(refpeakcont)+", "+str(refpeakcont33)+"), "
                  +str(rmscont)+" ("+str(refrmscont)+", "+str(refrmscont33)+")")
     casalog.post( "------------------------------------------------------------------------------------------")
-    casalog.post("NGC3256 selfcaled continuum, "+str(peakpcal)+" ("+str(refpeakpcal)+", "+str(refpeakpcal33)+"), "
-                 +str(rmspcal)+" ("+str(refrmspcal)+", "+str(refrmspcal33)+")")
+    casalog.post("NGC3256 selfcaled continuum, "+str(peakcontsc)+" ("+str(refpeakcontsc)+", "+str(refpeakcontsc33)+"), "
+                 +str(rmscontsc)+" ("+str(refrmscontsc)+", "+str(refrmscontsc33)+")")
     casalog.post( "------------------------------------------------------------------------------------------")
 
     print rmspcal, refrmspcal
