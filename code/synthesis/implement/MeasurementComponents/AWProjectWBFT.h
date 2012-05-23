@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int findPointingOffsets(const VisBuffer& vb, Array<Float> &l_off, Array<Float> &m_off,
 			    Bool Evaluate);
     void normalizeAvgPB();
-    void normalizeAvgPB(ImageInterface<Complex>& inImage, ImageInterface<Float>& outImage) 
+    void normalizeAvgPB(ImageInterface<Complex>& /*inImage*/, ImageInterface<Float>& /*outImage*/)
     {throw(AipsError("AWPWBFT::normalizeAvgPB(Complex,Float)"));}
 
     //
@@ -149,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Returns True if accumulation during gridding to compute the
     // average PB must be done.
     //
-    virtual Bool computeAvgPB(const Double& actualPA, const Double& lastPAUsedForWtImg) 
+    virtual Bool computeAvgPB(const Double& /*actualPA*/, const Double& /*lastPAUsedForWtImg*/)
     {return (avgPBReady_p==False);};
 
     // virtual void setMiscInfo(const Int qualifier)

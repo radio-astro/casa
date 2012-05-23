@@ -916,7 +916,7 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
     oldWvi = NULL;
 
     Bool isEnabled;
-    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
+    //Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
 
     //isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
     // For now (release 3.4) make imaging be explicitly turned on
