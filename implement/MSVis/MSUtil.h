@@ -62,6 +62,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const MFrequency::Types freqframe=MFrequency::LSRK,
 				   const Int fieldId=0);
 
+  private:
+    static void rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval, Vector<Int>& indx);
 
   };
 } //# NAMESPACE CASA - END
