@@ -298,15 +298,7 @@ protected:
   void setupMeasurementSet(const String& MSFileName, Bool useTSM=True,
                Int obsType = MSTileLayout::Standard);
 
-  // Fill the Observation and ObsLog tables
-  void fillObsTables();
-
-  // Fill the main table from the Primary group data
-  // if we have enough memory try to do it in mem
-  void fillMSMainTableColWise(Int& nField, Int& nSpW);
-  //else do it row by row
-  void fillMSMainTable(Int& nField, Int& nSpW);
-
+  ///////////////fillers for primary table form uvfits//////////////////////
   // Read a binary table extension of type AIPS AN and create an antenna table
   void fillAntennaTable(BinaryTable& bt);
 
@@ -324,19 +316,32 @@ protected:
 
   void fillPolarizationTable();
 
-   //verify that the fits contains visibility data
-   void checkRequiredAxis();
+  //verify that the fits contains visibility data
+  void checkRequiredAxis();
 
-   void fillSpectralWindowTable(BinaryTable& bt);
+  void fillSpectralWindowTable(BinaryTable& bt);
 
-  // fill observation, polarization, description from FITS UV table
-  void fillOtherUVTables(BinaryTable& bt, BinaryTable& fq);
+  // fill Field table 
+  void fillFieldTable(BinaryTable& bt);
 
   void fillMSMainTable(BinaryTable& bt);
 
+  void fillPointingTable();
+
   void fillSourceTable();
 
-  void fillPointingTable();
+  // fill the Feed table with minimal info needed for synthesis processing
+  void fillFeedTable();
+
+  ///////////////fillers for primary table form uvfits//////////////////////
+  // Fill the Observation and ObsLog tables
+  void fillObsTables();
+
+  // Fill the main table from the Primary group data
+  // if we have enough memory try to do it in mem
+  void fillMSMainTableColWise(Int& nField, Int& nSpW);
+  //else do it row by row
+  void fillMSMainTable(Int& nField, Int& nSpW);
 
   // fill spectralwindow table from FITS FQ table + header info
   void fillSpectralWindowTable(BinaryTable& bt, Int nSpW);
@@ -349,9 +354,6 @@ protected:
 
   // fill Field table from header (single source fits)
   void fillFieldTable(Int nField);
-
-  // fill the Feed table with minimal info needed for synthesis processing
-  void fillFeedTable();
 
   // fill the Pointing table (from Field table, all antennas are assumed
   // to point in the field direction) and possibly the Source table.

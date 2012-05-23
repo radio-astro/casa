@@ -360,6 +360,22 @@ class ImageAnalysis
     );
     
 
+    // regrids to match the "other" image interface...
+    ImageInterface<Float> * regrid(
+	const String& outfile, const ImageInterface<Float>*other,
+        const String& method="linear",
+    	const Vector<Int>& axes = Vector<Int>(0),
+	const Record &region = Record(),
+	const String& mask="",
+        const Int decimate=10,
+        const Bool replicate=False,
+        const Bool doref=True,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
+        const Bool force=False,
+        const Bool specAsVelocity=False,
+        const Bool extendAxes=False
+    );
 
     ImageInterface<Float>* rotate(
     	const String& outfile,
@@ -709,7 +725,7 @@ class ImageAnalysis
     ImageInterface<Float> * _regrid(
     	const String& outfile, const Vector<Int>& shape,
         const CoordinateSystem& csys, const Vector<Int>& axes,
-        Record& region, const String& mask,
+        const Record& region, const String& mask,
         const String& method, const Int decimate,
         const Bool replicate, const Bool doref,
         const Bool dropdeg, const Bool overwrite,
@@ -719,7 +735,7 @@ class ImageAnalysis
     ImageInterface<Float>* _regridByVelocity(
     	const String& outfile, const Vector<Int>& shape,
     	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
-    	Record& region, const String& mask,
+    	const Record& region, const String& mask,
     	const String& method, const Int decimate,
     	const Bool replicate, const Bool doref,
     	const Bool dropdeg, const Bool overwrite,
