@@ -9,12 +9,9 @@ rcParams['verbose'] = 0
 
 scan = scantable("../test/data/tid-t002.rpf", average=False)
 print scan
+
 # select only one IF/Pol/Beam
-sel = selector()
-sel.set_ifs(0)
-sel.set_polarisations(0)
-sel.set_beams(0)
-scan.set_selection(sel)
+scan.set_selection(ifs=0, beams=0, pols=0)
 
 # plot in GHz
 scan.set_unit("GHz")
@@ -49,4 +46,4 @@ xyplotter.gca().yaxis_date() # tell the plotter that the yaxis is using dates
 xyplotter.xlabel(xax[1])
 xyplotter.ylabel("Obs. Time")
 
-#xyplotter.savefig("test.ps",orientation="landscape")
+xyplotter.savefig("test.png",orientation="landscape")

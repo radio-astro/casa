@@ -2,8 +2,8 @@ from asap.scantable import scantable
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.selector import selector
-#from asap import asaplotgui
 from asap.asapplotter import new_asaplot
+from matplotlib import rc as rcp
 
 @asaplog_post_dec
 def average_time(*args, **kwargs):
@@ -311,6 +311,7 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
         asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
         asaplog.post('WARN')
         p=new_asaplot()
+        rcp('lines', linewidth=1)
         #nr=min(6,len(ifnos)*len(polnos))
         nr=len(ifnos)*len(polnos)
         titles=[]
@@ -530,6 +531,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
         asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
         asaplog.post('WARN')
         p=new_asaplot()
+        rcp('lines', linewidth=1)
         #nr=min(6,len(ifnos)*len(polnos))
         nr=len(ifnos)*len(polnos)
         titles=[]
@@ -740,6 +742,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
         asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
         asaplog.post('WARN')
         p=new_asaplot()
+        rcp('lines', linewidth=1)
         #nr=min(6,len(ifnos)*len(polnos))
         nr=len(ifnos)/2*len(polnos)
         titles=[]

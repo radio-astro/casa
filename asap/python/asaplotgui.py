@@ -37,6 +37,7 @@ class asaplotgui(asaplotbase):
         self.canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
         # Simply instantiating this is enough to get a working toolbar.
         self.figmgr = FigureManagerTkAgg(self.canvas, 0, self.window)
+        self.figmgr._cidgcf = None
         # Register this plot to matplotlib without activating it
         #_pylab_helpers.Gcf.set_active(self.figmgr)
         _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr

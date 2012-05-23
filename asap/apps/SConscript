@@ -5,7 +5,7 @@ Import( "env")
 myenv = env.Clone()
 
 # gather cpp files
-cpps = env.SGlob("*.cpp")
+cpps = []#env.SGlob("*.cpp")
 
 # location of libasap.a
 myenv.Prepend( LIBPATH = ['#/build'] )
@@ -16,7 +16,5 @@ myenv.Prepend(LIBS = ['asap'])
 installs = []
 for cpp in cpps:
     prog = myenv.Program(cpp)    
-    installs.append(myenv.Install("$prefix/bin", prog))
-    if len(myenv["makedist"]):
-        myenv.QInstall("#/$stagedir/bin", prog)
+    myenv.QInstall("#/$stagedir/bin", prog)
 

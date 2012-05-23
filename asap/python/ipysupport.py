@@ -6,8 +6,8 @@ from asap.scantable import scantable
 
 
 # workaround for ipython, which redirects this if banner=0 in ipythonrc
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
+#sys.stdout = sys.__stdout__
+#sys.stderr = sys.__stderr__
 
 def version():
     print  "ASAP %s(%s)"% (__version__, __date__)

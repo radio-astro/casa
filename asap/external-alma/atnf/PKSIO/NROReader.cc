@@ -625,8 +625,12 @@ int NROReader::getScanInfo( int irow,
   //cout << "spec.size() = " << spec.size() << endl ;
   
   // flagtra
+  bool setValue = !( flagtra.nelements() == spectra.nelements() ) ; 
   flagtra.resize( spectra.nelements() ) ;
-  flagtra.set( 0 ) ;
+  if ( setValue ) {
+    //cout << "flagtra resized. reset values..." << endl ;
+    flagtra.set( 0 ) ;
+  }
   //cout << "flag.size() = " << flag.size() << endl ;
 
   // tsys

@@ -2264,6 +2264,8 @@ class scantable(Scantable):
         if plot:
             from asap.asapplotter import new_asaplot
             theplot = new_asaplot(rcParams['plotter.gui'])
+            from matplotlib import rc as rcp
+            rcp('lines', linewidth=1)
             theplot.set_panels()
             ylab=s._get_ordinate_label()
             #theplot.palette(0,["#777777","red"])
@@ -2335,6 +2337,8 @@ class scantable(Scantable):
 #         if plot:
 #             from asap.asapplotter import new_asaplot
 #             theplot = new_asaplot(rcParams['plotter.gui'])
+#             from matplotlib import rc as rcp
+#             rcp('lines', linewidth=1)
 #             theplot.set_panels()
 #             ylab=s._get_ordinate_label()
 #             #theplot.palette(0,["#777777","red"])
@@ -2959,10 +2963,14 @@ class scantable(Scantable):
                 for r in rows:
                     f.x = workscan._getabcissa(r)
                     f.y = workscan._getspectrum(r)
-                    f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
+                    if mask:
+                        f.mask = mask_and(mask, workscan._getmask(r))    # (CAS-1434)
+                    else: # mask=None
+                        f.mask = workscan._getmask(r)
+                    
                     f.data = None
                     f.fit()
-                    
+
                     f.plot(residual=True)
                     accept_fit = raw_input("Accept fit ( [y]/n ): ")
                     if accept_fit.upper() == "N":
@@ -3104,8 +3112,11 @@ class scantable(Scantable):
                 
                 for r in rows:
                     idx = 2*workscan.getif(r)
-                    fl.find_lines(r, mask_and(mask, workscan._getmask(r)), 
-                                  edge[idx:idx+2])  # (CAS-1434)
+                    if mask:
+                        msk = mask_and(mask, workscan._getmask(r)) # (CAS-1434)
+                    else: # mask=None
+                        msk = workscan._getmask(r)
+                    fl.find_lines(r, msk, edge[idx:idx+2])  
 
                     f.x = workscan._getabcissa(r)
                     f.y = workscan._getspectrum(r)

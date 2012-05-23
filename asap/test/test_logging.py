@@ -4,6 +4,10 @@ from nose.tools import *
 from nose.plugins.skip import Skip, SkipTest
 from asap.logging import asaplog
 from asap.env import is_casapy
+from asap import rcParams
+
+# no logging if not verbose
+rcParams['verbose'] = True
 
 if is_casapy():
     raise SkipTest("Can't test against casalog")

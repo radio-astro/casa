@@ -25,12 +25,16 @@ class asaplot(asaplotbase):
         _pylab_helpers.Gcf.destroy(0)
         self.window = None
         self.canvas = FigureCanvasAgg(self.figure)
-        self.figmgr = FigureManagerBase(self.canvas,1)
+        self.figmgr = FigureManagerBase(self.canvas,0)
         # This seems necessary when using Gcf, as this is done in
         # pyplot.figure. Otherwise this can cause atexit errors at cleanup
         
         self.figmgr._cidgcf = None
         _pylab_helpers.Gcf.figs[self.figmgr.num] = self.figmgr
+
+    def quit(self):
+        # never dextroy non-GUI plotter.
+        pass
 
     def map(self):
         """ This method is not available in non-GUI plotting class"""

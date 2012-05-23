@@ -9,10 +9,8 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-
-#include <string>
-
 #include <boost/python.hpp>
+#include <string>
 
 #include "LineCatalog.h"
 

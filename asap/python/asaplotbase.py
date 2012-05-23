@@ -11,6 +11,7 @@ from matplotlib.font_manager import FontProperties as FP
 from numpy import sqrt
 from matplotlib import rc, rcParams
 from matplotlib.ticker import OldScalarFormatter
+from matplotlib import _pylab_helpers
 
 from asap.parameters import rcParams as asaprcParams
 from asap.logging import asaplog
@@ -849,3 +850,15 @@ class asaplotbase:
                                     horizontalalignment='center',
                     rotation=rotate,transform = trans)
         self.axes.set_autoscale_on(True)
+
+    def _alive(self):
+        # Return True if the GUI alives.
+        if (not self.is_dead) and \
+               self.figmgr and hasattr(self.figmgr, "num"):
+            figid = self.figmgr.num
+            # Make sure figid=0 is what asapplotter expects.
+            # It might be already destroied/overridden by matplotlib
+            # commands or other methods using asaplot.
+            return _pylab_helpers.Gcf.has_fignum(figid) and \
+                   (self.figmgr == _pylab_helpers.Gcf.get_fig_manager(figid))
+        return False

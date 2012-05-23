@@ -1,11 +1,11 @@
 //#---------------------------------------------------------------------------
 //# python_STGrid.cc: python exposure of c++ STGrid class
 //#---------------------------------------------------------------------------
-#include <string>
-#include <vector>
-
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
+
+#include <string>
+#include <vector>
 
 #include "STGrid.h"
 //#include "STGridWrapper.h"

@@ -5,6 +5,7 @@ from asap.logging import asaplog, asaplog_post_dec
 import matplotlib.axes
 from matplotlib.font_manager import FontProperties
 from matplotlib.text import Text
+from matplotlib import _pylab_helpers
 
 import re
 
@@ -85,15 +86,20 @@ class asapplotter:
                     return key
         return None
 
+    @asaplog_post_dec
     def _reload_plotter(self):
         if self._plotter is not None:
-            if  not self._plotter.is_dead:
-                # clear lines and axes
-                self._plotter.clear()
+            #if not self._plotter.is_dead:
+            #    # clear lines and axes
+            #    try:
+            #        self._plotter.clear()
+            #    except: # Can't remove when already killed.
+            #        pass
             if self.casabar_exists():
                 del self._plotter.figmgr.casabar
             self._plotter.quit()
             del self._plotter
+        asaplog.push('Loading new plotter')
         self._plotter = new_asaplot(self._visible,**self._inikwg)
         self._plotter.figmgr.casabar=self._new_custombar()
         # just to make sure they're set
@@ -133,7 +139,22 @@ class asapplotter:
             errmsg:    An error (warning) message to send to the logger,
                        when plot window is not alive.
         """
-        if self._plotter and not self._plotter.is_dead:
+        isAlive = (self._plotter is not None) and self._plotter._alive()
+        # More tests
+        #if isAlive:
+        #    if self._plotter.figmgr:
+        #        figmgr = self._plotter.figmgr
+        #        figid = figmgr.num
+        #        # Make sure figid=0 is what asapplotter expects.
+        #        # It might be already destroied/overridden by matplotlib
+        #        # commands or other plotting methods using asaplot.
+        #        isAlive = _pylab_helpers.Gcf.has_fignum(figid) and \
+        #                  (figmgr == \
+        #                   _pylab_helpers.Gcf.get_fig_manager(figid))
+        #    else:
+        #        isAlive = False
+            
+        if isAlive:
             return True
         # Plotter is not alive.
         haltmsg = "Plotter window has not yet been loaded or is closed."

@@ -4,6 +4,12 @@ import glob
 import re
 import platform
 
+def get_libdir():
+    import distutils.sysconfig
+    return os.path.basename(distutils.sysconfig.get_config_var('LIBDIR'))
+
+LIBDIR = "lib" #get_libdir()
+
 def generate(env):
 
     def SGlob(pattern, excludedirs=[], recursive=False):
@@ -32,7 +38,7 @@ def generate(env):
         if path is None or not os.path.exists(path):
             env.Exit(1)
         env.PrependUnique(CPPPATH = [os.path.join(path, "include")])
-        env.PrependUnique(LIBPATH = [os.path.join(path, "lib")])
+        env.PrependUnique(LIBPATH = [os.path.join(path, LIBDIR)])
     env.AddCustomPath = AddCustomPath
 
     def AddCustomPackage(pkgname=None):
@@ -45,7 +51,7 @@ def generate(env):
 	libd = None
 	if pkgroot is not None:
 	    incd = os.path.join(pkgroot, "include")
-	    libd = os.path.join(pkgroot, "lib")
+	    libd = os.path.join(pkgroot, LIBDIR)
 	else:	    
 	    if pkgincd is not None:
 		incd = pkgincd

@@ -155,7 +155,6 @@ class interactivemask:
                 asaplog.post("WARN")
             self.showmask = True
 
-        #if not self.p._plotter or self.p._plotter.is_dead:
         if not self.p:
             asaplog.push('A new ASAP plotter will be loaded')
             asaplog.post()
@@ -163,6 +162,8 @@ class interactivemask:
             self.p = asapplotter()
             self.newplot = True
         self.p._assert_plotter(action='reload')
+        from matplotlib import rc as rcp
+        rcp('lines', linewidth=1)
         
         # Plot selected spectra if needed
         if self.scan != self.p._data:
@@ -338,12 +339,15 @@ class interactivemask:
         """
         if callback: self.callback=callback
         if self.callback: self.callback()
-        if not self.event: self.p._plotter.register('button_press',None)
+        if not self.event:
+            try: self.p._plotter.register('button_press',None)
+            except: pass # plotter window is closed by X button.
         # Finish the plot
         if not self.newplot:
             self.clear_polygon()
         else:
-            self.p._plotter.unmap()
+            #self.p._plotter.unmap()
+            self.p._plotter.quit()
             self.p._plotter = None
             del self.p
             self.p = None

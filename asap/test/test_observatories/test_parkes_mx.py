@@ -8,7 +8,7 @@ rcParams['plotter.gui'] = 0
 DATA=os.path.join(os.path.split(__file__)[0], "..", "data", 
                   "2011-09-27_0551-P000_WKK5999_test.mbf")
 
-class TestMopra(object):
+class TestParkes(object):
     def setup(self):
         self.st = scantable(DATA)
 

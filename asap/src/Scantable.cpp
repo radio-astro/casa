@@ -1268,19 +1268,19 @@ void Scantable::summary( const std::string& filename )
   for (Int i=0; i < nfid; i++){
     // List row=i of FREQUENCIES subtable
     ifNos[i].shape(tmplen);
-    if (tmplen == 1) {
+    if (tmplen >= 1) {
       oss << std::right << setw(5) << ftabIds(i) << setw(2) << ""
 	  << setw(3) << ifNos[i](0) << setw(1) << ""
 	  << std::left << setw(46) << frequencies().print(ftabIds(i)) 
 	  << setw(2) << ""
 	  << std::right << setw(8) << fIdchans[i] << setw(2) << ""
-	  << std::left << polNos[i] << endl;
-    } else if (tmplen > 0 ) {
-      // You shouldn't come here
-      oss << std::left
-	  << "Multiple IFNOs in FREQ_ID = " << ftabIds(i) 
-	  << " !!!" << endl;
+	  << std::left << polNos[i];
+      if (tmplen > 1) {
+	oss  << " (" << tmplen << " chains)";
+      }
+      oss << endl;
     }
+    
   }
   oss << asap::SEPERATOR << endl;
 

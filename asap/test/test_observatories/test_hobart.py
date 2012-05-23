@@ -13,7 +13,7 @@ if not os.path.exists("output"):
 DATA=os.path.join(os.path.split(__file__)[0], "..", "data", 
                   "hobart.rpf")
 
-class TestMopra(object):
+class TestHobart(object):
     def setup(self):
         self.st = scantable(DATA)
 

@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# python_SrcType.cc: python exposure of c++ atnf/PKSIO/SrcType class
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2004
+//# Copyright (C) 2004-2012
 //# ATNF
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -28,9 +28,10 @@
 //#
 //# $Id: python_SrcType.cpp 1677 2010-01-27 07:29:48Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
-#include <vector>
 #include <boost/python.hpp>
 #include <boost/python/enum.hpp>
+
+#include <vector>
 
 #include <atnf/PKSIO/SrcType.h>
 

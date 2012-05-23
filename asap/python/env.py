@@ -50,24 +50,32 @@ def setup_env():
     if not os.environ.has_key("CASAPATH") or \
             not os.path.exists(os.environ["CASAPATH"].split()[0]+"/data"):
         os.environ["CASAPATH"] = "%s %s somwhere" % ( asapdata, plf)
+
     # set up user space
-    userdir = os.environ["HOME"]+"/.asap"
-    if not os.path.exists(userdir):
-        print 'First time ASAP use. Setting up ~/.asap'
-        os.mkdir(userdir)
-        if not is_casapy():
-            shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
-                            userdir+"/ipy_user_conf.py")
-        f = file(userdir+"/asapuserfuncs.py", "w")
-        f.close()
-        f = file(userdir+"/ipythonrc", "w")
-        f.close()
-    else:
-        if not is_casapy():
-            # upgrade to support later ipython versions
-            if not os.path.exists(userdir+"/ipy_user_conf.py"):
-               shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
-                               userdir+"/ipy_user_conf.py")
+#     userdir = os.environ["HOME"]+"/.asap"
+#     if not os.path.exists(userdir):
+#         print 'First time ASAP use. Setting up ~/.asap'
+#         os.makedirs(os.path.join(userdir, "profile_default"))
+#         if not is_casapy():
+#             shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
+#                             userdir+"/ipy_user_conf.py")
+#             shutil.copyfile(asapdata+"/data/ipython_config.py",
+#                             userdir+"/profile_default/ipython_config.py")
+#         f = file(userdir+"/asapuserfuncs.py", "w")
+#         f.close()
+#         f = file(userdir+"/ipythonrc", "w")
+#         f.close()
+#     else:
+#         if not is_casapy():
+#             # upgrade to support later ipython versions
+            
+#             if not os.path.exists(userdir+"/ipy_user_conf.py"):
+#                shutil.copyfile(asapdata+"/data/ipy_user_conf.py",
+#                                userdir+"/ipy_user_conf.py")
+#             if not os.path.exists(userdir+"/profile_default/ipython_config.py"):
+#                shutil.copyfile(asapdata+"/data/ipython_config.py",
+#                                userdir+"/profile_default/ipython_config.py")
+
 
 def get_revision():
     """Get the revision of the software. Only useful within casapy."""
