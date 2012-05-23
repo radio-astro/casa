@@ -89,8 +89,6 @@ namespace casa {
 	void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
 	void pixel_offset_to_linear_offset( WorldCanvas *wc_, double, double, double &, double & );
 	void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_offset_to_world_offset( WorldCanvas *wc_, double, double, MDirection::Types coordsys, const std::string &units, double &, double & );
-	void world_offset_to_linear_offset( WorldCanvas *wc_, MDirection::Types coordsys, const std::string &units, double, double, double &, double & );
 
 	MDirection::Types get_coordinate_type( const CoordinateSystem &wc );
 
@@ -189,6 +187,8 @@ namespace casa {
 		virtual void zRange( int &/*min*/, int &/*max*/ ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
 		int zIndex( ) const;
 		bool regionVisible( ) const { return visible_; }
+
+		bool worldBoundingRectangle( double &, double &, const std::string & ) const;
 
 		virtual ~Region( ) { }
 
