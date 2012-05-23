@@ -1,4 +1,0 @@
-
-
-String oCalTable;
-CalAnalysis* poCA;
