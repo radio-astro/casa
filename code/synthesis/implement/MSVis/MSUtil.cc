@@ -144,8 +144,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ddIdD+= 1.0; //no zero id
     //we have to do this as one can have multiple dd for the same time. 
     t*=ddIdD;
+    //t(fldId != fieldId)=-1.0;
+    Vector<Double> elt;
+    Vector<Int> elindx;
+    //rejecting the large blocks of same time for all baselines
+    //this speeds up by a lot GenSort::sort
+    rejectConsecutive(t, elt, elindx);
     Vector<uInt>  uniqIndx;
-    uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+    
+    uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, elt, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
     MDirection dir =fieldCol.phaseDirMeas(fieldId);
     MSDataDescIndex mddin(ms.dataDescription());
     MFrequency::Types obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(0));
@@ -181,8 +188,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       MFrequency::Convert toframe(obsMFreqType,
 				  MFrequency::Ref(freqframe, frame));
       for (uInt j=0; j< nTimes; ++j){
-	if((fldId[uniqIndx[j]] ==fieldId) && anyEQ(ddOfSpw, ddId[uniqIndx[j]])){
-	  timeCol.get(uniqIndx[j], ep);
+	if((fldId[elindx[uniqIndx[j]]] ==fieldId) && anyEQ(ddOfSpw, ddId[elindx[uniqIndx[j]]])){
+	  timeCol.get(elindx[uniqIndx[j]], ep);
 	  frame.resetEpoch(ep);
 	  Double freqTmp=toframe(Quantity(freqStartObs, "Hz")).get("Hz").getValue();
 	  if(freqStart > freqTmp)  freqStart=freqTmp;
@@ -190,14 +197,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  freqTmp=toframe(Quantity(freqEndObs, "Hz")).get("Hz").getValue();
 	  if(freqStart > freqTmp)  freqStart=freqTmp;
 	  if(freqEnd < freqTmp)  freqEnd=freqTmp;
-
 	}
       }
 
     }
-
-
   }
+  void MSUtil::rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval, Vector<Int>& indx){
+    uInt n=t.nelements();
+    if(n >0){
+      retval.resize(1);
+      indx.resize(1);
+      retval[0]=t[0];
+      indx[0]=0;
+    }
+    else
+      return;
+    Int prev=0;
+    for (uInt k=1; k < n; ++k){ 
+      if(t[k] != retval(prev)){
+	++prev;
+	retval.resize(prev+1, True);
+	retval[prev]=t[k];
+	indx.resize(prev+1, True);
+	indx[prev]=k;
+      }
+    }
+    
+  }
+
+  
 
 
 
