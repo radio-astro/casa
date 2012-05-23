@@ -836,8 +836,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int * offstor=off.getStorage(del);
   const Double *dpstor=dphase.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
-  {
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)  
+{
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
     locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
@@ -845,7 +845,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      offstor, phasorstor, irow, True);
   }  
 
-  }//end pragma parallel
+ }//end pragma parallel
 
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
@@ -1107,7 +1107,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   const Int *cmapstor=chanMap.getStorage(del);
   const Int * suppstor=convSupport.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow)
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4) 
   {
 #pragma omp for
     for (irow=startRow; irow<=endRow; ++irow){
