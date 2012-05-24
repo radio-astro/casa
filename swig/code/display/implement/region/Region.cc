@@ -32,13 +32,19 @@
 #include <display/QtViewer/QtPixelCanvas.qo.h>
 #include <images/Images/SubImage.h>
 #include <measures/Measures/MCDirection.h>
+#include <casa/Quanta/MVTime.h>
 #include <display/DisplayErrors.h>
 
 #include <images/Images/ImageStatistics.h>
+#include <components/ComponentModels/ComponentList.h>
+#include <components/ComponentModels/ComponentShape.h>
+#include <components/ComponentModels/SkyCompRep.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
+#include <casa/BasicMath/Functors.h>
 
 #define SEXAGPREC 9
 
@@ -68,6 +74,56 @@ namespace casa {
 	}
 
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }
+
+	bool Region::worldBoundingRectangle( double &width, double &height, const std::string &units ) const {
+	    width = 0.0;
+	    height = 0.0;
+
+	    if ( wc_ == 0 ) return false;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    Vector<Double> linear(2);
+	    Vector<Double> blc(2);
+	    Vector<Double> trc(2);
+
+	    linear(0) = blc_x;
+	    linear(1) = blc_y;
+	    if ( wc_->linToWorld(blc,linear) == false ) return false;
+
+	    linear(0) = trc_x;
+	    linear(1) = trc_y;
+	    if ( wc_->linToWorld(trc,linear) == false ) return false;
+
+	    Vector<String> unit_names=wc_->worldAxisUnits();
+	    Vector<Quantum<Double> > qblc(2);
+	    qblc(0) = Quantum<Double>(fmin(blc(0),trc(0)),unit_names(0));
+	    qblc(1) = Quantum<Double>(fmin(blc(1),trc(1)),unit_names(1));
+
+	    Vector<Quantum<Double> > qtrc(2);
+	    qtrc(0) = Quantum<Double>(fmax(blc(0),trc(0)),unit_names(0));
+	    qtrc(1) = Quantum<Double>(fmax(blc(1),trc(1)),unit_names(1));
+
+	    Vector<String> axis_names=wc_->worldAxisNames();
+
+	    // find ra and dec axis...
+	    int ra_index = -1;
+	    int dec_index = -1;
+	    int stop = axis_names.size() >= 2 ? 2 : 0;
+	    for ( int i=0; i < stop; i++ ) {
+		if ( axis_names(i).contains("scension") ) ra_index = i;
+		if ( axis_names(i).contains("eclination") ) dec_index = i;
+	    }
+
+	    Vector<Double> cosine_correct(2,1.0);
+	    if ( ra_index >= 0 && dec_index >= 0 )
+		cosine_correct(ra_index) = cos((qblc(dec_index)+qtrc(dec_index)).getValue("rad")/2.0);
+
+	    width = ((qtrc(0) - qblc(0)) * cosine_correct(0)).getValue(units.c_str());
+	    height = ((qtrc(1) - qblc(1)) * cosine_correct(1)).getValue(units.c_str());
+	    return true;
+	}
 
 	void Region::setDrawingEnv( ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
@@ -173,7 +229,7 @@ namespace casa {
 		visible_ = false;
 		return;
 	    }
-	    
+
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	    int new_z_index = wc_->zIndex( );
@@ -253,6 +309,33 @@ namespace casa {
 	    pc->drawText( x + dx, y + dy, text, m_angle, alignment );
 	}
 
+	void Region::drawCenter(double &x, double &y ) {
+		PixelCanvas *pc = wc_->pixelCanvas();
+		if(pc==0) return;
+		int x_screen, y_screen;
+		try { linear_to_screen( wc_, x, y, x_screen, y_screen); } catch(...) { return; }
+		pc->drawFilledRectangle(x_screen-2, y_screen-2, x_screen+2, y_screen+2);
+	}
+
+	void Region::drawCenter(double &x, double &y, double &deltx, double &delty) {
+		PixelCanvas *pc = wc_->pixelCanvas();
+		if(pc==0) return;
+		drawCenter(x, y);
+
+		// find the scale such that the arrow
+		// is the size of the larger box size
+		double blcx, blcy, trcx, trcy, scale;
+		int x1, x2, y1, y2;
+		boundingRectangle(blcx,blcy,trcx,trcy);
+		scale = fabs(trcy-blcy) > fabs(trcx-blcx) ? 0.5*fabs(trcy-blcy) : 0.5*fabs(trcx-blcx);
+
+		// compute the screen coos
+		try { linear_to_screen( wc_, x + scale*deltx, y + scale*delty, x1, y1); } catch(...) { return; }
+		try { linear_to_screen( wc_, x - scale*deltx, y - scale*delty, x2, y2); } catch(...) { return; }
+
+		// draw the line
+		pc->drawLine(x1, y1, x2, y2);
+	}
 
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
 	    std::list<RegionInfo> *info = generate_dds_statistics( );
@@ -429,7 +512,7 @@ namespace casa {
 		bounding_width = fabs(p_trc_x-p_blc_x);
 		bounding_height = fabs(p_trc_y-p_blc_y);
 	    } else {
-		try { linear_offset_to_world_offset(wc_,fabs(trc_x-blc_x),fabs(trc_y-blc_y), viewer_to_casa(coord), bounding_units, bounding_width, bounding_height); } catch(...) { return; }
+		worldBoundingRectangle( bounding_width, bounding_height, bounding_units );
 	    }
 
 	    if ( coord == cvcs ) {
@@ -445,24 +528,24 @@ namespace casa {
 	    }
 
 	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
-	    
+
 	    if ( new_x_units == Pixel ) {
 		double center_x, center_y;
 		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		x = as_string(center_x);
 	    } else if ( new_x_units == Sexagesimal ) {
 		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
 		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
 		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // H:M:S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
@@ -475,17 +558,17 @@ namespace casa {
 		y = as_string(center_y);
 	    } else if ( new_y_units == Sexagesimal ) {
 		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
 		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
 		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // H:M:S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
@@ -613,7 +696,7 @@ namespace casa {
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y,
 				      new_width_inc, new_height_inc ) ) {
-		updateStateInfo( true ); 
+		updateStateInfo( true );
 		return;
 	    }
 
@@ -1176,7 +1259,315 @@ namespace casa {
 	    return MDirection::EXTRA;
 	}
 
-	RegionInfo::stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
+   RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg, bool skycomp) {
+		  if( image==0 || padd == 0 ) return 0;
+		  try {
+			  // store the coordinate system and the axis names
+			  const CoordinateSystem& cs = image->coordinates();
+			  Vector<String> nm          = cs.worldAxisNames();
+			  Vector<String> axesNames   = padd->worldToPixelAxisNames( cs );
+
+
+			  // get all info on the hidden axis
+			  Int _axis_h_ = image->ndim() > 3 ? padd->xlatePixelAxes(3) : -1;		// get first "hidden axis
+			  String haxis = _axis_h_ >= 0 ? axesNames(_axis_h_) : "";
+			  // uiBase( ) sets zero/one based:
+			  Int hIndex = _axis_h_ >= 0 ? padd->xlateFixedPixelAxes(_axis_h_) + padd->uiBase( ) : -1;
+
+			  // get all info on the z-axis
+			  String zUnit, zspKey, zspVal;
+			  zUnit = padd->spectralunitStr( );
+			  String xaxis = padd->xaxisStr( );
+			  String yaxis = padd->yaxisStr( );
+			  String zaxis = padd->zaxisStr( );
+			  Int zIndex = padd->activeZIndex();
+
+			  Int xPos = -1;
+			  Int yPos = -1;
+			  Int zPos = -1;
+			  Int hPos = -1;
+			  // identify the display axes in the
+			  // coordinate systems of the image
+			  for (uInt k = 0; k < nm.nelements(); k++) {
+				  if (nm(k) == xaxis)
+					  xPos = k;
+				  if (nm(k) == yaxis)
+					  yPos = k;
+				  if (nm(k) == zaxis)
+					  zPos = k;
+				  if (nm(k) == haxis)
+					  hPos = k;
+			  }
+
+			  RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
+
+			  String zLabel="";
+			  String hLabel="";
+			  Vector<Double> tPix,tWrld;
+			  tPix = cs.referencePixel();
+			  String tStr;
+			  if (zPos > -1) {
+				  tPix(zPos) = zIndex;//cout << " tPix: " << tPix<<endl;
+				  if (!cs.toWorld(tWrld,tPix)) {
+				  } else {//cout << " tWrld: " << tWrld<<endl;
+					  if (zUnit.length()>0) {
+						  zspKey = "Spectral_Vale";//cout << " zUnit: " << zUnit<<" tWrld(zPos): " << tWrld(zPos)<< " zPos: "<< zPos<<endl;
+						  // in case that the spectral axis is displayed on x or y,
+						  // the format() throws an exception and prevents the centering
+						  // copied from 'getLayerStats'.
+						  zspVal = ((CoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+					  }
+				  }
+			  }
+
+			  if (hPos > -1) {
+				  tPix(hPos) = hIndex;
+
+				  if (!cs.toWorld(tWrld,tPix)) {
+				  } else {
+					  hLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
+					  if (zUnit.length()>0) {
+						  zspKey = "Spectral_Vale";
+						  zspVal = ((CoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+					  }
+				  }
+			  }
+
+			  Record *rec = new Record(imgReg.toRecord(""));
+			  ImageFitter fitter(image, "", rec);
+			  Array<Float> medVals;
+
+			  // add a sky component to the fit
+			  if (skycomp){
+				  // get a sky estimate via the median
+				  SubImage<Float> subImg(*image, imgReg);
+				  ImageStatistics<Float> stats(subImg, False);
+				  if (!stats.getConvertedStatistic(medVals, LatticeStatsBase::MEDIAN,True)){
+					  //cout << "no idea" << endl;
+					  return 0;
+				  }
+				  if (medVals.size()>0)
+					  fitter.setZeroLevelEstimate(Double(medVals(IPosition(1,0))), False);
+			  }
+
+			  // do the fit
+			  ComponentList compList = fitter.fit();
+
+			  // fit that did not converge go back immediately
+			  if (!fitter.converged(0)){
+				  layercenter->push_back(RegionInfo::center_t::value_type("Converged", "NO"));
+				  return layercenter;
+			  }
+
+			  Vector<Double> pVals;
+			  Vector<Quantity> pFlux;
+			  Vector<Double> pixCen;
+			  String errMsg;
+			  const uInt ncomponents=compList.nelements();
+			  for (uInt index=0; index<ncomponents; index++){
+				  const ComponentShape *cShapeShape = compList.getShape(index);
+
+				  // the reference direction
+				  // contains as .getAngle() ra, dec in [rad]
+				  // and as .getRefString() the reference system,
+				  // which I think is as default equal to the image
+				  const MDirection mDir=compList.getRefDirection(index);
+				  Quantum< Vector< Double > >dirAngle=mDir.getAngle();
+
+				  // toRecord is the killer and contains
+				  // all information, including errors
+				  //skyComp.toRecord(errMsg, tabRecord);
+				  //cout << "TabRecord: "<< tabRecord << endl;
+
+				  Vector<Double> allpars;
+				  allpars=cShapeShape->parameters();
+				  uInt npars=cShapeShape->nParameters();
+				  if (npars > 2){
+					  zspKey = "Ra_"+mDir.getRefString();
+					  //zspVal = MVTime(lat).string(MVTime::TIME, 9);
+					  zspVal = MVTime(Quantity((dirAngle.getValue())(0), dirAngle.getUnit())).string(MVTime::TIME, 9);
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  //Quantity longitude = mDir.getValue().getLat("rad");
+					  zspKey = "Dec_"+mDir.getRefString();
+					  //zspVal = MVAngle(longitude).string(MVAngle::ANGLE_CLEAN, 8);
+					  zspVal = MVAngle(Quantity((dirAngle.getValue())(1), dirAngle.getUnit())).string(MVAngle::ANGLE_CLEAN, 8);
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store major axis value in arcsecs
+					  zspKey = "W-Majorax";
+					  zspVal = String::toString(Quantity(allpars(0)/C::pi*180.0*3600.0, "arcsec"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store minor axis value in arcsecs
+					  zspKey = "W-Minorax";
+					  zspVal = String::toString(Quantity(allpars(1)/C::pi*180.0*3600.0, "arcsec"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store position angle in deg
+					  zspKey = "W-Posang";
+					  zspVal = String::toString(Quantity(allpars(2)*180.0/C::pi, "deg"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+				  }
+
+				  // get the pixel parameter values
+				  // for a Gauss, the vals are xcen, ycen, major_ax, minor_ax in [pix] and posang in [deg]
+				  pVals = cShapeShape->toPixel(image->coordinates().directionCoordinate(0));
+				  if (pVals.size()>4){
+
+					  // make sure the x- and y-positions can be assigned correctly
+					  AlwaysAssert((xPos==0&&yPos==1)|| (xPos==1&&yPos==0), AipsError);
+
+					  // store the x-center
+					  zspKey = "Xcen";
+					  zspVal = String::toString(Quantity(pVals(xPos), "pix"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store the y-center
+					  zspKey = "Ycen";
+					  zspVal = String::toString(Quantity(pVals(yPos), "pix"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store major axis value in pix
+					  zspKey = "I-Majorax";
+					  zspVal = String::toString(Quantity(pVals(2), "pix"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store minor axis value in pix
+					  zspKey = "I-Minorax";
+					  zspVal = String::toString(Quantity(pVals(3), "pix"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+					  // store the position angle in [deg],
+					  // turn the angle if necessary
+					  Double posang;
+					  zspKey = "I-Posang";
+					  if (xPos==1 && yPos==0)
+						  posang=-1.0*pVals(4)*180.0/C::pi+90.0;
+					  else
+						  posang=pVals(4)*180.0/C::pi;
+					  while (posang <0.0)
+						  posang += 180.0;
+					  while (posang > 180.0)
+						  posang -= 180.0;
+					  zspVal = String::toString(Quantity(posang, "deg"));
+					  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+
+					  // store the pixel values
+					  // for the center marking,
+					  // turn the angle if necessary
+					  pixCen.resize(3);
+					  pixCen(0) = pVals(xPos);
+					  pixCen(1) = pVals(yPos);
+					  if (xPos== 1 && yPos==0){
+						  pixCen(2) = -1.0*pVals(4)+C::pi_2;
+					  }
+					  else{
+						  pixCen(2) = pVals(4);
+					  }
+				  }
+
+				  // the reference direction
+				  // contains as .getAngle() ra, dec in [rad]
+				  // and as .getRefString() the reference system,
+				  // which I think is as default equal to the image
+				  zspKey = "Radeg"; // would need some more digits??
+				  zspVal = String::toString(Quantity(((MVAngle(dirAngle.getValue()(0)))(0.5)).degree(),"deg"));
+				  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+				  zspKey = "Decdeg"; // would need some more digits??
+				  zspVal = String::toString(Quantity(MVAngle(dirAngle.getValue()(1)).degree(),"deg"));
+				  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+				  // get the integrated flux value
+				  compList.getFlux(pFlux, index);
+				  if (pFlux.size()>0){
+
+					  // get the units of the image
+					  Unit imUnit=image->units();
+
+					  // get the peak flux from the integrated flux
+					  Quantity peakFlux=SkyCompRep::integralToPeakFlux(image->coordinates().directionCoordinate(0), ComponentType::GAUSSIAN, pFlux(0),
+							  imUnit, Quantity(allpars(0),"rad"), Quantity(allpars(1),"rad"), (image->imageInfo()).restoringBeam());
+
+					  if ((imUnit.getName()).size()>0){
+						  // if a unit was defined for the image, store
+						  // both, the peak flux and the integrated flux
+						  zspKey = "IntFlux";
+						  zspVal = String::toString(pFlux(0));
+						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+						  zspKey = "PeakFlux";
+						  zspVal = String::toString(peakFlux);
+						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+					  }
+					  else{
+						  // if the image has no units, the ImageFitter assumes
+						  // a unit, but the integrated flux does not seem to be
+						  // right. The peak flux WITHOUT UNITS is OK.
+						  zspKey = "PeakFlux";
+						  zspVal = String::toString(peakFlux.getValue());
+						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+					  }
+				  }
+			  }
+
+			  // store the sky results
+			  if (medVals.size()>0){
+				  vector<Double> solution, error;
+				  fitter.getZeroLevelSolution(solution, error);
+				  layercenter->push_back(RegionInfo::center_t::value_type("Skylevel", String::toString(solution[0])));
+			  }
+
+			  // store fit result, which here can only be
+			  // positive (bad fits have merged off above
+			  if (fitter.converged(0)){
+				  layercenter->push_back(RegionInfo::center_t::value_type("Converged", "YES"));
+			  }
+			  else {
+				  layercenter->push_back(RegionInfo::center_t::value_type("Converged", "NO"));
+				  return layercenter;
+			  }
+
+			  std::tr1::shared_ptr<LogIO> log(new LogIO());
+			  LogOrigin origin("Region", __FUNCTION__);;
+			  *log << origin << LogIO::NORMAL << "Centering results:" << LogIO::POST;
+			  for (RegionInfo::center_t::iterator it=layercenter->begin() ; it != layercenter->end(); it++ ){
+				  *log << origin << LogIO::NORMAL << "  --- " << (*it).first << ": " << (*it).second << LogIO::POST;
+			  }
+
+			  if (pixCen.size()>1){
+				  double pix_x1, pix_y1, lin_x1, lin_y1, posa, tmpx, tmpy;
+				  pix_x1 = (double)pixCen(0);
+				  pix_y1 = (double)pixCen(1);
+				  posa    = (double)pixCen(2);
+				  pixel_to_linear(wc_, pix_x1, pix_y1, lin_x1,lin_y1 );
+				  pixel_to_linear(wc_, pix_x1+cos(posa), pix_y1+sin(posa), tmpx, tmpy);
+				  tmpx = tmpx-lin_x1;
+				  tmpy = tmpy-lin_y1;
+
+				  setDrawingEnv( );
+				  drawCenter( lin_x1, lin_y1, tmpx, tmpy);
+				  resetDrawingEnv( );
+			  }
+
+			  delete rec;
+			  return layercenter;
+		  } catch (const casa::AipsError& err) {
+			  std::string errMsg_ = err.getMesg();
+			  //fprintf( stderr, "Region::getLayerCenter( ): %s\n", errMsg_.c_str() );
+			  return 0;
+		  } catch (...) {
+			  std::string errMsg_ = "Unknown error computing region centers.";
+			  //fprintf( stderr, "Region::getLayerCenter( ): %s\n", errMsg_.c_str() );
+			  return 0;
+		  }
+		  // should not get to here
+		  return 0;
+	  }
+
+   RegionInfo::stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
 
 	    // Compute and print statistics on DD's image for
 	    // given region in all layers.
@@ -1233,7 +1624,6 @@ namespace casa {
 		    ImageStatistics<Float> stats(subImg, False);
 		    if ( ! stats.setAxes(cursorAxes) ) return 0;
 		    stats.setList(True);
-		    String layerStats;
 		    Vector<String> nm = cs.worldAxisNames();
 
 		    Int zPos = -1;
@@ -1263,7 +1653,7 @@ namespace casa {
 			    layerstats->push_back(RegionInfo::stats_t::value_type(zaxis,zLabel + tStr));
 
 			    if (zUnit.length()>0) {
-				zspKey = "Spectral_Vale";
+				zspKey = "Spectral_Value";
 				zspVal = ((CoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 			    }
 			}
@@ -1276,7 +1666,7 @@ namespace casa {
 			} else {
 			    hLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
 			    if (zUnit.length()>0) {
-				zspKey = "Spectral_Vale";
+				zspKey = "Spectral_Value";
 				zspVal = ((CoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 			    }
 			}
@@ -1361,7 +1751,7 @@ namespace casa {
 
 		} catch (const casa::AipsError& err) {
 		    std::string errMsg_ = err.getMesg();
-		    // fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
+		     //fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
 		    return 0;
 		} catch (...) {
 		    std::string errMsg_ = "Unknown error computing region statistics.";

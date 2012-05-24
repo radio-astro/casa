@@ -89,7 +89,7 @@ namespace casa {
 		enum YScaleTo { ScaleTop, ScaleBottom };
 		enum XScaleTo { ScaleLeft, ScaleRight };
 		enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
-
+		std::list<RegionInfo> *generate_dds_centers( bool skycomp );
 		std::list<RegionInfo> *generate_dds_statistics( );
 
 		void drawRegion( bool );

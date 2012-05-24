@@ -1,3 +1,29 @@
+//# QtRegion.cc: GUI base class for all regions
+//# Copyright (C) 2012
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: $
 
 #include <casa/BasicSL/String.h>
 #include <display/DisplayEvents/DTVisible.h>
@@ -49,6 +75,7 @@ namespace casa {
 						   const QString &, const QString &, const QString & )),
 		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &, const QString &,
 					       const QString &, const QString &, const QString & )) );
+	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
@@ -106,6 +133,13 @@ namespace casa {
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
 
+	void QtRegion::updateCenterInfo() {
+		//cout << "in QtRegion::updateCenterInfo()"<< endl;
+		std::list<RegionInfo> *rc = generate_dds_centers(mystate->skyComponent());
+		mystate->updateCenters(rc);
+		//mystate->invalidate();
+	}
+
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {
 
@@ -131,13 +165,6 @@ namespace casa {
 		std::string whu;
 		std::string x, y, angle;
 		double width, height;
-		static bool first_time_through = true;
-		if ( first_time_through ) {
-		    getCoordinatesAndUnits( c, xu, yu, whu );
-		    mystate->setCoordinatesAndUnits( c, xu, yu, whu );
-		    first_time_through = false;
-		}
-
 		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
 		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
 

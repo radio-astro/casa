@@ -1259,7 +1259,7 @@ Calibrater::configureForCorrection ()
     // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
 
     Bool isEnabled;
-    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
+    //Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
 
     // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
     // For now (3/19/12) make asyncio for apply cal be explicitly enabled.
@@ -2329,14 +2329,14 @@ void Calibrater::fluxscale(const String& infile,
 
 }
 
-void Calibrater::accumulate(const String& intab,
-			    const String& incrtab,
-			    const String& outtab,
+void Calibrater::accumulate(const String& /*intab*/,
+			    const String& /*incrtab*/,
+			    const String& /*outtab*/,
 			    const Vector<String>& fields,
 			    const Vector<String>& calFields,
-			    const String& interp,
-			    const Double& t,
-			    const Vector<Int>& spwmap) {
+			    const String& /*interp*/,
+			    const Double& /*t*/,
+			    const Vector<Int>& /*spwmap*/) {
 
   logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL3;
 

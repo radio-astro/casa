@@ -27,8 +27,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>481</width>
-     <height>240</height>
+     <width>541</width>
+     <height>301</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -234,7 +234,7 @@
            <rect>
             <x>130</x>
             <y>45</y>
-            <width>100</width>
+            <width>115</width>
             <height>50</height>
            </rect>
           </property>
@@ -255,9 +255,12 @@
             <rect>
              <x>0</x>
              <y>18</y>
-             <width>95</width>
+             <width>115</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -388,7 +391,7 @@
          <widget class="QGroupBox" name="coordinate_angle_box">
           <property name="geometry">
            <rect>
-            <x>244</x>
+            <x>258</x>
             <y>44</y>
             <width>131</width>
             <height>41</height>
@@ -466,7 +469,7 @@
            <rect>
             <x>130</x>
             <y>91</y>
-            <width>100</width>
+            <width>115</width>
             <height>50</height>
            </rect>
           </property>
@@ -487,9 +490,12 @@
             <rect>
              <x>0</x>
              <y>18</y>
-             <width>95</width>
+             <width>115</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -615,6 +621,9 @@
              <width>61</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -1149,6 +1158,69 @@
      </property>
     </widget>
    </widget>
+   <widget class="QWidget" name="imfit_tab">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string>fit</string>
+    </attribute>
+    <widget class="QStackedWidget" name="centers_group">
+     <property name="geometry">
+      <rect>
+       <x>-4</x>
+       <y>-1</y>
+       <width>471</width>
+       <height>171</height>
+      </rect>
+     </property>
+     <property name="currentIndex">
+      <number>-1</number>
+     </property>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>180</y>
+       <width>250</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QPushButton" name="imfit_fit">
+        <property name="text">
+         <string>gaussfit</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="skycomp_chk">
+        <property name="text">
+         <string>sky component</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </widget>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>file</string>
@@ -1301,7 +1373,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>all marked regions</string>
+         <string>all selected regions</string>
         </property>
        </widget>
        <widget class="QRadioButton" name="save_all_regions">

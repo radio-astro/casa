@@ -47,7 +47,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	    // dismissRegion->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
 	    dismiss_region->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
-	    reset_regions->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
+	    reset_regions->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
 
 	    // Qt Designer will not allow you to create an empty QStackedWidget (qt4.7)... all created
 	    // stacked widgets seem to have two elements... here we remove that elements (if they

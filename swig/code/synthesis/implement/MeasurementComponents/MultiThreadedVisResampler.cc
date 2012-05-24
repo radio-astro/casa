@@ -416,9 +416,9 @@ namespace casa{
   //
   // Make the following four methods via templated implementation.
   template <class T>
-  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& griddedData,  
+  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& /*griddedData*/,
 							  VBStore& vbs, 
-							  Matrix<Double>& sumwt,
+							  Matrix<Double>& /*sumwt*/,
 							  const Bool& dopsf)
   {
     //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "DataToGridImpl_p"));

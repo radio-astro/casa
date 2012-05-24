@@ -293,10 +293,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
-    virtual void makeSensitivityImage(Lattice<Complex>& wtImage,
-				      ImageInterface<Float>& sensitivityImage,
-				      const Matrix<Float>& sumWt=Matrix<Float>(),
-				      const Bool& doFFTNorm=True) {};
+    virtual void makeSensitivityImage(Lattice<Complex>& /*wtImage*/,
+				      ImageInterface<Float>& /*sensitivityImage*/,
+				      const Matrix<Float>& /*sumWt*/=Matrix<Float>(),
+				      const Bool& /*doFFTNorm*/=True) {};
     virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
 				      ImageInterface<Float>& sensitivityImage);
 

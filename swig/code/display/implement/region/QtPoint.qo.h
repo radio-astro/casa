@@ -122,6 +122,7 @@ namespace casa {
 		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 
 				{ return Point::fetch_region_details( type, pixel_pts, world_pts ); }
+		std::list<RegionInfo> *generate_dds_centers(bool skycomp) { return Point::generate_dds_centers(skycomp); };
 
 
 	};

@@ -344,7 +344,6 @@ namespace casa {
 		    }
 		    popDrawingEnv( );
 		}
-
 	    }
 
 	}
@@ -404,6 +403,120 @@ namespace casa {
 	    return result;
 	}
 
+	std::list<RegionInfo> * Rectangle::generate_dds_centers(bool skycomp){
+		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+		if( wc_==0 ) return region_centers;
+
+		Int zindex = 0;
+		if (wc_->restrictionBuffer()->exists("zIndex")) {
+			wc_->restrictionBuffer()->getValue("zIndex", zindex);
+		}
+
+		DisplayData *dd = 0;
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+		Vector<Double> lin(2), blc(2), trc(2);
+
+		lin(0) = blc_x;
+		lin(1) = blc_y;
+		if ( ! wc_->linToWorld(blc, lin)) return region_centers;
+
+		lin(0) = trc_x;
+		lin(1) = trc_y;
+		if ( ! wc_->linToWorld(trc, lin)) return region_centers;
+
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			dd = *ddi;
+
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if (padd==0) {
+				MSAsRaster *msar =  dynamic_cast<MSAsRaster*>(dd);
+				if ( msar != 0 ) {
+					cout << "No centering on MS!" <<endl;
+				}
+				continue;
+			}
+
+			try {
+				if ( ! padd->conformsTo(*wc_) ) continue;
+
+				ImageInterface<Float> *image = padd->imageinterface( );
+
+				if ( image == 0 ) continue;
+
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				Int nAxes = image->ndim( );
+				IPosition shp = image->shape( );
+				const CoordinateSystem &cs = image->coordinates( );
+
+				int zIndex = padd->activeZIndex( );
+				IPosition pos = padd->fixedPosition( );
+				Vector<Int> dispAxes = padd->displayAxes( );
+
+				if ( nAxes == 2 ) dispAxes.resize(2,True);
+
+				if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
+						Int(pos.nelements()) != nAxes ||
+						anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+					continue;
+
+				if ( dispAxes.nelements() > 2u )
+					pos[dispAxes[2]] = zIndex;
+
+				dispAxes.resize(2,True);
+
+				// WCBox dummy;
+				Quantum<Double> px0(0.,"pix");
+				Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
+
+				//Int spaxis = getAxisIndex( image, String("Spectral") );
+				for (Int ax = 0; ax < nAxes; ax++) {
+					//if ( ax == dispAxes[0] || ax == dispAxes[1] || ax == spaxis) {
+					if ( ax == dispAxes[0] || ax == dispAxes[1]) {
+						trcq[ax].setValue(shp[ax]-1);
+					} else  {
+						blcq[ax].setValue(pos[ax]);
+						trcq[ax].setValue(pos[ax]);
+					}
+				}
+
+				// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
+				// used here, because it references the "CSmaster" DisplayData which all
+				// of the display options are referenced from... lets hope all of the
+				// coordinate systems are kept in sync...      <drs>
+				const Vector<String> &units = wc_->worldAxisUnits( );
+
+				for (Int i = 0; i < 2; i++) {
+					Int ax = dispAxes[i];
+
+					blcq[ax].setValue(blc[i]);
+					trcq[ax].setValue(trc[i]);
+
+					blcq[ax].setUnit(units[i]);
+					trcq[ax].setUnit(units[i]);
+				}
+
+				WCBox box(blcq, trcq, cs, Vector<Int>());
+				ImageRegion *imageregion = new ImageRegion(box);
+
+				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd, image, *imageregion, skycomp)));
+
+				delete imageregion;
+			} catch (const casa::AipsError& err) {
+				errMsg_ = err.getMesg();
+				continue;
+			} catch (...) {
+				errMsg_ = "Unknown error centering region";
+				continue;
+			}
+		}
+		return region_centers;
+	}
 
 	std::list<RegionInfo> *Rectangle::generate_dds_statistics(  ) {
 	    std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
