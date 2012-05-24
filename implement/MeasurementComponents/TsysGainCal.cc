@@ -236,7 +236,8 @@ void StandardTsys::specify(const Record&) {
     solveAllParErr()=0.1;  // what should we use here?  ~1/bandwidth?
     solveAllParSNR()=1.0;
 
-    IPosition blc(3,0,0,0), trc(3,tsysshape(0)-1,nChanPar()-1,0);
+    Int npol=tsysshape(0);
+    IPosition blc(3,0,0,0), trc(3,npol-1,nChanPar()-1,0);
     for (uInt iant=0;iant<ants.nelements();++iant) {
       Int thisant=ants(iant);
       blc(2)=trc(2)=thisant; // the MS antenna index (not loop index)
@@ -249,7 +250,16 @@ void StandardTsys::specify(const Record&) {
 
       negTsys(ispw,thisant)+=ntrue(currtsys<FLT_MIN);
 
-
+      // Issue warnings for completely bogus Tsys spectra (per pol)
+      for (Int ipol=0;ipol<npol;++ipol) {
+        if (nfalse(Matrix<Float>(currtsys).row(ipol)<FLT_MIN)==0)
+	  logSink() << "  Tsys data for ant id=" 
+                    << iant << " (pol=" << ipol<< ")"
+		    << " in spw " << ispw
+		    << " at t=" << MVTime(refTime()/C::day).string(MVTime::YMD,7) 
+		    << " are all negative or zero will be entirely flagged."
+		    << LogIO::WARN << LogIO::POST;
+      }
     }
     // Flag any Tsys<=0.0
     
@@ -266,19 +276,19 @@ void StandardTsys::specify(const Record&) {
   // Assign scan and fieldid info
   assignCTScanField(*ct_,msName());
 
-  logSink() << "Tsys spectra counts per spw for antenna Ids 0-"<<nElem()-1<<":" << LogIO::POST;
+  logSink() << "Tsys spectra counts per spw for antenna Ids 0-"<<nElem()-1<<" (per pol):" << LogIO::POST;
   for (Int ispw=0;ispw<nSpw();++ispw) {
     Vector<Int> tsyscountspw(tsyscount.row(ispw));
     if (sum(tsyscountspw)>0) {
       logSink() << "Spw " << ispw << ": " << tsyscountspw 
 		<< " (=" << sum(tsyscountspw) << " spectra;" 
-		<< " " << nChanParList()(ispw) << " chans per spectra)" 
+		<< " " << nChanParList()(ispw) << " chans per spectra, per pol)" 
       		<< LogIO::POST;
       for (Int iant=0;iant<nAnt();++iant) {
         if (negTsys(ispw,iant)>0)
-	  logSink() << "  (Found/flagged " << negTsys(ispw,iant) 
-                    << " spurious negative (or zero) Tsys channels for ant id=" 
-                    << iant << " in spw " << ispw << ".)"
+	  logSink() << "  (Found and flagged " << negTsys(ispw,iant) 
+		    << " spurious negative (or zero) Tsys channels for ant id=" 
+		    << iant << " in spw " << ispw << ".)"
 		    << LogIO::POST;
       }
     }
@@ -558,7 +568,7 @@ void EVLAGainTsys::specify(const Record&) {
 
     Int ispw=spwCol(0);
     Double timestamp=timeCol(0);
-    Double interval=intervalCol(0);
+    //    Double interval=intervalCol(0);
 
     Vector<Int> ants;
     antCol.getColumn(ants);
