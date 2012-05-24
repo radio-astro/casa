@@ -32,6 +32,7 @@
 
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <images/Regions/WCPolygon.h>
+#include <images/Images/SubImage.h>
 
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -742,6 +743,118 @@ namespace casa {
 
 	}
 
+	std::list<RegionInfo> *Polygon::generate_dds_centers(bool skycomp ){
+		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+
+		if( wc_==0 ) return region_centers;
+
+		Int zindex = 0;
+		if (wc_->restrictionBuffer()->exists("zIndex")) {
+			wc_->restrictionBuffer()->getValue("zIndex", zindex);
+		}
+
+		DisplayData *dd = 0;
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+		Vector<Double> lin(2), wld(2);
+
+		Vector<Double> x(_drawing_points_.size( ));
+		Vector<Double> y(_drawing_points_.size( ));
+		for ( unsigned int i = 0; i < _drawing_points_.size( ); ++i ) {
+			lin(0) = _drawing_points_[i].first;
+			lin(1) = _drawing_points_[i].second;
+			if ( ! wc_->linToWorld(wld, lin)) return region_centers;
+			x[i] = wld[0];
+			y[i] = wld[1];
+		}
+
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			dd = *ddi;
+
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if (padd==0) continue;
+
+			try {
+				if ( ! padd->conformsTo(*wc_) ) continue;
+
+				ImageInterface<Float> *image = padd->imageinterface( );
+
+				if ( image == 0 ) continue;
+
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				Int nAxes = image->ndim( );
+				IPosition shp = image->shape( );
+				const CoordinateSystem &cs = image->coordinates( );
+
+				int zIndex = padd->activeZIndex( );
+				IPosition pos = padd->fixedPosition( );
+				Vector<Int> dispAxes = padd->displayAxes( );
+
+				if ( nAxes == 2 ) dispAxes.resize(2,True);
+
+				if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
+						Int(pos.nelements()) != nAxes ||
+						anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+					continue;
+
+				if ( dispAxes.nelements() > 2u )
+					pos[dispAxes[2]] = zIndex;
+
+				dispAxes.resize(2,True);
+
+				// select the visible layer in the third and all
+				// hidden axes with a WCBox and a SubImage
+				Quantum<Double> px0(0.,"pix");
+				Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
+				for (Int ax = 0; ax < nAxes; ax++) {
+					if ( ax == dispAxes[0] || ax == dispAxes[1]) {
+						trcq[ax].setValue(shp[ax]-1);
+					} else  {
+						blcq[ax].setValue(pos[ax]);
+						trcq[ax].setValue(pos[ax]);
+					}
+				}
+				WCBox box(blcq, trcq, cs, Vector<Int>());
+				ImageRegion     *imgbox = new ImageRegion(box);
+			 	SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
+
+			 	// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
+				// used here, because it references the "CSmaster" DisplayData which all
+				// of the display options are referenced from... lets hope all of the
+				// coordinate systems are kept in sync...      <drs>
+				const Vector<String> &units = wc_->worldAxisUnits( );
+
+				Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
+				WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
+
+				ImageRegion *imageregion = new ImageRegion(poly);
+
+				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion, skycomp)));
+
+				delete imgbox;
+				delete imageregion;
+				delete boxImg;
+			} catch (const casa::AipsError& err) {
+				errMsg_ = err.getMesg();
+				fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+				continue;
+			} catch (...) {
+				errMsg_ = "Unknown error converting region";
+				fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+				continue;
+			}
+		}
+		return region_centers;
+	}
+
+//		cout << "in Polygon::generate_dds_centers()" <<endl;
+//		return region_centers;
+//	}
 
 	std::list<RegionInfo> *Polygon::generate_dds_statistics(  ) {
 	    std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );

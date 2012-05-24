@@ -163,6 +163,7 @@ namespace casa {
 		void revoke_region(QtRegionState*);
 		void output(std::list<QtRegionState*>,RegionTextList&);
 		void output(std::list<QtRegionState*>,ds9writer&);
+		void updateCenterInfo();
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
@@ -179,6 +180,7 @@ namespace casa {
 		                                   std::vector<std::pair<int,int> > &/*pixel_pts*/,
 						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const { }
 
+		virtual std::list<RegionInfo> *generate_dds_centers(bool ) DISPLAY_PURE_VIRTUAL(QtRegion::generate_dds_centers,0);
 
 
 		void signal_region_change( RegionChanges change );

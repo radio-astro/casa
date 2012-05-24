@@ -83,6 +83,7 @@ namespace casa {
 	    protected:
 		RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 		std::list<RegionInfo> *generate_dds_statistics( );
+		std::list<RegionInfo> *generate_dds_centers(bool skycomp );
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;

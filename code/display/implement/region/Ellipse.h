@@ -57,7 +57,7 @@ namespace casa {
 		bool flag( MSAsRaster * ) { return false; }
 
 	    protected:
-
+		std::list<RegionInfo> *generate_dds_centers( bool skycomp );
 		std::list<RegionInfo> *generate_dds_statistics( );
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 

@@ -59,6 +59,8 @@ namespace casa {
 
 		void updateStatistics( RegionInfo &stats );
 
+		void invalidate();
+
 		void setNext( QStackedWidget *, QtRegionStats * );
 
 	    protected slots:

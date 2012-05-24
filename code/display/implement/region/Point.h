@@ -74,6 +74,7 @@ namespace casa {
 
 		void drawRegion( bool );
 
+		std::list<RegionInfo> *generate_dds_centers(bool /*skycomp*/);
 	};
     }
 }

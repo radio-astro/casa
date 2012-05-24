@@ -44,6 +44,7 @@ namespace casa {
 	static const char *default_ext = casa_ext;
 
 	QtRegionState::freestat_list *QtRegionState::freestats = 0;
+	QtRegionState::freestat_list *QtRegionState::freecenters = 0;
 
 	void QtRegionState::init( ) {
 	    QString cat = categories->tabText(categories->currentIndex( ));
@@ -102,6 +103,8 @@ namespace casa {
 
 	    if ( freestats == 0 )
 		freestats = new freestat_list( );
+	    if ( freecenters == 0 )
+		freecenters = new freestat_list( );
 
 	    text_position->setWrapping(true);
 
@@ -172,15 +175,15 @@ namespace casa {
 	}
 
 	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
-	    if ( stats == 0 || stats->size() == 0 ) return;
+		if ( stats == 0 || stats->size() == 0 ) return;
 
-	    while ( stats->size() < statistics_group->count() ) {
+		 while ( (int)stats->size() < statistics_group->count() ) {
 		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 		if ( w == 0 ) throw internal_error( );
 		statistics_group->removeWidget(w);
 		freestats->push_back(w);
 	    }
-	    while ( stats->size() > statistics_group->count() ) {
+	    while ( (int)stats->size() > statistics_group->count() ) {
 		QtRegionStats *mystat;
 		// BEGIN - critical section
 		if ( freestats->size() > 0 ) {
@@ -220,6 +223,63 @@ namespace casa {
 	    }
 	    prev->setNext( statistics_group, first );
 
+	}
+
+	void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
+		// check if something can be done at all
+		if ( centers == 0 || centers->size() == 0 ) return;
+
+		while ((int)centers->size() < centers_group->count() ) {
+			QtRegionStats *w = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
+			if ( w == 0 ) throw internal_error( );
+			centers_group->removeWidget(w);
+			freecenters->push_back(w);
+		}
+		while ((int)centers->size() > centers_group->count() ) {
+			QtRegionStats *mycenter;
+			// BEGIN - critical section
+			if ( freecenters->size() > 0 ) {
+				mycenter = freecenters->back( );
+				freecenters->pop_back( );
+				// END - critical section
+				mycenter->reset( );
+			} else {
+				mycenter = new QtRegionStats( );
+			}
+			centers_group->insertWidget(centers_group->count( ),mycenter);
+		}
+		int num = centers_group->count( );
+		QtRegionStats *first = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
+		if ( first == 0 ) throw internal_error( );
+		std::list<RegionInfo>::iterator center_iter = centers->begin();
+		if ( memory::nullptr.check(center_iter->list( )) ) {
+			//fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
+		} else {
+			first->updateStatistics(*center_iter);
+		}
+		if ( num < 2 ) return;
+
+		QtRegionStats *prev = first;
+		for ( int i=1; i < centers_group->count() && ++center_iter != centers->end(); ++i ) {
+			QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
+			if ( cur == 0 ) throw internal_error( );
+			if ( memory::nullptr.check(center_iter->list( )) ) {
+				// fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
+			} else {
+				cur->updateStatistics(*center_iter);
+			}
+			prev->setNext( centers_group, cur );
+			prev = cur;
+		}
+		prev->setNext( centers_group, first );
+	}
+
+	void QtRegionState::invalidate() {
+		for ( int i=0; i < centers_group->count(); ++i ) {
+			QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
+			if ( cur == 0 ) throw internal_error( );
+			cur->invalidate();
+		}
 	}
 
 	void QtRegionState::clearStatistics( ) {

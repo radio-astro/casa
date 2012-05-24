@@ -75,6 +75,7 @@ namespace casa {
 						   const QString &, const QString &, const QString & )),
 		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &, const QString &,
 					       const QString &, const QString &, const QString & )) );
+	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
@@ -131,6 +132,13 @@ namespace casa {
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
+
+	void QtRegion::updateCenterInfo() {
+		//cout << "in QtRegion::updateCenterInfo()"<< endl;
+		std::list<RegionInfo> *rc = generate_dds_centers(mystate->skyComponent());
+		mystate->updateCenters(rc);
+		//mystate->invalidate();
+	}
 
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {

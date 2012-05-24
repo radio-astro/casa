@@ -256,11 +256,14 @@ namespace casa {
 		virtual std::list<RegionInfo> *generate_dds_statistics( )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));
 
+		virtual std::list<RegionInfo> *generate_dds_centers(bool )
+			DISPLAY_PURE_VIRTUAL(Region::generate_dds_centers, new std::list<RegionInfo>( ));
+
 		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
-
-		RegionInfo::stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
+	   RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg, bool skycomp);
+		RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_xunits( ) const;
 		Units current_yunits( ) const;
@@ -269,6 +272,10 @@ namespace casa {
 
 		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
+
+		virtual void drawCenter(double &x, double &y );
+		virtual void drawCenter(double &x, double &y, double &deltx, double &delty);
+
 
 		virtual bool within_drawing_area( );
 
