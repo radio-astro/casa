@@ -59,6 +59,7 @@ listcal.xml
 listhistory.xml
 listfits.xml
 listobs.xml
+listpartition.xml
 listsdm.xml
 listvis.xml
 mosaic.xml

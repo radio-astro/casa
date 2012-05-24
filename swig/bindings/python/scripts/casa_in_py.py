@@ -144,6 +144,7 @@ from listobs_pg import listobs_pg as listobs
 from feather_pg import feather_pg as feather
 from imregrid_pg import imregrid_pg as imregrid
 from listcal_pg import listcal_pg as listcal
+from listpartition_pg import listpartition_pg as listpartition
 #from plotxy_pg import plotxy_pg as plotxy
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits

@@ -124,6 +124,7 @@ scripts/task_listcal.py
 scripts/task_listhistory.py
 scripts/task_listfits.py
 scripts/task_listobs.py
+scripts/task_listpartition.py
 scripts/task_listsdm.py
 scripts/task_listvis.py
 scripts/taskmanager.py
