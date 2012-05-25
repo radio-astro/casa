@@ -19,6 +19,11 @@
 			<description>Name of multi-MS or normal MS.</description>
 			<value></value>
 		</param>
+
+        <param type="bool" name="createdict">
+            <description>Create and return a dictionary with sub-MS information</description>
+            <value>False</value>
+        </param>
 		
 		<param type="string" name="listfile">
 			<description>Name of ASCII file to save output: \'\'==>to terminal</description>
@@ -30,8 +35,8 @@
 
 <example>
 
-       A multi-measurement set (MMS) is a MS that has been split into sub-MSs.
-       A MMS contains two main files (directories), the first one is the reference
+       A multi-measurement set (MMS) is an MS that has been split into sub-MSs.
+       An MMS contains two main files (directories), the first one is the reference
        file (.mms or .ms) and the second has extension .data, which holds all 
        the sub-MSs in it. Example of a MS that was 'split' in two scans using the 
        task partition: 
@@ -48,50 +53,55 @@
 
        Keyword arguments:
        vis -- Name of multi-MS or normal MS.
-              default: ''. example: vis='uidA002.mms'
+              default: ''. 
+              example: vis='uidA002.mms'
+
+       createdict -- Create and return a dictionary containing scan summaries of each
+                     sub-MS. 
+              default: False
+              
+              If set to True, the returned dictionary will have the same structure as 
+              the dictionary returned by ms.getscansummary(), with the addition of an 
+              index as the top key and the sub-MS name.
+              Example:
+              
+              {'0': {'MS': '/tmp/uidA002.data/uidA002.0000.ms',
+                     'return': True,
+                     'summary': {'20': {'0': {'BeginTime': 55667.207786666666,
+                                              'EndTime': 55667.207800000004,
+                                              'FieldId': 2,
+                                              'IntegrationTime': 1.1519999999999999,
+                                              'SpwIds': array([0], dtype=int32),
+                                              'StateId': 0,
+                                              'nRow': 14},
+              
+               '1': {'MS': '/tmp/uidA002.data/uidA002.0001.ms',
+                     'return': True,
+                     'summary': {'6': {'0': {'BeginTime': 55667.178786666656,
+                                             'EndTime': 55667.178786666656,
+                                             'FieldId': 0,
+                                             'IntegrationTime': 1.1519999999999999,
+                                             'SpwIds': array([0], dtype=int32),
+                                             'StateId': 0,
+                                             'nRow': 7},
+                                       '1': {'BeginTime': 55667.178797777779,
+                                             'EndTime': 55667.178797777779,
+                                             'FieldId': 0,
+                                             'IntegrationTime': 2.0159999999999973,
+                                             'SpwIds': array([2, 4, 6, 8], dtype=int32),
+                                             'StateId': 0,
+                                             'nRow': 112},
+
                     
        listfile -- Name of ASCII file to save output to. If empty, it will 
                    list on the logger/terminal.
-              default: ''. Example: listfile='list.txt'
+              default: ''
+              example: listfile='list.txt'
 
 
-      The nRow column gives the number of rows in all scans listed in the Scan column.
+   NOTE: The nRow column gives the number of rows in all scans listed in the Scan column.
       
-      The task will return a dictionary of the scan summary for all sub-MS in input.
       
-          mysummary = listpartition(vis='uidA002.mms')
-      
-      The returned dictionary has the same structure as the dictionary returned by
-      ms.getscansummary(), with the addition of an index as the top key and the sub-MS name.
-      Example:
-      
-      {'0': {'MS': '/tmp/uidA002.data/uidA002.0000.ms',
-             'return': True,
-             'summary': {'20': {'0': {'BeginTime': 55667.207786666666,
-                                      'EndTime': 55667.207800000004,
-                                      'FieldId': 2,
-                                      'IntegrationTime': 1.1519999999999999,
-                                      'SpwIds': array([0], dtype=int32),
-                                      'StateId': 0,
-                                      'nRow': 14},
-      
-       '1': {'MS': '/tmp/uidA002.data/uidA002.0001.ms',
-             'return': True,
-             'summary': {'6': {'0': {'BeginTime': 55667.178786666656,
-                                     'EndTime': 55667.178786666656,
-                                     'FieldId': 0,
-                                     'IntegrationTime': 1.1519999999999999,
-                                     'SpwIds': array([0], dtype=int32),
-                                     'StateId': 0,
-                                     'nRow': 7},
-                               '1': {'BeginTime': 55667.178797777779,
-                                     'EndTime': 55667.178797777779,
-                                     'FieldId': 0,
-                                     'IntegrationTime': 2.0159999999999973,
-                                     'SpwIds': array([2, 4, 6, 8], dtype=int32),
-                                     'StateId': 0,
-                                     'nRow': 112},
-             
       
  </example>
  </task>

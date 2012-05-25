@@ -1,14 +1,18 @@
 import os
 from taskinit import *
+from subprocess import Popen, PIPE, STDOUT
 
 
-def listpartition(vis=None, listfile=None):
+def listpartition(vis=None, createdict=None, listfile=None):
     
     """List information about an MMS data set in the logger:
 
        Keyword arguments:
        vis -- Name of multi-MS or normal MS.
                default: none. example: vis='uidA002.mms'
+       createdict -- Create and return a dictionary with information about
+                     the sub-MSs.
+               default: False
        listfile -- save the output to a file
              default: ''. Example: listfile="mylist.txt"
              
@@ -71,7 +75,25 @@ def listpartition(vis=None, listfile=None):
             spwlist.append(spws)
             mslocal1.close()
             
-        # Get the width for printing the output        
+
+        # Get the data volume in bytes per sub-MS
+        sizelist = []
+        mycmd = 'du -hs '
+        
+        for subms in mslist:
+            ducmd = mycmd+subms
+            p = Popen(ducmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            ms_size = p.stdout.read()
+            
+            # Create a list of the output string, which looks like this:
+            # ' 75M\tuidScan23.data/uidScan23.0000.ms\n'
+            # This will create a list with [size,sub-ms]
+            sss = ms_size.split()
+            sizelist.append(sss[0])
+                       
+        # Get the width for printing the output     
+        # NOTE: if the sub-MS have very different numbers of scans or spws,
+        # the formatting will get messy. FIXME.   
         # MS name width
         mn = os.path.basename(mslist[0])
         ml = mn.__len__() + 2
@@ -90,16 +112,15 @@ def listpartition(vis=None, listfile=None):
         pwd = '%-'+str(pl)+'s '
         
         # Print header
-        fheader = mnw+swd+pwd+pwd+'%-6s '
-        ftext = mnw+swd+pwd+pwd+'%-6d '
+        fheader = mnw+swd+pwd+pwd+'%-6s '+'%-5s '
+        ftext = mnw+swd+pwd+pwd+'%-6d '+'%-5s '
 
-        hdr = fheader % (sname, 'Scan', 'SPW', 'NChan', 'nRow')
+        hdr = fheader % (sname, 'Scan', 'SPW', 'NChan', 'nRow', 'Size')
         
         if listfile != '':
             print >> ffout, hdr
         else:
             casalog.post(hdr)        
-            casalog.post()
 
         # Get the information to list in output
         # Dictionary to return
@@ -121,7 +142,8 @@ def listpartition(vis=None, listfile=None):
             scandict['MS'] = mslist[i]
 
             # Add and index
-            outdict[str(i)] = scandict
+            if createdict:
+                outdict[str(i)] = scandict
             
             # Get spws
             spwdict = spwlist[i]
@@ -134,7 +156,7 @@ def listpartition(vis=None, listfile=None):
                 chlist.append(nchans)
                 
             msname = os.path.basename(mslist[i])
-            text = ftext % (msname, scans, spws, chlist, nrows)
+            text = ftext % (msname, scans, spws, chlist, nrows, sizelist[i])
             
             if listfile != '':
                 print >> ffout, text
