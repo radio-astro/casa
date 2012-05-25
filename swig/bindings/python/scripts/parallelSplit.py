@@ -66,6 +66,8 @@ class JobQueueManager:
         return self.__completedQueue()
 
     def executeQueue(self, cluster):
+	print "pendingQueue"
+	print __pendingQueue
         self.__pendingQueue.reverse()
         engineList = cluster.get_ids()
 

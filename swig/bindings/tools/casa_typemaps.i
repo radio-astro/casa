@@ -260,6 +260,35 @@ using namespace casac;
        }
    }
 }
+
+%typemap(in) std::vector<bool> & {
+   if(!$1)
+      $1 = new std::vector<bool>(0);
+   else
+      $1->resize(0);
+   std::vector<int> shape;
+   PyObject *mytype = PyObject_Str(PyObject_Type($input));
+
+   if(casac::pyarray_check($input)){
+      casac::numpy2vector($input, *$1, shape);
+   } else {
+      if (PyString_Check($input)){
+         $1->push_back(0);
+      } else if (PyBool_Check($input)){
+         $1->push_back(bool(PyInt_AsLong($input)));
+      } else if (PyInt_Check($input)){
+         $1->push_back(bool(PyInt_AsLong($input)));
+      } else if (PyLong_Check($input)){
+         $1->push_back(bool(PyLong_AsLong($input)));
+      } else if (PyFloat_Check($input)){
+         $1->push_back(bool(PyInt_AsLong(PyNumber_Int($input))));
+      } else {
+         casac::pylist2vector($input,  *$1, shape);
+      }
+   }
+}
+
+
 %typemap(in) std::vector<int> & {
    if(!$1)
       $1 = new std::vector<int>(0);
@@ -317,6 +346,14 @@ using namespace casac;
 
 %typemap(out) variant& {
    $result = variant2pyobj($1);
+}
+
+%typemap(out) string {
+   $result = PyString_FromString($1.c_str());
+}
+
+%typemap(out) string* {
+   $result = PyString_FromString($1->c_str());
 }
 
 %typemap(out) variant* {

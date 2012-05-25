@@ -2189,7 +2189,7 @@ class cleanhelper:
         if debug: print "before ms.cvelfreqs (start,width,nchan)===>",start, width, nchan
         newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
                               start=start,width=width,phasec=inphasec, restfreq=restf,
-                              outframe=self.usespecframe,veltype=veltype)
+                              outframe=self.usespecframe,veltype=veltype).tolist()
         #print newfreqs
         descendingnewfreqs=False
         if type(newfreqs)==list:
