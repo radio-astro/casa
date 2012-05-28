@@ -1172,16 +1172,22 @@ void QtDisplayPanel::updateColorBarDDLists_() {
   allColorBarDDs_ = registeredDDs();
   for(ListIter<QtDisplayData*> acbdds(allColorBarDDs_); !acbdds.atEnd(); ) {
     QtDisplayData* cbdd = acbdds.getRight();
-    bool wouldDisplay = cbdd->wouldDisplayColorBar();
-    bool conforms = pd_->conforms(cbdd->dd(), False, True, False);
-    if( wouldDisplay && conforms ){
-    	acbdds++;	 // (keep).
+
+    if ( cbdd != NULL ){
+    	bool wouldDisplay = cbdd->wouldDisplayColorBar();
+    	bool conforms = pd_->conforms(cbdd->dd(), False, True, False);
+    	if( wouldDisplay && conforms ){
+    		acbdds++;	 // (keep).
+    	}
+    	else {
+    		acbdds.removeRight();  // (remove).
+    	}
+    	// (Note: behavior is still somewhat anomalous if some raster DDs
+    	// have different axes set from CSMaster DD (uncommon, no big deal.))
     }
     else {
-    	acbdds.removeRight();  // (remove).
+    	acbdds.removeRight();
     }
-	// (Note: behavior is still somewhat anomalous if some raster DDs
-	// have different axes set from CSMaster DD (uncommon, no big deal.))
   }
 
   // Pare allColorBarDDs_ down further, into colorBarDDsToDisplay_ (the
@@ -1202,6 +1208,7 @@ void QtDisplayPanel::updateColorBarDDLists_() {
     
     // Will any of the remaining candidate DDs display on this subpanel?
     for(ccbdds.toStart(); !ccbdds.atEnd(); ) {
+
     	QtDisplayData* ccbdd = ccbdds.getRight();
       
     	// 'True, False, False' == 'does DD conform to this sub-panel's

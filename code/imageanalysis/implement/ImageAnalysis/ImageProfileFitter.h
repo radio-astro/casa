@@ -161,6 +161,13 @@ public:
 
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
+
+
+    const static String _CONVERGED;
+    const static String _SUCCEEDED;
+    const static String _ITERATION_COUNT;
+    const Array<ImageFit1D<Float> >& getFitters() const;
+
 private:
 
 	String _residual, _model, _regionString, _xUnit,

@@ -1,137 +1,122 @@
 #include <display/QtPlotter/SpecFitSettingsWidget.qo.h>
-#include <display/QtPlotter/SpecFitSettingsPolynomialWidget.qo.h>
-#include <display/QtPlotter/SpecFitSettingsGaussWidget.qo.h>
-#include <display/QtPlotter/SpecFitSettingsRangeWidget.qo.h>
-#include <display/QtPlotter/SpecFitEstimateDialog.qo.h>
+#include <display/QtPlotter/SpecFitSettingsWidgetOptical.qo.h>
+#include <display/QtPlotter/SpecFitSettingsWidgetRadio.qo.h>
+#include <display/QtPlotter/SpecFitter.h>
+#include <display/QtPlotter/SpecFitMonitor.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
+#include <casa/Logging/LogIO.h>
 #include <QtGui>
-#include <QTableWidgetItem>
 #include <QHBoxLayout>
-#include <assert.h>
 
 namespace casa {
 
 
 SpecFitSettingsWidget::SpecFitSettingsWidget(QWidget *parent)
-    : QWidget(parent), NEW_ESTIMATE(-1), pixelCanvas( NULL )
+    : QWidget(parent), pixelCanvas( NULL ), specFitter( NULL),
+      opticalFitter( true )
 {
 	ui.setupUi(this);
-
-	QHBoxLayout* hbox = new QHBoxLayout();
-	rangeWidget = new SpecFitSettingsRangeWidget( this );
-	polyWidget = new SpecFitSettingsPolynomialWidget( this );
-	gaussWidget = new SpecFitSettingsGaussWidget( this );
-	hbox -> addWidget( rangeWidget );
-	hbox -> addWidget( polyWidget );
-	hbox -> addWidget( gaussWidget );
-	ui.settingsArea -> setLayout( hbox );
-
-
-	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(specLineFit()));
-	connect( ui.cleanButton, SIGNAL(clicked()), this, SLOT(showMainCurve()));
-
-
-
 }
+
+bool SpecFitSettingsWidget::isOptical() const {
+	return opticalFitter;
+}
+
+void SpecFitSettingsWidget::resetSpectralFitter( bool optical ){
+	if ( optical != opticalFitter || specFitter == NULL ){
+		//We are changing from an optical to a radio or vice versa
+		//so we need to change the display to match or we need to
+		//initialize the specFitter;
+		opticalFitter = optical;
+		QLayout* boxLayout = layout();
+		if ( boxLayout != NULL ){
+			boxLayout->removeWidget( dynamic_cast<QWidget*>(specFitter) );
+			if ( specFitter != NULL ){
+				delete specFitter;
+			}
+			delete boxLayout;
+		}
+
+		QHBoxLayout* hboxLayout = new QHBoxLayout( this );
+		hboxLayout->setMargin( 0 );
+		if ( optical ){
+			specFitter = new SpecFitSettingsWidgetOptical( this );
+
+		}
+		else {
+			specFitter = new SpecFitSettingsWidgetRadio( this );
+		}
+
+		//Reset the specFitter tools
+		if ( pixelCanvas != NULL ){
+			specFitter -> setCanvas( pixelCanvas );
+		}
+		if ( logger != NULL ){
+			specFitter -> setLogger( logger );
+		}
+		if ( specFitMonitor != NULL ){
+			specFitter -> setSpecFitMonitor( specFitMonitor );
+		}
+
+		hboxLayout->addWidget( dynamic_cast<QWidget*>(specFitter));
+		this->setLayout( hboxLayout );
+		this->update();
+	}
+	else {
+		//Only the data has changed (not the type of fitter).
+		specFitter->resetSpectralFitter();
+	}
+}
+
 
 void SpecFitSettingsWidget::setCanvas( QtCanvas* pCanvas ){
+	//We store a copy in this class so if the specFitter changes
+	//we can still provide it with the canvas for drawing and we
+	//can respond to range change requests without reconnecting if
+	//the specFitter changes.
 	pixelCanvas = pCanvas;
-	connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float,float)));
+	connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setFitRange(float,float)));
 
+	//We give the current spec fitter a copy of the canvas for drawing purposes.
+	if ( specFitter != NULL ){
+		specFitter->setCanvas( pixelCanvas );
+	}
 }
 
 
-
-
-
-void SpecFitSettingsWidget::setCollapseRange(float start, float end ){
-
-	rangeWidget -> setCollapseRange( start, end );
+void SpecFitSettingsWidget::setLogger( LogIO* log ){
+	logger = log;
+	if ( specFitter != NULL ){
+		specFitter->setLogger( log );
+	}
 }
 
-void SpecFitSettingsWidget::showGaussEstimateDialog( int estimateId ){
-	GaussFitEstimate* estimate = NULL;
-	/*if ( estimateId == NEW_ESTIMATE ){
-		estimate = new GaussFitEstimate();
+void SpecFitSettingsWidget::setFitMonitor( SpecFitMonitor* fitMonitor ){
+	specFitMonitor = fitMonitor;
+	if ( specFitter != NULL ){
+		specFitter ->setSpecFitMonitor( specFitMonitor );
 	}
-	else {
-		assert( 0 <= estimateId && estimateId <= estimates.size());
-		estimate = estimates[estimateId];
-	}
-	SpecFitEstimateDialog estimateDialog( estimate, this );
-	int result = estimateDialog.exec();
-	qDebug()<< "Showed dialog result=" << result << " accepted is "<< QDialog::Accepted;
-	if ( result == QDialog::Accepted ){
-		estimateDialog.updateEstimate( estimate );
-		if ( estimateId == NEW_ESTIMATE ){
-			estimates.push_back( estimate );
-			updateTable();
-		}
-	}
-	else {
-		delete estimate;
-	}*/
 }
 
-
-
-void SpecFitSettingsWidget::showMainCurve(){
-
+void SpecFitSettingsWidget::setUnits( QString units ){
+	if ( specFitter != NULL ){
+		specFitter -> setUnits( units );
+	}
 }
 
-
-void SpecFitSettingsWidget::specLineFit(){
-
-	/**itsLog << LogOrigin("QtProfile", "SpectralLineFit");
-
-	// get the values
-	float startVal = chanMinLineEdit -> text().toFloat();
-	float endVal = chanMaxLineEdit -> text().toFloat();
-
-	bool doFitGauss = gaussRadioButton->isChecked();
-	bool doFitPoly = !doFitGauss;
-	int polyN = -1;
-	if ( !doFitPoly ){
-		polyN = polyOrderSpinBox->value();
+void SpecFitSettingsWidget::setRange( float start, float end ){
+	if ( specFitter != NULL ){
+		specFitter ->setRange(start, end );
 	}
+}
 
-	// do the fit
-	String  msg;
-	if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)){
-		//msg = String("Data could not be fitted!");
-		profileStatus->showMessage(QString(msg.c_str()));
-	}
-	else{
-		if (fitter->getStatus() == SpectralFitter::SUCCESS){
-			// get the fit values
-			Vector<Float> z_xfit, z_yfit;
-			fitter->getFit(z_xval, z_xfit, z_yfit);
-			// report problems
-			if (z_yfit.size()<1){
-				msg = String("There exist no fit values!");
-				*itsLog << LogIO::WARN << msg << LogIO::POST;
-				profileStatus->showMessage(QString(msg.c_str()));
-				return;
-			}
-
-			// overplot the fit values
-			QString fitName = fileName + "FIT" + QString::number(startVal)
-				+ "-" + QString::number(endVal) + QString(xaxisUnit.c_str());
-			qDebug() << "Spec Line fit values are:";
-			for ( int i = 0; i < z_xfit.size(); i++ ){
-				qDebug() << "x="<<z_xfit[i] << " y=" <<z_yfit[i];
-			}
-			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
-		}
-		profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
-	}*/
+void SpecFitSettingsWidget::setFitRange( float start, float end ){
+	setRange( start, end );
 }
 
 
 SpecFitSettingsWidget::~SpecFitSettingsWidget()
 {
-	/*while( !estimates.isEmpty() ){
-		delete estimates.takeFirst();
-	}*/
+	delete specFitter;
 }
 } // end namespace

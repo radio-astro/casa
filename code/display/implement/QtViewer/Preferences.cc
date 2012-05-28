@@ -73,7 +73,7 @@ namespace casa {
 	  "viewer.prf.plot.type", "L", "mean", "calculation of the spectral value for non-point regions", "unchecked",
 	  "viewer.prf.freqcoord.type", "L", "radio velocity [km/s]", "frequency units for spectral profile tool", "unchecked",
 	  "viewer.prf.collapse.type", "L", "mean", "spectral profile tool: how are points in the collapsed image calculated", "unchecked",
-	  "viewer.prf.collerror.type", "L", "no error", "spectral profile tool: include errors in the collapsed image", "unchecked", 0
+	  "viewer.prf.collerror.type", "L", "no error", "spectral profile tool: include errors in the collapsed image", "unchecked",0
 	};
 
 	// validator class declarations...
