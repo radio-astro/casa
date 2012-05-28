@@ -89,7 +89,7 @@
         </size>
        </property>
        <property name="text">
-        <string/>
+        <string>&lt;font color='black'&gt;[km/s]&lt;/font&gt;</string>
        </property>
       </widget>
      </item>
