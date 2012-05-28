@@ -172,7 +172,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		# set default spectral axis unit
 		if ( specunit != '' ):
 			s.set_unit(specunit)
-		
+
 		# reset frame and doppler if needed
 		if ( frame != '' ):
 			s.set_freqframe(frame)
@@ -278,66 +278,10 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 
 			msk = None
 
-			### for specunit != 'channel'/'' cases (CSV-1869, 2012/05/23 WK)
-			### this part should be a scantable method..
-			abc = s.get_abcissa()[0]
-			abc_l = abc[0]
-			abc_r = abc[len(abc)-1]
-			isincr = (abc_r - abc_l > 0.0)
-			lmask2 = []
-			for elem_lmask in lmask:
-				if isincr:
-					if ((elem_lmask[0] < abc_l) and (elem_lmask[1] < abc_l)) or \
-					((elem_lmask[0] > abc_r) and (elem_lmask[1] > abc_r)):
-						continue
-				else:
-					if ((elem_lmask[0] > abc_l) and (elem_lmask[1] > abc_l)) or \
-					((elem_lmask[0] < abc_r) and (elem_lmask[1] < abc_r)):
-						continue
-
-				new_elem = []
-				for elem_idx in range(2):
-					elem_val = elem_lmask[elem_idx]
-					if isincr:
-						if elem_val < abc_l:
-							new_elem.append(0)
-							continue
-						elif elem_val >= abc_r:
-							new_elem.append(len(abc)-1)
-							continue
-					else:
-						if elem_val > abc_l:
-							new_elem.append(0)
-							continue
-						elif elem_val <= abc_r:
-							new_elem.append(len(abc)-1)
-							continue
-
-					for abc_idx in range(len(abc)-1):
-						if ((abc[abc_idx] <= elem_val) and (elem_val < abc[abc_idx+1])) or \
-						   ((abc[abc_idx] >= elem_val) and (elem_val > abc[abc_idx+1])):
-							new_idx = abc_idx + (elem_val - abc[abc_idx])/(abc[abc_idx+1] - abc[abc_idx])
-							new_elem.append(new_idx)
-							break
-
-				if (new_elem[0] <= new_elem[1]):
-					new_elem[0] = int(math.floor(new_elem[0]))
-					new_elem[1] = int(math.ceil(new_elem[1]))
-				else:
-					new_elem[0] = int(math.ceil(new_elem[0]))
-					new_elem[1] = int(math.floor(new_elem[1]))
-
-				lmask2.append(new_elem)
-
-			if (specunit != ''):
-				s.set_unit('')
-
-			### (end fix for CSV-1869)--------------
-				
 			if (maskmode == 'interact'):
 				new_mask = sd.interactivemask(scan=s)
-				if (len(lmask2) > 0):
-					new_mask.set_basemask(masklist=lmask2,invert=False)
+				if (len(lmask) > 0):
+					new_mask.set_basemask(masklist=lmask,invert=False)
 				new_mask.select_mask(once=False,showmask=True)
 
 				finish = raw_input("Press return to baseline spectra.\n")
@@ -356,7 +300,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			else:
 				# Use baseline mask for regions to INCLUDE in baseline fit
 				# Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
-				if (len(lmask2) > 0): msk = s.create_mask(lmask2)
+				if (len(lmask) > 0): msk = s.create_mask(lmask)
 			
 				
 			if (maskmode == 'auto'):
