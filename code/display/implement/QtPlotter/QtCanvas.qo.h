@@ -82,7 +82,7 @@ public:
 
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
-	void setTopAxisRange(const Vector<Float> &xValues );
+	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	CurveData* getCurveData(int);
 	ErrorData* getCurveError(int id);
 	QString getCurveName(int);

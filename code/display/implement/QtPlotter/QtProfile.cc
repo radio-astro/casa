@@ -1512,7 +1512,17 @@ void QtProfile::doImgCollapse(){
 	return;
 }*/
 
-
+bool QtProfile::isAxisAscending(const Vector<Float>& axisValues ) const {
+	bool axisAscending = true;
+	if ( axisValues.size() > 0 ){
+		float first = axisValues[0];
+		float last = axisValues[axisValues.size() - 1];
+		if ( last < first ){
+			axisAscending = false;
+		}
+	}
+	return axisAscending;
+}
 
 void QtProfile::changeTopAxis(){
 	if ( lastWX.size() > 0 ){
@@ -1524,8 +1534,23 @@ void QtProfile::changeTopAxis(){
 		String coordinateType;
 		String cTypeUnit;
 		getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+
+		//Check to see if the bottom axis ordering is ascending in x
+		bool bottomAxisAscendingX = isAxisAscending( z_xval );
+
+		//Get the minimum and maximum x-value for the top axis
 		assignFrequencyProfile( lastWX, lastWY, coordinateType, cTypeUnit, xValues, yValues  );
-		pixelCanvas -> setTopAxisRange(xValues);
+
+		//Check to see if the top axis ordering is ascending in x
+		bool topAxisAscendingX = isAxisAscending(xValues);
+
+		//We will have to show the labels of the top axis descending if the
+		//order does not match that of the bottom axis.
+		bool topAxisDescending = false;
+		if ( topAxisAscendingX != bottomAxisAscendingX ){
+			topAxisDescending = true;
+		}
+		pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 	}
 
 }

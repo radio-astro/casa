@@ -282,7 +282,7 @@ void QtCanvas::clearCurve()
     profileFitMarkers.clear();
 }
 
-void QtCanvas::setTopAxisRange(const Vector<Float> &values ){
+void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescending ){
 	double min = 1000000000000000000000000.;
 	double max = -min;
 	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
@@ -294,6 +294,13 @@ void QtCanvas::setTopAxisRange(const Vector<Float> &values ){
 		}
 	}
 	adjustExtremes( &min, &max );
+	//Switch the min and max if we need to draw the labels on the top
+	//axis in descending order.
+	if ( topAxisDescending ){
+		float tmp = min;
+		min = max;
+		max = tmp;
+	}
 	topAxisRange.first = min;
 	topAxisRange.second = max;
 	QtPlotSettings currentSettings = zoomStack[curZoom];
@@ -857,6 +864,10 @@ void QtCanvas::drawBackBuffer(QPainter *painter)
 
 QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const {
 	QtPlotSettings settings = zoomStack[curZoom];
+	/*float sgn = 1.f;
+	if ( !settings.isAscending(axisIndex) ){
+		sgn = -1.f;
+	}*/
 	double label = settings.getMinX(axisIndex) + (tickIndex * settings.spanX(axisIndex) / tickCount);
 	if (abs(label) < 0.00000005) label = 0.f;
 	QString tickLabel = QString::number( label );

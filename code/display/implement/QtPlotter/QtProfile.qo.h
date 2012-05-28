@@ -215,6 +215,12 @@ private:
     */
    void initSpectrumPosition();
 
+   /**
+    * Returns false if first vector value is greater than the last
+    * vector value; otherwise returns true.
+    */
+   bool isAxisAscending(const Vector<Float>& axisValues ) const;
+
    void setTitle( const QString& shape );
    void copyToLastEvent( const String& c, const Vector<Double> &px,
    	    		const Vector<Double> &py,
