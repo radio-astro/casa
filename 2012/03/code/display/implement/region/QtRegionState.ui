@@ -234,7 +234,7 @@
            <rect>
             <x>130</x>
             <y>45</y>
-            <width>100</width>
+            <width>115</width>
             <height>50</height>
            </rect>
           </property>
@@ -255,9 +255,12 @@
             <rect>
              <x>0</x>
              <y>18</y>
-             <width>95</width>
+             <width>115</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -388,7 +391,7 @@
          <widget class="QGroupBox" name="coordinate_angle_box">
           <property name="geometry">
            <rect>
-            <x>244</x>
+            <x>258</x>
             <y>44</y>
             <width>131</width>
             <height>41</height>
@@ -466,7 +469,7 @@
            <rect>
             <x>130</x>
             <y>91</y>
-            <width>100</width>
+            <width>115</width>
             <height>50</height>
            </rect>
           </property>
@@ -487,9 +490,12 @@
             <rect>
              <x>0</x>
              <y>18</y>
-             <width>95</width>
+             <width>115</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -615,6 +621,9 @@
              <width>61</width>
              <height>26</height>
             </rect>
+           </property>
+           <property name="currentIndex">
+            <number>2</number>
            </property>
            <item>
             <property name="text">
@@ -1301,7 +1310,7 @@
          </rect>
         </property>
         <property name="text">
-         <string>all marked regions</string>
+         <string>all selected regions</string>
         </property>
        </widget>
        <widget class="QRadioButton" name="save_all_regions">
