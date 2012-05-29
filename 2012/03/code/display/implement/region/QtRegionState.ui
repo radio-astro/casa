@@ -438,6 +438,9 @@
             <height>31</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>apply coordinate changes</string>
+          </property>
           <property name="text">
            <string>apply</string>
           </property>
@@ -450,6 +453,9 @@
             <width>81</width>
             <height>31</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>reset unapplied coordinate changes</string>
           </property>
           <property name="text">
            <string>reset</string>

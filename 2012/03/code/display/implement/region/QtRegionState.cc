@@ -354,7 +354,7 @@ namespace casa {
 	int QtRegionState::zMax( ) const { return frame_max->value( ); }
 	int QtRegionState::numFrames( ) const { return region_->numFrames( ); }
 
-	bool QtRegionState::isAnnotation( ) const { region_annotation->isChecked( ) ? true : false; }
+	bool QtRegionState::isAnnotation( ) const { return region_annotation->isChecked( ) ? true : false; }
 
 	void QtRegionState::stackChange( QWidget *top ) {
 

@@ -55,7 +55,7 @@
      <rect>
       <x>10</x>
       <y>220</y>
-      <width>431</width>
+      <width>411</width>
       <height>20</height>
      </rect>
     </property>
@@ -75,7 +75,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>453</x>
+      <x>454</x>
       <y>220</y>
       <width>21</width>
       <height>20</height>
@@ -83,6 +83,28 @@
     </property>
     <property name="toolTip">
      <string>delete this region</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reset_regions">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>428</x>
+      <y>220</y>
+      <width>21</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>delete ALL regions</string>
     </property>
     <property name="text">
      <string/>
