@@ -64,7 +64,6 @@ QtDrawCanvas::QtDrawCanvas(QWidget *parent)
     imageMode = false;
     
     setPlotSettings(QtDrawSettings());
-    setMarkMode(false);
     
 }
 
@@ -994,10 +993,10 @@ void QtDrawCanvas::drawCurves(QPainter *painter)
 }
 
 
-void QtDrawCanvas::setMarkMode(bool b)
+/*void QtDrawCanvas::setMarkMode(bool b)
 {
     markMode = b;
-}
+}*/
 
 void QtDrawCanvas::plotPolyLines(QString path)
 {

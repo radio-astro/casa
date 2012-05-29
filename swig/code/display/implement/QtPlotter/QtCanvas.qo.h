@@ -37,7 +37,8 @@
 #include <casa/Arrays/IPosition.h>
 
 #include <display/QtPlotter/QtPlotSettings.h>
-
+#include <display/QtPlotter/WorldCanvasTranslator.h>
+#include <display/QtPlotter/ProfileFitMarker.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -49,10 +50,13 @@
 #include <QDialog>
 #include <QPixmap>
 #include <QVBoxLayout>
+#include <QPainterPath>
 #include <QLabel>
+#include <QMenu>
 #include <map>
 #include <vector>
 #include <graphics/X11/X_exit.h>
+
 
 namespace casa { 
 
@@ -71,7 +75,7 @@ public:
 	GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), fontSize(12), color(Qt::blue) {}
 };
 
-class QtCanvas : public QWidget
+class QtCanvas : public QWidget, public WorldCanvasTranslator
 {
 	Q_OBJECT
 public:
@@ -79,7 +83,7 @@ public:
 
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
-	void setTopAxisRange(const Vector<Float> &xValues );
+	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	CurveData* getCurveData(int);
 	ErrorData* getCurveError(int id);
 	QString getCurveName(int);
@@ -129,22 +133,45 @@ public:
 	int getAutoScaleY( ) {return autoScaleY;}
 	int getShowGrid( )   {return showGrid;}
 	void setPlotError(int a)  {plotError = a; setDataRange();}
+
+	//Whether or not to show a top axis on the plot.
 	void setShowTopAxis( bool showAxis );
-	void setShowToolTips( bool toolTipsVisible ){ showToolTips = toolTipsVisible; }
 	bool getShowTopAxis() const { return showTopAxis; }
+
+	//Whether or not to show tool tips with the x,y coordinates
+	//of the points on the plot.
+	void setShowToolTips( bool toolTipsVisible ){ showToolTips = toolTipsVisible; }
 	bool getShowToolTips() const { return showToolTips; }
+
+	//Sets the coordinates for the x and y points that are displayed
+	//as tooltips.
 	void setToolTipYUnit( const QString& yUnit ){ toolTipYUnit = yUnit; }
 	void setToolTipXUnit( const QString& xUnit ){ toolTipXUnit = xUnit; }
 
+	//Stores the location of a (center,peak) point that represents an initial
+	//Gaussian estimate for spectral line fitting.
+	void setProfileFitMarkerCenterPeak( int index, double center, double peak);
+
+	//Stores the fwhm and the y value of the fwhm for an initial Gaussian estimate
+	//for spectral line fitting.
+	void setProfileFitMarkerFWHM( int index, double fwhm, double fwhmHeight);
+
+	//Whether or not to plot a line graph or instead plot the points as a
+	//step function.
+	bool isDisplayStepFunction() const;
+	void setDisplayStepFunction( bool displayAsStepFunction );
 
 public slots:
    void zoomIn();
    void zoomOut();
    void zoomNeutral();
+   void gaussianCenterPeakSelected();
+   void gaussianFWHMSelected();
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
 	void channelSelect(float xvalue);
+	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -197,6 +224,21 @@ private:
 	 */
 	double getDataX( int pixelPosition ) const;
 
+	//WorldCanvasTranslator interface methods.
+	/**
+	 * Maps a world x value to an x pixel coordinate.
+	 * @param dataX an world X value.
+	 * @return the pixel position of the passed in value.
+	 */
+	int getPixelX( double dataX ) const;
+
+	/**
+	 * Maps a world y value to a y pixel value.
+	 * @param dataY a world y value.
+	 * @return the pixel position of the world y value.
+	 */
+	int getPixelY ( double dataY ) const;
+
 	/**
 	 * Looks for a data point corresponding to the world
 	 * cooordinates (x,y).  Returns an empty string if there
@@ -239,6 +281,14 @@ private:
 	 */
 	QString getXTickLabel( int index, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const;
 
+	/**
+	 * Initializes the shift-right-click pop-up menu that
+	 * the user can use to specify Gaussian estimates.
+	 */
+	void initGaussianEstimateContextMenu();
+
+	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
+
 	enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
@@ -279,10 +329,22 @@ private:
 	int xRectStart;
 	int xRectEnd;
 
-	bool showToolTips;
+
 	bool showTopAxis;
+	bool showToolTips;
+	bool displayStepFunction;
 	QString toolTipXUnit;
 	QString toolTipYUnit;
+
+	//Profile Fitting Gaussian Estimation
+	QMenu gaussianContextMenu;
+	double gaussianEstimateX;
+	double gaussianEstimateY;
+	QList<ProfileFitMarker> profileFitMarkers;
+
+	ProfileFitMarker getMarker( int index ) const;
+	void setMarker( int index, ProfileFitMarker& marker );
+
 };
 
 }

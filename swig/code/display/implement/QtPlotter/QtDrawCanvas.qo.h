@@ -130,7 +130,7 @@ public:
     // template<class T>
     void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
     void drawImage(const Matrix<uInt> &data);
-    void setMarkMode(bool);
+    //void setMarkMode(bool);
     
     QColor getLinearColor(double);
     QSize minimumSizeHint() const;

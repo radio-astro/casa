@@ -29,9 +29,6 @@
 #include <measures/Measures.h>
 #include <coordinates/Coordinates.h>
 #include <casa/Exceptions/Error.h>
-//#include <images/Regions/WCBox.h>
-//#include <lattices/Lattices/LCRegion.h>
-//#include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/RegionType.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/BasicSL/String.h>
@@ -43,7 +40,7 @@
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
+//#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -55,8 +52,6 @@
 #include <images/Images/ImageUtilities.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/Display/Options.h>
-#include <display/QtPlotter/SpecFitEstimateDialog.qo.h>
-#include <display/QtPlotter/GaussFitEstimate.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -87,7 +82,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
         :QMainWindow(parent),
          //pc(0),
          //te(0),
-         analysis(0), image(img), collapser(0), fitter(0), over(0),WORLD_COORDINATES("world"),
+         analysis(0), image(img), collapser(0), /*fitter(0),*/ over(0),WORLD_COORDINATES("world"),
          coordinate( WORLD_COORDINATES ), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
@@ -100,10 +95,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 {
     setupUi(this);
 
-
+    functionTabs->removeTab(1);
     initPlotterResource();
 
-    functionTabs->removeTab(3);
+    //functionTabs->removeTab(3);
     functionTabs->setCurrentIndex( 0 );
 
     setWindowTitle(QString("Spectral Profile - ").append(name));
@@ -137,15 +132,13 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     ctypeUnit = String(bottomAxisCType->currentText().toStdString());
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
     pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
-    collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
-    fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+
 
     // get reference frame info for freq axis label
     MFrequency::Types freqtype = determineRefFrame(img);
     spcRefFrame = String(MFrequency::showType(freqtype));
     Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
     spcRef->setCurrentIndex(frameindex);
-    specFitSettingsWidget -> setCanvas( pixelCanvas );
     connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCoordinateType(const QString &)));
     connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
@@ -172,18 +165,18 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     toLabel->setAlignment((Qt::Alignment)(Qt::AlignRight|Qt::AlignVCenter));
     //collapseUnits->setMinimumWidth(45);
     collapseUnits->setMargin(3);
-    fitUnits->setMargin(3);
+    //fitUnits->setMargin(3);
     connect(collapse, SIGNAL(clicked()),
             this, SLOT(doImgCollapse()));
 
-    startValueFit->setValidator(validator);
+    /*startValueFit->setValidator(validator);
     startValueFit->setMaximumWidth(100);
     endValueFit->setValidator(validator);
     endValueFit->setMaximumWidth(100);
     connect(fit, SIGNAL(clicked()),
             this, SLOT(doLineFit()));
     connect(clean, SIGNAL(clicked()),
-            this, SLOT(plotMainCurve()));
+            this, SLOT(plotMainCurve()));*/
 
     pixelCanvas->setTitle("");
     pixelCanvas->setWelcome("assign a mouse button to\n"
@@ -219,14 +212,28 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     try{
    	 analysis  = new ImageAnalysis(img);
    	 collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
-   	 fitter    = new SpectralFitter();
+   	 //fitter    = new SpectralFitter();
+   	 specFitSettingsWidget->resetSpectralFitter( specFitSettingsWidget->isOptical() );
+   	 setUnitsText( xaxisUnit );
     }
     catch (AipsError x){
    	 String message = "Error when starting the profiler:\n" + x.getMesg();
    	 *itsLog << LogIO::WARN << message << LogIO::POST;
     }
+
+    //Spectral Line Fitting initialization
+    specFitSettingsWidget -> setCanvas( pixelCanvas );
+    specFitSettingsWidget -> setFitMonitor( this );
+    specFitSettingsWidget -> setLogger( itsLog );
 }
 
+
+void QtProfile::setUnitsText( String unitStr ){
+	QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
+	collapseUnits->setText( unitLabel );
+	//fitUnits->setText( unitLabel );
+	specFitSettingsWidget->setUnits( QString(unitStr.c_str()) );
+}
 
 //----------------------------------------------------------------------------------
 //              Spectrum Positioning
@@ -770,14 +777,15 @@ void QtProfile::down()
 void QtProfile::preferences()
 {
 	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), 
-		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool)),
-			this, SLOT(setPreferences(int, int, int, int, int, bool, bool)));
+		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
+		pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
+			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
 	profilePrefs->showNormal();
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
-				bool showToolTips, bool showTopAxis ){
+				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter ){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
@@ -786,6 +794,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowGrid(showGrid);
 	pixelCanvas->setShowToolTips( showToolTips );
 	pixelCanvas->setShowTopAxis( showTopAxis );
+	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 	topAxisCType -> setEnabled( showTopAxis );
 	
 	stateMProf=inMProf;
@@ -794,6 +803,10 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
 	}
 
+	bool oldOpticalFitter = specFitSettingsWidget->isOptical();
+	if ( opticalFitter != oldOpticalFitter ){
+		specFitSettingsWidget->resetSpectralFitter( opticalFitter );
+	}
 }
 
 void QtProfile::setPlotError(int st)
@@ -831,9 +844,8 @@ void QtProfile::changeTopAxisCoordinateType( const QString & /*text*/ ){
 }
 
 
-void QtProfile::changeCoordinateType(const QString &text) {
-    //coordinateType = String(text.toStdString());
 
+void QtProfile::changeCoordinateType(const QString &text) {
 	xpos = "";
 	ypos = "";
 	position = QString("");
@@ -842,8 +854,8 @@ void QtProfile::changeCoordinateType(const QString &text) {
 
 	ctypeUnit = String(text.toStdString());
 	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
-	collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
-	fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+
+	setUnitsText( xaxisUnit );
 
 	pixelCanvas->setPlotSettings(QtPlotSettings());
 	pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
@@ -883,10 +895,12 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 		collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
 		newCollapseVals=True;
 
-		if (fitter)
+		specFitSettingsWidget->resetSpectralFitter( specFitSettingsWidget->isOptical() );
+		/*if (fitter)
 			delete fitter;
-		fitter = new SpectralFitter();
+		fitter = new SpectralFitter();*/
 	}
+
 	catch (AipsError x){
 		String message = "Error when re-setting the profiler:\n" + x.getMesg();
 		*itsLog << LogIO::WARN << message << LogIO::POST;
@@ -919,8 +933,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
-	collapseUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
-	fitUnits->setText(QString("<font color='black'>[")+QString(xaxisUnit.c_str())+QString("]</font>"));
+	setUnitsText( xaxisUnit );
 
 	QString lbl = bottomAxisCType->currentText();
 	pixelCanvas->setXLabel(lbl, 12, 2, "Helvetica [Cronyx]", QtPlotSettings::xBottom );
@@ -1401,7 +1414,7 @@ void QtProfile::doImgCollapse(){
 	return;
 }
 
-void QtProfile::doLineFit(){
+/*void QtProfile::doLineFit(){
 
 	*itsLog << LogOrigin("QtProfile", "doLineFit");
 
@@ -1498,55 +1511,19 @@ void QtProfile::doLineFit(){
 	}
 
 	return;
-}
+}*/
 
-void QtProfile::specLineFit(){
-
-	/**itsLog << LogOrigin("QtProfile", "SpectralLineFit");
-
-	// get the values
-	float startVal = chanMinLineEdit -> text().toFloat();
-	float endVal = chanMaxLineEdit -> text().toFloat();
-
-	bool doFitGauss = gaussRadioButton->isChecked();
-	bool doFitPoly = !doFitGauss;
-	int polyN = -1;
-	if ( !doFitPoly ){
-		polyN = polyOrderSpinBox->value();
-	}
-
-	// do the fit
-	String  msg;
-	if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)){
-		//msg = String("Data could not be fitted!");
-		profileStatus->showMessage(QString(msg.c_str()));
-	}
-	else{
-		if (fitter->getStatus() == SpectralFitter::SUCCESS){
-			// get the fit values
-			Vector<Float> z_xfit, z_yfit;
-			fitter->getFit(z_xval, z_xfit, z_yfit);
-			// report problems
-			if (z_yfit.size()<1){
-				msg = String("There exist no fit values!");
-				*itsLog << LogIO::WARN << msg << LogIO::POST;
-				profileStatus->showMessage(QString(msg.c_str()));
-				return;
-			}
-
-			// overplot the fit values
-			QString fitName = fileName + "FIT" + QString::number(startVal)
-				+ "-" + QString::number(endVal) + QString(xaxisUnit.c_str());
-			qDebug() << "Spec Line fit values are:";
-			for ( int i = 0; i < z_xfit.size(); i++ ){
-				qDebug() << "x="<<z_xfit[i] << " y=" <<z_yfit[i];
-			}
-			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+bool QtProfile::isAxisAscending(const Vector<Float>& axisValues ) const {
+	bool axisAscending = true;
+	if ( axisValues.size() > 0 ){
+		float first = axisValues[0];
+		float last = axisValues[axisValues.size() - 1];
+		if ( last < first ){
+			axisAscending = false;
 		}
-		profileStatus->showMessage(QString((fitter->report(*itsLog, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str()));
-	}*/
+	}
+	return axisAscending;
 }
-
 
 void QtProfile::changeTopAxis(){
 	if ( lastWX.size() > 0 ){
@@ -1558,8 +1535,23 @@ void QtProfile::changeTopAxis(){
 		String coordinateType;
 		String cTypeUnit;
 		getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+
+		//Check to see if the bottom axis ordering is ascending in x
+		bool bottomAxisAscendingX = isAxisAscending( z_xval );
+
+		//Get the minimum and maximum x-value for the top axis
 		assignFrequencyProfile( lastWX, lastWY, coordinateType, cTypeUnit, xValues, yValues  );
-		pixelCanvas -> setTopAxisRange(xValues);
+
+		//Check to see if the top axis ordering is ascending in x
+		bool topAxisAscendingX = isAxisAscending(xValues);
+
+		//We will have to show the labels of the top axis descending if the
+		//order does not match that of the bottom axis.
+		bool topAxisDescending = false;
+		if ( topAxisAscendingX != bottomAxisAscendingX ){
+			topAxisDescending = true;
+		}
+		pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 	}
 
 }
@@ -2809,5 +2801,52 @@ QString QtProfile::getRaDec(double x, double y) {
 		lastWY.assign(wyv);
 		lastPX.assign(pxv);
 		lastPY.assign(pyv);
+	}
+
+
+	//Methods from the SpecFitMonitor interface that this class
+	//implements.
+	void QtProfile::postStatus( String status ){
+		profileStatus->showMessage(QString(status.c_str()));
+	}
+	Vector<Float> QtProfile::getXValues() const {
+		return z_xval;
+	}
+	Vector<Float> QtProfile::getYValues() const {
+		return z_yval;
+	}
+	Vector<Float> QtProfile::getZValues() const {
+		return z_eval;
+	}
+
+	QString QtProfile::getYUnit() const {
+		return yUnit;
+	}
+
+	QString QtProfile::getYUnitPrefix() const {
+		return yUnitPrefix;
+	}
+	String QtProfile::getXAxisUnit() const {
+		return xaxisUnit;
+	}
+
+	QString QtProfile::getFileName() const {
+		return fileName;
+	}
+
+	const ImageInterface<Float>* QtProfile::getImage() const{
+		return image;
+	}
+
+	const String QtProfile::getPixelBox() const {
+		String box = "";
+		if ( lastPX.size() == 2 && lastPY.size() == 2 ){
+			const String commaStr = ",";
+			box = String::toString(lastPX[0]) + commaStr;
+			box.append( String::toString( lastPY[0] )+ commaStr);
+			box.append( String::toString( lastPX[1] ) + commaStr );
+			box.append( String::toString( lastPY[1] ) );
+		}
+		return box;
 	}
 }

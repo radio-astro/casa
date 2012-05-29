@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>179</width>
-    <height>281</height>
+    <width>205</width>
+    <height>251</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,6 +75,23 @@
     <widget class="QCheckBox" name="topAxisCheckBox">
      <property name="text">
       <string>Top Axis</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="stepFunctionCheckBox">
+     <property name="text">
+      <string>Step Function</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="opticalSpecFitCheckBox">
+     <property name="text">
+      <string>Optical Spectral Line Fitting</string>
      </property>
      <property name="checked">
       <bool>true</bool>

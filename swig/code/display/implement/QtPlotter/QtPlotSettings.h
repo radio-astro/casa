@@ -54,6 +54,7 @@ public:
     double getMinY() const {
     	return minY;
     }
+
     void setMinY( double value );
     double getMaxY() const {
     	return maxY;
@@ -66,8 +67,7 @@ public:
     int getNumTicksY() const {
     	return numYTicks;
     }
-   // void setXAxesBounds( double min, double max );
-   // void setYAxesBounds( double min, double max );
+
 
 
 private:

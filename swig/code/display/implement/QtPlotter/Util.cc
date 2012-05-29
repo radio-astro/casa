@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <cmath>
 #include <iostream>
+#include <QMessageBox>
+#include <QWidget>
 using namespace std;
 namespace casa {
 
@@ -56,5 +58,11 @@ namespace casa {
 	double Util::toDecimalDegrees( int degrees, int mins, float seconds ){
 		double deg = degrees + mins / TIME_CONV + seconds / (TIME_CONV * TIME_CONV );
 		return deg;
+	}
+
+	void Util::showUserMessage( QString& msg, QWidget* parent ){
+		QMessageBox msgBox( parent );
+		msgBox.setText( msg );
+		msgBox.exec();
 	}
 }

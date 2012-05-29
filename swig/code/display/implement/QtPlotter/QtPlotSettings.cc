@@ -96,14 +96,14 @@ void QtPlotSettings::adjustAxis(double &min, double &max,
                                    int &numTicks)
 {
     const int MinTicks = 4;
-    double grossStep = (max - min) / MinTicks;
+    double grossStep = fabs(max - min) / MinTicks;
     double step = std::pow(10, floor(log10(grossStep)));
 
     if (5 * step < grossStep)
         step *= 5;
     else if (2 * step < grossStep)
         step *= 2;
-    numTicks = (int)(ceil(max / step) - floor(min / step));
+    numTicks = (int)fabs(ceil(max / step) - floor(min / step));
     min = floor(min / step) * step;
     max = ceil(max / step) * step;
 }
@@ -124,19 +124,6 @@ void QtPlotSettings::setMaxY( double value ){
   	maxY = value;
 }
 
-/*void QtPlotSettings::setXAxesBounds( double min, double max ){
-	assert( min <= max );
-	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
-		minX[i] = min;
-		maxX[i] = max;
-	}
-}*/
-
-/*void QtPlotSettings::setYAxesBounds( double min, double max ){
-	assert( min <= max );
-	minY = min;
-	maxY = max;
-}*/
 
 
 }

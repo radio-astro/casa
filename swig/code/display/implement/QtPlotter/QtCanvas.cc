@@ -27,13 +27,14 @@
 #include <casa/Containers/Record.h>
 
 #include <display/QtPlotter/QtCanvas.qo.h>
-
+#include <display/QtPlotter/Util.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
 #include <QHash>
 #include <QWidget>
+#include <QAction>
 #include <QMouseEvent>
 #include <cmath>
 #include <QtGui>
@@ -48,8 +49,10 @@ QtCanvas::~QtCanvas()
 {}
 
 QtCanvas::QtCanvas(QWidget *parent)
-        : QWidget(parent), 
-          title(), yLabel(), welcome(), showTopAxis( true ), showToolTips( true )
+        : QWidget(parent),
+          title(), yLabel(), welcome(),
+          showTopAxis( true ), showToolTips( true ), displayStepFunction( false ),
+          gaussianContextMenu( this )
 {    
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
@@ -66,10 +69,21 @@ QtCanvas::QtCanvas(QWidget *parent)
     autoScaleY = 2;
     plotError  = 2;
     showGrid   = 2;
+
+    initGaussianEstimateContextMenu();
 }
 
 
-
+void QtCanvas::initGaussianEstimateContextMenu(){
+	QAction* centerPeakAction = new QAction("(Center,Peak)", this );
+	centerPeakAction->setStatusTip( "Set the (Center,Peak) of the Gaussian Estimate");
+	connect( centerPeakAction, SIGNAL(triggered()), this, SLOT(gaussianCenterPeakSelected()));
+	gaussianContextMenu.addAction( centerPeakAction );
+	QAction* fwhmAction = new QAction( "(Center +/- FWHM/2, Peak/2)", this );
+	fwhmAction->setStatusTip("Specify the fwhm");
+	connect( fwhmAction, SIGNAL(triggered()), this, SLOT(gaussianFWHMSelected()));
+	gaussianContextMenu.addAction( fwhmAction );
+}
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
 {
@@ -266,9 +280,10 @@ void QtCanvas::clearCurve()
 {
     curveMap.clear();
     legend.clear();
+    profileFitMarkers.clear();
 }
 
-void QtCanvas::setTopAxisRange(const Vector<Float> &values ){
+void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescending ){
 	double min = 1000000000000000000000000.;
 	double max = -min;
 	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
@@ -280,6 +295,13 @@ void QtCanvas::setTopAxisRange(const Vector<Float> &values ){
 		}
 	}
 	adjustExtremes( &min, &max );
+	//Switch the min and max if we need to draw the labels on the top
+	//axis in descending order.
+	if ( topAxisDescending ){
+		float tmp = min;
+		min = max;
+		max = tmp;
+	}
 	topAxisRange.first = min;
 	topAxisRange.second = max;
 	QtPlotSettings currentSettings = zoomStack[curZoom];
@@ -370,7 +392,7 @@ double QtCanvas::getDataX( int pixelPosition ) const {
 	int rectLeft = getRectLeft();
 	double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
 	double xMin = settings.getMinX( QtPlotSettings::xBottom );
-	double dataX = xMin + (pixelPosition - rectLeft) * xAxisSpan / rectWidth;
+	double dataX = xMin + (pixelPosition - rectLeft) * xAxisSpan / (rectWidth -1);
 	return dataX;
 }
 
@@ -382,6 +404,26 @@ double QtCanvas::getDataY( int pixelPosition ) const {
 	double yMin = settings.getMinY();
 	double dataY = yMin + (rectBottom - pixelPosition) * yAxisSpan / (rectHeight - 1);
 	return dataY;
+}
+
+int QtCanvas::getPixelX( double dataX ) const {
+	QtPlotSettings settings = zoomStack[curZoom];
+	int rectWidth = getRectWidth();
+	int rectLeft = getRectLeft();
+	double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
+	double xMin = settings.getMinX( QtPlotSettings::xBottom );
+	int pixelX = rectLeft + static_cast<int>( (dataX - xMin ) * (rectWidth - 1) / xAxisSpan );
+	return pixelX;
+}
+
+int QtCanvas::getPixelY( double dataY ) const {
+	QtPlotSettings settings = zoomStack[curZoom];
+	int rectHeight = getRectHeight();
+	int rectBottom = getRectBottom();
+	double yAxisSpan = settings.spanY();
+	double yMin = settings.getMinY();
+	int pixelY = rectBottom - static_cast<int>((dataY - yMin)*(rectHeight - 1) / yAxisSpan);
+	return pixelY;
 }
 
 void QtCanvas::paintEvent(QPaintEvent *event)
@@ -399,30 +441,28 @@ void QtCanvas::paintEvent(QPaintEvent *event)
         painter.drawRect(rubberBandRect.normalized());
     }
     if ( xcursor.isValid( ) ) {
-	painter.setPen(xcursor);
-	QLine line( (int) currentCursorPosition.x( ), MARGIN, (int) currentCursorPosition.x( ), height() - MARGIN );
-	painter.drawLine(line);
+    	painter.setPen(xcursor);
+    	QLine line( (int) currentCursorPosition.x( ), MARGIN, (int) currentCursorPosition.x( ), height() - MARGIN );
+    	painter.drawLine(line);
     }
     if (xRangeIsShown)
     {
         painter.setPen(Qt::black);
-
-		QtPlotSettings settings = zoomStack[curZoom];
-		QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
-		double xAxisMin = settings.getMinX(QtPlotSettings::xBottom );
-		double dxStart = xRangeStart - xAxisMin;
-		double dxEnd   = xRangeEnd   - xAxisMin;
-		double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
-		double xStart = rect.left() + (dxStart * (rect.width()-1) / xAxisSpan );
-		double xEnd   = rect.left() + (dxEnd   * (rect.width()-1) / xAxisSpan );
-
-		xRangeRect.setLeft((int)(xStart));
-		xRangeRect.setRight((int)(xEnd));
+        int xStart = getPixelX( xRangeStart );
+        int xEnd = getPixelX( xRangeEnd );
+		xRangeRect.setLeft(xStart);
+		xRangeRect.setRight(xEnd);
 		xRangeRect.setBottom(MARGIN);
 		xRangeRect.setTop(height()-MARGIN-1);
 		painter.fillRect(xRangeRect, QColor(100,100,100,100));
 		painter.drawRect(xRangeRect.normalized());
 	}
+
+    //Paint the markers
+    for ( int i = 0; i < profileFitMarkers.length(); i++ ){
+    	profileFitMarkers[i].drawMarker( painter );
+    }
+
 	if (hasFocus())
 	{
 		QStyleOptionFocusRect option;
@@ -450,6 +490,8 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 
 	if (event->button() == Qt::LeftButton) {
 
+		//We are starting a spectral line fitting or a collapse/moments
+		//rectangle, unless we already have one.
 		if (event->modifiers().testFlag(Qt::ShiftModifier)){
 			xRangeMode    = true;
 			xRangeIsShown = true;
@@ -460,6 +502,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 			xRectStart= event->pos().x();
 			xRectEnd  = event->pos().x();
 			updatexRangeBandRegion();
+
 		} else {
 			xRangeIsShown     = false;
 			rubberBandIsShown = true;
@@ -470,40 +513,68 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 		setCursor(Qt::CrossCursor);
 	}
 
-	if (event->button() == Qt::RightButton) {
-		//cout << "Right button! " << endl;
-		int x = event->pos().x() - MARGIN;
-		int y = event->pos().y() - MARGIN;
-		//cout << "x=" << x << " y=" << y << endl;
-		QtPlotSettings prevSettings = zoomStack[curZoom];
-		QtPlotSettings settings;
+	else if (event->button() == Qt::RightButton) {
+		if ( ! event->modifiers().testFlag(Qt::ShiftModifier)){
+			//cout << "Right button! " << endl;
+			int x = event->pos().x() - MARGIN;
+			int y = event->pos().y() - MARGIN;
+			//cout << "x=" << x << " y=" << y << endl;
+			QtPlotSettings prevSettings = zoomStack[curZoom];
+			QtPlotSettings settings;
 
-		double dx = prevSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
-		double dy = prevSettings.spanY() / ( getRectHeight() );
-		x = (int)(prevSettings.getMinX(QtPlotSettings::xBottom) + dx * x);
-		y = (int)(prevSettings.getMaxY() - dy * y);
-		//cout << "x=" << x << " y=" << y << endl;
+			double dx = prevSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+			double dy = prevSettings.spanY() / ( getRectHeight() );
+			x = (int)(prevSettings.getMinX(QtPlotSettings::xBottom) + dx * x);
+			y = (int)(prevSettings.getMaxY() - dy * y);
+			//cout << "x=" << x << " y=" << y << endl;
 
-		std::map<int, CurveData>::const_iterator it = markerStack.begin();
+			std::map<int, CurveData>::const_iterator it = markerStack.begin();
 
-		while (it != markerStack.end())
-		{
+			while (it != markerStack.end()){
 
-			int id = (*it).first;
-			const CurveData &data = (*it).second;
-			//cout << " " << data[0] << " " << data[2]
-			//        << " " << data[1] << " " << data[3] << endl;
-			if ( x >= data[0] && x < data[2] &&
-					y <= data[1] && y > data[3]) {
-				markerStack[id] = markerStack[markerStack.size() - 1];
-				markerStack.erase(markerStack.size() - 1);
-				refreshPixmap();
-				break;
+				int id = (*it).first;
+				const CurveData &data = (*it).second;
+				//cout << " " << data[0] << " " << data[2]
+				//        << " " << data[1] << " " << data[3] << endl;
+				if ( x >= data[0] && x < data[2] &&
+						y <= data[1] && y > data[3]) {
+					markerStack[id] = markerStack[markerStack.size() - 1];
+					markerStack.erase(markerStack.size() - 1);
+					refreshPixmap();
+					break;
+				}
+				++it;
 			}
-			++it;
+		}
+		else {
+			if ( xRangeIsShown ){
+				//The user is specifying the (Center,Peak) or the FWHM
+				//of a Gaussian estimate. The point must be in the selected
+				//range to be valid.
+				int xPos = event->pos().x();
+				int yPos = event->pos().y();
+				if ( xRangeRect.contains( xPos, yPos ) ){
+					gaussianEstimateX = getDataX( xPos );
+					gaussianEstimateY = getDataY( yPos );
+					//Show a context menu to determine if the user is specifying
+					//the (Center,Peak) or FWHM.
+					gaussianContextMenu.exec( event->globalPos());
+				}
+				else {
+					QString msg( "Initial Gaussian estimates must be within\n the specified spectral-line fitting range.");
+					Util::showUserMessage( msg, this );
+				}
+			}
+			else {
+				QString msg( "Please specify a Spectral-Line Fitting range \nby shift-clicking the left mouse button\n and dragging it before you specify\n initial Gaussian estimates.");
+				Util::showUserMessage( msg, this );
+			}
+
 		}
 	}
 }
+
+
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
 	// save cursor position for xcursor setup...
@@ -723,6 +794,14 @@ void QtCanvas::wheelEvent(QWheelEvent *event)
     refreshPixmap();
 }
 
+void QtCanvas::gaussianCenterPeakSelected(){
+	emit specFitEstimateSpecified( gaussianEstimateX, gaussianEstimateY, true );
+}
+
+void QtCanvas::gaussianFWHMSelected(){
+	emit specFitEstimateSpecified( gaussianEstimateX, gaussianEstimateY, false );
+}
+
 void QtCanvas::updateRubberBandRegion(){
     update();
 }
@@ -749,7 +828,6 @@ void QtCanvas::refreshPixmap()
 	drawLabels(&painter);
 	if (!imageMode)
 	{
-
 		drawGrid(&painter);
 		drawCurves(&painter);
 		//if (xRangeIsShown)
@@ -986,22 +1064,14 @@ void QtCanvas::drawRects(QPainter *painter)
 	      (*pMask)(i, h - j) = 0;
 	}
 	
-	double dx1 = data[0] - settings.getMinX(QtPlotSettings::xBottom);
-    double dy1 = data[1] - settings.getMinY();
-    double dx2 = data[2] - settings.getMinX(QtPlotSettings::xBottom );
-    double dy2 = data[3] - settings.getMinY();
+	int x1 = getPixelX( data[0] );
+	int x2 = getPixelX( data[2] );
+	int y1 = getPixelX( data[1] );
+	int y2 = getPixelX( data[3] );
 
-    double spanX = settings.spanX( QtPlotSettings::xBottom );
-    double spanY = settings.spanY();
-    double x1 = rect.left() + (dx1 * (rect.width() - 1) / spanX );
-    double y1 = rect.bottom() - (dy1 * (rect.height() - 1) / spanY );
-    double x2 = rect.left() + (dx2 * (rect.width() - 1) / spanX );
-    double y2 = rect.bottom() - (dy2 * (rect.height() - 1) / spanY );
+    points.addRect((int)x1, (int)y1, (int)(x2 - x1), (int)(y2 - y1));
 
-        points.addRect((int)x1, (int)y1, (int)(x2 - x1), (int)(y2 - y1));
-       
-
-        painter->setPen(Qt::green);
+    painter->setPen(Qt::green);
 	//cout << "curMarker=" << curMarker << " id=" << id << endl;
 	if (id == curMarker)
 	painter->setPen(Qt::white);
@@ -1011,22 +1081,14 @@ void QtCanvas::drawRects(QPainter *painter)
 }
 
 
-void QtCanvas::drawxRange(QPainter *painter)
-{
-    QtPlotSettings settings = zoomStack[curZoom];
-
-    QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
-    double minX = settings.getMinX(QtPlotSettings::xBottom);
-    double dxStart = xRangeStart - minX;
-    double dxEnd   = xRangeEnd - minX;
-    double spanX = settings.spanX(QtPlotSettings::xBottom);
-    double xStart = rect.left() + (dxStart * (rect.width() - 1) / spanX);
-    double xEnd = rect.left() + (dxEnd * (rect.width() - 1) / spanX );
+void QtCanvas::drawxRange(QPainter *painter){
+	int xStart = getPixelX( xRangeStart );
+	int xEnd = getPixelX( xRangeEnd );
 
     xRangeRect.setBottom(MARGIN);
 	xRangeRect.setTop(height()-MARGIN-1);
-	xRangeRect.setRight((int)xStart);
-	xRangeRect.setLeft((int)xEnd);
+	xRangeRect.setRight(xStart);
+	xRangeRect.setLeft(xEnd);
     painter->fillRect(xRangeRect, QColor(100,100,100,100));
     painter->drawRect(xRangeRect.normalized());
 }
@@ -1050,7 +1112,7 @@ QColor QtCanvas::getDiscreteColor(const int &d)
 		lColor = Qt::blue;
 		break;
 	case 2:
-		lColor = Qt::green;
+		lColor = Qt::darkGreen;
 		break;
 	case 3:
 		lColor = Qt::cyan;
@@ -1071,7 +1133,7 @@ QColor QtCanvas::getDiscreteColor(const int &d)
 		lColor = Qt::darkBlue;
 		break;
 	case 9:
-		lColor = Qt::darkGreen;
+		lColor = Qt::green;
 		break;
 	case 10:
 		lColor = Qt::darkCyan;
@@ -1090,6 +1152,24 @@ QColor QtCanvas::getDiscreteColor(const int &d)
 		lColor = Qt::gray;
 	}
 	return lColor;
+}
+
+void QtCanvas::addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const {
+	 // plots a diamond from
+  			 // primitive lines to have a 2D item
+  	for (int i = 0; i < diamondSize; ++i){
+  		// closes the centre
+  		if (i==1){
+  			points.lineTo(x + i, y);
+  		}
+  		else {
+    		points.moveTo(x + i, y);
+  		}
+  		points.lineTo(x, y - i);
+  		points.lineTo(x - i, y);
+  		points.lineTo(x, y + i);
+  		points.lineTo(x + i, y);
+    }
 }
 
 void QtCanvas::drawCurves(QPainter *painter)
@@ -1123,29 +1203,10 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 colorFolds[id] = getDiscreteColor(id);
 
    	 if (maxPoints == 1) {
-   		 double dx = data[0] - settings.getMinX(QtPlotSettings::xBottom);
-   		 double dy = data[1] - settings.getMinY();
-   		 double x = rect.left() + (dx * (rect.width() - 1)
-   				 / settings.spanX(QtPlotSettings::xBottom));
-   		 double y = rect.bottom() - (dy * (rect.height() - 1)
-   				 / settings.spanY());
-   		 if (fabs(x) < 32768 && fabs(y) < 32768)
-   		 {
-
-   			 // plots a diamond from
-   			 // primitive lines to have a 2D item
-   			 for (int i = 0; i < QT_DIAMOND_SIZE; ++i)
-      		 {
-   				 // closes the centre
-   				 if (i==1)
-   					 points.lineTo((int)x + i, (int)y);
-   				 else
-     					 points.moveTo((int)x + i, (int)y);
-   				 points.lineTo((int)x, (int)y - i);
-   				 points.lineTo((int)x - i, (int)y);
-   				 points.lineTo((int)x, (int)y + i);
-   				 points.lineTo((int)x + i, (int)y);
-      		 }
+   		 int x = getPixelX( data[0] );
+   		 int y = getPixelY( data[1] );
+   		 if (fabs(x) < 32768 && fabs(y) < 32768){
+   			addDiamond( x, y, QT_DIAMOND_SIZE, points );
    		 }
 
    		 if (plotError && (error.size() > 0)){
@@ -1170,20 +1231,28 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    	 }
    	 else {
-   		 for (int i = 0; i < maxPoints; ++i)
-   		 {
-   			 double dx = data[2 * i] - settings.getMinX(QtPlotSettings::xBottom);
-   			 double dy = data[2 * i + 1] - settings.getMinY();
-   			 double x = rect.left() + (dx * (rect.width() - 1)
-   					 / settings.spanX(QtPlotSettings::xBottom));
-   			 double y = rect.bottom() - (dy * (rect.height() - 1)
-   					 / settings.spanY());
-   			 if (fabs(x) < 32768 && fabs(y) < 32768)
-   			 {
-   				 if (i == 0)
-   					 points.moveTo((int)x, (int)y);
-   				 else
-   					 points.lineTo((int)x, (int)y);
+   		 for (int i = 0; i < maxPoints; ++i){
+   			 int x = getPixelX( data[2*i] );
+   			 int y = getPixelY( data[2*i+1] );
+   			 if (fabs(x) < 32768 && fabs(y) < 32768){
+   				 if (i == 0){
+   					 points.moveTo(x, y);
+   				 }
+   				 else {
+   					 if (displayStepFunction ){
+   						 int prevX = getPixelX( data[2*(i-1)] );
+   						 int prevY = getPixelY( data[2*i-1] );
+   						 points.moveTo(prevX, prevY);
+   						 points.lineTo(x, prevY);
+   						 //Plot the last point
+   						 if ( i == maxPoints - 1){
+   							addDiamond( x, y, 2, points );
+   						 }
+   					 }
+   					 else {
+   						 points.lineTo(x, y);
+   					 }
+   				 }
    			 }
    		 }
 
@@ -1230,18 +1299,15 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const Vector<Float> &y, 
                            const QString& lb)
 {
-    //qDebug() << "add poly line float";
     Int xl, yl;
     x.shape(xl);
     y.shape(yl);
     CurveData data;
-    for (uInt i = 0; i < (uInt)min(xl, yl); i++)
-    {
+    for (uInt i = 0; i < (uInt)min(xl, yl); i++){
         data.push_back(x[i]);
         data.push_back(y[i]);
     }
     int j = curveMap.size();
-    //qDebug() << "j:" << j;
     setCurveData(j, data, ErrorData(), lb);
 
     setDataRange();
@@ -1385,27 +1451,6 @@ template<class T> void QtCanvas::plotPolyLine(const Matrix<T> &x)
 	return;
 }
 
-
-
-/*void QtCanvas::setPixmap(const QImage &data)
-{
-    //std::cout << "pixmap w=" << pixmap.width() << " h=" << pixmap.height() <<
-    //" pixmap isNull()=" << pixmap.isNull() << std::endl;
-    backBuffer = QPixmap::fromImage(data);
-    QtPlotSettings settings;
-
-
-    settings.setXAxesBounds(0, backBuffer.width() );
-    settings.setYAxesBounds(0, backBuffer.height() );
-
-    settings.adjust();
-    setPlotSettings(settings);
-    //QImage img = backBuffer.toImage();
-    //for (int i = 290; i < 300; i++) for (int j = 290; j < 300; j++)
-    //std::cout << "x=" << i << " y=" << j << " pixmap data=" << hex <<
-    //img.pixel(i, j) << dec << std::endl;
-    refreshPixmap();
-}*/
 void QtCanvas::setImageMode(bool b)
 {
     imageMode = b;
@@ -1466,5 +1511,45 @@ void QtCanvas::adjustExtremes( double* const min, double* const max ) const {
 	}
 }
 
+ProfileFitMarker QtCanvas::getMarker( int index ) const {
+	ProfileFitMarker marker( this );
+	if ( index < profileFitMarkers.length() ){
+		marker = profileFitMarkers[index];
+	}
+	return marker;
+}
 
+void QtCanvas::setMarker( int index, ProfileFitMarker& marker ) {
+	if ( index < profileFitMarkers.length() ){
+		profileFitMarkers[index] = marker;
+	}
+	else {
+		profileFitMarkers.append( marker );
+	}
+}
+
+void QtCanvas::setProfileFitMarkerCenterPeak( int index, double center, double peak ){
+	ProfileFitMarker marker = getMarker( index );
+	marker.setCenterPeak( center, peak );
+	setMarker( index, marker );
+	update();
+}
+
+void QtCanvas::setProfileFitMarkerFWHM( int index, double fwhm, double fwhmHeight ){
+	ProfileFitMarker marker = getMarker( index );
+	marker.setFWHM( fwhm, fwhmHeight );
+	setMarker( index, marker );
+	update();
+}
+
+bool QtCanvas::isDisplayStepFunction() const{
+	return displayStepFunction;
+}
+void QtCanvas::setDisplayStepFunction( bool displayAsStepFunction ){
+	bool oldDisplayStepFunction = displayStepFunction;
+	displayStepFunction = displayAsStepFunction;
+	if ( oldDisplayStepFunction != displayStepFunction ){
+		refreshPixmap();
+	}
+}
 }

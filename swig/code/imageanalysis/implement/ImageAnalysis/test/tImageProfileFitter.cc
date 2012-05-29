@@ -227,7 +227,7 @@ int main() {
 
     		Record results = fitter->fit();
             delete fitter;
-            Vector<Bool> converged = results.asArrayBool("converged");
+            Vector<Bool> converged = results.asArrayBool(ImageProfileFitter::_CONVERGED );
 
     		writeTestString("  -- Results arrays have one member");
     		AlwaysAssert(converged.size() == 1, AipsError);
@@ -276,7 +276,7 @@ int main() {
     		Record results = fitter.fit();
 
     		writeTestString("-- test correct number of fits performed");
-    		Array<Bool> converged = results.asArrayBool("converged");
+    		Array<Bool> converged = results.asArrayBool(ImageProfileFitter::_CONVERGED);
     		AlwaysAssert(converged.size() == 81, AipsError);
 
     		writeTestString("  -- test all fits converged");
@@ -354,7 +354,7 @@ int main() {
     		Record results = fitter.fit();
 
     		writeTestString(" -- test correct number of fits attempted");
-    		Array<Bool> converged = results.asArrayBool("converged");
+    		Array<Bool> converged = results.asArrayBool(ImageProfileFitter::_CONVERGED );
     		AlwaysAssert(converged.size() == 81, AipsError);
     		writeTestString("  -- test all but one fits converged");
     		cout << "number not converged " << nfalse(converged) << endl;
@@ -390,7 +390,7 @@ int main() {
     		Record results = fitter.fit();
 
     		writeTestString(" -- test correct number of fits attempted");
-    		converged = results.asArrayBool("converged");
+    		converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
     		AlwaysAssert(converged.size() == 81, AipsError);
     		writeTestString("  -- test all but one fits converged");
     		cout << "number not converged " << nfalse(converged) << endl;
@@ -441,7 +441,7 @@ int main() {
     		Record results = fitter.fit();
 
     		writeTestString(" -- test converged array");
-    		AlwaysAssert(allTrue(results.asArrayBool("converged") == converged), AipsError);
+    		AlwaysAssert(allTrue(results.asArrayBool( ImageProfileFitter::_CONVERGED ) == converged), AipsError);
     		writeTestString("  -- Test of fit units");
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
@@ -464,7 +464,7 @@ int main() {
 
     		Record results = fitter->fit();
             delete fitter;
-            Vector<Bool> converged = results.asArrayBool("converged");
+            Vector<Bool> converged = results.asArrayBool(ImageProfileFitter::_CONVERGED);
 
     		writeTestString("  -- Results arrays have one member");
     		AlwaysAssert(converged.size() == 1, AipsError);
@@ -500,7 +500,7 @@ int main() {
 
     		Record results = fitter->fit();
             delete fitter;
-            Vector<Bool> converged = results.asArrayBool("converged");
+            Vector<Bool> converged = results.asArrayBool(ImageProfileFitter::_CONVERGED );
 
     		writeTestString("  -- Results arrays have one member");
     		AlwaysAssert(converged.size() == 1, AipsError);
