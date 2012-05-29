@@ -113,12 +113,12 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 			
 			# check if all scratch columns are present
 			t.open(theconcatvis)
-			if(t.colnames().tolist().count('CORRECTED_DATA')==1 
-			   or  t.colnames().tolist().count('MODEL_DATA')==1):
+			if(t.colnames().count('CORRECTED_DATA')==1 
+			   or  t.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 				
-			needscrcols.append(t.colnames().tolist().count('CORRECTED_DATA')==0 
-					   or  t.colnames().tolist().count('MODEL_DATA')==0)
+			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
+					   or  t.colnames().count('MODEL_DATA')==0)
 			t.close()
                 else:
                         raise Exception, 'Visibility data set '+theconcatvis+' not found - please verify the name'
@@ -129,12 +129,12 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 
 			# check if all scratch columns are present
 			t.open(elvis)
-			if(t.colnames().tolist().count('CORRECTED_DATA')==1 
-                           or  t.colnames().tolist().count('MODEL_DATA')==1):
+			if(t.colnames().count('CORRECTED_DATA')==1 
+                           or  t.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 
-			needscrcols.append(t.colnames().tolist().count('CORRECTED_DATA')==0 
-					  or  t.colnames().tolist().count('MODEL_DATA')==0)
+			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
+					  or  t.colnames().count('MODEL_DATA')==0)
 			t.close()
 
 		# start actual work, file existence has already been checked
