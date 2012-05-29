@@ -41,7 +41,7 @@ namespace casa {
     namespace viewer {
 
 	Polygon::Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts) :
-	  Region( wc ), closed(false), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+	  Region( wc ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 	  _drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
 	    for ( int i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
@@ -51,7 +51,7 @@ namespace casa {
 	}
 
 	void Polygon::closeFigure( bool signal_complete ) {
-	    closed = true;
+	    complete = true;
 	    unsigned int size = _ref_points_.size( );
 	    if ( size > 1 && _ref_points_[size-1].first == _ref_points_[size-2].first &&
 		 _ref_points_[size-1].second == _ref_points_[size-2].second ) {
@@ -122,7 +122,7 @@ namespace casa {
 	// returns point state (Region::PointLocation)
 	Region::PointInfo Polygon::checkPoint( double x, double y )  const {
 
-	    if ( closed == false )
+	    if ( complete == false )
 		return PointInfo( x, y, PointOutside );
 
 	    unsigned int result = 0;
@@ -504,7 +504,7 @@ namespace casa {
 		x1 = x2;
 		y1 = y2;
 	    }
-	    if ( closed ) pc->drawLine( x1, y1, first_x, first_y );
+	    if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
 
 
 	    if ( selected ) {

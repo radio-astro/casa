@@ -89,8 +89,6 @@ namespace casa {
 	void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
 	void pixel_offset_to_linear_offset( WorldCanvas *wc_, double, double, double &, double & );
 	void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
-	void linear_offset_to_world_offset( WorldCanvas *wc_, double, double, MDirection::Types coordsys, const std::string &units, double &, double & );
-	void world_offset_to_linear_offset( WorldCanvas *wc_, MDirection::Types coordsys, const std::string &units, double, double, double &, double & );
 
 	MDirection::Types get_coordinate_type( const CoordinateSystem &wc );
 
@@ -161,7 +159,7 @@ namespace casa {
 		virtual int textFontStyle( ) const DISPLAY_PURE_VIRTUAL(Region::textFontStyle,0);
 		virtual std::string textValue( ) const DISPLAY_PURE_VIRTUAL(Region::textValue,"");
 		virtual TextPosition textPosition( ) const DISPLAY_PURE_VIRTUAL(Region::textPosition,BottomText);
-		virtual void textPositionDelta( int &x, int &y ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
+		virtual void textPositionDelta( int &/*x*/, int &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
 
 		virtual void setLabel( const std::string &l ) = 0;
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
@@ -186,14 +184,19 @@ namespace casa {
 		// hierarchy, but rather it is within the Qt portion... thus this function
 		// to fetch it...   <drs>
 		virtual int numFrames( ) const DISPLAY_PURE_VIRTUAL(Region::numFrames,0);
-		virtual void zRange( int &min, int &max ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
+		virtual void zRange( int &/*min*/, int &/*max*/ ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
 		int zIndex( ) const;
 		bool regionVisible( ) const { return visible_; }
+
+		bool worldBoundingRectangle( double &, double &, const std::string & ) const;
 
 		virtual ~Region( ) { }
 
 		Region( ) : wc_(0), selected_(false), visible_(true) { }
 		Region( WorldCanvas *wc );
+
+		// is this region degenerate?
+		virtual bool degenerate( ) const;
 
 		void setDrawingEnv( );
 		void resetDrawingEnv( );
@@ -208,12 +211,13 @@ namespace casa {
 		virtual PointInfo checkPoint( double x, double y ) const = 0;
 
 		// returns OR'ed set of MouseState...
-		virtual unsigned int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
+		virtual unsigned int mouseMovement( double /*x*/, double /*y*/, bool /*other_selected*/ )
+		DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
 		virtual void draw( bool other_selected );
 
 		// indicates that region movement requires that the statistcs be updated...
-		virtual void updateStateInfo( bool region_modified ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
+		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
 
 		bool selected( ) const { return selected_; }
 
@@ -242,8 +246,9 @@ namespace casa {
 		virtual bool mark_toggle( ) = 0;
 
 		// in "linear" coordinates...
-		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
-			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
+		virtual void boundingRectangle (double &/*blc_x*/, double &/*blc_y*/, double &/*trc_x*/,
+		                                double &/*trc_y*/) const
+		DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
 		virtual void emitUpdate( )
 			DISPLAY_PURE_VIRTUAL(Region::emitUpdate,);
@@ -262,7 +267,7 @@ namespace casa {
 		Coord current_region_coordsys( ) const;
 		MDirection::Types current_casa_coordsys( ) const;
 
-		virtual void drawRegion( bool selected ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
+		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
 		virtual bool within_drawing_area( );
@@ -275,6 +280,10 @@ namespace casa {
 		bool selected_;
 
 		bool visible_;
+
+		// Should this region be considered complete?
+		// Set to true by derived classes...
+		bool complete;
 
 	    private:
 		void set_line_style( LineStyle linestyle );
