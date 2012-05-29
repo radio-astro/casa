@@ -318,7 +318,7 @@ protected:
 		const Direction& dirs
 	);
 
-	virtual void _printPairs(ostream &os) const;
+	virtual void _printPairs(ostream& os) const;
 
 	inline const Vector<MDirection>& _getConvertedDirections() const {
 		return _convertedDirections;
@@ -328,6 +328,24 @@ protected:
 		return _directionAxes;
 	}
 
+	// direction to string, precision of 0.1 mas
+	// ra and dec in sexigesimal format, non-equatorial coords in degrees
+	String _printDirection(
+		const Quantity& longitude, const Quantity& latitude
+	) const;
+
+	// convert angle to arcsec, precision 0.1 mas
+	static String _toArcsec(const Quantity& angle);
+
+	// convert angle to degrees, precision 0.1 mas
+	static String _toDeg(const Quantity& angle);
+
+	inline void _setParam(const Keyword k, const String& s) {
+		_params[k] = s;
+	}
+
+	// return a string representing a pixel value, precision 1.
+	static String _printPixel(const Double& d);
 private:
 	Type _type;
 	MDirection::Types _directionRefFrame;
@@ -369,6 +387,7 @@ private:
 	void _testConvertToPixel() const;
 
 	static void _initTypeMap();
+
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {

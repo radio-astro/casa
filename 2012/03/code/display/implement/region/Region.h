@@ -265,6 +265,8 @@ namespace casa {
 		virtual void drawRegion( bool selected ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
+		virtual bool within_drawing_area( );
+
 		LineStyle current_ls;
 		std::list<LineStyle> ls_stack;
 		WorldCanvas *wc_;
