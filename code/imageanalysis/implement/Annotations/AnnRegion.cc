@@ -10,6 +10,8 @@
 #include <measures/Measures/VelocityMachine.h>
 #include <tables/Tables/TableRecord.h>
 
+#include <iomanip>
+
 namespace casa {
 
 const String AnnRegion::_class = "AnnRegion";
@@ -29,7 +31,7 @@ AnnRegion::AnnRegion(
 	_convertedFreqLimits(Vector<MFrequency>(0)), _stokes(stokes),
 	_isDifference(False), _constructing(True), _imShape(imShape) {
 	_init();
-	setFrequencyLimits(
+	_setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq
 	);
@@ -77,7 +79,7 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     return *this;
 }
 
-void AnnRegion::setFrequencyLimits(
+void AnnRegion::_setFrequencyLimits(
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrame,
@@ -103,8 +105,8 @@ void AnnRegion::setFrequencyLimits(
 	if (! beginFreq.getUnit().empty()) {
 		if (! beginFreq.isConform(endFreq)) {
 			throw AipsError(
-				preamble + "Beginning freq units (" + _beginFreq.getUnit()
-				+ ") do not conform to ending freq units (" + _endFreq.getUnit()
+				preamble + "Beginning freq units (" + beginFreq.getUnit()
+				+ ") do not conform to ending freq units (" + endFreq.getUnit()
 				+ ") but they must."
 			);
 		}
@@ -135,6 +137,9 @@ void AnnRegion::setFrequencyLimits(
 				+ freqRefFrame
 			);
 		}
+		else {
+			_setParam(AnnotationBase::FRAME, freqRefFrame);
+		}
 		if (dopplerString.empty()) {
 			_dopplerType = getCsys().spectralCoordinate().velocityDoppler();
 		}
@@ -143,9 +148,15 @@ void AnnRegion::setFrequencyLimits(
 				preamble + "Unknown doppler code " + dopplerString
 			);
 		}
+		else {
+			_setParam(AnnotationBase::VELTYPE, dopplerString);
+		}
 		_beginFreq = beginFreq;
 		_endFreq = endFreq;
 		_restFreq = restfreq;
+		_setParam(AnnotationBase::RANGE, _printFreqRange());
+		_setParam(AnnotationBase::RESTFREQ, _printFreq(_restFreq));
+
 		_checkAndConvertFrequencies();
 		if (! _constructing) {
 			// have to re-extend the direction region because of new freq range.
@@ -195,13 +206,27 @@ Bool AnnRegion::isRegion() const {
 	return True;
 }
 
-void AnnRegion::_init() const {
+void AnnRegion::_init() {
 	if (_imShape.nelements() != getCsys().nPixelAxes()) {
 		ostringstream oss;
 		oss << _class << "::" << __FUNCTION__ << ": Number of coordinate axes ("
 			<< getCsys().nPixelAxes() << ") differs from number of dimensions in image shape ("
 			<< _imShape.nelements() << ")";
 		throw AipsError(oss.str());
+	}
+	uInt size = _stokes.size();
+
+	if (size > 0) {
+		ostringstream os;
+		os << "[";
+		for (uInt i=0; i< size; i++) {
+			os << Stokes::name(_stokes[i]);
+			if (i != _stokes.size() - 1) {
+				os << ", ";
+			}
+		}
+		os << "]";
+		_setParam(AnnotationBase::CORR, os.str());
 	}
 }
 
@@ -217,6 +242,12 @@ void AnnRegion::_extend() {
 	if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
 		Quantity begin = _convertedFreqLimits[0].get("Hz");
 		Quantity end = _convertedFreqLimits[1].get("Hz");
+		if (begin.getValue("Hz") > end.getValue("Hz")) {
+			Quantity tmp;
+			tmp = begin;
+			begin = end;
+			end = tmp;
+		}
 		freqRange.resize(2);
 		freqRange[0] = begin;
 		freqRange[1] = end;
@@ -417,6 +448,31 @@ void AnnRegion::_printPrefix(ostream& os) const {
 	else if (isDifference()) {
 		os << "- ";
 	}
+}
+
+String AnnRegion::_printFreqRange() const {
+	ostringstream os;
+	os << "["
+		<< _printFreq(_beginFreq) << ", "
+		<< _printFreq(_endFreq) << "]";
+	return os.str();
+}
+
+String AnnRegion::_printFreq(const Quantity& freq) {
+	if (freq.getUnit() == "pix") {
+		return _printPixel(freq.getValue());
+	}
+	ostringstream os;
+	os << std::fixed;
+	if (freq.isConform("km/s")) {
+		os << std::setprecision(4) << freq.getValue("km/s") << "km/s";
+	}
+	else {
+		os << std::setprecision(3) << freq.getValue("MHz") << "MHz";
+	}
+	return os.str();
+
+
 }
 
 

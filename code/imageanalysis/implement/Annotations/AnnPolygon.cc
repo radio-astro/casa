@@ -75,7 +75,7 @@ ostream& AnnPolygon::print(ostream &os) const {
 	_printPrefix(os);
 	os << "poly [";
 	for (uInt i=0; i<_origXPos.size(); i++) {
-		os << "[" << _origXPos[i] << ", " << _origYPos[i] << "]";
+		os << "[" << _printDirection(_origXPos[i], _origYPos[i]) << "]";
 		if (i < _origXPos.size()-1) {
 			os << ", ";
 		}
