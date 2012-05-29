@@ -50,6 +50,7 @@
 #include <QDialog>
 #include <QPixmap>
 #include <QVBoxLayout>
+#include <QPainterPath>
 #include <QLabel>
 #include <QMenu>
 #include <map>
@@ -132,14 +133,33 @@ public:
 	int getAutoScaleY( ) {return autoScaleY;}
 	int getShowGrid( )   {return showGrid;}
 	void setPlotError(int a)  {plotError = a; setDataRange();}
+
+	//Whether or not to show a top axis on the plot.
 	void setShowTopAxis( bool showAxis );
-	void setShowToolTips( bool toolTipsVisible ){ showToolTips = toolTipsVisible; }
 	bool getShowTopAxis() const { return showTopAxis; }
+
+	//Whether or not to show tool tips with the x,y coordinates
+	//of the points on the plot.
+	void setShowToolTips( bool toolTipsVisible ){ showToolTips = toolTipsVisible; }
 	bool getShowToolTips() const { return showToolTips; }
+
+	//Sets the coordinates for the x and y points that are displayed
+	//as tooltips.
 	void setToolTipYUnit( const QString& yUnit ){ toolTipYUnit = yUnit; }
 	void setToolTipXUnit( const QString& xUnit ){ toolTipXUnit = xUnit; }
+
+	//Stores the location of a (center,peak) point that represents an initial
+	//Gaussian estimate for spectral line fitting.
 	void setProfileFitMarkerCenterPeak( int index, double center, double peak);
+
+	//Stores the fwhm and the y value of the fwhm for an initial Gaussian estimate
+	//for spectral line fitting.
 	void setProfileFitMarkerFWHM( int index, double fwhm, double fwhmHeight);
+
+	//Whether or not to plot a line graph or instead plot the points as a
+	//step function.
+	bool isDisplayStepFunction() const;
+	void setDisplayStepFunction( bool displayAsStepFunction );
 
 public slots:
    void zoomIn();
@@ -267,6 +287,8 @@ private:
 	 */
 	void initGaussianEstimateContextMenu();
 
+	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
+
 	enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
@@ -310,6 +332,7 @@ private:
 
 	bool showTopAxis;
 	bool showToolTips;
+	bool displayStepFunction;
 	QString toolTipXUnit;
 	QString toolTipYUnit;
 

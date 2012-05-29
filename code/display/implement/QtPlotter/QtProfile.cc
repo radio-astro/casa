@@ -778,14 +778,14 @@ void QtProfile::preferences()
 {
 	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), 
 		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
-		specFitSettingsWidget->isOptical());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool)),
-			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool)));
+		pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
+			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
 	profilePrefs->showNormal();
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
-				bool showToolTips, bool showTopAxis, bool opticalFitter ){
+				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter ){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
@@ -794,6 +794,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowGrid(showGrid);
 	pixelCanvas->setShowToolTips( showToolTips );
 	pixelCanvas->setShowTopAxis( showTopAxis );
+	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 	topAxisCType -> setEnabled( showTopAxis );
 	
 	stateMProf=inMProf;

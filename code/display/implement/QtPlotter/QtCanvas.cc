@@ -51,7 +51,8 @@ QtCanvas::~QtCanvas()
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
           title(), yLabel(), welcome(),
-          showTopAxis( true ), showToolTips( true ), gaussianContextMenu( this )
+          showTopAxis( true ), showToolTips( true ), displayStepFunction( false ),
+          gaussianContextMenu( this )
 {    
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
@@ -391,7 +392,7 @@ double QtCanvas::getDataX( int pixelPosition ) const {
 	int rectLeft = getRectLeft();
 	double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
 	double xMin = settings.getMinX( QtPlotSettings::xBottom );
-	double dataX = xMin + (pixelPosition - rectLeft) * xAxisSpan / rectWidth;
+	double dataX = xMin + (pixelPosition - rectLeft) * xAxisSpan / (rectWidth -1);
 	return dataX;
 }
 
@@ -411,7 +412,7 @@ int QtCanvas::getPixelX( double dataX ) const {
 	int rectLeft = getRectLeft();
 	double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
 	double xMin = settings.getMinX( QtPlotSettings::xBottom );
-	int pixelX = rectLeft + static_cast<int>( (dataX - xMin ) * rectWidth / xAxisSpan );
+	int pixelX = rectLeft + static_cast<int>( (dataX - xMin ) * (rectWidth - 1) / xAxisSpan );
 	return pixelX;
 }
 
@@ -447,18 +448,10 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     if (xRangeIsShown)
     {
         painter.setPen(Qt::black);
-
-		QtPlotSettings settings = zoomStack[curZoom];
-		QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
-		double xAxisMin = settings.getMinX(QtPlotSettings::xBottom );
-		double dxStart = xRangeStart - xAxisMin;
-		double dxEnd   = xRangeEnd   - xAxisMin;
-		double xAxisSpan = settings.spanX( QtPlotSettings::xBottom );
-		double xStart = rect.left() + (dxStart * (rect.width()-1) / xAxisSpan );
-		double xEnd   = rect.left() + (dxEnd   * (rect.width()-1) / xAxisSpan );
-
-		xRangeRect.setLeft((int)(xStart));
-		xRangeRect.setRight((int)(xEnd));
+        int xStart = getPixelX( xRangeStart );
+        int xEnd = getPixelX( xRangeEnd );
+		xRangeRect.setLeft(xStart);
+		xRangeRect.setRight(xEnd);
 		xRangeRect.setBottom(MARGIN);
 		xRangeRect.setTop(height()-MARGIN-1);
 		painter.fillRect(xRangeRect, QColor(100,100,100,100));
@@ -835,7 +828,6 @@ void QtCanvas::refreshPixmap()
 	drawLabels(&painter);
 	if (!imageMode)
 	{
-
 		drawGrid(&painter);
 		drawCurves(&painter);
 		//if (xRangeIsShown)
@@ -864,10 +856,6 @@ void QtCanvas::drawBackBuffer(QPainter *painter)
 
 QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const {
 	QtPlotSettings settings = zoomStack[curZoom];
-	/*float sgn = 1.f;
-	if ( !settings.isAscending(axisIndex) ){
-		sgn = -1.f;
-	}*/
 	double label = settings.getMinX(axisIndex) + (tickIndex * settings.spanX(axisIndex) / tickCount);
 	if (abs(label) < 0.00000005) label = 0.f;
 	QString tickLabel = QString::number( label );
@@ -1076,22 +1064,14 @@ void QtCanvas::drawRects(QPainter *painter)
 	      (*pMask)(i, h - j) = 0;
 	}
 	
-	double dx1 = data[0] - settings.getMinX(QtPlotSettings::xBottom);
-    double dy1 = data[1] - settings.getMinY();
-    double dx2 = data[2] - settings.getMinX(QtPlotSettings::xBottom );
-    double dy2 = data[3] - settings.getMinY();
+	int x1 = getPixelX( data[0] );
+	int x2 = getPixelX( data[2] );
+	int y1 = getPixelX( data[1] );
+	int y2 = getPixelX( data[3] );
 
-    double spanX = settings.spanX( QtPlotSettings::xBottom );
-    double spanY = settings.spanY();
-    double x1 = rect.left() + (dx1 * (rect.width() - 1) / spanX );
-    double y1 = rect.bottom() - (dy1 * (rect.height() - 1) / spanY );
-    double x2 = rect.left() + (dx2 * (rect.width() - 1) / spanX );
-    double y2 = rect.bottom() - (dy2 * (rect.height() - 1) / spanY );
+    points.addRect((int)x1, (int)y1, (int)(x2 - x1), (int)(y2 - y1));
 
-        points.addRect((int)x1, (int)y1, (int)(x2 - x1), (int)(y2 - y1));
-       
-
-        painter->setPen(Qt::green);
+    painter->setPen(Qt::green);
 	//cout << "curMarker=" << curMarker << " id=" << id << endl;
 	if (id == curMarker)
 	painter->setPen(Qt::white);
@@ -1101,22 +1081,14 @@ void QtCanvas::drawRects(QPainter *painter)
 }
 
 
-void QtCanvas::drawxRange(QPainter *painter)
-{
-    QtPlotSettings settings = zoomStack[curZoom];
-
-    QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
-    double minX = settings.getMinX(QtPlotSettings::xBottom);
-    double dxStart = xRangeStart - minX;
-    double dxEnd   = xRangeEnd - minX;
-    double spanX = settings.spanX(QtPlotSettings::xBottom);
-    double xStart = rect.left() + (dxStart * (rect.width() - 1) / spanX);
-    double xEnd = rect.left() + (dxEnd * (rect.width() - 1) / spanX );
+void QtCanvas::drawxRange(QPainter *painter){
+	int xStart = getPixelX( xRangeStart );
+	int xEnd = getPixelX( xRangeEnd );
 
     xRangeRect.setBottom(MARGIN);
 	xRangeRect.setTop(height()-MARGIN-1);
-	xRangeRect.setRight((int)xStart);
-	xRangeRect.setLeft((int)xEnd);
+	xRangeRect.setRight(xStart);
+	xRangeRect.setLeft(xEnd);
     painter->fillRect(xRangeRect, QColor(100,100,100,100));
     painter->drawRect(xRangeRect.normalized());
 }
@@ -1182,6 +1154,24 @@ QColor QtCanvas::getDiscreteColor(const int &d)
 	return lColor;
 }
 
+void QtCanvas::addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const {
+	 // plots a diamond from
+  			 // primitive lines to have a 2D item
+  	for (int i = 0; i < diamondSize; ++i){
+  		// closes the centre
+  		if (i==1){
+  			points.lineTo(x + i, y);
+  		}
+  		else {
+    		points.moveTo(x + i, y);
+  		}
+  		points.lineTo(x, y - i);
+  		points.lineTo(x - i, y);
+  		points.lineTo(x, y + i);
+  		points.lineTo(x + i, y);
+    }
+}
+
 void QtCanvas::drawCurves(QPainter *painter)
 {
 
@@ -1213,29 +1203,10 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 colorFolds[id] = getDiscreteColor(id);
 
    	 if (maxPoints == 1) {
-   		 double dx = data[0] - settings.getMinX(QtPlotSettings::xBottom);
-   		 double dy = data[1] - settings.getMinY();
-   		 double x = rect.left() + (dx * (rect.width() - 1)
-   				 / settings.spanX(QtPlotSettings::xBottom));
-   		 double y = rect.bottom() - (dy * (rect.height() - 1)
-   				 / settings.spanY());
-   		 if (fabs(x) < 32768 && fabs(y) < 32768)
-   		 {
-
-   			 // plots a diamond from
-   			 // primitive lines to have a 2D item
-   			 for (int i = 0; i < QT_DIAMOND_SIZE; ++i)
-      		 {
-   				 // closes the centre
-   				 if (i==1)
-   					 points.lineTo((int)x + i, (int)y);
-   				 else
-     					 points.moveTo((int)x + i, (int)y);
-   				 points.lineTo((int)x, (int)y - i);
-   				 points.lineTo((int)x - i, (int)y);
-   				 points.lineTo((int)x, (int)y + i);
-   				 points.lineTo((int)x + i, (int)y);
-      		 }
+   		 int x = getPixelX( data[0] );
+   		 int y = getPixelY( data[1] );
+   		 if (fabs(x) < 32768 && fabs(y) < 32768){
+   			addDiamond( x, y, QT_DIAMOND_SIZE, points );
    		 }
 
    		 if (plotError && (error.size() > 0)){
@@ -1260,20 +1231,28 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    	 }
    	 else {
-   		 for (int i = 0; i < maxPoints; ++i)
-   		 {
-   			 double dx = data[2 * i] - settings.getMinX(QtPlotSettings::xBottom);
-   			 double dy = data[2 * i + 1] - settings.getMinY();
-   			 double x = rect.left() + (dx * (rect.width() - 1)
-   					 / settings.spanX(QtPlotSettings::xBottom));
-   			 double y = rect.bottom() - (dy * (rect.height() - 1)
-   					 / settings.spanY());
-   			 if (fabs(x) < 32768 && fabs(y) < 32768)
-   			 {
-   				 if (i == 0)
-   					 points.moveTo((int)x, (int)y);
-   				 else
-   					 points.lineTo((int)x, (int)y);
+   		 for (int i = 0; i < maxPoints; ++i){
+   			 int x = getPixelX( data[2*i] );
+   			 int y = getPixelY( data[2*i+1] );
+   			 if (fabs(x) < 32768 && fabs(y) < 32768){
+   				 if (i == 0){
+   					 points.moveTo(x, y);
+   				 }
+   				 else {
+   					 if (displayStepFunction ){
+   						 int prevX = getPixelX( data[2*(i-1)] );
+   						 int prevY = getPixelY( data[2*i-1] );
+   						 points.moveTo(prevX, prevY);
+   						 points.lineTo(x, prevY);
+   						 //Plot the last point
+   						 if ( i == maxPoints - 1){
+   							addDiamond( x, y, 2, points );
+   						 }
+   					 }
+   					 else {
+   						 points.lineTo(x, y);
+   					 }
+   				 }
    			 }
    		 }
 
@@ -1320,20 +1299,15 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const Vector<Float> &y, 
                            const QString& lb)
 {
-    //qDebug() << "add poly line float";
     Int xl, yl;
     x.shape(xl);
     y.shape(yl);
     CurveData data;
-    //qDebug() << "QtCanvas amount of curve data is " << min(xl,yl);
-    for (uInt i = 0; i < (uInt)min(xl, yl); i++)
-    {
+    for (uInt i = 0; i < (uInt)min(xl, yl); i++){
         data.push_back(x[i]);
         data.push_back(y[i]);
-        //qDebug() << "Added point x="<<x[i]<<" and y="<<y[i];
     }
     int j = curveMap.size();
-    //qDebug() << "j:" << j;
     setCurveData(j, data, ErrorData(), lb);
 
     setDataRange();
@@ -1477,27 +1451,6 @@ template<class T> void QtCanvas::plotPolyLine(const Matrix<T> &x)
 	return;
 }
 
-
-
-/*void QtCanvas::setPixmap(const QImage &data)
-{
-    //std::cout << "pixmap w=" << pixmap.width() << " h=" << pixmap.height() <<
-    //" pixmap isNull()=" << pixmap.isNull() << std::endl;
-    backBuffer = QPixmap::fromImage(data);
-    QtPlotSettings settings;
-
-
-    settings.setXAxesBounds(0, backBuffer.width() );
-    settings.setYAxesBounds(0, backBuffer.height() );
-
-    settings.adjust();
-    setPlotSettings(settings);
-    //QImage img = backBuffer.toImage();
-    //for (int i = 290; i < 300; i++) for (int j = 290; j < 300; j++)
-    //std::cout << "x=" << i << " y=" << j << " pixmap data=" << hex <<
-    //img.pixel(i, j) << dec << std::endl;
-    refreshPixmap();
-}*/
 void QtCanvas::setImageMode(bool b)
 {
     imageMode = b;
@@ -1587,5 +1540,16 @@ void QtCanvas::setProfileFitMarkerFWHM( int index, double fwhm, double fwhmHeigh
 	marker.setFWHM( fwhm, fwhmHeight );
 	setMarker( index, marker );
 	update();
+}
+
+bool QtCanvas::isDisplayStepFunction() const{
+	return displayStepFunction;
+}
+void QtCanvas::setDisplayStepFunction( bool displayAsStepFunction ){
+	bool oldDisplayStepFunction = displayStepFunction;
+	displayStepFunction = displayAsStepFunction;
+	if ( oldDisplayStepFunction != displayStepFunction ){
+		refreshPixmap();
+	}
 }
 }
