@@ -30,6 +30,7 @@
 % JO 2011-05-25 nterms threshold calification
 % JO 2011-10-03 edits for Release 3.3
 % JO 2011-10-03 remove autoclean
+% JO 2012-04-19 edits for 3.4.0
 
 
 \chapter{Synthesis Imaging}
@@ -80,9 +81,7 @@ imaging with calibration:
 	 (\S~\ref{section:im.mask.boxit}),
 %   \item {\tt makemask} - create ``cleanbox'' deconvolution regions
 %         from a box specification or file (\S~\ref{section:im.mask.makemask}),
-   \item {\tt ft} - Fourier transform the specified model (or component
-         list) and insert the source model into the MODEL column of a
-         visibility set (\S~\ref{section:im.ft}).
+   \item {\tt ft} - add a source model to the MS (\S~\ref{section:im.ft}).
 \end{itemize}
 
 The full ``tool kit'' that allows expert-level imaging must still be
@@ -201,21 +200,29 @@ The image size in numbers of pixels on the x and y axes is
 set by {\tt imsize}.  For example,
 \small
 \begin{verbatim}
-  imsize = [288, 288]
+  imsize = [640, 640]
 \end{verbatim}
-\normalsize
-makes a square image 288 pixels on a side.  If a single value
-is given, then a square image of that dimension is made.  This
-need not be a power of two, but for optimal performance should
-be a ``composite'' number divisible only by 2 and also 3 and/or
-5.  Note that in the example above $288 = 2^5 \cdot 3^2$.
+\normalsize makes a square image 640 pixels on a side.  If a single
+value is given, then a square image of that dimension is made.  The
+underlying algorithms work best for certain image sizes. If you pick a
+size where that algorithm will be particularly slow, the logger will
+send a warning message, suggesting the nearest optimal values. In
+general, the best performance is obtained with image sizes that are
+even and factorizable to 2,3,5,7 only. An easy rule of thumb would be
+$2^{n}\times10$ where $n$ is an integer number, like 160, 320, 640,
+1280, 2560, etc.
 
-{\bf ALERT:} You will be warned if you give a non-composite
-{\tt imsize} and it will suggest the nearest appropriate value.
-But it will continue cleaning so you may have to abort if you want
-to make use of this suggestion.  This restriction will be lifted
-in the future when we migrate to a better FFTW engine.
 
+%This
+%need not be a power of two, but for optimal performance should
+%be a ``composite'' number divisible only by 2 and also 3 and/or
+%5.  Note that in the example above $288 = 2^5 \cdot 3^2$.
+%
+%{\bf ALERT:} You will be warned if you give a non-composite
+%{\tt imsize} and it will suggest the nearest appropriate value.
+%But it will continue cleaning so you may have to abort if you want
+%to make use of this suggestion.  
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parameter {\tt mode} }
 \label{section:im.pars.mode}
@@ -297,12 +304,14 @@ I_{\nu_0}^{\rm sky}=I_{0}^{\rm sky}
 
 
 
-For more information, please see Rau, U. \& Cornwell, T. J. 2011, ``A multi-scale multi-frequency deconvolution algorithm for synthesis imaging in radio interferometry'', A\&A, 532, 71 \url{http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2011A%26A...532A..71R&db_key=AST&link_type=ABSTRACT&high=4b90831b1d31322}
+For more information, please see Rau, U. \& Cornwell, T. J. 2011, ``A
+multi-scale multi-frequency deconvolution algorithm for synthesis
+imaging in radio interferometry'', A\&A, 532, 71 % \url{http://adsabs.harvard.edu/cgi-bin/nph-data_query?bibcode=2011A\%26A...532A..71R\&db_key=AST\&link_type=ABSTRACT\&high=4b90831b1d31322}
 
 {\bf Alert:} The MS-MFS (multiscale-multifrequency) algorithm in the
 current release is new and is still being
 developed/tested/debugged. Its basic operation has been tested on
-wide-band EVLA data for Stokes I imaging.
+wide-band JVLA data for Stokes I imaging.
 
 {\bf Explanation of the Parameters:} \\
 {\tt nterms}: The number of terms in the Taylor polynomial used to
@@ -363,6 +372,9 @@ triggered via {\tt gridmode}='widefield'.
                is reported in the logger.  Elsewhere, the values are
                currently set to zero.
 
+                [xxx.image.alpha.error] contains the errors of the
+                spectral index solutions.
+
 
 The following is a list of differences between MS-MFS ({\tt
                  nterms}$>1$) and standard imaging, in the current
@@ -379,7 +391,7 @@ The following is a list of differences between MS-MFS ({\tt
 
 \item Currently, the following options are not supported for {\tt
     nterms}$>1$: {\tt psfmode,} {\tt pbcorr}, {\tt minpb}, {\tt
-    imagermode}='mosaic', {\tt outlierfile}, {\tt
+    imagermode}='mosaic', {\tt
     gridmode}='aprojection', {\tt cyclespeedup}, and allowed are one
   of Stokes I, Q, U, V, RR, LL, XX, YY at a time. More options and combinations are currently under
   development and testing. Under 'Using CASA' $\rightarrow$ 'Other
@@ -2288,27 +2300,65 @@ increasingly severe with increasing distance from the phase center.
 In this case, one must use a ``wide-field'' imaging algorithm such as
 w-projection or faceting.
 
-When is wide-field imaging needed?  It depends on the expected dynamic
-range the image.  In order to keep the phase error associated with the
-sky/array curvature less than about $5^\circ$ (good to about 500:1
-dynamic range), use the following table, suitably scaled, for
-guidance:
-\small
-\begin{verbatim}
-        Maximum Radius of Image Before widefield is Needed
-          Assuming 5 deg phase error and 35-km Baseline
+When is wide-field imaging needed? The number of required facets $N$ depends on
+the the maximum baseline $B_{\rm max}$, the dish diameter $D$ and the
+wavelength $\lambda$ as:
 
-           Wavelength                 Radius of image
-              6 cm                       1.4 arcmin
-             20 cm                       2.6 arcmin
-             90 cm                       5.3 arcmin
+\begin{equation}
+N=\frac{B_{\rm max}\,\lambda}{D^{2}}
+\label{eq:imaging.wproj.facets}
+\end{equation} 
 
-  Radius of image ~ SQRT (Wavelength * phase error / Maximum baseline)
-      (arcmin)              (cm)          (deg)           (km)
-\end{verbatim}
-\normalsize
-If a relatively small image is being made, but there are outliers
-sources beyond the above limits, then widefield should also be used.
+and w-projection is required when $N>1$. (For details, see ``Synthesis
+Imaging in Radio Astronomy II'', ed. Taylor, G., Carilli, C., Perley,
+R. 1999). With 25\,m diameter JVLA dishes (which implies that imaging
+is requested out to the primary beam FWHM), w-projection is required
+for array configurations as listed in
+Table\,\ref{tab:imaging.w-projection.config}.
+
+\begin{table}
+\begin{tabular}{ccc}
+\hline
+Receiver Band & Wavelength [cm] & Array configurations \\
+\hline
+4             &  430            &  A/B/C/D \\
+L             &  20             &  A/B/C \\
+S             &  10             &  A/B \\
+C             &  5              &  A \\
+X             &  3              &  A \\
+Ku            &  2              &  A \\
+K             &  1.4            &  -- \\
+Ka            &  0.9            &  -- \\
+Q             &  0.7            &  -- \\
+\hline
+\end{tabular}
+\caption{Combinations of observing band (wavelength,) and antenna
+  array configurations that require w-projection. \label{tab:imaging.w-projection.config}}
+\end{table}
+
+
+
+%When is wide-field imaging needed?  It depends on the expected dynamic
+%range the image.  In order to keep the phase error associated with the
+%sky/array curvature less than about $5^\circ$ (good to about 500:1
+%dynamic range), use the following table, suitably scaled, for
+%guidance:
+%\small
+%\begin{verbatim}
+%        Maximum Radius of Image Before widefield is Needed
+%          Assuming 5 deg phase error and 35-km Baseline
+%
+%           Wavelength                 Radius of image
+%              6 cm                       1.4 arcmin
+%             20 cm                       2.6 arcmin
+%             90 cm                       5.3 arcmin
+%
+%  Radius of image ~ SQRT (Wavelength * phase error / Maximum baseline)
+%      (arcmin)              (cm)          (deg)           (km)
+%\end{verbatim}
+%\normalsize
+%If a relatively small image is being made, but there are outliers
+%sources beyond the above limits, then widefield should also be used.
 
 The relevant inputs for {\tt clean} for wide-field imaging are:
 \small
@@ -2361,7 +2411,7 @@ phasecenter   = ['','J2000 13h27m20.98 43d26m28.0', 'J2000 13h30m52.158 43d23m08
 \normalsize
 
 {\bf Outlier file} For many outlier fields, it may be easier to setup
-the main interface od {\tt clean} for the main field only and list
+the main interface to {\tt clean} for the main field only and list
 outlier fields in an additional {\tt outlierfile}:
 
 
@@ -2395,7 +2445,7 @@ phasecenter = 'J2000 13h24m08.16 43d09m48.0'
 \end{verbatim}
 \normalsize
 
-The syntax rules for the are:
+The syntax rules for the outlier files are:
 \begin{itemize}
 \item each field must begin with {\tt imagename} followed by 
 \item {\tt imsize} and {\tt phasecenter} must be given
@@ -2523,9 +2573,11 @@ resolution while preserving single-dish total flux density.
 The feathering technique does the following:
 \begin{enumerate}
 \item The single-dish and interferometer images are Fourier
-      transformed.
-\item The beam from the single-dish image is Fourier transformed
-      ($FTSDB(u,v)$).
+      transformed. 
+    \item The beam from the single-dish image is Fourier transformed
+      ($FTSDB(u,v)$), (alternatively, one can specify some smaller
+      portion of the single dish aperture, which corresponds to a
+      wider beam).
 \item The Fourier transform of the interferometer image is multiplied
       by ($1-FTSDB(u,v)$).  This basically down weights the shorter
       spacing data from the interferometer image.
@@ -2564,15 +2616,42 @@ the image tool to trim the number of pixels to something desirable.
 The inputs for {\tt feather} are:
 \small
 \begin{verbatim}
-imagename   =         ''   #   Name of output feathered image
-highres     =         ''   #   Name of high resolution (synthesis) image
-lowres      =         ''   #   Name of low resolution (single dish) image
-async       =      False   #  If true the taskname must be started using feather(...)
+#  feather :: Combine two images using their Fourier transforms
+imagename           =         ''        #  Name of output feathered image
+highres             =         ''        #  Name of high resolution (interferometer)
+                                        #   image
+lowres              =         ''        #  Name of low resolution (single dish) image
+sdfactor            =        1.0        #  Scale factor to apply to Single Dish image
+effdishdiam         =       -1.0        #  New effective SingleDish diameter to use in m
+showplot            =      False        #  Show plot of feather function
+async               =      False        #  If true the taskname must be started using
 \end{verbatim}
-\normalsize
-Note that the only inputs are for images.
-Note that {\tt feather} does not do any deconvolution but combines presumably
-deconvolved images after the fact.
+\normalsize 
+
+
+The single-dish data cube is specified by the {\tt lowres} and the
+interferometric data cube by the {\tt highres} keyword. The combined,
+feathered output cube name is given by the {\tt imagename}
+parameter. {\tt sdfactor} can be used to adjust the flux calibration
+of the images. Since single-dish processing typically involves the fit
+of a baseline level, it might be the one with the most uncertain
+calibration and {\tt sdfactor} will multiply with the single-dish
+image values for any needed correction.
+
+When {\tt showplot=True}, a GUI pops up that displays the single dish
+and interferometric weighting functions in the {\tt uv}-domain as a function
+of {\it uv}-distance.
+
+Note that the only inputs are for images and {\tt feather} will
+attempt to regrid the images to a common shape, ie. pixel size, pixel
+numbers, and spectral channels. {\tt feather} does not do any
+deconvolution but combines presumably deconvolved images after the
+fact. This implies that the short spacings extrapolated by the
+deconvolution process will be those that are down-weighted the
+most. The single dish image must have a well-defined beam shape and
+the correct flux units for a model image (Jy/beam instead of Jy/pixel)
+so use the tasks {\tt imhead} and {\tt immath} first to convert if
+needed.
 
 Starting with a cleaned synthesis image and a low resolution image
 from a single dish telescope, the following example shows how they
@@ -2581,15 +2660,13 @@ can be feathered:
 \begin{verbatim}
 feather(imagename='feather.im',      # Create an image called feather.im
        highres='synth.im',           # The synthesis image is called synth.im
-        owres='single_dish.im'       # The SD image is called single_dish.im
+        lowres='single_dish.im'       # The SD image is called single_dish.im
        )
 \end{verbatim}
 \normalsize
 
-Note that the single dish image must have a
-well-defined beam shape and the correct flux units for a model image
-(Jy/beam instead of Jy/pixel) so use the tasks {\tt
-imhead} and {\tt immath} first to convert if needed.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Making Deconvolution Masks or Box Regions}
@@ -2768,42 +2845,46 @@ improvements.  %%%XXX Amy modification; added missing word "as" to above
 %{\tt clean} with {\tt cleanbox='interactive'} to generate a mask graphically.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Transforming an Image Model ({\tt ft})}
+\section{Insert an Image Model ({\tt ft})}
 \label{section:im.ft}
 
-\begin{wrapfigure}{r}{2.5in}
-  \begin{boxedminipage}{2.5in}
-     \centerline{\bf Inside the Toolkit:}
-     The {\tt im.ft} method does what the {\tt ft} task does.
-     Its main use is setting the {\tt MODEL\_DATA} column in the
-     MS so that the {\tt cb} tool can use it for subsequent
-     calibration.
-  \end{boxedminipage}
-\end{wrapfigure}
+%\begin{wrapfigure}{r}{2.5in}
+%  \begin{boxedminipage}{2.5in}
+%     \centerline{\bf Inside the Toolkit:}
+%     The {\tt im.ft} method does what the {\tt ft} task does.
+%     Its main use is setting the {\tt MODEL\_DATA} column in the
+%     MS so that the {\tt cb} tool can use it for subsequent
+%     calibration.
+%  \end{boxedminipage}
+%\end{wrapfigure}
 
-The {\tt ft} task will Fourier transform an image and insert the resulting model into the
-{\tt MODEL\_DATA} column of a Measurement Set.
-You can also convert a CLEAN component list to a model and insert that
-into the {\tt MODEL\_DATA} column.  The MS {\tt MODEL\_DATA} column is
-used, for example, to hold the model for calibration purposes in 
-the tasks and toolkit.  This is especially useful if you have a resolved
-calibrator and you want to start with a model of the source before you
-derive accurate gain solutions.  This is also helpful for self-calibration
-(see \S~\ref{section:im.selfcal} below).
+The {\tt ft} task will add a source model (units should be Jy/pixel)
+or a clean component list
+to a Measurement Set.  This is especially useful if
+you have a resolved calibrator and you want to start with a model of
+the source before you derive accurate gain solutions.  This is also
+helpful for self-calibration (see \S~\ref{section:im.selfcal} below).
 
 The inputs for {\tt ft} are:
 \small
 \begin{verbatim}
-vis                 =         ''   #   Name of input visibility file
-fieldid             =          0   #   Field index identifier
-field               =         ''   #   Field name list
-model               =         ''   #   Name of input model image
-complist            =         ''   #   Name of component list
-incremental         =      False   #   Add to the existing MODEL_DATA column?
+#  ft :: Insert a source model into the MODEL_DATA column of a visibility set:
+vis                 =         ''        #  Name of input visibility file (MS)
+field               =         ''        #  Field selection
+spw                 =         ''        #  Spw selection
+model               =         ''        #  Name of input model image(s)
+nterms              =          1        #  Number of terms used to model the sky
+                                        #   frequency dependence
+complist            =         ''        #  Name of component list
+incremental         =      False        #  Add to the existing model visibility?
+usescratch          =      False        #  If True predicted  visibility  is stored in
+                                        #   MODEL_DATA column
+async               =      False        #  If true the taskname must be started using
+                                        #   ft(...)
 \end{verbatim}
 \normalsize
 
-An example of how to do this: 
+An example on how to do this: 
 \small
 \begin{verbatim}
 ft(vis='n75.ms',                   # Start with the visibility dataset n75.ms
@@ -2811,13 +2892,36 @@ ft(vis='n75.ms',                   # Start with the visibility dataset n75.ms
    model='1328.model.image')       # Name of the model image you have already
 \end{verbatim}
 \normalsize
-This task will Fourier transform the model image and insert the
-resulting model in the {\tt MODEL\_DATA} column of the rows of the MS 
-corresponding to the source {\tt 1328+307}.
+This example will add the source model '1328.model.imag' to all
+entries that match the field name '1328'. If the parameter {\tt
+  usescratch} is set to {\tt 'True'}, {\tt ft} will Fourier transform the
+source model and fill the {\tt MODEL\_DATA} column with the data. This,
+however, is only needed in special applications and {\tt usescratch=F}
+is the default.
 
-Note that after {\tt clean}, the transform of the final model is
-left in the {\tt MODEL\_DATA} column so you can go directly to
-a self-calibration step without explicitly using {\tt ft}.
+Alternatively, one can add a clean component list to be used as a
+model to the MS. The following procedure is an example:
+
+\small
+\begin{verbatim}
+# for a point source with no spectral index
+cl.addcomponent(flux=0.39, fluxunit='Jy',shape='point', dir='J2000 19h33m09s 15d01m20s')
+ 
+# for a Gaussian with a spectral index
+cl.addcomponent(flux=1.25, fluxunit='mJy', polarization='Stokes',
+dir='J2000 19h30m00s 15d00m00s', shape='gaussian', majoraxis='10arcsec',
+minoraxis='6arcsec', positionangle='0deg', freq='1.25GHz',
+spectrumtype='spectral index', index=-0.8)
+###you can add more components if you wish by calling addcomponent repeatedly with different params
+ 
+##save it to disk
+cl.rename('my_component.cl')
+cl.close()
+ 
+## write the model into into the measurement set ('myms')
+ft(vis='myms', complist='my_component.cl')
+\end{verbatim}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Image-plane deconvolution ({\tt deconvolve})}
@@ -2871,15 +2975,13 @@ not clean very deeply early on, so that the CLEAN model contains
 correct components only.  
 
 One important thing to keep in mind is that the self-calibration
-relies upon having the most recent Fourier transform of the
-model in the {\tt MODEL\_DATA} column of the MS.  This is indeed
+relies upon having the most recent source model inside the MS.  This is indeed
 the case if you follow the imaging (using {\tt clean})
 directly by the self-calibration.  If you have done something strange
-in between and have lost or overwritten the {\tt MODEL\_DATA} column
+in between and have lost or overwritten source model
 (for example done some extra cleaning that you do not want to keep),
 then use the {\tt ft} task (see \S~\ref{section:im.ft} above), which 
-fills the {\tt MODEL\_DATA} column with the Fourier transform of the
-specified model or model image.  
+adds a source model image or clean component lists to an MS.  
 
 Likewise, during self-calibration (once you have a new calibration
 solution) the imaging part
