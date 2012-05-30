@@ -54,6 +54,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
         if ismms:
             casalog.post('This is a multi-MS')
             mslist = mslocal.getreferencedtables()
+            mslist.sort()
             sname = 'Sub-MS'
         else:
             mslist.append(vis)
