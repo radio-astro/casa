@@ -1,6 +1,6 @@
 import os
 from taskinit import *
-from subprocess import Popen, PIPE, STDOUT
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 
 def listpartition(vis=None, createdict=None, listfile=None):
@@ -54,6 +54,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
         if ismms:
             casalog.post('This is a multi-MS')
             mslist = mslocal.getreferencedtables()
+            mslist.sort()
             sname = 'Sub-MS'
         else:
             mslist.append(vis)
@@ -66,9 +67,8 @@ def listpartition(vis=None, createdict=None, listfile=None):
         scanlist = []
         spwlist = []
 
-        # Get the data volume in bytes per sub-MS
+        # List with sizes in bytes per sub-MS
         sizelist = []
-        mycmd = 'du -hs '
         
         # Loop through all sub-Mss
         for subms in mslist:
@@ -80,15 +80,8 @@ def listpartition(vis=None, createdict=None, listfile=None):
             mslocal1.close()
 
             # Get the data volume in bytes per sub-MS
-            ducmd = mycmd+subms
-            p = Popen(ducmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
-            ms_size = p.stdout.read()
-            
-            # Create a list of the output string, which looks like this:
-            # ' 75M\tuidScan23.data/uidScan23.0000.ms\n'
-            # This will create a list with [size,sub-ms]
-            sss = ms_size.split()
-            sizelist.append(sss[0])
+            sizelist.append(getDiskUsage(subms))
+
             
         # Get the width for printing the output     
         # MS name width
@@ -235,9 +228,24 @@ def getMaxWidth(listdict, par):
     return max_width
             
 
+def getDiskUsage(msfile):
+    '''Return the size in bytes of an MS'''
+    
+    from subprocess import Popen, PIPE, STDOUT
 
+    # Command line to run
+    ducmd = 'du -hs '+msfile
+    
+    p = Popen(ducmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+    
+    sizeline = p.stdout.read()
+    
+    # Create a list of the output string, which looks like this:
+    # ' 75M\tuidScan23.data/uidScan23.0000.ms\n'
+    # This will create a list with [size,sub-ms]
+    mssize = sizeline.split()
 
-
+    return mssize[0]
 
 
 
