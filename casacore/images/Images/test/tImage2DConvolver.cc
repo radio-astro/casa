@@ -58,7 +58,7 @@ int main() {
 		);
 		FITSImage exp("test_image2dconvolver_convolved.fits");
 		cout << "*** max " << max(abs(got.get() - exp.get())) << endl;
-		AlwaysAssert(max(abs(got.get() - exp.get())) < 1e-8, AipsError);
+		AlwaysAssert(max(abs(got.get() - exp.get())) < 4e-5, AipsError);
 		Vector<Quantity> gotBeam = got.imageInfo().restoringBeam();
 		Vector<Quantity> expBeam = exp.imageInfo().restoringBeam();
 		for (uInt i=0; i<3; i++) {
@@ -67,7 +67,7 @@ int main() {
 				AipsError
 			);
 			AlwaysAssert(
-				abs(gotBeam[i].getValue() - expBeam[i].getValue()) < 1e-8,
+				abs(gotBeam[i].getValue() - expBeam[i].getValue()) < 5e-5,
 				AipsError
 			);
 		}
