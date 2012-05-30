@@ -112,14 +112,14 @@ namespace casa {
 
 	    csys_box->hide( );
 
-	    // still buggy...
+	    // deprecated...
 	    coordinates_apply->hide( );
 	    coordinates_reset->hide( );
 	    bounding_height->setReadOnly(true);
 	    bounding_width->setReadOnly(true);
-	    center_x->setReadOnly(true);
-	    center_y->setReadOnly(true);
 
+	    connect( center_x, SIGNAL(editingFinished( )), SLOT(translate_x( )) );
+	    connect( center_y, SIGNAL(editingFinished( )), SLOT(translate_y( )) );
 
 	    // update line characteristics...
 	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
@@ -163,9 +163,6 @@ namespace casa {
 	    connect( x_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
 	    connect( y_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
 	    connect( dim_units, SIGNAL(currentIndexChanged(int)), SLOT(states_val_change(int)) );
-	    connect( coordinates_reset, SIGNAL(clicked(bool)), SLOT(coordinates_reset_event(bool)) );
-	    connect( coordinates_apply, SIGNAL(clicked(bool)), SLOT(coordinates_apply_event(bool)) );
-
 
 	    last_line_color = line_color->currentText( );
 	    connect( line_color, SIGNAL(currentIndexChanged(const QString&)), SLOT(line_color_change(const QString&)) );
@@ -182,6 +179,8 @@ namespace casa {
 	    frame_max->setMaximum(z_max);
 	    frame_max->setValue(z_max);
 	}
+
+	void QtRegionState::updateCoord( ) { emit positionVisible(true); }
 
 	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 		if ( stats == 0 || stats->size() == 0 ) return;
@@ -682,14 +681,11 @@ namespace casa {
 		emit positionVisible( false );
 	}
 
-	void QtRegionState::coordinates_reset_event(bool) {
-	    emit positionVisible(true);
+	void QtRegionState::translate_x( ) {
+	    emit translateX( center_x->displayText( ), x_units->currentText( ), coordinate_system->currentText( ) );
 	}
-
-	void QtRegionState::coordinates_apply_event(bool) {
-	    emit positionMove( center_x->displayText( ), center_y->displayText( ), coordinate_system->currentText( ),
-			       x_units->currentText( ), y_units->currentText( ), bounding_width->displayText( ),
-			       bounding_height->displayText( ), QString::fromStdString(bounding_index_to_string(dim_units->currentIndex( ))) );
+	void QtRegionState::translate_y( ) {
+	    emit translateY( center_y->displayText( ), y_units->currentText( ), coordinate_system->currentText( ) );
 	}
 
 	void QtRegionState::frame_min_change( int v ) {
