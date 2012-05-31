@@ -20,6 +20,7 @@
 % JO 2010-10-12 edits Release 3.1.0 
 % STM 2011-05-03  Release 3.2.0 importevla and importasdm update
 % JO 2011-10-03 Release 3.3 edits
+% JO 2012-05-05 Release 3.4 edits
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -33,9 +34,11 @@ There are a number of tasks used to fill telescope-specific data,
 to import/export standard formats, to list data contents, and
 to concatenate multiple datasets.  These are:
 \begin{itemize}
+   \item {\tt asdmsummary} --- list the contents of a archive file in
+     {\it ASDM} format (\S~\ref{section:io.import.asdm})
    \item {\tt importasdm} --- import of ALMA data in 
          {\it ASDM} format (\S~\ref{section:io.import.asdm})
-   \item {\tt importevla} --- import of EVLA data and flags in 
+   \item {\tt importevla} --- import of EVLA/JVLA data and flags in 
          {\it ASDM} format (\S~\ref{section:io.import.evla})
    \item {\tt importuvfits} --- import visibility data in UVFITS
          format (\S~\ref{section:io.import.uvfits.import})
@@ -64,6 +67,8 @@ This is described in \S~\ref{section:io.selection}.
 There are also tasks for the import and export of image data using
 FITS:
 \begin{itemize}
+   \item {\tt listfits} --- show the header content of any FITS file
+         (\S~\ref{section:io.ms})
    \item {\tt importfits} --- import a FITS image into a CASA  
          {\it image} format table 
          (\S~\ref{section:analysis.fits})
@@ -97,6 +102,18 @@ there are also data formats more suitable for single-dish spectra (see
 Note that images are handled through special
 {\tt image} tables, although standard FITS I/O is also supported.
 Images and {\tt image} data are described in a separate chapter.
+
+The headers of any FITS files can be displayed in the logger with the
+{\tt listfits} task:
+
+\small
+\begin{verbatim}
+#  listfits :: List the HDU and typical data rows of a fits file:
+fitsfile            =         ''        #  Name of input fits file
+async               =      False        #  If true the taskname must be started using
+                                        #   listfits(...)
+\end{verbatim}
+\normalsize
 
 Unless your data was previously processed by CASA or software based
 upon its predecessor {\tt aips++}, you will need to import it into
@@ -243,7 +260,8 @@ for further processing.  The most common scratch columns are:
 \item {\tt CORRECTED\_DATA} --- used to hold calibrated data for
   imaging or display;
 \item {\tt MODEL\_DATA} --- holds the Fourier inversion of a
-  particular model image for calibration or imaging.
+  particular model image for calibration or imaging. {\bf this column
+    is optional from CASA 3.4 and higher and typically not required anymore}
 \end{itemize}
 The creation and use of the scratch columns is generally done behind the scenes, but you
 should be aware that they are there (and when they are used).
@@ -299,7 +317,7 @@ into CASA as a Measurement Set:
 \item ALMA Science Data Model format data can be imported
       into CASA ({\tt importasdm})
 
-\item EVLA Science Data Model format data, including online flags,
+\item JVLA Science Data Model format data, including online flags,
       can imported into CASA ({\tt importevla})
 
 \item VLA Archive format data can be imported into CASA
@@ -318,12 +336,12 @@ into CASA as a Measurement Set:
   \begin{boxedminipage}{2.5in}
      \centerline{\underline{\bf Under the Hood:}}
      The {\tt importasdm} task is just an interface to the stand-alone
-     {\tt asdm2MS} and {\tt asdm2MS\_v3} applications.  To find out the command-line
-     arguments to this application, do {\tt asdm2MS --help} or {\tt asdm2MS\_v3 --help} respectively.
+     {\tt asdm2MS\_v3} and {\tt asdm2MS} applications.  To find out the command-line
+     arguments to this application, do {\tt asdm2MS\_v3 --help} or {\tt asdm2MS --help} respectively.
  \end{boxedminipage}
 \end{wrapfigure}
 
-The ALMA and EVLA projects have agreed upon a common archival science
+The ALMA and JVLA projects have agreed upon a common archival science
 data model (ASDM) format, and have jointly developed the software to
 fill this data into CASA.  In the ASDM format, the bulk of the data is
 contained in large binary data format (BDF) tables, with the meta-data
@@ -331,111 +349,201 @@ and ancillary information in XML tables.  This is structured as a
 directory, like the MS, and was designed to be similar to the MS to 
 facilitate conversion.
 
-The {\bf importasdm} task will fill SDM1.2 and SDM1.3 format data into a 
-CASA visibility data set (MS). ALMA data was recorded in SDM1.2 format from October 2009
-until May 2011. Since May 2011, ALMA is using the SDM 1.3 format. In particular all science
-data from cycle 0 will be in SDM1.3. The EVLA also started using SDM1.2 in October 2009 
-and continues to use this format as of October 2011.  
+The content of an ASDM can be listed with the task {\tt asdmsummary}:
 
-{\bf ALERT}: The underlying implementation of the filler for SDM1.3, {\tt asdm2MS\_v3}, can import both
-SDM1.2 and SDM1.3 and recognizes both versions automatically. However, to stay on the safe side,
-CASA release 3.3 still contains the previous version of the filler,  {\tt asdm2MS}, which is
-only able to read SDM1.2. The new task parameter {\tt useversion} of {\tt importasdm} controls
-which of the two fillers is used. Default is {\tt asdm2MS\_v3}. 
+\small
+
+\begin{verbatim}
+#  asdmsummary :: Summarized description of an ASDM dataset.
+asdm                =         ''        #  Name of input ASDM directory
+async               =      False        #  If true the taskname must be started using
+                                        #   asdmsummary(...)
+\end{verbatim}
+\normalsize
+
+with an output that contains the list and positions of the
+antennas, followed by the parameters of each scan like observation
+time, source name, frequency and polarization setup: 
+
+\small
+\begin{verbatim}
+Input ASDM dataset : TDEM0008.sb3373760.eb3580330.55661.22790537037
+========================================================================================
+ASDM dataset :TDEM0008.sb3373760.eb3580330.55661.22790537037
+========================================================================================
+
+Exec Block : ExecBlock_0
+Telescope : JVLA
+Configuration name : B
+Observer name : Dr. Juergen Ott
+The exec block started on 2011-04-10T05:28:13.200000000 and ended on 2011-04-10T10:27:12.300000256
+
+27 antennas have been used in this exec block.
+        Id     Name         Make Station    Diameter         X              Y             Z
+     Antenna_0  ea01    UNDEFINED   W36        25    -1606841.96   -5042279.689    3551913.017
+     Antenna_1  ea02    UNDEFINED   E20        25     -1599340.8   -5043150.965    3554065.219
+     Antenna_2  ea03    UNDEFINED   E36        25   -1596127.728   -5045193.751    3552652.421
+     Antenna_3  ea04    UNDEFINED   W28        25   -1604865.649    -5042190.04    3552962.365
+     Antenna_4  ea05    UNDEFINED   W08        25   -1601614.091   -5042001.653    3554652.509
+     Antenna_5  ea06    UNDEFINED   N24        25    -1600930.06   -5040316.397    3557330.397
+     Antenna_6  ea07    UNDEFINED   E32        25   -1597053.116   -5044604.687    3553058.987
+     Antenna_7  ea08    UNDEFINED   N28        25   -1600863.684   -5039885.318    3557965.319
+     Antenna_8  ea09    UNDEFINED   E24        25    -1598663.09   -5043581.392    3553767.029
+     Antenna_9  ea10    UNDEFINED   N32        25   -1600781.039   -5039347.456    3558761.542
+     Antenna_10  ea11    UNDEFINED   E04        25    -1601068.79    -5042051.91    3554824.835
+     Antenna_11  ea12    UNDEFINED   E08        25   -1600801.926   -5042219.366    3554706.448
+     Antenna_12  ea14    UNDEFINED   W12        25   -1602044.903   -5042025.824    3554427.832
+     Antenna_13  ea15    UNDEFINED   W24        25   -1604008.742   -5042135.828    3553403.707
+     Antenna_14  ea16    UNDEFINED   N12        25   -1601110.052   -5041488.079    3555597.439
+     Antenna_15  ea17    UNDEFINED   W32        25   -1605808.656   -5042230.082    3552459.202
+     Antenna_16  ea18    UNDEFINED   N16        25   -1601061.961    -5041175.88    3556058.022
+     Antenna_17  ea19    UNDEFINED   W04        25   -1601315.893    -5041985.32    3554808.305
+     Antenna_18  ea20    UNDEFINED   N36        25   -1600690.606   -5038758.734    3559632.061
+     Antenna_19  ea21    UNDEFINED   E12        25    -1600416.51    -5042462.45    3554536.041
+     Antenna_20  ea22    UNDEFINED   N04        25   -1601173.979   -5041902.658    3554987.518
+     Antenna_21  ea23    UNDEFINED   E16        25   -1599926.104   -5042772.967    3554319.789
+     Antenna_22  ea24    UNDEFINED   W16        25   -1602592.854   -5042054.997      3554140.7
+     Antenna_23  ea25    UNDEFINED   N20        25   -1601004.709   -5040802.809    3556610.133
+     Antenna_24  ea26    UNDEFINED   W20        25   -1603249.685   -5042091.404    3553797.803
+     Antenna_25  ea27    UNDEFINED   E28        25   -1597899.903   -5044068.676    3553432.445
+     Antenna_26  ea28    UNDEFINED   N08        25    -1601147.94   -5041733.837    3555235.956
+
+Number of scans in this exec Block : 234
+
+scan #1 from 2011-04-10T05:28:13.200000000 to 2011-04-10T05:33:35.500000256
+        Intents : OBSERVE_TARGET
+        Sources : 1331+305=3C286
+        Subscan #1 from 2011-04-10T05:28:13.200000000 to 2011-04-10T05:33:35.500000256
+                Intent : UNSPECIFIED
+                Number of integrations : 322
+
+                 Binary data in uid:///evla/bdf/1302413292901
+                 Number of integrations : 322
+                 Time sampling : INTEGRATION
+                 Correlation Mode : CROSS_AND_AUTO
+                 Spectral resolution type : FULL_RESOLUTION
+                 Atmospheric phase correction : AP_UNCORRECTED
+                 SpectralWindow_0 : numChan = 256, frame = TOPO, firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
+
+scan #2 from 2011-04-10T05:33:35.500000256 to 2011-04-10T05:35:35.200000000
+        Intents : OBSERVE_TARGET
+        Sources : 1331+305=3C286
+        Subscan #1 from 2011-04-10T05:33:35.500000256 to 2011-04-10T05:35:35.200000000
+                Intent : UNSPECIFIED
+                Number of integrations : 119
+
+                 Binary data in uid:///evla/bdf/1302413293280
+                 Number of integrations : 119
+                 Time sampling : INTEGRATION
+                 Correlation Mode : CROSS_AND_AUTO
+                 Spectral resolution type : FULL_RESOLUTION
+                 Atmospheric phase correction : AP_UNCORRECTED
+                 SpectralWindow_0 : numChan = 256, frame = TOPO, firstChan = 8484000000, chandWidth = 125000 x Polarization_0 : corr = RR,LL
+
+scan #3 from 2011-04-10T05:35:35.200000000 to 2011-04-10T05:36:34.999999488
+        Intents : OBSERVE_TARGET
+        Sources : 1331+305=3C286
+        Subscan #1 from 2011-04-10T05:35:35.200000000 to 2011-04-10T05:36:34.999999488
+...
+\end{verbatim}
+\normalsize
+
+The {\bf importasdm} task will fill SDM1.2 and SDM1.3 format data into
+a CASA visibility data set (MS). ALMA data was recorded in SDM1.2
+format from October 2009 until May 2011. Since May 2011, ALMA is using
+the SDM 1.3 format. In particular all science data from cycle 0 will
+be in SDM1.3. The JVLA also started using SDM1.2 in October 2009 and
+continues to use this format as of October 2011. The parameter {\tt useversion} can
+be used to select between {\tt asdm2MW\_v3} and {\tt asdm2MS}, {\tt
+  asdm2MW\_v3} is the default.
+
+
+
 
 The default inputs of {\tt importasdm} are:
 
 \small
 \begin{verbatim}
-#  importasdm :: Convert an ALMA Science Data Model observation into a CASA visibility file
+#  importasdm :: Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable)
 asdm                =         ''        #  Name of input asdm directory (on disk)
-vis                 =         ''        #  Root name of the ms to be created.
-                                        #   Note the .ms is NOT added
-singledish          =      False        #  Set true to output single-dish data
-                                        #   format
+vis                 =         ''        #  Root name of the ms to be created. Note the
+                                        #   .ms is NOT added
+singledish          =      False        #  Set true to output single-dish data format
 corr_mode           =      'all'        #  specifies the correlation mode to be
                                         #   considered on input. A quoted string
-                                        #   containing a sequence of ao, co,
-                                        #   ac,or all separated by whitespaces is
+                                        #   containing a sequence of ao, co, ac,or all
+                                        #   separated by whitespaces is expected
+srt                 =      'all'        #  specifies the spectral resolution type to be
+                                        #   considered on input. A quoted string
+                                        #   containing a sequence of fr, ca, bw, or all
+                                        #   separated by whitespaces is expected
+time_sampling       =      'all'        #  specifies the time sampling (INTEGRATION
+                                        #   and/or SUBINTEGRATION)  to be considered on
+                                        #   input. A quoted string containing a sequence
+                                        #   of i, si, or all separated by whitespaces is
                                         #   expected
-srt                 =      'all'        #  specifies the spectral resolution type
-                                        #   to be considered on input. A quoted
-                                        #   string containing a sequence of fr,
-                                        #   ca, bw, or all separated by
-                                        #   whitespaces is expected
-time_sampling       =      'all'        #  specifies the time sampling
-                                        #   (INTEGRATION and/or SUBINTEGRATION)
-                                        #   to be considered on input. A quoted
-                                        #   string containing a sequence of i,
-                                        #   si, or all separated by whitespaces
-                                        #   is expected
-ocorr_mode          =       'ca'        #  output data for correlation mode
-                                        #   AUTO_ONLY (ao) or CROSS_ONLY (co) or
-                                        #   CROSS_AND_AUTO (ca)
+ocorr_mode          =       'co'        #  output data for correlation mode AUTO_ONLY
+                                        #   (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO
+                                        #   (ca)
 compression         =      False        #  Flag for turning on data compression
-asis                =         ''        #  Creates verbatim copies of the
-                                        #   ASDMtables in the ouput measurement
-                                        #   set.  Value given must be a string of
-                                        #   table names separated by spaces; A *
-                                        #   wildcard is allowed.
-wvr_corrected_data  =       'no'        #   Specifies which values are considerd
-                                        #   in the SDM binary data to fill the
-                                        #   DATA column in the MAIN table of the
-                                        #   MS. Expected values for this option
-                                        #   are: no, for uncorrected data
-                                        #   (default), yes, for the corrected
-                                        #   data, and both, for for corrected and
-                                        #   uncorrected data. Note if both is
-                                        #   selected two measurement sets are
-                                        #   created, one with uncorrected data
-                                        #   and the other with corrected data.
-scans               =         ''        #  processes only the specified scans.
-                                        #   This value is a semicolon separated
-                                        #   list of scan specifications. A scan
-                                        #   specification consists in an exec
-                                        #   bock index followed by the :
-                                        #   character;  followed by a comma
-                                        #   separated list of scan indexes or
-                                        #   scan index ranges. A scan index is
-                                        #   relative to the exec block it belongs
-                                        #   to. Scan indexes are 1-based while
-                                        #   exec blocks are 0-based. "0:1" or
-                                        #   "2:2~6" or "0:1,1:2~6,8;2:,3:24~30"
-                                        #   "1,2" are valid values for the
-                                        #   option. "3:" alone will be
-                                        #   interpreted as, all the scans of the
-                                        #   exec block#3.  An scan index or a
-                                        #   scan index range not preceded by an
-                                        #   exec block index will be interpreted
-                                        #   as, all the scans with such indexes
-                                        #   in all the exec blocks.  By default
-                                        #   all the scans are considered.
-ignore_time         =      False        #  All the rows of the tables Feed,
-                                        #   History, Pointing, Source, SysCal,
-                                        #   CalDevice, SysPower, and Weather are
-                                        #   processed independently of the time
-                                        #   range of the selected exec block /
-                                        #   scan.
-process_syspower    =       True        #   The SysPower table is processed if
-                                        #   and only if this parameter is set to
-                                        #   true.
-process_caldevice   =       True        #   The CalDevice table is processed if
-                                        #   and only if this parameter is set to
-                                        #   true.
-process_pointing    =       True        #   The Pointing table is processed if
-                                        #   and only if this parameter is set to
-                                        #   true.
-verbose             =      False        #  Output lots of information while the
-                                        #   filler is working
-overwrite           =      False        #  Over write an existing MS
-showversion         =      False        #  Report the version of asdm2MS being
-                                        #   used
-useversion          =       'v3'        #  Selects the version of asdm2MS to be
-                                        #   used ('v3' (default, works for all
-                                        #   ALMA data) or 'v2' (only for ALMA
-                                        #   data taken before May 2011))
-async               =      False        #  If true the taskname must be started
-                                        #   using importasdm(...)
+asis                =         ''        #  Creates verbatim copies of the ASDMtables in
+                                        #   the ouput measurement set.  Value given must
+                                        #   be a string of table names separated by
+                                        #   spaces; A * wildcard is allowed.
+wvr_corrected_data  =       'no'        #   Specifies which values are considerd in the
+                                        #   SDM binary data to fill the DATA column in
+                                        #   the MAIN table of the MS. Expected values
+                                        #   for this option are: no, for uncorrected
+                                        #   data (default), yes, for the corrected data,
+                                        #   and both, for for corrected and uncorrected
+                                        #   data. Note if both is selected two
+                                        #   measurement sets are created, one with
+                                        #   uncorrected data and the other with
+                                        #   corrected data.
+scans               =         ''        #  processes only the specified scans. This
+                                        #   value is a semicolon separated list of scan
+                                        #   specifications. A scan specification
+                                        #   consists in an exec bock index followed by
+                                        #   the : character;  followed by a comma
+                                        #   separated list of scan indexes or scan index
+                                        #   ranges. A scan index is relative to the exec
+                                        #   block it belongs to. Scan indexes are
+                                        #   1-based while exec blocks are 0-based. "0:1"
+                                        #   or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2"
+                                        #   are valid values for the option. "3:" alone
+                                        #   will be interpreted as, all the scans of the
+                                        #   exec block#3.  An scan index or a scan index
+                                        #   range not preceded by an exec block index
+                                        #   will be interpreted as, all the scans with
+                                        #   such indexes in all the exec blocks.  By
+                                        #   default all the scans are considered.
+ignore_time         =      False        #  All the rows of the tables Feed, History,
+                                        #   Pointing, Source, SysCal, CalDevice,
+                                        #   SysPower, and Weather are processed
+                                        #   independently of the time range of the
+                                        #   selected exec block / scan.
+process_syspower    =       True        #   The SysPower table is processed if and only
+                                        #   if this parameter is set to true.
+process_caldevice   =       True        #   The CalDevice table is processed if and only
+                                        #   if this parameter is set to true.
+process_pointing    =       True        #   The Pointing table is processed if and only
+                                        #   if this parameter is set to true.
+process_flags       =       True        #   Create online flags in the FLAG_CMD sub-
+                                        #   table.
+     tbuff          =        0.0        #   Time padding buffer (seconds)
+     applyflags     =      False        #   Apply the flags to the MS.
+     savecmds       =      False        #  Save flag commands to an ASCII file
+     outfile        =         ''        #  Name of ASCII file to save flag commands
+
+verbose             =      False        #  Output lots of information while the filler
+                                        #   is working
+overwrite           =       True        #  Over write an existing MS
+showversion         =      False        #  Report the version of asdm2MS being used
+useversion          =       'v3'        #  Version of asdm2MS to be used ('v3' (default,
+                                        #   should work for all data))
+async               =      False        #  If true the taskname must be started using
+                                        #   importasdm(...)
+
 \end{verbatim}
 \normalsize
 
@@ -458,6 +566,14 @@ as {\it 'all the scans of the exec block 3'}. An scan index or a scan index
 range not preceded by an exec block index will be interpreted as {\it 'all
 the scans with such indexes in all the exec blocks'}.  By default all
 the scans are considered.
+
+When {\tt process\_flags=True} the task will create online flags based
+on the {\tt Flag.xml}, {\tt Antenna.xml} and {\tt SpectralWindow.xml}
+files and copy them to the {\tt FLAG\_CMD} sub-table of the MS. The
+flags will {\it NOT} be applied unless the parameter {\tt applyflags}
+is set to {\tt True}.  Optionally, the flags can also be saved to an
+external ASCII file if {\tt savecmds} is set to {\tt True.}
+
 
 If {\tt singledish=True}, output data format is scantable (single-dish data
 format, see \ref{chapter:sd}) instead of MS. In that case, you must specify
@@ -487,7 +603,7 @@ async           =   False   #  If true the taskname must be started using import
 \normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{EVLA: Filling of Science Data Model (ASDM) data}
+\subsection{EVLA/JVLA: Filling of Science Data Model (ASDM) data}
 \label{section:io.import.evla}
 
 \begin{wrapfigure}{r}{2.5in}
@@ -500,7 +616,7 @@ async           =   False   #  If true the taskname must be started using import
   \end{boxedminipage}
 \end{wrapfigure}
 
-The {\bf importevla} task will fill SDM data from EVLA (or ALMA) into
+The {\bf importevla} task will fill SDM data from JVLA (or ALMA) into
 a MS, along with online flagging data contained in the {\tt Flag.xml}
 SDM table.  Otherwise, it behaves as {\tt importasdm} but with a
 streamlined parameter set.
@@ -509,35 +625,48 @@ The default inputs are:
 
 \small
 \begin{verbatim}
-#  importevla :: Convert a Science Data Model observation into a CASA Measurement Set
-asdm           =      ''  #  Name of input asdm directory (on disk)
-vis            =      ''  #  Root name of the ms to be created. Note the .ms is NOT added
-ocorr_mode     =    'ca'  #  Fill correlation mode AUTO_ONLY (ao), CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
-compression    =   False  #  Flag for turning on data compression
-asis           =      ''  #  Create verbatim copies of these SDM tables in the MS.
-scans          =      ''  #  List of scans to fill (default is all scans).
-switchedpower  =   False  #  Enables support for switched-power gain and tsys corrections
-verbose        =   False  #  Output lots of information while the filler is working
-overwrite      =   False  #  Over write an existing MS
-online         =    True  #  Create online flags
-     tbuff     =     1.0  #  time padding buffer (seconds)
+#  importevla :: Convert an Science Data Model observation into a CASA Measurement Set
+asdm                =         ''        #  Name of input asdm directory (on disk)
+vis                 =         ''        #  Root name of the ms to be created. Note the
+                                        #   .ms is NOT added
+ocorr_mode          =       'co'        #  Fill correlation mode AUTO_ONLY (ao),
+                                        #   CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+compression         =      False        #  Flag for turning on data compression
+asis                =         ''        #  Create verbatim copies of these SDM tables in
+                                        #   the MS.
+scans               =         ''        #  List of scans to fill (default is all scans).
+switchedpower       =      False        #   The SysPower and CalDevice tables are
+                                        #   processed if and only if this parameter is
+                                        #   set to true, enabling support for switched-
+                                        #   power gain and tsys corrections.
+verbose             =      False        #  Output lots of information while the filler
+                                        #   is working
+overwrite           =       True        #  Over write an existing MS
+online              =       True        #  Create online flags
+     tbuff          =        0.0        #  Time padding buffer (in seconds)
 
-flagzero       =    True  #  Create flag for low amplitude/zero points
-     cliplevel =   1e-08  #  zero clipping level
-     flagpol   =    True  #  flag cross-hand corrs also?
+flagzero            =       True        #  Create flag commands for zero points
+     flagpol        =       True        #  Create flag commands for cross-hand
+                                        #   correlations
 
-shadow         =    True  #  Create flag for shadowed data
-     diameter  =    -1.0  #  diameter to use for shadowing (-1=antenna dia.)
+shadow              =       True        #  Create flag commands for shadowed data
+     tolerance      =        0.0        #  Amount of shadow allowed (in meters)
+     addantenna     =         ''        #  File name or dictionary with additional
+                                        #   antenna names, positions and diameters
 
-applyflags     =   False  #  Apply flags to MS
-flagbackup     =    True  #  Back up flag column at start
-async          =   False  #  If true the taskname must be started using importevla(...)
+applyflags          =      False        #  Apply flag commands to MS
+savecmds            =      False        #  Save flag commands to an ASCII file
+flagbackup          =       True        #  Back up flag column before applying flags
+async               =      False        #  If true the taskname must be started using
+                                        #   importevla(...)
 \end{verbatim}
 \normalsize
 
-{\bf ALERT}: If you want to use your EVLA online flags then you must
+{\bf ALERT}: If you want to use your JVLA online flags then you must
 use {\tt importevla} rather than {\tt importasdm}.  The {\tt flagcmd} 
-task will process these flags.
+task will process these flags. Also, if you have run {\tt importevla}
+in CASA 3.3 or earlier, the flag syntax will be processed by the task
+{\tt oldflagcmd}. 
 
 The default action of {\bf importevla} is to construct the {\tt FLAG\_CMD} 
 MS table based on the settings of {\tt online}, {\tt flagzero}, and
@@ -554,26 +683,39 @@ action of the two related parameters that {\tt importasdm} uses.
 The {\tt online} parameter controls creation of online flags from the 
 {\tt Flag.xml} SDM table. The {\tt tbuff} parameter adds a time ``buffer''
 padding for these flags in both directions to deal with timing mis-matches.
-{\bf ALERT}: For EVLA data taken before April 2011, you should set {\tt tbuff}
+{\bf ALERT}: For JVLA data taken before April 2011, you should set {\tt tbuff}
 to a value (in seconds) equal to $1.5\times$ the integration time.
 
-The {\tt flagzero} parameter controls creation of clipping commands to flag
-visibilities with amplitudes below the cutoff given by {\tt cliplevel}. If
-{\tt flagpol=True} then it will flag the cross-hands (e.g. RL and LR) as well,
-which might result in low but correct values of these correlations being thrown
-out (but can catch erroneous zeros also).  
-{\bf ALERT}: This facility is provided as the EVLA correlator, particularly in
-2010, occasionally produces visibilities with zero or very small values that
-need to get flagged out.
+The {\tt flagzero} parameter controls creation of clipping commands to
+flag visibilities with amplitudes that are exact zeros. If {\tt
+  flagpol=True} then it will flag the cross-hands (e.g. RL and LR) as
+well, which might result in low but correct values of these
+correlations being thrown out (but can catch erroneous zeros also).
+{\bf ALERT}: This facility is provided as the JVLA correlator,
+particularly in 2010, occasionally produces visibilities with zero or
+very small values that need to get flagged out.
 
-The {\tt shadow} parameter turns on creation of flag commands to remove antenna
-time ranges where they are shadowed by other antennas in the array.  By default
-it will flag based on the antenna diameter, but if you want more lenient or 
-conservative flagging then set the {\tt diameter} sub-parameter to a value 
-smaller or larger respectively than the actual diameter.
-{\bf ALERT}: Note that the shadow flagging calculation will only be able to
-detect shadowing by antennas for which there is actual visibility data in
-the MS.
+The {\tt shadow} parameter turns on creation of flag commands to
+remove antenna time ranges where they are shadowed by other antennas
+in the array.  By default it will flag based on the antenna diameter,
+but if you want more lenient or conservative flagging then set the
+{\tt tolerance} sub-parameter, where the shadowed antennas are flagged
+for all baselines that are shorter than ${\rm radius}_1 + {\rm
+  radius}_2 - {\rm tolerance}$
+(the radii are those for the antennas as listed in the ANTENNA
+subtable). {\tt addantenna} can be a file that defines the positions
+of antennas that are on the ground but do not appear in the MS. They
+can still shadow antennas in the array. 
+
+{\tt savecmds} will save all flagging commands in the {\tt flagcmd}
+and {\tt tflagdata} syntax (\S\,\ref{section:edit.tflagdata} and
+\ref{section:edit.flagcmd}) to a file to be applied later or for
+bookkeeping. 
+
+A flag backup can be performed using the {\tt flagbackup}
+parameter. It saves all current flags to the '*.flagversions' file of
+the MS, before all new flags are applied.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{VLA: Filling data from archive format ({\tt importvla})}
@@ -700,7 +842,7 @@ using the traditional bandname codes.  These are:
   \item {\tt ''}  = all bands (default)
 \end{itemize}
 
-Note that as the transition from the VLA to EVLA progresses,
+Note that as the transition from the VLA to JVLA progresses,
 the actual frequency ranges covered by the bands will expand,
 and additional bands will be added (namely {\tt 'S'} from 1-2 GHz and 
 {\tt 'A'} from 26.4-40 GHz).
@@ -758,10 +900,10 @@ will have to flag them before imaging.
 \label{section:io.import.vla.antnamescheme}
 
 The {\tt antnamescheme} parameter controls whether {\tt importvla}
-will try to use a naming scheme where EVLA antennas are prefixed
+will try to use a naming scheme where JVLA antennas are prefixed
 with {\tt EA} (e.g. {\tt 'EA16'}) and old VLA antennas have names
 prefixed with {\tt VA} (e.g. {\tt 'VA11'}).  Our method to detect
-whether an antenna is EVLA is not yet perfected, and thus unless you
+whether an antenna is JVLA is not yet perfected, and thus unless you
 require this feature, simply use {\tt antnamescheme='old'}.
 
 
@@ -769,10 +911,10 @@ require this feature, simply use {\tt antnamescheme='old'}.
 \label{section:io.import.vla.evlabands}
 
 The {\tt evlabands=True} option is provided to allow users to access
-EVLA frequencies outside the standard VLA tuninings (e.g.\ the extended
+JVLA frequencies outside the standard VLA tuninings (e.g.\ the extended
 C-band above 6~GHz).  {\bf ALERT:} use of this option for standard VLA
 data will cause unexpected associations, such as X-band data below
-8~GHz being extracted to C-band (as the EVLA C-band is 4--8~GHz).  Use
+8~GHz being extracted to C-band (as the JVLA C-band is 4--8~GHz).  Use
 with care.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -784,6 +926,9 @@ archive and transport format nonetheless.  CASA supports
 UVFITS files written by the AIPS {\tt FITTP} task, and others.
 
 UVFITS is supported for both import and export.
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Import using {\tt importuvfits} }
@@ -903,7 +1048,7 @@ out.  These are mostly here for compatibility with AIPS.
 
 The {\tt writesyscal} parameter toggles whether {\tt GC} and 
 {\tt TY} extension tables are written.  These are important for
-VLBA data, and for EVLA data.  {\bf ALERT:} Not yet available.
+VLBA data, and for JVLA data.  {\bf ALERT:} Not yet available.
 
 The {\tt multisource} parameter determines whether the UV FITS file is
 a multi-source file or a single-source file, if you have a
@@ -981,17 +1126,33 @@ get a summary of the MS contents with the {\tt listobs} task.
 The inputs are:
 \small
 \begin{verbatim}
+#  listobs :: List the summary of a data set in the logger or in a file
 vis                 =         ''        #  Name of input visibility file (MS)
+selectdata          =       True        #  Data selection parameters
+     field          =         ''        #  Field names or field index numbers: ''==>all,
+                                        #   field='0~2,3C286'
+     spw            =         ''        #  spectral-window/frequency/channel
+     antenna        =         ''        #  antenna/baselines: ''==>all, antenna ='3,VA04'
+     timerange      =         ''        #  time range: ''==>all,timerange='09:14:0~09:54:0'
+     correlation    =         ''        #  Select data based on correlation
+     scan           =         ''        #  scan numbers: ''==>all
+     intent         =         ''        #  Select data based on observation intent: ''==>all
+     feed           =         ''        #  multi-feed numbers: Not yet implemented
+     array          =         ''        #  (sub)array numbers: ''==>all
+     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default
+                                        #   units=meters
+     observation    =         ''        #  Select data based on observation ID: ''==>all
+
 verbose             =       True        
-listfile            =         ''        #  Name of disk file to write output:
-                                        #   ''==>to terminal
-async               =      False        #  If true the taskname must be started                                        #   using listobs(...)
+listfile            =         ''        #  Name of disk file to write output: ''==>to terminal
+async               =      False        #  If true the taskname must be started using listobs(...)
+
 \end{verbatim}
 \normalsize
 
-The summary will be written to the logger, to the {\tt casapy.log}
-file, and optionally to a file specified in the {\tt listfile}
-parameter.  For example, \small
+The summary (of the selected data) will be written to the logger, to
+the {\tt casapy-YYYYMMDD-HHMMSS.log} file, and optionally to a file
+specified in the {\tt listfile} parameter.  For example, \small
 \begin{verbatim}
    listobs('n5921.ms')
 \end{verbatim}
@@ -1000,70 +1161,66 @@ results in the logger messages:
 \small
 \begin{verbatim}
 ================================================================================
-           MeasurementSet Name:  /Users/jott/casa/data/day2_TDEM0003_10s_norx      MS Version 2
+           MeasurementSet Name:  /Users/jott/casa/data/3.4-scripts/irc/day2_TDEM0003_10s_norx      MS Version 2
 ================================================================================
    Observer: Mark J. Mark Claussen     Project: T.B.D.  
 Observation: EVLA
 Data records: 290218       Total integration time = 10016 seconds
    Observed from   26-Apr-2010/03:21:56.0   to   26-Apr-2010/06:08:52.0 (UTC)
-
+   
    ObservationID = 0         ArrayID = 0
-  Date        Timerange (UTC)          Scan  FldId FieldName nVis   Int(s)   SpwIds      ScanIntent
-  26-Apr-2010/03:21:56.0 - 03:23:16.0     5      2 J0954+1743   2720   9.8      [0, 1]                      
-                                             .......   
-              05:31:21.0 - 05:35:57.5    48      3 IRC+10216    9918   9.7      [0, 1]                      
-              05:36:19.0 - 05:37:26.5    49      2 J0954+1743   2700   9.2      [0, 1]                      
-              05:37:50.0 - 05:42:27.0    50      3 IRC+10216    9918   9.73     [0, 1]                      
-              05:42:49.0 - 05:43:56.0    51      2 J0954+1743   2700   9.18     [0, 1]                      
-              05:44:19.0 - 05:48:55.5    52      3 IRC+10216    9882   9.75     [0, 1]                      
-              05:49:17.0 - 05:50:24.5    53      2 J0954+1743   2700   9.22     [0, 1]                      
-              05:55:46.0 - 06:00:53.0    56      5 J1229+0203   10836  9.69     [0, 1]                      
-              06:06:14.0 - 06:08:52.0    59      7 J1331+3030   5814   9.52     [0, 1]                      
-           (nVis = Total number of time/baseline visibilities per scan) 
+  Date        Timerange (UTC)          Scan  FldId FieldName           nRows   Int(s)   SpwIds      ScanIntent
+  26-Apr-2010/03:21:56.0 - 03:23:16.0     5      2 J0954+1743          2720   9.8      [0, 1]                      
+              03:23:44.0 - 03:28:20.0     6      3 IRC+10216           9918   9.64     [0, 1]                      
+              03:28:43.0 - 03:29:49.0     7      2 J0954+1743          2700   8.89     [0, 1]                      
+              03:30:13.0 - 03:34:48.5     8      3 IRC+10216           9918   9.64     [0, 1]                      
+...           
+              06:06:14.0 - 06:08:52.0    59      7 J1331+3030          5814   9.52     [0, 1]                      
+           (nRows = Total number of rows per scan) 
 Fields: 4
-  ID   Code Name         RA            Decl           Epoch   SrcId nVis   
-  2    D    J0954+1743   09:54:56.8236 +17.43.31.2224 J2000   2     65326  
-  3    NONE IRC+10216    09:47:57.3820 +13.16.40.6600 J2000   3     208242 
-  5    F    J1229+0203   12:29:06.6997 +02.03.08.5982 J2000   5     10836  
-  7    E    J1331+3030   13:31:08.2880 +30.30.32.9589 J2000   7     5814   
-   (nVis = Total number of time/baseline visibilities per field) 
+  ID   Code Name                RA              Decl          Epoch   SrcId nRows  
+  2    D    J0954+1743          09:54:56.82363 +17.43.31.2224 J2000   2     65326  
+  3    NONE IRC+10216           09:47:57.38200 +13.16.40.6600 J2000   3     208242 
+  5    F    J1229+0203          12:29:06.69973 +02.03.08.5982 J2000   5     10836  
+  7    E    J1331+3030          13:31:08.28798 +30.30.32.9589 J2000   7     5814   
 Spectral Windows:  (2 unique spectral windows and 1 unique polarization setups)
- INFO    listobs::ms::summary+     SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)TotBW(kHz)  Ref(MHz)    Corrs           
-   0          64 TOPO  36387.2295  125         8000        36387.2295  RR  RL  LR  LL  
-   1          64 TOPO  36304.542   125         8000        36304.542   RR  RL  LR  LL  
- Sources: 10
-   ID   Name         SpwId RestFreq(MHz)  SysVel(km/s) 
-   0    J1008+0730   0     0.03639232     -0.026       
-   0    J1008+0730   1     0.03639232     -0.026       
-   2    J0954+1743   0     0.03639232     -0.026       
-   2    J0954+1743   1     0.03639232     -0.026       
-   3    IRC+10216    0     0.03639232     -0.026       
-   3    IRC+10216    1     0.03639232     -0.026       
-   5    J1229+0203   0     0.03639232     -0.026       
-   5    J1229+0203   1     0.03639232     -0.026       
-   7    J1331+3030   0     0.03639232     -0.026       
-   7    J1331+3030   1     0.03639232     -0.026       
- Antennas: 19:
-   ID   Name  Station   Diam.    Long.         Lat.         
-   0    ea01  W09       25.0 m   -107.37.25.2  +33.53.51.0  
-   1    ea02  E02       25.0 m   -107.37.04.4  +33.54.01.1  
-   2    ea03  E09       25.0 m   -107.36.45.1  +33.53.53.6  
-   3    ea04  W01       25.0 m   -107.37.05.9  +33.54.00.5  
-   4    ea05  W08       25.0 m   -107.37.21.6  +33.53.53.0  
-   5    ea07  N06       25.0 m   -107.37.06.9  +33.54.10.3  
-   6    ea08  N01       25.0 m   -107.37.06.0  +33.54.01.8  
-   7    ea09  E06       25.0 m   -107.36.55.6  +33.53.57.7  
-   8    ea12  E08       25.0 m   -107.36.48.9  +33.53.55.1  
-   9    ea15  W06       25.0 m   -107.37.15.6  +33.53.56.4  
-   10   ea19  W04       25.0 m   -107.37.10.8  +33.53.59.1  
-   11   ea20  N05       25.0 m   -107.37.06.7  +33.54.08.0  
-   12   ea21  E01       25.0 m   -107.37.05.7  +33.53.59.2  
-   13   ea22  N04       25.0 m   -107.37.06.5  +33.54.06.1  
-   14   ea23  E07       25.0 m   -107.36.52.4  +33.53.56.5  
-   15   ea24  W05       25.0 m   -107.37.13.0  +33.53.57.8  
-   16   ea25  N02       25.0 m   -107.37.06.2  +33.54.03.5  
-   17   ea27  E03       25.0 m   -107.37.02.8  +33.54.00.5  
-   18   ea28  N08       25.0 m   -107.37.07.5  +33.54.15.8 
+  SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)  TotBW(kHz)  Corrs          
+  0          64 TOPO  36387.2295  125           8000        RR  RL  LR  LL  
+  1          64 TOPO  36304.542   125           8000        RR  RL  LR  LL  
+Sources: 10
+  ID   Name                SpwId RestFreq(MHz)  SysVel(km/s) 
+  0    J1008+0730          0     0.03639232     -0.026       
+  0    J1008+0730          1     0.03639232     -0.026       
+  2    J0954+1743          0     0.03639232     -0.026       
+  2    J0954+1743          1     0.03639232     -0.026       
+  3    IRC+10216           0     0.03639232     -0.026       
+  3    IRC+10216           1     0.03639232     -0.026       
+  5    J1229+0203          0     0.03639232     -0.026       
+  5    J1229+0203          1     0.03639232     -0.026       
+  7    J1331+3030          0     0.03639232     -0.026       
+  7    J1331+3030          1     0.03639232     -0.026       
+Antennas: 19:
+  ID   Name  Station   Diam.    Long.         Lat.         
+  0    ea01  W09       25.0 m   -107.37.25.2  +33.53.51.0  
+  1    ea02  E02       25.0 m   -107.37.04.4  +33.54.01.1  
+  2    ea03  E09       25.0 m   -107.36.45.1  +33.53.53.6  
+  3    ea04  W01       25.0 m   -107.37.05.9  +33.54.00.5  
+  4    ea05  W08       25.0 m   -107.37.21.6  +33.53.53.0  
+  5    ea07  N06       25.0 m   -107.37.06.9  +33.54.10.3  
+  6    ea08  N01       25.0 m   -107.37.06.0  +33.54.01.8  
+  7    ea09  E06       25.0 m   -107.36.55.6  +33.53.57.7  
+  8    ea12  E08       25.0 m   -107.36.48.9  +33.53.55.1  
+  9    ea15  W06       25.0 m   -107.37.15.6  +33.53.56.4  
+  10   ea19  W04       25.0 m   -107.37.10.8  +33.53.59.1  
+  11   ea20  N05       25.0 m   -107.37.06.7  +33.54.08.0  
+  12   ea21  E01       25.0 m   -107.37.05.7  +33.53.59.2  
+  13   ea22  N04       25.0 m   -107.37.06.5  +33.54.06.1  
+  14   ea23  E07       25.0 m   -107.36.52.4  +33.53.56.5  
+  15   ea24  W05       25.0 m   -107.37.13.0  +33.53.57.8  
+  16   ea25  N02       25.0 m   -107.37.06.2  +33.54.03.5  
+  17   ea27  E03       25.0 m   -107.37.02.8  +33.54.00.5  
+  18   ea28  N08       25.0 m   -107.37.07.5  +33.54.15.8  
+
 \end{verbatim}
 \normalsize
 using the (default) {\tt verbose=True} option.
@@ -1080,40 +1237,40 @@ The inputs are:
 \small
 \begin{verbatim}
 #  listvis :: List measurement set visibilities.
-vis          =         ''   #  Name of input visibility file
-options      =       'ap'   #  List options: ap only
-datacolumn   =     'data'   #  Column to list: data, corrected, model, residual
-field        =         ''   #  Field names or index to be listed: ''==>all
-spw          =        '*'   #  Spectral window:channels: '\*'==>all, spw='1:5~57'
-selectdata   =      False   #  Other data selection parameters
-average      =         ''   #  Averaging mode: ==>none (Not yet implemented)
-showflags    =      False   #  Show flagged data (Not yet implemented)
-pagerows     =         50   #  Rows per page
-listfile     =         ''   #  Output file
-async        =      False   #  If true the taskname must be started using listvis(...)
+vis                 =         ''        #  Name of input visibility file
+options             =       'ap'        #  List options: ap only
+datacolumn          =     'data'        #  Column to list: data, float_data, corrected, model,
+                                        #   residual
+field               =         ''        #  Field names or index to be listed: ''==>all
+spw                 =        '*'        #  Spectral window:channels: '\*'==>all, spw='1:5~57'
+selectdata          =      False        #  Other data selection parameters
+observation         =         ''        #  Select by observation ID(s)
+average             =         ''        #  Averaging mode: ==>none (Not yet implemented)
+showflags           =      False        #  Show flagged data (Not yet implemented)
+pagerows            =         50        #  Rows per page
+listfile            =         ''        #  Output file
+async               =      False        #  If true the taskname must be started using listvis(...)
 \end{verbatim}
 \normalsize
 
 For example:
 \small
 \begin{verbatim}
-CASA <2>: listvis('ngc5921.demo.ms',datacolumn='corrected',field='0',selectdata=T,antenna='*&*',pagerows=10)
-All selected data has FIELD = 0
-All selected data has SPW = 0
-Date/Time:                    RR:                 LL:                                                
-1995/04/13/ Intrf UVDist Chn     Amp    Phs  Wt F    Amp    Phs  Wt F          U          V          W
-------------|---|------|---|--------------------|-------------------|----------|----------|----------|
-  09:19:00.0 1-2   1823   0:  7.388   17.4 100    3.518  131.9  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   1: 11.913   -6.0 100   10.945   12.7  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   2: 13.570    1.5 100   12.700    3.5  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   3: 13.829   -0.6 100   13.479    2.2  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   4: 14.082    1.1 100   14.201   -0.1  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   5: 14.436    3.2 100   14.886    0.3  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   6: 15.190   -1.2 100   14.977   -1.0  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   7: 14.823    2.6 100   14.475    0.9  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   8: 14.484    1.7 100   14.572    0.9  81       386.69  130409.94      15.46
-  09:19:00.0 1-2   1823   9: 14.393    1.3 100   14.675    1.8  81       386.69  130409.94      15.46
-Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: Q
+Units of columns are: Date/Time(YYMMDD/HH:MM:SS UT), UVDist(wavelength), Phase(deg), UVW(m)
+WEIGHT: 7
+FIELD: 2
+SPW: 0
+Date/Time:                           RR:                 RL:                 LR:                 LL:                                             
+2010/04/26/      Intrf UVDist  Chn    Amp     Phs  Wt F   Amp     Phs  Wt F   Amp     Phs  Wt F   Amp     Phs  Wt F         U         V         W
+------------|---------|------|----|--------------------|-------------------|-------------------|-------------------|---------|---------|---------|
+  03:21:56.0 ea01-ea02  72363    0: 0.005  -124.5   7   0.005    25.7   7   0.001   104.6   7   0.000    23.4   7     -501.93   -321.75    157.78
+  03:21:56.0 ea01-ea02  72363    1: 0.001    -4.7   7   0.001  -135.1   7   0.004   -14.6   7   0.001    19.9   7     -501.93   -321.75    157.78
+  03:21:56.0 ea01-ea02  72363    2: 0.002    17.8   7   0.002    34.3   7   0.005  -114.3   7   0.005  -149.7   7     -501.93   -321.75    157.78
+  03:21:56.0 ea01-ea02  72363    3: 0.004   -19.4   7   0.003   -79.2   7   0.002   -89.0   7   0.004    31.3   7     -501.93   -321.75    157.78
+  03:21:56.0 ea01-ea02  72363    4: 0.001   -16.8   7   0.004  -141.5   7   0.005   114.9   7   0.006   105.2   7     -501.93   -321.75    157.78
+  03:21:56.0 ea01-ea02  72363    5: 0.001   -29.8   7   0.009   -96.4   7   0.002  -125.0   7   0.002   -64.5   7     -501.93   -321.75    157.78
+...
+Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: 
 
 \end{verbatim}
 \normalsize
@@ -1219,11 +1376,11 @@ CASA <36>: vishead('ngc5921.demo.ms',mode='get',hdkey='telescope')
 (array(['VLA'], 
       dtype='|S4'), {})
 
-CASA <37>: vishead('ngc5921.demo.ms',mode='put',hdkey='telescope',hdvalue='EVLA')
+CASA <37>: vishead('ngc5921.demo.ms',mode='put',hdkey='telescope',hdvalue='JVLA')
 
 CASA <38>: vishead('ngc5921.demo.ms',mode='get',hdkey='telescope')
   Out[38]: 
-(array(['EVLA'], 
+(array(['JVLA'], 
       dtype='|S5'), {})
 \end{verbatim}
 \normalsize
@@ -1314,23 +1471,28 @@ The default inputs are:
 \small
 \begin{verbatim}
 #  concat :: Concatenate several visibility data sets.
-vis                 =         ''        #  Name of input visibility files to be
-                                        #   concatenated
+vis                 = 'IRC10216.cont'   #  Name of input visibility files to be concatenated
 concatvis           =         ''        #  Name of output visibility file
-freqtol             =         ''        #  Frequency shift tolerance for
-                                        #   considering data as the same spwid
-dirtol              =         ''        #  Direction shift tolerance for
-                                        #   considering data as the same field
-timesort            =      False        #  If true, sort by TIME in ascending
-                                        #   order
+freqtol             =         ''        #  Frequency shift tolerance for considering data as the same spwid
+dirtol              =         ''        #  Direction shift tolerance for considering data as the same field
+timesort            =      False        #  If true, sort by TIME in ascending order
 copypointing        =       True        #  Copy all rows of the POINTING table.
-async               =      False        #  If true the taskname must be started
-                                        #   using concat(...)
+visweightscale      =         []        #  List of the weight scaling factors to be applied to the individual MSs
+createmms           =      False        #  Should this create a multi-MS output
+async               =      False        #  If true the taskname must
+be started using concat(...)
+
 \end{verbatim}
 \normalsize
 
 The {\tt vis} parameter will take a list of one or more MS.  Usually,
 this will contain all the MS to combine.
+
+With {\tt visweightscale}, a list of weights can be manually specified
+for the respective input data sets. They will be applied at the time
+of the combination. To determine the appropriate weights for this
+procedure, one can inspect the weights ({\it Wt} axis parameter) of
+the input datasets in {\tt plotms}.
 
 The {\tt concatvis} parameter contains the name of the output MS.
 If this points to an existing file on disk, then the MS in
@@ -1367,12 +1529,13 @@ For example:
    vis = ['n4826_16apr.split.ms','n4826_22apr.split.ms']
    concatvis = 'n4826_tboth.ms'
    freqtol = '50MHz'
+   visweightscale=['1',2']
    concat()
 \end{verbatim}
 \normalsize
 combines the two days in {\tt 'n4826\_16apr.split.ms'} and
 {\tt 'n4826\_22apr.split.ms'} into a new output MS called
-{\tt 'n4826\_tboth.ms'}.
+{\tt 'n4826\_tboth.ms'}, and the second MS is weighted twice the first one.
 
 
 {\bf ALERT:} Note that if you are concatenating MSs which use
@@ -1380,7 +1543,7 @@ antennas which were moved between observations, the MS definition
 does only foresee a unique antenna ID, but not a unique name(!). 
 The moved antenna will
 appear twice in the antenna list under the same name but on different
-{\it stations} and with two different IDs. The pair (NAME, STATION)
+{\it stations} and with two different IDs. The pair ('NAME@STATION')
 will be the unique identifier.
 
 If you would like to only concatenate the subtables of several 
@@ -1758,8 +1921,7 @@ The {\tt selectdata} parameter, if set to {\tt True}, will expand
 the inputs to include a number of sub-parameters, given below and
 in the individual task descriptions (if different).  If 
 {\tt selectdata = False}, then the sub-parameters are treated as
-blank for selection by the task.  The default for {\tt selectdata} 
-is {\tt False}.
+blank for selection by the task.  
 
 The common {\tt selectdata} expanded sub-parameters are:
 
@@ -1888,7 +2050,24 @@ There is currently no way to force a selection to use the index, and
 if there an antenna with that name it will select that.
 
 Read elsewhere (e.g. {\tt info regex} under Unix) for details of
-regular expression and patterns.
+regular expression and patterns.\\
+
+{\bf Antenna stations}
+Instead of antenna names, the antenna station names are also accepted
+by the selection syntax., e.g. 'N15' for the JVLA.
+
+
+{\bf ANT@STATION sections syntax}
+Sometimes, data from multiple array configurations are stored in a
+single MS. But some antennas may have been moved during reconfiguration
+and the {\tt 'ANT@STATION'} syntax can distinguish between them. {\tt 'ANT'}
+is the antenna name or index and {\tt 'STATION'} is the antenna station
+name, e.g., 'EA12@W03' selects antenna EA012 but only at times when it is
+positioned on station W03. Wildcards are accepted, e.g. 'EA12@*'
+selects all visibilities from antenna EA12, and '*@W03' would select
+all antennas that are located on station 'W03' during any
+observations included in the MS. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt scan} Parameter}
@@ -1909,7 +2088,7 @@ Examples:
 \end{verbatim}
 \normalsize
 
-NOTE: ALMA and VLA/EVLA number scans starting with 1
+NOTE: ALMA and VLA/JVLA number scans starting with 1
 and not 0.  You can see what the numbering is in your MS using
 the {\tt listobs} task with {\tt verbose=True} (see
 \S~\ref{section:io.list}).
@@ -2065,6 +2244,17 @@ Examples:
 \normalsize
 
 %  uvrange = '31Mlambda:5%'                    # +/- 2.5% about 31Ml
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{The {\tt observation} Parameter}
+\label{section:io.selection.selectdata.observation}
+
+The {\tt observation} parameter can select between different
+observation IDs. They will be assigned to parts of a combined data set during a
+run of {\tt concat}. Each input MS will receive its own observation id
+in the process. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt msselect} Parameter}

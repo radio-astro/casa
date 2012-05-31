@@ -16,6 +16,7 @@
 % JO  2010-10-12  Release 3.1.0
 % JO  2011-04-24  Release 3.2.0 edits
 % JO  2011-10-03  Release 3.3.0 edits 
+% JO  2012-05-06  Release 3.4.0 edits
 
 \chapter{Image Analysis}
 \label{chapter:analysis}
@@ -66,8 +67,8 @@ The image analysis tasks are:
          (\S~\ref{section:analysis.regrid})
    \item {\tt imsmooth} --- smooth images in the spectral and angular directions
          (\S~\ref{section:analysis.imsmooth})
-   \item{\tt specfit} --- fit 1-dimensional Gaussians and/or
-     polynomial models to an image or image region 
+   \item{\tt specfit} --- fit 1-dimensional Gaussians, 
+     polynomial, and/or Lorentzians models to an image or image region 
           (\S~\ref{section:analysis.specfit})
   \item{\tt slsearch} --- query a subset of the Splatalogue spectral
 line catalog
@@ -633,20 +634,21 @@ The inputs are:
 #  imfit :: Fit one or more elliptical Gaussian components on an image region(s)
 imagename           =         ''        #  Name of the input image
 box                 =         ''        #  Specify one or more box regions for the fit.
-region              =         ''        #  Region name or region specified using rg tool.
+region              =         ''        #  Region. See help par.region for specs.
 chans               =         ''        #  Spectral channels on which to perform fit.
-stokes              =        'I'        #  Stokes parameter to fit. If blank, first stokes plane is used.
-mask                =  'junk.im'        #  Mask to be applied to the image
+stokes              =         ''        #  Stokes parameter to fit. If blank, first stokes plane is used.
+mask                =         ''        #  Mask to use. See help par.mask. Default is none.
 includepix          =         []        #  Range of pixel values to include for fitting.
 excludepix          =         []        #  Range of pixel values to exclude for fitting.
 residual            =         ''        #  Name of output residual image.
-model               = 'evalexpr'        #  Name of output model image.
+model               =         ''        #  Name of output model image.
 estimates           =         ''        #  Name of file containing initial estimates of component parameters.
 logfile             =         ''        #  Name of file to write fit results.
 newestimates        =         ''        #  File to write fit results which can be used as initial estimates for next run.
 complist            =         ''        #  Name of output component list table.
-chan                =         -1        #  DEPRECATED. USE chans INSTEAD.
+dooff               =      False        #  Also fit a zero level offset? Default is False
 async               =      False        #  If true the taskname must be started using imfit(...)
+
 
 \end{verbatim}
 \normalsize
@@ -1454,25 +1456,28 @@ dictionary.
 The inputs are:
 \small
 \begin{verbatim}
-CASA <7>: inp imstat
---------> inp(imstat)
 #  imstat :: Displays statistical information from an image or image region
 imagename           =         ''        #  Name of the input image
-axes                =         -1        #  List of axes to evaluate statistics over. Default is all axes.
+axes                =         -1        #  List of axes to evaluate statistics over.
+                                        #   Default is all axes.
 region              =         ''        #  Image Region or name. Use Viewer
 box                 =         ''        #  Select one or more box regions
 chans               =         ''        #  Select the channel(spectral) range
-stokes              =        'I'        #  Stokes params to image (I,IV,IQU,IQUV). Default "" => include all
+stokes              =         ''        #  Stokes params to image (I,IV,IQU,IQUV).
+                                        #   Default "" => include all
 listit              =       True        #  Print stats and bounding box to logger?
 verbose             =       True        #  Print additional messages to logger?
-async               =      False        #  If true the taskname must be started using imstat(...)
+mask                =         ''        #  Mask to use. See help par.mask. Default is
+                                        #   none.
+logfile             =         ''        #  Name of file to write fit results.
+async               =      False        #  If true the taskname must be started using
+              
 \end{verbatim}
 \normalsize
 
-Area selection using {\tt box} (this parameter will be removed from
-CASA 3.4 and higher) and {\tt region} is detailed in 
-\S~\ref{section:analysis.pars.box} and
-\S~\ref{section:analysis.pars.regions} respectively.
+Area selection using {\tt region} and {\tt mask} is detailed in 
+\S~\ref{section:analysis.pars.regions} and
+(\S~\ref{section:im.clean.mask}) respectively.
 
 Plane selection is controlled by {\tt chans} and {\tt stokes}.
 See \S~\ref{section:analysis.pars.planes} for details on plane
@@ -1483,6 +1488,47 @@ statistics is calculated over. Typical data cubes have axes like: RA
 axis 0, DEC axis 1, Velocity axis 2. So, e.g. {\tt axes=[0,1]} would
 be the most common setting to calculate statistics per spectral
 channel.
+
+A typical output of imstat on a cube with {\tt axes=[0,1]} looks
+like:
+
+\small
+\begin{verbatim}
+No region specified. Using full positional plane.
+Using all spectral channels.
+Using polarizations ALL
+Determining stats for image IRC10216_HC3N.cube_r0.5.image
+Set region from supplied region record
+Regions --- 
+         -- bottom-left corner (pixel) [blc]:  [0, 0, 0, 0]
+         -- top-right corner (pixel) [trc]:    [299, 299, 0, 63]
+         -- bottom-left corner (world) [blcf]: 09:48:01.492, +13.15.40.658, I, 3.63994e+10Hz
+         -- top-right corner (world) [trcf]:   09:47:53.299, +13.17.40.258, I, 3.63915e+10Hz
+No region specified. Using full positional plane.
+Using all spectral channels.
+Using polarizations ALL
+Selected bounding box : 
+    [0, 0, 0, 0] to [299, 299, 0, 63]  (09:48:01.492, +13.15.40.658, I, 3.63994e+10Hz to 09:47:53.299, +13.17.40.258, I, 3.63915e+10Hz)
+#        Frequency  Frequency(Plane) Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     
+  3.63993552e+10                  0  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63992302e+10                  1  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63991052e+10                  2  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63989802e+10                  3  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63988551e+10                  4  9.000000e+04  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
+  3.63987301e+10                  5  9.000000e+04  6.069948e-01  6.744386e-06  1.534640e-03  1.534634e-03 -6.355108e-03  6.166496e-03
+  3.63986051e+10                  6  9.000000e+04  2.711720e-01  3.013023e-06  1.538071e-03  1.538077e-03 -6.165663e-03  5.862981e-03
+  3.63984801e+10                  7  9.000000e+04  2.501259e-01  2.779177e-06  1.578049e-03  1.578056e-03 -6.771976e-03  6.272645e-03
+  3.63983551e+10                  8  9.000000e+04 -3.706732e-01 -4.118591e-06  1.607191e-03  1.607194e-03 -8.871284e-03  6.591001e-03
+\end{verbatim}
+
+where the header information provides the specifications of the data
+that were selected followed by the table with the frequency values of
+the lanes, the plane numbers,
+Npts the number of pixels per plane, and the Sum, Median, RMS, Standard
+deviations, Minimum, and Maximum of the pixel values for each
+plane. Similar output is provided when the data is averaged over
+different axes. The logger output can also be written into a log file
+for further processing elsewhere ({\tt logfile} parameter). 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1824,8 +1870,6 @@ async               =      False        #  If true the taskname must be started
 \normalsize
 
 
-
-
 The {\tt order} parameter is the most important input here. It is a
 string of numbers that shows how axes 0, 1, 2, 3, ... are mapped onto
 the new cube (note that the first axis has the label 0, as typical in
@@ -1839,10 +1883,10 @@ the first two, {\tt order=[``declination'', ``right ascension'',
   (ia.coordsys().names())}. Minimum match is supported, so that  {\tt
   order=["d", "f", "r"]} will produce the same results.
 
-Axes can simultaneously be transposed and reversed. To reverse an axis,
-precede it by a "-". For example, {\tt order='-10-32'} will reverse
-the direction of the first and third axis of the input image (the zeroth and second
-axes in the output image).
+Axes can simultaneously be transposed and reversed. To reverse an
+axis, precede it by a "-". For example, {\tt order='-10-32'} will
+reverse the direction of the first and third axis of the input image
+(the zeroth and second axes in the output image).
 
 Example:\\
 
@@ -2103,8 +2147,8 @@ imsmooth( imagename='new.image', major='20pix', minor='10pix', kernel='boxcar')
 \label{section:analysis.specfit}
 
 {\tt specfit} is a powerful task to perform spectral line fits in data
-cubes. Two types of fitting functions are currently supported,
-polynomials and Gaussians. {\tt specfit} can fit these functions in
+cubes. Three types of fitting functions are currently supported,
+polynomials, Gaussians, and Lorentians. {\tt specfit} can fit these functions in
 two ways: over data that were averaged across a region ({\tt
   multifit=False}) or on a pixel
 by pixel basis ({\tt multifit=True}). 
@@ -2114,78 +2158,145 @@ by pixel basis ({\tt multifit=True}).
 \begin{verbatim}
 #  specfit :: Fit 1-dimensional gaussians and/or polynomial models to an image or image region
 imagename           =         ''        #  Name of the input image
-box                 =         ''        #  Rectangular box in direction
-                                        #   coordinate blc, trc. Default: entire
-                                        #   image ("").
-region              =         ''        #  Region name, Default: no region ("").
+box                 =         ''        #  Rectangular box in direction coordinate
+                                        #   blc, trc. Default: entire image ("").
+region              =         ''        #  Region of interest. See help par.region
+                                        #   for possible specifications. Default: Do
+                                        #   not use a region.
 chans               =         ''        #  Channels to use. Channels must be
-                                        #   contiguous. Default: all channels
-                                        #   ("").
+                                        #   contiguous. Default: all channels ("").
 stokes              =         ''        #  Stokes planes to use. Planes must be
                                         #   contiguous. Default: all stokes ("").
 axis                =         -1        #  The profile axis. Default: use the
                                         #   spectral axis if one exists, axis 0
                                         #   otherwise (<0).
-mask                =         ''        #  OTF mask, Boolean LEL expression or
-                                        #   mask region.  Default: no mask ("").
-poly                =         -1        #  Order of polynomial element.  Default:
-                                        #   do not fit a polynomial (<0).
-estimates           =         ''        #  Name of file containing initial
-                                        #   estimates.  Default: No initial
-                                        #   estimates ("").
-     ngauss         =          1        #  Number of Gaussian elements.  Default:
-                                        #   1.
+mask                =         ''        #  Mask to use. See help par.mask. Default is
+                                        #   none..
+poly                =         -1        #  Order of polynomial element.  Default: do
+                                        #   not fit a polynomial (<0).
+estimates           =         ''        #  Name of file containing initial estimates.
+                                        #   Default: No initial estimates ("").
+     ngauss         =          1        #  Number of Gaussian elements.  Default: 1.
+     pampest        =         ''        #  Initial estimate of PCF profile (gaussian
+                                        #   or lorentzian) amplitudes.
+     pcenterest     =         ''        #  Initial estimate PCF profile centers, in
+                                        #   pixels.
+     pfwhmest       =         ''        #  Initial estimate PCF profile FWHMs, in
+                                        #   pixels.
+     pfix           =         ''        #  PCF profile parameters to fix during fit.
+     pfunc          =         ''        #  PCF singlet functions to fit. "gaussian"
+                                        #   or "lorentzian" (minimal match
+                                        #   supported). Unspecified means all
+                                        #   gaussians.
 
 minpts              =          0        #  Minimum number of unmasked points
                                         #   necessary to attempt fit.
-multifit            =       True        #  If true, fit a profile along the
-                                        #   desired axis at each pixel in the
-                                        #   specified region. If false, average
-                                        #   the non-fit axis pixels and do a
-                                        #   single fit to that average profile.
-                                        #   Default False.
-     amp            =         ''        #  Name of amplitude solution image.
+multifit            =       True        #  If true, fit a profile along the desired
+                                        #   axis at each pixel in the specified
+                                        #   region. If false, average the non-fit
+                                        #   axis pixels and do a single fit to that
+                                        #   average profile. Default False.
+     amp            =         ''        #  Name of amplitude solution image. Default:
+                                        #   do not write the image ("").
+     amperr         =         ''        #  Name of amplitude solution error image.
                                         #   Default: do not write the image ("").
-     amperr         =         ''        #  Name of amplitude solution error
-                                        #   image. Default: do not write the
-                                        #   image ("").
-     center         =         ''        #  Name of center solution image.
-                                        #   Default: do not write the image ("").
+     center         =         ''        #  Name of center solution image. Default: do
+                                        #   not write the image ("").
      centererr      =         ''        #  Name of center solution error image.
                                         #   Default: do not write the image ("").
-     fwhm           =         ''        #  Name of fwhm solution image. Default:
-                                        #   do not write the image ("").
+     fwhm           =         ''        #  Name of fwhm solution image. Default: do
+                                        #   not write the image ("").
      fwhmerr        =         ''        #  Name of fwhm solution error image.
                                         #   Default: do not write the image ("").
-     integral       =         ''        #  Prefix of ame of integral solution
-                                        #   image. Name of image will have
-                                        #   gaussian component number appended.
-                                        #   Default: do not write the image ("").
-     integralerr    =         ''        #  Prefix of name of integral error
-                                        #   solution image. Name of image will
-                                        #   have gaussian component number
-                                        #   appended.  Default: do not write the
-                                        #   image ("").
+     integral       =         ''        #  Prefix of ame of integral solution image.
+                                        #   Name of image will have gaussian
+                                        #   component number appended.  Default: do
+                                        #   not write the image ("").
+     integralerr    =         ''        #  Prefix of name of integral error solution
+                                        #   image. Name of image will have gaussian
+                                        #   component number appended.  Default: do
+                                        #   not write the image ("").
 
-model               =         ''        #  Name of model image. Default: do not
-                                        #   write the model image ("").
-residual            =         ''        #  Name of residual image. Default: do
-                                        #   not write the residual image ("").
-wantreturn          =       True        #  Should a record summarizing the
-                                        #   results be returned?
-async               =      False        #  If true the taskname must be started
-                                        #   using specfit(...)
+model               =         ''        #  Name of model image. Default: do not write
+                                        #   the model image ("").
+residual            =         ''        #  Name of residual image. Default: do not
+                                        #   write the residual image ("").
+wantreturn          =       True        #  Should a record summarizing the results be
+                                        #   returned?
+logresults          =       True        #  Output results to logger?
+gmncomps            =          0        #  Number of components in each gaussian
+                                        #   multiplet to fit
+gmampcon            =         ''        #  The amplitude ratio constraints for non-
+                                        #   reference components to reference
+                                        #   component in gaussian multiplets.
+gmcentercon         =         ''        #  The center offset constraints (in pixels)
+                                        #   for non-reference components to reference
+                                        #   component in gaussian multiplets.
+gmfwhmcon           =         ''        #  The FWHM  ratio constraints for non-
+                                        #   reference components to reference
+                                        #   component in gaussian multiplets.
+gmampest            =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   amplitudes in gaussian multiplets.
+gmcenterest         =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   centers in gaussian multiplets, in
+                                        #   pixels.
+gmfwhmest           =      [0.0]        #  Initial estimate of individual gaussian
+                                        #   FWHMss in gaussian multiplets, in pixels.
+gmfix               =         ''        #  Parameters of individual gaussians in
+                                        #   gaussian multiplets to fix during fit.
+logfile             =         ''        #  File in which to log results. Default is
+                                        #   not to write a logfile.
+goodamprange        =      [0.0]        #  Acceptable amplitude solution range. [0.0]
+                                        #   => all amplitude solutions are
+                                        #   acceptable.
+goodcenterrange     =      [0.0]        #  Acceptable center solution range in pixels
+                                        #   relative to region start. [0.0] => all
+                                        #   center solutions are acceptable.
+goodfwhmrange       =      [0.0]        #  Acceptable FWHM solution range in pixels.
+                                        #   [0.0] => all FWHM solutions are
+                                        #   acceptable.
+sigma               =         ''        #  Standard deviation array or image name.
+async               =      False        #  If true the taskname must be started using
+                                        #   specfit(...)
+
+
 \end{verbatim}
 \normalsize
 
-For Gaussian fits, the task will allow multiple Gaussian components
-and {\tt specfit} will try to find the best solution. The parameter
-space, however, is usually not uniform and to avoid local minima in the
-goodness-of-fit space, one can provide initial start values for the
-fits. The {\tt estimates} parameter will take a file with the initial
-estimates for the individual Gaussians (one Gaussian parameter set per
-line) and their parameters. The
-file has the following format:
+\subsection{Polynomial Fits}
+\label{section:analysis.specfit.poly}
+
+Polynomials can be fit by specifying the polynomial order in {\tt
+  poly}. Negative orders will not fit any polynomials. 
+
+\subsection{Lorentzian and Gaussian Fits}
+\label{section:analysis.specfit.lorgau}
+
+Gaussian and Lorentzian fits are very similar, they both require
+amplitude, center, and FWHM to be fully specified. All of the
+following discussion is thus valid for both functions. The parameter
+{\tt pfunc} controls whether Gaussian or Lorentizan functions are to
+be used. Default is all Gaussians. {\tt pfunc=["L", "G", "G", "L"]}
+would would use Lorentzian, Gaussian, Gaussian, and Lorentzian
+components in the order they appear in the estimates file (see below).
+
+\subsubsection{One or more single Gaussian/Lorentzian}
+\label{section:analysis.specfit.lorgau.single}
+
+For Gaussian and Lorentzian fits, the task will allow multiple
+components and {\tt specfit} will try to find the best solution. The
+parameter space, however, is usually not uniform and to avoid local
+minima in the goodness-of-fit space, one can provide initial start
+values for the fits. This can be done either through the parameters
+{\tt pampest}, {\tt pcenterest}, and {\tt pfwhmest} for the
+amplitudes, center, and FWHM estimates in image coordinates. {\tt
+  pfix} can take parameters that specify fixed fit values.  Any
+combination of the characters 'p' (peak), 'c' (center), and 'f' (fwhm)
+are permitted, e.g. "fc" will hold the fwhm and the center constant
+during the fit. Fixed parameters will have no errors associated with
+them in the solution.  Alternatively, a file with initial values can
+be supplied vai the {\tt estimates} parameter (one Gaussian/Lorentzian parameter
+set per line). The file has the following format:
 
 {\tt [peak intensity], [center], [fwhm], [optional fixed parameter string]}
 
@@ -2193,11 +2304,7 @@ The first three values are required and must be numerical values. The
 peak intensity must be expressed in map units, while the
 center and fwhm must be specified in pixels. The fourth value is
 optional and if present, represents the parameter(s)
-that should be held constant during the fit. Any combination of the
-characters 'p' (peak), 'c' (center), and 'f' (fwhm) are
-permitted, eg "fc" means hold the fwhm and the center constant during
-the fit. Fixed parameters will have no errors associated
-with them in the solution. 
+that should be held constant during the fit (see above).
 
 An example {\tt estimates} file is: 
 
@@ -2221,13 +2328,12 @@ and the output of a typical execution, e.g.
 
 \small
 \begin{verbatim}
-specfit(imagename='IRC10216_HC3N.cube_r0.5.image', region='specfit.rgn', multifit=F,
+specfit(imagename='IRC10216_HC3N.cube_r0.5.image', region='specfit.crtf', multifit=F,
         estimates='', ngauss=2)
 \end{verbatim}
 \normalsize
-('specfit.rgn' is a CASA regions file, see
-Section\,\ref{chapter:regionformat}; but note that the old format is
-still created by the {\tt viewer} and is still supported in CASA 3.3)\\
+('specfit.crtf' is a CASA regions file, see
+Section\,\ref{chapter:regionformat})\\
 
 will be 
 
@@ -2275,13 +2381,51 @@ fitresults=specfit(imagename='IRC10216_HC3N.cube_r0.5.image', region='specfit.rg
 The values can then be used by other python code for further
 processing. 
 
+
+\subsubsection{Gaussian Multiplets}
+\label{section:analysis.specfit.lorgau.multiplet}
+It is possible to fit a number of Gaussians together, as multiplets
+with restrictions. All restrictions are relative to a reference
+Gaussian (the zero'th component of each multiplet). {\tt gncomps}
+specifies the number of Gaussians for each multiplets, and, in fact, a
+number of these multiplets can be fit simultaneously. {\tt
+  gncomps=[2,4,3]}, e.g. fits a 2-component Gaussian, a 4-component
+Gaussian, and a 3-component Gaussian all at once. The initial
+parameter estimates can be specified with the {\tt gmampest}, {\tt
+  gmcenterest}, and {\tt gmfwhmest} parameters and the estimates
+are simply listed in the sequence of {\tt gncomps}. E.g. if {\tt
+  gncomps=[2,4,3]} is specified with multiplet G0 consisting of 2
+Gaussians a, b, multiplet G1 of 4 Gaussians c, d, e, f, and multiplet
+G2 of three Gaussians g, h, i, the parameter list in {\tt gm*est} would be
+like {\tt gm*est=[a,b,c,d,e,f,g,h,i]}.
+
+Restrictions can be specified via the {\tt gmampcon} parameter for the
+amplitude ratio (non-reference to reference), {\tt gmcentercon} for
+the offset in pixels (to a reference), and {\tt gmfwhmcon} for the
+FWHM ratio (non-reference to reference). A value of 0 will not
+constrain anything. The reference is always the zero'th component in
+each multiplet, in our example, Gaussians a, c, and g. They cannot be
+constrained. So {\tt gmncomps=[2, 4, 3]}, {\tt gmampcon= [ 0 , 0.2, 0
+  , 0.1, 4.5, 0 ]}, {\tt gcentercon=[24.2, 45.6, 92.7, 0 , -22.8,
+  -33.5]}, and {\tt gfwhmcon=""} would constrain Gaussians b relative
+to a with a 24.2 pixel offset, Gaussian d to c with a amplitude ratio
+of 0.2 and a 45.6 pixel offset, Gaussian e to c with a offset of 92.7
+pixels, etc. Restrictions will overrule any estimates.
+
+The parameters {\tt goodamprange}, {\tt goodcenterrange}, and {\tt
+  goodfwhmrange} can be used to limit the range of amplitude, center,
+and fwhm solutions for all Gaussians.
+
+
+\subsection{Pixel-by-pixel fits}
+\label{section:analysis.specfit.pixel}
 As mentioned above, {\tt specfit} can also fit spectral cubes on a
 pixel by pixel basis. In this case, one can choose to write none, any
-or all of the solution and error images for Gaussian fits via the
+or all of the solution and error images for Gaussian/Lorentzian fits via the
 parameters {\tt amp}, {\tt amperr}, {\tt center}, {\tt centererr},
 {\tt fwhm}, and {\tt fwhmerr}. The
 specified parameter value will by appended by "\_n" where n is the
-Gaussian component number. Writing analogous images for polynomial
+Gaussian/Lorentzian component number. Writing analogous images for polynomial
 coefficients is not yet supported although polynomial fits when {\tt
   multifit=True} is supported. Best fit coefficients are written to the
 logger. Pixels for which fits were not attempted or did not converge
@@ -2379,9 +2523,19 @@ Example:\\
 Search for all lines of the species HOCN and HOCO+ in the 200-300GHz range:
 \small
 \begin{verbatim}
-sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
+slsearch(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
 \end{verbatim}
 \normalsize
+
+The task can also return a pythin dictionary if assigned a variable
+like:
+
+\begin{verbatim}
+myLines = slsearch(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
+\end{verbatim}
+\normalsize
+
+
 
 
 

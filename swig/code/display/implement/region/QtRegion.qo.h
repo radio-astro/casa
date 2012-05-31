@@ -107,9 +107,9 @@ namespace casa {
 						Region::Units x_units = Region::DefaultUnits,
 						Region::Units y_units = Region::DefaultUnits,
 						const std::string &bounding_units = "rad" ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getPositionString,);
-		virtual void movePosition( const std::string &x, const std::string &y, const std::string &coord,
-					   const std::string &x_units, const std::string &y_units,
-					   const std::string &width, const std::string &height, const std::string &bounding_units ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,);
+
+		virtual bool translateX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
+		virtual bool translateY( const std::string &/*y*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
 
 		void holdSignals( ) { hold_signals++; }
 		void releaseSignals( );
@@ -153,9 +153,10 @@ namespace casa {
 		void refresh_canvas_event( );
 		void refresh_statistics_event( bool );
 		void refresh_position_event( bool );
-		void position_move_event( const QString &x, const QString &y, const QString &coord,
-					  const QString &x_units, const QString &y_units,
-					  const QString &width, const QString &height, const QString &bounding_units );
+
+		void translate_x( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
+		void translate_y( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
+
 		void refresh_zrange_event(int,int);
 		// revoke...
 		void revoke_region( );

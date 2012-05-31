@@ -71,10 +71,10 @@ namespace casa {
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
-	    connect( mystate, SIGNAL(positionMove( const QString &, const QString &, const QString &, const QString &, const QString &,
-						   const QString &, const QString &, const QString & )),
-		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &, const QString &,
-					       const QString &, const QString &, const QString & )) );
+
+	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(translateY(const QString &, const QString &, const QString &)), SLOT(translate_y(const QString&,const QString&, const QString &)) );
+
 	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
@@ -202,11 +202,15 @@ namespace casa {
 	    updateStateInfo( false );
 	}
 
-	void QtRegion::position_move_event( const QString &x, const QString &y, const QString &coord,
-					    const QString &x_units, const QString &y_units,
-					    const QString &width, const QString &height, const QString &bounding_units ) {
-	    movePosition( x.toStdString( ), y.toStdString( ), coord.toStdString( ), x_units.toStdString( ), y_units.toStdString( ),
-			  width.toStdString( ), height.toStdString( ), bounding_units.toStdString( ) );
+	void QtRegion::translate_x( const QString &x, const QString &x_units, const QString &coordsys ) {
+	    if ( translateX( x.toStdString( ), x_units.toStdString( ), coordsys.toStdString( ) ) ) {
+		refresh( );
+	    }
+	}
+	void QtRegion::translate_y( const QString &y, const QString &y_units, const QString &coordsys ) {
+	    if ( translateY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) ) ) {
+		refresh( );
+	    }
 	}
 
 	void QtRegion::refresh_zrange_event( int min, int max ) {
