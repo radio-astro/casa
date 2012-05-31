@@ -80,10 +80,12 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 				if(os.path.exists(concatvis+'.data')):
 					raise Exception, 'When creating a multi-MS, the directory concavis+\'.data\' must not yet exist.'
 				else:
-					os.mkdir(concatvis+'.data')
+					t.create(concatvis)
+					t.close()
+					os.mkdir(concatvis+'/SUBMSS')
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				if(createmms):
-					theconcatvis = concatvis+'.data/'+vis[0]
+					theconcatvis = concatvis+'/SUBMSS/'+vis[0]
 				casalog.post('copying '+vis[0]+' to '+theconcatvis , 'INFO')
 				shutil.copytree(vis[0], theconcatvis)
 				# note that the resulting copy is writable even if the original was read-only
@@ -173,7 +175,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 			i = i + 1
 			destms = ""
 			if createmms:
-				destms = concatvis+'.data/'+elvis
+				destms = concatvis+'/SUBMSS/'+elvis
 				mmsmembers.append(destms)
 				casalog.post('adding '+elvis+' to multi-MS '+concatvis+' creating '+destms, 'INFO')
 			else:
@@ -191,14 +193,14 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 				# create scratch cols			
 				casalog.post('creating scratch columns for '+elvis+' (original MS unchanged)', 'INFO')
 				tempname = elvis+'_with_scrcols'
-				os.system('rm -rf '+tempname)
-				os.system('cp -R '+elvis+' '+tempname)
+				shutil.rmtree(tempname, ignore_errors=True)
+				shutil.copytree(elvis, tempname)
 				cb.open(tempname) # calibrator-open creates scratch columns
 				cb.close()
 				# concatenate copy instead of original file
 				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
 					      destmsfile=destms)
-				os.system('rm -rf '+tempname)
+				shutil.rmtree(tempname, ignore_errors=True)
 			else:
 				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
 					      destmsfile=destms)
@@ -217,13 +219,20 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 			m.timesort()
 
 		if createmms:
-			m.createmultims(concatvis, mmsmembers,
+			tmpmsname = concatvis+'_createmms_tmp'
+			shutil.rmtree(tmpmsname, ignore_errors=True)
+			m.createmultims(tmpmsname, mmsmembers,
 					[],
 					True, # nomodify
 					False,# lock
 					True) # copysubtables from first to all other members
+			m.close()
+			shutil.move(concatvis+'/SUBMSS', tmpmsname)
+			shutil.rmtree(concatvis, ignore_errors=True)
+			shutil.move(tmpmsname, concatvis)
+		else:
 
-		m.close()
+			m.close()
 
 
 	except Exception, instance:

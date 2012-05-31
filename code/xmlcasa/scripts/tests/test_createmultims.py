@@ -73,17 +73,18 @@ class test_createmultims(unittest.TestCase):
                 print "Copying ", mymsname
                 shutil.copytree(mymsname, cpath+'/'+mymsname)
         os.chdir(cpath)
-        shutil.rmtree(msname,ignore_errors=True)
 
         
     def tearDown(self):
         pass
-        #shutil.rmtree(msname,ignore_errors=True)
+        shutil.rmtree(msname,ignore_errors=True)
 
     def test1(self):
         '''Test_createmultims 1: 4 parts, same sources but different spws'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
         
+        shutil.rmtree(msname,ignore_errors=True)
+
         self.res = ms.createmultims(msname,
                                     ['part1.ms','part2.ms','part3.ms','part4.ms'],
                                     [],
@@ -103,13 +104,14 @@ class test_createmultims(unittest.TestCase):
         self.assertEqual(ldict['2']['MS'].split('/').pop(), 'part3.ms')
         self.assertEqual(ldict['3']['MS'].split('/').pop(), 'part4.ms')
 
+
 class testcreatemultims_cleanup(unittest.TestCase):           
     def setUp(self):
         pass
     
     def tearDown(self):
         pass
-        #os.system('rm -rf *.ms')   
+        os.system('rm -rf *.ms')   
 
     def testrun(self):
         '''Test_createmultims: Cleanup'''

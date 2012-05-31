@@ -1,7 +1,7 @@
 #############################################################################
 # $Id:$
 # Test Name:                                                                #
-#    Regression Test Script for the concat task
+#    Unit Test Script for the concat task
 #    
 #                                                                           #
 #############################################################################
@@ -22,7 +22,7 @@ msname = 'concatenated.ms'
 def checktable(thename, theexpectation, multims=False):
     global msname, myname
     if multims:        
-        tb.open(msname+".data/"+thename)
+        tb.open(msname+"/SUBMSS/"+thename)
     else:
         tb.open(msname+"/"+thename)
     if thename == "":
@@ -82,7 +82,6 @@ class test_concat(unittest.TestCase):
         default(concat)
         
     def tearDown(self):
-        shutil.rmtree(msname+'.data',ignore_errors=True)
         shutil.rmtree(msname,ignore_errors=True)
 
     def test1(self):
@@ -883,9 +882,7 @@ class test_concat(unittest.TestCase):
             ms.close()
             if 'test9.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test9.ms',ignore_errors=True)
-                shutil.rmtree('test9.ms.data',ignore_errors=True)
             shutil.copytree(msname,'test9.ms')
-            shutil.copytree(msname+'.data','test9.ms.data')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -933,9 +930,7 @@ class test_concat(unittest.TestCase):
             ms.close()
             if 'test10.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test10.ms',ignore_errors=True)
-                shutil.rmtree('test10.ms.data',ignore_errors=True)
             shutil.copytree(msname,'test10.ms')
-            shutil.copytree(msname+'.data','test10.ms.data')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
