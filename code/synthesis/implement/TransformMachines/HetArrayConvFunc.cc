@@ -517,13 +517,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=( (30*convSampling) < convSize_p) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
+	  trial=( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
 	}
 	//cerr << "trial1 " << trial << endl;
 				 
 	if(found) {
-	  if(trial < 15*convSampling) 
-	    trial= ( (30*convSampling) < convSize_p) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
+	  if(trial < 5*convSampling) 
+	    trial= ( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
 	  //support is really over the edge
 	  if( (convSupport*convSampling) >= convSize_p/2){
