@@ -40,6 +40,12 @@
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
+#include <float.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/ImageAnalysis.h>
+#include <sstream>
+#include <casa/Arrays/VectorSTLIterator.h>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QMessageBox>
@@ -68,6 +74,24 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     setupUi(this);
     ms_selection->setupUi(ms_selection_scroll_widget);
 
+    ifields.push_back(infofield_list_t::value_type(ibox11,itext11));
+    ifields.push_back(infofield_list_t::value_type(ibox12,itext12));
+    ifields.push_back(infofield_list_t::value_type(ibox21,itext21));
+    ifields.push_back(infofield_list_t::value_type(ibox22,itext22));
+    ifields.push_back(infofield_list_t::value_type(ibox31,itext31));
+    ifields.push_back(infofield_list_t::value_type(ibox32,itext32));
+
+#if defined(__APPLE__)
+    QFont field_font( "Lucida Grande", 10 );
+#else
+    QFont field_font( "Sans Serif", 7 );
+#endif
+    for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
+	(*it).first->setTitle(" ");
+	(*it).second->clear( );
+	(*it).second->setFont( field_font );
+    }
+
     std::string show_lel = rc.get("viewer." + panel_->rcid() + ".datamgr.show_lel");
     if ( show_lel != "true" && show_lel != "false" ) {
 	rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
@@ -92,6 +116,8 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     } else {
 	showLEL_->setChecked( true );
     }
+
+
     connect(showLEL_, SIGNAL(clicked(bool)), SLOT(showlelButtonClicked(bool)));
 
   
@@ -405,14 +431,39 @@ void QtDataManager::changeItemSelection(){
   if (!lst.empty()) {
       lelEdit_->deactivate();
       QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
-      showDisplayButtons(uiDataType_[item->text(1)]);
-      
+      showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
   }
 }
 
+    struct strip_chars {
+	// should generalize to strip 'chars'...
+	strip_chars( const char */*chars*/ ) { }
+	strip_chars(const strip_chars &other) : str(other.str) { }
+	operator std::string( ) const { return str; }
+	void operator( )( const char &c ) { if ( c != '[' && c != ']' ) str += c; }
+    private:
+	std::string str;
+    };
 
+    struct max_ftor {
+	max_ftor( ) : max(-FLT_MAX) { }
+	max_ftor( const max_ftor &other ) : max(other.max) { }
+	operator float( ) const { return max; }
+	void operator( )( float f ) { if ( f > max ) max = f; }
+    private:
+	float max;
+    };
 
-void QtDataManager::showDisplayButtons(int ddtp) {
+    struct min_ftor {
+	min_ftor( ) : min(FLT_MAX) { }
+	min_ftor( const min_ftor &other ) : min(other.min) { }
+	operator float( ) const { return min; }
+	void operator( )( float f ) { if ( f < min ) min = f; }
+    private:
+	float min;
+    };
+
+  void QtDataManager::showDisplayButtons(int ddtp,const QString &name) {
   hideDisplayButtons();
   switch (ddtp) {
      case IMAGE :
@@ -420,6 +471,16 @@ void QtDataManager::showDisplayButtons(int ddtp) {
         contourButton_->show();
         vectorButton_->show();
         markerButton_->show();
+	info_box->show();
+	if ( ! name.isNull( ) ) {
+	    std::string path = (dir_.path() + "/" + name).toStdString( );
+	    if( imagePixelType(path) == TpFloat ) {
+		fill_image_info( path );
+	    } else if(imagePixelType(path)==TpComplex) {
+		PagedImage<Complex> image(path, TableLock::AutoNoReadLocking);
+	    }
+
+	}
         break;      
      case MEASUREMENT_SET :
         rasterButton_->show();
@@ -489,6 +550,7 @@ void QtDataManager::hideDisplayButtons(){
   newPanelButton_->hide();
   regionButton_->hide();
   ms_selection_box->hide();
+  info_box->hide();
 }
 
 
@@ -640,6 +702,7 @@ void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
   
 void QtDataManager::lelGotFocus_() {
   treeWidget_->clearSelection();
+  info_box->hide( );
   showDisplayButtons(IMAGE);  }
   
 
@@ -687,7 +750,7 @@ QStringList QtDataManager::analyseFITSImage(QString path){
     return typedExtlist;
 }
 
-Bool QtDataManager::isQualImg(const QString &extexpr){
+Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	return True;
 }
 
@@ -709,5 +772,101 @@ Bool QtDataManager::isQualImg(const QString &extexpr){
      }
  }
 
+
+    void QtDataManager::fill_image_info( const std::string &path ) {
+	for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
+	    (*it).first->hide( );
+	}
+	PagedImage<Float> image(path, TableLock::AutoNoReadLocking);
+	CoordinateSystem cs = image.coordinates( );
+	ImageAnalysis ia(&image);
+	infofield_list_t::iterator it = ifields.begin( );
+	(*it).first->show( );
+	(*it).first->setTitle("shape");
+	std::ostringstream buf;
+	Vector<Int> shape = ia.shape( );
+	buf << shape;
+	std::string shape_str = buf.str( );
+	(*it).second->setText(QString::fromStdString(std::for_each(shape_str.begin(),shape_str.end(),strip_chars("[]"))));
+	buf.str("");
+	(*it).second->setCursorPosition(0);
+	++it;
+	if ( cs.hasDirectionCoordinate( ) ) {
+	    (*it).first->show( );
+	    (*it).first->setTitle("direction type");
+	    const DirectionCoordinate &direction = cs.directionCoordinate( );
+	    std::string dirtype = MDirection::showType(direction.directionType( ));
+	    (*it).second->setText(QString::fromStdString(dirtype));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
+	}
+	if ( cs.hasSpectralAxis( ) && shape[cs.spectralAxisNumber( )] > 1 ) {
+	    Vector<Double> refval(cs.referenceValue( ));
+	    const SpectralCoordinate &spec = cs.spectralCoordinate( );
+	    Vector<String> spec_unit_vec = spec.worldAxisUnits( );
+	    if ( spec_unit_vec(0) == "Hz" ) spec_unit_vec(0) = "GHz";
+	    Vector<Double> xy(2);
+	    xy(0) = refval(0);
+	    xy(1) = refval(1);
+	    Vector<Float> zx,zy;
+	    if ( ia.getFreqProfile( xy, zx, zy, "world", "freq", 0, 0, 0, spec_unit_vec(0) ) ) {
+		(*it).first->show( );
+		(*it).first->setTitle("frequency range");
+		buf.str("");
+		Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
+		Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
+		buf << min << " - " << max << " " << spec_unit_vec(0);
+		std::string specrange = buf.str( );
+		(*it).second->setText(QString::fromStdString(specrange));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
+	    if ( ia.getFreqProfile( xy, zx, zy, "world", "radio velocity", 0, 0, 0, spec_unit_vec(0) ) ) {
+		(*it).first->show( );
+		(*it).first->setTitle("velocity range");
+		buf.str("");
+		Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
+		Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
+		buf << min << " - " << max << " km/s" ;
+		std::string specrange = buf.str( );
+		(*it).second->setText(QString::fromStdString(specrange));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
+	}
+
+	ImageInfo ii = image.imageInfo();
+	Double beamArea = 0;
+	Vector<Quantum<Double> > beam = ii.restoringBeam();
+	std::string imageUnits = image.units().getName();
+	std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
+	Int afterCoord = -1;
+	Int dC = cs.findCoordinate(Coordinate::DIRECTION, afterCoord);
+	// use contains() not == so moment maps are dealt with nicely
+	if ( beam.nelements()==3 && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
+	    DirectionCoordinate dCoord = cs.directionCoordinate(dC);
+	    Vector<String> units(2);
+	    units(0) = units(1) = "rad";
+	    dCoord.setWorldAxisUnits(units);
+	    Vector<Double> deltas = dCoord.increment();
+
+	    Double major = beam(0).getValue(Unit("rad"));
+	    Double minor = beam(1).getValue(Unit("rad"));
+	    beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
+	}
+	if ( beamArea != 0 ) {
+// 	    Quantity baq(beamArea,"rad");
+// 	    baq.convert("arcmin");
+// 	    buf.str("");
+// 	    baq.print(buf);
+// 	    std::string beam_str = buf.str( );
+	    (*it).first->show( );
+	    (*it).first->setTitle("beam area");
+// 	    (*it).second->setText(QString::fromStdString(beam_str));
+	    (*it).second->setText(QString::number(beamArea));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
+	}
+    }
 
 } //# NAMESPACE CASA - END
