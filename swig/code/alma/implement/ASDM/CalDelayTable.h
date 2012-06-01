@@ -122,6 +122,8 @@
 
 #include <Representable.h>
 
+#include <pthread.h>
+
 namespace asdm {
 
 //class asdm::ASDM;
@@ -137,7 +139,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "1.62", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
@@ -326,7 +328,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static std::vector<std::string> getKeyName();
+	static const std::vector<std::string>& getKeyName();
 
 
 	virtual ~CalDelayTable();
@@ -625,41 +627,13 @@ private:
 
 
 	/**
-	 * The name of this table.
-	 */
-	static std::string itsName;
-	
-	/**
-	 * The attributes names.
-	 */
-	static std::vector<std::string> attributesNames;
-	
-	/**
-	 * The attributes names in the order in which they appear in the binary representation of the table.
-	 */
-	static std::vector<std::string> attributesNamesInBin;
-	
-
-	/**
-	 * A method to fill attributesNames and attributesNamesInBin;
-	 */
-	static bool initAttributesNames(), initAttributesNamesDone ;
-	
-
-	/**
-	 * The list of field names that make up key key.
-	 */
-	static std::vector<std::string> key;
-
-
-	/**
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
 	 * @throws DuplicateKey
 	 
 	 */
-	CalDelayRow* checkAndAdd(CalDelayRow* x) ;
+	CalDelayRow* checkAndAdd(CalDelayRow* x, bool skipCheckUniqueness=false) ;
 	
 	/**
 	 * Brutally append an CalDelayRow x to the collection of rows already stored in this table. No uniqueness check is done !

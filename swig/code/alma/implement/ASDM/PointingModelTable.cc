@@ -67,36 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfPointingModel = "PointingModel";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfPointingModel_a[] = {
+		
+			"antennaId"
+		,
+			"pointingModelId"
+		
+		
+			, "numCoeff"
+		
+			, "coeffName"
+		
+			, "coeffVal"
+		
+			, "polarizationType"
+		
+			, "receiverBand"
+		
+			, "assocNature"
+		
+			, "assocPointingModelId"
+				
+		
+			, "coeffFormula"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfPointingModel_v (attributesNamesOfPointingModel_a, attributesNamesOfPointingModel_a + sizeof(attributesNamesOfPointingModel_a) / sizeof(attributesNamesOfPointingModel_a[0]));
 
-	string PointingModelTable::itsName = "PointingModel";
-	vector<string> PointingModelTable::attributesNames; 
-	vector<string> PointingModelTable::attributesNamesInBin; 
-	bool PointingModelTable::initAttributesNamesDone = PointingModelTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfPointingModel_a[] = {
+    
+    	 "antennaId" , "pointingModelId" , "numCoeff" , "coeffName" , "coeffVal" , "polarizationType" , "receiverBand" , "assocNature" , "assocPointingModelId" 
+    	,
+    	 "coeffFormula" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfPointingModel_v(attributesNamesInBinOfPointingModel_a, attributesNamesInBinOfPointingModel_a + sizeof(attributesNamesInBinOfPointingModel_a) / sizeof(attributesNamesInBinOfPointingModel_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> PointingModelTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfPointingModel_a[] = {
+	
+		"antennaId"
+	,
+		"pointingModelId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfPointingModel_v(keyOfPointingModel_a, keyOfPointingModel_a + sizeof(keyOfPointingModel_a) / sizeof(keyOfPointingModel_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> PointingModelTable::getKeyName() {
-		return key;
+	const vector<string>& PointingModelTable::getKeyName() {
+		return keyOfPointingModel_v;
 	}
 
 
 	PointingModelTable::PointingModelTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("pointingModelId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,75 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string PointingModelTable::getName() const {
-		return itsName;
+		return entityNameOfPointingModel;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string PointingModelTable::name() {
-		return itsName;
+		return entityNameOfPointingModel;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool PointingModelTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("pointingModelId");
-
-
-		attributesNames.push_back("numCoeff");
-
-		attributesNames.push_back("coeffName");
-
-		attributesNames.push_back("coeffVal");
-
-		attributesNames.push_back("polarizationType");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("assocNature");
-
-		attributesNames.push_back("assocPointingModelId");
-
-
-		attributesNames.push_back("coeffFormula");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("pointingModelId") ; 
-    	 
-    	attributesNamesInBin.push_back("numCoeff") ; 
-    	 
-    	attributesNamesInBin.push_back("coeffName") ; 
-    	 
-    	attributesNamesInBin.push_back("coeffVal") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationType") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("assocNature") ; 
-    	 
-    	attributesNamesInBin.push_back("assocPointingModelId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("coeffFormula") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& PointingModelTable::getAttributesNames() { return attributesNamesOfPointingModel_v; }
 	
-
-	const vector<string>& PointingModelTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& PointingModelTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& PointingModelTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfPointingModel_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -407,30 +404,32 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	PointingModelRow*  PointingModelTable::checkAndAdd(PointingModelRow* x)  {
+	PointingModelRow*  PointingModelTable::checkAndAdd(PointingModelRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getAntennaId()
+				x->getAntennaId()
 		,
-			x->getNumCoeff()
+				x->getNumCoeff()
 		,
-			x->getCoeffName()
+				x->getCoeffName()
 		,
-			x->getCoeffVal()
+				x->getCoeffVal()
 		,
-			x->getPolarizationType()
+				x->getPolarizationType()
 		,
-			x->getReceiverBand()
+				x->getReceiverBand()
 		,
-			x->getAssocNature()
+				x->getAssocNature()
 		,
-			x->getAssocPointingModelId()
+				x->getAssocPointingModelId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -600,7 +599,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -722,7 +721,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PointingModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -981,7 +980,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfPointingModel_v.begin(); iter != attributesNamesOfPointingModel_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "PointingModel"); 
 		}
@@ -1100,7 +1099,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfPointingModel_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

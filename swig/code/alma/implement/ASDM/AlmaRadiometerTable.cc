@@ -67,34 +67,66 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfAlmaRadiometer = "AlmaRadiometer";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfAlmaRadiometer_a[] = {
+		
+			"almaRadiometerId"
+		
+				
+		
+			, "numAntenna"
+		
+			, "spectralWindowId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfAlmaRadiometer_v (attributesNamesOfAlmaRadiometer_a, attributesNamesOfAlmaRadiometer_a + sizeof(attributesNamesOfAlmaRadiometer_a) / sizeof(attributesNamesOfAlmaRadiometer_a[0]));
 
-	string AlmaRadiometerTable::itsName = "AlmaRadiometer";
-	vector<string> AlmaRadiometerTable::attributesNames; 
-	vector<string> AlmaRadiometerTable::attributesNamesInBin; 
-	bool AlmaRadiometerTable::initAttributesNamesDone = AlmaRadiometerTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfAlmaRadiometer_a[] = {
+    
+    	 "almaRadiometerId" 
+    	,
+    	 "numAntenna" , "spectralWindowId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfAlmaRadiometer_v(attributesNamesInBinOfAlmaRadiometer_a, attributesNamesInBinOfAlmaRadiometer_a + sizeof(attributesNamesInBinOfAlmaRadiometer_a) / sizeof(attributesNamesInBinOfAlmaRadiometer_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> AlmaRadiometerTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfAlmaRadiometer_a[] = {
+	
+		"almaRadiometerId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfAlmaRadiometer_v(keyOfAlmaRadiometer_a, keyOfAlmaRadiometer_a + sizeof(keyOfAlmaRadiometer_a) / sizeof(keyOfAlmaRadiometer_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> AlmaRadiometerTable::getKeyName() {
-		return key;
+	const vector<string>& AlmaRadiometerTable::getKeyName() {
+		return keyOfAlmaRadiometer_v;
 	}
 
 
 	AlmaRadiometerTable::AlmaRadiometerTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("almaRadiometerId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,47 +177,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string AlmaRadiometerTable::getName() const {
-		return itsName;
+		return entityNameOfAlmaRadiometer;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string AlmaRadiometerTable::name() {
-		return itsName;
+		return entityNameOfAlmaRadiometer;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool AlmaRadiometerTable::initAttributesNames() {
-
-		attributesNames.push_back("almaRadiometerId");
-
-
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("spectralWindowId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("almaRadiometerId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& AlmaRadiometerTable::getAttributesNames() { return attributesNamesOfAlmaRadiometer_v; }
 	
-
-	const vector<string>& AlmaRadiometerTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& AlmaRadiometerTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& AlmaRadiometerTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfAlmaRadiometer_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -280,10 +291,12 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	AlmaRadiometerRow*  AlmaRadiometerTable::checkAndAdd(AlmaRadiometerRow* x)  {
+	AlmaRadiometerRow*  AlmaRadiometerTable::checkAndAdd(AlmaRadiometerRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -394,7 +407,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -516,7 +529,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ardmtr=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/3/AlmaRadiometerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AlmaRadiometerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -754,7 +767,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfAlmaRadiometer_v.begin(); iter != attributesNamesOfAlmaRadiometer_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "AlmaRadiometer"); 
 		}
@@ -873,7 +886,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfAlmaRadiometer_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

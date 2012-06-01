@@ -55,7 +55,7 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 namespace casa {
     namespace viewer {
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false) {
+	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false), draw_center_(false){
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
@@ -247,12 +247,14 @@ namespace casa {
 
 	    if ( new_z_index != last_z_index ) {
 		updateStateInfo(true);
+		invalidateCenterInfo( );
 	    }
 	    last_z_index = new_z_index;
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 	    setDrawingEnv( );
 	    drawRegion( (! other_selected && selected( )) || marked( ) );
+	    //if (draw_center_) cout << "center drawn" << endl; else cout << "center NOT drawn" << endl;
 	    resetDrawingEnv( );
 
 	    setTextEnv( );
@@ -1563,18 +1565,24 @@ namespace casa {
 			  }
 
 			  if (pixCen.size()>1){
-				  double pix_x1, pix_y1, lin_x1, lin_y1, posa, tmpx, tmpy;
-				  pix_x1 = (double)pixCen(0);
-				  pix_y1 = (double)pixCen(1);
-				  posa    = (double)pixCen(2);
-				  pixel_to_linear(wc_, pix_x1, pix_y1, lin_x1,lin_y1 );
-				  pixel_to_linear(wc_, pix_x1+cos(posa), pix_y1+sin(posa), tmpx, tmpy);
-				  tmpx = tmpx-lin_x1;
-				  tmpy = tmpy-lin_y1;
+				  double pix_cent_x, pix_cent_y, lin_delta_x, lin_delta_y;
+				  double lin_x, lin_y, posang, tmpx, tmpy;
 
-				  setDrawingEnv( );
-				  drawCenter( lin_x1, lin_y1, tmpx, tmpy);
-				  resetDrawingEnv( );
+				  // get the pixel center and the position angle
+				  pix_cent_x = (double)pixCen(0);
+				  pix_cent_y = (double)pixCen(1);
+				  posang     = (double)pixCen(2);
+
+				  // convert to linear center coos and the extend
+				  pixel_to_linear(wc_, pix_cent_x, pix_cent_y, lin_x, lin_y );
+				  pixel_to_linear(wc_, pix_cent_x+cos(posang), pix_cent_y+sin(posang), tmpx, tmpy);
+				  lin_delta_x = tmpx-lin_x;
+				  lin_delta_y = tmpy-lin_y;
+
+				  // set the center and let it drawn
+				  setCenter( lin_x, lin_y, lin_delta_x, lin_delta_y);
+				  setDrawCenter(true);
+				  refresh();
 			  }
 
 			  delete rec;

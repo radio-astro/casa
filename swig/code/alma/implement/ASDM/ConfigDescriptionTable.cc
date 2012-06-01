@@ -67,34 +67,96 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfConfigDescription = "ConfigDescription";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfConfigDescription_a[] = {
+		
+			"configDescriptionId"
+		
+		
+			, "numAntenna"
+		
+			, "numDataDescription"
+		
+			, "numFeed"
+		
+			, "correlationMode"
+		
+			, "numAtmPhaseCorrection"
+		
+			, "atmPhaseCorrection"
+		
+			, "processorType"
+		
+			, "spectralType"
+		
+			, "antennaId"
+		
+			, "feedId"
+		
+			, "switchCycleId"
+		
+			, "dataDescriptionId"
+		
+			, "processorId"
+				
+		
+			, "phasedArrayList"
+		
+			, "numAssocValues"
+		
+			, "assocNature"
+		
+			, "assocConfigDescriptionId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfConfigDescription_v (attributesNamesOfConfigDescription_a, attributesNamesOfConfigDescription_a + sizeof(attributesNamesOfConfigDescription_a) / sizeof(attributesNamesOfConfigDescription_a[0]));
 
-	string ConfigDescriptionTable::itsName = "ConfigDescription";
-	vector<string> ConfigDescriptionTable::attributesNames; 
-	vector<string> ConfigDescriptionTable::attributesNamesInBin; 
-	bool ConfigDescriptionTable::initAttributesNamesDone = ConfigDescriptionTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfConfigDescription_a[] = {
+    
+    	 "configDescriptionId" , "numAntenna" , "numDataDescription" , "numFeed" , "correlationMode" , "numAtmPhaseCorrection" , "atmPhaseCorrection" , "processorType" , "spectralType" , "antennaId" , "feedId" , "switchCycleId" , "dataDescriptionId" , "processorId" 
+    	,
+    	 "phasedArrayList" , "numAssocValues" , "assocNature" , "assocConfigDescriptionId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfConfigDescription_v(attributesNamesInBinOfConfigDescription_a, attributesNamesInBinOfConfigDescription_a + sizeof(attributesNamesInBinOfConfigDescription_a) / sizeof(attributesNamesInBinOfConfigDescription_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ConfigDescriptionTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfConfigDescription_a[] = {
+	
+		"configDescriptionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfConfigDescription_v(keyOfConfigDescription_a, keyOfConfigDescription_a + sizeof(keyOfConfigDescription_a) / sizeof(keyOfConfigDescription_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ConfigDescriptionTable::getKeyName() {
-		return key;
+	const vector<string>& ConfigDescriptionTable::getKeyName() {
+		return keyOfConfigDescription_v;
 	}
 
 
 	ConfigDescriptionTable::ConfigDescriptionTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("configDescriptionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,107 +207,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ConfigDescriptionTable::getName() const {
-		return itsName;
+		return entityNameOfConfigDescription;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ConfigDescriptionTable::name() {
-		return itsName;
+		return entityNameOfConfigDescription;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ConfigDescriptionTable::initAttributesNames() {
-
-		attributesNames.push_back("configDescriptionId");
-
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("numDataDescription");
-
-		attributesNames.push_back("numFeed");
-
-		attributesNames.push_back("correlationMode");
-
-		attributesNames.push_back("numAtmPhaseCorrection");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("processorType");
-
-		attributesNames.push_back("spectralType");
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("feedId");
-
-		attributesNames.push_back("switchCycleId");
-
-		attributesNames.push_back("dataDescriptionId");
-
-		attributesNames.push_back("processorId");
-
-
-		attributesNames.push_back("phasedArrayList");
-
-		attributesNames.push_back("numAssocValues");
-
-		attributesNames.push_back("assocNature");
-
-		attributesNames.push_back("assocConfigDescriptionId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("configDescriptionId") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("numDataDescription") ; 
-    	 
-    	attributesNamesInBin.push_back("numFeed") ; 
-    	 
-    	attributesNamesInBin.push_back("correlationMode") ; 
-    	 
-    	attributesNamesInBin.push_back("numAtmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("processorType") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralType") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("switchCycleId") ; 
-    	 
-    	attributesNamesInBin.push_back("dataDescriptionId") ; 
-    	 
-    	attributesNamesInBin.push_back("processorId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("phasedArrayList") ; 
-    	 
-    	attributesNamesInBin.push_back("numAssocValues") ; 
-    	 
-    	attributesNamesInBin.push_back("assocNature") ; 
-    	 
-    	attributesNamesInBin.push_back("assocConfigDescriptionId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ConfigDescriptionTable::getAttributesNames() { return attributesNamesOfConfigDescription_v; }
 	
-
-	const vector<string>& ConfigDescriptionTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ConfigDescriptionTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ConfigDescriptionTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfConfigDescription_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -435,40 +416,42 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRow(ConfigDescriptionRow* row) 
 	 * @throws UniquenessViolationException
 	 
 	 */
-	ConfigDescriptionRow*  ConfigDescriptionTable::checkAndAdd(ConfigDescriptionRow* x)  {
+	ConfigDescriptionRow*  ConfigDescriptionTable::checkAndAdd(ConfigDescriptionRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getNumAntenna()
+				x->getNumAntenna()
 		,
-			x->getNumDataDescription()
+				x->getNumDataDescription()
 		,
-			x->getNumFeed()
+				x->getNumFeed()
 		,
-			x->getCorrelationMode()
+				x->getCorrelationMode()
 		,
-			x->getNumAtmPhaseCorrection()
+				x->getNumAtmPhaseCorrection()
 		,
-			x->getAtmPhaseCorrection()
+				x->getAtmPhaseCorrection()
 		,
-			x->getProcessorType()
+				x->getProcessorType()
 		,
-			x->getSpectralType()
+				x->getSpectralType()
 		,
-			x->getAntennaId()
+				x->getAntennaId()
 		,
-			x->getFeedId()
+				x->getFeedId()
 		,
-			x->getSwitchCycleId()
+				x->getSwitchCycleId()
 		,
-			x->getDataDescriptionId()
+				x->getDataDescriptionId()
 		,
-			x->getProcessorId()
+				x->getProcessorId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -621,7 +604,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -743,7 +726,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cnfdsc=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/3/ConfigDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ConfigDescriptionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1026,7 +1009,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfConfigDescription_v.begin(); iter != attributesNamesOfConfigDescription_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "ConfigDescription"); 
 		}
@@ -1145,7 +1128,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfConfigDescription_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,34 +67,96 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSBSummary = "SBSummary";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSBSummary_a[] = {
+		
+			"sBSummaryId"
+		
+		
+			, "sbSummaryUID"
+		
+			, "projectUID"
+		
+			, "obsUnitSetUID"
+		
+			, "frequency"
+		
+			, "frequencyBand"
+		
+			, "sbType"
+		
+			, "sbDuration"
+		
+			, "numObservingMode"
+		
+			, "observingMode"
+		
+			, "numberRepeats"
+		
+			, "numScienceGoal"
+		
+			, "scienceGoal"
+		
+			, "numWeatherConstraint"
+		
+			, "weatherConstraint"
+				
+		
+			, "centerDirection"
+		
+			, "centerDirectionCode"
+		
+			, "centerDirectionEquinox"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSBSummary_v (attributesNamesOfSBSummary_a, attributesNamesOfSBSummary_a + sizeof(attributesNamesOfSBSummary_a) / sizeof(attributesNamesOfSBSummary_a[0]));
 
-	string SBSummaryTable::itsName = "SBSummary";
-	vector<string> SBSummaryTable::attributesNames; 
-	vector<string> SBSummaryTable::attributesNamesInBin; 
-	bool SBSummaryTable::initAttributesNamesDone = SBSummaryTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSBSummary_a[] = {
+    
+    	 "sBSummaryId" , "sbSummaryUID" , "projectUID" , "obsUnitSetUID" , "frequency" , "frequencyBand" , "sbType" , "sbDuration" , "numObservingMode" , "observingMode" , "numberRepeats" , "numScienceGoal" , "scienceGoal" , "numWeatherConstraint" , "weatherConstraint" 
+    	,
+    	 "centerDirection" , "centerDirectionCode" , "centerDirectionEquinox" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSBSummary_v(attributesNamesInBinOfSBSummary_a, attributesNamesInBinOfSBSummary_a + sizeof(attributesNamesInBinOfSBSummary_a) / sizeof(attributesNamesInBinOfSBSummary_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SBSummaryTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSBSummary_a[] = {
+	
+		"sBSummaryId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSBSummary_v(keyOfSBSummary_a, keyOfSBSummary_a + sizeof(keyOfSBSummary_a) / sizeof(keyOfSBSummary_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SBSummaryTable::getKeyName() {
-		return key;
+	const vector<string>& SBSummaryTable::getKeyName() {
+		return keyOfSBSummary_v;
 	}
 
 
 	SBSummaryTable::SBSummaryTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("sBSummaryId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,107 +207,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SBSummaryTable::getName() const {
-		return itsName;
+		return entityNameOfSBSummary;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SBSummaryTable::name() {
-		return itsName;
+		return entityNameOfSBSummary;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SBSummaryTable::initAttributesNames() {
-
-		attributesNames.push_back("sBSummaryId");
-
-
-		attributesNames.push_back("sbSummaryUID");
-
-		attributesNames.push_back("projectUID");
-
-		attributesNames.push_back("obsUnitSetUID");
-
-		attributesNames.push_back("frequency");
-
-		attributesNames.push_back("frequencyBand");
-
-		attributesNames.push_back("sbType");
-
-		attributesNames.push_back("sbDuration");
-
-		attributesNames.push_back("numObservingMode");
-
-		attributesNames.push_back("observingMode");
-
-		attributesNames.push_back("numberRepeats");
-
-		attributesNames.push_back("numScienceGoal");
-
-		attributesNames.push_back("scienceGoal");
-
-		attributesNames.push_back("numWeatherConstraint");
-
-		attributesNames.push_back("weatherConstraint");
-
-
-		attributesNames.push_back("centerDirection");
-
-		attributesNames.push_back("centerDirectionCode");
-
-		attributesNames.push_back("centerDirectionEquinox");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("sBSummaryId") ; 
-    	 
-    	attributesNamesInBin.push_back("sbSummaryUID") ; 
-    	 
-    	attributesNamesInBin.push_back("projectUID") ; 
-    	 
-    	attributesNamesInBin.push_back("obsUnitSetUID") ; 
-    	 
-    	attributesNamesInBin.push_back("frequency") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyBand") ; 
-    	 
-    	attributesNamesInBin.push_back("sbType") ; 
-    	 
-    	attributesNamesInBin.push_back("sbDuration") ; 
-    	 
-    	attributesNamesInBin.push_back("numObservingMode") ; 
-    	 
-    	attributesNamesInBin.push_back("observingMode") ; 
-    	 
-    	attributesNamesInBin.push_back("numberRepeats") ; 
-    	 
-    	attributesNamesInBin.push_back("numScienceGoal") ; 
-    	 
-    	attributesNamesInBin.push_back("scienceGoal") ; 
-    	 
-    	attributesNamesInBin.push_back("numWeatherConstraint") ; 
-    	 
-    	attributesNamesInBin.push_back("weatherConstraint") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("centerDirection") ; 
-    	 
-    	attributesNamesInBin.push_back("centerDirectionCode") ; 
-    	 
-    	attributesNamesInBin.push_back("centerDirectionEquinox") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SBSummaryTable::getAttributesNames() { return attributesNamesOfSBSummary_v; }
 	
-
-	const vector<string>& SBSummaryTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SBSummaryTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SBSummaryTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSBSummary_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -441,42 +422,44 @@ SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	SBSummaryRow*  SBSummaryTable::checkAndAdd(SBSummaryRow* x)  {
+	SBSummaryRow*  SBSummaryTable::checkAndAdd(SBSummaryRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getSbSummaryUID()
+				x->getSbSummaryUID()
 		,
-			x->getProjectUID()
+				x->getProjectUID()
 		,
-			x->getObsUnitSetUID()
+				x->getObsUnitSetUID()
 		,
-			x->getFrequency()
+				x->getFrequency()
 		,
-			x->getFrequencyBand()
+				x->getFrequencyBand()
 		,
-			x->getSbType()
+				x->getSbType()
 		,
-			x->getSbDuration()
+				x->getSbDuration()
 		,
-			x->getNumObservingMode()
+				x->getNumObservingMode()
 		,
-			x->getObservingMode()
+				x->getObservingMode()
 		,
-			x->getNumberRepeats()
+				x->getNumberRepeats()
 		,
-			x->getNumScienceGoal()
+				x->getNumScienceGoal()
 		,
-			x->getScienceGoal()
+				x->getScienceGoal()
 		,
-			x->getNumWeatherConstraint()
+				x->getNumWeatherConstraint()
 		,
-			x->getWeatherConstraint()
+				x->getWeatherConstraint()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -631,7 +614,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/3/SBSummaryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/3/SBSummaryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -753,7 +736,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/3/SBSummaryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbsmmr=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/3/SBSummaryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SBSummaryTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1036,7 +1019,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSBSummary_v.begin(); iter != attributesNamesOfSBSummary_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "SBSummary"); 
 		}
@@ -1155,7 +1138,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSBSummary_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

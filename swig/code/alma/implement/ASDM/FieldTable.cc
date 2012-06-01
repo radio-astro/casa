@@ -67,34 +67,88 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfField = "Field";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfField_a[] = {
+		
+			"fieldId"
+		
+		
+			, "fieldName"
+		
+			, "numPoly"
+		
+			, "delayDir"
+		
+			, "phaseDir"
+		
+			, "referenceDir"
+				
+		
+			, "time"
+		
+			, "code"
+		
+			, "directionCode"
+		
+			, "directionEquinox"
+		
+			, "assocNature"
+		
+			, "ephemerisId"
+		
+			, "sourceId"
+		
+			, "assocFieldId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfField_v (attributesNamesOfField_a, attributesNamesOfField_a + sizeof(attributesNamesOfField_a) / sizeof(attributesNamesOfField_a[0]));
 
-	string FieldTable::itsName = "Field";
-	vector<string> FieldTable::attributesNames; 
-	vector<string> FieldTable::attributesNamesInBin; 
-	bool FieldTable::initAttributesNamesDone = FieldTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfField_a[] = {
+    
+    	 "fieldId" , "fieldName" , "numPoly" , "delayDir" , "phaseDir" , "referenceDir" 
+    	,
+    	 "time" , "code" , "directionCode" , "directionEquinox" , "assocNature" , "ephemerisId" , "sourceId" , "assocFieldId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfField_v(attributesNamesInBinOfField_a, attributesNamesInBinOfField_a + sizeof(attributesNamesInBinOfField_a) / sizeof(attributesNamesInBinOfField_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FieldTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfField_a[] = {
+	
+		"fieldId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfField_v(keyOfField_a, keyOfField_a + sizeof(keyOfField_a) / sizeof(keyOfField_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FieldTable::getKeyName() {
-		return key;
+	const vector<string>& FieldTable::getKeyName() {
+		return keyOfField_v;
 	}
 
 
 	FieldTable::FieldTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("fieldId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,91 +199,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FieldTable::getName() const {
-		return itsName;
+		return entityNameOfField;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FieldTable::name() {
-		return itsName;
+		return entityNameOfField;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FieldTable::initAttributesNames() {
-
-		attributesNames.push_back("fieldId");
-
-
-		attributesNames.push_back("fieldName");
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("delayDir");
-
-		attributesNames.push_back("phaseDir");
-
-		attributesNames.push_back("referenceDir");
-
-
-		attributesNames.push_back("time");
-
-		attributesNames.push_back("code");
-
-		attributesNames.push_back("directionCode");
-
-		attributesNames.push_back("directionEquinox");
-
-		attributesNames.push_back("assocNature");
-
-		attributesNames.push_back("ephemerisId");
-
-		attributesNames.push_back("sourceId");
-
-		attributesNames.push_back("assocFieldId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("fieldId") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldName") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("delayDir") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseDir") ; 
-    	 
-    	attributesNamesInBin.push_back("referenceDir") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	 
-    	attributesNamesInBin.push_back("code") ; 
-    	 
-    	attributesNamesInBin.push_back("directionCode") ; 
-    	 
-    	attributesNamesInBin.push_back("directionEquinox") ; 
-    	 
-    	attributesNamesInBin.push_back("assocNature") ; 
-    	 
-    	attributesNamesInBin.push_back("ephemerisId") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceId") ; 
-    	 
-    	attributesNamesInBin.push_back("assocFieldId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FieldTable::getAttributesNames() { return attributesNamesOfField_v; }
 	
-
-	const vector<string>& FieldTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FieldTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FieldTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfField_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -371,24 +360,26 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	FieldRow*  FieldTable::checkAndAdd(FieldRow* x)  {
+	FieldRow*  FieldTable::checkAndAdd(FieldRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getFieldName()
+				x->getFieldName()
 		,
-			x->getNumPoly()
+				x->getNumPoly()
 		,
-			x->getDelayDir()
+				x->getDelayDir()
 		,
-			x->getPhaseDir()
+				x->getPhaseDir()
 		,
-			x->getReferenceDir()
+				x->getReferenceDir()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -525,7 +516,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -647,7 +638,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:field=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/3/FieldTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FieldTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -918,7 +909,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfField_v.begin(); iter != attributesNamesOfField_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Field"); 
 		}
@@ -1037,7 +1028,7 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfField_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

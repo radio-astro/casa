@@ -67,38 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfWVMCal = "WVMCal";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfWVMCal_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		
+		
+			, "wvrMethod"
+		
+			, "polyFreqLimits"
+		
+			, "numChan"
+		
+			, "numPoly"
+		
+			, "pathCoeff"
+		
+			, "refTemp"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfWVMCal_v (attributesNamesOfWVMCal_a, attributesNamesOfWVMCal_a + sizeof(attributesNamesOfWVMCal_a) / sizeof(attributesNamesOfWVMCal_a[0]));
 
-	string WVMCalTable::itsName = "WVMCal";
-	vector<string> WVMCalTable::attributesNames; 
-	vector<string> WVMCalTable::attributesNamesInBin; 
-	bool WVMCalTable::initAttributesNamesDone = WVMCalTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfWVMCal_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "wvrMethod" , "polyFreqLimits" , "numChan" , "numPoly" , "pathCoeff" , "refTemp" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfWVMCal_v(attributesNamesInBinOfWVMCal_a, attributesNamesInBinOfWVMCal_a + sizeof(attributesNamesInBinOfWVMCal_a) / sizeof(attributesNamesInBinOfWVMCal_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> WVMCalTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfWVMCal_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfWVMCal_v(keyOfWVMCal_a, keyOfWVMCal_a + sizeof(keyOfWVMCal_a) / sizeof(keyOfWVMCal_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> WVMCalTable::getKeyName() {
-		return key;
+	const vector<string>& WVMCalTable::getKeyName() {
+		return keyOfWVMCal_v;
 	}
 
 
 	WVMCalTable::WVMCalTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,71 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string WVMCalTable::getName() const {
-		return itsName;
+		return entityNameOfWVMCal;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string WVMCalTable::name() {
-		return itsName;
+		return entityNameOfWVMCal;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool WVMCalTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("wvrMethod");
-
-		attributesNames.push_back("polyFreqLimits");
-
-		attributesNames.push_back("numChan");
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("pathCoeff");
-
-		attributesNames.push_back("refTemp");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("wvrMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("polyFreqLimits") ; 
-    	 
-    	attributesNamesInBin.push_back("numChan") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("pathCoeff") ; 
-    	 
-    	attributesNamesInBin.push_back("refTemp") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& WVMCalTable::getAttributesNames() { return attributesNamesOfWVMCal_v; }
 	
-
-	const vector<string>& WVMCalTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& WVMCalTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& WVMCalTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfWVMCal_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -347,7 +346,9 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 	
 		
 	void WVMCalTable::addWithoutCheckingUnique(WVMCalRow * x) {
-		WVMCalRow * dummy = add(x);
+		WVMCalRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -366,7 +367,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 			
 			
 			
-	WVMCalRow*  WVMCalTable::checkAndAdd(WVMCalRow* x) {
+	WVMCalRow*  WVMCalTable::checkAndAdd(WVMCalRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -548,7 +549,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -670,7 +671,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='WVMCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -926,7 +927,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfWVMCal_v.begin(); iter != attributesNamesOfWVMCal_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "WVMCal"); 
 		}
@@ -1045,7 +1046,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfWVMCal_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

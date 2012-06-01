@@ -67,36 +67,112 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfPointing = "Pointing";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfPointing_a[] = {
+		
+			"antennaId"
+		,
+			"timeInterval"
+		
+		
+			, "numSample"
+		
+			, "encoder"
+		
+			, "pointingTracking"
+		
+			, "usePolynomials"
+		
+			, "timeOrigin"
+		
+			, "numTerm"
+		
+			, "pointingDirection"
+		
+			, "target"
+		
+			, "offset"
+		
+			, "pointingModelId"
+				
+		
+			, "overTheTop"
+		
+			, "sourceOffset"
+		
+			, "sourceOffsetReferenceCode"
+		
+			, "sourceOffsetEquinox"
+		
+			, "sampledTimeInterval"
+		
+			, "atmosphericCorrection"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfPointing_v (attributesNamesOfPointing_a, attributesNamesOfPointing_a + sizeof(attributesNamesOfPointing_a) / sizeof(attributesNamesOfPointing_a[0]));
 
-	string PointingTable::itsName = "Pointing";
-	vector<string> PointingTable::attributesNames; 
-	vector<string> PointingTable::attributesNamesInBin; 
-	bool PointingTable::initAttributesNamesDone = PointingTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfPointing_a[] = {
+    
+    	"antennaId",
+    	"timeInterval",
+    	"numSample",
+    	"encoder",
+    	"pointingTracking",
+    	"usePolynomials",
+    	"timeOrigin",
+    	"numTerm",
+    	"pointingDirection",
+    	"target",
+    	"offset",
+    	"pointingModelId",
+    	"overTheTop",
+    	"sourceOffset",
+    	"sourceOffsetReferenceCode",
+    	"sourceOffsetEquinox",
+    	"sampledTimeInterval"
+	
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfPointing_v(attributesNamesInBinOfPointing_a, attributesNamesInBinOfPointing_a + sizeof(attributesNamesInBinOfPointing_a) / sizeof(attributesNamesInBinOfPointing_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> PointingTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfPointing_a[] = {
+	
+		"antennaId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfPointing_v(keyOfPointing_a, keyOfPointing_a + sizeof(keyOfPointing_a) / sizeof(keyOfPointing_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> PointingTable::getKeyName() {
-		return key;
+	const vector<string>& PointingTable::getKeyName() {
+		return keyOfPointing_v;
 	}
 
 
 	PointingTable::PointingTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,86 +223,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string PointingTable::getName() const {
-		return itsName;
+		return entityNameOfPointing;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string PointingTable::name() {
-		return itsName;
+		return entityNameOfPointing;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool PointingTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("numSample");
-
-		attributesNames.push_back("encoder");
-
-		attributesNames.push_back("pointingTracking");
-
-		attributesNames.push_back("usePolynomials");
-
-		attributesNames.push_back("timeOrigin");
-
-		attributesNames.push_back("numTerm");
-
-		attributesNames.push_back("pointingDirection");
-
-		attributesNames.push_back("target");
-
-		attributesNames.push_back("offset");
-
-		attributesNames.push_back("pointingModelId");
-
-
-		attributesNames.push_back("overTheTop");
-
-		attributesNames.push_back("sourceOffset");
-
-		attributesNames.push_back("sourceOffsetReferenceCode");
-
-		attributesNames.push_back("sourceOffsetEquinox");
-
-		attributesNames.push_back("sampledTimeInterval");
-
-		attributesNames.push_back("atmosphericCorrection");
-
-
-    
-    	attributesNamesInBin.push_back("antennaId");
-    	attributesNamesInBin.push_back("timeInterval");
-    	attributesNamesInBin.push_back("numSample");
-    	attributesNamesInBin.push_back("encoder");
-    	attributesNamesInBin.push_back("pointingTracking");
-    	attributesNamesInBin.push_back("usePolynomials");
-    	attributesNamesInBin.push_back("timeOrigin");
-    	attributesNamesInBin.push_back("numTerm");
-    	attributesNamesInBin.push_back("pointingDirection");
-    	attributesNamesInBin.push_back("target");
-    	attributesNamesInBin.push_back("offset");
-    	attributesNamesInBin.push_back("pointingModelId");
-    	attributesNamesInBin.push_back("overTheTop");
-    	attributesNamesInBin.push_back("sourceOffset");
-    	attributesNamesInBin.push_back("sourceOffsetReferenceCode");
-    	attributesNamesInBin.push_back("sourceOffsetEquinox");
-    	attributesNamesInBin.push_back("sampledTimeInterval");    	
-    
-    	return true; 
-	}
+	const vector<string>& PointingTable::getAttributesNames() { return attributesNamesOfPointing_v; }
 	
-
-	const vector<string>& PointingTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& PointingTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& PointingTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfPointing_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -368,7 +384,9 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 	
 		
 	void PointingTable::addWithoutCheckingUnique(PointingRow * x) {
-		PointingRow * dummy = add(x);
+		PointingRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -387,7 +405,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 			
 			
 			
-	PointingRow*  PointingTable::checkAndAdd(PointingRow* x) {
+	PointingRow*  PointingTable::checkAndAdd(PointingRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   ); 
@@ -567,7 +585,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pntng=\"http://Alma/XASDM/PointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingTable http://almaobservatory.org/XML/XASDM/3/PointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pntng=\"http://Alma/XASDM/PointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingTable http://almaobservatory.org/XML/XASDM/3/PointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -689,7 +707,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pntng=\"http://Alma/XASDM/PointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingTable http://almaobservatory.org/XML/XASDM/3/PointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pntng=\"http://Alma/XASDM/PointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingTable http://almaobservatory.org/XML/XASDM/3/PointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PointingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -951,7 +969,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfPointing_v.begin(); iter != attributesNamesOfPointing_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Pointing"); 
 		}
@@ -1070,7 +1088,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfPointing_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

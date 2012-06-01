@@ -24,7 +24,7 @@ namespace casa {
 		void updateCoord( );
 		void updateStatistics( std::list<RegionInfo> *stats );
 		void updateCenters( std::list<RegionInfo> *centers );
-		void invalidate( );
+		void setCenterBackground(QString background);
 		void clearStatistics( );
 
 		std::string lineColor( ) const;

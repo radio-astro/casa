@@ -67,40 +67,94 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFeed = "Feed";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFeed_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		,
+			"feedId"
+		
+		
+			, "numReceptor"
+		
+			, "beamOffset"
+		
+			, "focusReference"
+		
+			, "polarizationTypes"
+		
+			, "polResponse"
+		
+			, "receptorAngle"
+		
+			, "receiverId"
+				
+		
+			, "feedNum"
+		
+			, "illumOffset"
+		
+			, "position"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFeed_v (attributesNamesOfFeed_a, attributesNamesOfFeed_a + sizeof(attributesNamesOfFeed_a) / sizeof(attributesNamesOfFeed_a[0]));
 
-	string FeedTable::itsName = "Feed";
-	vector<string> FeedTable::attributesNames; 
-	vector<string> FeedTable::attributesNamesInBin; 
-	bool FeedTable::initAttributesNamesDone = FeedTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFeed_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "numReceptor" , "beamOffset" , "focusReference" , "polarizationTypes" , "polResponse" , "receptorAngle" , "receiverId" 
+    	,
+    	 "feedNum" , "illumOffset" , "position" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFeed_v(attributesNamesInBinOfFeed_a, attributesNamesInBinOfFeed_a + sizeof(attributesNamesInBinOfFeed_a) / sizeof(attributesNamesInBinOfFeed_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FeedTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFeed_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+	,
+		"feedId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFeed_v(keyOfFeed_a, keyOfFeed_a + sizeof(keyOfFeed_a) / sizeof(keyOfFeed_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FeedTable::getKeyName() {
-		return key;
+	const vector<string>& FeedTable::getKeyName() {
+		return keyOfFeed_v;
 	}
 
 
 	FeedTable::FeedTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("feedId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,91 +205,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FeedTable::getName() const {
-		return itsName;
+		return entityNameOfFeed;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FeedTable::name() {
-		return itsName;
+		return entityNameOfFeed;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FeedTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("feedId");
-
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("beamOffset");
-
-		attributesNames.push_back("focusReference");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("polResponse");
-
-		attributesNames.push_back("receptorAngle");
-
-		attributesNames.push_back("receiverId");
-
-
-		attributesNames.push_back("feedNum");
-
-		attributesNames.push_back("illumOffset");
-
-		attributesNames.push_back("position");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("beamOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("focusReference") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("polResponse") ; 
-    	 
-    	attributesNamesInBin.push_back("receptorAngle") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("feedNum") ; 
-    	 
-    	attributesNamesInBin.push_back("illumOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("position") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FeedTable::getAttributesNames() { return attributesNamesOfFeed_v; }
 	
-
-	const vector<string>& FeedTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FeedTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FeedTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFeed_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -435,7 +424,9 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 	
 		
 	void FeedTable::addWithoutCheckingUnique(FeedRow * x) {
-		FeedRow * dummy = add(x);
+		FeedRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -458,7 +449,7 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 	 * @throws DuplicateKey
 	 * @throws UniquenessViolationException 
 	 */
-	FeedRow*  FeedTable::checkAndAdd(FeedRow* x) {
+	FeedRow*  FeedTable::checkAndAdd(FeedRow* x, bool skipCheckUniqueness) {
 		ArrayTime startTime = x->getTimeInterval().getStart();		
 		
 		// Determine the entry in the context map from the appropriate attributes.
@@ -468,35 +459,37 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 		                x->getSpectralWindowId()
 		               );
 
-		// Uniqueness Rule Check
-		if (context.find(k) != context.end()) {
-			for (unsigned int i = 0;  i < context[k].size(); i++) 
-				for (unsigned int j = 0; j < context[k][i].size(); j++)
-					if (
-						(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
+		if (!skipCheckUniqueness) {
+			// Uniqueness Rule Check
+			if (context.find(k) != context.end()) {
+				for (unsigned int i = 0;  i < context[k].size(); i++) 
+					for (unsigned int j = 0; j < context[k][i].size(); j++)
+						if (
+							(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
 					
-						 && (context[k][i][j]->getNumReceptor() == x->getNumReceptor())
-					
-
-						 && (context[k][i][j]->getBeamOffset() == x->getBeamOffset())
+							 && (context[k][i][j]->getNumReceptor() == x->getNumReceptor())
 					
 
-						 && (context[k][i][j]->getFocusReference() == x->getFocusReference())
+							 && (context[k][i][j]->getBeamOffset() == x->getBeamOffset())
 					
 
-						 && (context[k][i][j]->getPolarizationTypes() == x->getPolarizationTypes())
+							 && (context[k][i][j]->getFocusReference() == x->getFocusReference())
 					
 
-						 && (context[k][i][j]->getPolResponse() == x->getPolResponse())
+							 && (context[k][i][j]->getPolarizationTypes() == x->getPolarizationTypes())
 					
 
-						 && (context[k][i][j]->getReceptorAngle() == x->getReceptorAngle())
+							 && (context[k][i][j]->getPolResponse() == x->getPolResponse())
 					
 
-						 && (context[k][i][j]->getReceiverId() == x->getReceiverId())
+							 && (context[k][i][j]->getReceptorAngle() == x->getReceptorAngle())
 					
-					)
-						throw UniquenessViolationException("Uniqueness violation exception in table FeedTable");			
+
+							 && (context[k][i][j]->getReceiverId() == x->getReceiverId())
+					
+						)
+							throw UniquenessViolationException("Uniqueness violation exception in table FeedTable");			
+			}
 		}
 
 
@@ -706,7 +699,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -828,7 +821,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FeedTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:feed=\"http://Alma/XASDM/FeedTable\" xsi:schemaLocation=\"http://Alma/XASDM/FeedTable http://almaobservatory.org/XML/XASDM/3/FeedTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FeedTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1099,7 +1092,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFeed_v.begin(); iter != attributesNamesOfFeed_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Feed"); 
 		}
@@ -1218,7 +1211,7 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFeed_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

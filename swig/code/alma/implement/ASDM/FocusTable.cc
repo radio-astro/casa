@@ -67,36 +67,78 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFocus = "Focus";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFocus_a[] = {
+		
+			"antennaId"
+		,
+			"timeInterval"
+		
+		
+			, "focusTracking"
+		
+			, "focusOffset"
+		
+			, "focusRotationOffset"
+		
+			, "focusModelId"
+				
+		
+			, "measuredFocusPosition"
+		
+			, "measuredFocusRotation"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFocus_v (attributesNamesOfFocus_a, attributesNamesOfFocus_a + sizeof(attributesNamesOfFocus_a) / sizeof(attributesNamesOfFocus_a[0]));
 
-	string FocusTable::itsName = "Focus";
-	vector<string> FocusTable::attributesNames; 
-	vector<string> FocusTable::attributesNamesInBin; 
-	bool FocusTable::initAttributesNamesDone = FocusTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFocus_a[] = {
+    
+    	 "antennaId" , "timeInterval" , "focusTracking" , "focusOffset" , "focusRotationOffset" , "focusModelId" 
+    	,
+    	 "measuredFocusPosition" , "measuredFocusRotation" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFocus_v(attributesNamesInBinOfFocus_a, attributesNamesInBinOfFocus_a + sizeof(attributesNamesInBinOfFocus_a) / sizeof(attributesNamesInBinOfFocus_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FocusTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFocus_a[] = {
+	
+		"antennaId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFocus_v(keyOfFocus_a, keyOfFocus_a + sizeof(keyOfFocus_a) / sizeof(keyOfFocus_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FocusTable::getKeyName() {
-		return key;
+	const vector<string>& FocusTable::getKeyName() {
+		return keyOfFocus_v;
 	}
 
 
 	FocusTable::FocusTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,67 +189,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FocusTable::getName() const {
-		return itsName;
+		return entityNameOfFocus;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FocusTable::name() {
-		return itsName;
+		return entityNameOfFocus;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FocusTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("focusTracking");
-
-		attributesNames.push_back("focusOffset");
-
-		attributesNames.push_back("focusRotationOffset");
-
-		attributesNames.push_back("focusModelId");
-
-
-		attributesNames.push_back("measuredFocusPosition");
-
-		attributesNames.push_back("measuredFocusRotation");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("focusTracking") ; 
-    	 
-    	attributesNamesInBin.push_back("focusOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("focusRotationOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("focusModelId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("measuredFocusPosition") ; 
-    	 
-    	attributesNamesInBin.push_back("measuredFocusRotation") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FocusTable::getAttributesNames() { return attributesNamesOfFocus_v; }
 	
-
-	const vector<string>& FocusTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FocusTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FocusTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFocus_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -325,7 +326,9 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 	
 		
 	void FocusTable::addWithoutCheckingUnique(FocusRow * x) {
-		FocusRow * dummy = add(x);
+		FocusRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -344,7 +347,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 			
 			
 			
-	FocusRow*  FocusTable::checkAndAdd(FocusRow* x) {
+	FocusRow*  FocusTable::checkAndAdd(FocusRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   ); 
@@ -524,7 +527,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/3/FocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/3/FocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -646,7 +649,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/3/FocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focus=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/3/FocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FocusTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -899,7 +902,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFocus_v.begin(); iter != attributesNamesOfFocus_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Focus"); 
 		}
@@ -1018,7 +1021,7 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFocus_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

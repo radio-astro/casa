@@ -95,6 +95,9 @@ namespace casa {
 
 	    pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
 
+	    if (getDrawCenter())
+	   	 drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
+
 	    if ( selected ) {
 
 		// draw outline rectangle for resizing the ellipse...

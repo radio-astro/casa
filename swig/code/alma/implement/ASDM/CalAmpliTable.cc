@@ -67,44 +67,98 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalAmpli = "CalAmpli";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalAmpli_a[] = {
+		
+			"antennaName"
+		,
+			"atmPhaseCorrection"
+		,
+			"receiverBand"
+		,
+			"basebandName"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "numReceptor"
+		
+			, "polarizationTypes"
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "frequencyRange"
+		
+			, "apertureEfficiency"
+		
+			, "apertureEfficiencyError"
+				
+		
+			, "correctionValidity"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalAmpli_v (attributesNamesOfCalAmpli_a, attributesNamesOfCalAmpli_a + sizeof(attributesNamesOfCalAmpli_a) / sizeof(attributesNamesOfCalAmpli_a[0]));
 
-	string CalAmpliTable::itsName = "CalAmpli";
-	vector<string> CalAmpliTable::attributesNames; 
-	vector<string> CalAmpliTable::attributesNamesInBin; 
-	bool CalAmpliTable::initAttributesNamesDone = CalAmpliTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalAmpli_a[] = {
+    
+    	 "antennaName" , "atmPhaseCorrection" , "receiverBand" , "basebandName" , "calDataId" , "calReductionId" , "numReceptor" , "polarizationTypes" , "startValidTime" , "endValidTime" , "frequencyRange" , "apertureEfficiency" , "apertureEfficiencyError" 
+    	,
+    	 "correctionValidity" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalAmpli_v(attributesNamesInBinOfCalAmpli_a, attributesNamesInBinOfCalAmpli_a + sizeof(attributesNamesInBinOfCalAmpli_a) / sizeof(attributesNamesInBinOfCalAmpli_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalAmpliTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalAmpli_a[] = {
+	
+		"antennaName"
+	,
+		"atmPhaseCorrection"
+	,
+		"receiverBand"
+	,
+		"basebandName"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalAmpli_v(keyOfCalAmpli_a, keyOfCalAmpli_a + sizeof(keyOfCalAmpli_a) / sizeof(keyOfCalAmpli_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalAmpliTable::getKeyName() {
-		return key;
+	const vector<string>& CalAmpliTable::getKeyName() {
+		return keyOfCalAmpli_v;
 	}
 
 
 	CalAmpliTable::CalAmpliTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("atmPhaseCorrection");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("basebandName");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -155,91 +209,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalAmpliTable::getName() const {
-		return itsName;
+		return entityNameOfCalAmpli;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalAmpliTable::name() {
-		return itsName;
+		return entityNameOfCalAmpli;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalAmpliTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("apertureEfficiency");
-
-		attributesNames.push_back("apertureEfficiencyError");
-
-
-		attributesNames.push_back("correctionValidity");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("apertureEfficiency") ; 
-    	 
-    	attributesNamesInBin.push_back("apertureEfficiencyError") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("correctionValidity") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalAmpliTable::getAttributesNames() { return attributesNamesOfCalAmpli_v; }
 	
-
-	const vector<string>& CalAmpliTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalAmpliTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalAmpliTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalAmpli_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -412,8 +401,10 @@ CalAmpliRow* CalAmpliTable::newRow(CalAmpliRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalAmpliRow*  CalAmpliTable::checkAndAdd(CalAmpliRow* x)  {
+	CalAmpliRow*  CalAmpliTable::checkAndAdd(CalAmpliRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -596,7 +587,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/3/CalAmpliTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/3/CalAmpliTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -718,7 +709,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/3/CalAmpliTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalAmpliTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clmpl=\"http://Alma/XASDM/CalAmpliTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAmpliTable http://almaobservatory.org/XML/XASDM/3/CalAmpliTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAmpliTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -989,7 +980,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalAmpli_v.begin(); iter != attributesNamesOfCalAmpli_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalAmpli"); 
 		}
@@ -1108,7 +1099,7 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalAmpli_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

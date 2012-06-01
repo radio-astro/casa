@@ -67,34 +67,68 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfPolarization = "Polarization";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfPolarization_a[] = {
+		
+			"polarizationId"
+		
+		
+			, "numCorr"
+		
+			, "corrType"
+		
+			, "corrProduct"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfPolarization_v (attributesNamesOfPolarization_a, attributesNamesOfPolarization_a + sizeof(attributesNamesOfPolarization_a) / sizeof(attributesNamesOfPolarization_a[0]));
 
-	string PolarizationTable::itsName = "Polarization";
-	vector<string> PolarizationTable::attributesNames; 
-	vector<string> PolarizationTable::attributesNamesInBin; 
-	bool PolarizationTable::initAttributesNamesDone = PolarizationTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfPolarization_a[] = {
+    
+    	 "polarizationId" , "numCorr" , "corrType" , "corrProduct" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfPolarization_v(attributesNamesInBinOfPolarization_a, attributesNamesInBinOfPolarization_a + sizeof(attributesNamesInBinOfPolarization_a) / sizeof(attributesNamesInBinOfPolarization_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> PolarizationTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfPolarization_a[] = {
+	
+		"polarizationId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfPolarization_v(keyOfPolarization_a, keyOfPolarization_a + sizeof(keyOfPolarization_a) / sizeof(keyOfPolarization_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> PolarizationTable::getKeyName() {
-		return key;
+	const vector<string>& PolarizationTable::getKeyName() {
+		return keyOfPolarization_v;
 	}
 
 
 	PolarizationTable::PolarizationTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("polarizationId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,51 +179,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string PolarizationTable::getName() const {
-		return itsName;
+		return entityNameOfPolarization;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string PolarizationTable::name() {
-		return itsName;
+		return entityNameOfPolarization;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool PolarizationTable::initAttributesNames() {
-
-		attributesNames.push_back("polarizationId");
-
-
-		attributesNames.push_back("numCorr");
-
-		attributesNames.push_back("corrType");
-
-		attributesNames.push_back("corrProduct");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("polarizationId") ; 
-    	 
-    	attributesNamesInBin.push_back("numCorr") ; 
-    	 
-    	attributesNamesInBin.push_back("corrType") ; 
-    	 
-    	attributesNamesInBin.push_back("corrProduct") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& PolarizationTable::getAttributesNames() { return attributesNamesOfPolarization_v; }
 	
-
-	const vector<string>& PolarizationTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& PolarizationTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& PolarizationTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfPolarization_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -319,20 +328,22 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	PolarizationRow*  PolarizationTable::checkAndAdd(PolarizationRow* x)  {
+	PolarizationRow*  PolarizationTable::checkAndAdd(PolarizationRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getNumCorr()
+				x->getNumCorr()
 		,
-			x->getCorrType()
+				x->getCorrType()
 		,
-			x->getCorrProduct()
+				x->getCorrProduct()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -465,7 +476,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/3/PolarizationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/3/PolarizationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -587,7 +598,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/3/PolarizationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<PolarizationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:plrztn=\"http://Alma/XASDM/PolarizationTable\" xsi:schemaLocation=\"http://Alma/XASDM/PolarizationTable http://almaobservatory.org/XML/XASDM/3/PolarizationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PolarizationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -828,7 +839,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfPolarization_v.begin(); iter != attributesNamesOfPolarization_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Polarization"); 
 		}
@@ -947,7 +958,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfPolarization_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

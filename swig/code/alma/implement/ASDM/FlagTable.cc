@@ -67,34 +67,84 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFlag = "Flag";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFlag_a[] = {
+		
+			"flagId"
+		
+		
+			, "startTime"
+		
+			, "endTime"
+		
+			, "reason"
+		
+			, "numAntenna"
+		
+			, "antennaId"
+				
+		
+			, "numPolarizationType"
+		
+			, "numSpectralWindow"
+		
+			, "numPairedAntenna"
+		
+			, "polarizationType"
+		
+			, "pairedAntennaId"
+		
+			, "spectralWindowId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFlag_v (attributesNamesOfFlag_a, attributesNamesOfFlag_a + sizeof(attributesNamesOfFlag_a) / sizeof(attributesNamesOfFlag_a[0]));
 
-	string FlagTable::itsName = "Flag";
-	vector<string> FlagTable::attributesNames; 
-	vector<string> FlagTable::attributesNamesInBin; 
-	bool FlagTable::initAttributesNamesDone = FlagTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFlag_a[] = {
+    
+    	 "flagId" , "startTime" , "endTime" , "reason" , "numAntenna" , "antennaId" 
+    	,
+    	 "numPolarizationType" , "numSpectralWindow" , "numPairedAntenna" , "polarizationType" , "pairedAntennaId" , "spectralWindowId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFlag_v(attributesNamesInBinOfFlag_a, attributesNamesInBinOfFlag_a + sizeof(attributesNamesInBinOfFlag_a) / sizeof(attributesNamesInBinOfFlag_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FlagTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFlag_a[] = {
+	
+		"flagId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFlag_v(keyOfFlag_a, keyOfFlag_a + sizeof(keyOfFlag_a) / sizeof(keyOfFlag_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FlagTable::getKeyName() {
-		return key;
+	const vector<string>& FlagTable::getKeyName() {
+		return keyOfFlag_v;
 	}
 
 
 	FlagTable::FlagTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("flagId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,83 +195,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FlagTable::getName() const {
-		return itsName;
+		return entityNameOfFlag;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FlagTable::name() {
-		return itsName;
+		return entityNameOfFlag;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FlagTable::initAttributesNames() {
-
-		attributesNames.push_back("flagId");
-
-
-		attributesNames.push_back("startTime");
-
-		attributesNames.push_back("endTime");
-
-		attributesNames.push_back("reason");
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("antennaId");
-
-
-		attributesNames.push_back("numPolarizationType");
-
-		attributesNames.push_back("numSpectralWindow");
-
-		attributesNames.push_back("numPairedAntenna");
-
-		attributesNames.push_back("polarizationType");
-
-		attributesNames.push_back("pairedAntennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("flagId") ; 
-    	 
-    	attributesNamesInBin.push_back("startTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endTime") ; 
-    	 
-    	attributesNamesInBin.push_back("reason") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numPolarizationType") ; 
-    	 
-    	attributesNamesInBin.push_back("numSpectralWindow") ; 
-    	 
-    	attributesNamesInBin.push_back("numPairedAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationType") ; 
-    	 
-    	attributesNamesInBin.push_back("pairedAntennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FlagTable::getAttributesNames() { return attributesNamesOfFlag_v; }
 	
-
-	const vector<string>& FlagTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FlagTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FlagTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFlag_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -363,24 +356,26 @@ FlagRow* FlagTable::newRow(FlagRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	FlagRow*  FlagTable::checkAndAdd(FlagRow* x)  {
+	FlagRow*  FlagTable::checkAndAdd(FlagRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getStartTime()
+				x->getStartTime()
 		,
-			x->getEndTime()
+				x->getEndTime()
 		,
-			x->getReason()
+				x->getReason()
 		,
-			x->getNumAntenna()
+				x->getNumAntenna()
 		,
-			x->getAntennaId()
+				x->getAntennaId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -517,7 +512,7 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FlagTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flag=\"http://Alma/XASDM/FlagTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagTable http://almaobservatory.org/XML/XASDM/3/FlagTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FlagTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flag=\"http://Alma/XASDM/FlagTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagTable http://almaobservatory.org/XML/XASDM/3/FlagTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -639,7 +634,7 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FlagTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flag=\"http://Alma/XASDM/FlagTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagTable http://almaobservatory.org/XML/XASDM/3/FlagTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FlagTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flag=\"http://Alma/XASDM/FlagTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagTable http://almaobservatory.org/XML/XASDM/3/FlagTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FlagTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -904,7 +899,7 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFlag_v.begin(); iter != attributesNamesOfFlag_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Flag"); 
 		}
@@ -1023,7 +1018,7 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFlag_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

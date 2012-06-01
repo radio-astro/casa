@@ -67,38 +67,96 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfTotalPower = "TotalPower";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfTotalPower_a[] = {
+		
+			"time"
+		,
+			"configDescriptionId"
+		,
+			"fieldId"
+		
+		
+			, "scanNumber"
+		
+			, "subscanNumber"
+		
+			, "integrationNumber"
+		
+			, "uvw"
+		
+			, "exposure"
+		
+			, "timeCentroid"
+		
+			, "floatData"
+		
+			, "flagAnt"
+		
+			, "flagPol"
+		
+			, "interval"
+		
+			, "stateId"
+		
+			, "execBlockId"
+				
+		
+			, "subintegrationNumber"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfTotalPower_v (attributesNamesOfTotalPower_a, attributesNamesOfTotalPower_a + sizeof(attributesNamesOfTotalPower_a) / sizeof(attributesNamesOfTotalPower_a[0]));
 
-	string TotalPowerTable::itsName = "TotalPower";
-	vector<string> TotalPowerTable::attributesNames; 
-	vector<string> TotalPowerTable::attributesNamesInBin; 
-	bool TotalPowerTable::initAttributesNamesDone = TotalPowerTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfTotalPower_a[] = {
+    
+    	 "time" , "configDescriptionId" , "fieldId" , "scanNumber" , "subscanNumber" , "integrationNumber" , "uvw" , "exposure" , "timeCentroid" , "floatData" , "flagAnt" , "flagPol" , "interval" , "stateId" , "execBlockId" 
+    	,
+    	 "subintegrationNumber" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfTotalPower_v(attributesNamesInBinOfTotalPower_a, attributesNamesInBinOfTotalPower_a + sizeof(attributesNamesInBinOfTotalPower_a) / sizeof(attributesNamesInBinOfTotalPower_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> TotalPowerTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfTotalPower_a[] = {
+	
+		"time"
+	,
+		"configDescriptionId"
+	,
+		"fieldId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfTotalPower_v(keyOfTotalPower_a, keyOfTotalPower_a + sizeof(keyOfTotalPower_a) / sizeof(keyOfTotalPower_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> TotalPowerTable::getKeyName() {
-		return key;
+	const vector<string>& TotalPowerTable::getKeyName() {
+		return keyOfTotalPower_v;
 	}
 
 
 	TotalPowerTable::TotalPowerTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("time");
-	
-		key.push_back("configDescriptionId");
-	
-		key.push_back("fieldId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,99 +207,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string TotalPowerTable::getName() const {
-		return itsName;
+		return entityNameOfTotalPower;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string TotalPowerTable::name() {
-		return itsName;
+		return entityNameOfTotalPower;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool TotalPowerTable::initAttributesNames() {
-
-		attributesNames.push_back("time");
-
-		attributesNames.push_back("configDescriptionId");
-
-		attributesNames.push_back("fieldId");
-
-
-		attributesNames.push_back("scanNumber");
-
-		attributesNames.push_back("subscanNumber");
-
-		attributesNames.push_back("integrationNumber");
-
-		attributesNames.push_back("uvw");
-
-		attributesNames.push_back("exposure");
-
-		attributesNames.push_back("timeCentroid");
-
-		attributesNames.push_back("floatData");
-
-		attributesNames.push_back("flagAnt");
-
-		attributesNames.push_back("flagPol");
-
-		attributesNames.push_back("interval");
-
-		attributesNames.push_back("stateId");
-
-		attributesNames.push_back("execBlockId");
-
-
-		attributesNames.push_back("subintegrationNumber");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	 
-    	attributesNamesInBin.push_back("configDescriptionId") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldId") ; 
-    	 
-    	attributesNamesInBin.push_back("scanNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("subscanNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("integrationNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("uvw") ; 
-    	 
-    	attributesNamesInBin.push_back("exposure") ; 
-    	 
-    	attributesNamesInBin.push_back("timeCentroid") ; 
-    	 
-    	attributesNamesInBin.push_back("floatData") ; 
-    	 
-    	attributesNamesInBin.push_back("flagAnt") ; 
-    	 
-    	attributesNamesInBin.push_back("flagPol") ; 
-    	 
-    	attributesNamesInBin.push_back("interval") ; 
-    	 
-    	attributesNamesInBin.push_back("stateId") ; 
-    	 
-    	attributesNamesInBin.push_back("execBlockId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("subintegrationNumber") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& TotalPowerTable::getAttributesNames() { return attributesNamesOfTotalPower_v; }
 	
-
-	const vector<string>& TotalPowerTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& TotalPowerTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& TotalPowerTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfTotalPower_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -389,7 +374,9 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	
 		
 	void TotalPowerTable::addWithoutCheckingUnique(TotalPowerRow * x) {
-		TotalPowerRow * dummy = add(x);
+		TotalPowerRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -408,7 +395,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 			
 			
 			
-	TotalPowerRow*  TotalPowerTable::checkAndAdd(TotalPowerRow* x) {
+	TotalPowerRow*  TotalPowerTable::checkAndAdd(TotalPowerRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getConfigDescriptionId() 
 					   , 
@@ -578,7 +565,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/3/TotalPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/3/TotalPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -700,7 +687,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/3/TotalPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ttlpwr=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/3/TotalPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='TotalPowerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -977,7 +964,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfTotalPower_v.begin(); iter != attributesNamesOfTotalPower_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "TotalPower"); 
 		}
@@ -1096,7 +1083,7 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfTotalPower_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

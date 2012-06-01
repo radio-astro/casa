@@ -67,34 +67,122 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSpectralWindow = "SpectralWindow";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSpectralWindow_a[] = {
+		
+			"spectralWindowId"
+		
+		
+			, "basebandName"
+		
+			, "netSideband"
+		
+			, "numChan"
+		
+			, "refFreq"
+		
+			, "sidebandProcessingMode"
+		
+			, "totBandwidth"
+		
+			, "windowFunction"
+				
+		
+			, "chanFreqStart"
+		
+			, "chanFreqStep"
+		
+			, "chanFreqArray"
+		
+			, "chanWidth"
+		
+			, "chanWidthArray"
+		
+			, "correlationBit"
+		
+			, "effectiveBw"
+		
+			, "effectiveBwArray"
+		
+			, "freqGroup"
+		
+			, "freqGroupName"
+		
+			, "lineArray"
+		
+			, "measFreqRef"
+		
+			, "name"
+		
+			, "oversampling"
+		
+			, "quantization"
+		
+			, "refChan"
+		
+			, "resolution"
+		
+			, "resolutionArray"
+		
+			, "numAssocValues"
+		
+			, "assocNature"
+		
+			, "assocSpectralWindowId"
+		
+			, "imageSpectralWindowId"
+		
+			, "dopplerId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSpectralWindow_v (attributesNamesOfSpectralWindow_a, attributesNamesOfSpectralWindow_a + sizeof(attributesNamesOfSpectralWindow_a) / sizeof(attributesNamesOfSpectralWindow_a[0]));
 
-	string SpectralWindowTable::itsName = "SpectralWindow";
-	vector<string> SpectralWindowTable::attributesNames; 
-	vector<string> SpectralWindowTable::attributesNamesInBin; 
-	bool SpectralWindowTable::initAttributesNamesDone = SpectralWindowTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSpectralWindow_a[] = {
+    
+    	 "spectralWindowId" , "basebandName" , "netSideband" , "numChan" , "refFreq" , "sidebandProcessingMode" , "totBandwidth" , "windowFunction" 
+    	,
+    	 "chanFreqStart" , "chanFreqStep" , "chanFreqArray" , "chanWidth" , "chanWidthArray" , "correlationBit" , "effectiveBw" , "effectiveBwArray" , "freqGroup" , "freqGroupName" , "lineArray" , "measFreqRef" , "name" , "oversampling" , "quantization" , "refChan" , "resolution" , "resolutionArray" , "numAssocValues" , "assocNature" , "assocSpectralWindowId" , "imageSpectralWindowId" , "dopplerId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSpectralWindow_v(attributesNamesInBinOfSpectralWindow_a, attributesNamesInBinOfSpectralWindow_a + sizeof(attributesNamesInBinOfSpectralWindow_a) / sizeof(attributesNamesInBinOfSpectralWindow_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SpectralWindowTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSpectralWindow_a[] = {
+	
+		"spectralWindowId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSpectralWindow_v(keyOfSpectralWindow_a, keyOfSpectralWindow_a + sizeof(keyOfSpectralWindow_a) / sizeof(keyOfSpectralWindow_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SpectralWindowTable::getKeyName() {
-		return key;
+	const vector<string>& SpectralWindowTable::getKeyName() {
+		return keyOfSpectralWindow_v;
 	}
 
 
 	SpectralWindowTable::SpectralWindowTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("spectralWindowId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,159 +233,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SpectralWindowTable::getName() const {
-		return itsName;
+		return entityNameOfSpectralWindow;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SpectralWindowTable::name() {
-		return itsName;
+		return entityNameOfSpectralWindow;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SpectralWindowTable::initAttributesNames() {
-
-		attributesNames.push_back("spectralWindowId");
-
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("netSideband");
-
-		attributesNames.push_back("numChan");
-
-		attributesNames.push_back("refFreq");
-
-		attributesNames.push_back("sidebandProcessingMode");
-
-		attributesNames.push_back("totBandwidth");
-
-		attributesNames.push_back("windowFunction");
-
-
-		attributesNames.push_back("chanFreqStart");
-
-		attributesNames.push_back("chanFreqStep");
-
-		attributesNames.push_back("chanFreqArray");
-
-		attributesNames.push_back("chanWidth");
-
-		attributesNames.push_back("chanWidthArray");
-
-		attributesNames.push_back("correlationBit");
-
-		attributesNames.push_back("effectiveBw");
-
-		attributesNames.push_back("effectiveBwArray");
-
-		attributesNames.push_back("freqGroup");
-
-		attributesNames.push_back("freqGroupName");
-
-		attributesNames.push_back("lineArray");
-
-		attributesNames.push_back("measFreqRef");
-
-		attributesNames.push_back("name");
-
-		attributesNames.push_back("oversampling");
-
-		attributesNames.push_back("quantization");
-
-		attributesNames.push_back("refChan");
-
-		attributesNames.push_back("resolution");
-
-		attributesNames.push_back("resolutionArray");
-
-		attributesNames.push_back("numAssocValues");
-
-		attributesNames.push_back("assocNature");
-
-		attributesNames.push_back("assocSpectralWindowId");
-
-		attributesNames.push_back("imageSpectralWindowId");
-
-		attributesNames.push_back("dopplerId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("netSideband") ; 
-    	 
-    	attributesNamesInBin.push_back("numChan") ; 
-    	 
-    	attributesNamesInBin.push_back("refFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("sidebandProcessingMode") ; 
-    	 
-    	attributesNamesInBin.push_back("totBandwidth") ; 
-    	 
-    	attributesNamesInBin.push_back("windowFunction") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("chanFreqStart") ; 
-    	 
-    	attributesNamesInBin.push_back("chanFreqStep") ; 
-    	 
-    	attributesNamesInBin.push_back("chanFreqArray") ; 
-    	 
-    	attributesNamesInBin.push_back("chanWidth") ; 
-    	 
-    	attributesNamesInBin.push_back("chanWidthArray") ; 
-    	 
-    	attributesNamesInBin.push_back("correlationBit") ; 
-    	 
-    	attributesNamesInBin.push_back("effectiveBw") ; 
-    	 
-    	attributesNamesInBin.push_back("effectiveBwArray") ; 
-    	 
-    	attributesNamesInBin.push_back("freqGroup") ; 
-    	 
-    	attributesNamesInBin.push_back("freqGroupName") ; 
-    	 
-    	attributesNamesInBin.push_back("lineArray") ; 
-    	 
-    	attributesNamesInBin.push_back("measFreqRef") ; 
-    	 
-    	attributesNamesInBin.push_back("name") ; 
-    	 
-    	attributesNamesInBin.push_back("oversampling") ; 
-    	 
-    	attributesNamesInBin.push_back("quantization") ; 
-    	 
-    	attributesNamesInBin.push_back("refChan") ; 
-    	 
-    	attributesNamesInBin.push_back("resolution") ; 
-    	 
-    	attributesNamesInBin.push_back("resolutionArray") ; 
-    	 
-    	attributesNamesInBin.push_back("numAssocValues") ; 
-    	 
-    	attributesNamesInBin.push_back("assocNature") ; 
-    	 
-    	attributesNamesInBin.push_back("assocSpectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("imageSpectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("dopplerId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SpectralWindowTable::getAttributesNames() { return attributesNamesOfSpectralWindow_v; }
 	
-
-	const vector<string>& SpectralWindowTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SpectralWindowTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SpectralWindowTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSpectralWindow_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -451,28 +406,30 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	SpectralWindowRow*  SpectralWindowTable::checkAndAdd(SpectralWindowRow* x)  {
+	SpectralWindowRow*  SpectralWindowTable::checkAndAdd(SpectralWindowRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getBasebandName()
+				x->getBasebandName()
 		,
-			x->getNetSideband()
+				x->getNetSideband()
 		,
-			x->getNumChan()
+				x->getNumChan()
 		,
-			x->getRefFreq()
+				x->getRefFreq()
 		,
-			x->getSidebandProcessingMode()
+				x->getSidebandProcessingMode()
 		,
-			x->getTotBandwidth()
+				x->getTotBandwidth()
 		,
-			x->getWindowFunction()
+				x->getWindowFunction()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -613,7 +570,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -735,7 +692,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:spctrw=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/3/SpectralWindowTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SpectralWindowTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1057,7 +1014,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSpectralWindow_v.begin(); iter != attributesNamesOfSpectralWindow_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "SpectralWindow"); 
 		}
@@ -1176,7 +1133,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSpectralWindow_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

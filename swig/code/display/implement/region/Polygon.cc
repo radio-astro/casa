@@ -104,7 +104,9 @@ namespace casa {
 		    _drawing_trc_y_ = _drawing_points_[i].second;
 	    }
 
-	    updateStateInfo( true ); 
+	    updateStateInfo( true );
+	    setDrawCenter(false);
+	    invalidateCenterInfo();
 	}
 
 	bool Polygon::within_vertex_handle( double x, double y ) const {
@@ -274,6 +276,8 @@ namespace casa {
 		return 0;
 
 	    updateStateInfo( true ); 
+	    setDrawCenter(false);
+	    invalidateCenterInfo();
 	    return handle;
 	}
 
@@ -497,7 +501,11 @@ namespace casa {
 
 	    int x1, y1, x2, y2;
 	    try { linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 ); } catch(...) { return; }
-	      
+
+	    // draw the center
+	    if (getDrawCenter())
+	   	 drawCenter( _center_x, _center_y, _center_delta_x, _center_delta_y);
+
 	    int first_x = x1, first_y = y1;
 	    for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
 		try { linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 ); } catch(...) { return; }

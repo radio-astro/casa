@@ -67,42 +67,110 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalPhase = "CalPhase";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalPhase_a[] = {
+		
+			"basebandName"
+		,
+			"receiverBand"
+		,
+			"atmPhaseCorrection"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "numBaseline"
+		
+			, "numReceptor"
+		
+			, "ampli"
+		
+			, "antennaNames"
+		
+			, "baselineLengths"
+		
+			, "decorrelationFactor"
+		
+			, "direction"
+		
+			, "frequencyRange"
+		
+			, "integrationTime"
+		
+			, "phase"
+		
+			, "polarizationTypes"
+		
+			, "phaseRMS"
+		
+			, "statPhaseRMS"
+				
+		
+			, "correctionValidity"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalPhase_v (attributesNamesOfCalPhase_a, attributesNamesOfCalPhase_a + sizeof(attributesNamesOfCalPhase_a) / sizeof(attributesNamesOfCalPhase_a[0]));
 
-	string CalPhaseTable::itsName = "CalPhase";
-	vector<string> CalPhaseTable::attributesNames; 
-	vector<string> CalPhaseTable::attributesNamesInBin; 
-	bool CalPhaseTable::initAttributesNamesDone = CalPhaseTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalPhase_a[] = {
+    
+    	 "basebandName" , "receiverBand" , "atmPhaseCorrection" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "numBaseline" , "numReceptor" , "ampli" , "antennaNames" , "baselineLengths" , "decorrelationFactor" , "direction" , "frequencyRange" , "integrationTime" , "phase" , "polarizationTypes" , "phaseRMS" , "statPhaseRMS" 
+    	,
+    	 "correctionValidity" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalPhase_v(attributesNamesInBinOfCalPhase_a, attributesNamesInBinOfCalPhase_a + sizeof(attributesNamesInBinOfCalPhase_a) / sizeof(attributesNamesInBinOfCalPhase_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalPhaseTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalPhase_a[] = {
+	
+		"basebandName"
+	,
+		"receiverBand"
+	,
+		"atmPhaseCorrection"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalPhase_v(keyOfCalPhase_a, keyOfCalPhase_a + sizeof(keyOfCalPhase_a) / sizeof(keyOfCalPhase_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalPhaseTable::getKeyName() {
-		return key;
+	const vector<string>& CalPhaseTable::getKeyName() {
+		return keyOfCalPhase_v;
 	}
 
 
 	CalPhaseTable::CalPhaseTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("basebandName");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("atmPhaseCorrection");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -153,119 +221,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalPhaseTable::getName() const {
-		return itsName;
+		return entityNameOfCalPhase;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPhaseTable::name() {
-		return itsName;
+		return entityNameOfCalPhase;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalPhaseTable::initAttributesNames() {
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("numBaseline");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("ampli");
-
-		attributesNames.push_back("antennaNames");
-
-		attributesNames.push_back("baselineLengths");
-
-		attributesNames.push_back("decorrelationFactor");
-
-		attributesNames.push_back("direction");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("integrationTime");
-
-		attributesNames.push_back("phase");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("phaseRMS");
-
-		attributesNames.push_back("statPhaseRMS");
-
-
-		attributesNames.push_back("correctionValidity");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("numBaseline") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("ampli") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaNames") ; 
-    	 
-    	attributesNamesInBin.push_back("baselineLengths") ; 
-    	 
-    	attributesNamesInBin.push_back("decorrelationFactor") ; 
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("integrationTime") ; 
-    	 
-    	attributesNamesInBin.push_back("phase") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseRMS") ; 
-    	 
-    	attributesNamesInBin.push_back("statPhaseRMS") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("correctionValidity") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalPhaseTable::getAttributesNames() { return attributesNamesOfCalPhase_v; }
 	
-
-	const vector<string>& CalPhaseTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalPhaseTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalPhaseTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalPhase_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -462,8 +437,10 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalPhaseRow*  CalPhaseTable::checkAndAdd(CalPhaseRow* x)  {
+	CalPhaseRow*  CalPhaseTable::checkAndAdd(CalPhaseRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -654,7 +631,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/3/CalPhaseTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/3/CalPhaseTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -776,7 +753,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/3/CalPhaseTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clphas=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/3/CalPhaseTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPhaseTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1068,7 +1045,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalPhase_v.begin(); iter != attributesNamesOfCalPhase_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalPhase"); 
 		}
@@ -1187,7 +1164,7 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalPhase_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

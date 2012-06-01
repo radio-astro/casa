@@ -67,36 +67,84 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalGain = "CalGain";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalGain_a[] = {
+		
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "gain"
+		
+			, "gainValid"
+		
+			, "fit"
+		
+			, "fitWeight"
+		
+			, "totalGainValid"
+		
+			, "totalFit"
+		
+			, "totalFitWeight"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalGain_v (attributesNamesOfCalGain_a, attributesNamesOfCalGain_a + sizeof(attributesNamesOfCalGain_a) / sizeof(attributesNamesOfCalGain_a[0]));
 
-	string CalGainTable::itsName = "CalGain";
-	vector<string> CalGainTable::attributesNames; 
-	vector<string> CalGainTable::attributesNamesInBin; 
-	bool CalGainTable::initAttributesNamesDone = CalGainTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalGain_a[] = {
+    
+    	 "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "gain" , "gainValid" , "fit" , "fitWeight" , "totalGainValid" , "totalFit" , "totalFitWeight" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalGain_v(attributesNamesInBinOfCalGain_a, attributesNamesInBinOfCalGain_a + sizeof(attributesNamesInBinOfCalGain_a) / sizeof(attributesNamesInBinOfCalGain_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalGainTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalGain_a[] = {
+	
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalGain_v(keyOfCalGain_a, keyOfCalGain_a + sizeof(keyOfCalGain_a) / sizeof(keyOfCalGain_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalGainTable::getKeyName() {
-		return key;
+	const vector<string>& CalGainTable::getKeyName() {
+		return keyOfCalGain_v;
 	}
 
 
 	CalGainTable::CalGainTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,79 +195,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalGainTable::getName() const {
-		return itsName;
+		return entityNameOfCalGain;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalGainTable::name() {
-		return itsName;
+		return entityNameOfCalGain;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalGainTable::initAttributesNames() {
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("gain");
-
-		attributesNames.push_back("gainValid");
-
-		attributesNames.push_back("fit");
-
-		attributesNames.push_back("fitWeight");
-
-		attributesNames.push_back("totalGainValid");
-
-		attributesNames.push_back("totalFit");
-
-		attributesNames.push_back("totalFitWeight");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("gain") ; 
-    	 
-    	attributesNamesInBin.push_back("gainValid") ; 
-    	 
-    	attributesNamesInBin.push_back("fit") ; 
-    	 
-    	attributesNamesInBin.push_back("fitWeight") ; 
-    	 
-    	attributesNamesInBin.push_back("totalGainValid") ; 
-    	 
-    	attributesNamesInBin.push_back("totalFit") ; 
-    	 
-    	attributesNamesInBin.push_back("totalFitWeight") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalGainTable::getAttributesNames() { return attributesNamesOfCalGain_v; }
 	
-
-	const vector<string>& CalGainTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalGainTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalGainTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalGain_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -368,8 +363,10 @@ CalGainRow* CalGainTable::newRow(CalGainRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalGainRow*  CalGainTable::checkAndAdd(CalGainRow* x)  {
+	CalGainRow*  CalGainTable::checkAndAdd(CalGainRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -524,7 +521,7 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalGainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clgn=\"http://Alma/XASDM/CalGainTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalGainTable http://almaobservatory.org/XML/XASDM/3/CalGainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalGainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clgn=\"http://Alma/XASDM/CalGainTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalGainTable http://almaobservatory.org/XML/XASDM/3/CalGainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -646,7 +643,7 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalGainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clgn=\"http://Alma/XASDM/CalGainTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalGainTable http://almaobservatory.org/XML/XASDM/3/CalGainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalGainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clgn=\"http://Alma/XASDM/CalGainTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalGainTable http://almaobservatory.org/XML/XASDM/3/CalGainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalGainTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -908,7 +905,7 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalGain_v.begin(); iter != attributesNamesOfCalGain_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalGain"); 
 		}
@@ -1027,7 +1024,7 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalGain_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

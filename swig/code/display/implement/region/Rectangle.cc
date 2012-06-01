@@ -218,7 +218,19 @@ namespace casa {
 
 	    if ( blc_x > trc_x || blc_y > trc_y ) throw internal_error("rectangle inconsistency");
 	    updateStateInfo( true );
+	    setDrawCenter(false);
+	    invalidateCenterInfo();
 	    return handle;
+	}
+
+	void Rectangle::move( double dx, double dy ) {
+		blc_x += dx;
+		trc_x += dx;
+		blc_y += dy;
+		trc_y += dy;
+		updateStateInfo( true );
+		setDrawCenter(false);
+		invalidateCenterInfo();
 	}
 
 	void Rectangle::regionCenter( double &x, double &y ) const {
@@ -306,6 +318,10 @@ namespace casa {
 	    int x1, y1, x2, y2;
 	    try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
 	    pc->drawRectangle( x1, y1, x2, y2 );
+
+	    // draw the center
+	    if (getDrawCenter())
+	   	 drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
 	    if ( selected ) {
 		Int w = x2 - x1;

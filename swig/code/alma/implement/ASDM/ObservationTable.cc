@@ -67,34 +67,62 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfObservation = "Observation";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfObservation_a[] = {
+		
+			"observationId"
+		
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfObservation_v (attributesNamesOfObservation_a, attributesNamesOfObservation_a + sizeof(attributesNamesOfObservation_a) / sizeof(attributesNamesOfObservation_a[0]));
 
-	string ObservationTable::itsName = "Observation";
-	vector<string> ObservationTable::attributesNames; 
-	vector<string> ObservationTable::attributesNamesInBin; 
-	bool ObservationTable::initAttributesNamesDone = ObservationTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfObservation_a[] = {
+    
+    	 "observationId" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfObservation_v(attributesNamesInBinOfObservation_a, attributesNamesInBinOfObservation_a + sizeof(attributesNamesInBinOfObservation_a) / sizeof(attributesNamesInBinOfObservation_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ObservationTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfObservation_a[] = {
+	
+		"observationId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfObservation_v(keyOfObservation_a, keyOfObservation_a + sizeof(keyOfObservation_a) / sizeof(keyOfObservation_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ObservationTable::getKeyName() {
-		return key;
+	const vector<string>& ObservationTable::getKeyName() {
+		return keyOfObservation_v;
 	}
 
 
 	ObservationTable::ObservationTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("observationId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,39 +173,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ObservationTable::getName() const {
-		return itsName;
+		return entityNameOfObservation;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ObservationTable::name() {
-		return itsName;
+		return entityNameOfObservation;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ObservationTable::initAttributesNames() {
-
-		attributesNames.push_back("observationId");
-
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("observationId") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ObservationTable::getAttributesNames() { return attributesNamesOfObservation_v; }
 	
-
-	const vector<string>& ObservationTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ObservationTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ObservationTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfObservation_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -272,10 +287,12 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	ObservationRow*  ObservationTable::checkAndAdd(ObservationRow* x)  {
+	ObservationRow*  ObservationTable::checkAndAdd(ObservationRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -386,7 +403,7 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:obsrvn=\"http://Alma/XASDM/ObservationTable\" xsi:schemaLocation=\"http://Alma/XASDM/ObservationTable http://almaobservatory.org/XML/XASDM/3/ObservationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:obsrvn=\"http://Alma/XASDM/ObservationTable\" xsi:schemaLocation=\"http://Alma/XASDM/ObservationTable http://almaobservatory.org/XML/XASDM/3/ObservationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -508,7 +525,7 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:obsrvn=\"http://Alma/XASDM/ObservationTable\" xsi:schemaLocation=\"http://Alma/XASDM/ObservationTable http://almaobservatory.org/XML/XASDM/3/ObservationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:obsrvn=\"http://Alma/XASDM/ObservationTable\" xsi:schemaLocation=\"http://Alma/XASDM/ObservationTable http://almaobservatory.org/XML/XASDM/3/ObservationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ObservationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -740,7 +757,7 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfObservation_v.begin(); iter != attributesNamesOfObservation_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Observation"); 
 		}
@@ -859,7 +876,7 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfObservation_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

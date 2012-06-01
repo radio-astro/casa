@@ -204,6 +204,9 @@ namespace casa {
 		void pushDrawingEnv( LineStyle ls );
 		void popDrawingEnv( );
 
+		void setDrawCenter(bool draw_center){draw_center_=draw_center;};
+		bool getDrawCenter(){return draw_center_;};
+
 		// duplicate of MultiWCTool::refresh( )
 		void refresh( );
 
@@ -217,6 +220,9 @@ namespace casa {
 
 		// indicates that region movement requires that the statistcs be updated...
 		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
+
+		// indicates that the center info is no longer valid
+		virtual void invalidateCenterInfo( ) DISPLAY_PURE_VIRTUAL(Region::invalidateCenterInfo,);
 
 		bool selected( ) const { return selected_; }
 
@@ -272,6 +278,8 @@ namespace casa {
 		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
+		virtual void setCenter(double &, double &, double &, double &) DISPLAY_PURE_VIRTUAL(Region::setCenter,);
+
 		virtual void drawCenter(double &x, double &y );
 		virtual void drawCenter(double &x, double &y, double &deltx, double &delty);
 
@@ -293,6 +301,8 @@ namespace casa {
 
 	    private:
 		void set_line_style( LineStyle linestyle );
+		bool draw_center_;
+
 	};
     }
 }
