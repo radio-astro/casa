@@ -67,34 +67,72 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfState = "State";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfState_a[] = {
+		
+			"stateId"
+		
+		
+			, "calDeviceName"
+		
+			, "sig"
+		
+			, "ref"
+		
+			, "onSky"
+				
+		
+			, "weight"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfState_v (attributesNamesOfState_a, attributesNamesOfState_a + sizeof(attributesNamesOfState_a) / sizeof(attributesNamesOfState_a[0]));
 
-	string StateTable::itsName = "State";
-	vector<string> StateTable::attributesNames; 
-	vector<string> StateTable::attributesNamesInBin; 
-	bool StateTable::initAttributesNamesDone = StateTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfState_a[] = {
+    
+    	 "stateId" , "calDeviceName" , "sig" , "ref" , "onSky" 
+    	,
+    	 "weight" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfState_v(attributesNamesInBinOfState_a, attributesNamesInBinOfState_a + sizeof(attributesNamesInBinOfState_a) / sizeof(attributesNamesInBinOfState_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> StateTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfState_a[] = {
+	
+		"stateId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfState_v(keyOfState_a, keyOfState_a + sizeof(keyOfState_a) / sizeof(keyOfState_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> StateTable::getKeyName() {
-		return key;
+	const vector<string>& StateTable::getKeyName() {
+		return keyOfState_v;
 	}
 
 
 	StateTable::StateTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("stateId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,59 +183,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string StateTable::getName() const {
-		return itsName;
+		return entityNameOfState;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string StateTable::name() {
-		return itsName;
+		return entityNameOfState;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool StateTable::initAttributesNames() {
-
-		attributesNames.push_back("stateId");
-
-
-		attributesNames.push_back("calDeviceName");
-
-		attributesNames.push_back("sig");
-
-		attributesNames.push_back("ref");
-
-		attributesNames.push_back("onSky");
-
-
-		attributesNames.push_back("weight");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("stateId") ; 
-    	 
-    	attributesNamesInBin.push_back("calDeviceName") ; 
-    	 
-    	attributesNamesInBin.push_back("sig") ; 
-    	 
-    	attributesNamesInBin.push_back("ref") ; 
-    	 
-    	attributesNamesInBin.push_back("onSky") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("weight") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& StateTable::getAttributesNames() { return attributesNamesOfState_v; }
 	
-
-	const vector<string>& StateTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& StateTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& StateTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfState_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -333,22 +338,24 @@ StateRow* StateTable::newRow(StateRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	StateRow*  StateTable::checkAndAdd(StateRow* x)  {
+	StateRow*  StateTable::checkAndAdd(StateRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getCalDeviceName()
+				x->getCalDeviceName()
 		,
-			x->getSig()
+				x->getSig()
 		,
-			x->getRef()
+				x->getRef()
 		,
-			x->getOnSky()
+				x->getOnSky()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -483,7 +490,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -605,7 +612,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='StateTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -852,7 +859,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfState_v.begin(); iter != attributesNamesOfState_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "State"); 
 		}
@@ -971,7 +978,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfState_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

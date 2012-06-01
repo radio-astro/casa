@@ -67,40 +67,106 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSysCal = "SysCal";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSysCal_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		,
+			"feedId"
+		
+		
+			, "numReceptor"
+		
+			, "numChan"
+				
+		
+			, "tcalFlag"
+		
+			, "tcalSpectrum"
+		
+			, "trxFlag"
+		
+			, "trxSpectrum"
+		
+			, "tskyFlag"
+		
+			, "tskySpectrum"
+		
+			, "tsysFlag"
+		
+			, "tsysSpectrum"
+		
+			, "tantFlag"
+		
+			, "tantSpectrum"
+		
+			, "tantTsysFlag"
+		
+			, "tantTsysSpectrum"
+		
+			, "phaseDiffFlag"
+		
+			, "phaseDiffSpectrum"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSysCal_v (attributesNamesOfSysCal_a, attributesNamesOfSysCal_a + sizeof(attributesNamesOfSysCal_a) / sizeof(attributesNamesOfSysCal_a[0]));
 
-	string SysCalTable::itsName = "SysCal";
-	vector<string> SysCalTable::attributesNames; 
-	vector<string> SysCalTable::attributesNamesInBin; 
-	bool SysCalTable::initAttributesNamesDone = SysCalTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSysCal_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "numReceptor" , "numChan" 
+    	,
+    	 "tcalFlag" , "tcalSpectrum" , "trxFlag" , "trxSpectrum" , "tskyFlag" , "tskySpectrum" , "tsysFlag" , "tsysSpectrum" , "tantFlag" , "tantSpectrum" , "tantTsysFlag" , "tantTsysSpectrum" , "phaseDiffFlag" , "phaseDiffSpectrum" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSysCal_v(attributesNamesInBinOfSysCal_a, attributesNamesInBinOfSysCal_a + sizeof(attributesNamesInBinOfSysCal_a) / sizeof(attributesNamesInBinOfSysCal_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SysCalTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSysCal_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+	,
+		"feedId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSysCal_v(keyOfSysCal_a, keyOfSysCal_a + sizeof(keyOfSysCal_a) / sizeof(keyOfSysCal_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SysCalTable::getKeyName() {
-		return key;
+	const vector<string>& SysCalTable::getKeyName() {
+		return keyOfSysCal_v;
 	}
 
 
 	SysCalTable::SysCalTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("feedId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,115 +217,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SysCalTable::getName() const {
-		return itsName;
+		return entityNameOfSysCal;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SysCalTable::name() {
-		return itsName;
+		return entityNameOfSysCal;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SysCalTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("feedId");
-
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("numChan");
-
-
-		attributesNames.push_back("tcalFlag");
-
-		attributesNames.push_back("tcalSpectrum");
-
-		attributesNames.push_back("trxFlag");
-
-		attributesNames.push_back("trxSpectrum");
-
-		attributesNames.push_back("tskyFlag");
-
-		attributesNames.push_back("tskySpectrum");
-
-		attributesNames.push_back("tsysFlag");
-
-		attributesNames.push_back("tsysSpectrum");
-
-		attributesNames.push_back("tantFlag");
-
-		attributesNames.push_back("tantSpectrum");
-
-		attributesNames.push_back("tantTsysFlag");
-
-		attributesNames.push_back("tantTsysSpectrum");
-
-		attributesNames.push_back("phaseDiffFlag");
-
-		attributesNames.push_back("phaseDiffSpectrum");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("numChan") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("tcalFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("tcalSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("trxFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("trxSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tskyFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("tskySpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tsysFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("tsysSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tantFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("tantSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tantTsysFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("tantTsysSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseDiffFlag") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseDiffSpectrum") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SysCalTable::getAttributesNames() { return attributesNamesOfSysCal_v; }
 	
-
-	const vector<string>& SysCalTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SysCalTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SysCalTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSysCal_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -385,7 +362,9 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	
 		
 	void SysCalTable::addWithoutCheckingUnique(SysCalRow * x) {
-		SysCalRow * dummy = add(x);
+		SysCalRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -404,7 +383,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 			
 			
 			
-	SysCalRow*  SysCalTable::checkAndAdd(SysCalRow* x) {
+	SysCalRow*  SysCalTable::checkAndAdd(SysCalRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -588,7 +567,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/3/SysCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/3/SysCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -710,7 +689,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/3/SysCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SysCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syscal=\"http://Alma/XASDM/SysCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysCalTable http://almaobservatory.org/XML/XASDM/3/SysCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -999,7 +978,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSysCal_v.begin(); iter != attributesNamesOfSysCal_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "SysCal"); 
 		}
@@ -1118,7 +1097,7 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSysCal_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

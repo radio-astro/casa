@@ -67,38 +67,100 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalWVR = "CalWVR";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalWVR_a[] = {
+		
+			"antennaName"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "wvrMethod"
+		
+			, "numInputAntennas"
+		
+			, "inputAntennaNames"
+		
+			, "numChan"
+		
+			, "chanFreq"
+		
+			, "chanWidth"
+		
+			, "refTemp"
+		
+			, "numPoly"
+		
+			, "pathCoeff"
+		
+			, "polyFreqLimits"
+		
+			, "wetPath"
+		
+			, "dryPath"
+		
+			, "water"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalWVR_v (attributesNamesOfCalWVR_a, attributesNamesOfCalWVR_a + sizeof(attributesNamesOfCalWVR_a) / sizeof(attributesNamesOfCalWVR_a[0]));
 
-	string CalWVRTable::itsName = "CalWVR";
-	vector<string> CalWVRTable::attributesNames; 
-	vector<string> CalWVRTable::attributesNamesInBin; 
-	bool CalWVRTable::initAttributesNamesDone = CalWVRTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalWVR_a[] = {
+    
+    	 "antennaName" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "wvrMethod" , "numInputAntennas" , "inputAntennaNames" , "numChan" , "chanFreq" , "chanWidth" , "refTemp" , "numPoly" , "pathCoeff" , "polyFreqLimits" , "wetPath" , "dryPath" , "water" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalWVR_v(attributesNamesInBinOfCalWVR_a, attributesNamesInBinOfCalWVR_a + sizeof(attributesNamesInBinOfCalWVR_a) / sizeof(attributesNamesInBinOfCalWVR_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalWVRTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalWVR_a[] = {
+	
+		"antennaName"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalWVR_v(keyOfCalWVR_a, keyOfCalWVR_a + sizeof(keyOfCalWVR_a) / sizeof(keyOfCalWVR_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalWVRTable::getKeyName() {
-		return key;
+	const vector<string>& CalWVRTable::getKeyName() {
+		return keyOfCalWVR_v;
 	}
 
 
 	CalWVRTable::CalWVRTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,107 +211,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalWVRTable::getName() const {
-		return itsName;
+		return entityNameOfCalWVR;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalWVRTable::name() {
-		return itsName;
+		return entityNameOfCalWVR;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalWVRTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("wvrMethod");
-
-		attributesNames.push_back("numInputAntennas");
-
-		attributesNames.push_back("inputAntennaNames");
-
-		attributesNames.push_back("numChan");
-
-		attributesNames.push_back("chanFreq");
-
-		attributesNames.push_back("chanWidth");
-
-		attributesNames.push_back("refTemp");
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("pathCoeff");
-
-		attributesNames.push_back("polyFreqLimits");
-
-		attributesNames.push_back("wetPath");
-
-		attributesNames.push_back("dryPath");
-
-		attributesNames.push_back("water");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("wvrMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("numInputAntennas") ; 
-    	 
-    	attributesNamesInBin.push_back("inputAntennaNames") ; 
-    	 
-    	attributesNamesInBin.push_back("numChan") ; 
-    	 
-    	attributesNamesInBin.push_back("chanFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("chanWidth") ; 
-    	 
-    	attributesNamesInBin.push_back("refTemp") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("pathCoeff") ; 
-    	 
-    	attributesNamesInBin.push_back("polyFreqLimits") ; 
-    	 
-    	attributesNamesInBin.push_back("wetPath") ; 
-    	 
-    	attributesNamesInBin.push_back("dryPath") ; 
-    	 
-    	attributesNamesInBin.push_back("water") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalWVRTable::getAttributesNames() { return attributesNamesOfCalWVR_v; }
 	
-
-	const vector<string>& CalWVRTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalWVRTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalWVRTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalWVR_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -430,8 +411,10 @@ CalWVRRow* CalWVRTable::newRow(CalWVRRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalWVRRow*  CalWVRTable::checkAndAdd(CalWVRRow* x)  {
+	CalWVRRow*  CalWVRTable::checkAndAdd(CalWVRRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -606,7 +589,7 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clwvr=\"http://Alma/XASDM/CalWVRTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalWVRTable http://almaobservatory.org/XML/XASDM/3/CalWVRTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clwvr=\"http://Alma/XASDM/CalWVRTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalWVRTable http://almaobservatory.org/XML/XASDM/3/CalWVRTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -728,7 +711,7 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clwvr=\"http://Alma/XASDM/CalWVRTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalWVRTable http://almaobservatory.org/XML/XASDM/3/CalWVRTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clwvr=\"http://Alma/XASDM/CalWVRTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalWVRTable http://almaobservatory.org/XML/XASDM/3/CalWVRTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalWVRTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1011,7 +994,7 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalWVR_v.begin(); iter != attributesNamesOfCalWVR_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalWVR"); 
 		}
@@ -1130,7 +1113,7 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalWVR_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

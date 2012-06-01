@@ -67,38 +67,118 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalHolography = "CalHolography";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalHolography_a[] = {
+		
+			"antennaName"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "antennaMake"
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "ambientTemperature"
+		
+			, "focusPosition"
+		
+			, "frequencyRange"
+		
+			, "illuminationTaper"
+		
+			, "numReceptor"
+		
+			, "polarizationTypes"
+		
+			, "numPanelModes"
+		
+			, "receiverBand"
+		
+			, "beamMapUID"
+		
+			, "rawRMS"
+		
+			, "weightedRMS"
+		
+			, "surfaceMapUID"
+		
+			, "direction"
+				
+		
+			, "numScrew"
+		
+			, "screwName"
+		
+			, "screwMotion"
+		
+			, "screwMotionError"
+		
+			, "gravCorrection"
+		
+			, "gravOptRange"
+		
+			, "tempCorrection"
+		
+			, "tempOptRange"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalHolography_v (attributesNamesOfCalHolography_a, attributesNamesOfCalHolography_a + sizeof(attributesNamesOfCalHolography_a) / sizeof(attributesNamesOfCalHolography_a[0]));
 
-	string CalHolographyTable::itsName = "CalHolography";
-	vector<string> CalHolographyTable::attributesNames; 
-	vector<string> CalHolographyTable::attributesNamesInBin; 
-	bool CalHolographyTable::initAttributesNamesDone = CalHolographyTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalHolography_a[] = {
+    
+    	 "antennaName" , "calDataId" , "calReductionId" , "antennaMake" , "startValidTime" , "endValidTime" , "ambientTemperature" , "focusPosition" , "frequencyRange" , "illuminationTaper" , "numReceptor" , "polarizationTypes" , "numPanelModes" , "receiverBand" , "beamMapUID" , "rawRMS" , "weightedRMS" , "surfaceMapUID" , "direction" 
+    	,
+    	 "numScrew" , "screwName" , "screwMotion" , "screwMotionError" , "gravCorrection" , "gravOptRange" , "tempCorrection" , "tempOptRange" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalHolography_v(attributesNamesInBinOfCalHolography_a, attributesNamesInBinOfCalHolography_a + sizeof(attributesNamesInBinOfCalHolography_a) / sizeof(attributesNamesInBinOfCalHolography_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalHolographyTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalHolography_a[] = {
+	
+		"antennaName"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalHolography_v(keyOfCalHolography_a, keyOfCalHolography_a + sizeof(keyOfCalHolography_a) / sizeof(keyOfCalHolography_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalHolographyTable::getKeyName() {
-		return key;
+	const vector<string>& CalHolographyTable::getKeyName() {
+		return keyOfCalHolography_v;
 	}
 
 
 	CalHolographyTable::CalHolographyTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,143 +229,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalHolographyTable::getName() const {
-		return itsName;
+		return entityNameOfCalHolography;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalHolographyTable::name() {
-		return itsName;
+		return entityNameOfCalHolography;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalHolographyTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("antennaMake");
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("ambientTemperature");
-
-		attributesNames.push_back("focusPosition");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("illuminationTaper");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("numPanelModes");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("beamMapUID");
-
-		attributesNames.push_back("rawRMS");
-
-		attributesNames.push_back("weightedRMS");
-
-		attributesNames.push_back("surfaceMapUID");
-
-		attributesNames.push_back("direction");
-
-
-		attributesNames.push_back("numScrew");
-
-		attributesNames.push_back("screwName");
-
-		attributesNames.push_back("screwMotion");
-
-		attributesNames.push_back("screwMotionError");
-
-		attributesNames.push_back("gravCorrection");
-
-		attributesNames.push_back("gravOptRange");
-
-		attributesNames.push_back("tempCorrection");
-
-		attributesNames.push_back("tempOptRange");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaMake") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("ambientTemperature") ; 
-    	 
-    	attributesNamesInBin.push_back("focusPosition") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("illuminationTaper") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("numPanelModes") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("beamMapUID") ; 
-    	 
-    	attributesNamesInBin.push_back("rawRMS") ; 
-    	 
-    	attributesNamesInBin.push_back("weightedRMS") ; 
-    	 
-    	attributesNamesInBin.push_back("surfaceMapUID") ; 
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numScrew") ; 
-    	 
-    	attributesNamesInBin.push_back("screwName") ; 
-    	 
-    	attributesNamesInBin.push_back("screwMotion") ; 
-    	 
-    	attributesNamesInBin.push_back("screwMotionError") ; 
-    	 
-    	attributesNamesInBin.push_back("gravCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("gravOptRange") ; 
-    	 
-    	attributesNamesInBin.push_back("tempCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("tempOptRange") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalHolographyTable::getAttributesNames() { return attributesNamesOfCalHolography_v; }
 	
-
-	const vector<string>& CalHolographyTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalHolographyTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalHolographyTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalHolography_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -470,8 +433,10 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalHolographyRow*  CalHolographyTable::checkAndAdd(CalHolographyRow* x)  {
+	CalHolographyRow*  CalHolographyTable::checkAndAdd(CalHolographyRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -648,7 +613,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/3/CalHolographyTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/3/CalHolographyTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -770,7 +735,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/3/CalHolographyTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clholo=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/3/CalHolographyTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalHolographyTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1080,7 +1045,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalHolography_v.begin(); iter != attributesNamesOfCalHolography_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalHolography"); 
 		}
@@ -1199,7 +1164,7 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalHolography_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

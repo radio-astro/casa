@@ -67,34 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalReduction = "CalReduction";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalReduction_a[] = {
+		
+			"calReductionId"
+		
+		
+			, "numApplied"
+		
+			, "appliedCalibrations"
+		
+			, "numParam"
+		
+			, "paramSet"
+		
+			, "numInvalidConditions"
+		
+			, "invalidConditions"
+		
+			, "timeReduced"
+		
+			, "messages"
+		
+			, "software"
+		
+			, "softwareVersion"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalReduction_v (attributesNamesOfCalReduction_a, attributesNamesOfCalReduction_a + sizeof(attributesNamesOfCalReduction_a) / sizeof(attributesNamesOfCalReduction_a[0]));
 
-	string CalReductionTable::itsName = "CalReduction";
-	vector<string> CalReductionTable::attributesNames; 
-	vector<string> CalReductionTable::attributesNamesInBin; 
-	bool CalReductionTable::initAttributesNamesDone = CalReductionTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalReduction_a[] = {
+    
+    	 "calReductionId" , "numApplied" , "appliedCalibrations" , "numParam" , "paramSet" , "numInvalidConditions" , "invalidConditions" , "timeReduced" , "messages" , "software" , "softwareVersion" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalReduction_v(attributesNamesInBinOfCalReduction_a, attributesNamesInBinOfCalReduction_a + sizeof(attributesNamesInBinOfCalReduction_a) / sizeof(attributesNamesInBinOfCalReduction_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalReductionTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalReduction_a[] = {
+	
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalReduction_v(keyOfCalReduction_a, keyOfCalReduction_a + sizeof(keyOfCalReduction_a) / sizeof(keyOfCalReduction_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalReductionTable::getKeyName() {
-		return key;
+	const vector<string>& CalReductionTable::getKeyName() {
+		return keyOfCalReduction_v;
 	}
 
 
 	CalReductionTable::CalReductionTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,79 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalReductionTable::getName() const {
-		return itsName;
+		return entityNameOfCalReduction;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalReductionTable::name() {
-		return itsName;
+		return entityNameOfCalReduction;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalReductionTable::initAttributesNames() {
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("numApplied");
-
-		attributesNames.push_back("appliedCalibrations");
-
-		attributesNames.push_back("numParam");
-
-		attributesNames.push_back("paramSet");
-
-		attributesNames.push_back("numInvalidConditions");
-
-		attributesNames.push_back("invalidConditions");
-
-		attributesNames.push_back("timeReduced");
-
-		attributesNames.push_back("messages");
-
-		attributesNames.push_back("software");
-
-		attributesNames.push_back("softwareVersion");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("numApplied") ; 
-    	 
-    	attributesNamesInBin.push_back("appliedCalibrations") ; 
-    	 
-    	attributesNamesInBin.push_back("numParam") ; 
-    	 
-    	attributesNamesInBin.push_back("paramSet") ; 
-    	 
-    	attributesNamesInBin.push_back("numInvalidConditions") ; 
-    	 
-    	attributesNamesInBin.push_back("invalidConditions") ; 
-    	 
-    	attributesNamesInBin.push_back("timeReduced") ; 
-    	 
-    	attributesNamesInBin.push_back("messages") ; 
-    	 
-    	attributesNamesInBin.push_back("software") ; 
-    	 
-    	attributesNamesInBin.push_back("softwareVersion") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalReductionTable::getAttributesNames() { return attributesNamesOfCalReduction_v; }
 	
-
-	const vector<string>& CalReductionTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalReductionTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalReductionTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalReduction_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -389,34 +384,36 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	CalReductionRow*  CalReductionTable::checkAndAdd(CalReductionRow* x)  {
+	CalReductionRow*  CalReductionTable::checkAndAdd(CalReductionRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getNumApplied()
+				x->getNumApplied()
 		,
-			x->getAppliedCalibrations()
+				x->getAppliedCalibrations()
 		,
-			x->getNumParam()
+				x->getNumParam()
 		,
-			x->getParamSet()
+				x->getParamSet()
 		,
-			x->getNumInvalidConditions()
+				x->getNumInvalidConditions()
 		,
-			x->getInvalidConditions()
+				x->getInvalidConditions()
 		,
-			x->getTimeReduced()
+				x->getTimeReduced()
 		,
-			x->getMessages()
+				x->getMessages()
 		,
-			x->getSoftware()
+				x->getSoftware()
 		,
-			x->getSoftwareVersion()
+				x->getSoftwareVersion()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -563,7 +560,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/3/CalReductionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/3/CalReductionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -685,7 +682,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/3/CalReductionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalReductionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clred=\"http://Alma/XASDM/CalReductionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalReductionTable http://almaobservatory.org/XML/XASDM/3/CalReductionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalReductionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -947,7 +944,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalReduction_v.begin(); iter != attributesNamesOfCalReduction_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalReduction"); 
 		}
@@ -1066,7 +1063,7 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalReduction_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

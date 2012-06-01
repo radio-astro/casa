@@ -67,34 +67,70 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfStation = "Station";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfStation_a[] = {
+		
+			"stationId"
+		
+		
+			, "name"
+		
+			, "position"
+		
+			, "type"
+				
+		
+			, "time"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfStation_v (attributesNamesOfStation_a, attributesNamesOfStation_a + sizeof(attributesNamesOfStation_a) / sizeof(attributesNamesOfStation_a[0]));
 
-	string StationTable::itsName = "Station";
-	vector<string> StationTable::attributesNames; 
-	vector<string> StationTable::attributesNamesInBin; 
-	bool StationTable::initAttributesNamesDone = StationTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfStation_a[] = {
+    
+    	 "stationId" , "name" , "position" , "type" 
+    	,
+    	 "time" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfStation_v(attributesNamesInBinOfStation_a, attributesNamesInBinOfStation_a + sizeof(attributesNamesInBinOfStation_a) / sizeof(attributesNamesInBinOfStation_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> StationTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfStation_a[] = {
+	
+		"stationId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfStation_v(keyOfStation_a, keyOfStation_a + sizeof(keyOfStation_a) / sizeof(keyOfStation_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> StationTable::getKeyName() {
-		return key;
+	const vector<string>& StationTable::getKeyName() {
+		return keyOfStation_v;
 	}
 
 
 	StationTable::StationTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("stationId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,55 +181,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string StationTable::getName() const {
-		return itsName;
+		return entityNameOfStation;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string StationTable::name() {
-		return itsName;
+		return entityNameOfStation;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool StationTable::initAttributesNames() {
-
-		attributesNames.push_back("stationId");
-
-
-		attributesNames.push_back("name");
-
-		attributesNames.push_back("position");
-
-		attributesNames.push_back("type");
-
-
-		attributesNames.push_back("time");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("stationId") ; 
-    	 
-    	attributesNamesInBin.push_back("name") ; 
-    	 
-    	attributesNamesInBin.push_back("position") ; 
-    	 
-    	attributesNamesInBin.push_back("type") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& StationTable::getAttributesNames() { return attributesNamesOfStation_v; }
 	
-
-	const vector<string>& StationTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& StationTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& StationTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfStation_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -323,20 +330,22 @@ StationRow* StationTable::newRow(StationRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	StationRow*  StationTable::checkAndAdd(StationRow* x)  {
+	StationRow*  StationTable::checkAndAdd(StationRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getName()
+				x->getName()
 		,
-			x->getPosition()
+				x->getPosition()
 		,
-			x->getType()
+				x->getType()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -469,7 +478,7 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<StationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sttn=\"http://Alma/XASDM/StationTable\" xsi:schemaLocation=\"http://Alma/XASDM/StationTable http://almaobservatory.org/XML/XASDM/3/StationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<StationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sttn=\"http://Alma/XASDM/StationTable\" xsi:schemaLocation=\"http://Alma/XASDM/StationTable http://almaobservatory.org/XML/XASDM/3/StationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -591,7 +600,7 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<StationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sttn=\"http://Alma/XASDM/StationTable\" xsi:schemaLocation=\"http://Alma/XASDM/StationTable http://almaobservatory.org/XML/XASDM/3/StationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<StationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sttn=\"http://Alma/XASDM/StationTable\" xsi:schemaLocation=\"http://Alma/XASDM/StationTable http://almaobservatory.org/XML/XASDM/3/StationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='StationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -835,7 +844,7 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfStation_v.begin(); iter != attributesNamesOfStation_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Station"); 
 		}
@@ -954,7 +963,7 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfStation_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

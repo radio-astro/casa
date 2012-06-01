@@ -67,38 +67,104 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalFlux = "CalFlux";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalFlux_a[] = {
+		
+			"sourceName"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "numFrequencyRanges"
+		
+			, "numStokes"
+		
+			, "frequencyRanges"
+		
+			, "fluxMethod"
+		
+			, "flux"
+		
+			, "fluxError"
+		
+			, "stokes"
+				
+		
+			, "direction"
+		
+			, "directionCode"
+		
+			, "directionEquinox"
+		
+			, "PA"
+		
+			, "PAError"
+		
+			, "size"
+		
+			, "sizeError"
+		
+			, "sourceModel"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalFlux_v (attributesNamesOfCalFlux_a, attributesNamesOfCalFlux_a + sizeof(attributesNamesOfCalFlux_a) / sizeof(attributesNamesOfCalFlux_a[0]));
 
-	string CalFluxTable::itsName = "CalFlux";
-	vector<string> CalFluxTable::attributesNames; 
-	vector<string> CalFluxTable::attributesNamesInBin; 
-	bool CalFluxTable::initAttributesNamesDone = CalFluxTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalFlux_a[] = {
+    
+    	 "sourceName" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "numFrequencyRanges" , "numStokes" , "frequencyRanges" , "fluxMethod" , "flux" , "fluxError" , "stokes" 
+    	,
+    	 "direction" , "directionCode" , "directionEquinox" , "PA" , "PAError" , "size" , "sizeError" , "sourceModel" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalFlux_v(attributesNamesInBinOfCalFlux_a, attributesNamesInBinOfCalFlux_a + sizeof(attributesNamesInBinOfCalFlux_a) / sizeof(attributesNamesInBinOfCalFlux_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalFluxTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalFlux_a[] = {
+	
+		"sourceName"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalFlux_v(keyOfCalFlux_a, keyOfCalFlux_a + sizeof(keyOfCalFlux_a) / sizeof(keyOfCalFlux_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalFluxTable::getKeyName() {
-		return key;
+	const vector<string>& CalFluxTable::getKeyName() {
+		return keyOfCalFlux_v;
 	}
 
 
 	CalFluxTable::CalFluxTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("sourceName");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,115 +215,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalFluxTable::getName() const {
-		return itsName;
+		return entityNameOfCalFlux;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalFluxTable::name() {
-		return itsName;
+		return entityNameOfCalFlux;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalFluxTable::initAttributesNames() {
-
-		attributesNames.push_back("sourceName");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("numFrequencyRanges");
-
-		attributesNames.push_back("numStokes");
-
-		attributesNames.push_back("frequencyRanges");
-
-		attributesNames.push_back("fluxMethod");
-
-		attributesNames.push_back("flux");
-
-		attributesNames.push_back("fluxError");
-
-		attributesNames.push_back("stokes");
-
-
-		attributesNames.push_back("direction");
-
-		attributesNames.push_back("directionCode");
-
-		attributesNames.push_back("directionEquinox");
-
-		attributesNames.push_back("PA");
-
-		attributesNames.push_back("PAError");
-
-		attributesNames.push_back("size");
-
-		attributesNames.push_back("sizeError");
-
-		attributesNames.push_back("sourceModel");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("sourceName") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("numFrequencyRanges") ; 
-    	 
-    	attributesNamesInBin.push_back("numStokes") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRanges") ; 
-    	 
-    	attributesNamesInBin.push_back("fluxMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("flux") ; 
-    	 
-    	attributesNamesInBin.push_back("fluxError") ; 
-    	 
-    	attributesNamesInBin.push_back("stokes") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	 
-    	attributesNamesInBin.push_back("directionCode") ; 
-    	 
-    	attributesNamesInBin.push_back("directionEquinox") ; 
-    	 
-    	attributesNamesInBin.push_back("PA") ; 
-    	 
-    	attributesNamesInBin.push_back("PAError") ; 
-    	 
-    	attributesNamesInBin.push_back("size") ; 
-    	 
-    	attributesNamesInBin.push_back("sizeError") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceModel") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalFluxTable::getAttributesNames() { return attributesNamesOfCalFlux_v; }
 	
-
-	const vector<string>& CalFluxTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalFluxTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalFluxTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalFlux_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -414,8 +391,10 @@ CalFluxRow* CalFluxTable::newRow(CalFluxRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalFluxRow*  CalFluxTable::checkAndAdd(CalFluxRow* x)  {
+	CalFluxRow*  CalFluxTable::checkAndAdd(CalFluxRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -578,7 +557,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/3/CalFluxTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/3/CalFluxTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -700,7 +679,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/3/CalFluxTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clflx=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/3/CalFluxTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFluxTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -989,7 +968,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalFlux_v.begin(); iter != attributesNamesOfCalFlux_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalFlux"); 
 		}
@@ -1108,7 +1087,7 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalFlux_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

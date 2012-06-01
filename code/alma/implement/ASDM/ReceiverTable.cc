@@ -67,38 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfReceiver = "Receiver";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfReceiver_a[] = {
+		
+			"receiverId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		
+		
+			, "name"
+		
+			, "numLO"
+		
+			, "frequencyBand"
+		
+			, "freqLO"
+		
+			, "receiverSideband"
+		
+			, "sidebandLO"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfReceiver_v (attributesNamesOfReceiver_a, attributesNamesOfReceiver_a + sizeof(attributesNamesOfReceiver_a) / sizeof(attributesNamesOfReceiver_a[0]));
 
-	string ReceiverTable::itsName = "Receiver";
-	vector<string> ReceiverTable::attributesNames; 
-	vector<string> ReceiverTable::attributesNamesInBin; 
-	bool ReceiverTable::initAttributesNamesDone = ReceiverTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfReceiver_a[] = {
+    
+    	 "receiverId" , "spectralWindowId" , "timeInterval" , "name" , "numLO" , "frequencyBand" , "freqLO" , "receiverSideband" , "sidebandLO" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfReceiver_v(attributesNamesInBinOfReceiver_a, attributesNamesInBinOfReceiver_a + sizeof(attributesNamesInBinOfReceiver_a) / sizeof(attributesNamesInBinOfReceiver_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ReceiverTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfReceiver_a[] = {
+	
+		"receiverId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfReceiver_v(keyOfReceiver_a, keyOfReceiver_a + sizeof(keyOfReceiver_a) / sizeof(keyOfReceiver_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ReceiverTable::getKeyName() {
-		return key;
+	const vector<string>& ReceiverTable::getKeyName() {
+		return keyOfReceiver_v;
 	}
 
 
 	ReceiverTable::ReceiverTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("receiverId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,71 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ReceiverTable::getName() const {
-		return itsName;
+		return entityNameOfReceiver;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ReceiverTable::name() {
-		return itsName;
+		return entityNameOfReceiver;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ReceiverTable::initAttributesNames() {
-
-		attributesNames.push_back("receiverId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("name");
-
-		attributesNames.push_back("numLO");
-
-		attributesNames.push_back("frequencyBand");
-
-		attributesNames.push_back("freqLO");
-
-		attributesNames.push_back("receiverSideband");
-
-		attributesNames.push_back("sidebandLO");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("receiverId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("name") ; 
-    	 
-    	attributesNamesInBin.push_back("numLO") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyBand") ; 
-    	 
-    	attributesNamesInBin.push_back("freqLO") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverSideband") ; 
-    	 
-    	attributesNamesInBin.push_back("sidebandLO") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ReceiverTable::getAttributesNames() { return attributesNamesOfReceiver_v; }
 	
-
-	const vector<string>& ReceiverTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ReceiverTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ReceiverTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfReceiver_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -398,7 +397,9 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 	
 		
 	void ReceiverTable::addWithoutCheckingUnique(ReceiverRow * x) {
-		ReceiverRow * dummy = add(x);
+		ReceiverRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -421,7 +422,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 	 * @throws DuplicateKey
 	 * @throws UniquenessViolationException 
 	 */
-	ReceiverRow*  ReceiverTable::checkAndAdd(ReceiverRow* x) {
+	ReceiverRow*  ReceiverTable::checkAndAdd(ReceiverRow* x, bool skipCheckUniqueness) {
 		ArrayTime startTime = x->getTimeInterval().getStart();		
 		
 		// Determine the entry in the context map from the appropriate attributes.
@@ -429,32 +430,34 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 		                x->getSpectralWindowId()
 		               );
 
-		// Uniqueness Rule Check
-		if (context.find(k) != context.end()) {
-			for (unsigned int i = 0;  i < context[k].size(); i++) 
-				for (unsigned int j = 0; j < context[k][i].size(); j++)
-					if (
-						(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
+		if (!skipCheckUniqueness) {
+			// Uniqueness Rule Check
+			if (context.find(k) != context.end()) {
+				for (unsigned int i = 0;  i < context[k].size(); i++) 
+					for (unsigned int j = 0; j < context[k][i].size(); j++)
+						if (
+							(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
 					
-						 && (context[k][i][j]->getName() == x->getName())
-					
-
-						 && (context[k][i][j]->getNumLO() == x->getNumLO())
+							 && (context[k][i][j]->getName() == x->getName())
 					
 
-						 && (context[k][i][j]->getFrequencyBand() == x->getFrequencyBand())
+							 && (context[k][i][j]->getNumLO() == x->getNumLO())
 					
 
-						 && (context[k][i][j]->getFreqLO() == x->getFreqLO())
+							 && (context[k][i][j]->getFrequencyBand() == x->getFrequencyBand())
 					
 
-						 && (context[k][i][j]->getReceiverSideband() == x->getReceiverSideband())
+							 && (context[k][i][j]->getFreqLO() == x->getFreqLO())
 					
 
-						 && (context[k][i][j]->getSidebandLO() == x->getSidebandLO())
+							 && (context[k][i][j]->getReceiverSideband() == x->getReceiverSideband())
 					
-					)
-						throw UniquenessViolationException("Uniqueness violation exception in table ReceiverTable");			
+
+							 && (context[k][i][j]->getSidebandLO() == x->getSidebandLO())
+					
+						)
+							throw UniquenessViolationException("Uniqueness violation exception in table ReceiverTable");			
+			}
 		}
 
 
@@ -660,7 +663,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -782,7 +785,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ReceiverTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1038,7 +1041,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfReceiver_v.begin(); iter != attributesNamesOfReceiver_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Receiver"); 
 		}
@@ -1157,7 +1160,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfReceiver_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

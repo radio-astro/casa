@@ -67,46 +67,112 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalBandpass = "CalBandpass";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalBandpass_a[] = {
+		
+			"basebandName"
+		,
+			"sideband"
+		,
+			"atmPhaseCorrection"
+		,
+			"typeCurve"
+		,
+			"receiverBand"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "numAntenna"
+		
+			, "numPoly"
+		
+			, "numReceptor"
+		
+			, "antennaNames"
+		
+			, "refAntennaName"
+		
+			, "freqLimits"
+		
+			, "polarizationTypes"
+		
+			, "curve"
+		
+			, "reducedChiSquared"
+				
+		
+			, "numBaseline"
+		
+			, "rms"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalBandpass_v (attributesNamesOfCalBandpass_a, attributesNamesOfCalBandpass_a + sizeof(attributesNamesOfCalBandpass_a) / sizeof(attributesNamesOfCalBandpass_a[0]));
 
-	string CalBandpassTable::itsName = "CalBandpass";
-	vector<string> CalBandpassTable::attributesNames; 
-	vector<string> CalBandpassTable::attributesNamesInBin; 
-	bool CalBandpassTable::initAttributesNamesDone = CalBandpassTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalBandpass_a[] = {
+    
+    	 "basebandName" , "sideband" , "atmPhaseCorrection" , "typeCurve" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "numAntenna" , "numPoly" , "numReceptor" , "antennaNames" , "refAntennaName" , "freqLimits" , "polarizationTypes" , "curve" , "reducedChiSquared" 
+    	,
+    	 "numBaseline" , "rms" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalBandpass_v(attributesNamesInBinOfCalBandpass_a, attributesNamesInBinOfCalBandpass_a + sizeof(attributesNamesInBinOfCalBandpass_a) / sizeof(attributesNamesInBinOfCalBandpass_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalBandpassTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalBandpass_a[] = {
+	
+		"basebandName"
+	,
+		"sideband"
+	,
+		"atmPhaseCorrection"
+	,
+		"typeCurve"
+	,
+		"receiverBand"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalBandpass_v(keyOfCalBandpass_a, keyOfCalBandpass_a + sizeof(keyOfCalBandpass_a) / sizeof(keyOfCalBandpass_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalBandpassTable::getKeyName() {
-		return key;
+	const vector<string>& CalBandpassTable::getKeyName() {
+		return keyOfCalBandpass_v;
 	}
 
 
 	CalBandpassTable::CalBandpassTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("basebandName");
-	
-		key.push_back("sideband");
-	
-		key.push_back("atmPhaseCorrection");
-	
-		key.push_back("typeCurve");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -157,115 +223,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalBandpassTable::getName() const {
-		return itsName;
+		return entityNameOfCalBandpass;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalBandpassTable::name() {
-		return itsName;
+		return entityNameOfCalBandpass;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalBandpassTable::initAttributesNames() {
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("sideband");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("typeCurve");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("antennaNames");
-
-		attributesNames.push_back("refAntennaName");
-
-		attributesNames.push_back("freqLimits");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("curve");
-
-		attributesNames.push_back("reducedChiSquared");
-
-
-		attributesNames.push_back("numBaseline");
-
-		attributesNames.push_back("rms");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("sideband") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("typeCurve") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaNames") ; 
-    	 
-    	attributesNamesInBin.push_back("refAntennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("freqLimits") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("curve") ; 
-    	 
-    	attributesNamesInBin.push_back("reducedChiSquared") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numBaseline") ; 
-    	 
-    	attributesNamesInBin.push_back("rms") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalBandpassTable::getAttributesNames() { return attributesNamesOfCalBandpass_v; }
 	
-
-	const vector<string>& CalBandpassTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalBandpassTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalBandpassTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalBandpass_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -462,8 +439,10 @@ CalBandpassRow* CalBandpassTable::newRow(CalBandpassRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalBandpassRow*  CalBandpassTable::checkAndAdd(CalBandpassRow* x)  {
+	CalBandpassRow*  CalBandpassTable::checkAndAdd(CalBandpassRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -662,7 +641,7 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clbndp=\"http://Alma/XASDM/CalBandpassTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalBandpassTable http://almaobservatory.org/XML/XASDM/3/CalBandpassTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clbndp=\"http://Alma/XASDM/CalBandpassTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalBandpassTable http://almaobservatory.org/XML/XASDM/3/CalBandpassTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -784,7 +763,7 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clbndp=\"http://Alma/XASDM/CalBandpassTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalBandpassTable http://almaobservatory.org/XML/XASDM/3/CalBandpassTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clbndp=\"http://Alma/XASDM/CalBandpassTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalBandpassTable http://almaobservatory.org/XML/XASDM/3/CalBandpassTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalBandpassTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1073,7 +1052,7 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalBandpass_v.begin(); iter != attributesNamesOfCalBandpass_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalBandpass"); 
 		}
@@ -1192,7 +1171,7 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalBandpass_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

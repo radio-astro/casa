@@ -67,34 +67,80 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCorrelatorMode = "CorrelatorMode";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCorrelatorMode_a[] = {
+		
+			"correlatorModeId"
+		
+		
+			, "numBaseband"
+		
+			, "basebandNames"
+		
+			, "basebandConfig"
+		
+			, "accumMode"
+		
+			, "binMode"
+		
+			, "numAxes"
+		
+			, "axesOrderArray"
+		
+			, "filterMode"
+		
+			, "correlatorName"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCorrelatorMode_v (attributesNamesOfCorrelatorMode_a, attributesNamesOfCorrelatorMode_a + sizeof(attributesNamesOfCorrelatorMode_a) / sizeof(attributesNamesOfCorrelatorMode_a[0]));
 
-	string CorrelatorModeTable::itsName = "CorrelatorMode";
-	vector<string> CorrelatorModeTable::attributesNames; 
-	vector<string> CorrelatorModeTable::attributesNamesInBin; 
-	bool CorrelatorModeTable::initAttributesNamesDone = CorrelatorModeTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCorrelatorMode_a[] = {
+    
+    	 "correlatorModeId" , "numBaseband" , "basebandNames" , "basebandConfig" , "accumMode" , "binMode" , "numAxes" , "axesOrderArray" , "filterMode" , "correlatorName" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCorrelatorMode_v(attributesNamesInBinOfCorrelatorMode_a, attributesNamesInBinOfCorrelatorMode_a + sizeof(attributesNamesInBinOfCorrelatorMode_a) / sizeof(attributesNamesInBinOfCorrelatorMode_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CorrelatorModeTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCorrelatorMode_a[] = {
+	
+		"correlatorModeId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCorrelatorMode_v(keyOfCorrelatorMode_a, keyOfCorrelatorMode_a + sizeof(keyOfCorrelatorMode_a) / sizeof(keyOfCorrelatorMode_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CorrelatorModeTable::getKeyName() {
-		return key;
+	const vector<string>& CorrelatorModeTable::getKeyName() {
+		return keyOfCorrelatorMode_v;
 	}
 
 
 	CorrelatorModeTable::CorrelatorModeTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("correlatorModeId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,75 +191,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CorrelatorModeTable::getName() const {
-		return itsName;
+		return entityNameOfCorrelatorMode;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CorrelatorModeTable::name() {
-		return itsName;
+		return entityNameOfCorrelatorMode;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CorrelatorModeTable::initAttributesNames() {
-
-		attributesNames.push_back("correlatorModeId");
-
-
-		attributesNames.push_back("numBaseband");
-
-		attributesNames.push_back("basebandNames");
-
-		attributesNames.push_back("basebandConfig");
-
-		attributesNames.push_back("accumMode");
-
-		attributesNames.push_back("binMode");
-
-		attributesNames.push_back("numAxes");
-
-		attributesNames.push_back("axesOrderArray");
-
-		attributesNames.push_back("filterMode");
-
-		attributesNames.push_back("correlatorName");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("correlatorModeId") ; 
-    	 
-    	attributesNamesInBin.push_back("numBaseband") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandNames") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandConfig") ; 
-    	 
-    	attributesNamesInBin.push_back("accumMode") ; 
-    	 
-    	attributesNamesInBin.push_back("binMode") ; 
-    	 
-    	attributesNamesInBin.push_back("numAxes") ; 
-    	 
-    	attributesNamesInBin.push_back("axesOrderArray") ; 
-    	 
-    	attributesNamesInBin.push_back("filterMode") ; 
-    	 
-    	attributesNamesInBin.push_back("correlatorName") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CorrelatorModeTable::getAttributesNames() { return attributesNamesOfCorrelatorMode_v; }
 	
-
-	const vector<string>& CorrelatorModeTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CorrelatorModeTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CorrelatorModeTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCorrelatorMode_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -379,32 +376,34 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	CorrelatorModeRow*  CorrelatorModeTable::checkAndAdd(CorrelatorModeRow* x)  {
+	CorrelatorModeRow*  CorrelatorModeTable::checkAndAdd(CorrelatorModeRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getNumBaseband()
+				x->getNumBaseband()
 		,
-			x->getBasebandNames()
+				x->getBasebandNames()
 		,
-			x->getBasebandConfig()
+				x->getBasebandConfig()
 		,
-			x->getAccumMode()
+				x->getAccumMode()
 		,
-			x->getBinMode()
+				x->getBinMode()
 		,
-			x->getNumAxes()
+				x->getNumAxes()
 		,
-			x->getAxesOrderArray()
+				x->getAxesOrderArray()
 		,
-			x->getFilterMode()
+				x->getFilterMode()
 		,
-			x->getCorrelatorName()
+				x->getCorrelatorName()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -549,7 +548,7 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CorrelatorModeTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cormod=\"http://Alma/XASDM/CorrelatorModeTable\" xsi:schemaLocation=\"http://Alma/XASDM/CorrelatorModeTable http://almaobservatory.org/XML/XASDM/3/CorrelatorModeTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CorrelatorModeTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cormod=\"http://Alma/XASDM/CorrelatorModeTable\" xsi:schemaLocation=\"http://Alma/XASDM/CorrelatorModeTable http://almaobservatory.org/XML/XASDM/3/CorrelatorModeTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -671,7 +670,7 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CorrelatorModeTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cormod=\"http://Alma/XASDM/CorrelatorModeTable\" xsi:schemaLocation=\"http://Alma/XASDM/CorrelatorModeTable http://almaobservatory.org/XML/XASDM/3/CorrelatorModeTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CorrelatorModeTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cormod=\"http://Alma/XASDM/CorrelatorModeTable\" xsi:schemaLocation=\"http://Alma/XASDM/CorrelatorModeTable http://almaobservatory.org/XML/XASDM/3/CorrelatorModeTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CorrelatorModeTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -930,7 +929,7 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCorrelatorMode_v.begin(); iter != attributesNamesOfCorrelatorMode_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CorrelatorMode"); 
 		}
@@ -1049,7 +1048,7 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCorrelatorMode_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

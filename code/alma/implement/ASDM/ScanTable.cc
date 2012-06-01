@@ -67,36 +67,92 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfScan = "Scan";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfScan_a[] = {
+		
+			"execBlockId"
+		,
+			"scanNumber"
+		
+		
+			, "startTime"
+		
+			, "endTime"
+		
+			, "numIntent"
+		
+			, "numSubscan"
+		
+			, "scanIntent"
+		
+			, "calDataType"
+		
+			, "calibrationOnLine"
+				
+		
+			, "calibrationFunction"
+		
+			, "calibrationSet"
+		
+			, "calPattern"
+		
+			, "numField"
+		
+			, "fieldName"
+		
+			, "sourceName"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfScan_v (attributesNamesOfScan_a, attributesNamesOfScan_a + sizeof(attributesNamesOfScan_a) / sizeof(attributesNamesOfScan_a[0]));
 
-	string ScanTable::itsName = "Scan";
-	vector<string> ScanTable::attributesNames; 
-	vector<string> ScanTable::attributesNamesInBin; 
-	bool ScanTable::initAttributesNamesDone = ScanTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfScan_a[] = {
+    
+    	 "execBlockId" , "scanNumber" , "startTime" , "endTime" , "numIntent" , "numSubscan" , "scanIntent" , "calDataType" , "calibrationOnLine" 
+    	,
+    	 "calibrationFunction" , "calibrationSet" , "calPattern" , "numField" , "fieldName" , "sourceName" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfScan_v(attributesNamesInBinOfScan_a, attributesNamesInBinOfScan_a + sizeof(attributesNamesInBinOfScan_a) / sizeof(attributesNamesInBinOfScan_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ScanTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfScan_a[] = {
+	
+		"execBlockId"
+	,
+		"scanNumber"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfScan_v(keyOfScan_a, keyOfScan_a + sizeof(keyOfScan_a) / sizeof(keyOfScan_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ScanTable::getKeyName() {
-		return key;
+	const vector<string>& ScanTable::getKeyName() {
+		return keyOfScan_v;
 	}
 
 
 	ScanTable::ScanTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("execBlockId");
-	
-		key.push_back("scanNumber");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,95 +203,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ScanTable::getName() const {
-		return itsName;
+		return entityNameOfScan;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ScanTable::name() {
-		return itsName;
+		return entityNameOfScan;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ScanTable::initAttributesNames() {
-
-		attributesNames.push_back("execBlockId");
-
-		attributesNames.push_back("scanNumber");
-
-
-		attributesNames.push_back("startTime");
-
-		attributesNames.push_back("endTime");
-
-		attributesNames.push_back("numIntent");
-
-		attributesNames.push_back("numSubscan");
-
-		attributesNames.push_back("scanIntent");
-
-		attributesNames.push_back("calDataType");
-
-		attributesNames.push_back("calibrationOnLine");
-
-
-		attributesNames.push_back("calibrationFunction");
-
-		attributesNames.push_back("calibrationSet");
-
-		attributesNames.push_back("calPattern");
-
-		attributesNames.push_back("numField");
-
-		attributesNames.push_back("fieldName");
-
-		attributesNames.push_back("sourceName");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("execBlockId") ; 
-    	 
-    	attributesNamesInBin.push_back("scanNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("startTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endTime") ; 
-    	 
-    	attributesNamesInBin.push_back("numIntent") ; 
-    	 
-    	attributesNamesInBin.push_back("numSubscan") ; 
-    	 
-    	attributesNamesInBin.push_back("scanIntent") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataType") ; 
-    	 
-    	attributesNamesInBin.push_back("calibrationOnLine") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("calibrationFunction") ; 
-    	 
-    	attributesNamesInBin.push_back("calibrationSet") ; 
-    	 
-    	attributesNamesInBin.push_back("calPattern") ; 
-    	 
-    	attributesNamesInBin.push_back("numField") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldName") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceName") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ScanTable::getAttributesNames() { return attributesNamesOfScan_v; }
 	
-
-	const vector<string>& ScanTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ScanTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ScanTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfScan_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -376,8 +363,10 @@ ScanRow* ScanTable::newRow(ScanRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	ScanRow*  ScanTable::checkAndAdd(ScanRow* x)  {
+	ScanRow*  ScanTable::checkAndAdd(ScanRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -528,7 +517,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scn=\"http://Alma/XASDM/ScanTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScanTable http://almaobservatory.org/XML/XASDM/3/ScanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scn=\"http://Alma/XASDM/ScanTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScanTable http://almaobservatory.org/XML/XASDM/3/ScanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -650,7 +639,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scn=\"http://Alma/XASDM/ScanTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScanTable http://almaobservatory.org/XML/XASDM/3/ScanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scn=\"http://Alma/XASDM/ScanTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScanTable http://almaobservatory.org/XML/XASDM/3/ScanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ScanTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -924,7 +913,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfScan_v.begin(); iter != attributesNamesOfScan_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Scan"); 
 		}
@@ -1043,7 +1032,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfScan_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

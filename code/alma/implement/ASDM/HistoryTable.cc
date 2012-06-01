@@ -67,36 +67,80 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfHistory = "History";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfHistory_a[] = {
+		
+			"execBlockId"
+		,
+			"time"
+		
+		
+			, "message"
+		
+			, "priority"
+		
+			, "origin"
+		
+			, "objectId"
+		
+			, "application"
+		
+			, "cliCommand"
+		
+			, "appParms"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfHistory_v (attributesNamesOfHistory_a, attributesNamesOfHistory_a + sizeof(attributesNamesOfHistory_a) / sizeof(attributesNamesOfHistory_a[0]));
 
-	string HistoryTable::itsName = "History";
-	vector<string> HistoryTable::attributesNames; 
-	vector<string> HistoryTable::attributesNamesInBin; 
-	bool HistoryTable::initAttributesNamesDone = HistoryTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfHistory_a[] = {
+    
+    	 "execBlockId" , "time" , "message" , "priority" , "origin" , "objectId" , "application" , "cliCommand" , "appParms" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfHistory_v(attributesNamesInBinOfHistory_a, attributesNamesInBinOfHistory_a + sizeof(attributesNamesInBinOfHistory_a) / sizeof(attributesNamesInBinOfHistory_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> HistoryTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfHistory_a[] = {
+	
+		"execBlockId"
+	,
+		"time"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfHistory_v(keyOfHistory_a, keyOfHistory_a + sizeof(keyOfHistory_a) / sizeof(keyOfHistory_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> HistoryTable::getKeyName() {
-		return key;
+	const vector<string>& HistoryTable::getKeyName() {
+		return keyOfHistory_v;
 	}
 
 
 	HistoryTable::HistoryTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("execBlockId");
-	
-		key.push_back("time");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,71 +191,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string HistoryTable::getName() const {
-		return itsName;
+		return entityNameOfHistory;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string HistoryTable::name() {
-		return itsName;
+		return entityNameOfHistory;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool HistoryTable::initAttributesNames() {
-
-		attributesNames.push_back("execBlockId");
-
-		attributesNames.push_back("time");
-
-
-		attributesNames.push_back("message");
-
-		attributesNames.push_back("priority");
-
-		attributesNames.push_back("origin");
-
-		attributesNames.push_back("objectId");
-
-		attributesNames.push_back("application");
-
-		attributesNames.push_back("cliCommand");
-
-		attributesNames.push_back("appParms");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("execBlockId") ; 
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	 
-    	attributesNamesInBin.push_back("message") ; 
-    	 
-    	attributesNamesInBin.push_back("priority") ; 
-    	 
-    	attributesNamesInBin.push_back("origin") ; 
-    	 
-    	attributesNamesInBin.push_back("objectId") ; 
-    	 
-    	attributesNamesInBin.push_back("application") ; 
-    	 
-    	attributesNamesInBin.push_back("cliCommand") ; 
-    	 
-    	attributesNamesInBin.push_back("appParms") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& HistoryTable::getAttributesNames() { return attributesNamesOfHistory_v; }
 	
-
-	const vector<string>& HistoryTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& HistoryTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& HistoryTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfHistory_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -331,7 +330,9 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 	
 		
 	void HistoryTable::addWithoutCheckingUnique(HistoryRow * x) {
-		HistoryRow * dummy = add(x);
+		HistoryRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -350,7 +351,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 			
 			
 			
-	HistoryRow*  HistoryTable::checkAndAdd(HistoryRow* x) {
+	HistoryRow*  HistoryTable::checkAndAdd(HistoryRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getExecBlockId() 
 					   ); 
@@ -518,7 +519,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<HistoryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:histry=\"http://Alma/XASDM/HistoryTable\" xsi:schemaLocation=\"http://Alma/XASDM/HistoryTable http://almaobservatory.org/XML/XASDM/3/HistoryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<HistoryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:histry=\"http://Alma/XASDM/HistoryTable\" xsi:schemaLocation=\"http://Alma/XASDM/HistoryTable http://almaobservatory.org/XML/XASDM/3/HistoryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -640,7 +641,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<HistoryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:histry=\"http://Alma/XASDM/HistoryTable\" xsi:schemaLocation=\"http://Alma/XASDM/HistoryTable http://almaobservatory.org/XML/XASDM/3/HistoryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<HistoryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:histry=\"http://Alma/XASDM/HistoryTable\" xsi:schemaLocation=\"http://Alma/XASDM/HistoryTable http://almaobservatory.org/XML/XASDM/3/HistoryTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='HistoryTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -896,7 +897,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfHistory_v.begin(); iter != attributesNamesOfHistory_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "History"); 
 		}
@@ -1015,7 +1016,7 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfHistory_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,34 +67,74 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFlagCmd = "FlagCmd";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFlagCmd_a[] = {
+		
+			"timeInterval"
+		
+		
+			, "type"
+		
+			, "reason"
+		
+			, "level"
+		
+			, "severity"
+		
+			, "applied"
+		
+			, "command"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFlagCmd_v (attributesNamesOfFlagCmd_a, attributesNamesOfFlagCmd_a + sizeof(attributesNamesOfFlagCmd_a) / sizeof(attributesNamesOfFlagCmd_a[0]));
 
-	string FlagCmdTable::itsName = "FlagCmd";
-	vector<string> FlagCmdTable::attributesNames; 
-	vector<string> FlagCmdTable::attributesNamesInBin; 
-	bool FlagCmdTable::initAttributesNamesDone = FlagCmdTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFlagCmd_a[] = {
+    
+    	 "timeInterval" , "type" , "reason" , "level" , "severity" , "applied" , "command" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFlagCmd_v(attributesNamesInBinOfFlagCmd_a, attributesNamesInBinOfFlagCmd_a + sizeof(attributesNamesInBinOfFlagCmd_a) / sizeof(attributesNamesInBinOfFlagCmd_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FlagCmdTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFlagCmd_a[] = {
+	
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFlagCmd_v(keyOfFlagCmd_a, keyOfFlagCmd_a + sizeof(keyOfFlagCmd_a) / sizeof(keyOfFlagCmd_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FlagCmdTable::getKeyName() {
-		return key;
+	const vector<string>& FlagCmdTable::getKeyName() {
+		return keyOfFlagCmd_v;
 	}
 
 
 	FlagCmdTable::FlagCmdTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,63 +185,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FlagCmdTable::getName() const {
-		return itsName;
+		return entityNameOfFlagCmd;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FlagCmdTable::name() {
-		return itsName;
+		return entityNameOfFlagCmd;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FlagCmdTable::initAttributesNames() {
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("type");
-
-		attributesNames.push_back("reason");
-
-		attributesNames.push_back("level");
-
-		attributesNames.push_back("severity");
-
-		attributesNames.push_back("applied");
-
-		attributesNames.push_back("command");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("type") ; 
-    	 
-    	attributesNamesInBin.push_back("reason") ; 
-    	 
-    	attributesNamesInBin.push_back("level") ; 
-    	 
-    	attributesNamesInBin.push_back("severity") ; 
-    	 
-    	attributesNamesInBin.push_back("applied") ; 
-    	 
-    	attributesNamesInBin.push_back("command") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FlagCmdTable::getAttributesNames() { return attributesNamesOfFlagCmd_v; }
 	
-
-	const vector<string>& FlagCmdTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FlagCmdTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FlagCmdTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFlagCmd_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -299,7 +302,9 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	
 		
 	void FlagCmdTable::addWithoutCheckingUnique(FlagCmdRow * x) {
-		FlagCmdRow * dummy = add(x);
+		FlagCmdRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -315,7 +320,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		
 		
 			
-	FlagCmdRow*  FlagCmdTable::checkAndAdd(FlagCmdRow* x) {
+	FlagCmdRow*  FlagCmdTable::checkAndAdd(FlagCmdRow* x, bool skipCheckUniqueness) {
 		if (getRowByKey(
 		
 			x->getTimeInterval()
@@ -428,7 +433,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -550,7 +555,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FlagCmdTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -800,7 +805,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFlagCmd_v.begin(); iter != attributesNamesOfFlagCmd_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "FlagCmd"); 
 		}
@@ -919,7 +924,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFlagCmd_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

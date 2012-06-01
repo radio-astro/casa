@@ -67,34 +67,66 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfDataDescription = "DataDescription";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfDataDescription_a[] = {
+		
+			"dataDescriptionId"
+		
+		
+			, "polOrHoloId"
+		
+			, "spectralWindowId"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfDataDescription_v (attributesNamesOfDataDescription_a, attributesNamesOfDataDescription_a + sizeof(attributesNamesOfDataDescription_a) / sizeof(attributesNamesOfDataDescription_a[0]));
 
-	string DataDescriptionTable::itsName = "DataDescription";
-	vector<string> DataDescriptionTable::attributesNames; 
-	vector<string> DataDescriptionTable::attributesNamesInBin; 
-	bool DataDescriptionTable::initAttributesNamesDone = DataDescriptionTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfDataDescription_a[] = {
+    
+    	 "dataDescriptionId" , "polOrHoloId" , "spectralWindowId" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfDataDescription_v(attributesNamesInBinOfDataDescription_a, attributesNamesInBinOfDataDescription_a + sizeof(attributesNamesInBinOfDataDescription_a) / sizeof(attributesNamesInBinOfDataDescription_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> DataDescriptionTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfDataDescription_a[] = {
+	
+		"dataDescriptionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfDataDescription_v(keyOfDataDescription_a, keyOfDataDescription_a + sizeof(keyOfDataDescription_a) / sizeof(keyOfDataDescription_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> DataDescriptionTable::getKeyName() {
-		return key;
+	const vector<string>& DataDescriptionTable::getKeyName() {
+		return keyOfDataDescription_v;
 	}
 
 
 	DataDescriptionTable::DataDescriptionTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("dataDescriptionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,47 +177,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string DataDescriptionTable::getName() const {
-		return itsName;
+		return entityNameOfDataDescription;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string DataDescriptionTable::name() {
-		return itsName;
+		return entityNameOfDataDescription;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool DataDescriptionTable::initAttributesNames() {
-
-		attributesNames.push_back("dataDescriptionId");
-
-
-		attributesNames.push_back("polOrHoloId");
-
-		attributesNames.push_back("spectralWindowId");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("dataDescriptionId") ; 
-    	 
-    	attributesNamesInBin.push_back("polOrHoloId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& DataDescriptionTable::getAttributesNames() { return attributesNamesOfDataDescription_v; }
 	
-
-	const vector<string>& DataDescriptionTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& DataDescriptionTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& DataDescriptionTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfDataDescription_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -309,18 +320,20 @@ DataDescriptionRow* DataDescriptionTable::newRow(DataDescriptionRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	DataDescriptionRow*  DataDescriptionTable::checkAndAdd(DataDescriptionRow* x)  {
+	DataDescriptionRow*  DataDescriptionTable::checkAndAdd(DataDescriptionRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getPolOrHoloId()
+				x->getPolOrHoloId()
 		,
-			x->getSpectralWindowId()
+				x->getSpectralWindowId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -451,7 +464,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dtdsc=\"http://Alma/XASDM/DataDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/DataDescriptionTable http://almaobservatory.org/XML/XASDM/3/DataDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dtdsc=\"http://Alma/XASDM/DataDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/DataDescriptionTable http://almaobservatory.org/XML/XASDM/3/DataDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -573,7 +586,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dtdsc=\"http://Alma/XASDM/DataDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/DataDescriptionTable http://almaobservatory.org/XML/XASDM/3/DataDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dtdsc=\"http://Alma/XASDM/DataDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/DataDescriptionTable http://almaobservatory.org/XML/XASDM/3/DataDescriptionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='DataDescriptionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -811,7 +824,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfDataDescription_v.begin(); iter != attributesNamesOfDataDescription_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "DataDescription"); 
 		}
@@ -930,7 +943,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfDataDescription_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

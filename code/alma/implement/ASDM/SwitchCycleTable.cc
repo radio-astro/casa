@@ -67,34 +67,76 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSwitchCycle = "SwitchCycle";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSwitchCycle_a[] = {
+		
+			"switchCycleId"
+		
+		
+			, "numStep"
+		
+			, "weightArray"
+		
+			, "dirOffsetArray"
+		
+			, "freqOffsetArray"
+		
+			, "stepDurationArray"
+				
+		
+			, "directionCode"
+		
+			, "directionEquinox"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSwitchCycle_v (attributesNamesOfSwitchCycle_a, attributesNamesOfSwitchCycle_a + sizeof(attributesNamesOfSwitchCycle_a) / sizeof(attributesNamesOfSwitchCycle_a[0]));
 
-	string SwitchCycleTable::itsName = "SwitchCycle";
-	vector<string> SwitchCycleTable::attributesNames; 
-	vector<string> SwitchCycleTable::attributesNamesInBin; 
-	bool SwitchCycleTable::initAttributesNamesDone = SwitchCycleTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSwitchCycle_a[] = {
+    
+    	 "switchCycleId" , "numStep" , "weightArray" , "dirOffsetArray" , "freqOffsetArray" , "stepDurationArray" 
+    	,
+    	 "directionCode" , "directionEquinox" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSwitchCycle_v(attributesNamesInBinOfSwitchCycle_a, attributesNamesInBinOfSwitchCycle_a + sizeof(attributesNamesInBinOfSwitchCycle_a) / sizeof(attributesNamesInBinOfSwitchCycle_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SwitchCycleTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSwitchCycle_a[] = {
+	
+		"switchCycleId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSwitchCycle_v(keyOfSwitchCycle_a, keyOfSwitchCycle_a + sizeof(keyOfSwitchCycle_a) / sizeof(keyOfSwitchCycle_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SwitchCycleTable::getKeyName() {
-		return key;
+	const vector<string>& SwitchCycleTable::getKeyName() {
+		return keyOfSwitchCycle_v;
 	}
 
 
 	SwitchCycleTable::SwitchCycleTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("switchCycleId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,67 +187,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SwitchCycleTable::getName() const {
-		return itsName;
+		return entityNameOfSwitchCycle;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SwitchCycleTable::name() {
-		return itsName;
+		return entityNameOfSwitchCycle;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SwitchCycleTable::initAttributesNames() {
-
-		attributesNames.push_back("switchCycleId");
-
-
-		attributesNames.push_back("numStep");
-
-		attributesNames.push_back("weightArray");
-
-		attributesNames.push_back("dirOffsetArray");
-
-		attributesNames.push_back("freqOffsetArray");
-
-		attributesNames.push_back("stepDurationArray");
-
-
-		attributesNames.push_back("directionCode");
-
-		attributesNames.push_back("directionEquinox");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("switchCycleId") ; 
-    	 
-    	attributesNamesInBin.push_back("numStep") ; 
-    	 
-    	attributesNamesInBin.push_back("weightArray") ; 
-    	 
-    	attributesNamesInBin.push_back("dirOffsetArray") ; 
-    	 
-    	attributesNamesInBin.push_back("freqOffsetArray") ; 
-    	 
-    	attributesNamesInBin.push_back("stepDurationArray") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("directionCode") ; 
-    	 
-    	attributesNamesInBin.push_back("directionEquinox") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SwitchCycleTable::getAttributesNames() { return attributesNamesOfSwitchCycle_v; }
 	
-
-	const vector<string>& SwitchCycleTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SwitchCycleTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SwitchCycleTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSwitchCycle_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -347,24 +348,26 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	SwitchCycleRow*  SwitchCycleTable::checkAndAdd(SwitchCycleRow* x)  {
+	SwitchCycleRow*  SwitchCycleTable::checkAndAdd(SwitchCycleRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getNumStep()
+				x->getNumStep()
 		,
-			x->getWeightArray()
+				x->getWeightArray()
 		,
-			x->getDirOffsetArray()
+				x->getDirOffsetArray()
 		,
-			x->getFreqOffsetArray()
+				x->getFreqOffsetArray()
 		,
-			x->getStepDurationArray()
+				x->getStepDurationArray()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -501,7 +504,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/3/SwitchCycleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/3/SwitchCycleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -623,7 +626,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/3/SwitchCycleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:swtccl=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/3/SwitchCycleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SwitchCycleTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -876,7 +879,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSwitchCycle_v.begin(); iter != attributesNamesOfSwitchCycle_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "SwitchCycle"); 
 		}
@@ -995,7 +998,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSwitchCycle_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

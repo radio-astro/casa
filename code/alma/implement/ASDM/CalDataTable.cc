@@ -67,34 +67,88 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalData = "CalData";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalData_a[] = {
+		
+			"calDataId"
+		
+		
+			, "startTimeObserved"
+		
+			, "endTimeObserved"
+		
+			, "execBlockUID"
+		
+			, "calDataType"
+		
+			, "calType"
+		
+			, "numScan"
+		
+			, "scanSet"
+				
+		
+			, "assocCalDataId"
+		
+			, "assocCalNature"
+		
+			, "fieldName"
+		
+			, "sourceName"
+		
+			, "sourceCode"
+		
+			, "scanIntent"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalData_v (attributesNamesOfCalData_a, attributesNamesOfCalData_a + sizeof(attributesNamesOfCalData_a) / sizeof(attributesNamesOfCalData_a[0]));
 
-	string CalDataTable::itsName = "CalData";
-	vector<string> CalDataTable::attributesNames; 
-	vector<string> CalDataTable::attributesNamesInBin; 
-	bool CalDataTable::initAttributesNamesDone = CalDataTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalData_a[] = {
+    
+    	 "calDataId" , "startTimeObserved" , "endTimeObserved" , "execBlockUID" , "calDataType" , "calType" , "numScan" , "scanSet" 
+    	,
+    	 "assocCalDataId" , "assocCalNature" , "fieldName" , "sourceName" , "sourceCode" , "scanIntent" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalData_v(attributesNamesInBinOfCalData_a, attributesNamesInBinOfCalData_a + sizeof(attributesNamesInBinOfCalData_a) / sizeof(attributesNamesInBinOfCalData_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalDataTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalData_a[] = {
+	
+		"calDataId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalData_v(keyOfCalData_a, keyOfCalData_a + sizeof(keyOfCalData_a) / sizeof(keyOfCalData_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalDataTable::getKeyName() {
-		return key;
+	const vector<string>& CalDataTable::getKeyName() {
+		return keyOfCalData_v;
 	}
 
 
 	CalDataTable::CalDataTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("calDataId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,91 +199,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalDataTable::getName() const {
-		return itsName;
+		return entityNameOfCalData;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalDataTable::name() {
-		return itsName;
+		return entityNameOfCalData;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalDataTable::initAttributesNames() {
-
-		attributesNames.push_back("calDataId");
-
-
-		attributesNames.push_back("startTimeObserved");
-
-		attributesNames.push_back("endTimeObserved");
-
-		attributesNames.push_back("execBlockUID");
-
-		attributesNames.push_back("calDataType");
-
-		attributesNames.push_back("calType");
-
-		attributesNames.push_back("numScan");
-
-		attributesNames.push_back("scanSet");
-
-
-		attributesNames.push_back("assocCalDataId");
-
-		attributesNames.push_back("assocCalNature");
-
-		attributesNames.push_back("fieldName");
-
-		attributesNames.push_back("sourceName");
-
-		attributesNames.push_back("sourceCode");
-
-		attributesNames.push_back("scanIntent");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("startTimeObserved") ; 
-    	 
-    	attributesNamesInBin.push_back("endTimeObserved") ; 
-    	 
-    	attributesNamesInBin.push_back("execBlockUID") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataType") ; 
-    	 
-    	attributesNamesInBin.push_back("calType") ; 
-    	 
-    	attributesNamesInBin.push_back("numScan") ; 
-    	 
-    	attributesNamesInBin.push_back("scanSet") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("assocCalDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("assocCalNature") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldName") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceName") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceCode") ; 
-    	 
-    	attributesNamesInBin.push_back("scanIntent") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalDataTable::getAttributesNames() { return attributesNamesOfCalData_v; }
 	
-
-	const vector<string>& CalDataTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalDataTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalDataTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalData_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -383,28 +372,30 @@ CalDataRow* CalDataTable::newRow(CalDataRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	CalDataRow*  CalDataTable::checkAndAdd(CalDataRow* x)  {
+	CalDataRow*  CalDataTable::checkAndAdd(CalDataRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getStartTimeObserved()
+				x->getStartTimeObserved()
 		,
-			x->getEndTimeObserved()
+				x->getEndTimeObserved()
 		,
-			x->getExecBlockUID()
+				x->getExecBlockUID()
 		,
-			x->getCalDataType()
+				x->getCalDataType()
 		,
-			x->getCalType()
+				x->getCalType()
 		,
-			x->getNumScan()
+				x->getNumScan()
 		,
-			x->getScanSet()
+				x->getScanSet()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -545,7 +536,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -667,7 +658,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDataTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -938,7 +929,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalData_v.begin(); iter != attributesNamesOfCalData_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalData"); 
 		}
@@ -1057,7 +1048,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalData_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,38 +67,86 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSubscan = "Subscan";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSubscan_a[] = {
+		
+			"execBlockId"
+		,
+			"scanNumber"
+		,
+			"subscanNumber"
+		
+		
+			, "startTime"
+		
+			, "endTime"
+		
+			, "fieldName"
+		
+			, "subscanIntent"
+		
+			, "numIntegration"
+		
+			, "numSubintegration"
+				
+		
+			, "subscanMode"
+		
+			, "correlatorCalibration"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSubscan_v (attributesNamesOfSubscan_a, attributesNamesOfSubscan_a + sizeof(attributesNamesOfSubscan_a) / sizeof(attributesNamesOfSubscan_a[0]));
 
-	string SubscanTable::itsName = "Subscan";
-	vector<string> SubscanTable::attributesNames; 
-	vector<string> SubscanTable::attributesNamesInBin; 
-	bool SubscanTable::initAttributesNamesDone = SubscanTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSubscan_a[] = {
+    
+    	 "execBlockId" , "scanNumber" , "subscanNumber" , "startTime" , "endTime" , "fieldName" , "subscanIntent" , "numIntegration" , "numSubintegration" 
+    	,
+    	 "subscanMode" , "correlatorCalibration" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSubscan_v(attributesNamesInBinOfSubscan_a, attributesNamesInBinOfSubscan_a + sizeof(attributesNamesInBinOfSubscan_a) / sizeof(attributesNamesInBinOfSubscan_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SubscanTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSubscan_a[] = {
+	
+		"execBlockId"
+	,
+		"scanNumber"
+	,
+		"subscanNumber"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSubscan_v(keyOfSubscan_a, keyOfSubscan_a + sizeof(keyOfSubscan_a) / sizeof(keyOfSubscan_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SubscanTable::getKeyName() {
-		return key;
+	const vector<string>& SubscanTable::getKeyName() {
+		return keyOfSubscan_v;
 	}
 
 
 	SubscanTable::SubscanTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("execBlockId");
-	
-		key.push_back("scanNumber");
-	
-		key.push_back("subscanNumber");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,79 +197,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SubscanTable::getName() const {
-		return itsName;
+		return entityNameOfSubscan;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SubscanTable::name() {
-		return itsName;
+		return entityNameOfSubscan;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SubscanTable::initAttributesNames() {
-
-		attributesNames.push_back("execBlockId");
-
-		attributesNames.push_back("scanNumber");
-
-		attributesNames.push_back("subscanNumber");
-
-
-		attributesNames.push_back("startTime");
-
-		attributesNames.push_back("endTime");
-
-		attributesNames.push_back("fieldName");
-
-		attributesNames.push_back("subscanIntent");
-
-		attributesNames.push_back("numIntegration");
-
-		attributesNames.push_back("numSubintegration");
-
-
-		attributesNames.push_back("subscanMode");
-
-		attributesNames.push_back("correlatorCalibration");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("execBlockId") ; 
-    	 
-    	attributesNamesInBin.push_back("scanNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("subscanNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("startTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endTime") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldName") ; 
-    	 
-    	attributesNamesInBin.push_back("subscanIntent") ; 
-    	 
-    	attributesNamesInBin.push_back("numIntegration") ; 
-    	 
-    	attributesNamesInBin.push_back("numSubintegration") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("subscanMode") ; 
-    	 
-    	attributesNamesInBin.push_back("correlatorCalibration") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SubscanTable::getAttributesNames() { return attributesNamesOfSubscan_v; }
 	
-
-	const vector<string>& SubscanTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SubscanTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SubscanTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSubscan_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -366,8 +361,10 @@ SubscanRow* SubscanTable::newRow(SubscanRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	SubscanRow*  SubscanTable::checkAndAdd(SubscanRow* x)  {
+	SubscanRow*  SubscanTable::checkAndAdd(SubscanRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -524,7 +521,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/3/SubscanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/3/SubscanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -646,7 +643,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/3/SubscanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sbscn=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/3/SubscanTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SubscanTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -908,7 +905,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSubscan_v.begin(); iter != attributesNamesOfSubscan_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Subscan"); 
 		}
@@ -1027,7 +1024,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSubscan_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

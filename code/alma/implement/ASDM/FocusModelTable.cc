@@ -67,36 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFocusModel = "FocusModel";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFocusModel_a[] = {
+		
+			"antennaId"
+		,
+			"focusModelId"
+		
+		
+			, "polarizationType"
+		
+			, "receiverBand"
+		
+			, "numCoeff"
+		
+			, "coeffName"
+		
+			, "coeffFormula"
+		
+			, "coeffVal"
+		
+			, "assocNature"
+		
+			, "assocFocusModelId"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFocusModel_v (attributesNamesOfFocusModel_a, attributesNamesOfFocusModel_a + sizeof(attributesNamesOfFocusModel_a) / sizeof(attributesNamesOfFocusModel_a[0]));
 
-	string FocusModelTable::itsName = "FocusModel";
-	vector<string> FocusModelTable::attributesNames; 
-	vector<string> FocusModelTable::attributesNamesInBin; 
-	bool FocusModelTable::initAttributesNamesDone = FocusModelTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFocusModel_a[] = {
+    
+    	 "antennaId" , "focusModelId" , "polarizationType" , "receiverBand" , "numCoeff" , "coeffName" , "coeffFormula" , "coeffVal" , "assocNature" , "assocFocusModelId" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFocusModel_v(attributesNamesInBinOfFocusModel_a, attributesNamesInBinOfFocusModel_a + sizeof(attributesNamesInBinOfFocusModel_a) / sizeof(attributesNamesInBinOfFocusModel_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FocusModelTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFocusModel_a[] = {
+	
+		"antennaId"
+	,
+		"focusModelId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFocusModel_v(keyOfFocusModel_a, keyOfFocusModel_a + sizeof(keyOfFocusModel_a) / sizeof(keyOfFocusModel_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FocusModelTable::getKeyName() {
-		return key;
+	const vector<string>& FocusModelTable::getKeyName() {
+		return keyOfFocusModel_v;
 	}
 
 
 	FocusModelTable::FocusModelTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("focusModelId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,75 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FocusModelTable::getName() const {
-		return itsName;
+		return entityNameOfFocusModel;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FocusModelTable::name() {
-		return itsName;
+		return entityNameOfFocusModel;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FocusModelTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("focusModelId");
-
-
-		attributesNames.push_back("polarizationType");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("numCoeff");
-
-		attributesNames.push_back("coeffName");
-
-		attributesNames.push_back("coeffFormula");
-
-		attributesNames.push_back("coeffVal");
-
-		attributesNames.push_back("assocNature");
-
-		attributesNames.push_back("assocFocusModelId");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("focusModelId") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationType") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("numCoeff") ; 
-    	 
-    	attributesNamesInBin.push_back("coeffName") ; 
-    	 
-    	attributesNamesInBin.push_back("coeffFormula") ; 
-    	 
-    	attributesNamesInBin.push_back("coeffVal") ; 
-    	 
-    	attributesNamesInBin.push_back("assocNature") ; 
-    	 
-    	attributesNamesInBin.push_back("assocFocusModelId") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FocusModelTable::getAttributesNames() { return attributesNamesOfFocusModel_v; }
 	
-
-	const vector<string>& FocusModelTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FocusModelTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FocusModelTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFocusModel_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -413,32 +410,34 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	FocusModelRow*  FocusModelTable::checkAndAdd(FocusModelRow* x)  {
+	FocusModelRow*  FocusModelTable::checkAndAdd(FocusModelRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getAntennaId()
+				x->getAntennaId()
 		,
-			x->getPolarizationType()
+				x->getPolarizationType()
 		,
-			x->getReceiverBand()
+				x->getReceiverBand()
 		,
-			x->getNumCoeff()
+				x->getNumCoeff()
 		,
-			x->getCoeffName()
+				x->getCoeffName()
 		,
-			x->getCoeffFormula()
+				x->getCoeffFormula()
 		,
-			x->getCoeffVal()
+				x->getCoeffVal()
 		,
-			x->getAssocNature()
+				x->getAssocNature()
 		,
-			x->getAssocFocusModelId()
+				x->getAssocFocusModelId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -610,7 +609,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focsm=\"http://Alma/XASDM/FocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusModelTable http://almaobservatory.org/XML/XASDM/3/FocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focsm=\"http://Alma/XASDM/FocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusModelTable http://almaobservatory.org/XML/XASDM/3/FocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -732,7 +731,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focsm=\"http://Alma/XASDM/FocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusModelTable http://almaobservatory.org/XML/XASDM/3/FocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FocusModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:focsm=\"http://Alma/XASDM/FocusModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusModelTable http://almaobservatory.org/XML/XASDM/3/FocusModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FocusModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -991,7 +990,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFocusModel_v.begin(); iter != attributesNamesOfFocusModel_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "FocusModel"); 
 		}
@@ -1110,7 +1109,7 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFocusModel_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

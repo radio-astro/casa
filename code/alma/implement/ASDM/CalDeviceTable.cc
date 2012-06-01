@@ -67,40 +67,88 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalDevice = "CalDevice";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalDevice_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		,
+			"feedId"
+		
+		
+			, "numCalload"
+		
+			, "calLoadNames"
+				
+		
+			, "numReceptor"
+		
+			, "calEff"
+		
+			, "noiseCal"
+		
+			, "coupledNoiseCal"
+		
+			, "temperatureLoad"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalDevice_v (attributesNamesOfCalDevice_a, attributesNamesOfCalDevice_a + sizeof(attributesNamesOfCalDevice_a) / sizeof(attributesNamesOfCalDevice_a[0]));
 
-	string CalDeviceTable::itsName = "CalDevice";
-	vector<string> CalDeviceTable::attributesNames; 
-	vector<string> CalDeviceTable::attributesNamesInBin; 
-	bool CalDeviceTable::initAttributesNamesDone = CalDeviceTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalDevice_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "numCalload" , "calLoadNames" 
+    	,
+    	 "numReceptor" , "calEff" , "noiseCal" , "coupledNoiseCal" , "temperatureLoad" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalDevice_v(attributesNamesInBinOfCalDevice_a, attributesNamesInBinOfCalDevice_a + sizeof(attributesNamesInBinOfCalDevice_a) / sizeof(attributesNamesInBinOfCalDevice_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalDeviceTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalDevice_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+	,
+		"feedId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalDevice_v(keyOfCalDevice_a, keyOfCalDevice_a + sizeof(keyOfCalDevice_a) / sizeof(keyOfCalDevice_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalDeviceTable::getKeyName() {
-		return key;
+	const vector<string>& CalDeviceTable::getKeyName() {
+		return keyOfCalDevice_v;
 	}
 
 
 	CalDeviceTable::CalDeviceTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("feedId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,79 +199,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalDeviceTable::getName() const {
-		return itsName;
+		return entityNameOfCalDevice;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalDeviceTable::name() {
-		return itsName;
+		return entityNameOfCalDevice;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalDeviceTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("feedId");
-
-
-		attributesNames.push_back("numCalload");
-
-		attributesNames.push_back("calLoadNames");
-
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("calEff");
-
-		attributesNames.push_back("noiseCal");
-
-		attributesNames.push_back("coupledNoiseCal");
-
-		attributesNames.push_back("temperatureLoad");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("numCalload") ; 
-    	 
-    	attributesNamesInBin.push_back("calLoadNames") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("calEff") ; 
-    	 
-    	attributesNamesInBin.push_back("noiseCal") ; 
-    	 
-    	attributesNamesInBin.push_back("coupledNoiseCal") ; 
-    	 
-    	attributesNamesInBin.push_back("temperatureLoad") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalDeviceTable::getAttributesNames() { return attributesNamesOfCalDevice_v; }
 	
-
-	const vector<string>& CalDeviceTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalDeviceTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalDeviceTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalDevice_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -349,7 +344,9 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	
 		
 	void CalDeviceTable::addWithoutCheckingUnique(CalDeviceRow * x) {
-		CalDeviceRow * dummy = add(x);
+		CalDeviceRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -368,7 +365,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 			
 			
 			
-	CalDeviceRow*  CalDeviceTable::checkAndAdd(CalDeviceRow* x) {
+	CalDeviceRow*  CalDeviceTable::checkAndAdd(CalDeviceRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -552,7 +549,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/3/CalDeviceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/3/CalDeviceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -674,7 +671,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/3/CalDeviceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldvc=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/3/CalDeviceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDeviceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -936,7 +933,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalDevice_v.begin(); iter != attributesNamesOfCalDevice_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalDevice"); 
 		}
@@ -1055,7 +1052,7 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalDevice_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

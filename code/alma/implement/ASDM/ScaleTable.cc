@@ -67,34 +67,70 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfScale = "Scale";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfScale_a[] = {
+		
+			"scaleId"
+		
+		
+			, "timeScale"
+		
+			, "crossDataScale"
+		
+			, "autoDataScale"
+		
+			, "weightType"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfScale_v (attributesNamesOfScale_a, attributesNamesOfScale_a + sizeof(attributesNamesOfScale_a) / sizeof(attributesNamesOfScale_a[0]));
 
-	string ScaleTable::itsName = "Scale";
-	vector<string> ScaleTable::attributesNames; 
-	vector<string> ScaleTable::attributesNamesInBin; 
-	bool ScaleTable::initAttributesNamesDone = ScaleTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfScale_a[] = {
+    
+    	 "scaleId" , "timeScale" , "crossDataScale" , "autoDataScale" , "weightType" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfScale_v(attributesNamesInBinOfScale_a, attributesNamesInBinOfScale_a + sizeof(attributesNamesInBinOfScale_a) / sizeof(attributesNamesInBinOfScale_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ScaleTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfScale_a[] = {
+	
+		"scaleId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfScale_v(keyOfScale_a, keyOfScale_a + sizeof(keyOfScale_a) / sizeof(keyOfScale_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ScaleTable::getKeyName() {
-		return key;
+	const vector<string>& ScaleTable::getKeyName() {
+		return keyOfScale_v;
 	}
 
 
 	ScaleTable::ScaleTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("scaleId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,55 +181,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ScaleTable::getName() const {
-		return itsName;
+		return entityNameOfScale;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ScaleTable::name() {
-		return itsName;
+		return entityNameOfScale;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ScaleTable::initAttributesNames() {
-
-		attributesNames.push_back("scaleId");
-
-
-		attributesNames.push_back("timeScale");
-
-		attributesNames.push_back("crossDataScale");
-
-		attributesNames.push_back("autoDataScale");
-
-		attributesNames.push_back("weightType");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("scaleId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeScale") ; 
-    	 
-    	attributesNamesInBin.push_back("crossDataScale") ; 
-    	 
-    	attributesNamesInBin.push_back("autoDataScale") ; 
-    	 
-    	attributesNamesInBin.push_back("weightType") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ScaleTable::getAttributesNames() { return attributesNamesOfScale_v; }
 	
-
-	const vector<string>& ScaleTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ScaleTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ScaleTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfScale_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -329,22 +336,24 @@ ScaleRow* ScaleTable::newRow(ScaleRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	ScaleRow*  ScaleTable::checkAndAdd(ScaleRow* x)  {
+	ScaleRow*  ScaleTable::checkAndAdd(ScaleRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getTimeScale()
+				x->getTimeScale()
 		,
-			x->getCrossDataScale()
+				x->getCrossDataScale()
 		,
-			x->getAutoDataScale()
+				x->getAutoDataScale()
 		,
-			x->getWeightType()
+				x->getWeightType()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -479,7 +488,7 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ScaleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scale=\"http://Alma/XASDM/ScaleTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScaleTable http://almaobservatory.org/XML/XASDM/3/ScaleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ScaleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scale=\"http://Alma/XASDM/ScaleTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScaleTable http://almaobservatory.org/XML/XASDM/3/ScaleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -601,7 +610,7 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ScaleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scale=\"http://Alma/XASDM/ScaleTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScaleTable http://almaobservatory.org/XML/XASDM/3/ScaleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ScaleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:scale=\"http://Alma/XASDM/ScaleTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScaleTable http://almaobservatory.org/XML/XASDM/3/ScaleTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ScaleTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -845,7 +854,7 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfScale_v.begin(); iter != attributesNamesOfScale_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Scale"); 
 		}
@@ -964,7 +973,7 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfScale_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

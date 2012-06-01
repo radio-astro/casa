@@ -67,36 +67,94 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfWeather = "Weather";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfWeather_a[] = {
+		
+			"stationId"
+		,
+			"timeInterval"
+		
+				
+		
+			, "pressure"
+		
+			, "relHumidity"
+		
+			, "temperature"
+		
+			, "windDirection"
+		
+			, "windSpeed"
+		
+			, "windMax"
+		
+			, "dewPoint"
+		
+			, "numLayer"
+		
+			, "layerHeight"
+		
+			, "temperatureProfile"
+		
+			, "cloudMonitor"
+		
+			, "numWVR"
+		
+			, "wvrTemp"
+		
+			, "water"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfWeather_v (attributesNamesOfWeather_a, attributesNamesOfWeather_a + sizeof(attributesNamesOfWeather_a) / sizeof(attributesNamesOfWeather_a[0]));
 
-	string WeatherTable::itsName = "Weather";
-	vector<string> WeatherTable::attributesNames; 
-	vector<string> WeatherTable::attributesNamesInBin; 
-	bool WeatherTable::initAttributesNamesDone = WeatherTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfWeather_a[] = {
+    
+    	 "stationId" , "timeInterval" 
+    	,
+    	 "pressure" , "relHumidity" , "temperature" , "windDirection" , "windSpeed" , "windMax" , "dewPoint" , "numLayer" , "layerHeight" , "temperatureProfile" , "cloudMonitor" , "numWVR" , "wvrTemp" , "water" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfWeather_v(attributesNamesInBinOfWeather_a, attributesNamesInBinOfWeather_a + sizeof(attributesNamesInBinOfWeather_a) / sizeof(attributesNamesInBinOfWeather_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> WeatherTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfWeather_a[] = {
+	
+		"stationId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfWeather_v(keyOfWeather_a, keyOfWeather_a + sizeof(keyOfWeather_a) / sizeof(keyOfWeather_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> WeatherTable::getKeyName() {
-		return key;
+	const vector<string>& WeatherTable::getKeyName() {
+		return keyOfWeather_v;
 	}
 
 
 	WeatherTable::WeatherTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("stationId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -147,99 +205,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string WeatherTable::getName() const {
-		return itsName;
+		return entityNameOfWeather;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string WeatherTable::name() {
-		return itsName;
+		return entityNameOfWeather;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool WeatherTable::initAttributesNames() {
-
-		attributesNames.push_back("stationId");
-
-		attributesNames.push_back("timeInterval");
-
-
-
-		attributesNames.push_back("pressure");
-
-		attributesNames.push_back("relHumidity");
-
-		attributesNames.push_back("temperature");
-
-		attributesNames.push_back("windDirection");
-
-		attributesNames.push_back("windSpeed");
-
-		attributesNames.push_back("windMax");
-
-		attributesNames.push_back("dewPoint");
-
-		attributesNames.push_back("numLayer");
-
-		attributesNames.push_back("layerHeight");
-
-		attributesNames.push_back("temperatureProfile");
-
-		attributesNames.push_back("cloudMonitor");
-
-		attributesNames.push_back("numWVR");
-
-		attributesNames.push_back("wvrTemp");
-
-		attributesNames.push_back("water");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("stationId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("pressure") ; 
-    	 
-    	attributesNamesInBin.push_back("relHumidity") ; 
-    	 
-    	attributesNamesInBin.push_back("temperature") ; 
-    	 
-    	attributesNamesInBin.push_back("windDirection") ; 
-    	 
-    	attributesNamesInBin.push_back("windSpeed") ; 
-    	 
-    	attributesNamesInBin.push_back("windMax") ; 
-    	 
-    	attributesNamesInBin.push_back("dewPoint") ; 
-    	 
-    	attributesNamesInBin.push_back("numLayer") ; 
-    	 
-    	attributesNamesInBin.push_back("layerHeight") ; 
-    	 
-    	attributesNamesInBin.push_back("temperatureProfile") ; 
-    	 
-    	attributesNamesInBin.push_back("cloudMonitor") ; 
-    	 
-    	attributesNamesInBin.push_back("numWVR") ; 
-    	 
-    	attributesNamesInBin.push_back("wvrTemp") ; 
-    	 
-    	attributesNamesInBin.push_back("water") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& WeatherTable::getAttributesNames() { return attributesNamesOfWeather_v; }
 	
-
-	const vector<string>& WeatherTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& WeatherTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& WeatherTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfWeather_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -341,7 +326,9 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	
 		
 	void WeatherTable::addWithoutCheckingUnique(WeatherRow * x) {
-		WeatherRow * dummy = add(x);
+		WeatherRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -360,7 +347,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 			
 			
 			
-	WeatherRow*  WeatherTable::checkAndAdd(WeatherRow* x) {
+	WeatherRow*  WeatherTable::checkAndAdd(WeatherRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getStationId() 
 					   ); 
@@ -540,7 +527,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:weathr=\"http://Alma/XASDM/WeatherTable\" xsi:schemaLocation=\"http://Alma/XASDM/WeatherTable http://almaobservatory.org/XML/XASDM/3/WeatherTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:weathr=\"http://Alma/XASDM/WeatherTable\" xsi:schemaLocation=\"http://Alma/XASDM/WeatherTable http://almaobservatory.org/XML/XASDM/3/WeatherTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -662,7 +649,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:weathr=\"http://Alma/XASDM/WeatherTable\" xsi:schemaLocation=\"http://Alma/XASDM/WeatherTable http://almaobservatory.org/XML/XASDM/3/WeatherTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:weathr=\"http://Alma/XASDM/WeatherTable\" xsi:schemaLocation=\"http://Alma/XASDM/WeatherTable http://almaobservatory.org/XML/XASDM/3/WeatherTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='WeatherTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -939,7 +926,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfWeather_v.begin(); iter != attributesNamesOfWeather_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Weather"); 
 		}
@@ -1058,7 +1045,7 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfWeather_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
