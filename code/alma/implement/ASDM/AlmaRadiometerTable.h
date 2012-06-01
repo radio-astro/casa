@@ -66,6 +66,8 @@
 
 #include <Representable.h>
 
+#include <pthread.h>
+
 namespace asdm {
 
 //class asdm::ASDM;
@@ -81,7 +83,7 @@ class AlmaRadiometerRow;
  * Properties of the Radiometer receiver/backend (used to monitor water vapour  content and correct phases). Note that standard properties (like  spectral coverage) are in the generic tables (like SpectralWindow).
  * <BR>
  
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "1.62", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of AlmaRadiometer </CAPTION>
@@ -131,7 +133,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static std::vector<std::string> getKeyName();
+	static const std::vector<std::string>& getKeyName();
 
 
 	virtual ~AlmaRadiometerTable();
@@ -344,34 +346,6 @@ private:
 
 
 	/**
-	 * The name of this table.
-	 */
-	static std::string itsName;
-	
-	/**
-	 * The attributes names.
-	 */
-	static std::vector<std::string> attributesNames;
-	
-	/**
-	 * The attributes names in the order in which they appear in the binary representation of the table.
-	 */
-	static std::vector<std::string> attributesNamesInBin;
-	
-
-	/**
-	 * A method to fill attributesNames and attributesNamesInBin;
-	 */
-	static bool initAttributesNames(), initAttributesNamesDone ;
-	
-
-	/**
-	 * The list of field names that make up key key.
-	 */
-	static std::vector<std::string> key;
-
-
-	/**
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
@@ -380,7 +354,7 @@ private:
 	 * @throws UniquenessViolationException
 	 
 	 */
-	AlmaRadiometerRow* checkAndAdd(AlmaRadiometerRow* x) ;
+	AlmaRadiometerRow* checkAndAdd(AlmaRadiometerRow* x, bool skipCheckUniqueness=false) ;
 	
 	/**
 	 * Brutally append an AlmaRadiometerRow x to the collection of rows already stored in this table. No uniqueness check is done !
