@@ -282,11 +282,12 @@ namespace casa {
 		prev->setNext( centers_group, first );
 	}
 
-	void QtRegionState::invalidate() {
+	void QtRegionState::setCenterBackground(QString background){
+	//void QtRegionState::invalidate() {
 		for ( int i=0; i < centers_group->count(); ++i ) {
 			QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 			if ( cur == 0 ) throw internal_error( );
-			cur->invalidate();
+			cur->setCenterBackground(background);
 		}
 	}
 

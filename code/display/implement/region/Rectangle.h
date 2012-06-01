@@ -66,8 +66,8 @@ namespace casa {
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
-		void move( double dx, double dy )
-		    { blc_x += dx; trc_x += dx; blc_y += dy; trc_y += dy; updateStateInfo( true ); }
+		void move( double dx, double dy );
+
 		void resize( double /*width_delta*/, double /*height_delta*/ );
 		bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
@@ -91,8 +91,12 @@ namespace casa {
 		void drawRegion( bool );
 		/* void drawHandles( ); */
 
+		virtual void setCenter(double &x, double &y, double &deltx, double &delty) {center_x_=x; center_y_=y; center_delta_x_=deltx; center_delta_y_=delty;};
+
 		double blc_x, blc_y;
 		double trc_x, trc_y;
+		double center_x_, center_y_;
+		double center_delta_x_, center_delta_y_;
 		double handle_delta_x, handle_delta_y;
 
 	    private:

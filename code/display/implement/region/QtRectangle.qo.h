@@ -96,6 +96,9 @@ namespace casa {
 		// indicates that region movement requires that the statistcs be updated...
 		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
 
+		// indicates that the center info is no longer valid
+		void invalidateCenterInfo( ) {QtRegion::invalidateCenterInfo();};
+
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }

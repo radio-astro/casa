@@ -165,6 +165,7 @@ namespace casa {
 		void output(std::list<QtRegionState*>,RegionTextList&);
 		void output(std::list<QtRegionState*>,ds9writer&);
 		void updateCenterInfo();
+		void invalidateCenterInfo( );
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);

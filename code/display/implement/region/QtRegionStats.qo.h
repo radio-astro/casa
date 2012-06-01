@@ -59,7 +59,7 @@ namespace casa {
 
 		void updateStatistics( RegionInfo &stats );
 
-		void invalidate();
+		void setCenterBackground(QString background);
 
 		void setNext( QStackedWidget *, QtRegionStats * );
 
