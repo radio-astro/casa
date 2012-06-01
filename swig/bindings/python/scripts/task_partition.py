@@ -1,4 +1,5 @@
 import os
+import shutil
 import string
 import copy
 import math
@@ -12,6 +13,7 @@ class PartitionHelper(ParallelTaskHelper):
         self._calScanList = None
         self._selectionScanList = None
         self._msTool = None
+        self._tbTool = None
 
     def initialize(self):
         '''
@@ -307,14 +309,53 @@ class PartitionHelper(ParallelTaskHelper):
                     subMSList.append(job.getCommandArguments()['outputvis'])
 
             if len(subMSList) == 0:
-                print "Error, no subMSs were created."
+                print "Error: no subMSs were created."
                 return False
 
             # Really should double check here before creating.
             if os.path.exists(self._arg['outputvis']):
                 raise ValueError, "Output MS already exists"
-            self._msTool.createmultims(self._arg['outputvis'],subMSList)
 
+            ## make a MMS with all sub-MSs contain in a SUBMSS subdirectory
+            thems = self._arg['outputvis']
+            themsname = os.path.basename(thems.rstrip('/'))
+            thecontainingdir = os.path.dirname(thems.rstrip('/'))
+            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+
+            os.mkdir(thems)
+            shutil.move(thesubmscontainingdir, thems+'/SUBMSS')
+            
+            thesubmss = []
+            for submsname in subMSList:
+                thesubmsname = os.path.basename(submsname.rstrip('/'))
+                thesubmss.append(themsname+'/SUBMSS/'+thesubmsname)
+
+            ## create the MMS via a temporary directory in order to be able
+            ## to have the members inside the outputvis
+            
+            origpath = os.getcwd()
+            # need to be in the containing directory of outputvis in order
+            # to have the right relative paths in the MMS header
+            if not (thecontainingdir==''):
+                os.chdir(thecontainingdir)
+            tmpmsname = themsname+'_createmms_tmp'
+            shutil.rmtree(tmpmsname, ignore_errors=True)
+            self._msTool.close()
+            try:
+                self._msTool.createmultims(tmpmsname,
+                                           thesubmss,
+                                           [],
+                                           True,  # nomodify
+                                           False, # lock
+                                           False) # copysubtables
+            except:
+                print "Problem in createmultims: ", sys.exc_info()[0]
+                os.chdir('origpath')
+                raise
+            shutil.move(thems+'/SUBMSS', tmpmsname)
+            shutil.rmtree(thems, ignore_errors=True)
+            shutil.move(tmpmsname, thems)
+            os.chdir(origpath)
             
         # Probably should check to see if anything failed
         # This should be done in the base class

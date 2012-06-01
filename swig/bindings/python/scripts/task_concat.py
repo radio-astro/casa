@@ -77,12 +77,8 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 				casalog.post('Will be concatenating into the existing ms '+concatvis , 'WARN')
 		else:
 			if(createmms):
-				if(os.path.exists(concatvis+'.data')):
-					raise Exception, 'When creating a multi-MS, the directory concavis+\'.data\' must not yet exist.'
-				else:
-					t.create(concatvis)
-					t.close()
-					os.mkdir(concatvis+'/SUBMSS')
+				os.mkdir(concatvis)
+				os.mkdir(concatvis+'/SUBMSS')
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				if(createmms):
 					theconcatvis = concatvis+'/SUBMSS/'+vis[0]
