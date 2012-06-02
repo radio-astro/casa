@@ -784,7 +784,7 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	(*it).first->show( );
 	(*it).first->setTitle("shape");
 	std::ostringstream buf;
-	Vector<Int> shape = ia.shape( );
+	Vector<Int> shape = image.shape( ).asVector( );
 	buf << shape;
 	std::string shape_str = buf.str( );
 	(*it).second->setText(QString::fromStdString(std::for_each(shape_str.begin(),shape_str.end(),strip_chars("[]"))));

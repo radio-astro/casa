@@ -1809,7 +1809,7 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		// handle default coord
 		std::vector<int> ncoord(coord);
 		if (ncoord.size() == 1 && ncoord[0] == -1) {
-			int n = (_image->shape()).size();
+			int n = (_image->getImage()->shape()).size();
 			ncoord.resize(n);
 			for (int i = 0; i < n; i++) {
 				//ncoord[i]=i;
@@ -2784,7 +2784,7 @@ std::vector<int> image::shape() {
 	if (detached())
 		return rstat;
 	try {
-		Vector<Int> dummy = _image->shape();
+		Vector<Int> dummy = _image->getImage()->shape().asVector();
 		dummy.tovector(rstat);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2809,7 +2809,6 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 		casa::Quantity beam2(casaQuantityFromVar(pa));
 
 		Record *rec = toRecord(beam);
-
 		rstat = _image->setrestoringbeam(beam0, beam1, beam2, *rec, deleteIt,
 				log);
 		delete rec;
