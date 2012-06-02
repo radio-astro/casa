@@ -423,8 +423,6 @@ class ImageAnalysis
 
     bool setmiscinfo(const Record& info);
 
-    Vector<Int> shape();
-
     Bool setrestoringbeam(const Quantity& major, const Quantity& minor, 
                           const Quantity& pa, const Record& beam, 
                           const Bool remove = False, const Bool log = True);
