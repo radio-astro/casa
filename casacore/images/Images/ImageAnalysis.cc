@@ -4294,11 +4294,6 @@ Bool ImageAnalysis::setmiscinfo(const Record& info) {
 	return pImage_p->setMiscInfo(info);
 }
 
-Vector<Int> ImageAnalysis::shape() {
-
-	return pImage_p->shape().asVector();
-}
-
 Bool ImageAnalysis::setrestoringbeam(const Quantity& major,
 		const Quantity& minor, const Quantity& pa, const Record& rec,
 		const bool deleteIt, const bool log) {
@@ -5487,7 +5482,7 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 		ImageUtilities::openImage(pImage_p_tmp, infile, *itsLog);
 		latticeShapeVec = pImage_p_tmp->shape().asVector();
 	} else {
-		latticeShapeVec = this->shape();
+		latticeShapeVec = pImage_p->shape().asVector();
 	}
 	rec.define("shape", latticeShapeVec);
 
