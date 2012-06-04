@@ -400,6 +400,7 @@ casa_add_library( display
   implement/Utilities/DlTarget.cc
   implement/Utilities/Lowlevel.cc
   implement/Utilities/dtor.cc
+  implement/Utilities/ImageProperties.cc
   implement/region/QtRegion.cc
   implement/region/QtRectangle.cc
   implement/region/QtPolygon.cc
