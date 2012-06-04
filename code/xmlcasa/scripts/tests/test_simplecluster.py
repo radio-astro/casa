@@ -8,17 +8,22 @@ import unittest
 import time
 from simple_cluster import *
 import glob
+import multiprocessing
 
 class simplecluster_test(unittest.TestCase):
-    # Input and output names
-    
+
     projectname="test_simplecluster"
     resultfile="test_simplecluster.result"
-    clusterfile="test_simplecluster"
-    
-    cluster=simple_cluster()
+    clusterfile="test_simplecluster_config.txt"
+    monitorFile="monitoring.log"
+    cluster=None
 
-    def _cleanUp(self):
+    # Get local host configuration parameters
+    host=os.uname()[1]
+    cwd=os.getcwd()
+    ncpu=multiprocessing.cpu_count()
+
+    def cleanUp(self):
         if os.path.exists(self.resultfile):
             os.remove(self.resultfile)
         logfiles=glob.glob("engine-*.log")
@@ -26,41 +31,206 @@ class simplecluster_test(unittest.TestCase):
             os.remove(i)
         if os.path.exists(self.clusterfile):
             os.remove(self.clusterfile)
+        if os.path.exists(self.monitorFile):
+            os.remove(self.monitorFile)
 
-    def setUp(self):
-        self._cleanUp()
-
-    def tearDown(self):
-        #print 'tearDown.....get called when each test finish'
+    def stopCluster(self):
+        # Stop cluster and thread services
+        self.cluster.stop_monitor()
+        self.cluster.stop_resource()
+        # Need to wait until the threads have actually returned
+        time.sleep(10)
+        # Now we can stop the cluster w/o problems
         self.cluster.cold_start()
-        self._cleanUp()
+        # Remove log files, cluster files, and result files
+        self.cleanUp()
 
-    def test000(self):
-        '''Test 0: create a default cluster'''
-        host=os.uname()[1]
-        cwd=os.getcwd()
-        import multiprocessing
-        ncpu=multiprocessing.cpu_count()
-        msg=host+', '+str(ncpu)+', '+cwd
+    def createClusterFile(self):
+
+        msg=self.host + ', ' + str(self.ncpu) + ', ' + self.cwd
         f=open(self.clusterfile, 'w')
         f.write(msg)
         f.close()
         self._waitForFile(self.clusterfile, 10)
 
-        self.cluster.init_cluster(self.clusterfile, self.projectname)
+    def create_input(self,str_text, filename):
+        """Save the string in a text file"""
+    
+        inp = filename
+        cmd = str_text
+    
+        # remove file first
+        if os.path.exists(inp):
+            os.system('rm -f '+ inp)
+        
+        # save to a file    
+        fid = open(inp, 'w')
+        fid.write(cmd)
+        
+        # close file
+        fid.close()
 
-        print self.cluster._cluster.hello()
-        print "engines:", self.cluster.use_engines()
-        print "hosts:",  self.cluster.get_hosts()
+        # wait until file is visible for the filesystem
+        self._waitForFile(filename, 10)
+    
+        return
 
-    def _checkResultFile(self):
-        self.assertTrue(os.path.isfile(self.resultfile))
-            
     def _waitForFile(self, file, seconds):
         for i in range(0,seconds):
             if (os.path.isfile(file)):
                 return
             time.sleep(1)
+
+    def initCluster(self,userMonitorFile=""):
+        # First of all clean up files from previous sessions
+        self.cleanUp()
+        # Create cluster object
+        if (len(userMonitorFile) > 0):
+            self.cluster = simple_cluster(userMonitorFile)
+        else:
+            self.cluster = simple_cluster()
+        # Create cluster file
+        self.createClusterFile()
+        # Initialize cluster object
+        self.cluster.init_cluster(self.clusterfile, self.projectname)
+        # Wait 10 seconds to stabilize
+        time.sleep(10)
+
+    def tearDown(self):
+        # Remove log files, cluster files, and result files
+        self.stopCluster()
+
+    def setUp_4Ants_partition(self):
+        self.vis = "Four_ants_3C286.partition.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                         os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/simplecluster/" + self.vis + ' ' + self.vis)
+            os.system('cp -r ' + \
+                         os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/simplecluster/" + self.vis.replace('.ms','.data') + ' ' + self.vis.replace('.ms','.data'))
+
+    def test1_defaultCluster(self):
+        """Test 1: Create a default cluster"""
+
+        self.initCluster()
+
+        # Check parameters vs actual cluster configuration
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][1]==self.ncpu)
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()
+
+    def test2_monitoringDefault(self):
+        """Test 2: Check default monitoring file exists"""
+
+        self.initCluster()
+
+        fid = open('monitoring.log', 'r')
+        line = fid.readline()
+        self.assertTrue(line.find('Host')>=0)
+        self.assertTrue(line.find('Engine')>=0)
+        self.assertTrue(line.find('Status')>=0)
+        self.assertTrue(line.find('CPU[%]')>=0)
+        self.assertTrue(line.find('Memory[%]')>=0)
+        self.assertTrue(line.find('Time[s]')>=0)
+        self.assertTrue(line.find('Read[MB]')>=0)
+        self.assertTrue(line.find('Write[MB]')>=0)
+        self.assertTrue(line.find('Read[MB/s]')>=0)
+        self.assertTrue(line.find('Write[MB/s]')>=0)
+        self.assertTrue(line.find('Job')>=0)
+        self.assertTrue(line.find('Sub-MS')>=0)
+
+        self.stopCluster()
+
+    def test3_monitoringUser(self):
+        """Test 3: Check custom monitoring file exists"""
+
+        self.initCluster('userMonitorFile.log')
+
+        fid = open('userMonitorFile.log', 'r')
+        line = fid.readline()
+        self.assertTrue(line.find('Host')>=0)
+        self.assertTrue(line.find('Engine')>=0)
+        self.assertTrue(line.find('Status')>=0)
+        self.assertTrue(line.find('CPU[%]')>=0)
+        self.assertTrue(line.find('Memory[%]')>=0)
+        self.assertTrue(line.find('Time[s]')>=0)
+        self.assertTrue(line.find('Read[MB]')>=0)
+        self.assertTrue(line.find('Write[MB]')>=0)
+        self.assertTrue(line.find('Read[MB/s]')>=0)
+        self.assertTrue(line.find('Write[MB/s]')>=0)
+        self.assertTrue(line.find('Job')>=0)
+        self.assertTrue(line.find('Sub-MS')>=0)
+
+        self.stopCluster()
+
+    def test4_monitoringStandAlone(self):
+        """Test 4: Check the dict structure of the stand-alone method """
+
+        self.initCluster('userMonitorFile.log')
+
+        time.sleep(10)
+        state = self.cluster.show_state()
+        for engine in range(self.ncpu):
+            self.assertTrue(state[self.host][engine].has_key('Status'))
+            self.assertTrue(state[self.host][engine].has_key('Sub-MS'))
+            self.assertTrue(state[self.host][engine].has_key('Read'))
+            self.assertTrue(state[self.host][engine].has_key('Write'))
+            self.assertTrue(state[self.host][engine].has_key('Job'))
+            self.assertTrue(state[self.host][engine].has_key('Memory'))
+            self.assertTrue(state[self.host][engine].has_key('ReadRate'))
+            self.assertTrue(state[self.host][engine].has_key('WriteRate'))
+
+        self.stopCluster()
+
+    def test5_tflagdata_list_return(self):
+        """Test 5: Test support for MMS using tflagdata in unflag+clip mode"""
+
+        self.setUp_4Ants_partition()
+        self.initCluster()
+
+        # Create list file
+        text = "mode='unflag'\n"\
+               "mode='clip' clipminmax=[0,0.1]"
+        filename = 'list_tflagdata.txt'
+        self.create_input(text, self.projectname + '/' + filename)
+
+        # step 1: Do unflag+clip
+        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+
+        # step 2: Now do summary
+        tflagdata(vis=self.vis, mode='summary')
+
+        # Retrieve result from summary
+        summary = self.cluster.get_return_list()
+
+        # Print summary (note: the first 16 jobs correspond to the step 1)
+        self.assertTrue(summary[0]['spw']['15']['flagged'] == 96284.0)
+        self.assertTrue(summary[1]['spw']['0']['flagged'] == 129711.0)
+        self.assertTrue(summary[2]['spw']['1']['flagged'] == 128551.0)
+        self.assertTrue(summary[3]['spw']['2']['flagged'] == 125686.0)
+        self.assertTrue(summary[4]['spw']['3']['flagged'] == 122862.0)
+        self.assertTrue(summary[5]['spw']['4']['flagged'] == 109317.0)
+        self.assertTrue(summary[6]['spw']['5']['flagged'] == 24481.0)
+        self.assertTrue(summary[7]['spw']['6']['flagged'] == 0)
+        self.assertTrue(summary[8]['spw']['7']['flagged'] == 0)
+        self.assertTrue(summary[9]['spw']['8']['flagged'] == 0)
+        self.assertTrue(summary[10]['spw']['9']['flagged'] == 27422.0)
+        self.assertTrue(summary[11]['spw']['10']['flagged'] == 124638.0)
+        self.assertTrue(summary[12]['spw']['11']['flagged'] == 137813.0)
+        self.assertTrue(summary[13]['spw']['12']['flagged'] == 131896.0)
+        self.assertTrue(summary[14]['spw']['13']['flagged'] == 125074.0)
+        self.assertTrue(summary[15]['spw']['14']['flagged'] == 118039.0)
+
+        self.stopCluster()
+
 
 class testJobData(unittest.TestCase):
     '''
@@ -251,11 +421,63 @@ class testJobQueueManager(unittest.TestCase):
             counter -= 1
         cluster.remove_record()
 
-        
+class testMonitoring(unittest.TestCase):
+    """
+    This class tests the monitoring functionality
+    """
+
+    def setUp(self):
+       self.setUp_4Ants_partition()
+
+    def setUp_4Ants_partition(self):
+       self.vis = "Four_ants_3C286.partition.ms"
+
+       if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+       else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                         os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/simplecluster/" + self.vis + ' ' + self.vis)
+            os.system('cp -r ' + \
+                         os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/simplecluster/" + self.vis.replace('.ms','.data') + ' ' + self.vis.replace('.ms','.data'))
+
+       self.unflag_table()
+
+    def unflag_table(self):
+       tflagdata(vis=self.vis,mode='unflag')
+
+    def tearDown(self):
+       os.system('rm -rf ' + self.vis)
+       os.system('rm -rf ' + self.vis.replace('.ms','.data'))
+       sc = simple_cluster.getCluster()
+       sc.stop_monitor()
+       sc.stop_resource()
+       sc.cold_start()
+       # Need to wait until the threads have actually returned
+       time.sleep(10)
+    
+    def testMonitoringDefault(self):
+       tflagdata(vis=self.vis,mode='clip')
+       fid = open('monitoring.log', 'r')
+       line = fid.readline()
+       self.assertTrue(line.find('Host')>=0)
+       self.assertTrue(line.find('Engine')>=0)
+       self.assertTrue(line.find('Status')>=0)
+       self.assertTrue(line.find('CPU[%]')>=0)
+       self.assertTrue(line.find('Memory[%]')>=0)
+       self.assertTrue(line.find('Time[s]')>=0)
+       self.assertTrue(line.find('Read[MB]')>=0)
+       self.assertTrue(line.find('Write[MB]')>=0)
+       self.assertTrue(line.find('Read[MB/s]')>=0)
+       self.assertTrue(line.find('Write[MB/s]')>=0)
+       self.assertTrue(line.find('Job')>=0)
+       self.assertTrue(line.find('Sub-MS')>=0)
 
 
 def suite():
-    return [testJobData]
+    return [simplecluster_test]
     return [simplecluster_test, testJobData, testJobQueueManager]
      
 if __name__ == '__main__':

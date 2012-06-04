@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import flaghelper as fh
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 debug = False
 
@@ -87,6 +88,13 @@ def tflagdata(vis,
         return
 
     casalog.origin('tflagdata')
+
+    # Take care of the trivial parallelization
+    if ParallelTaskHelper.isParallelMS(vis):
+        # To be safe convert file names to absolute paths.
+        helper = ParallelTaskHelper('tflagdata', locals())
+        helper.go()
+        return
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
