@@ -71,7 +71,7 @@ namespace casa {
 
 	    CoordinateSystem cs = image.coordinates( );
 	    ImageAnalysis ia(&image);
-	    shape_ = ia.shape( );
+	    shape_ = image.shape( ).asVector( );
 	    if ( shape_.size( ) <= 0 )
 		return;
 
