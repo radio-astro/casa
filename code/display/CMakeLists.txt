@@ -48,8 +48,10 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtPlotter/QtDrawCanvas.qo.h
   implement/QtPlotter/QtDrawColors.qo.h
   implement/QtPlotter/QtDrawer.qo.h
+  implement/QtPlotter/MomentSettingsWidgetOptical.qo.h
+  implement/QtPlotter/MomentSettingsWidgetRadio.qo.h
   implement/QtPlotter/SpecFitLogDialog.qo.h
-  implement/QtPlotter/SpecFitSettingsWidget.qo.h
+  implement/QtPlotter/SettingsWidget.qo.h
   implement/QtPlotter/SpecFitSettingsFixedTableCell.qo.h
   implement/QtPlotter/SpecFitSettingsWidgetOptical.qo.h
   implement/QtPlotter/SpecFitSettingsWidgetRadio.qo.h
@@ -118,7 +120,9 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtPlotter/QtProfileGUI.ui
   implement/QtPlotter/QtProfilePrefsGUI.ui
   implement/QtPlotter/SpecFitLogDialog.ui
-  implement/QtPlotter/SpecFitSettingsWidget.ui
+  implement/QtPlotter/MomentSettingsWidgetOptical.ui
+  implement/QtPlotter/MomentSettingsWidgetRadio.ui
+  implement/QtPlotter/SettingsWidget.ui
   implement/QtPlotter/SpecFitSettingsWidgetRadio.ui
   implement/QtPlotter/SpecFitSettingsWidgetOptical.ui
   implement/QtPlotter/SpecFitSettingsFixedTableCell.ui
@@ -338,6 +342,7 @@ casa_add_library( display
   implement/QtAutoGui/QtLayout.cc
   implement/QtAutoGui/QtXmlRecord.cc
   implement/QtPlotter/QtCanvas.cc
+  implement/QtPlotter/ProfileTaskFacilitator.cc
   implement/QtPlotter/QtMWCTools.cc
   implement/QtPlotter/QtOldMWCTools.cc
   implement/QtPlotter/QtPlotSettings.cc
@@ -352,12 +357,13 @@ casa_add_library( display
   implement/QtPlotter/ProfileFitMarker.cc
   implement/QtPlotter/WorldCanvasTranslator.cc
   implement/QtPlotter/SpecFitLogDialog.cc
-  implement/QtPlotter/SpecFitSettingsWidget.cc
+  implement/QtPlotter/MomentSettingsWidgetOptical.cc
+  implement/QtPlotter/MomentSettingsWidgetRadio.cc
+  implement/QtPlotter/SettingsWidget.cc
   implement/QtPlotter/SpecFitSettingsWidgetOptical.cc
   implement/QtPlotter/SpecFitSettingsWidgetRadio.cc
   implement/QtPlotter/SpecFitSettingsFixedTableCell.cc
-  implement/QtPlotter/SpecFitter.cc
-  implement/QtPlotter/SpecFitMonitor.cc
+  implement/QtPlotter/ProfileTaskMonitor.cc
   implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/QtWCBox.cc

@@ -2,14 +2,14 @@
 #define SPECFITSETTINGSWIDGETOPTICAL_QO_H
 
 #include <QtGui/QWidget>
-#include <display/QtPlotter/SpecFitter.h>
+#include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/SpecFitSettingsWidgetOptical.ui.h>
 
 namespace casa {
 
 class SpectralFitter;
 
-class SpecFitSettingsWidgetOptical : public QWidget, public SpecFitter
+class SpecFitSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitator
 {
     Q_OBJECT
 
@@ -18,7 +18,8 @@ public:
     ~SpecFitSettingsWidgetOptical();
     void setRange(float start, float end );
     void setUnits( QString units );
-    void resetSpectralFitter();
+    void reset();
+    void clear();
 
 private slots:
 	void specLineFit();

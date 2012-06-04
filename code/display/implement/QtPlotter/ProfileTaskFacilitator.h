@@ -1,40 +1,43 @@
 /*
- * SpecFitter.h
+ * ProfileTaskFacilitator.h
  *
  *  Created on: May 16, 2012
  *      Author: slovelan
  *
  *  This abstract class is an interface that specifies the basic functionality that
- *  spectral line profiling should implement.  It is expected that it will be subclassed
- *  by implementation classes to provide specialized spectral line fitting behavior.
+ *  spectral line moments/fitting should implement.  It is expected that it will be subclassed
+ *  by implementation classes to provide specialized behavior.
  *
  */
 
-#ifndef SPECFITTER_H_
-#define SPECFITTER_H_
+#ifndef PROFILE_TASK_FACILITATOR_H_
+#define PROFILE_TASK_FACILITATOR_H_
 
 #include <QString>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
+
+class QDoubleValidator;
+
 namespace casa {
 
 class QtCanvas;
-class SpecFitMonitor;
+class ProfileTaskMonitor;
 class LogIO;
+
 template <class T> class ImageInterface;
 
-class SpecFitter {
+class ProfileTaskFacilitator {
 public:
-	SpecFitter();
-	virtual ~SpecFitter();
+	ProfileTaskFacilitator();
+	virtual ~ProfileTaskFacilitator();
 
-	virtual void specLineFit() = 0;
 	virtual void setUnits( QString units ) = 0;
 	virtual void setRange(float start, float end )=0;
-	virtual void resetSpectralFitter() = 0;
+	virtual void reset() = 0;
 
 	virtual void setCanvas( QtCanvas* pixelCanvas );
-	virtual void setSpecFitMonitor( SpecFitMonitor* monitor );
+	virtual void setTaskMonitor( ProfileTaskMonitor* monitor );
 	virtual void setLogger( LogIO* log );
 	virtual void plotMainCurve();
 
@@ -50,10 +53,23 @@ public:
 	virtual const ImageInterface<Float>* getImage() const;
 	virtual const String getPixelBox() const;
 
+	bool isOptical();
+	void setOptical( bool optical );
+
+	virtual void clear();
+	void setCollapseVals(const Vector<Float> &spcVals);
+
 protected:
+	bool isValidChannelRangeValue( QString str, const QString& endStr );
+	void findChannelRange( float startVal, float endVal,
+		const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex );
 	QtCanvas* pixelCanvas;
-	SpecFitMonitor* specFitMonitor;
+	ProfileTaskMonitor* taskMonitor;
 	LogIO* logger;
+
+private:
+	bool optical;
+	QDoubleValidator *validator;
 };
 
 } /* namespace casa */

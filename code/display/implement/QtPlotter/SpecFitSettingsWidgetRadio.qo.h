@@ -3,14 +3,14 @@
 
 #include <QtGui/QWidget>
 #include <display/QtPlotter/SpecFitSettingsWidgetRadio.ui.h>
-#include <display/QtPlotter/SpecFitter.h>
+#include <display/QtPlotter/ProfileTaskFacilitator.h>
 
 namespace casa {
 
 class ImageProfileFitter;
 class SpectralList;
 
-class SpecFitSettingsWidgetRadio : public QWidget, public SpecFitter
+class SpecFitSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator
 {
     Q_OBJECT
 
@@ -19,7 +19,7 @@ public:
     ~SpecFitSettingsWidgetRadio();
     void setUnits( QString units );
     void setRange(float start, float end );
-    void resetSpectralFitter();
+    void reset();
 
 
 private slots:
@@ -42,11 +42,8 @@ private:
 			QString& fwhmStr, QString& fixedStr, int rowIndex );
 	SpectralList buildSpectralList( int nGauss, Bool& validList );
 	bool isValidFitSpecification( int gaussCount, bool polyFit );
-	bool isValidRangeValue( QLineEdit* lineEdit );
 	void setCanvas( QtCanvas* canvas );
 	void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
-	void findChannelRange( float startVal, float endVal,
-			const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex );
 	String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
 	enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
     Ui::SpecFitSettingsWidgetRadio ui;
