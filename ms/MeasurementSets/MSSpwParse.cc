@@ -291,7 +291,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vec.erase( unique( vec.begin(), vec.end() ), vec.end() );
     Vector<Int> uniqueIDList(vec);
 
-    const TableExprNode *tten=MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(uniqueIDList,True,False);    
+    const TableExprNode *tten=
+      MSSpwParse::thisMSSParser->selectSpwIdsFromIDList(uniqueIDList,True,False);    
 
     if (tten->isNull())
       {
