@@ -388,30 +388,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      start = stop = start < 0? 0 : start;
 		      if (stop >= numChans(spw(i)))
 			{
-			  //			  ostringstream Mesg;
-			  Mesg << "Channel " << stop << " out of range for SPW "
-			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")"
-			       << endl;
+			  Mesg << "Spot-channel " << stop << " out of range for SPW "
+			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")."
+			       << " Limit it to be within the available range.";
 			  //			  throw(MSSelectionSpwError(Mesg.str()));
-			  //			  logIO << Mesg << LogIO::WARN << LogIO::POST;
+			  log_l << Mesg.str() << LogIO::WARN << LogIO::POST;
+			  stop = start = numChans(spw(i))-1;
 			  someMatchFailed=True;
 			}
 		    }
 		  else
 		    {
-		      if (start >= numChans(spw(i)))
+		      if (stop >= numChans(spw(i)))
 			{
 			  //			  ostringstream Mesg;
-			  Mesg << "Channel " << start << " out of range for SPW "
-			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")"
-			       << endl;
+			  Mesg << "Channel " << stop << " out of range for SPW "
+			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")."
+			       << " Limit it to be within the available range.";
 			  //			  throw(MSSelectionSpwError(Mesg.str()));
-			  //			  logIO << Mesg << LogIO::WARN << LogIO::POST;
+			  log_l << Mesg.str() << LogIO::WARN << LogIO::POST;
 			  someMatchFailed=True;
 			}
 		      start = start < 0 ? 0 : start;
 		      stop  = stop >= numChans(spw(i)) ? numChans(spw(i)) - 1 : stop;
 		    }
+		  if ((start != -1) && (stop != -1)) localFoundSpwList.push_back(spw(i));
 		  localFreqList(pos++)=start;
 		  localFreqList(pos++)=stop;
 		  localFreqList(pos++)=step;
@@ -518,9 +519,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // if (localFoundSpwList.size() == 0)
     //   log_l << "No match found for SPW and CHAN combination" << LogIO::WARN << LogIO::POST;
     // else 
-    if (someMatchFailed && (localFoundSpwList.size() != 0))
-      log_l << "Found match only for SPW(s) "  << Vector<Int>(localFoundSpwList) << " for some sub-expression." 
-	    << LogIO::WARN << LogIO::POST;
+    if (someMatchFailed)
+      if (localFoundSpwList.size() != 0)
+	// log_l << "Found match for SPW(s) "  
+	//       << Vector<Int>(localFoundSpwList) 
+	//       << " for some sub-expression." 
+	//       << LogIO::WARN << LogIO::POST;
+	;
+      else
+	{
+	  ostringstream m;
+	  log_l << "Found no matching SPW(s) " << spw << LogIO::WARN << LogIO::POST;
+	  //	  log_l << m.str() << LogIO::WARN << LogIO::POST;
+	}
+	
     
     return localFreqList;
   }
