@@ -40,11 +40,9 @@
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
-#include <float.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <display/Utilities/ImageProperties.h>
+#include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
 #include <sstream>
-#include <casa/Arrays/VectorSTLIterator.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -476,9 +474,10 @@ void QtDataManager::changeItemSelection(){
 	    std::string path = (dir_.path() + "/" + name).toStdString( );
 	    if( imagePixelType(path) == TpFloat ) {
 		fill_image_info( path );
-	    } else if(imagePixelType(path)==TpComplex) {
-		PagedImage<Complex> image(path, TableLock::AutoNoReadLocking);
 	    }
+// 	    else if(imagePixelType(path)==TpComplex) {
+// 		PagedImage<Complex> image(path, TableLock::AutoNoReadLocking);
+// 	    }
 
 	}
         break;      
@@ -777,93 +776,51 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
 	    (*it).first->hide( );
 	}
-	PagedImage<Float> image(path, TableLock::AutoNoReadLocking);
-	CoordinateSystem cs = image.coordinates( );
-	ImageAnalysis ia(&image);
+
+	viewer::ImageProperties props(path);
+	if ( props.ok( ) == false ) return;
+
 	infofield_list_t::iterator it = ifields.begin( );
 	(*it).first->show( );
 	(*it).first->setTitle("shape");
 	std::ostringstream buf;
-	Vector<Int> shape = image.shape( ).asVector( );
-	buf << shape;
+	buf << props.shape( );
 	std::string shape_str = buf.str( );
 	(*it).second->setText(QString::fromStdString(std::for_each(shape_str.begin(),shape_str.end(),strip_chars("[]"))));
 	buf.str("");
 	(*it).second->setCursorPosition(0);
 	++it;
-	if ( cs.hasDirectionCoordinate( ) ) {
+
+	if ( props.hasDirectionAxis( ) ) {
 	    (*it).first->show( );
 	    (*it).first->setTitle("direction type");
-	    const DirectionCoordinate &direction = cs.directionCoordinate( );
-	    std::string dirtype = MDirection::showType(direction.directionType( ));
-	    (*it).second->setText(QString::fromStdString(dirtype));
+	    (*it).second->setText(QString::fromStdString(props.directionType( )));
 	    (*it).second->setCursorPosition(0);
 	    ++it;
 	}
-	if ( cs.hasSpectralAxis( ) && shape[cs.spectralAxisNumber( )] > 1 ) {
-	    Vector<Double> refval(cs.referenceValue( ));
-	    const SpectralCoordinate &spec = cs.spectralCoordinate( );
-	    Vector<String> spec_unit_vec = spec.worldAxisUnits( );
-	    if ( spec_unit_vec(0) == "Hz" ) spec_unit_vec(0) = "GHz";
-	    Vector<Double> xy(2);
-	    xy(0) = refval(0);
-	    xy(1) = refval(1);
-	    Vector<Float> zx,zy;
-	    if ( ia.getFreqProfile( xy, zx, zy, "world", "freq", 0, 0, 0, spec_unit_vec(0) ) ) {
-		(*it).first->show( );
-		(*it).first->setTitle("frequency range");
-		buf.str("");
-		Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
-		Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
-		buf << min << " - " << max << " " << spec_unit_vec(0);
-		std::string specrange = buf.str( );
-		(*it).second->setText(QString::fromStdString(specrange));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    }
-	    if ( ia.getFreqProfile( xy, zx, zy, "world", "radio velocity", 0, 0, 0, spec_unit_vec(0) ) ) {
-		(*it).first->show( );
-		(*it).first->setTitle("velocity range");
-		buf.str("");
-		Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
-		Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
-		buf << min << " - " << max << " km/s" ;
-		std::string specrange = buf.str( );
-		(*it).second->setText(QString::fromStdString(specrange));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    }
+
+	if ( props.hasSpectralAxis( ) ) {
+	    (*it).first->show( );
+	    (*it).first->setTitle("frequency range");
+	    buf.str("");
+	    buf << props.freqRange()[0] << " - " << props.freqRange()[1] << " " << props.freqUnits( );
+	    (*it).second->setText(QString::fromStdString(buf.str( )));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
+
+	    (*it).first->show( );
+	    (*it).first->setTitle("velocity range");
+	    buf.str("");
+	    buf << props.veloRange()[0] << " - " << props.veloRange()[1] << " km/s" ;
+	    (*it).second->setText(QString::fromStdString(buf.str( )));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
 	}
 
-	ImageInfo ii = image.imageInfo();
-	Double beamArea = 0;
-	Vector<Quantum<Double> > beam = ii.restoringBeam();
-	std::string imageUnits = image.units().getName();
-	std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
-	Int afterCoord = -1;
-	Int dC = cs.findCoordinate(Coordinate::DIRECTION, afterCoord);
-	// use contains() not == so moment maps are dealt with nicely
-	if ( beam.nelements()==3 && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
-	    DirectionCoordinate dCoord = cs.directionCoordinate(dC);
-	    Vector<String> units(2);
-	    units(0) = units(1) = "rad";
-	    dCoord.setWorldAxisUnits(units);
-	    Vector<Double> deltas = dCoord.increment();
-
-	    Double major = beam(0).getValue(Unit("rad"));
-	    Double minor = beam(1).getValue(Unit("rad"));
-	    beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
-	}
-	if ( beamArea != 0 ) {
-// 	    Quantity baq(beamArea,"rad");
-// 	    baq.convert("arcmin");
-// 	    buf.str("");
-// 	    baq.print(buf);
-// 	    std::string beam_str = buf.str( );
+	if ( props.beamArea( ) > 0 ) {
 	    (*it).first->show( );
 	    (*it).first->setTitle("beam area");
-// 	    (*it).second->setText(QString::fromStdString(beam_str));
-	    (*it).second->setText(QString::number(beamArea));
+	    (*it).second->setText(QString::number(props.beamArea( )));
 	    (*it).second->setCursorPosition(0);
 	    ++it;
 	}
