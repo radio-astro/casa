@@ -305,6 +305,11 @@ namespace casa {
 	    return lc.toStdString( );
 	}
 
+	std::string QtRegionState::centerColor( ) const {
+	    QString cc = center_color->currentText( );
+	    return cc.toStdString( );
+	}
+
 	Region::LineStyle QtRegionState::lineStyle( ) const {
 	    QString ls = line_style->currentText( );
 	    if ( ls == "dashed" ) return Region::DashLine;

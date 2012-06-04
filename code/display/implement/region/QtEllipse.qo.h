@@ -50,7 +50,8 @@ namespace casa {
 
 		const std::string name( ) const { return QtRegion::name( ); }
 
-		std::string lineColor( ) const { return QtRegion::lineColor( ); }
+		std::string lineColor( )   const { return QtRegion::lineColor( ); }
+		std::string centerColor( ) const { return QtRegion::centerColor( ); }
 		int lineWidth( ) const { return QtRegion::lineWidth( ); }
 		Region::LineStyle lineStyle( ) const { return QtRegion::lineStyle( ); }
 
@@ -115,6 +116,10 @@ namespace casa {
 		bool marked( ) const { return QtRegion::marked( ); }
 		bool mark_toggle( ) { return QtRegion::mark_toggle( ); }
 
+		bool markCenter() const { return QtRegion::markCenter( ); }
+
+		bool skyComponent() const { return QtRegion::skyComponent( ); }
+
 		void output( ds9writer &out ) const;
 
 		void emitUpdate( ) { QtRegion::emitUpdate( ); }
@@ -126,7 +131,7 @@ namespace casa {
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 
 				{ return Ellipse::fetch_region_details( type, pixel_pts, world_pts ); }
-		std::list<RegionInfo> *generate_dds_centers( bool skycomp ) { return Ellipse::generate_dds_centers( skycomp ); };
+		std::list<RegionInfo> *generate_dds_centers(  ) { return Ellipse::generate_dds_centers( ); };
 
 	};
     }

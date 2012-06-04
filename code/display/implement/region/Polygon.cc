@@ -751,7 +751,7 @@ namespace casa {
 
 	}
 
-	std::list<RegionInfo> *Polygon::generate_dds_centers(bool skycomp ){
+	std::list<RegionInfo> *Polygon::generate_dds_centers(){
 		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
 
 		if( wc_==0 ) return region_centers;
@@ -842,7 +842,7 @@ namespace casa {
 
 				ImageRegion *imageregion = new ImageRegion(poly);
 
-				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion, skycomp)));
+				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion)));
 
 				delete imgbox;
 				delete imageregion;

@@ -166,7 +166,7 @@
       <item>
        <widget class="QTabWidget" name="states">
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="coordinateTab">
          <attribute name="title">
@@ -1189,7 +1189,7 @@
       <rect>
        <x>10</x>
        <y>180</y>
-       <width>250</width>
+       <width>404</width>
        <height>27</height>
       </rect>
      </property>
@@ -1209,6 +1209,68 @@
         <property name="checked">
          <bool>true</bool>
         </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="markcenter_chk">
+        <property name="text">
+         <string>mark center</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="center_color">
+        <property name="currentIndex">
+         <number>3</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>black</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>white</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>red</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>green</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>blue</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>cyan</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>magenta</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yellow</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>gray</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>

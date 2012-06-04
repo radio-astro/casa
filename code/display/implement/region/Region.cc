@@ -323,6 +323,11 @@ namespace casa {
 	void Region::drawCenter(double &x, double &y, double &deltx, double &delty) {
 		PixelCanvas *pc = wc_->pixelCanvas();
 		if(pc==0) return;
+if (!markCenter()) return;
+		// switch to the center color
+		pc->setColor(centerColor());
+
+		// draw the center
 		drawCenter(x, y);
 
 		// find the scale such that the arrow
@@ -338,6 +343,9 @@ namespace casa {
 
 		// draw the line
 		pc->drawLine(x1, y1, x2, y2);
+
+		// switch back to the general line color
+		pc->setColor(lineColor());
 	}
 
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
@@ -1286,7 +1294,7 @@ namespace casa {
 	    return MDirection::EXTRA;
 	}
 
-   RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg, bool skycomp) {
+   RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg) {
 		  if( image==0 || padd == 0 ) return 0;
 		  try {
 			  // store the coordinate system and the axis names
@@ -1365,7 +1373,7 @@ namespace casa {
 			  Array<Float> medVals;
 
 			  // add a sky component to the fit
-			  if (skycomp){
+			  if (skyComponent()){
 				  // get a sky estimate via the median
 				  SubImage<Float> subImg(*image, imgReg);
 				  ImageStatistics<Float> stats(subImg, False);

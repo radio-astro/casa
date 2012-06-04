@@ -320,7 +320,7 @@ namespace casa {
 	    pc->drawRectangle( x1, y1, x2, y2 );
 
 	    // draw the center
-	    if (getDrawCenter())
+	    if (getDrawCenter())// && markCenter())
 	   	 drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
 	    if ( selected ) {
@@ -419,7 +419,7 @@ namespace casa {
 	    return result;
 	}
 
-	std::list<RegionInfo> * Rectangle::generate_dds_centers(bool skycomp){
+	std::list<RegionInfo> * Rectangle::generate_dds_centers( ){
 		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
 		if( wc_==0 ) return region_centers;
 
@@ -520,7 +520,7 @@ namespace casa {
 				WCBox box(blcq, trcq, cs, Vector<Int>());
 				ImageRegion *imageregion = new ImageRegion(box);
 
-				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd, image, *imageregion, skycomp)));
+				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd, image, *imageregion)));
 
 				delete imageregion;
 			} catch (const casa::AipsError& err) {
