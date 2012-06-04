@@ -489,11 +489,11 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	// if it drops by more than 2 magnitudes per pixel
-	trial=5;
+	trial=( convSize_p > (10*convSampling)) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
       }
 
-      if(trial < 15*convSampling) 
-	trial=( convSize_p > (30*convSampling)) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
+      if(trial < 5*convSampling) 
+	trial=( convSize_p > (10*convSampling)) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
       
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
