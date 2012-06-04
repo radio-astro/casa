@@ -390,7 +390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			{
 			  Mesg << "Spot-channel " << stop << " out of range for SPW "
 			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")."
-			       << " Limit it to be within the available range.";
+			       << " Limiting it to be within the available range.";
 			  //			  throw(MSSelectionSpwError(Mesg.str()));
 			  log_l << Mesg.str() << LogIO::WARN << LogIO::POST;
 			  stop = start = numChans(spw(i))-1;
@@ -404,7 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  //			  ostringstream Mesg;
 			  Mesg << "Channel " << stop << " out of range for SPW "
 			       << spw(i) << " (valid range 0~" << numChans(spw(i))-1 << ")."
-			       << " Limit it to be within the available range.";
+			       << " Limiting it to be within the available range.";
 			  //			  throw(MSSelectionSpwError(Mesg.str()));
 			  log_l << Mesg.str() << LogIO::WARN << LogIO::POST;
 			  someMatchFailed=True;
