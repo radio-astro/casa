@@ -149,9 +149,9 @@ namespace casa {
 		virtual const std::string name( ) const DISPLAY_PURE_VIRTUAL(Region::name,"");
 
 		virtual std::string lineColor( ) const DISPLAY_PURE_VIRTUAL(Region::lineColor,"cyan");
+		virtual std::string centerColor( ) const DISPLAY_PURE_VIRTUAL(Region::centerColor,"cyan");
 		virtual int lineWidth( ) const DISPLAY_PURE_VIRTUAL(Region::lineWidth,1);
 		virtual LineStyle lineStyle( ) const DISPLAY_PURE_VIRTUAL(Region::lineStyle,SolidLine);
-
 
 		virtual std::string textColor( ) const DISPLAY_PURE_VIRTUAL(Region::textColor,"cyan");
 		virtual std::string textFont( ) const DISPLAY_PURE_VIRTUAL(Region::textFont,"Courier");
@@ -250,6 +250,10 @@ namespace casa {
 		// returns the new state...
 		virtual bool mark_toggle( ) = 0;
 
+		virtual bool markCenter( ) const DISPLAY_PURE_VIRTUAL(Region::markCenter,true);
+
+		virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+
 		// in "linear" coordinates...
 		virtual void boundingRectangle (double &/*blc_x*/, double &/*blc_y*/, double &/*trc_x*/,
 		                                double &/*trc_y*/) const
@@ -267,7 +271,7 @@ namespace casa {
 		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
-	   RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg, bool skycomp);
+	   RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg);
 		RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_xunits( ) const;

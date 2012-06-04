@@ -28,6 +28,7 @@ namespace casa {
 		void clearStatistics( );
 
 		std::string lineColor( ) const;
+		std::string centerColor( ) const;
 		int lineWidth( ) const { return line_width->value( ); }
 		Region::LineStyle lineStyle( ) const;
 
@@ -76,7 +77,8 @@ namespace casa {
 		/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
 		void mark( bool set=true ) { region_mark->setChecked( set ); }
 		bool marked( ) const { return region_mark->isChecked( ); }
-		bool skyComponent() const {return (skycomp_chk->checkState()==Qt::Checked);};
+		bool markCenter( ) const { return (markcenter_chk->checkState()==Qt::Checked); }
+		bool skyComponent() const { return (skycomp_chk->checkState()==Qt::Checked); };
 		bool mark_toggle( ) {
 		    bool newstate = region_mark->isChecked( ) ? false : true;
 		    region_mark->setChecked( newstate );
