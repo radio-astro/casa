@@ -321,15 +321,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //dataspectralwindowids_p.resize();
       //dataspectralwindowids_p=thisSelection.getSpwList();
       Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+     
       uInt nms = numMS_p;
-      uInt nrow = chansels.nrow();
+      uInt nrow = chansels.nrow(); 
       dataspectralwindowids_p.resize();
       const ROMSSpWindowColumns spwc(thisms.spectralWindow());
       uInt nspw = spwc.nrow();
       const ROScalarColumn<Int> spwNchans(spwc.numChan());
       Vector<Int> nchanvec = spwNchans.getColumn();
       //cerr<<"SetDataOnThisMS::numMS_p="<<numMS_p<<" nchanvec="<<nchanvec<<endl;
-      //cerr<<"chansels="<<chansels<<" nrow for chansels="<<nrow<<endl;
       Int maxnchan = 0;
       
       for (uInt i=0;i<nchanvec.nelements();i++) {
@@ -529,8 +529,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  for(uInt ch=0;ch<uInt(nchanvec(dataspectralwindowids_p[k]));ch++) 
 	    {if(spwchansels_p(numMS_p-1,dataspectralwindowids_p[k],ch)) chancounts[k]++; }
-	  if(chancounts[k]<1)
-	    throw(AipsError("bad selection in spw "+ String::toString( dataspectralwindowids_p[k])));
+	  //if(chancounts[k]<1)
+	  //  throw(AipsError("bad selection in spw "+ String::toString( dataspectralwindowids_p[k])));
 	  os << " [" << chancounts[k] << " chans in spw " << dataspectralwindowids_p[k] << "]";
 	  //	os << "Selected " << chancounts[k] << " chans in spw " 
 	  //	   << dataspectralwindowids_p[k] << LogIO::POST;
