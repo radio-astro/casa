@@ -419,8 +419,8 @@ FullSpec: Spw
             {
 	      //	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	      MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
-	      //Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
-	      Vector<Int> varifiedSpwList=(*($1));
+	      Vector<Int> varifiedSpwList=myMSSI.matchId(*($1));
+	      //Vector<Int> varifiedSpwList=(*($1));
 	      Int nFSpecs;
 	      Vector<Int> chanList = myMSSI.convertToChannelIndex(varifiedSpwList, (*($3)), nFSpecs);
 	      //
