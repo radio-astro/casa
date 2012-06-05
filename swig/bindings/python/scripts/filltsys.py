@@ -650,12 +650,12 @@ class TsysFiller:
                 ext1 += 1
                 r += incr
         else:
-            while l > l0:
-                ext1 += 1
-                l += incr
-            while r < r0:
+            while l < l0:
                 ext0 += 1
-                r0 -= incr
+                l -= incr
+            while r > r0:
+                ext1 += 1
+                r += incr
         if ext0 == 0 and ext1 == 0:
             return (a,b)
         #print 'ext0=%s,ext1=%s'%(ext0,ext1)

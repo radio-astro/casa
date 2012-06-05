@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import flaghelper as fh
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 debug = False
 
@@ -88,8 +89,15 @@ def tflagdata(vis,
 
     casalog.origin('tflagdata')
 
+    # Take care of the trivial parallelization
+    if ParallelTaskHelper.isParallelMS(vis):
+        # To be safe convert file names to absolute paths.
+        helper = ParallelTaskHelper('tflagdata', locals())
+        retVar = helper.go()
+        return retVar
     tflocal = casac.testflagger()
     mslocal = casac.ms()
+
 
     # MS HISTORY
     mslocal.open(vis, nomodify=False)

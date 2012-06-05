@@ -1,4 +1,6 @@
 import os
+import numpy as np
+import pprint
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -85,93 +87,161 @@ def listpartition(vis=None, createdict=None, listfile=None):
             
         # Get the width for printing the output     
         # MS name width
-        mn = os.path.basename(mslist[0])
-        ml = mn.__len__() + 2
-        mnw = '%-'+ str(ml) +'s'
+#        mn = os.path.basename(mslist[0])
+#        ml = mn.__len__() + 2
+#        mnw = '%-'+ str(ml) +'s'
+#        
+#        # Scan list width        
+#        swidth = getMaxWidth(scanlist, 'scan') + 2
+#        swd = '%-'+str(swidth)+'s '
+#        
+#        # SPW list width        
+#        pwidth = getMaxWidth(scanlist, 'scan-spw') + 2
+#        pwd = '%-'+str(pwidth)+'s '
+#        
+#        # Channel list width
+#        cwidth = getMaxWidth(spwlist, 'channel') + 2
+#        cwd = '%-'+str(cwidth)+'s '
+#        
+#        # Print header
+#        fheader = mnw+swd+pwd+cwd+'%-6s '+'%-5s '
+#        ftext = mnw+swd+pwd+cwd+'%-6d '+'%-5s '
+#
+#        hdr = fheader % (sname, 'Scan', 'SPW', 'NChan', 'nRow', 'Size')
         
-        # Scan list width        
-        swidth = getMaxWidth(scanlist, 'scan') + 2
-        swd = '%-'+str(swidth)+'s '
-        
-        # SPW list width        
-        pwidth = getMaxWidth(spwlist, 'spw') + 2
-        pwd = '%-'+str(pwidth)+'s '
-        
-        # Channel list width
-        cwidth = getMaxWidth(spwlist, 'channel') + 2
-        cwd = '%-'+str(cwidth)+'s '
-        
-        # Print header
-        fheader = mnw+swd+pwd+cwd+'%-6s '+'%-5s '
-        ftext = mnw+swd+pwd+cwd+'%-6d '+'%-5s '
-
-        hdr = fheader % (sname, 'Scan', 'SPW', 'NChan', 'nRow', 'Size')
-        
-        if listfile != '':
-            print >> ffout, hdr
-        else:
-            casalog.post(hdr)        
+#        if listfile != '':
+#            print >> ffout, hdr
+#        else:
+#            casalog.post(hdr)        
 
         # Get the information to list in output
         # Dictionary to return
         outdict = {}
 
-        for i in range(mslist.__len__()):   
-            # Get scans
-            scandict = scanlist[i]
+        for subms in range(mslist.__len__()):   
+            
+            # Create temp dictionary for each sub-MS
+            tempdict = {}
+            msname = os.path.basename(mslist[subms])
+            tempdict['MS'] = msname
+            tempdict['size'] = sizelist[subms]
+            
+            # Get scan dictionary for this sub-MS
+            scandict = scanlist[subms]
+            
+            # Get spw dictionary for this sub-MS
+            spwdict = spwlist[subms]
             
             # The keys are the scan numbers
             scans = scandict['summary'].keys()
             
-            # Get the total nRows per scan
-            nrows = 0
+            # Get information per scan
+            tempdict['scanId'] = {}
             for ii in scans:
-                sscans = scandict['summary'][ii].keys()
+                scanid = ii
+                newscandict = {}
+
+                sscans = scandict['summary'][scanid].keys()
+                
+                # Get spws and nrows per sub-scan
+                nrows = 0
+                aspws = np.array([],dtype=int)
                 for kk in sscans:
-                    nrows += scandict['summary'][ii][kk]['nRow']
+                    sscanid = kk
+                    nrows += scandict['summary'][scanid][sscanid]['nRow']
 
-            # Convert string scans to integer to take less space
-            # when printing on the screen
-            for index in range(scans.__len__()):
-                scans[index] = int(scans[index])            
+                    # Get the spws for each sub-scan
+                    spwids = scandict['summary'][scanid][sscanid]['SpwIds']
+                    aspws = np.append(aspws,spwids)
 
-            # Add and index and the MS name to the output dictionary
-            if createdict:
-                scandict['MS'] = mslist[i]
-                outdict[str(i)] = scandict
-            
-            # Get spws
-            spwdict = spwlist[i]
-            spws = spwdict['spwInfo'].keys()
-            
-            # Get the number of channels per spw
-            chlist = []
-            for j in range(spws.__len__()):
-                spwid = spws[j]
-                nchans = spwdict['spwInfo'][spwid]['NumChan']
-                chlist.append(nchans)
-                
-                # Convert string spws to integer to take less space
-                # when printing on the screen
-                spws[j] = int(spws[j])
-                
-                
-            # Create the text to print
-            msname = os.path.basename(mslist[i])
-            text = ftext % (msname, scans, spws, chlist, nrows, sizelist[i])
-            
-            # Print to a file
-            if listfile != '':
-                print >> ffout, text
-            else:
-                # Print to the logger
-                casalog.post(text)
+                newscandict['nrows'] = nrows
+
+                # Sort spws  and remove duplicates
+                aspws.sort()
+                uniquespws = np.unique(aspws)
+                newscandict['spwIds'] = uniquespws
+                                
+                # Array to hold channels
+                charray = np.empty_like(uniquespws)
+                spwsize = np.size(uniquespws)
+
+                # Now get the number of channels per spw
+                for ind in range(spwsize):
+                    spwid = uniquespws[ind]
+                    nchans = spwdict['spwInfo'][str(spwid)]['NumChan']
+                    charray[ind] = nchans
                     
+                newscandict['nchans'] = charray
+                tempdict['scanId'][int(scanid)] = newscandict
+                    
+                
+            outdict[subms] = tempdict
+#            pprint.pprint(outdict)
+
+
+        # Now loop through the dictionary to print the information
+        if outdict.keys() == []:
+            casalog.post('Error in processing dictionaries','ERROR')
+        
+        indices = outdict.keys()
+            
+        counter = 0
+        for index in indices:
+            
+            # Get data
+            MS = outdict[index]['MS']
+            SIZE = outdict[index]['size']
+            SCAN = outdict[index]['scanId']
+                        
+            # Sort scans for more optimal printing
+            # Print information per scan
+            firstscan = True
+            skeys = SCAN.keys()
+            skeys.sort()
+            for myscan in skeys:
+                SPW = outdict[index]['scanId'][myscan]['spwIds']
+                NCHAN = outdict[index]['scanId'][myscan]['nchans']
+                
+                # Get maximum widths
+                smxw = getWidth(outdict, 'spw')
+                cmxw = getWidth(outdict, 'channel')
+                
+                # Create format
+                fhdr = '%-'+str(len(MS)+2)+'s' + '%-6s' + '%-'+str(smxw+2)+'s' + '%-'+str(cmxw+2)+'s' + '%-6s'
+    
+                
+                # Print header
+                text = ''
+                if counter == 0:
+                    text = text + fhdr % (sname,'Scan','Spw','Nchan','Size')  
+                    text = text + '\n'                  
+                counter += 1
+                
+                # Print first scan
+                if firstscan:
+                    text = text + fhdr % (MS, myscan, SPW, NCHAN, SIZE)   
+                else:
+                    text = text + fhdr % ('', myscan, SPW, NCHAN, '')
+                
+                firstscan = False            
+
+                # Print to a file
+                if listfile != '':
+                    print >> ffout, text
+                else:
+                    # Print to the logger
+                    casalog.post(text)
+                                
+                
         if listfile != '':    
             ffout.close()
-    
+                                        
+     
         # Return the scan dictionary
-        return outdict
+        if createdict:
+            return outdict
+        
+        return {}
             
     except Exception, instance:
 #        mslocal.close()
@@ -202,6 +272,19 @@ def getMaxWidth(listdict, par):
             sl = str(ss).__len__()
             if sl > max_width:
                 max_width = sl
+                
+        elif par == 'scan-spw':
+            ss = listdict[dict]['summary'].keys()
+            
+            # convert strings to integers
+            for i in range(ss.__len__()):
+                sss = listdict[dict]['summary'][i].keys()
+                
+                for subscan in sss:
+                    spwids = listdict[dict]['summary'][i][subscan]['SpwIds']
+                    for id in spwids:
+                        if id > max_width:
+                            max_width = id            
                 
         elif par == 'spw':
             spws = listdict[dict]['spwInfo'].keys()
@@ -246,6 +329,50 @@ def getDiskUsage(msfile):
     mssize = sizeline.split()
 
     return mssize[0]
+
+
+def sortedDictValues(adict):
+    '''Sort the keys of a dictionary coming from
+       ms.getscansummary'''
+    
+    items = adict.items()
+    items.sort()
+    return [value for key, value in items]
+
+
+def getWidth(adict, par):
+    
+    width = 0
+    for aa in adict.keys():
+        scans = adict[aa]['scanId'].keys()
+        for bb in scans:
+            if par == 'spw':
+                spws = adict[aa]['scanId'][bb]['spwIds']
+                mystr = str(spws)
+                length = len(mystr)
+                if length > width:
+                    width = length
+                    
+            elif par == 'channel':
+                chans = adict[aa]['scanId'][bb]['nchans']
+                mystr = str(chans)
+                length = len(mystr)
+                if length > width:
+                    width = length
+    
+    return width
+
+
+def sortScandict(adict):
+    '''Sort a given dictionary'''
+    
+    keys = adict.keys()
+    keys.sort()
+        
+    return [dict[key] for key in keys]
+
+
+
 
 
 
