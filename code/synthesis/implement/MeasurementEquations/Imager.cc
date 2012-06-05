@@ -1504,6 +1504,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       for (uInt i=0;i<nrow;i++) {
 	Vector<Int> sel = chansels.row(i);
 	Int spwid = sel[0];
+	if((sel[1] >= nchanvec[spwid]) || (sel[2] >=nchanvec[spwid]))
+	  throw(AipsError("Unexpected selection  in spw selection of spwid "+String::toString(spwid)));
 	if (spwid != prvspwid){
 	  nselspw++;
 	  selspw.resize(nselspw,True);
@@ -6565,6 +6567,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
     filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );
     casa::DBusSession::instance( ).connection( ).add_filter( filter );
     casa::dbus::variant res = viewer_p->start_interact( dbus::variant(), clean_panel_p);
+
+    //casa::DBusSession::instance( ).dispatcher( ).set_responsiveness(10000.0, 10.0);
     casa::DBusSession::instance( ).dispatcher( ).enter( );
     casa::DBusSession::instance( ).connection( ).remove_filter( filter );
     casa::dbus::variant interact_result = mycb->result( );

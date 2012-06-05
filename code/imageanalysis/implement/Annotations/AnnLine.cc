@@ -78,9 +78,11 @@ Vector<MDirection> AnnLine::getEndPoints() const {
 }
 
 ostream& AnnLine::print(ostream &os) const {
-	os << "line [[" << _inputPoints(0).first << ", "
-		<< _inputPoints(0).second << "], [" << _inputPoints(1).first
-		<< ", " << _inputPoints(1).second << "]]";
+	os << "line [["
+		<< _printDirection(_inputPoints(0).first, _inputPoints(0).second)
+		<< "], ["
+		<< _printDirection(_inputPoints(1).first, _inputPoints(1).second)
+		<< "]]";
 	_printPairs(os);
 	return os;
 }

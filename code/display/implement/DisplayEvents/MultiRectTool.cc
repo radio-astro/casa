@@ -171,7 +171,22 @@ void MultiRectTool::disable() {
     }
 
     void MultiRectTool::keyReleased(const WCPositionEvent &ev) {
-	Bool wasActive = itsActive; itsActive = False;
+
+	// avoid degenerate rectangles...
+	if ( memory::nullptr.check(creating_region) == false ) {
+	    if ( creating_region->degenerate( ) ) {
+		viewer::Region *nix = creating_region.get( );
+		rfactory->revokeRegion(nix);
+		if ( creating_region == resizing_region ) {
+		    resizing_region = memory::nullptr;
+		    resizing_region_handle = 0;
+		}
+	    }
+	    creating_region = memory::nullptr;
+	}
+
+	Bool wasActive = itsActive;
+	itsActive = False;
 	if ( rectangles.size( ) == 0 ) {
 	    if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
 		Int x = ev.pixX();
@@ -721,7 +736,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return -1;
     }
 
-    void MultiRectTool::update_stats(const WCMotionEvent &ev) {
+    void MultiRectTool::update_stats(const WCMotionEvent &/*ev*/) {
 	if( ! rectangleDefined() || itsCurrentWC==0 ) return;
 
 	WorldCanvasHolder *wch = pd_->wcHolder(itsCurrentWC);
@@ -849,7 +864,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
-    void MultiRectTool::checkPoint( WorldCanvas *wc, State &state ) {
+    void MultiRectTool::checkPoint( WorldCanvas */*wc*/, State &state ) {
 	for ( rectanglelist::iterator iter = ((MultiRectTool*) this)->rectangles.begin(); iter != rectangles.end(); ++iter ) {
 	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x(), state.y() );
 	    // should consider introducing a cptr_ref which somehow allows creating a
@@ -866,7 +881,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return multi_rect_tool_region_set;
     }
 
-    bool MultiRectTool::create( viewer::Region::RegionTypes region_type, WorldCanvas *wc,
+    bool MultiRectTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
 				const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
@@ -902,7 +917,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	double linx, liny;
 	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
-	resizing_region = allocate_region( wc, linx, liny, linx, liny );
+	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny );
 	rectangles.push_back( resizing_region );
 
 	if ( type( ) != POINTTOOL )

@@ -211,6 +211,7 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
 //
   {
      Vector<Double> tmp(1);
+     tmp[0] = 0.0;
      if (!(record.isDefined("error"))) {
         tmp[0] = 0.0;
      } else {

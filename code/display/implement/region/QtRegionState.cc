@@ -109,6 +109,14 @@ namespace casa {
 
 	    csys_box->hide( );
 
+	    // suffers from the cosine correction problem...
+	    coordinates_apply->hide( );
+	    coordinates_reset->hide( );
+	    bounding_height->setReadOnly(true);
+	    bounding_width->setReadOnly(true);
+	    center_x->setReadOnly(true);
+	    center_y->setReadOnly(true);
+
 	    // update line characteristics...
 	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
 	    connect( line_style, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
@@ -354,7 +362,7 @@ namespace casa {
 	int QtRegionState::zMax( ) const { return frame_max->value( ); }
 	int QtRegionState::numFrames( ) const { return region_->numFrames( ); }
 
-	bool QtRegionState::isAnnotation( ) const { region_annotation->isChecked( ) ? true : false; }
+	bool QtRegionState::isAnnotation( ) const { return region_annotation->isChecked( ) ? true : false; }
 
 	void QtRegionState::stackChange( QWidget *top ) {
 

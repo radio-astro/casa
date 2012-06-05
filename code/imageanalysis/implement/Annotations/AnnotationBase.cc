@@ -27,6 +27,7 @@
 #include <imageanalysis/Annotations/AnnotationBase.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Quanta/MVAngle.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <measures/Measures/MCDirection.h>
 
@@ -656,7 +657,11 @@ ostream& AnnotationBase::print(
 			if (iter != params.begin()) {
 				os << ", ";
 			}
-			String quote = iter->first == LABEL || iter->second.contains(' ')
+			String quote = iter->first == LABEL
+				|| (
+					iter->second.contains(' ')
+					&& iter->first != RANGE
+				)
 				? "\"" : "";
 			os << keywordToString((Keyword)iter->first)
 				<< "=" << quote << iter->second << quote;
@@ -839,6 +844,73 @@ void AnnotationBase::_testConvertToPixel() const {
 		}
 	}
 }
+
+String AnnotationBase::_printDirection(
+	const Quantity& longitude, const Quantity& latitude
+) const {
+	if (longitude.getUnit() == "pix") {
+		ostringstream os;
+		os << _printPixel(longitude.getValue())
+			<< ", "
+			<< _printPixel(latitude.getValue());
+		return os.str();
+	}
+	MDirection::Types frame;
+	MDirection::getType(frame, _params.find(COORD)->second);
+	if (
+		frame == MDirection::J2000
+		|| frame == MDirection::B1950
+		|| frame == MDirection::JMEAN
+		|| frame == MDirection::JTRUE
+		|| frame == MDirection::B1950_VLA
+		|| frame == MDirection::BMEAN
+		|| frame == MDirection::BTRUE
+	) {
+		// equatorial coordinates in sexigesimal
+		MVAngle x(longitude);
+		MVAngle y(latitude);
+		return x.string(MVAngle::TIME_CLEAN, 11) + ", " + y.string(MVAngle::ANGLE, 10);
+	}
+	else {
+		// non-equatorial coordinates in degrees
+		return _toDeg(longitude) + ", " + _toDeg(latitude);
+	}
+}
+
+String AnnotationBase::_toArcsec(const Quantity& angle) {
+	if (angle.getUnit() == "pix") {
+
+	}
+	ostringstream os;
+	if (angle.getUnit() == "pix") {
+		os << _printPixel(angle.getValue());
+	}
+	else {
+		os << std::fixed << std::setprecision(4)
+			<< angle.getValue("arcsec") << "arcsec";
+	}
+	return os.str();
+}
+
+String AnnotationBase::_toDeg(const Quantity& angle) {
+	ostringstream os;
+	if (angle.getUnit() == "pix") {
+		os << _printPixel(angle.getValue());
+	}
+	else {
+		os << std::fixed << std::setprecision(8)
+			<< angle.getValue("deg") << "deg";
+	}
+	return os.str();
+}
+
+String AnnotationBase::_printPixel(const Double& d) {
+	ostringstream os;
+	os << std::fixed << std::setprecision(1)
+		<< d << "pix";
+	return os.str();
+}
+
 
 }
 

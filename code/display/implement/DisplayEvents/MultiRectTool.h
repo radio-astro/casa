@@ -189,6 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Bool itsActive;
 	    // itsActive is being replaced by resizing_region
 	    std::tr1::shared_ptr<viewer::Rectangle> resizing_region;
+	    std::tr1::shared_ptr<viewer::Rectangle> creating_region;
 	    int resizing_region_handle;
 
 	    // (valid only if itsActive==True):

@@ -5,6 +5,7 @@
 % STM 2008-11-07  Patch3 draft from Wes
 % STM 2009-11-23  Release 3.0.0 version
 % JO  2011-10-03  Release 3.3 edits
+% JM  2012-05-24  Release 3.4 edits
 
 %\chapter{Writing Tasks in CASA}
 \chapter[Appendix: Writing Tasks in CASA]{Writing Tasks}
@@ -26,43 +27,51 @@ easiest to start from one of the existing tasks when constructing
 these.  You would make the name of the function in the 
 {\tt  yourtask.py} be ``yourtask'' in this example.
 
-We have provided the {\tt buildmytasks} command (outside casa) in order
+We have provided the {\tt buildmytasks} command in order
 to assemble your Python and XML into a loadable Python file.  Thus,
 the steps you need to execute (again for an example task named ``yourtask''):
 \begin{itemize}
-\item Create python code for task as {\tt yourtask\_task.py}
+\item Create python code for task as {\tt task\_yourtask.py}
 \item Create xml for task as {\tt yourtask.xml}
-\item Execute in or outside casapy the shell script: {\tt buildmytasks yourtask}
-\item Execute inside casapy: {\tt execfile 'mytasks.py'}
+\item Execute buildmytasks from the casapy prompt: {\tt !buildmytasks}
+\item Initialize your new task inside casapy: {\tt execfile 'mytasks.py'}
 \end{itemize}
 After this, you should see the help and inputs inside casapy, e.g.\ 
 {\tt inp yourtask} should work.  Note that for the final step you
 invoke the file called {\tt mytasks.py}, regardless of what you named
-the actual task.
-
-To get all paths at the right place, it is easiest to execute the {\tt
-  buildmytask} from within CASA, in the directory where the {\tt
-  task\_yourtask.py} and {\tt yourtask.xml} files reside. As this is a
-shell script and not a python command, call {\tt buildmytasks} within
-the {\tt os.system()} python method:
-\begin{verbatim}
-os.system(buildmytasks  yourtask)
-\end{verbatim}
-or simply 
-\begin{verbatim}
-os.system(buildmytasks) 
-\end{verbatim}
-the latter will build all the tasks that reside in the current
-directory. This will create a few *.pyc. *cli* files that CASA needs
-to run properly, and {\tt buildmytasks} will also create {\tt
-  mytasks.py} which needs to be executed within CASA to register the
-new task:
-\begin{verbatim}
-    execfile('mytasks.py')
-\end{verbatim}
-
-You now have a shiny new task {\tt yourtask} that you can run and use
+the actual task. You now have a shiny new task {\tt yourtask} that you can run and use
 in the same way as all other CASA tasks. 
+
+
+Note that if multiple custom tasks are stored in the same directory,
+they will all be built by {\tt !buildmytasks} and will all be initialized by executing mytasks.py.
+To build and initialize only a single task, instead use {\tt `!buildmytasks taskname}; you are then free 
+to rename mytasks.py (e.g. load\_taskname.py) and repeat this proceedure for your other tasks.  
+Our recommendation, for those of you who are managing multiple custom tasks, is to have each task live in its own directory.
+The {\tt mytasks.py} file need not be in the current working directory to initialize your task, since you can procide the
+full path upon initialization (e.g. {\tt execfile '/full\_path\_to\_my\_task/mytasks.py'}.
+
+%To get all paths at the right place, it is easiest to execute the {\tt
+%  buildmytask} from within CASA, in the directory where the {\tt
+%  task\_yourtask.py} and {\tt yourtask.xml} files reside. As this is a
+%shell script and not a python command, call {\tt buildmytasks} within
+%the {\tt os.system()} python method:
+%\begin{verbatim}
+%os.system(buildmytasks  yourtask)
+%\end{verbatim}
+%or simply 
+%\begin{verbatim}
+%os.system(buildmytasks) 
+%\end{verbatim}
+%the latter will build all the tasks that reside in the current
+%directory. This will create a few *.pyc. *cli* files that CASA needs
+%to run properly, and {\tt buildmytasks} will also create {\tt
+%  mytasks.py} which needs to be executed within CASA to register the
+%new task:
+%\begin{verbatim}
+%    execfile('mytasks.py')
+%\end{verbatim}
+
 
 
 
@@ -319,6 +328,7 @@ import time
 \end{verbatim}
 followed by the task function {\tt def}.  See Sect.\,\ref{section:write.clean.py}
 for an example.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,3 +1,29 @@
+//# QtRegion.cc: GUI base class for all regions
+//# Copyright (C) 2012
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: $
 
 #include <casa/BasicSL/String.h>
 #include <display/DisplayEvents/DTVisible.h>
@@ -52,6 +78,7 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
+	    connect( dock_, SIGNAL(deleteAllRegions( )), SLOT(revoke_region( )) );
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
 
@@ -130,13 +157,6 @@ namespace casa {
 		std::string whu;
 		std::string x, y, angle;
 		double width, height;
-		static bool first_time_through = true;
-		if ( first_time_through ) {
-		    getCoordinatesAndUnits( c, xu, yu, whu );
-		    mystate->setCoordinatesAndUnits( c, xu, yu, whu );
-		    first_time_through = false;
-		}
-
 		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
 		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
 
@@ -193,10 +213,12 @@ namespace casa {
 	}
 	void QtRegion::refresh_canvas_event( ) { refresh( ); }
 
+	void QtRegion::revoke_region( ) {
+	    source_->revokeRegion(fetch_my_region( ));
+	}
+
 	void QtRegion::revoke_region( QtRegionState *redacted_state ) {
-	    if ( redacted_state == mystate ) {
-		source_->revokeRegion(fetch_my_region( ));
-	    }
+	    if ( redacted_state == mystate ) { revoke_region( ); }
 	}
 
 	static inline AnnotationBase::LineStyle viewer_to_annotation( Region::LineStyle ls ) {

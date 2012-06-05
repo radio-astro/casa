@@ -76,10 +76,11 @@ Vector<MDirection> AnnRectBox::getCorners() const {
 
 ostream& AnnRectBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "box [[" << _inputCorners[0].first << ", "
-		<< _inputCorners[0].second << "], ["
-		<< _inputCorners[1].first << ", "
-		<< _inputCorners[1].second << "]]";
+	os << "box [["
+		<< _printDirection(_inputCorners[0].first, _inputCorners[0].second)
+		<< "], ["
+		<< _printDirection(_inputCorners[1].first, _inputCorners[1].second)
+		<< "]]";
 	_printPairs(os);
 	return os;
 }

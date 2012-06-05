@@ -3,6 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % STM 2007-04-13  split from previous version
+% JO 2012-04-19 Release 3.4.0 edits
 
 \chapter[Appendix: Obtaining, Installing, and Customizing CASA]{Obtaining,
   Installing, and Customizing CASA}
@@ -154,13 +155,17 @@ There are a number of options to {\tt casapy} (see {\tt casapy --help}):
 Options are: 
 \small
 \begin{verbatim}
-   --rcdir            
-   --logfile        specify the name of the log file if other than casapy.log
-   --maclogger      will use the Mac Console program for the logger
-   --log2term       output the logger text in the terminal
-   --nologger       run without launching the logger
-   -c               execute a CASA python script from the command line 
-   --help           print this text and exit
+   --rcdir     directory
+   --logfile   logfilename              specify the name of the log file if other than casapy-DATE.log
+   --maclogger                          will use the Mac Console program for the logger
+   --log2term                           output the logger text in the terminal
+   --nologger                           run without launching the logger
+   --nologfile                          does not create a logfile 
+   --nogui                              will not open the logger GUI 
+   --colors=[NoColor|Linux|LightBG]     selects color theme for prompt task inputs
+   --noipython                          does not launch ipython (useful when combined with the -c option)
+   -c filename-or-expression            execute a CASA python script from the command line 
+   --help                               print this text and exit
 \end{verbatim}
 \normalsize
 
@@ -300,6 +305,46 @@ display.colormaps.defaultcolormap: Hot Metal 1
 #ms.async: ddd ./ms %s
 \end{verbatim}
 \normalsize
+
+
+\section{Updating the data repository}
+\label{section:install.datarep}
+
+
+Each CASA release for linux comes with an up to date data repository
+(containing information such as observatory coordinates, calibrator
+models, leap second tables, etc.). However, the files that make up the
+data repository are updated regularly. Therefore, if you install (or
+have installed) a release that is a few weeks to a month old, it makes
+sense to update the data repository because it is very easy. On a Mac,
+the data repository is updated every time you run 'casapy'. For Linux,
+you just change to the {\tt 'data} directory in the installation root and
+run {\tt "svn update"}. This will sync your local copy of the CASA data
+repository with the repository maintained by the CASA group, e.g. 
+
+\small
+\begin{verbatim}
+cd /usr/lib64/casapy/data/
+svn update
+\end{verbatim}
+\normalsize
+
+will start syncing:
+
+\small
+\begin{verbatim}
+bash-3.2$ svn update
+U    geodetic/IERSeop97/table.f0
+U    geodetic/IERSeop97/table.dat
+U    geodetic/IERSeop97/table.lock
+U    geodetic/Observatories/table.f0
+U    geodetic/Observatories/table.f1
+U    geodetic/Observatories/table.dat
+...
+\end{verbatim}
+\normalsize
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

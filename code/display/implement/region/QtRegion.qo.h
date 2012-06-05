@@ -87,7 +87,7 @@ namespace casa {
 		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
 		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
 
-		virtual void regionCenter( double &x, double &y ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
+		virtual void regionCenter( double &/*x*/, double &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
 
 		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
 		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
@@ -157,6 +157,9 @@ namespace casa {
 					  const QString &x_units, const QString &y_units,
 					  const QString &width, const QString &height, const QString &bounding_units );
 		void refresh_zrange_event(int,int);
+		// revoke...
+		void revoke_region( );
+		// revoke if our state matches parameter...
 		void revoke_region(QtRegionState*);
 		void output(std::list<QtRegionState*>,RegionTextList&);
 		void output(std::list<QtRegionState*>,ds9writer&);

@@ -39,6 +39,7 @@
 #include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
+#include <casa/BasicMath/Functors.h>
 
 #define SEXAGPREC 9
 
@@ -49,14 +50,75 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 namespace casa {
     namespace viewer {
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true) {
+	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false) {
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	    // }
 	}
 
+	bool Region::degenerate( ) const {
+	    // incomplete regions can not yet be found to be degenerate...
+	    if ( complete == false ) return false;
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    double pblcx, pblcy, ptrcx, ptrcy;
+	    linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy );
+	    // non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
+	    return (ptrcx - pblcx) < 1 && (ptrcy - pblcy) < 1;
+	}
+
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }
+
+	bool Region::worldBoundingRectangle( double &width, double &height, const std::string &units ) const {
+	    width = 0.0;
+	    height = 0.0;
+
+	    if ( wc_ == 0 ) return false;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    Vector<Double> linear(2);
+	    Vector<Double> blc(2);
+	    Vector<Double> trc(2);
+
+	    linear(0) = blc_x;
+	    linear(1) = blc_y;
+	    if ( wc_->linToWorld(blc,linear) == false ) return false;
+
+	    linear(0) = trc_x;
+	    linear(1) = trc_y;
+	    if ( wc_->linToWorld(trc,linear) == false ) return false;
+
+	    Vector<String> unit_names=wc_->worldAxisUnits();
+	    Vector<Quantum<Double> > qblc(2);
+	    qblc(0) = Quantum<Double>(fmin(blc(0),trc(0)),unit_names(0));
+	    qblc(1) = Quantum<Double>(fmin(blc(1),trc(1)),unit_names(1));
+
+	    Vector<Quantum<Double> > qtrc(2);
+	    qtrc(0) = Quantum<Double>(fmax(blc(0),trc(0)),unit_names(0));
+	    qtrc(1) = Quantum<Double>(fmax(blc(1),trc(1)),unit_names(1));
+
+	    Vector<String> axis_names=wc_->worldAxisNames();
+
+	    // find ra and dec axis...
+	    int ra_index = -1;
+	    int dec_index = -1;
+	    int stop = axis_names.size() >= 2 ? 2 : 0;
+	    for ( int i=0; i < stop; i++ ) {
+		if ( axis_names(i).contains("scension") ) ra_index = i;
+		if ( axis_names(i).contains("eclination") ) dec_index = i;
+	    }
+
+	    Vector<Double> cosine_correct(2,1.0);
+	    if ( ra_index >= 0 && dec_index >= 0 )
+		cosine_correct(ra_index) = cos((qblc(dec_index)+qtrc(dec_index)).getValue("rad")/2.0);
+
+	    width = ((qtrc(0) - qblc(0)) * cosine_correct(0)).getValue(units.c_str());
+	    height = ((qtrc(1) - qblc(1)) * cosine_correct(1)).getValue(units.c_str());
+	    return true;
+	}
 
 	void Region::setDrawingEnv( ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
@@ -142,8 +204,26 @@ namespace casa {
 	    pc->callRefreshEventHandlers(Display::BackCopiedToFront);
 	}
 
+
+	bool Region::within_drawing_area( ) {
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    int sblcx, sblcy, strcx, strcy;
+	    linear_to_screen( wc_, blcx, blcy, trcx, trcy, sblcx, sblcy, strcx, strcy );
+	    return wc_->inDrawArea(sblcx,sblcy) && wc_->inDrawArea(strcx,strcy);
+	}
+
 	void Region::draw( bool other_selected ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+	    visible_ = true;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) {
+		visible_ = false;
+		return;
+	    }
+
+	    if ( ! within_drawing_area( ) ) {
+		visible_ = false;
+		return;
+	    }
 
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -400,7 +480,7 @@ namespace casa {
 		bounding_width = fabs(p_trc_x-p_blc_x);
 		bounding_height = fabs(p_trc_y-p_blc_y);
 	    } else {
-		try { linear_offset_to_world_offset(wc_,fabs(trc_x-blc_x),fabs(trc_y-blc_y), viewer_to_casa(coord), bounding_units, bounding_width, bounding_height); } catch(...) { return; }
+		worldBoundingRectangle( bounding_width, bounding_height, bounding_units );
 	    }
 
 	    if ( coord == cvcs ) {
@@ -416,24 +496,24 @@ namespace casa {
 	    }
 
 	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
-	    
+
 	    if ( new_x_units == Pixel ) {
 		double center_x, center_y;
 		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		x = as_string(center_x);
 	    } else if ( new_x_units == Sexagesimal ) {
 		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
 		    //x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
 		    x = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // H:M:S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    x = MVAngle(result_x)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
@@ -446,17 +526,17 @@ namespace casa {
 		y = as_string(center_y);
 	    } else if ( new_y_units == Sexagesimal ) {
 		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
 		    //y = MVAngle(result_y)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		    // MVAngle::operator( ) => -pi to +pi
 		    y = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
 		} else {
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // H:M:S
-		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    y = MVAngle(result_y)(0.0).string(MVAngle::TIME,SEXAGPREC);
 		}
 	    } else {
@@ -584,7 +664,7 @@ namespace casa {
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y,
 				      new_width_inc, new_height_inc ) ) {
-		updateStateInfo( true ); 
+		updateStateInfo( true );
 		return;
 	    }
 

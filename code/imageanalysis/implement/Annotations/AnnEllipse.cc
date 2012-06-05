@@ -94,10 +94,11 @@ Quantity AnnEllipse::getPositionAngle() const {
 
 ostream& AnnEllipse::print(ostream &os) const {
 	_printPrefix(os);
-	os << "ellipse [[" << _inputCenter[0].first << ", "
-		<< _inputCenter[0].second << "], [" << _inputMajorAxis
-		<< ", " << _inputMinorAxis << "], "
-		<< _inputPositionAngle << "]";
+	os << "ellipse [["
+		<< _printDirection(_inputCenter[0].first, _inputCenter[0].second)
+		<< "], [" << _toArcsec(_inputMajorAxis)
+		<< ", " << _toArcsec(_inputMinorAxis) << "], "
+		<< _toDeg(_inputPositionAngle) << "]";
 	_printPairs(os);
 	return os;
 }

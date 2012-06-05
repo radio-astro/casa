@@ -12,6 +12,7 @@
 % STM 2009-12-20  Release 0 versions (3.0.0)
 % JO 2010-03-01 Release 3.0.1 edits
 % JO 2011-10-03 Release 3.2. edits
+% JO 2012-05-10 Release 3.4 edits
 
 \chapter[Appendix: Annotated Example Scripts]{Annotated Example Scripts}
 \label{chapter:scripts}
@@ -37,7 +38,7 @@ scripts on our wiki page
 \url{http://casaguides.nrao.edu}
 \end{quote}
 
-Those will cover more recent data such as EVLA OSRO data.
+Those will cover more recent data such as JVLA and ALMA data.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,9 +77,7 @@ The latest version of this script can be found at:
 # Updated      STM 2009-12-02 (Release 0)                                #
 # Revised      JO  2010-04-13 (Release 3.0.1) edit viewer call           #
 # Checked      JO  2010-10-07 (Release 3.1.0)                            #
-#                                                                        #
-#                                                                        #
-#   data packaged with CASA                                              #
+# Updated      JO  2012-05-10 (Release 3.4.0)                            #
 #                                                                        #
 # Features Tested:                                                       #
 #    The script illustrates end-to-end processing with CASA              #
@@ -142,7 +141,7 @@ The latest version of this script can be found at:
 #                          v                                             #
 ##########################################################################
 print 'Demo Script for NGC5921 VLA HI observation'
-print 'Version for Release 0 (3.0.0) 2-Dec-2009'
+print 'Version for Release 0 (3.4.0) May-2012'
 print ''
 
 import time
@@ -681,10 +680,10 @@ applycal()
 #
 #=====================================================================
 #
-# Now use plotxy to plot the calibrated target data (before contsub)
+# Now use plotms to plot the calibrated target data (before contsub)
 #
-print '--Plotxy (NGC5921)--'
-default('plotxy')
+print '--Plotms (NGC5921)--'
+default('plotms')
 
 vis = msfile
 
@@ -694,54 +693,34 @@ spw = '0:4~59'
 
 # Time average across scans
 timebin = '86000.'
-crossscans = True
+averagedata=T
+averagescans=T
 
-# Set up 2x1 panels - upper panel amp vs. channel
-subplot = 211
 xaxis = 'channel'
 yaxis = 'amp'
-datacolumn = 'corrected'
+ydatacolumn = 'corrected'
 # No output file yet (wait to plot next panel)
 
-saveinputs('plotxy',prefix+'.plotxy.final.amp.saved')
+saveinputs('plotms',prefix+'.plotms.final.amp.saved')
 
 print "Amp averaged across time and baseline (upper)"
 
-figfile = ''
-if scriptmode:
-    interactive = True
-else:
-    interactive = False
-
-plotxy()
+plotms()
 #
-# Set up 2x1 panels - lower panel phase vs. time
-subplot = 212
 yaxis = 'phase'
-datacolumn = 'corrected'
+ydatacolumn = 'corrected'
 # Time average across scans and baselines
 timebin = '86000.'
-crossscans = True
-crossbls = True
+averagedata=T
+averagescans=T
+averagebaselines=T
 
-saveinputs('plotxy',prefix+'.plotxy.final.phase.saved')
+saveinputs('plotms',prefix+'.plotms.final.phase.saved')
 
 print "Phase averaged across time and baseline (lower)"
 
 print "Final calibrated data"
 
-# Pause script if you are running in scriptmode
-if scriptmode:
-    interactive = True
-    figfile = ''
-    plotxy()
-    user_check=raw_input('Return to continue script\n')
-else:
-    interactive = False
-    # Now send final plot to file in PNG format (via .png suffix)
-    figfile = vis + '.plotxy.png'
-    plotxy()
-    
 
 #=====================================================================
 #
@@ -1307,6 +1286,7 @@ print >>logfile,'--- Done ---'
 #
 logfile.close()
 print "Results are in "+outfile
+
 \end{verbatim}
 \normalsize
 
@@ -1340,10 +1320,7 @@ The latest version of this script can be found at:
 # Updated STM 2009-12-20 (Release 0)      for Version 3.0.0          #
 # Revised JO  2010-04-13 (Release 3.0.1) edit viewer call            #
 # Checked JO  2010-10-07 (Release 3.1.0)                             #
-#                                                                    #
-#                                                                    #
-#  download data at:                                                 #
-#  http://casa.nrao.edu/Data/VLA/Planets6cm/planets_6cm.fits         #
+# Updated JO  2012-05-10 (Release 3.4.0)                             #
 #                                                                    #
 # This is a VLA 6cm dataset that was observed in 1999 to set the     #
 # flux scale for calibration of the VLA.  Included in the program    #
@@ -1796,10 +1773,10 @@ listobs()
 # Data Examination and Flagging
 #=====================================================================
 # 
-# Use Plotxy to interactively flag the data
+# Use Plotms to interactively flag the data
 #
-print '--Plotxy--'
-default('plotxy')
+print '--Plotms--'
+default('plotms')
 
 print "Now we use plotxy to examine and interactively flag data"
 
@@ -1814,27 +1791,15 @@ field = '1331+305'
 # Plot only the RR and LL for now
 correlation = 'RR LL'
 
-# As of 2.3.0 (Patch 3) you can extend the flags to the cross-correlations
-# But this slows things down immensely
-#extendflag = T
-#extendcorr = 'all'
-
 # Plot amplitude vs. uvdist
 xaxis = 'uvdist'
 yaxis = 'amp'
-multicolor = 'both'
 
-# Use the field name as the title
-selectplot = True
-title = field+"  "
-
-iteration = ''
-
-plotxy()
+plotms()
 
 print ""
 print "-----------------------------------------------------"
-print "Plotxy"
+print "Plotms"
 print "Showing 1331+305 RR LL for all antennas"
 print "Use MarkRegion then draw boxes around points to flag"
 print "You can use ESC to drop last drawn box"
@@ -1853,9 +1818,9 @@ if scriptmode:
 
 # Now look at the cross-polar products
 correlation = 'RL LR'
-extendflag = F
 
-plotxy()
+
+plotms()
 
 print ""
 print "-----------------------------------------------------"
@@ -1882,7 +1847,7 @@ antenna = ''
 
 title = field+"  "
 
-plotxy()
+plotms()
 
 # You'll see a bunch of bad data along the bottom near zero amp
 # Draw a box around some of it and use Locate
@@ -1910,7 +1875,7 @@ extendflag = F
 # So be careful here (why naming antennas as numbers is bad).
 antenna = '9'
 
-plotxy()
+plotms()
 
 # YES! the last 4 scans are bad.  Box 'em and flag.
 
@@ -1936,7 +1901,7 @@ correlation = 'RR LL'
 #extendflag = T
 #extendcorr = 'all'
 
-plotxy()
+plotms()
 
 # Box up the bad low points (basically a clip below 0.52) and flag
 
@@ -1959,9 +1924,7 @@ correlation = 'RR LL'
 iteration = ''
 xaxis = 'uvdist'
 
-title = field+"  "
-
-plotxy()
+plotms()
 
 # Here you will see that the final scan at 22:00:00 UT is bad
 # Draw a box around it and flag it!
@@ -1978,10 +1941,9 @@ if scriptmode:
     user_check=raw_input('Return to continue script\n')
 
 correlation = ''
-extendflag = F
 xaxis = 'time'
 
-plotxy()
+plotms()
 
 # Here you will see that the final scan at 22:00:00 UT is bad
 # Draw a box around it and flag it!
@@ -1997,17 +1959,12 @@ if scriptmode:
 
 # Now look at whats left
 correlation = 'RR LL'
-# As of 2.3.0 (Patch 3) you can extend the flags to the cross-correlations
-# But this slows things down immensely
-#extendflag = T
-#extendcorr = 'all'
 
 xaxis = 'uvdist'
 spw = '1'
 antenna = ''
-iteration = 'antenna'
 
-plotxy()
+plotms()
 
 # As you step through, you will see that Antenna 9 (ID=8) is often 
 # bad in this spw. If you box and do Locate (or remember from
@@ -2028,12 +1985,10 @@ if scriptmode:
 # The easiset way to kill it:
 
 antenna = '9'
-iteration = ''
 xaxis = 'time'
 correlation = ''
-extendflag = F
 
-plotxy()
+plotms()
 
 # Draw a box around all points in the last bad scans and flag 'em!
 
@@ -2049,11 +2004,6 @@ if scriptmode:
 # Now clean up the rest
 xaxis = 'uvdist'
 correlation = 'RR LL'
-# As of 2.3.0 (Patch 3) you can extend the flags to the cross-correlations
-# But this slows things down immensely
-#extendflag = T
-#extendcorr = 'all'
-
 antenna = ''
 spw = ''
 
@@ -2061,7 +2011,7 @@ spw = ''
 # use the ESC key to get rid of the most recent box if you
 # make a mistake.
 
-plotxy()
+plotms()
 
 # Note that the end result is we've flagged lots of points
 # in RR and LL.  We will rely upon imager to ignore the
@@ -2082,7 +2032,7 @@ print ""
 if scriptmode:
     user_check=raw_input('Return to continue script\n')
 
-print "Done with plotxy!"
+print "Done with plotms!"
 
 #
 #=====================================================================
@@ -2098,7 +2048,7 @@ print "These are named xyflags"
 vis = msfile
 mode = 'save'
 versionname = 'xyflags'
-comment = 'Plotxy flags'
+comment = 'Plotms flags'
 merge = 'replace'
 
 flagmanager()
@@ -2557,111 +2507,14 @@ print "Split "+field+" data into new ms "+calsplitms
 split()
 
 #=====================================================================
-# Force scratch column creation so plotxy will work
+# Use Plotms to look at the split calibrated data
 #
-vis = srcsplitms
-clearcal()
-
-vis = calsplitms
-clearcal()
-
-#=====================================================================
-# Use Plotxy to look at the split calibrated data
-#
-print '--Plotxy--'
-default('plotxy')
-
-selectdata = True
-correlation = 'RR LL'
-xaxis = 'uvdist'
-datacolumn = 'data'
-multicolor = 'both'
-iteration = ''
-selectplot = True
-field = 'JUPITER'
-
-#vis = srcsplitms
-#interactive = True
-#yaxis = 'amp'
-#title = field+"  "
-#
-# Plotxy interactively if desired
-#plotxy()
-#
-#print ""
-#print "-----------------------------------------------------"
-#print "Plotting JUPITER corrected visibilities"
-#print "Look for outliers"
-
-# Pause script if you are running in scriptmode
-#if scriptmode:
-#    user_check=raw_input('Return to continue script\n')
-#
-# Now go back and plot to files
-interactive = False
-
-#
-# First the target
-#
-vis = srcsplitms
-field = srcname
-yaxis = 'amp'
-# Use the field name as the title
-title = field+"  "
-
-#figfile = vis + '.plotxy.amp.png'
-#print "Plotting to file "+figfile
-#saveinputs('plotxy',vis+'.plotxy.amp.saved')
-#plotxy()
-
-yaxis = 'phase'
-# Use the field name as the title
-
-#figfile = vis + '.plotxy.phase.png'
-#print "Plotting to file "+figfile
-#saveinputs('plotxy',vis+'.plotxy.phase.saved')
-#plotxy()
-
-#
-# Now the calibrator
-#
-vis = calsplitms
-field = calname
-yaxis = 'amp'
-# Use the field name as the title
-title = field+"  "
-
-#figfile = vis + '.plotxy.amp.png'
-#print "Plotting to file "+figfile
-#saveinputs('plotxy',vis+'.plotxy.amp.saved')
-#plotxy()
-
-yaxis = 'phase'
-
-#figfile = vis + '.plotxy.phase.png'
-#print "Plotting to file "+figfile
-#saveinputs('plotxy',vis+'.plotxy.phase.saved')
-#plotxy()
 
 print 'Calibration completed'
 #
 #=====================================================================
 #
 # Intensity Imaging/Selfcal
-#
-#=====================================================================
-#
-# Make the scratch columns in the split ms
-#
-print '--Clearcal--'
-default('clearcal')
-
-vis = srcsplitms
-
-clearcal()
-
-print "Created scratch columns for MS "+vis
-print ""
 #
 #=====================================================================
 # FIRST CLEAN / SELFCAL CYCLE
@@ -2925,36 +2778,6 @@ calwt = True
 applycal()
 
 # Self-cal is now in CORRECTED_DATA column of split ms
-#=====================================================================
-# Use Plotxy to look at the self-calibrated data
-#
-#print '--Plotxy--'
-#default('plotxy')
-#
-#vis = srcsplitms
-#selectdata = True
-#field = 'JUPITER'
-#correlation = 'RR LL'
-#xaxis = 'uvdist'
-#yaxis = 'amp'
-#datacolumn = 'corrected'
-#multicolor = 'both'
-#selectplot = True
-#title = field+"  "
-#
-#iteration = ''
-#
-#plotxy()
-#
-#print ""
-#print "-----------------------------------------------------"
-#print "Plotting JUPITER self-corrected visibilities"
-#print "Look for outliers, and you can flag them"
-
-# Pause script if you are running in scriptmode
-#if scriptmode:
-#    user_check=raw_input('Return to continue script\n')
-#
 
 #
 #=====================================================================
@@ -3326,6 +3149,7 @@ print '--- Done ---'
 
 #
 #=====================================================================
+
 \end{verbatim}
 \normalsize
 
@@ -3367,11 +3191,9 @@ The latest version of this script can be found at:
 # Updated by STM    2009-06-26                  Patch 4, web download    #
 # Updated by STM    2009-12-20                  Release 3.0 final        #
 # Checked by JO     2010-10-08                  Release 3.1.0            #
+# Updated by JO     2012-05-10                  Release 3.4.0            #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
-#                                                                        #
-#  download data at:                                                     #
-#  http://casa.nrao.edu/Data/BIMA/NGC4826/ngc4826.fitsfiles.tgz          #
 #                                                                        #
 # This data is from the BIMA Survey of Nearby Galaxies (BIMA SONG)       #
 # Helfer, Thornley, Regan, et al., 2003, ApJS, 145, 259                  #
@@ -3384,7 +3206,7 @@ The latest version of this script can be found at:
 #      if it cannot find the data on disk.                               #
 #    o The "default" commands are not necessary, but are included        #
 #      in case we want to change from function calls to globals          #
-#    o This script has some interactive commands, such as with plotxy    #
+#    o This script has some interactive commands, such as with plotms    #
 #      and the viewer.  This script will stop and require a              #
 #      carriage-return to continue at these points.                      #
 #    o Sometimes cut-and-paste of a series of lines from this script     #
@@ -3399,10 +3221,7 @@ import os
 # needed for existence check
 from os import F_OK
 
-# Might need these if having problems with plotxy windows
-#pl.ion()
-#pl.clf()
-#
+
 ##########################################################################
 #                                                                        
 # Clear out previous run results
@@ -3414,7 +3233,7 @@ prefix='ngc4826.tutorial'
 msfile = prefix + '.16apr98.ms'
 
 print 'Tutorial Script for BIMASONG NGC4826 Mosaic'
-print 'Version for Release 0 (3.0.0) 20-Dec-2009'
+print 'Version for Release 3.4.0  May-2012'
 print 'Will do: import, flagging, calibration, imaging'
 print ''
 #
@@ -3425,15 +3244,15 @@ print ''
 #
 # N4826 - BIMA SONG Data CO(1-0) 115.2712 GHz
 # 16apr98
-#       source=ngc4826
-#       phasecal=1310+323
-#       fluxcal=3c273, Flux = 23 Jy on 16apr98
-#       passcal= none - data were observed with online bandpass correction.
+#	source=ngc4826
+#	phasecal=1310+323
+#	fluxcal=3c273, Flux = 23 Jy on 16apr98
+#	passcal= none - data were observed with online bandpass correction.
 #
 # NOTE: This data has been filled into MIRIAD, line-length correction 
-#       done, and then exported as separate files for each source.
-#       3c273 was not line length corrected since it was observed
-#       for such a short amount of time that it did not need it.  
+#	done, and then exported as separate files for each source.
+#	3c273 was not line length corrected since it was observed
+#	for such a short amount of time that it did not need it.  
 #
 # From miriad: source Vlsr = 408; delta V is 20 km/s 
 #
@@ -3462,7 +3281,7 @@ else:
         os.system("cp -r "+datafiles+" .")
         os.system('chmod -R a+wx '+datafiles)
     else:
-        # try web retrieval
+	# try web retrieval
         print '--Trying to retrieve data from '+webfiles
         # Use curl (for Mac compatibility)
         os.system('curl '+webfiles+' -f -o '+dataname)
@@ -3473,7 +3292,7 @@ else:
     os.system('tar xzf '+dataname)
     if os.access(fitsdir,F_OK):
         # should now be in current directory
-        print "  Will use "+fitsdir+" in current directory"
+	print "  Will use "+fitsdir+" in current directory"
     else:
         raise IOError," ERROR: "+fitsdir+" not found"
 
@@ -3500,16 +3319,16 @@ print "The USB spectral windows were written separately by miriad for 16apr98"
 #### 1+ number of actual files.
 
 for i in range(5,9):
-        importuvfits(fitsfile="fitsfiles/3c273.fits"+str(i),
-                vis="ngc4826.tutorial.3c273."+str(i)+".ms")
+	importuvfits(fitsfile="fitsfiles/3c273.fits"+str(i),
+		vis="ngc4826.tutorial.3c273."+str(i)+".ms")
 
 for i in range(9,17):
-        importuvfits(fitsfile="fitsfiles/1310+323.ll.fits"+str(i),
-                vis="ngc4826.tutorial.1310+323.ll."+str(i)+".ms")
+	importuvfits(fitsfile="fitsfiles/1310+323.ll.fits"+str(i),
+		vis="ngc4826.tutorial.1310+323.ll."+str(i)+".ms")
 
 for i in range(5,9):
-        importuvfits(fitsfile="fitsfiles/ngc4826.ll.fits"+str(i),
-                vis="ngc4826.tutorial.ngc4826.ll."+str(i)+".ms")
+	importuvfits(fitsfile="fitsfiles/ngc4826.ll.fits"+str(i),
+		vis="ngc4826.tutorial.ngc4826.ll."+str(i)+".ms")
 #
 ##########################################################################
 #
@@ -3517,21 +3336,21 @@ print '--Concat--'
 default('concat')
 
 concat(vis=['ngc4826.tutorial.3c273.5.ms',
-            'ngc4826.tutorial.3c273.6.ms',
-            'ngc4826.tutorial.3c273.7.ms',
-            'ngc4826.tutorial.3c273.8.ms',
-            'ngc4826.tutorial.1310+323.ll.9.ms',
-            'ngc4826.tutorial.1310+323.ll.10.ms',
-            'ngc4826.tutorial.1310+323.ll.11.ms',
-            'ngc4826.tutorial.1310+323.ll.12.ms',
-            'ngc4826.tutorial.1310+323.ll.13.ms',
-            'ngc4826.tutorial.1310+323.ll.14.ms',
-            'ngc4826.tutorial.1310+323.ll.15.ms',
-            'ngc4826.tutorial.1310+323.ll.16.ms',
-            'ngc4826.tutorial.ngc4826.ll.5.ms',
-            'ngc4826.tutorial.ngc4826.ll.6.ms',
-            'ngc4826.tutorial.ngc4826.ll.7.ms',
-            'ngc4826.tutorial.ngc4826.ll.8.ms'],
+	    'ngc4826.tutorial.3c273.6.ms',
+	    'ngc4826.tutorial.3c273.7.ms',
+	    'ngc4826.tutorial.3c273.8.ms',
+	    'ngc4826.tutorial.1310+323.ll.9.ms',
+	    'ngc4826.tutorial.1310+323.ll.10.ms',
+	    'ngc4826.tutorial.1310+323.ll.11.ms',
+	    'ngc4826.tutorial.1310+323.ll.12.ms',
+	    'ngc4826.tutorial.1310+323.ll.13.ms',
+	    'ngc4826.tutorial.1310+323.ll.14.ms',
+	    'ngc4826.tutorial.1310+323.ll.15.ms',
+	    'ngc4826.tutorial.1310+323.ll.16.ms',
+	    'ngc4826.tutorial.ngc4826.ll.5.ms',
+	    'ngc4826.tutorial.ngc4826.ll.6.ms',
+	    'ngc4826.tutorial.ngc4826.ll.7.ms',
+	    'ngc4826.tutorial.ngc4826.ll.8.ms'],
        concatvis='ngc4826.tutorial.ms',
        freqtol="",dirtol="1arcsec",async=False)
 
@@ -3586,7 +3405,7 @@ concat(vis=['ngc4826.tutorial.3c273.5.ms',
 #       'ngc4826.tutorial.1310+323.ll.13.ms',
 #       'ngc4826.tutorial.1310+323.ll.14.ms',
 #       'ngc4826.tutorial.1310+323.ll.15.ms',
-#       'ngc4826.tutorial.1310+323.ll.16.ms',       
+#       'ngc4826.tutorial.1310+323.ll.16.ms',	    
 #       'ngc4826.tutorial.ngc4826.ll.5.ms',
 #       'ngc4826.tutorial.ngc4826.ll.6.ms',
 #       'ngc4826.tutorial.ngc4826.ll.7.ms',
@@ -3639,10 +3458,10 @@ print "See listobs summary in logger"
 # Plotting and Flagging
 ##########################################################################
 #
-# The plotxy task is the interactive x-y display and flagging GUI
+# The plotms task is the interactive x-y display and flagging GUI
 #
-print '--Plotxy--'
-default(plotxy)
+print '--Plotms--'
+default(plotms)
 
 # Here we will suggest things to plot, and actually only do a few
 # (near the end of this task block).  If you like you can
@@ -3651,10 +3470,9 @@ default(plotxy)
 # First look at amplitude as a funciton of uv-distance using an
 # average over all channels for each source.
 #
-# Interactive plotxy
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field='0',spw='0~3',
-#       averagemode='vector',width='1000',selectplot=True,title='Field 0 SPW 0~3')
-#       
+# Interactive plotms
+#plotms(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field='0',spw='0~3',width='1000')
+#	
 # Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
 
@@ -3665,13 +3483,11 @@ default(plotxy)
 #
 # Now average over all times across scans but not over channel and
 # plot versus channel. There are four 64-channel spws set end-to-end
-# by plotxy You should see bad edge channels in each spw segment We
+# by plotms You should see bad edge channels in each spw segment We
 # will flag these (non-interactively) later
 #
-# Interactive plotxy
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',field='0',spw='0~3',
-#       averagemode='vector',timebin='1e7',crossscans=True,selectplot=True,
-#       newplot=False,title='Field 0 SPW 0~3')
+# Interactive plotms
+#plotms(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',field='0',spw='0~3', averagedata=T,avgtime='1e7',averagescans=T)
 #
 # Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
@@ -3680,17 +3496,6 @@ default(plotxy)
 #
 # You might do this for all the other spw/field combos
 #
-
-# You can also non-interactively plotxy to a file
-# (note this works only if iteration is not set)
-# Also, see how we use Python variables to make this easier
-#
-#field = '0'
-#spw = '0~3'
-#figfile = 'ngc4826.tutorial.ms' + '.plotxy.'+field+'.spectrum.raw.png'
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw=spw,
-#       averagemode='vector',timebin='1e7',crossscans=True,selectplot=True,
-#       newplot=False,title='Field '+field+' SPW '+spw,interactive=False,figfile=figfile)
 
 # Now lets look at the target source, the first of the NGC4826 mosaic fields
 # which are 2~8 in this MS.
@@ -3707,10 +3512,9 @@ default(plotxy)
 #
 # But this data is relatively clean, and flagging will not improve results.
 #
-# Interactive plotxy
-plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field='2',spw='12~15',
-       averagemode='vector',timebin='1e7',crossscans=True,
-       selectplot=True,newplot=False,title='Field 2 SPW 12~15')
+# Interactive plotms
+plotms(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field='2',spw='12~15',
+       averagedata=T,avgtime='1e7',avgscan=True)
 
 print "You could Mark Region around outliers and Flag"
 # Pause script if you are running in scriptmode
@@ -3720,39 +3524,34 @@ user_check=raw_input('Return to continue script\n')
 # You could set up a Python loop to do all the N4826 fields, like this:
 #
 #for fld in range(2,9):
-#       field = str(fld)
-#       plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw=spw,
-#              averagemode='vector',timebin='1e7',crossscans=True,selectplot=True,
-#              newplot=False,title='Field '+field+' SPW '+spw)
+#	field = str(fld)
+#	plotms(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw=spw,averagedata=T,avgtime='1e7',avgscan=True)
 #
-#       print "Nominally, Mark Region around outliers and Flag"
-#       # Pause script if you are running in scriptmode
-#       user_check=raw_input('Return to continue script\n')
+#	print "Nominally, Mark Region around outliers and Flag"
+#	# Pause script if you are running in scriptmode
+#	user_check=raw_input('Return to continue script\n')
 
 # Back to first field.
 # You can also have it iterate over baselines, using Next to advance
 # Ignore baselines 1:1, 2:2 etc. as they would correspond to autocorrelations
 # if they were present (they are not in this dataset)
 #
-# Interactive plotxy
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',field='0',spw='0~3',
-#       averagemode='vector',timebin='1e7',crossscans=True,iteration='baseline',
-#       selectplot=True,newplot=False,title='Field 0 SPW 0~3')
-#       
+# Interactive plotms
+#plotms(vis='ngc4826.tutorial.ms',xaxis='channel',yaxis='amp',field='0',spw='0~3',averagedata=T,avgtime='1e7',avgscan=True)
+#	
 # Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
 
 #
 # Finally, look for bad data. Here we look at field 8 w/o averaging
-plotxy(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',field='8',spw='12~15',
-       selectplot=True,newplot=False,title='Field 8 SPW 12~15')
+plotms(vis='ngc4826.tutorial.ms',xaxis='time',yaxis='amp',field='8',spw='12~15')
 
 print "You can see some bad data here"
 print "Mark Region and Locate, look in logger"
 print "This is a correlator glitch in baseline 3-9 at 06:19:30"
 print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
 print "In a normal session you could Mark Region and Flag."
-print "Here we will use flagdata instead."
+print "Here we will use tflagdata instead."
 # Pause script if you are running in scriptmode
 user_check=raw_input('Return to continue script\n')
 
@@ -3762,15 +3561,15 @@ user_check=raw_input('Return to continue script\n')
 #
 # Flag end channels
 #
-print '--Flagdata--'
-default('flagdata')
+print '--TFlagdata--'
+default('tflagdata')
 
 print ""
 print "Flagging edge channels in all spw"
 print "  0~3:0~1;62~63 , 4~11:0~1;30~31, 12~15:0~1;62~63 "
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag',
+tflagdata(vis='ngc4826.tutorial.ms', mode='manual',
          spw='0~3:0;1;62;63,4~11:0;1;30;31,12~15:0;1;62;63')
 
 #
@@ -3781,7 +3580,7 @@ print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
 print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='3&9', 
+tflagdata(vis='ngc4826.tutorial.ms', mode='manual', field='8', spw='15', antenna='3&9', 
          timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
 
 
@@ -3790,12 +3589,11 @@ flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', ante
 #
 # Some example clean-up editing
 # Slightly high almost-edge channel in field='1', spw='4' (channel 2)
-# can be flagged interactively with plotxy.
+# can be flagged interactively with plotms.
 #
-#plotxy(vis='ngc4826.tutorial.ms',
+#plotms(vis='ngc4826.tutorial.ms',
 #       xaxis='channel',yaxis='amp',field='1',spw='4',
-#       averagemode='vector',timebin='1e7',crossscans=True,
-#       selectplot=True,newplot=False,title='Field 1 SPW 4')
+#       averagedata=T,avgtime='1e7',avgscan=True,)
 
 print "Completed pre-calibration flagging"
 
@@ -3859,9 +3657,9 @@ print 'Using solint=inf combining over spw'
 print 'Output table ngc4826.tutorial.16apr98.gcal'
 
 gaincal(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
-        field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
-        refant='ANT5', gaincurve=False, opacity=0.0,
-        solint='inf', combine='spw')
+	field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
+	refant='ANT5', gaincurve=False, opacity=0.0,
+	solint='inf', combine='spw')
 
 #
 ##########################################################################
@@ -3876,8 +3674,8 @@ print 'Transferring flux of 3C273 to sources: 1310+323'
 print 'Output table ngc4826.tutorial.16apr98.fcal'
 
 fluxscale(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
-          fluxtable='ngc4826.tutorial.16apr98.fcal',
-          reference='3C273', transfer=['1310+323'])
+	  fluxtable='ngc4826.tutorial.16apr98.fcal',
+	  reference='3C273', transfer=['1310+323'])
 
 # Flux density for 1310+323 is: 1.48 +/- 0.016 (SNR = 90.6, nAnt= 8)
 #
@@ -3892,7 +3690,7 @@ plotcal(caltable='ngc4826.tutorial.16apr98.fcal', yaxis='amp', field='')
 print ''
 print 'Plotting final scaled gain calibration table'
 print 'First amp vs. time for all fields '
-        
+	
 # Pause script if you are running in scriptmode
 user_check=raw_input('Return to continue script\n')
 
@@ -3924,53 +3722,47 @@ default('applycal')
 print 'Applying calibration table ngc4826.tutorial.16apr98.fcal to data'
 
 applycal(vis='ngc4826.tutorial.ms',
-         field='', spw='',
-         gaincurve=False, opacity=0.0, 
+	 field='', spw='',
+	 gaincurve=False, opacity=0.0, 
          gaintable='ngc4826.tutorial.16apr98.fcal',
-         spwmap=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+	 spwmap=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
 #
 ##########################################################################
 #
 # Check calibrated data
-print '--Plotxy--'
-default(plotxy)
+print '--Plotms--'
+default(plotms)
 
 #
 # Here we plot the first of the NGC4826 fields unaveraged versus velocity
 # Notice how the spw fit together
 
-# Interactive plotxy
+# Interactive plotms
 #print "Will plot all the NGC4826 calibrated data unaveraged - this will take a while"
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field='2~8',spw='12~15',
-#       averagemode='vector',datacolumn='corrected',selectplot=True,
-#       newplot=False,title='Field 2~8 SPW 12~15')
+#plotms(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field='2~8',spw='12~15',averagedata=T,ydatacolumn='corrected')
 
 #print ""
 #print "Look for outliers, flag them if there are any bad ones"
 #print ""
-        
+	
 # Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
 
 # You can also plot all the N4826 fields 2 through 8, for example using a loop:
 
 #for fld in range(2,9):
-#       field = str(fld)
-#       plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw='11~15',
-#              averagemode='vector',datacolumn='corrected',selectplot=True,
-#              newplot=False,title='Field '+field+' SPW 11~15')
-#       
-#       user_check=raw_input('Return to continue script\n')
+#	field = str(fld)
+#	plotms(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw='11~15',averagedata=T,ydatacolumn='corrected')
+#	
+#	user_check=raw_input('Return to continue script\n')
 
 # Now here we time-average the data, plotting versus velocity
 
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw=spw,
-#       averagemode='vector',datacolumn='corrected',timebin='1e7',crossscans=True,
-#       plotcolor='blue',selectplot=True,newplot=False,title='Field '+field+' SPW '+spw)
+#plotms(vis='ngc4826.tutorial.ms',xaxis='velocity',yaxis='amp',field=field,spw=spw,averagedata=T,ydatacolumn='corrected',avgtime='1e7',avgscan=True)
 #print ""
 #print 'Final Spectrum field '+field+' spw '+spw+' TimeAverage Corrected Data'
-        
+	
 # Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
 
@@ -3980,21 +3772,15 @@ default(plotxy)
 # First the corrected column in blue
 #field = '0'
 #spw = '0~3'
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field=field,spw=spw,
-#       averagemode='vector',width='1000',datacolumn='corrected',timebin='1e7',
-#       crossscans=True,plotcolor='blue',selectplot=True,newplot=False,
-#       title='Field '+field+' SPW '+spw)
+#plotms(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field=field,spw=spw,averagedata=T,avgchannel='1000',ydatacolumn='corrected',avgtime='1e7',avgscan=Truew)
 #print ""
 #print 'Plotting field '+field+' spw '+spw+' TimeChanAverage Corrected Data in blue'
 #
 # Now the original data column in red
-#plotxy(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field=field,spw=spw,
-#       averagemode='vector',width='1000',datacolumn='data',timebin='1e7',
-#       crossscans=True,plotcolor='red',overplot=True,selectplot=True,
-#       newplot=False,title='Field '+field+' SPW '+spw)
+#plotms(vis='ngc4826.tutorial.ms',xaxis='uvdist',yaxis='amp',field=field,spw=spw,averagdata=T,avgchannel='1000',ydatacolumn='data',avgtime='1e7',avgscan=True)
 #
-#print 'OverPlotting field '+field+' spw '+spw+' TimeChanAverage Original Data in red'
-        
+#print 'Plotting field '+field+' spw '+spw+' TimeChanAverage Original Data in red'
+	
 ## Pause script if you are running in scriptmode
 #user_check=raw_input('Return to continue script\n')
 
@@ -4039,8 +3825,8 @@ split(vis='ngc4826.tutorial.ms',
 #
 ##########################################################################
 #
-# If you want to use plotxy before cleaning to look at the split ms
-#plotxy(vis='ngc4826.tutorial.16apr98.src.split.ms',xaxis='time',yaxis='amp')
+# If you want to use plotms before cleaning to look at the split ms
+#plotms(vis='ngc4826.tutorial.16apr98.src.split.ms',xaxis='time',yaxis='amp')
 #
 ##########################################################################
 #
@@ -4050,10 +3836,7 @@ split(vis='ngc4826.tutorial.ms',
 #default('clean')
 #
 #
-#clean(vis='ngc4826.tutorial.16apr98.1310+323.split.ms',
-#      imagename='ngc4826.tutorial.16apr98.cal.clean',
-#      cell=[1.,1.],imsize=[256,256],field='0',spw='0~7',
-#      threshold=10.,mode='mfs',psfmode='clark',niter=100,stokes='I')
+#clean(vis='ngc4826.tutorial.16apr98.1310+323.split.ms',imagename='ngc4826.tutorial.16apr98.cal.clean',cell=[1.,1.],imsize=[256,256],field='0',spw='0~7',threshold=10.,mode='mfs',psfmode='clark',niter=100,stokes='I')
 
 # You can look at this in the viewer
 #viewer('ngc4826.tutorial.16apr98.cal.clean.image')
@@ -4213,8 +3996,8 @@ momoneimage = 'ngc4826.tutorial.16apr98.moments.mom1'
 print "Calculating Moments 0,1 for PBcor image"
 
 immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',
-          moments=0,axis='spectral',
-          chans='7~28',
+	  moments=0,axis='spectral',
+	  chans='7~28',
           outfile='ngc4826.tutorial.16apr98.moments.integrated') 
 
 # TUTORIAL NOTES: For moment 0 we use the image corrected for the
@@ -4231,8 +4014,8 @@ immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',
 # flux cutoff to produce sensible results.
 
 immoments(imagename='ngc4826.tutorial.16apr98.src.clean.image',
-          moments=1,axis='spectral',includepix=[0.2,1000.0],
-          chans='7~28',
+	  moments=1,axis='spectral',includepix=[0.2,1000.0],
+	  chans='7~28',
           outfile='ngc4826.tutorial.16apr98.moments.mom1') 
 
 # Now view the resulting images
@@ -4283,16 +4066,12 @@ print "Found moment 1 median = "+str(momonestat['median'][0])
 
 #print '--ImMoments (masked)--'
 #print 'Creating masked moment 0 image ngc4826.tutorial.16apr98.moments.integratedmasked'
-#       
-#immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',moments=0,
-#          axis='spectral',chans='7~28',region='mom0mask.rgn',
-#          outfile='ngc4826.tutorial.16apr98.moments.integratedmasked') 
+#	
+#immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor',moments=0,axis='spectral',chans='7~28',region='mom0mask.rgn',outfile='ngc4826.tutorial.16apr98.moments.integratedmasked') 
 #
 #print 'Creating masked moment 1 image ngc4826.tutorial.16apr98.moments.mom1masked'
 #
-#immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor.masked',moments=1,
-#          axis='spectral',includepix=[0.2,1000.0],chans='7~28',
-#          region='mom0mask.rgn',outfile='ngc4826.tutorial.16apr98.moments.mom1masked') 
+#immoments(imagename='ngc4826.tutorial.16apr98.src.clean.pbcor.masked',moments=1,axis='spectral',includepix=[0.2,1000.0],chans='7~28', region='mom0mask.rgn',outfile='ngc4826.tutorial.16apr98.moments.mom1masked') 
 
 # Now view the resulting images
 #viewer('ngc4826.tutorial.16apr98.moments.integratedmasked')
@@ -4345,6 +4124,7 @@ print '          Signal-to-Noise ratio = '+str(im_srcmax16/im_offlinerms16)
 print "Done with NGC4826 Tutorial"
 #
 ##########################################################################
+
 \end{verbatim}
 \normalsize
 
