@@ -93,8 +93,8 @@ def tflagdata(vis,
     if ParallelTaskHelper.isParallelMS(vis):
         # To be safe convert file names to absolute paths.
         helper = ParallelTaskHelper('tflagdata', locals())
-        helper.go()
-        return
+        retVar = helper.go()
+        return retVar
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()

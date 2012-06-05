@@ -19,6 +19,8 @@ class ParallelTaskHelper:
         self._jobQueue = None
         # Cache the initial inputs
         self.__originalParams = args
+        # jagonzal: Add reference to cluster object
+        self._cluster = None
 
     def initialize(self):
         '''
@@ -52,19 +54,23 @@ class ParallelTaskHelper:
 
 
     def executeJobs(self):
-        cluster = simple_cluster.simple_cluster.getCluster()
-        self._jobQueue = simple_cluster.JobQueueManager(cluster)
+        self._cluster = simple_cluster.simple_cluster.getCluster()
+        self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
         self._jobQueue.addJob(self._executionList)
         self._jobQueue.executeQueue()
 
     def postExecution(self):
-        pass
+        if (self._cluster != None):
+            return self._cluster.get_return_list()
+        else:
+            return None
             
     def go(self):
         self.initialize()
         self.generateJobs()
         self.executeJobs()
-        self.postExecution()
+        retVar = self.postExecution()
+        return retVar
 
     @staticmethod
     def getReferencedMSs(vis):

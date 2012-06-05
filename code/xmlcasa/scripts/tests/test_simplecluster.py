@@ -206,10 +206,7 @@ class simplecluster_test(unittest.TestCase):
         tflagdata(vis=self.vis, mode='list', inpfile=filename)
 
         # step 2: Now do summary
-        tflagdata(vis=self.vis, mode='summary')
-
-        # Retrieve result from summary
-        summary = self.cluster.get_return_list()
+        summary = tflagdata(vis=self.vis, mode='summary')
 
         # Print summary (note: the first 16 jobs correspond to the step 1)
         self.assertTrue(summary[0]['spw']['15']['flagged'] == 96284.0)
