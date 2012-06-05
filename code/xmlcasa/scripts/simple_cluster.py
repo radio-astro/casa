@@ -777,6 +777,9 @@ class simple_cluster:
  		   sc.init_cluster('cluster-config.txt','test-rhel')
 		"""
 
+		# Determine verbose mode
+		verbose = self._verbose or verbose_local
+
 		# Open monitoring file
 		fid = open(self._monitoringFile + ".tmp", 'w')
 		
@@ -791,7 +794,7 @@ class simple_cluster:
 																				"Read[MB]","Write[MB]",
 																				"Read[MB/s]","Write[MB/s]",
 																				"Job","Sub-MS")
-		if ((self._verbose) or (verbose_local)):
+		if (verbose):
 			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ("Host","Engine","Status",
 																		"CPU[%]","Memory[%]","Time[s]",
 																		"Read[MB]","Write[MB]",
@@ -815,8 +818,9 @@ class simple_cluster:
 				try:
 					read_bytes = float(read_bytes[1])
 				except:
-					print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-					print "read_bytes: [" +  str(read_bytes) + "]"
+					if (verbose):
+						print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+						print "read_bytes: [" +  str(read_bytes) + "]"
 				# Get write activity
 				cmd_write_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
 				write_bytes=commands.getoutput(cmd_write_bytes)
@@ -824,8 +828,9 @@ class simple_cluster:
 				try:
 					write_bytes = float(write_bytes[1])
 				except:
-					print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-					print "write_bytes: [" +  str(write_bytes) + "]"
+					if (verbose):
+						print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+						print "write_bytes: [" +  str(write_bytes) + "]"
 			# Get resources usage (cpu, mem, elapsed time since start)
 			cmd_resources = "ssh " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
 			resources=commands.getoutput(cmd_resources)
@@ -837,6 +842,7 @@ class simple_cluster:
 			try:
 				cpu = round(float(resources[0]))
 			except:
+				if (verbose):
 					print "Problem converting CPU into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
 					print "CPU: [" +  resources[0] + "]"
 			# Convert Memory into number
@@ -844,6 +850,7 @@ class simple_cluster:
 			try:
 				memory = round(float(resources[1]))
 			except:
+				if (verbose):
 					print "Problem converting memory into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
 					print "Memory: [" +  resources[1] + "]"
 			# Initialize engine RW offsets map
@@ -912,7 +919,7 @@ class simple_cluster:
 																					result[engine[1]][engine[0]]["WriteRate"],
 																					result[engine[1]][engine[0]]["Job"],
 																					result[engine[1]][engine[0]]["Sub-MS"])
-			if ((self._verbose) or (verbose_local)):
+			if (verbose):
 				print "%20s%10d%10s%10d%10d%10d%10d%10d%15d%15d%20s%30s" % (	engine[1],
 																				engine[0],
 																				result[engine[1]][engine[0]]["Status"],
@@ -939,7 +946,7 @@ class simple_cluster:
 																				"===============",
 																				"====================",
 																				"==============================")
-		if ((self._verbose) or (verbose_local)):
+		if (verbose):
 			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
 																			"==========",
 																			"==========",
@@ -967,7 +974,7 @@ class simple_cluster:
 																					result[host]["WriteRate"],
 																					"",
 																					"")
-		if ((self._verbose) or (verbose_local)):
+		if (verbose):
 			for host in result:
 				print "%20s%10s%10s%10d%10d%10s%10d%10d%15d%15d%20s%30s" % (	host,
 																				"Total",
@@ -995,7 +1002,7 @@ class simple_cluster:
 																				"===============",
 																				"====================",
 																				"==============================")
-		if ((self._verbose) or (verbose_local)):
+		if (verbose):
 			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
 																			"==========",
 																			"==========",
@@ -1018,7 +1025,7 @@ class simple_cluster:
 		return result
 
 
-    def get_return_list(self, verbose_local=False):
+    def get_return_list(self):
 		"""
 		"""
 
