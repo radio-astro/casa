@@ -469,7 +469,8 @@ void QtDataManager::changeItemSelection(){
         contourButton_->show();
         vectorButton_->show();
         markerButton_->show();
-	info_box->show();
+	if ( treeWidget_->currentItem()->text(1) == "Image" )
+	    info_box->show();
 	if ( ! name.isNull( ) ) {
 	    std::string path = (dir_.path() + "/" + name).toStdString( );
 	    if( imagePixelType(path) == TpFloat ) {
