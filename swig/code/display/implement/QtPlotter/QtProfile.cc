@@ -39,7 +39,7 @@
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/QtPlotter/Util.h>
-#include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
+//#include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 //#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
@@ -82,7 +82,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
         :QMainWindow(parent),
          //pc(0),
          //te(0),
-         analysis(0), image(img), collapser(0), /*fitter(0),*/ over(0),WORLD_COORDINATES("world"),
+         analysis(0), image(img), /*collapser(0),*/ /*fitter(0),*/ over(0),WORLD_COORDINATES("world"),
          coordinate( WORLD_COORDINATES ), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
@@ -91,15 +91,15 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0), newCollapseVals(True)
+         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0)/*newCollapseVals(True)*/
 {
     setupUi(this);
 
     functionTabs->removeTab(1);
+    functionTabs->removeTab(0);
     initPlotterResource();
 
-    //functionTabs->removeTab(3);
-    functionTabs->setCurrentIndex( 0 );
+    functionTabs->setCurrentIndex( 2 );
 
     setWindowTitle(QString("Spectral Profile - ").append(name));
     setBackgroundRole(QPalette::Dark);
@@ -110,19 +110,19 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeErrorType(const QString &)));
 
-    connect(collapseType, SIGNAL(currentIndexChanged(const QString &)),
+    /*connect(collapseType, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCollapseType(const QString &)));
     connect(collapseError, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeCollapseError(const QString &)));
     changeCollapseType();
     changeCollapseError();
-
+	*/
     QPalette pal = pixelCanvas->palette();
     pal.setColor(QPalette::Background, Qt::white);
     pixelCanvas->setPalette(pal);
 
     // read the preferred ctype from casarc
-    QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
+    QString pref_ctype = read( ".freqcoord.type");
     if (pref_ctype.size()>0){
     	// change to the preferred ctype
     	updateAxisUnitCombo( pref_ctype, bottomAxisCType );
@@ -152,7 +152,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
     connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(emitChannelSelect(float)));
 
-    QValidator *validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10,this);
+    /*QValidator *validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10,this);
     startValue->setValidator(validator);
     startValue->setMaximumWidth(100);
     endValue->setValidator(validator);
@@ -163,20 +163,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     toLabel->setMinimumWidth(30);
     toLabel->setMargin(3);
     toLabel->setAlignment((Qt::Alignment)(Qt::AlignRight|Qt::AlignVCenter));
-    //collapseUnits->setMinimumWidth(45);
     collapseUnits->setMargin(3);
-    //fitUnits->setMargin(3);
     connect(collapse, SIGNAL(clicked()),
-            this, SLOT(doImgCollapse()));
-
-    /*startValueFit->setValidator(validator);
-    startValueFit->setMaximumWidth(100);
-    endValueFit->setValidator(validator);
-    endValueFit->setMaximumWidth(100);
-    connect(fit, SIGNAL(clicked()),
-            this, SLOT(doLineFit()));
-    connect(clean, SIGNAL(clicked()),
-            this, SLOT(plotMainCurve()));*/
+            this, SLOT(doImgCollapse()));*/
 
     pixelCanvas->setTitle("");
     pixelCanvas->setWelcome("assign a mouse button to\n"
@@ -209,30 +198,35 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
     initSpectrumPosition();
 
+    //Spectral Line Fitting & Moments/Collapse initialization
+    momentSettingsWidget->setTaskSpecLineFitting( false );
+    specFitSettingsWidget->setTaskSpecLineFitting( true );
+    specFitSettingsWidget -> setCanvas( pixelCanvas );
+    momentSettingsWidget -> setCanvas( pixelCanvas );
+    specFitSettingsWidget -> setTaskMonitor( this );
+    momentSettingsWidget -> setTaskMonitor( this );
+    specFitSettingsWidget -> setLogger( itsLog );
+    momentSettingsWidget -> setLogger( itsLog );
     try{
    	 analysis  = new ImageAnalysis(img);
-   	 collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
-   	 //fitter    = new SpectralFitter();
-   	 specFitSettingsWidget->resetSpectralFitter( specFitSettingsWidget->isOptical() );
+   	 //collapser = new SpectralCollapser(img, String(viewer::options.temporaryPath( )));
+   	 momentSettingsWidget->reset();
+   	 specFitSettingsWidget->reset();
    	 setUnitsText( xaxisUnit );
     }
     catch (AipsError x){
    	 String message = "Error when starting the profiler:\n" + x.getMesg();
    	 *itsLog << LogIO::WARN << message << LogIO::POST;
     }
-
-    //Spectral Line Fitting initialization
-    specFitSettingsWidget -> setCanvas( pixelCanvas );
-    specFitSettingsWidget -> setFitMonitor( this );
-    specFitSettingsWidget -> setLogger( itsLog );
 }
 
 
 void QtProfile::setUnitsText( String unitStr ){
 	QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
-	collapseUnits->setText( unitLabel );
+	//collapseUnits->setText( unitLabel );
 	//fitUnits->setText( unitLabel );
-	specFitSettingsWidget->setUnits( QString(unitStr.c_str()) );
+	specFitSettingsWidget->setUnits( unitLabel );
+	momentSettingsWidget->setUnits( unitLabel );
 }
 
 //----------------------------------------------------------------------------------
@@ -799,14 +793,18 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	
 	stateMProf=inMProf;
 	stateRel  = inRel;
+
+	bool oldOpticalFitter = specFitSettingsWidget->isOptical();
+	if ( opticalFitter != oldOpticalFitter ){
+		SettingsWidget::setOptical( opticalFitter );
+		specFitSettingsWidget->reset();
+		momentSettingsWidget->reset();
+	}
+
 	if (update){
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
 	}
 
-	bool oldOpticalFitter = specFitSettingsWidget->isOptical();
-	if ( opticalFitter != oldOpticalFitter ){
-		specFitSettingsWidget->resetSpectralFitter( opticalFitter );
-	}
 }
 
 void QtProfile::setPlotError(int st)
@@ -840,29 +838,29 @@ void QtProfile::updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex
 }
 
 void QtProfile::changeTopAxisCoordinateType( const QString & /*text*/ ){
-	changeCoordinateType( bottomAxisCType -> currentText() );
+	changeTopAxis();
 }
 
 
 
-void QtProfile::changeCoordinateType(const QString &text) {
-	xpos = "";
-	ypos = "";
-	position = QString("");
-	profileStatus->showMessage(position);
-	pixelCanvas->clearCurve();
+void QtProfile::changeCoordinateType(const QString &text ) {
+		xpos = "";
+		ypos = "";
+		position = QString("");
+		profileStatus->showMessage(position);
+		pixelCanvas->clearCurve();
 
-	ctypeUnit = String(text.toStdString());
-	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+		ctypeUnit = String(text.toStdString());
+		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 
-	setUnitsText( xaxisUnit );
+		setUnitsText( xaxisUnit );
 
-	pixelCanvas->setPlotSettings(QtPlotSettings());
-	pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
-    updateXAxisLabel( text, QtPlotSettings::xBottom );
+		pixelCanvas->setPlotSettings(QtPlotSettings());
+		pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
+		updateXAxisLabel( text, QtPlotSettings::xBottom );
 
-	//cout << "put to rc.viewer: " << text.toStdString() << endl;
-	rc.put( "viewer." + rcid() + ".freqcoord.type", text.toStdString());
+		//cout << "put to rc.viewer: " << text.toStdString() << endl;
+	persist( ".freqcoord.type", text);
 	if(lastPX.nelements() > 0){ // update display with new coord type
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
 	}
@@ -890,12 +888,13 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 			delete analysis;
 		analysis = new ImageAnalysis(img);
 
-		if (collapser)
+		/*if (collapser)
 			delete collapser;
 		collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
-		newCollapseVals=True;
+		newCollapseVals=True;*/
 
-		specFitSettingsWidget->resetSpectralFitter( specFitSettingsWidget->isOptical() );
+		specFitSettingsWidget->reset( );
+		momentSettingsWidget->reset();
 		/*if (fitter)
 			delete fitter;
 		fitter = new SpectralFitter();*/
@@ -921,10 +920,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	fillPlotTypes(img);
 
 	// adjust the collapse type
-	changeCollapseType();
+	//changeCollapseType();
 
 	// read the preferred ctype from casarc
-	QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
+	QString pref_ctype = read( ".freqcoord.type");
 	if (pref_ctype.size()>0){
 		// change to the preferred ctype
 		updateAxisUnitCombo( pref_ctype, bottomAxisCType );
@@ -1061,17 +1060,19 @@ void QtProfile::wcChanged( const String c,
     addImageAnalysisGraph( wxv,wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
 
-    if (newCollapseVals){
+    momentSettingsWidget->setCollapseVals( z_xval );
+    specFitSettingsWidget->setCollapseVals( z_xval );
+    /*if (newCollapseVals){
    	 setCollapseVals(z_xval);
    	 newCollapseVals=False;
-    }
+    }*/
 }
 
 
 void QtProfile::changePlotType(const QString &text) {
 
 	// store the plot type and set the class data
-	rc.put( "viewer." + rcid() + ".plot.type", text.toStdString());
+	persist( ".plot.type", text );
 	stringToPlotType(text, itsPlotType);
 
 	// get the coo-sys
@@ -1114,14 +1115,14 @@ void QtProfile::changePlotType(const QString &text) {
 }
 
 void QtProfile::changeErrorType(const QString &text) {
-	rc.put( "viewer." + rcid() + ".error.type", text.toStdString());
+	persist( ".error.type", text);
 
 	stringToErrorType(text, itsErrorType);
 
 	redraw();
 }
 
-void QtProfile::changeCollapseType(QString text) {
+/*void QtProfile::changeCollapseType(QString text) {
 	bool switchError(false);
 
 	// if no type given means
@@ -1130,7 +1131,7 @@ void QtProfile::changeCollapseType(QString text) {
 		switchError=true;
 
 		// read and set a type from the rc-file
-		text = QString(rc.get("viewer." + rcid() + ".collapse.type").c_str());
+		text = read( ".collapse.type");
 		if (text.size()>0){
 			int index = collapseType->findText(text);
 			if (index > -1)
@@ -1179,13 +1180,13 @@ void QtProfile::changeCollapseType(QString text) {
 	}
 
 	// store the collapse type in the rc-file
-	rc.put( "viewer." + rcid() + ".collapse.type", text.toStdString());
+	persist( ".collapse.type", text);
 
 	// if initialization
 	if (switchError){
 
 		// read the error type from the rc-file
-		QString error(rc.get("viewer." + rcid() + ".collerror.type").c_str());
+		QString error = read(".collerror.type");
 		if (error.size()>0){
 
 			// if the error type does exist, which means
@@ -1197,14 +1198,14 @@ void QtProfile::changeCollapseType(QString text) {
 			}
 		}
 	}
-}
+}*/
 
-void QtProfile::changeCollapseError(QString text) {
+/*void QtProfile::changeCollapseError(QString text) {
 	if (text.size()<1)
 		text=collapseError->currentText();
-	rc.put( "viewer." + rcid() + ".collerror.type", text.toStdString());
+	persist( ".collerror.type", text );
 	SpectralCollapser::stringToCollapseError(String(text.toStdString ()), itsCollapseError);
-}
+}*/
 
 void QtProfile::redraw( ) {
     wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
@@ -1351,7 +1352,7 @@ void QtProfile::updateAxisUnitCombo( const QString& textToMatch, QComboBox* axis
 	}
 }
 
-void QtProfile::doImgCollapse(){
+/*void QtProfile::doImgCollapse(){
 
 	*itsLog << LogOrigin("QtProfile", "doImgCollapse");
 
@@ -1412,7 +1413,7 @@ void QtProfile::doImgCollapse(){
 	emit showCollapsedImg(outname, "image", "raster", True, True);
 
 	return;
-}
+}*/
 
 /*void QtProfile::doLineFit(){
 
@@ -1567,7 +1568,7 @@ void QtProfile::emitChannelSelect( float xval ) {
 }
 
 void QtProfile::setCollapseRange(float xmin, float xmax){
-	if (xmax < xmin){
+	/*if (xmax < xmin){
 		startValue->clear();
 		endValue->clear();
 		startValueFit->clear();
@@ -1582,7 +1583,9 @@ void QtProfile::setCollapseRange(float xmin, float xmax){
 		endValue->setText(endStr);
 		startValueFit->setText(startStr);
 		endValueFit->setText(endStr);
-	}
+	}*/
+	momentSettingsWidget->setRange( xmin, xmax );
+	specFitSettingsWidget->setRange( xmin, xmax );
 }
 
 void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
@@ -1692,10 +1695,12 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     addImageAnalysisGraph( wxv, wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
 
-    if (newCollapseVals){
+    /*if (newCollapseVals){
    	 setCollapseVals(z_xval);
    	 newCollapseVals=False;
-    }
+    }*/
+    momentSettingsWidget->setCollapseVals( z_xval );
+    specFitSettingsWidget->setCollapseVals( z_xval );
 }
 
 
@@ -1767,10 +1772,12 @@ void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList
     addImageAnalysisGraph( wxv, wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
 
-    if (newCollapseVals){
+    /*if (newCollapseVals){
    	 setCollapseVals(z_xval);
    	 newCollapseVals=False;
-    }
+    }*/
+    momentSettingsWidget->setCollapseVals(z_xval );
+    specFitSettingsWidget->setCollapseVals( z_xval );
 }
 
 
@@ -2045,7 +2052,10 @@ void QtProfile::messageFromProfile(QString &msg){
 	QMessageBox::critical(this, "Error", msg);
 }
 
-void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
+/*void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
+
+
+
 	String msg;
 
 	*itsLog << LogOrigin("QtProfile", "setCollapseVals");
@@ -2081,6 +2091,7 @@ void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
 		return;
 	}
 
+
 	// set the values into the fields
 	if (ascending){
 		startValue->setText(startQStr);
@@ -2097,7 +2108,7 @@ void QtProfile::setCollapseVals(const Vector<Float> &spcVals){
 	msg = String("Initial collapse values set: ") + msg;
 	*itsLog << LogIO::NORMAL << msg << LogIO::POST;
 	return;
-}
+}*/
 
 void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 
@@ -2118,7 +2129,7 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 			plotMode->addItem("flux");
 
 		// read the preferred plot mode from casarc
-		QString pref_plotMode = QString(rc.get("viewer." + rcid() + ".plot.type").c_str());
+		QString pref_plotMode = read(".plot.type");
 		if (pref_plotMode.size()>0){
 			// change to the preferred plotMode
 			int etypeindex= plotMode->findText(pref_plotMode);
@@ -2180,7 +2191,7 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 	}
 
 	// read the preferred error mode from casarc
-   QString pref_errMode = QString(rc.get("viewer." + rcid() + ".error.type").c_str());
+   QString pref_errMode = read( ".error.type");
    if (pref_errMode.size()>0){
      // change to the preferred plotMode
    	int e_index= errorMode->findText(pref_errMode);
@@ -2191,7 +2202,7 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
    }
 
    stringToErrorType(errorMode->currentText(), itsErrorType);
-	rc.put( "viewer." + rcid() + ".error.type", errorMode->currentText().toStdString());
+   persist( ".error.type", errorMode->currentText());
 }
 
 
@@ -2834,19 +2845,29 @@ QString QtProfile::getRaDec(double x, double y) {
 		return fileName;
 	}
 
+	QString QtProfile::getImagePath() const {
+		return imagePath;
+	}
+
 	const ImageInterface<Float>* QtProfile::getImage() const{
 		return image;
 	}
 
-	const String QtProfile::getPixelBox() const {
-		String box = "";
-		if ( lastPX.size() == 2 && lastPY.size() == 2 ){
-			const String commaStr = ",";
-			box = String::toString(lastPX[0]) + commaStr;
-			box.append( String::toString( lastPY[0] )+ commaStr);
-			box.append( String::toString( lastPX[1] ) + commaStr );
-			box.append( String::toString( lastPY[1] ) );
-		}
-		return box;
+	const void QtProfile::getPixelBounds( Vector<double>& pixelX, Vector<double>& pixelY) const {
+		pixelX = lastPX;
+		pixelY = lastPY;
+	}
+
+	void QtProfile::persist( const QString& key, const QString& value ){
+		rc.put( "viewer." + rcid() + key.toStdString(), value.toStdString());
+	}
+
+	QString QtProfile::read( const QString & key ) const {
+		QString valueStr( rc.get("viewer." + rcid() + key.toStdString()).c_str());
+		return valueStr;
+	}
+
+	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img){
+		emit showCollapsedImg(path, dataType, displayType, autoRegister, tmpData, img);
 	}
 }

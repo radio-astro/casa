@@ -27,11 +27,16 @@ SpecFitSettingsWidgetOptical::SpecFitSettingsWidgetOptical(QWidget *parent)
     connect( ui.fit, SIGNAL(clicked()), this, SLOT(specLineFit()));
 	connect(ui.clean, SIGNAL(clicked()), this, SLOT(clean()));
 
-	resetSpectralFitter();
+	reset();
 
 }
 
-void SpecFitSettingsWidgetOptical::resetSpectralFitter(){
+void SpecFitSettingsWidgetOptical::clear(){
+	ui.startValueFit->setText("");
+	ui.endValueFit->setText("");
+}
+
+void SpecFitSettingsWidgetOptical::reset(){
 	if ( fitter != NULL ){
 		delete fitter;
 		fitter = NULL;

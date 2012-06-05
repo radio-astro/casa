@@ -47,7 +47,7 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 }
 
 void SpecFitSettingsWidgetRadio::setCanvas( QtCanvas* canvas ){
-	SpecFitter::setCanvas( canvas );
+	ProfileTaskFacilitator::setCanvas( canvas );
 	connect( pixelCanvas, SIGNAL(specFitEstimateSpecified(double,double,bool)),
 			this, SLOT(specFitEstimateSpecified(double,double,bool)));
 }
@@ -65,8 +65,10 @@ void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 	QList<QTableWidgetSelectionRange> selectionRanges = ui.estimateTable->selectedRanges();
 	int selectionCount = selectionRanges.length();
 	if ( selectionCount == 0 ){
-		QString msg( "Please select a row in the initial Gaussian estimates table before specifying the estimate.");
-		Util::showUserMessage( msg, this );
+		if ( ui.estimateTable->isVisible()){
+			QString msg( "Please select a row in the initial Gaussian estimates table before specifying the estimate.");
+			Util::showUserMessage( msg, this );
+		}
 	}
 	else if ( selectionCount == 1 ){
 		QTableWidgetSelectionRange selectionRange = selectionRanges[0];
@@ -91,11 +93,6 @@ void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 					setEstimateValue( row, FWHM, fwhm);
 					pixelCanvas -> setProfileFitMarkerFWHM( row, fwhm, yValue );
 				}
-				else {
-					//Post an error that we can't calculate the fwhm without
-					//a valid center.
-				}
-
 			}
 			//Update the profile fit marker in this row.
 		}
@@ -104,7 +101,7 @@ void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 
 }
 
-void SpecFitSettingsWidgetRadio::resetSpectralFitter(){
+void SpecFitSettingsWidgetRadio::reset(){
 	if ( fitter != NULL ){
 		delete fitter;
 		fitter = NULL;
@@ -182,96 +179,6 @@ bool SpecFitSettingsWidgetRadio::isValidFitSpecification( int gaussCount, bool p
 	return valid;
 }
 
-bool SpecFitSettingsWidgetRadio::isValidRangeValue( QLineEdit* lineEdit ) {
-	QString str = lineEdit->text();
-	bool valid = !str.isEmpty();
-	if ( !valid ){
-		String msg("No start value specified!");
-		logWarning(msg);
-		postStatus(msg);
-	}
-	else {
-		//These checks are necessary in cases the values are set
-		//by the code rather than the user.
-		int pos=0;
-		if ( lineEdit->validator()->validate(str, pos) != QValidator::Acceptable){
-			String startString(str.toStdString());
-			String msg = String("Start value not correct: ") + startString;
-			logWarning( msg );
-			postStatus(msg);
-			valid = false;
-		}
-	}
-	return valid;
-}
-
-void SpecFitSettingsWidgetRadio::findChannelRange( float startVal, float endVal,
-		const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex ) {
-	if (specValues.size() < 1){
-		String msg = String("No spectral values provided!");
-		logWarning( msg );
-		return;
-	}
-
-	Bool ascending=True;
-	if (specValues(specValues.size()-1)<specValues(0)){
-		ascending=False;
-	}
-	int startIndex = 0;
-	int endIndex = 0;
-	String startValueStr( "Start value: " );
-	String endValueStr( "End value: ");
-	String smallerStr( " is smaller than all spectral values!");
-	String largerStr( " is larger than all spectral values!");
-	if (ascending){
-		if (endVal < specValues(0)){
-			String msg = startValueStr + String::toString(endVal) + smallerStr;
-			logWarning( msg );
-			return;
-		}
-
-		if (startVal > specValues(specValues.size()-1)){
-			String msg = endValueStr + String::toString(startVal) + largerStr;
-			logWarning( msg );
-			return;
-		}
-
-		startIndex=0;
-		while (specValues(startIndex)<startVal){
-			startIndex++;
-		}
-
-		endIndex=specValues.size()-1;
-		while (specValues(endIndex)>endVal){
-			endIndex--;
-		}
-	}
-	//Descending case
-	else {
-		if (endVal < specValues(specValues.size()-1)){
-			String msg = startValueStr + String::toString(endVal) + smallerStr;
-			logWarning( msg );
-			return;
-		}
-		if (startVal > specValues(0)){
-			String msg = endValueStr + String::toString(startVal) + largerStr;
-			logWarning( msg );
-			return;
-		}
-
-		startIndex=0;
-		while (specValues(startIndex)>endVal){
-			startIndex++;
-		}
-		endIndex=specValues.size()-1;
-		while (specValues(endIndex)<startVal){
-			endIndex--;
-		}
-	}
-
-	channelStartIndex = startIndex;
-	channelEndIndex = endIndex;
-}
 
 
 
@@ -363,15 +270,13 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 	Vector<Float> z_xval = getXValues();
 	Vector<Float> z_yval = getYValues();
 	Vector<Float> z_eval = getZValues();
-	resetSpectralFitter();
+	reset();
 	const ImageInterface<float>* image = getImage();
 	const String pixelBox = getPixelBox();
-	qDebug() << "Pixel box = "<< pixelBox.c_str();
 
 	Bool validSpectralList;
 	SpectralList spectralList = buildSpectralList( nGauss, validSpectralList );
 	if ( !validSpectralList ){
-		qDebug() << "Spectral List was not valid so canceling fit";
 		return;
 	}
 
@@ -399,7 +304,6 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 			QString msgStr(msg.c_str());
 			postStatus(msg);
 			Util::showUserMessage( msgStr, this);
-
 		}
 		else{
 			String xaxisUnit = getXAxisUnit();
@@ -407,36 +311,6 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 			QString yUnitPrefix = getYUnitPrefix();
 			Vector<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
 			if ( converged.size() == 1 && converged[0]){
-				// get the fit values
-				Array<ImageFit1D<Float> > fitters = fitter->getFitters();
-				std::vector <ImageFit1D<Float> > vFitters;
-				fitters.tovector( vFitters );
-				for ( int i = 0; i < static_cast<int>(vFitters.size()); i++ ){
-
-					Vector<Float> fitYValues = vFitters[i].getFit();
-					int fitCount = fitYValues.size();
-
-					// report problems
-					if (fitCount<1){
-						String msg = String("There were no fit values!");
-						logWarning( msg );
-						postStatus(msg);
-					}
-					else {
-						// overplot the fit values
-						QString fileName = getFileName();
-						QString startStr = QString::number( startVal );
-						QString endStr = QString::number( endVal );
-
-						Vector<Float> fitXValues( fitCount );
-						float dx = (z_xval[endChannelIndex] - z_xval[startChannelIndex]) / fitCount;
-						for ( int i = 0; i < fitCount; i++ ){
-							fitXValues[i] = z_xval[startChannelIndex] + i * dx;
-						}
-						QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
-						pixelCanvas->addPolyLine(fitXValues, fitYValues, fitName);
-					}
-				}
 				Vector<Int> iterationCounts = results.asArrayInt(ImageProfileFitter::_ITERATION_COUNT);
 				String msg( "Fit converged in "+String::toString(iterationCounts[0])+" iterations.");
 				postStatus( msg );
@@ -454,7 +328,8 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 void SpecFitSettingsWidgetRadio::specLineFit(){
 	*logger << LogOrigin("SpecFitOptical", "specLineFit");
 
-	if ( isValidRangeValue( ui.minLineEdit ) && isValidRangeValue( ui.maxLineEdit )){
+	if ( isValidChannelRangeValue( ui.minLineEdit->text(), "Start" ) &&
+			isValidChannelRangeValue( ui.maxLineEdit->text(), "End" )){
 		// convert input values to Float
 		float startVal=ui.minLineEdit->text().toFloat();
 		float endVal  =ui.maxLineEdit->text().toFloat();

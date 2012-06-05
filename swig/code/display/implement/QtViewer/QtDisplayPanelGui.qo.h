@@ -241,7 +241,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   //</group>
  
   // add a new DD
-  virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False);
+  virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, ImageInterface<Float>* img = NULL);
   // go to a specifc channel
   virtual void doSelectChannel(const Vector<float> &zvec, float zval);
  
@@ -473,7 +473,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   bool use_new_regions;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
-    
+  QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
+		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
 

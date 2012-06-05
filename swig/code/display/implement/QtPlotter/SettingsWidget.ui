@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SpecFitSettingsWidget</class>
- <widget class="QWidget" name="SpecFitSettingsWidget">
+ <class>SettingsWidget</class>
+ <widget class="QWidget" name="SettingsWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>SpecFitSettingsWidget</string>
+   <string>SettingsWidget</string>
   </property>
  </widget>
  <layoutdefault spacing="1" margin="1"/>

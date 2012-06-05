@@ -882,6 +882,18 @@ FlagAgentBase::setAgentParameters(Record config)
 	}
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
+	// Retrieve mode
+	exists = config.fieldNumber ("mode");
+	if (config.fieldNumber ("mode") >= 0)
+	{
+		mode_p = config.asString("mode");
+	}
+	else
+	{
+		mode_p = config.asString("manual");
+		*logger_p << LogIO::WARN << " Mode not specified, defaulting to manual" << LogIO::POST;
+	}
+
 	exists = config.fieldNumber ("nThreads");
 	if (exists >= 0)
 	{
@@ -1057,14 +1069,16 @@ FlagAgentBase::setAgentParameters(Record config)
 					(expression_p.find("IMAG") == string::npos) and
 					(expression_p.find("ARG") == string::npos) and
 					(expression_p.find("ABS") == string::npos) and
-					(expression_p.find("NORM") == string::npos))
+					(expression_p.find("NORM") == string::npos) and
+					// jagonzal: Rflag does not need complex operator
+					(mode_p.find("rflag") == string::npos) )
 			{
-				expression_p = "ABS ALL";
 				*logger_p 	<< LogIO::WARN
-							<< " Unsupported visibility expression: " << expression_p
-							<< ", selecting ABS ALL by default. "
+							<< " Unsupported complex operator: " << expression_p
+							<< ", using ABS by default. "
 							<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
 							<< LogIO::POST;
+				expression_p = "ABS " + expression_p;
 			}
 		}
 
