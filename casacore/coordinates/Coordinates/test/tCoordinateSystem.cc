@@ -720,14 +720,29 @@ void doit (CoordinateSystem& cSys, uInt nCoords, const Vector<Int>& types,
       }
    }
    Matrix<Double> xform = cSys.linearTransform();
-   xform(0,0) = 10.0;
+   xform(0,0) = 10.0; // this affects the direction coordinate which enforces that 
+                      // the linear transform rows pertaining to it obey 
+                      // for each i: xform(i,0)^2 + xform(i,1)^s == 1.0
+                      // The normalization is tranferred to the increment.
+   Matrix<Double> xformOut(cSys.nWorldAxes(), cSys.nWorldAxes());
+   xformOut = 0.;
+   xformOut.diagonal() = 1.0;
+   Vector<Double> cdeltOut; 
+   cdeltOut = cSys.increment();
+   cdeltOut(0) *= 10.;
+
    if (!cSys.setLinearTransform(xform)) {
       throw(AipsError(String("Failed to set linear transform because") 
             + cSys.errorMessage()));
    }
-   if (!allNear(xform, cSys.linearTransform(), 1e-6)) {
-      throw(AipsError("Failed linear transform set/recovery test"));
+
+   if (!allNear(xformOut, cSys.linearTransform(), 1e-6)) {
+      throw(AipsError("Failed linear transform set/recovery test (wrong resulting xform)"));
    }
+   if (!allNear(cdeltOut, cSys.increment(), 1E-6)) {
+      throw(AipsError("Failed linear transform set/recovery test (wrong resulting cdelt)"));
+   }
+
 //
 // Test FITS interface.  Do this with a CS without a TabularCoordinate
 // because that is not reflected back by the FITS  conversion

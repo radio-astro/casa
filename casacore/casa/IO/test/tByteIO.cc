@@ -193,13 +193,15 @@ void testMemoryIO()
 	}
 	try {
 	    membuf.read (1, &val);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {
-	    cout << x.getMesg() << endl;         // read beyond object
+
 	} 
 	try {
 	    membuf.seek (Int(-(length + incr + 1)), ByteIO::Current);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {
-	    cout << x.getMesg() << endl;         // negative seek
+
 	} 
 	membuf.seek (Int(-(length + incr)), ByteIO::Current);
     }
@@ -208,13 +210,15 @@ void testMemoryIO()
 	MemoryIO membuf (buf, sizeof(buf), ByteIO::New, 0);
 	try {
 	    doIt (membuf);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {                   // not expandable
-	    cout << x.getMesg() << endl;
+
 	} 
 	try {
 	    membuf.seek (10, ByteIO::End);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {                   // not expandable
-	    cout << x.getMesg() << endl;
+
 	} 
 	AlwaysAssertExit (membuf.getBuffer() == (const uChar*)buf);
     }
@@ -223,13 +227,15 @@ void testMemoryIO()
 	MemoryIO membuf (buf, 10, ByteIO::Scratch, 0, True);
 	try {
 	    doIt (membuf);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {                   // not expandable
-	    cout << x.getMesg() << endl;
+
 	} 
 	try {
 	    membuf.seek (10, ByteIO::End);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {                   // not expandable
-	    cout << x.getMesg() << endl;
+
 	} 
 	AlwaysAssertExit (membuf.getBuffer() == (const uChar*)buf);
     }
@@ -247,8 +253,9 @@ int main()
 	MemoryIO file3 (file2.getBuffer(), file2.length());
 	try {
 	    file3.write (0, 0);
+	    AlwaysAssertExit (False); // should have thrown exception
 	} catch (AipsError x) {
-	    cout << x.getMesg() << endl;          // readonly
+	    // readonly
 	} 
 	checkValues (file3, 100);
 	
@@ -265,46 +272,24 @@ int main()
 	}
 
 	int fd = open ("tByteIO_tmp.data2", O_CREAT|O_TRUNC|O_RDWR, 0644);
-	int flags = fcntl (fd, F_GETFL);
-	if (flags & O_RDWR) {
-	    cout << "read/write" << endl;
-	} else if (flags & O_WRONLY) {
-	    cout << "writeonly" << endl;
-	} else {
-	    cout << "readonly" << endl;
-	}
 	FiledesIO file4 (fd, "");
 	doIt (file4);
 	close (fd);
 
 	int fd1 = open ("tByteIO_tmp.data2", O_RDONLY, 0644);
-	int flags1 = fcntl (fd1, F_GETFL);
-	if (flags1 & O_RDWR) {
-	    cout << "read/write" << endl;
-	} else if (flags1 & O_WRONLY) {
-	    cout << "writeonly" << endl;
-	} else {
-	    cout << "readonly" << endl;
-	}
 	FiledesIO file5 (fd1, "");
 	checkValues (file5, 100);
 	close (fd1);
 
 	int fd2 = creat ("tByteIO_tmp.data2", 0644);
-	int flags2 = fcntl (fd2, F_GETFL);
-	if (flags2 & O_RDWR) {
-	    cout << "read/write" << endl;
-	} else if (flags2 & O_WRONLY) {
-	    cout << "writeonly" << endl;
-	} else {
-	    cout << "readonly" << endl;
-	}
 	FiledesIO file6 (fd2, "");
 	close (fd2);
     } catch (AipsError x) {
-	cout << "Caught an exception: " << x.getMesg() << endl;
+	cout << "Failed: Caught exception: " << x.getMesg() << endl;
 	return 1;
     } 
+
+    cout << "Succeeded!" << endl;
     return 0;                           // exit with success status
 }
 

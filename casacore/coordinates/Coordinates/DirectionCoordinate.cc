@@ -144,10 +144,10 @@ DirectionCoordinate::DirectionCoordinate(MDirection::Types directionType,
    }
 
 // Initialize other things
-
-    initializeFactors();
-    setDefaultWorldMixRanges();
-    setRotationMatrix();
+   normalizePCMatrix();
+   initializeFactors();
+   setDefaultWorldMixRanges();
+   setRotationMatrix();
 }
 
 
@@ -626,6 +626,7 @@ Bool DirectionCoordinate::setLinearTransform(const Matrix<Double> &xform)
   
     xFormToPC (wcs_p, xform);
     set_wcs(wcs_p);
+    normalizePCMatrix();
 //      
     return True;
 }
@@ -1568,6 +1569,7 @@ void DirectionCoordinate::makeDirectionCoordinate(MDirection::Types directionTyp
             refLong*to_degrees_p[0], refLat*to_degrees_p[1],
             incLong*to_degrees_p[0], incLat*to_degrees_p[1],
             longPole2, latPole2);
+
 }
 
 
@@ -1971,6 +1973,53 @@ void DirectionCoordinate::makeWCS(::wcsprm& wcs,  const Matrix<Double>& xform,
 // Fill in the wcs structure
 
     set_wcs(wcs);
+
+// normalize the PC Matrix
+
+    normalizePCMatrix();    
+
+}
+
+
+void DirectionCoordinate::normalizePCMatrix()
+{
+    Bool changed(False);
+
+    // go over each of the two rows 
+    for (uInt i=0; i<2; i++) {
+       Double pcNorm = 0;
+       
+       // compute the factor
+       uInt jStart = i*2;
+       uInt jEnd   = jStart + 2;
+       uInt idiag =  jStart + i;
+       Double rowSign = wcs_p.pc[idiag]/fabs(wcs_p.pc[idiag]);
+
+       for (uInt j=jStart; j < jEnd; j++){
+	  pcNorm += wcs_p.pc[j]*wcs_p.pc[j];
+       }
+	
+       if (pcNorm != 0.0 && pcNorm != 1.0){
+	  changed=True;
+	  pcNorm = sqrt(pcNorm);
+	  // make diagonal element positive
+	  pcNorm *=rowSign; 
+	  
+	  // normalize all elements
+	  for (uInt j=jStart; j < jEnd; j++){
+	     wcs_p.pc[j] /= pcNorm;
+	  }
+	    
+	  // adjust the increment correspondingly
+	  wcs_p.cdelt[i] *= pcNorm;
+       }
+   }
+
+   // mark the changes in the wcs struct
+   if (changed){
+      wcs_p.altlin |= 1;
+      set_wcs(wcs_p);
+   }
 }
 
 

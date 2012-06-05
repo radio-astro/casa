@@ -43,7 +43,7 @@ int main() {
 			Double sumSq = 0;
 			Float dataMin, dataMax;
 			Int minPos, maxPos;
-			Bool minMaxInit;
+			Bool minMaxInit = True;
 			Bool fixedMinMax = False;
 			uInt pos = 0;
 			Bool useIt = True;
