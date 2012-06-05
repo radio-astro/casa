@@ -800,21 +800,25 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	}
 
 	if ( image_properties.hasSpectralAxis( ) ) {
-	    (*it).first->show( );
-	    (*it).first->setTitle("frequency range");
-	    buf.str("");
-	    buf << image_properties.freqRange()[0] << " - " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
-	    (*it).second->setText(QString::fromStdString(buf.str( )));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
+	    if ( image_properties.freqRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("frequency range");
+		buf.str("");
+		buf << image_properties.freqRange()[0] << " - " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
 
-	    (*it).first->show( );
-	    (*it).first->setTitle("velocity range");
-	    buf.str("");
-	    buf << image_properties.veloRange()[0] << " - " << image_properties.veloRange()[1] << " km/s" ;
-	    (*it).second->setText(QString::fromStdString(buf.str( )));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
+	    if ( image_properties.veloRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("velocity range");
+		buf.str("");
+		buf << image_properties.veloRange()[0] << " - " << image_properties.veloRange()[1] << " km/s" ;
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
 	}
 
 	if ( image_properties.beamArea( ) > 0 ) {
