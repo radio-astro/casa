@@ -57,10 +57,32 @@ namespace casa {
 	    float min;
 	};
 
-	ImageProperties::ImageProperties( const std::string &path ) : status_ok(false), path_(path), has_direction_axis(false),
-								      has_spectral_axis(false),
-								      velo_units("km/s"), beam_area(0) {
+	ImageProperties::ImageProperties( )  : status_ok(false), has_direction_axis(false),
+					       has_spectral_axis(false), beam_area(0) { }
 
+	ImageProperties::ImageProperties( const std::string &path ) { reset(path); }
+
+	const ImageProperties &ImageProperties::operator=( const std::string &path ) { reset(path); return *this; }
+
+	void ImageProperties::reset( const std::string &path ) {
+
+	    // clear settings...
+	    status_ok = false;
+	    path_ = "";
+	    has_direction_axis = false;
+	    has_spectral_axis = false;
+	    velo_units = "";
+	    direction_type = "";
+	    shape_.resize(0);
+	    freq_range.resize(0);
+	    freq_units = "";
+	    velo_range.resize(0);
+	    velo_units = "";
+	    beam_area = 0;
+
+	    // check for validity...
+	    if ( path == "" ) return;
+	  
 	    if ( ImageOpener::imageType(path) != ImageOpener::AIPSPP ||
 		 imagePixelType(path) != TpFloat )
 		return;
@@ -75,7 +97,9 @@ namespace casa {
 	    if ( shape_.size( ) <= 0 )
 		return;
 
+	    // initialize...
 	    status_ok = true;
+	    velo_units = "km/s";
 
 	    if ( cs.hasDirectionCoordinate( ) ) {
 		has_direction_axis = true;
@@ -130,6 +154,7 @@ namespace casa {
 		beam_area = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
 	    }
 	}
+
     }
 }
 
