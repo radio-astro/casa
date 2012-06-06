@@ -56,7 +56,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
         if ismms:
             casalog.post('This is a multi-MS')
             mslist = mslocal.getreferencedtables()
-            mslist.sort()
+#            mslist.sort()
             sname = 'Sub-MS'
         else:
             mslist.append(vis)
@@ -84,53 +84,23 @@ def listpartition(vis=None, createdict=None, listfile=None):
             # Get the data volume in bytes per sub-MS
             sizelist.append(getDiskUsage(subms))
 
-            
-        # Get the width for printing the output     
-        # MS name width
-#        mn = os.path.basename(mslist[0])
-#        ml = mn.__len__() + 2
-#        mnw = '%-'+ str(ml) +'s'
-#        
-#        # Scan list width        
-#        swidth = getMaxWidth(scanlist, 'scan') + 2
-#        swd = '%-'+str(swidth)+'s '
-#        
-#        # SPW list width        
-#        pwidth = getMaxWidth(scanlist, 'scan-spw') + 2
-#        pwd = '%-'+str(pwidth)+'s '
-#        
-#        # Channel list width
-#        cwidth = getMaxWidth(spwlist, 'channel') + 2
-#        cwd = '%-'+str(cwidth)+'s '
-#        
-#        # Print header
-#        fheader = mnw+swd+pwd+cwd+'%-6s '+'%-5s '
-#        ftext = mnw+swd+pwd+cwd+'%-6d '+'%-5s '
-#
-#        hdr = fheader % (sname, 'Scan', 'SPW', 'NChan', 'nRow', 'Size')
-        
-#        if listfile != '':
-#            print >> ffout, hdr
-#        else:
-#            casalog.post(hdr)        
-
         # Get the information to list in output
         # Dictionary to return
         outdict = {}
 
-        for subms in range(mslist.__len__()):   
-            
+        for ims in range(mslist.__len__()):   
             # Create temp dictionary for each sub-MS
             tempdict = {}
-            msname = os.path.basename(mslist[subms])
+            msname = os.path.basename(mslist[ims])
             tempdict['MS'] = msname
-            tempdict['size'] = sizelist[subms]
+            tempdict['size'] = sizelist[ims]
             
             # Get scan dictionary for this sub-MS
-            scandict = scanlist[subms]
+            scandict = scanlist[ims]
             
             # Get spw dictionary for this sub-MS
-            spwdict = spwlist[subms]
+            # NOTE: the keys of spwdict['spwInfo'].keys() are NOT the spw Ids
+            spwdict = spwlist[ims]
             
             # The keys are the scan numbers
             scans = scandict['summary'].keys()
@@ -164,18 +134,22 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 # Array to hold channels
                 charray = np.empty_like(uniquespws)
                 spwsize = np.size(uniquespws)
+                
 
                 # Now get the number of channels per spw
                 for ind in range(spwsize):
                     spwid = uniquespws[ind]
-                    nchans = spwdict['spwInfo'][str(spwid)]['NumChan']
-                    charray[ind] = nchans
+                    for sid in spwdict['spwInfo'].keys():
+                        if spwdict['spwInfo'][sid]['SpectralWindowId'] == spwid:
+                            nchans = spwdict['spwInfo'][sid]['NumChan']
+                            charray[ind] = nchans
+                            continue
                     
                 newscandict['nchans'] = charray
                 tempdict['scanId'][int(scanid)] = newscandict
                     
                 
-            outdict[subms] = tempdict
+            outdict[ims] = tempdict
 #            pprint.pprint(outdict)
 
 
@@ -184,12 +158,13 @@ def listpartition(vis=None, createdict=None, listfile=None):
             casalog.post('Error in processing dictionaries','ERROR')
         
         indices = outdict.keys()
+        indices.sort()
             
         counter = 0
         for index in indices:
             
             # Get data
-            MS = outdict[index]['MS']
+            MS = outdict[index]['MS']            
             SIZE = outdict[index]['size']
             SCAN = outdict[index]['scanId']
                         
@@ -248,68 +223,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
         print '*** Error ***', instance
     
 
-def getMaxWidth(listdict, par):
-    '''From a list of dictionaries, return the maximum width of a string.
-       The dictionaries are either taken from ms.getspectralwindow() or
-       ms.getscansummary(). This function will compare the lists of scans or
-       spws in each dictionary and return the largest width of a string.
-       
-       listdict -->  list with dictionaries
-       par      --> 'scan', 'spw' or 'channel'
-       Example:
-       listdict = 
-    '''
-    
-    max_width = 0
-    
-    for dict in range(listdict.__len__()):
-        if par == 'scan':
-            ss = listdict[dict]['summary'].keys()
-            
-            # convert strings to integers
-            for i in range(ss.__len__()):
-                ss[i] = int(ss[i])
-            sl = str(ss).__len__()
-            if sl > max_width:
-                max_width = sl
-                
-        elif par == 'scan-spw':
-            ss = listdict[dict]['summary'].keys()
-            
-            # convert strings to integers
-            for i in range(ss.__len__()):
-                sss = listdict[dict]['summary'][i].keys()
-                
-                for subscan in sss:
-                    spwids = listdict[dict]['summary'][i][subscan]['SpwIds']
-                    for id in spwids:
-                        if id > max_width:
-                            max_width = id            
-                
-        elif par == 'spw':
-            spws = listdict[dict]['spwInfo'].keys()
-            for j in range(spws.__len__()):
-                spws[j] = int(spws[j])
-                
-            pl = str(spws).__len__()
-            if pl > max_width:
-                max_width = pl
-                
-        elif par == 'channel':
-            chlist = []
-            spws = listdict[dict]['spwInfo'].keys()
-            for j in range(spws.__len__()):
-                spwid = spws[j]
-                nchans = listdict[dict]['spwInfo'][spwid]['NumChan']            
-                chlist.append(nchans)
-                
-            cl = str(chlist).__len__()
-            if cl > max_width:
-                max_width = cl
-               
-                
-    return max_width
-            
+           
 
 def getDiskUsage(msfile):
     '''Return the size in bytes of an MS'''
@@ -330,14 +244,6 @@ def getDiskUsage(msfile):
 
     return mssize[0]
 
-
-def sortedDictValues(adict):
-    '''Sort the keys of a dictionary coming from
-       ms.getscansummary'''
-    
-    items = adict.items()
-    items.sort()
-    return [value for key, value in items]
 
 
 def getWidth(adict, par):
@@ -361,16 +267,6 @@ def getWidth(adict, par):
                     width = length
     
     return width
-
-
-def sortScandict(adict):
-    '''Sort a given dictionary'''
-    
-    keys = adict.keys()
-    keys.sort()
-        
-    return [dict[key] for key in keys]
-
 
 
 
