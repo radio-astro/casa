@@ -1518,11 +1518,15 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
         agent_name = mode.capitalize()+'_'+str(key)
         modepars['name'] = agent_name
         
-        # Remove the data selection parameters if there is only one agent for performance reason.
+        # Remove the data selection parameters if there is only one agent for performance reasons.
+        # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
+        # it will have to go through the entire MS and check if each data selection given to the agent
+        # matches what the user asked in the selected data.
+
         # Only correlation, antenna and timerange will go to the agent
+        # CAS-3959 Handle channel selection at the FlagAgent level, leave spw in here too
         if myflagcmd.__len__() == 1:
-            sellist=['scan','field','intent','feed','array','uvrange',
-                     'spw','observation']
+            sellist=['scan','field','intent','feed','array','uvrange','observation']
             for k in sellist:
                 if modepars.has_key(k):
                     modepars.pop(k)

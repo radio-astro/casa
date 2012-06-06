@@ -270,6 +270,43 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
         self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
         self.assertFalse(self.res,False)
 
+    def test205(self):
+        """Test 205: test to read USB spectral window"""
+        self.__spwtest()
+        
+    def test206(self):
+        """Test 206: test to read LSB spectral window"""
+        tb.open('%s/SPECTRAL_WINDOW'%(self.infile),nomodify=False)
+        chanw = tb.getcol('CHAN_WIDTH')
+        chanf = tb.getcol('CHAN_FREQ')
+        chanw *= -1.0
+        chanf = numpy.flipud(chanf)
+        tb.putcol('CHAN_WIDTH',chanw)
+        tb.putcol('CHAN_FREQ',chanf)
+        netsb = numpy.ones( tb.nrows(), int )
+        tb.putcol('NET_SIDEBAND', netsb )
+        tb.close()
+        self.__spwtest()
+
+    def __spwtest(self):
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
+        self.assertFalse(self.res,False)
+        self.__compareIncrement( self.outfile0, self.infile )
+        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.assertFalse(self.res,False)
+        self.__compareIncrement( self.outfile0, self.outfile1 )        
+
+    def __compareIncrement(self,stdata,msdata):
+        tb.open('%s/FREQUENCIES'%(stdata))
+        incr=tb.getcol('INCREMENT')
+        tb.close()
+        tb.open('%s/SPECTRAL_WINDOW'%(msdata))
+        chanw=tb.getcol('CHAN_WIDTH')
+        tb.close()
+        for i in xrange(len(incr)):
+            #print 'incr[%s]=%s,chanw[0][%s]=%s(diff=%s)'%(i,incr[i],i,chanw[0][i],(incr[i]-chanw[0][i]))
+            self.assertEqual(incr[i],chanw[0][i])
+        
 ###
 # Test to read ATNF SDFITS and write various types of format
 ###
