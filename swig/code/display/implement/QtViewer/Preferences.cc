@@ -69,11 +69,11 @@ namespace casa {
 	  "viewer.iclean.visible.regiondock", "L", "false", "should the dock widget for regions be visible", "T/F",
 
 	  "viewer.prf", "N", "", "spectral profile tool preferences", "",
-	  "viewer.prf.error.type", "L", "rmse", "error units for the spectral profile tool", "unchecked",
-	  "viewer.prf.plot.type", "L", "mean", "calculation of the spectral value for non-point regions", "unchecked",
-	  "viewer.prf.freqcoord.type", "L", "radio velocity [km/s]", "frequency units for spectral profile tool", "unchecked",
-	  "viewer.prf.collapse.type", "L", "mean", "spectral profile tool: how are points in the collapsed image calculated", "unchecked",
-	  "viewer.prf.collerror.type", "L", "no error", "spectral profile tool: include errors in the collapsed image", "unchecked",0
+	  "viewer.prf.error.type", "L", "no error", "type of error displayed with extracted spectra (no error, propagated, rmse)", "N/P/R",
+	  "viewer.prf.plot.type", "L", "mean", "combine type to compute extracted spectra (mean, median, sum)", "M/M/S",
+	  "viewer.prf.freqcoord.type", "L", "radio velocity [km/s]", "spectral units for extracted spectra", "unchecked",
+	  "viewer.prf.collapse.type", "L", "mean", "combine type to compute collapsed image (mean, median, sum)", "M/M/S",
+	  "viewer.prf.collerror.type", "L", "no error", "typer of error to compute for collapsed image (no error, propagated, rmse)", "N/P/R",0
 	};
 
 	// validator class declarations...
@@ -127,55 +127,85 @@ namespace casa {
 		}
 	};
 
+	class CombineTypeValidator : public QValidator {
+	    public:
+		CombineTypeValidator( QObject *parent=0 ) : QValidator(parent) { }
+		State validate( QString &input, int & ) const {
+		    QString mean("mean"), median("median"), sum("sum");
+		    QString val = input.toLower( );
+		    if ( val == mean || val == median || val == sum ) return Acceptable;
+		    if ( mean.contains(val) || median.contains(val) || sum.contains(val) ) return Intermediate;
+		    return Invalid;
+		}
+	};
+
+	class ErrorTypeValidator : public QValidator {
+	    public:
+		ErrorTypeValidator( QObject *parent=0 ) : QValidator(parent) { }
+		State validate( QString &input, int & ) const {
+		    QString noerror("no error"), propa("propagated"), rmse("rmse");
+		    QString val = input.toLower( );
+		    if ( val == noerror || val == propa || val == rmse ) return Acceptable;
+		    if ( noerror.contains(val) || propa.contains(val) || rmse.contains(val) ) return Intermediate;
+		    return Invalid;
+		}
+	};
+
 	int Preferences::tokenize( tokenized_type &tokenized ) {
-	    char sep[] = ".";
-	    int buf_size = 256;
-	    char *buf = (char*) malloc(buf_size*sizeof(char));
-	    int rc_count = 0;
+		char sep[] = ".";
+		int buf_size = 256;
+		char *buf = (char*) malloc(buf_size*sizeof(char));
+		int rc_count = 0;
 
-	    // for use in setting up validation routines...
-	    TrueFalseValidator *tfval = new TrueFalseValidator( );
-	    LRTBValidator *lrtbval = new LRTBValidator( );
-	    TabValidator *tabval = new TabValidator( );
-	    IntPairValidator *intpairval = new IntPairValidator( );
+		// for use in setting up validation routines...
+		TrueFalseValidator   *tfval      = new TrueFalseValidator( );
+		LRTBValidator        *lrtbval    = new LRTBValidator( );
+		TabValidator         *tabval     = new TabValidator( );
+		IntPairValidator     *intpairval = new IntPairValidator( );
+		CombineTypeValidator *combtypeval= new CombineTypeValidator( );
+		ErrorTypeValidator   *errtypeval = new ErrorTypeValidator( );
 
-	    for ( const char **p=init_state; *p; p+=init_fields ) {
-		// store tips for nodes & leaves...
-		tips.insert(tooltips_type::value_type(p[0],p[tip_offset]));
+		for ( const char **p=init_state; *p; p+=init_fields ) {
+			// store tips for nodes & leaves...
+			tips.insert(tooltips_type::value_type(p[0],p[tip_offset]));
 
-		// only leaves represent actual rc values...
-		if ( p[role_offset][0] != 'L' ) continue;
+			// only leaves represent actual rc values...
+			if ( p[role_offset][0] != 'L' ) continue;
 
-		++rc_count;
+			++rc_count;
 
-		std::string validate_type(p[validate_offset]);
-		if ( validate_type == "L/R/T/B" )
-		    validate_map.insert(validate_map_type::value_type(p[0],lrtbval));
-		else if ( validate_type == "2int" )
-		    validate_map.insert(validate_map_type::value_type(p[0],intpairval));
-		else if ( validate_type == "tabs" )
-		    validate_map.insert(validate_map_type::value_type(p[0],tabval));
-		else if ( validate_type == "T/F" )
-		    validate_map.insert(validate_map_type::value_type(p[0],tfval));
+			std::string validate_type(p[validate_offset]);
+			if ( validate_type == "L/R/T/B" )
+				validate_map.insert(validate_map_type::value_type(p[0],lrtbval));
+			else if ( validate_type == "2int" )
+				validate_map.insert(validate_map_type::value_type(p[0],intpairval));
+			else if ( validate_type == "tabs" )
+				validate_map.insert(validate_map_type::value_type(p[0],tabval));
+			else if ( validate_type == "T/F" )
+				validate_map.insert(validate_map_type::value_type(p[0],tfval));
+			else if ( validate_type == "M/M/S" )
+				validate_map.insert(validate_map_type::value_type(p[0],combtypeval));
+			else if ( validate_type == "N/P/R" )
+				validate_map.insert(validate_map_type::value_type(p[0],errtypeval));
 
-		// store system defaults...
-		defaults.insert(rcvalues_type::value_type(p[0],p[default_offset]));
+			// store system defaults...
+			defaults.insert(rcvalues_type::value_type(p[0],p[default_offset]));
 
-		int size = strlen(p[0]) + 1;
-		if ( size > buf_size ) {
-		    while ( size > buf_size ) buf_size *= 2;
-		    buf = (char*) realloc( buf, buf_size*sizeof(char) );
+			int size = strlen(p[0]) + 1;
+			if ( size > buf_size ) {
+				while ( size > buf_size ) buf_size *= 2;
+				buf = (char*) realloc( buf, buf_size*sizeof(char) );
+			}
+			memcpy( buf, p[0], buf_size );
+			std::vector<std::string> tokens;
+			for( char *val = strtok(buf,sep); val; val = strtok(NULL, sep) ) {
+				tokens.push_back(val);
+			}
+			tokenized.insert(tokenized_type::value_type(p[0],tokens));
 		}
-		memcpy( buf, p[0], buf_size );
-		std::vector<std::string> tokens;
-		for( char *val = strtok(buf,sep); val; val = strtok(NULL, sep) ) {
-		    tokens.push_back(val);
-		}
-		tokenized.insert(tokenized_type::value_type(p[0],tokens));
-	    }
 
-	    free(buf);
-	    return rc_count;
+		free(buf);
+		return rc_count;
 	}
 
 	int Preferences::countbranches( const tokenized_type &tokenized, branch_count_type &branch_count ) {
@@ -371,7 +401,7 @@ namespace casa {
 						      rc(viewer::getrc()) {
 
 	    setupUi(this);
-	    
+
 	    // see if the configuration has a multiple of 3 strings...
 	    if ( (((sizeof(init_state)-1) / sizeof(const char *)) % init_fields) != 0 )
 		throw casa::viewer::internal_error("size issue with initialization of preferences");

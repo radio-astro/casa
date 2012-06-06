@@ -34,7 +34,9 @@ namespace casa {
     namespace viewer {
 	class ImageProperties {
 	    public:
-		ImageProperties( const std::string &path );
+		ImageProperties( );
+		ImageProperties( const std::string &/*path*/ );
+		const ImageProperties &operator=( const std::string & );
 		bool hasDirectionAxis( ) const { return has_direction_axis; }
 		const std::string &directionType( ) const { return direction_type; }
 		bool hasSpectralAxis( ) const { return has_spectral_axis; }
@@ -47,6 +49,7 @@ namespace casa {
 		const std::string &path( ) const { return path_; }
 		bool ok( ) const { return status_ok; }
 	    private:
+		void reset( const std::string &path="" );
 		bool status_ok;
 		std::string path_;
 		Vector<Int> shape_;

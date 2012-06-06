@@ -37,56 +37,37 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::DataDescriptionRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <ComplexWrapper.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
+
+
+
+
+
+	 
 #include <Tag.h>
-#include <Temperature.h>
+	
+
+
+
+
+	
+
+
+
 #include <ConversionException.h>
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
- 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
 
+#include <RowTransformer.h>
+//#include <TableStreamReader.h>
+
+/*\file DataDescription.h
+    \brief Generated from model's revision "1.62", branch "HEAD"
+*/
 
 namespace asdm {
 
@@ -94,23 +75,29 @@ namespace asdm {
 
 
 // class asdm::PolarizationRow;
-  class PolarizationRow;
-  
-  // class asdm::HolographyRow;
-  class HolographyRow;
-  
-  // class asdm::SpectralWindowRow;
-  class SpectralWindowRow;
-  
-  class DataDescriptionRow;
-  typedef void (DataDescriptionRow::*DataDescriptionAttributeFromBin) (EndianIStream& eis);  
-  
+class PolarizationRow;
+
+// class asdm::HolographyRow;
+class HolographyRow;
+
+// class asdm::SpectralWindowRow;
+class SpectralWindowRow;
+	
+
+class DataDescriptionRow;
+typedef void (DataDescriptionRow::*DataDescriptionAttributeFromBin) (EndianIStream& eis);
+typedef void (DataDescriptionRow::*DataDescriptionAttributeFromText) (const string& s);
 
 /**
  * The DataDescriptionRow class is a row of a DataDescriptionTable.
+ * 
+ * Generated from model's revision "1.62", branch "HEAD"
+ *
  */
 class DataDescriptionRow {
 friend class asdm::DataDescriptionTable;
+friend class asdm::RowTransformer<DataDescriptionRow>;
+//friend class asdm::TableStreamReader<DataDescriptionTable, DataDescriptionRow>;
 
 public:
 
@@ -122,40 +109,11 @@ public:
 	DataDescriptionTable &getTable() const;
 	
 	/**
-	 * Has this row been added to its table?
+	 * Has this row been added to its table ?
 	 * @return true if and only if it has been added.
 	 */
 	bool isAdded() const;
-
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a DataDescriptionRowIDL struct.
-	 */
-	DataDescriptionRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct DataDescriptionRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 */
-	void setFromIDL (DataDescriptionRowIDL x) throw(ConversionException);
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
-	
+		
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -174,6 +132,11 @@ public:
  	Tag getDataDescriptionId() const;
 	
  
+ 	
+ 	
+	
+	
+
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //
@@ -198,10 +161,12 @@ public:
  	/**
  	 * Set polOrHoloId with the specified Tag.
  	 * @param polOrHoloId The Tag value to which polOrHoloId is to be set.
+ 	 
  		
+ 			
  	 */
  	void setPolOrHoloId (Tag polOrHoloId);
-		
+  		
 	
 	
 	
@@ -226,10 +191,12 @@ public:
  	/**
  	 * Set spectralWindowId with the specified Tag.
  	 * @param spectralWindowId The Tag value to which spectralWindowId is to be set.
+ 	 
  		
+ 			
  	 */
  	void setSpectralWindowId (Tag spectralWindowId);
-		
+  		
 	
 	
 	
@@ -239,29 +206,8 @@ public:
 	// Links //
 	///////////
 	
-	///////////////////////////////
-	// binary-deserialization material//
-	///////////////////////////////	
-	std::map<std::string, DataDescriptionAttributeFromBin> fromBinMethods;
-	void dataDescriptionIdFromBin(EndianIStream& eis);
-	void polOrHoloIdFromBin(EndianIStream& eis);
-	void spectralWindowIdFromBin(EndianIStream& eis);
-
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
-	  * @param eis the EndianIStream to be read.
-	  * @param table the DataDescriptionTable to which the row built by deserialization will be parented.
-	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
-	  * in which the attributes are written in the binary serialization.
-	  */
-	 static DataDescriptionRow* fromBin(EndianIStream& eis, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	
-		
+	
+	
 	/**
 	 * Returns pointer to the row in the Polarization table having Polarization.polarizationId == polOrHoloId
 	 * @return a PolarizationRow* or 0 if polOrHoloId is an Holography Tag.
@@ -275,21 +221,44 @@ public:
 	 * 	 
 	 */
 	 HolographyRow* getHolographyUsingPolOrHoloId();
-	 
+		
+		
 	/**
-	 * Returns a pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * spectralWindowId pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
 	 * @return a SpectralWindowRow*
-	 * 
+	 * 	 
 	 */
 	 SpectralWindowRow* getSpectralWindowUsingSpectralWindowId();
 	 
+
+	
+
+	
+	
+	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this DataDescriptionRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param polOrHoloId
+	    
+	 * @param spectralWindowId
+	    
 	 */ 
 	bool compareNoAutoInc(Tag polOrHoloId, Tag spectralWindowId);
 	
+	
 
+	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param polOrHoloId
+	    
+	 * @param spectralWindowId
+	    
+	 */ 
 	bool compareRequiredValue(Tag polOrHoloId, Tag spectralWindowId); 
 		 
 	
@@ -302,6 +271,67 @@ public:
 	 * @return a boolean.
 	 */
 	bool equalByRequiredValue(DataDescriptionRow* x) ;
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a DataDescriptionRowIDL struct.
+	 */
+	asdmIDL::DataDescriptionRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct DataDescriptionRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (asdmIDL::DataDescriptionRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	std::string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (std::string rowDoc) ;
+
+	/// @cond DISPLAY_PRIVATE	
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+
+	std::map<std::string, DataDescriptionAttributeFromBin> fromBinMethods;
+void dataDescriptionIdFromBin( EndianIStream& eis);
+void polOrHoloIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
+
+	
+
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the DataDescriptionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static DataDescriptionRow* fromBin(EndianIStream& eis, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	 
+ 
+ 	 /**
+ 	  * Parses a string t and assign the result of the parsing to the attribute of name attributeName.
+ 	  *
+ 	  * @param attributeName the name of the attribute whose value is going to be defined.
+ 	  * @param t the string to be parsed into a value given to the attribute of name attributeName.
+ 	  */
+ 	 void fromText(const std::string& attributeName, const std::string&  t);
+     /// @endcond			
 
 private:
 	/**
@@ -354,19 +384,25 @@ private:
 	// ===> Attribute dataDescriptionId
 	
 	
+
 	Tag dataDescriptionId;
+
 	
 	
  	
  	/**
  	 * Set dataDescriptionId with the specified Tag value.
  	 * @param dataDescriptionId The Tag value to which dataDescriptionId is to be set.
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 */
- 	void setDataDescriptionId (Tag dataDescriptionId) throw(IllegalAccessException);
-  		
 		
+ 		
+			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setDataDescriptionId (Tag dataDescriptionId);
+  		
+	
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -375,7 +411,9 @@ private:
 	// ===> Attribute polOrHoloId
 	
 	
+
 	Tag polOrHoloId;
+
 	
 	
  	
@@ -384,7 +422,9 @@ private:
 	// ===> Attribute spectralWindowId
 	
 	
+
 	Tag spectralWindowId;
+
 	
 	
  	
@@ -407,7 +447,50 @@ private:
 
 	
 
+	
+/*
+	////////////////////////////////////////////////////////////
+	// binary-deserialization material from an EndianIStream  //
+	////////////////////////////////////////////////////////////
+	std::map<std::string, DataDescriptionAttributeFromBin> fromBinMethods;
+void dataDescriptionIdFromBin( EndianIStream& eis);
+void polOrHoloIdFromBin( EndianIStream& eis);
+void spectralWindowIdFromBin( EndianIStream& eis);
 
+	
+*/
+	
+	///////////////////////////////////
+	// text-deserialization material //
+	///////////////////////////////////
+	std::map<std::string, DataDescriptionAttributeFromText> fromTextMethods;
+	
+void dataDescriptionIdFromText (const string & s);
+	
+	
+void polOrHoloIdFromText (const string & s);
+	
+	
+void spectralWindowIdFromText (const string & s);
+	
+
+		
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
+	  * @param eiss the EndianIStream to be read.
+	  * @param table the DataDescriptionTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+
+	 static DataDescriptionRow* fromBin(EndianIStream& eis, DataDescriptionTable& table, const std::vector<std::string>& attributesSeq);	 
+		*/
 };
 
 } // End namespace asdm

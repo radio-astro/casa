@@ -40,7 +40,6 @@
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
-#include <display/Utilities/ImageProperties.h>
 #include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
 #include <sstream>
 
@@ -469,7 +468,8 @@ void QtDataManager::changeItemSelection(){
         contourButton_->show();
         vectorButton_->show();
         markerButton_->show();
-	info_box->show();
+	if ( treeWidget_->currentItem()->text(1) == "Image" )
+		info_box->show();
 	if ( ! name.isNull( ) ) {
 	    std::string path = (dir_.path() + "/" + name).toStdString( );
 	    if( imagePixelType(path) == TpFloat ) {
@@ -777,50 +777,54 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	    (*it).first->hide( );
 	}
 
-	viewer::ImageProperties props(path);
-	if ( props.ok( ) == false ) return;
+	image_properties = path;
+	if ( image_properties.ok( ) == false ) return;
 
 	infofield_list_t::iterator it = ifields.begin( );
 	(*it).first->show( );
 	(*it).first->setTitle("shape");
 	std::ostringstream buf;
-	buf << props.shape( );
+	buf << image_properties.shape( );
 	std::string shape_str = buf.str( );
 	(*it).second->setText(QString::fromStdString(std::for_each(shape_str.begin(),shape_str.end(),strip_chars("[]"))));
 	buf.str("");
 	(*it).second->setCursorPosition(0);
 	++it;
 
-	if ( props.hasDirectionAxis( ) ) {
+	if ( image_properties.hasDirectionAxis( ) ) {
 	    (*it).first->show( );
 	    (*it).first->setTitle("direction type");
-	    (*it).second->setText(QString::fromStdString(props.directionType( )));
+	    (*it).second->setText(QString::fromStdString(image_properties.directionType( )));
 	    (*it).second->setCursorPosition(0);
 	    ++it;
 	}
 
-	if ( props.hasSpectralAxis( ) ) {
-	    (*it).first->show( );
-	    (*it).first->setTitle("frequency range");
-	    buf.str("");
-	    buf << props.freqRange()[0] << " - " << props.freqRange()[1] << " " << props.freqUnits( );
-	    (*it).second->setText(QString::fromStdString(buf.str( )));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
+	if ( image_properties.hasSpectralAxis( ) ) {
+	    if ( image_properties.freqRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("frequency range");
+		buf.str("");
+		buf << image_properties.freqRange()[0] << " - " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
 
-	    (*it).first->show( );
-	    (*it).first->setTitle("velocity range");
-	    buf.str("");
-	    buf << props.veloRange()[0] << " - " << props.veloRange()[1] << " km/s" ;
-	    (*it).second->setText(QString::fromStdString(buf.str( )));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
+	    if ( image_properties.veloRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("velocity range");
+		buf.str("");
+		buf << image_properties.veloRange()[0] << " - " << image_properties.veloRange()[1] << " km/s" ;
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
 	}
 
-	if ( props.beamArea( ) > 0 ) {
+	if ( image_properties.beamArea( ) > 0 ) {
 	    (*it).first->show( );
 	    (*it).first->setTitle("beam area");
-	    (*it).second->setText(QString::number(props.beamArea( )));
+	    (*it).second->setText(QString::number(image_properties.beamArea( )));
 	    (*it).second->setCursorPosition(0);
 	    ++it;
 	}

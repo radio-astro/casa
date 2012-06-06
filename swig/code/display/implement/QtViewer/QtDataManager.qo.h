@@ -34,6 +34,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtLELEdit.qo.h>
+#include <display/Utilities/ImageProperties.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -94,7 +95,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   QHash<QString, int> displayType_;
   QHash<QString, int> uiDisplayType_;
  
-
+  viewer::ImageProperties image_properties;
   infofield_list_t ifields;
  
  protected slots:
