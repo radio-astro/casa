@@ -73,7 +73,7 @@ def tflagdata(vis,
              outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, mode, applyflags, savepars                      
+    # vis, mode, action, savepars                      
     
     #
     # Task tflagdata
@@ -406,7 +406,7 @@ def tflagdata(vis,
                                baseline=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
-            # CAS-3966 Handle channel selection at the FlagAgent level
+            # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
             if (not tflocal.parseagentparameters(agent_pars)):

@@ -632,6 +632,40 @@ class test_selections(test_base):
         tflagdata(vis=self.vis, spw='0', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
+    def test_spw_list(self):
+        '''tflagdata: spw selection in list mode''' 
+        spwfile = 'spwflags.txt'
+        if os.path.exists(spwfile):
+            os.system('rm -rf '+spwfile)
+                   
+        tflagdata(vis=self.vis, spw='0:1~10', savepars=True, outfile=spwfile)
+        res0 = tflagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res0['flagged'], 453060, 'Only channels 1~10 should be flagged')
+        
+        # Unflag
+        tflagdata(vis=self.vis, mode='unflag')
+        ures = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(ures['flagged'], 0)
+        
+        # Flag using the saved list
+        tflagdata(vis=self.vis, mode='list', inpfile=spwfile, action='apply')
+        res = tflagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res0['flagged'], res['flagged'])        
+                  
+        # Only channels 1~10 should be flagged
+        self.assertEqual(res['spw:channel']['0:0']['flagged'], 0)
+        self.assertEqual(res['spw:channel']['0:1']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:2']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:3']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:4']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:5']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:6']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:7']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:8']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:9']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:10']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:11']['flagged'], 0)
+
     def test_correlation(self):
         tflagdata(vis=self.vis, correlation='LL', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
