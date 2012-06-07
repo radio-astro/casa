@@ -453,37 +453,9 @@ void Table::open (const String& name, const String& type, int tableOption,
         //# Check if the table directory exists.
         File dir(absName);
 
-        // Begin workaround -----------------------------------
-        // Might solve Lustre error that appears to be caused
-        // by directory information requests being satisfied
-        // using stale data (Jim Jacobs 2011/10/5)
-
-        Bool dirExists = False;
-	if(dir.getFSType() == "Lustre" && !EnvironmentVariable::isDefined("CASA_NOLUSTRE_CHECK")){
-          for (int i = 0; i < 3; i++){
-            dirExists = dir.exists();
-            if (dirExists){
-                break;
-            }
-            usleep (1000000); // one second
-	    if(i==2){
-	      std::cerr << "Lustre Latency Check is on. To turn off set environment variable CASA_NOLUSTRE_CHECK=1." << std::endl;
-	      std::cerr << "Missing file is " << absName << std::endl;
-	    }
-          }
-
-        }
-        dirExists = dir.exists();
-        if (! dirExists){
+        if (!dir.exists()) {
             throw TableNoFile(absName);
         }
-
-// original code being replaced by workaround:
-//        if (!dir.exists()) {
-//            throw TableNoFile(absName);
-//        }
-
-        // End workaround ---------------------------------------
 
         if (!dir.isDirectory()) {
             throw TableNoDir(absName);
@@ -550,13 +522,14 @@ BaseTable* Table::makeBaseTable (const String& name, const String& type,
     return baseTabPtr;
 }
 	
-BaseTable* Table::lookCache (const String& name, int tableOption,
-			     const TableLock& lockOptions)
+BaseTable*
+Table::lookCache (const String& name, int tableOption,
+                  const TableLock& lockOptions)
 {
     //# Exit if table is not in cache yet.
     PlainTable* btp = PlainTable::tableCache()(name);
     if (btp == 0) {
-	return btp;
+        return btp;
     }
     //# Check if option matches. It does if equal.
     //# Otherwise it does if option in cached table is "more".
@@ -564,21 +537,21 @@ BaseTable* Table::lookCache (const String& name, int tableOption,
     //# a new table is created with the same name as an open table.
     int cachedTableOption = btp->tableOption();
     if ((tableOption == cachedTableOption)
-    ||  ((cachedTableOption == Table::New
-      ||  cachedTableOption == Table::NewNoReplace
-      ||  cachedTableOption == Table::Update)
-     &&  (tableOption == Table::Update
-      ||  tableOption == Table::Old))) {
-	btp->mergeLock (lockOptions);
-	return btp;
+            ||  ((cachedTableOption == Table::New
+                    ||  cachedTableOption == Table::NewNoReplace
+                    ||  cachedTableOption == Table::Update)
+                    &&  (tableOption == Table::Update
+                            ||  tableOption == Table::Old))) {
+        btp->mergeLock (lockOptions);
+        return btp;
     }
     if (cachedTableOption == Table::Old  &&  tableOption == Table::Update) {
-	btp->mergeLock (lockOptions);
-	btp->reopenRW();
-	return btp;
+        btp->mergeLock (lockOptions);
+        btp->reopenRW();
+        return btp;
     }
     throw (TableInvOper ("Table " + name +
-			 " cannot be opened/created (already in cache)"));
+                         " cannot be opened/created (already in cache)"));
     return 0;
 }
 
