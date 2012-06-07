@@ -36,7 +36,7 @@ namespace sdmbin {
       Error(FATAL, "Directory " + execBlockDir + " not present present");
     string xmlfile = execBlockDir + "/Main.xml"; //cout << "xmlfile="<< xmlfile<<endl;
     if(!fopen( xmlfile.c_str(),"r"))
-      Error(FATAL, "Main table not present in the SDM dataset");
+      Error(FATAL, string("Main table not present in the SDM dataset"));
 
     execBlockDir_ = execBlockDir;
     mainRowPtr_   = NULL;
@@ -76,35 +76,35 @@ namespace sdmbin {
     if(canSelect_)
       es_si_ = es_si;
     else
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
   }
 
   void SDMBinData::select( EnumSet<ProcessorType> es_pt){
     if(canSelect_)
       es_pt_ = es_pt;
     else
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
   }
 
   void SDMBinData::select( EnumSet<CorrelationMode> es_cm){
     if(canSelect_)
       es_cm_ = es_cm;
     else
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
   }
 
   void SDMBinData::select( EnumSet<SpectralResolutionType> es_srt){
     if(canSelect_)
       es_srt_ = es_srt;
     else
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
   }
 
   void SDMBinData::SDMBinData::select( EnumSet<TimeSampling> es_ts){
     if(canSelect_)
       es_ts_ = es_ts;
     else
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
   }
 
   void SDMBinData::select( EnumSet<CorrelationMode>        es_cm,
@@ -115,7 +115,7 @@ namespace sdmbin {
       es_srt_ = es_srt;
       es_ts_  = es_ts;
     }else{
-      Error(WARNING,"Selecting a subset of rows in the Main table at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of rows in the Main table at this stage is forbidden"));
     }
   }
 
@@ -124,7 +124,7 @@ namespace sdmbin {
       e_qcm_   = e_qcm;
       es_qapc_ = es_qapc;
     }else{
-      Error(WARNING,"Selecting a subset of data in the BLOB(s) at this stage is forbidden");
+      Error(WARNING,string("Selecting a subset of data in the BLOB(s) at this stage is forbidden"));
     }
   }
 
@@ -270,7 +270,7 @@ namespace sdmbin {
 	cout << "Successfully opened Stream Data Object" << endl;
       }
     }else{
-      Error(WARNING,"No data retrieving for this SDM mainTable row");
+      Error(WARNING,string("No data retrieving for this SDM mainTable row"));
       return false;
     }
     if (verbose_) cout << "SDMBinData::openMainRow : exiting" << endl;
@@ -335,7 +335,7 @@ namespace sdmbin {
 	v_dataDump_[0]->summary();
       }
     }else{
-      Error(WARNING,"No data retrieving for this SDM mainTable row");
+      Error(WARNING,string("No data retrieving for this SDM mainTable row"));
       return false;
     }
 
@@ -372,7 +372,7 @@ namespace sdmbin {
     ostringstream dir; dir<<execBlockDir_<<"/ASDMBinary";
     dirp = opendir(dir.str().c_str());
     if(!dirp)
-      Error(FATAL,"Could not open directory %s",dir.str().c_str());
+      Error(FATAL,(char *) "Could not open directory %s",dir.str().c_str());
     closedir(dirp);
     filename=dir.str()+"/"+filename;
     if(coutest)cout<<"filename="<<filename<<endl;
@@ -522,7 +522,7 @@ namespace sdmbin {
 	itf=m_dc_sizeAndAxes.find(AUTO_DATA),
 	ite=m_dc_sizeAndAxes.end();
       if(itf==ite)itf=m_dc_sizeAndAxes.find(CROSS_DATA);
-      if(itf==ite)Error(FATAL,"BLOB %s has no declaration for observational data",dataOID.c_str());
+      if(itf==ite)Error(FATAL,(char *) "BLOB %s has no declaration for observational data",dataOID.c_str());
 
 
       if(coutDeleteInfo_)cout<<"delete  v_dataDump_"<<endl;
@@ -566,7 +566,7 @@ namespace sdmbin {
 	  es_flagsAxes = itf->second.second;
 	  numFlags     = dataSubset.flags( flagsPtr );
 	  if(numFlags!=flagsSize)
-	    Error(FATAL, "Size of flags, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of flags, %d, not compatible with the declared size of %d",
 		  numFlags,flagsSize);
 	  flagsSize   /= numTime;
 	}
@@ -577,7 +577,7 @@ namespace sdmbin {
 	  es_actualTimesAxes = itf->second.second;
 	  numActualTimes     = dataSubset.actualTimes( actualTimesPtr );
 	  if(numActualTimes!=actualTimesSize)
-	    Error(FATAL, "Size of actualTimes, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of actualTimes, %d, not compatible with the declared size of %d",
 		  numActualTimes,actualTimesSize);
 	  actualTimesSize   /= numTime;
 	}
@@ -588,7 +588,7 @@ namespace sdmbin {
 	  es_actualDurationsAxes = itf->second.second;
 	  numActualDurations     = dataSubset.actualDurations( actualDurationsPtr );
 	  if(numActualDurations!=actualDurationsSize)
-	    Error(FATAL, "Size of actualDurations, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of actualDurations, %d, not compatible with the declared size of %d",
 		  numActualDurations,actualDurationsSize);
 	  actualDurationsSize   /= numTime;
 	}
@@ -609,11 +609,11 @@ namespace sdmbin {
 	    break;
 	  default:
 	    Enum<PrimitiveDataType> e_pdt=dataSubset.crossDataType();
-	    Error(FATAL, "Cross data with the primitive data type %s are not supported",
+	    Error(FATAL, (char *) "Cross data with the primitive data type %s are not supported",
 		  e_pdt.str().c_str());
 	  }
 	  if(numCrossData!=crossDataSize)
-	    Error(FATAL, "Size of crossData, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of crossData, %d, not compatible with the declared size of %d",
 		  numCrossData,crossDataSize);
 	  crossDataSize /= numTime;
 
@@ -625,7 +625,7 @@ namespace sdmbin {
 	  es_zeroLagsAxes = itf->second.second;
 	  numZeroLags = dataSubset.zeroLags( zeroLagsPtr );
 	  if(numZeroLags != zeroLagsSize)
-	    Error(FATAL,"Size of zeroLags, %d, not compatible with the declared size of %d",
+	    Error(FATAL,(char *) "Size of zeroLags, %d, not compatible with the declared size of %d",
 		    numZeroLags,zeroLagsSize);
 	  zeroLagsSize /= numTime;
 	}
@@ -637,11 +637,11 @@ namespace sdmbin {
 	  numAutoData     = dataSubset.autoData( autoDataPtr );
 	  if(numAutoData){
 	    if(numAutoData != autoDataSize)
-	      Error(FATAL,"Size of autoData, %d, not compatible with the declared size of %d",
+	      Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		    numAutoData,itf->second.first);
 	  }else if(numAutoData==0){
 	    if(!e_cm[CROSS_ONLY])
-	      Error(WARNING,"No autoData! may happen when a subscan is aborted");
+	      Error(WARNING,string("No autoData! may happen when a subscan is aborted"));
 	    return 0;
 	  }
 	  autoDataSize /= numTime;
@@ -840,7 +840,7 @@ namespace sdmbin {
 	      break;
 	    default:
 	      Enum<PrimitiveDataType> e_pdt=v_dataSubset[nt].crossDataType();
-	      Error(FATAL, "Cross data with the primitive data type %s are not supported",
+	      Error(FATAL, (char *) "Cross data with the primitive data type %s are not supported",
 		    e_pdt.str().c_str());
 	    }
 	  }
@@ -852,7 +852,7 @@ namespace sdmbin {
 	    if(coutest)cout<<numFloatData<<" "<<itf->second.first<<"  "<<floatDataPtr<<endl;
 	    if(numFloatData){
 	      if(numFloatData!=itf->second.first)
-		Error(FATAL,"Size of autoData, %d, not compatible with the declared size of %d",
+		Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		      numFloatData,itf->second.first);
 	      dataDumpPtr->attachAutoData( itf->second.first, itf->second.second,
 					   numFloatData, floatDataPtr);
@@ -860,7 +860,7 @@ namespace sdmbin {
 // 	      const long unsigned int* aptr=dataDumpPtr->flags();
 	    }else if(numFloatData==0){
 	       if(!e_cm[CROSS_ONLY])
-		 Error(WARNING,"No autoData! may happen when a subscan is aborted");
+		 Error(WARNING,string("No autoData! may happen when a subscan is aborted"));
 	      break;
 	    }
 	  }
@@ -910,7 +910,7 @@ namespace sdmbin {
     ostringstream dir; dir<<execBlockDir_<<"/ASDMBinary";
     dirp = opendir(dir.str().c_str());
     if(!dirp)
-      Error(FATAL,"Could not open directory %s",dir.str().c_str());
+      Error(FATAL,(char *) "Could not open directory %s",dir.str().c_str());
     closedir(dirp);
     filename=dir.str()+"/"+filename;
     if(verbose_)cout<<"filename="<<filename<<endl;
@@ -1087,7 +1087,7 @@ namespace sdmbin {
     ostringstream dir; dir<<execBlockDir_<<"/ASDMBinary";
     dirp = opendir(dir.str().c_str());
     if(!dirp)
-      Error(FATAL,"Could not open directory %s",dir.str().c_str());
+      Error(FATAL,(char *) "Could not open directory %s",dir.str().c_str());
     closedir(dirp);
     filename=dir.str()+"/"+filename;
     if(coutest)cout<<"filename="<<filename<<endl;
@@ -1233,7 +1233,7 @@ namespace sdmbin {
 	itf=m_dc_sizeAndAxes.find(AUTO_DATA),
 	ite=m_dc_sizeAndAxes.end();
       if(itf==ite)itf=m_dc_sizeAndAxes.find(CROSS_DATA);
-      if(itf==ite)Error(FATAL,"BLOB %s has no declaration for observational data",dataOID.c_str());
+      if(itf==ite)Error(FATAL,(char *) "BLOB %s has no declaration for observational data",dataOID.c_str());
 
 
       if(coutDeleteInfo_)cout<<"delete  v_dataDump_"<<endl;
@@ -1277,7 +1277,7 @@ namespace sdmbin {
 	  es_flagsAxes = itf->second.second;
 	  numFlags     = dataSubset.flags( flagsPtr );
 	  if(numFlags!=flagsSize)
-	    Error(FATAL, "Size of flags, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of flags, %d, not compatible with the declared size of %d",
 		  numFlags,flagsSize);
 	  flagsSize   /= numTime;
 	}
@@ -1288,7 +1288,7 @@ namespace sdmbin {
 	  es_actualTimesAxes = itf->second.second;
 	  numActualTimes     = dataSubset.actualTimes( actualTimesPtr );
 	  if(numActualTimes!=actualTimesSize)
-	    Error(FATAL, "Size of actualTimes, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of actualTimes, %d, not compatible with the declared size of %d",
 		  numActualTimes,actualTimesSize);
 	  actualTimesSize   /= numTime;
 	}
@@ -1299,7 +1299,7 @@ namespace sdmbin {
 	  es_actualDurationsAxes = itf->second.second;
 	  numActualDurations     = dataSubset.actualDurations( actualDurationsPtr );
 	  if(numActualDurations!=actualDurationsSize)
-	    Error(FATAL, "Size of actualDurations, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of actualDurations, %d, not compatible with the declared size of %d",
 		  numActualDurations,actualDurationsSize);
 	  actualDurationsSize   /= numTime;
 	}
@@ -1320,11 +1320,11 @@ namespace sdmbin {
 	    break;
 	  default:
 	    Enum<PrimitiveDataType> e_pdt=dataSubset.crossDataType();
-	    Error(FATAL, "Cross data with the primitive data type %s are not supported",
+	    Error(FATAL, (char *) "Cross data with the primitive data type %s are not supported",
 		  e_pdt.str().c_str());
 	  }
 	  if(numCrossData!=crossDataSize)
-	    Error(FATAL, "Size of crossData, %d, not compatible with the declared size of %d",
+	    Error(FATAL, (char *) "Size of crossData, %d, not compatible with the declared size of %d",
 		  numCrossData,crossDataSize);
 	  crossDataSize /= numTime;
 
@@ -1336,7 +1336,7 @@ namespace sdmbin {
 	  es_zeroLagsAxes = itf->second.second;
 	  numZeroLags = dataSubset.zeroLags( zeroLagsPtr );
 	  if(numZeroLags != zeroLagsSize)
-	    Error(FATAL,"Size of zeroLags, %d, not compatible with the declared size of %d",
+	    Error(FATAL,(char *) "Size of zeroLags, %d, not compatible with the declared size of %d",
 		    numZeroLags,zeroLagsSize);
 	  zeroLagsSize /= numTime;
 	}
@@ -1348,11 +1348,11 @@ namespace sdmbin {
 	  numAutoData     = dataSubset.autoData( autoDataPtr );
 	  if(numAutoData){
 	    if(numAutoData != autoDataSize)
-	      Error(FATAL,"Size of autoData, %d, not compatible with the declared size of %d",
+	      Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		    numAutoData,itf->second.first);
 	  }else if(numAutoData==0){
 	    if(!e_cm[CROSS_ONLY])
-	      Error(WARNING,"No autoData! may happen when a subscan is aborted");
+	      Error(WARNING,string("No autoData! may happen when a subscan is aborted"));
 	    return 0;
 	  }
 	  autoDataSize /= numTime;
@@ -1556,7 +1556,7 @@ namespace sdmbin {
 	      break;
 	    default:
 	      Enum<PrimitiveDataType> e_pdt=currentSubset.crossDataType();
-	      Error(FATAL, "Cross data with the primitive data type %s are not supported",
+	      Error(FATAL, (char *) "Cross data with the primitive data type %s are not supported",
 		    e_pdt.str().c_str());
 	    }
 	  }
@@ -1568,7 +1568,7 @@ namespace sdmbin {
 	    if(coutest)cout<<numFloatData<<" "<<itf->second.first<<"  "<<floatDataPtr<<endl;
 	    if(numFloatData){
 	      if(numFloatData!=itf->second.first)
-		Error(FATAL,"Size of autoData, %d, not compatible with the declared size of %d",
+		Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		      numFloatData,itf->second.first);
 	      dataDumpPtr->attachAutoData( itf->second.first, itf->second.second,
 					   numFloatData, floatDataPtr);
@@ -1576,7 +1576,7 @@ namespace sdmbin {
 // 	      const long unsigned int* aptr=dataDumpPtr->flags();
 	    }else if(numFloatData==0){
 	       if(!e_cm[CROSS_ONLY])
-		 Error(WARNING,"No autoData! may happen when a subscan is aborted");
+		 Error(WARNING,string("No autoData! may happen when a subscan is aborted"));
 	      break;
 	    }
 	  }
@@ -1653,7 +1653,7 @@ namespace sdmbin {
 
     if(!canSelect_ && (e_qcm.count() || es_qapc.count()) ){
 
-      Error(FATAL,"This method cannot be used in this context!\n Use the method with no argument getData()");
+      Error(FATAL,string("This method cannot be used in this context!\n Use the method with no argument getData()"));
       return v_msDataPtr_;
 
     }
@@ -1901,7 +1901,7 @@ namespace sdmbin {
       if(coutest)for(unsigned int n=0; n<v_napc.size(); n++)cout<<"v_napc["<<n<<"]="<<v_napc[n]<<endl;
 
       if(!v_napc.size()){
-	Error(WARNING,"No visibilities with AtmPhaseCorrection in the set {%s}",
+	Error(WARNING,(char *) "No visibilities with AtmPhaseCorrection in the set {%s}",
 	      es_qapc_.str().c_str());
 	return v_msDataPtr_;
       }
@@ -1927,7 +1927,7 @@ namespace sdmbin {
 	else if(v_dataDump_[nt]->crossDataFloat())
 	  floatDataPtr_    = v_dataDump_[nt]->crossDataFloat();
 	else
-	  Error(FATAL,"Cross data typed float not yet supported");
+	  Error(FATAL, string("Cross data typed float not yet supported"));
 	if(coutest)cout<<"ici DD 2"<<endl;
 	unsigned int scn=0;
 	for(unsigned int na1=0; na1<v_antSet.size(); na1++){
@@ -2235,7 +2235,7 @@ namespace sdmbin {
     unsigned int numApc = baselinesSet_->numApc();                               
     for(unsigned int i=0; i<v_napc.size(); i++){
       if((v_napc[i]+1)>numApc){
-	Error(FATAL,"error in the program: apc index exceeds  %d",numApc);
+	Error(FATAL,(char *) "error in the program: apc index exceeds  %d",numApc);
 	return 0;
       }
     }
@@ -2423,7 +2423,7 @@ namespace sdmbin {
 
     //VMSData* vmsDataPtr_ = new VMSData;
     if(!vmsDataPtr_)
-      Error(FATAL,"Fail to allocate memory for a new VMSData type structure");
+      Error(FATAL,string("Fail to allocate memory for a new VMSData type structure"));
 
 
     // the fields of the SDM key shared by all MS rows for this SDM Main entry:
@@ -2562,7 +2562,18 @@ namespace sdmbin {
       e_qcm   = e_qcm_;
       es_qapc = es_qapc_;
     }
-    return getNextMSMainCols( e_qcm, es_qapc, nDataSubset );
+    return getNextMSMainCols( e_qcm, es_qapc, nDataSubset);
+  }
+
+  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
+    Enum<CorrelationMode>       e_qcm;
+    EnumSet<AtmPhaseCorrection> es_qapc;
+    if(canSelect_){
+      cout<<"INFORM: context allow to select"<<endl;
+      e_qcm   = e_qcm_;
+      es_qapc = es_qapc_;
+    }
+    getNextMSMainCols( e_qcm, es_qapc, nDataSubset, vmsData_p_sp );
   }
 
   const VMSData* SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset) {
@@ -2594,7 +2605,7 @@ namespace sdmbin {
     vmsDataPtr_ = new VMSData;
 
     if(!vmsDataPtr_)
-      Error(FATAL,"Fail to allocate memory for a new VMSData type structure");
+      Error(FATAL, string("Fail to allocate memory for a new VMSData type structure"));
 
    if(numRows){
       vmsDataPtr_->processorId          = v_msDataPtr_[0]->processorId;
@@ -2690,6 +2701,118 @@ namespace sdmbin {
     return vmsDataPtr_;
   }
 
+  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
+    if (verbose_) cout << "SDMBinData::getNextMSMainCols (with VMSDataSharedPtr) : entering" << endl;
+
+    VMSDataWithSharedPtr* vmsData_p = vmsData_p_sp.get();
+
+    // Delete the content of v_msDataPtr (but do not delete "deeply" i.e. do not delete the visibilities referred to by pointers stored into v_msDataPtr since the 
+    // memory they occupy is going to be managed by boost::shared_ptr s.
+    //
+    if ( v_msDataPtr_.size() > 0 ){
+      for(vector<MSData*>::reverse_iterator it=v_msDataPtr_.rbegin(); it!=v_msDataPtr_.rend(); ++it) delete (*it);
+    }
+    v_msDataPtr_.clear();
+
+    v_msDataPtr_ = getMSDataFromBDFData(e_qcm, es_qapc, nDataSubset);
+    int numRows = v_msDataPtr_.size();
+    if (verbose_) cout << "Number of MS Main rows for this block of " << nDataSubset << " [sub]integrations in '" << sdmdosr.dataOID() << "' = " << numRows << endl; 
+
+   if(numRows){
+      vmsData_p->processorId          = v_msDataPtr_[0]->processorId;
+      vmsData_p->binNum               = v_msDataPtr_[0]->binNum;
+    }
+
+    unsigned int numApcMax=0;
+    for(int n=0; n<numRows; n++){
+      if(v_msDataPtr_[n]->v_atmPhaseCorrection.size()>numApcMax)
+	numApcMax=v_msDataPtr_[n]->v_atmPhaseCorrection.size();
+    }
+    if(verbose_)cout<<"numApcMax="<<numApcMax<<endl;
+
+    multimap<int,unsigned int> mm_dd;
+    if(ddfirst_){
+      for(unsigned int n=0; n<v_msDataPtr_.size(); n++)
+	mm_dd.insert(make_pair(v_msDataPtr_[n]->dataDescId,n));
+    }
+
+    v_tci_.clear();  
+    v_tci_.resize(numRows);
+
+    if(ddfirst_){   // the dataDescription/time/baseline expansion
+
+      unsigned int n, i=0;
+      multimap<int,unsigned int>::const_iterator it;
+      for(it=mm_dd.begin(); it!=mm_dd.end(); ++it){
+	n=it->second;
+	vmsData_p->v_time.push_back(v_msDataPtr_[n]->time);
+	vmsData_p->v_fieldId.push_back(v_msDataPtr_[n]->fieldId);
+	vmsData_p->v_interval.push_back(v_msDataPtr_[0]->interval);
+	vmsData_p->v_antennaId1.push_back(v_msDataPtr_[n]->antennaId1);
+	vmsData_p->v_antennaId2.push_back(v_msDataPtr_[n]->antennaId2);
+	vmsData_p->v_feedId1.push_back(v_msDataPtr_[n]->feedId1);
+	vmsData_p->v_feedId2.push_back(v_msDataPtr_[n]->feedId2);
+	vmsData_p->v_dataDescId.push_back(v_msDataPtr_[n]->dataDescId);
+	vmsData_p->v_timeCentroid.push_back(v_msDataPtr_[n]->timeCentroid);
+	vmsData_p->v_exposure.push_back(v_msDataPtr_[n]->exposure);
+	vmsData_p->v_numData.push_back(v_msDataPtr_[n]->numData);
+	vmsData_p->vv_dataShape.push_back(v_msDataPtr_[n]->v_dataShape);
+	vmsData_p->v_phaseDir.push_back(v_msDataPtr_[n]->phaseDir);
+	vmsData_p->v_stateId.push_back(v_msDataPtr_[n]->stateId);
+	vmsData_p->v_msState.push_back(v_msDataPtr_[n]->msState);
+	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
+
+	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
+	map<AtmPhaseCorrection,boost::shared_array<float> > m_vdata;
+	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
+	  float* d=v_msDataPtr_[n]->v_data[napc];
+	  boost::shared_array<float> d_sp(d);
+	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
+	}
+	vmsData_p->v_m_data.push_back(m_vdata);
+	//cout<<"dataDescriptionId="<<it->first<<" row="<<it->second<<endl;
+
+	pair<unsigned int,double> p=make_pair(i++,v_msDataPtr_[n]->timeCentroid);
+	v_tci_[n]=p;
+      }
+
+    }else{    // the baseline/dataDescription expansion
+
+      
+      for(int n=0; n<numRows; n++){
+
+	vmsData_p->v_time.push_back(v_msDataPtr_[n]->time);
+	vmsData_p->v_fieldId.push_back(v_msDataPtr_[n]->fieldId);
+	vmsData_p->v_interval.push_back(v_msDataPtr_[0]->interval);
+	vmsData_p->v_antennaId1.push_back(v_msDataPtr_[n]->antennaId1);
+	vmsData_p->v_antennaId2.push_back(v_msDataPtr_[n]->antennaId2);
+	vmsData_p->v_feedId1.push_back(v_msDataPtr_[n]->feedId1);
+	vmsData_p->v_feedId2.push_back(v_msDataPtr_[n]->feedId2);
+	vmsData_p->v_dataDescId.push_back(v_msDataPtr_[n]->dataDescId);
+	vmsData_p->v_timeCentroid.push_back(v_msDataPtr_[n]->timeCentroid);
+	vmsData_p->v_exposure.push_back(v_msDataPtr_[n]->exposure);
+	vmsData_p->v_numData.push_back(v_msDataPtr_[n]->numData);
+	vmsData_p->vv_dataShape.push_back(v_msDataPtr_[n]->v_dataShape);
+	vmsData_p->v_phaseDir.push_back(v_msDataPtr_[n]->phaseDir);
+	vmsData_p->v_stateId.push_back(v_msDataPtr_[n]->stateId);
+	vmsData_p->v_msState.push_back(v_msDataPtr_[n]->msState);
+	vmsData_p->v_flag.push_back(v_msDataPtr_[n]->flag);
+
+	vmsData_p->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
+	map<AtmPhaseCorrection, boost::shared_array<float> > m_vdata;
+	for(unsigned int napc=0; napc<vmsData_p->v_atmPhaseCorrection.size(); napc++){
+	  float* d=v_msDataPtr_[n]->v_data[napc];
+	  boost::shared_array<float> d_sp(d);
+	  m_vdata.insert(make_pair(vmsData_p->v_atmPhaseCorrection[napc],d_sp));
+	}
+	vmsData_p->v_m_data.push_back(m_vdata);
+
+	v_tci_[n] = make_pair(n,v_msDataPtr_[n]->timeCentroid);
+      }
+    }
+    if (verbose_) cout << "SDMBinData::getNextMSMainCols : exiting" << endl; 
+  }
+
   vector<MSData*> SDMBinData::getMSDataFromBDFData(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubsets) {
     if (verbose_) cout << "SDMBinData::getMSDataFromBDFData: entering (e_qcm="<<e_qcm.str()
 		      <<",es_qapc="<<es_qapc.str()
@@ -2712,7 +2835,7 @@ namespace sdmbin {
     Enum<CorrelationMode>       e_cm; e_cm = cdPtr->getCorrelationMode();
 
     if(!canSelect_ && (e_qcm.count() || es_qapc.count()) ){
-      Error(FATAL,"This method cannot be used in this context!\n Use the method with no argument getData()");
+      Error(FATAL, string("This method cannot be used in this context!\n Use the method with no argument getData()"));
       return v_msDataPtr_;
     }
 
@@ -2748,12 +2871,12 @@ namespace sdmbin {
       itsf=s_cdId_.find(configDescriptionId),
       itse=s_cdId_.end();
     if(itsf==itse)
-      Error(FATAL,"Tree hierarchy not present for configDescId " + configDescriptionId.toString());
+      Error(FATAL, string("Tree hierarchy not present for configDescId ") + configDescriptionId.toString());
     std::map<Tag,BaselinesSet*>::iterator
       itf(m_cdId_baselinesSet_.find(configDescriptionId)),
       ite(m_cdId_baselinesSet_.end());
     if(itf==ite)
-      Error(FATAL,"Tree hierarchy not present for configDescId " + configDescriptionId.toString());
+      Error(FATAL, string("Tree hierarchy not present for configDescId ") + configDescriptionId.toString());
     baselinesSet_=itf->second;
 
     if (verbose_) cout<<"ConfigDescriptionId = " << configDescriptionId.toString()<<endl;
@@ -2931,7 +3054,7 @@ namespace sdmbin {
       if(verbose_)for(unsigned int n=0; n<v_napc.size(); n++)cout<<"v_napc["<<n<<"]="<<v_napc[n]<<endl;
       
       if(!v_napc.size()){
-	Error(WARNING,"No visibilities with AtmPhaseCorrection in the set {%s}",
+	Error(WARNING,(char *) "No visibilities with AtmPhaseCorrection in the set {%s}",
 	      es_qapc_.str().c_str());
 	return v_msDataPtr_;
       }
@@ -2957,7 +3080,7 @@ namespace sdmbin {
 	else if(v_dataDump_[nt]->crossDataFloat())
 	  floatDataPtr_    = v_dataDump_[nt]->crossDataFloat();
 	else
-	  Error(FATAL,"Cross data typed float not yet supported");
+	  Error(FATAL, string("Cross data typed float not yet supported"));
 	if(verbose_)cout<<"ici DD 2"<<endl;
 	unsigned int scn=0;
 	for(unsigned int na1=0; na1<v_antSet.size(); na1++){
@@ -3184,7 +3307,7 @@ namespace sdmbin {
       itf=m_dc_sizeAndAxes.find(AUTO_DATA),
       ite=m_dc_sizeAndAxes.end();
     if(itf==ite)itf=m_dc_sizeAndAxes.find(CROSS_DATA);
-    if(itf==ite)Error(FATAL,"BLOB %s has no declaration for observational data",sdmdosr.dataOID().c_str());
+    if(itf==ite)Error(FATAL,(char *) "BLOB %s has no declaration for observational data",sdmdosr.dataOID().c_str());
     
     // Okay then we can start to read.
     unsigned int nread = 0 ;
@@ -3304,7 +3427,7 @@ namespace sdmbin {
 	  break;
 	default:
 	  Enum<PrimitiveDataType> e_pdt=currentSubset.crossDataType();
-	  Error(FATAL, "Cross data with the primitive data type %s are not supported",
+	  Error(FATAL, (char *) "Cross data with the primitive data type %s are not supported",
 		e_pdt.str().c_str());
 	}
       }
@@ -3316,7 +3439,7 @@ namespace sdmbin {
 	if(verbose_)cout<<numFloatData<<" "<<itf->second.first<<"  "<<floatDataPtr<<endl;
 	if(numFloatData){
 	  if(numFloatData!=itf->second.first)
-	    Error(FATAL,"Size of autoData, %d, not compatible with the declared size of %d",
+	    Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		  numFloatData,itf->second.first);
 	  dataDumpPtr->attachAutoData( itf->second.first, itf->second.second,
 				       numFloatData, floatDataPtr);
@@ -3324,7 +3447,7 @@ namespace sdmbin {
 	  // 	      const long unsigned int* aptr=dataDumpPtr->flags();
 	}else if(numFloatData==0){
 	  if(!e_cm[CROSS_ONLY])
-	    Error(WARNING,"No autoData! may happen when a subscan is aborted");
+	    Error(WARNING, string("No autoData! may happen when a subscan is aborted"));
 	  break;
 	}
       }
@@ -3397,7 +3520,7 @@ namespace sdmbin {
       }
       int nt=-1;
       vector<CalDeviceRow*> v_ts=vvvv_calDevice[na][nfe][nspw];   // the time series
-      if(!v_ts.size())Error(FATAL,"The CalDevice is empty, I can't go further.");
+      if(!v_ts.size())Error(FATAL, string("The CalDevice is empty, I can't go further."));
       for(unsigned int n=0; n<v_ts.size(); n++){
 	if( nt==-1 && v_ts[n]->getTimeInterval().contains(timeOfDump) ){
 	  nt=n;
@@ -3406,7 +3529,7 @@ namespace sdmbin {
       }
       if(nt==-1)
 	Error( FATAL,
-	       "Failed to find the CalDevice row for na=%d nfe=%d nspw=%d at the given time of dump",
+	       (char *) "Failed to find the CalDevice row for na=%d nfe=%d nspw=%d at the given time of dump",
 	       na,nfe,nspw);
 
       CalDeviceRow*             caldevr      = vvvv_calDevice[na][nfe][nspw][nt];
@@ -3435,13 +3558,13 @@ namespace sdmbin {
 	    msState.cal = v_noiseCal[n_cd];
 	  break;
 	case QUARTER_WAVE_PLATE:
-	  Error(FATAL,"QUATER_WAVE_PLATE use-case not yet supported");
+	  Error(FATAL, string("QUATER_WAVE_PLATE use-case not yet supported"));
 	  break;
 	case SOLAR_FILTER:
-	  Error(FATAL,"SOLAR_FILTER use-case not yet supported");
+	  Error(FATAL, string("SOLAR_FILTER use-case not yet supported"));
 	  break;
 	default:
-	  Error(FATAL,"Illegal calibration device name");
+	  Error(FATAL, string("Illegal calibration device name"));
 	}
       }
     }
@@ -3473,7 +3596,7 @@ namespace sdmbin {
 	cerr<<"Forbidden to use the method isComplexData() in the context of a specific"<<endl;
 	cerr<<"row of the Main table because it was already used in the context of the Main"<<endl;
 	cerr<<"table as a whole"<<endl;
-	Error(FATAL,"Use-case not valid in the perpective of a filling a MeasurementSet");
+	Error(FATAL, string("Use-case not valid in the perpective of a filling a MeasurementSet"));
 	return true;  // never pass here
       }
 

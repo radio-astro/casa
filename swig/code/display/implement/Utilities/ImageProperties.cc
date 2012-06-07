@@ -71,7 +71,6 @@ namespace casa {
 	    path_ = "";
 	    has_direction_axis = false;
 	    has_spectral_axis = false;
-	    velo_units = "";
 	    direction_type = "";
 	    shape_.resize(0);
 	    freq_range.resize(0);
@@ -99,7 +98,6 @@ namespace casa {
 
 	    // initialize...
 	    status_ok = true;
-	    velo_units = "km/s";
 
 	    if ( cs.hasDirectionCoordinate( ) ) {
 		has_direction_axis = true;
@@ -109,29 +107,26 @@ namespace casa {
 
 	    if ( cs.hasSpectralAxis( ) && shape_[cs.spectralAxisNumber( )] > 1 ) {
 		has_spectral_axis = true;
-		Vector<Double> refval(cs.referenceValue( ));
-		const SpectralCoordinate &spec = cs.spectralCoordinate( );
+		SpectralCoordinate spec = cs.spectralCoordinate( );
 		Vector<String> spec_unit_vec = spec.worldAxisUnits( );
 		if ( spec_unit_vec(0) == "Hz" ) spec_unit_vec(0) = "GHz";
-		Vector<Double> xy(2);
-		xy(0) = refval(0);
-		xy(1) = refval(1);
-		Vector<Float> zx,zy;
-		if ( ia.getFreqProfile( xy, zx, zy, "world", "freq", 0, 0, 0, spec_unit_vec(0) ) ) {
-		    freq_range.resize(2);
-		    Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
-		    Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
-		    freq_range(0) = min;
-		    freq_range(1) = max;
+		spec.setWorldAxisUnits(spec_unit_vec);
+		freq_range.resize(2);
+		double last_channel = shape_[cs.spectralAxisNumber( )]-1;
+		if ( spec.toWorld(freq_range(0),0) == false ||
+		     spec.toWorld(freq_range(1),last_channel) == false ) {
+		    has_spectral_axis = false;
+		    freq_range.resize(0);
+		} else {
 		    freq_units = spec_unit_vec(0);
-		}
-
-		if ( ia.getFreqProfile( xy, zx, zy, "world", "radio velocity", 0, 0, 0, spec_unit_vec(0) ) ) {
+		    spec.setVelocity( "km/s" );
 		    velo_range.resize(2);
-		    Float min = std::for_each(zx.begin(),zx.end(),min_ftor( ));
-		    Float max = std::for_each(zx.begin(),zx.end(),max_ftor( ));
-		    velo_range(0) = min;
-		    velo_range(1) = max;
+		    if ( spec.pixelToVelocity(velo_range(0),0) == false ||
+			 spec.pixelToVelocity(velo_range(1),last_channel) == false ) {
+			velo_range.resize(0);
+		    } else {
+			velo_units = "km/s";
+		    }
 		}
 	    }
 

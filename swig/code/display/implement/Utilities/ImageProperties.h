@@ -41,9 +41,9 @@ namespace casa {
 		const std::string &directionType( ) const { return direction_type; }
 		bool hasSpectralAxis( ) const { return has_spectral_axis; }
 		const Vector<Int> &shape( ) const { return shape_; }
-		const Vector<Float> &freqRange( ) const { return freq_range; }
+		const Vector<double> &freqRange( ) const { return freq_range; }
 		const std::string &freqUnits( ) const { return freq_units; }
-		const Vector<Float> &veloRange( ) const { return velo_range; }
+		const Vector<double> &veloRange( ) const { return velo_range; }
 		const std::string &veloUnits( ) const { return velo_units; }
 		double beamArea( ) const { return beam_area; }
 		const std::string &path( ) const { return path_; }
@@ -56,9 +56,9 @@ namespace casa {
 		bool has_direction_axis;
 		std::string direction_type;
 		bool has_spectral_axis;
-		Vector<Float> freq_range;
+		Vector<double> freq_range;
 		std::string freq_units;
-		Vector<Float> velo_range;
+		Vector<double> velo_range;
 		std::string velo_units;
 		double beam_area;
 	};
