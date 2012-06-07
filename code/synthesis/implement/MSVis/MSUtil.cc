@@ -205,8 +205,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void MSUtil::rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval, Vector<Int>& indx){
     uInt n=t.nelements();
     if(n >0){
-      retval.resize(1);
-      indx.resize(1);
+      retval.resize(n);
+      indx.resize(n);
       retval[0]=t[0];
       indx[0]=0;
     }
@@ -216,12 +216,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=1; k < n; ++k){ 
       if(t[k] != retval(prev)){
 	++prev;
-	retval.resize(prev+1, True);
+	//retval.resize(prev+1, True);
 	retval[prev]=t[k];
-	indx.resize(prev+1, True);
+	//indx.resize(prev+1, True);
 	indx[prev]=k;
       }
     }
+    retval.resize(prev+1, True);
+    indx.resize(prev+1, True);
     
   }
 

@@ -35,7 +35,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Inputs/Input.h>
 #include <casa/Arrays/IPosition.h>
-//#include <display/QtPlotter/QtCanvas.qo.h>
+#include <display/QtPlotter/SpecFitMonitor.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/Display/PanelDisplay.h>
@@ -75,7 +75,13 @@ namespace casa {
 class QtProfilePrefs;
 class SpectralFitter;
 
-class QtProfile : public QMainWindow, Ui::QtProfileGUI
+//Note:  The purpose of the SpecFitMonitor interface is to provide
+//a communications interface between the class doing spectral line
+//fitting and this class.  By using an interface, we can decouple
+//this class and the class doing the work of spectral fitting as
+//much as possible.
+
+class QtProfile : public QMainWindow, Ui::QtProfileGUI, public SpecFitMonitor
 {
 	Q_OBJECT
 
@@ -114,6 +120,22 @@ public:
 
 	virtual std::string rcid( ) const { return rcid_; }
 
+	//These methods are from the SpecFitMoniter interface.
+	//Their purpose is to provide the class doing the spectral
+	//profile fitting with initial input values, and to inform
+	//this class of status and log messages indicated the result
+	//of a spectral fit.
+	void postStatus( String status );
+	Vector<Float> getXValues() const;
+	Vector<Float> getYValues() const;
+	Vector<Float> getZValues() const;
+	QString getYUnit() const;
+	QString getYUnitPrefix() const;
+	String getXAxisUnit() const;
+	QString getFileName() const;
+	const ImageInterface<Float>* getImage() const;
+	const String getPixelBox() const;
+
 public slots:
 	void zoomIn();
 	void zoomOut();
@@ -129,7 +151,8 @@ public slots:
 	void right();
 	void preferences();
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
-			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis);
+			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
+			bool opticalFitter);
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -154,8 +177,7 @@ public slots:
 	void changeAxis(String xa, String ya, String za, std::vector<int>);
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 	void doImgCollapse();
-	void doLineFit();
-	void specLineFit();
+	//void doLineFit();
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
 	void emitChannelSelect(float xval);
@@ -186,15 +208,13 @@ private:
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
    void setCollapseVals(const Vector<Float> &spcVals);
+   void setUnitsText( String unitStr );
 
    /**
     * Initializes the spectrum positioning tab.
     */
    void initSpectrumPosition();
-   /**
-    * Initializes the spectrum fitting tab.
-    */
-   void initSpectrumFitting();
+
    void setTitle( const QString& shape );
    void copyToLastEvent( const String& c, const Vector<Double> &px,
    	    		const Vector<Double> &py,
@@ -247,7 +267,7 @@ private:
    ImageInterface<Float>* image;
 
    SpectralCollapser *collapser;
-   SpectralFitter    *fitter;
+   //SpectralFitter    *fitter;
 
    QHash<QString, ImageAnalysis*> *over;
    const String WORLD_COORDINATES;

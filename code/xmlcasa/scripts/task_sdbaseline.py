@@ -5,6 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 from asap import _to_list
 from asap.scantable import is_scantable
+import math
 import pylab as pl
 
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
@@ -171,7 +172,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		# set default spectral axis unit
 		if ( specunit != '' ):
 			s.set_unit(specunit)
-		
+
 		# reset frame and doppler if needed
 		if ( frame != '' ):
 			s.set_freqframe(frame)
@@ -276,7 +277,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				del msg
 
 			msk = None
-			
+
 			if (maskmode == 'interact'):
 				new_mask = sd.interactivemask(scan=s)
 				if (len(lmask) > 0):

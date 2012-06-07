@@ -77,12 +77,12 @@ class QtProfilePrefs : public QDialog, Ui::QtProfilePrefsGUI{
 public:
 	QtProfilePrefs(QWidget *parent = 0);
 	QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, int showGrid,
-			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis);
+			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis, bool opticalFitter);
 	~QtProfilePrefs();
 
 signals:
 	void currentPrefs(int stateAutoX, int stateAutoY, int showGrid, int stateMProf,
-			int stateRel, bool showToolTips, bool showTopAxis);
+			int stateRel, bool showToolTips, bool showTopAxis, bool opticalFitter);
 
 private slots:
 	void accepted();

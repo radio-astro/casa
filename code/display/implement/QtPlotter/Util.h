@@ -9,9 +9,13 @@
 #define UTIL_H_
 
 #include <QString>
+
+class QWidget;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 	class Util {
 		public:
+			static void showUserMessage( QString& msg, QWidget* parent);
 			static double degMinSecToRadians( int degrees, int mins, float secs );
 			static double hrMinSecToRadians( int hours, int mins, float secs );
 			static QString toHTML( const QString& baseStr );

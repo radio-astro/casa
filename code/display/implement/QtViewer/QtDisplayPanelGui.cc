@@ -651,7 +651,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 
     bool dimension_set = false;
-    int width, height;
     std::string dim = rc.get("viewer." + rcid() + ".dimensions");
     if ( dim != "" ) {
 	std::stringstream ins(dim);
@@ -751,7 +750,7 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 void QtDisplayPanelGui::doSelectChannel( const Vector<float> &zvec, float zval ) {
     unsigned int size = zvec.size( );
     if ( size == 0 ) return;
-    unsigned int channel_num = zvec[0];
+    unsigned int channel_num = static_cast<unsigned int>(zvec[0]);
     bool forward = zvec[0] < zvec[size-1];
     if ( forward ) {
 	for ( unsigned int i=0; i < size; ++i ) {
@@ -869,7 +868,7 @@ List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
+void QtDisplayPanelGui:: addedData( QString /*type*/, QtDisplayData * ) { }
 
 // Animation slots.
 
@@ -887,11 +886,15 @@ void QtDisplayPanelGui::updateAnimUi_() {
        fslSav = frameSlider_->blockSignals(True);
   
   // Current animator state.
-  Int  frm   = qdp_->frame(),       len  = qdp_->nFrames(),
-       strt  = qdp_->startFrame(),  lst  = qdp_->lastFrame(),
-       stp   = qdp_->step(),        rate = qdp_->animRate(),
-       minr  = qdp_->minRate(),     maxr = qdp_->maxRate(),
-       play  = qdp_->animating();
+  Int  frm   = qdp_->frame();
+  Int len  = qdp_->nFrames();
+  qdp_->startFrame();
+  qdp_->lastFrame();
+  qdp_->step();
+  Int     rate = qdp_->animRate();
+  Int     minr  = qdp_->minRate();
+  Int maxr = qdp_->maxRate();
+  Int play  = qdp_->animating();
   Bool modez = qdp_->modeZ();
   
 
@@ -2072,7 +2075,7 @@ void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) {
 
 
 
-void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
+void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
   // Re-populates ddRegMenu_ with actions.  If doCloseMenu is
   // True (on DD create/close), also recreates ddCloseMenu_.
   // (For now, both menus are always recreated).

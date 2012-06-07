@@ -351,7 +351,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2010', 
-          spw='0,1,2,3')
+          spw='0,1,2,3', usescratch=False)
 
     timing()
 
@@ -448,7 +448,7 @@ if(mystep in thesteps):
              bandtype='B', fillgaps=1, refant = therefant, solnorm = T, append=True)
 
     setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2010', 
-          spw='0,1,2,3')
+          spw='0,1,2,3', usescratch=False)
 
     gaincal(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.G2n', spw =
             '*:16~112', field = '1037*,Titan', minsnr=1.0,
@@ -475,7 +475,8 @@ if(mystep in thesteps):
           spw='*:20~120', selectdata=T, mode='mfs', niter=500,
           gain=0.1, threshold='0.75mJy', psfmode='hogbom',
           interactive=False, mask=[62, 62, 67, 67], imsize=128,
-          cell='1arcsec', weighting='briggs', robust=0.0, nterms=2)
+          cell='1arcsec', weighting='briggs', robust=0.0, nterms=2,
+          usescratch=False)
     
     calstat=imstat(imagename='result-phasecal_cont.image.tt0', region='', box='85,8,120,120')
     rmspcal=(calstat['rms'][0])
@@ -516,7 +517,8 @@ if(mystep in thesteps):
     clean(vis='ngc3256_line.ms', imagename='result-ampcal_cont', 
           field='Titan', spw='0:20~120,1:20~120', mode='mfs', niter=200, 
           threshold='5mJy', psfmode='hogbom', mask=[62, 62, 67, 67], imsize=128,
-          cell='1arcsec', weighting='briggs', robust=0.0)
+          cell='1arcsec', weighting='briggs', robust=0.0,
+          usescratch=False)
 
     calstat=imstat(imagename="result-ampcal_cont.image",region="",box="85,8,120,120")
     rmstitan=(calstat['rms'][0])
@@ -556,7 +558,7 @@ if(mystep in thesteps):
            spw='0:20~53;71~120,1:70~120,2:20~120,3:20~120', psfmode='hogbom',
            mode='mfs', niter=500, threshold='0.3mJy', mask=[42,43,59,60],
            imsize=100, cell='1arcsec', weighting='briggs', robust=0.0, 
-           interactive=False)
+           interactive=False, usescratch=False)
 
     calstat=imstat(imagename='result-ngc3256_cont.image', region='', box='10,10,90,35')
     rmscont=(calstat['rms'][0])
@@ -613,7 +615,7 @@ if(mystep in thesteps):
           spw='0:20~53;71~120,1:70~120,2:20~120,3:20~120', psfmode='hogbom', 
           mode='mfs', niter=500, threshold='0.13mJy', mask=[42,43,59,60], 
           imsize=100, cell='1arcsec', weighting='briggs', robust=0.0,
-          interactive=False)
+          interactive=False, usescratch=False)
 
     calstat=imstat(imagename='result-ngc3256_cont_sc1.image', region='', 
                    box='10,10,90,35')
@@ -653,7 +655,8 @@ if(mystep in thesteps):
           spw='0:38~87', mode='channel', start='', nchan=50, width='', 
           psfmode='hogbom', outframe='LSRK', restfreq='115.271201800GHz', 
           mask=[53,50,87,83], niter=500, interactive=False, imsize=128, cell='1arcsec', 
-          weighting='briggs', robust=0.0, threshold='5mJy')
+          weighting='briggs', robust=0.0, threshold='5mJy',
+          usescratch=False)
 
     timing()
 
@@ -717,7 +720,8 @@ if(mystep in thesteps):
           restfreq='113.48812GHz', selectdata=T, mode='channel',
           niter=500, gain=0.1, psfmode='hogbom', mask=[53,50,87,83],
           interactive=False, imsize=128, cell='1arcsec',
-          weighting='briggs', robust=0.0, threshold='2mJy')
+          weighting='briggs', robust=0.0, threshold='2mJy',
+          usescratch=False)
 
     timing()
 
@@ -742,7 +746,7 @@ if(mystep in thesteps):
 
     timing()
 
-# Clean the NGC3256 CNhi line cube
+# Clean the NGC3256 CNlo line cube
 mystep = 28
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
@@ -753,11 +757,12 @@ if(mystep in thesteps):
            restfreq='113.17049GHz', selectdata=T, mode='channel',
            niter=300, gain=0.1, psfmode='hogbom', mask=[53,50,87,83],
            interactive=False, imsize=128, cell='1arcsec',
-           weighting='briggs', robust=0.0, threshold='2mJy')
+           weighting='briggs', robust=0.0, threshold='2mJy',
+           usescratch=False)
 
     timing()
 
-# Evaluate the NGC3256 CNhi line cube
+# Evaluate the NGC3256 CNlo line cube
 mystep = 29
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]

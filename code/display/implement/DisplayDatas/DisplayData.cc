@@ -801,7 +801,7 @@ void DisplayData::handleEvent(DisplayEvent &ev) {
 }
 
 DisplayData::DisplayData(const DisplayData &other) :
-  DisplayOptions(other) {
+  DisplayOptions(other), DisplayEH(), DlTarget() {
     displaystate = LIMBO;
 }
 

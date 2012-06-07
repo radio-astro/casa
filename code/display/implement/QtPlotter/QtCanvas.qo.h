@@ -37,7 +37,8 @@
 #include <casa/Arrays/IPosition.h>
 
 #include <display/QtPlotter/QtPlotSettings.h>
-
+#include <display/QtPlotter/WorldCanvasTranslator.h>
+#include <display/QtPlotter/ProfileFitMarker.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -50,9 +51,11 @@
 #include <QPixmap>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <map>
 #include <vector>
 #include <graphics/X11/X_exit.h>
+
 
 namespace casa { 
 
@@ -71,7 +74,7 @@ public:
 	GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), fontSize(12), color(Qt::blue) {}
 };
 
-class QtCanvas : public QWidget
+class QtCanvas : public QWidget, public WorldCanvasTranslator
 {
 	Q_OBJECT
 public:
@@ -135,16 +138,20 @@ public:
 	bool getShowToolTips() const { return showToolTips; }
 	void setToolTipYUnit( const QString& yUnit ){ toolTipYUnit = yUnit; }
 	void setToolTipXUnit( const QString& xUnit ){ toolTipXUnit = xUnit; }
-
+	void setProfileFitMarkerCenterPeak( int index, double center, double peak);
+	void setProfileFitMarkerFWHM( int index, double fwhm, double fwhmHeight);
 
 public slots:
    void zoomIn();
    void zoomOut();
    void zoomNeutral();
+   void gaussianCenterPeakSelected();
+   void gaussianFWHMSelected();
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
 	void channelSelect(float xvalue);
+	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -197,6 +204,21 @@ private:
 	 */
 	double getDataX( int pixelPosition ) const;
 
+	//WorldCanvasTranslator interface methods.
+	/**
+	 * Maps a world x value to an x pixel coordinate.
+	 * @param dataX an world X value.
+	 * @return the pixel position of the passed in value.
+	 */
+	int getPixelX( double dataX ) const;
+
+	/**
+	 * Maps a world y value to a y pixel value.
+	 * @param dataY a world y value.
+	 * @return the pixel position of the world y value.
+	 */
+	int getPixelY ( double dataY ) const;
+
 	/**
 	 * Looks for a data point corresponding to the world
 	 * cooordinates (x,y).  Returns an empty string if there
@@ -239,6 +261,12 @@ private:
 	 */
 	QString getXTickLabel( int index, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const;
 
+	/**
+	 * Initializes the shift-right-click pop-up menu that
+	 * the user can use to specify Gaussian estimates.
+	 */
+	void initGaussianEstimateContextMenu();
+
 	enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
@@ -279,10 +307,21 @@ private:
 	int xRectStart;
 	int xRectEnd;
 
-	bool showToolTips;
+
 	bool showTopAxis;
+	bool showToolTips;
 	QString toolTipXUnit;
 	QString toolTipYUnit;
+
+	//Profile Fitting Gaussian Estimation
+	QMenu gaussianContextMenu;
+	double gaussianEstimateX;
+	double gaussianEstimateY;
+	QList<ProfileFitMarker> profileFitMarkers;
+
+	ProfileFitMarker getMarker( int index ) const;
+	void setMarker( int index, ProfileFitMarker& marker );
+
 };
 
 }

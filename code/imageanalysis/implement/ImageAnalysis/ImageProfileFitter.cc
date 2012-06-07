@@ -45,6 +45,10 @@
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
+const String ImageProfileFitter::_CONVERGED = "converged";
+const String ImageProfileFitter::_SUCCEEDED = "succeeded";
+const String ImageProfileFitter::_ITERATION_COUNT = "niter";
+
 const uInt ImageProfileFitter::_nOthers = 2;
 const uInt ImageProfileFitter::_gsPlane = 0;
 const uInt ImageProfileFitter::_lsPlane = 1;
@@ -81,9 +85,10 @@ ImageProfileFitter::ImageProfileFitter(
     	ProfileFitterEstimatesFileParser parser(estimatesFilename);
     	_nonPolyEstimates = parser.getEstimates();
     	_nGaussSinglets = _nonPolyEstimates.nelements();
+
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
-    		<< _nGaussSinglets << " in estimates file " << estimatesFilename
-    		<< LogIO::POST;
+    			<<_nGaussSinglets << " in estimates file " << estimatesFilename
+    			<< LogIO::POST;
     }
     else if (spectralList.nelements() > 0) {
     	_nonPolyEstimates = spectralList;
@@ -108,28 +113,35 @@ ImageProfileFitter::ImageProfileFitter(
 				    << LogIO::EXCEPTION;
 			}
     	}
+
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
-    	    << _nGaussSinglets << " from provided spectral element list"
-    	    << LogIO::POST;
+    			<< _nGaussSinglets << " from provided spectral element list"
+    			<< LogIO::POST;
+
     	*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
-    		<< _nGaussMultiplets << " from provided spectral element list"
-    		<< LogIO::POST;
+    			<< _nGaussMultiplets << " from provided spectral element list"
+    			<< LogIO::POST;
+
     	*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
-			<< _nLorentzSinglets << " from provided spectral element list"
-			<< LogIO::POST;
+    			<< _nLorentzSinglets << " from provided spectral element list"
+    			<< LogIO::POST;
     }
     if (_nonPolyEstimates.nelements() > 0 && ngauss > 0) {
-    	*_getLog() << LogIO::WARN
-    		<< "Estimates specified so ignoring input value of ngauss"
-    		<< LogIO::POST;
+    	*_getLog() << LogIO::WARN << "Estimates specified so ignoring input value of ngauss"
+    			<<LogIO::POST;
     }
+
     _construct();
     _finishConstruction();
 }
 
 ImageProfileFitter::~ImageProfileFitter() {}
 
+
+
+
 Record ImageProfileFitter::fit() {
+
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
@@ -569,10 +581,10 @@ void ImageProfileFitter::_setResults() {
 	);
 	IPosition shape = myTemplate->shape();
 	_results.define("attempted", attemptedArr.reform(shape));
-	_results.define("succeeded", successArr.reform(shape));
-	_results.define("converged", convergedArr.reform(shape));
+	_results.define(_SUCCEEDED, successArr.reform(shape));
+	_results.define(_CONVERGED, convergedArr.reform(shape));
 	_results.define("valid", validArr.reform(shape));
-	_results.define("niter", niterArr.reform(shape));
+	_results.define(_ITERATION_COUNT, niterArr.reform(shape));
 	_results.define("ncomps", nCompArr.reform(shape));
 	_results.define("xUnit", _xUnit);
 	const String yUnit = _getImage()->units().getName();
@@ -1600,9 +1612,19 @@ void ImageProfileFitter::_fitProfiles(
 			}
 		}
 		fitter.clearList();
+
 		if (! fitter.setData (curPos, abcissaType, True)) {
 			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
 		}
+		//curPos seems to just contain a list of zeros.
+		/*else {
+			Vector<Int> curPosVector = curPos.asVector();
+			*_getLog() <<LogIO::WARN << "Writing out curPosVector" << LogIO::POST;
+			for ( int i = 0; i < curPosVector.size(); i++ ){
+
+				*_getLog()<< LogIO::WARN << curPosVector[i]<<LogIO::POST;
+			}
+		}*/
 		if (_nonPolyEstimates.nelements() == 0) {
 			if (! fitter.setGaussianElements (_nGaussSinglets)) {
 				*_getLog() << "Unable to set gaussian elements"
@@ -1792,6 +1814,10 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 		}
 	}
 	return True;
+}
+
+const Array<ImageFit1D<Float> >& ImageProfileFitter::getFitters() const{
+	return _fitters;
 }
 
 } //# NAMESPACE CASA - END

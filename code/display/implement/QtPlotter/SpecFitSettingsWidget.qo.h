@@ -2,15 +2,15 @@
 #define SPECFITSETTINGSWIDGET_QO_H
 
 #include <QtGui/QWidget>
-#include <display/QtPlotter/GaussFitEstimate.h>
 #include <display/QtPlotter/SpecFitSettingsWidget.ui.h>
 
 namespace casa {
 
-class SpecFitSettingsPolynomialWidget;
-class SpecFitSettingsGaussWidget;
-class SpecFitSettingsRangeWidget;
+
 class QtCanvas;
+class LogIO;
+class SpecFitMonitor;
+class SpecFitter;
 
 class SpecFitSettingsWidget : public QWidget
 {
@@ -18,25 +18,28 @@ class SpecFitSettingsWidget : public QWidget
 
 public:
     void setCanvas( QtCanvas* pCanvas );
+    void setFitMonitor( SpecFitMonitor* fitMonitor );
+    void resetSpectralFitter( bool optical );
+    void setLogger( LogIO* log );
+    void setUnits( QString units );
+    void setRange( float start, float end );
+    bool isOptical() const;
     SpecFitSettingsWidget(QWidget *parent = 0);
     ~SpecFitSettingsWidget();
 
+
+
 private slots:
-	void showGaussEstimateDialog( int estimateId = -1 );
-    void specLineFit();
-    void showMainCurve();
-    void setCollapseRange(float start, float end );
+    void setFitRange(float start, float end );
 
 private:
-
-
-    const int NEW_ESTIMATE;
-    SpecFitSettingsPolynomialWidget* polyWidget;
-    SpecFitSettingsGaussWidget* gaussWidget;
-    SpecFitSettingsRangeWidget* rangeWidget;
-    Ui::SpecFitSettingsWidget ui;
-	//QValidator* doubleValidator;
     QtCanvas* pixelCanvas;
+    SpecFitter* specFitter;
+    LogIO* logger;
+    SpecFitMonitor* specFitMonitor;
+    Ui::SpecFitSettingsWidget ui;
+    bool opticalFitter;
+
 };
 }
 #endif // SPECFITSETTINGSWIDGET_QO_H

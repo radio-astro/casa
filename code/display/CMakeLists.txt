@@ -48,11 +48,11 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtPlotter/QtDrawCanvas.qo.h
   implement/QtPlotter/QtDrawColors.qo.h
   implement/QtPlotter/QtDrawer.qo.h
-  implement/QtPlotter/SpecFitEstimateDialog.qo.h
+  implement/QtPlotter/SpecFitLogDialog.qo.h
   implement/QtPlotter/SpecFitSettingsWidget.qo.h
-  implement/QtPlotter/SpecFitSettingsPolynomialWidget.qo.h
-  implement/QtPlotter/SpecFitSettingsGaussWidget.qo.h
-  implement/QtPlotter/SpecFitSettingsRangeWidget.qo.h
+  implement/QtPlotter/SpecFitSettingsFixedTableCell.qo.h
+  implement/QtPlotter/SpecFitSettingsWidgetOptical.qo.h
+  implement/QtPlotter/SpecFitSettingsWidgetRadio.qo.h
   implement/QtViewer/FileBox.qo.h
   implement/QtViewer/MakeMask.qo.h
   implement/QtViewer/MakeRegion.qo.h
@@ -117,11 +117,11 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtViewer/QtDataMgrMsSelect.ui
   implement/QtPlotter/QtProfileGUI.ui
   implement/QtPlotter/QtProfilePrefsGUI.ui
-  implement/QtPlotter/SpecFitEstimateDialog.ui
+  implement/QtPlotter/SpecFitLogDialog.ui
   implement/QtPlotter/SpecFitSettingsWidget.ui
-  implement/QtPlotter/SpecFitSettingsPolynomialWidget.ui
-  implement/QtPlotter/SpecFitSettingsGaussWidget.ui
-  implement/QtPlotter/SpecFitSettingsRangeWidget.ui
+  implement/QtPlotter/SpecFitSettingsWidgetRadio.ui
+  implement/QtPlotter/SpecFitSettingsWidgetOptical.ui
+  implement/QtPlotter/SpecFitSettingsFixedTableCell.ui
   implement/RegionShapes/QtDS9WriteOptions.ui
   implement/RegionShapes/QtEditRegionShape.ui
   implement/RegionShapes/QtNewRegionShape.ui
@@ -349,12 +349,15 @@ casa_add_library( display
   implement/QtPlotter/QtDrawSettings.cc
   implement/QtPlotter/QtDrawer.cc
   implement/QtPlotter/Util.cc
-  implement/QtPlotter/GaussFitEstimate.cc
-  implement/QtPlotter/SpecFitEstimateDialog.cc
+  implement/QtPlotter/ProfileFitMarker.cc
+  implement/QtPlotter/WorldCanvasTranslator.cc
+  implement/QtPlotter/SpecFitLogDialog.cc
   implement/QtPlotter/SpecFitSettingsWidget.cc
-  implement/QtPlotter/SpecFitSettingsPolynomialWidget.cc
-  implement/QtPlotter/SpecFitSettingsGaussWidget.cc
-  implement/QtPlotter/SpecFitSettingsRangeWidget.cc
+  implement/QtPlotter/SpecFitSettingsWidgetOptical.cc
+  implement/QtPlotter/SpecFitSettingsWidgetRadio.cc
+  implement/QtPlotter/SpecFitSettingsFixedTableCell.cc
+  implement/QtPlotter/SpecFitter.cc
+  implement/QtPlotter/SpecFitMonitor.cc
   implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/QtWCBox.cc
