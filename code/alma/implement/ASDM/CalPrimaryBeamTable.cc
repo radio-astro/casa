@@ -67,40 +67,106 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalPrimaryBeam = "CalPrimaryBeam";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalPrimaryBeam_a[] = {
+		
+			"antennaName"
+		,
+			"receiverBand"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "antennaMake"
+		
+			, "numSubband"
+		
+			, "frequencyRange"
+		
+			, "numReceptor"
+		
+			, "polarizationTypes"
+		
+			, "mainBeamEfficiency"
+		
+			, "beamDescriptionUID"
+		
+			, "relativeAmplitudeRms"
+		
+			, "direction"
+		
+			, "minValidDirection"
+		
+			, "maxValidDirection"
+		
+			, "descriptionType"
+		
+			, "imageChannelNumber"
+		
+			, "imageNominalFrequency"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalPrimaryBeam_v (attributesNamesOfCalPrimaryBeam_a, attributesNamesOfCalPrimaryBeam_a + sizeof(attributesNamesOfCalPrimaryBeam_a) / sizeof(attributesNamesOfCalPrimaryBeam_a[0]));
 
-	string CalPrimaryBeamTable::itsName = "CalPrimaryBeam";
-	vector<string> CalPrimaryBeamTable::attributesNames; 
-	vector<string> CalPrimaryBeamTable::attributesNamesInBin; 
-	bool CalPrimaryBeamTable::initAttributesNamesDone = CalPrimaryBeamTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalPrimaryBeam_a[] = {
+    
+    	 "antennaName" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "antennaMake" , "numSubband" , "frequencyRange" , "numReceptor" , "polarizationTypes" , "mainBeamEfficiency" , "beamDescriptionUID" , "relativeAmplitudeRms" , "direction" , "minValidDirection" , "maxValidDirection" , "descriptionType" , "imageChannelNumber" , "imageNominalFrequency" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalPrimaryBeam_v(attributesNamesInBinOfCalPrimaryBeam_a, attributesNamesInBinOfCalPrimaryBeam_a + sizeof(attributesNamesInBinOfCalPrimaryBeam_a) / sizeof(attributesNamesInBinOfCalPrimaryBeam_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalPrimaryBeamTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalPrimaryBeam_a[] = {
+	
+		"antennaName"
+	,
+		"receiverBand"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalPrimaryBeam_v(keyOfCalPrimaryBeam_a, keyOfCalPrimaryBeam_a + sizeof(keyOfCalPrimaryBeam_a) / sizeof(keyOfCalPrimaryBeam_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalPrimaryBeamTable::getKeyName() {
-		return key;
+	const vector<string>& CalPrimaryBeamTable::getKeyName() {
+		return keyOfCalPrimaryBeam_v;
 	}
 
 
 	CalPrimaryBeamTable::CalPrimaryBeamTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,115 +217,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalPrimaryBeamTable::getName() const {
-		return itsName;
+		return entityNameOfCalPrimaryBeam;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPrimaryBeamTable::name() {
-		return itsName;
+		return entityNameOfCalPrimaryBeam;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalPrimaryBeamTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("antennaMake");
-
-		attributesNames.push_back("numSubband");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("mainBeamEfficiency");
-
-		attributesNames.push_back("beamDescriptionUID");
-
-		attributesNames.push_back("relativeAmplitudeRms");
-
-		attributesNames.push_back("direction");
-
-		attributesNames.push_back("minValidDirection");
-
-		attributesNames.push_back("maxValidDirection");
-
-		attributesNames.push_back("descriptionType");
-
-		attributesNames.push_back("imageChannelNumber");
-
-		attributesNames.push_back("imageNominalFrequency");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaMake") ; 
-    	 
-    	attributesNamesInBin.push_back("numSubband") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("mainBeamEfficiency") ; 
-    	 
-    	attributesNamesInBin.push_back("beamDescriptionUID") ; 
-    	 
-    	attributesNamesInBin.push_back("relativeAmplitudeRms") ; 
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	 
-    	attributesNamesInBin.push_back("minValidDirection") ; 
-    	 
-    	attributesNamesInBin.push_back("maxValidDirection") ; 
-    	 
-    	attributesNamesInBin.push_back("descriptionType") ; 
-    	 
-    	attributesNamesInBin.push_back("imageChannelNumber") ; 
-    	 
-    	attributesNamesInBin.push_back("imageNominalFrequency") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalPrimaryBeamTable::getAttributesNames() { return attributesNamesOfCalPrimaryBeam_v; }
 	
-
-	const vector<string>& CalPrimaryBeamTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalPrimaryBeamTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalPrimaryBeamTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalPrimaryBeam_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -452,8 +429,10 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::newRow(CalPrimaryBeamRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalPrimaryBeamRow*  CalPrimaryBeamTable::checkAndAdd(CalPrimaryBeamRow* x)  {
+	CalPrimaryBeamRow*  CalPrimaryBeamTable::checkAndAdd(CalPrimaryBeamRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -638,7 +617,7 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPrimaryBeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clprbm=\"http://Alma/XASDM/CalPrimaryBeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPrimaryBeamTable http://almaobservatory.org/XML/XASDM/3/CalPrimaryBeamTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalPrimaryBeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clprbm=\"http://Alma/XASDM/CalPrimaryBeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPrimaryBeamTable http://almaobservatory.org/XML/XASDM/3/CalPrimaryBeamTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -760,7 +739,7 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPrimaryBeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clprbm=\"http://Alma/XASDM/CalPrimaryBeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPrimaryBeamTable http://almaobservatory.org/XML/XASDM/3/CalPrimaryBeamTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalPrimaryBeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clprbm=\"http://Alma/XASDM/CalPrimaryBeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPrimaryBeamTable http://almaobservatory.org/XML/XASDM/3/CalPrimaryBeamTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPrimaryBeamTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1049,7 +1028,7 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalPrimaryBeam_v.begin(); iter != attributesNamesOfCalPrimaryBeam_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalPrimaryBeam"); 
 		}
@@ -1168,7 +1147,7 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalPrimaryBeam_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

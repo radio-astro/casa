@@ -67,38 +67,128 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSource = "Source";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSource_a[] = {
+		
+			"sourceId"
+		,
+			"timeInterval"
+		,
+			"spectralWindowId"
+		
+		
+			, "code"
+		
+			, "direction"
+		
+			, "properMotion"
+		
+			, "sourceName"
+				
+		
+			, "directionCode"
+		
+			, "directionEquinox"
+		
+			, "calibrationGroup"
+		
+			, "catalog"
+		
+			, "deltaVel"
+		
+			, "position"
+		
+			, "numLines"
+		
+			, "transition"
+		
+			, "restFrequency"
+		
+			, "sysVel"
+		
+			, "rangeVel"
+		
+			, "sourceModel"
+		
+			, "frequencyRefCode"
+		
+			, "numFreq"
+		
+			, "numStokes"
+		
+			, "frequency"
+		
+			, "frequencyInterval"
+		
+			, "stokesParameter"
+		
+			, "flux"
+		
+			, "fluxErr"
+		
+			, "positionAngle"
+		
+			, "positionAngleErr"
+		
+			, "size"
+		
+			, "sizeErr"
+		
+			, "velRefCode"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSource_v (attributesNamesOfSource_a, attributesNamesOfSource_a + sizeof(attributesNamesOfSource_a) / sizeof(attributesNamesOfSource_a[0]));
 
-	string SourceTable::itsName = "Source";
-	vector<string> SourceTable::attributesNames; 
-	vector<string> SourceTable::attributesNamesInBin; 
-	bool SourceTable::initAttributesNamesDone = SourceTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSource_a[] = {
+    
+    	 "sourceId" , "timeInterval" , "spectralWindowId" , "code" , "direction" , "properMotion" , "sourceName" 
+    	,
+    	 "directionCode" , "directionEquinox" , "calibrationGroup" , "catalog" , "deltaVel" , "position" , "numLines" , "transition" , "restFrequency" , "sysVel" , "rangeVel" , "sourceModel" , "frequencyRefCode" , "numFreq" , "numStokes" , "frequency" , "frequencyInterval" , "stokesParameter" , "flux" , "fluxErr" , "positionAngle" , "positionAngleErr" , "size" , "sizeErr" , "velRefCode" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSource_v(attributesNamesInBinOfSource_a, attributesNamesInBinOfSource_a + sizeof(attributesNamesInBinOfSource_a) / sizeof(attributesNamesInBinOfSource_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SourceTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSource_a[] = {
+	
+		"sourceId"
+	,
+		"timeInterval"
+	,
+		"spectralWindowId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSource_v(keyOfSource_a, keyOfSource_a + sizeof(keyOfSource_a) / sizeof(keyOfSource_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SourceTable::getKeyName() {
-		return key;
+	const vector<string>& SourceTable::getKeyName() {
+		return keyOfSource_v;
 	}
 
 
 	SourceTable::SourceTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("sourceId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("spectralWindowId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,163 +239,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SourceTable::getName() const {
-		return itsName;
+		return entityNameOfSource;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SourceTable::name() {
-		return itsName;
+		return entityNameOfSource;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SourceTable::initAttributesNames() {
-
-		attributesNames.push_back("sourceId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("spectralWindowId");
-
-
-		attributesNames.push_back("code");
-
-		attributesNames.push_back("direction");
-
-		attributesNames.push_back("properMotion");
-
-		attributesNames.push_back("sourceName");
-
-
-		attributesNames.push_back("directionCode");
-
-		attributesNames.push_back("directionEquinox");
-
-		attributesNames.push_back("calibrationGroup");
-
-		attributesNames.push_back("catalog");
-
-		attributesNames.push_back("deltaVel");
-
-		attributesNames.push_back("position");
-
-		attributesNames.push_back("numLines");
-
-		attributesNames.push_back("transition");
-
-		attributesNames.push_back("restFrequency");
-
-		attributesNames.push_back("sysVel");
-
-		attributesNames.push_back("rangeVel");
-
-		attributesNames.push_back("sourceModel");
-
-		attributesNames.push_back("frequencyRefCode");
-
-		attributesNames.push_back("numFreq");
-
-		attributesNames.push_back("numStokes");
-
-		attributesNames.push_back("frequency");
-
-		attributesNames.push_back("frequencyInterval");
-
-		attributesNames.push_back("stokesParameter");
-
-		attributesNames.push_back("flux");
-
-		attributesNames.push_back("fluxErr");
-
-		attributesNames.push_back("positionAngle");
-
-		attributesNames.push_back("positionAngleErr");
-
-		attributesNames.push_back("size");
-
-		attributesNames.push_back("sizeErr");
-
-		attributesNames.push_back("velRefCode");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("sourceId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("code") ; 
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	 
-    	attributesNamesInBin.push_back("properMotion") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceName") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("directionCode") ; 
-    	 
-    	attributesNamesInBin.push_back("directionEquinox") ; 
-    	 
-    	attributesNamesInBin.push_back("calibrationGroup") ; 
-    	 
-    	attributesNamesInBin.push_back("catalog") ; 
-    	 
-    	attributesNamesInBin.push_back("deltaVel") ; 
-    	 
-    	attributesNamesInBin.push_back("position") ; 
-    	 
-    	attributesNamesInBin.push_back("numLines") ; 
-    	 
-    	attributesNamesInBin.push_back("transition") ; 
-    	 
-    	attributesNamesInBin.push_back("restFrequency") ; 
-    	 
-    	attributesNamesInBin.push_back("sysVel") ; 
-    	 
-    	attributesNamesInBin.push_back("rangeVel") ; 
-    	 
-    	attributesNamesInBin.push_back("sourceModel") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRefCode") ; 
-    	 
-    	attributesNamesInBin.push_back("numFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("numStokes") ; 
-    	 
-    	attributesNamesInBin.push_back("frequency") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("stokesParameter") ; 
-    	 
-    	attributesNamesInBin.push_back("flux") ; 
-    	 
-    	attributesNamesInBin.push_back("fluxErr") ; 
-    	 
-    	attributesNamesInBin.push_back("positionAngle") ; 
-    	 
-    	attributesNamesInBin.push_back("positionAngleErr") ; 
-    	 
-    	attributesNamesInBin.push_back("size") ; 
-    	 
-    	attributesNamesInBin.push_back("sizeErr") ; 
-    	 
-    	attributesNamesInBin.push_back("velRefCode") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SourceTable::getAttributesNames() { return attributesNamesOfSource_v; }
 	
-
-	const vector<string>& SourceTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SourceTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SourceTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSource_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -476,8 +429,9 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 	
 		
 	void SourceTable::addWithoutCheckingUnique(SourceRow * x) {
-	  //SourceRow * dummy = add(x);
-	  SourceRow * dummy = checkAndAdd(x);
+		SourceRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -500,7 +454,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 	 * @throws DuplicateKey
 	 * @throws UniquenessViolationException 
 	 */
-	SourceRow*  SourceTable::checkAndAdd(SourceRow* x) {
+	SourceRow*  SourceTable::checkAndAdd(SourceRow* x, bool skipCheckUniqueness) {
 		ArrayTime startTime = x->getTimeInterval().getStart();		
 		
 		// Determine the entry in the context map from the appropriate attributes.
@@ -508,26 +462,28 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 		                x->getSpectralWindowId()
 		               );
 
-		// Uniqueness Rule Check
-		if (context.find(k) != context.end()) {
-			for (unsigned int i = 0;  i < context[k].size(); i++) 
-				for (unsigned int j = 0; j < context[k][i].size(); j++)
-					if (
-						(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
+		if (!skipCheckUniqueness) {
+			// Uniqueness Rule Check
+			if (context.find(k) != context.end()) {
+				for (unsigned int i = 0;  i < context[k].size(); i++) 
+					for (unsigned int j = 0; j < context[k][i].size(); j++)
+						if (
+							(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
 					
-						 && (context[k][i][j]->getCode() == x->getCode())
-					
-
-						 && (context[k][i][j]->getDirection() == x->getDirection())
+							 && (context[k][i][j]->getCode() == x->getCode())
 					
 
-						 && (context[k][i][j]->getProperMotion() == x->getProperMotion())
+							 && (context[k][i][j]->getDirection() == x->getDirection())
 					
 
-						 && (context[k][i][j]->getSourceName() == x->getSourceName())
+							 && (context[k][i][j]->getProperMotion() == x->getProperMotion())
 					
-					)
-						throw UniquenessViolationException("Uniqueness violation exception in table SourceTable");			
+
+							 && (context[k][i][j]->getSourceName() == x->getSourceName())
+					
+						)
+							throw UniquenessViolationException("Uniqueness violation exception in table SourceTable");			
+			}
 		}
 
 
@@ -729,7 +685,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/3/SourceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/3/SourceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -851,7 +807,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/3/SourceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:src=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/3/SourceTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SourceTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1176,7 +1132,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSource_v.begin(); iter != attributesNamesOfSource_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Source"); 
 		}
@@ -1295,7 +1251,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSource_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

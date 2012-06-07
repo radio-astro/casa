@@ -67,34 +67,80 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfAntenna = "Antenna";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfAntenna_a[] = {
+		
+			"antennaId"
+		
+		
+			, "name"
+		
+			, "antennaMake"
+		
+			, "antennaType"
+		
+			, "dishDiameter"
+		
+			, "position"
+		
+			, "offset"
+		
+			, "time"
+		
+			, "stationId"
+				
+		
+			, "assocAntennaId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfAntenna_v (attributesNamesOfAntenna_a, attributesNamesOfAntenna_a + sizeof(attributesNamesOfAntenna_a) / sizeof(attributesNamesOfAntenna_a[0]));
 
-	string AntennaTable::itsName = "Antenna";
-	vector<string> AntennaTable::attributesNames; 
-	vector<string> AntennaTable::attributesNamesInBin; 
-	bool AntennaTable::initAttributesNamesDone = AntennaTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfAntenna_a[] = {
+    
+    	 "antennaId" , "name" , "antennaMake" , "antennaType" , "dishDiameter" , "position" , "offset" , "time" , "stationId" 
+    	,
+    	 "assocAntennaId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfAntenna_v(attributesNamesInBinOfAntenna_a, attributesNamesInBinOfAntenna_a + sizeof(attributesNamesInBinOfAntenna_a) / sizeof(attributesNamesInBinOfAntenna_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> AntennaTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfAntenna_a[] = {
+	
+		"antennaId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfAntenna_v(keyOfAntenna_a, keyOfAntenna_a + sizeof(keyOfAntenna_a) / sizeof(keyOfAntenna_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> AntennaTable::getKeyName() {
-		return key;
+	const vector<string>& AntennaTable::getKeyName() {
+		return keyOfAntenna_v;
 	}
 
 
 	AntennaTable::AntennaTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,75 +191,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string AntennaTable::getName() const {
-		return itsName;
+		return entityNameOfAntenna;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string AntennaTable::name() {
-		return itsName;
+		return entityNameOfAntenna;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool AntennaTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-
-		attributesNames.push_back("name");
-
-		attributesNames.push_back("antennaMake");
-
-		attributesNames.push_back("antennaType");
-
-		attributesNames.push_back("dishDiameter");
-
-		attributesNames.push_back("position");
-
-		attributesNames.push_back("offset");
-
-		attributesNames.push_back("time");
-
-		attributesNames.push_back("stationId");
-
-
-		attributesNames.push_back("assocAntennaId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("name") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaMake") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaType") ; 
-    	 
-    	attributesNamesInBin.push_back("dishDiameter") ; 
-    	 
-    	attributesNamesInBin.push_back("position") ; 
-    	 
-    	attributesNamesInBin.push_back("offset") ; 
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	 
-    	attributesNamesInBin.push_back("stationId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("assocAntennaId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& AntennaTable::getAttributesNames() { return attributesNamesOfAntenna_v; }
 	
-
-	const vector<string>& AntennaTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& AntennaTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& AntennaTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfAntenna_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -373,30 +370,32 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	AntennaRow*  AntennaTable::checkAndAdd(AntennaRow* x)  {
+	AntennaRow*  AntennaTable::checkAndAdd(AntennaRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getName()
+				x->getName()
 		,
-			x->getAntennaMake()
+				x->getAntennaMake()
 		,
-			x->getAntennaType()
+				x->getAntennaType()
 		,
-			x->getDishDiameter()
+				x->getDishDiameter()
 		,
-			x->getPosition()
+				x->getPosition()
 		,
-			x->getOffset()
+				x->getOffset()
 		,
-			x->getTime()
+				x->getTime()
 		,
-			x->getStationId()
+				x->getStationId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -539,7 +538,7 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:antnn=\"http://Alma/XASDM/AntennaTable\" xsi:schemaLocation=\"http://Alma/XASDM/AntennaTable http://almaobservatory.org/XML/XASDM/3/AntennaTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:antnn=\"http://Alma/XASDM/AntennaTable\" xsi:schemaLocation=\"http://Alma/XASDM/AntennaTable http://almaobservatory.org/XML/XASDM/3/AntennaTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -661,7 +660,7 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:antnn=\"http://Alma/XASDM/AntennaTable\" xsi:schemaLocation=\"http://Alma/XASDM/AntennaTable http://almaobservatory.org/XML/XASDM/3/AntennaTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:antnn=\"http://Alma/XASDM/AntennaTable\" xsi:schemaLocation=\"http://Alma/XASDM/AntennaTable http://almaobservatory.org/XML/XASDM/3/AntennaTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AntennaTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -920,7 +919,7 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfAntenna_v.begin(); iter != attributesNamesOfAntenna_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Antenna"); 
 		}
@@ -1039,7 +1038,7 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfAntenna_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

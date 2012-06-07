@@ -67,40 +67,76 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfFreqOffset = "FreqOffset";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfFreqOffset_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		,
+			"feedId"
+		
+		
+			, "offset"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfFreqOffset_v (attributesNamesOfFreqOffset_a, attributesNamesOfFreqOffset_a + sizeof(attributesNamesOfFreqOffset_a) / sizeof(attributesNamesOfFreqOffset_a[0]));
 
-	string FreqOffsetTable::itsName = "FreqOffset";
-	vector<string> FreqOffsetTable::attributesNames; 
-	vector<string> FreqOffsetTable::attributesNamesInBin; 
-	bool FreqOffsetTable::initAttributesNamesDone = FreqOffsetTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfFreqOffset_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "offset" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfFreqOffset_v(attributesNamesInBinOfFreqOffset_a, attributesNamesInBinOfFreqOffset_a + sizeof(attributesNamesInBinOfFreqOffset_a) / sizeof(attributesNamesInBinOfFreqOffset_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> FreqOffsetTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfFreqOffset_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+	,
+		"feedId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfFreqOffset_v(keyOfFreqOffset_a, keyOfFreqOffset_a + sizeof(keyOfFreqOffset_a) / sizeof(keyOfFreqOffset_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> FreqOffsetTable::getKeyName() {
-		return key;
+	const vector<string>& FreqOffsetTable::getKeyName() {
+		return keyOfFreqOffset_v;
 	}
 
 
 	FreqOffsetTable::FreqOffsetTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("feedId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,55 +187,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string FreqOffsetTable::getName() const {
-		return itsName;
+		return entityNameOfFreqOffset;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string FreqOffsetTable::name() {
-		return itsName;
+		return entityNameOfFreqOffset;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool FreqOffsetTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("feedId");
-
-
-		attributesNames.push_back("offset");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("offset") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& FreqOffsetTable::getAttributesNames() { return attributesNamesOfFreqOffset_v; }
 	
-
-	const vector<string>& FreqOffsetTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& FreqOffsetTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& FreqOffsetTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfFreqOffset_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -321,7 +328,9 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 	
 		
 	void FreqOffsetTable::addWithoutCheckingUnique(FreqOffsetRow * x) {
-		FreqOffsetRow * dummy = add(x);
+		FreqOffsetRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -340,7 +349,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 			
 			
 			
-	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x) {
+	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -524,7 +533,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -646,7 +655,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FreqOffsetTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -890,7 +899,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfFreqOffset_v.begin(); iter != attributesNamesOfFreqOffset_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "FreqOffset"); 
 		}
@@ -1009,7 +1018,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfFreqOffset_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

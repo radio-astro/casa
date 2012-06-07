@@ -67,40 +67,88 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfGainTracking = "GainTracking";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfGainTracking_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		,
+			"feedId"
+		
+		
+			, "numReceptor"
+		
+			, "attenuator"
+		
+			, "polarizationType"
+				
+		
+			, "samplingLevel"
+		
+			, "numAttFreq"
+		
+			, "attFreq"
+		
+			, "attSpectrum"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfGainTracking_v (attributesNamesOfGainTracking_a, attributesNamesOfGainTracking_a + sizeof(attributesNamesOfGainTracking_a) / sizeof(attributesNamesOfGainTracking_a[0]));
 
-	string GainTrackingTable::itsName = "GainTracking";
-	vector<string> GainTrackingTable::attributesNames; 
-	vector<string> GainTrackingTable::attributesNamesInBin; 
-	bool GainTrackingTable::initAttributesNamesDone = GainTrackingTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfGainTracking_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "numReceptor" , "attenuator" , "polarizationType" 
+    	,
+    	 "samplingLevel" , "numAttFreq" , "attFreq" , "attSpectrum" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfGainTracking_v(attributesNamesInBinOfGainTracking_a, attributesNamesInBinOfGainTracking_a + sizeof(attributesNamesInBinOfGainTracking_a) / sizeof(attributesNamesInBinOfGainTracking_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> GainTrackingTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfGainTracking_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+	,
+		"feedId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfGainTracking_v(keyOfGainTracking_a, keyOfGainTracking_a + sizeof(keyOfGainTracking_a) / sizeof(keyOfGainTracking_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> GainTrackingTable::getKeyName() {
-		return key;
+	const vector<string>& GainTrackingTable::getKeyName() {
+		return keyOfGainTracking_v;
 	}
 
 
 	GainTrackingTable::GainTrackingTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-		key.push_back("feedId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,79 +199,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string GainTrackingTable::getName() const {
-		return itsName;
+		return entityNameOfGainTracking;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string GainTrackingTable::name() {
-		return itsName;
+		return entityNameOfGainTracking;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool GainTrackingTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-		attributesNames.push_back("feedId");
-
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("attenuator");
-
-		attributesNames.push_back("polarizationType");
-
-
-		attributesNames.push_back("samplingLevel");
-
-		attributesNames.push_back("numAttFreq");
-
-		attributesNames.push_back("attFreq");
-
-		attributesNames.push_back("attSpectrum");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("attenuator") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationType") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("samplingLevel") ; 
-    	 
-    	attributesNamesInBin.push_back("numAttFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("attFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("attSpectrum") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& GainTrackingTable::getAttributesNames() { return attributesNamesOfGainTracking_v; }
 	
-
-	const vector<string>& GainTrackingTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& GainTrackingTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& GainTrackingTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfGainTracking_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -353,7 +348,9 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	
 		
 	void GainTrackingTable::addWithoutCheckingUnique(GainTrackingRow * x) {
-		GainTrackingRow * dummy = add(x);
+		GainTrackingRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -372,7 +369,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 			
 			
 			
-	GainTrackingRow*  GainTrackingTable::checkAndAdd(GainTrackingRow* x) {
+	GainTrackingRow*  GainTrackingTable::checkAndAdd(GainTrackingRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -556,7 +553,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -678,7 +675,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:gntrk=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/3/GainTrackingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='GainTrackingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -940,7 +937,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfGainTracking_v.begin(); iter != attributesNamesOfGainTracking_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "GainTracking"); 
 		}
@@ -1059,7 +1056,7 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfGainTracking_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

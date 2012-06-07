@@ -67,40 +67,82 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSysPower = "SysPower";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSysPower_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"feedId"
+		,
+			"timeInterval"
+		
+		
+			, "numReceptor"
+				
+		
+			, "switchedPowerDifference"
+		
+			, "switchedPowerSum"
+		
+			, "requantizerGain"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSysPower_v (attributesNamesOfSysPower_a, attributesNamesOfSysPower_a + sizeof(attributesNamesOfSysPower_a) / sizeof(attributesNamesOfSysPower_a[0]));
 
-	string SysPowerTable::itsName = "SysPower";
-	vector<string> SysPowerTable::attributesNames; 
-	vector<string> SysPowerTable::attributesNamesInBin; 
-	bool SysPowerTable::initAttributesNamesDone = SysPowerTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSysPower_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "feedId" , "timeInterval" , "numReceptor" 
+    	,
+    	 "switchedPowerDifference" , "switchedPowerSum" , "requantizerGain" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSysPower_v(attributesNamesInBinOfSysPower_a, attributesNamesInBinOfSysPower_a + sizeof(attributesNamesInBinOfSysPower_a) / sizeof(attributesNamesInBinOfSysPower_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SysPowerTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSysPower_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"feedId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSysPower_v(keyOfSysPower_a, keyOfSysPower_a + sizeof(keyOfSysPower_a) / sizeof(keyOfSysPower_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SysPowerTable::getKeyName() {
-		return key;
+	const vector<string>& SysPowerTable::getKeyName() {
+		return keyOfSysPower_v;
 	}
 
 
 	SysPowerTable::SysPowerTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("feedId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,67 +193,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SysPowerTable::getName() const {
-		return itsName;
+		return entityNameOfSysPower;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SysPowerTable::name() {
-		return itsName;
+		return entityNameOfSysPower;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SysPowerTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("feedId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("numReceptor");
-
-
-		attributesNames.push_back("switchedPowerDifference");
-
-		attributesNames.push_back("switchedPowerSum");
-
-		attributesNames.push_back("requantizerGain");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("feedId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("switchedPowerDifference") ; 
-    	 
-    	attributesNamesInBin.push_back("switchedPowerSum") ; 
-    	 
-    	attributesNamesInBin.push_back("requantizerGain") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SysPowerTable::getAttributesNames() { return attributesNamesOfSysPower_v; }
 	
-
-	const vector<string>& SysPowerTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SysPowerTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SysPowerTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSysPower_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -333,7 +334,9 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 	
 		
 	void SysPowerTable::addWithoutCheckingUnique(SysPowerRow * x) {
-		SysPowerRow * dummy = add(x);
+		SysPowerRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -352,7 +355,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 			
 			
 			
-	SysPowerRow*  SysPowerTable::checkAndAdd(SysPowerRow* x) {
+	SysPowerRow*  SysPowerTable::checkAndAdd(SysPowerRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -536,7 +539,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -658,7 +661,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SysPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:syspwr=\"http://Alma/XASDM/SysPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/SysPowerTable http://almaobservatory.org/XML/XASDM/3/SysPowerTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SysPowerTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -911,7 +914,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSysPower_v.begin(); iter != attributesNamesOfSysPower_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "SysPower"); 
 		}
@@ -1030,7 +1033,7 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSysPower_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,40 +67,124 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalFocus = "CalFocus";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalFocus_a[] = {
+		
+			"antennaName"
+		,
+			"receiverBand"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "ambientTemperature"
+		
+			, "atmPhaseCorrection"
+		
+			, "focusMethod"
+		
+			, "frequencyRange"
+		
+			, "pointingDirection"
+		
+			, "numReceptor"
+		
+			, "polarizationTypes"
+		
+			, "wereFixed"
+		
+			, "offset"
+		
+			, "offsetError"
+		
+			, "offsetWasTied"
+		
+			, "reducedChiSquared"
+		
+			, "position"
+				
+		
+			, "polarizationsAveraged"
+		
+			, "focusCurveWidth"
+		
+			, "focusCurveWidthError"
+		
+			, "focusCurveWasFixed"
+		
+			, "offIntensity"
+		
+			, "offIntensityError"
+		
+			, "offIntensityWasFixed"
+		
+			, "peakIntensity"
+		
+			, "peakIntensityError"
+		
+			, "peakIntensityWasFixed"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalFocus_v (attributesNamesOfCalFocus_a, attributesNamesOfCalFocus_a + sizeof(attributesNamesOfCalFocus_a) / sizeof(attributesNamesOfCalFocus_a[0]));
 
-	string CalFocusTable::itsName = "CalFocus";
-	vector<string> CalFocusTable::attributesNames; 
-	vector<string> CalFocusTable::attributesNamesInBin; 
-	bool CalFocusTable::initAttributesNamesDone = CalFocusTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalFocus_a[] = {
+    
+    	 "antennaName" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "ambientTemperature" , "atmPhaseCorrection" , "focusMethod" , "frequencyRange" , "pointingDirection" , "numReceptor" , "polarizationTypes" , "wereFixed" , "offset" , "offsetError" , "offsetWasTied" , "reducedChiSquared" , "position" 
+    	,
+    	 "polarizationsAveraged" , "focusCurveWidth" , "focusCurveWidthError" , "focusCurveWasFixed" , "offIntensity" , "offIntensityError" , "offIntensityWasFixed" , "peakIntensity" , "peakIntensityError" , "peakIntensityWasFixed" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalFocus_v(attributesNamesInBinOfCalFocus_a, attributesNamesInBinOfCalFocus_a + sizeof(attributesNamesInBinOfCalFocus_a) / sizeof(attributesNamesInBinOfCalFocus_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalFocusTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalFocus_a[] = {
+	
+		"antennaName"
+	,
+		"receiverBand"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalFocus_v(keyOfCalFocus_a, keyOfCalFocus_a + sizeof(keyOfCalFocus_a) / sizeof(keyOfCalFocus_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalFocusTable::getKeyName() {
-		return key;
+	const vector<string>& CalFocusTable::getKeyName() {
+		return keyOfCalFocus_v;
 	}
 
 
 	CalFocusTable::CalFocusTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,151 +235,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalFocusTable::getName() const {
-		return itsName;
+		return entityNameOfCalFocus;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalFocusTable::name() {
-		return itsName;
+		return entityNameOfCalFocus;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalFocusTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("ambientTemperature");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("focusMethod");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("pointingDirection");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("wereFixed");
-
-		attributesNames.push_back("offset");
-
-		attributesNames.push_back("offsetError");
-
-		attributesNames.push_back("offsetWasTied");
-
-		attributesNames.push_back("reducedChiSquared");
-
-		attributesNames.push_back("position");
-
-
-		attributesNames.push_back("polarizationsAveraged");
-
-		attributesNames.push_back("focusCurveWidth");
-
-		attributesNames.push_back("focusCurveWidthError");
-
-		attributesNames.push_back("focusCurveWasFixed");
-
-		attributesNames.push_back("offIntensity");
-
-		attributesNames.push_back("offIntensityError");
-
-		attributesNames.push_back("offIntensityWasFixed");
-
-		attributesNames.push_back("peakIntensity");
-
-		attributesNames.push_back("peakIntensityError");
-
-		attributesNames.push_back("peakIntensityWasFixed");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("ambientTemperature") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("focusMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("pointingDirection") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("wereFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("offset") ; 
-    	 
-    	attributesNamesInBin.push_back("offsetError") ; 
-    	 
-    	attributesNamesInBin.push_back("offsetWasTied") ; 
-    	 
-    	attributesNamesInBin.push_back("reducedChiSquared") ; 
-    	 
-    	attributesNamesInBin.push_back("position") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("polarizationsAveraged") ; 
-    	 
-    	attributesNamesInBin.push_back("focusCurveWidth") ; 
-    	 
-    	attributesNamesInBin.push_back("focusCurveWidthError") ; 
-    	 
-    	attributesNamesInBin.push_back("focusCurveWasFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensity") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensityError") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensityWasFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensity") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensityError") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensityWasFixed") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalFocusTable::getAttributesNames() { return attributesNamesOfCalFocus_v; }
 	
-
-	const vector<string>& CalFocusTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalFocusTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalFocusTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalFocus_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -484,8 +443,10 @@ CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalFocusRow*  CalFocusTable::checkAndAdd(CalFocusRow* x)  {
+	CalFocusRow*  CalFocusTable::checkAndAdd(CalFocusRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -668,7 +629,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -790,7 +751,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFocusTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1106,7 +1067,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalFocus_v.begin(); iter != attributesNamesOfCalFocus_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalFocus"); 
 		}
@@ -1225,7 +1186,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalFocus_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

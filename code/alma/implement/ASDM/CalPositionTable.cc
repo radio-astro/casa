@@ -67,40 +67,108 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalPosition = "CalPosition";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalPosition_a[] = {
+		
+			"antennaName"
+		,
+			"atmPhaseCorrection"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "antennaPosition"
+		
+			, "stationName"
+		
+			, "stationPosition"
+		
+			, "positionMethod"
+		
+			, "receiverBand"
+		
+			, "numAntenna"
+		
+			, "refAntennaNames"
+		
+			, "axesOffset"
+		
+			, "axesOffsetErr"
+		
+			, "axesOffsetFixed"
+		
+			, "positionOffset"
+		
+			, "positionErr"
+		
+			, "reducedChiSquared"
+				
+		
+			, "delayRms"
+		
+			, "phaseRms"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalPosition_v (attributesNamesOfCalPosition_a, attributesNamesOfCalPosition_a + sizeof(attributesNamesOfCalPosition_a) / sizeof(attributesNamesOfCalPosition_a[0]));
 
-	string CalPositionTable::itsName = "CalPosition";
-	vector<string> CalPositionTable::attributesNames; 
-	vector<string> CalPositionTable::attributesNamesInBin; 
-	bool CalPositionTable::initAttributesNamesDone = CalPositionTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalPosition_a[] = {
+    
+    	 "antennaName" , "atmPhaseCorrection" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "antennaPosition" , "stationName" , "stationPosition" , "positionMethod" , "receiverBand" , "numAntenna" , "refAntennaNames" , "axesOffset" , "axesOffsetErr" , "axesOffsetFixed" , "positionOffset" , "positionErr" , "reducedChiSquared" 
+    	,
+    	 "delayRms" , "phaseRms" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalPosition_v(attributesNamesInBinOfCalPosition_a, attributesNamesInBinOfCalPosition_a + sizeof(attributesNamesInBinOfCalPosition_a) / sizeof(attributesNamesInBinOfCalPosition_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalPositionTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalPosition_a[] = {
+	
+		"antennaName"
+	,
+		"atmPhaseCorrection"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalPosition_v(keyOfCalPosition_a, keyOfCalPosition_a + sizeof(keyOfCalPosition_a) / sizeof(keyOfCalPosition_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalPositionTable::getKeyName() {
-		return key;
+	const vector<string>& CalPositionTable::getKeyName() {
+		return keyOfCalPosition_v;
 	}
 
 
 	CalPositionTable::CalPositionTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("atmPhaseCorrection");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,119 +219,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalPositionTable::getName() const {
-		return itsName;
+		return entityNameOfCalPosition;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPositionTable::name() {
-		return itsName;
+		return entityNameOfCalPosition;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalPositionTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("antennaPosition");
-
-		attributesNames.push_back("stationName");
-
-		attributesNames.push_back("stationPosition");
-
-		attributesNames.push_back("positionMethod");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("refAntennaNames");
-
-		attributesNames.push_back("axesOffset");
-
-		attributesNames.push_back("axesOffsetErr");
-
-		attributesNames.push_back("axesOffsetFixed");
-
-		attributesNames.push_back("positionOffset");
-
-		attributesNames.push_back("positionErr");
-
-		attributesNames.push_back("reducedChiSquared");
-
-
-		attributesNames.push_back("delayRms");
-
-		attributesNames.push_back("phaseRms");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaPosition") ; 
-    	 
-    	attributesNamesInBin.push_back("stationName") ; 
-    	 
-    	attributesNamesInBin.push_back("stationPosition") ; 
-    	 
-    	attributesNamesInBin.push_back("positionMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("refAntennaNames") ; 
-    	 
-    	attributesNamesInBin.push_back("axesOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("axesOffsetErr") ; 
-    	 
-    	attributesNamesInBin.push_back("axesOffsetFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("positionOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("positionErr") ; 
-    	 
-    	attributesNamesInBin.push_back("reducedChiSquared") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("delayRms") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseRms") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalPositionTable::getAttributesNames() { return attributesNamesOfCalPosition_v; }
 	
-
-	const vector<string>& CalPositionTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalPositionTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalPositionTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalPosition_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -452,8 +427,10 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalPositionRow*  CalPositionTable::checkAndAdd(CalPositionRow* x)  {
+	CalPositionRow*  CalPositionTable::checkAndAdd(CalPositionRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -636,7 +613,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -758,7 +735,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPositionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1050,7 +1027,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalPosition_v.begin(); iter != attributesNamesOfCalPosition_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalPosition"); 
 		}
@@ -1169,7 +1146,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalPosition_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

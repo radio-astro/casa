@@ -92,6 +92,8 @@
 
 #include <Representable.h>
 
+#include <pthread.h>
+
 namespace asdm {
 
 //class asdm::ASDM;
@@ -107,7 +109,7 @@ class CorrelatorModeRow;
  * Contains information on a Correlator processor.
  * <BR>
  
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "1.62", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CorrelatorMode </CAPTION>
@@ -206,7 +208,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static std::vector<std::string> getKeyName();
+	static const std::vector<std::string>& getKeyName();
 
 
 	virtual ~CorrelatorModeTable();
@@ -472,34 +474,6 @@ private:
 
 
 	/**
-	 * The name of this table.
-	 */
-	static std::string itsName;
-	
-	/**
-	 * The attributes names.
-	 */
-	static std::vector<std::string> attributesNames;
-	
-	/**
-	 * The attributes names in the order in which they appear in the binary representation of the table.
-	 */
-	static std::vector<std::string> attributesNamesInBin;
-	
-
-	/**
-	 * A method to fill attributesNames and attributesNamesInBin;
-	 */
-	static bool initAttributesNames(), initAttributesNamesDone ;
-	
-
-	/**
-	 * The list of field names that make up key key.
-	 */
-	static std::vector<std::string> key;
-
-
-	/**
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
@@ -508,7 +482,7 @@ private:
 	 * @throws UniquenessViolationException
 	 
 	 */
-	CorrelatorModeRow* checkAndAdd(CorrelatorModeRow* x) ;
+	CorrelatorModeRow* checkAndAdd(CorrelatorModeRow* x, bool skipCheckUniqueness=false) ;
 	
 	/**
 	 * Brutally append an CorrelatorModeRow x to the collection of rows already stored in this table. No uniqueness check is done !

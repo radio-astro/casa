@@ -67,34 +67,72 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfSeeing = "Seeing";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfSeeing_a[] = {
+		
+			"timeInterval"
+		
+		
+			, "numBaseLength"
+		
+			, "baseLength"
+		
+			, "phaseRms"
+		
+			, "seeing"
+		
+			, "exponent"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfSeeing_v (attributesNamesOfSeeing_a, attributesNamesOfSeeing_a + sizeof(attributesNamesOfSeeing_a) / sizeof(attributesNamesOfSeeing_a[0]));
 
-	string SeeingTable::itsName = "Seeing";
-	vector<string> SeeingTable::attributesNames; 
-	vector<string> SeeingTable::attributesNamesInBin; 
-	bool SeeingTable::initAttributesNamesDone = SeeingTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfSeeing_a[] = {
+    
+    	 "timeInterval" , "numBaseLength" , "baseLength" , "phaseRms" , "seeing" , "exponent" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfSeeing_v(attributesNamesInBinOfSeeing_a, attributesNamesInBinOfSeeing_a + sizeof(attributesNamesInBinOfSeeing_a) / sizeof(attributesNamesInBinOfSeeing_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> SeeingTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfSeeing_a[] = {
+	
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfSeeing_v(keyOfSeeing_a, keyOfSeeing_a + sizeof(keyOfSeeing_a) / sizeof(keyOfSeeing_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> SeeingTable::getKeyName() {
-		return key;
+	const vector<string>& SeeingTable::getKeyName() {
+		return keyOfSeeing_v;
 	}
 
 
 	SeeingTable::SeeingTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,59 +183,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string SeeingTable::getName() const {
-		return itsName;
+		return entityNameOfSeeing;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string SeeingTable::name() {
-		return itsName;
+		return entityNameOfSeeing;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool SeeingTable::initAttributesNames() {
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("numBaseLength");
-
-		attributesNames.push_back("baseLength");
-
-		attributesNames.push_back("phaseRms");
-
-		attributesNames.push_back("seeing");
-
-		attributesNames.push_back("exponent");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("numBaseLength") ; 
-    	 
-    	attributesNamesInBin.push_back("baseLength") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseRms") ; 
-    	 
-    	attributesNamesInBin.push_back("seeing") ; 
-    	 
-    	attributesNamesInBin.push_back("exponent") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& SeeingTable::getAttributesNames() { return attributesNamesOfSeeing_v; }
 	
-
-	const vector<string>& SeeingTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& SeeingTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& SeeingTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfSeeing_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -291,7 +296,9 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 	
 		
 	void SeeingTable::addWithoutCheckingUnique(SeeingRow * x) {
-		SeeingRow * dummy = add(x);
+		SeeingRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -307,7 +314,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		
 		
 			
-	SeeingRow*  SeeingTable::checkAndAdd(SeeingRow* x) {
+	SeeingRow*  SeeingTable::checkAndAdd(SeeingRow* x, bool skipCheckUniqueness) {
 		if (getRowByKey(
 		
 			x->getTimeInterval()
@@ -420,7 +427,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/3/SeeingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/3/SeeingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -542,7 +549,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/3/SeeingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sng=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/3/SeeingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SeeingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -789,7 +796,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfSeeing_v.begin(); iter != attributesNamesOfSeeing_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Seeing"); 
 		}
@@ -908,7 +915,7 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfSeeing_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

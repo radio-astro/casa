@@ -67,38 +67,126 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfDelayModel = "DelayModel";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfDelayModel_a[] = {
+		
+			"antennaId"
+		,
+			"spectralWindowId"
+		,
+			"timeInterval"
+		
+		
+			, "numPoly"
+		
+			, "phaseDelay"
+		
+			, "phaseDelayRate"
+		
+			, "groupDelay"
+		
+			, "groupDelayRate"
+		
+			, "fieldId"
+				
+		
+			, "timeOrigin"
+		
+			, "atmosphericGroupDelay"
+		
+			, "atmosphericGroupDelayRate"
+		
+			, "geometricDelay"
+		
+			, "geometricDelayRate"
+		
+			, "numLO"
+		
+			, "LOOffset"
+		
+			, "LOOffsetRate"
+		
+			, "dispersiveDelay"
+		
+			, "dispersiveDelayRate"
+		
+			, "atmosphericDryDelay"
+		
+			, "atmosphericWetDelay"
+		
+			, "padDelay"
+		
+			, "antennaDelay"
+		
+			, "numReceptor"
+		
+			, "polarizationType"
+		
+			, "electronicDelay"
+		
+			, "electronicDelayRate"
+		
+			, "receiverDelay"
+		
+			, "IFDelay"
+		
+			, "LODelay"
+		
+			, "crossPolarizationDelay"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfDelayModel_v (attributesNamesOfDelayModel_a, attributesNamesOfDelayModel_a + sizeof(attributesNamesOfDelayModel_a) / sizeof(attributesNamesOfDelayModel_a[0]));
 
-	string DelayModelTable::itsName = "DelayModel";
-	vector<string> DelayModelTable::attributesNames; 
-	vector<string> DelayModelTable::attributesNamesInBin; 
-	bool DelayModelTable::initAttributesNamesDone = DelayModelTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfDelayModel_a[] = {
+    
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "numPoly" , "phaseDelay" , "phaseDelayRate" , "groupDelay" , "groupDelayRate" , "fieldId" 
+    	,
+    	 "timeOrigin" , "atmosphericGroupDelay" , "atmosphericGroupDelayRate" , "geometricDelay" , "geometricDelayRate" , "numLO" , "LOOffset" , "LOOffsetRate" , "dispersiveDelay" , "dispersiveDelayRate" , "atmosphericDryDelay" , "atmosphericWetDelay" , "padDelay" , "antennaDelay" , "numReceptor" , "polarizationType" , "electronicDelay" , "electronicDelayRate" , "receiverDelay" , "IFDelay" , "LODelay" , "crossPolarizationDelay" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfDelayModel_v(attributesNamesInBinOfDelayModel_a, attributesNamesInBinOfDelayModel_a + sizeof(attributesNamesInBinOfDelayModel_a) / sizeof(attributesNamesInBinOfDelayModel_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> DelayModelTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfDelayModel_a[] = {
+	
+		"antennaId"
+	,
+		"spectralWindowId"
+	,
+		"timeInterval"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfDelayModel_v(keyOfDelayModel_a, keyOfDelayModel_a + sizeof(keyOfDelayModel_a) / sizeof(keyOfDelayModel_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> DelayModelTable::getKeyName() {
-		return key;
+	const vector<string>& DelayModelTable::getKeyName() {
+		return keyOfDelayModel_v;
 	}
 
 
 	DelayModelTable::DelayModelTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaId");
-	
-		key.push_back("spectralWindowId");
-	
-		key.push_back("timeInterval");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -149,159 +237,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string DelayModelTable::getName() const {
-		return itsName;
+		return entityNameOfDelayModel;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string DelayModelTable::name() {
-		return itsName;
+		return entityNameOfDelayModel;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool DelayModelTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("spectralWindowId");
-
-		attributesNames.push_back("timeInterval");
-
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("phaseDelay");
-
-		attributesNames.push_back("phaseDelayRate");
-
-		attributesNames.push_back("groupDelay");
-
-		attributesNames.push_back("groupDelayRate");
-
-		attributesNames.push_back("fieldId");
-
-
-		attributesNames.push_back("timeOrigin");
-
-		attributesNames.push_back("atmosphericGroupDelay");
-
-		attributesNames.push_back("atmosphericGroupDelayRate");
-
-		attributesNames.push_back("geometricDelay");
-
-		attributesNames.push_back("geometricDelayRate");
-
-		attributesNames.push_back("numLO");
-
-		attributesNames.push_back("LOOffset");
-
-		attributesNames.push_back("LOOffsetRate");
-
-		attributesNames.push_back("dispersiveDelay");
-
-		attributesNames.push_back("dispersiveDelayRate");
-
-		attributesNames.push_back("atmosphericDryDelay");
-
-		attributesNames.push_back("atmosphericWetDelay");
-
-		attributesNames.push_back("padDelay");
-
-		attributesNames.push_back("antennaDelay");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationType");
-
-		attributesNames.push_back("electronicDelay");
-
-		attributesNames.push_back("electronicDelayRate");
-
-		attributesNames.push_back("receiverDelay");
-
-		attributesNames.push_back("IFDelay");
-
-		attributesNames.push_back("LODelay");
-
-		attributesNames.push_back("crossPolarizationDelay");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("spectralWindowId") ; 
-    	 
-    	attributesNamesInBin.push_back("timeInterval") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("phaseDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("groupDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("groupDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("fieldId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("timeOrigin") ; 
-    	 
-    	attributesNamesInBin.push_back("atmosphericGroupDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("atmosphericGroupDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("geometricDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("geometricDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("numLO") ; 
-    	 
-    	attributesNamesInBin.push_back("LOOffset") ; 
-    	 
-    	attributesNamesInBin.push_back("LOOffsetRate") ; 
-    	 
-    	attributesNamesInBin.push_back("dispersiveDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("dispersiveDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("atmosphericDryDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("atmosphericWetDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("padDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationType") ; 
-    	 
-    	attributesNamesInBin.push_back("electronicDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("electronicDelayRate") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("IFDelay") ; 
-    	 
-    	attributesNamesInBin.push_back("LODelay") ; 
-    	 
-    	attributesNamesInBin.push_back("crossPolarizationDelay") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& DelayModelTable::getAttributesNames() { return attributesNamesOfDelayModel_v; }
 	
-
-	const vector<string>& DelayModelTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& DelayModelTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& DelayModelTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfDelayModel_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -435,7 +390,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	
 		
 	void DelayModelTable::addWithoutCheckingUnique(DelayModelRow * x) {
-		DelayModelRow * dummy = add(x);
+		DelayModelRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
 	
 
@@ -454,7 +411,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 			
 			
 			
-	DelayModelRow*  DelayModelTable::checkAndAdd(DelayModelRow* x) {
+	DelayModelRow*  DelayModelTable::checkAndAdd(DelayModelRow* x, bool skipCheckUniqueness) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -636,7 +593,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -758,7 +715,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<DelayModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:dlymdl=\"http://Alma/XASDM/DelayModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/DelayModelTable http://almaobservatory.org/XML/XASDM/3/DelayModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='DelayModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1080,7 +1037,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfDelayModel_v.begin(); iter != attributesNamesOfDelayModel_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "DelayModel"); 
 		}
@@ -1199,7 +1156,7 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfDelayModel_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,34 +67,62 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfEphemeris = "Ephemeris";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfEphemeris_a[] = {
+		
+			"ephemerisId"
+		
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfEphemeris_v (attributesNamesOfEphemeris_a, attributesNamesOfEphemeris_a + sizeof(attributesNamesOfEphemeris_a) / sizeof(attributesNamesOfEphemeris_a[0]));
 
-	string EphemerisTable::itsName = "Ephemeris";
-	vector<string> EphemerisTable::attributesNames; 
-	vector<string> EphemerisTable::attributesNamesInBin; 
-	bool EphemerisTable::initAttributesNamesDone = EphemerisTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfEphemeris_a[] = {
+    
+    	 "ephemerisId" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfEphemeris_v(attributesNamesInBinOfEphemeris_a, attributesNamesInBinOfEphemeris_a + sizeof(attributesNamesInBinOfEphemeris_a) / sizeof(attributesNamesInBinOfEphemeris_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> EphemerisTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfEphemeris_a[] = {
+	
+		"ephemerisId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfEphemeris_v(keyOfEphemeris_a, keyOfEphemeris_a + sizeof(keyOfEphemeris_a) / sizeof(keyOfEphemeris_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> EphemerisTable::getKeyName() {
-		return key;
+	const vector<string>& EphemerisTable::getKeyName() {
+		return keyOfEphemeris_v;
 	}
 
 
 	EphemerisTable::EphemerisTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("ephemerisId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,39 +173,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string EphemerisTable::getName() const {
-		return itsName;
+		return entityNameOfEphemeris;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string EphemerisTable::name() {
-		return itsName;
+		return entityNameOfEphemeris;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool EphemerisTable::initAttributesNames() {
-
-		attributesNames.push_back("ephemerisId");
-
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("ephemerisId") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& EphemerisTable::getAttributesNames() { return attributesNamesOfEphemeris_v; }
 	
-
-	const vector<string>& EphemerisTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& EphemerisTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& EphemerisTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfEphemeris_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -272,10 +287,12 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x)  {
+	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -386,7 +403,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -508,7 +525,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='EphemerisTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -740,7 +757,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfEphemeris_v.begin(); iter != attributesNamesOfEphemeris_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Ephemeris"); 
 		}
@@ -859,7 +876,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfEphemeris_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

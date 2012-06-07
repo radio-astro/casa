@@ -67,34 +67,90 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfAnnotation = "Annotation";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfAnnotation_a[] = {
+		
+			"annotationId"
+		
+		
+			, "time"
+		
+			, "issue"
+		
+			, "details"
+				
+		
+			, "numAntenna"
+		
+			, "basebandName"
+		
+			, "numBaseband"
+		
+			, "interval"
+		
+			, "dValue"
+		
+			, "vdValue"
+		
+			, "vvdValues"
+		
+			, "llValue"
+		
+			, "vllValue"
+		
+			, "vvllValue"
+		
+			, "antennaId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfAnnotation_v (attributesNamesOfAnnotation_a, attributesNamesOfAnnotation_a + sizeof(attributesNamesOfAnnotation_a) / sizeof(attributesNamesOfAnnotation_a[0]));
 
-	string AnnotationTable::itsName = "Annotation";
-	vector<string> AnnotationTable::attributesNames; 
-	vector<string> AnnotationTable::attributesNamesInBin; 
-	bool AnnotationTable::initAttributesNamesDone = AnnotationTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfAnnotation_a[] = {
+    
+    	 "annotationId" , "time" , "issue" , "details" 
+    	,
+    	 "numAntenna" , "basebandName" , "numBaseband" , "interval" , "dValue" , "vdValue" , "vvdValues" , "llValue" , "vllValue" , "vvllValue" , "antennaId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfAnnotation_v(attributesNamesInBinOfAnnotation_a, attributesNamesInBinOfAnnotation_a + sizeof(attributesNamesInBinOfAnnotation_a) / sizeof(attributesNamesInBinOfAnnotation_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> AnnotationTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfAnnotation_a[] = {
+	
+		"annotationId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfAnnotation_v(keyOfAnnotation_a, keyOfAnnotation_a + sizeof(keyOfAnnotation_a) / sizeof(keyOfAnnotation_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> AnnotationTable::getKeyName() {
-		return key;
+	const vector<string>& AnnotationTable::getKeyName() {
+		return keyOfAnnotation_v;
 	}
 
 
 	AnnotationTable::AnnotationTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("annotationId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,95 +201,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string AnnotationTable::getName() const {
-		return itsName;
+		return entityNameOfAnnotation;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string AnnotationTable::name() {
-		return itsName;
+		return entityNameOfAnnotation;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool AnnotationTable::initAttributesNames() {
-
-		attributesNames.push_back("annotationId");
-
-
-		attributesNames.push_back("time");
-
-		attributesNames.push_back("issue");
-
-		attributesNames.push_back("details");
-
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("numBaseband");
-
-		attributesNames.push_back("interval");
-
-		attributesNames.push_back("dValue");
-
-		attributesNames.push_back("vdValue");
-
-		attributesNames.push_back("vvdValues");
-
-		attributesNames.push_back("llValue");
-
-		attributesNames.push_back("vllValue");
-
-		attributesNames.push_back("vvllValue");
-
-		attributesNames.push_back("antennaId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("annotationId") ; 
-    	 
-    	attributesNamesInBin.push_back("time") ; 
-    	 
-    	attributesNamesInBin.push_back("issue") ; 
-    	 
-    	attributesNamesInBin.push_back("details") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("numBaseband") ; 
-    	 
-    	attributesNamesInBin.push_back("interval") ; 
-    	 
-    	attributesNamesInBin.push_back("dValue") ; 
-    	 
-    	attributesNamesInBin.push_back("vdValue") ; 
-    	 
-    	attributesNamesInBin.push_back("vvdValues") ; 
-    	 
-    	attributesNamesInBin.push_back("llValue") ; 
-    	 
-    	attributesNamesInBin.push_back("vllValue") ; 
-    	 
-    	attributesNamesInBin.push_back("vvllValue") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& AnnotationTable::getAttributesNames() { return attributesNamesOfAnnotation_v; }
 	
-
-	const vector<string>& AnnotationTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& AnnotationTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& AnnotationTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfAnnotation_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -363,20 +350,22 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	AnnotationRow*  AnnotationTable::checkAndAdd(AnnotationRow* x)  {
+	AnnotationRow*  AnnotationTable::checkAndAdd(AnnotationRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getTime()
+				x->getTime()
 		,
-			x->getIssue()
+				x->getIssue()
 		,
-			x->getDetails()
+				x->getDetails()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -509,7 +498,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -631,7 +620,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AnnotationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -905,7 +894,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfAnnotation_v.begin(); iter != attributesNamesOfAnnotation_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Annotation"); 
 		}
@@ -1024,7 +1013,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfAnnotation_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

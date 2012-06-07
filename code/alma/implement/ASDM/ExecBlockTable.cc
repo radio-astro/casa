@@ -67,34 +67,118 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfExecBlock = "ExecBlock";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfExecBlock_a[] = {
+		
+			"execBlockId"
+		
+		
+			, "startTime"
+		
+			, "endTime"
+		
+			, "execBlockNum"
+		
+			, "execBlockUID"
+		
+			, "projectUID"
+		
+			, "configName"
+		
+			, "telescopeName"
+		
+			, "observerName"
+		
+			, "numObservingLog"
+		
+			, "observingLog"
+		
+			, "sessionReference"
+		
+			, "baseRangeMin"
+		
+			, "baseRangeMax"
+		
+			, "baseRmsMinor"
+		
+			, "baseRmsMajor"
+		
+			, "basePa"
+		
+			, "aborted"
+		
+			, "numAntenna"
+		
+			, "antennaId"
+		
+			, "sBSummaryId"
+				
+		
+			, "releaseDate"
+		
+			, "schedulerMode"
+		
+			, "siteAltitude"
+		
+			, "siteLongitude"
+		
+			, "siteLatitude"
+		
+			, "observingScript"
+		
+			, "observingScriptUID"
+		
+			, "scaleId"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfExecBlock_v (attributesNamesOfExecBlock_a, attributesNamesOfExecBlock_a + sizeof(attributesNamesOfExecBlock_a) / sizeof(attributesNamesOfExecBlock_a[0]));
 
-	string ExecBlockTable::itsName = "ExecBlock";
-	vector<string> ExecBlockTable::attributesNames; 
-	vector<string> ExecBlockTable::attributesNamesInBin; 
-	bool ExecBlockTable::initAttributesNamesDone = ExecBlockTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfExecBlock_a[] = {
+    
+    	 "execBlockId" , "startTime" , "endTime" , "execBlockNum" , "execBlockUID" , "projectUID" , "configName" , "telescopeName" , "observerName" , "numObservingLog" , "observingLog" , "sessionReference" , "baseRangeMin" , "baseRangeMax" , "baseRmsMinor" , "baseRmsMajor" , "basePa" , "aborted" , "numAntenna" , "antennaId" , "sBSummaryId" 
+    	,
+    	 "releaseDate" , "schedulerMode" , "siteAltitude" , "siteLongitude" , "siteLatitude" , "observingScript" , "observingScriptUID" , "scaleId" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfExecBlock_v(attributesNamesInBinOfExecBlock_a, attributesNamesInBinOfExecBlock_a + sizeof(attributesNamesInBinOfExecBlock_a) / sizeof(attributesNamesInBinOfExecBlock_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ExecBlockTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfExecBlock_a[] = {
+	
+		"execBlockId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfExecBlock_v(keyOfExecBlock_a, keyOfExecBlock_a + sizeof(keyOfExecBlock_a) / sizeof(keyOfExecBlock_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ExecBlockTable::getKeyName() {
-		return key;
+	const vector<string>& ExecBlockTable::getKeyName() {
+		return keyOfExecBlock_v;
 	}
 
 
 	ExecBlockTable::ExecBlockTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("execBlockId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,151 +229,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ExecBlockTable::getName() const {
-		return itsName;
+		return entityNameOfExecBlock;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ExecBlockTable::name() {
-		return itsName;
+		return entityNameOfExecBlock;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ExecBlockTable::initAttributesNames() {
-
-		attributesNames.push_back("execBlockId");
-
-
-		attributesNames.push_back("startTime");
-
-		attributesNames.push_back("endTime");
-
-		attributesNames.push_back("execBlockNum");
-
-		attributesNames.push_back("execBlockUID");
-
-		attributesNames.push_back("projectUID");
-
-		attributesNames.push_back("configName");
-
-		attributesNames.push_back("telescopeName");
-
-		attributesNames.push_back("observerName");
-
-		attributesNames.push_back("numObservingLog");
-
-		attributesNames.push_back("observingLog");
-
-		attributesNames.push_back("sessionReference");
-
-		attributesNames.push_back("baseRangeMin");
-
-		attributesNames.push_back("baseRangeMax");
-
-		attributesNames.push_back("baseRmsMinor");
-
-		attributesNames.push_back("baseRmsMajor");
-
-		attributesNames.push_back("basePa");
-
-		attributesNames.push_back("aborted");
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("antennaId");
-
-		attributesNames.push_back("sBSummaryId");
-
-
-		attributesNames.push_back("releaseDate");
-
-		attributesNames.push_back("schedulerMode");
-
-		attributesNames.push_back("siteAltitude");
-
-		attributesNames.push_back("siteLongitude");
-
-		attributesNames.push_back("siteLatitude");
-
-		attributesNames.push_back("observingScript");
-
-		attributesNames.push_back("observingScriptUID");
-
-		attributesNames.push_back("scaleId");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("execBlockId") ; 
-    	 
-    	attributesNamesInBin.push_back("startTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endTime") ; 
-    	 
-    	attributesNamesInBin.push_back("execBlockNum") ; 
-    	 
-    	attributesNamesInBin.push_back("execBlockUID") ; 
-    	 
-    	attributesNamesInBin.push_back("projectUID") ; 
-    	 
-    	attributesNamesInBin.push_back("configName") ; 
-    	 
-    	attributesNamesInBin.push_back("telescopeName") ; 
-    	 
-    	attributesNamesInBin.push_back("observerName") ; 
-    	 
-    	attributesNamesInBin.push_back("numObservingLog") ; 
-    	 
-    	attributesNamesInBin.push_back("observingLog") ; 
-    	 
-    	attributesNamesInBin.push_back("sessionReference") ; 
-    	 
-    	attributesNamesInBin.push_back("baseRangeMin") ; 
-    	 
-    	attributesNamesInBin.push_back("baseRangeMax") ; 
-    	 
-    	attributesNamesInBin.push_back("baseRmsMinor") ; 
-    	 
-    	attributesNamesInBin.push_back("baseRmsMajor") ; 
-    	 
-    	attributesNamesInBin.push_back("basePa") ; 
-    	 
-    	attributesNamesInBin.push_back("aborted") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaId") ; 
-    	 
-    	attributesNamesInBin.push_back("sBSummaryId") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("releaseDate") ; 
-    	 
-    	attributesNamesInBin.push_back("schedulerMode") ; 
-    	 
-    	attributesNamesInBin.push_back("siteAltitude") ; 
-    	 
-    	attributesNamesInBin.push_back("siteLongitude") ; 
-    	 
-    	attributesNamesInBin.push_back("siteLatitude") ; 
-    	 
-    	attributesNamesInBin.push_back("observingScript") ; 
-    	 
-    	attributesNamesInBin.push_back("observingScriptUID") ; 
-    	 
-    	attributesNamesInBin.push_back("scaleId") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ExecBlockTable::getAttributesNames() { return attributesNamesOfExecBlock_v; }
 	
-
-	const vector<string>& ExecBlockTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ExecBlockTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ExecBlockTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfExecBlock_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -521,54 +480,56 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	ExecBlockRow*  ExecBlockTable::checkAndAdd(ExecBlockRow* x)  {
+	ExecBlockRow*  ExecBlockTable::checkAndAdd(ExecBlockRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getStartTime()
+				x->getStartTime()
 		,
-			x->getEndTime()
+				x->getEndTime()
 		,
-			x->getExecBlockNum()
+				x->getExecBlockNum()
 		,
-			x->getExecBlockUID()
+				x->getExecBlockUID()
 		,
-			x->getProjectUID()
+				x->getProjectUID()
 		,
-			x->getConfigName()
+				x->getConfigName()
 		,
-			x->getTelescopeName()
+				x->getTelescopeName()
 		,
-			x->getObserverName()
+				x->getObserverName()
 		,
-			x->getNumObservingLog()
+				x->getNumObservingLog()
 		,
-			x->getObservingLog()
+				x->getObservingLog()
 		,
-			x->getSessionReference()
+				x->getSessionReference()
 		,
-			x->getBaseRangeMin()
+				x->getBaseRangeMin()
 		,
-			x->getBaseRangeMax()
+				x->getBaseRangeMax()
 		,
-			x->getBaseRmsMinor()
+				x->getBaseRmsMinor()
 		,
-			x->getBaseRmsMajor()
+				x->getBaseRmsMajor()
 		,
-			x->getBasePa()
+				x->getBasePa()
 		,
-			x->getAborted()
+				x->getAborted()
 		,
-			x->getNumAntenna()
+				x->getNumAntenna()
 		,
-			x->getAntennaId()
+				x->getAntennaId()
 		,
-			x->getSBSummaryId()
+				x->getSBSummaryId()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -735,7 +696,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/3/ExecBlockTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/3/ExecBlockTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -857,7 +818,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/3/ExecBlockTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:excblk=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/3/ExecBlockTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ExecBlockTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1173,7 +1134,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfExecBlock_v.begin(); iter != attributesNamesOfExecBlock_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "ExecBlock"); 
 		}
@@ -1292,7 +1253,7 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfExecBlock_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

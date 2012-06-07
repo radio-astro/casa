@@ -67,42 +67,140 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalAtmosphere = "CalAtmosphere";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalAtmosphere_a[] = {
+		
+			"antennaName"
+		,
+			"receiverBand"
+		,
+			"basebandName"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "numFreq"
+		
+			, "numLoad"
+		
+			, "numReceptor"
+		
+			, "forwardEffSpectrum"
+		
+			, "frequencyRange"
+		
+			, "groundPressure"
+		
+			, "groundRelHumidity"
+		
+			, "frequencySpectrum"
+		
+			, "groundTemperature"
+		
+			, "polarizationTypes"
+		
+			, "powerSkySpectrum"
+		
+			, "powerLoadSpectrum"
+		
+			, "syscalType"
+		
+			, "tAtmSpectrum"
+		
+			, "tRecSpectrum"
+		
+			, "tSysSpectrum"
+		
+			, "tauSpectrum"
+		
+			, "tAtm"
+		
+			, "tRec"
+		
+			, "tSys"
+		
+			, "tau"
+		
+			, "water"
+		
+			, "waterError"
+				
+		
+			, "alphaSpectrum"
+		
+			, "forwardEfficiency"
+		
+			, "forwardEfficiencyError"
+		
+			, "sbGain"
+		
+			, "sbGainError"
+		
+			, "sbGainSpectrum"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalAtmosphere_v (attributesNamesOfCalAtmosphere_a, attributesNamesOfCalAtmosphere_a + sizeof(attributesNamesOfCalAtmosphere_a) / sizeof(attributesNamesOfCalAtmosphere_a[0]));
 
-	string CalAtmosphereTable::itsName = "CalAtmosphere";
-	vector<string> CalAtmosphereTable::attributesNames; 
-	vector<string> CalAtmosphereTable::attributesNamesInBin; 
-	bool CalAtmosphereTable::initAttributesNamesDone = CalAtmosphereTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalAtmosphere_a[] = {
+    
+    	 "antennaName" , "receiverBand" , "basebandName" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "numFreq" , "numLoad" , "numReceptor" , "forwardEffSpectrum" , "frequencyRange" , "groundPressure" , "groundRelHumidity" , "frequencySpectrum" , "groundTemperature" , "polarizationTypes" , "powerSkySpectrum" , "powerLoadSpectrum" , "syscalType" , "tAtmSpectrum" , "tRecSpectrum" , "tSysSpectrum" , "tauSpectrum" , "tAtm" , "tRec" , "tSys" , "tau" , "water" , "waterError" 
+    	,
+    	 "alphaSpectrum" , "forwardEfficiency" , "forwardEfficiencyError" , "sbGain" , "sbGainError" , "sbGainSpectrum" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalAtmosphere_v(attributesNamesInBinOfCalAtmosphere_a, attributesNamesInBinOfCalAtmosphere_a + sizeof(attributesNamesInBinOfCalAtmosphere_a) / sizeof(attributesNamesInBinOfCalAtmosphere_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalAtmosphereTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalAtmosphere_a[] = {
+	
+		"antennaName"
+	,
+		"receiverBand"
+	,
+		"basebandName"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalAtmosphere_v(keyOfCalAtmosphere_a, keyOfCalAtmosphere_a + sizeof(keyOfCalAtmosphere_a) / sizeof(keyOfCalAtmosphere_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalAtmosphereTable::getKeyName() {
-		return key;
+	const vector<string>& CalAtmosphereTable::getKeyName() {
+		return keyOfCalAtmosphere_v;
 	}
 
 
 	CalAtmosphereTable::CalAtmosphereTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("basebandName");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -153,179 +251,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalAtmosphereTable::getName() const {
-		return itsName;
+		return entityNameOfCalAtmosphere;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalAtmosphereTable::name() {
-		return itsName;
+		return entityNameOfCalAtmosphere;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalAtmosphereTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("basebandName");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("numFreq");
-
-		attributesNames.push_back("numLoad");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("forwardEffSpectrum");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("groundPressure");
-
-		attributesNames.push_back("groundRelHumidity");
-
-		attributesNames.push_back("frequencySpectrum");
-
-		attributesNames.push_back("groundTemperature");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("powerSkySpectrum");
-
-		attributesNames.push_back("powerLoadSpectrum");
-
-		attributesNames.push_back("syscalType");
-
-		attributesNames.push_back("tAtmSpectrum");
-
-		attributesNames.push_back("tRecSpectrum");
-
-		attributesNames.push_back("tSysSpectrum");
-
-		attributesNames.push_back("tauSpectrum");
-
-		attributesNames.push_back("tAtm");
-
-		attributesNames.push_back("tRec");
-
-		attributesNames.push_back("tSys");
-
-		attributesNames.push_back("tau");
-
-		attributesNames.push_back("water");
-
-		attributesNames.push_back("waterError");
-
-
-		attributesNames.push_back("alphaSpectrum");
-
-		attributesNames.push_back("forwardEfficiency");
-
-		attributesNames.push_back("forwardEfficiencyError");
-
-		attributesNames.push_back("sbGain");
-
-		attributesNames.push_back("sbGainError");
-
-		attributesNames.push_back("sbGainSpectrum");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("basebandName") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("numFreq") ; 
-    	 
-    	attributesNamesInBin.push_back("numLoad") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("forwardEffSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("groundPressure") ; 
-    	 
-    	attributesNamesInBin.push_back("groundRelHumidity") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencySpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("groundTemperature") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("powerSkySpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("powerLoadSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("syscalType") ; 
-    	 
-    	attributesNamesInBin.push_back("tAtmSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tRecSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tSysSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tauSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("tAtm") ; 
-    	 
-    	attributesNamesInBin.push_back("tRec") ; 
-    	 
-    	attributesNamesInBin.push_back("tSys") ; 
-    	 
-    	attributesNamesInBin.push_back("tau") ; 
-    	 
-    	attributesNamesInBin.push_back("water") ; 
-    	 
-    	attributesNamesInBin.push_back("waterError") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("alphaSpectrum") ; 
-    	 
-    	attributesNamesInBin.push_back("forwardEfficiency") ; 
-    	 
-    	attributesNamesInBin.push_back("forwardEfficiencyError") ; 
-    	 
-    	attributesNamesInBin.push_back("sbGain") ; 
-    	 
-    	attributesNamesInBin.push_back("sbGainError") ; 
-    	 
-    	attributesNamesInBin.push_back("sbGainSpectrum") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalAtmosphereTable::getAttributesNames() { return attributesNamesOfCalAtmosphere_v; }
 	
-
-	const vector<string>& CalAtmosphereTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalAtmosphereTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalAtmosphereTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalAtmosphere_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -562,8 +507,10 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalAtmosphereRow*  CalAtmosphereTable::checkAndAdd(CalAtmosphereRow* x)  {
+	CalAtmosphereRow*  CalAtmosphereTable::checkAndAdd(CalAtmosphereRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -774,7 +721,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -896,7 +843,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/3/CalAtmosphereTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAtmosphereTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1233,7 +1180,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalAtmosphere_v.begin(); iter != attributesNamesOfCalAtmosphere_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalAtmosphere"); 
 		}
@@ -1352,7 +1299,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalAtmosphere_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

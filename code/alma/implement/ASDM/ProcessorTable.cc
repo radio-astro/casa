@@ -67,34 +67,68 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfProcessor = "Processor";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfProcessor_a[] = {
+		
+			"processorId"
+		
+		
+			, "modeId"
+		
+			, "processorType"
+		
+			, "processorSubType"
+				
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfProcessor_v (attributesNamesOfProcessor_a, attributesNamesOfProcessor_a + sizeof(attributesNamesOfProcessor_a) / sizeof(attributesNamesOfProcessor_a[0]));
 
-	string ProcessorTable::itsName = "Processor";
-	vector<string> ProcessorTable::attributesNames; 
-	vector<string> ProcessorTable::attributesNamesInBin; 
-	bool ProcessorTable::initAttributesNamesDone = ProcessorTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfProcessor_a[] = {
+    
+    	 "processorId" , "modeId" , "processorType" , "processorSubType" 
+    	,
+    	
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfProcessor_v(attributesNamesInBinOfProcessor_a, attributesNamesInBinOfProcessor_a + sizeof(attributesNamesInBinOfProcessor_a) / sizeof(attributesNamesInBinOfProcessor_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> ProcessorTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfProcessor_a[] = {
+	
+		"processorId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfProcessor_v(keyOfProcessor_a, keyOfProcessor_a + sizeof(keyOfProcessor_a) / sizeof(keyOfProcessor_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> ProcessorTable::getKeyName() {
-		return key;
+	const vector<string>& ProcessorTable::getKeyName() {
+		return keyOfProcessor_v;
 	}
 
 
 	ProcessorTable::ProcessorTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("processorId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -145,51 +179,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string ProcessorTable::getName() const {
-		return itsName;
+		return entityNameOfProcessor;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string ProcessorTable::name() {
-		return itsName;
+		return entityNameOfProcessor;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool ProcessorTable::initAttributesNames() {
-
-		attributesNames.push_back("processorId");
-
-
-		attributesNames.push_back("modeId");
-
-		attributesNames.push_back("processorType");
-
-		attributesNames.push_back("processorSubType");
-
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("processorId") ; 
-    	 
-    	attributesNamesInBin.push_back("modeId") ; 
-    	 
-    	attributesNamesInBin.push_back("processorType") ; 
-    	 
-    	attributesNamesInBin.push_back("processorSubType") ; 
-    	
-    	
-    
-    	return true; 
-	}
+	const vector<string>& ProcessorTable::getAttributesNames() { return attributesNamesOfProcessor_v; }
 	
-
-	const vector<string>& ProcessorTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& ProcessorTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& ProcessorTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfProcessor_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -319,20 +328,22 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 	 * @throws UniquenessViolationException
 	 
 	 */
-	ProcessorRow*  ProcessorTable::checkAndAdd(ProcessorRow* x)  {
+	ProcessorRow*  ProcessorTable::checkAndAdd(ProcessorRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 	 
 		 
-		if (lookup(
+			if (lookup(
 			
-			x->getModeId()
+				x->getModeId()
 		,
-			x->getProcessorType()
+				x->getProcessorType()
 		,
-			x->getProcessorSubType()
+				x->getProcessorSubType()
 		
-		)) throw UniquenessViolationException();
+			)) throw UniquenessViolationException();
 		
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -465,7 +476,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/3/ProcessorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/3/ProcessorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -587,7 +598,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/3/ProcessorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:prcssr=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/3/ProcessorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ProcessorTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -828,7 +839,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfProcessor_v.begin(); iter != attributesNamesOfProcessor_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "Processor"); 
 		}
@@ -947,7 +958,7 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfProcessor_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

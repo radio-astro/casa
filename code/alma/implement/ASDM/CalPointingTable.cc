@@ -67,40 +67,132 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalPointing = "CalPointing";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalPointing_a[] = {
+		
+			"antennaName"
+		,
+			"receiverBand"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "ambientTemperature"
+		
+			, "antennaMake"
+		
+			, "atmPhaseCorrection"
+		
+			, "direction"
+		
+			, "frequencyRange"
+		
+			, "pointingModelMode"
+		
+			, "pointingMethod"
+		
+			, "numReceptor"
+		
+			, "polarizationTypes"
+		
+			, "collOffsetRelative"
+		
+			, "collOffsetAbsolute"
+		
+			, "collError"
+		
+			, "collOffsetTied"
+		
+			, "reducedChiSquared"
+				
+		
+			, "averagedPolarizations"
+		
+			, "beamPA"
+		
+			, "beamPAError"
+		
+			, "beamPAWasFixed"
+		
+			, "beamWidth"
+		
+			, "beamWidthError"
+		
+			, "beamWidthWasFixed"
+		
+			, "offIntensity"
+		
+			, "offIntensityError"
+		
+			, "offIntensityWasFixed"
+		
+			, "peakIntensity"
+		
+			, "peakIntensityError"
+		
+			, "peakIntensityWasFixed"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalPointing_v (attributesNamesOfCalPointing_a, attributesNamesOfCalPointing_a + sizeof(attributesNamesOfCalPointing_a) / sizeof(attributesNamesOfCalPointing_a[0]));
 
-	string CalPointingTable::itsName = "CalPointing";
-	vector<string> CalPointingTable::attributesNames; 
-	vector<string> CalPointingTable::attributesNamesInBin; 
-	bool CalPointingTable::initAttributesNamesDone = CalPointingTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalPointing_a[] = {
+    
+    	 "antennaName" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "ambientTemperature" , "antennaMake" , "atmPhaseCorrection" , "direction" , "frequencyRange" , "pointingModelMode" , "pointingMethod" , "numReceptor" , "polarizationTypes" , "collOffsetRelative" , "collOffsetAbsolute" , "collError" , "collOffsetTied" , "reducedChiSquared" 
+    	,
+    	 "averagedPolarizations" , "beamPA" , "beamPAError" , "beamPAWasFixed" , "beamWidth" , "beamWidthError" , "beamWidthWasFixed" , "offIntensity" , "offIntensityError" , "offIntensityWasFixed" , "peakIntensity" , "peakIntensityError" , "peakIntensityWasFixed" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalPointing_v(attributesNamesInBinOfCalPointing_a, attributesNamesInBinOfCalPointing_a + sizeof(attributesNamesInBinOfCalPointing_a) / sizeof(attributesNamesInBinOfCalPointing_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalPointingTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalPointing_a[] = {
+	
+		"antennaName"
+	,
+		"receiverBand"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalPointing_v(keyOfCalPointing_a, keyOfCalPointing_a + sizeof(keyOfCalPointing_a) / sizeof(keyOfCalPointing_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalPointingTable::getKeyName() {
-		return key;
+	const vector<string>& CalPointingTable::getKeyName() {
+		return keyOfCalPointing_v;
 	}
 
 
 	CalPointingTable::CalPointingTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("antennaName");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -151,167 +243,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalPointingTable::getName() const {
-		return itsName;
+		return entityNameOfCalPointing;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalPointingTable::name() {
-		return itsName;
+		return entityNameOfCalPointing;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalPointingTable::initAttributesNames() {
-
-		attributesNames.push_back("antennaName");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("ambientTemperature");
-
-		attributesNames.push_back("antennaMake");
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("direction");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("pointingModelMode");
-
-		attributesNames.push_back("pointingMethod");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("collOffsetRelative");
-
-		attributesNames.push_back("collOffsetAbsolute");
-
-		attributesNames.push_back("collError");
-
-		attributesNames.push_back("collOffsetTied");
-
-		attributesNames.push_back("reducedChiSquared");
-
-
-		attributesNames.push_back("averagedPolarizations");
-
-		attributesNames.push_back("beamPA");
-
-		attributesNames.push_back("beamPAError");
-
-		attributesNames.push_back("beamPAWasFixed");
-
-		attributesNames.push_back("beamWidth");
-
-		attributesNames.push_back("beamWidthError");
-
-		attributesNames.push_back("beamWidthWasFixed");
-
-		attributesNames.push_back("offIntensity");
-
-		attributesNames.push_back("offIntensityError");
-
-		attributesNames.push_back("offIntensityWasFixed");
-
-		attributesNames.push_back("peakIntensity");
-
-		attributesNames.push_back("peakIntensityError");
-
-		attributesNames.push_back("peakIntensityWasFixed");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("antennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("ambientTemperature") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaMake") ; 
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("direction") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("pointingModelMode") ; 
-    	 
-    	attributesNamesInBin.push_back("pointingMethod") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("collOffsetRelative") ; 
-    	 
-    	attributesNamesInBin.push_back("collOffsetAbsolute") ; 
-    	 
-    	attributesNamesInBin.push_back("collError") ; 
-    	 
-    	attributesNamesInBin.push_back("collOffsetTied") ; 
-    	 
-    	attributesNamesInBin.push_back("reducedChiSquared") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("averagedPolarizations") ; 
-    	 
-    	attributesNamesInBin.push_back("beamPA") ; 
-    	 
-    	attributesNamesInBin.push_back("beamPAError") ; 
-    	 
-    	attributesNamesInBin.push_back("beamPAWasFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("beamWidth") ; 
-    	 
-    	attributesNamesInBin.push_back("beamWidthError") ; 
-    	 
-    	attributesNamesInBin.push_back("beamWidthWasFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensity") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensityError") ; 
-    	 
-    	attributesNamesInBin.push_back("offIntensityWasFixed") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensity") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensityError") ; 
-    	 
-    	attributesNamesInBin.push_back("peakIntensityWasFixed") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalPointingTable::getAttributesNames() { return attributesNamesOfCalPointing_v; }
 	
-
-	const vector<string>& CalPointingTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalPointingTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalPointingTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalPointing_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -504,8 +455,10 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalPointingRow*  CalPointingTable::checkAndAdd(CalPointingRow* x)  {
+	CalPointingRow*  CalPointingTable::checkAndAdd(CalPointingRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -690,7 +643,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/3/CalPointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/3/CalPointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -812,7 +765,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/3/CalPointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clpntg=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/3/CalPointingTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPointingTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1140,7 +1093,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalPointing_v.begin(); iter != attributesNamesOfCalPointing_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalPointing"); 
 		}
@@ -1259,7 +1212,7 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalPointing_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )

@@ -67,42 +67,104 @@ using namespace asdm;
 using namespace boost;
 
 namespace asdm {
+	// The name of the entity we will store in this table.
+	static string entityNameOfCalCurve = "CalCurve";
+	
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order : key, required value, optional value.
+	//
+	static string attributesNamesOfCalCurve_a[] = {
+		
+			"atmPhaseCorrection"
+		,
+			"typeCurve"
+		,
+			"receiverBand"
+		,
+			"calDataId"
+		,
+			"calReductionId"
+		
+		
+			, "startValidTime"
+		
+			, "endValidTime"
+		
+			, "frequencyRange"
+		
+			, "numAntenna"
+		
+			, "numPoly"
+		
+			, "numReceptor"
+		
+			, "antennaNames"
+		
+			, "refAntennaName"
+		
+			, "polarizationTypes"
+		
+			, "curve"
+		
+			, "reducedChiSquared"
+				
+		
+			, "numBaseline"
+		
+			, "rms"
+				
+	};
+	
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesOfCalCurve_v (attributesNamesOfCalCurve_a, attributesNamesOfCalCurve_a + sizeof(attributesNamesOfCalCurve_a) / sizeof(attributesNamesOfCalCurve_a[0]));
 
-	string CalCurveTable::itsName = "CalCurve";
-	vector<string> CalCurveTable::attributesNames; 
-	vector<string> CalCurveTable::attributesNamesInBin; 
-	bool CalCurveTable::initAttributesNamesDone = CalCurveTable::initAttributesNames();
+	// An array of string containing the names of the columns of this table.
+	// The array is filled in the order where the names would be read by default in the XML header of a file containing
+	// the table exported in binary mode.
+	//	
+	static string attributesNamesInBinOfCalCurve_a[] = {
+    
+    	 "atmPhaseCorrection" , "typeCurve" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "frequencyRange" , "numAntenna" , "numPoly" , "numReceptor" , "antennaNames" , "refAntennaName" , "polarizationTypes" , "curve" , "reducedChiSquared" 
+    	,
+    	 "numBaseline" , "rms" 
+    
+	};
+	        			
+	// A vector of string whose content is a copy of the strings in the array above.
+	//
+	static vector<string> attributesNamesInBinOfCalCurve_v(attributesNamesInBinOfCalCurve_a, attributesNamesInBinOfCalCurve_a + sizeof(attributesNamesInBinOfCalCurve_a) / sizeof(attributesNamesInBinOfCalCurve_a[0]));		
 	
 
-	/**
-	 * The list of field names that make up key key.
-	 * (Initialization is in the constructor.)
-	 */
-	vector<string> CalCurveTable::key;
+	// The array of attributes (or column) names that make up key key.
+	//
+	string keyOfCalCurve_a[] = {
+	
+		"atmPhaseCorrection"
+	,
+		"typeCurve"
+	,
+		"receiverBand"
+	,
+		"calDataId"
+	,
+		"calReductionId"
+		 
+	};
+	 
+	// A vector of strings which are copies of those stored in the array above.
+	vector<string> keyOfCalCurve_v(keyOfCalCurve_a, keyOfCalCurve_a + sizeof(keyOfCalCurve_a) / sizeof(keyOfCalCurve_a[0]));
 
 	/**
 	 * Return the list of field names that make up key key
-	 * as an array of strings.
+	 * as a const reference to a vector of strings.
 	 */	
-	vector<string> CalCurveTable::getKeyName() {
-		return key;
+	const vector<string>& CalCurveTable::getKeyName() {
+		return keyOfCalCurve_v;
 	}
 
 
 	CalCurveTable::CalCurveTable(ASDM &c) : container(c) {
-
-	
-		key.push_back("atmPhaseCorrection");
-	
-		key.push_back("typeCurve");
-	
-		key.push_back("receiverBand");
-	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
-
 
 		// Define a default entity.
 		entity.setEntityId(EntityId("uid://X0/X0/X0"));
@@ -153,107 +215,26 @@ namespace asdm {
 	 * Return the name of this table.
 	 */
 	string CalCurveTable::getName() const {
-		return itsName;
+		return entityNameOfCalCurve;
 	}
 	
 	/**
 	 * Return the name of this table.
 	 */
 	string CalCurveTable::name() {
-		return itsName;
+		return entityNameOfCalCurve;
 	}
 	
 	/**
-	 * Build the vector of attributes names.
+	 * Return the the names of the attributes (or columns) of this table.
 	 */
-	bool CalCurveTable::initAttributesNames() {
-
-		attributesNames.push_back("atmPhaseCorrection");
-
-		attributesNames.push_back("typeCurve");
-
-		attributesNames.push_back("receiverBand");
-
-		attributesNames.push_back("calDataId");
-
-		attributesNames.push_back("calReductionId");
-
-
-		attributesNames.push_back("startValidTime");
-
-		attributesNames.push_back("endValidTime");
-
-		attributesNames.push_back("frequencyRange");
-
-		attributesNames.push_back("numAntenna");
-
-		attributesNames.push_back("numPoly");
-
-		attributesNames.push_back("numReceptor");
-
-		attributesNames.push_back("antennaNames");
-
-		attributesNames.push_back("refAntennaName");
-
-		attributesNames.push_back("polarizationTypes");
-
-		attributesNames.push_back("curve");
-
-		attributesNames.push_back("reducedChiSquared");
-
-
-		attributesNames.push_back("numBaseline");
-
-		attributesNames.push_back("rms");
-
-
-    
-    	 
-    	attributesNamesInBin.push_back("atmPhaseCorrection") ; 
-    	 
-    	attributesNamesInBin.push_back("typeCurve") ; 
-    	 
-    	attributesNamesInBin.push_back("receiverBand") ; 
-    	 
-    	attributesNamesInBin.push_back("calDataId") ; 
-    	 
-    	attributesNamesInBin.push_back("calReductionId") ; 
-    	 
-    	attributesNamesInBin.push_back("startValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("endValidTime") ; 
-    	 
-    	attributesNamesInBin.push_back("frequencyRange") ; 
-    	 
-    	attributesNamesInBin.push_back("numAntenna") ; 
-    	 
-    	attributesNamesInBin.push_back("numPoly") ; 
-    	 
-    	attributesNamesInBin.push_back("numReceptor") ; 
-    	 
-    	attributesNamesInBin.push_back("antennaNames") ; 
-    	 
-    	attributesNamesInBin.push_back("refAntennaName") ; 
-    	 
-    	attributesNamesInBin.push_back("polarizationTypes") ; 
-    	 
-    	attributesNamesInBin.push_back("curve") ; 
-    	 
-    	attributesNamesInBin.push_back("reducedChiSquared") ; 
-    	
-    	 
-    	attributesNamesInBin.push_back("numBaseline") ; 
-    	 
-    	attributesNamesInBin.push_back("rms") ; 
-    	
-    
-    	return true; 
-	}
+	const vector<string>& CalCurveTable::getAttributesNames() { return attributesNamesOfCalCurve_v; }
 	
-
-	const vector<string>& CalCurveTable::getAttributesNames() { return attributesNames; }
-	
-	const vector<string>& CalCurveTable::defaultAttributesNamesInBin() { return attributesNamesInBin; }
+	/**
+	 * Return the the names of the attributes (or columns) of this table as they appear by default
+	 * in an binary export of this table.
+	 */
+	const vector<string>& CalCurveTable::defaultAttributesNamesInBin() { return attributesNamesInBinOfCalCurve_v; }
 
 	/**
 	 * Return this table's Entity.
@@ -434,8 +415,10 @@ CalCurveRow* CalCurveTable::newRow(CalCurveRow* row) {
 	 * @throws DuplicateKey
 	 
 	 */
-	CalCurveRow*  CalCurveTable::checkAndAdd(CalCurveRow* x)  {
+	CalCurveRow*  CalCurveTable::checkAndAdd(CalCurveRow* x, bool skipCheckUniqueness)  {
+		if (!skipCheckUniqueness) { 
 		
+		}
 		
 		if (getRowByKey(
 	
@@ -618,7 +601,7 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clcrv=\"http://Alma/XASDM/CalCurveTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalCurveTable http://almaobservatory.org/XML/XASDM/3/CalCurveTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n");
+		buf.append("<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clcrv=\"http://Alma/XASDM/CalCurveTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalCurveTable http://almaobservatory.org/XML/XASDM/3/CalCurveTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -740,7 +723,7 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clcrv=\"http://Alma/XASDM/CalCurveTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalCurveTable http://almaobservatory.org/XML/XASDM/3/CalCurveTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.61\">\n";
+		oss << "<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clcrv=\"http://Alma/XASDM/CalCurveTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalCurveTable http://almaobservatory.org/XML/XASDM/3/CalCurveTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalCurveTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -1023,7 +1006,7 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 		//
 		// Is this attribute really unknown ?
 		//
-		for (vector<string>::const_iterator iter = attributesNames.begin(); iter != attributesNames.end(); iter++) {
+		for (vector<string>::const_iterator iter = attributesNamesOfCalCurve_v.begin(); iter != attributesNamesOfCalCurve_v.end(); iter++) {
 			if ((*iter).compare(attributeName) == 0) 
 				throw ConversionException("the attribute '"+attributeName+"' is known you can't override the way it's read in the MIME binary file containing the table.", "CalCurve"); 
 		}
@@ -1142,7 +1125,7 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
    // This vector will be filled by the names of  all the attributes of the table
    // in the order in which they are expected to be found in the binary representation.
    //
-    vector<string> attributesSeq(attributesNamesInBin);
+    vector<string> attributesSeq(attributesNamesInBinOfCalCurve_v);
       
     xmlNode* root_element = xmlDocGetRootElement(doc);
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
