@@ -23,6 +23,7 @@
 %Updated TN 2011-04-18 first draft for R3.2, added inputs from Kana, Wataru
 %and myself
 %Updated JO 2010-10-29 JO edits for 3.1.0 
+%Updated TN 2012-04-11 first draft for R3.4, added inputs from Kana and myself
 
 %\chapter{Single Dish Data Processing}
 \chapter[Single Dish Data Processing]{Single Dish Data Processing}
@@ -45,11 +46,7 @@ However, it is fully accessible for general users.
 
 For single-dish spectral calibration and analysis, 
 CASA uses the ATNF Spectral Analysis Package (ASAP).
-ASAP is
-imported as the {\tt sd} tool via \\
-
-
-\noindent  {\tt asap\_init()}\\
+ASAP is imported as the {\tt sd} tool at the start-up of CASA.
 
 It forms the basis for a series
 of tasks (the ``SDtasks'') that encapsulates the functionality
@@ -58,18 +55,10 @@ support the Australian telescopes such as Mopra, Parkes, and
 Tidbinbilla, and we have adapted it for use within CASA for
 GBT (see the note below for limitation of GBT SDFITS handling) 
 and eventually ALMA [Note: Some support for the ALMA is now available].  
-{\bf For R3.3 or later, the ASAP version included in CASA was updated to 3.1. 
-%(which is the latest official release of ASAP as of Oct. 2010).
-In ASAP 3.1, data format was also updated from 2.0 to 3.0. 
-Note that this update is backward incompatible.}
-To compensate this backward incompatibility, there is an executable to convert 
-data in version 2.0 format to version 3.0. 
-The executable, {\tt asap2to3}, is automatically called when the user tries to 
-instantiate older format data so that the user usually need not to worry about 
-change in data format. When {\tt asap2to3} is called, it will create new data 
-whose name is an original input file name plus additional suffix {\tt .asap3}. 
-It is recommended to use the data with additional suffix in the subsequent 
-data processing. 
+{\bf For R3.4 or later, the ASAP version included in CASA was updated to 4.0
+(which is the latest official release of ASAP as of Mar. 2012).
+In ASAP 4.0, data format was also updated from 3.0 to 4.0. 
+Note that data in version 3.0 format are automatically updated to version 4.0 format and replaced.}
 
 For details on ASAP -- including the User Guide, Reference Manual, and tutorial -- see
 the ASAP home page at ATNF: 
@@ -99,6 +88,12 @@ and features of ASAP and the SDtasks presented in
 %data starting from the raw SDFITS cannot be done. It is generally possible to 
 %process the GBT data once it is converted with tools outside CASA 
 %to a single data table SDFITS or other data format supported by ASAP.  
+
+\medskip
+{\bf R3.4 New Features}\\
+The single dish package (ASAP) is now loaded at the start-up of CASA. 
+It is not necessary to load ASAP explicitly by invoking {\tt asap\_init}
+anymore.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,6 +134,31 @@ compared with a size of data to be loaded.  On the other hand,
 forces the task to store datasets on disk, which might be necessary when they are large.
 See \S~\ref{subsection:sd.asap.environ} for more details on the
 ASAP environment variables.
+
+{\bf Important Note:}\\
+User must use {\tt sd.rcParams[scantable.storage']='disk'} with care when 
+you call any tool level functions since some functions may overwrite original data 
+even if you set {\tt sd.rcParams['insitu']=False}, which tells the system not to 
+overwrite original data (in contrast, setting {\tt sd.rcParams['insitu']} to True 
+forces to overwrite original data). 
+Relevant methods, which may overwrite original data in the above case, are as follows:
+\small
+\begin{itemize}
+   \item {\tt sd.average\_time}
+   \item {\tt sd.merge}
+   \item four operations ({\tt +, -, *, /}) of {\tt sd.scantable} instance with scalar or array
+   \item {\tt sd.scantable.add}
+   \item {\tt sd.scantable.clip}
+   \item {\tt sd.scantable.flag}
+   \item {\tt sd.scantable.flag\_nans}
+   \item {\tt sd.scantable.flag\_row}
+   \item {\tt sd.scantable.scale}
+   \item {\tt sd.scantable.recalc\_azel}
+   \item any setter functions of {\tt sd.scantable} class (both {\tt set\_xxx} and {\tt \_setxxx} functions)
+\end{itemize}
+\normalsize
+If you only use SDtasks, you don't need to worry about that since 
+SDtasks are designed to keep original data unchanged.  
 
 \subsection{Assignment}
 \label{section:sd.intro.ass}
@@ -254,8 +274,10 @@ more forgiving.  Also, beware Python's sensitivity to indentation.
 
 Before R3.0, all messages from ASAP were written to the standard output
 ({\tt sys.stdout}) and they disappeared after exiting CASA. After R3.0, the
-logging system of ASAP is integrated into CASA logging system.  Therefore, all outputs from ASAP commands, except for GUI related notifications, are sent to the file {\tt casapy.log} and they
-are displayed to the CASA Logger (see \S~\ref{section:intro.common.logger}).
+logging system of ASAP is integrated into CASA logging system.  Therefore, 
+all outputs from ASAP commands, except for GUI related notifications, 
+are sent to the log file for the current session and they
+are displayed to the CASA Logger (see \S~\ref{section:intro.common.logger}). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Single Dish Analysis Tasks}
@@ -266,13 +288,13 @@ reduction activities.  The list currently includes:
 
 \begin{itemize}
 
-\item {\bf sdaverage} --- select, calibrate, and average SD data
+\item {\bf sdcal} --- select, calibrate, and average SD data
 
 \item {\bf sdsmooth} --- smooth SD spectra
 
 \item {\bf sdbaseline} --- fit/remove spectral baselines from SD data
 
-\item {\bf sdcal} --- {\tt sdaverage}, {\tt sdsmooth}, and {\tt sdbaseline} combined to perform standard single dish processing all at once 
+\item {\bf sdreduce} --- {\tt sdcal}, {\tt sdsmooth}, and {\tt sdbaseline} combined to perform standard single dish processing all at once 
 
 \item {\bf sdcoadd} --- merge/co-add multiple SD data
 
@@ -281,6 +303,8 @@ reduction activities.  The list currently includes:
 \item {\bf sdflagmanager} --- enable list, save, restore, delete and rename flag version files
 
 \item {\bf sdfit} --- line fitting to SD spectra
+
+\item {\bf sdgrid} --- convolve map data onto regularly spaced grid
 
 \item {\bf sdimaging} --- create an image from the total power or spectral data
 
@@ -313,11 +337,11 @@ to {\tt sd.scantable} to read the data.  The scantable objects
 do not persist within CASA after completion of the tasks and
 are destroyed to free up memory. 
 
-Three tasks {\tt sdaverage}, {\tt sdsmooth}, and {\tt sdbaseline} are the
+Three tasks {\tt sdcal}, {\tt sdsmooth}, and {\tt sdbaseline} are the
 workhorses for the calibration, selection,
 averaging, baseline fitting, and smoothing. The output datasets for
 each task are written to a file on disk.
-Alternatively, one can use the task {\tt sdcal} to perform all of the steps in
+Alternatively, one can use the task {\tt sdreduce} to perform all of the steps in
 the three tasks described. 
 Its operation is
 controlled by three main "mode" parameters: {\tt calmode} (which selects
@@ -325,15 +349,16 @@ the type of calibration, if any, to be applied), {\tt kernel} (which selects
 the smoothing), and {\tt blfunc} (which selects baseline fitting).  There
 are also parameters controlling the selection such as {\tt scanlist}, 
 {\tt iflist}, {\tt field}, {\tt scanaverage}, {\tt timeaverage}, and
-{\tt polaverage}.  Note that {\tt sdcal} can be
+{\tt polaverage}.  Note that {\tt sdreduce} can be
 run with {\tt calmode='none'} to allow re-selection or writing out of data
 that is already calibrated.  There is a "wiring diagram" of the dataflow and control inputs for
-{\tt sdcal} shown in Figure~\ref{fig:sdcal}.
+{\tt sdreduce} shown in Figure~\ref{fig:sdreduce}.
 
 \begin{figure}[h!]
 \begin{center}
-\pnghigh{sdcal_wiring_diagram}{7}
-\caption{\label{fig:sdcal} Wiring diagram for the SDtask {\tt sdcal}.
+%\pnghigh{sdcal_wiring_diagram}{7}
+\pnghigh{sdreduce_wiring_diagram}{7}
+\caption{\label{fig:sdreduce} Wiring diagram for the SDtask {\tt sdreduce}.
 The stages of processing within the task are shown, along with the
 parameters that control them. }
 \hrulefill
@@ -342,7 +367,7 @@ parameters that control them. }
 
 The SDtasks support the import and export file formats supported
 by ASAP itself.  For import, this includes:  ASAP (scantables), 
-MS (CASA Measurement Set), RPFITS, SDFITS and NRO data format.  
+MS (CASA Measurement Set), RPFITS, SDFITS (version 1.3) and NRO data format.  
 For export, this includes: ASAP (scantables), MS (CASA Measurement Set),
 ASCII (text file), SDFITS (a flavor of SD FITS).
 The {\tt sdsave} task is available exclusively for exporting with these
@@ -386,6 +411,11 @@ These tasks directly access the Measurement Set without converting it to scantab
 The {\tt sdimprocess} is intended to remove the 'scanning noise' from single dish
 images by either the 'Basket-Weaving' or 'Pressed-out' methods.
 
+The task {\tt sdgrid}, which convolves map data onto regularly 
+spaced grid, is available. The task can be used as imaging tool although 
+output of this task is not an image but a scantable. Also, it can be 
+regarded as a data averaging tool with various weight. 
+
 Although the Measurement Set can store data from multiple antennas
 even if it consists of only single-dish spectra (auto-correlation data),
 the scantable cannot distinguish data from multiple antennas. It causes
@@ -408,10 +438,10 @@ The {\tt antenna} parameter takes no effect for other input data formats.
 
 The following are the list of parameters and
 brief descriptions of each of the SDtasks.
-These descriptions are also contained in {\tt help <taskname>} once {\tt asap\_init} has been invoked.
+These descriptions are also contained in {\tt help <taskname>}.
 
-\subsubsection{{\tt sdaverage}}
-\label{section:sd.sdtasks.tasks.sdaverage}
+\subsubsection{{\tt sdcal}}
+\label{section:sd.sdtasks.tasks.sdcal}
 
 \begin{verbatim}
 Keyword arguments:
@@ -460,28 +490,24 @@ calmode -- calibration mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field,
-                 iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-        this selection is in addition to scanlist,
-        field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 channelrange -- channel range selection
         default: [] (use all channel)
         example: [0,5000]
-                 Note that specified values are recognized as 
-                 'channel' regardless of the value of specunit 
+        Note that specified values are recognized as 'channel' 
+        regardless of the value of specunit 
 scanaverage -- average integrations within scans
         options: (bool) True,False
         default: False
@@ -549,46 +575,40 @@ plotlevel -- control for plotting of results
 
 DESCRIPTION:
 
-Task {\tt sdaverage} performs data selection, calibration for single-dish
-spectra.  By setting {\tt calmode='none'}
-one can run {\tt sdaverage} on already calibrated data, for further selection, 
-averaging and atmospheric optical depth correction.
+Task {\tt sdcal} performs data selection, calibration for single-dish
+spectra.  By setting {\tt calmode='none'}, one can run {\tt sdcal} on already 
+calibrated data, for further selection , averaging and atmospheric 
+optical depth correction. To save the output spectra in a certain range of 
+channels, you set the range in {\tt channelrange}.
 
 If you give multiple IFs in {\tt iflist}, then your scantable will have
-multiple IFs.  This can be handled, but there can be funny interactions
-later on.  We recommend you split each IF out into separate files
-by re-running sdaverage with each IF in turn unless you want to averaging of
-multi-resolution spectra (see below).
-
-To save the output spectra in a certain range of 
-channels, you set the range in {\tt channelrange}.
-Averaging of multi-resolution
-spectra can be achieved by setting the sub-parameter in {\tt timeaverage}, {\tt averageall} 
-to True. It generally handles multi-IFs by selecting overlaps in IFs and assigning
-new IFs in the output spectra.
+multiple IFs by default. Averaging of multi-resolution (multi-IFs)
+spectra can be achieved by setting a sub-parameter in {\tt timeaverage}, 
+{\tt averageall}, to True. It handles multi-IFs by selecting overlaps in 
+frequency coverages and assigning new IFs in the output spectra.
 
 ASAP recognizes the data of the "AT" telescopes, but currently
 does not know about the GBT or any other telescope. This task
 does know about GBT. Telescope name is obtained from the data.
-If you wish to change the {\tt fluxunit} (see below) by unsetting
-the sub-parameter unset ({\tt telescopeparm=''}),
+If you wish to change the {\tt fluxunit} (see below), by leaving
+the sub-parameter telescopeparm unset ({\tt telescopeparm=''}),
 it will use internal telescope parameters for
 flux conversion for the data from AT telescopes and it will use an
 approximate aperture efficiency conversion for the GBT data.
-When {\tt telescopeparm} is a list, then if the list has a single float it
-is assumed to be the gain in Jy/K.  If there are two or more elements they are assumed
+If you give {\tt telescopeparm} a list, then if the list has a single float it
+is assumed to be the gain in Jy/K, if two or more elements they are assumed
 to be telescope diameter (m) and aperture efficiency
 respectively.
 
-Note that {\tt sdaverage} assumes that {\tt fluxunit} is set correctly in
+Note that {\tt sdcal} assumes that the {\tt fluxunit} is set correctly in
 the data already.  If not, then set {\tt telescopeparm='FIX'} and it
 will set the default units to {\tt fluxunit} without conversion.
-{\bf NOTE:} If the data table in {\tt infile} is an ms from GBT and the default flux
+{\bf NOTE}: If the data in {\tt infile} is an ms from GBT and the default flux
 unit is missing, this task automatically fixes the default {\tt fluxunit}
-to 'K' before performing the conversion.
+to 'K' before the conversion.
 
 WARNING for the GBT raw SDFITS format data as input:\\
-SDtasks are able to handle GBT raw SDFITS format data since the 
+SDtasks are able to handle GBT raw SDFITS format (version 1.3) data since the 
 data filler is available. However, the functionality is not well 
 tested yet, so that there may be unknown bugs. 
 
@@ -599,9 +619,12 @@ tested yet, so that there may be unknown bugs.
  \begin{itemize}
 % \item A new parameter {\tt verify} is added. The task plots both raw spectra and
 % calibrated spectra to verify the calibration results if {\tt verify} is 'True'. 
-  \item If the observation mode is On-The-Fly, the direction
-information will be considered for averaging, i.e., spectra will be
-averaged only if the directions are in agreement with each other.
+%  \item If the observation mode is On-The-Fly, the direction
+%information will be considered for averaging, i.e., spectra will be
+%averaged only if the directions are in agreement with each other.
+  \item Direction information is not considered when data is averaged. 
+Use {\tt sdgrid} task if you want to take care of direction information 
+when averaging.
   \item Calibration of frequency switching data is now fully implemented, including folding.
   \item Additional calibration algorithms are implemented. These are the
 'Chopper-Wheel' calibration and the one adopted in APEX telescope (an advanced version of classical 'Chopper-Wheel' method). Two load
@@ -609,13 +632,17 @@ calibration, which will be a standard calibration mode of ALMA total
 power antennas, is formally implemented but still experimental.
 \end{itemize}
 
+\medskip
+{\bf R3.4 New Features:}\\
+This task has been renamed, and was previously called {\tt sdaverage}.
+
 \subsubsection{{\tt sdsmooth}}
 \label{section:sd.sdtasks.tasks.sdsmooth}
 
 \begin{verbatim}
 Keyword arguments:
 infile -- name of input SD dataset
-antenna -- antenna name or id (only effective for MS input)
+antenna -- antenna name or id (only effective for MS input). 
 scanaverage -- average integrations within scans
         options: (bool) True,False
         default: False
@@ -624,41 +651,41 @@ scanaverage -- average integrations within scans
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                this selection is in addition to field,
-                iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist,pollist
+        this selection is in addition to scanlist, iflist,pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-                 this selection is in addition to scanlist,
-                 field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 kernel -- type of spectral smoothing
-        options: 'hanning','gaussian','boxcar'
+        options: 'hanning','gaussian','boxcar','regrid'
         default: 'hanning'
-        
+
     >>>kernel expandable parameter
          kwidth -- width of spectral smoothing kernel
-                 options: (int) in channels
+                 options: (int) in channels 
                  default: 5
-                 example: 5 or 10 seem to be popular for boxcar,
+                 example: 5 or 10 seem to be popular for boxcar
                           ignored for hanning (fixed at 5 chans)
                           (0 will turn off gaussian or boxcar)
-                          
+         chanwidth -- channel width of regridded spectra
+                 default: '5' (in channels)
+                 example: '500MHz', '0.2km/s'
+
 verify -- verify the results of smoothing
         options: (bool) True,False
         default: False
         WARNING: Currently this just asks whether you accept
                  the displayed smoothing and if not, continues
                  without smoothing.
+        Note: verification is not yet available for kernel='regrid'
 outfile -- Name of output ASAP format(scantable) file
         default: '' (<infile>_sm)
 outform -- format of output file
@@ -685,7 +712,11 @@ plotlevel -- control for plotting of results
 Task {\tt sdsmooth} performs smoothing of the single-dish spectra.
 Set {\tt plotlevel >= 1} to plot the spectrum before and after smoothing.
     
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
+
+\medskip
+{\bf R3.4 New Features:}\\
+Channel binning is available by setting {\tt kernel='regrid'}.
 
  
 \subsubsection{{\tt sdbaseline}}
@@ -729,23 +760,19 @@ doppler -- doppler mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field,
-                 iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-        this selection is in addition to scanlist,
-        field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 tau -- atmospheric optical depth
         default: 0.0 (no correction)
 masklist -- list or string of mask regions to INCLUDE in BASELINE fit
@@ -885,9 +912,9 @@ Task {\tt sdbaseline} performs baseline fitting/removal for single-dish spectra.
 The fit parameters, terms and rms of baseline are saved to an ASCII
 file, {\tt <outfile>\_blparam.txt}.
 
-See the {\tt sdaverage} description for information on {\tt fluxunit} 
+See the {\tt sdcal} description for information on {\tt fluxunit} 
 conversion and the {\tt telescopeparm} parameter.
-Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 By setting {\tt maskmode='interact'}, you can set/unset mask regions interactively using
 mouse buttons. Current mask regions will be shown with yellow shading.
@@ -903,21 +930,14 @@ Available functions for baseline subtraction are polynomial, cubic spline, and s
 Also, iterative n-$\sigma$ clipping becomes available with cubic spline and sinusoid. 
 
 
-\medskip
-{\bf R3.3 New Features:}
-\begin{enumerate}
-\item Sinusoid fitting becomes easier to use. Users are no longer forced 
-      to explicitly give a set wave numbers. 
-\item A number of changes in parameters related to sinusoidal fitting: 
-      {\tt nwave} and {\tt maxwavelenth} are removed, and five new parameters, 
-      namely, {\tt applyfft}, {\tt fftmethod}, {\tt fftthresh}, {\tt addwn} 
-      and {\tt rejwn} are added.  
-\item Better performance in case {\tt maskmode}='auto'. This is due to the 
-      speedup of linefinder (linefinder runs 12-13 times faster in R3.3). 
-\end{enumerate}
+%\medskip
+%{\bf R3.3 New Features:}
+%\begin{enumerate}
+%\item ...
+%\end{enumerate}
   
-\subsubsection{{\tt sdcal}}
-\label{section:sd.sdtasks.tasks.sdcal}
+\subsubsection{{\tt sdreduce}}
+\label{section:sd.sdtasks.tasks.sdreduce}
 
 \begin{verbatim}
 Keyword arguments:
@@ -942,7 +962,6 @@ fluxunit -- units for line flux
                          telescopeparm=[0.743] gain in Jy/K
                          telescopeparm='FIX' to change default fluxunit
                          see description below
-
 specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
         default: '' (=current)
@@ -964,28 +983,24 @@ calmode -- calibration mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field,
-                 iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-        this selection is in addition to scanlist,
-        field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 channelrange -- channel range selection
         default: [] (use all channel)
         example: [0,5000]
-                 Note that specified values are recognized as 
-                 'channel' regardless of the value of specunit 
+        Note that specified values are recognized as 'channel' 
+        regardless of the value of specunit 
 average -- averaging on spectral data 
         options: (bool) True,False
         default: False
@@ -1023,7 +1038,7 @@ average -- averaging on spectral data
 tau -- atmospheric optical depth
         default: 0.0 (no correction)
 kernel -- type of spectral smoothing
-        options: 'none','hanning','gaussian','boxcar'
+        options: 'none','hanning','gaussian','boxcar','regrid'
         default: 'none' (no smoothing)
 
     >>>kernel expandable parameter
@@ -1033,6 +1048,9 @@ kernel -- type of spectral smoothing
                  example: 5 or 10 seem to be popular for boxcar
                           ignored for hanning (fixed at 5 chans)
                           (0 will turn off gaussian or boxcar)
+         chanwidth -- channel width of regridded spectra
+                 default: '5' (in channels)
+                 example: '500MHz', '0.2km/s'
 masklist -- list or string of mask regions to INCLUDE in BASELINE fit
             a string masklist allows per IF selection of channels.
         default: [] (entire spectrum)
@@ -1170,36 +1188,31 @@ plotlevel -- control for plotting of results
                  -1 => hardcopy of final plot (will be named
                  <outfile>_calspec.eps)
         WARNING: be careful plotting in fsotf mode!
-
 \end{verbatim}
     
 DESCRIPTION:
 
-Task {\tt sdcal} performs data selection, calibration, and/or spectral
+Task {\tt sdreduce} performs data selection, calibration, and/or spectral
 baseline fitting for single-dish spectra. This task internally calls the
-tasks {\tt sdaverage}, {\tt sdsmooth}, and {\tt sdbaseline}, and it can be used to run all the
+tasks {\tt sdcal}, {\tt sdsmooth}, and {\tt sdbaseline}, and it can be used to run all the
 three steps in one task execution.
 By setting {\tt calmode='none'}
-one can run {\tt sdcal} on already calibrated data for further selection, averaging and atmospheric optical depth correction.
-
-If you give multiple IFs in iflist, then your scantable will have
-multiple IFs. This can be handled, but there can be funny interactions
-later on.  We recommend you split each IF out into separate files
-by re-running sdcal with each IF in turn.
-
-See the {\tt sdaverage} description for information on the {\tt fluxunit} 
-conversion and the {\tt telescopeparm} parameter.
-Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
-
+one can run {\tt sdreduce} on already calibrated data for further selection, averaging and atmospheric optical depth correction. 
 To save the output spectra within a certain range of 
 channels, you set the range in {\tt channelrange}. 
-Averaging of multi-resolution
-spectra can be achieved by setting the sub-parameter of {\tt average}, {\tt averageall}, 
-to True. It generally handles multi-IFs by selecting overlaps in IFs and assigning
-new IFs in the output spectra. 
+
+If you give multiple IFs in iflist, then your scantable will have
+multiple IFs by default. Averaging of multi-resolution (multi-IFs)
+spectra can be achieved by setting a sub-parameter of {\tt average}, 
+{\tt averageall}, to True. It handles multi-IFs by selecting overlaps in 
+frequency coverages and assigning new IFs in the output spectra.
+
+See the {\tt sdcal} description for information on the {\tt fluxunit} 
+conversion and the {\tt telescopeparm} parameter.
+Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 The {\tt verifycal}, {\tt verifysm}, and {\tt verifybl}  parameters correspond to parameter
-{\tt  verify} in {\tt sdaverage}, {\tt sdsmooth}, and {\tt sdbaseline}, respectively. 
+{\tt  verify} in {\tt sdcal}, {\tt sdsmooth}, and {\tt sdbaseline}, respectively. 
     
 
 The parameter {\tt masklist} accepts per IF selection of mask regions. 
@@ -1207,6 +1220,12 @@ See \S~\ref{section:io.selection.spw.channel} for details.
 Note, the mask regions should be specified in unit of {\tt specunit} 
 in this task.
 
+\medskip
+{\bf R3.4 New Features:}
+\begin{itemize}
+\item This task has been renamed, and was previously called {\tt sdcal}.
+\item Channel binning is available by setting {\tt kernel='regrid'}.
+\end{itemize}
 
 \subsubsection{{\tt sdcoadd}}
 \label{section:sd.sdtasks.tasks.sdcoadd}
@@ -1251,7 +1270,7 @@ scanaverage -- average integrations within scans
         options: (bool) True,False
         default: False
         example: if True, this happens in read-in
-                 For GBT, set False!
+        For GBT, set False!
 timeaverage -- average times for multiple scan cycles
         options: (bool) True,False
         default: False
@@ -1306,7 +1325,7 @@ The {\tt timaverage} and {\tt polaverage} are used to perform time
 and polarization averaging over scans on the merged scantable to 
 obtained co-added spectra before saving to a file on disk.
 
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 
 \subsubsection{{\tt sdflag}}
@@ -1324,18 +1343,15 @@ scanlist -- list of scan numbers to process
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist
-                 and iflist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist
-                 and field
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-                 this selection is in addition to scanlist,
-                 field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 maskflag -- list of mask regions to apply flag/unflag 
             Note, this parameter is ignored if one or more rows are 
             given in flagrow, or clip=True.
@@ -1430,7 +1446,7 @@ There is a known issue in overwriting {\tt infile}. If {\tt outform} differs to 
 data format of {\tt infile}, the data is overwritten with the new data format 
 (specified by {\tt outform}) and the data in the original format will be lost.
 
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 
 \bigskip
@@ -1569,7 +1585,7 @@ Keyword arguments:
 infile -- name of input SD dataset
         default: none - must input file name
         example: 'mysd.asap'
-                 See sdcal for allowed formats.
+                 See sdreduce for allowed formats.
 antenna -- antenna name or id (only effective for MS input). 
 fluxunit -- units for line flux
         options: (str) 'K','Jy',''
@@ -1608,8 +1624,7 @@ scanlist -- list of scan numbers to process
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist
-                 and iflist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
@@ -1637,7 +1652,7 @@ fitmode -- mode for fitting
                  default: 5
                  example: a single channel S/N ratio above which the channel is
                           considered to be a detection
-         min_nchan -- minimum number of consecutive channels for linefinder
+	 min_nchan -- minimum number of consecutive channels for linefinder
        	         default: 3
                  example: minimum number of consecutive channels required to pass threshold
          avg_limit -- channel averaging for broad lines
@@ -1699,8 +1714,8 @@ Returns a Python dictionary of line statistics
 DESCRIPTION:
 
 Task {\tt sdfit} is a basic line-fitter for single-dish spectra.
-It assumes that the spectra have been calibrated in {\tt sdaverage}
-or {\tt sdcal}.
+It assumes that the spectra have been calibrated in {\tt sdcal}
+or {\tt sdreduce}.
 
 Furthermore, it assumes that any selection of scans, IFs,
 polarizations, and time and channel averaging/smoothing has
@@ -1723,12 +1738,111 @@ you use {\tt sd.fitter} in the toolkit which has more options, such
 as fixing components in the fit and supplying starting guesses
 by hand.
 
-WARNING: sdfit will currently return the fit for the first
-row in the scantable.
-    
-See the {\tt sdaverage} description for information on {\tt fluxunit} 
+See the {\tt sdcal} description for information on {\tt fluxunit} 
 conversion and the {\tt telescopeparm} parameter.
-Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
+
+\subsubsection{{\tt sdgrid}}
+\label{section::sd.sdtasks.tasks.sdgrid}
+
+\begin{verbatim}
+Keyword arguments:
+infiles -- name of input SD dataset. can be list.
+        example: 'testimage.asap' 
+                 ['testimage1.asap','testimage2.asap']
+antenna -- select data based on antenna name(s) or id(s)
+        default: -1
+        example: 0, 'DV01'
+scanlist -- list of scan numbers to process
+        default: [] (use all scans)
+        example: [21,22,23,24]
+ifno -- IFNO to be gridded
+        default: -1 (only process IFNO in the first row)
+        example: 1
+pollist -- POLNO to be gridded
+        default: [] (all polarizations)
+        example: 1,[0,1]
+gridfunction -- gridding function 
+        options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                 'GAUSS' (Gaussian), 'PB' (Primary-beam)
+        default: 'BOX'
+        example: 'SF'
+    >>> gridfunction expandable parameter:
+       width -- width of convolution kernel, not available 
+                for BOX gridding
+           default: -1 (use default for each gridfunction)
+           example: 3
+weight -- weight type (both lower-case and upper-case are 
+          acceptable)
+        options: 'UNIFORM',
+                 'TSYS'  (1/Tsys**2 weighted)
+                 'TINT'  (integration time weighted)
+                 'TINTSYS'  (Tint/Tsys**2)
+        default: 'UNIFORM'
+clipminmax -- do min/max cliping if True
+        default: False
+outfile -- output data name
+        default: '' (outfile will be set to infile+'.grid')
+        example: 'mydata.asap.grid'
+overwrite -- overwrite option for outfile
+        default: False (not overwrite)
+        options: True, False
+        example: if True, existing file will be overwritten
+npix -- x and y image size in pixels, symmetric for single value
+        default: -1 (automatically calculated from cell size and 
+                     the data)
+        example: npix=200 (equivalent to [200,200])
+cell -- x and y cell size. default unit arcsec
+        default: '' (automatically calculated from npix if it is 
+                     set, otherwise '1.0arcmin')
+        example: cell=['0.2arcmin, 0.2arcmin']
+                 cell='0.2arcmin' (equivalent to example above)
+                 cell=12.0 (interpreted as '12.0arcsec'='0.2arcmin')
+center -- grid center
+        default: '' (automatically calculated from the data)
+        example: 'J2000 13h44m00 -17d02m00'
+                 ['05:34:48.2', '-05.22.17.7'] (in J2000 frame)
+                 [1.46, -0.09] (interpreted as radian in J2000 frame)
+plot -- Plot result or not
+        default: False (not plot)
+        example: if True, result will be plotted
+\end{verbatim}
+
+DESCRIPTION:
+
+The sdgrid task performs spatial gridding according to the user 
+specification of spatial grid, convolution function, etc.
+
+For grid configuration, the task supplements necessary information 
+by referring input data if any of gridding parameter ('npix', 
+'cell', or 'center') is not specified by the user. If 'center' is 
+default value (empty string), central position of the grid will be 
+set to the center of observed area, i.e. x=0.5*(xmax+xmin), 
+y=0.5*(ymax+ymin). If either 'cell' or 'npix' is set, unspecified 
+one will be calculated from the others. In that case, total extent of 
+the grid will be set to cover all observed position. If neither 'cell' 
+nor 'npix' is set, cell size will be set to 1.0 arcmin and number of 
+pixel will be calculated based on that cell size.
+ 
+Currently, only J2000 frame is supported.
+ 
+The parameter gridfunction sets gridding function for imaging. 
+Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
+Spheroidal Wave Function), 'GAUSS' (Gaussian). and 'PB' 
+(Primary Beam, not implemented yet). For 'PB', correct 
+antenna informations should be included in input file. 
+The 'width' parameter specifies width of the convolution kernel 
+in pixel unit. For Gaussian gridding, 'width' is treated as HWHM 
+and actual width (the width that convolution function has non-zero 
+value) is set to 4*HWHM to take into account contribution from 
+Gaussian tail. Otherwise, 'width' is treated as actual width of the 
+convolution function. 
+
+Boolean parameter 'plot' controls whether gridded result is plotted 
+or not. If True, color map of gridded data will be shown. Pixel 
+center and observed position are overlayed as blue dot and red dot, 
+respectively. Currently, channel averaged value will be plotted.
+
 
 
 \subsubsection{{\tt sdimaging}}
@@ -1747,15 +1861,15 @@ restfreq -- rest frequency
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field and spw
+        this selection is in addition to field and spw
 field -- field id or selection string for selecting scans by name
         default: -1 (all fields)
         example: 'FLS3a', 0
-                 this selection is in addition to scanlist and spw
+        this selection is in addition to scanlist and spw
 spw -- spectral window id
         default: 0
         example: 1
-                 this selection is in addition to scanlist and field
+        this selection is in addition to scanlist and field
 antenna -- select data based on antenna name(s) or id(s)
         default: -1 (all baselines, i.e. all antenna in case of auto data)
         example: 0, 'DV01'
@@ -1831,10 +1945,10 @@ Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate Spheroidal
 Wave Function), and 'PB' (Primary Beam). For 'PB', correct antenna 
 information should be included in input file. 
 
-\medskip
-{\bf R3.3 New Feature:}
-
-The task now allows to specify all fields and/or all antennas selection.
+%\medskip
+%{\bf R3.3 New Feature:}
+%
+%The task now allows to specify all fields and/or all antennas selection.
  
 
 \subsubsection{{\tt sdlist}}
@@ -1848,7 +1962,7 @@ scanaverage -- average integrations within scans
         options: (bool) True,False
         default: False
         example: if True, this happens in read-in
-                 For GBT, set False!
+        For GBT, set False!
 outfile -- Name of output file for summary list
         default: '' (no output file)
         example: 'mysd_summary.txt'
@@ -1871,7 +1985,7 @@ as file.
 %%     before running {\tt sdlist}.  Set it back afterward if you want lots
 %%     of information.
 
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 \subsubsection{{\tt sdmath}}
 \label{section:sd.sdtasks.tasks.sdmath}
@@ -1918,23 +2032,19 @@ doppler -- doppler mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field,
-                 iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-        this selection is in addition to scanlist,
-        field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 outfile -- Name of output file
         default: '' (<infile>_cal)
 outform -- format of output file
@@ -1972,7 +2082,7 @@ Other selections (e.g. scan No, IF, Pol) also apply to all
 the spectral data in the expression, so if any of the data are
 not selected, the task will produce no output. 
      
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 Example:
 \begin{verbatim}
@@ -2045,28 +2155,28 @@ doppler -- doppler mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field
-                 iflist, pollist, and beamlist
+        this selection is in addition to field, iflist, pollist,
+        and beamlist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist
-                 iflist, pollist, and beamlist
+        this selection is in addition to scanlist, iflist, pollist,
+        and beamlist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist
-                 field, pollist, and beamlist
+        this selection is in addition to scanlist, field, pollist,
+        and beamlist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-                 this selection is in addition to scanlist,
-                 field, iflist, and beamlist
+        this selection is in addition to scanlist, field, iflist,
+        and beamlist
 beamlist -- list of beam id numbers to select
         default: [] (use all beams)
         example: [1]
-                 this selection is in addition to scanlist,
-                 field, iflist, and pollist
+        this selection is in addition to scanlist, field, iflist,
+        and pollist
 scanaverage -- average integs within scans
         options: (bool) True,False
         default: False
@@ -2195,8 +2305,7 @@ outfile -- file name for hardcopy output
         options: (str) filename.eps,.ps,.png
         default: '' (no hardcopy)
         example: 'specplot.eps','specplot.png'
-                 Note this autodetects the format from
-                 the suffix (.eps,.ps,.png).
+        Note this autodetects the format from the suffix (.eps,.ps,.png).
 overwrite -- overwrite the output file if already exists
         options: (bool) True,False
         default: False
@@ -2240,11 +2349,23 @@ Currently most of the parameters are ignored in these modes.
 \item {\tt plottype='pointing'} plots antenna poinitings.
 \end{itemize}
 
-See the {\tt sdaverage} description for information on the {\tt fluxunit} conversion
+See the {\tt sdcal} description for information on the {\tt fluxunit} conversion
 and the {\tt telescopeparm} parameter.
-Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 WARNING: be careful plotting otf data with lots of fields!
+
+%\medskip  
+%{\bf R3.2 New Features:}
+
+%Two new parameters are added to the task. 
+%A new parameter {\tt beamlist} enables selecting data to plot by a list of beam IDs.
+%The other new parameter {\tt subplot} is a sub-parameter of {\tt plottype='spectra'}, 
+%and controls row and column numbers of panels on a page of plot.
+
+%Toolbar buttons are reorganized.
+%The spectral value mode is set to default and the button for it is removed from the toolbar.
+%A new button is added to plot the previous page.
 
 
 \bigskip
@@ -2368,30 +2489,25 @@ getpt -- fill DIRECTION column properly, or reuse POINTING table
 rowlist -- list of row numbers to process
         default: [] (use all rows)
         example: [0,2,4,6]
-                 For expert users only!
-                 this selection is applied first, and then 
-                 followed by the selection with scans, fields, 
-                 ifs, and polarizations. 
+        For expert users only!
+        this selection is applied first, and then followed by 
+        the selection with scans, fields, ifs, and polarizations. 
 scanlist -- list of to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field,
-                 iflist, and pollist
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist,
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to scanlist,
-                 field, and pollist
+        this selection is in addition to scanlist, field, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
-                 this selection is in addition to scanlist,
-                 field, and iflist
+        this selection is in addition to scanlist, field, and iflist
 scanaverage --  average integrations within scans
         options: (bool) True,False
         default: False
@@ -2437,20 +2553,20 @@ and field names. The ASAP (scantable) format is recommended for
 further analysis using sd tool. For further imaging using imager,
 save the data to the Measurement Set (MS2).
           
-Note that setting getpt=False needs a lot of attention.
-If you set getpt=False, the task retrieves pointing direction from 
+Note that setting {\tt getpt=False} needs a lot of attention.
+If you set {\tt getpt=False}, the task retrieves pointing direction from 
 MS's FIELD table, which might not be correct for single dish 
 observation, instead to check MS's POINTING table, which is the 
-default behavior of the task (getpt=True). To compensate this, 
+default behavior of the task ({\tt getpt=True}). To compensate this, 
 absolute path to MS's POINTING table is stored, and it will be used 
 for POINTING table when the data is converted back to MS format. 
-In general, getpt=False is faster especially for large data. However, 
+In general, {\tt getpt=False} is faster especially for large data. However, 
 MS created from Scantable cannot have correct POINTING table if 
 original MS's POINTING table doesn't exist. Such situation will 
 happen when original MS is removed or renamed, or imported Scantable 
 is moved to other computer alone.
 
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 WARNING:  The parameter {\tt rowlist} enables you to make data selection based
 on row number in the Measurement Set or scantable for data saving. 
@@ -2459,11 +2575,11 @@ based selection, since row numbers can be changed easily by
 sorting, prior selection, etc. Therefore, this parameter is expected
 to be used by expert users only . 
 
-\medskip
-{\bf R3.3 New Feature:}
+%\medskip
+%{\bf R3.3 New Feature:}
 
-A new parameter {\tt getpt} is added to enable the user to select whether 
-MS POINTING table is imported correctly or not.
+%A new parameter {\tt getpt} is added to enable the user to select whether 
+%MS POINTING table is imported correctly or not.
 
 
 
@@ -2515,7 +2631,7 @@ For example, if the content of input ASCII file is shown as,
 
 it is interpreted as a list [[0.5,0.3,0.2],[1.0,0.2,0.9]].
 
-See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 \subsubsection{{\tt sdstat}}
 \label{section:sd.sdtasks.tasks.sdstat}
@@ -2525,7 +2641,7 @@ Keyword arguments:
 infile -- name of input SD dataset
         default: none - must input file name
         example: 'mysd.asap'
-                 See sdcal for allowed formats.
+                 See sdreduce for allowed formats.
 antenna -- antenna name or id (only effective for MS input). 
 fluxunit -- units for line flux
         options: (str) 'K','Jy',''
@@ -2561,21 +2677,19 @@ doppler -- doppler mode
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
+        this selection is in addition to field, iflist, and pollist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
-                 this selection is in addition to scanlist
-                 iflist, and pollist
+        this selection is in addition to scanlist, iflist, and pollist
 iflist -- list of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
-                 this selection is in addition to field, scanlist
-                 and pollist
+        this selection is in addition to field, scanlist, and pollist
 pollist -- list of polarization id numbers to select
         default: [] (use all pols)
         example: [1]
-                 this selection is in addition to field, scanlist
-                 and iflist
+        this selection is in addition to field, scanlist, and iflist
 masklist -- list of mask regions to INCLUDE in stats
         default: [] (whole spectrum)
         example: [4000,4500] for one region
@@ -2627,7 +2741,7 @@ Task {\tt sdstat} computes basic statistics (rms,mean,median,sum)
 for single-dish spectra.  It assumes that the spectra have
 been calibrated.  Furthermore, it assumes that any
 time and channel averaging/smoothing has also already been done as
-there are no controls for these. Note that you can run {\tt sdcal}
+there are no controls for these. Note that you can run {\tt sdreduce}
 with {\tt calmode='none'} and do selection, writing out a new
 scantable.
 The calculated statistics are written into a file specified by
@@ -2640,9 +2754,9 @@ Note that multiple scans and IFs can in principle be handled, but
 we recommend that you use {\tt scanlist}, {\tt field}, {\tt
 iflist}, and {\tt pollist} to give a single selection for each run.
 
-See the {\tt sdaverage} description for information on the {\tt fluxunit} 
+See the {\tt sdcal} description for information on the {\tt fluxunit} 
 conversion and the {\tt telescopeparm} parameter.
-Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 WARNING: If you do have multiple scantable rows, then {\tt xstat}
 values will be lists.
@@ -2941,11 +3055,6 @@ and some options during processing.
 import time
 import os
 
-# NOTE: you should have already run
-# asap_init()
-# to import the ASAP tools as sd.<tool>
-# and the SDtasks
-
 #
 # This is the environment variable
 # pointing to the head of the CASA
@@ -3023,62 +3132,67 @@ sdlist()
 # You could also just type
 #go
 
-# In the logger, you should see something like:
+# You should see something like:
 #
-#--------------------------------------------------------------------------------
-#Scan Table Summary
-#--------------------------------------------------------------------------------
-#Project:       AGBT06A_018_01
-#Obs Date:      2006/01/19/01:45:58
-#Observer:      Joseph McMullin
-#Antenna Name:  GBT@GREENBANK
-#Data Records:  512 rows
-#Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-#Beams:         1   
-#IFs:           8   
-#Polarisations: 2   (circular)
-#Channels:      8192
-#Flux Unit:     K
-#Abscissa:      Channel
-#Selection:     none
+\end{verbatim}
+\scriptsize
+\begin{verbatim}
+# --------------------------------------------------------------------------------
+#  Scan Table Summary
+# --------------------------------------------------------------------------------
+# Project:       AGBT06A_018_01
+# Obs Date:      2006/01/19/01:45:58
+# Observer:      Joseph McMullin
+# Antenna Name:  GBT@GREENBANK
+# Data Records:  512 rows
+# Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
+# Beams:         1   
+# IFs:           8   
+# Polarisations: 2   (circular)
+# Channels:      8192
+# Flux Unit:     K
+# Abscissa:      Channel
+# Selection:     none
 #
-#Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
-#       Beam  Position (J2000)       
-#--------------------------------------------------------------------------------
-#  20 OrionS         2006/01/19/01:45:58.0 - 01:47:58.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
-#       0      05:15:13.5 -05.24.08.6
-#  21 OrionS         2006/01/19/01:48:38.0 - 01:50:38.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
-#       0      05:35:13.4 -05.24.07.8
-#  22 OrionS         2006/01/19/01:51:21.0 - 01:53:21.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
-#       0      05:15:13.6 -05.24.08.5
-#  23 OrionS         2006/01/19/01:54:01.0 - 01:56:01.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
-#       0      05:35:13.4 -05.24.08.1
-#  24 OrionS         2006/01/19/02:01:47.0 - 02:03:47.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
-#       0      05:15:13.5 -05.24.08.5
-#  25 OrionS         2006/01/19/02:04:27.0 - 02:06:27.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
-#       0      05:35:13.4 -05.24.08.1
-#  26 OrionS         2006/01/19/02:07:10.0 - 02:09:10.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
-#       0      05:15:13.5 -05.24.08.4
-#  27 OrionS         2006/01/19/02:09:51.0 - 02:11:51.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
-#       0      05:35:13.3 -05.24.08.1
-#--------------------------------------------------------------------------------
-#FREQUENCIES: 4
-#   ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
-#    0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0, 1]
-#    1    1     LSRK   4.5300782e+10 4095.5       6104.233      8192  [0, 1]
-#    2    2     LSRK   4.4074926e+10 4095.5       6104.233      8192  [0, 1]
-#    3    3     LSRK   4.4166212e+10 4095.5       6104.233      8192  [0, 1]
-#    4   12     LSRK   4.3962123e+10 4095.5      6104.2336      8192  [0, 1]
-#    5   13     LSRK   4.2645417e+10 4095.5      6104.2336      8192  [0, 1]
-#    6   14     LSRK   4.1594977e+10 4095.5      6104.2336      8192  [0, 1]
-#    7   15     LSRK    4.342282e+10 4095.5      6104.2336      8192  [0, 1]
-#--------------------------------------------------------------------------------
-#MOLECULES: 
-#   ID   RestFreq          Name           
-#    0   [4.54903e+10] []
-#    1   [4.3963e+10] []
-#--------------------------------------------------------------------------------
-
+# Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
+#        Beam  Position (J2000)       
+# --------------------------------------------------------------------------------
+#   20 OrionS         2006/01/19/01:45:58.0 - 01:47:58.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
+#        0      05:15:13.5 -05.24.08.6
+#   21 OrionS         2006/01/19/01:48:38.0 - 01:50:38.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
+#        0      05:35:13.4 -05.24.07.8
+#   22 OrionS         2006/01/19/01:51:21.0 - 01:53:21.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
+#        0      05:15:13.6 -05.24.08.5
+#   23 OrionS         2006/01/19/01:54:01.0 - 01:56:01.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
+#        0      05:35:13.4 -05.24.08.1
+#   24 OrionS         2006/01/19/02:01:47.0 - 02:03:47.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
+#        0      05:15:13.5 -05.24.08.5
+#   25 OrionS         2006/01/19/02:04:27.0 - 02:06:27.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
+#        0      05:35:13.4 -05.24.08.1
+#   26 OrionS         2006/01/19/02:07:10.0 - 02:09:10.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
+#        0      05:15:13.5 -05.24.08.4
+#   27 OrionS         2006/01/19/02:09:51.0 - 02:11:51.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
+#        0      05:35:13.3 -05.24.08.1
+# --------------------------------------------------------------------------------
+# FREQUENCIES: 4
+#    ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
+#     0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0, 1]
+#     1    1     LSRK   4.5300782e+10 4095.5       6104.233      8192  [0, 1]
+#     2    2     LSRK   4.4074926e+10 4095.5       6104.233      8192  [0, 1]
+#     3    3     LSRK   4.4166212e+10 4095.5       6104.233      8192  [0, 1]
+#     4   12     LSRK   4.3962123e+10 4095.5      6104.2336      8192  [0, 1]
+#     5   13     LSRK   4.2645417e+10 4095.5      6104.2336      8192  [0, 1]
+#     6   14     LSRK   4.1594977e+10 4095.5      6104.2336      8192  [0, 1]
+#     7   15     LSRK    4.342282e+10 4095.5      6104.2336      8192  [0, 1]
+# --------------------------------------------------------------------------------
+# MOLECULES: 
+#    ID   RestFreq          Name           
+#     0   [4.54903e+10] []
+#     1   [4.3963e+10] []
+# --------------------------------------------------------------------------------
+\end{verbatim}
+\normalsize
+\begin{verbatim}
 # The HC3N and CH3OH lines are in IFs 0 and 2 respectively
 # of scans 20,21,22,23.  We will pull these out in our
 # calibration.
@@ -3086,9 +3200,9 @@ sdlist()
 ##########################
 # Calibrate data
 ##########################
-# We will use the sdcal task to calibrate the data.
+# We will use the sdreduce task to calibrate the data.
 # Set the defaults
-default('sdcal')
+default('sdreduce')
 
 # You can see the inputs with
 #inp
@@ -3101,7 +3215,7 @@ fluxunit = 'K'
 # Lets leave the spectral axis in channels for now
 specunit = 'channel'
 
-# This is position-switched data so we tell sdcal this
+# This is position-switched data so we tell sdreduce this
 calmode = 'ps'
 
 # For GBT data, it is safest to not have scantable pre-average
@@ -3109,7 +3223,7 @@ calmode = 'ps'
 average = True
 scanaverage = False
 
-# We do want sdcal to average up scans and polarization after
+# We do want sdreduce to average up scans and polarization after
 # calibration however. The averaging of scans are weighted by 
 # integration time and Tsys, and the averaging of polarization 
 # by Tsys.
@@ -3153,7 +3267,7 @@ edge = [1000]
 #masklist=[[1000,3000],[5000,7000]]
 masklist = []
 
-# By default, we will not get plots in sdcal (but
+# By default, we will not get plots in sdreduce (but
 # can make them using sdplot).
 plotlevel = 0
 # But if you wish to see a final spectrum, set
@@ -3173,18 +3287,18 @@ outform = 'asap'
 
 # Before running, lets save the inputs in case we want
 # to come back and re-run the calibration.
-saveinputs('sdcal','sdcal.orions.save')
+saveinputs('sdreduce','sdreduce.orions.save')
 # These can be recovered by
-#execfile 'sdcal.orions.save'
+#execfile 'sdreduce.orions.save'
 
 # We are ready to calibrate
-sdcal()
+sdreduce()
 
 # Note that after the task ran, it produced a file
-# sdcal.last which contains the inputs from the last
+# sdreduce.last which contains the inputs from the last
 # run of the task (all tasks do this). You can recover
-# this (anytime before sdcal is run again) with
-#execfile 'sdcal.last'
+# this (anytime before sdreduce is run again) with
+#execfile 'sdreduce.last'
 
 ##########################
 # List data
@@ -3196,41 +3310,44 @@ outfile = ''
 sdlist()
 
 # You should see:
-# 
-#
-#--------------------------------------------------------------------------------
-# Scan Table Summary
-#--------------------------------------------------------------------------------
-#Project:       AGBT06A_018_01
-#Obs Date:      2006/01/19/01:45:58
-#Observer:      Joseph McMullin
-#Antenna Name:  GBT@GREENBANK
-#Data Records:  1 rows
-#Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-#Beams:         1   
-#IFs:           8   
-#Polarisations: 1   (stokes)
-#Channels:      8192
-#Flux Unit:     K
-#Abscissa:      Channel
-#Selection:     none
-#
-#Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
-#       Beam  Position (J2000)       
-#--------------------------------------------------------------------------------
-#   0 OrionS         2006/01/19/01:52:04.6 - 02:00:05.1   480.48     1  [PSON] [0] [0]
-#       0      05:35:13.4 -05.24.07.8
-#--------------------------------------------------------------------------------
-#FREQUENCIES: 1
-#   ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
-#    0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0]
-#--------------------------------------------------------------------------------
-#MOLECULES: 
-#   ID   RestFreq          Name           
-#    0   [4.54903e+10] []
-#    1   [4.3963e+10] []
-#--------------------------------------------------------------------------------
-#
+\end{verbatim}
+\footnotesize
+\begin{verbatim}
+# --------------------------------------------------------------------------------
+#  Scan Table Summary
+# --------------------------------------------------------------------------------
+# Project:       AGBT06A_018_01
+# Obs Date:      2006/01/19/01:45:58
+# Observer:      Joseph McMullin
+# Antenna Name:  GBT@GREENBANK
+# Data Records:  1 rows
+# Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
+# Beams:         1   
+# IFs:           8   
+# Polarisations: 1   (stokes)
+# Channels:      8192
+# Flux Unit:     K
+# Abscissa:      Channel
+# Selection:     none
+
+# Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
+#        Beam  Position (J2000)       
+# --------------------------------------------------------------------------------
+#    0 OrionS         2006/01/19/01:52:04.6 - 02:00:05.1   480.48     1  [PSON] [0] [0]
+#        0      05:35:13.4 -05.24.07.8
+# --------------------------------------------------------------------------------
+# FREQUENCIES: 1
+#    ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
+#     0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0]
+# --------------------------------------------------------------------------------
+# MOLECULES: 
+#    ID   RestFreq          Name           
+#     0   [4.54903e+10] []
+#     1   [4.3963e+10] []
+# --------------------------------------------------------------------------------
+\end{verbatim}
+\normalsize
+\begin{verbatim}
 # Note that our scans are now collapsed (timeaverage=True) but 
 # we still have our IF 0
 
@@ -3243,7 +3360,7 @@ default('sdplot')
 # (if we hadn't reset defaults it would have
 # been set - note that sdplot,sdfit,sdstat use
 # infile as the input file, which is the output
-# file of sdcal).
+# file of sdreduce).
 infile = 'sdusecase_orions_hc3n.asap'
 
 # Lets just go ahead and plot it up as-is
@@ -3496,9 +3613,6 @@ scan). The bottom panel shows the calibrated (baseline subtracted) data. }
 \end{figure}
 
 \begin{verbatim}
-# load single dish module
-# asap_init()
-
 # The data used here (uid___X1e1_X3197_X1.ms) is the total power 
 # raster scans of the Moon  taken  at ATF (with both antennas). 
 # It is in MS format  which was converted from the ASDM format.
@@ -3538,16 +3652,8 @@ sdtpimaging()
 \section{Using The ASAP Toolkit Within CASA}
 \label{section:sd.asap}
 
-ASAP is included with the CASA installation/build. It is not loaded
-upon start-up, however, and must be imported as a standard Python
-package. A convenience function exists for importing ASAP along with
-a set of prototype tasks for single dish analysis:
-\small
-\begin{verbatim}
-  CASA <1>: asap_init
-\end{verbatim}
-\normalsize
-Once this is done, all of the ASAP functionality is now under the
+ASAP is included with the CASA installation/build. It is loaded
+upon start-up, and the ASAP functionality is under the
 Python 'sd' tool.  {\bf Note:} This means that if you are following
 the ASAP cookbook or documentation, all of the commands should be 
 invoked with a '{\tt sd.}' before the native ASAP command.
@@ -3612,6 +3718,11 @@ table.  Type
 \normalsize
 (using TAB completion) to see the full list. 
 
+\medskip
+{\bf R3.4 New Features}\\
+The single dish package (ASAP) is now loaded at the start-up of CASA. 
+It is not necessary to load ASAP explicitly by invoking {\tt asap\_init} anymore.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Environment Variables}
 \label{subsection:sd.asap.environ}
@@ -3673,6 +3784,30 @@ rc(group, **kwargs)
 \end{verbatim}
 \normalsize
 
+{\bf Important Note:}\\
+User must use {\tt sd.rcParams[scantable.storage']='disk'} with care when 
+you call any tool level functions since some functions may overwrite original data 
+even if you set {\tt sd.rcParams['insitu']=False}, which tells the system not to 
+overwrite original data (in contrast, setting {\tt sd.rcParams['insitu']} to True 
+forces to overwrite original data). 
+Relevant methods, which may overwrite original data in the above case, are as follows:
+\small
+\begin{itemize}
+   \item {\tt sd.average\_time}
+   \item {\tt sd.merge}
+   \item four operations ({\tt +, -, *, /}) of {\tt sd.scantable} instance with scalar or array
+   \item {\tt sd.scantable.add}
+   \item {\tt sd.scantable.clip}
+   \item {\tt sd.scantable.flag}
+   \item {\tt sd.scantable.flag\_nans}
+   \item {\tt sd.scantable.flag\_row}
+   \item {\tt sd.scantable.scale}
+   \item {\tt sd.scantable.recalc\_azel}
+   \item any setter functions of {\tt sd.scantable} class (both {\tt set\_xxx} and {\tt \_setxxx} functions)
+\end{itemize}
+\normalsize
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Import}
 \label{subsection:sd.asap.import}
@@ -3686,6 +3821,67 @@ SDFITS, the CASA Measurement Set, and NRO data format). For example:
 \begin{verbatim}
   CASA <1>: scans = sd.scantable('OrionS_rawACSmod', average=False)
   Importing OrionS_rawACSmod...
+\end{verbatim}
+\normalsize
+
+Use the {\tt summary} function to examine the data and get basic information:
+
+\footnotesize
+\begin{verbatim}
+CASA <8>: print scans.summary()
+--------------------------------------------------------------------------------
+ Scan Table Summary
+--------------------------------------------------------------------------------
+Project:       AGBT06A_018_01
+Obs Date:      2006/01/19/01:45:58
+Observer:      Joseph McMullin
+Antenna Name:  GBT@GREENBANK
+Data Records:  512 rows
+Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
+Beams:         1   
+IFs:           8   
+Polarisations: 2   (circular)
+Channels:      8192
+Flux Unit:     K
+Abscissa:      Channel
+Selection:     none
+
+Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
+       Beam  Position (J2000)       
+--------------------------------------------------------------------------------
+  20 OrionS         2006/01/19/01:45:58.0 - 01:47:58.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
+       0      05:15:13.5 -05.24.08.6
+  21 OrionS         2006/01/19/01:48:38.0 - 01:50:38.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
+       0      05:35:13.4 -05.24.07.8
+  22 OrionS         2006/01/19/01:51:21.0 - 01:53:21.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
+       0      05:15:13.6 -05.24.08.5
+  23 OrionS         2006/01/19/01:54:01.0 - 01:56:01.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
+       0      05:35:13.4 -05.24.08.1
+  24 OrionS         2006/01/19/02:01:47.0 - 02:03:47.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
+       0      05:15:13.5 -05.24.08.5
+  25 OrionS         2006/01/19/02:04:27.0 - 02:06:27.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
+       0      05:35:13.4 -05.24.08.1
+  26 OrionS         2006/01/19/02:07:10.0 - 02:09:10.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
+       0      05:15:13.5 -05.24.08.4
+  27 OrionS         2006/01/19/02:09:51.0 - 02:11:51.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
+       0      05:35:13.3 -05.24.08.1
+--------------------------------------------------------------------------------
+FREQUENCIES: 4
+   ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
+    0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0, 1]
+    1    1     LSRK   4.5300782e+10 4095.5       6104.233      8192  [0, 1]
+    2    2     LSRK   4.4074926e+10 4095.5       6104.233      8192  [0, 1]
+    3    3     LSRK   4.4166212e+10 4095.5       6104.233      8192  [0, 1]
+    4   12     LSRK   4.3962123e+10 4095.5      6104.2336      8192  [0, 1]
+    5   13     LSRK   4.2645417e+10 4095.5      6104.2336      8192  [0, 1]
+    6   14     LSRK   4.1594977e+10 4095.5      6104.2336      8192  [0, 1]
+    7   15     LSRK    4.342282e+10 4095.5      6104.2336      8192  [0, 1]
+--------------------------------------------------------------------------------
+MOLECULES: 
+   ID   RestFreq          Name           
+    0   [4.54903e+10] []
+    1   [4.3963e+10] []
+--------------------------------------------------------------------------------
 \end{verbatim}
 \normalsize
 
@@ -3745,25 +3941,19 @@ GBT staff.
 \subsubsection{Handling ALMA data}
 
 \begin{itemize}
+% 2012/04/12 TN asdm2ASAP is implemented
 %\item Currently ASDM data cannot be read to ASAP directly. It must be converted
 %to a MS first via {\tt importasdm} task. Then you can load this MS to ASAP. The
 % {\tt importasdm} task allows to handle these two steps at once. To do
 % that, you should set {\tt singledish=True} and specify id or name of the
 % antenna by the {\tt antenna} parameter (see \S~\ref{section:io.import.asdm}).
-\item The {\tt importasdm} task allows to import ASDM to ASAP format. There 
-are two choices to do that. One is, like before R3.2, to import ASDM to ASAP 
-format via MS. In that case, ASDM is imported as MS using the task by 
-setting {\tt singledish=False}, and then convert MS using {\tt sd.scantable} 
-constructor, {\tt sdsave} task, or {\tt sd.splitant} described below. 
-Another way to import ASDM is to directly import it as ASAP format. 
-It can be realized to set {\tt singledish=True} when the 
-task is executed. In that case, you should specify id or name of the
-antenna by the {\tt antenna} parameter. 
-One advantage to use direct import is its performance. However, some 
-options are not effective when {\tt singledish=True}, e.g. {\tt asis} 
-option is disabled. If you want to use whole functionalities in the 
-{\tt importasdm} task, setting {\tt singledish=False} is recommended 
-(see \S~\ref{section:io.import.asdm}).
+\item Using {\tt importasdm} task, ASDM data can be imported to ASAP directly.
+To do that, you should set {\tt singledish=True} and specify id or name of 
+the antenna by the {\tt antenna} parameter 
+(see \S~\ref{section:io.import.asdm}). This functionality is still under 
+testing. You can use previous two step process (import ASDM as MS using 
+{\tt importasdm} task first, then import MS as ASAP format) to import ASDM 
+as ASAP format if you have any problem during direct import. 
 
 \item If the MS data contain data from multiple single dish antennas you need either, to 
 specify the {\tt antenna} parameter when importing data ({\tt sd.scantable}) or,
@@ -3779,85 +3969,40 @@ from antA and antB, with {\tt outprefix='splitted'}, i.e.,
 are 'splitted.antA' and 'splitted.antB'.  
 The returned value of the method is a list of scantable names. 
 
-\item An experimental functionality to import two-element interferometric 
-data as a single dish data is not available any more.
-%\item It is possible to read the 2-element interferometric
-%data taken by the ALMA telescopes 
-%as a single dish data to further examine it using ASAP Toolkit and
-%the SDtasks. The usage is the same as importing single
-%dish data. 
-%For example, to load the ALMA interferometry data, myOSFint.ms
-%\begin{verbatim} 
-%s=sd.scantable('myOSFint.ms', 'False')
-%\end{verbatim} 
-%It is still experimental and limited to data obtained with a
-%two-element array.
+\item It is possible to read the 2-element interferometric
+data taken by the ALMA telescopes 
+as a single dish data to further examine it using ASAP Toolkit and
+the SDtasks. The usage is the same as importing single
+dish data. 
+For example, to load the ALMA interferometry data, myOSFint.ms
+\begin{verbatim} 
+s=sd.scantable('myOSFint.ms', 'False')
+\end{verbatim} 
+It is still experimental and limited to data obtained with a
+two-element array.
+
+\item In ALMA, Tsys measurement is done in a specific spectral window
+for calibration so that it is necessary to transfer Tsys to the
+spectral window for target scan. This will be done using {\tt filltsys}
+module. Usage is as follows:
+\begin{verbatim}
+import filltsys
+filltsys.fillTsys( filename='mydata.asap', specif=5, tsysif=1, mode='linear' )
+\end{verbatim}
+The parameter {\tt filename} specifies a name of the data to be
+processed. Data must be in ASAP format. The spectral windows (=IFs) for
+target scan and calibration scan should be set using {\tt specif} and
+{\tt tsysif}, respectively. You can identify those informations using
+{\tt sdlist} task. The {\tt mode} is an interpolation mode along
+frequency axis. Available options are 'linear', 'nearest', 'zero',
+'slinear', 'quadratic', 'cubic', and any integer specifiying an order
+of the spline interpolation.
+Note that {\tt filltsys} will overwrite the data specified by
+{\tt filename}. 
+
 \end{itemize}
-%%% 2011/10/13 TN
-%%% The following description looks out of place.
-%
-%Use the {\tt summary} function to examine the data and get basic information:
-%
-%\small
-%\begin{verbatim}
-%CASA <8>: scans.summary()
-%--------------------------------------------------------------------------------
-%Scan Table Summary
-%--------------------------------------------------------------------------------
-%Project:       AGBT06A_018_01
-%Obs Date:      2006/01/19/01:45:58
-%Observer:      Joseph McMullin
-%Antenna Name:  GBT@GREENBANK
-%Data Records:  512 rows
-%Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-%Beams:         1   
-%IFs:           8   
-%Polarisations: 2   (circular)
-%Channels:      8192
-%Flux Unit:     K
-%Abscissa:      Channel
-%Selection:     none
-%
-%Scan Source         Time range                           Int[s] Record SrcType FreqIDs MolIDs 
-%       Beam  Position (J2000)       
-%--------------------------------------------------------------------------------
-%  20 OrionS         2006/01/19/01:45:58.0 - 01:47:58.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
-%       0      05:15:13.5 -05.24.08.6
-%  21 OrionS         2006/01/19/01:48:38.0 - 01:50:38.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
-%       0      05:35:13.4 -05.24.07.8
-%  22 OrionS         2006/01/19/01:51:21.0 - 01:53:21.2   30.03     64  [PSOFF, PSOFF:CALON] [0, 1, 2, 3] [0]
-%       0      05:15:13.6 -05.24.08.5
-%  23 OrionS         2006/01/19/01:54:01.0 - 01:56:01.2   30.03     64  [PSON, PSON:CALON] [0, 1, 2, 3] [0]
-%       0      05:35:13.4 -05.24.08.1
-%  24 OrionS         2006/01/19/02:01:47.0 - 02:03:47.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
-%       0      05:15:13.5 -05.24.08.5
-%  25 OrionS         2006/01/19/02:04:27.0 - 02:06:27.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
-%       0      05:35:13.4 -05.24.08.1
-%  26 OrionS         2006/01/19/02:07:10.0 - 02:09:10.2   30.03     64  [PSOFF, PSOFF:CALON] [4, 5, 6, 7] [1]
-%       0      05:15:13.5 -05.24.08.4
-%  27 OrionS         2006/01/19/02:09:51.0 - 02:11:51.2   30.03     64  [PSON, PSON:CALON] [4, 5, 6, 7] [1]
-%       0      05:35:13.3 -05.24.08.1
-%--------------------------------------------------------------------------------
-%FREQUENCIES: 4
-%   ID  IFNO   Frame   RefVal          RefPix Increment      Channels POLNOs
-%    0    0     LSRK   4.5489351e+10 4095.5       6104.233      8192  [0, 1]
-%    1    1     LSRK   4.5300782e+10 4095.5       6104.233      8192  [0, 1]
-%    2    2     LSRK   4.4074926e+10 4095.5       6104.233      8192  [0, 1]
-%    3    3     LSRK   4.4166212e+10 4095.5       6104.233      8192  [0, 1]
-%    4   12     LSRK   4.3962123e+10 4095.5      6104.2336      8192  [0, 1]
-%    5   13     LSRK   4.2645417e+10 4095.5      6104.2336      8192  [0, 1]
-%    6   14     LSRK   4.1594977e+10 4095.5      6104.2336      8192  [0, 1]
-%    7   15     LSRK    4.342282e+10 4095.5      6104.2336      8192  [0, 1]
-%--------------------------------------------------------------------------------
-%MOLECULES: 
-%   ID   RestFreq          Name           
-%    0   [4.54903e+10] []
-%    1   [4.3963e+10] []
-%--------------------------------------------------------------------------------
-%\end{verbatim}
-%\normalsize
-%
-%Note that the above information is displayed in the logger.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Scantable Manipulation}
@@ -3916,14 +4061,18 @@ selection functions, e.g.,
 
 Some properties of a scantable apply to all of the data, such as
 spectral units, frequency frame, or Doppler type. This
-information can be set using the {\tt scantable} \_set\_xxxx\_
+information can be set using the %{\tt scantable} \_set\_xxxx\_
+{\tt scantable.set\_xxxx}
 methods.  These are currently:
 \small
 \begin{verbatim}
 CASA <1>: sd.scantable.set_<TAB>
-sd.scantable.set_dirframe    sd.scantable.set_fluxunit    sd.scantable.set_restfreqs   
-sd.scantable.set_doppler     sd.scantable.set_freqframe   sd.scantable.set_selection   
-sd.scantable.set_feedtype    sd.scantable.set_instrument  sd.scantable.set_unit
+sd.scantable.set_dirframe    sd.scantable.set_restfreqs
+sd.scantable.set_doppler     sd.scantable.set_selection
+sd.scantable.set_feedtype    sd.scantable.set_sourcetype
+sd.scantable.set_fluxunit    sd.scantable.set_spectrum
+sd.scantable.set_freqframe   sd.scantable.set_unit
+sd.scantable.set_instrument  
 \end{verbatim}
 \normalsize
 
@@ -3991,14 +4140,20 @@ scantable.  These can be found in the usual way:
 \small
 \begin{verbatim}
 CASA <4>: sd.scantable.get<TAB>
-sd.scantable.get_abcissa       sd.scantable.get_restfreqs     sd.scantable.getbeamnos
-sd.scantable.get_azimuth       sd.scantable.get_scan          sd.scantable.getcycle
-sd.scantable.get_column_names  sd.scantable.get_selection     sd.scantable.getif
-sd.scantable.get_direction     sd.scantable.get_sourcename    sd.scantable.getifnos
-sd.scantable.get_elevation     sd.scantable.get_time          sd.scantable.getpol
-sd.scantable.get_fit           sd.scantable.get_tsys          sd.scantable.getpolnos
-sd.scantable.get_fluxunit      sd.scantable.get_unit          sd.scantable.getscan
-sd.scantable.get_parangle      sd.scantable.getbeam           sd.scantable.getscannos
+sd.scantable.get_abcissa       sd.scantable.get_parangle
+sd.scantable.get_antennaname   sd.scantable.get_restfreqs
+sd.scantable.get_azimuth       sd.scantable.get_rms
+sd.scantable.get_column_names  sd.scantable.get_row
+sd.scantable.get_coordinate    sd.scantable.get_row_selector
+sd.scantable.get_direction     sd.scantable.get_scan
+sd.scantable.get_directionval  sd.scantable.get_selection
+sd.scantable.get_elevation     sd.scantable.get_sourcename
+sd.scantable.get_fit           sd.scantable.get_spectrum
+sd.scantable.get_fluxunit      sd.scantable.get_time
+sd.scantable.get_inttime       sd.scantable.get_tsys
+sd.scantable.get_mask          sd.scantable.get_tsysspectrum
+sd.scantable.get_mask_indices  sd.scantable.get_unit
+sd.scantable.get_masklist      sd.scantable.get_weather
 \end{verbatim}
 \normalsize
 These include functions to get the current values of the states
@@ -4390,7 +4545,7 @@ Smoothing on data can be done as follows:
 \subsection{Baseline Fitting}
 \label{subsection:sd.asap.BLfitting}
 
-CASA 3.2 offers a variety of functions for baseline fitting: cubic 
+CASA offers a variety of functions for baseline fitting: cubic 
 spline function and sinusoid are now available in addition to polynomial. 
 Also three new parameters are added to all the baseline fitting 
 functions in common. They include {\tt getresidual, outlog,} and 
@@ -4465,6 +4620,9 @@ The parameters {\tt edge, threshold}, and {\tt chan\_avg\_limit} can be used
 in common for all the baseline fitting functions that use linefinder 
 ({\tt auto\_*\_baseline}). 
 
+It should also be noted that the above two functions now run about 30 times 
+faster than in CASA 3.1. 
+
 The functions {\tt cspline\_baseline} and {\tt auto\_cspline\_baseline} 
 are for cubic spline fitting with or without using linefinder, respectively. 
 The unique paramters for these are as follows:
@@ -4480,42 +4638,20 @@ The unique paramters for these are as follows:
 
 The functions {\tt sinusoid\_baseline} and {\tt auto\_sinusoid\_baseline} 
 are for sinusoidal fitting with or without using linefinder, respectively. 
-In CASA 3.3, some of the unique paramters have been changed to offer an 
-automatically selected set of wave number components, for an easier use. 
-Actually, 'nwave' and 'maxwavelength' have been removed and five new ones 
-are added as follows: 
+The unique paramters for these are as follows:
 
 \small
 \begin{verbatim}
-        applyfft:   if True use some method, such as FFT, to find the 
-                    strongest sinusoidal components in the wavenumber 
-                    domain to be used for baseline fitting.
-                    default is True.
-        fftmethod:  method to find the strong sinusoidal components.
-                    now only 'fft' is available and it is the default. 
-        fftthresh:  the threshold to select wave numbers to be used for 
-                    fitting from the distribution of amplitudes in the 
-                    wavenumber domain.
-                    both float and string values accepted. 
-                    given a float value, the unit is set to sigma. 
-                    for string values, allowed formats include:
-                        'xsigma' or 'x' (=x-sigma level, e.g., '3sigma'), or 
-                        'topx' (= the x strongest ones, e.g., 'top5').
-                    default is 3.0 (unit: sigma).
-        addwn:      the additional wave numbers to be used for fitting. 
-                    list or integer value is accepted to specify every 
-                    wave numbers. also string value can be used in case 
-                    you need to specify wave numbers in a certain range,
-                    e.g., 'a-b' (= a, a+1, a+2, ..., b-1, b),
-                          '<a'  (= 0, 1, ..., a-2, a-1),
-                          '>=a' (= a, a+1, ... up to the maximum wave 
-                                   number corresponding to the Nyquist 
-                                   frequency for the case of FFT).
-                    default is [].
-        rejwn:      the wave numbers NOT to be used for fitting.
-                    can be set just as addwn but has higher priority: 
-                    wave numbers which are specified both in addwn 
-                    and rejwn will NOT be used. default is [].
+        nwave:      the maximum wave number of sinusoids within a range 
+                    of spectral width multiplied by maxwavelength.
+                    The default is 3 (i.e., sinusoids with wave 
+                    number of 0(=constant), 1, 2, and 3 are 
+                    used for fitting). Also it is possible to 
+                    explicitly specify all the wave numbers to 
+                    be used, by giving a list including them 
+                    (e.g., [0, 1, 2, 15, 16]).
+        maxwavelength: the longest sonusoidal wavelength. The 
+                    default is 1.0 (unit: spectral range)
         clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
         clipniter:  maximum number of iteration of 'clipthresh-sigma 
                     clipping (default is 0: no clipping)
@@ -4529,10 +4665,6 @@ operation by using cubic spline fitting function with npiece=1).
 
 Also, for cubic spline and sinusoidal fitting, the parameter {\tt plot} is 
 ignored (always set False) and yet to be available. 
-
-Note: in CASA 3.3, the three {\tt auto\_xxx\_baseline} functions using 
-linefinder functionality become several or more than 10 times faster than 
-in CASA 3.2. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4683,10 +4815,14 @@ for each IF.
   scans.get_restfreqs()         #retrieve current rest frequencies
   #{0: [45490258000.0]
 \end{verbatim}
+\normalsize
+
 All of the rest frequencies currently set to the data are listed in
 python dictionary for each MOLECULE\_ID.
 
 Here is an example of setting multiple rest frequencies for spectra of a particular IF:
+
+\small
 \begin{verbatim}
   #Select IFs, then set rest frequencies,
   sel=sd.selector()
@@ -4694,6 +4830,7 @@ Here is an example of setting multiple rest frequencies for spectra of a particu
   scans.set_selection(sel)
   scans.set_restfreqs([45490258000.0,45590258000.0,45690258000.0])
 \end{verbatim}
+\normalsize
 
 {\bf NOTE:} there is no functionality yet to select a specific rest frequency 
 to apply to a specific line, etc. Currently, the first one in the list
@@ -5029,9 +5166,12 @@ implemented.  These currently include:
 
 \item {\tt sd.scantable}
 
-  There is no useful inline help on the scantable constructor
-  in {\tt help sd.scantable} and {\tt help sd}.
-
+% 2012/04/12 TN inline help for scantable constructor seems to be available
+%  There is no useful inline help on the scantable constructor
+%  in {\tt help sd.scantable} and {\tt help sd}.
+% 2012/04/12 TN verbose parameter doesn't exist 
+%  The inline help for {\tt scantable.summary} claims that there is
+%  a verbose parameter, but there is not.  
   The {\tt scantable.verbosesummary}
   asaprc parameter (e.g. in {\tt sd.rcParams}) does nothing.
 
@@ -5065,12 +5205,12 @@ implemented.  These currently include:
   behavior is consistent throughout the casapy tasks.
 
 
-\item {\tt sdaverage} (and {\tt sdcal})
+\item {\tt sdcal} (and {\tt sdreduce})
 
   {\tt averageall=True} is still experimental since the test was insufficient 
   because of a lack of test data.
 
-% \item {\tt sdcal}
+% \item {\tt sdreduce}
 % 
 %   Can crash if {\tt timeaverage=True} and/or {\tt polaverage=True}
 %   and you give a
@@ -5093,7 +5233,7 @@ For {\tt fitmode='list'}, there are no way to give initial guesses for each IFs 
 
 \item GBT raw SDFITS data
 
-  The SDtasks and {\tt sd.scantable} are able to handle GBT raw SDFITS data format data 
+  The SDtasks and {\tt sd.scantable} are able to handle GBT raw SDFITS data format (version 1.3) data 
   since the data filler is available. However, the functionality is not well 
   tested yet, so that there may be unknown bugs.  
 

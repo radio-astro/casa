@@ -174,10 +174,9 @@ namespace casa {
 					Region::Units x_units = Region::DefaultUnits,
 					Region::Units y_units = Region::DefaultUnits,
 					const std::string &bounding_units = "rad" ) const;
-		void movePosition( const std::string &x, const std::string &y, const std::string &coord,
-				   const std::string &x_units, const std::string &y_units,
-				   const std::string &width, const std::string &height, const std::string &bounding_units );
 
+		bool translateX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ );
+		bool translateY( const std::string &/*x*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ );
 
 		// one would expect the "number of frames" in our composite cube (including
 		// multiple images) to be contained in the non-GUI portion of the viewer

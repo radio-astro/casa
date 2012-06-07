@@ -21,7 +21,7 @@ namespace casa {
 		QtRegionState( const QString &name, QtRegion *region, QWidget *parent=0 );
 		~QtRegionState( );
 
-		void updateCoord( ) { coordinates_reset_event(true); }
+		void updateCoord( );
 		void updateStatistics( std::list<RegionInfo> *stats );
 		void clearStatistics( );
 
@@ -86,8 +86,9 @@ namespace casa {
 		void refreshCanvas( );
 		void statisticsVisible( bool );
 		void positionVisible( bool );
-		void positionMove( const QString &x,const QString &y,const QString &coord,const QString &x_units,const QString &y_units,
-				   const QString &width, const QString &height, const QString &bounding_units );
+		void translateX( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
+		void translateY( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
+
 		void zRange( int z_min, int z_max );
 		/* void regionCategoryChange( QString ); */
 		void outputRegions( const QString &what, const QString &name, const QString &type, const QString &csys );
@@ -104,8 +105,8 @@ namespace casa {
 		void states_change( int );
 		void states_val_change( int );
 		void coordsys_change( const QString &text );
-		void coordinates_reset_event(bool);
-		void coordinates_apply_event(bool);
+		void translate_x( );
+		void translate_y( );
 		void category_change( int );
 		void filetab_change( int );
 		// keeps text color in sync with line color (if they were the same before)

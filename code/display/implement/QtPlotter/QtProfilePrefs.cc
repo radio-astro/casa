@@ -46,7 +46,7 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 
 QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 		int stateGrid, int stateMProf, int stateRel, bool showToolTips,
-		bool showTopAxis, bool opticalFit )
+		bool showTopAxis, bool displayAsStepFunction, bool opticalFit )
 :QDialog(parent)
 {
 	// paint the GUI
@@ -60,6 +60,7 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 	toolTipsCheckBox -> setChecked(showToolTips );
 	topAxisCheckBox -> setChecked( showTopAxis );
 	opticalSpecFitCheckBox -> setChecked( opticalFit );
+	stepFunctionCheckBox->setChecked( displayAsStepFunction );
 	if (stateMProf){
 		relative->setChecked(stateRel);
 	}
@@ -79,7 +80,8 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 void QtProfilePrefs::accepted(){
 	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
 			(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
-			topAxisCheckBox->checkState(), opticalSpecFitCheckBox->checkState() ) ;
+			topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
+			opticalSpecFitCheckBox->checkState() ) ;
 	close();
 }
 

@@ -50,7 +50,7 @@ class listhistory_test(unittest.TestCase):
         os.system(cmd)
     
         # Get the number of lines in file
-        refnum=14
+        refnum=13
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
         output=commands.getoutput(cmd)
         num = int(output)

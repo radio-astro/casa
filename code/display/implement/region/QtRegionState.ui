@@ -360,6 +360,9 @@
              <height>22</height>
             </rect>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
           </widget>
          </widget>
          <widget class="QGroupBox" name="groupBox_4">
@@ -385,6 +388,9 @@
              <width>120</width>
              <height>22</height>
             </rect>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </widget>

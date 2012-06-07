@@ -71,11 +71,11 @@ namespace casa {
 					Region::Units y_units = Region::DefaultUnits,
 					const std::string &bounding_units = "rad" ) const
 			{ Region::getPositionString( x, y, angle, bounding_width, bounding_height, coord, x_units, y_units, bounding_units ); }
-		void movePosition( const std::string &x, const std::string &y, const std::string &coord,
-				   const std::string &x_units, const std::string &y_units,
-				   const std::string &width, const std::string &height, const std::string &bounding_units )
-			{ Region::movePosition( x, y, coord, x_units, y_units, width, height, bounding_units ); }
 
+		bool translateX( const std::string &x, const std::string &x_units, const std::string &coordsys )
+			{ return Region::translateX( x, x_units, coordsys ); }
+		bool translateY( const std::string &y, const std::string &y_units, const std::string &coordsys )
+			{ return Region::translateY( y, y_units, coordsys ); }
 
 		int numFrames( ) const { return QtRegion::numFrames( ); }
 		void zRange( int &min, int &max ) const { QtRegion::zRange(min,max); }

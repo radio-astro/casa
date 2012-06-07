@@ -152,7 +152,7 @@ public slots:
 	void preferences();
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool opticalFitter);
+			bool displayStepFunction, bool opticalFitter);
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -214,6 +214,12 @@ private:
     * Initializes the spectrum positioning tab.
     */
    void initSpectrumPosition();
+
+   /**
+    * Returns false if first vector value is greater than the last
+    * vector value; otherwise returns true.
+    */
+   bool isAxisAscending(const Vector<Float>& axisValues ) const;
 
    void setTitle( const QString& shape );
    void copyToLastEvent( const String& c, const Vector<Double> &px,

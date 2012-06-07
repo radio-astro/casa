@@ -33,24 +33,21 @@
  #include "TagType.h"
 
 namespace asdm {
+
 const TagType* TagType::NoType = new TagType("NoType") ;
 
 	
 
 	
-const TagType* TagType:: AlmaRadiometer = new TagType("AlmaRadiometer") ;
+const TagType* TagType::AlmaRadiometer = new TagType("AlmaRadiometer") ;
 	
 
 	
-const TagType* TagType:: Annotation = new TagType("Annotation") ;
+const TagType* TagType::Annotation = new TagType("Annotation") ;
 	
 
 	
-const TagType* TagType:: Antenna = new TagType("Antenna") ;
-	
-
-	
-
+const TagType* TagType::Antenna = new TagType("Antenna") ;
 	
 
 	
@@ -58,11 +55,11 @@ const TagType* TagType:: Antenna = new TagType("Antenna") ;
 	
 
 	
-const TagType* TagType:: CalData = new TagType("CalData") ;
-	
 
 	
 
+	
+const TagType* TagType::CalData = new TagType("CalData") ;
 	
 
 	
@@ -86,7 +83,11 @@ const TagType* TagType:: CalData = new TagType("CalData") ;
 	
 
 	
-const TagType* TagType:: CalReduction = new TagType("CalReduction") ;
+
+	
+
+	
+const TagType* TagType::CalReduction = new TagType("CalReduction") ;
 	
 
 	
@@ -94,49 +95,41 @@ const TagType* TagType:: CalReduction = new TagType("CalReduction") ;
 	
 
 	
-const TagType* TagType:: ConfigDescription = new TagType("ConfigDescription") ;
+const TagType* TagType::ConfigDescription = new TagType("ConfigDescription") ;
 	
 
 	
-const TagType* TagType:: CorrelatorMode = new TagType("CorrelatorMode") ;
+const TagType* TagType::CorrelatorMode = new TagType("CorrelatorMode") ;
 	
 
 	
-const TagType* TagType:: DataDescription = new TagType("DataDescription") ;
-	
-
-	
-
-	
-const TagType* TagType:: Doppler = new TagType("Doppler") ;
-	
-
-	
-const TagType* TagType:: Ephemeris = new TagType("Ephemeris") ;
-	
-
-	
-const TagType* TagType:: ExecBlock = new TagType("ExecBlock") ;
-	
-
-	
-const TagType* TagType:: Feed = new TagType("Feed") ;
-	
-
-	
-const TagType* TagType:: Field = new TagType("Field") ;
-	
-
-	
-const TagType* TagType:: Flag = new TagType("Flag") ;
+const TagType* TagType::DataDescription = new TagType("DataDescription") ;
 	
 
 	
 
 	
+const TagType* TagType::Doppler = new TagType("Doppler") ;
+	
 
 	
-const TagType* TagType:: FocusModel = new TagType("FocusModel") ;
+const TagType* TagType::Ephemeris = new TagType("Ephemeris") ;
+	
+
+	
+const TagType* TagType::ExecBlock = new TagType("ExecBlock") ;
+	
+
+	
+const TagType* TagType::Feed = new TagType("Feed") ;
+	
+
+	
+const TagType* TagType::Field = new TagType("Field") ;
+	
+
+	
+const TagType* TagType::Flag = new TagType("Flag") ;
 	
 
 	
@@ -144,69 +137,7 @@ const TagType* TagType:: FocusModel = new TagType("FocusModel") ;
 	
 
 	
-
-	
-const TagType* TagType:: Holography = new TagType("Holography") ;
-	
-
-	
-const TagType* TagType:: Observation = new TagType("Observation") ;
-	
-
-	
-
-	
-const TagType* TagType:: PointingModel = new TagType("PointingModel") ;
-	
-
-	
-const TagType* TagType:: Polarization = new TagType("Polarization") ;
-	
-
-	
-const TagType* TagType:: Processor = new TagType("Processor") ;
-	
-
-	
-const TagType* TagType:: Receiver = new TagType("Receiver") ;
-	
-
-	
-const TagType* TagType:: SBSummary = new TagType("SBSummary") ;
-	
-
-	
-const TagType* TagType:: Scale = new TagType("Scale") ;
-	
-
-	
-
-	
-
-	
-const TagType* TagType:: Source = new TagType("Source") ;
-	
-
-	
-const TagType* TagType:: SpectralWindow = new TagType("SpectralWindow") ;
-	
-
-	
-const TagType* TagType:: SquareLawDetector = new TagType("SquareLawDetector") ;
-	
-
-	
-const TagType* TagType:: State = new TagType("State") ;
-	
-
-	
-const TagType* TagType:: Station = new TagType("Station") ;
-	
-
-	
-
-	
-const TagType* TagType:: SwitchCycle = new TagType("SwitchCycle") ;
+const TagType* TagType::FocusModel = new TagType("FocusModel") ;
 	
 
 	
@@ -216,12 +147,274 @@ const TagType* TagType:: SwitchCycle = new TagType("SwitchCycle") ;
 	
 
 	
+const TagType* TagType::Holography = new TagType("Holography") ;
+	
+
+	
+const TagType* TagType::Observation = new TagType("Observation") ;
+	
 
 	
 
+	
+const TagType* TagType::PointingModel = new TagType("PointingModel") ;
+	
+
+	
+const TagType* TagType::Polarization = new TagType("Polarization") ;
+	
+
+	
+const TagType* TagType::Processor = new TagType("Processor") ;
+	
+
+	
+const TagType* TagType::Receiver = new TagType("Receiver") ;
+	
+
+	
+const TagType* TagType::SBSummary = new TagType("SBSummary") ;
+	
+
+	
+const TagType* TagType::Scale = new TagType("Scale") ;
+	
+
+	
+
+	
+
+	
+const TagType* TagType::Source = new TagType("Source") ;
+	
+
+	
+const TagType* TagType::SpectralWindow = new TagType("SpectralWindow") ;
+	
+
+	
+const TagType* TagType::SquareLawDetector = new TagType("SquareLawDetector") ;
+	
+
+	
+const TagType* TagType::State = new TagType("State") ;
+	
+
+	
+const TagType* TagType::Station = new TagType("Station") ;
+	
+
+	
+
+	
+const TagType* TagType::SwitchCycle = new TagType("SwitchCycle") ;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+map<string, const TagType*> fillName2TagType_m() {
+	map<string, const TagType*> result;
+	result["NoType"] = TagType::NoType;
+
+	
+
+	
+	result["AlmaRadiometer"] = TagType::AlmaRadiometer ;
+	
+
+	
+	result["Annotation"] = TagType::Annotation ;
+	
+
+	
+	result["Antenna"] = TagType::Antenna ;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	result["CalData"] = TagType::CalData ;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	result["CalReduction"] = TagType::CalReduction ;
+	
+
+	
+
+	
+
+	
+	result["ConfigDescription"] = TagType::ConfigDescription ;
+	
+
+	
+	result["CorrelatorMode"] = TagType::CorrelatorMode ;
+	
+
+	
+	result["DataDescription"] = TagType::DataDescription ;
+	
+
+	
+
+	
+	result["Doppler"] = TagType::Doppler ;
+	
+
+	
+	result["Ephemeris"] = TagType::Ephemeris ;
+	
+
+	
+	result["ExecBlock"] = TagType::ExecBlock ;
+	
+
+	
+	result["Feed"] = TagType::Feed ;
+	
+
+	
+	result["Field"] = TagType::Field ;
+	
+
+	
+	result["Flag"] = TagType::Flag ;
+	
+
+	
+
+	
+
+	
+	result["FocusModel"] = TagType::FocusModel ;
+	
+
+	
+
+	
+
+	
+
+	
+	result["Holography"] = TagType::Holography ;
+	
+
+	
+	result["Observation"] = TagType::Observation ;
+	
+
+	
+
+	
+	result["PointingModel"] = TagType::PointingModel ;
+	
+
+	
+	result["Polarization"] = TagType::Polarization ;
+	
+
+	
+	result["Processor"] = TagType::Processor ;
+	
+
+	
+	result["Receiver"] = TagType::Receiver ;
+	
+
+	
+	result["SBSummary"] = TagType::SBSummary ;
+	
+
+	
+	result["Scale"] = TagType::Scale ;
+	
+
+	
+
+	
+
+	
+	result["Source"] = TagType::Source ;
+	
+
+	
+	result["SpectralWindow"] = TagType::SpectralWindow ;
+	
+
+	
+	result["SquareLawDetector"] = TagType::SquareLawDetector ;
+	
+
+	
+	result["State"] = TagType::State ;
+	
+
+	
+	result["Station"] = TagType::Station ;
+	
+
+	
+
+	
+	result["SwitchCycle"] = TagType::SwitchCycle ;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	return result;	
+}
+
+static map<string, const TagType*> name2TagType_m = fillName2TagType_m();
 
 TagType::TagTypeMgr TagType::tagTypeMgr;
-map<string, const TagType*> TagType::name2TagType;
 
 TagType::TagType(string name) {
   this->name = name;
@@ -232,194 +425,6 @@ string TagType::toString() const {
 }
 
 const TagType* TagType::getTagType(string name) {
-  if ( name2TagType.size() == 0) {
-	TagType::name2TagType["NoType"] = TagType::NoType;
- 
-	
-
-	
-	TagType::name2TagType["AlmaRadiometer"] = TagType::AlmaRadiometer ;
-	
-
-	
-	TagType::name2TagType["Annotation"] = TagType::Annotation ;
-	
-
-	
-	TagType::name2TagType["Antenna"] = TagType::Antenna ;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["CalData"] = TagType::CalData ;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["CalReduction"] = TagType::CalReduction ;
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["ConfigDescription"] = TagType::ConfigDescription ;
-	
-
-	
-	TagType::name2TagType["CorrelatorMode"] = TagType::CorrelatorMode ;
-	
-
-	
-	TagType::name2TagType["DataDescription"] = TagType::DataDescription ;
-	
-
-	
-
-	
-	TagType::name2TagType["Doppler"] = TagType::Doppler ;
-	
-
-	
-	TagType::name2TagType["Ephemeris"] = TagType::Ephemeris ;
-	
-
-	
-	TagType::name2TagType["ExecBlock"] = TagType::ExecBlock ;
-	
-
-	
-	TagType::name2TagType["Feed"] = TagType::Feed ;
-	
-
-	
-	TagType::name2TagType["Field"] = TagType::Field ;
-	
-
-	
-	TagType::name2TagType["Flag"] = TagType::Flag ;
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["FocusModel"] = TagType::FocusModel ;
-	
-
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["Holography"] = TagType::Holography ;
-	
-
-	
-	TagType::name2TagType["Observation"] = TagType::Observation ;
-	
-
-	
-
-	
-	TagType::name2TagType["PointingModel"] = TagType::PointingModel ;
-	
-
-	
-	TagType::name2TagType["Polarization"] = TagType::Polarization ;
-	
-
-	
-	TagType::name2TagType["Processor"] = TagType::Processor ;
-	
-
-	
-	TagType::name2TagType["Receiver"] = TagType::Receiver ;
-	
-
-	
-	TagType::name2TagType["SBSummary"] = TagType::SBSummary ;
-	
-
-	
-	TagType::name2TagType["Scale"] = TagType::Scale ;
-	
-
-	
-
-	
-
-	
-	TagType::name2TagType["Source"] = TagType::Source ;
-	
-
-	
-	TagType::name2TagType["SpectralWindow"] = TagType::SpectralWindow ;
-	
-
-	
-	TagType::name2TagType["SquareLawDetector"] = TagType::SquareLawDetector ;
-	
-
-	
-	TagType::name2TagType["State"] = TagType::State ;
-	
-
-	
-	TagType::name2TagType["Station"] = TagType::Station ;
-	
-
-	
-
-	
-	TagType::name2TagType["SwitchCycle"] = TagType::SwitchCycle ;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-  }
-  return TagType::name2TagType[name];
+  return name2TagType_m[name];
 } 
 } // end namespace asdm

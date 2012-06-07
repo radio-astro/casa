@@ -705,8 +705,10 @@ def coordsystest():
         if not mycs: fail('coordsys constructor 3b failed')
         #
         val1 = ia.makearray(0,[2,2])
-        val1[0,0] = 2.0
-        val1[1,1] = 3.0
+        val1[0,0] = cos(0.5)
+        val1[0,1] = -sin(0.5)
+        val1[1,0] = sin(0.5)
+        val1[1,1] = cos(0.5)
         type = 'direction'
         ok = mycs.setlineartransform(value=val1, type=type)
         if not ok: fail()

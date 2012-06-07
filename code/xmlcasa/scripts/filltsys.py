@@ -238,7 +238,10 @@ class TsysFiller:
         incr = abc[1] - abc[0]
         ledge = abc[0] - 0.5 * incr
         redge = abc[-1] + 0.5 * incr
-        return (ledge,redge)
+        if ledge > redge:
+            return (redge,ledge)
+        else:
+            return (ledge,redge)
     
     def _select( self, ifno, polno=None, beamno=0, scanno=None ):
         """

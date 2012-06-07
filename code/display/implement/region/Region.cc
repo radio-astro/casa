@@ -112,8 +112,9 @@ namespace casa {
 	    }
 
 	    Vector<Double> cosine_correct(2,1.0);
-	    if ( ra_index >= 0 && dec_index >= 0 )
+	    if ( ra_index >= 0 && dec_index >= 0 ) {
 		cosine_correct(ra_index) = cos((qblc(dec_index)+qtrc(dec_index)).getValue("rad")/2.0);
+	    }
 
 	    width = ((qtrc(0) - qblc(0)) * cosine_correct(0)).getValue(units.c_str());
 	    height = ((qtrc(1) - qblc(1)) * cosine_correct(1)).getValue(units.c_str());
@@ -546,13 +547,8 @@ namespace casa {
 
 	}
 
-	void Region::movePosition( const std::string &x, const std::string &y, const std::string &coord,
-				   const std::string &x_units, const std::string &y_units,
-				   const std::string &width, const std::string &height, const std::string &bounding_units ) {
-
-	    const double dim_threshold = 0.5;
-
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+	bool Region::translateX( const std::string &x, const std::string &x_units, const std::string &coordsys ) {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
 
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
@@ -560,122 +556,151 @@ namespace casa {
 	    // current center of region...
 	    double cur_center_x = linear_average(blc_x,trc_x);
 	    double cur_center_y = linear_average(blc_y,trc_y);
-	    double cur_width = fabs(trc_x-blc_x);
-	    double cur_height = fabs(trc_y-blc_y);
-	    // filled in below...
+
 	    double new_center_x, new_center_y;
-	    double new_width_inc=0, new_height_inc=0;
-
-	    if ( coord == "pixel" ) {
-
-		double pix_x = atof(x.c_str( ));
-		double pix_y = atof(y.c_str( ));
-
-		try { pixel_to_linear( wc_, pix_x, pix_y, new_center_x, new_center_y ); } catch(...) { return; }
-
-		double x_off = atof(width.c_str( ))/2.0;
-		double y_off = atof(height.c_str( ))/2.0;
-
-		double dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y;
-
-		try { pixel_to_linear( wc_, cur_center_x - x_off, cur_center_y - y_off, cur_center_x + x_off, cur_center_y + y_off, dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y ); } catch(...) { return; }
-		double new_blc_x = (dd_blc_x <= dd_trc_x ? dd_blc_x : dd_trc_x);
-		double new_blc_y = (dd_blc_y <= dd_trc_y ? dd_blc_y : dd_trc_y);
-		double new_trc_x = (dd_blc_x >= dd_trc_x ? dd_blc_x : dd_trc_x);
-		double new_trc_y = (dd_blc_y >= dd_trc_y ? dd_blc_y : dd_trc_y);
-
-		double x_change = fabs(new_trc_x - new_blc_x) - fabs(trc_x - blc_x);
-		double y_change = fabs(new_trc_y - new_blc_y) - fabs(trc_y - blc_y);
-		if ( fabs(x_change) >= dim_threshold )
-		    new_width_inc = x_change;
-		if ( fabs(y_change) >= dim_threshold )
-		    new_height_inc = y_change;
-
+	    if ( x_units == "pixel" ) {
+		try { pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, new_center_y ); } catch(...) { return false; }
 	    } else {
-		Quantity xq, yq;
-
-		// read in to convert HMS/DMS...
-		MVAngle::read(xq,x);
-		MVAngle::read(yq,y);
-		// the above results in radians... fix in case of degrees...
-		if ( x_units == "degrees" )
-		    xq = Quantity(xq.getValue(),string_to_casa_units(x_units));
-		if ( y_units == "degrees" )
-		    yq = Quantity(yq.getValue(),string_to_casa_units(y_units));
-
-		// convert to radians, for wrap_angle( ) below...
-		xq.convert("rad");
-		yq.convert("rad");
-
-		// center specified by the user...
-		MDirection orig_direction(xq,yq,string_to_casa_coordsys(coord));
-		Quantum<Vector<double> > orig_center = orig_direction.getAngle("rad");
-		Quantity xoff(atof(width.c_str( ))/2.0,bounding_units.c_str( ));
-		Quantity yoff(atof(height.c_str( ))/2.0,bounding_units.c_str( ));
-
-		double orig_center_x = orig_center.getValue("rad")(0);
-		double orig_center_y = orig_center.getValue("rad")(1);
-
-		MDirection orig_blc_md( Quantity(orig_center_x - xoff.getValue("rad"),"rad"), Quantity(orig_center_y - yoff.getValue("rad"),"rad") );
-		MDirection orig_trc_md( Quantity(orig_center_x + xoff.getValue("rad"),"rad"), Quantity(orig_center_y + yoff.getValue("rad"),"rad") );
-		MDirection blc_md = MDirection::Convert(orig_blc_md,current_casa_coordsys( ))( );
-		casa::Quantum<casa::Vector<double> > blc = blc_md.getAngle("rad");
-		MDirection trc_md = MDirection::Convert(orig_trc_md,current_casa_coordsys( ))( );
-		casa::Quantum<casa::Vector<double> > trc = trc_md.getAngle("rad");
-
-		double dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y;
-		try {
-		    world_to_linear( wc_, blc.getValue("rad")(0), blc.getValue("rad")(1), trc.getValue("rad")(0), trc.getValue("rad")(1), dd_blc_x, dd_blc_y, dd_trc_x, dd_trc_y );
-		} catch(...) {
-		    // conversion failed...
-		    // need a viewer status line...
+		Quantity xq;
+		if ( x_units == "sexagesimal" ) {
+		    // read in to convert HMS/DMS...
+		    MVAngle::read(xq,x);
+		} else if ( x_units == "degrees" ) {
+		    xq = Quantity( atof(x.c_str( )), "deg" );
+		} else if ( x_units == "radians" ) {
+		    xq = Quantity( atof(x.c_str( )), "rad" );
+		} else {
 		    updateStateInfo( true );
-		    return;
+		    return false;
 		}
 
-		double new_blc_x = (dd_blc_x <= dd_trc_x ? dd_blc_x : dd_trc_x);
-		double new_blc_y = (dd_blc_y <= dd_trc_y ? dd_blc_y : dd_trc_y);
-		double new_trc_x = (dd_blc_x >= dd_trc_x ? dd_blc_x : dd_trc_x);
-		double new_trc_y = (dd_blc_y >= dd_trc_y ? dd_blc_y : dd_trc_y);
+		MDirection::Types cccs = current_casa_coordsys( );
+		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
+		const CoordinateSystem &cs = wc_->coordinateSystem( );
 
-		double x_change = fabs(new_trc_x - new_blc_x) - fabs(trc_x - blc_x);
-		double y_change = fabs(new_trc_y - new_blc_y) - fabs(trc_y - blc_y);
-		if ( fabs(x_change) >= dim_threshold )
-		    new_width_inc = x_change;
-		if ( fabs(y_change) >= dim_threshold )
-		    new_height_inc = y_change;
+		Vector<Double> worldv(2);
+		Vector<Double> linearv(2);
+		linearv(0) = cur_center_x;
+		linearv(1) = cur_center_y;
+		if ( ! wc_->linToWorld( worldv, linearv ) ) {
+		    updateStateInfo( true );
+		    return false;
+		}
 
-		// convert world coordinates to current coordinate system...
-		MDirection md = MDirection::Convert(orig_direction,current_casa_coordsys( ))( );
 
-		// cout << "Viewer MDirection:\t" << md << endl;
+		if ( cccs != input_direction ) {
+		    // convert current center to input direction type...
+		    MDirection cur_center( Quantum<Vector<Double> > (worldv,"rad"), cccs );
+		    MDirection input_center = MDirection::Convert(cur_center,input_direction)( );
+		    Quantum<Vector<Double> > inputq = input_center.getAngle("rad");
+		    // get quantity in input direction as radians...
+		    inputq.getValue( )(0) = xq.getValue("rad");
+		    // convert new position (in input direction type) current direction type...
+		    MDirection new_center_input( inputq, input_direction );
+		    MDirection new_center = MDirection::Convert(new_center_input,cccs)( );
+		    // retrieve world position in the current direction type...
+		    Quantum<Vector<Double> > new_center_q = new_center.getAngle("rad");
+		    worldv = new_center_q.getValue("rad");
+		} else {
+		    worldv(0) = xq.getValue("rad");
+		}
 
-		// fetch world coordinates in radians...
-		// and make angles consistent with input...
-		casa::Quantum<casa::Vector<double> > worldq = md.getAngle("rad");
-		new_center_x = wrap_angle(xq.getValue("rad"),worldq.getValue()(0));
-		new_center_y = wrap_angle(yq.getValue("rad"),worldq.getValue()(1));
-
-		// convert new center to linear coordinates...
-		try { world_to_linear( wc_, new_center_x, new_center_y, new_center_x, new_center_y ); } catch(...) { return; }
-
+		if ( ! wc_->worldToLin( linearv, worldv ) ) {
+		    updateStateInfo( true );
+		    return false;
+		}
+		new_center_x = linearv[0];
+		new_center_y = linearv[1];
 	    }
 
+
 	    // trap attempts to move region out of visible area...
-	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y,
-				      new_width_inc, new_height_inc ) ) {
+	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
 		updateStateInfo( true );
-		return;
+		return false;
 	    }
 
 	    // move region...
 	    move( new_center_x - cur_center_x, new_center_y - cur_center_y );
 
-	    if ( new_width_inc != 0 || new_height_inc != 0 ) {
-		resize( new_width_inc, new_height_inc );
+	    return true;
+	}
+
+	bool Region::translateY( const std::string &y, const std::string &y_units, const std::string &coordsys ) {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    // current center of region...
+	    double cur_center_x = linear_average(blc_x,trc_x);
+	    double cur_center_y = linear_average(blc_y,trc_y);
+
+	    double new_center_x, new_center_y;
+	    if ( y_units == "pixel" ) {
+		try { pixel_to_linear( wc_, 0, atof(y.c_str( )), new_center_x, new_center_y ); } catch(...) { return false; }
+	    } else {
+		Quantity yq;
+		if ( y_units == "sexagesimal" ) {
+		    // read in to convert HMS/DMS...
+		    MVAngle::read(yq,y);
+		} else if ( y_units == "degrees" ) {
+		    yq = Quantity( atof(y.c_str( )), "deg" );
+		} else if ( y_units == "radians" ) {
+		    yq = Quantity( atof(y.c_str( )), "rad" );
+		} else {
+		    updateStateInfo( true );
+		    return false;
+		}
+
+		MDirection::Types cccs = current_casa_coordsys( );
+		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
+		const CoordinateSystem &cs = wc_->coordinateSystem( );
+
+		Vector<Double> worldv(2);
+		Vector<Double> linearv(2);
+		linearv(0) = cur_center_x;
+		linearv(1) = cur_center_y;
+		if ( ! wc_->linToWorld( worldv, linearv ) ) {
+		    updateStateInfo( true );
+		    return false;
+		}
+
+		if ( cccs != input_direction ) {
+		    // convert current center to input direction type...
+		    MDirection cur_center( Quantum<Vector<Double> > (worldv,"rad"), cccs );
+		    MDirection input_center = MDirection::Convert(cur_center,input_direction)( );
+		    Quantum<Vector<Double> > inputq = input_center.getAngle("rad");
+		    // get quantity in input direction as radians...
+		    inputq.getValue( )(1) = yq.getValue("rad");
+		    // convert new position (in input direction type) current direction type...
+		    MDirection new_center_input( inputq, input_direction );
+		    MDirection new_center = MDirection::Convert(new_center_input,cccs)( );
+		    // retrieve world position in the current direction type...
+		    Quantum<Vector<Double> > new_center_q = new_center.getAngle("rad");
+		    worldv = new_center_q.getValue("rad");
+		} else {
+		    worldv(1) = yq.getValue("rad");
+		}
+
+		if ( ! wc_->worldToLin( linearv, worldv ) ) {
+		    updateStateInfo( true );
+		    return false;
+		}
+		new_center_x = linearv[0];
+		new_center_y = linearv[1];
 	    }
 
-	    refresh( );
+	    // trap attempts to move region out of visible area...
+	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
+		updateStateInfo( true );
+		return false;
+	    }
+
+	    // move region...
+	    move( new_center_x - cur_center_x, new_center_y - cur_center_y );
+
+	    return true;
 	}
 
 	Region::Coord Region::current_region_coordsys( ) const {

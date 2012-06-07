@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>203</width>
-    <height>304</height>
+    <width>205</width>
+    <height>251</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -78,6 +78,13 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="stepFunctionCheckBox">
+     <property name="text">
+      <string>Step Function</string>
      </property>
     </widget>
    </item>
