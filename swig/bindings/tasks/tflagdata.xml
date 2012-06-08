@@ -781,7 +781,10 @@ The task will flag a subset of data based on the following modes of operation:
                    The value of 'w' is used to determine which antenna is behind the other.
                    The phase-reference center is used for antenna-pointing direction. 
                      
-               tolerance -- Amount of shadowing allowed, in meters. 
+               tolerance -- Amount of shadowing allowed (or tolerated), in meters. 
+                        A positive number allows antennas to overlap in projection
+                        A negative number forces antennas apart in projection
+                        Zero implies a distance of radius_1+radius_2 between antenna centers.
                    default: 0.0
 
                addantenna -- It can be either a file name with additional antenna names, positions 
