@@ -35,7 +35,7 @@ include "image.g"
 \noindent{\bf Summary}
 
 Image tools provides access to \casa\ images.    Currently only single
-precision floating point \casa\ images are supported by the Image \tool. In the
+precision floating point \casa\ images are supported by the Image tool. In the
 future, complex images will also be supported.
 
 Image tools also provide direct (native) access to \fits\ and Miriad images.
@@ -43,7 +43,7 @@ You can also convert these foreign formats to \casa\ format (for
 optimum processing speed).
 
 \bigskip
-{\bf Overview of Image \tool\ functionality}
+{\bf Overview of Image tool functionality}
 
 \begin{itemize}
 
@@ -89,7 +89,7 @@ computing aggregate function of pixels along that axis
 \item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
 
 \item <link anchor="images:image.fitprofile.function">fitprofile</link> - fit a 1-d profile with varying
-combinations of functional forms (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
+combinations of functional forms (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> tool.
 
 \item <link anchor="images:image.histograms.function">histograms</link> - compute histograms from the image
 
@@ -134,7 +134,7 @@ Create a (sub)image from a region of the image
 pixel to world coordinate wrapped as Measures
 
 \item <link anchor="images:image.coordsys.function">coordsys</link> - recover the Coordinate System into
-a <link anchor="images:coordsys">Coordsys</link> \tool.
+a <link anchor="images:coordsys">Coordsys</link> tool.
 
 \item <link anchor="images:image.setcoordsys.function">setcoordsys</link> - set a new Coordinate System
 
@@ -144,7 +144,7 @@ a <link anchor="images:coordsys">Coordsys</link> \tool.
 
 \end{itemize}
 
-The  <link anchor="images:coordsys">coordsys</link> \tool\ provides more extensive
+The  <link anchor="images:coordsys">coordsys</link> tool provides more extensive
 coordinate system manipulation.
 
 \item {\bf Filtering - } Images may be filtered via
@@ -238,11 +238,11 @@ image are
 
 \item <link anchor="images:image.history.function">history</link> - recover/list history file
 
-<!--\item <link anchor="images:image.id.function">id</link> - Return the fundamental identifier of this \tool\-->
+<!--\item <link anchor="images:image.id.function">id</link> - Return the fundamental identifier of this tool-->
 
 \item <link anchor="images:image.ispersistent.function">ispersistent</link> - is the image persistent (on disk)
 
-\item <link anchor="images:image.name.function">name</link> - name of the \imagefile\ this tool is attached to
+\item <link anchor="images:image.name.function">name</link> - name of the imagefile this tool is attached to
 
 \item <link anchor="images:image.restoringbeam.function">restoringbeam</link> - Get restoring beam
 
@@ -250,7 +250,7 @@ image are
 
 \item <link anchor="images:image.summary.function">summary</link> - summarize basic information about the image
 
-\item <link anchor="images:image.type.function">type</link> - the type of this Image \tool\
+\item <link anchor="images:image.type.function">type</link> - the type of this Image tool
 
 \end{itemize}
 
@@ -265,12 +265,12 @@ through the functions
 
 \item <link anchor="images:image.brightnessunit.function">brightnessunit</link> - Get image brightness unit
 
-\item <link anchor="images:image.close.function">close</link> - Close the \imagetool\ (but don't destroy it)
+\item <link anchor="images:image.close.function">close</link> - Close the imagetool (but don't destroy it)
 
 \item <link anchor="images:image.convertflux.function">convertflux</link> Convert flux density between
 peak and integral
 
-\item <link anchor="images:image.close.function">close</link> - close this \imagetool\
+\item <link anchor="images:image.close.function">close</link> - close this imagetool
 
 \item <link anchor="images:image.haslock.function">haslock</link> - does this image have a lock set
 
@@ -278,11 +278,11 @@ peak and integral
 
 \item <link anchor="images:image.imagefiles.function">imagefiles</link> - Find the names of all image files in the given directory
 
-\item <link anchor="images:image.imagetools.function">imagetools</link> - Find the names of all global image \tools\
+\item <link anchor="images:image.imagetools.function">imagetools</link> - Find the names of all global image tools\
 
-\item <link anchor="images:image.is_image.function">is\_image</link> - Is this variable an Image \tool\
+\item <link anchor="images:image.is_image.function">is\_image</link> - Is this variable an Image tool
 
-\item <link anchor="images:image.isopen.function">isopen</link> - Is this Image \tool\ open?
+\item <link anchor="images:image.isopen.function">isopen</link> - Is this Image tool open?
 
 \item <link anchor="images:image.lock.function">lock</link> - acquire a lock on the image
 
@@ -290,13 +290,13 @@ peak and integral
 
 \item <link anchor="images:image.miscinfo.function">miscinfo</link> - recover miscellaneous information record
 
-\item <link anchor="images:image.open.function">open</link> - open a new \imagefile\ with this image tool
+\item <link anchor="images:image.open.function">open</link> - open a new imagefile with this image tool
 
-\item <link anchor="images:image.rename.function">rename</link> - rename the \imagefile\ associated with this Image \tool\
+\item <link anchor="images:image.rename.function">rename</link> - rename the imagefile associated with this Image tool
 
 \item <link anchor="images:image.restoringbeam.function">restoringbeam</link> - Get restoring beam
 
-\item <link anchor="images:image.remove.function">remove</link> - remove the \imagefile\ associated with this Image \tool\
+\item <link anchor="images:image.remove.function">remove</link> - remove the imagefile associated with this Image tool
 
 \item <link anchor="images:image.setbrightnessunit.function">setbrightnessunit</link> - Set image brightness unit
 
@@ -306,7 +306,7 @@ peak and integral
 
 \item <link anchor="images:image.setrestoringbeam.function">setrestoringbeam</link> - Set new restoring beam
 
-\item <link anchor="images:image.unlock.function">unlock</link> - release lock on this \imagefile\
+\item <link anchor="images:image.unlock.function">unlock</link> - release lock on this imagefile
 
 \end{itemize}
 
@@ -330,7 +330,7 @@ Create a (sub)image from a region of the image
 
 \begin{itemize}
 
-\item <link anchor="images:imagetest.function">imagetest</link> - Run test suite for Image \tool\
+\item <link anchor="images:imagetest.function">imagetest</link> - Run test suite for Image tool
 
 \item <link anchor="images:imagedemo.function">imagedemo</link> - Demonstrate the use of an image
 
@@ -341,18 +341,18 @@ Create a (sub)image from a region of the image
 \medskip
 \noindent{\bf General}
 
-We refer to a \casa\ \imagefile\ when we are referring to the actual
-data stored on disk.  The name that you give a \casa\ \imagefile\ is
+We refer to a \casa\ imagefile when we are referring to the actual
+data stored on disk.  The name that you give a \casa\ imagefile is
 actually the name of a directory containing a collection of \casa\
-tables which together constitute the \imagefile.  But you only need to
+tables which together constitute the imagefile.  But you only need to
 refer to the directory name and you can think of it as one {\it logical}
 file.  
 
 Whenever we use the word ``image'', we are just using it in a generic
 sense.  \casa\ images are manipulated with an <link
 anchor="images:image.image.constructor">Image</link> tool <!--.  An
-\imagetool\ is--> associated with, or bound to, the actual
-\imagefile.\ <!-- via a \constructor.--> Note that some \imagetools\
+imagetool is--> associated with, or bound to, the actual
+imagefile. <!-- via a \constructor.--> Note that some imagetools
 don't have a disk file associated with them.  These are called
 ``virtual'' images and are discussed
 \htmlref{below}{IMAGES:VIRTUALIMAGES}
@@ -362,7 +362,7 @@ variety of ways.  For example, the image could be stored row by row;
 this is the way that most older generation packages store images.  It
 makes for very fast row by row access, but very slow in other
 directions (e.g.  extract all the profiles along the third axis of an
-image).  A \casa\ \imagefile\ is stored with what is called tiling.
+image).  A \casa\ imagefile is stored with what is called tiling.
 This means that small multi-dimensional chunks (a tile) are stored
 sequentially.  It means that row by row access is a little slower, but
 access speed is essentially the same in all directions.  This in turn
@@ -399,7 +399,7 @@ ia.close()      # DO NOT DONE DEFAULT IMAGE TOOL ia!!!
 \medskip
 \noindent {\label{IMAGE:FOREIGNIMAGES}\bf Foreign Images}
 
-The Image \tool\ also provides you with native access to some foreign
+The Image tool also provides you with native access to some foreign
 image formats.  Presently, these are \fits\ (Floar, Double, Short and Long
 are supported) and Miriad.   This means
 that you don't have to convert  the file to native \casa\ format
@@ -433,11 +433,11 @@ ia.close()                      # close (not done) default image analysis tool
 #
 """
 
-Each of these Image tools has access to all the same \toolfunctions.
+Each of these Image tools has access to all the same toolfunctions.
 \end{verbatim}
 </example>
 
-Where ever you see an argument in an Image \tool\ function which is
+Where ever you see an argument in an Image tool function which is
 an input image disk file, that disk file can be a \casa, \fits, or
 Miriad image file. 
 
@@ -461,13 +461,13 @@ to convert to a native \casa\ image.
 \medskip
 \noindent {\label{IMAGE:VIRTUALIMAGES}\bf Virtual Images}
 
-We also have Image \tools\ that are not associated one-to-one with disk
+We also have Image tools\ that are not associated one-to-one with disk
 files; these are called ``virtual'' images (see also the article in the
 \htmladdnormallink{AugustNewsLetter}{../../newsletters/aug00/aug00.html}). 
 For example, with the image calculator,
 <link anchor="images:image.imagecalc.constructor">imagecalc</link>, one can create
 an expression which may contain many images.  You can write the result
-of the expression out to a disk \imagefile, but if you wish, you can
+of the expression out to a disk imagefile, but if you wish, you can
 also just maintain the expression, evaluating it each time it is needed
 - nothing is ever written out to disk in this case.  There are other
 Image <!-- constructors and--> functions like this (the documentation for each
@@ -476,7 +476,7 @@ one explains what it does).  The rules are:
 \begin{itemize}
 
 \item  If you specify the {\stfaf outfile} argument, then
-the image is always written to the specified disk \imagefile. 
+the image is always written to the specified disk imagefile. 
 
 \item If you leave the {\stfaf outfile} argument unset, then if
 possible, a virtual image will be created.  Sometimes this virtual image
@@ -491,7 +491,7 @@ constructor --> cannot make a virtual image, it will create a disk file for
 you with a name of its choice (usually input plus function name). 
 
 \item You can always write a virtual image to disk with the
-\htmlref{subimage}{images:image.subimage.function} \toolfunction.  
+\htmlref{subimage}{images:image.subimage.function} toolfunction.  
 
 \end{itemize}
 
@@ -499,18 +499,18 @@ you with a name of its choice (usually input plus function name).
 \noindent {\bf Coordinate Systems}
 
 An image contains a Coordinate System.  A
-<link anchor="images:coordsys">Coordsys</link> \tool\ is used to manipulate the
-Coordinate System.  An Image \tool\ allows you to recover the Coordinate
-System into a Coordsys \tool\ through the
+<link anchor="images:coordsys">Coordsys</link> tool is used to manipulate the
+Coordinate System.  An Image tool allows you to recover the Coordinate
+System into a Coordsys tool through the
 <link anchor="images:image.coordsys.function">coordsys</link> function.  You can set a new
 Coordinate System with the
 <link anchor="images:image.setcoordsys.function">setcoordsys</link> function. 
 
-You can do some direct coordinate conversion via the Image \tool\
+You can do some direct coordinate conversion via the Image tool
 functions <link anchor="images:image.toworld.function">toworld</link>,
 <link anchor="images:image.topixel.function">topixel</link>, and
 <link anchor="images:image.coordmeasures.function">coordmeasures</link>.  The actual work is
-done by a Coordsys \tool, for which these Image \tool\ functions are
+done by a Coordsys tool, for which these Image tool functions are
 just wrappers.
 
 \medskip
@@ -525,7 +525,7 @@ rich and is described in detail in \htmladdnormallink{note
 LEL is accessed via the <link
 anchor="images:image.imagecalc.constructor">imagecalc</link> <!--
 constructor --> and the <link
-anchor="images:image.calc.function">calc</link> \tool\ functions.
+anchor="images:image.calc.function">calc</link> tool functions.
 Here are some examples.
 
 <example> 
@@ -547,15 +547,15 @@ ia.close()
 #myim.done()
 -->
 
-<!-- In the first example, the Image \tool\ {\stf im} is associated with
+<!-- In the first example, the Image tool {\stf im} is associated with
 a virtual image.  We use the \$ syntax in the expression accessing
-this image via its \tool.  In the second example, the Image \tool\
+this image via its tool.  In the second example, the Image tool
 {\stf im2} is associated with the non-virtual disk file {\sff zz}.
 We could still have used the \$ syntax if we wanted, but we show
-here how you can also use the \imagefile\ name in the expression.-->
+here how you can also use the imagefile\ name in the expression.-->
 
-In this example the Image \tool\ is associated with the non-virtual
-disk file {\sff zz}.  This \imagefile\ name is used in an LEL
+In this example the Image tool is associated with the non-virtual
+disk file {\sff zz}.  This imagefile name is used in an LEL
 expression.
 
 </example>
@@ -602,7 +602,7 @@ regions.
 See the <link anchor="images:regionmanager">Regionmanager</link> documentation for
 more details on regions.
 
-Regions are always supplied to <!-- constructors and --> \toolfunctions\
+Regions are always supplied to <!-- constructors and --> toolfunctions\
 via the {\stfaf region} argument.
 
 \medskip
@@ -690,7 +690,7 @@ and the OTF mask (if any).
 \bigskip
 In the following example we open a Rotation Measure image.  We then
 evaluate statistics and display it where only those pixels whose error
-in the Rotation Measure (\imagefile\ {\sff rmerr}) is less than the specified
+in the Rotation Measure (imagefile {\sff rmerr}) is less than the specified
 value are shown; the others are masked.  The nice thing is you can
 experiment with different \pixelmasks\ until you are satisfied, whereupon you
 might then make the \pixelmask\ persistent with the
@@ -795,7 +795,7 @@ Some comment about the combination of \pixelmasks\ and \regions\ is useful
 here.    See the <link anchor="images:regionmanager">Regionmanager</link> tool
 for basic information about \regions\ first.  
 
-Regions are provided to Image \toolfunctions\ via the standard {\stfaf region}
+Regions are provided to Image toolfunctions\ via the standard {\stfaf region}
 <!--constructor and--> function argument.
 
 Consider a simple polygonal region.  This \region\ is defined by
@@ -849,11 +849,11 @@ print "\t----\t Intro Ex 10 \t----"
 \bigskip
 \noindent{\bf Error Handling}
 
-All the constructors and functions for Image \tools\ return a variable by
+All the constructors and functions for Image tools\ return a variable by
 value.  Because of the weak typing of \glish, this variable may take on
 different forms depending upon the outcome.  For example, a constructor
-such as {\cf ia.image('hcn.xyv')} normally returns an \imagetool. 
-However, if the operation failed (e.g.  the \imagefile\ {\sff hcn.xyv})
+such as {\cf ia.image('hcn.xyv')} normally returns an imagetool. 
+However, if the operation failed (e.g.  the imagefile\ {\sff hcn.xyv})
 does not exist, them the return variable will be what is called a
 \glish\ fail.  You can check any \glish\ variable with the {\cf
 is\_fail(variable)} function; it returns T or F.  With an Image tool,
@@ -886,7 +886,7 @@ message from the variable {\cf im} when it is a fail.
 \bigskip
 \noindent{\label{IMAGE:VECTORINPUT}\bf Vector Inputs}
 
-Many of the functions of an Image \tool\ take vectors (numeric or
+Many of the functions of an Image tool take vectors (numeric or
 strings) as their arguments.  We take advantage of the weak-typing of
 Glish so that whenever you see a vector argument, you can assume that
 
@@ -907,7 +907,7 @@ a string with white space and/or comma delimiters (e.g. '1.2 2.5 3').
 \bigskip
 \noindent{\bf Events}
 
-An \imagetool\ may emit five events.  These are generated by the
+An imagetool may emit five events.  These are generated by the
 <link anchor="images:image.view.function">view</link> display function.  See it for details
 of the event values. 
 
@@ -929,7 +929,7 @@ the user has pressed the `break' button on the
 \viewer\ display panel.
 
 \item a {\tt viewerdone} event.  This signifies that
-the private \viewer\ inside the Image \tool\ has been
+the private \viewer\ inside the Image tool has been
 destroyed.
 
 \end{itemize}
@@ -952,12 +952,12 @@ given at the beginning of the documentation for each function.
 At present only real-valued (single precision) images are supported. 
 Complex images will be supported in the future. 
 
-Besides the functions available as \toolfunctions, you may of
+Besides the functions available as toolfunctions, you may of
 course add functionality through Python programming.  Python computing
 speed will be adequate for many ``chunk-by-chunk'' algorithms.  Beware
 putting large images into an array - this can use up a lot of memory!
 
-Some of the \toolfunctions\ in this module can be run asynchronously
+Some of the toolfunctions\ in this module can be run asynchronously
 (usually things that might take a long time).  This is controlled by the
 argument {\stfaf async} which defaults to {\stfaf !dowait} (i.e.  the
 opposite to the value of this Python Boolean variable).  By default
@@ -967,7 +967,7 @@ synchronously.  If you don't want to type this in every time you start
 \casa\, then put this statement in your {\sff .glishrc} resource file
 that lives in your home directory. 
 
-Note that if the \toolfunction\ is run asynchronously, you have to recover the
+Note that if the toolfunction\ is run asynchronously, you have to recover the
 result in a more indirect fashion as follows in the following example.
 
 
@@ -993,11 +993,11 @@ result in a more indirect fashion as follows in the following example.
 <description>
 
 This is the most commonly used constructor.  It constructs (creates) a 
-\imagetool\ associated with disk \imagefile.
+imagetool associated with disk imagefile.
 
 The disk image file may be a native \casa, \fits\ (Float, Double,
 Short, Long are supported) , or Miriad
-\imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
+imagefile.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
 information on foreign images.
 
 </description>
@@ -1384,10 +1384,10 @@ be captured and closed as soon as the user is finished with it to free up
 system resources (eg memory).
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 created by the function actually references all of the input files.
 So if you deleted any of the input image disk files, it would render
-this \tool\ useless.  When you destroy this tool (with the <link
+this tool useless.  When you destroy this tool (with the <link
 anchor="images:image.done.function">done</link> function) the
 reference connections are broken.
 
@@ -1551,7 +1551,7 @@ At present, no matter what type the {\stfaf pixels} array is, a
 float-valued image will be written.
 
 The coordinate system, provided as a <link
-anchor="images:coordsys">coordsys</link> \tool converted to a record
+anchor="images:coordsys">coordsys</link> tool converted to a record
 is optional.  If you provide it, it must have the same number of dimensions
 as the pixels array (see also <link anchor="images:image.coordsys.function">coordsys</link>).
 Call the naxes() method on the coordinate system tool to see how many dimensions the coordinate
@@ -1664,7 +1664,7 @@ ia.done()
 <description>
 
 This function is used to create a \casa\
-\image from a pre-existing ASCII file. You might want to use this if you
+image from a pre-existing ASCII file. You might want to use this if you
 just want to create a quick image to use to see what various image analysis methods
 do. The image analysis tool on
 which the method is called will always reference the created image if
@@ -1677,7 +1677,7 @@ specified disk file.  If {\stfaf outfile} is unset, the image analysis tool
 on which this method was called references a temporary image.  This temporary
 image may be in
 memory or on disk, depending on its size.  When you close the image analysis
-\tool\ (with the <link
+tool (with the <link
 anchor="images:image.close.function">close</link> function) the
 temporary image is deleted.
 
@@ -1733,7 +1733,7 @@ ary[1, 3, 1] = 23
 ary[2, 3, 1] = 24
 
 The coordinate system, provided as a <link
-anchor="images:coordsys">coordsys</link> {\tool} converted to a record
+anchor="images:coordsys">coordsys</link> {tool} converted to a record
 with coordsys torecord, is optional.  If you provide it, it must be
 dimensionally consistent with the pixels array you give (see also
 <link anchor="images:image.coordsys.function">coordsys</link>).
@@ -1805,11 +1805,11 @@ ia.done()
 
 This function is used to convert a FITS disk image file (Float,
 Double, Short, Long are supported) to an
-\casa\ \imagefile.  If {\stfaf outfile} is given, the image is written
+\casa\ imagefile.  If {\stfaf outfile} is given, the image is written
 to the specified disk file.  If {\stfaf outfile} is unset, the Image
-\tool\ is associated with a temporary image.  This temporary image may
+tool is associated with a temporary image.  This temporary image may
 be in memory or on disk, depending on its size.  When you close the
-Image \tool\ (with the <link anchor="images:image.close.function">close</link> function) this
+Image tool (with the <link anchor="images:image.close.function">close</link> function) this
 temporary image is deleted. 
 
 This function reads from the FITS primary array (when the image is at
@@ -1840,8 +1840,8 @@ ia.close()
 """
 
 
-The FITS image is converted to a \casa\ \imagefile\ and access is
-provided via the default \imagetool\ called {\stf ia}.  Any FITS
+The FITS image is converted to a \casa\ imagefile\ and access is
+provided via the default imagetool\ called {\stf ia}.  Any FITS
 header keywords which were not recognized or used are put in the
 miscellaneous information bucket accessible with the <link
 anchor="images:image.miscinfo.function">miscinfo</link> function.  In
@@ -1892,8 +1892,8 @@ the example we list the names of the fields in this record.
 <returns type="bool"/>
 <description>
 
-This function applies a \region\ to an \imagefile, creates a new
-\imagefile\ containing the (sub)image, and associates the \imagetool\
+This function applies a \region\ to an imagefile, creates a new
+imagefile\ containing the (sub)image, and associates the imagetool\
 with it. 
 
 The input image file may be in native \casa, \fits, or Miriad
@@ -1903,9 +1903,9 @@ information on foreign images.
 If {\stfaf outfile} is given, the (sub)image is written to the specified
 disk file.  
 
-If {\stfaf outfile} is unset, the Image \tool\ actually references
+If {\stfaf outfile} is unset, the Image tool actually references
 the input image file.  So if you deleted the input image disk file, it
-would render this \tool\ useless.  When you close this \tool\
+would render this tool useless.  When you close this tool
 (with the <link anchor="images:image.close.function">close</link> function)
 the reference connection is broken.  
 
@@ -1982,18 +1982,18 @@ of the image, and all pixels of other axes.
 <returns type="bool">Image tool</returns>
 <description>
 
-This function creates a \casa\ \imagefile\ with the specified shape.  All
+This function creates a \casa\ imagefile\ with the specified shape.  All
 the pixel values in the image are set to 0.  
 
 If {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the Image \tool\ is associated with
+file.  If {\stfaf outfile} is unset, the Image tool is associated with
 a temporary image.  This temporary image may be in memory or on disk,
-depending on its size.  When you close the Image \tool\  (with the
+depending on its size.  When you close the Image tool  (with the
 <link anchor="images:image.close.function">close</link> function) this temporary image is
 deleted.
 
 The Coordinate System, provided as a <link anchor="images:coordsys">Coordsys</link>
-\tool, is optional.  If you provide it, it must be dimensionally
+tool, is optional.  If you provide it, it must be dimensionally
 consistent with the shape that you specify (see also
 <link anchor="images:image.coordsys.function">coordsys</link>).
 
@@ -2021,7 +2021,7 @@ ia.close()
 """
 
 
-The first example creates a zero-filled \imagefile\ named {\sff
+The first example creates a zero-filled imagefile\ named {\sff
 test.data} of shape [64,64,128].  If you examine the header with {\stff
 ia.summary()} you will see the RA/DEC/Spectral coordinate information. 
 In the second example, a Coordinate System describing the first and third axes
@@ -2125,7 +2125,7 @@ This function <!-- (short-hand name {\stff ada}) --> adds degenerate axes (i.e.
 axes of length 1) of the specified type.  Sometimes this can be useful
 although you will generally need to modify the coordinate system of the
 added axis to give it the coordinate you want (do this with the
-<link anchor="images:coordsys">Coordsys</link> \tool).
+<link anchor="images:coordsys">Coordsys</link> tool).
 
 You specify which type of axes you want to add.  You can't add
 an axis type that already exists in the image.  For the Stokes axis,
@@ -2133,10 +2133,10 @@ the allowed value (a string such as  I, Q, XX, RR) can be found in the
 <link anchor="images:coordsys.newcoordsys.function">Coordsys newcoordsys</link> function documentation.
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by the function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the generated Image \tool\ (with the <link
+When you destroy the generated Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -2214,13 +2214,13 @@ This function adds noise to the image.  You may zero the image first
 before the noise is added if you wish.
 
 The noise can be drawn from one of many distributions. <!--, which are also
-available in the <link anchor="mathematics.randomnumbers">randomnumbers</link> \tool. -->
+available in the <link anchor="mathematics.randomnumbers">randomnumbers</link> tool. -->
 
 For each distribution, you must supply the type via the {\stfaf type}
 argument (minimum match is active) and parameters via the {\stfaf
 pars} argument.  <!-- Each distribution type is described in detail in
 the <link anchor="mathematics.randomnumbers">randomnumbers</link>
-\tool.--> Briefly:
+tool.--> Briefly:
 
 \begin{itemize}
 
@@ -2340,19 +2340,19 @@ from a normal distribution added.
 
 <description>
 
-This function does Fourier-based convolution of an \imagefile\ by the
+This function does Fourier-based convolution of an imagefile\ by the
 given kernel.  
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 generated by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the generated Image \tool\ (with the <link
+When you destroy the generated Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
 The kernel is provided as a multi-dimensional array or as the 
-filename of a disk-based \imagefile.   The provided kernel can have fewer
+filename of a disk-based imagefile.   The provided kernel can have fewer
 dimensions than the image being convolved.  In this case, it will be
 padded with degenerate axes.  An error will result if the kernel has
 more dimensions than the image.   No additional scaling of the kernel is
@@ -2694,10 +2694,10 @@ example.
 <returns type="bool"/>
 <description>
 
-This function closes the \imagetool.  This means that it detaches the
-tool from its \imagefile\ (flushing all the changes first).  The
-\imagetool\ is ``null'' after this change (it is not destroyed) and
-calling any \toolfunction\ other than <link anchor="images:image.open.function">open</link>
+This function closes the imagetool.  This means that it detaches the
+tool from its imagefile (flushing all the changes first).  The
+imagetool\ is ``null'' after this change (it is not destroyed) and
+calling any toolfunction\ other than <link anchor="images:image.open.function">open</link>
 will result in an error. 
 
 </description>
@@ -2982,13 +2982,13 @@ ia.close()
 <description>
 
 This function <!-- (short-hand name {\stff c2d}) --> does Fourier-based
-convolution of an \imagefile\ by the given 2D kernel.  
+convolution of an imagefile\ by the given 2D kernel.  
 
 If {\stfaf outfile} is unset, the image is written to the specified
 disk file.  If {\stfaf outfile} is not given, the newly constructed
-on-the-fly Image \tool\ is associated with a temporary image.  This
+on-the-fly Image tool is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -3254,7 +3254,7 @@ anchor="images:coordsys.toworld.function">toworld</link> function
 documentation for discussion about the formatting and meaning of the
 measures.
 
-This Image \tool\ function adds two additional fields to the return record.
+This Image tool function adds two additional fields to the return record.
 
 The {\cf mask} field contains the value of the image \pixelmask\ at the
 specified position. It is either T (pixel is good) or F (pixel is masked
@@ -3309,7 +3309,7 @@ print 'az,el=', qa.angle(azel['m0']), qa.angle(azel['m1'])
 
 
 In this example we first find the world coordinates of the centre of the
-image.  Then we use the Measures \tool\ {\stf me} to convert the
+image.  Then we use the Measures tool {\stf me} to convert the
 {\cf direction coordinate} field from J2000 to an azimuth and elevation
 at a particular location at a particular time. 
 
@@ -3477,8 +3477,8 @@ ia.close()
 <description>
 
 This function <!-- (short-hand name {\stff dcl}) --> deconvolves (a
-record representation of) a Componentlist \tool\ from the restoring
-beam, returning (a record representation of) a new Componentlist \tool.
+record representation of) a Componentlist tool from the restoring
+beam, returning (a record representation of) a new Componentlist tool.
 If there is no restoring beam, a fail is generated.
 
 Currently, only deconvolution of Gaussian components is supported.
@@ -3585,10 +3585,10 @@ print 'pa=',recout['fit']['pa']
 <description>
 
 This function first <link anchor="images:image.close.function">closes</link> the
-\imagetool\ which detaches it from its underlying \imagefile.  It then
-deletes that \imagefile.  If {\stfaf done=False}, the \imagetool\ is still
+imagetool which detaches it from its underlying imagefile.  It then
+deletes that imagefile.  If {\stfaf done=False}, the imagetool is still
 viable, and can be used with function <link anchor="images:image.open.function">open</link>
-to open a new \imagefile.  Otherwise the \imagetool\ is destroyed.  If {\stfaf verbose=True}, the logger will receive a progress report.
+to open a new imagefile.  Otherwise the imagetool is destroyed.  If {\stfaf verbose=True}, the logger will receive a progress report.
 
 </description>
 <example>
@@ -3665,20 +3665,20 @@ ia.removefile('myimage')
 <returns type="bool"/>
 <description>
 
-If you no longer need to use an \imagetool, calling this function will
-free up its resources.  That is, it destroys the \tool.  You can no
-longer call any functions on the \tool\ after it has been {\stff done}.
+If you no longer need to use an imagetool, calling this function will
+free up its resources.  That is, it destroys the tool.  You can no
+longer call any functions on the tool after it has been {\stff done}.
 DO NOT done THE DEFAULT IMAGE TOOL ia!
 
-If the Image \tool\ is associated with a disk file,
+If the Image tool is associated with a disk file,
 you can also delete that if you wish by setting
 {\stfaf delete=T}.  By default any associated disk
 file is not deleted.
 
 This function is different from the {\stff close} function
-because the latter does not destroy the \imagetool.  For example, you
+because the latter does not destroy the imagetool.  For example, you
 can use function {\stff open} straight after {\stff close} on the
-same \tool. 
+same tool. 
 
 </description>
 <example>
@@ -3757,7 +3757,7 @@ must specify both of them.
 
 You specify which form you wish to see the result in by specifying the
 desired output image file name(s).  At some point, an output complex
-image will also be allowed (when the Image \tool\ can deal with it). 
+image will also be allowed (when the Image tool can deal with it). 
 
 Before the FFT is taken, any masked pixels are replaced by zero. 
 The output mask is the combination (logical OR) of the default input
@@ -3852,7 +3852,7 @@ images only are written out.
 
 This function <!-- (short-hand name {\stff fs}) --> finds strong point sources in
 the image.  The sources are returned in a record that can be used by a
-<link anchor="componentmodels:componentlist">Componentlist</link> \tool. 
+<link anchor="componentmodels:componentlist">Componentlist</link> tool. 
 
 An efficient method is used to locate sources under the assumption that
 they are point-like and not too close to the noise.  Only sources with a
@@ -3880,7 +3880,7 @@ Any degenerate trailing dimensions in the region are discarded.
 See also the function <link
 anchor="images:image.fitcomponents.function">fitcomponents</link> (for which {\stff
 findsources} can provide an initial estimate). <!-- and the <link
-anchor="images:imagefitter">Imagefitter</link> \tool.-->
+anchor="images:imagefitter">Imagefitter</link> tool.-->
 
 </description>
 
@@ -4731,7 +4731,7 @@ ia.fromrecord(rec, "testimage")
 <description>
 
 This function returns the pixels (or optionally the pixel mask) from the
-\imagefile\ between {\stfaf blc} and {\stfaf trc} inclusively.  An
+imagefile\ between {\stfaf blc} and {\stfaf trc} inclusively.  An
 increment may be specified with {\stfaf inc}.  Note that if you retrieve
 too many pixels, you might cause swapping since the pixels are kept in
 memory. 
@@ -4937,7 +4937,7 @@ In this example we recover first the pixels and then the pixel mask.
 <description>
 
 This function returns a 1-D slice (the pixels and opionally the pixel mask) from the
-\imagefile.   The slice is constrained to lie in a plane of two  cardinal axes
+imagefile.   The slice is constrained to lie in a plane of two  cardinal axes
 (e.g. XY or YZ).  At some point this constraint will be relaxed.
 A range of interpolation schemes are available.
 
@@ -5241,7 +5241,7 @@ and acquires just a read lock.
 <description>
 
 This function <!-- (short-hand name is {\stff histo}) --> computes
-histograms of the pixel values in the \imagefile.  You can <!-- plot them
+histograms of the pixel values in the imagefile.  You can <!-- plot them
 and --> retrieve them (into a record) for further analysis or display.
 
 The chunk of the image over which you compute the histograms is
@@ -5477,12 +5477,12 @@ im4.done()
 
  
    <method type="function" name="isopen">
-   <shortdescription>Is this Image \tool\ open?</shortdescription>
+   <shortdescription>Is this Image tool open?</shortdescription>
    
 <returns type="bool">Bool</returns>
 <description>
 
-This function can be used to find out whether the Image \tool\
+This function can be used to find out whether the Image tool
 is associated with an image or not.
 
 </description>
@@ -5573,7 +5573,7 @@ ia.close(remove=true)
 <description>
 
 This function can be used to acquire a Read or a Read/Write lock
-on the \imagefile.   It is not of general user interest.  
+on the imagefile.   It is not of general user interest.  
 
 In general locking is handled automatically, with a built in lock
 release cycle.  However, this function can be useful in scripts when a
@@ -5632,10 +5632,10 @@ and acquire a readonly lock.
 
 This function combines the current image with another image to make
 a complex image.  The current image (i.e. that associated with this
-Image \tool\ is assumed to be the Real image).  You supply
+Image tool is assumed to be the Real image).  You supply
 the Imaginary image; it must be disk-based at this time.
 
-The output image cannot be associated with an Image \tool\ (does
+The output image cannot be associated with an Image tool (does
 not handle Complex images yet) and so the best you can do is
 write it to disk.  The Viewer can view it.
 
@@ -5786,7 +5786,7 @@ ia.close()
 
 <description>
 
-A \casa\ \imagefile\ can accumulate miscellaneous information
+A \casa\ imagefile can accumulate miscellaneous information
 during its lifetime.  This information is stored in a record called the {\stff
 miscinfo} record.  For example, the \fits\ filler puts header keywords
 it doesn't otherwise use into the {\stff miscinfo} record.  This {\stff
@@ -5869,7 +5869,7 @@ ia.close()
 
 This function applies a model of the sky to the image. You can add or
 subtract the model which is contained in a
-<link anchor="componentmodels:componentlist">Componentlist</link> \tool.
+<link anchor="componentmodels:componentlist">Componentlist</link> tool.
 
 The pixel values are only changed where the total mask
 (combination of the default \pixelmask\ [if any] and the OTF mask)
@@ -6125,7 +6125,7 @@ anchor="images:image.moments.function">momentsgui</link> function as
 the command line interface is presently rather cumbersome. -->
 
 You can generate one or more output moment images.  The return value
-of this function is an on-the-fly Image \tool\ holding the {\bf first}
+of this function is an on-the-fly Image tool holding the {\bf first}
 of the output moment images.
 
 The word `moment' is used loosely here.  It refers to collapsing an axis
@@ -6295,7 +6295,7 @@ with a manageably small number of spectra. -->
 and you specify {\stfaf outfile}, then the image is created
 on disk with this name.  If you leave {\stfaf outfile} empty
 then a temporary image is created.  In both cases, you can
-access this image with the returned Image \tool.  If you are
+access this image with the returned Image tool.  If you are
 making more than one moment image, then theses images are always
 created on disk.  If you specify {\stfaf outfile} then this is
 the root for the output file names.  If you don't specify it,
@@ -6453,10 +6453,10 @@ image is temporary and accessed via the returned Image tool.
 
 <description>
 
-This function returns the name of the \imagefile\ By default, this
-function returns the full absolute path of the \imagefile.  You can
+This function returns the name of the imagefile By default, this
+function returns the full absolute path of the imagefile.  You can
 strip this path off if you wish with the {\stfaf strippath} argument and
-just recover the \imagefile\ name itself. 
+just recover the imagefile name itself. 
 
 </description>
 
@@ -6492,17 +6492,17 @@ ia.close()
 <description>
 
 Use this function when you are finished analyzing the current
-\imagefile\ and want to attach to another one.  This function detaches the
-\imagetool\ from the current \imagefile, and reattaches it (opens) to
-the new \imagefile. 
+imagefile and want to attach to another one.  This function detaches the
+imagetool from the current imagefile, and reattaches it (opens) to
+the new imagefile. 
 
 The input image file may be in native \casa, \fits, or Miriad  
 format.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
 information on foreign images.
 
 <!--
-You could, of course, also create a new \imagetool\ and associate that
-with the new \imagefile, but this saves you the \tool\ creation. 
+You could, of course, also create a new imagetool and associate that
+with the new imagefile, but this saves you the tool creation. 
 -->
 
 </description>
@@ -6520,7 +6520,7 @@ ia.close()
 #
 """
 
-The {\stff open} function first closes the old \imagefile.
+The {\stff open} function first closes the old imagefile.
 </example>
 </method>
 
@@ -6619,7 +6619,7 @@ ia.close()
 <returns type="bool">T or fail</returns>
 <description>
 
-This function puts an array into the \imagefile.  If there is a
+This function puts an array into the imagefile.  If there is a
 default \pixelmask\ it is ignored in this process.  It is the complement of the
 <link anchor="images:image.getchunk.function">getchunk</link> function.  You can specify the {\stfaf
 blc} and {\stfaf inc} if desired.  If they are unspecified, they default
@@ -6914,10 +6914,10 @@ input pixel values. The output pixel will be masked bad if there
 were no good input pixels.  You cannot rebin a Stokes axis.
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
+disk file.  If {\stfaf outfile} is unset, the Image tool is
 associated with a temporary image.  This temporary image may be in
 memory or on disk, depending on its size.  When you destroy the
-on-the-fly Image \tool\ returned by this function (with the <link
+on-the-fly Image tool returned by this function (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -7043,7 +7043,7 @@ given Coordinate System.   You can also specify the shape of the
 output image.
 
 The Coordinate System must be given via a <link
-anchor="images:coordsys">Coordsys</link> \tool\ (using
+anchor="images:coordsys">Coordsys</link> tool (using
 coordsys.torecord()).  It is optional; if not specified, the Coordinate
 System from the input image (i.e.  the one to which you are applying
 the regrid function) is taken.  The order of the coordinates and axes
@@ -7118,10 +7118,10 @@ non-regridded axes (must match that of the region - use function
 <link anchor="images:image.boundingbox.function">boundingbox</link> to find that out). 
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -7233,7 +7233,7 @@ ia.close()
 In this example, we regrid a radio image from J2000 to B1950. This is
 accomplished by first recovering the Coordinate System into a
 <link anchor="images:coordsys">Coordsys</link> tool, manipulating the reference code
-with that \tool, and then supplying the new Coordinate System to the
+with that tool, and then supplying the new Coordinate System to the
 regrid function.
 </example>
 
@@ -7449,10 +7449,10 @@ non-regridded axes (must match that of the region - use function
 <link anchor="images:image.boundingbox.function">boundingbox</link> to find that out).
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -7525,7 +7525,7 @@ displays the before and after images.
 <returns type="bool">T or fail</returns>
 <description>
 
-This function renames the \imagefile\ associated with the \imagetool. 
+This function renames the imagefile associated with the imagetool. 
 If a file with name {\stfaf name} already exists, you can overwrite it
 with the argument {\stfaf overwrite}; otherwise a fail will
 result. 
@@ -7620,19 +7620,19 @@ replacement.
 
 \item Third, you can give a
 \htmladdnormallink{LEL}{../../notes/223/223.html} expression string
-which has the same shape as the \imagefile\ you are applying the
+which has the same shape as the imagefile you are applying the
 function to.  For example, putting {\cf pixels='myotherimage'} means
-replace all masked pixels in this \imagefile\ with the equivalent pixel
-in the \imagefile\ called {\sff myotherimage}. 
+replace all masked pixels in this imagefile with the equivalent pixel
+in the imagefile called {\sff myotherimage}. 
 
 Your expression might be quite complex, and you can think of it as
 producing another masked lattice.  However, in the replace process, the
 mask of that expression lattice is ignored.  Thus, only the mask of
-the \imagefile\ you are replacing and the pixel values of the expression
+the imagefile you are replacing and the pixel values of the expression
 lattice are relevant. 
 
 The expression must conform with the subimage formed by applying the
-\region\ to the image (i.e.  that associated with this Image \tool).  If
+\region\ to the image (i.e.  that associated with this Image tool).  If
 you use the {\stfaf mask} argument as well, the \region\ is applied to
 it as well (see examples). 
 
@@ -7864,13 +7864,13 @@ ia.close()
 <description>
 
 This function <!-- (short-hand name {\stff sc}) --> does Fourier-based 
-convolution of an \imagefile\ by a specified separable kernel.  
+convolution of an imagefile by a specified separable kernel.  
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the Image \tool\ (with the <link
+When you destroy the Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -8094,11 +8094,11 @@ print ia.brightnessunit()
 
 This function replaces the Coordinate System in the image. Coordinate
 System are stored in and manipulated with the
-<link anchor="images:coordsys">Coordsys</link> \tool.  The Coordinate System can be
+<link anchor="images:coordsys">Coordsys</link> tool.  The Coordinate System can be
 recovered from an image via the <link anchor="images:coordsys">coordsys</link>
 function.
 
-Note that changing the Coordsys \tool\ has no effect on the original
+Note that changing the Coordsys tool has no effect on the original
 image, until it is replaced with this function.
 
 </description>
@@ -8145,7 +8145,7 @@ ia.close()
 
 <description>
 
-A \casa\ \imagefile\ can accumulate history information
+A \casa\ imagefile can accumulate history information
 from  an input \fits\ file or by you writing something into
 it explicitly with this function.     Each element of
 the input vector is one line of history.  The new
@@ -8189,7 +8189,7 @@ ia.close()
 
 <description>
 
-A \casa\ \imagefile\ can accumulate miscellaneous information
+A \casa\ imagefile can accumulate miscellaneous information
 during its lifetime; it is stored in a record called the {\stff
 miscinfo} record.  For example, the \fits\ reader
 (<link anchor="images:image.fromfits.constructor">fromfits</link>) puts header keywords
@@ -8197,7 +8197,7 @@ it doesn't otherwise use into the {\stff miscinfo} record.  The {\stff
 miscinfo} record is not guaranteed to have any entries, so it's up to
 you to check for any fields that you require. 
 
-This function sets the {\cf miscinfo} record of the \imagefile.  Note
+This function sets the {\cf miscinfo} record of the imagefile.  Note
 that this function {\em replaces} the record, it doesn't add to it, so
 if you want to augment the existing record, you should first capture
 it with the <link
@@ -8838,11 +8838,11 @@ part of the image to another on-the-fly Image tool.
 \htmlref{subimage}{images:image.subimage.constructor} constructor). -->
 
 If {\stfaf outfile} is given, the subimage is written to the specified
-disk file.  If {\stfaf outfile} is unset, the returned Image \tool\ actually
+disk file.  If {\stfaf outfile} is unset, the returned Image tool actually
 references the input image file (i.e.  that associated with the Image
-\tool\ to which you are applying this function).  So if you deleted the
-input image disk file, it would render this \tool\ useless.  When you
-destroy this \tool\ (with the <link anchor="images:image.done.function">done</link> function)
+tool to which you are applying this function).  So if you deleted the
+input image disk file, it would render this tool useless.  When you
+destroy this tool (with the <link anchor="images:image.done.function">done</link> function)
 the reference connection is broken. 
 
 Sometimes it is useful to drop axes of length one (degenerate axes).
@@ -8944,7 +8944,7 @@ definitions are
 \end{itemize}
 where $F = \nu/\nu_0$ and $\nu_0$ is the rest frequency.  If the rest
 frequency has not been set in your image, you can set it via
-a Coordsys \tool\ with
+a Coordsys tool with
 the function <link anchor="images:coordsys.setrestfrequency.function">setrestfrequency</link>.
 
 If the output of summary is saved to a variable, then the {\stfaf
@@ -9307,7 +9307,7 @@ ia.close()
 
 This function returns the string `image'.  It can be used in
 a script to make sure this variable is an Image
-\tool.
+tool.
 
 </description>
 </method>
@@ -9334,7 +9334,7 @@ The world coordinate can be provided in many formats (numeric, string,
 quantum etc.) via the argument {\stfaf value}.  These match the output
 formats of function <link anchor="images:image.toworld.function">toworld</link>. 
 
-This function is just a wrapper for the Coordsys \tool\ function
+This function is just a wrapper for the Coordsys tool function
 <link anchor="images:coordsys.topixel.function">topixel</link> so see the documentation there
 for a description and more examples. 
 
@@ -9392,7 +9392,7 @@ formatted as measures instead.
 This function converts between absolute pixel coordinate (0-rel)   
 and world (physical coordinate).
 
-This function is just a wrapper for the Coordsys \tool\ function
+This function is just a wrapper for the Coordsys tool function
 <link anchor="images:coordsys.toworld.function">toworld</link> so see the documentation there
 for a description of the arguments and more examples. 
 
@@ -9435,7 +9435,7 @@ and a subrecord of measures.
 
 <description>
 
-This function releases any lock set on the \imagefile\ (and also flushes
+This function releases any lock set on the imagefile (and also flushes
 any outstanding I/O to disk).  It is not of general user interest.  It
 can be useful in scripts when a file is being shared between more than
 one process.  See also functions <link anchor="images:image.lock.function">lock</link> and
@@ -9455,8 +9455,8 @@ ia.close()
 """
 
 
-This releases the write lock on the \imagefile.  Now some
-other process can gain immediate access to the \imagefile.
+This releases the write lock on the imagefile.  Now some
+other process can gain immediate access to the imagefile.
 
 </example>
 
@@ -9503,13 +9503,13 @@ other process can gain immediate access to the \imagefile.
 <description>
 
 This function converts an array of any size into a \casa\
-\imagefile. 
+imagefile. 
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -9518,7 +9518,7 @@ real-valued image will be written (the input pixels will be converted
 to Float).  In the future, Complex images will be supported.
 
 The Coordinate System, provided as a record describing a <link
-anchor="images:coordsys">Coordsys</link> \tool\ (via
+anchor="images:coordsys">Coordsys</link> tool (via
 coordsys.torecord(), for instance) is optional.  If you provide it, it
 must be dimensionally consistent with the pixels array you give (see
 also <link anchor="images:image.coordsys.function">coordsys</link>).
@@ -9551,7 +9551,7 @@ im2.done()
 """
 
 
-The first example creates a zero-filled \imagefile\ named {\sff
+The first example creates a zero-filled imagefile named {\sff
 test.data} which is of shape [64,64,4,128].  If you examine the header
 with {\stff ia.summary()} you will see the default
 RA/DEC/Stokes/Frequency coordinate information.  In the second
@@ -9601,12 +9601,12 @@ temporary image.
 <description>
 
 This function is used to convert a FITS disk image file (Float,
-Double, Short, Long are supported) to an \casa\ \imagefile.  If
+Double, Short, Long are supported) to an \casa\ imagefile.  If
 {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
@@ -9642,8 +9642,8 @@ im1.done()
 """
 
 
-The FITS image is converted to a \casa\ \imagefile\ and access is
-provided via the \imagetool\ called {\stf im1}.  Any FITS header
+The FITS image is converted to a \casa\ imagefile and access is
+provided via the imagetool called {\stf im1}.  Any FITS header
 keywords which were not recognized or used are put in the
 miscellaneous information bucket accessible with the <link
 anchor="images:image.miscinfo.function">miscinfo</link> function.  In
@@ -9693,8 +9693,8 @@ the example we list the names of the fields in this record.
 <returns type="casaimage"/>
 <description>
 
-This function applies a \region\ to a disk \imagefile, creates a new
-\imagefile\ containing the (sub)image, and associates a new \imagetool\
+This function applies a \region\ to a disk imagefile, creates a new
+imagefile containing the (sub)image, and associates a new imagetool
 with it. 
 
 The input disk image file may be in native \casa, \fits (Float,
@@ -9705,10 +9705,10 @@ images.
 If {\stfaf outfile} is given, the (sub)image is written to the specified
 disk file.  
 
-If {\stfaf outfile} is unset, the Image \tool\ actually references the
+If {\stfaf outfile} is unset, the Image tool actually references the
 input image file.  So if you deleted the input image disk file, it
-would render this \tool\ useless.  When you destroy this on-the-fly
-\tool\ (with the <link anchor="images:image.done.function">done</link>
+would render this tool useless.  When you destroy this on-the-fly
+tool (with the <link anchor="images:image.done.function">done</link>
 function) the reference connection is broken.
 
 Sometimes it is useful to drop axes of length one (degenerate axes).
@@ -9793,19 +9793,19 @@ of the image, and all pixels of other axes.-->
 <returns type="casaimage"/>
 <description>
 
-This function creates a \casa\ \imagefile\ with the specified shape.  All
+This function creates a \casa\ imagefile with the specified shape.  All
 the pixel values in the image are set to 0.  
 
 If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
+disk file.  If {\stfaf outfile} is unset, the on-the-fly Image tool
 returned by this function is associated with a temporary image.  This
 temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
+When you destroy the on-the-fly Image tool (with the <link
 anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
 The Coordinate System, provided as a record describing a <link
-anchor="images:coordsys">Coordsys</link> \tool\ (created via
+anchor="images:coordsys">Coordsys</link> tool (created via
 coordsys.torecord(), for instance), is optional.  If you provide it,
 it must be dimensionally consistent with the pixels array you give
 (see also <link
@@ -9835,7 +9835,7 @@ im2.done()
 """
 
 
-The first example creates a zero-filled \imagefile\ named {\sff
+The first example creates a zero-filled imagefile named {\sff
 test.data} of shape [64,64,128].  If you examine the header with
 {\stff ia.summary()} you will see the RA/DEC/Spectral coordinate
 information.  In the second example, a Coordinate System describing
