@@ -695,7 +695,13 @@ void FITSQualityImage::setup()
 	QualityCoordinate qualAxis(quality);
 	cSys.addCoordinate(qualAxis);
 
+	// set the coordinate system
 	setCoordsMember(cSys);
+
+	// set the units
+	setUnitMember(fitsdata_p->units());
+
+	// set the image info
 	setImageInfo(fitsdata_p->imageInfo());
 
 	// Form the tile shape.
