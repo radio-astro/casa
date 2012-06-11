@@ -3306,94 +3306,6 @@ def imagetest(which=None, size=[32,32,8]):
             if bb:
                 stop('boundingbox 5 unexpectedly did not fail')
 
-            #
-            # {set}restoringbeam
-            #
-            #
-            info('')
-            info('Testing {set}restoringbeam')
-            info('')
-            ok = myim.setrestoringbeam(remove=T, log=F)
-            if not ok: fail('failed starting test of setrestoringbeam')
-            rb = myim.restoringbeam()
-            if len(rb) != 0:
-                fail('restoring beam was not removed')
-            #
-            #ok = myim.setrestoringbeam (major=10, minor=5, pa=30, log=F)
-            ok = myim.setrestoringbeam (major='10arcsec', minor='5arcsec',
-                                        pa='30deg', log=F)
-            if not ok: fail('failed setting restoring beam')
-            rb = myim.restoringbeam()
-            if not rb: fail('failed setting default restoring beam')
-            ok = (rb['major']['value']==10)
-            ok = ok and (rb['minor']['value']==5)
-            ok = ok and (rb['positionangle']['value']==30)
-            ok = ok and (rb['major']['unit']=='arcsec')
-            ok = ok and (rb['minor']['unit']=='arcsec')
-            ok = ok and (rb['positionangle']['unit']=='deg')
-            if not ok:
-                fail('restoringbeam/setrestoringbeam failed reflection test 1')
-            #
-            #ok = myim.setrestoringbeam(major=qa.unit(15,'deg'),
-            #                           minor=qa.unit(12,'deg'),
-            #                           pa=qa.unit('.1rad'), log=F)
-            ok = myim.setrestoringbeam(major='15deg', minor='12deg',
-                                       pa='.1rad', log=F)
-            if not ok: fail('failed setting restoring beam')
-            rb = myim.restoringbeam()
-            if not rb: fail('failed getting restoring beam')
-            ok = (rb['major']['value']==15)
-            ok = ok and (rb['minor']['value']==12)
-            ok = ok and (rb['positionangle']['value']==.1)
-            ok = ok and (rb['major']['unit']=='deg')
-            ok = ok and (rb['minor']['unit']=='deg')
-            ok = ok and (rb['positionangle']['unit']=='rad')
-            if not ok:
-                fail('restoringbeam/setrestoringbeam failed reflection test 2')
-            #
-            #ok = myim.setrestoringbeam (major=3, minor=2, pa=0.02, log=F)
-            ok = myim.setrestoringbeam (major='3deg', minor='2deg',
-                                        pa='0.02rad', log=F)
-            if not ok: fail('failed to set restoring beam')
-            rb = myim.restoringbeam()
-            if not rb: fail('failed setting default restoring beam')
-            ok = (rb['major']['value']==3)
-            ok = ok and (rb['minor']['value']==2)
-            ok = ok and (rb['positionangle']['value']==.02)
-            ok = ok and (rb['major']['unit']=='deg')
-            ok = ok and (rb['minor']['unit']=='deg')
-            ok = ok and (rb['positionangle']['unit']=='rad')
-            if not ok:
-                fail('restoringbeam/setrestoringbeam failed reflection test 3')
-            #
-            rb2 = myim.restoringbeam()
-            if not rb2:
-                fail('failed to create rb2')
-            rb2['major']['value'] = 10.0
-            ok = myim.setrestoringbeam(beam=rb2, log=F)
-            if not ok:
-                fail('failed to set restoring beam')
-            rb = myim.restoringbeam()
-            if not rb:
-                fail('failed to get restoring beam')
-            ok = rb['major']['value']==rb2['major']['value']
-            ok = ok and rb['major']['unit']==rb2['major']['unit']
-            ok = ok and rb['minor']['value']==rb2['minor']['value']
-            ok = ok and rb['minor']['unit']==rb2['minor']['unit']
-            ok = ok and rb['positionangle']['value']==rb2['positionangle']['value']
-            ok = ok and rb['positionangle']['unit']==rb2['positionangle']['unit']
-            if not ok:
-                fail('restoringbeam/setrestoringbeam failed reflection test 4')
-            #
-            ok = myim.setrestoringbeam(remove=T, log=F)
-            if not ok:
-                fail('failed to set restoring beam')
-            rb = myim.restoringbeam()
-            if (len(rb)!=0):
-                fail('restoring beam was not removed')
-            #
-            if not myim.done():
-                fail('failed done after setrestoringbeam')
         ok = cleanup(testdir)
         if not ok:
             fail('cleanup failed')
@@ -4683,118 +4595,6 @@ def imagetest(which=None, size=[32,32,8]):
 
         return cleanup(testdir)
 
-    def test23():
-        #
-        # Test methods
-        #   histograms
-        #
-        info('')
-        info('')
-        info('')
-        info('Test 23 - histograms')
-        # Make the directory
-        testdir = 'imagetest_temp'
-        if not cleanup(testdir):
-            return False
-        try:
-            os.mkdir(testdir)
-        except IOError, e:
-            note(e, "SEVERE")
-            raise RuntimeError, "mkdir " + testdir + " fails!"
-        # Make image
-        imshape = [5,10]
-        pixels = ia.makearray(0.0, imshape)
-        pixels[0,0] = -100
-        pixels[imshape[0]-1,imshape[1]-1] = 100
-        imname = testdir+'/'+'ia.fromarray.image'
-        myim = ia.newimagefromarray(outfile=imname, pixels=pixels)
-        if not myim:
-            stop('ia.fromarray constructor 1 failed')
-        #
-        try:
-            note('Expect SEVERE error and Exception here')
-            ok = myim.histograms(axes=[9,19])
-        except Exception, e:
-            note('Caught expected Exception')
-            ok = false
-        if ok:
-            stop('Histograms unexpectedly did not fail (1)')
-        #
-        nbins = 25
-        idx = nbins/2+1
-        #
-        out = myim.histograms(list=F, nbins=nbins)
-        if not out['return']:
-            stop('Histograms failed (1)')
-        hists=out['histout']
-        ok = hists.has_key('values') and hists.has_key('counts')
-        if not ok:
-            stop('Histograms record does not have the correct fields')
-        ok = len(hists['values'])==nbins and len(hists['counts'])==nbins
-        if not ok:
-            stop('Histograms value arrays have the wrong shape (1)')
-        #ok := hists.counts[1]==1 && hists.counts[nbins]==1 &&
-        #      hists.counts[idx]==(prod(imshape)-2);
-        ok = hists['counts'][0]==1 and hists['counts'][nbins-1]==1
-        ok = ok and (hists['counts'][idx-1]==(imshape[0]*imshape[1]-2))
-        if not ok:
-            stop('histogram counts wrong')
-        ##
-        blc = [0,0]; trc = [4,4]
-        r1 = rg.box(blc=blc, trc=trc)
-        ok = myim.histograms(nbins=nbins, list=F, region=r1)
-        if not ok:
-            stop('Histograms failed (2)')
-        hists=ok['histout']
-        ok = (hists['counts'][0]==1) and (hists['counts'][nbins-1]==((trc[0]-blc[0]+1)*(trc[1]-blc[1]+1)-1))
-        if not ok:
-            stop('Histograms values are wrong (2)')
-        ##
-        for j in range(imshape[1]):
-            pixels[0,j] = -100*(j+1)
-            pixels[imshape[0]-1,j] = 100*(j+1)
-        ok = myim.putchunk(pixels)
-        if not ok:
-            stop('putchunk failed (1)')
-        ok = myim.histograms(nbins=nbins, list=F, axes=[0])
-        if not ok['return']:
-            stop('Histograms failed (3)')
-        hists=ok['histout']
-        ok = list(hists['values'].shape)==[nbins,imshape[1]]
-        ok = ok and list(hists['counts'].shape)==[nbins,imshape[1]]
-        if not ok:
-            stop('Histograms value arrays have the wrong shape (2)')
-        for j in range(imshape[1]):
-            ok = hists['counts'][0,j]==1 and hists['counts'][nbins-1,j]==1
-            ok = ok and alleqnum(hists['counts'][idx-1],(imshape[0]-2),tolerance=0.0001)
-        if not ok:
-            stop('Histograms values are wrong (3)')
-        ##
-        ok = myim.histograms(list=F, includepix=[-5,5], nbins=25)
-        if not ok:
-            stop('Histograms failed (4)')
-        hists=ok['histout']
-        ok = hists['counts'][idx-1]==(imshape[0]*imshape[1]-(imshape[1]+imshape[1]))
-        ok = ok and alleqnum(hists['counts'][0:(idx-2)],0,tolerance=0.0001)
-        ok = ok and alleqnum(hists['counts'][idx:nbins],0,tolerance=0.0001)
-        if not ok:
-            stop('Histograms values are wrong (4)')
-        #
-        ok = myim.histograms(list=F, disk=T, force=T)
-        if not ok['return']:
-            stop('histograms failed (4)')
-        ok = myim.histograms(list=F, disk=F, force=T)
-        if not ok['return']:
-            stop('histograms failed (5)')
-        ok = myim.histograms(list=F, gauss=T, cumu=T, log=T)
-        if not ok['return']:
-            stop('histograms failed (6)')
-        #
-        ok = myim.done()
-        if not ok:
-            stop('Done failed (1)')
-        return cleanup(testdir)
-
     def test24():
         #
         # Test methods
@@ -5663,114 +5463,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         return True
 
-             
-    def test31():
-        #
-        # Test methods
-        #   adddegaxes
-        #
-        info('')
-        info('')
-        info('')
-        info('Test 31 - adddegaxes')
-        # Make the directory
-        testdir = 'imagetest_temp'
-        if not cleanup(testdir):
-            return False
-        try:
-            os.mkdir(testdir)
-        except IOError, e:
-            note(e, "SEVERE")
-            raise RuntimeError, "mkdir " + testdir + " fails!"
-        #
-        # Make RA/DEC image
-        #
-        imname = testdir+'/'+'ia.fromshape.image'
-        imshape = [10,10]
-        myim = ia.newimagefromshape(imname, imshape)
-        if not myim:
-            stop('ia.fromshape constructor 1 failed')
-        #
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.adddegaxes(direction=T)
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2: stop ('Unexpectedly (1) did not fail')
-        #
-        myim2 = myim.adddegaxes(spectral=T)
-        if not myim2: fail('failed in adddegaxes')
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        if (s!=s2): stop('shape (1) is wrong')
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        if (types[2] != 'Spectral'): stop('Wrong (1) degenerate axis type')
-        if not mycs.done(): fail('failed done')
-        if not myim2.done(): fail('failed done')
-        #
-        myim2 = myim.adddegaxes(stokes='i')
-        if not myim2: fail()
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        if (s!=s2): stop('shape (2) is wrong')
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        if (types[2] != 'Stokes'): stop('Wrong (2) degenerate axis type')
-        if not mycs.done(): fail()
-        if not myim2.done(): fail()
-        #
-        myim2 = myim.adddegaxes(linear=T)
-        if not myim2: fail()
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        if (s!=s2): stop('shape (3) is wrong')
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        if (types[2] != 'Linear'): stop('Wrong (3) degenerate axis type')
-        if not mycs.done(): fail()
-        if not myim2.done(): fail()
-        #
-        myim2 = myim.adddegaxes(tabular=T)
-        if not myim2: fail()
-        s = myim2.shape()
-        s2 = [imshape[0],imshape[1],1]
-        if (s!=s2): stop('shape (4) is wrong')
-        mycs = myim2.coordsys()
-        types = mycs.axiscoordinatetypes()
-        if (types[2] != 'Tabular'): stop('Wrong (4) degenerate axis type')
-        if not mycs.done(): fail()
-        if not myim2.done(): fail()
-        #
-        if not myim.done(): fail()
-        #
-        # Make Spectral image
-        #
-        mycs = cs.newcoordsys(spectral=T)
-        if not mycs: fail()
-        imname = testdir+'/'+'ia.fromshape2.image'
-        imshape = [10]
-        myim = ia.newimagefromshape(imname, imshape, csys=mycs.torecord())
-        if not myim:
-            stop('ia.fromshape constructor 2 failed')
-        #
-        myim2 = myim.adddegaxes(direction=T)
-        if not myim2: fail()
-        s = myim2.shape()
-        s2 = [imshape[0],1,1]
-        if (s!=s2): stop('shape (4) is wrong')
-        mycs2 = myim2.coordsys()
-        types = mycs2.axiscoordinatetypes()
-        if (types[1] != 'Direction' or types[2] != 'Direction'):
-            stop('Wrong (4) degenerate axis type')
-        if not mycs2.done(): fail()
-        if not myim2.done(): fail()
-        if not mycs.done(): fail()
-        #
-        if not myim.done(): fail()
-        return cleanup(testdir)
-
     def test32():
         #
         # Test methods
@@ -6415,7 +6107,6 @@ def imagetest(which=None, size=[32,32,8]):
     test20()
     test21()
     test22()
-    test23()
     test24()
     test25()
     test26()  # needs comparison to numpy.fft result implemented
@@ -6423,7 +6114,6 @@ def imagetest(which=None, size=[32,32,8]):
     test28()
     test29()
     test30()  # are abs/rel/world/pixel output values correct?
-    test31()
     test32()  # original has commented out bits. Why?
     test33()
     test34()
