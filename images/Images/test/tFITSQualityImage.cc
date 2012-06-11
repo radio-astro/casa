@@ -421,6 +421,14 @@ Bool testQualImg(FITSQualityImage &fitsQI, const String &in, const uInt &hdu_sci
    FITSImage fitsErrorImg = FITSImage(fitsname, 0, hdu_err);
 
    {
+   	// make sure the quality image and the
+   	// extension image have the same units
+   	if (fitsQI.units() != fitsDataImg.units()){
+   		String msg = String("Quality image and it data extension must have identical units!");
+   		throw(AipsError(msg));
+   	}
+   }
+   {
 	   Array<Float> mmData;
 	   Array<Bool>  mmMask;
 
