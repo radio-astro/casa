@@ -176,27 +176,29 @@ def listpartition(vis=None, createdict=None, listfile=None):
             for myscan in skeys:
                 SPW = outdict[index]['scanId'][myscan]['spwIds']
                 NCHAN = outdict[index]['scanId'][myscan]['nchans']
+                NROWS = outdict[index]['scanId'][myscan]['nrows']
                 
                 # Get maximum widths
                 smxw = getWidth(outdict, 'spw')
                 cmxw = getWidth(outdict, 'channel')
                 
                 # Create format
-                fhdr = '%-'+str(len(MS)+2)+'s' + '%-6s' + '%-'+str(smxw+2)+'s' + '%-'+str(cmxw+2)+'s' + '%-6s'
+                fhdr = '%-'+str(len(MS)+2)+'s' + '%-6s' + '%-'+str(smxw+2)+'s' + \
+                        '%-'+str(cmxw+2)+'s' + '%-8s' + '%-6s'
     
                 
                 # Print header
                 text = ''
                 if counter == 0:
-                    text = text + fhdr % (sname,'Scan','Spw','Nchan','Size')  
+                    text = text + fhdr % (sname,'Scan','Spw','Nchan','Nrows','Size')  
                     text = text + '\n'                  
                 counter += 1
                 
                 # Print first scan
                 if firstscan:
-                    text = text + fhdr % (MS, myscan, SPW, NCHAN, SIZE)   
+                    text = text + fhdr % (MS, myscan, SPW, NCHAN, NROWS, SIZE)   
                 else:
-                    text = text + fhdr % ('', myscan, SPW, NCHAN, '')
+                    text = text + fhdr % ('', myscan, SPW, NCHAN, NROWS, '')
                 
                 firstscan = False            
 
