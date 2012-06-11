@@ -1,0 +1,67 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# aipsmail: Sort AIPS++ exploder mail into folders.
+#-----------------------------------------------------------------------------
+#   Copyright (C) 1995,1996
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: "| aipsmail [<folder>]"
+#-----------------------------------------------------------------------------
+# aipsmail archives AIPS++ electronic mail.  It is invoked directly by
+# 'sendmail' via entries in the /etc/aliases file.  Since sendmail normally
+# invokes such commands using the identity of the person who sent the mail,
+# this script needs to run as setuid to aips2adm.
+#
+# aipsmail expects to receive the text of a mail message on stdin.  Its first
+# task is to invoke 'rcvstore' to store this message in the specified MH mail
+# folder - "general" by default.  It then invokes 'scanhtml' to produce an
+# HTML index for the folder.
+#
+# Original: 1995/07/18 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+# This tricks MH into processing the mail as aips2adm.
+  HOME=/export/aips++
+  export HOME
+
+# MH definitions.
+  MHBIN=/opt/local/mh/bin
+  MHLIB=/opt/local/mh/lib
+
+# Parse the folder name.
+  if [ $# -gt 0 ]
+  then
+     FOLDER=$1
+  else
+     FOLDER="general"
+  fi
+
+# Store the mail, consuming stdin in the process.
+  $MHLIB/rcvstore -create +"$FOLDER"
+
+# Update the folder index.
+  $HOME/master/etc/scanhtml "$FOLDER"
+
+  exit 0
