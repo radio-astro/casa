@@ -1111,10 +1111,45 @@ IPosition IPosition::makeAxisPath (uInt nrdim, const IPosition& partialPath)
     return path;
 }
 
-IPosition IPosition::otherAxes (uInt nrdim, const IPosition& axes)
-{
+IPosition IPosition::otherAxes (
+	uInt nrdim, const IPosition& axes
+) {
    AlwaysAssert (nrdim>=axes.nelements(),AipsError);
    return makeAxisPath(nrdim, axes).getLast(nrdim-axes.nelements());
+}
+
+void IPosition::next(const IPosition& shape) {
+	if (shape.size_p != size_p) {
+		throw AipsError(
+			"IPosition::next(): Sizes of object and shape not consistent"
+		);
+	}
+	if (*this > shape) {
+		throw AipsError(
+			"IPosition::next(): This object is not consistent with the input shape"
+		);
+	}
+	if (*this == shape - 1) {
+		*this = shape;
+		return;
+	}
+	uInt xpos = data_p[0];
+	xpos++;
+	if (xpos < shape[0]) {
+		data_p[0] = xpos;
+	}
+	else {
+		data_p[0] = 0;
+		for (uInt i=1; i<size_p; i++) {
+			if (data_p[i] < shape.data_p[i] - 1) {
+				data_p[i]++;
+				break;
+			}
+			else {
+				data_p[i] = 0;
+			}
+		}
+	}
 }
 
 void IPosition::throwIndexError() const

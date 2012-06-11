@@ -436,7 +436,37 @@ int main()
 }
 
 }
+{
+	// next() tests
+	IPosition x(5, 20, 9, 31, 5, 2);
+	IPosition exp(5, 0);
+	uInt prod = x.product();
+	IPosition partialProd(4, 0);
+	uInt pprod = 1;
+	for (uInt i=0; i< partialProd.nelements(); i++) {
+		pprod *= x[i];
+		partialProd[i] = pprod;
+	}
+	uInt i = 0;
+	for (IPosition curPos(x.size(), 0); curPos<x; curPos.next(x), i++) {
+		uInt partdiff = i;
+		for (Int j=partialProd.size() - 1; j >=0; j-- ) {
+			exp[j+1] = partdiff/partialProd[j];
+			partdiff -= exp[j+1] * partialProd[j];
+		}
+		exp[0] = i % partialProd[0];
+		AlwaysAssert(curPos == exp, AipsError);
+	}
+	AlwaysAssert(i == x.product(), AipsError);
+	IPosition myShape(2, 20, 4);
+	uInt count = 0;
+	for (
+		IPosition pos(2, 0, 0); pos<myShape;
+		pos.next(myShape), count++
+	) {}
+	AlwaysAssert(count = myShape.product(), AipsError);
 
+}
     cout << "OK\n";
     return 0;
 }
