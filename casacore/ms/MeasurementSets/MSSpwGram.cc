@@ -104,6 +104,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ret=MSSpwGramparse();                // parse command string
 	selectedIDs = parser->selectedIDs();
 	selectedChans = parser->selectedChanIDs();
+	if ((selectedIDs.size() == 0) ||
+	    (selectedChans.size() == 0))
+	  throw(MSSelectionSpwParseError("No valid SPW & Chan combination found"));
 	return ret;
       }
     catch (MSSelectionSpwError &x)
@@ -154,6 +157,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	ret=MSSpwGramparse();                // parse command string
     	selectedIDs = parser.selectedIDs();
     	selectedChans = parser.selectedChanIDs();
+	if ((selectedIDs.size() == 0) ||
+	    (selectedChans.size() == 0))
+	  throw(MSSelectionSpwParseError("No valie SPW & Chan combination found"));
     	return ret;
       }
     catch (MSSelectionSpwError &x)

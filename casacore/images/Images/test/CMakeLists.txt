@@ -8,6 +8,7 @@ CAS-2533.im/table.lock
 CAS-2533.im/table.dat
 CAS-2533.im/table.f0_TSM0
 CAS-2533.im/table.f0
+histogram_test.fits
 imagetestimage.fits
 jyperpixelimage.fits
 linearCoords.fits

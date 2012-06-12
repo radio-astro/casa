@@ -1185,19 +1185,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Matrix<Double> MSSelection::getChanFreqList(const MeasurementSet* ms, 
 					      const Bool sorted) 
   {
+    LogIO log_l(LogOrigin("MSSelection", "getChanFreqList"));
+
     if (chanIDs_p.nelements() == 0) getTEN(ms); 
     Matrix<Int> chanList_l = getChanList(ms, 1, sorted);
     Matrix<Double> freqList_l;
     freqList_l.resize(chanList_l.shape());
     
     const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
-    
-    IPosition row(1,0);
+     if (msSpwSubTable.nrow() <= max(chanList_l.column(0)))
+	throw(MSSelectionError(String("MSS::getChanFreqList:: Internal error:  Selected list of SPW IDs > "
+				      "no. of rows in the SPECTRAL_WINDOW sub-table.")));
+    Int spwID;
     for (uInt i=0; i < chanList_l.shape()(0); i++)
       {
-	row(0) = i;
-	Array<Double> chanFreq(msSpwSubTable.chanFreq()(i));
-	Double avgChanWidth = sum(msSpwSubTable.chanWidth()(i))/msSpwSubTable.chanWidth()(i).nelements();
+	spwID = chanList_l(i,0); // First column has the SPW ID
+	Array<Double> chanFreq(msSpwSubTable.chanFreq()(spwID));
+	Double avgChanWidth = sum(msSpwSubTable.chanWidth()(spwID))
+	  /msSpwSubTable.chanWidth()(spwID).nelements();
 	
 	freqList_l(i,0) = (Double)chanList_l(i,0);
 	freqList_l(i,1) = chanFreq(IPosition(1,chanList_l(i,1)));
