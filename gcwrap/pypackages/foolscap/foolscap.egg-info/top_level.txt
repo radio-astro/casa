@@ -1,4 +1,0 @@
-foolscap
-foolscap/logging
-foolscap/test
-foolscap/slicers
