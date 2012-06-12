@@ -37,6 +37,7 @@
 #include <casa/Arrays/IPosition.h>
 
 #include <display/QtPlotter/QtPlotSettings.h>
+#include <display/QtPlotter/CanvasCurve.h>
 #include <display/QtPlotter/WorldCanvasTranslator.h>
 #include <display/QtPlotter/ProfileFitMarker.h>
 
@@ -60,9 +61,6 @@
 
 namespace casa { 
 
-typedef std::vector<double> CurveData;
-typedef std::vector<double> ErrorData;
-
 #define QT_DIAMOND_SIZE 5
 
 class GraphLabel
@@ -72,7 +70,7 @@ public:
 	QString fontName;
 	int fontSize;
 	QColor color;
-	GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), fontSize(12), color(Qt::blue) {}
+	GraphLabel() : text(""), fontName(""), fontSize(12), color(Qt::blue) {}
 };
 
 class QtCanvas : public QWidget, public WorldCanvasTranslator
@@ -82,17 +80,15 @@ public:
 	QtCanvas(QWidget *parent = 0);
 
 	void setPlotSettings(const QtPlotSettings &settings);
-	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
+
 	CurveData* getCurveData(int);
 	ErrorData* getCurveError(int id);
 	QString getCurveName(int);
 	int getLineCount();
-	//void clearCurve(int id = -1);
 	void clearCurve();
 	void setDataRange();
 	void setImageMode(bool);
-	//void setPixmap(const QImage&);
 	QPixmap* graph();
 	void drawBackBuffer(QPainter *);
 
@@ -101,14 +97,13 @@ public:
 	template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
+	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, ZOOM_COLOR, REGION_COLOR,
+					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
-			const QString& lb="");
+			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
+
 	template<class T> void plotPolyLine(const Matrix<T> &verts);
-	// template<class T>
-	// void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
-	// void drawImage(const Matrix<uInt> &data);
-	//QColor getLinearColor(double);
-	QColor getDiscreteColor(const int &d);
+
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
 	~QtCanvas();
@@ -116,16 +111,15 @@ public:
 	int getCurZoom();
 	int getZoomStackSize();
 
-	void setTitle(const QString &text, int fontSize = 12,   int iclr = 1,
-			const QString &font = "Helvetica [Cronyx]");
+	void setTitle(const QString &text, int fontSize = 13,const QString &font = FONT_NAME);
 	QString getTitle(){return title.text;};
 
-	void setXLabel(const QString &text, int fontSize = 10,  int iclr = 1,
-			const QString &font = "Helvetica [Cronyx]", QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
-	void setYLabel(const QString &text, int fontSize = 10,  int iclr = 1,
-			const QString &font = "Helvetica [Cronyx]");
-	void setWelcome(const QString &text, int fontSize = 14, int iclr = 1,
-			const QString &font = "Helvetica [Cronyx]");
+	void setXLabel(const QString &text, int fontSize = 10,
+			const QString &font = FONT_NAME, QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
+	void setYLabel(const QString &text, int fontSize = 10,
+			const QString &font = FONT_NAME);
+	void setWelcome(const QString &text, int fontSize = 14,
+			const QString &font = FONT_NAME);
 	void setAutoScaleX(int a) {autoScaleX = a;}
 	void setAutoScaleY(int a) {autoScaleY = a;}
 	void setShowGrid(int a)   {showGrid = a; refreshPixmap();}
@@ -160,6 +154,7 @@ public:
 	//step function.
 	bool isDisplayStepFunction() const;
 	void setDisplayStepFunction( bool displayAsStepFunction );
+	static const QString FONT_NAME;
 
 public slots:
    void zoomIn();
@@ -198,6 +193,21 @@ protected:
 	void refreshPixmap();
 
 private:
+
+	/**
+	 * Stores the curve information for later plotting.
+	 * @param id a unique identifier for the curve
+	 * @param data a vector containing the (x,y) points that make up the curve.
+	 * @param error a vector containing errors associated with the curve.
+	 * @param lb a human readable identifier for the curve.
+	 * @param colorCategory an indication of the importance of curve being added.  Default
+	 * 	is set to a standalone main curve, but the parameter could also indicate a primary
+	 * 	or secondary curve that depends on a main curve for its meaning.
+	 */
+	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(),
+				const QString& lb="", ColorCategory colorCategory=CURVE_COLOR);
+
+
 	/**
 	 * Attempts to display a tool tip indicated a data point corresponding
 	 * to the mouse position, if there is such a point.
@@ -296,10 +306,7 @@ private:
 	GraphLabel yLabel;
 	GraphLabel welcome;
 
-
-	std::map<int, QString> legend;
-	std::map<int, CurveData> curveMap;
-	std::map<int, ErrorData> errorMap;
+	std::map<int, CanvasCurve> curveMap;
 	std::vector<QtPlotSettings> zoomStack;
 	std::map<int, CurveData> markerStack;
 	std::pair<double,double> topAxisRange;
@@ -344,6 +351,22 @@ private:
 
 	ProfileFitMarker getMarker( int index ) const;
 	void setMarker( int index, ProfileFitMarker& marker );
+
+
+	/**
+	 * Returns the color to use for drawing a particular item on the canvas.
+	 * The rational for the method is to always draw similar items in shades
+	 * of the same color so that the user will learn to recognize those items
+	 * by color.  Similar items should always have the same colorCategory.
+	 * @param colorCategory the type of item that needs to be drawn.
+	 */
+	QColor getDiscreteColor(ColorCategory colorCategory);
+	QColor getCurveColorPrimary();
+	QColor getCurveColorSecondary();
+	QColor getCurveColor();
+	int curveCount;
+	int curveCountPrimary;
+	int curveCountSecondary;
 
 };
 

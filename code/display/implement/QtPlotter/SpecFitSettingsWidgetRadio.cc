@@ -1,20 +1,32 @@
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageFit1D.h>
-#include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/PCFSpectralElement.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/SpecFitLogDialog.qo.h>
 #include <display/QtPlotter/SpecFitSettingsFixedTableCell.qo.h>
+#include <display/QtPlotter/SpecFit.h>
+#include <display/QtPlotter/SpecFitPolynomial.h>
+#include <display/QtPlotter/SpecFitGaussian.h>
 #include <display/QtPlotter/Util.h>
+#include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <QWidget>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTemporaryFile>
+#include <QMutableMapIterator>
 #include <QList>
 #include <QDebug>
+
+#include <iostream>
+using namespace std;
+
 namespace casa {
 
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
-    : QWidget(parent), fitter( NULL )
+    : QWidget(parent), fitter( NULL ), POINT_COUNT(20), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
 
@@ -44,6 +56,8 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(setOutputLogFile()));
 	connect( ui.viewButton, SIGNAL(clicked()), this, SLOT(viewOutputLogFile()));
 	connect( ui.saveOutputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(saveOutputChanged(int)));
+
+	ui.viewButton->setEnabled( false );
 }
 
 void SpecFitSettingsWidgetRadio::setCanvas( QtCanvas* canvas ){
@@ -106,15 +120,40 @@ void SpecFitSettingsWidgetRadio::reset(){
 		delete fitter;
 		fitter = NULL;
 	}
+
+	//Empty the curves and their associated data.
+	while (!curveList.isEmpty()) {
+	     QList<SpecFit*> curves = curveList.takeFirst();
+	     while( !curves.isEmpty()){
+	     	SpecFit* specFit = curves.takeFirst();
+	     	delete specFit;
+	     }
+	 }
+
 }
 
 void SpecFitSettingsWidgetRadio::clean(){
 	plotMainCurve();
+
+}
+
+void SpecFitSettingsWidgetRadio::clear(){
+	ui.minLineEdit->setText("");
+	ui.maxLineEdit->setText("");
+	clearEstimates();
 }
 
 
 void SpecFitSettingsWidgetRadio::setUnits( QString units ){
-	ui.rangeGroupBox->setTitle( units );
+	int bracketIndex = units.indexOf( "[]");
+	if ( bracketIndex > 0 ){
+		units = "";
+	}
+	QString oldUnits = ui.channelUnitLabel->text();
+	if ( oldUnits != units ){
+		clear();
+		ui.channelUnitLabel->setText( units );
+	}
 }
 
 void SpecFitSettingsWidgetRadio::adjustTableRowCount( int count ){
@@ -163,7 +202,6 @@ void SpecFitSettingsWidgetRadio::saveOutputChanged( int state ){
 	}
 	else {
 		outputLogPath="";
-		ui.viewButton->setEnabled( false );
 	}
 	ui.saveButton->setEnabled( saveOutput );
 }
@@ -174,6 +212,8 @@ bool SpecFitSettingsWidgetRadio::isValidFitSpecification( int gaussCount, bool p
 		String msg("Please indicate the type of fit:  Gaussian and/or Polynomial.");
 		logWarning( msg );
 		postStatus( msg );
+		QString userMsg(msg.c_str());
+		Util::showUserMessage(userMsg, this);
 		valid = false;
 	}
 	return valid;
@@ -217,27 +257,28 @@ bool SpecFitSettingsWidgetRadio::isValidEstimate( QString& peakStr,
 	return validEstimate;
 }
 
-SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss, Bool& validEstimates ){
+SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
+		Bool& validEstimates ){
 	SpectralList spectralList;
 	validEstimates = true;
 	if ( nGauss > 0 ){
 		int potentialEstimateCount = ui.estimateTable->rowCount();
 		if ( nGauss == potentialEstimateCount ){
 			for ( int i = 0; i < potentialEstimateCount; i++  ){
-				QTableWidgetItem* peakItem = ui.estimateTable->itemAt(i, PEAK );
+				QTableWidgetItem* peakItem = ui.estimateTable->item(i, PEAK );
 				QString peakStr;
 				if ( peakItem != NULL ){
 					peakStr = peakItem->text();
 				}
-				QTableWidgetItem* centerItem = ui.estimateTable->itemAt( i, CENTER );
+				QTableWidgetItem* centerItem = ui.estimateTable->item( i, CENTER );
 				QString centerStr;
 				if ( centerItem != NULL ){
 					centerStr = centerItem->text();
 				}
-				QTableWidgetItem* fwhmItem = ui.estimateTable->itemAt( i, FWHM );
+				QTableWidgetItem* fwhmItem = ui.estimateTable->item( i, FWHM );
 				QString fwhmStr;
 				if ( fwhmItem != NULL ){
-					fwhmStr = ui.estimateTable->itemAt(i, FWHM )->text();
+					fwhmStr = fwhmItem->text();
 				}
 				SpecFitSettingsFixedTableCell* fixedItem = dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
 				QString fixedStr;
@@ -249,7 +290,13 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss, Bool& va
 						double peakVal = peakStr.toDouble();
 						double centerVal = centerStr.toDouble();
 						double fwhmVal = fwhmStr.toDouble();
-						GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerVal, fwhmVal);
+
+						//Gaussian Estimate must be in pixels.
+						double centerValPix = toPixels( centerVal );
+						double fwhmValPtPix = toPixels( centerVal - fwhmVal/2 );
+						double fwhmValPix = fabs(centerValPix - fwhmValPtPix) * 2;
+
+						GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 						estimate->fixByString( fixedStr.toStdString());
 						spectralList.add( *estimate );
 					}
@@ -264,6 +311,42 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss, Bool& va
 
 	}
 	return spectralList;
+}
+
+
+double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
+
+	//Decide if we are currently in frequency, velocity or wavelength.
+	Bool velocityUnits = false;
+	Bool wavelengthUnits = false;
+	String xAxisUnits = getXAxisUnit();
+	getConversion( xAxisUnits, velocityUnits, wavelengthUnits );
+
+	const ImageInterface<Float>* img = this->getImage();
+	CoordinateSystem cSys = img->coordinates();
+	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+
+	//Frequency
+	//TODO:: Need to take care of channels case
+	Double pixelVal;
+	if ( !velocityUnits && !wavelengthUnits ){
+		spectralCoordinate.toPixel( pixelVal, val );
+	}
+	//Velocity
+	else if ( velocityUnits ){
+		spectralCoordinate.setVelocity( xAxisUnits );
+		spectralCoordinate.velocityToPixel( pixelVal, val );
+	}
+	//Wavelength
+	else {
+		spectralCoordinate.setWavelengthUnit( xAxisUnits );
+		Vector<Double> frequencyVector(1);
+		Vector<Double> wavelengthVector(1);
+		wavelengthVector[0] = val;
+		spectralCoordinate.wavelengthToFrequency(frequencyVector, wavelengthVector );
+		spectralCoordinate.toPixel( pixelVal, frequencyVector[0]);
+	}
+	return pixelVal;
 }
 
 void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ){
@@ -284,46 +367,285 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 	int endChannelIndex = -1;
 	findChannelRange( startVal, endVal, z_xval, startChannelIndex, endChannelIndex );
 	if ( startChannelIndex >= 0 && endChannelIndex >= 0 ){
+
+		//Get the channels
 		const String channelStr = String::toString( startChannelIndex )+ "~"+String::toString( endChannelIndex);
+
+		//Get the fit axis, which is right now hard-coded to be the
+		//spectral axis.
+		CoordinateSystem cSys = image -> coordinates();
+		Int spectralAxisNumber = cSys.spectralAxisNumber();
+
+		//Initialize the fitter
 		fitter = new ImageProfileFitter( image, "", 0, pixelBox,
-				channelStr, "", "", 0, static_cast<uInt>(nGauss), "", spectralList);
+				channelStr, "", "", spectralAxisNumber, static_cast<uInt>(nGauss), "",
+				spectralList);
+
+		//Tell the fitter if we want to include a polynomial
 		if ( fitPoly ){
 			fitter->setPolyOrder( polyN );
 		}
-		if ( !outputLogPath.isEmpty() ){
-			fitter->setLogfile( outputLogPath.toStdString() );
+
+		//Output logging will always be done even if the user doesn't
+		//specify a log file.
+		if ( outputLogPath.isEmpty() ){
+			resolveOutputLogFile();
 		}
+		fitter->setLogfile( outputLogPath.toStdString() );
+
+		//Tell the fitter if it is a multifit.
 		if ( ui.multiFitCheckBox->isChecked() ){
 			fitter->setDoMultiFit( true );
 		}
 
+		//Do the fit.
 		Record results = fitter->fit();
-		Vector<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
-		if ( ! succeeded.size() == 1 || ! succeeded[0]){
+
+		//Decide if we got any valid fits
+		//DataType resultType = results.dataType(ImageProfileFitter::_SUCCEEDED);
+
+		Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
+		Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
+		if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
+
+			//Tell the user basic information about the fit.
+			Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+
+			String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
+			msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
+			msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
+			postStatus( msg );
+
+			//Initialize the x-values.  In the case of a polynomial fit, the
+			//x values need to be in pixels.
+			Vector<Float> xValues( POINT_COUNT );
+			Vector<Float> xValuesPix( POINT_COUNT );
+			float dx = (endVal - startVal) / POINT_COUNT;
+			for( int i = 0; i < POINT_COUNT; i++ ){
+				xValues[i] = startVal + i * dx;
+				xValuesPix[i] = toPixels( xValues[i] );
+			}
+
+			//Go through each of the fits.  This could be 1 if multifit is not
+			//checked.  On the other hand it could be hundreds if multifit is checked.
+			std::vector<bool> successVector;
+			succeeded.tovector( successVector );
+			for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ){
+				//The fit succeeded.
+				if ( successVector[i] ){
+					//Initialize a SpecFit curve for the fit.
+					processFitResults( cSys, xValues, xValuesPix );
+				}
+			}
+
+			if ( !ui.multiFitCheckBox->isChecked() ){
+				drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
+			}
+			else {
+				QString msg( "Hover the mouse over the point\n in the selected rectangle of the Viewer Display Panel\n to see the fitted profile at each point");
+				Util::showUserMessage( msg, this );
+			}
+		}
+		else{
 			String msg = String("Data could not be fitted!");
 			QString msgStr(msg.c_str());
 			postStatus(msg);
 			Util::showUserMessage( msgStr, this);
 		}
-		else{
-			String xaxisUnit = getXAxisUnit();
-			QString yUnit = getYUnit();
-			QString yUnitPrefix = getYUnitPrefix();
-			Vector<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
-			if ( converged.size() == 1 && converged[0]){
-				Vector<Int> iterationCounts = results.asArrayInt(ImageProfileFitter::_ITERATION_COUNT);
-				String msg( "Fit converged in "+String::toString(iterationCounts[0])+" iterations.");
-				postStatus( msg );
+
+	}
+}
+
+
+void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
+	//Make sure we are in our selected rectangular region before
+	//going to the trouble of trying to find the curves to draw.
+	if ( pixelX != SUM_FIT_INDEX  && pixelY != SUM_FIT_INDEX ){
+		Vector<double> xPixels;
+		Vector<double> yPixels;
+		taskMonitor->getPixelBounds( xPixels, yPixels );
+		if ( pixelX < xPixels[0] || pixelX > xPixels[1] ){
+			return;
+		}
+		if ( pixelY < yPixels[0] || pixelY > yPixels[1] ){
+			return;
+		}
+	}
+
+	//Compute the yValues for the fit.
+	Vector<Float> yCumValues(POINT_COUNT, 0);
+
+	for ( int k = 0; k < curveList.size(); k++ ){
+
+		QList<SpecFit*> curves = curveList[k];
+		if ( !curves[0]->isSpecFitFor(pixelX, pixelY)){
+			continue;
+		}
+		else {
+			//Clear off the previous fit, if there was one.
+			clean();
+		}
+
+		Vector<Float> xValues = curves[0]->getXValues();
+		for ( int i = 0; i < curves.size(); i++ ){
+
+			Vector<Float> yValues = curves[i]->getYValues();
+			QString curveName = curves[i]->getCurveName();
+
+			//Send the curve to the canvas for plotting.
+			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+
+			for ( int i = 0; i < POINT_COUNT; i++ ){
+				yCumValues[i] = yCumValues[i]+yValues[i];
 			}
-			else {
-				//Post message saying that we didn't get convergence.
-				QString msg("Profile fit did not converge.");
-				Util::showUserMessage( msg, this);
-			}
+		}
+
+		//Add a curve that represents the sum of all the individual fits
+		if ( curves.size() > 1 ){
+			QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
+			pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
 		}
 	}
 }
 
+void SpecFitSettingsWidgetRadio::processFitResults( const CoordinateSystem& cSys,
+		Vector<float>& xValues, Vector<float>& xValuesPix){
+
+	//Iterate through all the fits and post the results
+	Array<ImageFit1D<Float> > image1DFitters = fitter-> getFitters();
+	Array<ImageFit1D<Float> >::iterator iterend( image1DFitters.end());
+	uint fitIndex = 0;
+	for ( Array<ImageFit1D<Float> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ){
+		ImageFit1D<Float> image1DFitter = *iter;
+		SpectralList solutions = image1DFitter.getList();
+
+		//Find the center of the fit in pixels.
+		int successCount = 0;
+		QList<SpecFit*> curves;
+		int centerX = SUM_FIT_INDEX;
+		int centerY = SUM_FIT_INDEX;
+		if ( ui.multiFitCheckBox->isChecked() ){
+			Vector<Double> fitCenter = fitter->getPixelCenter(fitIndex);
+			centerX = static_cast<int>(fitCenter[0]);
+			centerY = static_cast<int>(fitCenter[1]);
+		}
+		fitIndex++;
+
+		//Get the solutions for each fit
+		for ( int j = 0; j < static_cast<int>(solutions.nelements()); j++  ){
+			SpectralElement::Types fitType = solutions[j]->getType();
+			bool successfulFit = false;
+			if ( fitType == SpectralElement::GAUSSIAN ){
+				successfulFit = processFitResultGaussian( solutions[j], cSys, j, curves );
+			}
+			else if (fitType == SpectralElement::POLYNOMIAL ){
+				successfulFit = processFitResultPolynomial( solutions[j], curves );
+			}
+
+			//Add the fit values into the cumulative fit value vector.
+			if ( successfulFit ){
+				if ( curves[successCount] ->isXPixels() ){
+					curves[successCount]->evaluate( xValuesPix );
+					curves[successCount]->setXValues( xValues );
+				}
+				else {
+					curves[successCount]->evaluate( xValues );
+				}
+
+				QString curveName = taskMonitor->getFileName() +curves[successCount]->getSuffix();
+				curves[successCount]->setCurveName( curveName );
+
+				curves[successCount]->setFitCenter( centerX, centerY );
+				successCount++;
+			}
+		}
+		//store the curves in the curve map
+		curveList.append( curves );
+
+		if ( successCount == 0 ){
+			QString msg( "Fit returned invalid value(s).");
+			Util::showUserMessage( msg, this );
+		}
+	}
+	ui.viewButton->setEnabled( true );
+}
+
+
+bool SpecFitSettingsWidgetRadio::processFitResultPolynomial( const SpectralElement* solution,
+			QList<SpecFit*>& curves){
+
+	bool successfulFit = true;
+	const PolynomialSpectralElement* poly = dynamic_cast<const PolynomialSpectralElement*>(solution);
+
+	//Get the coefficients of the polynomial in pixels
+	Vector<Double> coefficients;
+	poly ->get( coefficients );
+	SpecFit* polyFit = new SpecFitPolynomial( coefficients );
+
+	curves.append( polyFit );
+	return successfulFit;
+}
+
+
+
+bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement* solution,
+		const CoordinateSystem& cSys, int index, QList<SpecFit*>& curves){
+
+	const PCFSpectralElement *pcf = dynamic_cast<const PCFSpectralElement*>(solution);
+
+	//Get the peak, center, and fwhm from the estimate
+	float peakVal = static_cast<float>(pcf->getAmpl());
+	Double centerValPix = pcf->getCenter();
+	double fwhmValPix = pcf->getFWHM();
+	if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
+			isinf( fwhmValPix) || isinf( centerValPix) || isinf( peakVal)){
+		return false;
+	}
+
+	//Center and fwhm needs to be converted from
+	//pixels to the current units we are using.
+	String xAxisUnit = getXAxisUnit();
+	int axisCount = cSys.nPixelAxes();
+	IPosition imPos(axisCount);
+	Bool velocityUnits;
+	Bool wavelengthUnits;
+	getConversion( xAxisUnit, velocityUnits, wavelengthUnits );
+	float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit,velocityUnits, wavelengthUnits));
+	float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit,velocityUnits, wavelengthUnits));
+	float fwhmVal = 2 * abs(fwhmValX - centerVal);
+	if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ){
+		return false;
+	}
+
+	SpecFit* gaussFit = new SpecFitGaussian( peakVal, centerVal, fwhmVal, index );
+	curves.append( gaussFit );
+	return true;
+}
+
+
+
+void SpecFitSettingsWidgetRadio::resolveOutputLogFile( ){
+	if (outputLogPath.isEmpty()){
+		QString baseName = taskMonitor->getFileName();
+		QTemporaryFile tmpFile( baseName );
+		tmpFile.open();
+		outputLogPath = tmpFile.fileName();
+	}
+}
+
+void SpecFitSettingsWidgetRadio::getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const {
+	int msIndex = unitStr.find( "m/s");
+	int mIndex = unitStr.find( "m");
+	int angIndex = unitStr.find( "Ang");
+	velocity = false;
+	wavelength = false;
+	if ( msIndex >= 0 ){
+		velocity = true;
+	}
+	else if ( mIndex >= 0 || angIndex >= 0 ){
+		wavelength = true;
+	}
+}
 
 void SpecFitSettingsWidgetRadio::specLineFit(){
 	*logger << LogOrigin("SpecFitOptical", "specLineFit");
@@ -369,11 +691,8 @@ void SpecFitSettingsWidgetRadio::setOutputLogFile(){
 		QStringList fileNames = fd.selectedFiles();
 		if ( fileNames.size() > 0 ){
 			outputLogPath = fileNames[0];
-			bool validPath = !outputLogPath.isEmpty();
-			ui.viewButton->setEnabled( validPath );
 		}
 	}
-
 }
 
 void SpecFitSettingsWidgetRadio::viewOutputLogFile(){
@@ -409,8 +728,36 @@ void SpecFitSettingsWidgetRadio::viewOutputLogFile(){
 	}
 }
 
+void SpecFitSettingsWidgetRadio::clearEstimates(){
+	int rowCount = ui.estimateTable->rowCount();
+	int colCount = ui.estimateTable->columnCount();
+	for ( int i = 0; i < rowCount; i++ ){
+		for ( int j = 0; j < colCount; j++ ){
+			if ( j != FIXED ){
+				QTableWidgetItem* tableItem = ui.estimateTable->item(i,j);
+				if ( tableItem != NULL ){
+					tableItem->setText("");
+				}
+			}
+			else {
+				SpecFitSettingsFixedTableCell* cellWidget =
+						dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->item(i,j));
+				if ( cellWidget != NULL ){
+					cellWidget->clear();
+				}
+			}
+
+		}
+	}
+	ui.estimateTable->resizeColumnToContents( FIXED );
+}
+
+void SpecFitSettingsWidgetRadio::pixelsChanged( int pixX, int pixY ){
+	drawCurves( pixX, pixY);
+}
+
 SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()
 {
-	delete fitter;
+	reset();
 }
 }

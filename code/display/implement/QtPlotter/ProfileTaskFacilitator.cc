@@ -24,6 +24,10 @@ ProfileTaskFacilitator::ProfileTaskFacilitator() :
 void ProfileTaskFacilitator::clear(){
 
 }
+
+void ProfileTaskFacilitator::pixelsChanged( int pixX, int pixY ){
+
+}
 void ProfileTaskFacilitator::setCanvas( QtCanvas* pCanvas ){
 	pixelCanvas = pCanvas;
 }

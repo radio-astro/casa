@@ -718,10 +718,10 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
 
   QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo );
   
-  return processDD( path, dataType, displayType, autoRegister, qdd, ddo  );
+  return processDD( path, dataType, displayType, autoRegister, qdd );
 }
 QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, String displayType,
-		Bool autoRegister, QtDisplayData* qdd, const viewer::DisplayDataOptions& ddo){
+		Bool autoRegister, QtDisplayData* qdd){
   if(qdd->isEmpty()) {
     errMsg_ = qdd->errMsg();
     emit createDDFailed(errMsg_, path, dataType, displayType);
@@ -1428,19 +1428,18 @@ void QtDisplayPanelGui::showImageProfile() {
 	        
 		    	profile_ = new QtProfile(img, pdd->name().c_str());
 		    	profile_->setPath(QString(pdd->path().c_str()) );
-			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
-			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-			connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-			connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
-					profile_, SLOT(changeSpectrum(String, String, String )));
-
-			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
-					this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
-			connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
-					this, SLOT(doSelectChannel(const Vector<float>&,float)));
-
-
+		    	connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
+		    	connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
+		    	connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+		    			profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		    	connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
+		    			profile_, SLOT(changeSpectrum(String, String, String )));
+		    	connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
+		    			this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+		    	connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
+		    			this, SLOT(doSelectChannel(const Vector<float>&,float)));
+		    	 connect( pdd, SIGNAL(pixelsChanged(int,int)), profile_,
+		    			   SLOT(pixelsChanged(int,int)) );
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
 			    if (pos) {

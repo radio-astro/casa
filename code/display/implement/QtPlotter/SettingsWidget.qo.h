@@ -4,6 +4,7 @@
 #include <QtGui/QWidget>
 #include <display/QtPlotter/SettingsWidget.ui.h>
 #include <casa/Arrays/Vector.h>
+
 namespace casa {
 
 
@@ -27,6 +28,7 @@ public:
     static bool isOptical();
     static void setOptical( bool optical );
     void setTaskSpecLineFitting( bool specLineFitting );
+    void pixelsChanged(int, int );
     SettingsWidget(QWidget *parent = 0);
     ~SettingsWidget();
 

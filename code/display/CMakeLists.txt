@@ -353,6 +353,7 @@ casa_add_library( display
   implement/QtPlotter/QtDrawColors.cc
   implement/QtPlotter/QtDrawSettings.cc
   implement/QtPlotter/QtDrawer.cc
+  implement/QtPlotter/CanvasCurve.cc
   implement/QtPlotter/Util.cc
   implement/QtPlotter/ProfileFitMarker.cc
   implement/QtPlotter/WorldCanvasTranslator.cc
@@ -360,6 +361,9 @@ casa_add_library( display
   implement/QtPlotter/MomentSettingsWidgetOptical.cc
   implement/QtPlotter/MomentSettingsWidgetRadio.cc
   implement/QtPlotter/SettingsWidget.cc
+  implement/QtPlotter/SpecFit.cc
+  implement/QtPlotter/SpecFitPolynomial.cc
+  implement/QtPlotter/SpecFitGaussian.cc
   implement/QtPlotter/SpecFitSettingsWidgetOptical.cc
   implement/QtPlotter/SpecFitSettingsWidgetRadio.cc
   implement/QtPlotter/SpecFitSettingsFixedTableCell.cc

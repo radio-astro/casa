@@ -40,13 +40,13 @@ void SettingsWidget::setTaskSpecLineFitting( bool specLineFit ){
 	reset( resetNeeded );
 }
 
-
-
-
-
 void SettingsWidget::reset( bool taskChanged ){
+	bool opticalChange = false;
+	if ( taskHelper != NULL ){
+		opticalChange = optical != taskHelper->isOptical();
+	}
 
-	if ( taskHelper == NULL || optical!= taskHelper->isOptical() || taskChanged ){
+	if ( taskHelper == NULL || opticalChange || taskChanged ){
 
 		//We are changing from an optical to a radio or vice versa
 		//so we need to change the display to match or we need to
@@ -78,7 +78,11 @@ void SettingsWidget::reset( bool taskChanged ){
 			dynamic_cast<QStackedLayout*>(stackedLayout)->setCurrentWidget( dynamic_cast<QWidget*>(taskHelperRadio) );
 			taskHelper = taskHelperRadio;
 		}
-		taskHelper -> setOptical( optical );
+		if ( opticalChange ){
+			qDebug() << "Resetring optical";
+			taskHelper -> setOptical( optical );
+			taskHelper -> reset();
+		}
 	}
 	else {
 		//Only the data has changed (not the type of fitter).
@@ -95,7 +99,9 @@ void SettingsWidget::setCollapseVals(const Vector<Float> &spcVals){
 	}
 }
 
-
+void SettingsWidget::pixelsChanged( int pixX, int pixY ){
+	taskHelper->pixelsChanged( pixX, pixY );
+}
 
 void SettingsWidget::setCanvas( QtCanvas* pCanvas ){
 	//We store a copy in this class so if the specFitter changes

@@ -45,6 +45,8 @@
  
 namespace casa { 
 
+const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";
+
 QtCanvas::~QtCanvas()
 {}
 
@@ -79,7 +81,7 @@ void QtCanvas::initGaussianEstimateContextMenu(){
 	centerPeakAction->setStatusTip( "Set the (Center,Peak) of the Gaussian Estimate");
 	connect( centerPeakAction, SIGNAL(triggered()), this, SLOT(gaussianCenterPeakSelected()));
 	gaussianContextMenu.addAction( centerPeakAction );
-	QAction* fwhmAction = new QAction( "(Center +/- FWHM/2, Peak/2)", this );
+	QAction* fwhmAction = new QAction( "FWHM/2 from Center", this );
 	fwhmAction->setStatusTip("Specify the fwhm");
 	connect( fwhmAction, SIGNAL(triggered()), this, SLOT(gaussianFWHMSelected()));
 	gaussianContextMenu.addAction( fwhmAction );
@@ -135,21 +137,14 @@ void QtCanvas::defaultZoomOut()
     refreshPixmap();
 }
 
-void QtCanvas::zoomIn()
-{
-	//xRangeIsShown=false;
-	//updatexRangeBandRegion();
-	//emit xRangeChanged(1.0,0.0);
-
-    if (curZoom < (int)zoomStack.size() - 1)
-    {
+void QtCanvas::zoomIn(){
+    if (curZoom < (int)zoomStack.size() - 1){
     	xRangeIsShown=false;
        ++curZoom;
         refreshPixmap();
     	emit xRangeChanged(1.0,0.0);
     }
-    else
-    {
+    else {
     	if (curveMap.size() != 0)
     		defaultZoomIn();
     }
@@ -180,28 +175,39 @@ void QtCanvas::zoomNeutral()
 	emit xRangeChanged(1.0,0.0);
 }
 
-int QtCanvas::getLineCount()
-{
+int QtCanvas::getLineCount(){
     return curveMap.size();
 }
-CurveData* QtCanvas::getCurveData(int id)
-{
-    return &curveMap[id];
+
+CurveData* QtCanvas::getCurveData(int id){
+    return &curveMap[id].getCurveData();
 }
-ErrorData* QtCanvas::getCurveError(int id)
-{
-    return &errorMap[id];
+ErrorData* QtCanvas::getCurveError(int id){
+    return &curveMap[id].getErrorData();
 }
-QString QtCanvas::getCurveName(int id)
-{
-    return legend[id];
+
+QString QtCanvas::getCurveName(int id){
+    return curveMap[id].getLegend();
 }
 
 void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
-                                    const QString& lbl){
-    curveMap[id]     = data;
-    errorMap[id]     = error;
-    legend[id]       = lbl;
+                                    const QString& lbl, ColorCategory level ){
+	QColor curveColor;
+	switch (level){
+
+	case CURVE_COLOR_PRIMARY:
+		curveColor = getDiscreteColor( CURVE_COLOR_PRIMARY);
+		break;
+	case CURVE_COLOR_SECONDARY:
+		curveColor = getDiscreteColor( CURVE_COLOR_SECONDARY);
+		break;
+	default:
+		curveColor = getDiscreteColor( CURVE_COLOR);
+		break;
+	}
+
+	CanvasCurve curve( data, error, lbl, curveColor );
+	curveMap[id]     = curve;
     refreshPixmap();
 }
 
@@ -210,42 +216,15 @@ void QtCanvas::setDataRange()
 	if (autoScaleX == 0 && autoScaleY == 0)
 		return;
 
-	double xmin = 1000000000000000000000000.;
-	double xmax = -xmin;
-	double ymin = 1000000000000000000000000.;
-	double ymax = -ymin;
-	std::map<int, CurveData>::const_iterator it = curveMap.begin();
-	while (it != curveMap.end())
-	{
-		int id = (*it).first;
-		const CurveData &data = (*it).second;
-		int maxPoints = data.size() / 2;
-
-		const ErrorData &error=errorMap[id];
-		int nErrPoints=error.size();
-
-		//if (plotError && nErrPoints>1){
-		if (plotError && nErrPoints>0){
-			for (int i = 0; i < maxPoints; ++i){
-				double dx = data[2 * i];
-				double dyl = data[2 * i + 1] - error[i];
-				double dyu = data[2 * i + 1] + error[i];
-				xmin = (xmin > dx)  ? dx : xmin;
-				xmax = (xmax < dx)  ? dx : xmax;
-				ymin = (ymin > dyl) ? dyl : ymin;
-				ymax = (ymax < dyu) ? dyu : ymax;
-			}
-		}
-		else {
-			for (int i = 0; i < maxPoints; ++i){
-				double dx = data[2 * i];
-				double dy = data[2 * i + 1];
-				xmin = (xmin > dx) ? dx : xmin;
-				xmax = (xmax < dx) ? dx : xmax;
-				ymin = (ymin > dy) ? dy : ymin;
-				ymax = (ymax < dy) ? dy : ymax;
-			}
-		}
+	Double xmin = 1000000000000000000000000.;
+	Double xmax = -xmin;
+	Double ymin = 1000000000000000000000000.;
+	Double ymax = -ymin;
+	std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
+	while (it != curveMap.end()){
+		//int id = (*it).first;
+		const CanvasCurve & canvasCurve = (*it).second;
+		canvasCurve.getMinMax(xmin, xmax, ymin, ymax, plotError );
 		++it;
 	}
 
@@ -276,11 +255,12 @@ void QtCanvas::setDataRange()
 	}
 }
 
-void QtCanvas::clearCurve()
-{
+void QtCanvas::clearCurve(){
     curveMap.clear();
-    legend.clear();
     profileFitMarkers.clear();
+    curveCount = 0;
+    curveCountPrimary = 0;
+    curveCountSecondary = 0;
 }
 
 void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescending ){
@@ -348,26 +328,18 @@ void QtCanvas::displayToolTip( QMouseEvent* event ) const {
 QString QtCanvas::findCoords( double x, double y ) const {
 	const double X_ERROR = .05;
 	const double Y_ERROR = .05;
-	std::map<int, CurveData>::const_iterator it = curveMap.begin();
 	QString coordStr;
+	std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
 	while (it != curveMap.end()){
-		const CurveData &data = (*it).second;
-		for ( int i = 0; i < static_cast<int>(data.size()); i++ ){
-			double curveX = data[2*i];
-			double curveY = data[2*i+1];
-			if ( abs(curveX - x )< X_ERROR && abs(curveY-y) < Y_ERROR ){
-				coordStr.append( "(" );
-				coordStr.append(QString::number( curveX ));
-				coordStr.append( " " +toolTipXUnit +", " );
-				coordStr.append(QString::number( curveY ));
-				coordStr.append( " " + toolTipYUnit+ ")");
-				return coordStr;
-			}
+		const CanvasCurve & canvasCurve = (*it).second;
+		QString toolTipStr = canvasCurve.getToolTip( x, y , X_ERROR, Y_ERROR, toolTipXUnit, toolTipYUnit );
+		if ( !toolTipStr.isEmpty() ){
+			coordStr = toolTipStr;
+			break;
 		}
 		++it;
 	}
 	return coordStr;
-
 }
 
 int QtCanvas::getRectHeight() const {
@@ -621,13 +593,8 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 
 	if ( xcursor.isValid( ) ) return;
 
-	if (event->button() == Qt::LeftButton)
-	{
+	if (event->button() == Qt::LeftButton){
 		if (xRangeMode){
-			//xRangeIsShown = false;
-			//updatexRangeBandRegion();
-			//unsetCursor();
-
 			QRect rect = xRangeRect.normalized();
 
 			if (rect.left() < 0 || rect.top() < 0 ||
@@ -838,8 +805,9 @@ void QtCanvas::refreshPixmap()
 		drawBackBuffer(&painter);
 		drawTicks(&painter);
 	}
-	if (welcome.text != "")
+	if (welcome.text !=""){
 		drawWelcome(&painter);
+	}
 	update();
 }
 void QtCanvas::drawBackBuffer(QPainter *painter)
@@ -978,8 +946,10 @@ void QtCanvas::drawLabels(QPainter *painter)
     QFont ft(painter->font());
     QPen pen(painter->pen());
     
-    painter->setPen(title.color);
-    painter->setFont(QFont(title.fontName, title.fontSize));
+    painter->setPen(getDiscreteColor( TITLE_COLOR ));
+    QFont titleFont(title.fontName, title.fontSize);
+    titleFont.setBold( true );
+    painter->setFont( titleFont );
     painter->drawText(MARGIN, 8, getRectWidth(), MARGIN / 2,
                           Qt::AlignHCenter | Qt::AlignTop, title.text);
 
@@ -991,7 +961,9 @@ void QtCanvas::drawLabels(QPainter *painter)
     for ( int i = 0; i < endIndex; i++ ){
     	QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(i);
     	painter->setPen(xLabel[axisIndex].color);
-    	painter->setFont(QFont(xLabel[axisIndex].fontName, xLabel[axisIndex].fontSize));
+    	QFont axisLabelFont(xLabel[axisIndex].fontName, xLabel[axisIndex].fontSize);
+    	axisLabelFont.setBold( true );
+    	painter->setFont( axisLabelFont );
     	int yPosition = height() - MARGIN / 2;
     	QString labelText = xLabel[axisIndex].text;
     	if ( axisIndex == QtPlotSettings::xTop ){
@@ -1001,7 +973,8 @@ void QtCanvas::drawLabels(QPainter *painter)
             Qt::AlignHCenter | Qt::AlignTop, labelText );
     }
     QPainterPath text;     
-    QFont font(yLabel.fontName, yLabel.fontSize); 
+    QFont font(yLabel.fontName, yLabel.fontSize);
+    font.setBold( true );
     QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text); 
     text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);                   
     font.setPixelSize(50);
@@ -1094,64 +1067,112 @@ void QtCanvas::drawxRange(QPainter *painter){
 }
 
 
-
-QColor QtCanvas::getDiscreteColor(const int &d)
-{
-	// maps an integer value against the 14 usefull colors
-	// defined in Qt::GlobalColor;
-	// is repetitive, but should suffice for all practical
-	// purposes;
-	QColor lColor;
-	const int cpicker = d % 14;
-
-	switch (cpicker) {
+QColor QtCanvas::getCurveColor() {
+	const int SHADE_COUNT = 6;
+	int index = curveCount % SHADE_COUNT;
+	QColor blueShade;
+	switch( index ){
 	case 0:
-		lColor = Qt::red;
+		blueShade.setNamedColor( "blue");
 		break;
 	case 1:
-		lColor = Qt::blue;
+		blueShade.setNamedColor( "darkorchid");
 		break;
 	case 2:
-		lColor = Qt::darkGreen;
+		blueShade.setNamedColor( "skyblue");
 		break;
 	case 3:
-		lColor = Qt::cyan;
+		blueShade.setNamedColor( "dodgerblue");
 		break;
 	case 4:
-		lColor = Qt::lightGray;
-		break;
-	case 5:
-		lColor = Qt::magenta;
-		break;
-	case 6:
-		lColor = Qt::yellow;
-		break;
-	case 7:
-		lColor = Qt::darkRed;
-		break;
-	case 8:
-		lColor = Qt::darkBlue;
-		break;
-	case 9:
-		lColor = Qt::green;
-		break;
-	case 10:
-		lColor = Qt::darkCyan;
-		break;
-	case 11:
-		lColor = Qt::darkGray;
-		break;
-	case 12:
-		lColor = Qt::darkMagenta;
-		break;
-	case 13:
-		lColor = Qt::darkYellow;
+		blueShade.setNamedColor( "mediumpurple");
 		break;
 	default:
-		// should never get here
-		lColor = Qt::gray;
+		blueShade.setNamedColor( "cyan");
+		break;
 	}
-	return lColor;
+	curveCount = index + 1;
+	return blueShade;
+}
+
+QColor QtCanvas::getCurveColorSecondary( ) {
+	int SHADE_COUNT = 6;
+	int index = curveCountSecondary % SHADE_COUNT;
+	QColor greenShade;
+	switch( index ){
+		case 0:
+			greenShade.setNamedColor("green");
+			break;
+		case 1:
+			greenShade.setNamedColor("olivedrab");
+			break;
+		case 2:
+			greenShade.setNamedColor("darkseagreen");
+			break;
+		case 3:
+			greenShade.setNamedColor( "springgreen");
+			break;
+		case 4:
+			greenShade.setNamedColor( "limegreen");
+			break;
+		default:
+			greenShade.setNamedColor( "lightseagreen");
+	}
+	curveCountSecondary = index + 1;
+	return greenShade;
+}
+
+QColor QtCanvas::getCurveColorPrimary()  {
+	int SHADE_COUNT = 6;
+	int index = curveCountPrimary % SHADE_COUNT;
+	QColor shade;
+	switch( index ){
+		case 0:
+			shade.setNamedColor("darkorange");
+			break;
+		case 1:
+			shade.setNamedColor("indianred");
+			break;
+		case 2:
+			shade.setNamedColor("sandybrown");
+			break;
+		case 3:
+			shade.setNamedColor( "peru");
+			break;
+		case 4:
+			shade.setNamedColor( "sienna");
+			break;
+		default:
+			shade.setNamedColor( "lightsalmon");
+	}
+	curveCountPrimary = index + 1;
+	return shade;
+}
+
+
+
+
+QColor QtCanvas::getDiscreteColor(ColorCategory colorCategory) {
+	QColor color;
+	if ( colorCategory == TITLE_COLOR ){
+		color = Qt::black;
+	}
+	else if ( colorCategory == CURVE_COLOR ){
+		color = getCurveColor( );
+	}
+	else if ( colorCategory == ZOOM_COLOR ){
+		color = Qt::darkYellow;
+	}
+	else if ( colorCategory == REGION_COLOR ){
+		color = Qt::lightGray;
+	}
+	else if ( colorCategory == CURVE_COLOR_SECONDARY ){
+		color = getCurveColorSecondary(  );
+	}
+	else if ( colorCategory == CURVE_COLOR_PRIMARY ){
+		color = getCurveColorPrimary(  );
+	}
+	return color;
 }
 
 void QtCanvas::addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const {
@@ -1177,6 +1198,10 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     QFont ft(painter->font());
     QPen pen(painter->pen());
+	int penWidth = pen.width();
+	QColor defaultColor = pen.color();
+   	const int CURVE_WIDTH = 2;
+   	pen.setWidth( CURVE_WIDTH );
     
     QtPlotSettings settings = zoomStack[curZoom];
     QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
@@ -1184,28 +1209,27 @@ void QtCanvas::drawCurves(QPainter *painter)
     painter->setClipRect(rect.x() + 1, rect.y() + 1,
                          rect.width() - 2, rect.height() - 2);
 
-    std::map<int, CurveData>::const_iterator it = curveMap.begin();
+    std::map<int, CanvasCurve>::iterator it = curveMap.begin();
     int siz = curveMap.size();
-
     int sz = siz > 1 ? siz : 1;
     QColor *colorFolds = new QColor[sz];
-
+    const int MAX_PIXEL = 32768;
     while (it != curveMap.end())
     {
    	 int id = (*it).first;
-   	 const CurveData &data = (*it).second;
-   	 const ErrorData &error = errorMap[id];
+   	 const CurveData &data = (*it).second.getCurveData();
+   	 const ErrorData &error =(*it).second.getErrorData();
 
    	 int maxPoints = data.size() / 2;
    	 QPainterPath points;
 
    	 // get a colour
-   	 colorFolds[id] = getDiscreteColor(id);
+   	 colorFolds[id] = (*it).second.getColor();
 
    	 if (maxPoints == 1) {
    		 int x = getPixelX( data[0] );
    		 int y = getPixelY( data[1] );
-   		 if (fabs(x) < 32768 && fabs(y) < 32768){
+   		 if (fabs(x) < MAX_PIXEL && fabs(y) < MAX_PIXEL){
    			addDiamond( x, y, QT_DIAMOND_SIZE, points );
    		 }
 
@@ -1222,7 +1246,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    			 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
    					 / settings.spanY());
 
-   			 if (fabs(x) < 32768 && fabs(yl) < 32768 && fabs(yu) < 32768)
+   			 if (fabs(x) < MAX_PIXEL && fabs(yl) < MAX_PIXEL && fabs(yu) < MAX_PIXEL)
    			 {
    				 points.moveTo((int)x, (int)yl);
    				 points.lineTo((int)x, (int)yu);
@@ -1269,7 +1293,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    				 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
    						 / settings.spanY());
 
-   				 if (fabs(x) < 32768 && fabs(yl) < 32768 && fabs(yu) < 32768)
+   				 if (fabs(x) < MAX_PIXEL && fabs(yl) < MAX_PIXEL && fabs(yu) < MAX_PIXEL)
    				 {
    					 points.moveTo((int)x, (int)yl);
    					 points.lineTo((int)x, (int)yu);
@@ -1278,28 +1302,46 @@ void QtCanvas::drawCurves(QPainter *painter)
    		 }
 
    	 }
-   	 painter->setPen(colorFolds[id]);
+
+   	 pen.setColor( colorFolds[id]);
+   	 painter->setPen( pen );
    	 painter->drawPath(points);
 
    	 if (siz > 1) {
-   		 painter->setFont(QFont(xLabel[QtPlotSettings::xBottom].fontName, xLabel[QtPlotSettings::xBottom].fontSize));
+   		 QFont curveLabelFont(xLabel[QtPlotSettings::xBottom].fontName, xLabel[QtPlotSettings::xBottom].fontSize);
+   		 curveLabelFont.setBold( true );
+   		 painter->setFont( curveLabelFont);
    		 painter->drawText(MARGIN + 4, MARGIN + (5 + id * 15),
    				 getRectWidth(), MARGIN / 2,
-   				 Qt::AlignLeft | Qt::AlignTop, legend[id]);
+   				 Qt::AlignLeft | Qt::AlignTop, (*it).second.getLegend());
    	 }
    	 ++it;
     }
 
     delete [] colorFolds;
+
+   	pen.setColor( defaultColor );
+    pen.setWidth( penWidth );
     painter->setPen(pen);                   
     painter->setFont(ft);
 }
 
+
+
+
+
 void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const Vector<Float> &y, 
-                           const QString& lb)
-{
-    Int xl, yl;
+                           const QString& lb, ColorCategory colorCategory){
+
+	//Make sure we don't already have a curve with the same name;
+	for ( int i = 0; i < curveMap.size(); i++ ){
+    	if ( curveMap[i].getLegend() == lb ){
+    		return;
+    	}
+    }
+
+	Int xl, yl;
     x.shape(xl);
     y.shape(yl);
     CurveData data;
@@ -1307,8 +1349,9 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
         data.push_back(x[i]);
         data.push_back(y[i]);
     }
+
     int j = curveMap.size();
-    setCurveData(j, data, ErrorData(), lb);
+    setCurveData(j, data, ErrorData(), lb, colorCategory );
 
     setDataRange();
     return;
@@ -1469,33 +1512,33 @@ int QtCanvas::getZoomStackSize()
 {
     return (int)zoomStack.size();
 }
-void QtCanvas::setTitle(const QString &text, int fontSize, int iclr, const QString &font)
+void QtCanvas::setTitle(const QString &text, int fontSize, const QString &font)
 { 
  	title.text = text;
  	title.fontName = font;
  	title.fontSize = fontSize;
- 	title.color = getDiscreteColor(iclr);
+ 	title.color = getDiscreteColor(TITLE_COLOR);
 }
-void QtCanvas::setXLabel(const QString &text, int fontSize, int iclr, const QString &font, QtPlotSettings::AxisIndex axisIndex )
+void QtCanvas::setXLabel(const QString &text, int fontSize, const QString &font, QtPlotSettings::AxisIndex axisIndex )
 { 
 	xLabel[axisIndex].text = text;
  	xLabel[axisIndex].fontName = font;
  	xLabel[axisIndex].fontSize = fontSize;
- 	xLabel[axisIndex].color = getDiscreteColor(iclr);
+ 	xLabel[axisIndex].color = getDiscreteColor(TITLE_COLOR);
 }
-void QtCanvas::setYLabel(const QString &text, int fontSize, int iclr, const QString &font)
+void QtCanvas::setYLabel(const QString &text, int fontSize, const QString &font)
 { 
 	yLabel.text = text;
  	yLabel.fontName = font;
  	yLabel.fontSize = fontSize;
- 	yLabel.color = getDiscreteColor(iclr);
+ 	yLabel.color = getDiscreteColor(TITLE_COLOR);
 } 
-void QtCanvas::setWelcome(const QString &text, int fontSize, int iclr, const QString &font)
+void QtCanvas::setWelcome(const QString &text, int fontSize, const QString &font)
 { 
  	welcome.text = text;
  	welcome.fontName = font;
  	welcome.fontSize = fontSize;
- 	welcome.color = getDiscreteColor(iclr);
+ 	welcome.color = getDiscreteColor(WARNING_COLOR);
 }
 QPixmap* QtCanvas::graph()
 {

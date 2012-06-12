@@ -760,7 +760,7 @@ If you get a PostScript error “limitcheck” offending command “image” whe
 
 
 void QtViewerPrintGui::itemValueChanged(QString name, QString value,
-                                        int action, bool autoApply)
+                                        int /*action*/, bool /*autoApply*/)
 {
     //std::cout << "received 4 parameters: name=" << name.toStdString()
     //<< " value=" << value.toStdString()

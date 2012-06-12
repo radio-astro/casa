@@ -46,7 +46,6 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-//#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -177,14 +176,11 @@ public slots:
 	void redraw( );
 	void changePlotType(const QString &text);
 	void changeErrorType(const QString &text);
-	//void changeCollapseType(QString text=QString(""));
-	//void changeCollapseError(QString text=QString(""));
 
 	void changeAxisOld(String xa, String ya, String za, std::vector<int>);
 	void changeAxis(String xa, String ya, String za, std::vector<int>);
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
-	//void doImgCollapse();
-	//void doLineFit();
+
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
 	void emitChannelSelect(float xval);
@@ -198,6 +194,7 @@ public slots:
 
 	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
 			const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void pixelsChanged(int, int );
 
 signals:
    void hideProfile();
@@ -214,7 +211,6 @@ private:
    bool exportASCIISpectrum(QString &fn);
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
-   //void setCollapseVals(const Vector<Float> &spcVals);
    void setUnitsText( String unitStr );
 
    /**
@@ -279,9 +275,6 @@ private:
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 
-   //SpectralCollapser *collapser;
-   //SpectralFitter    *fitter;
-
    QHash<QString, ImageAnalysis*> *over;
    const String WORLD_COORDINATES;
    String coordinate;
@@ -324,8 +317,7 @@ private:
 
    QtProfile::PlotType  itsPlotType;
    QtProfile::ErrorType itsErrorType;
-   //SpectralCollapser::CollapseType  itsCollapseType;
-   //SpectralCollapser::CollapseError itsCollapseError;
+
    LogIO *itsLog;
    Int ordersOfM_;
    Bool newCollapseVals;
@@ -354,8 +346,6 @@ private:
    enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
 	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
-
-
 
    private slots:
    	    void setPosition();

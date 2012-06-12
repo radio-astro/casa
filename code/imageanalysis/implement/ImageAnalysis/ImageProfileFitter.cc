@@ -47,7 +47,7 @@ namespace casa {
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 const String ImageProfileFitter::_CONVERGED = "converged";
 const String ImageProfileFitter::_SUCCEEDED = "succeeded";
-const String ImageProfileFitter::_ITERATION_COUNT = "niter";
+const String ImageProfileFitter::_VALID = "valid";
 
 const uInt ImageProfileFitter::_nOthers = 2;
 const uInt ImageProfileFitter::_gsPlane = 0;
@@ -583,8 +583,8 @@ void ImageProfileFitter::_setResults() {
 	_results.define("attempted", attemptedArr.reform(shape));
 	_results.define(_SUCCEEDED, successArr.reform(shape));
 	_results.define(_CONVERGED, convergedArr.reform(shape));
-	_results.define("valid", validArr.reform(shape));
-	_results.define(_ITERATION_COUNT, niterArr.reform(shape));
+	_results.define(_VALID, validArr.reform(shape));
+	_results.define("niter", niterArr.reform(shape));
 	_results.define("ncomps", nCompArr.reform(shape));
 	_results.define("xUnit", _xUnit);
 	const String yUnit = _getImage()->units().getName();
@@ -592,7 +592,7 @@ void ImageProfileFitter::_setResults() {
 	IPosition typeShape = shape;
 	typeShape.resize(shape.size() + 1, True);
 	typeShape[typeShape.size() - 1] = nComps;
-	_results.define("type", typeMat.reform(typeShape));
+	_results.define( "type", typeMat.reform(typeShape));
 	for (uInt i=0; i<_nGaussMultiplets+_nOthers; i++) {
 		if (i == _gsPlane && _nGaussSinglets == 0) {
 			continue;
@@ -652,6 +652,8 @@ void ImageProfileFitter::_setResults() {
 		}
 	}
 }
+
+
 
 String ImageProfileFitter::_getTag(const uInt i) const {
 	return i == _gsPlane
@@ -783,6 +785,46 @@ Double ImageProfileFitter::_fitAxisIncrement() const {
 	}
 }
 
+const Vector<Double> ImageProfileFitter::getPixelCenter( uint index ) const {
+	Vector<Double> pos;
+	if ( index < _pixelPositions.size()){
+		pos = _pixelPositions[index];
+	}
+	return pos;
+}
+
+Double ImageProfileFitter::getWorldValue(
+    double pixelVal, const IPosition& imPos, const String& units,
+    bool velocity, bool wavelength ) const {
+	Vector<Double> pixel(imPos.size());
+	for (uInt i=0; i<pixel.size(); i++) {
+		pixel[i] = imPos[i];
+	}
+	Vector<Double> world(pixel.size());
+	// in pixels here
+	pixel[_fitAxis] = pixelVal;
+	_subImage.coordinates().toWorld(world, pixel);
+	SpectralCoordinate spectCoord = _subImage.coordinates().spectralCoordinate();
+	Double convertedVal;
+	if (velocity) {
+		spectCoord.setVelocity( units );
+		spectCoord.frequencyToVelocity(convertedVal, world(_fitAxis));
+	}
+	else if ( wavelength  ){
+		spectCoord.setWavelengthUnit( units );
+		Vector<Double> worldVal(1);
+		worldVal[0] = world(_fitAxis);
+		Vector<Double> waveVal(1);
+		spectCoord.frequencyToWavelength(waveVal, worldVal);
+		convertedVal = waveVal[0];
+	}
+	else {
+		convertedVal = world(_fitAxis);
+	}
+	return convertedVal;
+}
+
+
 Double ImageProfileFitter::_centerWorld(
     const PCFSpectralElement& solution, const IPosition& imPos
 ) const {
@@ -897,6 +939,8 @@ void ImageProfileFitter::_resultsToLog() {
 	) {
 		iter->upcase();
 	}
+	_pixelPositions.resize( _fitters.size());
+	uint index = 0;
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != _fitters.end();
@@ -940,6 +984,8 @@ void ImageProfileFitter::_resultsToLog() {
 		for (uInt i=0; i<pixStart.size(); i++) {
 			imPix[i] = pixStart[i] + subimPos[i];
 		}
+		_pixelPositions[index] = imPix;
+		index++;
 		summary.setf(ios::fixed);
 		summary << setprecision(pixPrecision) << "    Pixel        : [";
 		for (uInt i=0; i<imPix.size(); i++) {
@@ -1099,6 +1145,7 @@ String ImageProfileFitter::_pcfToString(
 	Double center = _centerWorld(
 	    *pcf, imPos
 	);
+
 	Double increment = fabs(_fitAxisIncrement());
 
 	Double centerErr = pcf->getCenterErr() * increment;

@@ -326,6 +326,8 @@ class QtDisplayData : public QObject {
 
   void statsReady(const String&);
 
+  void pixelsChanged( int pixX, int pixY );
+
  protected slots:
   
   // Set the color bar orientation option according to the master
@@ -376,7 +378,7 @@ class QtDisplayData : public QObject {
  private:
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
-
+  IPosition getPixels( const WCMotionEvent& ev );
 
   //# data
   QtDisplayPanelGui *panel_;

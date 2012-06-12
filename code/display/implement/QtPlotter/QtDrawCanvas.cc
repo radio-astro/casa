@@ -30,7 +30,6 @@
 #include <display/QtPlotter/QtDrawCanvas.qo.h>
 #include <display/QtPlotter/QtDrawColors.qo.h>
 
-
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -41,8 +40,6 @@
 #include <QtGui>
 #include <iostream>
 #include <graphics/X11/X_exit.h>
-
-
  
 namespace casa { 
 

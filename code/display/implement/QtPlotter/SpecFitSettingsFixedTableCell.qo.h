@@ -13,6 +13,7 @@ public:
     ~SpecFitSettingsFixedTableCell();
     QString getFixedStr() const;
     QSize sizeHint() const;
+    void clear();
 
 private:
     Ui::SpecFitSettingsFixedTableCell ui;

@@ -46,6 +46,9 @@
 using namespace asap;
 using namespace casa;
 
+const std::string SDFitter::FIT_GAUSS="gauss";
+const std::string SDFitter::FIT_POLY="poly";
+
 SDFitter::SDFitter()
 {
 }
@@ -134,13 +137,13 @@ std::vector<float> SDFitter::getEstimate() const
 bool SDFitter::setExpression(const std::string& expr, int ncomp)
 {
   clear();
-  if (expr == "gauss") {
+  if (expr == FIT_GAUSS) {
     if (ncomp < 1) throw (AipsError("Need at least one gaussian to fit."));
     funcs_.resize(ncomp);
     for (Int k=0; k<ncomp; ++k) {
       funcs_[k] = new Gaussian1D<Float>();
     }
-  } else if (expr == "poly") {
+  } else if (expr == FIT_POLY) {
     funcs_.resize(1);
     funcs_[0] = new Polynomial<Float>(ncomp);
   } else {

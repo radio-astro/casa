@@ -510,6 +510,7 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
   
   if(trackingRec.nfields()>0u){
 	  processTracking( trackingRec, ev );
+
   }
 
 
