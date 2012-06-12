@@ -161,6 +161,54 @@ int main() {
         	xy.set(1.0);
     		AlwaysAssert(! ia.getFreqProfile(xy, zxaxis, zyaxis),AipsError);
         }
+        {
+            writeTestString("histograms() test");
+            FITSImage image("histogram_test.fits");
+            ImageAnalysis ia(&image);
+            Record histOut, regionRec;
+            String mask;
+            Vector<Int> axes(0);
+            Int nbins = 25;
+            Vector<Double> includepix(0);
+            Bool gauss = False;
+            Bool cumu = False;
+            Bool log = False;
+            Bool list = False;
+            Int nx = 1;
+            Int ny = 1;
+            Vector<Int> size(2);
+            size[0] = 600;
+            size[1] = 450;
+            Bool force = False;
+            Bool disk = False;
+            Bool extendMask = False;
+            AlwaysAssert(
+                ia.histograms(
+                    histOut, axes, regionRec, mask, nbins, includepix,
+                    gauss, cumu, log, list, "", nx, ny, size, force,
+                    disk, extendMask
+                ), AipsError
+            );
+            Array<Float> values = histOut.asArrayFloat("values");
+            Array<Float> counts = histOut.asArrayFloat("counts");
+            AlwaysAssert((Int)values.size() == nbins, AipsError);
+            AlwaysAssert((Int)counts.size() == nbins, AipsError);
+            Float expValue = -96;
+            for (
+                IPosition pos(values.ndim(), 0); pos<values.shape();
+                pos.next(values.shape()), expValue+=8
+            ) {
+                AlwaysAssert(values(pos) == expValue, AipsError);
+                Float expCount = 0;
+                if (pos[0] == 0 || pos[0] == nbins-1) {
+                    expCount = 1;
+                }
+                else if (pos[0] == Int((nbins-1)/2)) {
+                    expCount = 48;
+                }
+                AlwaysAssert(counts(pos) == expCount, AipsError);
+            }
+        }
         cout << "ok" << endl;
 	}
     catch (AipsError x) {
