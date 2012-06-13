@@ -89,13 +89,14 @@ template <typename T> class anylt {
 template <typename T> class anyge {
     public:
 	anyge( const T &r ) : rhs(r), tally_(false) { }
-	anyge( const anyge &o ) : rhs(o.rhs), tally_(o.tally_) { }
+	anyge( const anyge &o ) :  rhs(o.rhs),tally_(o.tally_) { }
 	void operator(  )( const T &lhs ) { if ( lhs >= rhs ) { tally_ = true; } }
 	operator bool( ) const { return tally_; }
 
     private:
-	bool tally_;
 	T rhs;
+	bool tally_;
+
 };
 
 
@@ -1848,8 +1849,24 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
     
 }
 
+IPosition QtDisplayData::getPixels( const WCMotionEvent& ev ){
+	PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
+	IPosition ipos;
+    if(padd) {
+    	Vector<Double> fullWorld, fullPixel;
+    	// determine the full position
+    	if (padd->getFullCoord(fullWorld, fullPixel, ev.world())){
 
-
+    		// convert to a pixel position
+    		Int length = fullPixel.shape()(0);
+        	ipos(length);
+        	for (Int i = 0; i < length; i++){
+        		ipos(i) = Int(fullPixel(i) + 0.5);
+        	}
+    	}
+    }
+    return ipos;
+}
 
 
 String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
@@ -1872,6 +1889,7 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     
     
     stringstream ss;
+
     ss << dd_->showValue(ev.world());
     /*
     if (eim_) {
@@ -1901,11 +1919,14 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     else ss << '\t';
     
     ss << dd_->showPosition(ev.world());
-    
-    return String(ss.str());  } 
-  
-  
-  catch (const AipsError &x) { return "";  }  }
+    IPosition pixels = getPixels( ev );
+    emit pixelsChanged(pixels(0), pixels(1));
+    return String(ss.str());
+  }
+  catch (const AipsError &x) {
+	  return "";
+  }
+}
 
  
 

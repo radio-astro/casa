@@ -474,7 +474,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
-		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
+		  QtDisplayData* qdd );
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
 

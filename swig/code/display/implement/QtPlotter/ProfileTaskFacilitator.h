@@ -16,6 +16,7 @@
 #include <QString>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 
 class QDoubleValidator;
 
@@ -58,6 +59,8 @@ public:
 
 	virtual void clear();
 	void setCollapseVals(const Vector<Float> &spcVals);
+
+	virtual void pixelsChanged(int pixX, int pixY );
 
 protected:
 	bool isValidChannelRangeValue( QString str, const QString& endStr );

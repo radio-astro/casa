@@ -158,7 +158,7 @@ void QtDataOptionsPanel::auto_apply_state_change(bool) {
 	//#dk hye-type trick (a very suspect action for a paintEvent....
 	//#dk I have seen it cause some (but not infinite) recursion).
 
-void QtDataOptionsPanel::resizeEvent (QResizeEvent* ev) {	//#dg
+void QtDataOptionsPanel::resizeEvent (QResizeEvent* /*ev*/) {	//#dg
 //  cerr<<"DOPrsz x:"<<ev->size().width()<<" y:"<<ev->size().height()<<endl;
 }				//#dg -- to show size.
 

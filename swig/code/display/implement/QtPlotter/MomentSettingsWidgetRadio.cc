@@ -233,6 +233,10 @@ bool MomentSettingsWidgetRadio::getOutputFileName( String& outName,
 }
 
 void MomentSettingsWidgetRadio::setUnits( QString unitStr ){
+	int bracketIndex = unitStr.indexOf( "[]");
+	if ( bracketIndex > 0 ){
+		unitStr = "";
+	}
 	ui.channelUnitLabel->setText( unitStr );
 }
 

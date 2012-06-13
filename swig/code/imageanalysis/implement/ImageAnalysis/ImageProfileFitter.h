@@ -165,8 +165,15 @@ public:
 
     const static String _CONVERGED;
     const static String _SUCCEEDED;
-    const static String _ITERATION_COUNT;
+    const static String _VALID;
+
     const Array<ImageFit1D<Float> >& getFitters() const;
+    // Returns the center, in pixels of the indexth fit.
+    const Vector<Double> getPixelCenter( uint index ) const;
+    //Converts a pixel value into a world value either in velocity, wavelength, or
+    //frequency units.
+    Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
+        bool velocity, bool wavelength) const;
 
 private:
 
@@ -300,6 +307,7 @@ private:
 
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
+    Vector< Vector<Double> > _pixelPositions;
 };
 }
 
