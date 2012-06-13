@@ -49,7 +49,6 @@
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisSet.h>
 
-//#include <tableplot/TablePlot/SLog.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -45,49 +45,45 @@ int main( int argc, char **argv ) {
 
     char *argv_mod[argc];
 
+    //
+    //This bit of code, copies the old casapy.log file to one with a
+    //date string based on the last entry and then blows away the casapy.log
+    //after creating a hard link
+    //
     struct stat thestats;
-
-// Let casapy.py handle the log file
-//    //
-//    //This bit of code, copies the old casapy.log file to one with a
-//    //date string based on the last entry and then blows away the casapy.log
-//    //after creating a hard link
-//    //
-//
-//    char *logfile(0);
-//    casa::String logfileKey("user.logfile");
-//    casa::String logname;
-//    if(!casa::Aipsrc::find(logname, logfileKey))
-//       logname = "casapy.log";
-//    logfile = const_cast<char *>(logname.c_str());
-//    if(!stat(logfile, &thestats)){
-//#ifdef AIPS_DARWIN
-//        tm *last_mod = localtime(&thestats.st_mtimespec.tv_sec);
-//#else
-//        tm *last_mod = localtime(&thestats.st_mtime);
-//#endif
-//	std::ostringstream oldlog;
-//	oldlog.fill('0');
-//        casa::String beg = logname.before(".log");
-//        if (beg == "")
-//           beg = "casapy";
-//	oldlog << beg << "-" <<
-//		       	last_mod->tm_year+1900 << "-";
-//       	oldlog.width(2);
-//	oldlog << last_mod->tm_mon+1 << "-";
-//       	oldlog.width(2);
-//	oldlog << last_mod->tm_mday << "T";
-//       	oldlog.width(2);
-//	oldlog << last_mod->tm_hour ;
-//       	oldlog.width(2);
-//	oldlog << last_mod->tm_min ;
-//       	oldlog.width(2);
-// 	oldlog << last_mod->tm_sec;
-//        oldlog << ".log";
-//        if(rename(logfile, oldlog.str().c_str()))
-//          perror("Oh no...");
-//    }
-//
+    char *logfile(0);
+    casa::String logfileKey("user.logfile");
+    casa::String logname;
+    if(!casa::Aipsrc::find(logname, logfileKey))
+       logname = "casapy.log";
+    logfile = const_cast<char *>(logname.c_str());
+    if(!stat(logfile, &thestats)){
+#ifdef AIPS_DARWIN
+        tm *last_mod = localtime(&thestats.st_mtimespec.tv_sec);
+#else
+        tm *last_mod = localtime(&thestats.st_mtime);
+#endif
+	std::ostringstream oldlog;
+	oldlog.fill('0');
+        casa::String beg = logname.before(".log");
+        if (beg == "")
+           beg = "casapy";
+	oldlog << beg << "-" <<
+		       	last_mod->tm_year+1900 << "-";
+       	oldlog.width(2);
+	oldlog << last_mod->tm_mon+1 << "-";
+       	oldlog.width(2);
+	oldlog << last_mod->tm_mday << "T";
+       	oldlog.width(2);
+	oldlog << last_mod->tm_hour ;
+       	oldlog.width(2);
+	oldlog << last_mod->tm_min ;
+       	oldlog.width(2);
+ 	oldlog << last_mod->tm_sec;
+        oldlog << ".log";
+        if(rename(logfile, oldlog.str().c_str()))
+		perror("Oh no...");
+    }
 
     // --- --- --- process command line arguments first --- --- ---
     // ------------------------------------------------------------

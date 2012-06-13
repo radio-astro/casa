@@ -13,7 +13,7 @@
 import os
 import commands
 
-modules = ["graphics", "casaqt", "msvis", "plotms", "display", "casadbus", "tableplot", "flagging", "calibration", "synthesis", "alma", "oldalma", "atnf", "dish", "nrao", "xmlcasa"]
+modules = ["graphics", "casaqt", "msvis", "plotms", "display", "casadbus", "tableplot", "flagging", "calibration", "synthesis", "alma", "oldalma", "atnf", "dish", "nrao", "stdcasa"]
 deps = {"casaqt" :['CASACORE', 'QT4', 'QWT', 'PYTHON', 'XERCES', "graphics"],
         "plotms" :['CASACORE', 'QT4', "casaqt", "msvis"],
         "tableplot" : ['CASACORE', 'PYTHON'],
@@ -25,7 +25,7 @@ deps = {"casaqt" :['CASACORE', 'QT4', 'QWT', 'PYTHON', 'XERCES', "graphics"],
         "synthesis" : ['CASACORE', 'LAPACK', 'ATM', 'casadbus', 'msvis', 'calibration'],
         "alma" : ['CASACORE', 'LIBXML2', 'Boost'],
         "oldalma" : ['CASACORE', 'LIBXML2', 'Boost'],
-        "xmlcasa" : ['CASACORE', 'CCMTOOLS', 'PYTHON', 'ATM', 'READLINE', 'plotms', 'dish', 'synthesis', 'flagging', 'nrao'],
+        "stdcasa" : ['CASACORE'],
         "display" : ['CASACORE', 'WCSLIB', 'QT4', 'casaqt', 'msvis'],
         "atnf" : ['CASACORE', 'RPFITS', 'CFITSIO'],
         "dish" : ['CASACORE'],
@@ -107,7 +107,7 @@ for mod in modules:
         )
 
     #print cc_sources
-    if mod == 'xmlcasa':
+    if mod == 'stdcasa':
         # QT_USE_FILE also calls add_definitions, therefore do not call it at the highest level
         # necessary?? cml.write("include( ${QT_USE_FILE} )\n")
         cml.write("add_custom_command( OUTPUT version.cc\n")
@@ -173,7 +173,7 @@ for mod in modules:
         cml.write('\nplotserver/PlotServerProxy.dbusproxy.h')
         cml.write('\nsession/DBusSession.dbusproxy.h')
         cml.write('\nviewer/ViewerProxy.dbusproxy.h')
-    if mod == "xmlcasa":
+    if mod == "stdcasa":
         cml.write(' version.cc\n')
     cml.write('  )\n\n')
 
@@ -209,95 +209,6 @@ for mod in modules:
             else:
                 cml.write('casa_add_assay( %s %s )\n' % (mod, t))
 
-
-
-    if py_sources.find('py') >= 0 and mod != "msvis":
-        cml.write('casa_add_python( %s %s_python python/${PYTHONV}\n' % (mod, mod) )
-        cml.write(py_sources)
-        cml.write(' )\n\n')
-
-
-    if mod == "xmlcasa":
-        cml.write('casa_add_tasks( %s %s_tasks \n' % (mod, mod) )
-        cml.write(xmltask_sources)
-        cml.write(' )\n\n')
-
-        cml.write('casa_add_tools( tools_idl tools_sources \n' )
-        cml.write(xmltool_sources)
-        cml.write(' )\n\n')
-
-
-        cml.write('# Handle source IDLs\n')
-        cml.write('set( outputs_idl "" )\n')
-        cml.write('casa_idl( outputs_idl idl/casatypes.idl Quantity)\n')
-        cml.write('casa_idl( outputs_idl idl/complex.idl complex )\n')
-        cml.write('casa_idl( outputs_idl idl/basicVecs.idl IntAry IntVec StringAry StringVec DoubleAry DoubleVec BoolAry BoolVec ComplexAry ComplexVec shape_type )\n')
-        cml.write('\n')
-
-        cml.write('casa_pybinding( casac_sources ${CMAKE_CURRENT_SOURCE_DIR}/idl/casatypes.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/complex.idl ${CMAKE_CURRENT_SOURCE_DIR}/idl/basicVecs.idl ${tools_idl} )\n\n')
-
-        cml.write('include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/impl)\n' + \
-                  '# for generated C++ bindings\n\n')
-        cml.write('add_definitions( -pthread -fno-strict-aliasing -DNDEBUG ) # may or may not be necessary for compiling python modules\n')
-        cml.write('\ncasa_add_pymodule( casac ${tools_sources} ${outputs_idl} ${casac_sources}')
-        cml.write(' )\n')
-
-        for m in [("apps/module_paramgui/paramgui_python.cc", "paramgui"), ("modules/interrupt/interrupt_python.cc", "interrupt")]:
-            cml.write('casa_add_pymodule( %s %s )\n' % (m[1], m[0]))
-
-        cml.write("\n# Make sure that all IDLs are up to date before considering casac\n")
-        cml.write("# This has the desired effects that\n")
-        cml.write("# - Dependencies of the C++ sources are calculated after the IDLs are created\n")
-        cml.write("# - When ccmtools is invoked, all the required IDL (which may not be explicit\n")
-        cml.write("#   cmake dependencies for the ccmtools command) exist.\n")
-        cml.write('add_custom_target( idl SOURCES ${tools_idl} )\n')
-        cml.write('add_dependencies( casac idl )\n\n')
-        
-        for d in [("scripts/regressions",       "python/${PYTHONV}/regressions", "xmlcasa_regressions"),
-                  ("scripts/regressions/tests", "python/${PYTHONV}/regressions/tests", "xmlcasa_regressions_tests"),
-                  ("scripts/usecases",          "python/${PYTHONV}/regressions", "xmlcasa_usecases"),
-                  ("scripts/demos",             "python/${PYTHONV}/regressions", "xmlcasa_demos")]:
-
-            cml.write('add_subdirectory( %s )\n' % d[0])
-
-            os.system("cp /tmp/gpl.txt " + d[0]+"/CMakeLists.txt")
-            cmlr = open(d[0]+"/CMakeLists.txt", "a")
-            cmlr.write('casa_add_python( %s %s_python %s\n' % (mod, d[2], d[1]))
-            
-            sources = commands.getoutput(
-                'cd ' + d[0] + ' && /bin/ls -1 *.py | sort | xargs -n1 echo " "'
-                )
-            cmlr.write(sources)
-            cmlr.write('\n)\n')
-
-            
-
-        cml.write("""
-# Documentation targets, which depend on the contents of casa_out_* being set
-# Latex target
-if( casa_out_latex )
-  add_custom_target( doc_latex DEPENDS ${casa_out_latex} )
-else()
-  add_custom_target( doc_latex COMMAND echo "No LaTeX to generate!" )
-endif()
-
-# HTML target
-if( casa_out_html )
-  add_custom_target( doc_html DEPENDS ${casa_out_html} )
-else()
-  add_custom_target( doc_html COMMAND echo "LaTeX to HTML converter was not found." )
-endif()
-
-# PDF target
-if( casa_out_pdf )
-  add_custom_target( doc_pdf DEPENDS ${casa_out_pdf} )
-else()
-  add_custom_target( doc_pdf COMMAND echo "PDF to HTML converter was not found." )
-endif()
-
-# All documentation
-add_custom_target( doc DEPENDS doc_doxy doc_latex doc_html doc_pdf )
-""")
 
 
     cml.close()

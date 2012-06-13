@@ -29,6 +29,13 @@ casa_add_library( calanalysis
   implement/CalAnalysis/CalStatsFIT.cc
 )
 
+install ( FILES
+  implement/CalAnalysis/CalAnalysis.h
+  implement/CalAnalysis/CalStats.h
+  implement/CalAnalysis/CalStatsDerived.h
+  implement/CalAnalysis/CalStatsFitter.h
+  DESTINATION include/casacode/calanalysis/CalAnalysis )
+
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats0.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats1.cc )
 casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats2.cc )

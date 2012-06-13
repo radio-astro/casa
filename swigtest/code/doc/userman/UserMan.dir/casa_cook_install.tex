@@ -54,33 +54,6 @@ The non-root installation is thought to work on a wide variety of
 linux platforms, see Sect.\,\ref{section:intro.obtaining} for the
 latest supported OSs.
 
-\subsubsection{Using more than one Linux version of CASA}
-Up to CASA 3.3.0, CASA .rpm files prohibited installing more than one CASA release at a time.  Starting with CASA 3.4.0, CASA .rpm files allow previously installed CASA releases to remain installed.  
-
-To start a specific CASA version, type 
-
-\small
-\begin{verbatim}
-casapy --release <VERSION>
-\end{verbatim}
-\normalsize
-or 
-\small
-\begin{verbatim}
-casapy -r <VERSION>
-\end{verbatim}
-\normalsize
-
-where <VERSION> is a placeholder for the CASA version to be invoked, e.g. 3.3.0. 
-
-Also, starting with CASA 3.4.0, the programs asdm2MS, casabrowser,
-casalogger, casaplotms, casapy, casapyinfo, and casaviewer all take
-the two new command line options: {\tt -r} and {\tt --release}.  These options
-allow users to select a CASA program to run from the installed CASA
-releases.
-
-
-
 
 \subsection{Unsupported platforms}
 
@@ -163,17 +136,7 @@ buildmytasks will also be available via the command line. Creating the
 symbolic links will require that you have administrator privileges.
 
 
-\subsubsection{Using more than one Mac version of CASA}
-By dragging the CASA.app into the Applications folder, any previous
-version of CASA will be replaced. If one would like to keep older
-versions, one can simply rename them, e.g., to CASA-3.3.0.app. Double
-clicking any of the CASA*.app applications will prompt to update the
-symlinks to that specific CASA version. So any startup of {\tt
-  casapy}, {\tt casaviewer}, {\tt casaplotms} will point to that
-version. If one decides to switch to a different version, just double
-click the respective CASA*.app and follow the instructions to update
-the symlinks.
-
+\
 
 
 \section{Startup}
@@ -201,8 +164,6 @@ Options are:
    --nogui                              will not open the logger GUI 
    --colors=[NoColor|Linux|LightBG]     selects color theme for prompt task inputs
    --noipython                          does not launch ipython (useful when combined with the -c option)
-   --release <VERSIOn>                  launches CASA version <VERSION> when installed as Linux rpm
-   -r <VERSION>                         alias for --release
    -c filename-or-expression            execute a CASA python script from the command line 
    --help                               print this text and exit
 \end{verbatim}

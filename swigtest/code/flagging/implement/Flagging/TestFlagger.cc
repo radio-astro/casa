@@ -32,6 +32,7 @@
 #include <casa/OS/HostInfo.h>
 #include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/TestFlagger.h>
+#include <flagging/Flagging/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
 #include <stdarg.h>

@@ -33,6 +33,20 @@ casa_add_library( miriad
   implement/Filling/MirVisReader.cc
   )
 
+install (FILES
+	implement/Filling/DOmirfiller.h
+	implement/Filling/DataLoadingBuf.h
+	implement/Filling/FillMetadata.h
+	implement/Filling/IDIndex.h
+	implement/Filling/MirDataBuffer.h
+	implement/Filling/MirExceptions.h
+	implement/Filling/MirFiller.h
+	implement/Filling/MirTypeAssert.h
+	implement/Filling/MirVarHandler.h
+	implement/Filling/MirVisReader.h
+	DESTINATION include/casacode/miriad/Filling
+	)
+
 # importmiriad is supposed to be a more general filler for miriad data
 # casa_add_executable( miriad importmiriad apps/importmiriad/importmiriad.cc )
 

@@ -27,7 +27,7 @@
 #ifndef FLAGGING_LIGHTFLAGGER_H
 #define FLAGGING_LIGHTFLAGGER_H
 
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <flagging/Flagging/FlagVersion.h>
 
 #include <flagging/Flagging/LFBase.h>
 

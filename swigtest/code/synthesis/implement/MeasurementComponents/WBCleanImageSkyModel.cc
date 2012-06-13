@@ -492,7 +492,6 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
 Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredNames, 
                                                                            const Vector<String> &residualNames)
 {
-  LogIO os(LogOrigin("WBCleanImageSkyModel", "calculateAlphaBeta", WHERE));
   Int index=0;
   Bool writeerror=True;
   
@@ -528,11 +527,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
       Float maxres = leMaxRes.getFloat();
       // Threshold is either 10% of the peak residual (psf sidelobe level) or 
       // user threshold, if deconvolution has gone that deep.
-      Double specthreshold = 0.0;
-      Double userthreshold = threshold();
-      if( (Double)(userthreshold*5.0) > (Double)(maxres/5.0) ) specthreshold = userthreshold*5.0;
-      else specthreshold = maxres/5.0;
-      //      if(MAX( threshold()*5 , maxres/5.0 );
+      Float specthreshold = MAX( threshold()*5 , maxres/5.0 );
       os << "Calculating spectral parameters for  Intensity > MAX(threshold*5,peakresidual/5) = " << specthreshold << " Jy/beam" << LogIO::POST;
       LatticeExpr<Float> mask1(iif((imtaylor0)>(specthreshold),1.0,0.0));
       LatticeExpr<Float> mask0(iif((imtaylor0)>(specthreshold),0.0,1.0));

@@ -45,7 +45,6 @@ casa_add_library( flagging
   implement/Flagging/RFFlagCube.cc
   implement/Flagging/RFRowClipper.cc
   implement/Flagging/RFFloatLattice.cc
-  implement/MSPlot/MsPlot.cc
   implement/Flagging/LightFlagger.cc
   implement/Flagging/LFTimeFreqCrop.cc
   implement/Flagging/LFExamineFlags.cc
@@ -66,7 +65,64 @@ casa_add_library( flagging
   implement/Flagging/FlagAgentShadow.cc
   implement/Flagging/FlagAgentExtension.cc
   implement/Flagging/FlagAgentRFlag.cc
+  implement/Flagging/FlagVersion.cc
+  implement/Flagging/SLog.cc
    )
+
+install (FILES
+	implement/Flagging/DDMapper.h
+	implement/Flagging/ExtendFlagger.h
+	implement/Flagging/FlagAgentBase.h
+	implement/Flagging/FlagAgentClipping.h
+	implement/Flagging/FlagAgentDisplay.h
+	implement/Flagging/FlagAgentElevation.h
+	implement/Flagging/FlagAgentExtension.h
+	implement/Flagging/FlagAgentManual.h
+	implement/Flagging/FlagAgentQuack.h
+	implement/Flagging/FlagAgentRFlag.h
+	implement/Flagging/FlagAgentShadow.h
+	implement/Flagging/FlagAgentSummary.h
+	implement/Flagging/FlagAgentTimeFreqCrop.h
+	implement/Flagging/FlagCalTableHandler.h
+	implement/Flagging/FlagDataHandler.h
+	implement/Flagging/FlagMSHandler.h
+	implement/Flagging/FlagReport.h
+	implement/Flagging/FlagVersion.h
+	implement/Flagging/Flagger.h
+	implement/Flagging/LFBase.h
+	implement/Flagging/LFDisplayFlags.h
+	implement/Flagging/LFExamineFlags.h
+	implement/Flagging/LFExtendFlags.h
+	implement/Flagging/LFPlotServerProxy.h
+	implement/Flagging/LFTimeFreqCrop.h
+	implement/Flagging/LightFlagger.h
+	implement/Flagging/RFABase.h
+	implement/Flagging/RFADiffBase.h
+	implement/Flagging/RFAFlagCubeBase.h
+	implement/Flagging/RFAFlagExaminer.h
+	implement/Flagging/RFAFlagExaminer.tcc
+	implement/Flagging/RFAMedianClip.h
+	implement/Flagging/RFANewMedianClip.h
+	implement/Flagging/RFASelector.h
+	implement/Flagging/RFASelector.tcc
+	implement/Flagging/RFASpectralRej.h
+	implement/Flagging/RFATimeFreqCrop.h
+	implement/Flagging/RFATimeFreqCrop.tcc
+	implement/Flagging/RFAUVBinner.h
+	implement/Flagging/RFChunkStats.h
+	implement/Flagging/RFChunkStats.tcc
+	implement/Flagging/RFCommon.h
+	implement/Flagging/RFCubeLattice.h
+	implement/Flagging/RFCubeLattice.tcc
+	implement/Flagging/RFDataMapper.h
+	implement/Flagging/RFFlagCube.h
+	implement/Flagging/RFFlagCube.tcc
+	implement/Flagging/RFFloatLattice.h
+	implement/Flagging/RFRowClipper.h
+	implement/Flagging/SLog.h
+	implement/Flagging/TestFlagger.h
+	DESTINATION include/casacode/flagging/Flagging
+	)
 
 casa_add_test( flagging implement/Flagging/test/tFlagAgentRFlag.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagAgentExtension.cc )

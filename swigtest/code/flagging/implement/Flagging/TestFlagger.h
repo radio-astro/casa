@@ -34,7 +34,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/Quantum.h>
-#include <tableplot/TablePlot/FlagVersion.h>
+#include <flagging/Flagging/FlagVersion.h>
 
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagMSHandler.h>

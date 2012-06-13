@@ -303,13 +303,14 @@ void TBViewArray::setup(String first, String second) {
     setWindowTitle(tTabs->getName().c_str());
     update = true;
 
-    if(editable)
+    if(editable){
         connect(table, SIGNAL(cellChanged(int, int)),
                 this, SLOT(dataChanged(int, int)));
-    connect(table, SIGNAL(currentCellChanged(int, int, int, int)),
+        connect(table, SIGNAL(currentCellChanged(int, int, int, int)),
             this, SLOT(cellClicked(int, int)));
-    connect(table, SIGNAL(cellDoubleClicked(int, int)),
+        connect(table, SIGNAL(cellDoubleClicked(int, int)),
             this, SLOT(cellDoubleClicked(int, int)));
+    }
 }
 
 vector<int> TBViewArray::currentCell(int row, int col) {
@@ -401,6 +402,7 @@ void TBViewArray::sliceChanged(vector<int> newSlice) {
 }
 
 void TBViewArray::dataChanged(int r, int c) {   
+    cerr << "hi: " << r << " " << c << endl;
     if(!update || r == -1 || c == -1) return;
 
     vector<int> d;
@@ -459,7 +461,7 @@ void TBViewArray::dataChanged(int r, int c) {
     
     ss << (result == NULL || !result->valid ? "failed!" : "succeeded!");
     TBConstants::dprint(TBConstants::DEBUG_HIGH, ss.str());
-    
+    cerr << ss.str() << endl;
     if(result != NULL) delete result;
     delete oldVal;
 }
@@ -500,7 +502,7 @@ void TBViewArray::cellDoubleClicked(int row, int col) {
             // clear formatting for editing
             vector<int> cell = currentCell(row, col);
             TBData* d = array->dataAt(cell);
-            setDataAt(cell, *d, false);
+            setDataAt(cell, *d, true);
             delete d;
         } else if(editable) {
             String message = "Browser is not in editor mode.\n";

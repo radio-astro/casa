@@ -23,4 +23,9 @@ casa_add_library( spectrallines
     implement/Splatalogue/SearchEngine.cc    
     implement/Splatalogue/SplatalogueTable.cc   
 )
-
+install (FILES 
+	implement/Splatalogue/ListConverter.h
+	implement/Splatalogue/SearchEngine.h
+	implement/Splatalogue/SplatalogueTable.h
+	DESTINATION include/casacode/spectrallines/Splatalogue
+	)
