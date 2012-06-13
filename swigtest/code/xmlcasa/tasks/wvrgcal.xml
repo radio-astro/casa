@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+  <task type="function" name="wvrgcal" category="calibration">
+
+    <shortdescription>Generate a gain table based on Water Vapour Radiometer data</shortdescription>
+    
+    <input>
+      
+      <param type="string" name="vis" kind="ms" mustexist="true">
+	<description>Name of input visibility file</description>
+	<value></value>
+      </param>
+      
+      <param type="string" name="caltable" mustexist="false">
+	<description>Name of output gain calibration table</description>
+	<value></value>
+      </param>
+      
+      <param type="double" name="toffset">
+	<description>Time offset (sec) between interferometric and WVR data</description>
+	<value>-1</value>
+      </param>
+      
+      <param type="bool" name="segsource">
+	<description>Do a new coefficient calculation for each source</description>
+	<value>True</value>
+      </param>
+      
+      <param type="stringArray" name="sourceflag" subparam="true">
+	<description>Flag the WVR data for these source(s) as bad and do not produce corrections for it (requires segsource=True)</description>
+	<value></value>
+      </param>
+      
+      <param type="stringArray" name="tie" subparam="true">
+	<description>Prioritise tieing the phase of these sources as well as possible (requires segsource=True)</description>
+	<value></value>
+      </param>
+      
+      <param type="int" name="nsol" subparam="true">
+	<description>Number of solutions for phase correction coefficients (nsol>1 requires segsource=False)</description>
+	<value>1</value>
+      </param>
+            
+      <param type="bool" name="disperse">
+	<description>Apply correction for dispersion</description>
+	<value>False</value>
+      </param>
+            
+      <param type="stringArray" name="wvrflag">
+	<description>Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values</description>
+	<value></value>
+      </param>
+      
+      <param type="string" name="statfield">
+	<description>Compute the statistics (Phase RMS, Disc) on this field only</description>
+	<value></value>
+      </param>
+      
+      <param type="string" name="statsource">
+	<description>Compute the statistics (Phase RMS, Disc) on this source only</description>
+	<value></value>
+      </param>
+      
+      <param type="int" name="smooth">
+	<description>Smooth WVR data by this many samples before applying the correction</description>
+	<value>1</value>
+      </param>
+      
+      <param type="double" name="scale">
+	<description>Scale the entire phase correction by this factor</description>
+	<value>1.</value>
+      </param>
+      
+      <param type="string" name="reversespw">
+	<description>Reverse the sign of the correction for the listed SPWs (only needed for early ALMA data before Cycle 0)</description>
+	<value></value>
+      </param>
+
+      <param type="bool" name="cont">
+	<description>Estimate the continuum (e.g., due to clouds) (experimental)</description>
+	<value>False</value>
+      </param>
+      
+
+      <!-- ================================================================= -->
+    
+      <constraints>
+	<when param="segsource">
+	  <equals type="bool" value="True">
+	    <default param="tie"><value type="stringArray"></value></default>
+	    <default param="sourceflag"><value type="stringArray"></value></default>
+	  </equals>
+	  <equals type="bool" value="False">
+	    <default param="nsol"><value type="int">1</value></default>
+	  </equals>
+	</when>
+      </constraints>
+
+    </input>
+
+    <returns type="bool"/>
+
+    <example>
+      
+  vis -- Name of input visibility file
+              default: none; example: vis='ngc5921.ms'
+
+  caltable -- Name of output gain calibration table
+              default: none; example: caltable='ngc5921.wvr'
+
+  toffset -- Time offset (sec) between interferometric and WVR data
+             default: -1 (ALMA default)
+
+  segsource -- Do a new coefficient calculation for each source
+             default: True
+
+  tie -- Prioritise tieing the phase of these sources as well as possible
+         (requires segsource=True)
+             default: [] example: ['3C273,NGC253', 'IC433,3C279']
+
+  sourceflag -- Flag the WVR data for these source(s) as bad and do not produce corrections for it
+               (requires segsource=True)
+               default: [] (none) example: ['3C273']
+
+  nsol -- Number of solutions for phase correction coefficients during this observation.
+          By default only one set of coefficients is generated for the entire observation. 
+          If more sets are requested, then they will be evenly distributed in time throughout 
+          the observation. Values > 1 require segsource=False.
+             default: 1
+
+  disperse -- Apply correction for dispersion
+             default: False
+
+  wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values
+               default: [] (none) example: ['DV03','DA05','PM02']           
+
+  statfield -- Compute the statistics (Phase RMS, Disc) on this field only
+               default: '' (all) 
+
+  statsource -- Compute the statistics (Phase RMS, Disc) on this source only
+               default: '' (all)             
+
+  smooth -- Smooth WVR data by this many samples before applying the correction
+             default: 1 (no smoothing) example: 3
+
+  scale -- Scale the entire phase correction by this factor
+             default: 1. (no scaling)
+
+  reversespw -- Reverse the sign of the correction for the listed SPWs
+                (only neede for early ALMA data before Cycle 0)
+             default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4
+
+  cont -- Estimate the continuum (e.g., due to clouds)
+             default: False
+
+  </example>
+
+</task>
+
+</casaxml>
