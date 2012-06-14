@@ -1,7 +1,7 @@
 from taskinit import *
 import shutil
 
-def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
+def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', datacolumn='all'):
     """
     Input Parameters
     vis        -- Name of the input visibility set
@@ -22,6 +22,10 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                      example: 'J2000 9h25m00s 05d12m00s'
                      If given without the equinox, e.g. '0h01m00s 00d12m00s', the parameter
                      is interpreted as a pair of offsets in RA and DEC to the present phasecenter.
+
+    datacolumn -- when applying a phase center shift, modify visibilities only in this/these column(s)
+                  default: 'all' (DATA, CORRECTED, and MODEL)
+                  example: 'DATA,CORRECTED' (will not modify MODEL)
 
     Examples:
 
@@ -116,12 +120,39 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
             # for the case of a non-variable reference column and several selected fields 
             commonoldrefstr = ''
 
+            # handle the datacolumn parameter
+            if (not type(datacolumn)==str):
+                casalog.post("Invalid parameter datacolumn", 'SEVERE')
+            elif datacolumn=='' or datacolumn.lower()=='all':
+                datacolumn='all'
+                casalog.post("Will modify the visibilities in all columns", 'NORMAL')
+            else:
+                # need to check datacolumn before any part of the MS gets modified
+                wantedcolumns = datacolumn.split(',')
+                tbt.open(outputvis)
+                thecolumns = tbt.colnames()
+                tbt.close()
+                for col in wantedcolumns:
+                    if not (col.lower() in ['data','observed','corrected', 'corrected_data','model','model_data']):
+                        casalog.post("Invalid datacolumn: \""+col+"\"", 'SEVERE')
+                        return False
+                    if (col.lower()=='observed'):
+                        col = 'DATA'
+                    if (col.lower()=='corrected'):
+                        col = 'CORRECTED_DATA'
+                    if (col.lower()=='model'):
+                        col = 'MODEL_DATA'
+                    if not col.upper() in thecolumns:
+                        casalog.post("Datacolumn "+col+" not present", 'SEVERE')
+                        return False
+                casalog.post("Will only modify the visibilities in the columns "+datacolumn.upper(), 'NORMAL')
+
             for fld in fields:
                 commonoldrefstr = modify_fld_vis(fld, outputvis, tbt, myim,
                                                  commonoldrefstr, phasecenter,
                                                  therefcode, reuse, numfields,
                                                  ckwdict, theoldref, theoldrefstr,
-                                                 isvarref, flddict)
+                                                 isvarref, flddict, datacolumn)
                 if commonoldrefstr == False:
                     return False
         #endif change phasecenter
@@ -195,7 +226,7 @@ def get_oldref(outputvis, tbt):
 
 def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
                    therefcode, reuse, numfields, ckwdict, theoldref,
-                   theoldrefstr, isvarref, flddict):
+                   theoldrefstr, isvarref, flddict, datacol):
     """Modify the UVW and visibilities of field fld."""
     viaoffset = False
     thenewra_rad = 0.
@@ -367,7 +398,7 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
 
     # 
     myim.open(outputvis, usescratch=False)
-    myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
+    myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode, datacolumn=datacol)
     myim.close()
     return commonoldrefstr
 

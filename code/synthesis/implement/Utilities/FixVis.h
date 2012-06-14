@@ -136,7 +136,7 @@ public:
   // For things like rotation, differential aberration correction, etc., when
   // there already is a UVW column, using FTMachine.  Returns true if _any_
   // fields are modified.
-  Bool fixvis(const String& refcode, const String& dataColName);
+  Bool fixvis(const String& refcode);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&, Bool //useCorrected
                                 ) {}
