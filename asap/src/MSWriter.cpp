@@ -1062,6 +1062,7 @@ private:
     if ( ic < 0 )
       netsb = 1 ;
     Vector<Double> res( nchan, abs(ic) ) ;
+    Vector<Double> cw( nchan, ic ) ;
     Vector<Double> chanf( nchan ) ;
     indgen( chanf, reffreq, ic ) ;
 
@@ -1073,7 +1074,8 @@ private:
     putField( "REF_FREQUENCY", r, reffreq ) ;
     putField( "NET_SIDEBAND", r, netsb ) ;
     defineField( "RESOLUTION", r, res ) ;
-    defineField( "CHAN_WIDTH", r, res ) ;
+//     defineField( "CHAN_WIDTH", r, res ) ;
+    defineField( "CHAN_WIDTH", r, cw ) ;
     defineField( "EFFECTIVE_BW", r, res ) ;
     defineField( "CHAN_FREQ", r, chanf ) ;
     tr.put( sid ) ;

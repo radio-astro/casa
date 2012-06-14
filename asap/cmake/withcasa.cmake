@@ -142,8 +142,14 @@ set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma/implement/ASDM
                       ${CASA_CODE_PATH}/alma/implement/ASDMBinaries
                       ${CASA_CODE_PATH}/alma/implement/Enumtcl
                       ${LIBXML2_INCLUDE_DIR} )
-set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma${CMAKE_SHARED_LIBRARY_SUFFIX}
-                  ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
+if ( NOT ALMA_LIB_PATH )
+   set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma${CMAKE_SHARED_LIBRARY_SUFFIX}
+                     ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
+else( )
+   set( ASDM_LIBRARY ${ALMA_LIB_PATH}
+                     ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
+endif( )
+message( STATUS "ASDM_LIBRARY = " ${ASDM_LIBRARY} ) 
 add_definitions( -DWITHOUT_ACS )
 
 #

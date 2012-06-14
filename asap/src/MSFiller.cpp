@@ -811,7 +811,8 @@ private:
     Bool even = (Bool)( nchan % 2 == 0 ) ;
     Vector< Quantum<Double> > qa ;
     getArrayQuant( "CHAN_WIDTH", spwId, spwtab, qa ) ;
-    Double increment = qa[refchan].getValue( "Hz" ) ;
+//     Double increment = qa[refchan].getValue( "Hz" ) ;
+    Double increment = abs(qa[refchan].getValue( "Hz" )) ;
     getArrayQuant( "CHAN_FREQ", spwId, spwtab, qa ) ;
     if ( nchan == 1 ) {
       Int netSideband ;
