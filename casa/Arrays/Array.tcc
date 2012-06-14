@@ -34,7 +34,170 @@
 #include <casa/BasicMath/Functional.h>
 #include <casa/Utilities/Copy.h>
 
+#include <utility>
+
 namespace casa {//#Begin casa namespace
+
+
+#if defined(ENABLE_ARRAY_LIFECYCLE_TRACKING)
+
+#warning "Array Life Cycle Debug code present."
+
+#define ArrayEvent(event, shape, storage) \
+    ArrayLifecycleTracker::track (this, event, shape, storage, sizeof (T), __PRETTY_FUNCTION__);
+
+#define ArrayEvent2(event, shapeNew, storageNew, shapeOld, storageOld) \
+    ArrayLifecycleTracker::track (this, event, shapeNew, storageNew, shapeOld, storageOld, sizeof (T), __PRETTY_FUNCTION__);
+
+// The macro ArrayEventComment is the only one that will typically be utilized by a user.
+// It is used to mark places in the code to better help in understanding the output.
+// For example:
+//
+//   ArrayEventComment ("Starting to do something")
+//
+//   doSomething ();
+//
+//   ArrayEventComment ("Done doing something")
+
+
+#define ArrayEventComment(comment)\
+    ArrayLifecycleTracker::addComment (comment, __FILE__, __LINE__);
+
+#define ArrayEventStorageSnapshot()\
+    void * oldStorage = data_p->storage();\
+    Bool storageDeleted = data_p.nrefs() == 1;
+
+#else
+
+#   define ArrayEvent(event, shape, storage)
+
+#   define ArrayEvent2(event, shapeNew, storageNew, shapeOld, storageOld)
+
+#   define ArrayEventComment(comment)
+
+#define ArrayEventStorageSnapshot()
+
+#endif
+
+class ArrayLifecycleTracker {
+
+public:
+
+    // Users of this class will mostly use the acro ArrayEventComment and the functions
+    // setFilter, setTagger and enable.  The rest are used by to implement the tracing
+    // and will not be needed by the user unless the instrumentation of the Array class
+    // needs to be reworked.
+    //
+    // A sample python 3 script is include as a comment at the end of Array2.cc (stuck there so it
+    // wouldn't get lost nor included into every file in the build).  It is somewhat specialized for
+    // a particular query but should serve as a useful starting point for processing the output.
+
+    // Filter function to allow removing some events and also to allow control over stack trace generation.
+    // The pair is interpreted as (filterOut, doStackTrace).  If filterOut is true then the event is
+    // filtered out (i.e., discarded).  If doStackTrace is true then a stack trace is generated after
+    // the event has been output; if the event is filtered out there will be no stack trace in any case.
+    // Here is a sample filter which only generates events if one of the array dimensions is 3000 and
+    // generates a stack for a subset of the event types.
+    //
+    //
+    //pair<bool,bool>
+    //arrayLifecycleFilter (const void * /*object*/,
+    //                      const String & event,
+    //                      const IPosition & shapeNew,
+    //                      const void * storageNew,
+    //                      const IPosition & shapeOld,
+    //                      const void * storageOld,
+    //                      uInt /*elearrayementSize*/,
+    //                      const String & /*signature*/)
+    //{
+    //    pair<bool, bool> result (False, False);
+    //
+    //    if (storageNew != storageOld){
+    //        bool has3K = False;
+    //        for (uInt i = 0; i < shapeNew.nelements(); i++){
+    //            if (shapeNew[i] == 3000){
+    //                has3K = True;
+    //                break;
+    //            }
+    //        }
+    //
+    //        for (uInt i = 0; i < shapeOld.nelements(); i++){
+    //            if (shapeOld[i] == 3000){
+    //                has3K = True;
+    //                break;
+    //            }
+    //        }
+    //        if (has3K){
+    //            bool dumpStack = event == "ctor" || event == "op=" || event == "resize" ||
+    //                             event == "resizeDel" || event == "op=Del" || event == "ref" ||
+    //                             event == "refDel";
+    //            result = make_pair (True, dumpStack);
+    //        }
+    //    }
+    //
+    //    return result;
+    //}
+
+    typedef std::pair<Bool, Bool> (* Filter) (const void * object,
+                                              const String & event,
+                                              const IPosition & shapeNew,
+                                              const void * storageNew,
+                                              const IPosition & shapeOld,
+                                              const void * storageOld,
+                                              uInt elearrayementSize,
+                                              const String & signature);
+
+    // Here is a simple tagger function.  It adds some memory statistics to
+    // each line output
+    //
+    //string
+    //tagger ()
+    //{
+    //    static utilj::MemoryStatistics memoryStatistics;
+    //
+    //    memoryStatistics.update();
+    //    return String::format ("vm=%.1f MB, res=%.1f MB",
+    //                           memoryStatistics.getVmInMB(),
+    //                           memoryStatistics.getRssInMB()).c_str();
+    //}
+
+    typedef string (* Tagger) ();
+
+    // Used by the macros ArrayEventComment
+
+    static void addComment (const String & comment, const String & filename, int lineNumber);
+
+    // Used to turn on/off array lifecycle tracing.  Parameter min is a simple size-based filtering.
+    // If the array is and was smaller than min in size it's event is ignored.
+
+    static void enable (Bool enableIt, Int min = -1);
+
+    // Installs a filter function that is fed each array lifecycle event event (see definition of Filter above).
+
+    static void setFilter (Filter filter);
+
+    // Sets a function that is called to add additional output to the array event's output line.
+
+    static void setTagger (Tagger tagger);
+
+    // Used by the macros ArrayEvent andArrayEvent2.
+
+    static void track (void * object, const String & event, const IPosition & shapeNew,
+                       void * storageNew, uInt elementSize, const String & signature);
+    static void track (void * object, const String & event, const IPosition & shapeNew, void * storageNew,
+                       const IPosition & shapeOld, void * storageOld, uInt elearrayementSize, const String & signature);
+
+private:
+
+    static double now ();
+
+    static Filter filter_p;
+    static Bool enable_p;
+    static FILE * logFile_p;
+    static Int min_p;  // in bytes
+    static Tagger tagger_p;
+
+};
 
 
 template<class T> Array<T>::Array()
@@ -43,6 +206,8 @@ template<class T> Array<T>::Array()
 {
     begin_p = data_p->storage();
     DebugAssert(ok(), ArrayError);
+
+    ArrayEvent ("ctor", shape(), data_p->storage());
 }
 
 // <thrown>
@@ -52,10 +217,13 @@ template<class T> Array<T>::Array(const IPosition &Shape)
 : ArrayBase (Shape),
   data_p    (0)
 {
+
     data_p = new Block<T>(nelements());
     begin_p = data_p->storage();
     setEndIter();
     DebugAssert(ok(), ArrayError);
+
+    ArrayEvent ("ctor", Shape, data_p->storage());
 }
 
 // <thrown>
@@ -71,6 +239,8 @@ template<class T> Array<T>::Array(const IPosition &Shape,
     setEndIter();
     DebugAssert(ok(), ArrayError);
     objset (begin_p, initialValue, nels_p);
+
+    ArrayEvent ("ctor", Shape, data_p->storage());
 }
 
 
@@ -79,8 +249,11 @@ template<class T> Array<T>::Array(const Array<T> &other)
   begin_p   (other.begin_p),
   end_p     (other.end_p)
 {
-    data_p = other.data_p;
+    ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
+
     DebugAssert(ok(), ArrayError);
+
+    ArrayEvent (storageDeleted ? "ctorCpyDel" : "ctorCpy", length_p, data_p->storage());
 }
 
 template<class T>
@@ -89,8 +262,11 @@ Array<T>::Array(const IPosition &shape, T *storage,
 : ArrayBase (shape),
   data_p    (0)
 {
+
     takeStorage(shape, storage, policy);
     DebugAssert(ok(), ArrayError);
+
+    ArrayEvent ("ctor", shape, data_p->storage());
 }
 
 template<class T>
@@ -100,12 +276,20 @@ Array<T>::Array (const IPosition &shape, const T *storage)
 {
     takeStorage(shape, storage);
     DebugAssert(ok(), ArrayError);
+
+    ArrayEvent ("ctor", shape, data_p->storage());
 }
 
 
 
 template<class T> Array<T>::~Array()
 {
+    if (data_p.nrefs() == 1){
+        ArrayEvent ("dtorDel", length_p, data_p->storage());
+    }
+    else{
+        ArrayEvent ("dtorNod", length_p, data_p->storage());
+    }
 }
 
 
@@ -120,6 +304,10 @@ template<class T> void Array<T>::assign (const Array<T>& other)
 
 template<class T> void Array<T>::reference(const Array<T> &other)
 {
+    IPosition oldLength = length_p;
+
+    ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
+
     DebugAssert(ok(), ArrayError);
     // First copy data, then meta data.
     // This is better in case of multi-threading because it makes it possible
@@ -128,6 +316,9 @@ template<class T> void Array<T>::reference(const Array<T> &other)
     begin_p = other.begin_p;
     end_p   = other.end_p;
     baseCopy (other);
+
+    ArrayEvent2 (storageDeleted ? "refDel" : "ref", length_p,
+                 data_p->storage(), oldLength, oldStorage);
 }
 
 template<class T> Array<T> Array<T>::copy() const
@@ -173,6 +364,9 @@ template<class T> Array<T> Array<T>::copy() const
 
 template<class T> Array<T> &Array<T>::operator=(const Array<T> &other)
 {
+    IPosition oldLength = length_p;
+    ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
+
     DebugAssert(ok(), ArrayError);
 
     if (this == &other) {
@@ -227,6 +421,7 @@ template<class T> Array<T> &Array<T>::operator=(const Array<T> &other)
 	Array<T> tmp (other.copy());
 	reference (tmp);
     }
+    ArrayEvent2 (storageDeleted ? "op=Del" : "op=", length_p, data_p->storage(), oldLength, oldStorage);
     return *this;
 }
 
@@ -240,6 +435,9 @@ template<class T> Array<T> &Array<T>::operator=(const T &val)
 
 template<class T> Array<T> &Array<T>::operator= (const MaskedArray<T> &marray)
 {
+    IPosition oldLength = length_p;
+    ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
+
     DebugAssert(ok(), ArrayError);
 
     if (!conform(marray)) {
@@ -274,6 +472,8 @@ template<class T> Array<T> &Array<T>::operator= (const MaskedArray<T> &marray)
     putStorage(thisStorage, deleteThis);
     marray.freeArrayStorage(arrStorage, deleteArr);
     marray.freeMaskStorage(maskStorage, deleteMask);
+
+    ArrayEvent2 (storageDeleted ? "op=Del" : "op=", length_p, data_p->storage(), oldLength, oldStorage);
 
     return *this;
 }
@@ -549,6 +749,10 @@ template<class T> void Array<T>::resize(const IPosition &len, Bool copyValues)
     if (len.isEqual (shape())) {
       return;
     }
+    IPosition oldShape = shape();
+
+    ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
+
     // OK we differ, so we really have to resize ourselves.
     Array<T> tmp(len);
     // Copy the contents if needed.
@@ -556,6 +760,8 @@ template<class T> void Array<T>::resize(const IPosition &len, Bool copyValues)
       tmp.copyMatchingPart (*this);
     }
     this->reference(tmp);
+
+    ArrayEvent2 (storageDeleted ? "resizeDel" : "resize", len, data_p->storage(), oldShape, oldStorage);
 }
 
 template<class T> void Array<T>::copyMatchingPart (const Array<T> &from)
