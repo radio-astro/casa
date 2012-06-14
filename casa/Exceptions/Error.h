@@ -102,6 +102,7 @@ public:
     { return(message.c_str()); }
   const String &getMesg() const
     { return(message); }
+  String getStackTrace () const;
   AipsError::Category getCategory( ) const
     { return(category); }
 
@@ -128,6 +129,8 @@ public:
   static String generateStackTrace ();
 
   static void getLastInfo (String & message, String & stackTrace);
+  static String getLastMessage ();
+  static String getLastStackTrace ();
   static void clearLastInfo ();
   static String noMessage ();
   static String noStackTrace ();
@@ -138,6 +141,7 @@ protected:
 
   String message;
   Category category;
+  String stackTrace;
 
   static String lastMessage;    // error message from last exception
   static String lastStackTrace; // stack trace from last exception

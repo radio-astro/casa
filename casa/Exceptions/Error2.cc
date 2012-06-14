@@ -26,6 +26,7 @@
 //# $Id: Error2.cc 21040 2011-04-07 13:26:55Z gervandiepen $
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Exceptions/CasaErrorTools.h>
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
 #include <casa/System/AipsrcValue.h>
@@ -89,12 +90,12 @@ AipsError::addStackTrace ()
     // Always generate a stack trace and keep it around in a static
     // for later retrieval via casapy
 
-    String trace = generateStackTrace();
+    stackTrace = generateStackTrace();
 
     {
         ScopedMutexLock lock(lastErrorMutex);
         lastMessage = message;
-        lastStackTrace = trace;
+        lastStackTrace = stackTrace;
     }
 
     // See if the default is to tack on the stack trace on the exception
@@ -108,7 +109,7 @@ AipsError::addStackTrace ()
 
         // If permitted, append to the error message.
 
-        message += trace;
+        message += stackTrace;
     }
 }
 
@@ -144,12 +145,32 @@ AipsError::generateStackTrace()
     return stackTrace;
 }
 
+
 void
 AipsError::getLastInfo (String & message, String & stackTrace)
 {
     ScopedMutexLock lock(lastErrorMutex);
-    message = lastMessage;
-    stackTrace = lastStackTrace;
+
+    message = getLastMessage ();
+    stackTrace = getLastStackTrace ();
+}
+
+String
+AipsError::getLastMessage ()
+{
+    return lastMessage;
+}
+
+String
+AipsError::getLastStackTrace ()
+{
+    return CasaErrorTools::replaceStackAddresses (lastStackTrace);
+}
+
+String
+AipsError::getStackTrace () const
+{
+    return CasaErrorTools::replaceStackAddresses (stackTrace);
 }
 
 void
