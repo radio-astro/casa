@@ -438,7 +438,7 @@ void ImageStatistics<T>::displayStats(
 		oss << "         -- position of max value (world) [maxposf]: " << maxPosString;
 		messages.push_back(oss.str());
 		oss.str("");
-		oss << "         -- position of min value (world) [maxposf]: " << minPosString;
+		oss << "         -- position of min value (world) [minposf]: " << minPosString;
 		messages.push_back(oss.str());
 		oss.str("");
 		oss << "         -- Sum of pixel values [sum]:               " << sum << " " << sbunit;
