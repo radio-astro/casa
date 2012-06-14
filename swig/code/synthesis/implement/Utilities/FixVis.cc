@@ -42,7 +42,7 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   antennaId_p.resize();
   antennaSelStr_p.resize();
   distances_p.resize();
-  dataCols_p = SubMS::parseColumnNames(dataColName);
+  dataCols_p = SubMS::parseColumnNames(dataColName, ms);
   nDataCols_p = dataCols_p.nelements();
 
   nchan_p = 1; // imageNchan_p;
@@ -378,8 +378,7 @@ void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
 }
 
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
-Bool FixVis::fixvis(const String& refcode, const String& //dataColName
-                    )
+Bool FixVis::fixvis(const String& refcode)
 {
   logSink() << LogOrigin("FixVis", "fixvis");
 
