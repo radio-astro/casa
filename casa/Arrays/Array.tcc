@@ -249,6 +249,8 @@ template<class T> Array<T>::Array(const Array<T> &other)
   begin_p   (other.begin_p),
   end_p     (other.end_p)
 {
+    data_p = other.data_p;
+
     ArrayEventStorageSnapshot(); // Noop exept when array life cycle tracking enabled
 
     DebugAssert(ok(), ArrayError);
