@@ -69,29 +69,29 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
-					npol_p(-1), pointToPix_p(), directionIndex_p(-1), thePix_p(0),
-					filledFluxScale_p(False),doneMainConv_p(False),
-					convFunctionMap_p(-1), 
-					actualConvIndex_p(-1), convSize_p(0), 
-					calcFluxScale_p(True), convSupport_p(0)  {
+SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
+        npol_p(-1), pointToPix_p(), directionIndex_p(-1), thePix_p(0),
+        filledFluxScale_p(False),doneMainConv_p(False),
+        convFunctionMap_p(-1),
+        actualConvIndex_p(-1),
+        calcFluxScale_p(True), convSize_p(0), convSupport_p(0)  {
     //
 
-     pbClass_p=PBMathInterface::COMMONPB;
-  }
+    pbClass_p=PBMathInterface::COMMONPB;
+}
 
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
     nchan_p(-1),npol_p(-1),pointToPix_p(),
     directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-    convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), calcFluxScale_p(True), convSupport_p(0) {
+    convFunctionMap_p(-1), actualConvIndex_p(-1), calcFluxScale_p(True), convSize_p(0), convSupport_p(0) {
     //
     pbClass_p=typeToUse;
 
   }
   SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
   : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
-    doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0),
-    calcFluxScale_p(calcfluxneeded), convSupport_p(0)
+    doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1),
+    calcFluxScale_p(calcfluxneeded), convSize_p(0), convSupport_p(0)
   {
     String err;
     fromRecord(err, rec, calcfluxneeded);
@@ -489,11 +489,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	// if it drops by more than 2 magnitudes per pixel
-	trial=5;
+	trial=( convSize_p > (10*convSampling)) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
       }
 
-      if(trial < 15*convSampling) 
-	trial=( convSize_p > (30*convSampling)) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
+      if(trial < 5*convSampling) 
+	trial=( convSize_p > (10*convSampling)) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
       
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;

@@ -472,6 +472,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 				x >= imShape[directionAxisNumbers[0]]
 				|| y >= imShape[directionAxisNumbers[1]]
 			) {
+				*_getLog() << "dAxisNum0=" <<directionAxisNumbers[0] <<" dAxisNum1="<<directionAxisNumbers[1];
+				*_getLog() << "x="<<x<<" imShape[0]="<<imShape[directionAxisNumbers[0]]<< " y="<<y<<" imShape[1]="<<imShape[directionAxisNumbers[1]]<<LogIO::POST;
 				*_getLog() << "trc in box spec is greater than or equal to number "
 					<< "of direction coordinate pixels in the image" << LogIO::EXCEPTION;
 			}

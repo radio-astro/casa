@@ -17,6 +17,7 @@
 #include <execinfo.h>
 #include <algorithm>
 #include <math.h>
+#include <fstream>
 
 using std::max;
 using std::min;
@@ -332,6 +333,57 @@ AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt
     free (trace);
 }
 
+
+
+MemoryStatistics::MemoryStatistics ()
+{
+    char buffer [128];
+
+    pid_t pid = getpid ();
+
+    sprintf (buffer, "/proc/%d/statm", pid);
+
+    filename_p = buffer;
+
+    pageSize_p = getpagesize ();
+
+    bytesPerMb_p = 1024 * 1024.0;
+}
+
+double
+MemoryStatistics::getVmInMB() const
+{
+    return getVmInBytes () / bytesPerMb_p;
+}
+
+int64_t
+MemoryStatistics::getVmInBytes() const
+{
+    return vmPages_p * pageSize_p;
+}
+
+double
+MemoryStatistics::getRssInMB() const
+{
+    return getRssInBytes () / bytesPerMb_p;
+}
+
+int64_t
+MemoryStatistics::getRssInBytes() const
+{
+    return rssPages_p * pageSize_p;
+}
+
+
+void
+MemoryStatistics::update ()
+{
+    ifstream is (filename_p.c_str());
+
+    is >> vmPages_p >> rssPages_p;
+
+    is.close ();
+}
 
 
 } // end namespace utilj

@@ -850,8 +850,8 @@ measurement.  Use casalog.filter('INFO') to restore the normal logging
 level.
 
 The source model will be attached to the MS and applied to all
-calibration steps when {\tt usescratch=False}. {\tt usesratch=True
-  fills the MODEL\_DATA column with the Fourier transform of the
+calibration steps when {\tt usescratch=False}. {\tt usesratch=True}
+  fills the {\tt MODEL\_DATA} column with the Fourier transform of the
   model. As of CASA 3.4. we found that under some circumstances,
   creation of the MODEL column may prevent memory issues and if tasks
   fail, we recoomend to set {\tt usesratch=True}. Note that currently

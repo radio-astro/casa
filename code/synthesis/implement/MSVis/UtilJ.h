@@ -302,6 +302,29 @@ containerToString (It begin, It end, String (Obj::* func) () const, const String
     return result;
 }
 
+class MemoryStatistics {
+
+public:
+
+    MemoryStatistics ();
+
+    void update (); // call to get the latest stats loaded
+    double getRssInMB () const; // get resident set size
+    int64_t getRssInBytes () const;
+
+    double getVmInMB () const; // get the Virtual memory size
+    int64_t getVmInBytes () const;
+
+private:
+
+    double bytesPerMb_p;
+    string filename_p;
+    int pageSize_p;
+    int64_t rssPages_p; // in pages
+    int64_t vmPages_p; // in pages
+};
+
+
 // These two classes, Times and DeltaTimes should be moved out of this file and
 // into casacore/casa/OS.  In the meantime, an ifdef should keep the apple from
 // barfing.

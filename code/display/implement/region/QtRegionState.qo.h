@@ -23,9 +23,12 @@ namespace casa {
 
 		void updateCoord( );
 		void updateStatistics( std::list<RegionInfo> *stats );
+		void updateCenters( std::list<RegionInfo> *centers );
+		void setCenterBackground(QString background);
 		void clearStatistics( );
 
 		std::string lineColor( ) const;
+		std::string centerColor( ) const;
 		int lineWidth( ) const { return line_width->value( ); }
 		Region::LineStyle lineStyle( ) const;
 
@@ -74,6 +77,8 @@ namespace casa {
 		/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
 		void mark( bool set=true ) { region_mark->setChecked( set ); }
 		bool marked( ) const { return region_mark->isChecked( ); }
+		bool markCenter( ) const { return (markcenter_chk->checkState()==Qt::Checked); }
+		bool skyComponent() const { return (skycomp_chk->checkState()==Qt::Checked); };
 		bool mark_toggle( ) {
 		    bool newstate = region_mark->isChecked( ) ? false : true;
 		    region_mark->setChecked( newstate );
@@ -81,6 +86,7 @@ namespace casa {
 		}
 
 		void nowVisible( );
+		QPushButton *getFitButton(){return imfit_fit;};
 
 	    signals:
 		void refreshCanvas( );
@@ -132,6 +138,7 @@ namespace casa {
 		int selected_statistics;
 		typedef std::list<QtRegionStats*> freestat_list;
 		static freestat_list *freestats;
+		static freestat_list *freecenters;
 		QString last_line_color;
 		QtRegion *region_;
 

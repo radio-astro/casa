@@ -1,4 +1,4 @@
-//# QtDisplayData.qo.h: Qt DisplayData wrapper.
+ //# QtDisplayData.qo.h: Qt DisplayData wrapper.
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -239,6 +239,10 @@ class QtDisplayData : public QObject {
   static const String WEDGE_LABEL_CHAR_SIZE;
   static const String WEDGE_YES;
 
+  void init();
+  void initImage();
+  void setImage( ImageInterface<Float>* img);
+
  public slots:
   
   // (Should only be used by QtDisplayPanels to notify the QDD that it
@@ -322,6 +326,8 @@ class QtDisplayData : public QObject {
 
   void statsReady(const String&);
 
+  void pixelsChanged( int pixX, int pixY );
+
  protected slots:
   
   // Set the color bar orientation option according to the master
@@ -372,6 +378,7 @@ class QtDisplayData : public QObject {
  private:
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
+  IPosition getPixels( const WCMotionEvent& ev );
 
   //# data
   QtDisplayPanelGui *panel_;

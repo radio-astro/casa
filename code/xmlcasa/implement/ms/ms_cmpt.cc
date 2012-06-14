@@ -550,8 +550,10 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     delete mssel; 
            mssel = new MeasurementSet(*itsMS);
          }
+
+         MeasurementSet selms(*mssel);
  
-         if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
+         if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
                                           inchan, istep, writesyscal,
                                           multisource, combinespw,
                                           writestation, 1.0, padwithflags, iwidth)) {

@@ -29,6 +29,12 @@ QString SpecFitSettingsFixedTableCell::getFixedStr() const {
 	return fixedEstimateStr;
 }
 
+void SpecFitSettingsFixedTableCell::clear(){
+	ui.centerCheckBox->setChecked( false );
+	ui.peakCheckBox->setChecked( false );
+	ui.fwhmCheckBox->setChecked( false );
+}
+
 
 SpecFitSettingsFixedTableCell::~SpecFitSettingsFixedTableCell()
 {

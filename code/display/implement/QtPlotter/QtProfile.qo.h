@@ -35,7 +35,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Inputs/Input.h>
 #include <casa/Arrays/IPosition.h>
-#include <display/QtPlotter/SpecFitMonitor.h>
+#include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/Display/PanelDisplay.h>
@@ -46,7 +46,6 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-//#include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -73,7 +72,7 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 namespace casa { 
 
 class QtProfilePrefs;
-class SpectralFitter;
+//class SpectralFitter;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
 //a communications interface between the class doing spectral line
@@ -81,7 +80,7 @@ class SpectralFitter;
 //this class and the class doing the work of spectral fitting as
 //much as possible.
 
-class QtProfile : public QMainWindow, Ui::QtProfileGUI, public SpecFitMonitor
+class QtProfile : public QMainWindow, Ui::QtProfileGUI, public ProfileTaskMonitor
 {
 	Q_OBJECT
 
@@ -119,12 +118,15 @@ public:
 	MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
 
 	virtual std::string rcid( ) const { return rcid_; }
+	void setPath( QString filePath ){
+		imagePath = filePath;
+	}
 
-	//These methods are from the SpecFitMoniter interface.
+	//These methods are from the ProfileTaskMoniter interface.
 	//Their purpose is to provide the class doing the spectral
-	//profile fitting with initial input values, and to inform
+	//profile fitting with initial input values, to inform
 	//this class of status and log messages indicated the result
-	//of a spectral fit.
+	//of a spectral fit, and to perform moments/collapsing.
 	void postStatus( String status );
 	Vector<Float> getXValues() const;
 	Vector<Float> getYValues() const;
@@ -133,8 +135,12 @@ public:
 	QString getYUnitPrefix() const;
 	String getXAxisUnit() const;
 	QString getFileName() const;
+	QString getImagePath() const;
 	const ImageInterface<Float>* getImage() const;
-	const String getPixelBox() const;
+	const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
+	void persist( const QString& key, const QString& value );
+	QString read( const QString & key ) const;
+	void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 
 public slots:
 	void zoomIn();
@@ -170,14 +176,11 @@ public slots:
 	void redraw( );
 	void changePlotType(const QString &text);
 	void changeErrorType(const QString &text);
-	void changeCollapseType(QString text=QString(""));
-	void changeCollapseError(QString text=QString(""));
 
 	void changeAxisOld(String xa, String ya, String za, std::vector<int>);
 	void changeAxis(String xa, String ya, String za, std::vector<int>);
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
-	void doImgCollapse();
-	//void doLineFit();
+
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
 	void emitChannelSelect(float xval);
@@ -191,11 +194,12 @@ public slots:
 
 	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
 			const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void pixelsChanged(int, int );
 
 signals:
    void hideProfile();
    void coordinateChange(const String&);
-   void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData);
+   void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
    void channelSelect( const Vector<float> &zvec, float zval );
 
 private:
@@ -207,7 +211,6 @@ private:
    bool exportASCIISpectrum(QString &fn);
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
-   void setCollapseVals(const Vector<Float> &spcVals);
    void setUnitsText( String unitStr );
 
    /**
@@ -272,9 +275,6 @@ private:
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 
-   SpectralCollapser *collapser;
-   //SpectralFitter    *fitter;
-
    QHash<QString, ImageAnalysis*> *over;
    const String WORLD_COORDINATES;
    String coordinate;
@@ -284,6 +284,7 @@ private:
    String spcRefFrame;
    String cSysRval;
    QString fileName;
+   QString imagePath;
    QString position;
    QString yUnit;
    QString yUnitPrefix;
@@ -316,8 +317,7 @@ private:
 
    QtProfile::PlotType  itsPlotType;
    QtProfile::ErrorType itsErrorType;
-   SpectralCollapser::CollapseType  itsCollapseType;
-   SpectralCollapser::CollapseError itsCollapseError;
+
    LogIO *itsLog;
    Int ordersOfM_;
    Bool newCollapseVals;
@@ -346,8 +346,6 @@ private:
    enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
 	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
-
-
 
    private slots:
    	    void setPosition();

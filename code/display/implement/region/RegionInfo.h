@@ -44,6 +44,10 @@ namespace casa {
 		enum InfoTypes { MsInfoType, ImageInfoType, InvalidInfoType };
 
 		typedef ImageStatistics<Float>::stat_list stats_t;
+		//typedef std::pair<String,String> center_element;
+		//typedef std::list<center_element> center_t;
+		//typedef std::list<std::pair<String,String> > center_t;
+		typedef stats_t center_t;
 
 		RegionInfo( ) : type_(InvalidInfoType) { }
 		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), type_( other.type_) { }
@@ -57,7 +61,7 @@ namespace casa {
 		RegionInfo( const std::string &label, stats_t *si, InfoTypes t ) : stat_list_(si), label_(label), type_(t) { }
 
 	    private:
-		std::tr1::shared_ptr<stats_t> stat_list_;
+		std::tr1::shared_ptr<stats_t>  stat_list_;
 		std::string label_;
 		InfoTypes type_;
 	};

@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import flaghelper as fh
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 debug = False
 
@@ -73,7 +74,7 @@ def tflagdata(vis,
              outfile):      # output file to save flag commands
 
     # Global parameters
-    # vis, mode, applyflags, savepars                      
+    # vis, mode, action, savepars                      
     
     #
     # Task tflagdata
@@ -87,6 +88,13 @@ def tflagdata(vis,
         return
 
     casalog.origin('tflagdata')
+
+    # Take care of the trivial parallelization
+    if ParallelTaskHelper.isParallelMS(vis):
+        # To be safe convert file names to absolute paths.
+        helper = ParallelTaskHelper('tflagdata', locals())
+        retVar = helper.go()
+        return retVar
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -406,7 +414,7 @@ def tflagdata(vis,
                                antenna=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
-            # CAS-3966 Handle channel selection at the FlagAgent level
+            # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
             if (not tflocal.parseagentparameters(agent_pars)):

@@ -40,7 +40,9 @@ void ProfileFitMarker::drawMarker( QPainter& painter){
 		//Set-up the pen
 		const QPen& pen = painter.pen();
 		QPen penCopy( pen );
-		penCopy.setWidth( 5 );
+		const int POINT_SIZE = 5;
+		const int FWHM_SIZE = 3;
+		penCopy.setWidth( POINT_SIZE );
 		painter.setPen(penCopy);
 
 		//Plot the center/peak
@@ -52,6 +54,9 @@ void ProfileFitMarker::drawMarker( QPainter& painter){
 		painter.drawPoint( pixelCenter, pixelPeak );
 
 		if (fwhmSpecified ){
+			penCopy.setWidth( FWHM_SIZE );
+			painter.setPen( penCopy );
+
 			//Draw a line to show the fwhm
 			int pixelfwhmHeight = worldCanvasTranslator -> getPixelY( fwhmHeight );
 			double halfWidth = fwhm / 2;

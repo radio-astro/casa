@@ -1,20 +1,20 @@
 /*
- * SpecFitMonitor.cpp
+ * ProfileTaskMonitor.cpp
  *
  *  Created on: May 16, 2012
  *      Author: slovelan
  */
 
-#include "SpecFitMonitor.h"
+#include "ProfileTaskMonitor.h"
 
 namespace casa {
 
-SpecFitMonitor::SpecFitMonitor() {
+ProfileTaskMonitor::ProfileTaskMonitor() {
 	// TODO Auto-generated constructor stub
 
 }
 
-SpecFitMonitor::~SpecFitMonitor() {
+ProfileTaskMonitor::~ProfileTaskMonitor() {
 	// TODO Auto-generated destructor stub
 }
 

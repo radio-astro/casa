@@ -65,6 +65,7 @@ namespace casa {
 		const std::string name( ) const { return name_.toStdString( ); }
 
 		std::string lineColor( ) const { return mystate->lineColor( ); }
+		std::string centerColor( ) const { return mystate->centerColor( ); }
 		int lineWidth( ) const { return mystate->lineWidth( ); }
 		Region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }
 
@@ -120,6 +121,10 @@ namespace casa {
 		bool marked( ) const { return mystate->marked( ); }
 		bool mark_toggle( ) { return mystate->mark_toggle( ); }
 
+		bool markCenter( ) const { return mystate->markCenter( ); }
+
+		bool skyComponent( ) const {return mystate->skyComponent();};
+
 		virtual void output( ds9writer &out ) const = 0;
 
 		// used to synchronize all of the RegionDock's RegionState tab configuration...
@@ -164,6 +169,8 @@ namespace casa {
 		void revoke_region(QtRegionState*);
 		void output(std::list<QtRegionState*>,RegionTextList&);
 		void output(std::list<QtRegionState*>,ds9writer&);
+		void updateCenterInfo();
+		void invalidateCenterInfo( );
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
@@ -180,6 +187,7 @@ namespace casa {
 		                                   std::vector<std::pair<int,int> > &/*pixel_pts*/,
 						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const { }
 
+		virtual std::list<RegionInfo> *generate_dds_centers( ) DISPLAY_PURE_VIRTUAL(QtRegion::generate_dds_centers, 0);
 
 
 		void signal_region_change( RegionChanges change );

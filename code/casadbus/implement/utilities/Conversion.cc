@@ -170,6 +170,9 @@ namespace casa {
 		    if ( level == 0 ) std::cout << std::endl;
 		}
 		break;
+
+	    default:
+	        break;
 	    }
 	}
 

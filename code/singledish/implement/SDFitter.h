@@ -66,6 +66,8 @@ public:
   bool computeEstimate();
   
   std::vector<float> evaluate(int whichComp) const;
+  static const std::string FIT_GAUSS;
+  static const std::string FIT_POLY;
 private:
   void clear();
   casa::Vector<casa::Float> x_;

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>832</width>
-    <height>766</height>
+    <height>764</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -70,7 +70,7 @@
      <enum>QTabWidget::South</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="twoDReconstr">
      <property name="sizePolicy">
@@ -1241,9 +1241,24 @@ p, li { white-space: pre-wrap; }
      </attribute>
      <layout class="QHBoxLayout" name="horizontalLayout_35">
       <item>
-       <widget class="SpecFitSettingsWidget" name="specFitSettingsWidget" native="true"/>
+       <widget class="SettingsWidget" name="specFitSettingsWidget" native="true"/>
       </item>
      </layout>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Collapse/Moments</string>
+     </attribute>
+     <widget class="SettingsWidget" name="momentSettingsWidget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>791</width>
+        <height>181</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -1572,7 +1587,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QStatusBar" name="profileStatus"/>
   <action name="actionExport">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
    </property>
    <property name="text">
@@ -1584,7 +1599,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionPrint">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/print.png</normaloff>:/images/print.png</iconset>
    </property>
    <property name="text">
@@ -1596,7 +1611,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
    </property>
    <property name="text">
@@ -1608,7 +1623,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionMoveLeft">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/leftarrow.png</normaloff>:/images/leftarrow.png</iconset>
    </property>
    <property name="text">
@@ -1620,7 +1635,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionMoveRight">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/rightarrow.png</normaloff>:/images/rightarrow.png</iconset>
    </property>
    <property name="text">
@@ -1632,7 +1647,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionMoveUp">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/uparrow.png</normaloff>:/images/uparrow.png</iconset>
    </property>
    <property name="text">
@@ -1644,7 +1659,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionMoveDown">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/downarrow.png</normaloff>:/images/downarrow.png</iconset>
    </property>
    <property name="text">
@@ -1656,7 +1671,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionZoomIn">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomi.png</normaloff>:/images/zoomi.png</iconset>
    </property>
    <property name="text">
@@ -1668,7 +1683,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionZoomOut">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomo.png</normaloff>:/images/zoomo.png</iconset>
    </property>
    <property name="text">
@@ -1680,7 +1695,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionSaveGraphic">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/saveGraphic.png</normaloff>:/images/saveGraphic.png</iconset>
    </property>
    <property name="text">
@@ -1692,7 +1707,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionZoomNeutral">
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../../../../../../../home/uniblab/casa/active/code/display/implement/QtPlotter/QtPlotter.qrc">
      <normaloff>:/images/zoomn.png</normaloff>:/images/zoomn.png</iconset>
    </property>
    <property name="text">
@@ -1711,10 +1726,9 @@ p, li { white-space: pre-wrap; }
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>SpecFitSettingsWidget</class>
+   <class>SettingsWidget</class>
    <extends>QWidget</extends>
-   <header>display/QtPlotter/SpecFitSettingsWidget.qo.h</header>
-   <container>1</container>
+   <header>display/QtPlotter/SettingsWidget.qo.h</header>
   </customwidget>
  </customwidgets>
  <resources>

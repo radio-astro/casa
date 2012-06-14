@@ -103,6 +103,19 @@ namespace casa {
 	      
 	}
 
+	void QtRegionStats::setCenterBackground(QString background){
+		//QPalette palette;
+		//palette.setColor(widget->backgroundRole(), color);
+		//widget->setPalette(palette);
+		QPalette palette;
+		qt::statfield_list_t::iterator fiter = fields.begin( );
+		while ( fiter != fields.end( )) {
+			palette.setColor((*fiter).second->backgroundRole(), QColor(background));
+			(*fiter).second->setPalette(palette);
+			++fiter;
+		}
+	}
+
 	void QtRegionStats::reset( ) {
 
 	    // Statistics update clears fields that are not filled...

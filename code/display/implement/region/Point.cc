@@ -145,6 +145,14 @@ namespace casa {
 	    return result;
 	}
 
+	std::list<RegionInfo> * Point::generate_dds_centers(bool /* skycomp */){
+		// In principle there is no need to implement this,
+		// it would go to Rectangle::generate_dds_centers() otherwise
+		// and really try to fit a Gaussian to a point, certainly
+		// without success. Implementing it here as an empty method
+		// just accelerates matters (MK)
+		return new std::list<RegionInfo>( );
+	}
     }
 
 }

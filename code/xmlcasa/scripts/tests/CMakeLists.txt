@@ -22,6 +22,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   __init__.py
   test_boxit.py
   test_caltabconvert.py
+  test_calanalysis.py
   test_clean.py
   test_cleanhelper.py
   test_clearstat.py
@@ -78,6 +79,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_listhistory.py
   test_listfits.py
   test_listobs.py
+  test_listpartition.py
   test_listvis.py
   test_measures.py
   test_msmoments.py

@@ -34,6 +34,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtLELEdit.qo.h>
+#include <display/Utilities/ImageProperties.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -61,8 +62,9 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
 
  public:
   
-  QtDataManager(QtDisplayPanelGui* panel=0, const char* name=0,
-		QWidget* parent=0 );
+  typedef std::list<std::pair<QGroupBox*,QLineEdit*> > infofield_list_t;
+
+  QtDataManager( QtDisplayPanelGui* panel=0, const char* name=0, QWidget* parent=0 );
   ~QtDataManager();
   
   String path() const { return dir_.path().toStdString();  }
@@ -76,7 +78,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
 
  protected:
 
-  void showDisplayButtons(int);
+  void showDisplayButtons(int,const QString &name=QString((const char *)0));
   void hideDisplayButtons();
   QColor getDirColor(int);
   QStringList analyseFITSImage(QString path);
@@ -93,6 +95,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   QHash<QString, int> displayType_;
   QHash<QString, int> uiDisplayType_;
  
+  viewer::ImageProperties image_properties;
+  infofield_list_t ifields;
  
  protected slots:
   
@@ -123,6 +127,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
  
  private:
   
+  void fill_image_info( const std::string &/*path*/ );
+
   QWidget *parent_;
   QtDisplayPanelGui* panel_;
   QDir dir_;

@@ -40,6 +40,9 @@
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 
+#include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
+#include <sstream>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QMessageBox>
@@ -68,6 +71,24 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     setupUi(this);
     ms_selection->setupUi(ms_selection_scroll_widget);
 
+    ifields.push_back(infofield_list_t::value_type(ibox11,itext11));
+    ifields.push_back(infofield_list_t::value_type(ibox12,itext12));
+    ifields.push_back(infofield_list_t::value_type(ibox21,itext21));
+    ifields.push_back(infofield_list_t::value_type(ibox22,itext22));
+    ifields.push_back(infofield_list_t::value_type(ibox31,itext31));
+    ifields.push_back(infofield_list_t::value_type(ibox32,itext32));
+
+#if defined(__APPLE__)
+    QFont field_font( "Lucida Grande", 10 );
+#else
+    QFont field_font( "Sans Serif", 7 );
+#endif
+    for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
+	(*it).first->setTitle(" ");
+	(*it).second->clear( );
+	(*it).second->setFont( field_font );
+    }
+
     std::string show_lel = rc.get("viewer." + panel_->rcid() + ".datamgr.show_lel");
     if ( show_lel != "true" && show_lel != "false" ) {
 	rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
@@ -92,6 +113,8 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     } else {
 	showLEL_->setChecked( true );
     }
+
+
     connect(showLEL_, SIGNAL(clicked(bool)), SLOT(showlelButtonClicked(bool)));
 
   
@@ -405,14 +428,39 @@ void QtDataManager::changeItemSelection(){
   if (!lst.empty()) {
       lelEdit_->deactivate();
       QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
-      showDisplayButtons(uiDataType_[item->text(1)]);
-      
+      showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
   }
 }
 
+    struct strip_chars {
+	// should generalize to strip 'chars'...
+	strip_chars( const char */*chars*/ ) { }
+	strip_chars(const strip_chars &other) : str(other.str) { }
+	operator std::string( ) const { return str; }
+	void operator( )( const char &c ) { if ( c != '[' && c != ']' ) str += c; }
+    private:
+	std::string str;
+    };
 
+    struct max_ftor {
+	max_ftor( ) : max(-FLT_MAX) { }
+	max_ftor( const max_ftor &other ) : max(other.max) { }
+	operator float( ) const { return max; }
+	void operator( )( float f ) { if ( f > max ) max = f; }
+    private:
+	float max;
+    };
 
-void QtDataManager::showDisplayButtons(int ddtp) {
+    struct min_ftor {
+	min_ftor( ) : min(FLT_MAX) { }
+	min_ftor( const min_ftor &other ) : min(other.min) { }
+	operator float( ) const { return min; }
+	void operator( )( float f ) { if ( f < min ) min = f; }
+    private:
+	float min;
+    };
+
+  void QtDataManager::showDisplayButtons(int ddtp,const QString &name) {
   hideDisplayButtons();
   switch (ddtp) {
      case IMAGE :
@@ -420,6 +468,18 @@ void QtDataManager::showDisplayButtons(int ddtp) {
         contourButton_->show();
         vectorButton_->show();
         markerButton_->show();
+	if ( treeWidget_->currentItem()->text(1) == "Image" )
+		info_box->show();
+	if ( ! name.isNull( ) ) {
+	    std::string path = (dir_.path() + "/" + name).toStdString( );
+	    if( imagePixelType(path) == TpFloat ) {
+		fill_image_info( path );
+	    }
+// 	    else if(imagePixelType(path)==TpComplex) {
+// 		PagedImage<Complex> image(path, TableLock::AutoNoReadLocking);
+// 	    }
+
+	}
         break;      
      case MEASUREMENT_SET :
         rasterButton_->show();
@@ -489,6 +549,7 @@ void QtDataManager::hideDisplayButtons(){
   newPanelButton_->hide();
   regionButton_->hide();
   ms_selection_box->hide();
+  info_box->hide();
 }
 
 
@@ -640,6 +701,7 @@ void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
   
 void QtDataManager::lelGotFocus_() {
   treeWidget_->clearSelection();
+  info_box->hide( );
   showDisplayButtons(IMAGE);  }
   
 
@@ -687,7 +749,7 @@ QStringList QtDataManager::analyseFITSImage(QString path){
     return typedExtlist;
 }
 
-Bool QtDataManager::isQualImg(const QString &extexpr){
+Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	return True;
 }
 
@@ -709,5 +771,63 @@ Bool QtDataManager::isQualImg(const QString &extexpr){
      }
  }
 
+
+    void QtDataManager::fill_image_info( const std::string &path ) {
+	for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
+	    (*it).first->hide( );
+	}
+
+	image_properties = path;
+	if ( image_properties.ok( ) == false ) return;
+
+	infofield_list_t::iterator it = ifields.begin( );
+	(*it).first->show( );
+	(*it).first->setTitle("shape");
+	std::ostringstream buf;
+	buf << image_properties.shape( );
+	std::string shape_str = buf.str( );
+	(*it).second->setText(QString::fromStdString(std::for_each(shape_str.begin(),shape_str.end(),strip_chars("[]"))));
+	buf.str("");
+	(*it).second->setCursorPosition(0);
+	++it;
+
+	if ( image_properties.hasDirectionAxis( ) ) {
+	    (*it).first->show( );
+	    (*it).first->setTitle("direction type");
+	    (*it).second->setText(QString::fromStdString(image_properties.directionType( )));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
+	}
+
+	if ( image_properties.hasSpectralAxis( ) ) {
+	    if ( image_properties.freqRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("frequency range");
+		buf.str("");
+		buf << image_properties.freqRange()[0] << " - " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
+
+	    if ( image_properties.veloRange().size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle("velocity range");
+		buf.str("");
+		buf << image_properties.veloRange()[0] << " - " << image_properties.veloRange()[1] << " km/s" ;
+		(*it).second->setText(QString::fromStdString(buf.str( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
+	}
+
+	if ( image_properties.beamArea( ) > 0 ) {
+	    (*it).first->show( );
+	    (*it).first->setTitle("beam area");
+	    (*it).second->setText(QString::number(image_properties.beamArea( )));
+	    (*it).second->setCursorPosition(0);
+	    ++it;
+	}
+    }
 
 } //# NAMESPACE CASA - END

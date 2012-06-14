@@ -149,9 +149,9 @@ namespace casa {
 		virtual const std::string name( ) const DISPLAY_PURE_VIRTUAL(Region::name,"");
 
 		virtual std::string lineColor( ) const DISPLAY_PURE_VIRTUAL(Region::lineColor,"cyan");
+		virtual std::string centerColor( ) const DISPLAY_PURE_VIRTUAL(Region::centerColor,"cyan");
 		virtual int lineWidth( ) const DISPLAY_PURE_VIRTUAL(Region::lineWidth,1);
 		virtual LineStyle lineStyle( ) const DISPLAY_PURE_VIRTUAL(Region::lineStyle,SolidLine);
-
 
 		virtual std::string textColor( ) const DISPLAY_PURE_VIRTUAL(Region::textColor,"cyan");
 		virtual std::string textFont( ) const DISPLAY_PURE_VIRTUAL(Region::textFont,"Courier");
@@ -204,6 +204,9 @@ namespace casa {
 		void pushDrawingEnv( LineStyle ls );
 		void popDrawingEnv( );
 
+		void setDrawCenter(bool draw_center){draw_center_=draw_center;};
+		bool getDrawCenter(){return draw_center_;};
+
 		// duplicate of MultiWCTool::refresh( )
 		void refresh( );
 
@@ -217,6 +220,9 @@ namespace casa {
 
 		// indicates that region movement requires that the statistcs be updated...
 		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
+
+		// indicates that the center info is no longer valid
+		virtual void invalidateCenterInfo( ) DISPLAY_PURE_VIRTUAL(Region::invalidateCenterInfo,);
 
 		bool selected( ) const { return selected_; }
 
@@ -244,6 +250,10 @@ namespace casa {
 		// returns the new state...
 		virtual bool mark_toggle( ) = 0;
 
+		virtual bool markCenter( ) const DISPLAY_PURE_VIRTUAL(Region::markCenter,true);
+
+		virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+
 		// in "linear" coordinates...
 		virtual void boundingRectangle (double &/*blc_x*/, double &/*blc_y*/, double &/*trc_x*/,
 		                                double &/*trc_y*/) const
@@ -255,11 +265,14 @@ namespace casa {
 		virtual std::list<RegionInfo> *generate_dds_statistics( )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));
 
+		virtual std::list<RegionInfo> *generate_dds_centers(bool )
+			DISPLAY_PURE_VIRTUAL(Region::generate_dds_centers, new std::list<RegionInfo>( ));
+
 		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
-
-		RegionInfo::stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
+	   RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg);
+		RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_xunits( ) const;
 		Units current_yunits( ) const;
@@ -268,6 +281,12 @@ namespace casa {
 
 		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
+
+		virtual void setCenter(double &, double &, double &, double &) DISPLAY_PURE_VIRTUAL(Region::setCenter,);
+
+		virtual void drawCenter(double &x, double &y );
+		virtual void drawCenter(double &x, double &y, double &deltx, double &delty);
+
 
 		virtual bool within_drawing_area( );
 
@@ -286,6 +305,8 @@ namespace casa {
 
 	    private:
 		void set_line_style( LineStyle linestyle );
+		bool draw_center_;
+
 	};
     }
 }

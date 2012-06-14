@@ -71,6 +71,7 @@ namespace casa {
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
+	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
 	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
 	    connect( mystate, SIGNAL(translateY(const QString &, const QString &, const QString &)), SLOT(translate_y(const QString&,const QString&, const QString &)) );
@@ -131,6 +132,18 @@ namespace casa {
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
+
+	void QtRegion::updateCenterInfo() {
+		std::list<RegionInfo> *rc = generate_dds_centers( );
+		mystate->updateCenters(rc);
+		// set the background to standard color which is some kind of grey
+		mystate->setCenterBackground(QString("#e8e8e8"));
+	}
+
+	void QtRegion::invalidateCenterInfo( ){
+		// set the background to "darkgrey"
+		mystate->setCenterBackground(QString("#a9a9a9"));
+	}
 
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {

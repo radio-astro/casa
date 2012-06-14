@@ -6,6 +6,7 @@
 #include <display/Display/PanelDisplay.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <images/Regions/WCEllipsoid.h>
+#include <images/Images/SubImage.h>
 
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -94,6 +95,9 @@ namespace casa {
 
 	    pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
 
+	    if (getDrawCenter())
+	   	 drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
+
 	    if ( selected ) {
 
 		// draw outline rectangle for resizing the ellipse...
@@ -164,6 +168,134 @@ namespace casa {
 		result |= MouseRefresh;
 	    }
 	    return result;
+	}
+
+	std::list<RegionInfo> *Ellipse::generate_dds_centers( ){
+		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+
+		if( wc_==0 ) return region_centers;
+
+		Int zindex = 0;
+		if (wc_->restrictionBuffer()->exists("zIndex")) {
+			wc_->restrictionBuffer()->getValue("zIndex", zindex);
+		}
+
+		double blcx, blcy, trcx, trcy;
+		boundingRectangle( blcx, blcy, trcx, trcy );
+
+		DisplayData *dd = 0;
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+		Vector<Double> lin(2), blc(2), center(2);
+
+		lin(0) = blcx;
+		lin(1) = blcy;
+		if ( ! wc_->linToWorld(blc, lin)) return region_centers;
+
+		double center_x, center_y;
+		regionCenter( center_x, center_y );
+		lin(0) = center_x;
+		lin(1) = center_y;
+		if ( ! wc_->linToWorld(center, lin)) return region_centers;
+
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			dd = *ddi;
+
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if (padd==0) continue;
+
+			try {
+				if ( ! padd->conformsTo(*wc_) ) continue;
+
+				ImageInterface<Float> *image = padd->imageinterface( );
+
+				if ( image == 0 ) continue;
+
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				Int nAxes = image->ndim( );
+				IPosition shp = image->shape( );
+				const CoordinateSystem &cs = image->coordinates( );
+
+				int zIndex = padd->activeZIndex( );
+				IPosition pos = padd->fixedPosition( );
+				Vector<Int> dispAxes = padd->displayAxes( );
+
+				if ( nAxes == 2 ) dispAxes.resize(2,True);
+
+				if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
+						Int(pos.nelements()) != nAxes ||
+						anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+					continue;
+
+				if ( dispAxes.nelements() > 2u )
+					pos[dispAxes[2]] = zIndex;
+
+				dispAxes.resize(2,True);
+
+				// select the visible layer in the third and all
+				// hidden axes with a WCBox and a SubImage
+				Quantum<Double> px0(0.,"pix");
+				Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
+				for (Int ax = 0; ax < nAxes; ax++) {
+					if ( ax == dispAxes[0] || ax == dispAxes[1]) {
+						trcq[ax].setValue(shp[ax]-1);
+					} else  {
+						blcq[ax].setValue(pos[ax]);
+						trcq[ax].setValue(pos[ax]);
+					}
+				}
+				WCBox box(blcq, trcq, cs, Vector<Int>());
+				ImageRegion     *imgbox = new ImageRegion(box);
+			 	SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
+
+			 	// generate the WCEllipsoide
+				//Quantum<Double> px0(0.,"pix");
+				Vector<Quantum<Double> > centerq(2,px0), radiiq(2,px0);
+				const Vector<String> &units = wc_->worldAxisUnits( );
+
+				centerq[0].setValue(center[0]);
+				centerq[0].setUnit(units[0]);
+				centerq[1].setValue(center[1]);
+				centerq[1].setUnit(units[1]);
+
+				Quantum<Double> _blc_1_(blc[0],units[0]);
+				radiiq[0] = centerq[0] - _blc_1_;
+				radiiq[0].setValue(fabs(radiiq[0].getValue( )));
+
+				Quantum<Double> _blc_2_(blc[1],units[1]);
+				radiiq[1] = centerq[1] - _blc_2_;
+				radiiq[1].setValue(fabs(radiiq[1].getValue( )));
+
+				cout << "centerq: " << centerq << endl;
+				cout << "radiiq:  " << radiiq << endl;
+				// This is a 2D ellipse (which is the same sort of ellipse that is created via
+				// the new annotaitons). I don't know how one creates an elliptical column (which
+				// extends the 2D ellipse through all spectral channels) that is analogous to
+				// what is done for rectangles... must consult the delphic oracle when the
+				// need arises... <drs>
+				WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
+				ImageRegion *imageregion = new ImageRegion(ellipse);
+
+				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion)));
+				delete imgbox;
+				delete imageregion;
+				delete boxImg;
+			} catch (const casa::AipsError& err) {
+				errMsg_ = err.getMesg();
+				fprintf( stderr, "Ellipse::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+				continue;
+			} catch (...) {
+				errMsg_ = "Unknown error converting region";
+				fprintf( stderr, "Ellipse::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+				continue;
+			}
+		}
+		return region_centers;
 	}
 
 	std::list<RegionInfo> *Ellipse::generate_dds_statistics(  ) {

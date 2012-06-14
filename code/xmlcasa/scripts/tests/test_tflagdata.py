@@ -211,6 +211,15 @@ class test_rflag(test_base):
         self.assertEqual(res1['flagged'],res2['flagged']);
         self.assertEqual(res1['flagged'], 39504.0,)
 
+    def test_rflag4(self):
+        '''tflagdata:: Test4 of mode = rflag : correlation selection'''
+        tflagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll');
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['RR']['flagged'], 9781.0)
+        self.assertEqual(res['correlation']['LL']['flagged'], 10355.0)
+        self.assertEqual(res['correlation']['LR']['flagged'], 0,)
+        self.assertEqual(res['correlation']['RL']['flagged'], 0,)
+
 
 class test_shadow(test_base):
     def setUp(self):
@@ -631,6 +640,40 @@ class test_selections(test_base):
         '''tflagdata: spw selection'''
         tflagdata(vis=self.vis, spw='0', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+
+    def test_spw_list(self):
+        '''tflagdata: spw selection in list mode''' 
+        spwfile = 'spwflags.txt'
+        if os.path.exists(spwfile):
+            os.system('rm -rf '+spwfile)
+                   
+        tflagdata(vis=self.vis, spw='0:1~10', savepars=True, outfile=spwfile)
+        res0 = tflagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res0['flagged'], 453060, 'Only channels 1~10 should be flagged')
+        
+        # Unflag
+        tflagdata(vis=self.vis, mode='unflag')
+        ures = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(ures['flagged'], 0)
+        
+        # Flag using the saved list
+        tflagdata(vis=self.vis, mode='list', inpfile=spwfile, action='apply')
+        res = tflagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res0['flagged'], res['flagged'])        
+                  
+        # Only channels 1~10 should be flagged
+        self.assertEqual(res['spw:channel']['0:0']['flagged'], 0)
+        self.assertEqual(res['spw:channel']['0:1']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:2']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:3']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:4']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:5']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:6']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:7']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:8']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:9']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:10']['flagged'], 45306)
+        self.assertEqual(res['spw:channel']['0:11']['flagged'], 0)
 
     def test_correlation(self):
         tflagdata(vis=self.vis, correlation='LL', savepars=False)

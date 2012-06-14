@@ -3,12 +3,8 @@ from taskinit import *
 
 import asap as sd
 import pylab as pl
-#import Tkinter as Tk
 from asap import _to_list
 from asap.scantable import is_scantable
-###### workaroud #####
-#from matplotlib import _pylab_helpers
-######################
 
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
@@ -37,8 +33,8 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             #load the data without time/pol averaging
             sorg = sd.scantable(infile,average=scanaverage,antenna=antenna)
 
-            doCopy = (frame != '') or (doppler != '') or (restfreq != '') or \
-                     (fluxunit != '' and fluxunit != sorg.get_fluxunit())\
+            doCopy = (frame != '') or (doppler != '') or (restfreq != '') \
+                     or (fluxunit != '' and fluxunit != sorg.get_fluxunit()) \
                      or (specunit != '' and specunit != sorg.get_unit())
             doCopy = doCopy and isScantable
 
@@ -204,21 +200,38 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             else:
                     casalog.post( 'Using current doppler convention' )
 
+            # Averaging
+            # average over time (scantable is already scan averaged if necessary)
+            if ( timeaverage and not scanaverage):
+                    if tweight=='none':
+                            del s
+                            errmsg = "Please specify weight type of time averaging"
+                            raise Exception,errmsg
+                    stave=sd.average_time(s,scanav=scanaverage, weight=tweight)
+            else:
+                    # No time averaging
+                    stave = s
+            del s
 
-            ##### workaround for plotter in CASA 3.4 #####
-            #figmgr = None
-            #if hasattr(sd.plotter._plotter,'figmgr'):
-            #        figmgr = sd.plotter._plotter.figmgr
-            #if figmgr:
-            #        if not _pylab_helpers.Gcf.has_fignum(figmgr.num):
-            #                _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-            #                sd.plotter._plotter.quit()
-            #        elif _pylab_helpers.Gcf.has_fignum(figmgr.num) \
-            #                 and figmgr != _pylab_helpers.Gcf.get_fig_manager(figmgr.num):
-            #                sd.plotter._plotter.quit()
-            #                _pylab_helpers.Gcf.figs[figmgr.num] = figmgr
-            #                sd.plotter._plotter.quit()
-            ######################################################
+            # average over polarization
+            if ( polaverage ):
+                    if pweight=='none':
+                            del stave
+                            errmsg = "Please specify weight type of polarization averaging"
+                            raise Exception,errmsg
+                    np = stave.npol()
+                    if ( np > 1 ):
+                            spave=stave.average_pol(weight=pweight)
+                    else:
+                            # only single polarization
+                            casalog.post( "Single polarization data - no need to average" )
+                            spave=stave
+            else:
+                    # No pol averaging
+                    spave=stave
+            del stave
+
+
 	    # Reload plotter if necessary
             sd.plotter._assert_plotter(action="reload")
 
@@ -240,72 +253,26 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    asaplot=False
             if plottype=='pointing':
                     if outfile != '': 
-                           sd.plotter.plotpointing(s,outfile)
+                           sd.plotter.plotpointing(spave,outfile)
                     else:
-                           sd.plotter.plotpointing(s)
-                    del s
+                           sd.plotter.plotpointing(spave)
+                    del spave
             elif plottype=='azel':
                     if outfile != '': 
-                           sd.plotter.plotazel(s,outfile)
+                           sd.plotter.plotazel(spave,outfile)
                     else:
-                           sd.plotter.plotazel(s)
-                    del s
+                           sd.plotter.plotazel(spave)
+                    del spave
             elif plottype=='totalpower':
 		    asaplot=True
-                    sd.plotter.plottp(s)
-                    del s
+                    sd.plotter.plottp(spave)
+                    del spave
             else:
 		    asaplot=True
-                    if s.nchan()==1:
+                    if spave.nchan()==1:
                            errmsg="Trying to plot the continuum/total power data in 'spectra' mode,\
                                    please use other plottype options" 
                            raise Exception,errmsg
-                    # Average in time if desired
-                    if (scanaverage and isScantable):
-                           scave=sd.average_time(s,scanav=True)
-                    else:
-                           scave=s.copy()
-                    del s
-
-                    if ( timeaverage ):
-                            if tweight=='none':
-                                    del scave
-                                    errmsg = "Please specify weight type of time averaging"
-                                    raise Exception,errmsg
-                            stave=sd.average_time(scave,scanav=False, weight=tweight)
-                            del scave
-                            # Now average over polarization
-                            if ( polaverage ):
-                                    if pweight=='none':
-                                            del stave
-               				    errmsg = "Please specify weight type of polarization averaging"
-                                            raise Exception,errmsg
-                                    np = stave.npol()
-                                    if ( np > 1 ):
-                                            spave=stave.average_pol(weight=pweight)
-                                    else:
-                                            # only single polarization
-                                            casalog.post( "Single polarization data - no need to average" )
-                                            spave=stave.copy()
-                            else:
-                                    spave=stave.copy()
-                            del stave
-                    else:
-                            if ( polaverage ):
-                                    if pweight=='none':
-                                            del scave
-                  		            errmsg = "Please specify weight type of polarization averaging"
-                                            raise Exception,errmsg
-                                    np = scave.npol()
-                                    if ( np > 1 ):
-                                            spave=scave.average_pol(weight=pweight)
-                                    else:
-                                            # only single polarization
-                                            casalog.post( "Single polarization data - no need to average" )
-                                            spave=scave.copy()
-                            else:
-                                    spave=scave.copy()
-                            del scave
 
                     # Smooth the spectrum (if desired)
 

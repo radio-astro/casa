@@ -89,7 +89,7 @@ namespace casa {
 		enum YScaleTo { ScaleTop, ScaleBottom };
 		enum XScaleTo { ScaleLeft, ScaleRight };
 		enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
-
+		std::list<RegionInfo> *generate_dds_centers( );
 		std::list<RegionInfo> *generate_dds_statistics( );
 
 		void drawRegion( bool );
@@ -111,6 +111,8 @@ namespace casa {
 		void update_drawing_state( );
 		void update_reference_state( int transformations, int handle, int new_handle );
 
+		virtual void setCenter(double &x, double &y, double &deltx, double &delty) {_center_x=x; _center_y=y; _center_delta_x=deltx; _center_delta_y=delty;};
+
 		double handle_delta_x, handle_delta_y;
 
 		point_list _ref_points_;
@@ -122,6 +124,9 @@ namespace casa {
 		double _drawing_blc_x_, _drawing_blc_y_;
 		double _drawing_trc_x_, _drawing_trc_y_;
 		double _drawing_width_, _drawing_height_;
+
+		double _center_x, _center_y;
+		double _center_delta_x, _center_delta_y;
 
 		XScaleTo _x_origin_;
 		YScaleTo _y_origin_;

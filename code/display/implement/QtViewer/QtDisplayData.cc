@@ -89,13 +89,14 @@ template <typename T> class anylt {
 template <typename T> class anyge {
     public:
 	anyge( const T &r ) : rhs(r), tally_(false) { }
-	anyge( const anyge &o ) : rhs(o.rhs), tally_(o.tally_) { }
+	anyge( const anyge &o ) :  rhs(o.rhs),tally_(o.tally_) { }
 	void operator(  )( const T &lhs ) { if ( lhs >= rhs ) { tally_ = true; } }
 	operator bool( ) const { return tally_; }
 
     private:
-	bool tally_;
 	T rhs;
+	bool tally_;
+
 };
 
 
@@ -104,7 +105,7 @@ const String QtDisplayData::WEDGE_LABEL_CHAR_SIZE = "wedgelabelcharsize";
 const String QtDisplayData::WEDGE_YES = "Yes";
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
-			      String displayType, const viewer::DisplayDataOptions &ddo ) :
+			      String displayType, const viewer::DisplayDataOptions &ddo) :
 	       panel_(panel), 
 	       path_(path),
 	       dataType_(dataType),
@@ -136,382 +137,373 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	// Default; can be changed with setName()
 	// (and should, if it duplicates another name).
     
-  
   String stdErrMsg = "Cannot display " + name_ + " as ";
   if(displayType_=="skycatalog") stdErrMsg += "skycatalog";
   else stdErrMsg += displayType_ + " " + dataType_;
   
   errMsg_ = "";
-    
-  try {
 
+  try {
     if (displayType_=="skycatalog") {
       dd_ = new SkyCatOverlayDD(path);
       if (dd_==0) throw(AipsError("Couldn't create skycatalog"));
     }
-    
-
-      
     else if(dataType_=="ms" && displayType_=="raster") {
       dd_ = new MSAsRaster( path_, ddo );
     }
-      
-      
-
     else if(dataType_=="image" || dataType_=="lel") {
       
       if(dataType_=="image") {
 
-      // check for a FITS extension in the path name
-      File fin(path);
-      String tmp_path, ext_expr;
-      tmp_path = path;
-    	if (!fin.exists() && !fin.isDirectory()){
-    		if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
-    			// create a string with the file path name only
-    			tmp_path = String(path, 0, path.rfind("[", path.length()));
-    			ext_expr = String(path, path.rfind("[", path.length()), path.length());
-    		}
-    	}
+    	  // check for a FITS extension in the path name
+    	  File fin(path);
+    	  String tmp_path, ext_expr;
+    	  tmp_path = path;
+    	  if (!fin.exists() && !fin.isDirectory()){
+    		  if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
+    			  // create a string with the file path name only
+    			  tmp_path = String(path, 0, path.rfind("[", path.length()));
+    			  ext_expr = String(path, path.rfind("[", path.length()), path.length());
+    		  }
+    	  }
 
-    	// use the file path name for the opener
-    	switch(ImageOpener::imageType(tmp_path)) {
+    	  // use the file path name for the opener
+    	  switch(ImageOpener::imageType(tmp_path)) {
 
-	  case ImageOpener::AIPSPP: {
+    	  case ImageOpener::AIPSPP: {
 	  
-	    if(imagePixelType(path_)==TpFloat) {
-	      im_  = new PagedImage<Float>
-	                 (path_, TableLock::AutoNoReadLocking);
-	      // regions in image...
-	      // Vector<String> regions = im_->regionNames( );
-	      // for ( int i = 0; i < regions.size( ); ++i ) {
-	      // 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
-	      // }
+    		  if(imagePixelType(path_)==TpFloat) {
+    			  im_  = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+    			  // regions in image...
+    			  // Vector<String> regions = im_->regionNames( );
+    			  // for ( int i = 0; i < regions.size( ); ++i ) {
+    			  // 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
+    			  // }
 
-	    } else if(imagePixelType(path_)==TpComplex) {
-	      cim_ = new PagedImage<Complex>
-		         (path_, TableLock::AutoNoReadLocking);  }
-
-	    else  throw AipsError("Only Float and Complex CASA images "
+    		  } else if(imagePixelType(path_)==TpComplex) {
+    			  cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);  }
+    		  else  throw AipsError("Only Float and Complex CASA images "
 			          "are supported at present.");
-	    break;  }
+    		  break;
+    	  }
+    	  case ImageOpener::FITS: {
+    		  FITSImgParser fip = FITSImgParser(tmp_path);
+    		  if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
+    			  im_  = new FITSQualityImage(path);
+    		  }
+    		  else {
+    			  im_ = new FITSImage(path);
+    		  }
+    		  break;
+    	  }
+    	  case ImageOpener::MIRIAD: {
+    		  im_ = new MIRIADImage(path);
+    		  break;
+    	  }
 
-  
-	  case ImageOpener::FITS: {
-		  FITSImgParser fip = FITSImgParser(tmp_path);
-		  if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
-			  im_  = new FITSQualityImage(path);
-		  }
-		  else {
-			  im_ = new FITSImage(path);
-		  }
-	    break;  }
-
-
-	  case ImageOpener::MIRIAD: {
-	    im_ = new MIRIADImage(path);
-	    break;  }
-
-
-	  default: { 
-          
-	    File f(path);
-	    if(!f.exists()) throw AipsError("File not found.");
-
-	    throw AipsError("Only casa, FITS and MIRIAD images "
-			  "are supported.");  }  }
-
-
-        if(im_==0 && cim_==0) throw AipsError("Couldn't create image.");  }
-		// (Needed?)
-
+    	  default: {
+    		  File f(path);
+    		  if(!f.exists()) throw AipsError("File not found.");
+    		  if (f.isDirectory()) {
+    			  //Defer image construction.
+    			  return;
+    		  }
+    		  throw AipsError("Only casa, FITS and MIRIAD images are supported.");
+    	  }
+    	  }
+    	  if(im_==0 && cim_==0) throw AipsError("Couldn't create image.");
+      }
       else {
-      
-        // Parse LEL expression to create expression-type ImageInterface.
+    	  // Parse LEL expression to create expression-type ImageInterface.
 
-        LatticeExprNode expr = ImageExprParse::command(path_);
+    	  LatticeExprNode expr = ImageExprParse::command(path_);
           
-	if(expr.dataType() == TpFloat) {
-          im_ = new ImageExpr<Float>(LatticeExpr<Float>(expr), name_);  }
-          
-	else if(expr.dataType() == TpComplex) {
-          cim_ = new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_);  }
-         
-	else throw AipsError("Only Float or Complex LEL expressions "
-			     "are allowed");  }
-      
- 
-
-      uInt ndim = (im_!=0)? im_->ndim() : cim_->ndim();
-      if(ndim<2) throw AipsError("Image doesn't have >=2 dimensions.");
-	// (Probably won't happen).
-
-      IPosition shape = (im_!=0)? im_->shape() : cim_->shape();
-      Block<uInt> axs(ndim);
-
-
-      
-      const CoordinateSystem* cs=0;
-      try { cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());  }
-		// (Is there perhaps a problem retrieving
-		//  a CS from FITS or miriad images?)
-      catch(...) { cs = 0;  }	// (In case there is).
-      
-      getInitialAxes_(axs, shape, cs);
-      //#dk  getInitialAxes(axs, shape);
-
-
-      IPosition fixedPos(ndim);
-      fixedPos = 0;
-      
-        
-      
-      if(displayType_=="raster") {
-      
-        if(im_!=0) {
-          if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);}
-	else {
-          if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
-    
-      else if(displayType_=="contour") {
-      
-        if(im_!=0) {
-          if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
-	else {
-          if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
-    
-      else if(displayType_=="vector") {
-      
-        if(im_!=0) {
-          if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
-	else {
-          if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
-    
-      else if(displayType_=="marker") {
-      
-        if(im_!=0) {
-          if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
-          else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
-	else {
-          if(ndim ==2) dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
-          else dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1],
-					          axs[2], fixedPos);  }  }
-    
-      else throw AipsError("Unsupported image display type: "
-	                     + displayType_);
-
-
-      
-      if(im_!=0) im_->unlock();
-      else      cim_->unlock(); }
-	// Needed (for unknown reasons) to avoid
-	// blocking other users of the image file....
-	// (11/07 -- locking mode changed; may no longer be necessary...).
-
-    
-    
-    else throw AipsError("Unsupported data type: " + dataType_);  }
- 
- 
-       
+    	  if(expr.dataType() == TpFloat) {
+    		  im_ = new ImageExpr<Float>(LatticeExpr<Float>(expr), name_);
+    	  }
+    	  else if(expr.dataType() == TpComplex) {
+    		  cim_ = new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_);
+    	  }
+    	  else throw AipsError("Only Float or Complex LEL expressions "
+			     "are allowed");
+     }
+     initImage();
+    }
+     // Needed (for unknown reasons) to avoid
+     	// blocking other users of the image file....
+     	// (11/07 -- locking mode changed; may no longer be necessary...).
+    else throw AipsError("Unsupported data type: " + dataType_);
+  }
   // (failure.. Is it best to try to delete the remains, or leave
   // them hanging?  Latter course chosen here...).
-  
+
   catch (const AipsError& err) {
-    errMsg_ = stdErrMsg;
-    if(err.getMesg()!="") errMsg_ += ":\n  " + err.getMesg();
-    else                  errMsg_ += ".";
-    dd_=0;  }
-  
-  catch (...) { 
-    errMsg_ = stdErrMsg + ".";
-    dd_=0;  }
-    
-  
+	errMsg_ = stdErrMsg;
+	if(err.getMesg()!="") errMsg_ += ":\n  " + err.getMesg();
+	else                  errMsg_ += ".";
+	dd_=0;  }
+
+  catch (...) {
+	errMsg_ = stdErrMsg + ".";
+	dd_=0;  }
+
+
   if(dd_==0) {
-    emit qddError(errMsg_);
+	emit qddError(errMsg_);
 	// (error signal propagated externally, rather than throw.
 	// Alternatively, caller can test newQdd->isEmpty()).
-    im_=0;
-    cim_=0;
-    return;  }
-  
+	im_=0;
+	cim_=0;
+	return;
+   }
+   init();
+}
 
-      
-  // Successful creation.
 
-  dd_source_map.insert( data_to_qtdata_map_type::value_type(dd_,this) );
 
-  dd_->setUIBase(0);  
-	// Items are numbered from zero in casaviewer as consistently
-	// as possible (including, e.g., axis 'pixel' positions).  This call
-	// is necessary after constructing DDs, to orient them away from
-	// their old default 1-based (glish) behavior.
- 
-  
-  
-  // Initialize colormap if necessary.
-  
-  if(usesClrMap_()) {
-  
-    // Check .aipsrc, otherwise use "Hot Metal 1" by default initially.
-        
-    String defaultCMName;
-    Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
-		 "Rainbow 2");
-    
-    // ...but fall back to "Greyscale 1" unless the above is a valid
-    // ('primary') name.  ('Synonym' colormap names (like "mono") are not
-    // supported at present through this QDD interface).  In case the table
-    // of standard colormaps is not in the installation data repository,
-    // this will also fall back to the (hard-coded) "Greyscale 1"...
-    
-    String initialCMName = "Greyscale 1";  // (Always valid/available).
 
-    clrMapNames_ = ColormapDefinition::builtinColormapNames();
-	// (Here 'builtin' means in a loaded table, or else "Greyscale 1").
-	// Don't use colormap 'synonyms' like "mono" in .aipsrc or
-	// QDD::setOptions()).  Note that it is possible to load a
-	// custom colormap table as well, using .aipsrc (see
-	// builtinColormapNames()); improvements are also planned.
+void QtDisplayData::setImage( ImageInterface<Float>* img ){
+	im_=img;
+}
 
-    colormapnamemap::iterator cmniter = clrMapNames_.find(defaultCMName);
-    if ( cmniter != clrMapNames_.end() ) {
-	// defaultCMName is a valid choice -- use it.
-        initialCMName = defaultCMName;
-    }
-    
-    setColormap_(initialCMName);
-    
-    
-    clrMapOpt_ = new DParameterChoice("colormap", "colormap",
-                 "Name of the mapping from data values to color",
-                 clrMapNames_, initialCMName, initialCMName, "");  }
-	// (For parsing user colormap selection via
-	// getOptions() / setOptions() / Options gui).
+void QtDisplayData::initImage(){
+	uInt ndim = (im_!=0)? im_->ndim() : cim_->ndim();
+	if(ndim<2) throw AipsError("Image doesn't have >=2 dimensions.");
+	      // (Probably won't happen).
 
-  
-  // Initialization for color bar, if necessary.
-  
-  if(usesColorBar_() && clrMap_!=0) {
-    
-    colorBar_ = new WedgeDD(dd_);
-    colorBar_->setColormap(clrMap_, 1.);
+	IPosition shape = (im_!=0)? im_->shape() : cim_->shape();
+	Block<uInt> axs(ndim);
 
-    Vector<String> yesNo(2);     yesNo[0]=WEDGE_YES;
-                                 yesNo[1]="No";
-    
-    Vector<String> vertHor(2);   vertHor[0]="vertical";
-                                 vertHor[1]="horizontal";
-    
-    String orientation = panel_->colorBarsVertical()? vertHor[0] : vertHor[1];
-    
-    colorBarDisplayOpt_ = new DParameterChoice(WedgeDD::WEDGE_PREFIX,
-            "display color wedge?",
-            "Whether to display a 'color bar' that indicates\n"
-	    "the current mapping of colors to data values.",
-            yesNo, yesNo[1], yesNo[1], "color_wedge");
-    
-    colorBarThicknessOpt_ = new DParameterRange<Float>("wedgethickness",
-            "wedge thickness",
-            "Manual adjustment factor for thickness of colorbar.\n"
-	    "Vary this if automatic thickness choice is not satisfactory.",
-	    .3, 5.,  .1,  1., 1.,  "color_wedge");
-    
-    colorBarLabelSpaceOpt_ = new DParameterRange<Float>("wedgelabelspace",
-            "wedge label space",
-	    "Manual adjustment factor for colorbar's label space.\n"
-	    "Vary this if automatic margin choice is not satisfactory.",
-	    .1, 2.,  .05,  1., 1.,  "color_wedge");
-    
-    colorBarOrientationOpt_ = new DParameterChoice("orientation",
-            "wedge orientation",
-            "Whether to display color bars vertically or horizontally.\n"
-	    "(Note: orientation will be the same for all color bars\n"
-	    "in all display panels).",
-            vertHor, orientation, orientation, "color_wedge");
-      
-    // (This one is just used to monitor changes to the "wedgelabelcharsize"
-    // parameter during setOptions().  getOptions() uses the values
-    // from colorBar_ (the WedgeDD)).
-    colorBarCharSizeOpt_ = new DParameterRange<Float>(
-            WEDGE_LABEL_CHAR_SIZE, "character size", "",
-	    0.2, 4.,  .05,  1.2, 1.2, "color_wedge");
-    
-    // Initialize colorBarCharSizeOpt_'s value from colorBar_.
-    Record cbopts = colorBar_->getOptions();
-    colorBarCharSizeOpt_->fromRecord(cbopts);
-    
-    
-    // Initialize some colorBar_ options which depend on other objects.
-    // "datamin" and "datamax" come from same same option fields (or from
-    // the "minmaxhist" field) of the main dd_, as does "powercycles".
-    // "orientation" comes from the central viewer object v_ (it is the
-    // same for all color bars).  "dataunit" comes from dd_'s dataUnit()
-    // method.
+	const CoordinateSystem* cs=0;
+	try {
+		cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());
+	}
+	     			// (Is there perhaps a problem retrieving
+	     			//  a CS from FITS or miriad images?)
+	catch(...) {
+		cs = 0;
+	}	// (In case there is).
 
-    Record cbropts, chgdopts;
-	// I'd just reuse cbopts if I could, but there's no explicit way
-	// to clear a Record, nor one to assign another arbitrary Record
-	// to it.  (As with Vectors, the assignee must be 'compatible';
-	// but who _cares_ what the record _used_ to be!  'a = b' _should_
-	// mean the assignee becomes a copy of the other, regardless...).
-    
-    Record mainDDopts = dd_->getOptions();
-    
-    Float datamin=0., datamax=1.,  powercycles=0.;
-    Vector<Float> minMax;
-    Bool notFound;
-    
-    dd_->readOptionRecord(minMax, notFound, mainDDopts, "minmaxhist");
-	// (DisplayOptions methods like readOptionRecord() should be
-	// static -- they're stateless.  Any DisplayOptions object (or
-	// a newly-created one) would do here instead of dd_, which
-	// just happened to be on hand...).
-    
-    if(minMax.nelements()==2) {
-      cbropts.define("datamin", minMax[0]);
-      cbropts.define("datamax", minMax[1]);  }
-    else {
-      dd_->readOptionRecord(datamin, notFound, mainDDopts, "datamin");
-      if(!notFound) cbropts.define("datamin", datamin);
-      dd_->readOptionRecord(datamax, notFound, mainDDopts, "datamax");
-      if(!notFound) cbropts.define("datamax", datamax);  }
+	getInitialAxes_(axs, shape, cs);
+	//#dk  getInitialAxes(axs, shape);
 
-    dd_->readOptionRecord(powercycles, notFound, mainDDopts, "powercycles");
-    if(!notFound) cbropts.define("powercycles", powercycles);
-      
-    String dataunit = "";
-    try { dataunit = dd_->dataUnit().getName();  }  catch(...) {  }
-	// (try because LaticePADD::dataUnit() is (stupidly) willing
-	// to throw up instead of returning Unit("") as a fallback...)    
-    if(dataunit=="_") dataunit="";
-    cbropts.define("dataunit", dataunit);
-    
-    
-    colorBar_->setOptions(cbropts, chgdopts);
-    
-    
-    connect( panel_, SIGNAL(colorBarOrientationChange()),
-                   SLOT(setColorBarOrientation_()) );
+	IPosition fixedPos(ndim);
+	fixedPos = 0;
 
-    connect(this, SIGNAL(statsReady(const String&)),
-            panel_,  SLOT(showStats(const String&)));
-      
-    setColorBarOrientation_();  }
+	if(displayType_=="raster") {
+		if(im_!=0) {
+	     	   if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
+	     	   else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+		}
+	    else {
+	     	   if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
+	     	   else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	}
+	else if(displayType_=="contour") {
+	    if(im_!=0) {
+	     	   if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
+	     	   else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	    else {
+	     	   if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
+	     	   else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	}
+	else if(displayType_=="vector") {
+	    if(im_!=0) {
+	     	   if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
+	     	   else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	    else {
+	     	   if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
+	     	   else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	}
+	else if(displayType_=="marker") {
+	    if(im_!=0) {
+	     	   if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
+	     	   else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	    else {
+	     	   if(ndim ==2) dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
+	     	   else dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+	    }
+	}
+	else throw AipsError("Unsupported image display type: " + displayType_);
+
+	if(im_!=0) im_->unlock();
+	else      cim_->unlock();
+}
+
+
+
+
+
+void QtDisplayData::init(){
+
+
+	  // Successful creation.
+
+	  dd_source_map.insert( data_to_qtdata_map_type::value_type(dd_,this) );
+
+	  dd_->setUIBase(0);
+		// Items are numbered from zero in casaviewer as consistently
+		// as possible (including, e.g., axis 'pixel' positions).  This call
+		// is necessary after constructing DDs, to orient them away from
+		// their old default 1-based (glish) behavior.
+
+
+
+	  // Initialize colormap if necessary.
+
+	  if(usesClrMap_()) {
+
+	    // Check .aipsrc, otherwise use "Hot Metal 1" by default initially.
+
+	    String defaultCMName;
+	    Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
+			 "Rainbow 2");
+
+	    // ...but fall back to "Greyscale 1" unless the above is a valid
+	    // ('primary') name.  ('Synonym' colormap names (like "mono") are not
+	    // supported at present through this QDD interface).  In case the table
+	    // of standard colormaps is not in the installation data repository,
+	    // this will also fall back to the (hard-coded) "Greyscale 1"...
+
+	    String initialCMName = "Greyscale 1";  // (Always valid/available).
+
+	    clrMapNames_ = ColormapDefinition::builtinColormapNames();
+		// (Here 'builtin' means in a loaded table, or else "Greyscale 1").
+		// Don't use colormap 'synonyms' like "mono" in .aipsrc or
+		// QDD::setOptions()).  Note that it is possible to load a
+		// custom colormap table as well, using .aipsrc (see
+		// builtinColormapNames()); improvements are also planned.
+
+	    colormapnamemap::iterator cmniter = clrMapNames_.find(defaultCMName);
+	    if ( cmniter != clrMapNames_.end() ) {
+		// defaultCMName is a valid choice -- use it.
+	        initialCMName = defaultCMName;
+	    }
+
+	    setColormap_(initialCMName);
+
+
+	    clrMapOpt_ = new DParameterChoice("colormap", "colormap",
+	                 "Name of the mapping from data values to color",
+	                 clrMapNames_, initialCMName, initialCMName, "");  }
+		// (For parsing user colormap selection via
+		// getOptions() / setOptions() / Options gui).
+
+
+	  // Initialization for color bar, if necessary.
+
+	  if(usesColorBar_() && clrMap_!=0) {
+
+	    colorBar_ = new WedgeDD(dd_);
+	    colorBar_->setColormap(clrMap_, 1.);
+
+	    Vector<String> yesNo(2);     yesNo[0]=WEDGE_YES;
+	                                 yesNo[1]="No";
+
+	    Vector<String> vertHor(2);   vertHor[0]="vertical";
+	                                 vertHor[1]="horizontal";
+
+	    String orientation = panel_->colorBarsVertical()? vertHor[0] : vertHor[1];
+
+	    colorBarDisplayOpt_ = new DParameterChoice(WedgeDD::WEDGE_PREFIX,
+	            "display color wedge?",
+	            "Whether to display a 'color bar' that indicates\n"
+		    "the current mapping of colors to data values.",
+	            yesNo, yesNo[1], yesNo[1], "color_wedge");
+
+	    colorBarThicknessOpt_ = new DParameterRange<Float>("wedgethickness",
+	            "wedge thickness",
+	            "Manual adjustment factor for thickness of colorbar.\n"
+		    "Vary this if automatic thickness choice is not satisfactory.",
+		    .3, 5.,  .1,  1., 1.,  "color_wedge");
+
+	    colorBarLabelSpaceOpt_ = new DParameterRange<Float>("wedgelabelspace",
+	            "wedge label space",
+		    "Manual adjustment factor for colorbar's label space.\n"
+		    "Vary this if automatic margin choice is not satisfactory.",
+		    .1, 2.,  .05,  1., 1.,  "color_wedge");
+
+	    colorBarOrientationOpt_ = new DParameterChoice("orientation",
+	            "wedge orientation",
+	            "Whether to display color bars vertically or horizontally.\n"
+		    "(Note: orientation will be the same for all color bars\n"
+		    "in all display panels).",
+	            vertHor, orientation, orientation, "color_wedge");
+
+	    // (This one is just used to monitor changes to the "wedgelabelcharsize"
+	    // parameter during setOptions().  getOptions() uses the values
+	    // from colorBar_ (the WedgeDD)).
+	    colorBarCharSizeOpt_ = new DParameterRange<Float>(
+	            WEDGE_LABEL_CHAR_SIZE, "character size", "",
+		    0.2, 4.,  .05,  1.2, 1.2, "color_wedge");
+
+	    // Initialize colorBarCharSizeOpt_'s value from colorBar_.
+	    Record cbopts = colorBar_->getOptions();
+	    colorBarCharSizeOpt_->fromRecord(cbopts);
+
+
+	    // Initialize some colorBar_ options which depend on other objects.
+	    // "datamin" and "datamax" come from same same option fields (or from
+	    // the "minmaxhist" field) of the main dd_, as does "powercycles".
+	    // "orientation" comes from the central viewer object v_ (it is the
+	    // same for all color bars).  "dataunit" comes from dd_'s dataUnit()
+	    // method.
+
+	    Record cbropts, chgdopts;
+		// I'd just reuse cbopts if I could, but there's no explicit way
+		// to clear a Record, nor one to assign another arbitrary Record
+		// to it.  (As with Vectors, the assignee must be 'compatible';
+		// but who _cares_ what the record _used_ to be!  'a = b' _should_
+		// mean the assignee becomes a copy of the other, regardless...).
+
+	    Record mainDDopts = dd_->getOptions();
+
+	    Float datamin=0., datamax=1.,  powercycles=0.;
+	    Vector<Float> minMax;
+	    Bool notFound;
+
+	    dd_->readOptionRecord(minMax, notFound, mainDDopts, "minmaxhist");
+		// (DisplayOptions methods like readOptionRecord() should be
+		// static -- they're stateless.  Any DisplayOptions object (or
+		// a newly-created one) would do here instead of dd_, which
+		// just happened to be on hand...).
+
+	    if(minMax.nelements()==2) {
+	      cbropts.define("datamin", minMax[0]);
+	      cbropts.define("datamax", minMax[1]);  }
+	    else {
+	      dd_->readOptionRecord(datamin, notFound, mainDDopts, "datamin");
+	      if(!notFound) cbropts.define("datamin", datamin);
+	      dd_->readOptionRecord(datamax, notFound, mainDDopts, "datamax");
+	      if(!notFound) cbropts.define("datamax", datamax);  }
+
+	    dd_->readOptionRecord(powercycles, notFound, mainDDopts, "powercycles");
+	    if(!notFound) cbropts.define("powercycles", powercycles);
+
+	    String dataunit = "";
+	    try { dataunit = dd_->dataUnit().getName();  }  catch(...) {  }
+		// (try because LaticePADD::dataUnit() is (stupidly) willing
+		// to throw up instead of returning Unit("") as a fallback...)
+	    if(dataunit=="_") dataunit="";
+	    cbropts.define("dataunit", dataunit);
+
+
+	    colorBar_->setOptions(cbropts, chgdopts);
+
+
+	    connect( panel_, SIGNAL(colorBarOrientationChange()),
+	                   SLOT(setColorBarOrientation_()) );
+
+	    connect(this, SIGNAL(statsReady(const String&)),
+	            panel_,  SLOT(showStats(const String&)));
+
+	    setColorBarOrientation_();  }
 }
 
 std::string QtDisplayData::path( const DisplayData *d ) {
@@ -1857,8 +1849,24 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
     
 }
 
+IPosition QtDisplayData::getPixels( const WCMotionEvent& ev ){
+	PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
+	IPosition ipos;
+    if(padd) {
+    	Vector<Double> fullWorld, fullPixel;
+    	// determine the full position
+    	if (padd->getFullCoord(fullWorld, fullPixel, ev.world())){
 
-
+    		// convert to a pixel position
+    		Int length = fullPixel.shape()(0);
+        	ipos(length);
+        	for (Int i = 0; i < length; i++){
+        		ipos(i) = Int(fullPixel(i) + 0.5);
+        	}
+    	}
+    }
+    return ipos;
+}
 
 
 String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
@@ -1881,6 +1889,7 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     
     
     stringstream ss;
+
     ss << dd_->showValue(ev.world());
     /*
     if (eim_) {
@@ -1910,11 +1919,14 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     else ss << '\t';
     
     ss << dd_->showPosition(ev.world());
-    
-    return String(ss.str());  } 
-  
-  
-  catch (const AipsError &x) { return "";  }  }
+    IPosition pixels = getPixels( ev );
+    emit pixelsChanged(pixels(0), pixels(1));
+    return String(ss.str());
+  }
+  catch (const AipsError &x) {
+	  return "";
+  }
+}
 
  
 

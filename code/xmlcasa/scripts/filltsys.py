@@ -38,7 +38,7 @@ scaling={'GHz':1.0e-9,
 #   2. if possible, linearly interpolate in time.
 #   3. interpolate in frequency with specified mode
 #
-def fillTsys( filename, specif, tsysif=None, mode='linear' ):
+def fillTsys( filename, specif, tsysif=None, mode='linear',extrap=False ):
     """
     high level function to fill Tsys on spectral data
     
@@ -59,7 +59,7 @@ def fillTsys( filename, specif, tsysif=None, mode='linear' ):
                      any integer specifying an order of
                      spline interpolation
     """
-    filler = TsysFiller( filename, specif, tsysif )
+    filler = TsysFiller( filename=filename, specif=specif, tsysif=tsysif, extrap=extrap )
     polnos = filler.getPolarizations()
     for pol in polnos:
         filler.setPolarization( pol )
@@ -139,7 +139,7 @@ class TsysFiller:
     """
     Fill Tsys
     """
-    def __init__( self, filename, specif, tsysif=None ):
+    def __init__( self, filename, specif, tsysif=None, extrap=False ):
         """
         Constructor
 
@@ -158,7 +158,7 @@ class TsysFiller:
         self.specif = specif
         self.stab = self._select( self.specif )
         self.abcsp = self._constructAbcissa( self.specif )
-        self.extend = False
+        self.extend = extrap
         if tsysif is None:
             self.tsysif = None
             self.abctsys = None
@@ -167,9 +167,10 @@ class TsysFiller:
             self.tsysif = tsysif
             self.ttab = self._select( self.tsysif )
             self.abctsys = self._constructAbcissa( self.tsysif )
-            if not self.__checkCoverage( self.abctsys, self.abcsp ):
+            if not self.extend and not self.__checkCoverage( self.abctsys, self.abcsp ):
                 raise Exception( "Invalid specification of SPW for Tsys: it must cover SPW for target" )
-        self.extend = self.__checkChannels( self.abctsys, self.abcsp )
+        if not self.extend:
+            self.extend = self.__checkChannels( self.abctsys, self.abcsp )
         print 'spectral IFNO %s: corresponding Tsys IFNO is %s'%(self.specif,self.tsysif) 
 
     def __del__( self ):
@@ -587,7 +588,7 @@ class TsysFiller:
 
         # extend tsys if necessary
         if self.extend:
-            (abctsys,atsys)=self.__extend(self.abctsys,atsys)
+            (abctsys,atsys)=self.__extend(self.abctsys,self.abcsp,atsys)
         else:
             abctsys = self.abctsys
 
@@ -614,7 +615,7 @@ class TsysFiller:
                     tsys0 = atsys[idx-1]
                     tsys1 = atsys[idx]
                     tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
-            if len(tsys) == len(self.abctsys):
+            if len(tsys) == len(abctsys):
                 newtsys = interpolateInFrequency( abctsys,
                                                   tsys,
                                                   self.abcsp,
@@ -627,24 +628,50 @@ class TsysFiller:
         tptab.close()
         del tptab
 
-    def __extend( self, a, b ):
+    def __extend( self, a, aref, b ):
         """
         Extend spectra
         """
-        abctsys = numpy.zeros(len(a)+2,dtype=a.dtype)
+        incr_ref = aref[1] - aref[0]
         incr = a[1] - a[0]
-        abctsys[0] = a[0] - 0.5 * incr
-        abctsys[-1] = a[-1] + 0.5 * incr
-        abctsys[1:-1] = a
-        #print abctsys
+        ext0 = 0
+        ext1 = 0
+        l0 = aref[0] - 0.5 * incr_ref
+        r0 = aref[-1] + 0.5 * incr_ref
+        l = a[0]
+        r = a[-1]
+        #print 'l0=%s,l=%s'%(l0,l)
+        #print 'r0=%s,r=%s'%(r0,r)
+        if incr_ref > 0.0:
+            while l > l0:
+                ext0 += 1
+                l -= incr
+            while r < r0:
+                ext1 += 1
+                r += incr
+        else:
+            while l < l0:
+                ext0 += 1
+                l -= incr
+            while r > r0:
+                ext1 += 1
+                r += incr
+        if ext0 == 0 and ext1 == 0:
+            return (a,b)
+        #print 'ext0=%s,ext1=%s'%(ext0,ext1)
+        abctsys = numpy.zeros(len(a)+ext0+ext1,dtype=a.dtype)
+        for i in xrange(ext0):
+            abctsys[i] = a[0] - incr * (ext0-i)
+        for i in xrange(ext1):
+            abctsys[i+len(a)+ext0] = a[-1] + incr * (1+i)
+        abctsys[ext0:len(abctsys)-ext1] = a
+        #print 'aref[0]=%s,abctsys[0]=%s'%(aref[0],abctsys[0])
+        #print 'aref[-1]=%s,abctsys[-1]=%s'%(aref[-1],abctsys[-1])
         atsys = numpy.zeros( (len(b),len(abctsys)), dtype=type(b[0][0]) )
         for i in xrange(len(b)):
-            atsys[i][0] = b[i][0]
-            atsys[i][-1] = b[i][-1]
-            atsys[i][1:-1] = b[i]
-##             print 'len(atsys[%s]=%s'%(i,len(atsys[i]))
-##             print 'atsys[%s][0:3]=%s'%(i,atsys[i][0:3])
-##             print 'atsys[%s][-3:]=%s'%(i,atsys[i][-3:])
+            atsys[i][0:ext0] = b[i][0]
+            atsys[i][len(abctsys)-ext1:] = b[i][-1]
+            atsys[i][ext0:len(abctsys)-ext1] = b[i]
         return (abctsys,atsys)
                 
     def _search( self, tcol, t, startpos=0 ):
