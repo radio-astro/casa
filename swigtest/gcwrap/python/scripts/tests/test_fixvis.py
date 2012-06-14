@@ -41,7 +41,7 @@ class fixvis_test1(unittest.TestCase):
         os.system('rm -rf test[yz]*')
 
     def test1(self):
-        '''Do converted directions in the FIELD table have the right shape?'''
+        '''Test1: Do converted directions in the FIELD table have the right shape?'''
         refcode = 'J2000'
         self.res = fixvis(inpms, outms, refcode=refcode)
         tb.open(outms + '/FIELD')
@@ -108,6 +108,7 @@ class fixvis_test1(unittest.TestCase):
             mystats = self._get_stats(0, 'testy')
         except:
             print "*** Unexpected error ***"
+
         return mystats
 
     def _get_stats(self, fld, imgname):
@@ -120,7 +121,7 @@ class fixvis_test1(unittest.TestCase):
         return imstat(imgname + '.image')
 
     def test2(self):
-        '''Apply trivial phase center shift, i.e. none.'''
+        '''Test2: Apply trivial phase center shift, i.e. none.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
 
@@ -129,7 +130,7 @@ class fixvis_test1(unittest.TestCase):
                         (mystats['maxpos'] == [64, 64, 0, 0]).all())
 
     def test3(self):
-        '''Apply positive phase center shift along DEC.'''
+        '''Test3: Apply positive phase center shift along DEC.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
         mystats = self._fixvis_and_get_stats('J2000 18h00m02.3092s -29d59m26.9987s')
@@ -137,7 +138,7 @@ class fixvis_test1(unittest.TestCase):
                         (mystats['maxpos'] == [64,34,0,0]).all())
 
     def test4(self):
-        '''Apply negative phase center shift along DEC using offset syntax.'''
+        '''Test4: Apply negative phase center shift along DEC using offset syntax.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
         mystats = self._fixvis_and_get_stats('0h -0d0m3s')
@@ -145,19 +146,19 @@ class fixvis_test1(unittest.TestCase):
                         (mystats['maxpos']==[64,94,0,0]).all())
 
     def test5(self):
-        '''Apply positive phase center shift along RA.'''
+        '''Test5: Apply positive phase center shift along RA.'''
         mystats = self._fixvis_and_get_stats('J2000 18h00m02.5401s -29d59m29.9987s')
         self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
                         (mystats['maxpos']==[94,64,0,0]).all())
 
     def test6(self):
-        '''Apply negative phase shift along RA using offset syntax (offset is an angle).'''
+        '''Test6: Apply negative phase shift along RA using offset syntax (offset is an angle).'''
         mystats = self._fixvis_and_get_stats('-0d0m3s 0deg')
         self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
                         (mystats['maxpos']==[34,64,0,0]).all())
 
     def test7(self):
-        '''Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time), no shift in field 0.'''
+        '''Test7: Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time), no shift in field 0.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
         os.system('cp -R ' + inpms2 + ' ' + outms2)
@@ -169,17 +170,155 @@ class fixvis_test1(unittest.TestCase):
                        qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
             phc = str(x) + 's 0deg'
             self.res = fixvis(vis=outms2, outputvis=outms2, field='1', refcode=refcode,
-                              phasecenter=phc)
+                              phasecenter=phc, datacolumn='all')
             self.assertTrue(self.res)
             mystats0 = self._get_stats(0, 'testy')
             mystats1 = self._get_stats(1, 'testz')
         except:
             print "*** Unexpected error ***"
+            self.assertFalse(True)
+                                             
+        self.assertTrue(mystats0['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats0['maxpos']==[64,64,0,0]).all() and
+                        mystats1['maxposf']=='18:00:02.333, -30.59.29.999, I, 2.26e+11Hz' and
+                        (mystats1['maxpos']==[34,64,0,0]).all())
+
+    def test8(self):
+        '''Test8: Apply negative phase shift along RA in field 0 (using offset syntax, offset is a time), execise datacolumn par = corrected'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        os.system('cp -R ' + inpms2 + ' ' + outms2)
+
+        mystats0 = ''
+        mystats1 = ''
+        try:
+            x = qa.div(qa.quantity(-3./3600., 'deg'),
+                       qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x) + 's 0deg'
+            self.res = fixvis(vis=outms2, outputvis=outms2, field='0', refcode=refcode,
+                              phasecenter=phc, datacolumn='DATA,CORRECTED')
+            self.assertTrue(self.res)
+            mystats0 = self._get_stats(0, 'testy') 
+
+        except:
+            print "*** Unexpected error ***"
+            self.assertFalse(True)
+
+        self.assertTrue(mystats0['maxposf']=='18:00:02.307, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats0['maxpos']==[34,64,0,0]).all())
+
+    def test9(self):
+        '''Test9: Apply negative phase shift along RA in field 0 (using offset syntax, offset is a time), exercise datacolumn parameter.'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        os.system('cp -R ' + inpms2 + ' ' + outms2)
+
+        mystats0 = ''
+        mystats1 = ''
+        try:
+            x = qa.div(qa.quantity(-3./3600., 'deg'),
+                       qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x) + 's 0deg'
+            self.res = fixvis(vis=outms2, outputvis=outms2, field='0', refcode=refcode,
+                              phasecenter=phc, datacolumn='DATA')
+            self.assertTrue(self.res)
+            mystats0 = self._get_stats(0, 'testy') # source should still be centered because CORRECTED was not changed
+                                                   # but the phase center change affects the world coordinates anyway
+
+        except:
+            print "*** Unexpected error ***"
+            self.assertFalse(True)
+
+        self.assertTrue(mystats0['maxposf']=='18:00:02.076, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats0['maxpos']==[64,64,0,0]).all())
+
+    def test10(self):
+        '''Test10: exercise datacolumn parameter - non-existent data column with valid name'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        os.system('cp -R ' + inpms2 + ' ' + outms2)
+
+        try:
+            x = qa.div(qa.quantity(-3./3600., 'deg'),
+                       qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x) + 's 0deg'
+
+            print "\nTesting non-existing datacolumn - expected error"
+            shutil.rmtree('test9tmp.ms', ignore_errors=True)
+            split(vis=outms2, outputvis='test9tmp.ms', datacolumn='corrected') # split out the unchanged column
+            shutil.rmtree(outms2)
+            self.res = fixvis(vis='test9tmp.ms', outputvis=outms2, field='0', refcode=refcode,
+                              phasecenter=phc, datacolumn='CORRECTED')
+            self.assertFalse(self.res)
+
+        except:
+            print "*** Expected error ***"
+
+
+    def test11(self):
+        '''Test11: Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time) with only one data column selected'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        os.system('cp -R ' + inpms2 + ' ' + outms2)
+
+        mystats0 = ''
+        mystats1 = ''
+        try:
+            x = qa.div(qa.quantity(-3./3600., 'deg'),
+                       qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x) + 's 0deg'
+            shutil.rmtree('test9tmp.ms', ignore_errors=True)
+            split(vis=outms2, outputvis='test9tmp.ms', datacolumn='corrected')
+            shutil.rmtree(outms2)
+            self.res = fixvis(vis='test9tmp.ms', outputvis=outms2, field='1', refcode=refcode,
+                              phasecenter=phc, datacolumn='DATA')
+            self.assertTrue(self.res)
+            
+            mystats0 = self._get_stats(0, 'testy')
+            mystats1 = self._get_stats(1, 'testz')
+            
+        except:
+            print "*** Unexpected error ***"
+            self.assertFalse(True)
 
         self.assertTrue(mystats0['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
                         (mystats0['maxpos']==[64,64,0,0]).all() and
                         mystats1['maxposf']=='18:00:02.333, -30.59.29.999, I, 2.26e+11Hz' and
                         (mystats1['maxpos']==[34,64,0,0]).all())
+
+    def test12(self):
+        '''Test12: Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time) w/o scratch columns'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        os.system('cp -R ' + inpms2 + ' ' + outms2)
+
+        mystats0 = ''
+        mystats1 = ''
+        try:
+            x = qa.div(qa.quantity(-3./3600., 'deg'),
+                       qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x) + 's 0deg'
+            shutil.rmtree('test9tmp.ms', ignore_errors=True)
+            split(vis=outms2, outputvis='test9tmp.ms', datacolumn='corrected')
+            shutil.rmtree(outms2)
+            self.res = fixvis(vis='test9tmp.ms', outputvis=outms2, field='1', refcode=refcode,
+                              phasecenter=phc)
+            self.assertTrue(self.res)
+            
+            mystats0 = self._get_stats(0, 'testy')
+            mystats1 = self._get_stats(1, 'testz')
+            
+        except:
+            print "*** Unexpected error ***"
+            self.assertFalse(True)
+
+        self.assertTrue(mystats0['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats0['maxpos']==[64,64,0,0]).all() and
+                        mystats1['maxposf']=='18:00:02.333, -30.59.29.999, I, 2.26e+11Hz' and
+                        (mystats1['maxpos']==[34,64,0,0]).all())
+
+
+
 
     ## def test_obs_pc(self):
     ##     """Prevent phasecenter modification for a subset of obsIDs"""

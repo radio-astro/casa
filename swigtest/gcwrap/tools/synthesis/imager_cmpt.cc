@@ -457,7 +457,7 @@ bool imager::fixvis(const std::vector<int>& fields,
 	      << LogIO::POST;
       return false;
     }
-    casa::FixVis visfixer(*itsMS);
+    casa::FixVis visfixer(*itsMS, dataCol);
     casa::Vector<casa::Int> cFields(fields);
     //int nFields = cFields.nelements();
 	
@@ -472,7 +472,7 @@ bool imager::fixvis(const std::vector<int>& fields,
     visfixer.setPhaseDirs(phaseCenters);
     visfixer.setDistances(Vector<Double>(distances));
 
-    rstat = visfixer.fixvis(refcode, dataCol);
+    rstat = visfixer.fixvis(refcode);
 
     // Update HISTORY table of modfied MS 
     ostringstream param;
