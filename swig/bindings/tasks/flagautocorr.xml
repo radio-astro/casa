@@ -6,9 +6,9 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="flagautocorr" category="editing">
-    <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
-    <shortdescription>*******            USE THE TASK tflagdata            *******\n</shortdescription>
-	<shortdescription>Flag autocorrelations</shortdescription>
+    <shortdescription> ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
+    <shortdescription> *******            USE THE TASK tflagdata            *******\n</shortdescription>
+	<shortdescription> Flag autocorrelations</shortdescription>
 	<description>
 	Flag autocorrelations:
 	Flags all autocorrelation data in the measurements set.
