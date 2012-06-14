@@ -45,6 +45,7 @@ Containers/ValueHolder.cc
 Containers/Record2Interface.cc
 Containers/Stack2.cc
 Exceptions/Error2.cc
+Exceptions/CasaErrorTools.cc
 HDF5/HDF5Record.cc
 HDF5/HDF5Error.cc
 HDF5/HDF5Group.cc
@@ -357,6 +358,7 @@ DESTINATION include/casacore/casa/Containers
 )
 
 install (FILES
+Exceptions/CasaErrorTools.h
 Exceptions/Error.h
 Exceptions/Error.tcc
 DESTINATION include/casacore/casa/Exceptions
