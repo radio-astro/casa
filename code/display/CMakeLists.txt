@@ -367,6 +367,7 @@ casa_add_library( display
   implement/QtPlotter/SpecFitSettingsWidgetOptical.cc
   implement/QtPlotter/SpecFitSettingsWidgetRadio.cc
   implement/QtPlotter/SpecFitSettingsFixedTableCell.cc
+  implement/QtPlotter/MomentCollapseThreadRadio.cc
   implement/QtPlotter/ProfileTaskMonitor.cc
   implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc

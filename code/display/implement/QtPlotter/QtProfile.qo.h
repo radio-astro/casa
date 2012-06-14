@@ -72,7 +72,6 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 namespace casa { 
 
 class QtProfilePrefs;
-//class SpectralFitter;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
 //a communications interface between the class doing spectral line

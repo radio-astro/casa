@@ -1,18 +1,46 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+
+
 #include "MomentSettingsWidgetRadio.qo.h"
 #include <images/Images/ImageAnalysis.h>
+
 #include <display/QtPlotter/ProfileTaskMonitor.h>
+#include <display/QtPlotter/MomentCollapseThreadRadio.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MeasurementSets/MS1ToMS2Converter.h>
 #include <QDebug>
 #include <QFileDialog>
-//#include <QGlobal.h>
 #include <QTime>
 #include <QTemporaryFile>
+
 namespace casa {
 
 MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
-    : QWidget(parent), imageAnalysis( NULL )
+    : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL )
 {
 	ui.setupUi(this);
 
@@ -126,111 +154,86 @@ Vector<Int> MomentSettingsWidgetRadio::populateMoments(){
 
 
 void MomentSettingsWidgetRadio::collapseImage(){
-	Vector<Int> moments = populateMoments();
+
+	// Get the spectral axis number.
+	// TODO: Generalize this to any hidden axis
+	const ImageInterface<float>* image = taskMonitor->getImage();
+	CoordinateSystem cSys = image -> coordinates();
+	int spectralAxisNumber = cSys.spectralAxisNumber();
+
+	Vector<String> method;
+
+	//Note default SNRPEAK is 3.  Must be nonnegative.
+	Double peaksnr = 3;
+	//Note default stddev is 0. Must be nonnegative.
+	Double stddev = 0;
+
+	Vector<Float> excludepix;
+	Vector<Float> includepix;
+	Vector<Int> smoothaxes;
+	Vector<String> smoothtypes;
+	Vector<Quantity> smoothwidths;
+	QString fileName = taskMonitor->getImagePath();
+	String infile(fileName.toStdString());
+
+	//Initialize the channels
+	uInt nSelectedChannels;
+	String channelStr = populateChannels( &nSelectedChannels );
+
+	//Get the region
+	IPosition pos = image->shape();
+	String regionName;
+	String stokesStr;
+	CasacRegionManager crm( cSys );
+	String diagnostics;
+	String pixelBox="";
+	Record region = crm.fromBCS( diagnostics, nSelectedChannels, stokesStr,
+		NULL, regionName, channelStr, CasacRegionManager::USE_ALL_STOKES,
+		pixelBox, pos, infile);
+
+	//Calculate the moments
+	if ( imageAnalysis == NULL ){
+		imageAnalysis = new ImageAnalysis( image );
+	}
+
+	delete collapseThread;
+	collapseThread = new MomentCollapseThreadRadio( imageAnalysis );
+	connect( collapseThread, SIGNAL( finished() ), this, SLOT(collapseDone()));
+
 	//Do a collapse image for each of the moments.
+	Vector<Int> moments = populateMoments();
+	Vector<QString> momentNames( moments.size());
 	for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
-		Vector<int> whichMoments(1);
-		whichMoments[0] = moments[i];
-
-		// Get the spectral axis number.
-		// TODO: Generalize this to any hidden axis
-		const ImageInterface<float>* image = taskMonitor->getImage();
-		CoordinateSystem cSys = image -> coordinates();
-		int spectralAxisNumber = cSys.spectralAxisNumber();
-
-		Vector<String> method;
-
-		//Note default SNRPEAK is 3.  Must be nonnegative.
-		Double peaksnr = 3;
-		//Note default stddev is 0. Must be nonnegative.
-		Double stddev = 0;
-
-		Vector<Float> excludepix;
-		Vector<Float> includepix;
-		Vector<Int> smoothaxes;
-		Vector<String> smoothtypes;
-		Vector<Quantity> smoothwidths;
-		QString fileName = taskMonitor->getImagePath();
-		String infile(fileName.toStdString());
-
-		//Initialize the channels
-		uInt nSelectedChannels;
-		String channelStr = populateChannels( &nSelectedChannels );
-
-		//Get the region
-		IPosition pos = image->shape();
-		String regionName;
-		String stokesStr;
-		CasacRegionManager crm( cSys );
-		String diagnostics;
-		String pixelBox="";
-		Record region = crm.fromBCS( diagnostics, nSelectedChannels, stokesStr,
-			NULL, regionName, channelStr, CasacRegionManager::USE_ALL_STOKES,
-			pixelBox, pos, infile);
-
-		//Output file
-		String outName;
-		bool temporary = getOutputFileName( outName, whichMoments[0], channelStr );
-
-		//Calculate the moments
-		if ( imageAnalysis == NULL ){
-			imageAnalysis = new ImageAnalysis( image );
-		}
-		ImageInterface<Float>* newImage = imageAnalysis->moments( whichMoments, spectralAxisNumber, region,
-				"", method,
-				smoothaxes, smoothtypes, smoothwidths,
-				includepix,excludepix,
-				peaksnr, stddev, "RADIO", outName);
-
-		//Update the viewer with the collapsed image.
-		if ( newImage != NULL ){
-			taskMonitor->imageCollapsed(outName, "image", "raster", True, temporary, newImage );
-		}
-		else {
-			QString msg( "Moment calculation failed.");
-			Util::showUserMessage( msg, this );
-		}
+		int sIndex = momentMap.key( i );
+		momentNames[i] = momentOptions[sIndex];
 	}
+	String baseName( taskMonitor->getFileName().toStdString());
+	collapseThread->setData(moments, spectralAxisNumber, region,
+			    	"", method, smoothaxes, smoothtypes, smoothwidths,
+			        includepix, excludepix, peaksnr, stddev,
+			        "RADIO", baseName);
+	collapseThread-> setMomentNames( momentNames );
+	collapseThread->setChannelStr( channelStr );
+	collapseThread->start();
 }
 
-bool MomentSettingsWidgetRadio::getOutputFileName( String& outName,
-		int moment, const String& channelStr ) const {
-
-	bool tmpFile = true;
-	//Use a default base name
-	if (outputFileName.isEmpty()){
-		QString baseName = taskMonitor->getFileName();
-		outName = baseName.toStdString();
+void MomentSettingsWidgetRadio::collapseDone(){
+	//Update the viewer with the collapsed image.
+	if ( collapseThread != NULL && collapseThread->isSuccess()){
+		std::vector<CollapseResult> results = collapseThread->getResults();
+		for ( int i = 0; i < static_cast<int>(results.size()); i++ ){
+			String outName = results[i].getOutputFileName();
+			bool outputTemporary = results[i].isTemporaryOutput();
+			ImageInterface<Float>* newImage = results[i].getImage();
+			taskMonitor->imageCollapsed(outName, "image", "raster", True, outputTemporary, newImage );
+		}
 	}
-	//Use the user specified name
 	else {
-		outName = outputFileName.toStdString();
-		tmpFile = false;
+		QString msg( "Moment calculation failed.");
+		Util::showUserMessage( msg, this );
 	}
-
-	//Append the channel and moment used to make it descriptive.
-	SummationIndex sIndex = momentMap.key( moment);
-	QString  momentStr = momentOptions[static_cast<int>(sIndex)];
-	outName = outName + "_" + String(momentStr.toStdString());
-	if ( channelStr != ""){
-		outName = outName + "_"+channelStr;
-	}
-	QString uniqueFileName( outName.c_str() );
-
-	//Add gibberish to ensure the file name is unique.
-	bool fileExists = true;
-	while ( fileExists ){
-		QFile file( uniqueFileName );
-		fileExists = file.exists();
-		if ( fileExists ){
-			uniqueFileName = outName.c_str() + QString::number(qrand() % 10000);
-		}
-		else {
-			outName = uniqueFileName.toStdString();
-		}
-	}
-	return tmpFile;
 }
+
 
 void MomentSettingsWidgetRadio::setUnits( QString unitStr ){
 	int bracketIndex = unitStr.indexOf( "[]");
@@ -274,6 +277,8 @@ void MomentSettingsWidgetRadio::reset(){
 		delete imageAnalysis;
 		imageAnalysis = NULL;
 	}
+	delete collapseThread;
+	collapseThread = NULL;
 	if ( taskMonitor != NULL ){
 		ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage());
 		imageAnalysis = new ImageAnalysis(img);

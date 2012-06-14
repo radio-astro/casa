@@ -179,11 +179,11 @@ int QtCanvas::getLineCount(){
     return curveMap.size();
 }
 
-CurveData* QtCanvas::getCurveData(int id){
-    return &curveMap[id].getCurveData();
+CurveData QtCanvas::getCurveData(int id){
+    return curveMap[id].getCurveData();
 }
-ErrorData* QtCanvas::getCurveError(int id){
-    return &curveMap[id].getErrorData();
+ErrorData QtCanvas::getCurveError(int id){
+    return curveMap[id].getErrorData();
 }
 
 QString QtCanvas::getCurveName(int id){
@@ -306,7 +306,7 @@ QSize QtCanvas::sizeHint() const
 
 
 
-void QtCanvas::displayToolTip( QMouseEvent* event ) const {
+void QtCanvas::displayToolTip( QMouseEvent* event ) const{
 	if ( showToolTips ){
         QPoint mouseLocation = event -> pos();
         int mouseX = mouseLocation.x();
@@ -1101,22 +1101,34 @@ QColor QtCanvas::getCurveColorSecondary( ) {
 	QColor greenShade;
 	switch( index ){
 		case 0:
-			greenShade.setNamedColor("green");
+			greenShade.setNamedColor("#006600");
 			break;
 		case 1:
-			greenShade.setNamedColor("olivedrab");
+			greenShade.setNamedColor("#00CC00");
 			break;
 		case 2:
-			greenShade.setNamedColor("darkseagreen");
+			greenShade.setNamedColor( "#00FF00");
 			break;
 		case 3:
-			greenShade.setNamedColor( "springgreen");
+			greenShade.setNamedColor("#009900");
 			break;
 		case 4:
-			greenShade.setNamedColor( "limegreen");
+			greenShade.setNamedColor( "#666600");
+			break;
+		case 5:
+			greenShade.setNamedColor( "#669900");
+			break;
+		case 6:
+			greenShade.setNamedColor( "#66CC33");
+			break;
+		case 7:
+			greenShade.setNamedColor( "#66FF33");
+			break;
+		case 8:
+			greenShade.setNamedColor( "#00CC99");
 			break;
 		default:
-			greenShade.setNamedColor( "lightseagreen");
+			greenShade.setNamedColor( "#99FF99");
 	}
 	curveCountSecondary = index + 1;
 	return greenShade;
@@ -1198,10 +1210,7 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     QFont ft(painter->font());
     QPen pen(painter->pen());
-	int penWidth = pen.width();
 	QColor defaultColor = pen.color();
-   	const int CURVE_WIDTH = 2;
-   	pen.setWidth( CURVE_WIDTH );
     
     QtPlotSettings settings = zoomStack[curZoom];
     QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
@@ -1309,7 +1318,6 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    	 if (siz > 1) {
    		 QFont curveLabelFont(xLabel[QtPlotSettings::xBottom].fontName, xLabel[QtPlotSettings::xBottom].fontSize);
-   		 curveLabelFont.setBold( true );
    		 painter->setFont( curveLabelFont);
    		 painter->drawText(MARGIN + 4, MARGIN + (5 + id * 15),
    				 getRectWidth(), MARGIN / 2,
@@ -1321,7 +1329,6 @@ void QtCanvas::drawCurves(QPainter *painter)
     delete [] colorFolds;
 
    	pen.setColor( defaultColor );
-    pen.setWidth( penWidth );
     painter->setPen(pen);                   
     painter->setFont(ft);
 }
@@ -1335,7 +1342,7 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const QString& lb, ColorCategory colorCategory){
 
 	//Make sure we don't already have a curve with the same name;
-	for ( int i = 0; i < curveMap.size(); i++ ){
+	for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
     	if ( curveMap[i].getLegend() == lb ){
     		return;
     	}
