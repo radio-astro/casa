@@ -58,7 +58,7 @@ class calanalysis_tsys1( unittest.TestCase ):
 	numTime = len( time )
 
 	def setUp( self ):
-		datapath = os.environment.get( 'CASAPATH' ).split()[0]
+		datapath = os.environ.get( 'CASAPATH' ).split()[0]
 		datapath += '/data/regression/unittest/calanalysis/'
 		return self.ca.open( datapath+self.calName )
 
@@ -69,8 +69,10 @@ class calanalysis_tsys1( unittest.TestCase ):
 
 		"""Test of introspective member functions"""
 
-		self.assertEqual( self.ca.calname(), self.calName )
-		self.assertEqual( self.ca.msname(), self.msName )
+		self.assertEqual( os.path.split(self.ca.calname())[1],
+		    self.calName )
+		self.assertEqual( os.path.split(self.ca.msname())[1],
+		    self.msName )
 		self.assertEqual( self.ca.partype(), self.parType )
 		self.assertEqual( self.ca.polbasis(), self.polBasis )
 		self.assertEqual( self.ca.viscal(), self.visCal )
@@ -109,3 +111,6 @@ class calanalysis_tsys1( unittest.TestCase ):
 		self.assertEqual( self.ca.time(name=True), self.time )
 
 		return None
+
+def suite():
+	return [calanalysis_tsys1]
