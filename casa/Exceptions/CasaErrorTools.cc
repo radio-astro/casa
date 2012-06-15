@@ -32,8 +32,6 @@ void
 CasaErrorTools::generateSharedObjectMap ()
 {}
 
-} // end namespace casa
-
 String
 CasaErrorTools::replaceStackAddresses (const String & stackTrace)
 {
@@ -154,8 +152,9 @@ CasaErrorTools::replaceStackAddresses (const String & stackTrace)
 
     return cleanedStackTrace;
 
-#endif
 
 }
 
 } // end namespace casa
+
+#endif
