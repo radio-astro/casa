@@ -1,4 +1,3 @@
-
 *=======================================================================
 *     Copyright (C) 1999-2012
 *     Associated Universities, Inc. Washington DC, USA.
@@ -125,9 +124,9 @@ C rotate but we do want to reproject uvw
 C
 C     Single precision gridder
       subroutine ggrids (uvw, dphase, values, nvispol, nvischan,
-     $   dopsf, flag, rflag, weight, nrow, rownum,
-     $   scale, offset, grid, nx, ny, npol, nchan, freq, c,
-     $   support, sampling, convFunc, chanmap, polmap, sumwt)
+     $     dopsf, flag, rflag, weight, nrow, rownum,
+     $     scale, offset, grid, nx, ny, npol, nchan, freq, c,
+     $     support, sampling, convFunc, chanmap, polmap, sumwt)
 
       implicit none
       integer nx, ny, npol, nchan, nvispol, nvischan, nrow
@@ -143,7 +142,7 @@ C     Single precision gridder
       double precision sumwt(npol, nchan)
       integer rownum
       integer support, sampling
-      integer chanmap(nchan), polmap(npol)
+      integer chanmap(nchan), polmap(npol)      
       integer dopsf
 
       double complex nvalue
@@ -605,6 +604,77 @@ C     $              scale, offset, sampling, pos, loc, off, phasor)
       return
       end
 
+      subroutine sectdgridjy (values, nvispol, nvischan,
+     $     flag, rflag,
+     $     nrow, grid, nx, ny, npol, nchan, 
+     $     support, sampling, convFunc, chanmap, polmap, rbeg, rend, 
+     $     loc,off,phasor, scalechan)
+
+      implicit none
+      integer, intent(in) :: nx,ny,npol,nchan,nvispol,nvischan,nrow
+      complex, intent(inout) :: values(nvispol, nvischan, nrow)
+      complex, intent(in) :: grid(nx, ny, npol, nchan)
+      integer, intent(in) :: flag(nvispol, nvischan, nrow)
+      integer, intent(in) :: rflag(nrow)
+      integer, intent(in) :: support, sampling
+      integer, intent(in) ::  chanmap(*), polmap(*)
+      complex :: nvalue
+
+      double precision, intent(in) :: convFunc(*), scalechan(*)
+      real norm
+
+      logical ogrid
+      integer, intent(in)  :: loc(2, nvischan, nrow)
+      integer, intent(in) :: off(2, nvischan, nrow) 
+      complex, intent(in) :: phasor(nvischan, nrow) 
+      integer :: iloc(2)
+      integer, intent(in) :: rbeg, rend
+      integer ix, iy, ipol, ichan
+      integer apol, achan, irow
+      real wt, wtx, wty
+
+
+      do irow=rbeg, rend
+         if(rflag(irow).eq.0) then
+         do ichan=1, nvischan
+            achan=chanmap(ichan)+1
+            if((achan.ge.1).and.(achan.le.nchan)) then
+C               call sgrid(uvw(1,irow), dphase(irow), freq(ichan), c,
+C     $              scale, offset, sampling, pos, loc, off, phasor)
+               if (ogrid(nx, ny, loc(1,ichan, irow) , support)) then
+                  do ipol=1, nvispol
+                     apol=polmap(ipol)+1
+                     if((flag(ipol,ichan,irow).ne.1).and.
+     $                    (apol.ge.1).and.(apol.le.npol)) then
+                        nvalue=0.0
+                        norm=0.0
+                        do iy=-support,support
+                           iloc(2)=abs(sampling*iy+off(2,ichan, 
+     $                                 irow))+1
+                           wty=convFunc(iloc(2))
+                           do ix=-support,support
+                              iloc(1)=abs(sampling*ix+off(1,ichan,
+     $                             irow))+1
+                              wtx=convFunc(iloc(1))
+                              wt=wtx*wty
+                              norm=norm+wt
+                              nvalue=nvalue+wt*scalechan(ichan)*
+     $                             grid(loc(1, ichan, irow)+ix,
+     $                             loc(2, ichan, irow)+iy,apol,achan)
+                           end do
+                        end do
+                        values(ipol,ichan,irow)=(nvalue*conjg(
+     $                       phasor(ichan, irow)))
+     $                       /norm
+                     end if
+                  end do
+               end if
+            end if
+         end do
+         end if
+      end do
+      return
+      end
 
 
 
@@ -676,4 +746,37 @@ C--------------
      $     (loc2sub.ge.1).and.(loc2plus.le.ny)
      
       return 
+      end
+      subroutine locuvw(uvw, dphase, freq, nvchan, scale, offset,
+     $     sampling, loc, off, phasor, irow, doW, Cinv)
+      implicit none
+      double precision,  intent(in) :: uvw(3, *), dphase(*), freq(*)
+      integer, intent(in) :: nvchan, sampling, irow, doW
+      double precision, intent(in) :: scale(3), offset(3), Cinv
+      integer, intent(inout) :: loc(2+doW, nvchan, *), off(2+doW,
+     $     nvchan, *)
+      complex, intent(inout) :: phasor(nvchan, *)
+      integer :: f, k, row
+      double precision :: phase, pos
+      double precision :: pi
+      data pi/3.14159265358979323846/
+
+      row=irow+1
+
+      do f=1, nvchan
+         do k=1,2
+            pos=scale(k)*uvw(k,row)*freq(f)*Cinv+(offset(k)+1.0)
+            loc(k, f, row)=nint(pos)
+            off(k, f, row)=nint((loc(k, f, row)-pos)*sampling)
+         end do
+         phase=-2.0D0*pi*dphase(row)*freq(f)*Cinv
+         phasor(f,row)=cmplx(cos(phase), sin(phase))
+         if(doW .eq. 1) then
+            pos=sqrt(abs(scale(3)*uvw(3, row)*freq(f)*Cinv))+offset(3)
+     $           +1.0
+            loc(3,f, row)=nint(pos)
+            off(3, f, row)=0
+         end if
+      end do
+      return
       end
