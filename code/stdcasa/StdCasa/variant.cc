@@ -1,7 +1,7 @@
 #include <casa/stdio.h>
 #include <cstdlib>
-#include "stdcasa/variant.h"
-#include "stdcasa/record.h"
+#include <stdcasa/variant.h>
+#include <stdcasa/record.h>
 #include <cstring>
 
 namespace casac {
@@ -1576,6 +1576,10 @@ void variant::resize( int size ) {
 		break;
 	}
     }
+}
+
+variant initialize_variant( const std::string & ) {
+	    return variant();
 }
 
 }	// casac namespace
