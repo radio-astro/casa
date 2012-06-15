@@ -170,7 +170,7 @@ void SpecFitSettingsWidgetOptical::specLineFit(){
 			// overplot the fit values
 			QString fileName = getFileName();
 			QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
-			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName, QtCanvas::CURVE_TRADITIONAL );
 		}
 		postStatus((fitter->report(*logger, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str());
 	}

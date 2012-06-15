@@ -98,7 +98,7 @@ public:
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
 	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, ZOOM_COLOR, REGION_COLOR,
-					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR };
+					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 
@@ -154,7 +154,7 @@ public:
 	//step function.
 	bool isDisplayStepFunction() const;
 	void setDisplayStepFunction( bool displayAsStepFunction );
-
+	void setOptical( bool optical );
 	static const QString FONT_NAME;
 
 public slots:
@@ -360,14 +360,15 @@ private:
 	 * by color.  Similar items should always have the same colorCategory.
 	 * @param colorCategory the type of item that needs to be drawn.
 	 */
-	QColor getDiscreteColor(ColorCategory colorCategory);
+	QColor getDiscreteColor(ColorCategory colorCategory, int id=0);
 	QColor getCurveColorPrimary();
 	QColor getCurveColorSecondary();
 	QColor getCurveColor();
+	QColor getTraditionalColor(int id);
 	int curveCount;
 	int curveCountPrimary;
 	int curveCountSecondary;
-
+	bool optical;
 };
 
 }

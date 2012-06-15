@@ -64,6 +64,8 @@ QtDrawCanvas::QtDrawCanvas(QWidget *parent)
     
 }
 
+
+
 void QtDrawCanvas::setPlotSettings(const QtDrawSettings &settings)
 {
     zoomStack.resize(1);

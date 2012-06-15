@@ -771,6 +771,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		SettingsWidget::setOptical( opticalFitter );
 		specFitSettingsWidget->reset();
 		momentSettingsWidget->reset();
+		pixelCanvas -> setOptical( opticalFitter );
 	}
 
 	if (update){
@@ -2311,7 +2312,6 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
-
 		if ( over != NULL ){
 			QHashIterator<QString, ImageAnalysis*> i(*over);
 

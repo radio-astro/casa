@@ -65,6 +65,7 @@ QtCanvas::QtCanvas(QWidget *parent)
     rubberBandIsShown = false;
     xRangeIsShown=false;
     imageMode = false;
+    optical = true;
     setPlotSettings(QtPlotSettings());
     xRangeMode=false;
     autoScaleX = 2;
@@ -192,20 +193,7 @@ QString QtCanvas::getCurveName(int id){
 
 void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
                                     const QString& lbl, ColorCategory level ){
-	QColor curveColor;
-	switch (level){
-
-	case CURVE_COLOR_PRIMARY:
-		curveColor = getDiscreteColor( CURVE_COLOR_PRIMARY);
-		break;
-	case CURVE_COLOR_SECONDARY:
-		curveColor = getDiscreteColor( CURVE_COLOR_SECONDARY);
-		break;
-	default:
-		curveColor = getDiscreteColor( CURVE_COLOR);
-		break;
-	}
-
+	QColor curveColor = getDiscreteColor( level, id );
 	CanvasCurve curve( data, error, lbl, curveColor );
 	curveMap[id]     = curve;
     refreshPixmap();
@@ -1066,6 +1054,68 @@ void QtCanvas::drawxRange(QPainter *painter){
     painter->drawRect(xRangeRect.normalized());
 }
 
+void QtCanvas::setOptical( bool optical ){
+	this->optical = optical;
+}
+
+QColor QtCanvas::getTraditionalColor(int d)
+{
+	// maps an integer value against the 14 usefull colors
+	// defined in Qt::GlobalColor;
+	// is repetitive, but should suffice for all practical
+	// purposes;
+	QColor lColor;
+	const int cpicker = d % 14;
+
+	switch (cpicker) {
+	case 0:
+		lColor = Qt::red;
+		break;
+	case 1:
+		lColor = Qt::blue;
+		break;
+	case 2:
+		lColor = Qt::green;
+		break;
+	case 3:
+		lColor = Qt::cyan;
+		break;
+	case 4:
+		lColor = Qt::lightGray;
+		break;
+	case 5:
+		lColor = Qt::magenta;
+		break;
+	case 6:
+		lColor = Qt::yellow;
+		break;
+	case 7:
+		lColor = Qt::darkRed;
+		break;
+	case 8:
+		lColor = Qt::darkBlue;
+		break;
+	case 9:
+		lColor = Qt::darkGreen;
+		break;
+	case 10:
+		lColor = Qt::darkCyan;
+		break;
+	case 11:
+		lColor = Qt::darkGray;
+		break;
+	case 12:
+		lColor = Qt::darkMagenta;
+		break;
+	case 13:
+		lColor = Qt::darkYellow;
+		break;
+	default:
+		// should never get here
+		lColor = Qt::gray;
+	}
+	return lColor;
+}
 
 QColor QtCanvas::getCurveColor() {
 	const int SHADE_COUNT = 6;
@@ -1164,10 +1214,13 @@ QColor QtCanvas::getCurveColorPrimary()  {
 
 
 
-QColor QtCanvas::getDiscreteColor(ColorCategory colorCategory) {
+QColor QtCanvas::getDiscreteColor(ColorCategory colorCategory, int id ) {
 	QColor color;
 	if ( colorCategory == TITLE_COLOR ){
 		color = Qt::black;
+	}
+	else if ( colorCategory == CURVE_TRADITIONAL || optical ){
+		color = getTraditionalColor( id );
 	}
 	else if ( colorCategory == CURVE_COLOR ){
 		color = getCurveColor( );
@@ -1342,12 +1395,13 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const QString& lb, ColorCategory colorCategory){
 
 	//Make sure we don't already have a curve with the same name;
-	for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
-    	if ( curveMap[i].getLegend() == lb ){
-    		return;
-    	}
-    }
-
+	if ( !optical ){
+		for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
+			if ( curveMap[i].getLegend() == lb ){
+				return;
+			}
+		}
+	}
 	Int xl, yl;
     x.shape(xl);
     y.shape(yl);
