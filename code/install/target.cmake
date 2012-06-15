@@ -164,7 +164,7 @@ macro( casa_add_module module )
   
 
   # Include path always include code/
-  set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/
+  set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ )
   set( ${module}_DEFINITIONS "" )
 
   # Which libraries to link against (internally used, not exported, by the module)

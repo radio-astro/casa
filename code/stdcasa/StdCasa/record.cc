@@ -1,4 +1,4 @@
-#include <xmlcasa/record.h>
+#include <stdcasa/record.h>
 
 namespace casac {
 

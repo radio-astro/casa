@@ -1,4 +1,4 @@
-#include <xmlcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Record.h>
