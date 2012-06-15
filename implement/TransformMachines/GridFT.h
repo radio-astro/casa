@@ -133,6 +133,7 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
+  GridFT();
   GridFT(Long cachesize, Int tilesize, String convType="SF",
 	 Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   GridFT(Long cachesize, Int tilesize, String convType,
@@ -153,36 +154,36 @@ public:
   GridFT(const GridFT &other);
 
   // Assignment operator
-  GridFT &operator=(const GridFT &other);
+  virtual GridFT &operator=(const GridFT &other);
 
-  ~GridFT();
+  virtual ~GridFT();
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(ImageInterface<Complex>& image,
+  virtual void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
   
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
-  void finalizeToVis();
+  virtual void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
 
   
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
-  void finalizeToSky();
+  virtual void finalizeToSky();
 
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, Int row=-1);
+  virtual void get(VisBuffer& vb, Int row=-1);
 
 
   // Put coherence to grid by gridding.
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
+  virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
   
   // Make the entire image
@@ -226,12 +227,12 @@ protected:
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
 
-  void ok();
+  virtual void ok();
 
-  void init();
+  virtual void init();
 
   //Prepare the grid for degridding
-  void prepGridForDegrid();
+  virtual void prepGridForDegrid();
 
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
