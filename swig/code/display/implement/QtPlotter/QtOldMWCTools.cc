@@ -142,7 +142,7 @@ QtOldCrossTool::QtOldCrossTool() : MWCCrosshairTool()
   setObjectName("CrossTool"); 
 }
 
-void QtOldCrossTool::crosshairReady(const String &evtype) {
+void QtOldCrossTool::crosshairReady(const String & /*evtype*/) {
   if (!itsCurrentWC) return;
 
   //qDebug() << "cross ready" << coordType.chars();

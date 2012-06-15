@@ -76,6 +76,12 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //  using namespace casa::async;
+  GridFT::GridFT() : FTMachine(), padding_p(1.0), imageCache(0), cachesize(1000000), tilesize(1000), gridder(0), isTiled(False), convType("SF"),
+  maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
+  usezero_p(False), noPadding_p(False), usePut2_p(False), 
+		     machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0){
+
+  }
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
 	       Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
@@ -474,9 +480,12 @@ Array<Complex>* GridFT::getDataPointer(const IPosition& centerLoc2D,
 #define sectggridd sectggridd_
 #define sectggrids sectggrids_
 #define sectdgrid sectdgrid_
+#define locuvw locuvw_
 #endif
 
 extern "C" { 
+  void locuvw(const Double*, const Double*, const Double*, const Int*, const Double*, const Double*, const Int*, 
+	      Int*, Int*, Complex*, const Int*, const Int*, const Double*);
    void ggrid(Double*,
                 Double*,
 		const Complex*,
@@ -749,13 +758,16 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvischan;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)
+  Double cinv=Double(1.0)/C::c;
+  Int dow=0;
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(4)
   {
 #pragma omp for
-  for (irow=startRow; irow<=endRow;irow++){
-    locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
-	      locstor, 
-	      offstor, phasorstor, irow);
+  for (irow=startRow; irow<=endRow; ++irow){
+    //locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
+    //	      locstor, 
+    //	      offstor, phasorstor, irow);
+    locuvw(uvstor, dpstor, visfreqstor, &nvchan, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv); 
   }  
 
   }//end pragma parallel
@@ -1021,13 +1033,18 @@ void GridFT::get(VisBuffer& vb, Int row)
   //Vector<Double> f1=interpVisFreq_p.copy();
   Int nvchan=nvc;
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)
+  Double cinv=Double(1.0)/C::c;
+  Int dow=0;
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(4) 
+
   {
 #pragma omp for
   for (irow=startRow; irow<=endRow; ++irow){
-    locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
-	      locstor, 
-	      offstor, phasorstor, irow);
+    //locateuvw(uvstor,dpstor, visfreqstor, nvchan, scalestor, offsetstor, csamp, 
+    //	      locstor, 
+    //	      offstor, phasorstor, irow);
+    
+    locuvw(uvstor, dpstor, visfreqstor, &nvchan, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
   }//end pragma parallel

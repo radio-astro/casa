@@ -1713,7 +1713,7 @@ bool QtProfile::exportASCIISpectrum(QString &fn)
     for (int k = 1; k < i; k++) {
       ts << "\n";
       ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-      CurveData data = *(pixelCanvas->getCurveData(k));
+      CurveData data = pixelCanvas->getCurveData(k);
       int j = data.size() / 2;
       for (int m = 0; m < j; m++) {
          ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";

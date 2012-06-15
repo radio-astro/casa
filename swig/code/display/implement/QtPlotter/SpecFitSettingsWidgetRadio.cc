@@ -1,6 +1,29 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
-#include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageFit1D.h>
 #include <components/SpectralComponents/PCFSpectralElement.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -12,23 +35,76 @@
 #include <display/QtPlotter/SpecFitGaussian.h>
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
-#include <QWidget>
+
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QTemporaryFile>
 #include <QMutableMapIterator>
 #include <QList>
 #include <QDebug>
+#include <QThread>
+#include <sys/time.h>
 
-#include <iostream>
-using namespace std;
 
 namespace casa {
 
+/**
+ * Responsible for running the spectral fitting calculations in
+ * the background so that we don't freeze the GUI.
+ */
+class SpecFitThread : public QThread {
+public:
+	SpecFitThread( ImageProfileFitter* profileFitter );
+	void run();
+	void setStartValue( float val );
+	void setEndValue( float val );
+	float getStartValue() const;
+	float getEndValue() const;
+	const Record& getResults() const;
+private:
+	ImageProfileFitter* fitter;
+	Record results;
+	float startValue;
+	float endValue;
+};
+
+const Record& SpecFitThread::getResults() const {
+	return results;
+}
+
+SpecFitThread::SpecFitThread( ImageProfileFitter* profileFitter ):
+		fitter( profileFitter ){
+}
+
+void SpecFitThread::setStartValue( float val ){
+	startValue = val;
+}
+void SpecFitThread::setEndValue( float val ){
+	endValue = val;
+}
+
+float SpecFitThread::getStartValue() const {
+	return startValue;
+}
+float SpecFitThread::getEndValue() const {
+	return endValue;
+}
+void SpecFitThread::run(){
+	results = fitter->fit();
+}
+
+
+//-------------------------------------------------------------------------------
+
+
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
-    : QWidget(parent), fitter( NULL ), POINT_COUNT(20), SUM_FIT_INDEX(-1)
+    : QWidget(parent), fitter( NULL ), specFitThread( NULL ),
+      progressDialog("Calculating fit(s)...", "Cancel", 0, 100, this),
+      POINT_COUNT(20), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
+
+	progressDialog.setModal( true );
+	connect( &progressDialog, SIGNAL(canceled()), this, SLOT(cancelFit()));
 
 	//Until we get the code written
 	ui.loadButton->setEnabled( false );
@@ -119,6 +195,10 @@ void SpecFitSettingsWidgetRadio::reset(){
 	if ( fitter != NULL ){
 		delete fitter;
 		fitter = NULL;
+	}
+	if ( specFitThread != NULL ){
+		delete specFitThread;
+		specFitThread = NULL;
 	}
 
 	//Empty the curves and their associated data.
@@ -350,9 +430,7 @@ double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
 }
 
 void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ){
-	Vector<Float> z_xval = getXValues();
-	Vector<Float> z_yval = getYValues();
-	Vector<Float> z_eval = getZValues();
+
 	reset();
 	const ImageInterface<float>* image = getImage();
 	const String pixelBox = getPixelBox();
@@ -365,6 +443,7 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 
 	int startChannelIndex = -1;
 	int endChannelIndex = -1;
+	Vector<Float> z_xval = getXValues();
 	findChannelRange( startVal, endVal, z_xval, startChannelIndex, endChannelIndex );
 	if ( startChannelIndex >= 0 && endChannelIndex >= 0 ){
 
@@ -399,45 +478,69 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 		}
 
 		//Do the fit.
-		Record results = fitter->fit();
+		specFitThread = new SpecFitThread( fitter );
+		connect( specFitThread, SIGNAL(finished()), this, SLOT(fitDone()));
+		specFitThread->setStartValue( startVal );
+		specFitThread->setEndValue( endVal );
+		specFitThread->start();
+		fitCancelled = false;
+		progressDialog.setValue( 0 );
+		progressDialog.show();
+	}
+}
 
-		//Decide if we got any valid fits
-		//DataType resultType = results.dataType(ImageProfileFitter::_SUCCEEDED);
+void SpecFitSettingsWidgetRadio::fitDone(){
+	float finishedProgress = 10;
+	const int PROGRESS_END = 100;
+	progressDialog.setValue( static_cast<int>(finishedProgress) );
 
-		Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
-		Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
-		if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
+	const Record& results = specFitThread->getResults();
 
-			//Tell the user basic information about the fit.
-			Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+	//Decide if we got any valid fits
+	Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
+	Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
+	float progressIncrement = 90.0f / ntrue( succeeded );
+	if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
 
-			String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
-			msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
-			msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
-			postStatus( msg );
+		//Tell the user basic information about the fit.
+		Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+		String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
+		msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
+		msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
+		postStatus( msg );
 
-			//Initialize the x-values.  In the case of a polynomial fit, the
-			//x values need to be in pixels.
-			Vector<Float> xValues( POINT_COUNT );
-			Vector<Float> xValuesPix( POINT_COUNT );
-			float dx = (endVal - startVal) / POINT_COUNT;
-			for( int i = 0; i < POINT_COUNT; i++ ){
-				xValues[i] = startVal + i * dx;
-				xValuesPix[i] = toPixels( xValues[i] );
+		//Initialize the x-values.  In the case of a polynomial fit, the
+		//x values need to be in pixels.
+		Vector<Float> xValues( POINT_COUNT );
+		Vector<Float> xValuesPix( POINT_COUNT );
+		float startVal = specFitThread->getStartValue();
+		float endVal = specFitThread->getEndValue();
+		float dx = (endVal - startVal) / POINT_COUNT;
+		for( int i = 0; i < POINT_COUNT; i++ ){
+			xValues[i] = startVal + i * dx;
+			xValuesPix[i] = toPixels( xValues[i] );
+		}
+
+		//Go through each of the fits.  This could be 1 if multifit is not
+		//checked.  On the other hand it could be hundreds if multifit is checked.
+		std::vector<bool> successVector;
+		succeeded.tovector( successVector );
+		for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ){
+			if ( fitCancelled ){
+				break;
 			}
-
-			//Go through each of the fits.  This could be 1 if multifit is not
-			//checked.  On the other hand it could be hundreds if multifit is checked.
-			std::vector<bool> successVector;
-			succeeded.tovector( successVector );
-			for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ){
-				//The fit succeeded.
-				if ( successVector[i] ){
-					//Initialize a SpecFit curve for the fit.
-					processFitResults( cSys, xValues, xValuesPix );
-				}
+			//The fit succeeded.
+			if ( successVector[i] ){
+				//Initialize a SpecFit curve for the fit.
+				processFitResults( xValues, xValuesPix );
 			}
+			finishedProgress = finishedProgress + progressIncrement;
 
+			progressDialog.setValue( static_cast<int>(finishedProgress) );
+		}
+
+		progressDialog.setValue( PROGRESS_END );
+		if ( !fitCancelled ){
 			if ( !ui.multiFitCheckBox->isChecked() ){
 				drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
 			}
@@ -446,16 +549,15 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 				Util::showUserMessage( msg, this );
 			}
 		}
-		else{
-			String msg = String("Data could not be fitted!");
-			QString msgStr(msg.c_str());
-			postStatus(msg);
-			Util::showUserMessage( msgStr, this);
-		}
-
+	}
+	else {
+		progressDialog.setValue( PROGRESS_END );
+		String msg = String("Data could not be fitted!");
+		QString msgStr(msg.c_str());
+		postStatus(msg);
+		Util::showUserMessage( msgStr, this);
 	}
 }
-
 
 void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	//Make sure we are in our selected rectangular region before
@@ -508,7 +610,7 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	}
 }
 
-void SpecFitSettingsWidgetRadio::processFitResults( const CoordinateSystem& cSys,
+void SpecFitSettingsWidgetRadio::processFitResults(
 		Vector<float>& xValues, Vector<float>& xValuesPix){
 
 	//Iterate through all the fits and post the results
@@ -536,7 +638,7 @@ void SpecFitSettingsWidgetRadio::processFitResults( const CoordinateSystem& cSys
 			SpectralElement::Types fitType = solutions[j]->getType();
 			bool successfulFit = false;
 			if ( fitType == SpectralElement::GAUSSIAN ){
-				successfulFit = processFitResultGaussian( solutions[j], cSys, j, curves );
+				successfulFit = processFitResultGaussian( solutions[j], j, curves );
 			}
 			else if (fitType == SpectralElement::POLYNOMIAL ){
 				successfulFit = processFitResultPolynomial( solutions[j], curves );
@@ -554,7 +656,6 @@ void SpecFitSettingsWidgetRadio::processFitResults( const CoordinateSystem& cSys
 
 				QString curveName = taskMonitor->getFileName() +curves[successCount]->getSuffix();
 				curves[successCount]->setCurveName( curveName );
-
 				curves[successCount]->setFitCenter( centerX, centerY );
 				successCount++;
 			}
@@ -589,7 +690,7 @@ bool SpecFitSettingsWidgetRadio::processFitResultPolynomial( const SpectralEleme
 
 
 bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement* solution,
-		const CoordinateSystem& cSys, int index, QList<SpecFit*>& curves){
+		int index, QList<SpecFit*>& curves){
 
 	const PCFSpectralElement *pcf = dynamic_cast<const PCFSpectralElement*>(solution);
 
@@ -605,6 +706,8 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 	//Center and fwhm needs to be converted from
 	//pixels to the current units we are using.
 	String xAxisUnit = getXAxisUnit();
+	ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage());
+	CoordinateSystem cSys = img->coordinates();
 	int axisCount = cSys.nPixelAxes();
 	IPosition imPos(axisCount);
 	Bool velocityUnits;
@@ -645,6 +748,10 @@ void SpecFitSettingsWidgetRadio::getConversion( const String& unitStr, Bool& vel
 	else if ( mIndex >= 0 || angIndex >= 0 ){
 		wavelength = true;
 	}
+}
+
+void SpecFitSettingsWidgetRadio::cancelFit(){
+	fitCancelled = true;
 }
 
 void SpecFitSettingsWidgetRadio::specLineFit(){

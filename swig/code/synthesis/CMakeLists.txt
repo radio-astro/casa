@@ -28,6 +28,7 @@ casa_add_library( synthesis
   implement/TransformMachines/DBeamSkyJones.cc
   implement/TransformMachines/FTMachine.cc
   implement/TransformMachines/GridFT.cc
+  implement/TransformMachines/SetJyGridFT.cc
   implement/TransformMachines/rGridFT.cc
   implement/TransformMachines/HetArrayConvFunc.cc
   implement/TransformMachines/MosaicFT.cc

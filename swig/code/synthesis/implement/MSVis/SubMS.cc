@@ -6450,7 +6450,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col,
                                                   const MeasurementSet& msref)
 {
-  // Memoize both for efficiency and so that the info message at the bottom
+  // Memorize both for efficiency and so that the info message at the bottom
   // isn't unnecessarily repeated.
   static String my_colNameStr = "";
   static Vector<MS::PredefinedColumns> my_colNameVect;
@@ -6458,10 +6458,11 @@ const Vector<MS::PredefinedColumns>& SubMS::parseColumnNames(String col,
   Vector<MS::PredefinedColumns> wanted;       // Data columns to pick up if present.
   
   col.upcase();
-  if(col == my_colNameStr && col != ""){
-    return my_colNameVect;
-  }    
-  else if(col == "None"){
+// This version of parseColumnNames does not reuse results of previous calls
+// but always checks the given columns because it cannot be certain that msref
+// refers to the same MS with every call.
+
+  if(col == "None"){
     my_colNameStr = "";
     my_colNameVect.resize(0);
     return my_colNameVect;

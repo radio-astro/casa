@@ -1526,23 +1526,29 @@ if (!markCenter()) return;
 					  Quantity peakFlux=SkyCompRep::integralToPeakFlux(image->coordinates().directionCoordinate(0), ComponentType::GAUSSIAN, pFlux(0),
 							  imUnit, Quantity(allpars(0),"rad"), Quantity(allpars(1),"rad"), (image->imageInfo()).restoringBeam());
 
-					  if ((imUnit.getName()).size()>0){
+					  //
+					  if ((imUnit.getName()).size()<1 || peakFlux.getUnit()!=imUnit.getName()){
+						  // if the image has no units, or the units of the peakflux
+						  // is not identical to the original unit, store only the values;
+						  // "imfit" sometimes assumes unit...; not sure whether this is the
+						  // best solution (MK)
+						  zspKey = "IntegrFlux";
+						  zspVal = String::toString((pFlux(0)).getValue());
+						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+
+						  zspKey = "PeakFlux";
+						  zspVal = String::toString(peakFlux.getValue());
+						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
+					  }
+					  else{
 						  // if a unit was defined for the image, store
-						  // both, the peak flux and the integrated flux
-						  zspKey = "IntFlux";
+						  // value and unit
+						  zspKey = "IntegrFlux";
 						  zspVal = String::toString(pFlux(0));
 						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
 
 						  zspKey = "PeakFlux";
 						  zspVal = String::toString(peakFlux);
-						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
-					  }
-					  else{
-						  // if the image has no units, the ImageFitter assumes
-						  // a unit, but the integrated flux does not seem to be
-						  // right. The peak flux WITHOUT UNITS is OK.
-						  zspKey = "PeakFlux";
-						  zspVal = String::toString(peakFlux.getValue());
 						  layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
 					  }
 				  }
