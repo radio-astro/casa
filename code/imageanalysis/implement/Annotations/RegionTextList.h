@@ -47,21 +47,6 @@ namespace casa {
 // See the region file format proposal attached to CAS-2285 (https://bugs.nrao.edu/browse/CAS-2285)
 // </synopsis>
 
-// <example>
-// To extact individual annotations/regions from a RegionTestList object, do something like
-
-// const Vector<AsciiAnnotationFileLine> fileLines = region_list.getLines();
-// for (uInt i=0; i<fileLines.size(); i++) {
-//    if (fileLines[i].getType() == AsciiAnnotationFileLine::ANNOTATION) {
-//        const AnnotationBase* annotation = fileLines[i].getAnnotationBase();
-//        AnnotationBase::Type myType = annotation->getType();
-//        switch (type) {
-//           // do stuff dependent on the type of region/annotation
-//        }
-//    }
-// }
-// </example>
-
 class RegionTextList {
 
 public:

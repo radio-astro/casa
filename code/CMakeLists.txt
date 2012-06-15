@@ -201,10 +201,8 @@ if( APPLE )
         if( archflag STREQUAL x86_64 )
 	      if(CMAKE_SYSTEM MATCHES ^Darwin-11)
                   set ( casa_packages /opt/casa/darwin11 )
-                  set( PYTHON_ROOT_DIR /opt/casa/darwin11 )
 	      else()
                   set ( casa_packages /opt/casa/darwin10-64b )
-                  set( PYTHON_ROOT_DIR /opt/casa/darwin10-64b )
 	      endif()
               add_definitions( -DAIPS_64B )
 	endif()
@@ -420,7 +418,6 @@ add_definitions(
 # seen nowhere
 #        -DHAVE_QT4
 #        -DAIPS_USEATM         # only in synthesis test
-#        -DAIPS_USEMATPLOTLIB  # commented out in tableplot
 )
 
 if( CMAKE_SYSTEM_NAME STREQUAL Linux )
@@ -722,121 +719,11 @@ if( USE_ALMAWVR )
            )
 endif()
 
-# Python
-
-# First determine which python version to search for,
-# then do the actual search
-if( NOT PYTHON_FOUND )
-
-  if ( NOT PYTHON_LIBNAME )
-    set( _names 2.6 2.7 2.5.2 2.5 )
-    # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
-  else()
-    set( _names ${PYTHON_LIBNAME} )
-  endif()
-
-  set( _found False )
-  foreach( _v ${_names} )
-
-    casa_find( 
-      PYTHON${_v} 
-      PREFIX_HINTS ${PYTHON_ROOT_DIR}
-      LIBS python${_v} 
-      NO_REQUIRE 
-      )
-
-    if( PYTHON${_v}_FOUND )
-      set( PYTHON_LIBNAME ${_v} )
-      set( _found True )
-      break()
-    endif()
-
-  endforeach()
-  
-  if( NOT _found )
-    message( FATAL_ERROR "Could not find any PYTHON library with version one of ${_names}. Please check!" )
-  endif()
-
-endif()
-
-if( NOT PYTHON_LIBNAME )
-  # Found Python, but PYTHON_LIBNAME is undefined, that is impossible.
-  message( FATAL_ERROR "The variable PYTHON_LIBNAME is undefined. Most likely, CMake's cache is out of date and you need to redetect your PYTHON installation (\"cmake -U PYTHON*\")")
-endif()
-
-string( SUBSTRING ${PYTHON_LIBNAME} 0 3 PYTHONV )
-string( REPLACE "." "" PV ${PYTHONV} )
-set( python_library python${PYTHON_LIBNAME} )
-
-# Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
-# the full python library path
-string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
-if( _match )
-  string( REGEX REPLACE "/lib(64)?/lib${python_library}.*" "" python_prefix ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
-else()
-  # Python library was not in a lib(64) directory!
-  message( WARNING "Python library path \"${PYTHON${PYTHON_LIBNAME}_LIBRARIES}\" does not contain \"/lib(64)/lib${python_library}\"" )
-  set( python_prefix ${casa_packages} )
-endif()
-
-#
-# For some unknown reason cmake sets the /usr for Lion
-#
-if( APPLE AND NOT python_prefix )
-   set( python_prefix ${casa_packages} )
-endif()
-
-
-# The python version and prefix is known, do the actual search
-if( NOT PYTHON_FOUND )
-  message( STATUS "Looking for PYTHON version ${PYTHONV}.x in ${python_prefix}" )
-endif()
-
-message( "${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core")
-message( "${NUMPY_ROOT_DIR}" )
-casa_find( PYTHON
-  VERSION 2.5    # minimum required
-  INCLUDES Python.h 
-     numpy/npy_interrupt.h   # for numpy
-  INCLUDES_SUFFIXES python${PYTHONV}
-  PREFIX_HINTS 
-     ${NUMPY_ROOT_DIR}     
-     ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
-     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
-     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
-     ${python_prefix} # Support the ALMA ACS special case.
-  LIBS ${python_library}
-  CPP_VERSION PY_VERSION )
-
-# Store PYTHON_LIBNAME in the cache
-set( PYTHON_LIBNAME ${PYTHON_LIBNAME} CACHE STRING "Python major and minor version to use" FORCE )
-
-# Define pyroot to two directory levels above Python.h.
-string( REGEX REPLACE "/[^/]+/[^/]+/?$" "" pyroot ${PYTHON_Python.h} )
-
-if( APPLE )
-  if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
-    set( pyroot ${pyroot}/lib/Python.framework/Versions/${PYTHONV} )
-  else()
-    set( pyroot ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} )
-  endif()
-endif()
-
-set( PYTHON_DEFINITIONS ${PYTHON_DEFINITIONS}
-  -DAIPSROOT=\"${CMAKE_SOURCE_DIR}\"
-  -DAIPSARCH=\"${arch}\"
-  -DAIPSSITE=\"garching\"
-  -DPYTHONROOT=\"${pyroot}\"
-  -DPYTHONVER=\"${PYTHONV}\"
-  -DPYVERSION=${PV} )
-
 # Java
 casa_find( Java
   VERSION 1.5
   PROGRAMS java
   PROG_VERSION "-version")
-
-set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/xmlcasa/install/saxon8.jar )
 
 # C++ DBus
 #
@@ -877,7 +764,7 @@ casa_find( DBUS
 
 # ATM
 casa_find( ATM
-  VERSION 0.5
+  VERSION 0.4
   INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_SUFFIXES ATM
   LIBS aatm
@@ -916,53 +803,6 @@ IF (NOT WIN32)
    PKG_CHECK_MODULES(PC_LIBXML libxml-2.0)
    SET(LIBXML2_DEFINITIONS ${LIBXML2_DEFINITIONS} ${PC_LIBXML_CFLAGS_OTHER})
 ENDIF (NOT WIN32)
-
-# CCMTools
-file( WRITE ${CMAKE_BINARY_DIR}/ccmtools_test.py
-      "import sys\n"
-      "print 'Successfully launched IPython from C++.'\n" 
-      "sys.exit(0)\n")
-#
-# The names of CCMTools libraries have changed.
-# Need to support both naming conventions, until the new
-# version is universally available. (This implementation
-# would be cleaner if CCMTools exported a version number.)
-#
-if( EXISTS ${casa_packages}/lib/libccmtools_local.so OR
-    EXISTS ${casa_packages}/lib64/libccmtools_local.so OR
-    EXISTS ${casa_packages}/lib/libccmtools_local.dylib )
-  set( _ccmtools_libs ccmtools_local )
-elseif( EXISTS ${casa_packages}/lib/libCCM_Python.so OR
-        EXISTS ${casa_packages}/lib64/libCCM_Python.so OR
-        EXISTS ${casa_packages}/lib/libCCM_Python.dylib )
-  set( _ccmtools_libs CCM_Python CCM_Local_HomeFinder WX_Utils_error WX_Utils_code WX_Utils_types )
-else()
-  set( _ccmtools_libs ccmtools_local )
-endif()
-
-casa_find( CCMTOOLS
-  VERSION 0.5.5
-  INCLUDES CCM_Local/HomeFinder.h
-           CCM_Python/BasicTypes.h
-           CCM_Python/Py.h
-           WX/Utils/error.h
-           WX/Utils/type.h
-  NO_CHECK             # The headers are not compilable without linking
-  LIBS ${_ccmtools_libs}
-  PROGRAMS ccmtools
-  PROG_VERSION "--version" 
-  EXTRA_TEST " 
-    CCM_Python::Py::init(argc, argv, \"${pyroot}/site-packages:${CMAKE_BINARY_DIR}\");
-    CCM_Python::Py py;
-    py.evalFile(\"ccmtools_test.py\");
-    /* This code is not reached, if IPython was launched */
-    return 1;
-    "
-  PREFIX_HINTS ${CCMTOOLS_ROOT_DIR}
-  DEPENDS PYTHON
-)
-
-set( CCMTOOLS_ccmtools_FLAGS -Xms1024M -Xmx1024M )
 
 #find_package( OpenGL REQUIRED )
 #set( OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} CACHE PATH "OpenGL include directories" FORCE )
@@ -1049,25 +889,6 @@ set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
 casa_config_end()
 
-#
-# The following variables are substitued into python scripts
-#
-set( PYTHON_LIBD ${CMAKE_INSTALL_PREFIX}/python/${PYTHONV} )
-set( PYTHON_TASKD ${PYTHON_LIBD} )
-#
-# allow user to override contents of casadef.py (needed for linux rpms)
-#
-if( NOT PYTHONLIBD )
-    set( PYTHON_LIBD_CASADEF ${PYTHON_LIBD} )
-else()
-    set( PYTHON_LIBD_CASADEF ${PYTHONLIBD} )
-endif()
-if( NOT PYTHONTASKD )
-    set( PYTHON_TASKD_CASADEF ${PYTHON_TASKD} )
-else()
-    set( PYTHON_TASKD_CASADEF ${PYTHONTASKD} )
-endif()
-
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
 
@@ -1081,17 +902,17 @@ else()
     casa_add_module( graphics CASACORE X11 WCSLIB Boost)
   endif()
 endif()
+casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
-casa_add_module( tableplot CASACORE PYTHON Boost)
-casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics Boost)
+casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
 casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( synthesis CASACORE ATM casadbus tableplot Boost )
-casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost )
+casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost stdcasa casadbus )
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)
-casa_add_module( alma CASACORE LIBXML2  LIBXSLT Boost synthesis)
+casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
 #casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE Boost)
@@ -1099,33 +920,21 @@ casa_add_module( nrao CASACORE Boost)
 casa_add_module( spectrallines CASACORE imageanalysis Boost)
 casa_add_module( miriad CASACORE Boost)
 if( USE_ALMAWVR )
-  casa_add_module( air_casawvr CASACORE ALMAWVR Boost tableplot synthesis WCSLIB CFITSIO LAPACK )
+  casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
   message( WARNING "Will not build wvrgcal." )
 endif()
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms
-display flagging synthesis dish nrao spectrallines imageanalysis miriad
-calanalysis Boost )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.
 #
 
-# Get library paths from the first of the rpfits/cfitsio/python library full paths.
+# Get library paths from the first of the rpfits/cfitsio library full paths.
 list( GET RPFITS_LIBRARIES 0 rpfits_lib )
 get_filename_component(rpfitslibd ${rpfits_lib} PATH)
 
 list( GET CFITSIO_LIBRARIES 0 cfitsio_lib )
 get_filename_component(cfitsiolibd ${cfitsio_lib} PATH)
-
-list( GET PYTHON_LIBRARIES 0 python_lib )
-get_filename_component(pythonlibd ${python_lib} PATH)
-
-# convert semicolons to spaces...
-set( _ii "" )
-foreach( _i ${PYTHON_INCLUDE_DIRS} )
-  set( _ii "${_ii} ${_i}" )
-endforeach()
 
 set( _cc "" )
 foreach( _c ${CASACORE_LIBRARIES} )
@@ -1136,7 +945,7 @@ foreach( _c ${CASACORE_LIBRARIES} )
   endif()
 endforeach()
 
-get_property( MYDEFINES DIRECTORY xmlcasa PROPERTY COMPILE_DEFINITIONS )
+get_property( MYDEFINES DIRECTORY PROPERTY COMPILE_DEFINITIONS )
 # convert semicolons to -Dmydefine...
 set( _dd "" )
 foreach( _d ${MYDEFINES} )
@@ -1146,7 +955,6 @@ endforeach()
 
 file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   "# This file exists only for ASAP\n"
-  PYTHONVER=${PYTHONV}\n
   CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
   COPTFLAGS = \"${_dd}\"\n
   LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
@@ -1154,10 +962,6 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   CORELIB = ${_cc}\n
   WCSLIBLIB = ${WCSLIB_wcs}\n
   WCSLIBLIBD = .\n
-  PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${pythonlibd}\n
-  PYTHONINCD = ${_ii}\n
-  PYTHONLIB = ${PYTHON_LIBRARIES}\n
   BOOSTROOT = ${BOOST_ROOT}\n
   RPFITSLIBD = ${rpfitslibd}\n
   CFITSIOLIBD = ${cfitsiolibd}\n
@@ -1166,10 +970,8 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
-add_subdirectory( doc/taskref )
-add_subdirectory( doc/casaref )
 add_subdirectory( doc/userman )
 
 # All documentation
-add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf userman_html userman_pdf)
+add_custom_target( doc DEPENDS userman_html userman_pdf)
 #add_custom_target( doc )

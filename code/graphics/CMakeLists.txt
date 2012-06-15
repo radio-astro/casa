@@ -39,3 +39,35 @@ casa_add_library( graphics
   ${casa_graphics_pgplot_obj}
   ${casa_graphics_pgplot_src}
   )
+install (FILES
+	implement/GenericPlotter/Plot.h
+	implement/GenericPlotter/PlotAnnotation.h
+	implement/GenericPlotter/PlotCanvas.h
+	implement/GenericPlotter/PlotCanvasLayout.h
+	implement/GenericPlotter/PlotData.h
+	implement/GenericPlotter/PlotEvent.h
+	implement/GenericPlotter/PlotEventHandler.h
+	implement/GenericPlotter/PlotFactory.h
+	implement/GenericPlotter/PlotItem.h
+	implement/GenericPlotter/PlotLogger.h
+	implement/GenericPlotter/PlotOperation.h
+	implement/GenericPlotter/PlotOptions.h
+	implement/GenericPlotter/PlotPanel.h
+	implement/GenericPlotter/PlotShape.h
+	implement/GenericPlotter/PlotTool.h
+	implement/GenericPlotter/Plotter.h
+	implement/GenericPlotter/SimplePlotter.h
+	DESTINATION include/casacode/graphics/GenericPlotter
+	)
+install (FILES
+	implement/Graphics/PGPLOT.h
+	implement/Graphics/PGPlotterLocal.h
+	implement/Graphics/X11Intrinsic.h
+	DESTINATION include/casacode/graphics/Graphics
+	)
+install (FILES
+	implement/X11/X11Util.h
+	implement/X11/X_enter.h
+	implement/X11/X_exit.h
+	DESTINATION include/casacode/graphics/X11
+	)

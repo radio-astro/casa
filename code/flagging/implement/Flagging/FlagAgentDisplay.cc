@@ -674,6 +674,10 @@ FlagReport
 				reportplotter_p->setlabel(xlabel,ylabel,title,report_panels_p[0].getInt());
 				
 			      }// end of plotpoints
+			    else 
+			      {
+				*logger_p << "NO Display for : " << reportid << " : " << agentName << LogIO::POST;
+			      }
 				
 			    getReportUserInput();
 
@@ -906,6 +910,7 @@ FlagReport
     
     while( ! exitEventLoop)
       {
+	
 	returnvalue = reportplotter_p->eventloop();
 	if(returnvalue == "Next" || returnvalue == "Prev" || returnvalue == "Quit")
 	  {
