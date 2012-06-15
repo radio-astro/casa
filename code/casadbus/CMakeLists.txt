@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_dbus_interface( plotserver/PlotServerProxy.dbusproxy.h implement/plotserver/PlotServerProxy.dbusproxy.xml )
-casa_add_dbus_interface( session/DBusSession.dbusproxy.h implement/session/DBusSession.dbusproxy.xml )
-casa_add_dbus_interface( viewer/ViewerProxy.dbusproxy.h implement/viewer/ViewerProxy.dbusproxy.xml )
+casa_add_dbus_interface( plotserver/PlotServerProxy.dbusproxy.h plotserver/PlotServerProxy.dbusproxy.xml )
+casa_add_dbus_interface( session/DBusSession.dbusproxy.h session/DBusSession.dbusproxy.xml )
+casa_add_dbus_interface( viewer/ViewerProxy.dbusproxy.h viewer/ViewerProxy.dbusproxy.xml )
 
 install( FILES 
 	${CMAKE_CURRENT_BINARY_DIR}/plotserver/PlotServerProxy.dbusproxy.h
@@ -36,43 +36,43 @@ install( FILES
 	)
 
 casa_add_library( casadbus
-  implement/plotserver/PlotServerProxy.cc
-  implement/session/DBusSession.cc
-  implement/session/Dispatcher.cc
-  implement/types/record.cc
-  implement/types/variant.cc
-  implement/types/nullptr.cc
-  implement/utilities/BusAccess.cc
-  implement/utilities/Conversion.cc
-  implement/viewer/ViewerProxy.cc
+  plotserver/PlotServerProxy.cc
+  session/DBusSession.cc
+  session/Dispatcher.cc
+  types/record.cc
+  types/variant.cc
+  types/nullptr.cc
+  utilities/BusAccess.cc
+  utilities/Conversion.cc
+  viewer/ViewerProxy.cc
  
 plotserver/PlotServerProxy.dbusproxy.h
 session/DBusSession.dbusproxy.h
 viewer/ViewerProxy.dbusproxy.h  )
 
 install (FILES
-	implement/plotserver/PlotServerProxy.h
+	plotserver/PlotServerProxy.h
 	DESTINATION include/casacode/casadbus/plotserver
 	)
 install (FILES
-	implement/session/DBusSession.h
-	implement/session/Dispatcher.h
+	session/DBusSession.h
+	session/Dispatcher.h
 	DESTINATION include/casacode/casadbus/session
 	)
 install (FILES
-	implement/types/functor.h
-	implement/types/nullptr.h
-	implement/types/ptr.h
-	implement/types/record.h
-	implement/types/variant.h
+	types/functor.h
+	types/nullptr.h
+	types/ptr.h
+	types/record.h
+	types/variant.h
 	DESTINATION include/casacode/casadbus/types
 	)
 install (FILES
-	implement/utilities/BusAccess.h
-	implement/utilities/Conversion.h
+	utilities/BusAccess.h
+	utilities/Conversion.h
 	DESTINATION include/casacode/casadbus/utilities
 	)
 install (FILES
-	implement/viewer/ViewerProxy.h
+	viewer/ViewerProxy.h
 	DESTINATION include/casacode/casadbus/viewer
 	)

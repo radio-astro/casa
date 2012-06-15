@@ -19,31 +19,31 @@
 #
 
 
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/implement/Filling ) 
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/Filling ) 
 # because the generated code contain relative paths to the source tree
 
 casa_add_library( miriad
-  implement/Filling/DataLoadingBuf.cc
-  implement/Filling/DOmirfiller.cc
-  implement/Filling/FillMetadata.cc
-  implement/Filling/IDIndex.cc
-  implement/Filling/MirExceptions.cc
-  implement/Filling/MirFiller.cc
-  implement/Filling/MirTypeAssert.cc
-  implement/Filling/MirVisReader.cc
+  Filling/DataLoadingBuf.cc
+  Filling/DOmirfiller.cc
+  Filling/FillMetadata.cc
+  Filling/IDIndex.cc
+  Filling/MirExceptions.cc
+  Filling/MirFiller.cc
+  Filling/MirTypeAssert.cc
+  Filling/MirVisReader.cc
   )
 
 install (FILES
-	implement/Filling/DOmirfiller.h
-	implement/Filling/DataLoadingBuf.h
-	implement/Filling/FillMetadata.h
-	implement/Filling/IDIndex.h
-	implement/Filling/MirDataBuffer.h
-	implement/Filling/MirExceptions.h
-	implement/Filling/MirFiller.h
-	implement/Filling/MirTypeAssert.h
-	implement/Filling/MirVarHandler.h
-	implement/Filling/MirVisReader.h
+	Filling/DOmirfiller.h
+	Filling/DataLoadingBuf.h
+	Filling/FillMetadata.h
+	Filling/IDIndex.h
+	Filling/MirDataBuffer.h
+	Filling/MirExceptions.h
+	Filling/MirFiller.h
+	Filling/MirTypeAssert.h
+	Filling/MirVarHandler.h
+	Filling/MirVisReader.h
 	DESTINATION include/casacode/miriad/Filling
 	)
 

@@ -52,35 +52,35 @@ add_custom_command( OUTPUT version.cc
 	-e 's|PATCH|${CASA_PATCH_VERSION}|'
 	-e 's|REVISION|${SVNREVISION}|'
 	-e 's|DATE|${TAGGEDTIME}|'
-	${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template > tmp4.txt
+	${CMAKE_CURRENT_SOURCE_DIR}/version.template > tmp4.txt
 	COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
 	|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/implement/version.template
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.template
 	DEPENDS definitions
 )
 
 
 casa_add_library( stdcasa
-	implement/StdCasa/CasacSupport.cc
-	implement/StdCasa/record.cc
-	implement/StdCasa/variant.cc
-	implement/version2.cc
+	StdCasa/CasacSupport.cc
+	StdCasa/record.cc
+	StdCasa/variant.cc
+	version2.cc
 	version.cc
 	)
 add_dependencies( libstdcasa_fast stdcasa_definitions )
 add_dependencies( libstdcasa      stdcasa_definitions )
 install (FILES
-	implement/Quantity.h
-	implement/array.h
-	implement/record.h
-	implement/variant.h
-	implement/casac.h
-	implement/version.h
+	Quantity.h
+	array.h
+	record.h
+	variant.h
+	casac.h
+	version.h
 	DESTINATION include/casacode/stdcasa
 	)
 install (FILES
-	implement/StdCasa/CasacSupport.h
-	implement/StdCasa/string_conversions
+	StdCasa/CasacSupport.h
+	StdCasa/string_conversions
 	DESTINATION include/casacode/stdcasa/StdCasa
 	)

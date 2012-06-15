@@ -32,659 +32,659 @@ if( APPLE AND
 endif()
 
 casa_add_library( alma
-implement/ASDM/AlmaRadiometerRow.cc
-implement/ASDM/AlmaRadiometerTable.cc
-implement/ASDM/Angle.cc
-implement/ASDM/AngularRate.cc
-implement/ASDM/AnnotationRow.cc
-implement/ASDM/AnnotationTable.cc
-implement/ASDM/AntennaRow.cc
-implement/ASDM/AntennaTable.cc
-implement/ASDM/ArrayTime.cc
-implement/ASDM/ArrayTimeInterval.cc
-implement/ASDM/ASDM.cc
-implement/ASDM/Base64.cc
-implement/ASDMBinaries/BaselineMetadata.cc
-implement/ASDMBinaries/BaselinesSet.cc
-implement/ASDMBinaries/DataDescriptionsSet.cc
-implement/ASDMBinaries/Error.cc
-implement/ASDMBinaries/Integration.cc
-implement/ASDMBinaries/SDMBinData.cc
-implement/ASDMBinaries/SDMDataObject.cc
-implement/ASDMBinaries/SDMDataObjectParser.cc
-implement/ASDMBinaries/SDMDataObjectReader.cc
-implement/ASDMBinaries/SDMDataObjectStreamReader.cc
-implement/ASDMBinaries/SDMDataObjectWriter.cc
-implement/ASDMBinaries/SwitchCyclesList.cc
-implement/ASDM/BooleanWrapper.cc
-implement/ASDM/ByteWrapper.cc
-implement/ASDM/CalAmpliRow.cc
-implement/ASDM/CalAmpliTable.cc
-implement/ASDM/CalAtmosphereRow.cc
-implement/ASDM/CalAtmosphereTable.cc
-implement/ASDM/CalBandpassRow.cc
-implement/ASDM/CalBandpassTable.cc
-implement/ASDM/CalCurveRow.cc
-implement/ASDM/CalCurveTable.cc
-implement/ASDM/CalDataRow.cc
-implement/ASDM/CalDataTable.cc
-implement/ASDM/CalDelayRow.cc
-implement/ASDM/CalDelayTable.cc
-implement/ASDM/CalDeviceRow.cc
-implement/ASDM/CalDeviceTable.cc
-implement/ASDM/CalFluxRow.cc
-implement/ASDM/CalFluxTable.cc
-implement/ASDM/CalFocusModelRow.cc
-implement/ASDM/CalFocusModelTable.cc
-implement/ASDM/CalFocusRow.cc
-implement/ASDM/CalFocusTable.cc
-implement/ASDM/CalGainRow.cc
-implement/ASDM/CalGainTable.cc
-implement/ASDM/CalHolographyRow.cc
-implement/ASDM/CalHolographyTable.cc
-implement/ASDM/CalPhaseRow.cc
-implement/ASDM/CalPhaseTable.cc
-implement/ASDM/CalPointingModelRow.cc
-implement/ASDM/CalPointingModelTable.cc
-implement/ASDM/CalPointingRow.cc
-implement/ASDM/CalPointingTable.cc
-implement/ASDM/CalPositionRow.cc
-implement/ASDM/CalPositionTable.cc
-implement/ASDM/CalPrimaryBeamRow.cc
-implement/ASDM/CalPrimaryBeamTable.cc
-implement/ASDM/CalReductionRow.cc
-implement/ASDM/CalReductionTable.cc
-implement/ASDM/CalSeeingRow.cc
-implement/ASDM/CalSeeingTable.cc
-implement/ASDM/CalWVRRow.cc
-implement/ASDM/CalWVRTable.cc
-implement/ASDM/CharacterWrapper.cc
-implement/ASDM/ComplexWrapper.cc
-implement/ASDM/ConfigDescriptionRow.cc
-implement/ASDM/ConfigDescriptionTable.cc
-implement/ASDM/ConversionException.cc
-implement/ASDM/CorrelatorModeRow.cc
-implement/ASDM/CorrelatorModeTable.cc
-implement/ASDM/DataDescriptionRow.cc
-implement/ASDM/DataDescriptionTable.cc
-implement/ASDM/DelayModelRow.cc
-implement/ASDM/DelayModelTable.cc
-implement/ASDM/DopplerRow.cc
-implement/ASDM/DopplerTable.cc
-implement/ASDM/DoubleWrapper.cc
-implement/ASDM/DuplicateKey.cc
-implement/ASDM/EndianStream.cc
-implement/ASDM/Entity.cc
-implement/ASDM/EntityId.cc
-implement/ASDM/EntityRef.cc
-implement/ASDM/EnumerationParser.cc
-implement/ASDM/EphemerisRow.cc
-implement/ASDM/EphemerisTable.cc
-implement/ASDM/ExecBlockRow.cc
-implement/ASDM/ExecBlockTable.cc
-implement/ASDM/FeedRow.cc
-implement/ASDM/FeedTable.cc
-implement/ASDM/FieldRow.cc
-implement/ASDM/FieldTable.cc
-implement/ASDM/FlagRow.cc
-implement/ASDM/FlagTable.cc
-implement/ASDM/FlagCmdRow.cc
-implement/ASDM/FlagCmdTable.cc
-implement/ASDM/FloatWrapper.cc
-implement/ASDM/Flux.cc
-implement/ASDM/FocusModelRow.cc
-implement/ASDM/FocusModelTable.cc
-implement/ASDM/FocusRow.cc
-implement/ASDM/FocusTable.cc
-implement/ASDM/FreqOffsetRow.cc
-implement/ASDM/FreqOffsetTable.cc
-implement/ASDM/Frequency.cc
-implement/ASDM/GainTrackingRow.cc
-implement/ASDM/GainTrackingTable.cc
-implement/ASDM/HistoryRow.cc
-implement/ASDM/HistoryTable.cc
-implement/ASDM/HolographyRow.cc
-implement/ASDM/HolographyTable.cc
-implement/ASDM/Humidity.cc
-implement/ASDM/IllegalAccessException.cc
-implement/ASDM/IntegerWrapper.cc
-implement/ASDM/Interval.cc
-implement/ASDM/InvalidArgumentException.cc
-implement/ASDM/InvalidDataException.cc
-implement/ASDM/Length.cc
-implement/ASDM/LongWrapper.cc
-implement/ASDM/MainRow.cc
-implement/ASDM/MainTable.cc
-implement/ASDM/Merger.cc
-implement/ASDM/Misc.cc
-implement/ASDM/NoSuchRow.cc
-implement/ASDM/NumberFormatException.cc
-implement/ASDM/ObservationRow.cc
-implement/ASDM/ObservationTable.cc
-implement/ASDM/OutOfBoundsException.cc
-implement/ASDM/Parser.cc
-implement/ASDM/PartId.cc
-implement/ASDM/PointingModelRow.cc
-implement/ASDM/PointingModelTable.cc
-implement/ASDM/PointingRow.cc
-implement/ASDM/PointingTable.cc
-implement/ASDM/PolarizationRow.cc
-implement/ASDM/PolarizationTable.cc
-implement/ASDM/Pressure.cc
-implement/ASDM/ProcessorRow.cc
-implement/ASDM/ProcessorTable.cc
-implement/ASDM/ReceiverRow.cc
-implement/ASDM/ReceiverTable.cc
-implement/ASDM/SBSummaryRow.cc
-implement/ASDM/SBSummaryTable.cc
-implement/ASDM/ScaleTable.cc
-implement/ASDM/ScaleTable.h
-implement/ASDM/ScaleRow.cc
-implement/ASDM/ScaleRow.h
-implement/ASDM/ScanRow.cc
-implement/ASDM/ScanTable.cc
-implement/ASDM/SeeingRow.cc
-implement/ASDM/SeeingTable.cc
-implement/ASDM/ShortWrapper.cc
-implement/ASDM/SourceRow.cc
-implement/ASDM/SourceTable.cc
-implement/ASDM/SpectralWindowRow.cc
-implement/ASDM/SpectralWindowTable.cc
-implement/ASDM/Speed.cc
-implement/ASDM/SquareLawDetectorRow.cc
-implement/ASDM/SquareLawDetectorTable.cc
-implement/ASDM/StateRow.cc
-implement/ASDM/StateTable.cc
-implement/ASDM/StationRow.cc
-implement/ASDM/StationTable.cc
-implement/ASDM/StringTokenizer.cc
-implement/ASDM/SubscanRow.cc
-implement/ASDM/SubscanTable.cc
-implement/ASDM/SwitchCycleRow.cc
-implement/ASDM/SwitchCycleTable.cc
-implement/ASDM/SysCalRow.cc
-implement/ASDM/SysCalTable.cc
-implement/ASDM/SysPowerRow.cc
-implement/ASDM/SysPowerTable.cc
-implement/ASDM/Tag.cc
-implement/ASDM/TagFormatException.cc
-implement/ASDM/TagType.cc
-implement/ASDM/Temperature.cc
-implement/ASDM/TotalPowerRow.cc
-implement/ASDM/TotalPowerTable.cc
-implement/ASDM/UniquenessViolationException.cc
-implement/ASDM/WeatherRow.cc
-implement/ASDM/WeatherTable.cc
-implement/ASDM/WVMCalRow.cc
-implement/ASDM/WVMCalTable.cc
-implement/Enumerations/CACAPolarization.cc
-implement/Enumerations/CAccumMode.cc
-implement/Enumerations/CAntennaMake.cc
-implement/Enumerations/CAntennaMotionPattern.cc
-implement/Enumerations/CAntennaType.cc
-implement/Enumerations/CAssociatedCalNature.cc
-implement/Enumerations/CAssociatedFieldNature.cc
-implement/Enumerations/CAtmPhaseCorrection.cc
-implement/Enumerations/CAxisName.cc
-implement/Enumerations/CBasebandName.cc
-implement/Enumerations/CBaselineReferenceCode.cc
-implement/Enumerations/CCalCurveType.cc
-implement/Enumerations/CCalDataOrigin.cc
-implement/Enumerations/CCalibrationDevice.cc
-implement/Enumerations/CCalibrationFunction.cc
-implement/Enumerations/CCalibrationMode.cc
-implement/Enumerations/CCalibrationSet.cc
-implement/Enumerations/CCalType.cc
-implement/Enumerations/CCorrelationBit.cc
-implement/Enumerations/CCorrelationMode.cc
-implement/Enumerations/CCorrelatorCalibration.cc
-implement/Enumerations/CCorrelatorName.cc
-implement/Enumerations/CCorrelatorType.cc
-implement/Enumerations/CDataContent.cc
-implement/Enumerations/CDataScale.cc
-implement/Enumerations/CDetectorBandType.cc
-implement/Enumerations/CDirectionReferenceCode.cc
-implement/Enumerations/CDopplerReferenceCode.cc
-implement/Enumerations/CDopplerTrackingMode.cc
-implement/Enumerations/CFieldCode.cc
-implement/Enumerations/CFilterMode.cc
-implement/Enumerations/CFluxCalibrationMethod.cc
-implement/Enumerations/CFocusMethod.cc
-implement/Enumerations/CFrequencyReferenceCode.cc
-implement/Enumerations/CHolographyChannelType.cc
-implement/Enumerations/CInvalidatingCondition.cc
-implement/Enumerations/CNetSideband.cc
-implement/Enumerations/CPointingMethod.cc
-implement/Enumerations/CPointingModelMode.cc
-implement/Enumerations/CPolarizationType.cc
-implement/Enumerations/CPositionMethod.cc
-implement/Enumerations/CPositionReferenceCode.cc
-implement/Enumerations/CPrimaryBeamDescription.cc
-implement/Enumerations/CPrimitiveDataType.cc
-implement/Enumerations/CProcessorSubType.cc
-implement/Enumerations/CProcessorType.cc
-implement/Enumerations/CRadialVelocityReferenceCode.cc
-implement/Enumerations/CReceiverBand.cc
-implement/Enumerations/CReceiverSideband.cc
-implement/Enumerations/CSBType.cc
-implement/Enumerations/CScanIntent.cc
-implement/Enumerations/CSchedulerMode.cc
-implement/Enumerations/CSidebandProcessingMode.cc
-implement/Enumerations/CSourceModel.cc
-implement/Enumerations/CSpectralResolutionType.cc
-implement/Enumerations/CStationType.cc
-implement/Enumerations/CStokesParameter.cc
-implement/Enumerations/CSubscanIntent.cc
-implement/Enumerations/CSwitchingMode.cc
-implement/Enumerations/CSyscalMethod.cc
-implement/Enumerations/CTimeSampling.cc
-implement/Enumerations/CTimeScale.cc
-implement/Enumerations/CWeightType.cc
-implement/Enumerations/CWindowFunction.cc
-implement/Enumerations/CWVRMethod.cc
-implement/Enumtcl/ACAPolarization.cc
-implement/Enumtcl/AccumMode.cc
-implement/Enumtcl/AntennaMake.cc
-implement/Enumtcl/AntennaMotionPattern.cc
-implement/Enumtcl/AntennaType.cc
-implement/Enumtcl/AssociatedCalNature.cc
-implement/Enumtcl/AssociatedFieldNature.cc
-implement/Enumtcl/AtmPhaseCorrection.cc
-implement/Enumtcl/AxisName.cc
-implement/Enumtcl/BasebandName.cc
-implement/Enumtcl/BaselineReferenceCode.cc
-implement/Enumtcl/CalCurveType.cc
-implement/Enumtcl/CalDataOrigin.cc
-implement/Enumtcl/CalibrationDevice.cc
-implement/Enumtcl/CalibrationFunction.cc
-implement/Enumtcl/CalibrationMode.cc
-implement/Enumtcl/CalibrationSet.cc
-implement/Enumtcl/CalType.cc
-implement/Enumtcl/CorrelationBit.cc
-implement/Enumtcl/CorrelationMode.cc
-implement/Enumtcl/CorrelatorCalibration.cc
-implement/Enumtcl/CorrelatorName.cc
-implement/Enumtcl/CorrelatorType.cc
-implement/Enumtcl/DataContent.cc
-implement/Enumtcl/DataScale.cc
-implement/Enumtcl/DetectorBandType.cc
-implement/Enumtcl/DirectionReferenceCode.cc
-implement/Enumtcl/DopplerReferenceCode.cc
-implement/Enumtcl/DopplerTrackingMode.cc
-implement/Enumtcl/FieldCode.cc
-implement/Enumtcl/FilterMode.cc
-implement/Enumtcl/FluxCalibrationMethod.cc
-implement/Enumtcl/FocusMethod.cc
-implement/Enumtcl/FrequencyReferenceCode.cc
-implement/Enumtcl/HolographyChannelType.cc
-implement/Enumtcl/InvalidatingCondition.cc
-implement/Enumtcl/NetSideband.cc
-implement/Enumtcl/PointingMethod.cc
-implement/Enumtcl/PointingModelMode.cc
-implement/Enumtcl/PolarizationType.cc
-implement/Enumtcl/PositionMethod.cc
-implement/Enumtcl/PositionReferenceCode.cc
-implement/Enumtcl/PrimaryBeamDescription.cc
-implement/Enumtcl/PrimitiveDataType.cc
-implement/Enumtcl/ProcessorSubType.cc
-implement/Enumtcl/ProcessorType.cc
-implement/Enumtcl/ReceiverBand.cc
-implement/Enumtcl/ReceiverSideband.cc
-implement/Enumtcl/SBType.cc
-implement/Enumtcl/ScanIntent.cc
-implement/Enumtcl/SchedulerMode.cc
-implement/Enumtcl/SidebandProcessingMode.cc
-implement/Enumtcl/SourceModel.cc
-implement/Enumtcl/SpectralResolutionType.cc
-implement/Enumtcl/StationType.cc
-implement/Enumtcl/StokesParameter.cc
-implement/Enumtcl/SubscanIntent.cc
-implement/Enumtcl/SwitchingMode.cc
-implement/Enumtcl/SyscalMethod.cc
-implement/Enumtcl/TimeSampling.cc
-implement/Enumtcl/TimeScale.cc
-implement/Enumtcl/WindowFunction.cc
-implement/Enumtcl/WeightType.cc
-implement/Enumtcl/WVRMethod.cc
-  implement/MS2ASDM/MS2ASDM.cc
+ASDM/AlmaRadiometerRow.cc
+ASDM/AlmaRadiometerTable.cc
+ASDM/Angle.cc
+ASDM/AngularRate.cc
+ASDM/AnnotationRow.cc
+ASDM/AnnotationTable.cc
+ASDM/AntennaRow.cc
+ASDM/AntennaTable.cc
+ASDM/ArrayTime.cc
+ASDM/ArrayTimeInterval.cc
+ASDM/ASDM.cc
+ASDM/Base64.cc
+ASDMBinaries/BaselineMetadata.cc
+ASDMBinaries/BaselinesSet.cc
+ASDMBinaries/DataDescriptionsSet.cc
+ASDMBinaries/Error.cc
+ASDMBinaries/Integration.cc
+ASDMBinaries/SDMBinData.cc
+ASDMBinaries/SDMDataObject.cc
+ASDMBinaries/SDMDataObjectParser.cc
+ASDMBinaries/SDMDataObjectReader.cc
+ASDMBinaries/SDMDataObjectStreamReader.cc
+ASDMBinaries/SDMDataObjectWriter.cc
+ASDMBinaries/SwitchCyclesList.cc
+ASDM/BooleanWrapper.cc
+ASDM/ByteWrapper.cc
+ASDM/CalAmpliRow.cc
+ASDM/CalAmpliTable.cc
+ASDM/CalAtmosphereRow.cc
+ASDM/CalAtmosphereTable.cc
+ASDM/CalBandpassRow.cc
+ASDM/CalBandpassTable.cc
+ASDM/CalCurveRow.cc
+ASDM/CalCurveTable.cc
+ASDM/CalDataRow.cc
+ASDM/CalDataTable.cc
+ASDM/CalDelayRow.cc
+ASDM/CalDelayTable.cc
+ASDM/CalDeviceRow.cc
+ASDM/CalDeviceTable.cc
+ASDM/CalFluxRow.cc
+ASDM/CalFluxTable.cc
+ASDM/CalFocusModelRow.cc
+ASDM/CalFocusModelTable.cc
+ASDM/CalFocusRow.cc
+ASDM/CalFocusTable.cc
+ASDM/CalGainRow.cc
+ASDM/CalGainTable.cc
+ASDM/CalHolographyRow.cc
+ASDM/CalHolographyTable.cc
+ASDM/CalPhaseRow.cc
+ASDM/CalPhaseTable.cc
+ASDM/CalPointingModelRow.cc
+ASDM/CalPointingModelTable.cc
+ASDM/CalPointingRow.cc
+ASDM/CalPointingTable.cc
+ASDM/CalPositionRow.cc
+ASDM/CalPositionTable.cc
+ASDM/CalPrimaryBeamRow.cc
+ASDM/CalPrimaryBeamTable.cc
+ASDM/CalReductionRow.cc
+ASDM/CalReductionTable.cc
+ASDM/CalSeeingRow.cc
+ASDM/CalSeeingTable.cc
+ASDM/CalWVRRow.cc
+ASDM/CalWVRTable.cc
+ASDM/CharacterWrapper.cc
+ASDM/ComplexWrapper.cc
+ASDM/ConfigDescriptionRow.cc
+ASDM/ConfigDescriptionTable.cc
+ASDM/ConversionException.cc
+ASDM/CorrelatorModeRow.cc
+ASDM/CorrelatorModeTable.cc
+ASDM/DataDescriptionRow.cc
+ASDM/DataDescriptionTable.cc
+ASDM/DelayModelRow.cc
+ASDM/DelayModelTable.cc
+ASDM/DopplerRow.cc
+ASDM/DopplerTable.cc
+ASDM/DoubleWrapper.cc
+ASDM/DuplicateKey.cc
+ASDM/EndianStream.cc
+ASDM/Entity.cc
+ASDM/EntityId.cc
+ASDM/EntityRef.cc
+ASDM/EnumerationParser.cc
+ASDM/EphemerisRow.cc
+ASDM/EphemerisTable.cc
+ASDM/ExecBlockRow.cc
+ASDM/ExecBlockTable.cc
+ASDM/FeedRow.cc
+ASDM/FeedTable.cc
+ASDM/FieldRow.cc
+ASDM/FieldTable.cc
+ASDM/FlagRow.cc
+ASDM/FlagTable.cc
+ASDM/FlagCmdRow.cc
+ASDM/FlagCmdTable.cc
+ASDM/FloatWrapper.cc
+ASDM/Flux.cc
+ASDM/FocusModelRow.cc
+ASDM/FocusModelTable.cc
+ASDM/FocusRow.cc
+ASDM/FocusTable.cc
+ASDM/FreqOffsetRow.cc
+ASDM/FreqOffsetTable.cc
+ASDM/Frequency.cc
+ASDM/GainTrackingRow.cc
+ASDM/GainTrackingTable.cc
+ASDM/HistoryRow.cc
+ASDM/HistoryTable.cc
+ASDM/HolographyRow.cc
+ASDM/HolographyTable.cc
+ASDM/Humidity.cc
+ASDM/IllegalAccessException.cc
+ASDM/IntegerWrapper.cc
+ASDM/Interval.cc
+ASDM/InvalidArgumentException.cc
+ASDM/InvalidDataException.cc
+ASDM/Length.cc
+ASDM/LongWrapper.cc
+ASDM/MainRow.cc
+ASDM/MainTable.cc
+ASDM/Merger.cc
+ASDM/Misc.cc
+ASDM/NoSuchRow.cc
+ASDM/NumberFormatException.cc
+ASDM/ObservationRow.cc
+ASDM/ObservationTable.cc
+ASDM/OutOfBoundsException.cc
+ASDM/Parser.cc
+ASDM/PartId.cc
+ASDM/PointingModelRow.cc
+ASDM/PointingModelTable.cc
+ASDM/PointingRow.cc
+ASDM/PointingTable.cc
+ASDM/PolarizationRow.cc
+ASDM/PolarizationTable.cc
+ASDM/Pressure.cc
+ASDM/ProcessorRow.cc
+ASDM/ProcessorTable.cc
+ASDM/ReceiverRow.cc
+ASDM/ReceiverTable.cc
+ASDM/SBSummaryRow.cc
+ASDM/SBSummaryTable.cc
+ASDM/ScaleTable.cc
+ASDM/ScaleTable.h
+ASDM/ScaleRow.cc
+ASDM/ScaleRow.h
+ASDM/ScanRow.cc
+ASDM/ScanTable.cc
+ASDM/SeeingRow.cc
+ASDM/SeeingTable.cc
+ASDM/ShortWrapper.cc
+ASDM/SourceRow.cc
+ASDM/SourceTable.cc
+ASDM/SpectralWindowRow.cc
+ASDM/SpectralWindowTable.cc
+ASDM/Speed.cc
+ASDM/SquareLawDetectorRow.cc
+ASDM/SquareLawDetectorTable.cc
+ASDM/StateRow.cc
+ASDM/StateTable.cc
+ASDM/StationRow.cc
+ASDM/StationTable.cc
+ASDM/StringTokenizer.cc
+ASDM/SubscanRow.cc
+ASDM/SubscanTable.cc
+ASDM/SwitchCycleRow.cc
+ASDM/SwitchCycleTable.cc
+ASDM/SysCalRow.cc
+ASDM/SysCalTable.cc
+ASDM/SysPowerRow.cc
+ASDM/SysPowerTable.cc
+ASDM/Tag.cc
+ASDM/TagFormatException.cc
+ASDM/TagType.cc
+ASDM/Temperature.cc
+ASDM/TotalPowerRow.cc
+ASDM/TotalPowerTable.cc
+ASDM/UniquenessViolationException.cc
+ASDM/WeatherRow.cc
+ASDM/WeatherTable.cc
+ASDM/WVMCalRow.cc
+ASDM/WVMCalTable.cc
+Enumerations/CACAPolarization.cc
+Enumerations/CAccumMode.cc
+Enumerations/CAntennaMake.cc
+Enumerations/CAntennaMotionPattern.cc
+Enumerations/CAntennaType.cc
+Enumerations/CAssociatedCalNature.cc
+Enumerations/CAssociatedFieldNature.cc
+Enumerations/CAtmPhaseCorrection.cc
+Enumerations/CAxisName.cc
+Enumerations/CBasebandName.cc
+Enumerations/CBaselineReferenceCode.cc
+Enumerations/CCalCurveType.cc
+Enumerations/CCalDataOrigin.cc
+Enumerations/CCalibrationDevice.cc
+Enumerations/CCalibrationFunction.cc
+Enumerations/CCalibrationMode.cc
+Enumerations/CCalibrationSet.cc
+Enumerations/CCalType.cc
+Enumerations/CCorrelationBit.cc
+Enumerations/CCorrelationMode.cc
+Enumerations/CCorrelatorCalibration.cc
+Enumerations/CCorrelatorName.cc
+Enumerations/CCorrelatorType.cc
+Enumerations/CDataContent.cc
+Enumerations/CDataScale.cc
+Enumerations/CDetectorBandType.cc
+Enumerations/CDirectionReferenceCode.cc
+Enumerations/CDopplerReferenceCode.cc
+Enumerations/CDopplerTrackingMode.cc
+Enumerations/CFieldCode.cc
+Enumerations/CFilterMode.cc
+Enumerations/CFluxCalibrationMethod.cc
+Enumerations/CFocusMethod.cc
+Enumerations/CFrequencyReferenceCode.cc
+Enumerations/CHolographyChannelType.cc
+Enumerations/CInvalidatingCondition.cc
+Enumerations/CNetSideband.cc
+Enumerations/CPointingMethod.cc
+Enumerations/CPointingModelMode.cc
+Enumerations/CPolarizationType.cc
+Enumerations/CPositionMethod.cc
+Enumerations/CPositionReferenceCode.cc
+Enumerations/CPrimaryBeamDescription.cc
+Enumerations/CPrimitiveDataType.cc
+Enumerations/CProcessorSubType.cc
+Enumerations/CProcessorType.cc
+Enumerations/CRadialVelocityReferenceCode.cc
+Enumerations/CReceiverBand.cc
+Enumerations/CReceiverSideband.cc
+Enumerations/CSBType.cc
+Enumerations/CScanIntent.cc
+Enumerations/CSchedulerMode.cc
+Enumerations/CSidebandProcessingMode.cc
+Enumerations/CSourceModel.cc
+Enumerations/CSpectralResolutionType.cc
+Enumerations/CStationType.cc
+Enumerations/CStokesParameter.cc
+Enumerations/CSubscanIntent.cc
+Enumerations/CSwitchingMode.cc
+Enumerations/CSyscalMethod.cc
+Enumerations/CTimeSampling.cc
+Enumerations/CTimeScale.cc
+Enumerations/CWeightType.cc
+Enumerations/CWindowFunction.cc
+Enumerations/CWVRMethod.cc
+Enumtcl/ACAPolarization.cc
+Enumtcl/AccumMode.cc
+Enumtcl/AntennaMake.cc
+Enumtcl/AntennaMotionPattern.cc
+Enumtcl/AntennaType.cc
+Enumtcl/AssociatedCalNature.cc
+Enumtcl/AssociatedFieldNature.cc
+Enumtcl/AtmPhaseCorrection.cc
+Enumtcl/AxisName.cc
+Enumtcl/BasebandName.cc
+Enumtcl/BaselineReferenceCode.cc
+Enumtcl/CalCurveType.cc
+Enumtcl/CalDataOrigin.cc
+Enumtcl/CalibrationDevice.cc
+Enumtcl/CalibrationFunction.cc
+Enumtcl/CalibrationMode.cc
+Enumtcl/CalibrationSet.cc
+Enumtcl/CalType.cc
+Enumtcl/CorrelationBit.cc
+Enumtcl/CorrelationMode.cc
+Enumtcl/CorrelatorCalibration.cc
+Enumtcl/CorrelatorName.cc
+Enumtcl/CorrelatorType.cc
+Enumtcl/DataContent.cc
+Enumtcl/DataScale.cc
+Enumtcl/DetectorBandType.cc
+Enumtcl/DirectionReferenceCode.cc
+Enumtcl/DopplerReferenceCode.cc
+Enumtcl/DopplerTrackingMode.cc
+Enumtcl/FieldCode.cc
+Enumtcl/FilterMode.cc
+Enumtcl/FluxCalibrationMethod.cc
+Enumtcl/FocusMethod.cc
+Enumtcl/FrequencyReferenceCode.cc
+Enumtcl/HolographyChannelType.cc
+Enumtcl/InvalidatingCondition.cc
+Enumtcl/NetSideband.cc
+Enumtcl/PointingMethod.cc
+Enumtcl/PointingModelMode.cc
+Enumtcl/PolarizationType.cc
+Enumtcl/PositionMethod.cc
+Enumtcl/PositionReferenceCode.cc
+Enumtcl/PrimaryBeamDescription.cc
+Enumtcl/PrimitiveDataType.cc
+Enumtcl/ProcessorSubType.cc
+Enumtcl/ProcessorType.cc
+Enumtcl/ReceiverBand.cc
+Enumtcl/ReceiverSideband.cc
+Enumtcl/SBType.cc
+Enumtcl/ScanIntent.cc
+Enumtcl/SchedulerMode.cc
+Enumtcl/SidebandProcessingMode.cc
+Enumtcl/SourceModel.cc
+Enumtcl/SpectralResolutionType.cc
+Enumtcl/StationType.cc
+Enumtcl/StokesParameter.cc
+Enumtcl/SubscanIntent.cc
+Enumtcl/SwitchingMode.cc
+Enumtcl/SyscalMethod.cc
+Enumtcl/TimeSampling.cc
+Enumtcl/TimeScale.cc
+Enumtcl/WindowFunction.cc
+Enumtcl/WeightType.cc
+Enumtcl/WVRMethod.cc
+  MS2ASDM/MS2ASDM.cc
   )
 
 install (FILES
-	implement/ASDM/ASDM.h
-	implement/ASDM/ASDMAll.h
-	implement/ASDM/ASDMEntities.h
-	implement/ASDM/ASDMExceptions.h
-	implement/ASDM/ASDMTypes.h
-	implement/ASDM/ASDMValuesParser.h
-	implement/ASDM/AlmaRadiometerRow.h
-	implement/ASDM/AlmaRadiometerTable.h
-	implement/ASDM/Angle.h
-	implement/ASDM/AngularRate.h
-	implement/ASDM/AnnotationRow.h
-	implement/ASDM/AnnotationTable.h
-	implement/ASDM/AntennaRow.h
-	implement/ASDM/AntennaTable.h
-	implement/ASDM/ArrayTime.h
-	implement/ASDM/ArrayTimeInterval.h
-	implement/ASDM/Base64.h
-	implement/ASDM/BooleanWrapper.h
-	implement/ASDM/ByteWrapper.h
-	implement/ASDM/CalAmpliRow.h
-	implement/ASDM/CalAmpliTable.h
-	implement/ASDM/CalAtmosphereRow.h
-	implement/ASDM/CalAtmosphereTable.h
-	implement/ASDM/CalBandpassRow.h
-	implement/ASDM/CalBandpassTable.h
-	implement/ASDM/CalCurveRow.h
-	implement/ASDM/CalCurveTable.h
-	implement/ASDM/CalDataRow.h
-	implement/ASDM/CalDataTable.h
-	implement/ASDM/CalDelayRow.h
-	implement/ASDM/CalDelayTable.h
-	implement/ASDM/CalDeviceRow.h
-	implement/ASDM/CalDeviceTable.h
-	implement/ASDM/CalFluxRow.h
-	implement/ASDM/CalFluxTable.h
-	implement/ASDM/CalFocusModelRow.h
-	implement/ASDM/CalFocusModelTable.h
-	implement/ASDM/CalFocusRow.h
-	implement/ASDM/CalFocusTable.h
-	implement/ASDM/CalGainRow.h
-	implement/ASDM/CalGainTable.h
-	implement/ASDM/CalHolographyRow.h
-	implement/ASDM/CalHolographyTable.h
-	implement/ASDM/CalPhaseRow.h
-	implement/ASDM/CalPhaseTable.h
-	implement/ASDM/CalPointingModelRow.h
-	implement/ASDM/CalPointingModelTable.h
-	implement/ASDM/CalPointingRow.h
-	implement/ASDM/CalPointingTable.h
-	implement/ASDM/CalPositionRow.h
-	implement/ASDM/CalPositionTable.h
-	implement/ASDM/CalPrimaryBeamRow.h
-	implement/ASDM/CalPrimaryBeamTable.h
-	implement/ASDM/CalReductionRow.h
-	implement/ASDM/CalReductionTable.h
-	implement/ASDM/CalSeeingRow.h
-	implement/ASDM/CalSeeingTable.h
-	implement/ASDM/CalWVRRow.h
-	implement/ASDM/CalWVRTable.h
-	implement/ASDM/CharacterWrapper.h
-	implement/ASDM/ComplexWrapper.h
-	implement/ASDM/ConfigDescriptionRow.h
-	implement/ASDM/ConfigDescriptionTable.h
-	implement/ASDM/ConversionException.h
-	implement/ASDM/CorrelatorModeRow.h
-	implement/ASDM/CorrelatorModeTable.h
-	implement/ASDM/DataBlock.h
-	implement/ASDM/DataDescriptionRow.h
-	implement/ASDM/DataDescriptionTable.h
-	implement/ASDM/DelayModelRow.h
-	implement/ASDM/DelayModelTable.h
-	implement/ASDM/DopplerRow.h
-	implement/ASDM/DopplerTable.h
-	implement/ASDM/DoubleWrapper.h
-	implement/ASDM/DuplicateKey.h
-	implement/ASDM/EndianStream.h
-	implement/ASDM/Entity.h
-	implement/ASDM/EntityId.h
-	implement/ASDM/EntityRef.h
-	implement/ASDM/EnumerationParser.h
-	implement/ASDM/EphemerisRow.h
-	implement/ASDM/EphemerisTable.h
-	implement/ASDM/ExecBlockRow.h
-	implement/ASDM/ExecBlockTable.h
-	implement/ASDM/FeedRow.h
-	implement/ASDM/FeedTable.h
-	implement/ASDM/FieldRow.h
-	implement/ASDM/FieldTable.h
-	implement/ASDM/FlagCmdRow.h
-	implement/ASDM/FlagCmdTable.h
-	implement/ASDM/FlagRow.h
-	implement/ASDM/FlagTable.h
-	implement/ASDM/FloatWrapper.h
-	implement/ASDM/Flux.h
-	implement/ASDM/FocusModelRow.h
-	implement/ASDM/FocusModelTable.h
-	implement/ASDM/FocusRow.h
-	implement/ASDM/FocusTable.h
-	implement/ASDM/FreqOffsetRow.h
-	implement/ASDM/FreqOffsetTable.h
-	implement/ASDM/Frequency.h
-	implement/ASDM/GainTrackingRow.h
-	implement/ASDM/GainTrackingTable.h
-	implement/ASDM/HistoryRow.h
-	implement/ASDM/HistoryTable.h
-	implement/ASDM/HolographyRow.h
-	implement/ASDM/HolographyTable.h
-	implement/ASDM/Humidity.h
-	implement/ASDM/IDLConversionException.h
-	implement/ASDM/IllegalAccessException.h
-	implement/ASDM/IntegerWrapper.h
-	implement/ASDM/Interval.h
-	implement/ASDM/InvalidArgumentException.h
-	implement/ASDM/InvalidDataException.h
-	implement/ASDM/Length.h
-	implement/ASDM/LongWrapper.h
-	implement/ASDM/MainRow.h
-	implement/ASDM/MainTable.h
-	implement/ASDM/Merger.h
-	implement/ASDM/Misc.h
-	implement/ASDM/NoSuchRow.h
-	implement/ASDM/NumberFormatException.h
-	implement/ASDM/ObservationRow.h
-	implement/ASDM/ObservationTable.h
-	implement/ASDM/OutOfBoundsException.h
-	implement/ASDM/Parser.h
-	implement/ASDM/PartId.h
-	implement/ASDM/PointingModelRow.h
-	implement/ASDM/PointingModelTable.h
-	implement/ASDM/PointingRow.h
-	implement/ASDM/PointingTable.h
-	implement/ASDM/PolarizationRow.h
-	implement/ASDM/PolarizationTable.h
-	implement/ASDM/Pressure.h
-	implement/ASDM/ProcessorRow.h
-	implement/ASDM/ProcessorTable.h
-	implement/ASDM/ReceiverRow.h
-	implement/ASDM/ReceiverTable.h
-	implement/ASDM/Representable.h
-	implement/ASDM/RowTransformer.h
-	implement/ASDM/SBSummaryRow.h
-	implement/ASDM/SBSummaryTable.h
-	implement/ASDM/ScaleRow.h
-	implement/ASDM/ScaleTable.h
-	implement/ASDM/ScanRow.h
-	implement/ASDM/ScanTable.h
-	implement/ASDM/SeeingRow.h
-	implement/ASDM/SeeingTable.h
-	implement/ASDM/ShortWrapper.h
-	implement/ASDM/SourceRow.h
-	implement/ASDM/SourceTable.h
-	implement/ASDM/SpectralWindowRow.h
-	implement/ASDM/SpectralWindowTable.h
-	implement/ASDM/Speed.h
-	implement/ASDM/SquareLawDetectorRow.h
-	implement/ASDM/SquareLawDetectorTable.h
-	implement/ASDM/StateRow.h
-	implement/ASDM/StateTable.h
-	implement/ASDM/StationRow.h
-	implement/ASDM/StationTable.h
-	implement/ASDM/StringTokenizer.h
-	implement/ASDM/SubscanRow.h
-	implement/ASDM/SubscanTable.h
-	implement/ASDM/SwitchCycleRow.h
-	implement/ASDM/SwitchCycleTable.h
-	implement/ASDM/SysCalRow.h
-	implement/ASDM/SysCalTable.h
-	implement/ASDM/SysPowerRow.h
-	implement/ASDM/SysPowerTable.h
-	implement/ASDM/TableStreamReader.h
-	implement/ASDM/Tag.h
-	implement/ASDM/TagFormatException.h
-	implement/ASDM/TagType.h
-	implement/ASDM/Temperature.h
-	implement/ASDM/TotalPowerRow.h
-	implement/ASDM/TotalPowerTable.h
-	implement/ASDM/UTCCorrection.h
-	implement/ASDM/UniquenessViolationException.h
-	implement/ASDM/WVMCalRow.h
-	implement/ASDM/WVMCalTable.h
-	implement/ASDM/WeatherRow.h
-	implement/ASDM/WeatherTable.h
+	ASDM/ASDM.h
+	ASDM/ASDMAll.h
+	ASDM/ASDMEntities.h
+	ASDM/ASDMExceptions.h
+	ASDM/ASDMTypes.h
+	ASDM/ASDMValuesParser.h
+	ASDM/AlmaRadiometerRow.h
+	ASDM/AlmaRadiometerTable.h
+	ASDM/Angle.h
+	ASDM/AngularRate.h
+	ASDM/AnnotationRow.h
+	ASDM/AnnotationTable.h
+	ASDM/AntennaRow.h
+	ASDM/AntennaTable.h
+	ASDM/ArrayTime.h
+	ASDM/ArrayTimeInterval.h
+	ASDM/Base64.h
+	ASDM/BooleanWrapper.h
+	ASDM/ByteWrapper.h
+	ASDM/CalAmpliRow.h
+	ASDM/CalAmpliTable.h
+	ASDM/CalAtmosphereRow.h
+	ASDM/CalAtmosphereTable.h
+	ASDM/CalBandpassRow.h
+	ASDM/CalBandpassTable.h
+	ASDM/CalCurveRow.h
+	ASDM/CalCurveTable.h
+	ASDM/CalDataRow.h
+	ASDM/CalDataTable.h
+	ASDM/CalDelayRow.h
+	ASDM/CalDelayTable.h
+	ASDM/CalDeviceRow.h
+	ASDM/CalDeviceTable.h
+	ASDM/CalFluxRow.h
+	ASDM/CalFluxTable.h
+	ASDM/CalFocusModelRow.h
+	ASDM/CalFocusModelTable.h
+	ASDM/CalFocusRow.h
+	ASDM/CalFocusTable.h
+	ASDM/CalGainRow.h
+	ASDM/CalGainTable.h
+	ASDM/CalHolographyRow.h
+	ASDM/CalHolographyTable.h
+	ASDM/CalPhaseRow.h
+	ASDM/CalPhaseTable.h
+	ASDM/CalPointingModelRow.h
+	ASDM/CalPointingModelTable.h
+	ASDM/CalPointingRow.h
+	ASDM/CalPointingTable.h
+	ASDM/CalPositionRow.h
+	ASDM/CalPositionTable.h
+	ASDM/CalPrimaryBeamRow.h
+	ASDM/CalPrimaryBeamTable.h
+	ASDM/CalReductionRow.h
+	ASDM/CalReductionTable.h
+	ASDM/CalSeeingRow.h
+	ASDM/CalSeeingTable.h
+	ASDM/CalWVRRow.h
+	ASDM/CalWVRTable.h
+	ASDM/CharacterWrapper.h
+	ASDM/ComplexWrapper.h
+	ASDM/ConfigDescriptionRow.h
+	ASDM/ConfigDescriptionTable.h
+	ASDM/ConversionException.h
+	ASDM/CorrelatorModeRow.h
+	ASDM/CorrelatorModeTable.h
+	ASDM/DataBlock.h
+	ASDM/DataDescriptionRow.h
+	ASDM/DataDescriptionTable.h
+	ASDM/DelayModelRow.h
+	ASDM/DelayModelTable.h
+	ASDM/DopplerRow.h
+	ASDM/DopplerTable.h
+	ASDM/DoubleWrapper.h
+	ASDM/DuplicateKey.h
+	ASDM/EndianStream.h
+	ASDM/Entity.h
+	ASDM/EntityId.h
+	ASDM/EntityRef.h
+	ASDM/EnumerationParser.h
+	ASDM/EphemerisRow.h
+	ASDM/EphemerisTable.h
+	ASDM/ExecBlockRow.h
+	ASDM/ExecBlockTable.h
+	ASDM/FeedRow.h
+	ASDM/FeedTable.h
+	ASDM/FieldRow.h
+	ASDM/FieldTable.h
+	ASDM/FlagCmdRow.h
+	ASDM/FlagCmdTable.h
+	ASDM/FlagRow.h
+	ASDM/FlagTable.h
+	ASDM/FloatWrapper.h
+	ASDM/Flux.h
+	ASDM/FocusModelRow.h
+	ASDM/FocusModelTable.h
+	ASDM/FocusRow.h
+	ASDM/FocusTable.h
+	ASDM/FreqOffsetRow.h
+	ASDM/FreqOffsetTable.h
+	ASDM/Frequency.h
+	ASDM/GainTrackingRow.h
+	ASDM/GainTrackingTable.h
+	ASDM/HistoryRow.h
+	ASDM/HistoryTable.h
+	ASDM/HolographyRow.h
+	ASDM/HolographyTable.h
+	ASDM/Humidity.h
+	ASDM/IDLConversionException.h
+	ASDM/IllegalAccessException.h
+	ASDM/IntegerWrapper.h
+	ASDM/Interval.h
+	ASDM/InvalidArgumentException.h
+	ASDM/InvalidDataException.h
+	ASDM/Length.h
+	ASDM/LongWrapper.h
+	ASDM/MainRow.h
+	ASDM/MainTable.h
+	ASDM/Merger.h
+	ASDM/Misc.h
+	ASDM/NoSuchRow.h
+	ASDM/NumberFormatException.h
+	ASDM/ObservationRow.h
+	ASDM/ObservationTable.h
+	ASDM/OutOfBoundsException.h
+	ASDM/Parser.h
+	ASDM/PartId.h
+	ASDM/PointingModelRow.h
+	ASDM/PointingModelTable.h
+	ASDM/PointingRow.h
+	ASDM/PointingTable.h
+	ASDM/PolarizationRow.h
+	ASDM/PolarizationTable.h
+	ASDM/Pressure.h
+	ASDM/ProcessorRow.h
+	ASDM/ProcessorTable.h
+	ASDM/ReceiverRow.h
+	ASDM/ReceiverTable.h
+	ASDM/Representable.h
+	ASDM/RowTransformer.h
+	ASDM/SBSummaryRow.h
+	ASDM/SBSummaryTable.h
+	ASDM/ScaleRow.h
+	ASDM/ScaleTable.h
+	ASDM/ScanRow.h
+	ASDM/ScanTable.h
+	ASDM/SeeingRow.h
+	ASDM/SeeingTable.h
+	ASDM/ShortWrapper.h
+	ASDM/SourceRow.h
+	ASDM/SourceTable.h
+	ASDM/SpectralWindowRow.h
+	ASDM/SpectralWindowTable.h
+	ASDM/Speed.h
+	ASDM/SquareLawDetectorRow.h
+	ASDM/SquareLawDetectorTable.h
+	ASDM/StateRow.h
+	ASDM/StateTable.h
+	ASDM/StationRow.h
+	ASDM/StationTable.h
+	ASDM/StringTokenizer.h
+	ASDM/SubscanRow.h
+	ASDM/SubscanTable.h
+	ASDM/SwitchCycleRow.h
+	ASDM/SwitchCycleTable.h
+	ASDM/SysCalRow.h
+	ASDM/SysCalTable.h
+	ASDM/SysPowerRow.h
+	ASDM/SysPowerTable.h
+	ASDM/TableStreamReader.h
+	ASDM/Tag.h
+	ASDM/TagFormatException.h
+	ASDM/TagType.h
+	ASDM/Temperature.h
+	ASDM/TotalPowerRow.h
+	ASDM/TotalPowerTable.h
+	ASDM/UTCCorrection.h
+	ASDM/UniquenessViolationException.h
+	ASDM/WVMCalRow.h
+	ASDM/WVMCalTable.h
+	ASDM/WeatherRow.h
+	ASDM/WeatherTable.h
 	DESTINATION include/casacode/alma/ASDM
 	)
 install (FILES
-	implement/ASDMBinaries/BaselineMetadata.h
-	implement/ASDMBinaries/BaselinesSet.h
-	implement/ASDMBinaries/CommonDefines.h
-	implement/ASDMBinaries/DataDescriptionsSet.h
-	implement/ASDMBinaries/Error.h
-	implement/ASDMBinaries/Integration.h
-	implement/ASDMBinaries/SDMBinData.h
-	implement/ASDMBinaries/SDMDataObject.h
-	implement/ASDMBinaries/SDMDataObjectParser.h
-	implement/ASDMBinaries/SDMDataObjectPartTypes.h
-	implement/ASDMBinaries/SDMDataObjectReader.h
-	implement/ASDMBinaries/SDMDataObjectStreamReader.h
-	implement/ASDMBinaries/SDMDataObjectWriter.h
-	implement/ASDMBinaries/SDMDataViews.h
-	implement/ASDMBinaries/SwitchCyclesList.h
+	ASDMBinaries/BaselineMetadata.h
+	ASDMBinaries/BaselinesSet.h
+	ASDMBinaries/CommonDefines.h
+	ASDMBinaries/DataDescriptionsSet.h
+	ASDMBinaries/Error.h
+	ASDMBinaries/Integration.h
+	ASDMBinaries/SDMBinData.h
+	ASDMBinaries/SDMDataObject.h
+	ASDMBinaries/SDMDataObjectParser.h
+	ASDMBinaries/SDMDataObjectPartTypes.h
+	ASDMBinaries/SDMDataObjectReader.h
+	ASDMBinaries/SDMDataObjectStreamReader.h
+	ASDMBinaries/SDMDataObjectWriter.h
+	ASDMBinaries/SDMDataViews.h
+	ASDMBinaries/SwitchCyclesList.h
 	DESTINATION include/casacode/alma/ASDMBinaries
 	)
 install (FILES
-	implement/Enumerations/CACAPolarization.h
-	implement/Enumerations/CAccumMode.h
-	implement/Enumerations/CAntennaMake.h
-	implement/Enumerations/CAntennaMotionPattern.h
-	implement/Enumerations/CAntennaType.h
-	implement/Enumerations/CAssociatedCalNature.h
-	implement/Enumerations/CAssociatedFieldNature.h
-	implement/Enumerations/CAtmPhaseCorrection.h
-	implement/Enumerations/CAxisName.h
-	implement/Enumerations/CBasebandName.h
-	implement/Enumerations/CBaselineReferenceCode.h
-	implement/Enumerations/CCalCurveType.h
-	implement/Enumerations/CCalDataOrigin.h
-	implement/Enumerations/CCalType.h
-	implement/Enumerations/CCalibrationDevice.h
-	implement/Enumerations/CCalibrationFunction.h
-	implement/Enumerations/CCalibrationMode.h
-	implement/Enumerations/CCalibrationSet.h
-	implement/Enumerations/CCorrelationBit.h
-	implement/Enumerations/CCorrelationMode.h
-	implement/Enumerations/CCorrelatorCalibration.h
-	implement/Enumerations/CCorrelatorName.h
-	implement/Enumerations/CCorrelatorType.h
-	implement/Enumerations/CDataContent.h
-	implement/Enumerations/CDataScale.h
-	implement/Enumerations/CDetectorBandType.h
-	implement/Enumerations/CDirectionReferenceCode.h
-	implement/Enumerations/CDopplerReferenceCode.h
-	implement/Enumerations/CDopplerTrackingMode.h
-	implement/Enumerations/CFieldCode.h
-	implement/Enumerations/CFilterMode.h
-	implement/Enumerations/CFluxCalibrationMethod.h
-	implement/Enumerations/CFocusMethod.h
-	implement/Enumerations/CFrequencyReferenceCode.h
-	implement/Enumerations/CHolographyChannelType.h
-	implement/Enumerations/CInvalidatingCondition.h
-	implement/Enumerations/CNetSideband.h
-	implement/Enumerations/CPointingMethod.h
-	implement/Enumerations/CPointingModelMode.h
-	implement/Enumerations/CPolarizationType.h
-	implement/Enumerations/CPositionMethod.h
-	implement/Enumerations/CPositionReferenceCode.h
-	implement/Enumerations/CPrimaryBeamDescription.h
-	implement/Enumerations/CPrimitiveDataType.h
-	implement/Enumerations/CProcessorSubType.h
-	implement/Enumerations/CProcessorType.h
-	implement/Enumerations/CRadialVelocityReferenceCode.h
-	implement/Enumerations/CReceiverBand.h
-	implement/Enumerations/CReceiverSideband.h
-	implement/Enumerations/CSBType.h
-	implement/Enumerations/CScanIntent.h
-	implement/Enumerations/CSchedulerMode.h
-	implement/Enumerations/CSidebandProcessingMode.h
-	implement/Enumerations/CSourceModel.h
-	implement/Enumerations/CSpectralResolutionType.h
-	implement/Enumerations/CStationType.h
-	implement/Enumerations/CStokesParameter.h
-	implement/Enumerations/CSubscanIntent.h
-	implement/Enumerations/CSwitchingMode.h
-	implement/Enumerations/CSyscalMethod.h
-	implement/Enumerations/CTimeSampling.h
-	implement/Enumerations/CTimeScale.h
-	implement/Enumerations/CWVRMethod.h
-	implement/Enumerations/CWeightType.h
-	implement/Enumerations/CWindowFunction.h
+	Enumerations/CACAPolarization.h
+	Enumerations/CAccumMode.h
+	Enumerations/CAntennaMake.h
+	Enumerations/CAntennaMotionPattern.h
+	Enumerations/CAntennaType.h
+	Enumerations/CAssociatedCalNature.h
+	Enumerations/CAssociatedFieldNature.h
+	Enumerations/CAtmPhaseCorrection.h
+	Enumerations/CAxisName.h
+	Enumerations/CBasebandName.h
+	Enumerations/CBaselineReferenceCode.h
+	Enumerations/CCalCurveType.h
+	Enumerations/CCalDataOrigin.h
+	Enumerations/CCalType.h
+	Enumerations/CCalibrationDevice.h
+	Enumerations/CCalibrationFunction.h
+	Enumerations/CCalibrationMode.h
+	Enumerations/CCalibrationSet.h
+	Enumerations/CCorrelationBit.h
+	Enumerations/CCorrelationMode.h
+	Enumerations/CCorrelatorCalibration.h
+	Enumerations/CCorrelatorName.h
+	Enumerations/CCorrelatorType.h
+	Enumerations/CDataContent.h
+	Enumerations/CDataScale.h
+	Enumerations/CDetectorBandType.h
+	Enumerations/CDirectionReferenceCode.h
+	Enumerations/CDopplerReferenceCode.h
+	Enumerations/CDopplerTrackingMode.h
+	Enumerations/CFieldCode.h
+	Enumerations/CFilterMode.h
+	Enumerations/CFluxCalibrationMethod.h
+	Enumerations/CFocusMethod.h
+	Enumerations/CFrequencyReferenceCode.h
+	Enumerations/CHolographyChannelType.h
+	Enumerations/CInvalidatingCondition.h
+	Enumerations/CNetSideband.h
+	Enumerations/CPointingMethod.h
+	Enumerations/CPointingModelMode.h
+	Enumerations/CPolarizationType.h
+	Enumerations/CPositionMethod.h
+	Enumerations/CPositionReferenceCode.h
+	Enumerations/CPrimaryBeamDescription.h
+	Enumerations/CPrimitiveDataType.h
+	Enumerations/CProcessorSubType.h
+	Enumerations/CProcessorType.h
+	Enumerations/CRadialVelocityReferenceCode.h
+	Enumerations/CReceiverBand.h
+	Enumerations/CReceiverSideband.h
+	Enumerations/CSBType.h
+	Enumerations/CScanIntent.h
+	Enumerations/CSchedulerMode.h
+	Enumerations/CSidebandProcessingMode.h
+	Enumerations/CSourceModel.h
+	Enumerations/CSpectralResolutionType.h
+	Enumerations/CStationType.h
+	Enumerations/CStokesParameter.h
+	Enumerations/CSubscanIntent.h
+	Enumerations/CSwitchingMode.h
+	Enumerations/CSyscalMethod.h
+	Enumerations/CTimeSampling.h
+	Enumerations/CTimeScale.h
+	Enumerations/CWVRMethod.h
+	Enumerations/CWeightType.h
+	Enumerations/CWindowFunction.h
 	DESTINATION include/casacode/alma/Enumerations
 	)
 install (FILES
-	implement/Enumtcl/ACAPolarization.h
-	implement/Enumtcl/AccumMode.h
-	implement/Enumtcl/AntennaMake.h
-	implement/Enumtcl/AntennaMotionPattern.h
-	implement/Enumtcl/AntennaType.h
-	implement/Enumtcl/AssociatedCalNature.h
-	implement/Enumtcl/AssociatedFieldNature.h
-	implement/Enumtcl/AtmPhaseCorrection.h
-	implement/Enumtcl/AxisName.h
-	implement/Enumtcl/BasebandName.h
-	implement/Enumtcl/BaselineReferenceCode.h
-	implement/Enumtcl/CalCurveType.h
-	implement/Enumtcl/CalDataOrigin.h
-	implement/Enumtcl/CalType.h
-	implement/Enumtcl/CalibrationDevice.h
-	implement/Enumtcl/CalibrationFunction.h
-	implement/Enumtcl/CalibrationMode.h
-	implement/Enumtcl/CalibrationSet.h
-	implement/Enumtcl/CorrelationBit.h
-	implement/Enumtcl/CorrelationMode.h
-	implement/Enumtcl/CorrelatorCalibration.h
-	implement/Enumtcl/CorrelatorName.h
-	implement/Enumtcl/CorrelatorType.h
-	implement/Enumtcl/DataContent.h
-	implement/Enumtcl/DataScale.h
-	implement/Enumtcl/DetectorBandType.h
-	implement/Enumtcl/DirectionReferenceCode.h
-	implement/Enumtcl/DopplerReferenceCode.h
-	implement/Enumtcl/DopplerTrackingMode.h
-	implement/Enumtcl/FieldCode.h
-	implement/Enumtcl/FilterMode.h
-	implement/Enumtcl/FluxCalibrationMethod.h
-	implement/Enumtcl/FocusMethod.h
-	implement/Enumtcl/FrequencyReferenceCode.h
-	implement/Enumtcl/HolographyChannelType.h
-	implement/Enumtcl/InvalidatingCondition.h
-	implement/Enumtcl/NetSideband.h
-	implement/Enumtcl/PointingMethod.h
-	implement/Enumtcl/PointingModelMode.h
-	implement/Enumtcl/PolarizationType.h
-	implement/Enumtcl/PositionMethod.h
-	implement/Enumtcl/PositionReferenceCode.h
-	implement/Enumtcl/PrimaryBeamDescription.h
-	implement/Enumtcl/PrimitiveDataType.h
-	implement/Enumtcl/ProcessorSubType.h
-	implement/Enumtcl/ProcessorType.h
-	implement/Enumtcl/ReceiverBand.h
-	implement/Enumtcl/ReceiverSideband.h
-	implement/Enumtcl/SBType.h
-	implement/Enumtcl/ScanIntent.h
-	implement/Enumtcl/SchedulerMode.h
-	implement/Enumtcl/SidebandProcessingMode.h
-	implement/Enumtcl/SourceModel.h
-	implement/Enumtcl/SpectralResolutionType.h
-	implement/Enumtcl/StationType.h
-	implement/Enumtcl/StokesParameter.h
-	implement/Enumtcl/SubscanIntent.h
-	implement/Enumtcl/SwitchingMode.h
-	implement/Enumtcl/SyscalMethod.h
-	implement/Enumtcl/TimeSampling.h
-	implement/Enumtcl/TimeScale.h
-	implement/Enumtcl/WVRMethod.h
-	implement/Enumtcl/WeightType.h
-	implement/Enumtcl/WindowFunction.h
+	Enumtcl/ACAPolarization.h
+	Enumtcl/AccumMode.h
+	Enumtcl/AntennaMake.h
+	Enumtcl/AntennaMotionPattern.h
+	Enumtcl/AntennaType.h
+	Enumtcl/AssociatedCalNature.h
+	Enumtcl/AssociatedFieldNature.h
+	Enumtcl/AtmPhaseCorrection.h
+	Enumtcl/AxisName.h
+	Enumtcl/BasebandName.h
+	Enumtcl/BaselineReferenceCode.h
+	Enumtcl/CalCurveType.h
+	Enumtcl/CalDataOrigin.h
+	Enumtcl/CalType.h
+	Enumtcl/CalibrationDevice.h
+	Enumtcl/CalibrationFunction.h
+	Enumtcl/CalibrationMode.h
+	Enumtcl/CalibrationSet.h
+	Enumtcl/CorrelationBit.h
+	Enumtcl/CorrelationMode.h
+	Enumtcl/CorrelatorCalibration.h
+	Enumtcl/CorrelatorName.h
+	Enumtcl/CorrelatorType.h
+	Enumtcl/DataContent.h
+	Enumtcl/DataScale.h
+	Enumtcl/DetectorBandType.h
+	Enumtcl/DirectionReferenceCode.h
+	Enumtcl/DopplerReferenceCode.h
+	Enumtcl/DopplerTrackingMode.h
+	Enumtcl/FieldCode.h
+	Enumtcl/FilterMode.h
+	Enumtcl/FluxCalibrationMethod.h
+	Enumtcl/FocusMethod.h
+	Enumtcl/FrequencyReferenceCode.h
+	Enumtcl/HolographyChannelType.h
+	Enumtcl/InvalidatingCondition.h
+	Enumtcl/NetSideband.h
+	Enumtcl/PointingMethod.h
+	Enumtcl/PointingModelMode.h
+	Enumtcl/PolarizationType.h
+	Enumtcl/PositionMethod.h
+	Enumtcl/PositionReferenceCode.h
+	Enumtcl/PrimaryBeamDescription.h
+	Enumtcl/PrimitiveDataType.h
+	Enumtcl/ProcessorSubType.h
+	Enumtcl/ProcessorType.h
+	Enumtcl/ReceiverBand.h
+	Enumtcl/ReceiverSideband.h
+	Enumtcl/SBType.h
+	Enumtcl/ScanIntent.h
+	Enumtcl/SchedulerMode.h
+	Enumtcl/SidebandProcessingMode.h
+	Enumtcl/SourceModel.h
+	Enumtcl/SpectralResolutionType.h
+	Enumtcl/StationType.h
+	Enumtcl/StokesParameter.h
+	Enumtcl/SubscanIntent.h
+	Enumtcl/SwitchingMode.h
+	Enumtcl/SyscalMethod.h
+	Enumtcl/TimeSampling.h
+	Enumtcl/TimeScale.h
+	Enumtcl/WVRMethod.h
+	Enumtcl/WeightType.h
+	Enumtcl/WindowFunction.h
 	DESTINATION include/casacode/alma/Enumtcl
 	)
 
@@ -706,7 +706,7 @@ casa_add_executable( alma asdmSummary
   apps/asdmSummary/asdmSummary.cc 
   )
 
-casa_add_assay(alma implement/ASDMBinaries/test/tReadBigBDF.cc)
-casa_add_assay(alma implement/ASDMBinaries/test/tReadAllBDFs.cc)
-casa_add_assay(alma implement/ASDM/test/tTableStreamReader.cc)
+casa_add_assay(alma ASDMBinaries/test/tReadBigBDF.cc)
+casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
+casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
 
