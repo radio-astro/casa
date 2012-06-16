@@ -42,7 +42,7 @@ if (libIndex !=-1):
     scriptpath=pathname+'/lib/python2.6/regressions'
 else:
     # Copy test scripts from the source directory.
-    scriptpath=pathname+'/code/xmlcasa/scripts/regressions'
+    scriptpath=pathname+'/gcwrap/python/scripts/regressions'
 
 command='cp '+scriptpath+'/*_regression.py .'
 #command='ls '+scriptpath+'/*_regression.py'
