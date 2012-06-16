@@ -14,7 +14,7 @@ else
 
 fi
 
-svntemplate=$svntemplate/bindings/install/svntemplate
+svntemplate=$svntemplate/gcwrap/install/svntemplate
 
 if [ ! -f $svntemplate ] ; then
     echo "Could not find ${svntemplate}.  Set CASAPATH."
@@ -30,7 +30,7 @@ that inserts the CASA commit log template.
 
 Use: 1. set the environment variable SVN_EDITOR to point to this file.
         (Can also be done by sourcing
-         $casaroot/bindings/install/setsvneditor.(c)sh.)
+         $casaroot/gcwrap/install/setsvneditor.(c)sh.)
      2. svn ci
      3. Edit as needed.
      4. "Exit" the editor, i.e. C-x # for emacsclient,
