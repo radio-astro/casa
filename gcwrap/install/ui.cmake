@@ -245,7 +245,7 @@ macro( casa_add_tools out_swig out_sources out_py )
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
 	                          ${PYTHON_LIBRARIES}
 				  ${ATM_LIBRARIES}
-				  ${CMAKE_CURRENT_BINARY_DIR}/libtools.dylib
+				  ${CMAKE_CURRENT_BINARY_DIR}/libtools${CMAKE_SHARED_LIBRARY_SUFFIX}
 				  ${QT4_LIBRARIES}
 				  ${DBUS_LIBRARIES}
 				  ${DL_LIBRARIES}
