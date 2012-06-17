@@ -8,7 +8,7 @@ startDir=$(pwd)
 #Set the location of the 3rd party software we will need
 #
 OSTYPE=$(uname -s)
-if [ $OSTYPE="Darwin" ]; then
+if [ $OSTYPE = "Darwin" ]; then
 	isapple="T"
         OSVERS=$(uname -r | awk -F. '{print $1}')
         if [ $OSVERS -eq "10" ]; then
