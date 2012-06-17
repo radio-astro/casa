@@ -1043,7 +1043,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 	}										\
     }
 
-void casac::pyobj2variant(PyObject *obj, variant &result) {
+void pyobj2variant(PyObject *obj, variant &result) {
     PYOBJ2VARIANT(result.push,,false)
 }
 
@@ -1189,7 +1189,7 @@ PyObject *variant2pyobj(const variant &val) {
     return result;
 }
 
-variant casac::pyobj2variant(PyObject *obj, bool throw_error) {
+variant pyobj2variant(PyObject *obj, bool throw_error) {
     variant result;
 
     PYOBJ2VARIANT(return variant,,throw_error)
