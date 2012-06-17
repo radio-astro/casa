@@ -189,7 +189,10 @@ fi
 
 #exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/2.6/casapy.py $*
 if [ ${_dodebug} = "T" ]; then
-   echo "Debugger run command is: -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*"
+   echo
+   echo "Debugger run command is: run -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*"
+   echo
+   echo
    exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
 else
    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*
