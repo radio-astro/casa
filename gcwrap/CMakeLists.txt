@@ -1179,6 +1179,7 @@ add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf
 install( PROGRAMS
          install/buildmytasks
          install/xmlgenpy
+	 apps/casapy/casa
          DESTINATION bin )
 
 install( FILES 
