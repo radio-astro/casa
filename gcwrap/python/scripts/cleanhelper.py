@@ -2192,7 +2192,7 @@ class cleanhelper:
                               outframe=self.usespecframe,veltype=veltype).tolist()
         #print newfreqs
         descendingnewfreqs=False
-        if type(newfreqs)==list:
+        if len(newfreqs)>1:
           if newfreqs[1]-newfreqs[0] < 0:
             descendingnewfreqs=True
         if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
@@ -2200,7 +2200,7 @@ class cleanhelper:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
                  " please check start and width parameters")
         if debug:
-          if type(newfreqs)==list:
+          if len(newfreqs)>1:
             print "FRAME=",self.usespecframe
             print "newfreqs[0]===>",newfreqs[0]
             print "newfreqs[1]===>",newfreqs[1]
@@ -2213,9 +2213,8 @@ class cleanhelper:
         # set output number of channels
         if nchan ==1:
           retnchan=1
-          newfreqs=[newfreqs]
         else:
-          if type(newfreqs)==list:
+          if len(newfreqs)>1:
             retnchan=len(newfreqs)
           else:
             retnchan=nchan
