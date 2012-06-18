@@ -1009,38 +1009,6 @@ endif()
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
 
-# for linux RPM & binary distros libgraphics contains pgplot (linked in)...
-#if( APPLE )
-	#casa_add_module( graphics CASACORE PGPLOT WCSLIB )
-  #else()
-	#if( NOT SKIP_PGPLOT )
-	  #casa_add_module( graphics CASACORE PGPLOT X11 WCSLIB )
-    #else()
-	  #casa_add_module( graphics CASACORE X11 WCSLIB )
-    #endif()
-  #endif()
-#casa_add_module( casadbus CASACORE DBUS )
-#casa_add_module( tableplot CASACORE PYTHON )
-#casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
-#casa_add_module( imageanalysis CASACORE Boost)
-#casa_add_module( display3d CASACORE QT4 OPENGL display )
-#casa_add_module( synthesis CASACORE ATM casadbus tableplot Boost )
-#casa_add_module( flagging CASACORE Boost casadbus tableplot synthesis casaqt QT4)
-#casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost casadbus )
-#casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
-#casa_add_module( calanalysis CASACORE synthesis )
-#casa_add_module( alma CASACORE LIBXML2 Boost )
-#casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
-#casa_add_module( oldalma CASACORE LIBXML2 Boost )
-#casa_add_module( dish CASACORE )
-#casa_add_module( nrao CASACORE )
-#casa_add_module( spectrallines CASACORE imageanalysis )
-#casa_add_module( miriad CASACORE )
-#if( USE_ALMAWVR )
-#casa_add_module( air_casawvr CASACORE ALMAWVR Boost tableplot synthesis WCSLIB CFITSIO LAPACK )
-#else()
-#message( WARNING "Will not build wvrgcal." )
-#endif()
 casa_add_module( tools  CASACORE PYTHON QT4 DBUS ATM READLINE DL XERCES CASACODE )
 
 #
@@ -1116,6 +1084,7 @@ install( PROGRAMS
          install/buildmytasks
          install/xmlgenpy
 	 apps/casapy/casa
+	 apps/casapy/casapy
          DESTINATION bin )
 
 install( FILES 
@@ -1134,3 +1103,4 @@ install( FILES
          DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
 
 install( FILES install/saxon8.jar DESTINATION lib )
+
