@@ -70,7 +70,10 @@ else
    export PYTHONEXECUTABLE=${p_root}/bin/python
    export TERMINFO="/usr/share/terminfo"
 fi
-DEBUGGER="gdb"
+if [ ! ${DEBUGGER} ]; then
+   DEBUGGER="gdb"
+fi
+
 p_bind=${p_root}/bin
 p_libd=${p_root}/lib/python2.6
 p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
