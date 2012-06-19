@@ -855,7 +855,7 @@ IF (NOT WIN32)
 ENDIF (NOT WIN32)
 
 # Find SWIG
-find_package( SWIG  REQUIRED )
+find_package( SWIG  2.0.1 )
 
 if( NOT SWIG_FOUND )
 	message( FATAL_ERROR "Swig could not be found. Please check!" )
