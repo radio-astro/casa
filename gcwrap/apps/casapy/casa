@@ -23,6 +23,9 @@ if [ $OSTYPE = "Darwin" ]; then
 else 
 	isapple="F"
 	casa3party="/usr/lib/casapy"
+	if [ `uname -p` = "x86_64"]; then
+	   casa3party="/usr/lib64/casapy"
+	else
 fi
 
 
@@ -37,9 +40,9 @@ else
 	myDir=$(dirname "$0")
 fi
 
-_dorsync="T"
-if [ "$1" = "--norsync" ]; then
-	  _dorsync="F"
+_dorsync="F"
+if [ "$1" = "--rsync" ]; then
+	  _dorsync="T"
 fi
 
 _dodebug="F"
