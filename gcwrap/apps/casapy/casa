@@ -25,7 +25,7 @@ else
 	casa3party="/usr/lib/casapy"
 	if [ `uname -p` = "x86_64"]; then
 	   casa3party="/usr/lib64/casapy"
-	else
+        fi
 fi
 
 
