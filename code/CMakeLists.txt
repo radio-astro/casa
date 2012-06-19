@@ -764,7 +764,7 @@ casa_find( DBUS
 
 # ATM
 casa_find( ATM
-  VERSION 0.4
+  VERSION 0.5
   INCLUDES ATMEnumerations.h ATMVersion.h
   INCLUDES_SUFFIXES ATM
   LIBS aatm
