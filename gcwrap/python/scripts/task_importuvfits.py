@@ -8,9 +8,21 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
 
     Keyword arguments:
     fitsfile -- Name of input UV FITS file
-        default: <unset>; example='3C273XC1.fits'
+        default = none; example='3C273XC1.fits'
     vis -- Name of output visibility file (MS)
-        default: <unset>; example: vis='3C273XC1.ms'
+        default = none; example: vis='3C273XC1.ms'
+    antnamescheme -- Naming scheme for VLA/JVLA/CARMA antennas
+        default = new;
+        new: Antenna name is not a number, 'VA04' or 'EA04'
+             With this scheme, data selection via
+             antenna names and indices is non-ambiguous.
+        old: Antenna name is a number, '04'
+             This option exists for backwards compatibility
+             but can lead to ambiguous results when antenna
+             indices are used for data selection.
+    async --  Run asynchronously
+        default = false; do not run asychronously
+
 
     """
 
