@@ -23,7 +23,8 @@ if [ $OSTYPE = "Darwin" ]; then
 else 
 	isapple="F"
 	casa3party="/usr/lib/casapy"
-	if [ `uname -p` = "x86_64"]; then
+        CPU=$(uname -p)
+	if [ "${CPU}" = "x86_64" ]; then
 	   casa3party="/usr/lib64/casapy"
         fi
 fi
