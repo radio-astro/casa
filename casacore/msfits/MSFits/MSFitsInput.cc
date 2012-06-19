@@ -1885,6 +1885,10 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
                 oss << "VA" << setw(2) << setfill('0') << id(i);
             //cerr << name(i) << endl;
             ant.name().put(row, oss.str());
+        } else if (array_p == "CARMA" && newNameStyle) {
+            ostringstream oss;
+            oss << "CA" << id(i);
+            ant.name().put(row, oss.str());
         } else {
             ant.name().put(row, String::toString(id(i)));
         }
