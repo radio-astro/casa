@@ -283,7 +283,7 @@ def imhead(
     data_unit = ''
     try:
         ia.open(imagename)
-        hd_dict = ia.summary(list=False)['header']
+        hd_dict = ia.summary(list=False)[1]
         stats = ia.statistics(verbose=False, list=False)
         csys = ia.coordsys()
         misc_info = ia.miscinfo()
