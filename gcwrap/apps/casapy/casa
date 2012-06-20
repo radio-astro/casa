@@ -29,17 +29,7 @@ else
         fi
 fi
 
-
-
 a_site="socorro"
-
-if [[ -L "$0"  ]]; then
-	real_me=$(stat -f %Y "$0")
-	myDir=$(dirname "$real_me")
-	echo -n '==>  '
-else
-	myDir=$(dirname "$0")
-fi
 
 _dorsync="F"
 if [ "$1" = "--rsync" ]; then
@@ -51,17 +41,14 @@ if [ "$1" = "--debug" ]; then
 	  _dodebug="T"
 fi
 
-#prefix=$(dirname "${myDir}")
 prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
-#prefix=/opt/casa/active/darwinllvm
-echo $prefix
+#echo $prefix
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
 a_host=$(hostname -s)
 a_arch=`echo ${CASAPATH} | awk '{print $2}'`
 a_site="${a_site}-${a_arch}"
 
-echo "need to set python"
 if [ $isapple = 'T' ]; then
    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.6
    export PYTHONEXECUTABLE=${p_root}/Resources/Python.app/Contents/MacOS/Python
@@ -89,7 +76,7 @@ p_path=${__CASAPY_PYTHONDIR}:${p_path}
 export PYTHONHOME=${p_root}
 export PYTHONPATH=${p_path}
 export CASAPATH="$a_root $a_arch $a_site $a_host"
-echo ${CASAPATH}
+#echo ${CASAPATH}
 export DISPLAY=${DISPLAY=:0.0}
 export PATH="${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
 export PGPLOT_DIR="${casa3party}/lib"
@@ -135,18 +122,18 @@ do
 done
 
 
-casapy_ddir=${a_root}/data
-if (( ${#casapy_ddir} > 0 )); then
+if [ "$_dorsync" = "T" ]; then
+   casapy_ddir=${a_root}/data
+   if (( ${#casapy_ddir} > 0 )); then
 	mkdir -p "$casapy_ddir"
 	cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
-	if [ "$_dorsync" = "T" ]; then
-	   echo "==================================="
-	   echo "Updating data repository...."
-	   rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
-	   echo "... data repository update complete"
-	   echo "==================================="
-        fi
-	cd -
+	echo "==================================="
+	echo "Updating data repository...."
+	rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
+	echo "... data repository update complete"
+	echo "==================================="
+   fi
+   cd -
 fi
 
 #
