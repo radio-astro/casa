@@ -71,7 +71,7 @@ from __main__ import *
 import unittest
 
 image = "gauss_no_pol.fits"
-myia = iatool.create()
+myia = iatool()
 
 class getchunk_test(unittest.TestCase):
     
