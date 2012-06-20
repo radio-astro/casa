@@ -11,7 +11,7 @@ class ss_setjy_helper:
 	self.im = imtool
 	self.vis = vis
         if not casalog:
-          loghome =  casac.homefinder.find_home_by_name('logsinkHome')
+          loghome =  casac.logsink()
           casalog = loghome.create()
         self._casalog = casalog
 
@@ -25,7 +25,7 @@ class ss_setjy_helper:
 
         #from taskinit import * 
         from taskinit import gentools 
-        qatool = casac.homefinder.find_home_by_name('quantaHome')
+        qatool = casac.quanta()
         qa = qatool.create()
  
 

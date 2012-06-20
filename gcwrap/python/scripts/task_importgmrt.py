@@ -134,7 +134,7 @@ def importgmrt( fitsfile, flagfile, vis ):
 
 #    mytb, myms, myfg = gentools(['tb', 'ms', 'fg'])
     mytb, myms = gentools(['tb', 'ms'])
-    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+    tflocal = casac.testflagger()
 
     # Write history
     try:

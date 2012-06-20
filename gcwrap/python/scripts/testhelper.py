@@ -29,7 +29,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
 
     rval = True
 
-    tb2 = casac.homefinder.find_home_by_name('tableHome').create()
+    tb2 = casac.table()
 
     tb.open(referencetab)
     cnames = tb.colnames()

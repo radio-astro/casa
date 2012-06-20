@@ -46,7 +46,7 @@ def importarchive(
     vftask = myf['vftask']
     vlafiller = vftask.fill
 #    fg = myf['fg']
-    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+    tflocal = casac.testflagger()
         # ##
         # Handle globals or user over-ride of arguments
     function_signature_defaults = \

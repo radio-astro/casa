@@ -2871,7 +2871,7 @@ class cleanhelper:
         # to select with nchan=-1
         retparms['imnchan']=1
         retparms['chanslice']=chan
-        qat=qatool();
+        qat=casac.quanta()
         q = qat.quantity
 
         # 2010-08-18 note: disable this. Has the problem 

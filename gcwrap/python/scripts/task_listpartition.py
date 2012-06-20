@@ -26,8 +26,8 @@ def listpartition(vis=None, createdict=None, listfile=None):
 
     casalog.origin('listpartition')
 
-    mslocal = casac.homefinder.find_home_by_name('msHome').create()
-    mslocal1 = casac.homefinder.find_home_by_name('msHome').create()
+    mslocal = casac.ms()
+    mslocal1 = casac.ms()
             
 
     try:

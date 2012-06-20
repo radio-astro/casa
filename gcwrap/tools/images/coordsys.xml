@@ -4132,8 +4132,7 @@ print cs.toworld([0,1,2], 'q')
    
 <input>
  
-     <param type="any" direction="in" name="value">
-	<any type="variant"/>
+     <param type="variant" name="value">
      <description>Absolute pixel coordinates</description>
      </param>
 </input>

@@ -4785,8 +4785,7 @@ ia.close()
      <value>-1</value>
      </param>
 
-     <param type="any" direction="in" name="mask">
-             <any type="variant"/>
+     <param type="variant" direction="in" name="mask">
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
@@ -4811,7 +4810,7 @@ ia.close()
      </param>
      
 </input>
-<returns type="any"><any type="variant"/></returns>
+<returns type="variant"></returns>
 <description>
 
 This function recovers the image pixel or \pixelmask\ values in the
@@ -7914,10 +7913,10 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="pixels">
-	     <any type="variant"/>
+     <param type="variant" direction="in" name="pixels">
      <description>The pixel value, LEL scalar expression or numeric scalar.
       Default is unset.</description>
+     <value/>
      </param>
   
      <param type="int" direction="in" name="pixelmask">

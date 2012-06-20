@@ -51,8 +51,8 @@ def oldflagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,t
 	
 	casalog.post('You are using oldflagcmd v4.2 Updated STM 2012-03-01')
 
-        fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
-        mslocal = casac.homefinder.find_home_by_name('msHome').create()
+        fglocal = casac.flagger()
+        mslocal = casac.ms()
 
         msopened = False
 	ms_starttime = ''
@@ -2041,7 +2041,7 @@ def getmstimes(vis):
     # Get start and end times from MS
     # this might take too long for large MS
     # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-    mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
+    mslocal2 = casac.ms()
     success = True
     ms_time1 = ''
     ms_time2 = ''
@@ -2080,7 +2080,7 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     except ImportError, e: 
         print "failed to load casa:\n", e 
         exit(1) 
-    qatool = casac.homefinder.find_home_by_name('quantaHome') 
+    qatool = casac.quanta()
     qa = casac.qa = qatool.create()
     
     try:

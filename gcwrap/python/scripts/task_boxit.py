@@ -35,6 +35,7 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
     for escapeme in ['-', '+', '*', '/' ]:
         escaped_imagename = re.sub("[" + escapeme + "]", "\\" + escapeme, escaped_imagename)         
     mask = escaped_imagename+'>'+str(threshold)
+    print "Mask is: "+mask
     fullmask = ia.getregion(mask=mask, getmask=True)
     if not(fullmask.max()):
         casalog.post('Maximum flux in image is below threshold.', 'WARN')

@@ -60,8 +60,8 @@ def importevla(
     #
 
     # Create local versions of the flagger and ms tools
-    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
-    mslocal = casac.homefinder.find_home_by_name('msHome').create()
+    tflocal = casac.testflagger()
+    mslocal = casac.ms()
 
     #
     try:
@@ -383,7 +383,7 @@ def getmsmjds(vis):
     # Get start and end times from MS, return in mjds
     # this might take too long for large MS
     # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-    mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
+    mslocal2 = casac.ms()
     success = True
     ms_time1 = ''
     ms_time2 = ''

@@ -38,10 +38,9 @@ def flagcmd(
 
     casalog.origin('flagcmd')
 
-    tflocal = casac.homefinder.find_home_by_name('testflaggerHome'
-            ).create()
-    mslocal = casac.homefinder.find_home_by_name('msHome').create()
-    mslocal2 = casac.homefinder.find_home_by_name('msHome').create()
+    tflocal = casac.testflagger()
+    mslocal = casac.ms()
+    mslocal2 = casac.ms()
 
     # MS HISTORY
 #    mslocal.open(vis, nomodify=False)
@@ -1514,8 +1513,8 @@ def plotflags(
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-    qatool = casac.homefinder.find_home_by_name('quantaHome')
-    qa = casac.qa = qatool.create()
+    qatool = casac.quanta()
+    qa = casac.qa = qatool
 
     try:
         import pylab as pl
@@ -1640,8 +1639,8 @@ def newplotflags(
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-    qatool = casac.homefinder.find_home_by_name('quantaHome')
-    qa = casac.qa = qatool.create()
+    #qatool = casac.quanta()
+    qa = casac.qa = qatool = casac.quanta()
 
     try:
         import pylab as pl
