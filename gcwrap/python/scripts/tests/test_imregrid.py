@@ -52,7 +52,7 @@ class imregrid_test(unittest.TestCase):
 
         
     def test1(self):    
-        myia = iatool.create()  
+        myia = iatool()  
         myia.maketestimage(outfile = IMAGE)
         default('imregrid')
         
@@ -217,7 +217,7 @@ class imregrid_test(unittest.TestCase):
         expected = "expected.im"
         shutil.copytree(datapath + image, image)
         shutil.copytree(datapath + expected, expected)
-        myia = iatool.create()
+        myia = iatool()
         myia.open(expected)
         csys = myia.coordsys().torecord()
         myia.done()
@@ -243,7 +243,7 @@ class imregrid_test(unittest.TestCase):
         
     def test_stretch(self):
         """ ia.regrid(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -275,7 +275,7 @@ class imregrid_test(unittest.TestCase):
         imagename = "test_axes.im"
         templatename = "test_axes.tmp"
         output = "test_axes.out"
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape(imagename, [10, 10, 10])
         exp = myia.coordsys().increment()["numeric"]
         myia.fromshape(templatename, [10, 10, 10])
