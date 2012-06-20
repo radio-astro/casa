@@ -2658,6 +2658,7 @@ removed by table functions like \texttt{open} and \texttt{tableexists}.-->
 
      <param type="string"  name="columnname">
      <description>Name of column</description>
+     <value/>
      </param>
 </input>
 <returns type="any">

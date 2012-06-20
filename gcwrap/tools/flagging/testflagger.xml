@@ -232,6 +232,7 @@ All data selection parameters follow the ms-selection syntax.
      \n and no specific parameter is given either, the whole MS will be selected. The record 
      \n may contain any data selection parameters supported by MSSelection such as:\n
      </description>     
+     <value type="record"></value>
      </param>
 
      <param type="string" name="field">

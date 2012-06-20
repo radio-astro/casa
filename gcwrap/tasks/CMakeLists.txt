@@ -29,6 +29,7 @@ fixvis.xml
 flagautocorr.xml
 flagcmd.xml
 flagdata.xml
+tflagdata.xml
 flagdata2.xml
 flagmanager.xml
 fluxscale.xml
