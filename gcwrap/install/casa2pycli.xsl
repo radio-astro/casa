@@ -27,6 +27,7 @@
 import sys
 import os
 #from casac import *
+import casac
 import string
 import time
 import inspect
@@ -75,8 +76,9 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text disable-output-escaping="yes">
 	if not hasattr(self, "__globals__") or self.__globals__ == None :
            self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
-	casac = self.__globals__['casac']
-	casalog = self.__globals__['casalog']
+	#casac = self.__globals__['casac']
+	#casalog = self.__globals__['casalog']
+	casalog = casac.casac.logsink()
         self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
@@ -148,7 +150,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 
 <xsl:when test="@units">
         if type(<xsl:value-of select="@name"/>) == str :
-           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = casac.qa.quantity(<xsl:value-of select="@name"/>)
+           mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = casac.casac.qa.quantity(<xsl:value-of select="@name"/>)
         else :
            mytmp[&apos;<xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/>
 </xsl:when>
@@ -168,12 +170,12 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:choose>
 <xsl:text disable-output-escaping="yes">
         pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
-        trec = casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
+        trec = casac.casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
-        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
+        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
 	    return False
 
 	try :
