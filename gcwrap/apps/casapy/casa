@@ -159,8 +159,8 @@ if [ "${_checkdbus}" -eq "1" ]; then
   _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
   launchctl remove ${_dbusctl}
 fi
-launchctl load /opt/casa/darwin11/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
-launchctl load /opt/casa/darwin11/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+launchctl load ${casa3party}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+launchctl load ${casa3party}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
 
 if (( ${#casapy_wdir} > 0 )); then
 	mkdir -p "$casapy_wdir"
