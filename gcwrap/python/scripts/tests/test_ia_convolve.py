@@ -87,7 +87,7 @@ class ia_convolve_test(unittest.TestCase):
     
     def test_stretch(self):
         """ ia.convolve(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
