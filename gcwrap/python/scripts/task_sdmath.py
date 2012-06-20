@@ -55,17 +55,10 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                     # set of names this way, will probably
                     # need to do a set_query eventually
 
+            # default flux unit
+            fluxunit_now = fluxunit
 
             scandic={}
-            # Lists of header info to restore
-            restorebase = sd.rcParams['scantable.storage'] == 'disk' and \
-                          ( (fluxunit != '') or (specunit != '') or \
-                            (frame != '') or (doppler != '') )
-            restorescans = []
-            spunitlist = []
-            flunitlist = []
-            framelist = []
-            dopplerlist = []
 
             for i in range(len(filenames)):
                skey='s'+str(i)
@@ -87,27 +80,7 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                      del line
                if not isfactor:
                   # scantable
-                  scandic[skey]=sd.scantable(filenames[i],average=False,antenna=antenna)
-                  thisscan = scandic[skey]
-                  # back up header info
-                  if restorebase and is_scantable(filenames[i]):
-                          restorescans.append(thisscan)
-                          spunitlist.append(thisscan.get_unit())
-                          flunitlist.append(thisscan.get_fluxunit())
-                          coord = thisscan._getcoordinfo()
-                          framelist.append(coord[1])
-                          dopplerlist.append(coord[2])
-                          del coord
-                  # apply set_fluxunit, selection
-                  # if fluxunit is not given, use first spetral data's flux unit 
-                  if fluxunit=='':
-                     fluxunit=thisscan.get_fluxunit()
-                  thisscan.set_fluxunit(fluxunit)
-                  if frame!='':
-                     thisscan.set_freqframe(frame)
-                  if ( doppler != '' ):
-                     ddoppler=doppler.upper()
-                     thisscan.set_doppler(ddoppler)
+                  thisscan=sd.scantable(filenames[i],average=False,antenna=antenna)
                   try:
                      #Apply the selection
                      thisscan.set_selection(sel)
@@ -117,6 +90,12 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                      casalog.post( str(instance), priority = 'ERROR' )
                      casalog.post( 'No output written.', priority = 'ERROR' )
                      return
+                  if fluxunit_now == '':
+                     fluxunit_now=thisscan.get_fluxunit()
+                  scandic[skey] = _convert_flux( thisscan,
+                                                 fluxunit_now,
+                                                 telescopeparm )
+                  del thisscan
                elif isfactor:
                   # variable
                   f = open( filenames[i] )
@@ -136,19 +115,26 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
             expr="tmpout="+expr
             exec(expr)
 
-            # Restore header information in the table
-            for i in range(len(restorescans)):
-                    thisscan = restorescans[i]
-                    thisscan.set_fluxunit(flunitlist[i])
-                    thisscan.set_unit(spunitlist[i])
-                    thisscan.set_doppler(dopplerlist[i])
-                    thisscan.set_freqframe(framelist[i])
-            casalog.post( "Restored header information of input tables" )
-            # Final clean up
-            del restorescans, scandic, thisscan
+            del scandic
             # vars() or locals() must be called to update local symbol table to remove
             # unwanted scantable instances from that symbol table 
             vars()
+
+            # set specunit to output data
+            if len(specunit) > 0:
+                    tmpout.set_unit(specunit)
+
+            # set frame to output data
+            if len(frame) > 0:
+                    tmpout.set_freqframe(frame)
+
+            # set doppler to output data
+            if len(doppler) > 0:
+                    tmpout.set_doppler(doppler)
+
+            # set flux unit
+            if tmpout.get_fluxunit() != fluxunit_now:
+                    tmpout.set_fluxunit(fluxunit_now)
 
             outform=outform.upper()
             if (outform == 'MS'):
@@ -164,16 +150,8 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                 return
         finally:
                 try:
-                        # Restore header information in the table
-                        for i in range(len(restorescans)):
-                                        thisscan = restorescans[i]
-                                        thisscan.set_fluxunit(flunitlist[i])
-                                        thisscan.set_unit(spunitlist[i])
-                                        thisscan.set_doppler(dopplerlist[i])
-                                        thisscan.set_freqframe(framelist[i])
-                        casalog.post( "Restored header information of input tables" )
                         # Final clean up
-                        del restorescans, scandic
+                        del scandic
                 except:
                         pass
                 # Put back insitu (WORKAROUND for bugs in STMath)
@@ -198,3 +176,81 @@ def _sdmath_parse( expr='' ):
            retValue.append(fnamestr)
 
         return retValue
+
+def _convert_flux( s, flunit, tparam ):
+        fl = s.get_fluxunit()
+
+        if fl == flunit or tparam.upper() == 'FIX':
+                return s
+
+        # to make sure the operation is done by insitu=False
+        insitu = sd.rcParams['insitu']
+        sd.rc('',insitu=False)
+        
+        # copy scantable since convert_flux overwrites spectral data
+        if sd.rcParams['scantable.storage'] == 'disk':
+                casalog.post('copy data to keep original one')
+                out = s.copy()
+        else:
+                out = s
+
+        antennaname = out.get_antennaname()
+
+        # convert_flux
+        if ( type(tparam) == list ):
+                # User input telescope params
+                if ( len(tparam) > 1 ):
+                        D = tparam[0]
+                        eta = tparam[1]
+                        #print "Use phys.diam D = %5.1f m" % (D)
+                        #print "Use ap.eff. eta = %5.3f " % (eta)
+                        casalog.post( "Use phys.diam D = %5.1f m" % (D) )
+                        casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
+                        out.convert_flux(eta=eta,d=D,insitu=True)
+                elif ( len(tparam) > 0 ):
+                        jypk = tparam[0]
+                        #print "Use gain = %6.4f Jy/K " % (jypk)
+                        casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
+                        out.convert_flux(jyperk=jypk,insitu=True)
+                else:
+                        #print "Empty telescope list"
+                        casalog.post( "Empty telescope list" )
+
+        elif ( tparam=='' ):
+                if ( antennaname == 'GBT'):
+                        # needs eventually to be in ASAP source code
+                        #print "Convert fluxunit to "+flunit
+                        casalog.post( "Convert fluxunit to "+flunit )
+                        # THIS IS THE CHEESY PART
+                        # Calculate ap.eff eta at rest freq
+                        # Use Ruze law
+                        #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
+                        # with
+                        #print "Using GBT parameters"
+                        casalog.post( "Using GBT parameters" )
+                        eps = 0.390  # mm
+                        eta_0 = 0.71 # at infinite wavelength
+                        # Ideally would use a freq in center of
+                        # band, but rest freq is what I have
+                        rf = out.get_restfreqs()[0][0]*1.0e-9 # GHz
+                        eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
+                        #print "Calculated ap.eff. eta = %5.3f " % (eta)
+                        #print "At rest frequency %5.3f GHz" % (rf)
+                        casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
+                        casalog.post( "At rest frequency %5.3f GHz" % (rf) )
+                        D = 104.9 # 100m x 110m
+                        #print "Assume phys.diam D = %5.1f m" % (D)
+                        casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
+                        out.convert_flux(eta=eta,d=D,insitu=True)
+                        
+                        #print "Successfully converted fluxunit to "+flunit
+                        casalog.post( "Successfully converted fluxunit to "+flunit )
+                elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
+                        out.convert_flux(insitu=True)
+                        
+                else:
+                        # Unknown telescope type
+                        #print "Unknown telescope - cannot convert"
+                        casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
+        sd.rc('',insitu=insitu)
+        return out

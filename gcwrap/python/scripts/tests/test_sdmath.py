@@ -36,7 +36,7 @@ class sdmath_unittest_base:
         self.assertEqual(isthere,True,
                          msg='output file %s was not created because of the task failure'%(name))
 
-    def _compare( self, name, ref, factor, op ):
+    def _compare( self, name, ref, factor, op, scale=1.0 ):
         self._checkfile( name )
         # get original nchan and nrow
         tb.open(ref)
@@ -68,7 +68,7 @@ class sdmath_unittest_base:
                 f = factor[irow][0]
             else:
                 f = factor[irow]
-            arrs = self._getref( numpy.ones(rspchans[irow],dtype=valuetype), op, f )
+            arrs = self._getref( numpy.ones(rspchans[irow],dtype=valuetype)*scale, op, f )
             print 'irow=%s'%(irow)
             print '   arrs=%s'%(arrs)
             print '   sp=%s'%(sp[irow])
@@ -108,7 +108,7 @@ class sdmath_unittest_base:
         f.close()
         #os.system('cat %s'%name)
                 
-    def _checkresult(self,r,l0,l1,op):
+    def _checkresult(self,r,l0,l1,op,scale=1.0):
         self._checkfile(r)
         tb.open(r)
         spr=tb.getcol('SPECTRA').transpose()
@@ -128,6 +128,10 @@ class sdmath_unittest_base:
                          msg='number of rows mismatch')
         self.assertEqual(spr.shape[1],spl1.shape[1],
                          msg='number of channels mismatch')
+
+        spl0*=scale
+        spl1*=scale
+        
         if op=='+':
             spl=spl0+spl1
         elif op=='-':
@@ -705,6 +709,7 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
         for infile in [self.rawfile, self.rawfile1]:
             if os.path.exists(infile):
                 shutil.rmtree(infile)
+        os.system( 'rm -rf %s*'%(self.outprefix) )
 
     # helper functions of tests
     def _get_unit_coord( self, scanname ):
@@ -842,6 +847,40 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op,0.78232766)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testMT2( self ):
+        """Storage Test MT2: Division of scalar on storage='memory' and insitu=T without converting spectral values"""
+        # Operation with a numerical value calls stmath._unaryop()
+        tid = "MT"
+        op = '/'
+        ex = 'V0'+op+'V1'
+        factor = 2.0
+        v = {'V0': self.rawfile,
+             'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     telescopeparm='FIX',\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
         self._compare(outfile,self.rawfile,factor,op)
         # Test  units and coords of output scantable
         self._comp_unit_coord(outfile,self.out_uc)
@@ -871,6 +910,40 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op,0.78232766)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testMF2( self ):
+        """Storage Test MF2: Multiplication of 1D array of [nchan] on storage='memory' and insitu=F without converting spectral values"""
+        # Operation with a numerical value calls stmath._arrayop()
+        tid = "MF"
+        op='*'
+        ex='V0'+op+'V1'
+        factor=[0.1,0.2,0.3,0.4]
+        v={'V0': self.rawfile,
+           'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+        
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     telescopeparm='FIX',\
                      specunit=self.out_uc['spunit'])
 
         self.assertEqual(res,None,
@@ -908,6 +981,40 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
 
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
+        self._compare(outfile,self.rawfile,factor,op,0.78232766)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord(self.rawfile,initval)
+
+
+    def testDT2( self ):
+        """Storage Test DT2: Subtraction of 2D array of [nrow,nchan] on storage='disk' and insitu=T without converting spectral values"""
+        # Operation of 2-D array calls asapmath._array2dOp()
+        tid = "DT"
+        op='-'
+        ex='V0'+op+'V1'
+        factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
+        v={'V0': self.rawfile,
+           'V1': factor}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_unit_coord(self.rawfile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     telescopeparm='FIX',\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
         self._compare(outfile,self.rawfile,factor,op)
         # Test  units and coords of output scantable
         self._comp_unit_coord(outfile,self.out_uc)
@@ -936,6 +1043,38 @@ class sdmath_storageTest( unittest.TestCase, sdmath_unittest_base ):
                      frame=self.out_uc['frame'],\
                      doppler=self.out_uc['doppler'],\
                      fluxunit=self.out_uc['flunit'],\
+                     specunit=self.out_uc['spunit'])
+
+        self.assertEqual(res,None,
+                         msg='Any error occurred during task execution')
+        self._checkresult(outfile,self.rawfile,self.rawfile1,op,0.78232766)
+        # Test  units and coords of output scantable
+        self._comp_unit_coord(outfile,self.out_uc)
+        # Compare units and coords of input scantable before/after run
+        self._comp_unit_coord([self.rawfile, self.rawfile1],initval)
+        
+    def testDF2( self ):
+        """Storage Test DF2: Addition of two scantables on storage='disk' and insitu=F without converting spectral values"""
+        # Operation of two scantables calls stmath._binaryop()
+        tid = "DF"
+        op='+'
+        ex='V0'+op+'V1'
+        v={'V0': self.rawfile,
+           'V1': self.rawfile1}
+        outfile = self.outprefix+tid+self.outsuffix
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_uclist([self.rawfile, self.rawfile1])
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        res = sdmath(expr=ex,varlist=v,outfile=outfile,\
+                     frame=self.out_uc['frame'],\
+                     doppler=self.out_uc['doppler'],\
+                     fluxunit=self.out_uc['flunit'],\
+                     telescopeparm='FIX',\
                      specunit=self.out_uc['spunit'])
 
         self.assertEqual(res,None,
