@@ -82,7 +82,7 @@ class ia_decompose_test(unittest.TestCase):
     
     def test_stretch(self):
         """ ia.decompose(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [20, 20, 1, 1])
         yy.addnoise()
