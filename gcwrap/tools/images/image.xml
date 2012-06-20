@@ -5120,13 +5120,6 @@ and acquires just a read lock.
    <method type="function" name="histograms">
    <shortdescription>Compute histograms from the image</shortdescription>
    
-
-<output>  
-     <param type="record" name="histout">
-     <description>record containing the histograms</description>
-     </param>
-</output>  
-
 <input>
   
      <param type="intArray" direction="in" name="axes">
@@ -5215,7 +5208,7 @@ and acquires just a read lock.
         <value>false</value>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="record"/>
 
 <description>
 

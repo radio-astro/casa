@@ -1877,18 +1877,18 @@ std::vector<bool> image::haslock() {
 	return rstat;
 }
 
-bool image::histograms(
+record* image::histograms(
 	const vector<int>& axes,
-	const ::casac::record& region, const ::casac::variant& mask,
+	const record& region, const variant& mask,
 	const int nbins, const vector<double>& includepix,
 	const bool gauss, const bool cumu, const bool log, const bool list,
 	const string& plotter, const int nx, const int ny,
 	const vector<int>& size, const bool force, const bool disk,
-	const bool /* async */, bool stretch, ::casac::record& histout
+	const bool /* async */, bool stretch
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
-		return false;
+		return 0;
 	}
 	try {
 		std::auto_ptr<Record> regionRec(toRecord(region));
@@ -1919,15 +1919,12 @@ bool image::histograms(
 			includePix.resize(includepix.size());
 			includePix = Vector<Double> (includepix);
 		}
-		_image->histograms(
+        _image->histograms(
 			retval, naxes, *regionRec, Mask, nbins, includePix,
 			gauss, cumu, log, list, plotter, nx, ny,
 			Vector<Int> (size), force, disk, stretch
 		);
-
-		std::auto_ptr<casac::record> tmp(fromRecord(retval));
-		histout = *tmp;
-		return true;
+		return fromRecord(retval);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;

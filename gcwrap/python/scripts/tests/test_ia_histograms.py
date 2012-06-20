@@ -107,7 +107,7 @@ def alleqnum(x,num,tolerance=0):
 class ia_histograms_test(unittest.TestCase):
     
     def setUp(self):
-        self._myia = iatool.create()
+        self._myia = iatool()
     
     def tearDown(self):
         self._myia.done()
@@ -133,8 +133,8 @@ class ia_histograms_test(unittest.TestCase):
         nbins = 25
         idx = nbins/2+1
         out = myim.histograms(list=F, nbins=nbins)
-        self.assertTrue(out['return'], 'Histograms failed (1)')
-        hists=out['histout']
+        self.assertTrue(out, 'Histograms failed (1)')
+        hists=out
         self.assertTrue(
             hists.has_key('values') and hists.has_key('counts'),
             'Histograms record does not have the correct fields'
@@ -149,9 +149,8 @@ class ia_histograms_test(unittest.TestCase):
         
         blc = [0,0]; trc = [4,4]
         r1 = rg.box(blc=blc, trc=trc)
-        ok = myim.histograms(nbins=nbins, list=F, region=r1)
-        self.assertTrue(ok, 'Histograms failed (2)')
-        hists=ok['histout']
+        hists = myim.histograms(nbins=nbins, list=F, region=r1)
+        self.assertTrue(hists, 'Histograms failed (2)')
         ok = (hists['counts'][0]==1) and (hists['counts'][nbins-1]==((trc[0]-blc[0]+1)*(trc[1]-blc[1]+1)-1))
         self.assertTrue(ok, 'Histograms values are wrong (2)')
 
@@ -160,9 +159,8 @@ class ia_histograms_test(unittest.TestCase):
             pixels[imshape[0]-1,j] = 100*(j+1)
         ok = myim.putchunk(pixels)
         self.assertTrue(ok, 'putchunk failed (1)')
-        ok = myim.histograms(nbins=nbins, list=F, axes=[0])
-        self.assertTrue(ok['return'], 'Histograms failed (3)')
-        hists=ok['histout']
+        hists = myim.histograms(nbins=nbins, list=F, axes=[0])
+        self.assertTrue(hists, 'Histograms failed (3)')
         ok = list(hists['values'].shape)==[nbins,imshape[1]]
         ok = ok and list(hists['counts'].shape)==[nbins,imshape[1]]
         self.assertTrue(ok, 'Histograms value arrays have the wrong shape (2)')
@@ -171,27 +169,26 @@ class ia_histograms_test(unittest.TestCase):
             ok = ok and alleqnum(hists['counts'][idx-1],(imshape[0]-2),tolerance=0.0001)
         self.assertTrue(ok, 'Histograms values are wrong (3)')
         
-        ok = myim.histograms(list=F, includepix=[-5,5], nbins=25)
-        self.assertTrue(ok, 'Histograms failed (4)')
-        hists=ok['histout']
+        hists = myim.histograms(list=F, includepix=[-5,5], nbins=25)
+        self.assertTrue(hists, 'Histograms failed (4)')
         ok = hists['counts'][idx-1]==(imshape[0]*imshape[1]-(imshape[1]+imshape[1]))
         ok = ok and alleqnum(hists['counts'][0:(idx-2)],0,tolerance=0.0001)
         ok = ok and alleqnum(hists['counts'][idx:nbins],0,tolerance=0.0001)
         self.assertTrue(ok, 'Histograms values are wrong (4)')
         
-        ok = myim.histograms(list=F, disk=T, force=T)
-        self.assertTrue(ok['return'], 'histograms failed (4)')
-        ok = myim.histograms(list=F, disk=F, force=T)
-        self.assertTrue(ok['return'], 'histograms failed (5)')
-        ok = myim.histograms(list=F, gauss=T, cumu=T, log=T)
-        self.assertTrue(ok['return'], 'histograms failed (6)')
+        hists = myim.histograms(list=F, disk=T, force=T)
+        self.assertTrue(hists, 'histograms failed (4)')
+        hists = myim.histograms(list=F, disk=F, force=T)
+        self.assertTrue(hists, 'histograms failed (5)')
+        hists = myim.histograms(list=F, gauss=T, cumu=T, log=T)
+        self.assertTrue(hists, 'histograms failed (6)')
 
         ok = myim.done()
         self.assertTrue(ok, 'Done failed (1)')
     
     def test_stretch(self):
         """ ia.histogram(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -206,7 +203,7 @@ class ia_histograms_test(unittest.TestCase):
         zz = yy.histograms(
             mask=mymask + ">0", stretch=True
         )
-        self.assertTrue(zz["return"] and type(zz) == type({}))
+        self.assertTrue(zz and type(zz) == type({}))
         yy.done()
     
 def suite():
