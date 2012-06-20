@@ -82,9 +82,9 @@ class ia_modify_test(unittest.TestCase):
     
     def test_stretch(self):
         """ ia.histogram(): Test stretch parameter"""
-        mycl = cltool.create()
+        mycl = cltool()
         mycl.addcomponent(flux=1, dir=['J2000', '00:00:00.00', '00.00.00.0'])
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()

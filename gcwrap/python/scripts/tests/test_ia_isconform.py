@@ -81,7 +81,7 @@ class ia_isconform_test(unittest.TestCase):
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/ia_isconform/'
         shutil.copy(datapath + fits, fits)
-        self._myia = iatool.create()
+        self._myia = iatool()
         self._myia.maketestimage()
 
     
