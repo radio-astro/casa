@@ -82,7 +82,7 @@ def run_collapse(
     imagename, function, axes, outfile, region, box, chans,
     stokes, mask, overwrite, stretch=False
 ):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     res = myia.collapse(
         function=function, axes=axes, outfile=outfile,
@@ -114,9 +114,9 @@ class imcollapse_test(unittest.TestCase):
         os.remove(good_image)
 
     def checkImage(self, gotImage, expectedName):
-        expected = iatool.create()                                
+        expected = iatool()                                
         expected.open(expectedName)
-        got = iatool.create()
+        got = iatool()
         if type(gotImage) == str:
             got.open(gotImage)
         else:
@@ -358,7 +358,7 @@ class imcollapse_test(unittest.TestCase):
 
     def test_8(self):
         """imcollapse: test both OTF and permanent masking works"""
-        xx = iatool.create()
+        xx = iatool()
         good_image_im = "collapse_in.im"
         xx.fromfits(good_image_im, good_image)
         xx.calcmask(good_image_im + "<78")
@@ -407,7 +407,7 @@ class imcollapse_test(unittest.TestCase):
     def test_CAS_3418(self):
         """imcollapse: Test seperate code for median due to performance issues"""
         for i in range(0,4):
-            xx = iatool.create()
+            xx = iatool()
             xx.open(good_image)
             exp = xx.statistics(robust=T, axes=i)["median"]
             xx.done()
@@ -431,7 +431,7 @@ class imcollapse_test(unittest.TestCase):
             
     def test_stretch(self):
         """ imcollapse: Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         yy.open(good_image)
         mycs = yy.coordsys().torecord()
         yy.done()
