@@ -82,7 +82,7 @@ class ia_tofits_test(unittest.TestCase):
     
     def test_stretch(self):
         """ ia.tofits(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -105,7 +105,7 @@ class ia_tofits_test(unittest.TestCase):
     def test_CAS3675(self):
         """ test fix for CAS 3675, outfile must be specified """
         name = "my.im"
-        yy = iatool.create()
+        yy = iatool()
         yy.fromshape(name, [1,1,1,1])
         self.assertRaises(Exception, yy.tofits, overwrite=T)
         yy.done()

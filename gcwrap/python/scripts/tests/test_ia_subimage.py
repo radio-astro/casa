@@ -85,7 +85,7 @@ class ia_subimage_test(unittest.TestCase):
 
     def test_stretch(self):
         """Test the stretch parameter"""
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape("mask1.im", [20, 30, 4, 10])
         myia.fromshape("mask2.im", [20, 30, 4, 1])
         myia.fromshape("mask3.im", [20, 30, 4, 2])
