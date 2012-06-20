@@ -3147,16 +3147,13 @@ coordsys::toworld(const ::casac::variant& value, const std::string& format)
 }
 
 record* coordsys::toworldmany(const variant& value) {
-	record * rstat = 0;
-	*itsLog << LogOrigin("coordsys", "toworldmany");
+	*itsLog << LogOrigin("coordsys", __FUNCTION__);
 	try {
-		// form Array<Double> pixel
 		Vector<Int> value_shape = value.arrayshape();
 	    if(value.type() != variant::DOUBLEVEC) {
-	        *itsLog << LogIO::SEVERE
+	        *itsLog
 	  	      << "You must provide a vector of doubles."
-	  	      << LogIO::POST;
-	        return 0;
+	  	      << LogIO::EXCEPTION;
 	    }
 
 		std::vector<double> value_vec = value.getDoubleVec();
@@ -3188,14 +3185,12 @@ record* coordsys::toworldmany(const variant& value) {
 		tmpRec.define("numeric", world);
 		tmpRec.define("pw_type", "world");
 		tmpRec.define("ar_type","absolute");
-		rstat = fromRecord(tmpRec);
+		return fromRecord(tmpRec);
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-
-	return rstat;
 }
 
 std::string

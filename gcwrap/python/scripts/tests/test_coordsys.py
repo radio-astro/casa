@@ -86,11 +86,10 @@ class coordsys_test(unittest.TestCase):
         os.remove(myim)
         
     def test_CAS_2724(self):
-        myia = iatool.create()
+        myia = iatool()
         myia.open(myim)
         mycsys = myia.coordsys()
-        # the fact that this executes without crashing the interpreter is proof the test passes
-        mycsys.toworldmany()
+        self.assertRaises(Exception, mycsys.toworldmany, [1])
 
 
 def suite():
