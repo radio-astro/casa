@@ -1797,6 +1797,8 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
     const ROScalarColumn<Int>& insrcid = msfc.sourceId();
     const ROScalarColumn<String>& inname = msfc.name();
 
+    TableExprNode phd = fieldTable.col("PHASE_DIR");
+
     // If source table exists, access it
 
     // This is for case where SOURCE guaranteed to exist:
@@ -1938,14 +1940,22 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
     *pmdec = 0.0;
 
     MDirection dir;
+    Vector<Double> dr;
 
+    //cout << " nelements=" << fieldidMap.nelements() << endl;
     // Only take those fields which are part of the fieldidMap
     // (which represents the fields written in the main table).
     for (uInt fieldnum = 0; fieldnum < nrow; fieldnum++) {
+        //cout << "fieldidMap[" << fieldnum << "]=" << fieldidMap[fieldnum] << endl;
         if (fieldnum < fieldidMap.nelements() && fieldidMap[fieldnum] >= 0) {
             *idno = 1 + fieldidMap[fieldnum];
             dir = msfc.phaseDirMeas(fieldnum);
-            *source = inname(fieldnum) + "                ";
+            //cout << "dir=" << *(dir.getData()) << endl;
+            //cout << "angle=" <<dir.getAngle() << endl;
+            dr = phd.getArrayDouble(fieldnum);
+            //cout << "fieldnum=" << fieldnum << " dr=" << dr << endl;
+            //cout << "dr.shape()=" << dr.shape() << endl;
+            *source = inname(fieldnum) + String::toString(fieldnum) + "                ";
             if (dir.type() == MDirection::B1950) {
                 *epoch = 1950.;
             }
@@ -1962,7 +1972,7 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
                 if (rownrs.nelements() > 0) {
                     uInt rownr = rownrs(0);
                     // Name in SOURCE table overides name in FIELD table
-                    *source = sourceColumns->name()(rownr) + "                ";
+                    //*source = sourceColumns->name()(rownr) + "                ";
                     //cout << "sysvel is Null: "
                     //     << sourceColumns->sysvel().isNull() << endl;
                     if (!sourceColumns->sysvel().isNull()
@@ -1989,12 +1999,12 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
                     *calcode = sourceColumns->code()(rownr) + "    ";
 
                     // Directions have to be converted from radians to degrees.
-                    if (sourceColumns->direction().isDefined(rownr)) {
-                        dir = sourceColumns->directionMeas()(rownr);
-                    }
-                    if (dir.type() == MDirection::B1950) {
-                        *epoch = 1950.;
-                    }
+                    //if (sourceColumns->direction().isDefined(rownr)) {
+                    //    dir = sourceColumns->directionMeas()(rownr);
+                    //}
+                    //if (dir.type() == MDirection::B1950) {
+                    //    *epoch = 1950.;
+                    //}
                 }
             }
 
@@ -2003,6 +2013,12 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
             {
                 *raepo = dir.getAngle("deg").getValue()(0);
                 *decepo = dir.getAngle("deg").getValue()(1);
+                //cout << "ra=" << *raepo << " dec=" << *decepo << endl;
+                //*raepo = dr(0) / C::degree;
+                //if (*raepo > 180) *raepo -= 360; 
+                //*decepo = dr(1) / C::degree;
+                //if (*decepo > 180) *decepo -= 360; 
+                //cout << "ra=" << *raepo << " dec=" << *decepo << endl;
                 MeasFrame frame;
                 frame.set(msfc.timeMeas()(fieldnum));
                 MDirection::Ref typeout(MDirection::APP, frame);
@@ -2640,6 +2656,7 @@ Int MSFitsOutput::makeIdMap(Block<Int>& map, Vector<Int>& selids, const Vector<
     for (Int i = 0; i < nrow; i++) {
         idUsed[data[i]] = True;
     }
+
     allids.freeStorage(data, deleteIt);
     Int nr = 0;
     for (Int i = 0; i < nrid; i++) {
@@ -2654,7 +2671,6 @@ Int MSFitsOutput::makeIdMap(Block<Int>& map, Vector<Int>& selids, const Vector<
             selids(nr++) = i; // determine which ids are selected
         }
     }
-
     return nr;
 }
 
