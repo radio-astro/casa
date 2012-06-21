@@ -26,6 +26,7 @@
 //# $Id: Error2.cc 21040 2011-04-07 13:26:55Z gervandiepen $
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Exceptions/CasaErrorTools.h>
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
 #include <casa/System/AipsrcValue.h>
@@ -46,6 +47,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 String AipsError::lastMessage = AipsError::noMessage ();
 String AipsError::lastStackTrace = AipsError::noStackTrace();
+Mutex  AipsError::lastErrorMutex;
+
 
 AipsError::AipsError (Category c)
 : message(), category(c)
@@ -83,20 +86,30 @@ AipsError::~AipsError() throw()
 void
 AipsError::addStackTrace ()
 {
-    lastMessage = message;
-    lastStackTrace = noStackTrace ();
+
+    // Always generate a stack trace and keep it around in a static
+    // for later retrieval via casapy
+
+    stackTrace = generateStackTrace();
+
+    {
+        ScopedMutexLock lock(lastErrorMutex);
+        lastMessage = message;
+        lastStackTrace = stackTrace;
+    }
+
+    // See if the default is to tack on the stack trace on the exception
+    // message.  N.B.: Turning this on will break some of the low-level tests
+    // which simply compare expected to actual output.
 
     Bool enabled;
     AipsrcValue<Bool>::find (enabled, "AipsError.enableStackTrace", AipsError_StackTracing_Default);
-
-    String trace = generateStackTrace();
-    lastStackTrace = trace;
 
     if (enabled) {
 
         // If permitted, append to the error message.
 
-        message += trace;
+        message += stackTrace;
     }
 }
 
@@ -132,16 +145,38 @@ AipsError::generateStackTrace()
     return stackTrace;
 }
 
+
 void
 AipsError::getLastInfo (String & message, String & stackTrace)
 {
-    message = lastMessage;
-    stackTrace = lastStackTrace;
+    ScopedMutexLock lock(lastErrorMutex);
+
+    message = getLastMessage ();
+    stackTrace = getLastStackTrace ();
+}
+
+String
+AipsError::getLastMessage ()
+{
+    return lastMessage;
+}
+
+String
+AipsError::getLastStackTrace ()
+{
+    return CasaErrorTools::replaceStackAddresses (lastStackTrace);
+}
+
+String
+AipsError::getStackTrace () const
+{
+    return CasaErrorTools::replaceStackAddresses (stackTrace);
 }
 
 void
 AipsError::clearLastInfo ()
 {
+    ScopedMutexLock lock(lastErrorMutex);
     lastMessage = noMessage ();
     lastStackTrace = noStackTrace ();
 }
@@ -157,9 +192,6 @@ AipsError::noStackTrace ()
 {
     return "*no-stack-trace*";
 }
-
-
-
 
 AllocError::~AllocError() throw()
 {}
