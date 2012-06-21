@@ -34,25 +34,43 @@ using namespace casac;
 }
 
 %typemap(in) string {
-   $1 = string(PyString_AsString($input));
+   if(PyString_Check($input)){
+      $1 = string(PyString_AsString($input));
+   } else {
+      // Can't throw an exception here as it's not in a try catch block
+      //
+      //throw casa::AipsError("Not a String");
+        PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
+        return NULL;
+   }
 }
 %typemap(typecheck) string {
    $1 = PyString_Check($input);
 }
 %typemap(in) string& {
-   if(!$1)
-      $1 = new string(PyString_AsString($input));
-   else
-      *$1 = string(PyString_AsString($input));
+   if(PyString_Check($input)){
+      if(!$1)
+         $1 = new string(PyString_AsString($input));
+      else
+         *$1 = string(PyString_AsString($input));
+   } else {
+        PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
+        return NULL;
+   }
 }
 %typemap(typecheck) string& {
    $1 = PyString_Check($input);
 }
 %typemap(in) const string& {
-   if(!$1)
-      $1 = new string(PyString_AsString($input));
-   else
-      *$1 = string(PyString_AsString($input));
+   if(PyString_Check($input)){
+      if(!$1)
+         $1 = new string(PyString_AsString($input));
+      else
+         *$1 = string(PyString_AsString($input));
+   } else {
+        PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
+        return NULL;
+   }
 }
 %typemap(typecheck) const string& {
    $1 = PyString_Check($input);
@@ -67,7 +85,7 @@ using namespace casac;
       if (PyString_Check(o))
         $1.value.push_back(PyString_AsString(PyList_GetItem($input,i)));
       else {
-        PyErr_SetString(PyExc_TypeError,"list must contain strings");
+        PyErr_SetString(PyExc_TypeError,"list $1_name must contain strings");
         return NULL;
       }
     }
@@ -75,7 +93,7 @@ using namespace casac;
     if(PyString_Check($input)){
        $1.value.push_back(PyString_AsString($input));
     } else {
-       PyErr_SetString(PyExc_TypeError,"not a list");
+       PyErr_SetString(PyExc_TypeError,"$1_name is not a list");
        return NULL;
     }
   }
@@ -95,7 +113,7 @@ using namespace casac;
         else
           $1->push_back(PyString_AsString(PyList_GetItem($input,i)));
       else {
-        PyErr_SetString(PyExc_TypeError,"list must contain strings");
+        PyErr_SetString(PyExc_TypeError,"list $1_name must contain strings");
         return NULL;
       }
     }
@@ -108,7 +126,7 @@ using namespace casac;
        else
           (*$1)[0] = PyString_AsString($input);
     } else {
-       PyErr_SetString(PyExc_TypeError,"not a list");
+       PyErr_SetString(PyExc_TypeError,"$1_name is not a list");
        return NULL;
     }
   }
@@ -146,7 +164,7 @@ using namespace casac;
    if(PyDict_Check($input)){
       $1 = pyobj2variant($input, true).asRecord();      
    } else {
-      PyErr_SetString(PyExc_TypeError,"not a dictionary");
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
    }
 }
 
@@ -154,7 +172,7 @@ using namespace casac;
    if(PyDict_Check($input)){
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
-      PyErr_SetString(PyExc_TypeError,"not a dictionary");
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
    }
 }
 
@@ -162,7 +180,7 @@ using namespace casac;
    if(PyDict_Check($input)){
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
-      PyErr_SetString(PyExc_TypeError,"not a dictionary");
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
    }
 }
 
