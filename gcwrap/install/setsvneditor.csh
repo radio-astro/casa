@@ -9,7 +9,7 @@
 #Routine for setting the SVN_EDITOR to get commit template
 set AIPSROOT=`/bin/echo $CASAPATH | awk '{print $1}'`
 
-setenv SVN_EDITOR $AIPSROOT/code/xmlcasa/install/svn_editor
+setenv SVN_EDITOR $AIPSROOT/gcwrap/install/svn_editor
 echo "SVN_EDITOR set to $SVN_EDITOR"
 
 # A warning for anyone relying on the old setsvneditor.csh to bizarrely set
