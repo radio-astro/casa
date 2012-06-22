@@ -1877,17 +1877,13 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
             mount = "ALT-AZ";
         ant.flagRow().put(row, False);
         ant.mount().put(row, mount);
-        if (newNameStyle) {
-            //cerr << name(i) << endl;
+        if (doVLARot && newNameStyle) {
             ostringstream oss;
             if (name(i).contains("EVLA"))
                 oss << "EA" << setw(2) << setfill('0') << id(i);
-            else if (name(i).contains("VLA"))
+            else
                 oss << "VA" << setw(2) << setfill('0') << id(i);
-            else if (array_p == "CARMA") 
-                oss << "CA" << id(i);
-            else 
-                oss << id(i);
+            //cerr << name(i) << endl;
             ant.name().put(row, oss.str());
         } else {
             ant.name().put(row, String::toString(id(i)));
