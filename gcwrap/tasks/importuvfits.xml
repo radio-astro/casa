@@ -21,8 +21,8 @@
 			<value></value>
 		</param>
 		<param type="string" name="antnamescheme">
-                  <description>VLA/EVLA/CARMA only; \'new\' or \'old\'; \'VA04\' or \'04\' for VLA ant 4</description>
-		  <value>new</value>
+                  <description>For VLA only; \'new\' or \'old\'; \'VA04\' or \'04\' for VLA ant 4</description>
+		  <value>old</value>
 		  <allowed kind="enum">
 		  <value>old</value>
 		  <value>new</value>
@@ -38,15 +38,16 @@
                 default = none; example='3C273XC1.fits'
         vis -- Name of output visibility file (MS)
                 default = none; example: vis='3C273XC1.ms'
-	antnamescheme -- Naming scheme for VLA/JVLA/CARMA antennas
-                default = new;
-                  new: Antenna name is not a number, e.g., 'VA04' or 'EA04'
-                       With this scheme, data selection via
-                       antenna names and indices is non-ambiguous.
-                  old: Antenna name is a number, '04'
-                       This option exists for backwards compatibility
-                       but can lead to ambiguous results when antenna
-                       indices are used for data selection.
+	antnamescheme -- Naming scheme for antennas
+                default = old;
+                   old: Antenna name is a number, '04'
+                         This option exists for backwards compatibility
+                         but can lead to ambiguous results when antenna
+                         indices are used for data selection.
+                  new: Antenna name is not a number, 'VA04' or 'EA04'
+                          With this scheme, data selection via
+                           antenna names and indices is non-ambiguous.
+
         async --  Run asynchronously
                default = false; do not run asychronously
 
