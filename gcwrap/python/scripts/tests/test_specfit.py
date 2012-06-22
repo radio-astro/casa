@@ -100,7 +100,7 @@ def run_fitprofile (
     goodamprange=[0.0], goodcenterrange=[0.0], goodfwhmrange=[0.0],
     sigma="", outsigma=""
 ):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     if (not myia.isopen()):
         myia.done()
@@ -173,9 +173,9 @@ class specfit_test(unittest.TestCase):
         os.remove(polyim)
 
     def checkImage(self, gotImage, expectedName):
-        expected = iatool.create()                                
+        expected = iatool()                                
         expected.open(expectedName)
-        got = iatool.create()
+        got = iatool()
         if type(gotImage) == str:
             got.open(gotImage)
         else:
@@ -505,7 +505,7 @@ class specfit_test(unittest.TestCase):
     def test_stretch(self):
         """specfit : test mask stretch"""
         imagename = twogauss
-        yy = iatool.create()
+        yy = iatool()
         yy.open(imagename)
         mycsys = yy.coordsys().torecord()
         yy.done()
@@ -771,7 +771,7 @@ class specfit_test(unittest.TestCase):
     def test_14(self):
         imagename = datapath + birdie
         sigmaimage = "sigma.im"
-        myia = iatool.create()
+        myia = iatool()
         myia.open(imagename)
         bb = myia.getchunk()
         myia.done()

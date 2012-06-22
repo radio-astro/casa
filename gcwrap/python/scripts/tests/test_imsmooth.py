@@ -1123,7 +1123,7 @@ class imsmooth_test2(unittest.TestCase):
     def test_targetres(self):
         '''Imsmooth: Targetres tests'''
         
-        myia = iatool.create()
+        myia = iatool()
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting imsmooth TARGETRES tests.", 'NORMAL2' )
         myia.open(targetres_im)
@@ -1215,7 +1215,7 @@ class imsmooth_test2(unittest.TestCase):
     
     def test_stretch(self):
         """ imsmooth(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()

@@ -408,6 +408,14 @@ using namespace casac;
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
+%typemap(out) std::vector<bool> {
+   $result = casac::map_vector($1);
+}
+
+%typemap(out) std::vector<bool>& {
+   $result = casac::map_vector($1);
+}
+
 %typemap(out) std::vector<int> {
    $result = casac::map_vector($1);
 }

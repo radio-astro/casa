@@ -91,7 +91,7 @@ def run_pbcor(
     imagename, pbimage, outfile, overwrite, region, box, chans,
     stokes, mask, mode, cutoff
 ):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     res = myia.pbcor(
         pbimage=pbimage, outfile=outfile, overwrite=overwrite,
@@ -131,9 +131,9 @@ class impbcor_test(unittest.TestCase):
                 os.remove(f)
 
     def checkImage(self, gotImage, expectedName):
-        expected = iatool.create()                                
+        expected = iatool()                                
         expected.open(expectedName)
-        got = iatool.create()
+        got = iatool()
         if type(gotImage) == str:
             got.open(gotImage)
         else:
@@ -250,7 +250,7 @@ class impbcor_test(unittest.TestCase):
         self, expected, imagename, pbimage, overwrite, region, box,
         chans, stokes, mask, mode, cutoff
     ):
-        myia = iatool.create()
+        myia = iatool()
         myia.open(pbimage)
         pbpix = myia.getchunk()
         myia.done()
@@ -321,7 +321,7 @@ class impbcor_test(unittest.TestCase):
 
     def test_stretch(self):
         """ ia.pbcor(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape("", [113, 76, 1, 1])
         yy.addnoise()

@@ -77,8 +77,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	if not hasattr(self, "__globals__") or self.__globals__ == None :
            self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
 	#casac = self.__globals__['casac']
-	#casalog = self.__globals__['casalog']
-	casalog = casac.casac.logsink()
+	casalog = self.__globals__['casalog']
+	#casalog = casac.casac.logsink()
         self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###

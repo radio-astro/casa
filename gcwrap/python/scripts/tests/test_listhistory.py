@@ -47,7 +47,7 @@ class listhistory_test(unittest.TestCase):
         
         self.res = listhistory(self.msfile)
         cmd="sed -n \"/Begin Task/,/End Task/p\" %s > %s " %(logfile,newfile)
-        os.system(cmd)
+	os.system(cmd)
     
         # Get the number of lines in file
         refnum=13

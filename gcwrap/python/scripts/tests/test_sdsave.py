@@ -557,7 +557,7 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
         self.assertTrue(self._compare())
 
     def _pointingKeywordExists(self):
-        _tb=tbtool.create()
+        _tb=tbtool()
         _tb.open(self.outfile0)
         keys=_tb.getkeywords()
         _tb.close()
@@ -566,8 +566,8 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
 
     def _compare(self):
         ret = True
-        _tb1=tbtool.create()
-        _tb2=tbtool.create()
+        _tb1=tbtool()
+        _tb2=tbtool()
         _tb1.open(self.infile)
         #ptab1=_tb1.getkeyword('POINTING').split()[-1]
         ptab1=_tb1.getkeyword('POINTING').lstrip('Table: ')

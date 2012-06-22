@@ -4,10 +4,8 @@
 from numpy import *
 import casac
 
-qatool = casac.homefinder.find_home_by_name('quantaHome')
-qa = qatool.create()
-metool = casac.homefinder.find_home_by_name('measuresHome')
-me = metool.create()
+qa = casac.quanta()
+me = casac.measures()
 
 
 #obsMeas = me.observatory('ALMA')

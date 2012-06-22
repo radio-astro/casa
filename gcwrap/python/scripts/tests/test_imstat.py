@@ -49,7 +49,7 @@ class imstat_test(unittest.TestCase):
         mean = stats['mean']
         npts = stats['npts']
 
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(self.moment)
         summary = _myia.summary()
         _myia.close()
@@ -68,7 +68,7 @@ class imstat_test(unittest.TestCase):
     def test002(self):
         """ Test 2: test position format for 150 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s150, self.s150)
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(self.s150)
         stats = _myia.statistics()
         _myia.close()
@@ -80,7 +80,7 @@ class imstat_test(unittest.TestCase):
     def test003(self):
         """ Test 3: test position format for 15 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s15, self.s15)
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(self.s15)
         stats = _myia.statistics()
         _myia.close()
@@ -92,7 +92,7 @@ class imstat_test(unittest.TestCase):
     def test004(self):
         """ Test 4: test position format for 0.015 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s0_015, self.s0_015)
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(self.s0_015)
         stats = _myia.statistics()
         _myia.close() 
@@ -104,7 +104,7 @@ class imstat_test(unittest.TestCase):
     def test005(self):
         """ Test 5: test position format for 0.0015 arcsec pixel image is correct """
         print "*** test 5"
-        _myia = iatool.create()
+        _myia = iatool()
         shutil.copytree(self.datapath+self.s0_0015, self.s0_0015)
         _myia.open(self.s0_0015)
         stats = _myia.statistics()
@@ -118,7 +118,7 @@ class imstat_test(unittest.TestCase):
     def test006(self):
         """ Test 6: test position format for 0.00015 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s0_00015, self.s0_00015)
-        _myia = iatool.create()
+        _myia = iatool()
         _myia.open(self.s0_00015)
         stats = _myia.statistics()
         _myia.close()
@@ -137,7 +137,7 @@ class imstat_test(unittest.TestCase):
     def test008(self):
         """ Test 8: verify fix for CAS-2195"""
         def test_statistics(image):
-            _myia = iatool.create()
+            _myia = iatool()
             _myia.open(myim)
             stats = _myia.statistics()
             _myia.done()
@@ -158,7 +158,7 @@ class imstat_test(unittest.TestCase):
     def test009(self):
         """ Test 9: choose axes works"""
         def test_statistics(image, axes):
-            _myia = iatool.create()
+            _myia = iatool()
             _myia.open(myim)
             stats = _myia.statistics(axes=axes)
             _myia.done()
@@ -222,7 +222,7 @@ class imstat_test(unittest.TestCase):
     def test_robust(self):
         *"" Confirm robust parameter*""
         def test_statistics(image, robust):
-            _myia = iatool.create()
+            _myia = iatool()
             _myia.open(myim)
             stats = _myia.statistics(robust=robust)
             _myia.done()
@@ -242,7 +242,7 @@ class imstat_test(unittest.TestCase):
                 
     def test_stretch(self):
         """ ia.statistics(): Test stretch parameter"""
-        yy = iatool.create()
+        yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -276,7 +276,7 @@ class imstat_test(unittest.TestCase):
     def test010(self):
         """test logfile """
         def test_statistics(image, axes, logfile, append):
-            _myia = iatool.create()
+            _myia = iatool()
             _myia.open(image)
             stats = _myia.statistics(
                 axes=axes, logfile=logfile, append=append

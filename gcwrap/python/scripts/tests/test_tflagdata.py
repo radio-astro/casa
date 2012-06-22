@@ -299,7 +299,7 @@ class test_flagmanager(test_base):
         '''flagmanager test1m: mode=list, flagbackup=True/False'''
         
         # Create a local copy of the tool
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         flagmanager(vis=self.vis, mode='list')
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 3)
@@ -361,7 +361,7 @@ class test_flagmanager(test_base):
         """flagmanager: Do not allow flagversion=''"""
         
         # Create a local copy of the tool
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         
         tflocal.open(self.vis)
         l = len(tflocal.getflagversionlist())

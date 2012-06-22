@@ -77,7 +77,7 @@ good_list = "list1.txt"
 bad_list = "list2.txt"
 
 def run_sttmethod(list, table):
-    mysl = sltool.create()
+    mysl = sltool()
     restool = mysl.splattotable(filenames=list, table=table)
     mysl.close()
     return restool
@@ -122,7 +122,7 @@ class splattotable_test(unittest.TestCase):
     def test_good_list(self):
         """splattotable: Test converting a good list"""
         def testit(filenames, table):
-            mytb = tbtool.create()
+            mytb = tbtool()
             for i in [0,1]:
                 table = table + str(i)
                 if (i==0):

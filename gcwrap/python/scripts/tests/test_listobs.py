@@ -57,9 +57,9 @@ class listobs_test1(unittest.TestCase):
         ms.open(msfile1)
         res = ms.summary(True)
         ms.close()
-        name = res['header']['field_0']['name']
+        name = res['field_0']['name']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
-        name = res['header']['scan_7']['0']['FieldName']
+        name = res['scan_7']['0']['FieldName']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
         
     def test4(self):
@@ -68,8 +68,8 @@ class listobs_test1(unittest.TestCase):
         res = ms.summary(True)
         ms.close()
         # Begin and end times should be different
-        btime = res['header']['scan_1']['0']['BeginTime']
-        etime = res['header']['scan_1']['0']['EndTime']
+        btime = res['scan_1']['0']['BeginTime']
+        etime = res['scan_1']['0']['EndTime']
         self.assertNotEqual(btime, etime, "Begin and End times of scan=1 should not be equal")
         
         # Only one row of scan=1 should be printed

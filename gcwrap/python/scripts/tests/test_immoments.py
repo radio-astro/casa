@@ -976,7 +976,7 @@ class immoment_test2(unittest.TestCase):
                           +"\nError: Moment file, " + got + ", was not created."
         
         immath( outfile=difference, expr='"' + got + '"-"' + expected + '"' )
-        myia = iatool.create()
+        myia = iatool()
         myia.open(difference)
         stats = myia.statistics()
         myia.close()
@@ -1110,7 +1110,7 @@ class immoment_test2(unittest.TestCase):
     
     def test_CAS2943(self):
         """Test the stretch parameter"""
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape("myim.im", [10, 20, 4, 40])
         myia.done()
         myia.fromshape("mask1.im", [10, 20, 4, 40])

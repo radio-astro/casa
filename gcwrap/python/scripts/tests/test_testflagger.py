@@ -76,7 +76,7 @@ class test_base(unittest.TestCase):
 
     def unflag_table(self):
 
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -94,7 +94,7 @@ class test_tsys(test_base):
 
     def test_manual_field_selection_agent_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -114,7 +114,7 @@ class test_tsys(test_base):
 
     def test_manual_antenna_selection_agent_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -134,7 +134,7 @@ class test_tsys(test_base):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
 
         # Run the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         tflocal.parsemanualparameters(apply=False)
@@ -149,7 +149,7 @@ class test_tsys(test_base):
 
     def test_manual_field_msSelection_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata(field='0')
@@ -176,7 +176,7 @@ class test_tsys(test_base):
 
     def test_manual_antenna_msSelection_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata(antenna='DV09')
@@ -201,7 +201,7 @@ class test_tsys(test_base):
         
     def test_clip_minmax_fparm_sol1(self):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1'
         tflocal.open(self.vis)
@@ -227,7 +227,7 @@ class test_tsys(test_base):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
 
         # Run the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1'
         tflocal.open(self.vis)
@@ -249,7 +249,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_sol1_extension(self):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range, and then extend to the other solution """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -274,7 +274,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_sol2(self):
         """TestFlagger:: Test cliping second calibration solution product of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol2'
         tflocal.open(self.vis)
@@ -298,7 +298,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_sol1sol2(self):
         """TestFlagger:: Test cliping first and second calibration solution products of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1,Sol2'
         tflocal.open(self.vis)
@@ -322,7 +322,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_all(self):
         """TestFlagger:: Test cliping all calibration solution products of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -346,7 +346,7 @@ class test_tsys(test_base):
 
     def test_clip_zeros_fparm_all(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of FPARAM column"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -370,7 +370,7 @@ class test_tsys(test_base):
 
     def test_clip_nan_and_inf_fparm_all(self):
         """TestFlagger:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -394,7 +394,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_error_case_absall(self):
         """TestFlagger:: Error case test when a complex operator is used with CalTables """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ABS ALL'
         tflocal.open(self.vis)
@@ -418,7 +418,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_paramerr_all_for_tsys_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for Tsys CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -442,7 +442,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_snr_all_for_tsys_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for Tsys CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -473,7 +473,7 @@ class test_bpass(test_base):
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -493,7 +493,7 @@ class test_bpass(test_base):
 
     def test_manual_antenna_selection_agent_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -511,7 +511,7 @@ class test_bpass(test_base):
 
     def test_manual_field_msSelection_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata({'field':'3C286_A'})
@@ -538,7 +538,7 @@ class test_bpass(test_base):
 
     def test_manual_antenna_msSelection_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata({'antenna':'ea09'})
@@ -563,7 +563,7 @@ class test_bpass(test_base):
         
     def test_clip_zeros_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -587,7 +587,7 @@ class test_bpass(test_base):
 
     def test_clip_nan_and_inf_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -611,7 +611,7 @@ class test_bpass(test_base):
 
     def test_clip_minmax_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -635,7 +635,7 @@ class test_bpass(test_base):
 
     def test_rflag_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test rflag in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -659,7 +659,7 @@ class test_bpass(test_base):
 
     def test_tfcrop_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test tfcrop in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'REAL ALL'
         tflocal.open(self.vis)
@@ -683,7 +683,7 @@ class test_bpass(test_base):
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
         """TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -711,7 +711,7 @@ class test_bpass(test_base):
         and then extend to the other solution for bpass CalTable"""
 
         # Same as the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'PARAMERR'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -732,7 +732,7 @@ class test_bpass(test_base):
 
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -761,7 +761,7 @@ class test_display(test_base):
     def test_display_data_single_channel_selection(self):
         """TestFlagger:: Check nominal behaviour for single spw:chan selection """
         self.setUp_4Ants()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -779,7 +779,7 @@ class test_display(test_base):
     def test_display_data_multiple_channel_selection(self):
         """TestFlagger:: Check behaviour for multiple spw:chan selection """
         self.setUp_4Ants()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -797,7 +797,7 @@ class test_display(test_base):
     def test_display_data_different_corrs_per_spw(self):
         """TestFlagger:: Check behaviour when the number of correlation products changes between SPWs """
         self.setUp_CAS_4052()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}

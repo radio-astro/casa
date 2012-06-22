@@ -851,7 +851,7 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: outfile 'expr_test1' was not created."
         else:
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imageList2[0])
             expected = 2*myia.getchunk()
             myia.done()
@@ -908,7 +908,7 @@ class immath_test2(unittest.TestCase):
                        + size + ".\nExpected the resulting image to"\
                        + "be 256x256x1x1 pixels."
             else:
-                myia = iatool.create()
+                myia = iatool()
                 myia.open(imageList2[0])
                 expected = myia.getchunk()[:,:,:,5:5]
                 myia.done()
@@ -964,7 +964,7 @@ class immath_test2(unittest.TestCase):
                       +"\nError: Size of output plane is incorrect: "+str(size)\
                       +"\n       Excepted a shape of 256x256x1x46"
             else:
-                myia = iatool.create()
+                myia = iatool()
                 myia.open("expr_test2")
                 chunk1 = myia.getchunk()
                 myia.done()
@@ -1064,7 +1064,7 @@ class immath_test2(unittest.TestCase):
             'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
         ]
         expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
-        myia = iatool.create()
+        myia = iatool()
         try:
             # full image test
             outfile = 'full_image_sum.im'
@@ -1187,7 +1187,7 @@ class immath_test2(unittest.TestCase):
                     else:
                         res = immath(expr=expr, chans='22', outfile=outfile)
                     if(res):
-                        myia = iatool.create()
+                        myia = iatool()
                         myia.open(outfile)
                         if (myia.shape() != expected):
                             retValue['success'] = False
@@ -1246,7 +1246,7 @@ class immath_test3(unittest.TestCase):
 
         # POLA
         mode = 'pola'
-        myia = iatool.create()
+        myia = iatool()
         myia.open(POLA_im)
         expected = myia.getchunk()
         myia.done()
@@ -1357,7 +1357,7 @@ class immath_test3(unittest.TestCase):
 
     def test_CAS2943(self):
         """Test the stretch parameter"""
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape("myim.im", [10, 20, 4, 40])
         myia.done()
         myia.fromshape("mask1.im", [10, 20, 4, 40])

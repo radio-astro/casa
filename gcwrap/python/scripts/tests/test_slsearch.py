@@ -81,7 +81,7 @@ def run_search(
     eu, rrlinclude, rrlonly, verbose, logfile,
     append
 ):
-    mysl = sltool.create()
+    mysl = sltool()
     mysl.open(table)
     try: 
         restool = mysl.search(
@@ -126,8 +126,8 @@ class slsearch_test(unittest.TestCase):
         eu, rrlinclude, rrlonly, verbose, logfile,
         append, nrows
     ):
-        mysl = sltool.create()
-        mytb = tbtool.create()
+        mysl = sltool()
+        mytb = tbtool()
         for i in [0, 1]:
             if (i==0):
                 mysl = run_search(table, outfile,

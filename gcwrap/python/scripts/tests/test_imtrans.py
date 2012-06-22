@@ -78,7 +78,7 @@ cas_2364im = "CAS-2364.im"
 
 
 def run_reorder(imagename, outfile, order):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     print "*** order " + str(order)
     res = myia.reorder(outfile=outfile, order=order)
@@ -86,7 +86,7 @@ def run_reorder(imagename, outfile, order):
     return res
 
 def run_transpose(imagename, outfile, order):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     print "*** order " + str(order)
     res = myia.transpose(outfile=outfile, order=order)
@@ -138,7 +138,7 @@ class imtrans_test(unittest.TestCase):
     def test_straight_copy(self):
         """No actual transposing"""
         imagename = good_image
-        myia = iatool.create()
+        myia = iatool()
         myia.open(imagename)
         expecteddata = myia.getchunk()
         expectednames = myia.coordsys().names()
@@ -157,7 +157,7 @@ class imtrans_test(unittest.TestCase):
     def test_transpose(self):
         """Test transposing"""
         imagename = good_image
-        myia = iatool.create()
+        myia = iatool()
         myia.open(imagename)
         expecteddata = myia.getchunk()
         expectednames = myia.coordsys().names()
@@ -186,7 +186,7 @@ class imtrans_test(unittest.TestCase):
         shutil.copytree(datapath + cas_2364im, cas_2364im)
         order="0132"
         out1 = "blah.im"
-        myia = iatool.create()
+        myia = iatool()
         myia.open(cas_2364im)
         myia.reorder(out1, order)
         myia.close()
