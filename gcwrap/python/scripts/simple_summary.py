@@ -650,7 +650,7 @@ class simple_summary:
         startProc=time.clock()
 
         ms.open(self._vis)
-        head=ms.summary(verbose=True)['header']
+        head=ms.summary(verbose=True)
         ms.done()
         self._trange.append(head['BeginTime'])
         self._trange.append(head['EndTime'])

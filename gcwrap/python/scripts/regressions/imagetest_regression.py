@@ -741,9 +741,9 @@ def imagetest(which=None, size=[32,32,8]):
     def coordcheck(im1, axes, testdir):
         #im1 = ia.newimage(im1name)
         ok = im1.summary(list=F)
-        if not ok:
+        if not ok[0]:
             fail('summary 1 failed in coordcheck')
-        rec1 = ok['header']
+        rec1 = ok[1]
         imname = testdir + "/" + "coordcheck.image"
         cs2 = im1.coordsys(axes)
         if not cs2:
@@ -752,14 +752,14 @@ def imagetest(which=None, size=[32,32,8]):
         for i in axes:
             shape2.append((im1.shape())[i])
         ok = ia.fromshape(imname, shape2, cs2.torecord())
-        if not ok:
+        if not ok[0]:
             fail('ia.fromshape 1 failed in coordcheck');
         ia.close()  # close coordcheck.image
         im2 = ia.newimage(imname)
         ok = im2.summary(list=F)
-        if not ok:
+        if not ok[0]:
             fail('summary 2 failed in coordcheck')
-        rec2 = ok['header']
+        rec2 = ok[1]
         #
         if rec1.has_key('axisnames') and rec2.has_key('axisnames'):
             rec1axes=[]
@@ -932,7 +932,7 @@ def imagetest(which=None, size=[32,32,8]):
         # Summarise the image
         info('Summarize image');
         ok = man.summary()
-        header = ok['header']
+        header = ok[1]
         info('')
 
         # Do statistics
@@ -944,6 +944,7 @@ def imagetest(which=None, size=[32,32,8]):
         # Do histograms
         info('Find histograms')
         ok = man.histograms()
+	print ok
         if not ok: fail()
         stuff = ok['histout']
         info('')
@@ -3410,7 +3411,7 @@ def imagetest(which=None, size=[32,32,8]):
             result = myim.summary(list=F)
             if not result:
                 fail('unable to retrieve summary')
-            header = result['header']
+            header = result[1]
             nfields = 13
             ok = header.has_key('ndim') and header.has_key('shape')
             ok = ok and header.has_key('tileshape')

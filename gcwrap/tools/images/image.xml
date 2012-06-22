@@ -9991,8 +9991,7 @@ ia.echo(x)
    <shortdescription>returns a variant</shortdescription>
 
 <output>
-     <param type="any" name="v">
-     <any type="variant"/>
+     <param type="variant" name="v">
      <description>a variant</description>
      </param>
 </output>

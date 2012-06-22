@@ -2037,7 +2037,7 @@ class simutil:
         sh=ia.shape()
         ia.done()
         spc=cs.findcoordinate("spectral")
-        if not spc['return']: return (0,0)
+        if not spc[0]: return (0,0)
         model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")
         model_nchan=sh[spc['pixel']]
         return model_nchan,model_width
@@ -2053,15 +2053,15 @@ class simutil:
         dir=cs.findcoordinate("direction")
         spc=cs.findcoordinate("spectral")
         stk=cs.findcoordinate("stokes")
-        if not (dir['return'] and spc['return'] and stk['return']): return False
-        if dir['pixel'].__len__() != 2: return False
-        if type(spc['pixel']) == type([]): return False
-        if type(stk['pixel']) == type([]): return False
+        if not (dir[0] and spc[0] and stk[0]): return False
+        if dir[1].__len__() != 2: return False
+        if type(spc[1]) == type([]): return False
+        if type(stk[1]) == type([]): return False
         # they have to be in the correct order too
-        if stk['pixel']!=2: return False
-        if spc['pixel']!=3: return False
-        if dir['pixel'][0]!=0: return False
-        if dir['pixel'][1]!=1: return False
+        if stk[1]!=2: return False
+        if spc[1]!=3: return False
+        if dir[1][0]!=0: return False
+        if dir[1][1]!=1: return False
         cs.done()
         return True
 
@@ -2148,8 +2148,8 @@ class simutil:
         model_refdir=""
         model_cell=""
         # look for direction coordinate, with two pixel axes:
-        if in_dir['return']:
-            in_ndir = in_dir['pixel'].__len__() 
+        if in_dir[0]:
+            in_ndir = in_dir[0].__len__() 
             if in_ndir != 2:
                 self.msg("Mal-formed direction coordinates in modelimage. Discarding and using first two pixel axes for RA and Dec.")
                 axmap[0]=0 # direction in first two pixel axes
@@ -2158,7 +2158,7 @@ class simutil:
                 axassigned[1]=0
             else:
                 # we've found direction axes, and may change their increments and direction or not.
-                dirax=in_dir['pixel']
+                dirax=in_dir[0]
                 axmap[0]=dirax[0]
                 axmap[1]=dirax[1]                    
                 axassigned[dirax[0]]=0
@@ -2250,11 +2250,11 @@ class simutil:
         model_center=""
         model_width=""
         # look for a spectral axis:
-        if in_spc['return']:
-            if type(in_spc['pixel']) == type(1) :
-                foo=in_spc['pixel']
+        if in_spc[0]:
+            if type(in_spc[0]) == type(1) :
+                foo=in_spc[0]
             else:
-                foo=in_spc['pixel'][0]
+                foo=in_spc[1][0]
                 self.msg("you seem to have two spectral axes",priority="warn")
             model_nchan=arr.shape[foo]
             axmap[3]=foo
@@ -2318,17 +2318,17 @@ class simutil:
 
         model_stokes=""
         # look for a stokes axis
-        if in_stk['return']:
+        if in_stk[0]:
             model_stokes=in_csys.stokes()
             foo=model_stokes[0]
             out_nstk=model_stokes.__len__()
             for i in range(out_nstk-1):
                 foo=foo+model_stokes[i+1]
             model_stokes=foo
-            if type(in_stk['pixel']) == type(1):
-                foo=in_stk['pixel']
+            if type(in_stk[1]) == type(1):
+                foo=in_stk[1]
             else:
-                foo=in_stk['pixel'][0]
+                foo=in_stk[1][0]
                 self.msg("you seem to have two stokes axes",priority="warn")                
             axmap[2]=foo
             axassigned[foo]=2
@@ -2688,9 +2688,9 @@ class simutil:
         imsize=ia.shape()
         imcsys=ia.coordsys()
         ia.done()
-        spectax=imcsys.findcoordinate('spectral')['pixel']
+        spectax=imcsys.findcoordinate('spectral')[1]
         nchan=imsize[spectax]
-        stokesax=imcsys.findcoordinate('stokes')['pixel']
+        stokesax=imcsys.findcoordinate('stokes')[1]
         nstokes=imsize[stokesax]
 
         flat=image+".flat"

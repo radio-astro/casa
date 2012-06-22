@@ -188,8 +188,8 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
         mysg = sg.value
         sdry=at.getDryOpacitySpec()
         swet=at.getWetOpacitySpec()
-        sd=sdry['dryOpacity']
-        sw=swet['wetOpacity'].value
+        sd=sdry[1]
+        sw=swet[1].value
         stot = pl.array(sd)+pl.array(sw)
         opac[:,i]=stot
 

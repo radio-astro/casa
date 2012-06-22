@@ -1222,12 +1222,6 @@ the ms definition itself. -->
    <shortdescription>(PARTIALLY IMPLEMENTED!!!) Summarize the measurement set</shortdescription>
    
   <keyword>summary</keyword>
-  <output>
-    
-     <param type="record" name="header">
-     <description>Header information (PARAMETER IGNORED..its an output)</description>
-     </param>
-   </output>
    <input> 
      <param type="bool" direction="in" name="verbose">
      <description>Produce verbose logging output</description>
@@ -1235,10 +1229,12 @@ the ms definition itself. -->
      </param>
      <param type="string" direction="in" name="listfile">
      <description>Output file</description>
-     <value></value>
+     <value/>
      </param>     
   </input>
-  <returns type="bool"/>
+  <returns type="record">
+     <description>Header information (PARAMETER IGNORED..its an output)</description>
+     </returns>
 
   <description>
     This function will print a summary of the measurement set to the
@@ -1272,12 +1268,9 @@ the ms definition itself. -->
   <shortdescription>Get the summary of the ms</shortdescription>
 
   <keyword>getscansummary</keyword>
-  <output>
-     <param type="record" name="summary">
+  <returns type="record">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
-     </param>
-   </output>
-  <returns type="bool"/>
+       </returns>
   <description>
     This function will return a summary of the main table as a structure
   </description>
@@ -1290,12 +1283,9 @@ the ms definition itself. -->
 <method type="function" name="getspectralwindowinfo">
   <shortdescription>Get a summary of the spectral windows</shortdescription>
   <keyword>getspectralwindowinfo</keyword>
-  <output>
-     <param type="record" name="spwInfo">
+  <returns type="record">
        <description>Return information (PARAMETER IGNORED..its an output)</description>
-     </param>
-   </output>
-  <returns type="bool"/>
+  </returns>
   <description>
     This method will get a summary of the spectral window actually
     used in this ms. To be precise those reference by the data

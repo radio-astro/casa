@@ -1045,7 +1045,7 @@ qa.time(time)                    # Format with quanta
      <value>0</value>
      </param>
 </input>    
-<returns type="bool"/>
+<returns type="bool">Whether it succeeded or not</returns>
   
 <description>
 
@@ -1107,7 +1107,7 @@ the Linear Coordinate (coordinate 1).
      <value>0</value>
      </param>
 </input>    
-<returns type="bool"/>
+<returns type="bool">Whether it succeeded or not</returns>
   
 <description>
 

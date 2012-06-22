@@ -261,7 +261,7 @@ class PartitionHelper(ParallelTaskHelper):
             self._selectMS()
         
         # Now get the list of SPWs in the selected ms
-        ddInfo = self._msTool.getspectralwindowinfo()['spwInfo']
+        ddInfo = self._msTool.getspectralwindowinfo()
         spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
 
         # Return a unique sorted list:
@@ -275,7 +275,7 @@ class PartitionHelper(ParallelTaskHelper):
         if self._msTool is None:
             self._selectMS()
 
-        scanSummary = self._msTool.getscansummary()['summary']
+        scanSummary = self._msTool.getscansummary()
         scanList = [int(scan) for scan in scanSummary]
 
         if len(scanList) == 0:

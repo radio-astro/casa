@@ -1093,7 +1093,7 @@ def simdata(
                     im.done()
                     ia.open(fileroot+"/"+project+".quick.psf")
                     beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1],beamcs.findcoordinate("stokes")[1]],dropdeg=True)
                     nn = beam_array.shape
                     xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]
@@ -1104,11 +1104,11 @@ def simdata(
                     ttrans_array.reverse()
                     pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
                     pl.title(project+".quick.psf",fontsize="x-small")
-                    b = qa.convert(beam['bmaj'],'arcsec')['value']
+                    b = qa.convert(beam[1],'arcsec')['value']
                     pl.xlim([-3*b,3*b])
                     pl.ylim([-3*b,3*b])
                     ax = pl.gca()
-                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['bmaj']['value'],beam['bmin']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam[1]['value'],beam[2]['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.done()
                 util.endfig(show=grscreen,filename=file)
 
@@ -1822,7 +1822,7 @@ def simdata(
                             im.done()
                     ia.open(psfim)            
                     beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1],beamcs.findcoordinate("stokes")[1]],dropdeg=True)
                     nn = beam_array.shape
                     xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]

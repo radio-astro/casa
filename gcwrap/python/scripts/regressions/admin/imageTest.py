@@ -24,10 +24,10 @@ class ImageTest:
         # assume for now that direction is in 01 at least, 
         mycs=self.imTool.coordsys()
         findstok=mycs.findcoordinate("stokes")
-        if not findstok["return"]:
+        if not findstok[0]:
             myImagename=imageName+".k"
             self.imTool.adddegaxes(stokes=True,outfile=myImagename,overwrite=True)
-            mystokpix=self.imTool.summary()['header']['ndim'] # ct from 0
+            mystokpix=self.imTool.summary()[1]['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
@@ -35,13 +35,13 @@ class ImageTest:
             mycs.done()
             mycs=self.imTool.coordsys()
         else:
-            mystokpix=findstok["pixel"]
+            mystokpix=findstok[1]
 
         findspec=mycs.findcoordinate("spectral")    
-        if not findspec["return"]:
+        if not findspec[0]:
             myImagename=imageName+".s"
             self.imTool.adddegaxes(spectral=True,outfile=myImagename,overwrite=True)
-            myspecpix=self.imTool.summary()['header']['ndim'] # ct from 0
+            myspecpix=self.imTool.summary()[1]['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
@@ -49,7 +49,7 @@ class ImageTest:
             mycs.done()
             mycs=self.imTool.coordsys()
         else:
-            myspecpix=findspec["pixel"]                    
+            myspecpix=findspec[1]                    
 
         curr_order=[mystokpix,myspecpix]
         if curr_order != [2,3]:

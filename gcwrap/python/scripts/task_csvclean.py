@@ -250,12 +250,12 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
             tb.done()
             fov=qa.quantity(3.0e8/reffreq/diam, 'rad')
             adv=im.advise(fieldofview=fov)
-            cellx=qa.tos(adv['cell'], prec=4)
+            cellx=qa.tos(adv[2], prec=4)
             celly=cellx
             myf = sys._getframe(len(inspect.stack())-1).f_globals
             myf['cell']=[cellx,cellx]
-            myf['imsize']=[adv['pixels'], adv['pixels']]
-            nx=ny=adv['pixels']
+            myf['imsize']=[adv[1], adv[1]]
+            nx=ny=adv[1]
             myf['advise']=False
             return
         redopsf=True
@@ -303,10 +303,10 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
                     #ia.close()
                     #if(coords['converged'] == True):
                 coords=im.fitpsf(psfim)
-                if(coords['return']):
-                    bmaj=coords['bmaj']
-                    bmin=coords['bmin']
-                    bpa=coords['bpa']
+                if(coords[0]):
+                    bmaj=coords[1]
+                    bmin=coords[2]
+                    bpa=coords[3]
                     redopsf=False
                 else:
                     redopsf=True

@@ -569,7 +569,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
         if (type(stkslist[0]) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
         _myia.open(filenames[0])
-        stokesPixel = _myia.coordsys().findcoordinate('stokes')['pixel']
+        stokesPixel = _myia.coordsys().findcoordinate('stokes')[1]
         if (type(stokesPixel) != int):
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
@@ -639,7 +639,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
         _myia = iatool()
         _myia.open(filenames[0])
-        stokesPixel = _myia.coordsys().findcoordinate('stokes')['pixel']
+        stokesPixel = _myia.coordsys().findcoordinate('stokes')[1]
         if (type(stokesPixel) != int):
             _myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"

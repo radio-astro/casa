@@ -66,7 +66,7 @@ def run_tasks(origvis='0420+417.ms', advice=None, lazy=True,
         im.open(origvis)
         advice = im.advise()
         im.close()
-    origphasecenter = advice['phasecenter']
+    origphasecenter = advice[4]
 
     peaks = {}
     peaks['original'] = getpeak(origvis, advice)
@@ -97,12 +97,12 @@ def run_tasks(origvis='0420+417.ms', advice=None, lazy=True,
                 fixvis(origvis, outputvis, refcode=equinox)
 
             if convert_phasecenter:
-                advice['phasecenter'] = conv_dirstr(origphasecenter, equinox)
+                advice[4] = conv_dirstr(origphasecenter, equinox)
                 
             peaks[equinox] = getpeak(outputvis, advice)
 
             if convert_phasecenter:
-                advice['phasecenter'] = origphasecenter
+                advice[4] = origphasecenter
                 
         except Exception, e:
             print "Error", e, "trying to test equinox", equinox
@@ -111,8 +111,8 @@ def run_tasks(origvis='0420+417.ms', advice=None, lazy=True,
 def getpeak(vis, advice):
     """Clean vis and find the peak of the resulting image."""
     print "Getting peak of", vis
-    pixsize = str(advice['cell']['value']) + advice['cell']['unit']
-    npix = advice['pixels']    
+    pixsize = str(advice[2]['value']) + advice[2]['unit']
+    npix = advice[1]    
 
     imroot = vis.replace('.ms', '')
     for ext in ['image', 'psf', 'residual', 'model', 'flux']:
@@ -122,7 +122,7 @@ def getpeak(vis, advice):
           imsize=[npix, npix],
           #imsize=npix,
           cell=[pixsize, pixsize],
-          phasecenter=advice['phasecenter'])
+          phasecenter=advice[4])
     for ext in ['residual', 'model', 'flux']:
         if os.path.isdir(imroot + '.' + ext):
             shutil.rmtree(imroot + '.' + ext)

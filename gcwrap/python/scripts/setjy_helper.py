@@ -48,7 +48,7 @@ class ss_setjy_helper:
 	myms.open(self.vis)
 	myms.msselect(sel,False)
 	scansummary=myms.getscansummary()
-	nscan=len(scansummary['summary'].keys())
+	nscan=len(scansummary.keys())
 	fieldids=myms.msselectedindices()['field']
 	myms.close()
 	  

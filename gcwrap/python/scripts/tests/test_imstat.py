@@ -53,11 +53,11 @@ class imstat_test(unittest.TestCase):
         _myia.open(self.moment)
         summary = _myia.summary()
         _myia.close()
-        rainc = qa.abs(qa.quantity(summary['header']['incr'][0],'rad'))
+        rainc = qa.abs(qa.quantity(summary[1]['incr'][0],'rad'))
         rainc = qa.convert(rainc,'arcsec')
-        decinc = qa.abs(qa.quantity(summary['header']['incr'][1],'rad'))
+        decinc = qa.abs(qa.quantity(summary[1]['incr'][1],'rad'))
         decinc = qa.convert(decinc,'arcsec')
-        beam = summary['header']['restoringbeam']['restoringbeam']
+        beam = summary[1]['restoringbeam']['restoringbeam']
         major = beam['major']
         minor = beam['minor']
         pixperbeam = qa.div(qa.mul(major,minor),(qa.mul(rainc,decinc)))['value']*(math.pi/(4*math.log(2)))

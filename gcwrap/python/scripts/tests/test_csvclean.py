@@ -83,8 +83,8 @@ class csvclean_test1(unittest.TestCase):
         summary = ia.summary()
         ia.close()
         # values of refval are in radians
-        ra = summary['header']['refval'][0]
-        dec = summary['header']['refval'][1]
+        ra = summary[1]['refval'][0]
+        dec = summary[1]['refval'][1]
         RA = qa.time(qa.quantity(ra,'rad'))
         DEC = qa.time(qa.quantity(dec,'rad'))
         

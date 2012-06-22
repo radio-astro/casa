@@ -561,8 +561,8 @@ class imagecont():
         #if inimshape[0:3]!=cubeshape[0:3]: 
         #        return False
         nchTile=1
-        if((ibig.summary()['header']['tileshape'][3]%subshape[3] ==0) or (subshape[3] > ibig.summary()['header']['tileshape'][3])):
-            nchTile=max(ibig.summary()['header']['tileshape'][3], subshape[3])
+        if((ibig.summary()[1]['tileshape'][3]%subshape[3] ==0) or (subshape[3] > ibig.summary()[1]['tileshape'][3])):
+            nchTile=max(ibig.summary()[1]['tileshape'][3], subshape[3])
         else:
             nchTile=subshape[3]
         

@@ -449,12 +449,14 @@ using namespace casac;
 
 %typemap(out) record* {
    $result = PyDict_New();
-   for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
-      const std::string &key = (*iter).first;
-      const casac::variant &val = (*iter).second;
-      PyObject *v = casac::variant2pyobj(val);
-      PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
-      Py_DECREF(v);
+   if($1){
+      for(record::const_iterator iter = $1->begin(); iter != $1->end(); ++iter){
+         const std::string &key = (*iter).first;
+         const casac::variant &val = (*iter).second;
+         PyObject *v = casac::variant2pyobj(val);
+         PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
+         Py_DECREF(v);
+      }
    }
 }
 

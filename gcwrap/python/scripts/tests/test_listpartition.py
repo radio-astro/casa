@@ -23,9 +23,9 @@ def getNrows(msfile, myscan):
     ms.close()
     
     Nrows = 0
-    subscans = scand['summary'][str(myscan)]
+    subscans = scand[1][str(myscan)]
     for ii in subscans.keys():
-        Nrows += scand['summary'][str(myscan)][ii]['nRow']
+        Nrows += scand[1][str(myscan)][ii]['nRow']
     
     return Nrows
 

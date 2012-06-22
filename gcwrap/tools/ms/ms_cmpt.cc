@@ -575,10 +575,10 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 }
 
 
-bool
-ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
+::casac::record*
+ms::summary(bool verbose, const std::string& listfile)
 {
-  Bool rstat(False);
+  ::casac::record *header;
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
@@ -615,10 +615,7 @@ ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
 
     	   // Call the listing routines
     	   mss.list(os, outRec, verbose, True);
-    	   casac::record* cOutRec=fromRecord(outRec);
-    	   header=*cOutRec;
-    	   if(cOutRec)
-    		   delete cOutRec;
+    	   header=fromRecord(outRec);
 
     	   // Restore cout's buffer
     	   cout.rdbuf(backup);
@@ -636,11 +633,7 @@ ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
        }
        else {
     	   mss.list(*itsLog, outRec, verbose, True);
-    	   casac::record* cOutRec=fromRecord(outRec);
-    	   header=*cOutRec;
-    	   if(cOutRec)
-    		   delete cOutRec;
-    	   rstat = True;
+    	   header=fromRecord(outRec);
        }
      }
    } catch (AipsError x) {
@@ -649,24 +642,20 @@ ms::summary(bool verbose, const std::string& listfile, ::casac::record& header)
        RETHROW(x);
    }
    Table::relinquishAutoLocks(True);
-   return rstat;
+   return header;
 }
 
-bool
-ms::getscansummary(::casac::record& scansummary)
+::casac::record*
+ms::getscansummary()
 {
-  Bool rstat(False);
+  ::casac::record *scansummary;
   try {
     if(!detached()){
       //*itsLog << LogOrigin("ms", "summary");
       MSSummary mss(itsMS);
       casa::Record outRec;
       mss.getScanSummary(outRec);
-      casac::record* cOutRec=fromRecord(outRec);
-      scansummary=*cOutRec;
-      if(cOutRec)
-        delete cOutRec;
-      rstat = True;
+      scansummary=fromRecord(outRec);
     }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -674,24 +663,20 @@ ms::getscansummary(::casac::record& scansummary)
     RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
-  return rstat;
+  return scansummary;
 }
 
-bool
-ms::getspectralwindowinfo(::casac::record& spwSummary)
+::casac::record*
+ms::getspectralwindowinfo()
 {
-  Bool rstat(False);
+  ::casac::record *spwSummary;
   try {
     if(!detached()){
       //*itsLog << LogOrigin("ms", "summary");
       MSSummary mss(itsMS);
       casa::Record outRec;
       mss.getSpectralWindowInfo(outRec);
-      casac::record* cOutRec=fromRecord(outRec);
-      spwSummary=*cOutRec;
-      if(cOutRec)
-        delete cOutRec;
-      rstat = True;
+      spwSummary=fromRecord(outRec);
     }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -699,7 +684,7 @@ ms::getspectralwindowinfo(::casac::record& spwSummary)
     RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
-  return rstat;
+  return spwSummary;
 }
 
 
