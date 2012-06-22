@@ -48,6 +48,30 @@
 <xsl:text disable-output-escaping="yes">%apply record &amp;OUTARGREC {record &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
 		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='intarray'">
+			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;int&gt;  &amp;OUTARGVEC {std::vector&lt;int&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='doublearray'">
+			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;double&gt;  &amp;OUTARGVEC {std::vector&lt;double&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='stringarray'">
+			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;string&gt;  &amp;OUTARGVEC {std::vector&lt;string&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='int'">
+			      <xsl:text disable-output-escaping="yes">%apply int  &amp;OUTARGINT {int &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='double'">
+			      <xsl:text disable-output-escaping="yes">%apply double  &amp;OUTARGDBL {double &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='string'">
+			      <xsl:text disable-output-escaping="yes">%apply std::string  &amp;OUTARGSTR {std::string &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
 	      </xsl:choose>
      </xsl:for-each>
 </xsl:template>

@@ -354,7 +354,7 @@ using namespace casac;
 }
 
 %typemap(out) complex {
-   $result = PyComple_FromDouble($1.real(), $1.imag());
+   $result = PyComplex_FromDouble($1.real(), $1.imag());
    //$result = PyComple_FromDouble($1.re, $1.im);
 }
 
@@ -412,7 +412,15 @@ using namespace casac;
    $result = casac::map_vector($1);
 }
 
+%typemap(out) std::vector<int>& {
+   $result = casac::map_vector($1);
+}
+
 %typemap(out) std::vector<double> {
+   $result = casac::map_vector($1);
+}
+
+%typemap(out) std::vector<double>& {
    $result = casac::map_vector($1);
 }
 
@@ -457,6 +465,123 @@ using namespace casac;
          PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
          Py_DECREF(v);
       }
+   }
+}
+
+%typemap(argout) int& OUTARGINT{
+   PyObject *o = PyLong_FromLong(*$1);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) double& OUTARGDBL{
+   PyObject *o = PyFloat_FromDouble(*$1);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) std::string& OUTARGSTR{
+   PyObject *o = PyString_FromString($1->c_str());
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+
+%typemap(argout) std::vector<std::string>& OUTARGVEC{
+   PyObject *o = PyList_New($1.size());
+   for(int i=0;i<$1.size();i++)
+      PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) std::vector<int>& OUTARGVEC {
+   PyObject *o = casac::map_vector(*$1);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) std::vector<double>& OUTARGVEC {
+   PyObject *o= casac::map_vector(*$1);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
    }
 }
 

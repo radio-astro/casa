@@ -982,19 +982,17 @@ def coordsystest():
         if ok:
             return stop('findcoordinate 1 unexpectedly did not fail')
         ok = mycs.findcoordinate('dir', 20)
-	print ok
-        if ok:
+        if ok[0]:
             return stop('findcoordinate 2 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
         mycs = cs.newcoordsys(direction=T, stokes="I V", spectral=T, linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         ok = mycs.findcoordinate('dir',0)
-	print ok
         if not ok or not ok[0]:
             return stop('findcoordinate 3 failed')
-        pa = ok['pixel']
-        wa = ok['world']
+        pa = ok[1]
+        wa = ok[2]
         if not (pa[0] == 0 and pa[1] == 1):
             return stop('find 3 pixel axes are wrong')
         if not (wa[0] == 0 and wa[1] == 1):
@@ -1003,8 +1001,8 @@ def coordsystest():
         ok = mycs.findcoordinate('stokes',0)
         if not ok or not ok[0]:
             return stop('findcoordinate 4 failed')
-        pa=ok['pixel']
-        wa=ok['world']
+        pa=ok[1]
+        wa=ok[2]
         if not pa==2:
             return stop('findcoordinate 4 pixel axes are wrong')
         if not wa==2:
@@ -1013,8 +1011,8 @@ def coordsystest():
         ok = mycs.findcoordinate('spectral',0)
         if not ok or not ok[0]:
             return stop('findcoordinate 5 failed')
-        pa=ok['pixel']
-        wa=ok['world']
+        pa=ok[1]
+        wa=ok[2]
         if not pa==3:
             return stop('findcoordinate 5 pixel axes are wrong')
         if not wa==3:
@@ -1024,8 +1022,8 @@ def coordsystest():
         ok = mycs.findcoordinate('linear',0)
         if not ok or not ok[0]:
             return stop('findcoordinate 6 failed')
-        pa=ok['pixel']
-        wa=ok['world']
+        pa=ok[1]
+        wa=ok[2]
         if not (pa[0]==4 and pa[1]==5):
             return stop('findcoordinate 6 pixel axes are wrong')
         if not (wa[0]==4 and wa[1]==5):
@@ -1072,7 +1070,7 @@ def coordsystest():
         except Exception, e:
             note('Caught expect Exception:' + str(e))
             ok = false
-        if ok[0]:
+        if ok:
             return stop('findaxis 4 unexpectedly found the axis')
         #
         if not mycs.done(): fail()
@@ -1250,9 +1248,10 @@ def coordsystest():
         # same presently
         #
         toworld = mycs.axesmap(toworld=T)
-        if not toworld: fail()
+	print toworld
+        if not len(toworld): fail()
         topixel = mycs.axesmap(toworld=F)
-        if not topixel: fail()
+        if not len(topixel): fail()
         #
         idx = range(0,len(mycs.referencepixel()['numeric']))
         if not all(toworld,idx): fail('toworld map is wrong')
@@ -1277,10 +1276,10 @@ def coordsystest():
         order = [3,2,1, 0]
         ok = mycs.reorder(order)
         if not ok: fail('reorder 1 failed')
-        ok = mycs.coordinatetype(0)=='Linear'
-        ok = ok and mycs.coordinatetype(1)=='Spectral'
-        ok = ok and mycs.coordinatetype(2)=='Stokes'
-        ok = ok and mycs.coordinatetype(3)=='Direction'
+        ok = mycs.coordinatetype(0)==['Linear']
+        ok = ok and mycs.coordinatetype(1)==['Spectral']
+        ok = ok and mycs.coordinatetype(2)==['Stokes']
+        ok = ok and mycs.coordinatetype(3)==['Direction']
         if not ok: fail('reorder reordered incorrectly')
         #
         try:
@@ -1330,21 +1329,22 @@ def coordsystest():
         #
         freq = rv['numeric'][0]
         freqUnit = mycs.units();
-        vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit,
+	print freqUnit
+        vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit[0],
                                        doppler='radio', velunit='km/s')
         if (abs(vel) > 1e-6):
             fail('frequencytovelocity 1 got wrong values')
-        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit,
+        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit[0],
                                          doppler='optical', velunit='km/s')
         if (abs(freq2-freq) > 1e-6):
             fail('velocitytofrequency 1 got wrong values')
         ##
-            vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit,
+            vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit[0],
                                            doppler='optical', velunit='km/s')
         if (abs(vel) > 1e-6):
             fail('frequencytovelocity 2 got wrong values')
         #
-        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit,
+        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit[0],
                                          doppler='optical', velunit='km/s')
         if (abs(freq2-freq) > 1e-6):
             fail('velocitytofrequency 2 got wrong values')
@@ -1353,18 +1353,18 @@ def coordsystest():
         if rp!=0.0: fail()
         freq = mycs.toworld (value=rp+1, format='n')
         vel = mycs.frequencytovelocity(value=list(freq['numeric']),
-                                       frequnit=freqUnit,
+                                       frequnit=freqUnit[0],
                                        doppler='radio', velunit='m/s')
         d = abs(vel - (1000.0*drv))
         if (d > 1e-6):
             fail('frequencytovelocity 3 got wrong values')
-        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit,
+        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit[0],
                                          doppler='radio', velunit='m/s')
         if (abs(freq2-freq['numeric']) > 1e-6):
             fail('velocitytofrequency 3 got wrong values')
         ##
         freq = [rv['numeric'][0], freq['numeric'][0]]
-        vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit,
+        vel = mycs.frequencytovelocity(value=freq, frequnit=freqUnit[0],
                                        doppler='radio', velunit='m/s')
         if (len(vel)!=2):
             fail('frequencytovelocity 4 returned wrong length vector')
@@ -1372,7 +1372,7 @@ def coordsystest():
         d2 = abs(vel[1] - (1000.0*drv))
         if (d1>1e-6 or d2>1e-6):
             fail('frequencytovelocity 4 got wrong values')
-        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit,
+        freq2 = mycs.velocitytofrequency(value=vel, frequnit=freqUnit[0],
                                          doppler='radio', velunit='m/s')
         d1 = abs(freq[0] - freq2[0])
         d2 = abs(freq[1] - freq2[1])
@@ -1640,14 +1640,14 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         if not all(p,coordin,tol): fail('convert 1 gives wrong values')
 
         # abs pix to rel pix
         absout = n * [F]
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.torel(coordin, F)['numeric']
         if len(p2)!=n: fail()
@@ -1664,7 +1664,7 @@ def coordsystest():
         #
         p = mycs.convert(coordin, absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric']
         if len(p2)!=n: fail()
@@ -1683,7 +1683,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric'] + 2
         if len(p2)!=n: fail()
@@ -1702,7 +1702,7 @@ def coordsystest():
         #
         p = mycs.convert(coordin, absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric'] + 2
         if len(p2)!=n: fail()
@@ -1720,7 +1720,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric']+2
         if len(p2)!=n: fail()
@@ -1738,7 +1738,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric']+2
         if len(p2)!=n: fail()
@@ -1758,7 +1758,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric'] + 2
         if len(p2)!=n: fail()
@@ -1775,7 +1775,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
         if len(p2)!=n: fail()
@@ -1792,7 +1792,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric']+2
         if len(p2)!=n: fail()
@@ -1808,7 +1808,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
         if len(p2)!=n: fail()
@@ -1860,7 +1860,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         if not abs(p[sAxis]-vOut)<tol: fail('convert 12 gives wrong values')
 
@@ -1885,7 +1885,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not d<tol: fail('convert 13 gives wrong values')
@@ -1908,7 +1908,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         w = mycs.toworld(mycs.referencepixel()['numeric']+2)['numeric']
         if len(w)!=n: fail()
@@ -1933,7 +1933,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         w = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),T)['numeric']
         if len(w)!=n: fail()
@@ -1958,7 +1958,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2 = mycs.referencepixel()['numeric']+2
         if len(p2)!=n: fail()
@@ -1983,7 +1983,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         p2  = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
         if len(p2)!=n: fail()
@@ -2013,7 +2013,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not (d<tol): fail('convert 18 gives wrong values')
@@ -2035,7 +2035,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not (d<tol): fail('convert 19 gives wrong values')
@@ -2059,7 +2059,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not (d<tol): fail('convert 20 gives wrong values')
@@ -2083,7 +2083,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not (d<tol): fail('convert 21 gives wrong values')
@@ -2107,7 +2107,7 @@ def coordsystest():
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
-        if not p: fail()
+        if not len(p): fail()
         #
         d = abs(p[sAxis]-vOut)
         if not (d<tol): fail('convert 22 gives wrong values')
@@ -2140,7 +2140,7 @@ def coordsystest():
         #
         coordout = mycs.convert(list(coordin), absin, dopplerin,
                                 unitsin, absout, dopplerout, unitsout)
-        if not coordout: fail()
+        if not len(coordout): fail()
         #
         rIn = ia.makearray(0, [len(coordin), 10])
         for i in range(10):
@@ -2183,7 +2183,7 @@ def coordsystest():
         rc = 'LSRK'
         ok = mycs.setspectral(refcode=rc)
         if not ok: fail()
-        if mycs.referencecode('spectral') != rc:
+        if mycs.referencecode('spectral') != [rc]:
             fail('setspectral/reference code test fails')
         #
         rf = qa.quantity('1.0GHz')
@@ -2503,7 +2503,7 @@ def coordsystest():
         cs2 = cs.newcoordsys(spectral=T)
         ok = mycs.replace(cs2.torecord(), whichin=0, whichout=1)
         if not ok: fail()
-        if mycs.coordinatetype(1) != 'Spectral':
+        if mycs.coordinatetype(1) != ['Spectral']:
             fail('Replace 1 did not set correct coordinate type')
         #
         ok = cs2.done()
