@@ -231,9 +231,9 @@ CASA is available for the following operating systems:
 \begin{itemize}
     \item Linux
       \begin{itemize}
-          \item RedHat 5.7 (32-bit \& 64-bit)
-          \item Fedora 16 (64-bit)
-          \item Ubuntu 10 (64-bit) 
+          \item RedHat 5.5 (32-bit \& 64-bit)
+          \item Fedora 14 (64-bit)
+          \item Ubuntu 10.10 (64-bit) 
       \end{itemize}
       
 
@@ -246,7 +246,7 @@ CASA is available for the following operating systems:
 
 
 The latest and previous releases can be downloaded from our CASA home
-page: \url{http://casa.nrao.edu}, following the 'Obtaining CASA'
+page: {\url http://casa.nrao.edu}, following the 'Obtaining CASA'
 link.
 
 
@@ -297,7 +297,7 @@ Major improvements over the previous version of CASA include:
 
    \item  Tasks {\tt importevla} and {\tt importasdm} now have flag-command-import options. 
 
-   \item  The flagversions names have changed. The backup names do not take a mode as part of their names anymore. They only take the task name along with an index. Example: {\it flags.tflagdata\_1} or {\it flags.flagcmd\_1}.
+   \item  The flagversions names have changed as requested. The backup names do not take a mode as part of their names anymore. They only take the task name along with an index. Example: {\it flags.tflagdata\_1} or {\it flags.flagcmd\_1}.
 
    \item  The vector mode of the old {\tt flagdata} is gone. The user can achieve the same results using the {\tt inpmode='cmd'} of the {\tt flagcmd} task. See the task inline help for more details.
 
@@ -346,7 +346,7 @@ Major improvements over the previous version of CASA include:
 
   \item  calibration tables are now independent from the original MS
 
-   \item  frequency windows can be adjusted for calibration solutions
+   \item  frequency interpolation of calibration tables
 
    \item  conversion script {\tt caltabconvert} to convert old (CASA 3.3 and earlier) to new calibration tables (CASA 3.4 and later) - note: we recommend to regenerate the calibration tables with calibration tasks if possible as some information will be not availbale by simply converting old to new caltables. 
 
@@ -360,7 +360,7 @@ Major improvements over the previous version of CASA include:
  
    \item  new task {\tt plotweather} to display the weather conditions. {\tt plotweather} also calculates the atmospheric opacities for each spw using actual and historical weather data for the EVLA 
 
-  \item  {\tt uvcontsub} supports fitorder $>1$ for continuum subtraction
+  \item  {\tt uvcontsub} supports fitorders > 1 for continuum subtraction
 
    \item  {\tt scalebychan=True} is the new default in {\tt setjy}
 
@@ -457,7 +457,7 @@ Major improvements over the previous version of CASA include:
 \item {\bf Performance}
  
 \begin{itemize}
-  \item  unified, optimized visibility access for some tasks
+  \item  unified, optimized visibility access
   \item  substantial performance improvements in {\tt importasdm} (including {\tt importevla}), {\tt tflagdata}, and {\tt flagcmd}, experimental parallelized clean {\tt pclean} 
   \item  The new flagger has successfully deployed asynchronous-I/O for flagging modes that read visibility values.
 
@@ -466,10 +466,6 @@ Major improvements over the previous version of CASA include:
 \item {\bf Other}
 
 \begin{itemize}
-
-  \item  when installing Linux rpms, it is now possible to have more
-    than a single version of CASA on disk. Versions can be invoked
-    like {\tt casapy --release 3.x.x}
 
   \item  improved support for special characters in MS field names
 

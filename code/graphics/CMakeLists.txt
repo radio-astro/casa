@@ -23,19 +23,51 @@ if( EXISTS ${CMAKE_SOURCE_DIR}/graphics/pgplot/CMakeLists.txt )
 endif()
 
 casa_add_library( graphics
-  implement/GenericPlotter/PlotCanvas.cc
-  implement/GenericPlotter/PlotCanvasLayout.cc
-  implement/GenericPlotter/PlotData.cc
-  implement/GenericPlotter/PlotEvent.cc
-  implement/GenericPlotter/PlotFactory.cc
-  implement/GenericPlotter/PlotItem.cc
-  implement/GenericPlotter/PlotLogger.cc
-  implement/GenericPlotter/PlotOperation.cc
-  implement/GenericPlotter/PlotOptions.cc
-  implement/GenericPlotter/Plotter.cc
-  implement/GenericPlotter/PlotTool.cc
-  implement/GenericPlotter/SimplePlotter.cc
-  implement/Graphics/PGPlotterLocal.cc
+  GenericPlotter/PlotCanvas.cc
+  GenericPlotter/PlotCanvasLayout.cc
+  GenericPlotter/PlotData.cc
+  GenericPlotter/PlotEvent.cc
+  GenericPlotter/PlotFactory.cc
+  GenericPlotter/PlotItem.cc
+  GenericPlotter/PlotLogger.cc
+  GenericPlotter/PlotOperation.cc
+  GenericPlotter/PlotOptions.cc
+  GenericPlotter/Plotter.cc
+  GenericPlotter/PlotTool.cc
+  GenericPlotter/SimplePlotter.cc
+  Graphics/PGPlotterLocal.cc
   ${casa_graphics_pgplot_obj}
   ${casa_graphics_pgplot_src}
   )
+install (FILES
+	GenericPlotter/Plot.h
+	GenericPlotter/PlotAnnotation.h
+	GenericPlotter/PlotCanvas.h
+	GenericPlotter/PlotCanvasLayout.h
+	GenericPlotter/PlotData.h
+	GenericPlotter/PlotEvent.h
+	GenericPlotter/PlotEventHandler.h
+	GenericPlotter/PlotFactory.h
+	GenericPlotter/PlotItem.h
+	GenericPlotter/PlotLogger.h
+	GenericPlotter/PlotOperation.h
+	GenericPlotter/PlotOptions.h
+	GenericPlotter/PlotPanel.h
+	GenericPlotter/PlotShape.h
+	GenericPlotter/PlotTool.h
+	GenericPlotter/Plotter.h
+	GenericPlotter/SimplePlotter.h
+	DESTINATION include/casacode/graphics/GenericPlotter
+	)
+install (FILES
+	Graphics/PGPLOT.h
+	Graphics/PGPlotterLocal.h
+	Graphics/X11Intrinsic.h
+	DESTINATION include/casacode/graphics/Graphics
+	)
+install (FILES
+	X11/X11Util.h
+	X11/X_enter.h
+	X11/X_exit.h
+	DESTINATION include/casacode/graphics/X11
+	)

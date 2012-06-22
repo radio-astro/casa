@@ -163,8 +163,8 @@ macro( casa_add_module module )
   add_dependencies( ${module} ${module}_install )
   
 
-  # Include path always include code/include/
-  set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include )
+  # Include path always include code/
+  set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ )
   set( ${module}_DEFINITIONS "" )
 
   # Which libraries to link against (internally used, not exported, by the module)
@@ -240,10 +240,10 @@ macro( casa_add_module module )
 
       set( ${module}_INCLUDE_DIRS 
         ${${module}_INCLUDE_DIRS}
-        ${CMAKE_SOURCE_DIR}/include/${module}/ASDM
-        ${CMAKE_SOURCE_DIR}/include/${module}/ASDMBinaries
-        ${CMAKE_SOURCE_DIR}/include/${module}/Enumtcl
-        ${CMAKE_SOURCE_DIR}/include/${module}/Enumerations
+        ${CMAKE_SOURCE_DIR}/${module}/ASDM
+        ${CMAKE_SOURCE_DIR}/${module}/ASDMBinaries
+        ${CMAKE_SOURCE_DIR}/${module}/Enumtcl
+        ${CMAKE_SOURCE_DIR}/${module}/Enumerations
         )
 
     endif()

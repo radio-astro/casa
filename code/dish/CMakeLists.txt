@@ -19,16 +19,28 @@
 #
 
 casa_add_library( dish
-  implement/SDIterators/SDFITSDataIterator.cc
-  implement/SDIterators/SDIterator.cc
-  implement/SDIterators/SDIterAxes.cc
-  implement/SDIterators/SDIterFieldCopier.cc
-  implement/SDIterators/SDMSIterator.cc
-  implement/SDIterators/SDRecord.cc
-  implement/SDIterators/SDTableIterator.cc
-  implement/SDIterators/SDTabRecCopier.cc
+  SDIterators/SDFITSDataIterator.cc
+  SDIterators/SDIterator.cc
+  SDIterators/SDIterAxes.cc
+  SDIterators/SDIterFieldCopier.cc
+  SDIterators/SDMSIterator.cc
+  SDIterators/SDRecord.cc
+  SDIterators/SDTableIterator.cc
+  SDIterators/SDTabRecCopier.cc
    )
 
-casa_add_assay( dish implement/SDIterators/test/tSDMSIterator.cc )
-casa_add_assay( dish implement/SDIterators/test/tSDRecord.cc )
-casa_add_assay( dish implement/SDIterators/test/tSDTableIterator.cc )
+install(FILES
+	SDIterators/SDFITSDataIterator.h
+	SDIterators/SDIterAxes.h
+	SDIterators/SDIterFieldCopier.h
+	SDIterators/SDIterator.h
+	SDIterators/SDMSIterator.h
+	SDIterators/SDRecord.h
+	SDIterators/SDTabRecCopier.h
+	SDIterators/SDTableIterator.h
+	DESTINATION include/casacode/dish/SDIterators
+	)
+
+casa_add_assay( dish SDIterators/test/tSDMSIterator.cc )
+casa_add_assay( dish SDIterators/test/tSDRecord.cc )
+casa_add_assay( dish SDIterators/test/tSDTableIterator.cc )

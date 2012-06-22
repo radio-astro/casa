@@ -19,22 +19,29 @@
 #
 
 casa_add_library( calanalysis
-  implement/CalAnalysis/CalAnalysis.cc
-  implement/CalAnalysis/CalAnalysisSPW_INFO.cc
-  implement/CalAnalysis/CalStats.cc
-  implement/CalAnalysis/CalStatsAXES.cc
-  implement/CalAnalysis/CalStatsDATA.cc
-  implement/CalAnalysis/CalStatsDerived.cc
-  implement/CalAnalysis/CalStatsFitter.cc
-  implement/CalAnalysis/CalStatsFIT.cc
+  CalAnalysis/CalAnalysis.cc
+  CalAnalysis/CalAnalysisSPW_INFO.cc
+  CalAnalysis/CalStats.cc
+  CalAnalysis/CalStatsAXES.cc
+  CalAnalysis/CalStatsDATA.cc
+  CalAnalysis/CalStatsDerived.cc
+  CalAnalysis/CalStatsFitter.cc
+  CalAnalysis/CalStatsFIT.cc
 )
 
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats0.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats1.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats2.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats3.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats4.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats5.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats6.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStats7.cc )
-casa_add_assay( calanalysis implement/CalAnalysis/test/tCalStatsTab.cc )
+install ( FILES
+  CalAnalysis/CalAnalysis.h
+  CalAnalysis/CalStats.h
+  CalAnalysis/CalStatsDerived.h
+  CalAnalysis/CalStatsFitter.h
+  DESTINATION include/casacode/calanalysis/CalAnalysis )
+
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats0.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats1.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats2.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats3.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats4.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats5.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats6.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStats7.cc )
+casa_add_assay( calanalysis CalAnalysis/test/tCalStatsTab.cc )

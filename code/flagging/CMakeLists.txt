@@ -29,59 +29,115 @@ endif()
 
 
 casa_add_library( flagging
-  implement/Flagging/DDMapper.cc
-  implement/Flagging/ExtendFlagger.cc
-  implement/Flagging/Flagger.cc
-  implement/Flagging/TestFlagger.cc
-  implement/Flagging/RFADiffBase.cc
-  implement/Flagging/RFAFlagCubeBase.cc
-  implement/Flagging/RFAMedianClip.cc
-  implement/Flagging/RFANewMedianClip.cc
-  implement/Flagging/RFASelector2.cc
-  implement/Flagging/RFASpectralRej.cc
-  implement/Flagging/RFAUVBinner.cc
-  implement/Flagging/RFChunkStats.cc
-  implement/Flagging/RFDataMapper.cc
-  implement/Flagging/RFFlagCube.cc
-  implement/Flagging/RFRowClipper.cc
-  implement/Flagging/RFFloatLattice.cc
-  implement/MSPlot/MsPlot.cc
-  implement/Flagging/LightFlagger.cc
-  implement/Flagging/LFTimeFreqCrop.cc
-  implement/Flagging/LFExamineFlags.cc
-  implement/Flagging/LFExtendFlags.cc
-  implement/Flagging/LFDisplayFlags.cc
-  implement/Flagging/FlagDataHandler.cc
-  implement/Flagging/FlagMSHandler.cc
-  implement/Flagging/FlagCalTableHandler.cc
-  implement/Flagging/FlagReport.cc
-  implement/Flagging/FlagAgentBase.cc
-  implement/Flagging/FlagAgentTimeFreqCrop.cc
-  implement/Flagging/FlagAgentClipping.cc
-  implement/Flagging/FlagAgentSummary.cc
-  implement/Flagging/FlagAgentDisplay.cc
-  implement/Flagging/FlagAgentManual.cc
-  implement/Flagging/FlagAgentElevation.cc
-  implement/Flagging/FlagAgentQuack.cc
-  implement/Flagging/FlagAgentShadow.cc
-  implement/Flagging/FlagAgentExtension.cc
-  implement/Flagging/FlagAgentRFlag.cc
+  Flagging/DDMapper.cc
+  Flagging/ExtendFlagger.cc
+  Flagging/Flagger.cc
+  Flagging/TestFlagger.cc
+  Flagging/RFADiffBase.cc
+  Flagging/RFAFlagCubeBase.cc
+  Flagging/RFAMedianClip.cc
+  Flagging/RFANewMedianClip.cc
+  Flagging/RFASelector2.cc
+  Flagging/RFASpectralRej.cc
+  Flagging/RFAUVBinner.cc
+  Flagging/RFChunkStats.cc
+  Flagging/RFDataMapper.cc
+  Flagging/RFFlagCube.cc
+  Flagging/RFRowClipper.cc
+  Flagging/RFFloatLattice.cc
+  Flagging/LightFlagger.cc
+  Flagging/LFTimeFreqCrop.cc
+  Flagging/LFExamineFlags.cc
+  Flagging/LFExtendFlags.cc
+  Flagging/LFDisplayFlags.cc
+  Flagging/FlagDataHandler.cc
+  Flagging/FlagMSHandler.cc
+  Flagging/FlagCalTableHandler.cc
+  Flagging/FlagReport.cc
+  Flagging/FlagAgentBase.cc
+  Flagging/FlagAgentTimeFreqCrop.cc
+  Flagging/FlagAgentClipping.cc
+  Flagging/FlagAgentSummary.cc
+  Flagging/FlagAgentDisplay.cc
+  Flagging/FlagAgentManual.cc
+  Flagging/FlagAgentElevation.cc
+  Flagging/FlagAgentQuack.cc
+  Flagging/FlagAgentShadow.cc
+  Flagging/FlagAgentExtension.cc
+  Flagging/FlagAgentRFlag.cc
+  Flagging/FlagVersion.cc
+  Flagging/SLog.cc
    )
 
-casa_add_test( flagging implement/Flagging/test/tFlagAgentRFlag.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentExtension.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentShadow.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentQuack.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentElevation.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentManual.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentSummary.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentDisplay.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentClipping.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentTimeFreqCrop.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagAgentBase.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagDataHandler.cc )
-casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
-casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )
-casa_add_test( flagging implement/Flagging/test/tFlagger.cc )
-casa_add_test( flagging implement/Flagging/test/tRFCubeLattice.cc )
-casa_add_test( flagging implement/Flagging/test/tTestFlagger.cc )
+install (FILES
+	Flagging/DDMapper.h
+	Flagging/ExtendFlagger.h
+	Flagging/FlagAgentBase.h
+	Flagging/FlagAgentClipping.h
+	Flagging/FlagAgentDisplay.h
+	Flagging/FlagAgentElevation.h
+	Flagging/FlagAgentExtension.h
+	Flagging/FlagAgentManual.h
+	Flagging/FlagAgentQuack.h
+	Flagging/FlagAgentRFlag.h
+	Flagging/FlagAgentShadow.h
+	Flagging/FlagAgentSummary.h
+	Flagging/FlagAgentTimeFreqCrop.h
+	Flagging/FlagCalTableHandler.h
+	Flagging/FlagDataHandler.h
+	Flagging/FlagMSHandler.h
+	Flagging/FlagReport.h
+	Flagging/FlagVersion.h
+	Flagging/Flagger.h
+	Flagging/LFBase.h
+	Flagging/LFDisplayFlags.h
+	Flagging/LFExamineFlags.h
+	Flagging/LFExtendFlags.h
+	Flagging/LFPlotServerProxy.h
+	Flagging/LFTimeFreqCrop.h
+	Flagging/LightFlagger.h
+	Flagging/RFABase.h
+	Flagging/RFADiffBase.h
+	Flagging/RFAFlagCubeBase.h
+	Flagging/RFAFlagExaminer.h
+	Flagging/RFAFlagExaminer.tcc
+	Flagging/RFAMedianClip.h
+	Flagging/RFANewMedianClip.h
+	Flagging/RFASelector.h
+	Flagging/RFASelector.tcc
+	Flagging/RFASpectralRej.h
+	Flagging/RFATimeFreqCrop.h
+	Flagging/RFATimeFreqCrop.tcc
+	Flagging/RFAUVBinner.h
+	Flagging/RFChunkStats.h
+	Flagging/RFChunkStats.tcc
+	Flagging/RFCommon.h
+	Flagging/RFCubeLattice.h
+	Flagging/RFCubeLattice.tcc
+	Flagging/RFDataMapper.h
+	Flagging/RFFlagCube.h
+	Flagging/RFFlagCube.tcc
+	Flagging/RFFloatLattice.h
+	Flagging/RFRowClipper.h
+	Flagging/SLog.h
+	Flagging/TestFlagger.h
+	DESTINATION include/casacode/flagging/Flagging
+	)
+
+casa_add_test( flagging Flagging/test/tFlagAgentRFlag.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentExtension.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentShadow.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentQuack.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentElevation.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentManual.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentSummary.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentDisplay.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentClipping.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentTimeFreqCrop.cc )
+casa_add_test( flagging Flagging/test/tFlagAgentBase.cc )
+casa_add_test( flagging Flagging/test/tFlagDataHandler.cc )
+casa_add_test( flagging Flagging/test/tAutoflag.cc )
+casa_add_test( flagging Flagging/test/tRFASelector.cc )
+casa_add_test( flagging Flagging/test/tFlagger.cc )
+casa_add_test( flagging Flagging/test/tRFCubeLattice.cc )
+casa_add_test( flagging Flagging/test/tTestFlagger.cc )

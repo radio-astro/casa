@@ -19,67 +19,108 @@
 #
 
 casa_add_library( imageanalysis
-implement/Annotations/AnnAnnulus.cc
-implement/Annotations/AnnCenterBox.cc
-implement/Annotations/AnnCircle.cc
-implement/Annotations/AnnEllipse.cc
-implement/Annotations/AnnLine.cc
-implement/Annotations/AnnotationBase.cc
-implement/Annotations/AnnPolygon.cc
-implement/Annotations/AnnRectBox.cc
-implement/Annotations/AnnRegion.cc
-implement/Annotations/AnnRotBox.cc
-implement/Annotations/AnnSymbol.cc
-implement/Annotations/AnnText.cc
-implement/Annotations/AnnVector.cc
-implement/Annotations/RegionTextList.cc
+Annotations/AnnAnnulus.cc
+Annotations/AnnCenterBox.cc
+Annotations/AnnCircle.cc
+Annotations/AnnEllipse.cc
+Annotations/AnnLine.cc
+Annotations/AnnotationBase.cc
+Annotations/AnnPolygon.cc
+Annotations/AnnRectBox.cc
+Annotations/AnnRegion.cc
+Annotations/AnnRotBox.cc
+Annotations/AnnSymbol.cc
+Annotations/AnnText.cc
+Annotations/AnnVector.cc
+Annotations/RegionTextList.cc
 
-implement/ImageAnalysis/ImageCollapser.cc
-implement/ImageAnalysis/ImageFitter.cc
-implement/ImageAnalysis/ImageInputProcessor.cc
-implement/ImageAnalysis/ImagePrimaryBeamCorrector.cc
-implement/ImageAnalysis/ImageProfileFitter.cc
-implement/ImageAnalysis/ImageStatsCalculator.cc
-implement/ImageAnalysis/ImageTransposer.cc
-implement/ImageAnalysis/ImageTask.cc
-implement/ImageAnalysis/SpectralCollapser.cc
-implement/ImageAnalysis/SpectralFitter.cc
+ImageAnalysis/ImageCollapser.cc
+ImageAnalysis/ImageFitter.cc
+ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImagePrimaryBeamCorrector.cc
+ImageAnalysis/ImageProfileFitter.cc
+ImageAnalysis/ImageStatsCalculator.cc
+ImageAnalysis/ImageTransposer.cc
+ImageAnalysis/ImageTask.cc
+ImageAnalysis/SpectralCollapser.cc
+ImageAnalysis/SpectralFitter.cc
 
-implement/IO/RegionTextParser.cc
-implement/IO/AsciiAnnotationFileLine.cc
-implement/IO/FitterEstimatesFileParser.cc
-implement/IO/ProfileFitterEstimatesFileParser.cc
+IO/RegionTextParser.cc
+IO/AsciiAnnotationFileLine.cc
+IO/FitterEstimatesFileParser.cc
+IO/ProfileFitterEstimatesFileParser.cc
 
-implement/Regions/CasacRegionManager.cc
+Regions/CasacRegionManager.cc
 )
+
+install (FILES
+	Annotations/AnnAnnulus.h
+	Annotations/AnnCenterBox.h
+	Annotations/AnnCircle.h
+	Annotations/AnnEllipse.h
+	Annotations/AnnLine.h
+	Annotations/AnnPolygon.h
+	Annotations/AnnRectBox.h
+	Annotations/AnnRegion.h
+	Annotations/AnnRotBox.h
+	Annotations/AnnSymbol.h
+	Annotations/AnnText.h
+	Annotations/AnnVector.h
+	Annotations/AnnotationBase.h
+	Annotations/RegionTextList.h
+	DESTINATION include/casacode/imageanalysis/Annotations
+	)
+install (FILES
+	IO/AsciiAnnotationFileLine.h
+	IO/FitterEstimatesFileParser.h
+	IO/ProfileFitterEstimatesFileParser.h
+	IO/RegionTextParser.h
+	DESTINATION include/casacode/imageanalysis/IO
+	)
+install (FILES
+	ImageAnalysis/ImageCollapser.h
+	ImageAnalysis/ImageFitter.h
+	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImagePrimaryBeamCorrector.h
+	ImageAnalysis/ImageProfileFitter.h
+	ImageAnalysis/ImageStatsCalculator.h
+	ImageAnalysis/ImageTask.h
+	ImageAnalysis/ImageTransposer.h
+	ImageAnalysis/SpectralCollapser.h
+	DESTINATION include/casacode/imageanalysis/ImageAnalysis
+	)
+install (FILES
+	Regions/CasacRegionManager.h
+	DESTINATION include/casacode/imageanalysis/Regions
+	)
 
 casa_add_executable(imageanalysis imfit apps/imfit.cc )
 casa_add_executable(imageanalysis imcollapse apps/imcollapse.cc )
 
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnAnnulus.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnCenterBox.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnCircle.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnEllipse.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnLine.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnPolygon.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnRectBox.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnRotBox.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnSymbol.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnText.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAnnVector.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tRegionTextList.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnAnnulus.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnCenterBox.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnCircle.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnEllipse.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnLine.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnPolygon.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnRectBox.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnRotBox.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnSymbol.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnText.cc )
+casa_add_assay( imageanalysis Annotations/test/tAnnVector.cc )
+casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageCollapser.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageFitter.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageInputProcessor.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageProfileFitter.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageTransposer.cc )
-casa_add_assay( imageanalysis implement/ImageAnalysis/test/tRegrid.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageTransposer.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tRegrid.cc )
 
-casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
-casa_add_assay( imageanalysis implement/IO/test/tProfileFitterEstimatesFileParser.cc )
-casa_add_assay( imageanalysis implement/IO/test/tRegionTextParser.cc )
+casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
+casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )
+casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
-casa_add_assay( imageanalysis implement/Regions/test/tCasacRegionManager.cc )
+casa_add_assay( imageanalysis Regions/test/tCasacRegionManager.cc )
 
