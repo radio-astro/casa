@@ -361,8 +361,8 @@ using namespace casac;
 /*
          for(int i=0;i<shape[0];i++)
             std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
-      }
 */
+      }
    }
 }
 
