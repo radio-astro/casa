@@ -165,6 +165,7 @@ using namespace casac;
       $1 = pyobj2variant($input, true).asRecord();      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -173,6 +174,7 @@ using namespace casac;
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -181,6 +183,7 @@ using namespace casac;
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -196,6 +199,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -205,6 +209,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -214,6 +219,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -223,6 +229,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -232,6 +239,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -242,6 +250,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -274,6 +283,7 @@ using namespace casac;
           $1->push_back(PyFloat_AsDouble($input));
        } else {
           //cerr << "pylist2vector" << endl;
+         shape.push_back(PyList_Size($input));
           casac::pylist2vector($input,  *$1, shape);
        }
    }
@@ -292,6 +302,8 @@ using namespace casac;
    } else {
       if (PyString_Check($input)){
          $1->push_back(0);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
+         return NULL;
       } else if (PyBool_Check($input)){
          $1->push_back(bool(PyInt_AsLong($input)));
       } else if (PyInt_Check($input)){
@@ -301,6 +313,7 @@ using namespace casac;
       } else if (PyFloat_Check($input)){
          $1->push_back(bool(PyInt_AsLong(PyNumber_Int($input))));
       } else {
+         shape.push_back(PyList_Size($input));
          casac::pylist2vector($input,  *$1, shape);
       }
    }
@@ -320,8 +333,9 @@ using namespace casac;
    } else {
       //$1 = &vtmp;
       if (PyString_Check($input)){
-      //$1->push_back(PyInt_AsLong(PyInt_FromString(PyString_AsString($input))));
          $1->push_back(-1);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must not be a string");
+         return NULL;
       } else if (PyInt_Check($input)){
          $1->push_back(int(PyInt_AsLong($input)));
       } else if (PyLong_Check($input)){
@@ -329,8 +343,26 @@ using namespace casac;
       } else if (PyFloat_Check($input)){
          $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
       } else {
+/*
+         shape.push_back(PyList_Size($input));
+         for(int i=0; i<PyList_Size($input); i++){
+             PyObject *item = PyList_GetItem($input, i);
+             if (PyInt_Check(item)){
+                $1->push_back(int(PyInt_AsLong(item)));
+             } else if (PyLong_Check(item)){
+                $1->push_back(PyLong_AsLong(item));
+             } else if (PyFloat_Check(item)){
+                $1->push_back(PyInt_AsLong(PyNumber_Int(item)));
+             }
+             std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
+         }
+*/
          casac::pylist2vector($input,  *$1, shape);
+/*
+         for(int i=0;i<shape[0];i++)
+            std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
       }
+*/
    }
 }
 
@@ -340,6 +372,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -349,6 +382,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
