@@ -92,19 +92,19 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 
 	# Open the old-format caltable and get the number of rows
 
-	tbOld = casa.__tablehome__.create()
+	tbOld = casa.table
 	tbOld.open( caltabold )
 	nRow = tbOld.nrows()
 
 	# Get spwid map from old CAL_DESC subtable
-	tbCD = casa.__tablehome__.create()
+	tbCD = casa.table
 	tbCD.open( caltabold+'/CAL_DESC' )
 	spwmap=tbCD.getcol('SPECTRAL_WINDOW_ID')[0,:]
 	tbCD.close()
 
   	# Create the empty new-format caltable with the correct number of rows
 
-  	tbNew = casa.__tablehome__.create()
+  	tbNew = casa.table
   	tbNew.create( caltabnew, desc_new( pTypeTemp ) )
 
   	tbNew.addrows( nRow )
@@ -184,7 +184,7 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 #	arg = 'cp -r ' + caltabold + '/CAL_HISTORY ' + caltabnew + '/HISTORY'
 #	os.system( arg )
 
-  	tbHis = casa.__tablehome__.create()
+  	tbHis = casa.table
 	tbHis.open(ms+'/HISTORY')
 	tbHis.copy(newtablename=caltabnew+'/HISTORY',deep=True,valuecopy=True,norows=True)
 	tbHis.close()
@@ -239,7 +239,7 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 	# Get the channel ranges from the CAL_DESC subtable of the old-format
 	# caltable
 
-	tbDesc = casa.__tablehome__.create()
+	tbDesc = casa.table
 	tbDesc.open( caltabold + '/CAL_DESC' )
 
 	nDesc = tbDesc.nrows()
@@ -267,7 +267,7 @@ def caltab_convert2( caltabold, ms, pType, caltabnew='' ):
 	# Modify the columns of the new-format caltable according to the
 	# channel ranges
 
-	tbSPW = casa.__tablehome__.create()
+	tbSPW = casa.table
 	tbSPW.open( caltabnew + '/SPECTRAL_WINDOW', nomodify=False )
 
 	for d in rDesc:
@@ -310,7 +310,7 @@ def get_scantimes( ms ):
 
 	# Open the MS
 
-	tbHandle = casa.__tablehome__.create()
+	tbHandle = casa.table
 	tbHandle.open( ms )
 
 
@@ -352,7 +352,7 @@ def get_polbasis( ms ):
 
 	# Open the MS
 
-	tbHandle = casa.__tablehome__.create()
+	tbHandle = casa.table
 	tbHandle.open( ms + '/FEED' )
 
 

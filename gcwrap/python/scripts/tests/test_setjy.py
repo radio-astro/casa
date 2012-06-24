@@ -262,7 +262,7 @@ class Uranus(SplitChecker):
         cols = tb.colnames()
         tb.close()
         if 'MODEL_DATA' in cols:
-            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col"
 
         try:
             print "\nRunning setjy(field='Uranus')."
@@ -294,6 +294,7 @@ class Uranus(SplitChecker):
 
     def test_history_Uranus(self):
         """Flux density in HISTORY (Uranus)?"""
+	print self.records
         check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
 
     def test_wvr(self):
@@ -347,7 +348,7 @@ class ScaleUranusByChan(SplitChecker):
         cols = tb.colnames()
         tb.close()
         if 'MODEL_DATA' in cols:
-            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col"
 
         try:
             print "\nRunning setjy(field='Uranus')."
@@ -388,6 +389,7 @@ class ScaleUranusByChan(SplitChecker):
     def test_auto1(self):
         """Zero spacing of spw 1 with scalebychan"""
         # 8 (decreasing freq!) chans, XX & YY.
+	print self.records
         check_eq(self.records['']['auto1'],
                  numpy.array([[65.49415588+0.j, 65.42105865+0.j,
                                65.34798431+0.j, 65.27491760+0.j,
@@ -443,7 +445,7 @@ class Uranus_newmodel(SplitChecker):
         cols = tb.colnames()
         tb.close()
         if 'MODEL_DATA' in cols:
-            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col"
 
         try:
             print "\nRunning setjy(field='Uranus')."
@@ -553,7 +555,7 @@ class selectobs(SplitChecker):
         cols = tb.colnames()
         tb.close()
         if 'MODEL_DATA' in cols:
-            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col"
 
         try:
             print "\nRunning setjy(field='Titan', observation=1)."
@@ -616,7 +618,7 @@ class selectobs_newmodel(SplitChecker):
         cols = tb.colnames()
         tb.close()
         if 'MODEL_DATA' in cols:
-            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col"
 
         try:
             print "\nRunning setjy(field='Titan', observation=1)."

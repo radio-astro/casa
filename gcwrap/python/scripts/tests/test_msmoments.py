@@ -210,6 +210,8 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[-1]
         postfix='.average'
         refval=[2.8974850177764893,2.6505289077758789]
+        if (os.path.exists(self.outfile)):
+            shutil.rmtree(self.outfile)
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
