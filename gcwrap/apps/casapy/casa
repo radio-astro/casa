@@ -70,7 +70,7 @@ p_libd=${p_root}/lib/python2.6
 p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
 
 export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
-p_path=${__CASAPY_PYTHONDIR}:${p_path}
+p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
 
 
 export PYTHONHOME=${p_root}
