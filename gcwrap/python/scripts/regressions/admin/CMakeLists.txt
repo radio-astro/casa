@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_regressions_admin_python python/${PYTHONV}/regressions/admin
+casa_add_python( tools tools_regressions_admin_python python/${PYTHONV}
   publish_summary.py
   runUnitTest.py
   memTest.py
@@ -34,7 +34,6 @@ casa_add_python( tools tools_regressions_admin_python python/${PYTHONV}/regressi
   tw_func.py
   tw_plotmem.py
   tw_utils.py
-  execute.py
 )
 
 install( PROGRAMS 
@@ -45,4 +44,5 @@ install( PROGRAMS
          runcasa_from_shell.sh
          tests_list.txt
          runUnitTest.py
+	 execute.py
          DESTINATION python/${PYTHONV}/regressions/admin )
