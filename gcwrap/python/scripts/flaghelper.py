@@ -404,12 +404,12 @@ def readXML(sdmfile, mytbuff):
         start = int(rowstart[0].childNodes[0].nodeValue)
         startmjds = float(start) * 1.0E-9 - mytbuff
         t = qa.quantity(startmjds, 's')
-        starttime = qa.time(t, form='ymd', prec=9)
+        starttime = qa.time(t, form='ymd', prec=9)[0]
         rowend = rownode.getElementsByTagName('endTime')
         end = int(rowend[0].childNodes[0].nodeValue)
         endmjds = float(end) * 1.0E-9 + mytbuff
         t = qa.quantity(endmjds, 's')
-        endtime = qa.time(t, form='ymd', prec=9)
+        endtime = qa.time(t, form='ymd', prec=9)[0]
     # time and interval for FLAG_CMD use
         times = 0.5 * (startmjds + endmjds)
         intervs = endmjds - startmjds

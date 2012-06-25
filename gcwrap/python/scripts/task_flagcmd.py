@@ -71,14 +71,14 @@ def flagcmd(
         ms_endmjds = timd['time'][1]
         t = qa.quantity(ms_startmjds, 's')
         t1sdata = t['value']
-        ms_starttime = qa.time(t, form='ymd', prec=9)
-        ms_startdate = qa.time(t, form=['ymd', 'no_time'])
+        ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
+        ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
         t0 = qa.totime(ms_startdate + '/00:00:00.00')
         t0d = qa.convert(t0, 'd')
         t0s = qa.convert(t0, 's')
         t = qa.quantity(ms_endmjds, 's')
         t2sdata = t['value']
-        ms_endtime = qa.time(t, form='ymd', prec=9)
+        ms_endtime = qa.time(t, form='ymd', prec=9)[0]
         # NOTE: could also use values from OBSERVATION table col TIME_RANGE
         casalog.post('MS spans timerange ' + ms_starttime + ' to '
                      + ms_endtime)
@@ -577,7 +577,7 @@ def readFromCmd(cmdlist, ms_startmjds, ms_endmjds):
         return myflagd
 
     t = qa.quantity(ms_startmjds, 's')
-    ms_startdate = qa.time(t, form=['ymd', 'no_time'])
+    ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
     t0 = qa.totime(ms_startdate + '/00:00:00.0')
     # t0d = qa.convert(t0,'d')
     t0s = qa.convert(t0, 's')
@@ -758,7 +758,7 @@ def readFromFile(
         return
 
     t = qa.quantity(ms_startmjds, 's')
-    ms_startdate = qa.time(t, form=['ymd', 'no_time'])
+    ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
     t0 = qa.totime(ms_startdate + '/00:00:00.0')
     # t0d = qa.convert(t0,'d')
     t0s = qa.convert(t0, 's')
@@ -1608,7 +1608,7 @@ def plotflags(
     myTimestr = []
     for time in mytime:
         q1 = qa.quantity(time, 's')
-        time1 = qa.time(q1, form='ymd', prec=9)
+        time1 = qa.time(q1, form='ymd', prec=9)[0]
         myTimestr.append(time1)
 
     ax1.set_xticklabels([myTimestr[0], (myTimestr[1])[11:],
@@ -1784,9 +1784,9 @@ def newplotflags(
                 timmax = t2s
     # min,max times
     q1 = qa.quantity(timmin, 's')
-    time1 = qa.time(q1, form='ymd', prec=9)
+    time1 = qa.time(q1, form='ymd', prec=9)[0]
     q2 = qa.quantity(timmax, 's')
-    time2 = qa.time(q2, form='ymd', prec=9)
+    time2 = qa.time(q2, form='ymd', prec=9)[0]
     casalog.post('Found flag times from ' + time1 + ' to ' + time2)
 
     # sort out blank times
@@ -1807,9 +1807,9 @@ def newplotflags(
                                    > t2sdata):
         # min,max data times
         q1 = qa.quantity(t1sdata, 's')
-        tdata1 = qa.time(q1, form='ymd', prec=9)
+        tdata1 = qa.time(q1, form='ymd', prec=9)[0]
         q2 = qa.quantity(t2sdata, 's')
-        tdata2 = qa.time(q2, form='ymd', prec=9)
+        tdata2 = qa.time(q2, form='ymd', prec=9)[0]
         casalog.post('WARNING: Trimming flag times to data limits '
                      + tdata1 + ' to ' + tdata2)
 
@@ -1946,7 +1946,7 @@ def newplotflags(
             / float(nxticks - 1)
         mytime.append(time)
         q1 = qa.quantity(time, 's')
-        time1 = qa.time(q1, form='ymd', prec=9)
+        time1 = qa.time(q1, form='ymd', prec=9)[0]
         if itim > 0:
             time1s = time1[11:]
         else:

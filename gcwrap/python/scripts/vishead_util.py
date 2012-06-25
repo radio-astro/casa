@@ -136,7 +136,7 @@ def secArray2localDate(secArray, timesys='UTC', timeunit='s'):
     string of it as a local date.
     """
     return qa.time({'unit': timeunit, 'value': secArray[0]},
-                   form=['ymd', 'local'])
+                   form=['ymd', 'local'])[0]
 
 def valref2localDate(valreftuple):
     """

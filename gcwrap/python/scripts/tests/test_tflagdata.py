@@ -299,7 +299,7 @@ class test_flagmanager(test_base):
         '''flagmanager test1m: mode=list, flagbackup=True/False'''
         
         # Create a local copy of the tool
-        tflocal = casac.casac.testflagger()
+        tflocal = casac.testflagger()
         flagmanager(vis=self.vis, mode='list')
         tflocal.open(self.vis)
         self.assertEqual(len(tflocal.getflagversionlist()), 3)
@@ -361,7 +361,7 @@ class test_flagmanager(test_base):
         """flagmanager: Do not allow flagversion=''"""
         
         # Create a local copy of the tool
-        tflocal = casac.casac.testflagger()
+        tflocal = casac.testflagger()
         
         tflocal.open(self.vis)
         l = len(tflocal.getflagversionlist())

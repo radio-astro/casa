@@ -1022,7 +1022,7 @@ class simutil:
         dec=qa.add(obslat, qa.add(qa.quantity("90deg"),qa.mul(elevation,-1)))
 
         sm.setfield(sourcename="src1", 
-                    sourcedirection="J2000 00:00:00.00 "+qa.angle(dec),
+                    sourcedirection="J2000 00:00:00.00 "+qa.angle(dec)[0],
                     calcode="OBJ", distance='0m')
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
         if integration==None:
@@ -1072,7 +1072,7 @@ class simutil:
             # very light clean - its an empty image!
             self.image(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
-                       "J2000 00:00:00.00 "+qa.angle(dec),
+                       "J2000 00:00:00.00 "+qa.angle(dec)[0],
                        100,"0.01mJy","natural",[],"I")
 
             ia.open(tmpname+".image")
@@ -1201,10 +1201,10 @@ class simutil:
                         
         reftime_float=time['m0']['value']
         reftime_floor=pl.floor(time['m0']['value'])
-        refdate_str=qa.time(qa.totime(str(reftime_floor)+'d'),form='dmy')
+        refdate_str=qa.time(qa.totime(str(reftime_floor)+'d'),form='dmy')[0]
 
         timeinc='15min'  # for plotting
-        timeinc=qa.convert(qa.time(timeinc),'d')['value']
+        timeinc=qa.convert(qa.time(timeinc)[0],'d')['value']
         ntime=int(1./timeinc)
 
         # check for circumpolar:
@@ -1241,13 +1241,13 @@ class simutil:
             time['m0']['value']+=timeinc
     
 #        self.msg(" ref="+date,origin='ephemeris')
-        self.msg("rise="+qa.time(rise['m0'],form='dmy'),origin='ephemeris')
-        self.msg(" set="+qa.time(settime['m0'],form='dmy'),origin='ephemeris')
+        self.msg("rise="+qa.time(rise['m0'],form='dmy')[0],origin='ephemeris')
+        self.msg(" set="+qa.time(settime['m0'],form='dmy')[0],origin='ephemeris')
     
         pl.plot((pl.array(times)-reftime_floor)*24,el)
 #        peak=(rise['m0']['value']+settime['m0']['value'])/2        
 #        self.msg("peak="+qa.time('%fd' % peak,form='dmy'),origin='ephemeris')
-        self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy'),origin='ephemeris')
+        self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy')[0],origin='ephemeris')
 
         relpeak=peaktime_float-reftime_floor
         pl.plot(pl.array([1,1])*24*relpeak,[0,90])
@@ -1812,7 +1812,7 @@ class simutil:
         lon=-lon
 
         if self.verbose:
-            self.msg(" longitude, latitude = %s %s; conv,kp = %f,%f" % (qa.angle(qa.quantity(lon,"rad"),prec=8),qa.angle(qa.quantity(lat,"rad"),prec=8),conv,kp),origin="utm2long")
+            self.msg(" longitude, latitude = %s %s; conv,kp = %f,%f" % (qa.angle(qa.quantity(lon,"rad"),prec=8)[0],qa.angle(qa.quantity(lat,"rad"),prec=8)[0],conv,kp),origin="utm2long")
         
         return lon,lat
 

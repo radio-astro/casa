@@ -104,7 +104,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
             casalog.post(objname + " rises at %s and sets at %s." % (riset['rise']['str'],
                                                                      riset['set']['str']))
             tmeridian=(riset['rise']['utc']['m0']['value']+riset['set']['utc']['m0']['value'])/2.
-            casalog.post(objname + ': meridian passage at ' + qa.time(str(tmeridian)+'d'))
+            casalog.post(objname + ': meridian passage at ' + qa.time(str(tmeridian)+'d')[0])
 
         if approx:
             riset['NOTE'] = approx

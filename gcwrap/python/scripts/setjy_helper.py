@@ -1,5 +1,5 @@
 # setjy helper functions
-import casac
+import casa
 import os
 import sys
 import shutil
@@ -11,8 +11,7 @@ class ss_setjy_helper:
 	self.im = imtool
 	self.vis = vis
         if not casalog:
-          loghome =  casac.logsink()
-          casalog = loghome.create()
+          casalog = casa.logsink
         self._casalog = casalog
 
     def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan):
@@ -25,8 +24,7 @@ class ss_setjy_helper:
 
         #from taskinit import * 
         from taskinit import gentools 
-        qatool = casac.quanta()
-        qa = qatool.create()
+        qa = casa.quanta
  
 
 	(myms, mytb, mycl, myme) = gentools(['ms','tb','cl','me'])

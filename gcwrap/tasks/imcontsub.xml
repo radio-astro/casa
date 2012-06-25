@@ -38,7 +38,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="fitorder" >
     	<description>Polynomial order for the continuum estimation</description>
     	<value>0</value>
-	 
+	<allowed kind="range"><value range="min">0</value></allowed> 
         <example>fitorder=2</example>
     </param>
 

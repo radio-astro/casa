@@ -128,8 +128,8 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     myTimestr2=[]
     for time in mytime:
         q1=qa.quantity(time,'s')
-        time1=qa.time(q1,form='ymd')
-        time2=qa.time(q1,form='local')
+        time1=qa.time(q1,form='ymd')[0]
+        time2=qa.time(q1,form='local')[0]
         myTimestr.append(time1)
         myTimestr2.append(time2)
  

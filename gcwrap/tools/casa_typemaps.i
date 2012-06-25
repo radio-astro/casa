@@ -22,7 +22,12 @@ using namespace casac;
 
 %}
 %typemap(in) int {
-   $1 = PyInt_AsLong($input);
+  if(PyInt_Check($input)){
+     $1 = PyInt_AsLong($input);
+  } else {
+     PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
+     return NULL;
+  }
 }
 
 %typemap(in) float {

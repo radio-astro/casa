@@ -396,7 +396,7 @@ def imhead(
         tmp = csys.epoch()
         if tmp.has_key('m0') and tmp['m0'].has_key('value') and tmp['m0'
                 ]['value'] > 0:
-            hd_values['date-obs'] = qa.time(tmp['m0'], form='ymd')
+            hd_values['date-obs'] = qa.time(tmp['m0'], form='ymd')[0]
             hd_units['data-obs'] = 'ymd'
         hd_types['date-obs'] = 'string'
         hd_comments['date-obs'] = ''
