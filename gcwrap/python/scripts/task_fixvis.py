@@ -194,8 +194,8 @@ def is_valid_refcode(refcode):
 def log_phasecenter(oldnew, refstr, ra, dec):
     """Post a phase center to the logger, along with whether it is old or new."""
     casalog.post(oldnew + ' phasecenter RA, DEC ' + refstr + ' '
-                 + qa.time(qa.quantity(ra, 'rad'), 10) # 10 digits precision
-                 + " " + qa.angle(qa.quantity(dec, 'rad'), 10), 'NORMAL')
+                 + qa.time(qa.quantity(ra, 'rad'), 10)[0] # 10 digits precision
+                 + " " + qa.angle(qa.quantity(dec, 'rad'), 10)[0], 'NORMAL')
     casalog.post('          RA, DEC (rad) ' + refstr + ' '
                  + str(ra) + " " + str(dec), 'NORMAL')
 
@@ -251,9 +251,10 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
         else:
             commonoldrefstr = theoldrefstr
 
+    
     theoldphasecenter = theoldrefstr + ' ' + \
-                        qa.time(qa.quantity(theolddir[0], 'rad'), 14) + ' ' + \
-                        qa.angle(qa.quantity(theolddir[1],'rad'), 14)
+                        qa.time(qa.quantity(theolddir[0], 'rad'), 14)[0] + ' ' + \
+                        qa.angle(qa.quantity(theolddir[1],'rad'), 14)[0]
 
     if not is_valid_refcode(theoldrefstr):
         casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet supported: '
@@ -444,7 +445,7 @@ def parse_phasecenter(phasecenter, isvarref, ref, refstr, theolddir):
                 return False
             qraoffset = qa.convert(qraoffset, 'deg')
             qnewra = qa.add(qnewra, qraoffset)
-        dirstr = [refstr, qa.time(qnewra,12), qa.angle(qnewdec,12)]
+        dirstr = [refstr, qa.time(qnewra,12)[0], qa.angle(qnewdec,12)[0]]
     elif not len(dirstr) == 3:
         casalog.post('Incorrectly formatted parameter \'phasecenter\': '
                      + phasecenter, 'SEVERE')

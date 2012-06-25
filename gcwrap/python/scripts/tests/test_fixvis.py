@@ -87,7 +87,7 @@ class fixvis_test1(unittest.TestCase):
                         record_error(dircol + "'s stated frame, " + ref
                                      + ', != expected ' + refcode, retValue)
                     dirshape = tb.getcolshapestring(dircol)
-                    if dirshape != exp_shape:
+                    if dirshape[0] != exp_shape:
                         record_error(dircol + "'s shape, " + dirshape
                                      + ', != expected ' + exp_shape)
             except:
