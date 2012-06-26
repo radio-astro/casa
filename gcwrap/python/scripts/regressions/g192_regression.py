@@ -83,7 +83,11 @@ print '--Flag bad scan--'
 
 # But actually doing so causes this regression test to fail!
 # flagdata(vis="g192_src.split.ms", field="0", spw="0", timerange="2003/04/26/02:45:00.0~2003/04/26/02:49:00.0")
-
+fg.open(msname='g192_src.split.ms')
+fg.setdata(field='0',spw='0', time='2003/04/26/02:45:00.0 ~ 2003/04/26/02:49:00.0')
+#af.settimerange(timerange=['26-APR-2003/02:45:00.0','26-APR-2003/02:49:00.0'])
+fg.run()
+fg.done()
 flagsrctime=time.time()
 
 print '--Clean src line--'
