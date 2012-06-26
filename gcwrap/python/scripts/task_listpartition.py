@@ -47,7 +47,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
             
                 
         # Is it a multi-MS?
-        ismms = mslocal.ismultims(vis)
+        ismms = mslocal.ismultims()
         
         # List of MSs to process
         mslist = []
