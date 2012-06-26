@@ -3,9 +3,8 @@ import sys
 import shutil
 import string
 from __main__ import default
+import partitionhelper as ph
 from tasks import listpartition
-from taskinit import ms
-from task_listpartition import getDiskUsage
 import unittest
 
 '''
@@ -14,20 +13,9 @@ Unit tests for task listpartition. It tests the following parameters:
     createdict  true or false
     listfile:   save to a file
     
+    These tests use auxiliary functions defined in partitionhelper.py
+    
 '''
-
-def getNrows(msfile, myscan):
-    '''Get nrows of a scan in a MS. It will add the nrows of all sub-scans'''
-    ms.open(msfile)
-    scand = ms.getscansummary()
-    ms.close()
-    
-    Nrows = 0
-    subscans = scand[1][str(myscan)]
-    for ii in subscans.keys():
-        Nrows += scand[1][str(myscan)][ii]['nRow']
-    
-    return Nrows
 
 
 # Base class which defines setUp functions
@@ -162,7 +150,7 @@ class test_MMS_spw(test_base):
             scans = resdict[k]['scanId'].keys()
             for s in scans:
                 nr = resdict[k]['scanId'][s]['nrows']
-                refN = getNrows(MS,s)
+                refN = ph.getScanNrows(MS, s)
                 self.assertEqual(nr, refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'\
                                  %(MS, s, nr, refN))
                         
@@ -208,7 +196,7 @@ class test_MMS_scan(test_base):
             scans = resdict[k]['scanId'].keys()
             for s in scans:
                 nr = resdict[k]['scanId'][s]['nrows']
-                refN = getNrows(MS,s)
+                refN = ph.getScanNrows(MS, s)
                 self.assertEqual(nr, refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'\
                                  %(MS, s, nr, refN))
             
@@ -237,7 +225,7 @@ class test_MMS_scan(test_base):
             
             # Now get the du -hs for the same sub-MS
             # Step into the data directory
-            dusize = getDiskUsage(self.visdata+front[0])
+            dusize = ph.getDiskUsage(self.visdata+front[0])
 
             # Compare both
             self.assertEqual(dusize, rear[2], '%s is not equal to %s for %s'%(dusize,rear[2],front[0]))
@@ -286,7 +274,7 @@ class test_MMS_mix(test_base):
             scans = resdict[k]['scanId'].keys()
             for s in scans:
                 nr = resdict[k]['scanId'][s]['nrows']
-                refN = getNrows(MS,s)
+                refN = ph.getScanNrows(MS, s)
                 self.assertEqual(nr, refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'\
                                  %(MS, s, nr, refN))
                         
@@ -315,7 +303,7 @@ class test_MMS_mix(test_base):
             
             # Now get the du -hs for the same sub-MS
             # Step into the data directory
-            dusize = getDiskUsage(self.visdata+front[0])
+            dusize = ph.getDiskUsage(self.visdata+front[0])
 
             # Compare both
             self.assertEqual(dusize, rear[2], '%s is not equal to %s for %s'%(dusize,rear[2],front[0]))
