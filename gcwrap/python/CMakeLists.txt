@@ -46,6 +46,7 @@ scripts/parallel_go.py
 scripts/parallelSplit.py
 scripts/parameter_check.py
 scripts/parameter_dictionary.py
+scripts/partitionhelper.py
 scripts/plotcomp.py
 scripts/pointcal.py
 scripts/predictcomp_helper.py
