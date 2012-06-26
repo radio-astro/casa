@@ -13,7 +13,11 @@
 #include <casa/aips.h>
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
-#include <casa/Utilities/CasaThreadNeutrality.h>
+
+// Commented out by S. Rankin until we can merge the
+// casacore change this depends on to the test branch.
+// TODO: Uncomment!
+// #include <casa/Utilities/CasaThreadNeutrality.h>
 #include <sys/time.h>
 #include <execinfo.h>
 #include <algorithm>
