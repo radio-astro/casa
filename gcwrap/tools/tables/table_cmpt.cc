@@ -288,6 +288,8 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
   return rstat;
 
 }
@@ -311,6 +313,8 @@ table::copy(const std::string& newtablename, const bool deep, const bool valueco
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
  return rstat;
 }
 
@@ -597,6 +601,8 @@ table::taql(const std::string& taqlcommand)
             << LogIO::POST;
     RETHROW(x);
  }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
  return rstat;
 }
 
@@ -633,6 +639,8 @@ table::query(const std::string& query, const std::string& name,
             << LogIO::POST;
     RETHROW(x);
  }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
  return rstat;
 }
 
@@ -656,6 +664,8 @@ table::calc(const std::string& expr)
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
  return rstat;
 }
 
@@ -674,6 +684,8 @@ table::selectrows(const std::vector<int>& rownrs, const std::string& name)
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
+ if(!rstat)
+	 throw AipsError("Unable to create table");
  return rstat;
 }
 

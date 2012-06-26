@@ -3190,6 +3190,8 @@ ms::moments(const std::vector<int>& moments,
   }
   Table::relinquishAutoLocks(True);
 
+  if(!rstat)
+     throw AipsError("ms.moments unable to create moments table");
   return rstat;
 }
 

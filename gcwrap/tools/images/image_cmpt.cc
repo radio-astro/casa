@@ -1450,6 +1450,7 @@ image* image::transpose(
 	try {
 		*_log << LogOrigin("image", __FUNCTION__);
 		if (detached()) {
+			throw AipsError("No image specified to transpose");
 			return 0;
 		}
 		std::auto_ptr<ImageTransposer> transposer(0);
@@ -1488,9 +1489,13 @@ image* image::transpose(
 					<< "unambiguously match the image axis names."
 					<< LogIO::EXCEPTION;
 		}
-		return new image(
+		
+		image *rstat =new image(
 			transposer->transpose(), False
 		);
+		if(!rstat)
+			throw AipsError("Unable to transpose image");
+		return rstat;
 	} catch (AipsError x) {
 		RETHROW(x);
 	}
