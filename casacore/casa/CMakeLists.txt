@@ -45,7 +45,6 @@ Containers/ValueHolder.cc
 Containers/Record2Interface.cc
 Containers/Stack2.cc
 Exceptions/Error2.cc
-Exceptions/CasaErrorTools.cc
 HDF5/HDF5Record.cc
 HDF5/HDF5Error.cc
 HDF5/HDF5Group.cc
@@ -206,7 +205,6 @@ casa_casa
 ${de_libraries}
 ${libm}
 dl
-${Boost_LIBRARIES}
 )
 
 install (
@@ -358,7 +356,6 @@ DESTINATION include/casacore/casa/Containers
 )
 
 install (FILES
-Exceptions/CasaErrorTools.h
 Exceptions/Error.h
 Exceptions/Error.tcc
 DESTINATION include/casacore/casa/Exceptions
@@ -569,7 +566,6 @@ Utilities/Template.h
 Utilities/Template.tcc
 Utilities/ValType.h
 Utilities/ValTypeId.h
-${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h
 DESTINATION include/casacore/casa/Utilities
 )
 

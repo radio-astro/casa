@@ -44,7 +44,6 @@ class MVRadialVelocity;
 class MeasComet;
 class FrameRep;
 class MCFrame;
-class RecursiveMutex;
 template <class T> class Vector;
 template <class Qtype> class Quantum;
 
@@ -296,7 +295,6 @@ private:
   //# Data
   // Representation of MeasFrame
   FrameRep *rep;
-  CountedPtr<RecursiveMutex> repMutex_p;
   
   //# Member functions
   // Create an instance of the MeasFrame class
