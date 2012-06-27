@@ -15,6 +15,7 @@
 #include <complex>
 #include <stdcasa/record.h>
 #include <tools/swigconvert_python.h>
+#include <numpy/arrayobject.h>
 
 using casac::record;
 using casac::variant;
@@ -22,7 +23,7 @@ using namespace casac;
 
 %}
 %typemap(in) int {
-  if(PyInt_Check($input)){
+  if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
      $1 = PyInt_AsLong($input);
   } else {
      PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
