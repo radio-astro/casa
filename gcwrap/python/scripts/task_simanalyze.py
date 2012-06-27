@@ -656,7 +656,7 @@ def simanalyze(
                             im.done()
                     ia.open(psfim)            
                     beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
+                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1][0],beamcs.findcoordinate("stokes")[1][0]],dropdeg=True)
                     nn = beam_array.shape
                     xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]

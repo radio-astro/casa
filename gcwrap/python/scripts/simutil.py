@@ -179,7 +179,7 @@ class simutil:
             if halt:
                 self.msg("can't interpret '"+str(s)+"' as a direction",priority="error")
             return False
-        if not me.measure(y):
+        if not me.measure(y,y['refer']):
             if halt:
                 self.msg("can't interpret '"+str(s)+"' as a direction",priority="error")
             return False
@@ -281,7 +281,7 @@ class simutil:
             highvalue=im_max
             lowvalue=im_min
         else:
-            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
+            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)#['histout']
             ii=0
             lowcounts=imhist['counts'][ii]
             while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
@@ -2038,7 +2038,7 @@ class simutil:
         ia.done()
         spc=cs.findcoordinate("spectral")
         if not spc[0]: return (0,0)
-        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")
+        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")[0]
         model_nchan=sh[spc['pixel']]
         return model_nchan,model_width
 
@@ -2055,8 +2055,8 @@ class simutil:
         stk=cs.findcoordinate("stokes")
         if not (dir[0] and spc[0] and stk[0]): return False
         if dir[1].__len__() != 2: return False
-        if type(spc[1]) == type([]): return False
-        if type(stk[1]) == type([]): return False
+        if spc[1].__len__() != 1: return False
+        if stk[1].__len__() != 1: return False
         # they have to be in the correct order too
         if stk[1]!=2: return False
         if spc[1]!=3: return False
@@ -2149,7 +2149,7 @@ class simutil:
         model_cell=""
         # look for direction coordinate, with two pixel axes:
         if in_dir[0]:
-            in_ndir = in_dir[0].__len__() 
+            in_ndir = in_dir[1].__len__() 
             if in_ndir != 2:
                 self.msg("Mal-formed direction coordinates in modelimage. Discarding and using first two pixel axes for RA and Dec.")
                 axmap[0]=0 # direction in first two pixel axes
@@ -2158,9 +2158,9 @@ class simutil:
                 axassigned[1]=0
             else:
                 # we've found direction axes, and may change their increments and direction or not.
-                dirax=in_dir[0]
+                dirax=in_dir[1]
                 axmap[0]=dirax[0]
-                axmap[1]=dirax[1]                    
+                axmap[1]=dirax[1]
                 axassigned[dirax[0]]=0
                 axassigned[dirax[1]]=0
                 if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
@@ -2168,7 +2168,7 @@ class simutil:
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
             dec = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[1]+1)]
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+            model_refdir= in_csys.referencecode(type="direction",list=False)[0]+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
             model_projection=in_csys.projection()['type']
             model_projpars=in_csys.projection()['parameters']
 
@@ -2251,10 +2251,12 @@ class simutil:
         model_width=""
         # look for a spectral axis:
         if in_spc[0]:
-            if type(in_spc[0]) == type(1) :
-                foo=in_spc[0]
-            else:
-                foo=in_spc[1][0]
+            #if type(in_spc[1]) == type(1) :
+            #    # should not come here after SWIG switch over
+            #    foo=in_spc[1]
+            #else:
+            foo=in_spc[1][0]
+            if in_spc[1].__len__() > 1:
                 self.msg("you seem to have two spectral axes",priority="warn")
             model_nchan=arr.shape[foo]
             axmap[3]=foo
@@ -2267,9 +2269,9 @@ class simutil:
             # grids it may trip things up
             # start is center of first channel.  for nch=1, that equals center
             model_center=model_start+0.5*(model_nchan-1)*model_width
-            model_width=str(model_width)+in_csys.units(type="spectral")
-            model_start=str(model_start)+in_csys.units(type="spectral")
-            model_center=str(model_center)+in_csys.units(type="spectral")
+            model_width=str(model_width)+in_csys.units(type="spectral")[0]
+            model_start=str(model_start)+in_csys.units(type="spectral")[0]
+            model_center=str(model_center)+in_csys.units(type="spectral")[0]
             add_spectral_coord=False
             if self.verbose: self.msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
         else:
@@ -2325,10 +2327,12 @@ class simutil:
             for i in range(out_nstk-1):
                 foo=foo+model_stokes[i+1]
             model_stokes=foo
-            if type(in_stk[1]) == type(1):
-                foo=in_stk[1]
-            else:
-                foo=in_stk[1][0]
+            #if type(in_stk[1]) == type(1):
+            #    # should not come here after SWIG switch over
+            #    foo=in_stk[1]
+            #else:
+            foo=in_stk[1][0]
+            if in_stk[1].__len__() > 1:
                 self.msg("you seem to have two stokes axes",priority="warn")                
             axmap[2]=foo
             axassigned[foo]=2
