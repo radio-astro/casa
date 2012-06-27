@@ -123,24 +123,24 @@ if ( LIBXML2_LIBRARY MATCHES "NOTFOUND$" )
    message( FATAL_ERROR "libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} could not be found. Please check!" )
 endif()
 message( STATUS "LIBXML2_LIBRARY = " ${LIBXML2_LIBRARY} ) 
-#set( ASDM_INCLUDE_DIR_OLD ${CASA_CODE_PATH}/alma/implement/ASDM
-#                          ${CASA_CODE_PATH}/alma/implement/Enumerations
-#                          ${CASA_CODE_PATH}/alma/implement/ASDMBinaries
-#                          ${CASA_CODE_PATH}/alma/implement/Enumtcl
+#set( ASDM_INCLUDE_DIR_OLD ${CASA_CODE_PATH}/alma/ASDM
+#                          ${CASA_CODE_PATH}/alma/Enumerations
+#                          ${CASA_CODE_PATH}/alma/ASDMBinaries
+#                          ${CASA_CODE_PATH}/alma/Enumtcl
 #                          ${LIBXML2_INCLUDE_DIR} )
 #set( ASDM_LIBRARY_OLD ${casaroot}/${arch}/lib/libalma${CMAKE_SHARED_LIBRARY_SUFFIX} 
 #                      ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
-#set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma_v3/implement/ASDM
-#                      ${CASA_CODE_PATH}/alma_v3/implement/Enumerations
-#                      ${CASA_CODE_PATH}/alma_v3/implement/ASDMBinaries
-#                      ${CASA_CODE_PATH}/alma_v3/implement/Enumtcl
+#set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma_v3/ASDM
+#                      ${CASA_CODE_PATH}/alma_v3/Enumerations
+#                      ${CASA_CODE_PATH}/alma_v3/ASDMBinaries
+#                      ${CASA_CODE_PATH}/alma_v3/Enumtcl
 #                      ${LIBXML2_INCLUDE_DIR} )
 #set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma_v3${CMAKE_SHARED_LIBRARY_SUFFIX}
 #                  ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
-set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma/implement/ASDM
-                      ${CASA_CODE_PATH}/alma/implement/Enumerations
-                      ${CASA_CODE_PATH}/alma/implement/ASDMBinaries
-                      ${CASA_CODE_PATH}/alma/implement/Enumtcl
+set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma/ASDM
+                      ${CASA_CODE_PATH}/alma/Enumerations
+                      ${CASA_CODE_PATH}/alma/ASDMBinaries
+                      ${CASA_CODE_PATH}/alma/Enumtcl
                       ${LIBXML2_INCLUDE_DIR} )
 if ( NOT ALMA_LIB_PATH )
    set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma${CMAKE_SHARED_LIBRARY_SUFFIX}
