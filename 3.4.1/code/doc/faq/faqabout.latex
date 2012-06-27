@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage{html}
+\pagestyle{empty}
+
+\externallabels{../../user/Utility}{../../user/Utility/labels.pl}
+\externallabels{../../user/General}{../../user/General/labels.pl}
+\externallabels{../../user/Display}{../../user/Display/labels.pl}
+\externallabels{../../user/Dish}{../../user/Dish/labels.pl}
+\externallabels{../../user/SynthesisRef}{../../user/SynthesisRef/labels.pl}
+\externallabels{../../user/ATNF}{../../user/ATNF/labels.pl}
+\externallabels{../../user/NFRA}{../../user/NFRA/labels.pl}
+\externallabels{../../user/NRAO}{../../user/NRAO/labels.pl}
+\externallabels{../../reference/Glish}{../../reference/Glish/labels.pl}
+\begin{document}
+
+
+{\large \textbf{Frequently Asked Questions About AIPS++}}
+
+\begin{enumerate}
+\item \textit{What is \textsf{AIPS++}}?
+
+\textsf{AIPS++} is the Astronomical Information Processing System.
+
+
+\item \textit{How was it developed?}
+
+By a \htmladdnormallink{Consortium}{../../project/consortium.html} of radio
+observatories. About 40 people in all contributed to the first release
+in 1999. The design was based on object-oriented techniques, and the
+implementation was in \textbf{C++} and a glue language called 
+\htmladdnormallink{Glish}{../../glish/glish.html}
+
+
+\item \textit{What does it do?}
+
+We quote the \htmladdnormallink{mission statement}{../../project/mission.html}
+
+\textit{A telescope requires post-processing software for calibration,
+editing, image formation, image enhancement, and analysis of images
+and other data streams. This software is an integral part of the radio
+telescope engineering. The Astronomical Information Processing System
+(\textsf{AIPS++}) project is designed to produce such a software product.}
+
+\textit{Although \textsf{AIPS++} is primarily targeted at radio astronomy, 
+it is
+anticipated that it will also be used in other branches of astronomy
+and for other applications in image processing and data analysis.}
+
+\item \textit{How is it related to \htmladdnormallink{AIPS}
+{http://www.cv.nrao.edu/aips/}?}
+
+\textsf{AIPS++} is the next generation. Little is in common
+with AIPS, besides some of the algorithms. Data structures,
+command language, algorithms, user interfaces, applicability
+have all been substantially improved relative to AIPS.
+
+\end{enumerate}
+
+
+If you find that the response is slow, documents are out of
+date, or you receive an error message,  it may help to have documentation served to you from a \htmladdnormallink{mirror site}{../../html/mirrors.html}
+
+Please E-mail any comments or questions about \textsf{AIPS++} to
+\texttt{aips2-request@nrao.edu}.
+
+
+
+
+
+
+Copyright 1995,1996,1997,1998,1999,2000 Associated Universities Inc.,
+Washington, D.C.
+  
+\end{document}

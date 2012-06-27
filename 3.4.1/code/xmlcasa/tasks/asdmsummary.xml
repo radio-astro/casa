@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- This is the parameter set for asdmsummary -->
+
+<task type="function" name="asdmsummary" category="information" visibility="experimental">
+
+  <shortdescription>Summarized description of an ASDM dataset.</shortdescription>
+
+  <description>Given an ASDM directory, this task will print informations about the content of the dataset contained in that directory (down to the level of a subscan).</description>
+
+  <input>
+
+    <param type="string" name="asdm" mustexist="true">
+      <description>Name of input ASDM directory</description>
+      <value></value>
+    </param>
+
+  </input>
+
+  <returns type="void"/>
+
+  <example>
+
+	The asdmsummary task prints to the CASA log a description of the content of an SDM dataset.
+	
+	Example:
+
+	asdmsummary(sdm='10C-119_sb3070258_1.55628.42186299768')
+
+	Prints information about the requested ASDM dataset to the CASA logger.
+
+        Keyword argument:
+
+        asdm -- Name of input ASDM directory.  
+               example: sdm='10C-119_sb3070258_1.55628.42186299768'
+	       	
+  </example>
+
+</task>
+
+</casaxml>

@@ -1,0 +1,389 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% JO 2012-04-19 Release 3.4.0 edits
+
+\chapter[Appendix: Obtaining, Installing, and Customizing CASA]{Obtaining,
+  Installing, and Customizing CASA}
+\label{chapter:install}
+
+\section{Installation On Linux}
+\label{section:install.script}
+
+To install CASA for Linux, we have packaged up a binary distribution
+of CASA which is available as a downloadable tar file. We believe this
+binary distribution works with most Linux distributions. While the
+binary distribution is the only supported public distribution, most
+CASA developers use RPMs for many third-party packages installed with
+yum to do development on RedHat Enterprise Linux. Installing the
+developer RPMs requires root access and we only provide developer
+support for organizations which have a cooperative agreement to
+participate in the development of CASA. We are currently working on
+the development of a distribution for developers similar to our
+standard binary distribution, but it is not yet ready for testing.
+
+
+\subsection{Installation}
+
+You do not have to have root or sudo permission, you can easily
+install CASA, delete it, move it, and it works for many versions of
+Linux. The one caveat is that CASA on Linux currently will not run if
+the Security-Enhanced Linux option of the linux operating system is
+set to enforcing. For the non-root install to work. SElinux must be
+set to disabled or permissive (in /etc/selinux/config) or you must run
+(as root):
+
+\small
+\begin{verbatim}
+setsebool -P allow_execheap=1
+\end{verbatim}
+\normalsize
+
+Otherwise, you will encounter errors like:
+
+
+\small
+\begin{verbatim}
+casapy: error while loading shared libraries: /opt/casa/casapy-20.0.5653-001/lib/liblapack.so.3.1.1: cannot restore segment prot after reloc: Permission denied
+\end{verbatim}
+\normalsize
+
+The non-root installation is thought to work on a wide variety of
+linux platforms, see Sect.\,\ref{section:intro.obtaining} for the
+latest supported OSs.
+
+\subsubsection{Using more than one Linux version of CASA}
+Up to CASA 3.3.0, CASA .rpm files prohibited installing more than one CASA release at a time.  Starting with CASA 3.4.0, CASA .rpm files allow previously installed CASA releases to remain installed.  
+
+To start a specific CASA version, type 
+
+\small
+\begin{verbatim}
+casapy --release <VERSION>
+\end{verbatim}
+\normalsize
+or 
+\small
+\begin{verbatim}
+casapy -r <VERSION>
+\end{verbatim}
+\normalsize
+
+where <VERSION> is a placeholder for the CASA version to be invoked, e.g. 3.3.0. 
+
+Also, starting with CASA 3.4.0, the programs asdm2MS, casabrowser,
+casalogger, casaplotms, casapy, casapyinfo, and casaviewer all take
+the two new command line options: {\tt -r} and {\tt --release}.  These options
+allow users to select a CASA program to run from the installed CASA
+releases.
+
+
+
+
+\subsection{Unsupported platforms}
+
+The non-root install may work on other platforms not listed, please
+let us know if you find that this binary distribution of CASA works on
+other linux platforms. Also note, that the plotting tasks like plotxy
+and plotcal are the ones that typically give problems for new
+platforms, so a check of these after attempting an unsupported
+platform installation is advisable.
+
+
+\subsection{Download \& Unpack}
+
+You can download the distribution tar file from
+
+{\url http://casa.nrao.edu/casa\_obtaining.shtml}
+
+This directory will contain two tar files one will be the 32-bit
+version of CASA and the other will be the 64-bit version of CASA. The
+file name of the 64-bit version ends with -64b.tar.gz. After
+downloading the appropriate tar file, untar it with
+
+\small
+\begin{verbatim}
+tar -zxf casapy-*.tar.gz
+\end{verbatim}
+\normalsize
+
+This will extract a directory with the same basename as the tar
+file. Change to that directory and add it to your path with, for
+example, 
+
+\small
+\begin{verbatim}
+PATH=`pwd`:\$PATH.
+\end{verbatim}
+\normalsize
+
+After that, you should be able to start CASA by running
+\small
+\begin{verbatim}
+casapy
+\end{verbatim}
+\normalsize
+
+
+\section{Installation on Mac OS}
+
+CASA for Macintosh is distributed as self-contained Macintosh
+application. For installation purposes, this means that you can
+install CASA by simply dragging the application to your hard disk. It
+should be as easy as copying a file.
+
+\begin{enumerate}
+   \item Download the CASA disk image for your OS version from our
+   download site {\url http://casa.nrao.edu/casa\_obtaining.shtml}
+   \item Open the disk image file (if your browser does not do so automatically).
+   \item Drag the CASA application to the Applications folder of your hard disk.
+   \item Eject the CASA disk image.
+   \item Double-click the CASA application to run it for the first time. This ensures everything is properly updated if you had installed a previous version. 
+\end{enumerate}
+
+You may need to unload the dbus before the copy will work
+
+\small
+\begin{verbatim}
+launchctl remove org.freedesktop.dbus-session
+launchctl remove org.freedesktop.dbus-system
+\end{verbatim}
+\normalsize
+
+Versions after 12115 are 64bit only and will not work on older mac
+intel machines The first time you launch the CASA application, it will
+prompt you to set up an alias to the casapy command. You will be taken
+through the process of creating several casapy symbolic links, it is
+advisable to do so as this will allow you to run casapy from a
+terminal window by typing casapy. Additionally, the viewer
+(casaviewer), table browser (casabrowser), plotms (casaplotms), and
+buildmytasks will also be available via the command line. Creating the
+symbolic links will require that you have administrator privileges.
+
+
+\subsubsection{Using more than one Mac version of CASA}
+By dragging the CASA.app into the Applications folder, any previous
+version of CASA will be replaced. If one would like to keep older
+versions, one can simply rename them, e.g., to CASA-3.3.0.app. Double
+clicking any of the CASA*.app applications will prompt to update the
+symlinks to that specific CASA version. So any startup of {\tt
+  casapy}, {\tt casaviewer}, {\tt casaplotms} will point to that
+version. If one decides to switch to a different version, just double
+click the respective CASA*.app and follow the instructions to update
+the symlinks.
+
+
+
+\section{Startup}
+\label{section:install.startup}
+
+in a terminal type\\
+\small
+\begin{verbatim}
+casapy
+\end{verbatim}
+\normalsize
+
+and the world of CASA will open its doors for you. 
+
+There are a number of options to {\tt casapy} (see {\tt casapy --help}):
+Options are: 
+\small
+\begin{verbatim}
+   --rcdir     directory
+   --logfile   logfilename              specify the name of the log file if other than casapy-DATE.log
+   --maclogger                          will use the Mac Console program for the logger
+   --log2term                           output the logger text in the terminal
+   --nologger                           run without launching the logger
+   --nologfile                          does not create a logfile 
+   --nogui                              will not open the logger GUI 
+   --colors=[NoColor|Linux|LightBG]     selects color theme for prompt task inputs
+   --noipython                          does not launch ipython (useful when combined with the -c option)
+   --release <VERSIOn>                  launches CASA version <VERSION> when installed as Linux rpm
+   -r <VERSION>                         alias for --release
+   -c filename-or-expression            execute a CASA python script from the command line 
+   --help                               print this text and exit
+\end{verbatim}
+\normalsize
+
+E.g. you can execute a CASA script {\tt script.py} directly with the command
+\small
+\begin{verbatim}
+casapy -c script.py
+\end{verbatim}
+\normalsize
+
+
+You can also launch the {\tt plotms} and {\tt viewer} GUIs separately
+without starting CASA itself. To do so, type:
+
+\small
+\begin{verbatim}
+casaplotms
+\end{verbatim}
+\normalsize
+to launch {\tt plotms} and 
+\small
+\begin{verbatim}
+casaviewer
+\end{verbatim}
+\normalsize
+for the {\tt viewer}.
+
+
+
+
+\section{Startup Customization}
+\label{section:install.customization}
+
+There are two initialization files that are loaded upon startup. The
+first is loaded very early in the startup of casapy:
+
+\small
+\begin{verbatim}
+	~/.casa/prelude.py
+\end{verbatim}
+\normalsize
+
+This allows for limited customization of the casapy environment,
+e.g. setting the path to an alternate logger. The second startup file
+should be used for most purposes:
+
+\small
+\begin{verbatim}
+	~/.casa/init.py
+\end{verbatim}
+\normalsize
+
+This file is loaded just before the casapy prompt is display. This is
+the place where users can load their own python modules and casa
+tasks. For example ~/.casa/init.py might contain:
+
+\small
+\begin{verbatim}
+	import os
+	sys.path.insert(1,os.environ['HOME']+os.sep+"python")
+	import analysisUtils as aU
+\end{verbatim}
+\normalsize
+
+and analysisUtils.py might contain:
+
+\small
+\begin{verbatim}
+	import numpy as np
+	from mpfit import mpfit
+	from pylab import *
+	from numpy.fft import fft
+	from scipy import polyfit
+	import taskinit as ti
+	from importasdm import importasdm
+ \end{verbatim}
+\normalsize
+
+
+Many options can also be set in the file 
+
+
+\small
+\begin{verbatim}
+~/.casarc
+\end{verbatim}
+\normalsize
+
+E.g. 
+
+\small
+\begin{verbatim}
+#
+# Set these so that bug(), ask(), etc. know who you are
+#
+userinfo.name:  Sheila User
+userinfo.email: suser@nrao.edu
+userinfo.org:   NRAO
+
+#NOTE: Fill this value in as appropriate - the units are MB
+#It is important that you not set this value larger than your actual
+#physical memory
+#system.resources.memory: 2000
+#help.popup.type: mb3long
+
+#catalog
+catalog.gui.auto:       T
+catalog.confirm:        T
+catalog.view.PostScript:        ghostview
+catalog.edit.ascii:             xterm -e vi
+
+#logger
+#logger.file:    ./aips++.log
+#logger.height:  12
+logger.default: screen
+
+
+#progress meter GUI pop-ups - disable
+progress.show: F
+
+#toolmanager - disable
+toolmanager.gui.auto:   F
+
+
+#Use current working directory for cache/scratch files
+user.aipsdir: .
+user.cache: .
+user.directories.work:  .
+user.initfiles: almainit.g
+
+#viewer
+display.axislabels: on
+display.colormaps.defaultcolormap: Hot Metal 1
+
+#development
+
+#ms.async: ddd ./ms %s
+\end{verbatim}
+\normalsize
+
+
+\section{Updating the data repository}
+\label{section:install.datarep}
+
+
+Each CASA release for linux comes with an up to date data repository
+(containing information such as observatory coordinates, calibrator
+models, leap second tables, etc.). However, the files that make up the
+data repository are updated regularly. Therefore, if you install (or
+have installed) a release that is a few weeks to a month old, it makes
+sense to update the data repository because it is very easy. On a Mac,
+the data repository is updated every time you run 'casapy'. For Linux,
+you just change to the {\tt 'data} directory in the installation root and
+run {\tt "svn update"}. This will sync your local copy of the CASA data
+repository with the repository maintained by the CASA group, e.g. 
+
+\small
+\begin{verbatim}
+cd /usr/lib64/casapy/data/
+svn update
+\end{verbatim}
+\normalsize
+
+will start syncing:
+
+\small
+\begin{verbatim}
+bash-3.2$ svn update
+U    geodetic/IERSeop97/table.f0
+U    geodetic/IERSeop97/table.dat
+U    geodetic/IERSeop97/table.lock
+U    geodetic/Observatories/table.f0
+U    geodetic/Observatories/table.f1
+U    geodetic/Observatories/table.dat
+...
+\end{verbatim}
+\normalsize
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
