@@ -216,12 +216,13 @@ class ImageTest:
             resid = pylab.array([])
         body2=[]
         fit_results = a['results']
+        tostr=lambda a: str(a[0]) if (type(a)==list) else str(a)
         if(fit_results.has_key('component0')):
-            ra = self.qaTool.time(fit_results['component0']['shape']['direction']['m0'])
-            dec = self.qaTool.angle(fit_results['component0']['shape']['direction']['m1'])
-            bmaj= self.qaTool.angle(fit_results['component0']['shape']['majoraxis'], form='dig2')
-            bmin = self.qaTool.angle(fit_results['component0']['shape']['minoraxis'], form='dig2')
-            bpa = self.qaTool.angle(fit_results['component0']['shape']['positionangle'])
+            ra = tostr(self.qaTool.time(fit_results['component0']['shape']['direction']['m0']))
+            dec = tostr(self.qaTool.angle(fit_results['component0']['shape']['direction']['m1']))
+            bmaj= tostr(self.qaTool.angle(fit_results['component0']['shape']['majoraxis'], form='dig2'))
+            bmin = tostr(self.qaTool.angle(fit_results['component0']['shape']['minoraxis'], form='dig2'))
+            bpa = tostr(self.qaTool.angle(fit_results['component0']['shape']['positionangle']))
             flux = str('%4.2f'%fit_results['component0']['flux']['value'][0])+fit_results['component0']['flux']['unit']
             result.append([ra, dec, bmaj, bmin, bpa, flux])
             ss='fit:\testimated center: %s  %s\n'%(ra,dec)+'\tMajAxis : %s  \tMinAxis: %s \tPosAng: %s'%(bmaj, bmin, bpa)+' flux= '+flux

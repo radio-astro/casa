@@ -1,4 +1,4 @@
-import casac
+from casac import casac
 from taskinit import casalog
 from imageTest import * 
 from visTest import * 
@@ -17,9 +17,9 @@ import cProfile
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
-imager = casac.imager
-image = casac.image
-quantity=casac.Quantity
+imager = casac.imager()
+image = casac.image()
+quantity=casac.quanta()
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 

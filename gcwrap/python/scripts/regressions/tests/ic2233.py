@@ -1,7 +1,7 @@
-import casac
+from casac import casac
 from locatescript import copydata
 
-quantity=casac.Quantity
+quantity=casac.quanta()
 im = casac.imager()
 ia = casac.image()
 
