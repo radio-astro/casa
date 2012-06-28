@@ -41,6 +41,7 @@
 #include <measures/Measures/MFrequency.h>
 #include <casa/BasicSL/String.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
+#include <tables/Tables/BaseTable.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -121,8 +122,14 @@ public:
   { return hdu_p->nextkw();}
 
   // Read the next group
-  Int read()
-  { return pf ? pf->read() : ( pl ? pl->read() : ps->read());}
+  Int read() {
+     if (pf) return pf->read(); 
+     else if (pl) return pl->read(); 
+     else if (ps) return ps->read(); 
+     else if (pb) return pb->read(); 
+     else cout << "can not read the table" << endl;
+     return 0;
+  }
 
 private:
   HeaderDataUnit* hdu_p;
@@ -257,10 +264,6 @@ private:
 // introduced by DBCON.
 // </synopsis>
 
-// <todo asof="1999/08/16">
-//   <li> So far we interpret AN, FQ and SU tables only
-// </todo>
-
 class MSFitsInput
 {
   // This is an implementation helper class used to store 'local' data
@@ -295,6 +298,42 @@ protected:
   void setupMeasurementSet(const String& MSFileName, Bool useTSM=True,
                Int obsType = MSTileLayout::Standard);
 
+  ///////////////fillers for primary table form uvfits//////////////////////
+  // Read a binary table extension of type AIPS AN and create an antenna table
+  void fillAntennaTable(BinaryTable& bt);
+
+  // Read a binary table extension and update history table
+  void fillHistoryTable(ConstFitsKeywordList& kwl);
+
+  // Read a binary table extension and update history table
+  void fillObservationTable(ConstFitsKeywordList& kwl);
+
+  //extract axis information
+  void getAxisInfo(ConstFitsKeywordList&);
+
+  //extract axis information
+  void sortPolarizations();
+
+  void fillPolarizationTable();
+
+  //verify that the fits contains visibility data
+  void checkRequiredAxis();
+
+  void fillSpectralWindowTable(BinaryTable& bt);
+
+  // fill Field table 
+  void fillFieldTable(BinaryTable& bt);
+
+  void fillMSMainTable(BinaryTable& bt);
+
+  void fillPointingTable();
+
+  void fillSourceTable();
+
+  // fill the Feed table with minimal info needed for synthesis processing
+  void fillFeedTable();
+
+  ///////////////fillers for primary table form uvfits//////////////////////
   // Fill the Observation and ObsLog tables
   void fillObsTables();
 
@@ -303,9 +342,6 @@ protected:
   void fillMSMainTableColWise(Int& nField, Int& nSpW);
   //else do it row by row
   void fillMSMainTable(Int& nField, Int& nSpW);
-
-  // Read a binary table extension of type AIPS AN and create an antenna table
-  void fillAntennaTable(BinaryTable& bt);
 
   // fill spectralwindow table from FITS FQ table + header info
   void fillSpectralWindowTable(BinaryTable& bt, Int nSpW);
@@ -318,9 +354,6 @@ protected:
 
   // fill Field table from header (single source fits)
   void fillFieldTable(Int nField);
-
-  // fill the Feed table with minimal info needed for synthesis processing
-  void fillFeedTable();
 
   // fill the Pointing table (from Field table, all antennas are assumed
   // to point in the field direction) and possibly the Source table.
@@ -380,6 +413,7 @@ private:
   Bool useAltrval;
   Vector<Double> chanFreq_p;
   Bool newNameStyle;
+  Vector<Double> obsTime;
 };
 
 
