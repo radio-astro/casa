@@ -285,7 +285,8 @@ image* image::imagecalc(
 ) {
 	try {
 		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
-		return new image(ia->imagecalc(outfile, pixels, overwrite));
+	        return  new image(ia->imagecalc(outfile, pixels, overwrite));
+		
 	}
 	catch (AipsError x) {
 		RETHROW(x);
@@ -298,6 +299,7 @@ image* image::imageconcat(
 	const bool overwrite
 ) {
 	try {
+		image *rstat(0);
 		Vector<String> inFiles;
 		if (infiles.type() == ::casac::variant::BOOLVEC) {
 			inFiles.resize(0); // unset
@@ -312,11 +314,14 @@ image* image::imageconcat(
 			*_log << "Unrecognized infiles datatype" << LogIO::EXCEPTION;
 		}
 		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
-		return new image(
+		rstat = new image(
 			ia->imageconcat(
 				outfile, inFiles, axis,	relax, tempclose, overwrite
 			)
 		);
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
 	}
 	catch (AipsError x) {
 		RETHROW(x);
@@ -740,6 +745,7 @@ image* image::convolve2d(
 	try {
 		*_log << _ORIGIN;
 		if (detached()) {
+		        throw AipsError("Unable to create image");
 			return 0;
 		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
@@ -1665,6 +1671,7 @@ image* image::pbcor(
 	const bool stretch
 ) {
 	if (detached()) {
+		throw AipsError("Unable to create image");
 		return 0;
 	}
 	try {
@@ -1842,6 +1849,7 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
+		throw AipsError("Unable to create image");
 		return 0;
 	}
 	try {
@@ -1858,7 +1866,10 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			)
 		);
 		// Return handle to new file
-		return new image(pImOut.get());
+		casac::image *rstat = new image(pImOut.get());
+		if(!rstat)
+			throw AipsError("Unable create image");
+		return rstat;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
@@ -2426,6 +2437,7 @@ bool image::putregion(const ::casac::variant& v_pixels,
 ) {
 	*_log << _ORIGIN;
 	if (detached()) {
+		throw AipsError("Unable to create image");
 		return 0;
 	}
 	try {
@@ -2464,6 +2476,7 @@ image* image::regrid(
 	try {
 		*_log << _ORIGIN;
 		if (detached()) {
+		        throw AipsError("Unable to create image");
 			return 0;
 		}
 		std::auto_ptr<Record> coordinates(toRecord(csys));
@@ -2501,6 +2514,7 @@ image* image::regrid(
 	try {
 		*_log << _ORIGIN;
 		if (detached()) {
+		        throw AipsError("Unable to create image");
 			return 0;
 		}
 		Vector<Int> shape(inshape);
@@ -2597,6 +2611,7 @@ image::restoringbeam() {
 ) {
 	*_log << _ORIGIN;
 	if (detached()) {
+		throw AipsError("Unable to create image");
 		return 0;
 	}
 	try {
@@ -3103,6 +3118,7 @@ bool image::twopointcorrelation(
 	try {
 		*_log << LogOrigin("image", __FUNCTION__);
 		if (detached()) {
+		        throw AipsError("Unable to create image");
 			return 0;
 		}
 		std::auto_ptr<Record> regionRec(toRecord(region));
@@ -3379,6 +3395,7 @@ image* image::newimagefromimage(
 	const bool dropdeg, const bool overwrite
 ) {
 	try {
+		image *rstat(0);
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
@@ -3400,12 +3417,14 @@ image* image::newimagefromimage(
 			*_log << LogIO::SEVERE
 					<< "Don't support region masking yet, only valid LEL "
 					<< LogIO::POST;
+			throw AipsError("Unable to create image");
 			return 0;
 		}
 		else {
 			*_log << LogIO::SEVERE
 					<< "Mask is not understood, try a valid LEL string "
 					<< LogIO::POST;
+			throw AipsError("Unable to create image");
 			return 0;
 		}
 
@@ -3417,10 +3436,14 @@ image* image::newimagefromimage(
 			)
 		);
 		if (outIm.get() != 0) {
-			return new image(outIm.get());
+			rstat = new image(outIm.get());
 		} else {
-			return new image();
+			rstat = new image();
 		}
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
+
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3431,6 +3454,7 @@ image* image::newimagefromimage(
 
 image* image::newimagefromfile(const std::string& fileName) {
 	try {
+		image *rstat(0);
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
@@ -3440,10 +3464,13 @@ image* image::newimagefromfile(const std::string& fileName) {
 			newImage->newimagefromfile(fileName)
 		);
 		if (outIm.get() != 0) {
-			return new image(outIm.get());
+			rstat =  new image(outIm.get());
 		} else {
-			return new image();
+			rstat =  new image();
 		}
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
@@ -3452,7 +3479,10 @@ image* image::newimagefromfile(const std::string& fileName) {
 }
 
 image* image::newimage(const string& fileName) {
-	return newimagefromfile(fileName);
+	image *rstat = newimagefromfile(fileName);
+	if (!rstat)
+			throw AipsError("Unable to create image");
+	return rstat;
 }
 
 image* image::newimagefromarray(
@@ -3461,6 +3491,7 @@ image* image::newimagefromarray(
 	const bool overwrite, const bool log
 ) {
 	try {
+		image *rstat(0);
 		if (_log.get() != 0) {
 			_log.reset(new LogIO());
 		}
@@ -3510,10 +3541,13 @@ image* image::newimagefromarray(
 			)
 		);
 		if (outIm.get() != 0) {
-			return new image(outIm.get());
+			rstat =  new image(outIm.get());
 		} else {
-			return new image();
+			rstat =  new image();
 		}
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3528,6 +3562,7 @@ image* image::newimagefromshape(
 	const bool overwrite, const bool log
 ) {
 	try {
+		image *rstat(0);
 		if (_log.get() != 0) {
 			_log.reset(new LogIO());
 		}
@@ -3541,10 +3576,13 @@ image* image::newimagefromshape(
 			)
 		);
 		if (outIm.get() != 0) {
-			return new image(outIm.get());
+			rstat =  new image(outIm.get());
 		} else {
-			return new image();
+			rstat =  new image();
 		}
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
@@ -3558,6 +3596,7 @@ image* image::newimagefromfits(
 	const bool zeroBlanks, const bool overwrite
 ) {
 	try {
+		image *rstat(0);
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
@@ -3570,10 +3609,13 @@ image* image::newimagefromfits(
 			)
 		);
 		if (outIm.get() != 0) {
-			return new image(outIm.get());
+			rstat = new image(outIm.get());
 		} else {
-			return new image();
+			rstat = new image();
 		}
+		if(!rstat)
+			throw AipsError("Unable to create image");
+		return rstat;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;

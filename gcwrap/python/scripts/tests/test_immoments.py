@@ -1168,8 +1168,7 @@ class immoment_test2(unittest.TestCase):
                         ret = False
                 myia.open(outfile)
                 if (atype):
-                    print str(myia.shape()) + " " + str(exp)
-                    self.assertTrue(myia.shape() == exp)
+                    self.assertTrue(myia.shape().tolist() == exp)
                 else:
                     self.assertFalse(ret)
                 myia.done()

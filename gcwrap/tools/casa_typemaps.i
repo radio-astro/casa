@@ -26,6 +26,7 @@ using namespace casac;
   if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
      $1 = PyInt_AsLong($input);
   } else {
+     cerr << "Failed here " << $input->ob_type->tp_name << endl;
      PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
      return NULL;
   }

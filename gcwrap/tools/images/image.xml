@@ -6446,7 +6446,7 @@ ia.close()
 
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string" direction="in" name="infile" mustexist="True">
      <description>image file name</description>
      </param>
 </input>
