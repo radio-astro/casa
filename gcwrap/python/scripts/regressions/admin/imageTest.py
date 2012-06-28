@@ -1,4 +1,4 @@
-import casac
+from casac import casac
 from tw_utils import *
 import os
 from time import *
@@ -190,8 +190,8 @@ class ImageTest:
     def bmodel(self, XY=None, plane=0): 
         shp=self.imTool.shape()
         result=[]
-        blc=[0,0,plane,0]
-        trc=[shp[0]-1, shp[1]-1, plane, 0]
+        blc=[int(0),int(0),int(plane),int(0)]
+        trc=[int(shp[0]-1), int(shp[1]-1), int(plane), int(0)]
         reg=self.rgTool.box(blc=blc, trc=trc)
         dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
         self.show(dat)
@@ -776,7 +776,7 @@ class ImageTest:
         s='fit at [%d,%d]\n\tFWHM: %f \n\peak: %f \t with errors: %f, %f '%(x0,y0, result[0][2], result[0][0], result[1][2], result[1][0]) 
         print s
         if self.write: self.body2.append('<pre>%s</pre>'%s)
-        data=self.imTool.getchunk(blc=[x0,y0], trc=[x0,y0], dropdeg=True)
+        data=self.imTool.getchunk(blc=[int(x0),int(y0)], trc=[int(x0),int(y0)], dropdeg=True)
         pylab.clf()
         pylab.plot(data,'r-')
         pylab.plot(theFit, 'bo')
