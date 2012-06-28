@@ -227,6 +227,20 @@ public:
     ssize_t operator()  (uInt index) const;
     // </group>
 
+    // make an IPosition by using only the specified elements of the current
+    // IPosition.  all values of <src>axes</src> must be less than
+    // the number of elements of the current object.
+    // Examples:
+    // IPosition ipos(4, 11, 12, 13, 14);
+    // // ex1 is IPosition(3, 11, 12, 13);
+    // IPosition ex1 = ipos(IPosition(3,0,1,2);
+    // // ex2 is IPosition(3, 12, 11)
+    // IPosition ex2 = ipos(IPosition(2,2,1);
+    // // ex3 is IPosition(4,14,14,14,14)
+    // IPosition ex3 = ipos(IPosition(4,3,3,3,3);
+
+    IPosition operator() (const IPosition& axes) const;
+
     // Get the storage.
     const ssize_t *storage() const;
 
