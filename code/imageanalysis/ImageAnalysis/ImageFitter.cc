@@ -835,15 +835,15 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
  
                 if (! isPointSource2) {
                     if (isPointSource1) {
+                        lsize = bestFit;
+                    }
+                    else {
                         lsize[0] = lsize[0].getValue() >  bestFit[0].getValue()
                             ? lsize[0]
                             : bestFit[0];
                         lsize[1] = lsize[1].getValue() >  bestFit[0].getValue()
                             ? lsize[1]
                             : bestFit[1];
-                    }
-                    else {
-                        lsize = bestFit;
                     }
                 }
                 if (! isPointSource1 || ! isPointSource2) {
