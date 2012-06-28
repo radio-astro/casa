@@ -52,7 +52,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<description>Select data based on time range</description>
 		<value></value>
 	</param>
-
+        <!--
 	<param type="int" name="nchan">
 		<description>Number of channels to select (superceded by spw)</description>
 		<value>-1</value>
@@ -62,8 +62,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<description>Start channel (superceded by spw)</description>
 		<value>0</value>
 	</param>
+        nchan ** Number of channels to select (superceded by spw)
+                default: =&gt; -1 (all)
+        start ** Start channel (superceded by spw)
+                default =&gt; 0;
+        -->
 
-	<param type="int" name="width">
+	<param type="int" name="avgchan">
 		<description>Channel averaging width (value > 1 indicates averaging)</description>
 		<value>1</value>
 	</param>
@@ -160,15 +165,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
                timerange='09:44:00' data within one integration of time
                timerange='&gt;10:24:00' data after this time
-        nchan -- Number of channels to select (superceded by spw)
-                default: =&gt; -1 (all)
-        start -- Start channel (superceded by spw)
-                default =&gt; 0;
-        width -- Channel averaging width (value &gt; 1 indicates averaging)
-                default =&gt;1; example: width=3
+        avgchan -- Channel averaging width (value &gt; 1 indicates averaging)
+                default =&gt;1; example: avgchan=3
                 output data will average channels in groups of three.
-        writesyscal -- Write GC and TY tables
-                default: =&gt; False; Not yet available
         multisource -- Write in multi-source format
                 default: =&gt; True;
                    false if one source is selected
@@ -189,6 +188,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         not yet support spectral windows with different widths.
         writestation -- Write station name instead of antenna name
                 default: True;
+        writesyscal -- Write GC and TY tables
+                default: =&gt; False; Not yet available
         async --  Run asynchronously
                 default = False;
 

@@ -201,8 +201,7 @@ bool ms::ismultims()
       rstat = (itsMS->tableInfo().subType() == "CONCATENATED");
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -225,8 +224,7 @@ std::vector<std::string> ms::getreferencedtables()
 
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: "
-            << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -372,6 +370,8 @@ try {
    if(dummy)
       rstat=true;
       */
+
+
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -469,7 +469,7 @@ ms::command(const std::string& msfile, const std::string& command, const bool no
 bool
 ms::tofits(const std::string& fitsfile, const std::string& column,
            const ::casac::variant& field, const ::casac::variant& spw,
-           const int nchan, const int start, const int width,
+           const int width,
            const ::casac::variant& baseline, const std::string& time,
            const ::casac::variant& scan, const ::casac::variant& uvrange,
            const std::string& taql, const bool writesyscal,
@@ -489,32 +489,41 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 String scanS=toCasaString(scan);
 	 String uvrangeS=toCasaString(uvrange);
 	 String taqlS=toCasaString(taql);
-	 Int inchan=-1;
+	 Int inchan=1;
 	 Int istart=0;
-	 Int iwidth=1;
-	 Record selrec=itsMS->msseltoindex(spwS, fieldS);
+         Int istep=1;
+         Int iwidth=width;
+         //if (spwS==String(""))
+         //    spwS="0";
+	 Record selrec;
+         try {
+             selrec=itsMS->msseltoindex(spwS, fieldS);
+         }
+         catch (AipsError x) {
+             Table::relinquishAutoLocks(True);
+             *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+             RETHROW(x);
+         }
 	 Vector<Int>fldids=selrec.asArrayInt("field");
 	 Vector<Int>spwids=selrec.asArrayInt("spw");
 	 
-	 //use nchan if defined else use caret-column syntax of  msselection 
-	 if(nchan>0){
-	   inchan=nchan;
-	   iwidth=width;
-	   istart=start;
-	 }
-	 else{
-	   Matrix<Int> chansel=selrec.asArrayInt("channel");
-	   if(chansel.nelements() !=0){
-	     iwidth=chansel.row(0)(3);
-	     if(iwidth < 1)
-	       iwidth=1;
-	     istart=chansel.row(0)(1);
-	     inchan=(chansel.row(0)(2)-istart+1)/iwidth;
-	     if(inchan<1)
-	       inchan=1;	  
-	     
-	   } 
-	 }
+	 Matrix<Int> chansel=selrec.asArrayInt("channel");
+         //cout << "chansel=" << chansel << endl;
+	 if(chansel.nelements() !=0){
+	    istep=chansel.row(0)(3);
+	    if(istep < 1)
+	      istep=1;
+	    istart=chansel.row(0)(1);
+	    inchan=(chansel.row(0)(2)-istart+1)/istep;
+	    if(inchan<1) {
+	      inchan=1;	  
+              istep=1;
+            }
+	 } 
+         if (iwidth < 1)
+            iwidth = 1;
+         if (iwidth > inchan)
+            iwidth = inchan;
 
 	 subselect = mssSetData(*itsMS, *mssel, "", timeS, baselineS, fieldS,
 				  spwS, uvrangeS, taqlS, "", scanS);
@@ -541,11 +550,13 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     delete mssel; 
            mssel = new MeasurementSet(*itsMS);
          }
+
+         MeasurementSet selms(*mssel);
  
-         if (!MSFitsOutput::writeFitsFile(fitsfile, *mssel, column, istart,
-                                          inchan, iwidth, writesyscal,
+         if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
+                                          inchan, istep, writesyscal,
                                           multisource, combinespw,
-                                          writestation, 1.0, padwithflags)) {
+                                          writestation, 1.0, padwithflags, iwidth)) {
            *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
          }
@@ -658,8 +669,7 @@ ms::getscansummary(::casac::record& scansummary)
       rstat = True;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -684,8 +694,7 @@ ms::getspectralwindowinfo(::casac::record& spwSummary)
       rstat = True;
     }
   } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-            << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -2156,8 +2165,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	}
 	rstat = True;
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		<< LogIO::POST;
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	Table::relinquishAutoLocks(True);
 	RETHROW(x);
     }
@@ -2214,8 +2222,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	}
 	rstat = True;
     } catch (AipsError x) {
-	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-		<< LogIO::POST;
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	Table::relinquishAutoLocks(True);
 	RETHROW(x);
     }
@@ -2615,8 +2622,7 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
                                   adddefaultsortcolumns);
      }
    } catch (AipsError x) {
-     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-             << LogIO::POST;
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      Table::relinquishAutoLocks(True);
      RETHROW(x);
    }
@@ -2756,8 +2762,7 @@ ms::fillbuffer(const std::string& item, const bool ifraxis)
      if(!detached())
         rstat =  itsFlag->fillDataBuffer(item, ifraxis);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2777,8 +2782,7 @@ ms::diffbuffer(const std::string& direction, const int window)
         retval = fromRecord(daRec);
 	}
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2794,8 +2798,7 @@ ms::getbuffer()
    if(!detached())
       retval = fromRecord(itsFlag->getDataBuffer());
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
  }
@@ -2862,8 +2865,7 @@ ms::clearbuffer()
      if(!detached())
         rstat =  itsFlag->clearDataBuffer();
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2894,8 +2896,7 @@ bool ms::continuumsub(const ::casac::variant& field,
     *itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;  
     rstat = True;
  } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	       << LogIO::POST;
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
  }
@@ -3041,21 +3042,20 @@ ms::uvsub(Bool reverse)
      //   (no-op if CORRECTED_DATA already present)
      VisSetUtil::addScrCols(*itsMS,False,True,True,False);
 
-
      // Open VisSet w/out triggering scr cols
      //  because CORRECTED_DATA has already been added above and
      //  MODEL_DATA is either present or automatic in VSU::UVSub
      Block<int> noSort;
      Matrix<Int> allChannels;
      Double intrvl = 0;
+
      VisSet vs(*itsMS, noSort, allChannels,False, intrvl, False,False);
      VisSetUtil::UVSub(vs, reverse);
 
      rstat = True;
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
@@ -3200,8 +3200,7 @@ ms::moments(const std::vector<int>& moments,
      }
   }
   catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
