@@ -814,7 +814,42 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 
 		if(fitSuccess) {
 			if (isPointSource) {
+                Vector<Quantity> largest(3);
+                largest[0] = maj + emaj;
+                largest[1] = min + emin;
+                largest[2] = pa - epa;
 				size << "    Component is a point source" << endl;
+                Bool isPointSource1 = ImageUtilities::deconvolveFromBeam(
+			        bestFit[0], bestFit[1], bestFit[2], fitSuccess,
+                    *_getLog(), largest, beam
+                );
+                Vector<Quantity> lsize(3, 0);
+                if (! isPointSource1) {
+                    lsize = bestFit;
+                }
+                largest[2] = pa + epa;
+                Bool isPointSource2 = ImageUtilities::deconvolveFromBeam(
+                    bestFit[0], bestFit[1], bestFit[2], fitSuccess,
+                    *_getLog(), largest, beam
+                );
+ 
+                if (! isPointSource2) {
+                    if (isPointSource1) {
+                        lsize[0] = lsize[0].getValue() >  bestFit[0].getValue()
+                            ? lsize[0]
+                            : bestFit[0];
+                        lsize[1] = lsize[1].getValue() >  bestFit[0].getValue()
+                            ? lsize[1]
+                            : bestFit[1];
+                    }
+                    else {
+                        lsize = bestFit;
+                    }
+                }
+                if (! isPointSource1 || ! isPointSource2) {
+                    size << "    It may be as large as " << std::setprecision(2) << lsize[0]
+                        << " x " << lsize[1] << endl;
+                }
 			}
 			else {
 				Vector<Quantity> majRange(2, maj - emaj);
@@ -869,7 +904,6 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			}
 		}
 		else {
-
 			size << "    Could not deconvolve source from beam. Source may be (only marginally) resolved in only one direction.";
 		}
 	}
