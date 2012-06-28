@@ -2875,6 +2875,15 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
     Int iSource = getIndex(TType, "SOURCE");
     Int iFreq = getIndex(TType, "FREQSEL");
     Int iVis = getIndex(TType, "VISIBILITIES");
+    if (iFreq < 0) {
+         itsLog << "Fits UV table required column 'FREQSEL' is missing! "
+                << LogIO::EXCEPTION;
+    }
+    if (iSource < 0) {
+         itsLog << "Fits UV table required column 'SOURCE' is missing! "
+                << LogIO::EXCEPTION;
+    }
+
 
     //receptorAngle_p.resize(1);
     //nAnt_p = 0;
