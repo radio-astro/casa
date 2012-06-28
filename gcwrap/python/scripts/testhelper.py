@@ -1,4 +1,4 @@
-import casac
+from casac import casac
 import os
 import commands
 import math

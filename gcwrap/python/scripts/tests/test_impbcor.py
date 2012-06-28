@@ -91,6 +91,17 @@ def run_pbcor(
     imagename, pbimage, outfile, overwrite, region, box, chans,
     stokes, mask, mode, cutoff
 ):
+    print iamgename
+    print pbimage
+    print outfile
+    print overwrite
+    print region
+    print box
+    print chans
+    print stokes
+    print mask
+    print mode
+    print cutoff
     myia = iatool()
     myia.open(imagename)
     res = myia.pbcor(
