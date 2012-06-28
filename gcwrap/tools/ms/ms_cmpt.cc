@@ -493,8 +493,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 Int istart=0;
          Int istep=1;
          Int iwidth=width;
-         //if (spwS==String(""))
-         //    spwS="0";
+         if (spwS==String(""))
+             spwS="*";
 	 Record selrec;
          try {
              selrec=itsMS->msseltoindex(spwS, fieldS);
@@ -509,6 +509,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 
 	 Matrix<Int> chansel=selrec.asArrayInt("channel");
          //cout << "chansel=" << chansel << endl;
+         //cout << "chansel.nelements()=" << chansel.nelements() << endl;
 	 if(chansel.nelements() !=0){
 	    istep=chansel.row(0)(3);
 	    if(istep < 1)
@@ -552,7 +553,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
          }
 
          MeasurementSet selms(*mssel);
- 
+         //cout << "inchan=" << inchan << " istart=" << istart << " istep=" << istep << endl; 
          if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
                                           inchan, istep, writesyscal,
                                           multisource, combinespw,
