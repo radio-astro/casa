@@ -2,7 +2,7 @@ import os
 from taskinit import *
 
 def exportuvfits(vis, fitsfile, datacolumn, field, spw, antenna, time,
-                 nchan, start, width, writesyscal, multisource, combinespw,
+                 avgchan, writesyscal, multisource, combinespw, 
                  writestation, padwithflags):
 	
         casalog.origin('exportuvfits')
@@ -12,15 +12,18 @@ def exportuvfits(vis, fitsfile, datacolumn, field, spw, antenna, time,
                         ms.open( vis, lock=True )
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
+                writesyscal=False #until ms syscal table defined
+                #start=-1 # redundant, use spw expr
+                #nchan=-1 # redundant, use spw expr
 		ms.tofits(fitsfile=fitsfile,
                           column=datacolumn,
                           field=field,
                           spw=spw,
                           baseline=antenna,
                           time=time,
-                          start=start,
-                          nchan=nchan,
-                          width=width,
+                          #start=start,
+                          #nchan=nchan,
+                          width=avgchan,
                           writesyscal=writesyscal,
                           multisource=multisource,
                           combinespw=combinespw,
@@ -28,7 +31,6 @@ def exportuvfits(vis, fitsfile, datacolumn, field, spw, antenna, time,
                           padwithflags=padwithflags)
 		ms.close( )
 	except Exception, instance:
-		print '*** Error ***',instance
-		raise Exception, instance
+		raise Exception
 
 
