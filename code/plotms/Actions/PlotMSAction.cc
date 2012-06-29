@@ -120,7 +120,7 @@ bool PlotMSAction::isValid() const {
 	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: case SEL_CLEAR_REGIONS:
 	case ITER_FIRST: case ITER_PREV: case ITER_NEXT: case ITER_LAST:
 	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: case PLOT:
-	case CLEAR_PLOTTER: case QUIT:
+	case CLEAR_PLOTTER: case QUIT: case SEL_INFO:
 		return true;
 
 	default: return false;
@@ -627,6 +627,52 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        }
 	    }
 
+            if(form == "TEXT") {
+                Record r;
+                PlotMSAction action(PlotMSAction::SEL_INFO);
+                bool success = action.doActionWithResponse(plotms, r);
+                if(r.nfields() < 1) return success;
+                // Write record data to file
+                ofstream csv_file;
+                csv_file.open(file.c_str());
+                String xunit = r.asString("xaxis");
+                String yunit = r.asString("yaxis");
+                r.removeField("xaxis");
+                r.removeField("yaxis");
+                csv_file << "x, y, chan, scan, field, ant1, ant2, time, freq, "
+                         << "spw, corr, offset, currchunk, irel" << endl;
+                csv_file << xunit << ", " << yunit
+                         << ", None, None, None, None, None, MJD(seconds), GHz, "
+                         << "None, None, None, None, None" << endl;
+                for(int field = 0; field < r.nfields(); ++field) {
+                    ostringstream fs;
+                    fs << field;
+                    String field_str = fs.str();
+                    Double x = r.subRecord(field_str).asDouble("x");
+                    Double y = r.subRecord(field_str).asDouble("y");
+                    Int chan = r.subRecord(field_str).asInt("chan");
+                    Int scan = r.subRecord(field_str).asInt("scan");
+                    Int field = r.subRecord(field_str).asInt("field");
+                    Int ant1 = r.subRecord(field_str).asInt("ant1");
+                    Int ant2 = r.subRecord(field_str).asInt("ant2");
+                    //String time = r.subRecord(field_str).asString("time");
+                    Double time = r.subRecord(field_str).asDouble("time");
+                    Int spw = r.subRecord(field_str).asInt("spw");
+                    Double freq = r.subRecord(field_str).asDouble("freq");
+                    String corr = r.subRecord(field_str).asString("corr");
+                    Int offset = r.subRecord(field_str).asInt("offset");
+                    Int currchunk = r.subRecord(field_str).asInt("currchunk");
+                    Int irel = r.subRecord(field_str).asInt("irel");
+                    csv_file << x << ", " << y << ", " << chan << ", " 
+                             << scan << ", " << field << ", " << ant1 << ", "
+                             << ant2 << ", " << time << ", " << freq << ", "
+                             << spw << ", " << corr << ", " << offset << ", "
+                             << currchunk << ", " << irel << endl;
+                }
+                csv_file.close();
+                return success;
+            }
+
 	    PlotExportFormat format(t, file);
 	    format.resolution = isDefinedBool(P_HIGHRES) && valueBool(P_HIGHRES)
 	    		? PlotExportFormat::HIGH : PlotExportFormat::SCREEN;
@@ -727,6 +773,11 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	  return true;
 	}
 
+        case SEL_INFO: {
+            Record retval;
+            doActionWithResponse(plotms, retval);
+            return true;
+        }
 
 	case QUIT:
 	    //QApplication::setQuitOnLastWindowClosed(true);
@@ -741,6 +792,78 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 
 	itsDoActionResult_ = "Unknown action type!";
 	return false;
+}
+
+bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
+    switch(itsType_) {
+    case SEL_INFO: {
+        // Locate/Flag/Unflag on all visible canvases.
+        const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
+        vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()->currentCanvases();
+
+        // Get flagging parameters.
+        PlotMSFlagging flagging = plotms->getPlotter()->getFlaggingTab()->getValue();
+
+        // Keep list of plots that have to be redrawn.
+        vector<PlotMSPlot*> redrawPlots;
+
+        PlotMSPlot* plot;
+        for(unsigned int i = 0; i < plots.size(); i++) {
+            plot = plots[i];
+            if(plot == NULL) continue;
+
+            // Get parameters.
+            PlotMSPlotParameters& params = plot->parameters();
+            PlotMSData& data = plot->data();
+
+            // Detect if we are showing flagged/unflagged points (for locate)
+            PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
+            Bool showUnflagged=(d->unflaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
+            Bool showFlagged=(d->flaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
+
+            vector<PlotCanvasPtr> canv = plot->canvases();
+            for(unsigned int j = 0; j < canv.size(); j++) {
+                // Only apply to visible canvases.
+                bool visible = false;
+                for(unsigned int k= 0; !visible && k < visibleCanv.size(); k++)
+                    if(canv[j] == visibleCanv[k]) visible = true;
+                if(!visible) continue;
+
+                // Get selected regions on that canvas.
+                vector<PlotRegion> regions = canv[j]->standardMouseTools()
+                    ->selectTool()->getSelectedRects();
+                if(regions.size() == 0) continue;
+	            
+                // Actually do locate/flag/unflag...
+                try {
+                    if (plot->spectype()=="Iter") {
+                        retval = plot->cache2().indexer(plot->iter()).locateInfo(
+                            Vector<PlotRegion>(regions), showUnflagged, showFlagged);
+                    }
+                    else {
+                        retval = data.locateInfo(Vector<PlotRegion>(regions));
+                    }
+                    // int n = retval.nfields();
+                    // for(uInt r = 0; r < d.nfields(); ++r) {
+                    //     retval.defineRecord(n+r, d.subRecord(r));
+                    // }
+                    // retval.defineRecord(i, d);
+	            // ...and catch any reported errors.
+                } catch(AipsError& err) {
+                    itsDoActionResult_ = "Error during info";
+                    itsDoActionResult_ += ": " + err.getMesg();
+                    return false;
+                } catch(...) {
+                    itsDoActionResult_ = "Unknown error during info!";
+                    return false;
+                }
+            }
+        }
+    } // case SEL_INFO:
+    default:
+        break;
+    } // switch(itsType_)
+    return true;
 }
 
 const String& PlotMSAction::doActionResult() const{ return itsDoActionResult_;}

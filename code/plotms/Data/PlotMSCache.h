@@ -242,6 +242,7 @@ public:
   PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
   PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
           const Vector<PlotRegion>& regions, Bool flag = True);
+  Record locateInfo(const Vector<PlotRegion>& regions);
 
   // Access to averaging state in the cache:
   PlotMSAveraging& averaging() { return averaging_; }

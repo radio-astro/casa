@@ -199,6 +199,11 @@ public:
     //is the top widget still shown
     static const String METHOD_ISCLOSED;
 
+    // DBus method name for locating points in a specified region
+    // PARAMETERS: upper left and lower right bounding box coordinates
+    // RETURNS: meta data of located points (Record)
+    static const String METHOD_LOCATEINFO;
+
     // Returns the name that the plotms in the process with the given ID is (or
     // would be) registered with in the CASA DBus server.
     static String dbusName(pid_t pid);
@@ -263,6 +268,8 @@ private:
     // helper for saving
     bool _savePlot(const Record& parameters);
 
+    // helper for locate
+    Record _locateInfo(const Record& parameters);
 
 };
 

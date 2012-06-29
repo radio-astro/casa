@@ -151,6 +151,8 @@ public:
     // See PlotMSCache::flagRange().
     PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
             const Vector<PlotRegion>& regions, bool flag = true);
+
+    Record locateInfo(const Vector<PlotRegion>& regions);
     
     // See PlotMSCache::loadedAxes().
     vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
