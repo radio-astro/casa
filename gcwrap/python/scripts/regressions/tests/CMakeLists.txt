@@ -36,6 +36,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   equinox_vis.py
   fits-import-export.py
   fls3a_hi.py
+  g192redux.py
   h121.py
   ic2233.py
   imagepoltest.py
@@ -46,6 +47,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   leo2pt_test.py
   listcal_test.py
   listvis_test.py
+  ngc1333.py
   ngc2403.py
   ngc5921redux.py
   ngc5921uvcontsub2.py
