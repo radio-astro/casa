@@ -945,7 +945,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    stokesAxis = axes[0] - 1;              // 1 -> 0 rel
 	    uInt stokesAxisShape = 1;
-	    if(stokesAxis<shape.size()){
+	    if(stokesAxis<(Int)shape.size()){
 	      stokesAxisShape = shape(stokesAxis);
 	    }
 	    Bool warnStokes = stokesFITSValue > 0;
@@ -989,7 +989,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	int ierr = wcssub (alloc, &wcs, &nsub, axes.storage(), &wcsDest);
 
 	uInt nc = 1;
-	if(axes[0]-1<shape.nelements()){
+	if(axes[0]-1<(Int)shape.nelements()){
 	  nc = shape(axes[0]-1); // the number of channels of the spectral axis
 	}
 
