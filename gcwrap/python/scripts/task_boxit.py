@@ -45,14 +45,14 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
 
     shape = fullmask.shape
 
-    nx = shape[0]
-    ny = shape[1]
+    nx = int(shape[0])
+    ny = int(shape[1])
     n2 = n3 = 1
     if len(shape)==3:
-        n2 = shape[2]
+        n2 = int(shape[2])
     if len(shape)==4:
-        n2 = shape[2]
-        n3 = shape[3]
+        n2 = int(shape[2])
+        n3 = int(shape[3])
     #print 'nx:', nx, 'ny:', ny, 'n2:', n2, 'n3:', n3
 
     #casa generated images always 4d and in order of [ra, dec, stokes, freq]

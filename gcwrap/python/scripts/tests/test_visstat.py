@@ -148,6 +148,8 @@ class visstat_test(unittest.TestCase):
 
         for col in cols:
             data_cols = ['']
+	    print 'col ',col
+	    print 'cplx ',cplx
             if col in cplx:
                 data_cols = ['data', 'corrected'] # not supported: 'residual'
                 if have_model:

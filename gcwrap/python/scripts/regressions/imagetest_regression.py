@@ -2794,7 +2794,7 @@ def imagetest(which=None, size=[32,32,8]):
             ok = myim.putregion(pixels=pixels, usemask=F)
             if not ok:
                 stop('putregion 10 failed')
-            pixel = myim.getregion()
+            pixels = myim.getregion()
             mask = myim.getregion(getmask=true)
             if len(pixels)==0 or len(mask)==0:
                 stop('getregion 11 failed')

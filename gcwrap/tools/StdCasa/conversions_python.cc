@@ -449,6 +449,13 @@ int casac::pyarray_check(PyObject *obj) {
 	VECTOR[INDEX] = COMPLEXCVT(c); 						\
     } else if (PyString_Check(ele)) {						\
 	VECTOR[INDEX] = STRINGCVT(PyString_AsString(ele));			\
+    } else { \
+	    if (PyNumber_Check(ele)){ \
+		    if(PyObject_TypeCheck(ele->ob_type, &PyLong_Type)) \
+		       VECTOR[INDEX] = INTCVT(PyLong_AsLong(PyNumber_Long(ele)));  		\
+	            else  \
+		       VECTOR[INDEX] = DOUBLECVT(PyFloat_AsDouble(PyNumber_Float(ele)));  		\
+            }										\
     }										\
 }										\
 
