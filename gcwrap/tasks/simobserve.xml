@@ -375,7 +375,7 @@ it'll do them for the same amount of time -->
     
     
   </input>
-  <returns type="void"/>
+  <returns type="bool"/>
   
 <example>
 mosaic simulation task:
