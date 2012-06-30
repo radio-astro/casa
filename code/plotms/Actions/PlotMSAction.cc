@@ -644,9 +644,9 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                 csv_file << xunit << ", " << yunit
                          << ", None, None, None, None, None, MJD(seconds), GHz, "
                          << "None, None, None, None, None" << endl;
-                for(int field = 0; field < r.nfields(); ++field) {
+                for(int _field = 0; _field < r.nfields(); ++_field) {
                     ostringstream fs;
-                    fs << field;
+                    fs << _field;
                     String field_str = fs.str();
                     Double x = r.subRecord(field_str).asDouble("x");
                     Double y = r.subRecord(field_str).asDouble("y");
