@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importuvfits" category="import/export">
+	<shortdescription>Convert a UVFITS file to a CASA visibility data set</shortdescription>
+	<description>Convert a UVITS file to a CASA visiblity data set.
+		Don\'t forget to flag autocorrelations using taskname flagdata, autocorr = true
+	</description>
+	<input>
+		<param type="string" mustexist="true" name="fitsfile">
+			<description>Name of input UV FITS file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="vis">
+			<description>Name of output visibility file (MS)</description>
+			<value></value>
+		</param>
+		<param type="string" name="antnamescheme">
+                  <description>For VLA only; \'new\' or \'old\'; \'VA04\' or \'04\' for VLA ant 4</description>
+		  <value>old</value>
+		  <allowed kind="enum">
+		  <value>old</value>
+		  <value>new</value>
+		  </allowed>
+		</param>
+	</input>
+
+<example>
+        Convert a UVFITS file to a CASA visibility data set:
+
+        Keyword arguments:
+        fitsfile -- Name of input UV FITS file
+                default: none; example='3C273XC1.fits'
+        vis -- Name of output visibility file (MS)
+                default: none; example: vis='3C273XC1.ms'
+        async --  Run asynchronously
+               default = false; do not run asychronously
+
+	Note: Don't forget to flag autocorrections using
+	   taskname flagdata, autocorr = true
+
+ </example>
+ </task>
+ </casaxml>

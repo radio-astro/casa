@@ -1,0 +1,486 @@
+<ui version="4.0" >
+ <class>PlotterWindow</class>
+ <widget class="QMainWindow" name="PlotterWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize" >
+   <size>
+    <width>0</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle" >
+   <string>PlotMS</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset resource="PlotMSPlotter.qrc" >:/images/images/plotms.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QGridLayout" >
+    <property name="leftMargin" >
+     <number>3</number>
+    </property>
+    <property name="topMargin" >
+     <number>3</number>
+    </property>
+    <property name="rightMargin" >
+     <number>3</number>
+    </property>
+    <property name="bottomMargin" >
+     <number>3</number>
+    </property>
+    <property name="horizontalSpacing" >
+     <number>3</number>
+    </property>
+    <property name="verticalSpacing" >
+     <number>3</number>
+    </property>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionQuit" />
+   </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuToolBars" >
+     <property name="title" >
+      <string>ToolBars</string>
+     </property>
+     <addaction name="actionToolsToolBar" />
+     <addaction name="actionIterationToolbar" />
+     <addaction name="actionDisplayToolbar" />
+    </widget>
+    <addaction name="menuToolBars" />
+   </widget>
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout" />
+    <addaction name="actionAboutQt" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menuView" />
+   <addaction name="menuHelp" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <widget class="QToolBar" name="toolsToolBar" >
+   <property name="windowTitle" >
+    <string>Tools ToolBar</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionZoom" />
+   <addaction name="actionPan" />
+   <addaction name="separator" />
+   <addaction name="actionStackBack" />
+   <addaction name="actionStackBase" />
+   <addaction name="actionStackForward" />
+   <addaction name="separator" />
+   <addaction name="actionMarkRegions" />
+   <addaction name="actionClearRegions" />
+   <addaction name="actionFlag" />
+   <addaction name="actionUnflag" />
+   <addaction name="actionLocate" />
+  </widget>
+  <widget class="QToolBar" name="iterationToolBar" >
+   <property name="windowTitle" >
+    <string>Iteration ToolBar</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionIterFirst" />
+   <addaction name="actionIterPrev" />
+   <addaction name="actionIterNext" />
+   <addaction name="actionIterLast" />
+  </widget>
+  <widget class="QToolBar" name="displayToolBar" >
+   <property name="windowTitle" >
+    <string>Display ToolBar</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionHoldRelease" />
+  </widget>
+  <action name="actionQuit" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/quit.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Quit</string>
+   </property>
+  </action>
+  <action name="actionClearRegions" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/clear.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Clear Regions</string>
+   </property>
+  </action>
+  <action name="actionFlag" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/flag.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Flag</string>
+   </property>
+  </action>
+  <action name="actionUnflag" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/unflag.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Unflag</string>
+   </property>
+  </action>
+  <action name="actionLocate" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/locate.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Locate</string>
+   </property>
+  </action>
+  <action name="actionIterNext" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/next.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Next Iteration</string>
+   </property>
+  </action>
+  <action name="actionIterPrev" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/prev.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Previous Iteration</string>
+   </property>
+  </action>
+  <action name="actionToolsToolBar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/menu/images/tools_toolbar.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Tools</string>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/menu/images/about.png</iconset>
+   </property>
+   <property name="text" >
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionAboutQt" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/menu/images/about_qt.png</iconset>
+   </property>
+   <property name="text" >
+    <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionMarkRegions" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/mark.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Mark Regions</string>
+   </property>
+  </action>
+  <action name="actionZoom" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/zoom.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Zoom</string>
+   </property>
+  </action>
+  <action name="actionPan" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/pan.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Pan</string>
+   </property>
+  </action>
+  <action name="actionStackBase" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_base.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Stack Base</string>
+   </property>
+  </action>
+  <action name="actionStackBack" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_back.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Stack Back</string>
+   </property>
+  </action>
+  <action name="actionStackForward" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/stack_forward.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Stack Foward</string>
+   </property>
+  </action>
+  <action name="actionClearPlots" >
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/clear_plot.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Clear Plots</string>
+   </property>
+  </action>
+  <action name="actionIterationToolbar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/menu/images/iteration_toolbar.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Iteration</string>
+   </property>
+  </action>
+  <action name="actionIterFirst" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/first.png</iconset>
+   </property>
+   <property name="text" >
+    <string>First Iteration</string>
+   </property>
+  </action>
+  <action name="actionIterLast" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/last.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Last Iteration</string>
+   </property>
+  </action>
+  <action name="actionHoldRelease" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Hold Drawing</string>
+   </property>
+  </action>
+  <action name="actionDisplayToolbar" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/menu/images/display_toolbar.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Display</string>
+   </property>
+  </action>
+  <action name="actionTrackerHover" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Tracker Hover</string>
+   </property>
+  </action>
+  <action name="actionTrackerDisplay" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Tracker Display</string>
+   </property>
+  </action>
+  <action name="actionCacheLoad" >
+   <property name="text" >
+    <string>Load Axes</string>
+   </property>
+  </action>
+  <action name="actionCacheRelease" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>Release Axes</string>
+   </property>
+  </action>
+  <action name="actionPlotExport" >
+   <property name="text" >
+    <string>Export</string>
+   </property>
+  </action>
+  <action name="actionAnnotate" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="text" >
+    <string>Annotate</string>
+   </property>
+  </action>
+  <action name="actionAnnotateText" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_text.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Annotate Text</string>
+   </property>
+  </action>
+  <action name="actionAnnotateRectangle" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="PlotMSPlotter.qrc" >:/actions/images/annotate_rectangle.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Annotate Rectangle</string>
+   </property>
+  </action>
+  <action name="actionPlot" >
+   <property name="text" >
+    <string>Plot</string>
+   </property>
+  </action>
+  <action name="actionMSSummary" >
+   <property name="text" >
+    <string>MS Summary</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="PlotMSPlotter.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionToolsToolBar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>toolsToolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>398</x>
+     <y>573</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionIterationToolbar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>iterationToolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>559</x>
+     <y>558</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDisplayToolbar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>displayToolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>679</x>
+     <y>558</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

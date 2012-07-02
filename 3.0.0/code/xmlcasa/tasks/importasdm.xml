@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="importasdm" category="import/export" visibility="experimental">
+
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file</shortdescription>
+
+  <input>
+
+    <param type="string" name="asdm" kind="asdm" mustexist="true">
+          <description>Name of input asdm directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
+          <value></value>
+    </param>
+
+    <param type="string" name="corr_mode" >
+	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="srt" >
+	    <description>specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr, ca, bw, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="time_sampling" >
+	    <description>specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i, si, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="ocorr_mode" >
+	    <description>output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value>ca</value>
+	    <allowed kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param>
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="asis">
+	    <description>Creates verbatim copies of the ASDMtables in the ouput measurement set.  Value given must be a string of table names separated by spaces; A * wildcard is allowed.</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="wvr_corrected_data">
+	    <description> Specifies which values are considerd in the SDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are: no, for uncorrected data (default), yes, for the corrected data, and both, for for corrected and uncorrected data. Note if both is selected two measurement sets are created, one with uncorrected data and the other with corrected data.  </description>
+	    <value>no</value>
+	    <allowed>
+	    <value>no</value>
+	    <value>yes</value>
+	    <value>both</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="showversion">
+	    <description>Report the version of asdm2MS being used</description>
+	    <value>False</value>
+    </param>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
+The conversion of the ALMA SDM archive format into a measurement set.  This version
+is under development and is geared to handling many spectral windows of different
+shapes.
+				          
+Keyword arguments:
+asdm -- Name of input ASDM file (directory)
+        default: none; example: asdm='ExecBlock3'
+
+vis       -- Root ms name, note a .ms is appended to this name
+             default: none
+
+corr_mode -- correlation mode to be considered on input. Could
+	     be one or more of the following, ao, co, ac, or all
+	     default: all
+
+srt       -- spectral resolution type. Could be one or more of
+	     the following, fr, ca, bw, or all
+	     default: all
+
+time_sampling -- specifies the time sampling, INTEGRATION and/or
+                 SUBINTEGRAION. could be one or more of the following
+                 i, si, or all.
+		 default: all
+
+ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                 (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: ca
+		 
+
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+
+asis         --  creates verbatim copies of the ASDM tables in 
+                 the output measurement set. The value given to
+		 this option must be a list of table names separated
+		 by space characters; the wildcard character '*' is 
+                 allowed in table names.
+
+wvr_corrected_data -- specifies wich values are considered in the 
+                      ASDM binary data to fill the DATA column in 
+                      the MAIN table of the MS. Expected values for 
+                      this option are 'no' for the uncorrected data 
+                      (this is the default), 'yes' for the corrected
+                      data and 'both' for corrected and uncorrected 
+                      data. In the latter case, two measurement sets
+                      are created, one containing the uncorrected 
+                      data and the other one, whose name is suffixed
+                      by '-wvr-corrected', containing the corrected 
+                      data.
+
+
+verbose     -- produce log output as asdm2MS is being run
+
+showversion -- report the version of the asdm2MS being used.
+
+  </example>
+
+</task>
+
+</casaxml>

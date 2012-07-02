@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Inspired by the old setsvneditor.sh, a desire to make it less picky about
+# editors, and 8/25/2006 post by Bart Robinson to users@subversion.tigris.org. 
+
+AIPSROOT=`echo $CASAPATH | awk '{print $1}'`
+
+[ $# -eq 1 ] || {
+cat <<EOF
+$0 -
+
+A wrapper for the user's (hopefully) favorite editor
+that inserts the CASA commit log template.
+
+Use: 1. set the environment variable SVN_EDITOR to point to this file.
+        (Can also be done by sourcing
+         $AIPSROOT/code/xmlcasa/install/setsvneditor.(c)sh.)
+     2. svn ci
+     3. Edit as needed.
+     4. "Exit" the editor, i.e. C-x # for emacsclient,
+                                C-xC-c for emacs, (and then learn about
+                                                   emacsclient),
+                                :wq for vi, (and then learn about
+                                             emacsclient).
+EOF
+exit 1
+}
+file=$1
+
+ed=$VISUAL
+[ -z $ed ] && ed=$EDITOR
+[ -z $ed ] && ed=vi
+
+cat < $AIPSROOT/code/xmlcasa/install/svntemplate > $file.$$
+cat $file >> $file.$$
+
+sum=`cksum $file.$$`
+if $ed $file.$$; then
+    newsum=`cksum $file.$$`
+    if [ "$newsum" != "$sum" ]; then
+	rm -f $file
+	mv $file.$$ $file
+    else
+	# no changes
+	rm -f $file.$$
+    fi
+else
+    echo "editor $ed failed"
+    exit 1
+fi

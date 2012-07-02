@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="newflagdata" category="data editing">
+
+	<shortdescription>Flag/Clip data based on selections</shortdescription>
+
+	<description>
+The task will select a subset of data explicitly for
+flagging (unflagging) or for clipping.
+	</description>
+
+  <input>
+
+    <param type="string" name="vis" kind="ms" mustexist="true">
+    <description>name of input visibility file</description>
+    <value></value>
+    </param>
+
+    <param type="bool" name="setdata">
+    <description>Create a subset of the MS to operate on.</description>
+    <value>False</value>
+    </param>
+    
+    <param type="string" name="mode">
+	    <description>manualflag,autoflag,summary,query,extend</description>
+	    <allowed kind="enum">
+	    <value>manualflag</value>
+	    <value>autoflag</value>
+	    <value>summary</value>
+	    <value>query</value>
+	    <value>extend</value>
+	    <value>run</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="baseline">
+	    <description>Select data based on baseline</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="field">
+    <description>Select data based on field name or index</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="correlation">
+	    <description>Select data based on correlation</description>
+	    <value></value>
+    </param>
+
+    <param type="any" name="spw">
+	    <description>Select data based on spectral window and frequency/channel</description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+
+    <param type="string" name="uvrange">
+    <description>Select data based on uv range</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="selecttime">
+    <description>Select data based on time</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="scan">
+    <description>Select data based on scan number</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="feed">
+    <description>Select data based on feed number</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="array">
+    <description>Select data based on the array</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="setclip">
+	    <description>Setup Clipping [clipexpr,[min,max],outside(T/F)]</description>
+    <value></value>
+    </param>
+
+    <param type="record" name="setquack">
+    <description>Setup VLA Quack [quack interval, quack length] - NOT TESTED</description>
+    <value type="record"></value>
+    </param>
+
+    <param type="bool" name="autocorr">
+    <description>Flag autocorrelations</description>
+    <value>False</value>
+    </param>
+
+    <param type="bool" name="unflag">
+    <description>Unflag the data specified</description>
+    <value>False</value>
+    </param>
+
+    <param type="string" name="flagcorr">
+    <description></description>
+    <value>Select flags based on correlation</value>
+    </param>
+
+    <param type="string" name="flagfield">
+    <description>Select flags based on field name or index</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="flaguvrange">
+    <description>Select flags based on uv range - NOT IMPLEMENED</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="flagtime">
+    <description>Select flags based on time</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="flagscan">
+    <description>Select flags based on scan number - NOT IMPLEMENTED</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="flagfeed">
+    <description>Select flags based on feed number - NOT IMPLEMENTED</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="flagarray">
+    <description>Select flags based on the array - NOT IMPLEMENTED</description>
+    <value></value>
+    </param>
+
+    <constraints>
+	    <when param="setdata">
+		<equals value="false"/>
+		<equals value="true">
+			<default param="baseline" ><value type="string"></value></default>
+			<default param="spw" ><value type="string"></value> </default>
+			<default param="correlation" ><value type="string"></value></default>
+			<default param="field" ><value type="string"></value></default>
+			<default param="uvrange" ><value type="string"></value></default>
+			<default param="selecttime" ><value type="string"></value></default>
+			<default param="scan" ><value type="string"></value></default>
+			<default param="feed" ><value type="string"></value></default>
+			<default param="array"><value type="string"></value></default>
+		</equals>
+	    </when>
+	    <when param="mode">
+	          <equals value=""/>
+	          <equals value="manualflag">
+		    <default param="flagbaseline"><value type="string"></value> </default>
+		    <default param="flagspw"><value type="string"></value> </default>
+		    <default param="flagcorr"><value type="string"></value> </default>
+			    <default param="flagfield"><value type="string"></value> </default>
+		    <default param="flaguvrange"><value type="string"></value> </default>
+		    <default param="flagtime"><value type="string"></value> </default>
+		    <default param="flagscan"><value type="string"></value> </default>
+		    <default param="flagfeed"><value type="string"></value> </default>
+		    <default param="flagarray"><value type="string"></value> </default>
+		    <default param="autocorr"><value type="bool">False</value> </default>
+		    <default param="unflag"><value type="bool">False</value> </default>
+		    <!--
+		    <default param="setclip"><value type="record">
+				    <value type="string"></value>
+				    <value type="record"></value>
+						    <value type="bool">True</value>
+				    </value> </default>
+				    -->
+		    <default param="setquack"><value type="record"></value> </default>
+                  </equals>
+	          <equals value="autoflag">
+		    <default param="algo"><value type="string">timemedian</value> </default>
+		    <default param="algo"><value type="double">threshold</value> </default>
+                  </equals>
+	          <equals value="query"/>
+	          <equals value="summary"/>
+	          <equals value="extend"/>
+	    </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+
+	Flag/Clip data based on selections:
+	The task will select a subset of data explicitly for
+	flagging (unflagging) or for clipping.
+
+	Keyword arguments:
+	vis -- Name of input visibility file (MS)
+		default: none example: vis='ngc5921.ms'
+        setdata -- Create a subset of the MS to operate on.
+                default: 'False' : operate on the entire MS
+        mode -- Mode of operation.
+                options: 'manualflag','autoflag','summary','query','extend','run'
+	baseline -- Select data based on baseline
+		default: '' (all); example: baseline='5&amp;6' baseline 5-6
+		baseline='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
+		baseline='5' # all baselines with antenna 5
+		baseline='5,6' # all baselines with antennas 5 and 6
+	spw -- Select data based on spectral window and channels
+		default: '' (all); example: spw='1'
+		spw='&lt;2' #spectral windows less than 2
+		spw='&gt;1' #spectral windows greater than 1
+                spw='0:0~10' # first 10 channels from spw 0
+                spw='0:0~5;56~60' # multiple separated channel chunks.
+        correlation -- Correlation types
+                default: '' (all);
+                example: correlation='RR,LL'
+	field -- Select data based on field id(s) or name(s)
+		default: '' (all); example: field='1'
+                field='0~2' # field ids inclusive from 0 to 2
+		field='3C*' # all field names starting with 3C
+	uvrange -- Select data based on uvrange(s)
+		default: '' (all); example:
+		uvrange='0~1000' # uvranges from 0-1000 meters
+		uvrange='&gt;4kl' #uvranges greater than 4 kilo lambda
+	selecttime  -- Select data based on time range:
+	        default = '' (all); example,
+		selecttime = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+	 	Note: YYYY/MM/DD can be dropped as needed:
+		selecttime='09:14:0~09:54:0' # this time range
+		selecttime='09:44:00' # data within one integration of time
+		selecttime='&gt;10:24:00' # data after this time
+		selecttime='09:44:00+00:13:00' #data 13 minutes after time
+	scan -- Select data based on scan number - New, under developement
+		default: '' (all); example: scan='&gt;3'
+	feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        array -- Selection based on the antenna array - NOT IMPLEMENTED YET
+
+        setclip -- Setup Clip operation. Flag OUTSIDE this range
+                [clipexpr, clipminmax,outside]
+                default: ['ABS I',[],True]
+	        clipexpr -- Clip using the following: 
+	        	default: 'ABS I'; example: clipexpr='RE XX'
+	        	Options: 'ABS','ARG','RE','IM','NORM' + ' ' +  'I','XX','YY','RR','LL'
+	        clipminmax -- Range of data (Jy) that will NOT be flagged
+	        	default: [] means do not use clip option
+	        	example: [0.0,1.5]
+                outside -- Clip OUTSIDE the range ?
+                        default: True
+                        example: False -&gt; flag data WITHIN the range.
+        setquack -- [Scan Interval, Quack length] for VLA quack-flagging
+                     default: [] means do not use quack option
+                     example: [15,2]
+        autocorr -- Flag autocorrelations ?
+                default: False
+                options: True,False
+	unflag -- Unflag the data 
+		default: False (i.e. flag); example: unflag=True
+
+
+  </example>
+
+</task>
+
+</casaxml>

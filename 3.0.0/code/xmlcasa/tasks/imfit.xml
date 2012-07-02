@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface to ia.fitcomponents           -->
+<!--                                                          -->
+
+<task type="function" name="imfit" category="image analysis">
+
+<shortdescription>Fit one or more elliptical Gaussian components on an image region(s)</shortdescription>
+
+<input>
+    <param type="string" name="imagename" mustexist="true" >
+    	<description>Name of the input image</description>
+    	<value></value>
+        <example>imagenam='ngc5921.im'</example>
+    </param>
+
+    <param type="string" name="box">
+        <description>Specify one or more box regions for the fit.</description>
+        <value></value>
+        <example>box='100,120,200,200'</example>
+    </param>
+
+    <param type="any" name="region">
+        <description>Region name or region specified using rg tool.</description>
+	    <any type='variant' limittype='string stringArray record'/>
+        <value type='string'/>
+        <example>region='myregion'</example>
+    </param>
+
+    <param type="int" name="chan">
+        <description>Spectral channel on which to perform fit (only one may be specified).</description>
+        <value>0</value>
+        <example>chan=14</example>
+    </param>
+    
+    <param type="string" name="stokes">
+        <description>Stokes parameter to fit.</description>
+        <value>I</value>
+        <example>stokes='Q'</example>
+    </param>
+    
+   <param type="string" name="mask">
+        <description>Mask to be applied to the image</description>
+        <value></value>
+        <example>'"ngc5921.im" > 0.5'</example>
+    </param>
+
+   <param type="intArray" name="includepix">
+        <description>Range of pixel values to include for fitting.</description>
+        <value></value>
+        <example>includepix=[0.5,500]</example>
+    </param>
+    
+    <param type="intArray" name="excludepix">
+        <description>Range of pixel values to exclude for fitting.</description>
+        <value></value>
+        <example>excludepix=[-500,.05]</example>
+    </param>
+    
+    <param type="string" name="residual">
+        <description>Name of output residual image.</description>
+        <value></value>
+        <example>residual='ngc5921_fit_resid.im'</example>
+    </param>
+    
+    <param type="string" name="model">
+        <description>Name of output model image.</description>
+        <value></value>
+        <example>model='ngc5921_fit_model.im'</example>
+    </param>
+    
+    <param type="string" name="estimates">
+        <description>Name of file containing initial estimates of component parameters.</description>
+        <value></value>
+        <example>model='ngc5921_fit_estimates.txt'</example>
+    </param>
+    
+    <param type="string" name="logfile">
+        <description>Name of file to write fit results.</description>
+        <value></value>
+        <example>model='ngc5921_fit_log.txt'</example>
+    </param>
+
+    <param type="bool" name="append" subparam="true"> 
+        <description>If logfile exists, append to it if True or overwrite it if False</description>
+        <value>True</value>
+        <example>append=True</example>
+    </param> 
+
+    <param type="string" name="newestimates">
+        <description>File to write fit results which can be used as initial estimates for next run.</description>
+        <value></value>
+        <example>model='ngc5921_fit_new_estimates.txt'</example>
+    </param>
+
+
+    <constraints>
+        <when param="logfile">
+            <notequals type="string" value="">
+                <default param="append">
+                    <value>True</value>
+                </default>
+            </notequals>
+        </when>
+    </constraints>
+</input>
+<returns type="void"/>
+
+<example>
+PARAMETER SUMMARY
+imagename        Name of the input image
+box              One or more box regions to use for fitting,
+                 eg "100, 120, 200, 220, 300, 300, 400, 400"
+                 to use two boxes. If both box and region
+                 parameters are specified, box is used.
+region           Region name or region specified using rg tool.
+                 A region from another image can be specified using the
+                 imagename:regionname syntax, eg "mycontinuumimage:mysourceregion"
+chan             Spectral channel on which to perform fit (only one may be specified).
+stokes           Stokes parameter to fit.
+mask             Mask to be applied to the image. Can be a mask associated with the
+                 image or an LEL expression. 
+includepix       Range of pixel values to include for fitting. Array of two numeric
+                 values assumed to have same units as image pixel values. Only one
+                 of includepix or excludepix can be specified.
+excludepix       Range of pixel values to exclude for fitting. Array of two numeric
+                 values assumed to have same units as image pixel values. Only one
+                 of includepix or excludepix can be specified.
+residual         Name of the residual image to write.
+model            Name of the model image to write.
+estimates        Name of file containing initial estimates of component parameters
+                 (see below for formatting details).
+logfile          Name of file to write fit results.
+append           If logfile exists, append to it (True) or overwrite it (False).
+newestimates     File to write fit results which can be used as initial estimates
+                 for next run.
+
+OVERVIEW
+
+Imfit is used to fit one or more gaussians to sources in an image.
+Fitting is limited to a single spectral channel and a single polarization.
+If the image has a clean beam, the task will report both the convolved
+and the deconvolved fit results.
+
+The task returns a dictionary with two keys, 'converged' and 'results'.
+The value of 'converged' is a boolean which indicates if the fit converged.
+The value of 'results' is a component list reflecting the fit results. In the
+case of a clean image, the results are the convolved results.
+
+The region can either be specified by a box (blc,trc) or a region (if both
+are given, the box is used). Ranges of pixel values can be included or
+excluded from the fit.
+
+If specified, the task will write the residual and/or model images for
+successful fits.
+
+If an estimates file is not specified, the task will attempt to estimate
+initial parameters and fit a single Gaussian. If a multiple Gaussian fit
+is desired, the user must specify initial estimates via a text file
+(see below for details).
+
+The user has the option of writing the result of the fit to a log file,
+and has the option of either appending to or overwriting an existing file.
+
+The user has the option of writing the (convolved) parameters of a successful
+fit to a file which can be fed back to imfit as the estimates file for a
+subsequent run.
+
+MASK SPECIFICATION
+
+Mask specification can be done using an LEL expression. For example
+
+mask = '"myimage">5' will use only pixels with values greater than 5.
+
+INCLUDING AND EXCLUDING PIXELS
+
+Pixels can be included or excluded from the fit based on their values
+using these parameters. Note that specifying both is not permitted and
+will cause an error. If specified, both take an array of two numeric
+values.
+
+ESTIMATES
+
+Initial estimates of fit parameters may be specified via an estimates
+text file. Each line of this file should contain a set of parameters for
+a single gaussian. Optionally, some of these parameters can be fixed during
+the fit. The format of each line is
+
+peak intensity, peak x-pixel value, peak y-pixel value, major axis, minor axis, position angle, fixed
+
+The fixed parameter is optional. The peak intensity is assumed to be in the
+same units as the image pixel values (eg Jy/beam). The peak coordinates are specified
+by pixel values. The major and minor axes and the position angle are the convolved
+parameters if the image has been convolved with a clean beam and are specified as quantities.
+The fixed parameter is optional and is a string. It may contain any combination of the
+following characters 'f' (peak intensity), 'x' (peak x position), 'y' (peak y position),
+'a' (major axis), 'b' (minor axis), 'p' (position angle).
+
+In addition, lines in the file starting with a "#" are considered comments.
+
+An example of such a file is:
+
+# peak intensity must be in map units
+120, 150, 110, 23.5arcsec, 18.9arcsec, 120deg  
+90, 60, 200, 46arcsec, 23arcsec, 140deg, fxp
+
+This is a file which specifies that two gaussians are to be simultaneously fit,
+and for the second gaussian the specified peak intensity, x position, and position angle
+are to be held fixed during the fit.
+
+EXAMPLE: 
+
+Here is how one might fit two gaussians to multiple channels of a cube using the fit
+from the previous channel as the initial estimate for the next. It also illustrates
+how one can specify a region in the associated continuum image as the region to use
+as the fit for the channel.
+
+imagename = "co_cube.im"
+# specify region using region from continuum
+region = "continuum.im:source.rgn"
+chan = 2
+# only use pixels with positive values in the fit
+excludepix = [-1e10,0]
+# estimates file contains initial parameters for two Gaussians in channel 2
+estimates = "initial_estimates.txt"
+logfile = "co_fit.log"
+# append results to the log file for all the channels
+append = "True"
+# write file to use as estimates for next channel
+newestimates = "estimates3.txt"
+imfit
+# now loop through channels
+for x in range(3,20):
+    chan = x
+    # feed initial estimates using results of last fit
+    estimates = "estimates" + str(x) + ".txt"
+    newestimates = "estimates" + str(x + 1) + ".txt"
+    imfit
+
+
+
+
+
+</example>
+
+</task>
+
+</casaxml>

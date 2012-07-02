@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/" >
+        <file>images/about.png</file>
+        <file>images/break.png</file>
+        <file>images/check.png</file>
+        <file>images/close.png</file>
+        <file>images/delete.png</file>
+        <file>images/edit.png</file>
+        <file>images/export_votable.png</file>
+        <file>images/filter.png</file>
+        <file>images/find.png</file>
+        <file>images/find_next.png</file>
+        <file>images/find_prev.png</file>
+        <file>images/home.png</file>
+        <file>images/info.png</file>
+        <file>images/insert.png</file>
+        <file>images/open.png</file>
+        <file>images/options.png</file>
+        <file>images/plot2d.png</file>
+        <file>images/redo.png</file>
+        <file>images/sort.png</file>
+        <file>images/undo.png</file>
+    </qresource>
+</RCC>
