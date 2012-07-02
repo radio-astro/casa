@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importaipscaltable" category="import/export">
+	<shortdescription>Convert a AIPS calibration table (FITS format) to a CASA calibration table</shortdescription>
+	<description>Convert a AIPS calibration table (FITS format) to a CASA calibration table
+	</description>
+	<input>
+		<param type="string" mustexist="true" name="fitsfile">
+			<description>Name of input AIPS calibration table file (FITS format)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltable">
+			<description>Name of output calibration table file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="extension">
+			<description>Name of the extension table to use inside the AIPS calibration file</description>
+			<value>CL</value>
+		</param>
+
+		<param type="string" name="whichhdu">
+			<description>Index of the caltable extension to use inside the AIPS calibration file</description>
+			<value></value>
+		</param>
+
+	</input>
+
+<example>
+        Convert a AIPS calibration table (FITS format) to a CASA calibration table:
+
+        Keyword arguments:
+        fitsfile -- Name of input AIPS calibration table file (FITS format)
+                default: none; example='n09m1.tasav.FITS'
+	caltable -- Name of output calibration table file
+	        default: none; example='n09m1.tasav.gcal'
+	extension -- Name of the extension table to use inside the AIPS calibration file (without the 'AIPS ')
+	        default: 'CL'
+	index -- If there is more than one extension of the same name, use this index to indentify it.
+	        default: '' = take the last one; example='3'
+        async --  Run asynchronously
+               default = false; do not run asychronously
+
+ </example>
+ </task>
+ </casaxml>

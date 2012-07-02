@@ -1,0 +1,57 @@
+AATM ReadMe File
+================
+
+
+Why "A"ATM
+----------
+
+ATM is a package most recently maintained and developed by Juan
+Pardo. I wanted to have a slightly different name in case Juan wants
+to relase code under name "ATM" and then we have a name
+clash. 
+
+Is AATM the same as ATM?
+------------------------
+
+AATM aims to track very closely the version of ATM as supplied by Juan
+Pardo for the ALMA online calibration software "TelCal". There are
+other versions of ATM around -- some written in Fortran, etc., and
+this package can of course only be close to one of them.
+
+
+Dependencies
+------------
+
+ATM itself has no external dependencies. However the build of this
+package depends on BOOST libraries because it is used in the test
+program(s) in the "test" sub-directory.
+
+
+Directory Structure
+-------------------
+
+tests: These are revised tests, to make them easier to understand
+
+otest: These are the orignal tests as in ALMA CVS 
+
+Notes on the code
+-----------------
+
+ATMAtmosphereType.cpp
+`````````````````````
+
+Appears to be a small test program -- exclude from library build
+
+
+Synchornising with the ALMA CVS Version
+---------------------------------------
+
+These are notes for my own use -- they show how to directly pull the
+files from the CVS layout.
+
+rsync -r appcs:/home/bn204/d/almasw5/TELCAL/TelCalResults/Libraries/ATM/include/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+
+rsync -r appcs:/home/bn204/d/almasw5/TELCAL/TelCalResults/Libraries/ATM/src/ src/ --exclude 'Makefile' --exclude '.cvsignore' --exclude "CVS"
+
+
+

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl"?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- This is a param set for vla filler -->
+
+<tool name="utils" module="utils">
+
+<code>
+	<include>xmlcasa/utils/utils_forward.h</include>
+<private>
+	#include &lt;xmlcasa/utils/utils_private.h&gt;
+</private>
+
+</code>
+<shortdescription>Utility component, verified, xml translator</shortdescription>
+
+<description></description>
+
+
+<method type="constructor" name="utils">
+
+  <shortdescription>Construct a utility tool</shortdescription>
+
+  <description></description>
+
+  <input></input>
+
+  <returns type="utils"/>
+
+  <example></example>
+
+</method>
+
+<method type="function" name="verify">
+
+	<shortdescription>Verifies an input record against an XML interface description of took or task</shortdescription>
+
+  <description></description>
+
+  <input>
+
+    <param type="any" name="input">
+	    <description>The input record to verify</description>
+	    <any type="record"/>
+	    <value></value>
+    </param>
+
+    <param type="any" name="xmldescriptor">
+	    <description>XML description, either record or url</description>
+	    <value></value>
+	    <any type="variant"/>
+    </param>
+
+  </input>
+
+  <returns type="bool"/>
+
+  <example></example>
+
+</method>
+
+<method type="function" name="setconstraints">
+	<shortdescription>Sets the internal contraints records from an XML file</shortdescription>
+	<input>
+    <param type="any" name="xmldescriptor">
+	    <description>XML description, either record or url</description>
+	    <value></value>
+	    <any type="variant"/>
+    </param>
+	</input>
+  <returns type="bool"/>
+</method>
+
+<method type="function" name="verifyparam">
+	<shortdescription>Verifies an individual parameter against a prespecified constraints record</shortdescription>
+	<input>
+    <param type="any" name="param">
+	    <description>Parameter name:value pair to verify</description>
+	    <value></value>
+	    <any type="record"/>
+    </param>
+	</input>
+  <returns type="bool"/>
+</method>
+
+<method type="function" name="expandparam">
+	<shortdescription>If a param is an enum it will minmatch the enum value and return the full value otherwise it just returns the value</shortdescription>
+	<input>
+    <param type="string" name="name">
+	    <description>Parameter name to expand</description>
+	    <value></value>
+    </param>
+    <param type="variant" name="value">
+	    <description>Value of the parameter</description>
+	    <value></value>
+    </param>
+	</input>
+  <returns type="variant"/>
+</method>
+
+<method type="function" name="torecord">
+
+	<shortdescription>Transforms an XML string into a record</shortdescription>
+
+  <description></description>
+
+  <input>
+
+    <param type="string" name="input">
+	    <description>XML string, maybe a URL</description>
+    </param>
+
+  </input>
+
+  <returns type="any">
+	  <any type="record"/>
+  </returns>
+
+  <example></example>
+
+</method>
+
+<method type="function" name="toxml">
+
+	<shortdescription>Turns a record into an xml string</shortdescription>
+
+  <description></description>
+
+  <input>
+
+    <param type="any" name="input">
+	    <description>name of thing to viewe</description>
+	    <any type="record"/>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="asfile">
+	    <description>write the xml as a file</description>
+	    <value>false</value>
+    </param>
+
+    <param type="string" name="filename">
+	    <description>if asfile is true then output filename</description>
+	    <value>recordas.xml</value>
+    </param>
+
+  </input>
+
+  <returns type="string">
+            <description>Either the xml or URL to the XML</description>
+  </returns>
+
+  <example></example>
+
+</method>
+<method type="function" name="getrc">
+     <input>
+        <param type="string" name="rcvar">
+           <description>Returns the value of the rc variable given.
+              If no value is give it returns the root directory of CASA.</description>
+           <value/>
+        </param>
+     </input>
+     <returns type="string">
+	<description>The value of the aipsrc/casarc variable</description>
+     </returns>
+</method>
+<method type="function" name="removetable">
+     <input>
+        <param type="stringArray" name="tablenames">
+           <description>Removes tables safely</description>
+           <value/>
+        </param>
+     </input>
+     <returns type="bool"/>
+</method>
+
+<method type="function" name="tableinfo">
+  <shortdescription>Get information about a particular table</shortdescription>
+  <description>
+    Currently this only returns the pid of the process locking the table (lockpid), if the lock
+    is permanent (lockperm), and the status (lockstatus) -- 'not in use', 'open', 'read', 'write',
+    or 'unknown'. However, the hope is that this will eventually return a complete description of
+    the table.
+  </description>
+  <input>
+    <param type="string" name="tablename">
+      <description>path to table</description>
+      <value></value>
+    </param>
+  </input>
+  <returns type="any">
+    <any type="record" />
+  </returns>
+  <example></example>
+</method>
+
+<method type="function" name="lockedtables">
+  <shortdescription>get the tables locked by this process</shortdescription>
+  <description></description>
+  <input></input>
+  <returns type="stringArray" />
+  <example></example>
+</method>
+
+
+<method type="function" name="hostinfo">
+
+	<shortdescription>returns host information</shortdescription>
+
+  <description></description>
+
+  <input></input>
+
+  <returns type="any">
+	  <any type="record"/>
+  </returns>
+  <example></example>
+
+</method>
+
+</tool>
+
+</casaxml>
