@@ -1,0 +1,160 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# scanpick: Produce an HTML index of selected mail in an AIPS++ folder
+#-----------------------------------------------------------------------------
+#   Copyright (C) 1996
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: scanpick [<folder>]
+#-----------------------------------------------------------------------------
+# scanpick is a CGI script which produces a 'scan' listing of messages in an
+# AIPS++ MH email archive folder selected according to 'pick' arguments.  The
+# pick arguments are acquired by another CGI script, 'pickhtml', which
+# generates an HTML form and passes the result to scanpick via the "POST"
+# method.  An auxiliary perl script called 'parseform' decodes the form
+# output.
+#
+# Options:
+#   none
+#
+# Original: 1996/05/21 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+# This tricks MH into processing the mail as aips2adm.
+  HOME=/export/aips++
+  export HOME
+
+# Directory definitions.
+  MHBIN=/opt/local/mh/bin
+  AIPSMAIL=$HOME/Mail
+  MSTRETCD=$HOME/master/etc
+
+# Parse the folder name.
+  if [ $# -gt 0 ]
+  then
+     FOLDER=$1
+     shift
+  else
+     FOLDER="general"
+  fi
+
+# Get the form output.
+  eval `$MSTRETCD/parseform`
+
+  EXPR=
+  if [ "$search" != "" ]
+  then
+     tmp=`echo "$search" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-search '$tmp'"
+  fi
+  if [ "$subject" != "" ]
+  then
+     tmp=`echo "$subject" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-subject '$tmp'"
+  fi
+  if [ "$from" != "" ]
+  then
+     tmp=`echo "$from" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-from '$tmp'"
+  fi
+  if [ "$to" != "" ]
+  then
+     tmp=`echo "$to" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-to '$tmp'"
+  fi
+  if [ "$cc" != "" ]
+  then
+     tmp=`echo "$cc" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-cc '$tmp'"
+  fi
+  if [ "$before" != "" ]
+  then
+     tmp=`echo "$before" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-before '$tmp'"
+  fi
+  if [ "$after" != "" ]
+  then
+     tmp=`echo "$after" | sed -e "s/'/'\\\\\\\\''/g"`
+     EXPR="${EXPR:+$EXPR -and }-after '$tmp'"
+  fi
+  if [ "$component" != "" ]
+  then
+     case "$component" in
+     *\ *)
+        tmp=`echo "$component" | sed -e "s/'/'\\\\\\\\''/g"`
+        tmp=`echo "$tmp" | sed -e "s/ /' '/"`
+        EXPR="${EXPR:+$EXPR -and }--'$tmp'"
+        ;;
+     esac
+  fi
+
+# Build the pick list.
+  if [ "$EXPR" != "" ]
+  then
+     PICK=`eval $MHBIN/pick +$FOLDER $EXPR`
+  else
+     PICK=""
+  fi
+
+# Required CGI preamble.
+  echo "Content-type: text/html"
+  echo ""
+
+# Write the HTML header.
+  echo "<HTML>"
+  echo "<HEAD>"
+  echo "<TITLE>Selection from AIPS++ $FOLDER email archive</TITLE>"
+  echo "<BASE HREF=\"http://aips2.nrao.edu/aips++/mail/$FOLDER/\">"
+  echo "</HEAD>"
+  echo ""
+  echo "<BODY>"
+  echo "<P><H2>Selection from AIPS++" \
+       "<I><A HREF=\"index.html\">$FOLDER</A></I>"
+  echo "email archive</H2></P>"
+
+  echo ""
+  echo "<HR>"
+  echo "<P>Pick expression: $EXPR</P>"
+  echo "<HR>"
+  echo ""
+  echo "<PRE>"
+  echo "<UL>"
+
+# Produce a scan list and convert it to an HTML list with links.
+  $MHBIN/scan +"$FOLDER" -header -reverse -width 132 $PICK | \
+     sed -e 's#&#\&amp;#g' \
+         -e 's#<#\&lt;#g' \
+         -e 's#>#\&gt;#g' \
+         -e 's#"#\&quot;#g' \
+         -e 's#^\( *\)\([1-9][0-9]*\)#<LI>\1<A HREF="\2">\2</A>#'
+
+# Write the HTML trailer.
+  echo "</UL>"
+  echo "</PRE>"
+  echo ""
+  echo "</BODY>"
+  echo "</HTML>"
+
+  exit 0

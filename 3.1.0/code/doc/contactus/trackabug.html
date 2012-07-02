@@ -1,0 +1,95 @@
+<HTML>
+<HEAD>
+<SCRIPT LANGUAGE = "JavaScript1.2" src="../javascripts/menu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2" src="../javascripts/aipsmenu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2">
+<!--
+ // Function need to place directory relative to docs tree.
+ aMenu = new aipsMenu("..", "#00009C");
+ function onLoad() {
+    if (document.layers) {
+        aMenu.loadMenus();
+    }
+ }
+//-->
+</SCRIPT>
+</HEAD><TITLE> AIPS++ Bug Tracking</TITLE>
+
+<body background="../gif/watermark.gif" bgcolor="#ffffff" text="#000000" link="#cc0f0f" vlink="#00009c">
+
+
+
+<table bgcolor="#00009C" cellpadding=4 cellspacing=0 border=0 width=600 height=25>
+<tr><td>
+<a href="../gettingstarted.html" onMouseOver="aMenu.showAipsMenu('gsMenu')">
+<font size=2 face=helvetica  color="#FFFFFF">
+<b>Getting Started</b></a></font></td>
+<td>
+<a href="../user/documentation.html" onMouseOver="aMenu.showAipsMenu('userMenu')">
+<font size=2 face=helvetica color="#FFFFFF">
+<b>Documentation</b></a></font></td>
+<td><a href="../glish/glish.html" onMouseOver="aMenu.showAipsMenu('glishMenu')">
+<font size=2 face=helvetica color="#FFFFFF">
+<b>Glish</b></a></font></td>
+<td>
+<a href="../learnmore.html" onMouseOver="aMenu.showAipsMenu('learnMenu')">
+<font size=2 face=helvetica color="#FFFFFF">
+<b>Learn More</b></a></font></td>
+<td>
+<a href="../programmer/programmer.html" onMouseOver="aMenu.showAipsMenu('progMenu')">
+<font size=2 face=helvetica color="#FFFFFF">
+<b>Programming</b></a></font></td>
+<td>
+<a href="contactus.html" onMouseOver="aMenu.showAipsMenu('commMenu')">
+<font size=2 face=helvetica color="#FFFF00">
+<b>Contact Us</b></a></font>
+</td></tr></table>
+<table border=0 width=600>
+<tr><td><img src="../gif/aipslogo.gif">
+</td> <td> <font size=2 face=helvetica color="#cc0f0f"><b>VERSIONID</b></font>
+</td><td valign=middle>
+<font size=2 face=helvetica color="#cc0f0f"><a href="../newsletters/index.html"><img src="../gif/tri2.gif" border=0>  <b>News</b></a></font><P>
+<font size=2 face=helvetica color="#cc0f0f"><a href="../faq/faq.html"><img src="../gif/tri2.gif" border=0>  <b>FAQ</b></a></font><P>
+<font size=2 face=helvetica color="#cc0f0f"><a href="../search/search.html"><img src="../gif/tri2.gif" border=0>  <b>Search</b></a></font><P>
+<font size=2 face=helvetica color="#cc0f0f"><a href="../aips++.html"><img src="../gif/tri2.gif" border=0>  <b>Home</b></a></font><P>
+</td></tr></table>
+
+<br><hr><br>
+
+<font face=helvetica size="+3" color="#000000">AIPS++ Bug Tracking System
+</font>
+<p>
+The AIPS++ consortium welcomes <a href="reportabug.html"> enhancement requests and problem reports</a>.  Please check our <a href="../faq/faq.html">
+FAQ</a>, it may already have the answer to your question.
+<hr>
+<form action="http://aips2.nrao.edu/ddts/ddts_main" method="POST">
+<H3>View the status of a problem report</H3>
+Key in the tracking number <INPUT NAME="bug_id" size=11> and then
+<input type="SUBMIT" Value="View Record"> or 
+<input type="reset" value="Reset">
+<input type="hidden" name="REMOTE_USER" value="nobody">
+<input type="hidden" name="LastForm" value="DumpBug">
+</FORM>
+<hr>
+
+<H3>
+<a href="http://aips2.nrao.edu/ddts/ddts_main?REMOTE_USER=nobody&NextForm=SavedQuery">
+Search</a></H3>
+You may
+<a href="http://aips2.nrao.edu/ddts/ddts_main?REMOTE_USER=nobody&NextForm=SavedQuery">
+search </a>  the AIPS++ Bug Tracking System  using 
+<a href="http://aips2.nrao.edu/ddts/ddts_main">NRAO's AOC ClearDDTs
+ installation</a>
+ .  Select one of the listed queries on the "Saved Queries" page and press Query.
+<hr>
+<BR> AIPS++  uses 
+<A HREF="http://www.rational.com/products/clear_ddts"> Rational's ClearDDTs </A> for
+problem tracking. Our <a href="gnatstrackabug.html" >older GNATS based system </a>
+was dropped in favour ClearDDTs</a>
+
+<hr>
+
+
+
+</BODY>
+</HTML>
