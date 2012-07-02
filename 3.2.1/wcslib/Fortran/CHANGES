@@ -1,0 +1,295 @@
+WCSLIB version 4.3 (2007/12/27)
+-------------------------------
+
+* In comment text, replaced use of the obsolete term "card" with "keyrecord"
+  which consists of a "keyword", "keyvalue", and "keycomment".
+
+* Autoconf-related portability improvements, particularly relating to Fortran
+  name mangling.
+
+* General improvements to the makefile for portability, including not relying
+  on "." being in the PATH when running tests.
+
+* Added rules to the makefile for building the shared library.
+
+* Switched licensing to LGPL 3.0.
+
+
+WCSLIB version 4.2 (2005/09/23)
+-------------------------------
+
+* Fixed handling of 64-bit integer keyvalues in keyget_().
+
+* Fixed output formatting of 64-bit integer keyvalues in tfitshdr.f.
+
+* Fixed minor syntax errors in twcsfix.f and tpih1.f reported by the Sun
+  Fortran compiler.
+
+* The output of each test program now identifies the source file.
+
+
+WCSLIB version 4.1 (2005/08/31)
+-------------------------------
+
+* The FORTRAN wrappers and test programs are now completely up-to-date with
+  respect to the C implementation.
+
+* New include files, wrappers, and test programs:
+  fitshdr.inc, fitshdr_f.c, getwcstab.inc, getwcstab_f.c, log.inc, log_f.c,
+  sph.inc, tab.inc, tab_f.c, tfitshdr.f, tlog.f, ttab1.f, ttab2.f, ttab3.f,
+  tunits.f, twcsfix.f, twcstab.f, wcsfix.inc, wcsfix_f.c, wcsunits.inc,
+  wcsunits_f.c.
+
+* Updates to reflect changes to the C library and test programs:
+  cel.inc, cel_f.c, prj.inc, spc.inc, spc_f.c, spx.inc, spx_f.c, tlin.f,
+  tpih1.f, tpih2.f, tprj1.f, tprj2.f, tspc.f, tsph.f, tspx.f, twcs.f,
+  twcsmix.f, twcssub.f, wcs.inc, wcs_f.c, wcshdr.inc, wcshdr_f.c.
+
+* Added *_ERRMSG arrays containing status messages to all include files.
+
+* Removed support for K&R C.
+
+
+WCSLIB version 4.0 (2005/02/07)
+-------------------------------
+
+* Changed the copyright notice in all library routines from LGPL to GPL as
+  recommended by the FSF (http://www.gnu.org/licenses/why-not-lgpl.html).
+
+* New wrapper defined in wcshdr_f.c: wcsidx_().  Modified test program tpih1.f
+  to use it.
+
+* Fixed the interaction between the FLAVOUR and PGPLOTLIB definitions in the
+  Makefile by introducing a separate variable, DO_PLOTS, to control whether to
+  exercise test programs that require PGPLOT (reported by Bill Pence,
+  NASA/Goddard).  Also added an "install" target.
+
+
+WCSLIB version 3.6 (2004/08/25)
+-------------------------------
+
+* New wrapper defined in wcs_f.c: wcssub_().  New test program, twcssub.f.
+
+* Renamed twcs1.f to twcs.f, and twcs2.f to twcsmix.f.
+
+* Worked over the C, FORTRAN, and PGSBOX makefiles, in particular to make them
+  all consistent.
+
+
+WCSLIB version 3.5 (2004/06/28)
+-------------------------------
+
+* New wrappers defined in wcshdr_f.c: wcspih_() and wcsvfree_(), and also a
+  new service function, wcsvcopy_().
+
+  New test programs, TPIH1 and TPIH2, being analogues of tpih1 and tpih2.
+  Removed TWCSPRT.
+
+* In wcs_f.c, new wrappers wcsnpv_() and wcsnps_(); modified wcsput_() and
+  wcsget_() to handle new members of the wcsprm struct.  Also modified
+  wcsput_() to null-fill all char[] members of the wcsprm struct, and likewise
+  wcsget_() to blank-fill them.
+
+* Modified wcs.inc to support changes to the wcsprm struct.
+
+
+WCSLIB version 3.4 (2004/02/11)
+WCSLIB version 3.3 (2003/10/21)
+WCSLIB version 3.2 (2003/09/09)
+WCSLIB version 3.1 (2003/04/01)
+-------------------------------
+
+* FORTRAN is now supported via a set of wrappers on the C library.
+  Refer to the README file.
+
+
+WCSLIB version 2.9 (2002/04/03)
+-------------------------------
+
+* Fixed CUBEFACE handling in WCSSET.
+
+
+WCSLIB version 2.8 (2001/11/16)
+-------------------------------
+
+* Added support for the SZP projection with SZPSET, SZPFWD and SZPREV, and
+  generalized AZP with support for the tilt parameter, gamma.
+
+* Changed the call sequence to PRJSET to return PHI0 along with THETA0.
+
+* Fixed a problem in WCSMIX caused by numerical imprecision that could cause
+  it not to recognize when convergence was reached; break out of the loop
+  early if a discontinuity is detected.
+
+* Clarified the usage of VSPAN in the prologue to WCSMIX.
+
+* Fixed comments relating to LATPOLE in the prologue to CEL and TCEL, and
+  replaced references to LONGPOLE with LONPOLE.
+
+* Augmented the error reports in TWCS2.
+
+* Modified PROJEX in TPROJ1 and PRJPLT in TPROJ2 to use the generic driver
+  routines PRJSET, PRJFWD and PRJREV.  PRJPLT also now uses the projection
+  type encoded in PRJ(11).
+
+
+WCSLIB version 2.7 (2001/02/19)
+-------------------------------
+
+* Added generic driver routines PRJSET, PRJFWD and PRJREV.  These are keyed to
+  specific projection routines via the value of PRJ(11) which now differs for
+  each projection.
+
+* The projection code for the Sanson-Flamsteed projection is now SFL.  The
+  upper-level routines, WCSSET, WCSFWD, and WCSREV, recognize GLS as an alias
+  for this.
+
+* WCSSET now recognizes 'xyLN/xyLT' axis pairs.
+
+* A bug in the translation from NCP to SIN in WCSFWD and WCSREV was fixed;
+  they did not honour PRJ(11) set to -1 to disable strict bounds checking.
+
+* A bug in WCSMIX was fixed - it was relying on the WCS array to have
+  been initialized beforehand.
+
+
+WCSLIB version 2.6 (2000/05/10)
+-------------------------------
+
+* Check for invalid (X,Y) in ZEAREV.
+
+* Declare COSD and SIND in WCSFWD and WCSREV, reported by Clive Page
+  (cgp@star.le.ac.uk).
+
+
+WCSLIB version 2.5 (1999/12/14)
+-------------------------------
+
+* Fixed cube face handling in WCSFWD and WCSREV, reported by Doug Mink
+  (dmink@cfa.harvard.edu).  Allow more general face layout in the inverse
+  quadcube projections.
+
+* Fixed the problem in WCSMIX where it failed to find a valid solution when
+  the solution point lay at a native pole of a projection in which the pole is
+  represented as a finite interval.  However, WCSMIX will only ever return one
+  solution even when two or more valid solutions may exist.
+
+* WCSMIX now accepts VITER in the range 5 - 10, the specified value will be
+  pushed up or down into this range if necessary.
+
+* The projection routines for AZP, TAN, SIN, ZPN, and COP now return error 2
+  if (phi,theta) correspond to the overlapped (far) side of the projection.
+  This strict bounds checking can be switched off by setting PRJ(11) to -1
+  (rather than 0) when the projections are initialized.
+
+* The upper level routines, WCSSET, WCSFWD, WCSREV, and WCSMIX, now recognize
+  the NCP projection and convert it to the equivalent SIN projection.  The
+  lower level routines do not recognize NCP.
+
+* Describe the two alternate representations of the quadcube projections
+  (i.e. faces laid out or stacked) in the prologue of wcs.f.
+
+
+WCSLIB version 2.4 (1996/09/23)
+-------------------------------
+
+* In SINREV, CSCREV, QSCREV, and TSCREV, return error 2 if (X,Y) do not lie
+  within the perimeter of the projection.  In SINREV, stop the computation of
+  PHI for the "synthesis" projection being applied to the pure "orthographic"
+  case.  Reported by David Berry (dsb@ast.man.ac.uk).
+
+* (Internal change) Renamed variables L <-> M in the quadcube projections to
+  accord with standard usage (and revised WCS draft paper).
+
+* (Internal change) Stopped PRJ(11) doing double service in any projection.
+  It is now set and tested for a specific magic value rather than simply being
+  non-zero.
+
+
+WCSLIB version 2.3 (1996/06/24)
+-------------------------------
+
+* Implemented the CUBEFACE axis for quadcube projections.
+
+* Added a new test program, TWCS1, to verify closure of WCSFWD and WCSREV.
+  The old TWCS test program is now called TWCS2.
+
+
+WCSLIB version 2.2 (1996/01/18)
+-------------------------------
+
+* Amended the projection equations for the conics (COP, COD, COE, COO) and
+  Bonne's projection (BON) to correctly handle southern hemisphere projections
+  with PROJP1 < 0 (reported by Lindsay Davis, NOAO).  Revised TPROJ1 and
+  TPROJ2 to test such cases.
+
+* Increased the dimension of the WCS array from WCS(0:2) to WCS(0:3) to allow
+  for future handling of the CUBEFACE keyword - WCS(3) will store an index to
+  the CUBEFACE axis.  This affects the call sequences of WCSSET, WCSFWD,
+  WCSREV, and WCSMIX.
+
+
+WCSLIB version 2.1 (1995/11/17)
+-------------------------------
+
+The main change of interest to programmers is that of changed call sequences
+for WCSFWD and WCSREV as described below.
+
+* The WCS linear transformations are now implemented in WCSLIB, complete with
+  matrix inverter.  The new files are lin.f and test program tlin.f.
+
+* Given either the celestial longitude or latitude plus an element of the
+  pixel coordinate a new routine, WCSMIX, solves for the remaining elements
+  by iterating on the unknown celestial coordinate element using WCSFWD.
+
+* The high level driver routines WCSFWD, WCSREV, and WCSMIX now apply the full
+  WCS algorithm chain (except for pixel regularization table), including
+  parsing the CTYPEn header cards and computing non-celestial elements of the
+  world coordinate.  This required a change to their call sequences which now
+  more closely reflect the sequence of algorithms applied.  A new routine,
+  WCSSET, parses the CTYPEn.
+
+* The high level driver routines of WCSLIB 1.0 are available as intermediate
+  level drivers CELSET, CELFWD, and CELREV, but note that their call sequences
+  have been extended to return native coordinates.  The related parameter
+  array is now called CEL instead of WCS.
+
+* The reference point for conic projections is now at the midpoint of the
+  standard parallels.  The FITS header cards PROJP1 and PROJP2 now give the
+  half-sum (midpoint) and half-difference of the latitudes of the standard
+  parallels; previously they gave the latitudes of the standard parallels
+  themselves.  The change is reflected in this release of WCSLIB.
+
+* A bug in CELSET (formerly WCSSET) that misapplied WCS draft equations 7
+  has been fixed (thanks to Rick Ebert IPAC/JPL and Lindsey Davis, NOAO for
+  reporting this).  This affected the computation of Euler angles for the
+  celestial coordinate transformation for those projections that have their
+  reference point away from the native pole.  In investigating this a
+  deficiency with the formalism was discovered that led to the introduction
+  of a LATPOLE FITS header card which may be used to disambiguate where
+  CRVAL1, CRVAL2, and LONGPOLE do not uniquely determine the latitude of the
+  native pole.  The CEL parameter array (formerly WCS) has been extended to
+  accomodate LATPOLE as CEL(4), and the flag variable is now CEL(5) (formerly
+  WCS(4)).
+
+* Default values of LONGPOLE and LATPOLE are now supported and their use is
+  recommended where appropriate.
+
+* Numerical precision was being lost near the native poles in the SIN, AIR,
+  and QSC projections and this has been recovered (reported by Lindsey Davis,
+  NOAO).  Floating underflows in CSC are now avoided.
+
+* Numerical precision was also lost in certain circumstances in the spherical
+  coordinate transformation routines and this has been fixed.
+
+* The test programs have been enhanced in various ways and the library has
+  been validated on an SGI machine using both 32-bit and 64-bit compilers.
+
+
+WCSLIB version 1.0 (1995/01/31)
+-------------------------------
+
+Initial release.
+
+------------------------------------------------------------------------------
+$Id: CHANGES,v 4.3 2007/12/27 05:48:07 cal103 Exp $

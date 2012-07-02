@@ -1,0 +1,13 @@
+ASAP Online monitor
+-------------------
+
+The monitor is a python cgi script using TAL fro html templating.
+
+The default locations are:
+
+/var/www/asapmon - for templates
+/opt/lib/cgi-bin/asapmon - for the cgi scripts
+
+The sys environment has to be configured by editing "asapconfig.py".
+The observatory specific file in terms of data is in "obsconfig.py".
+
