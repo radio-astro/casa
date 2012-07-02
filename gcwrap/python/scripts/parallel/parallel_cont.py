@@ -4,11 +4,12 @@ from taskinit import *
 import time
 import numpy as np
 from cleanhelper import *
+from casac import casac
 class imagecont():
     def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False):
-        self.im=imtool.create()
+        self.im=casac.imager()
         self.imperms={}
-        self.dc=dctool.create()
+        self.dc=casac.deconvolver()
         self.ft=ftmachine
         self.origms=''
         self.wprojplanes=wprojplanes
@@ -121,7 +122,7 @@ class imagecont():
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
-            im=imtool.create()
+            im=casac.imager()
             self.imperms[msname]=im
             self.novaliddata[msname]=False
             #casalog.post('MSNAME '+msname)
@@ -157,7 +158,7 @@ class imagecont():
         self.imageparamset=True
 
     def imagecontbychan(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[1], spw=[0], field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
-        ia=iatool.create()
+        ia=casac.image()
         if(type(spw) == int):
             spw=[spw]
             start=[start]
@@ -187,7 +188,7 @@ class imagecont():
                     spwind+=1
                 selkey[k]= {'spw': spw[spwind], 'start':start[spwind]+chancounter}
                 chancounter += 1
-                self.im.append(imtool.create())
+                self.im.append(casac.imager())
                 self.novaliddata.append(False)
             print 'selkey', selkey
         else:
@@ -259,7 +260,7 @@ class imagecont():
         self.imageparamset=False
 
     def cleancont(self, niter=100, alg='clark', thr='0.0mJy', psf='newmodel.psf', dirty='newmodel.dirty', model='newmodel.model', mask='', scales=[0]):
-        dc=dctool.create()
+        dc=casac.deconvolver()
         dc.open(dirty=dirty, psf=psf)
         if((alg=='hogbom') or (alg == 'msclean')):
             sca=scales if (alg=='msclean') else [0]

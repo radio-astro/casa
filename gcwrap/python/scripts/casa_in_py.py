@@ -8,7 +8,7 @@ import commands
 from get_user import get_user
 
 try:
-    import casac
+    from casac import casac
 except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
