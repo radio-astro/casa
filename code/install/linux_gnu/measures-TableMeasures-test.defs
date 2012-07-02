@@ -1,7 +1,0 @@
-LVL  := $(C++OPTLVL)
-LVL0 := -O0
- 
-tTableMeasures := 0
-tTableQuantum := 0
- 
-C++OPTLVL = $(LVL$($*))
