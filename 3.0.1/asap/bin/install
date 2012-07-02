@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+import distutils.sysconfig as dist
+import shutil
+import os
+import sys
+import getopt
+
+def usage():
+    print """Usage:
+    ./install [-p <prefix for asap binary>]
+              [-m <where to install python module>]
+              [-h] this message
+    """
+
+def get_libs(lib='_asap.so'):
+    lddcommand = "/usr/bin/ldd"
+    lddopts = ""
+    if (sys.platform == "darwin"):
+        lddcommand = "otool"
+        lddopts = "-L"
+    if not os.path.isfile(lddcommand):
+        raise IOError("ldd/otool is not available")
+    if not os.path.exists(lib):
+        raise IOError("File %s not found" %lib)
+    p = os.popen(lddcommand+" "+lddopts+" "+lib)
+    resolved = []
+    unresolved = []
+    for l in p.readlines():
+        lsp = l.split()
+        # test this to avoid fails on linux_gate, which has no library
+        if len(lsp) >= 3:
+            if lsp[2] == "not":
+                unresolved.append(lsp[0])
+            else:
+                resolved.append(lsp[2])
+    return resolved, unresolved
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "p:m:h",
+                               ["exec-prefix=", "module-dir=", "help"])
+
+except getopt.GetoptError:
+    usage()
+    sys.exit(2)
+
+execprefix = dist.EXEC_PREFIX
+moduledir = dist.get_python_lib()
+sysmoduledir = moduledir
+for k, v in opts:
+    if k in ("-h", "--help"):
+        usage()
+        sys.exit()
+    if k in ("-p", "--exec-prefix"):
+        v = os.path.expanduser(v)
+        v = os.path.expandvars(v)
+        if not os.path.exists(v):
+            print "The specified exec directory %s doesn't exist" % v
+            sys.exit(1)
+        p = os.path.join(v,"bin")
+        if not os.path.exists(p):
+            print "The specified exec directory %s doesn't exist" % p
+            sys.exit(1)
+        execprefix = v
+    if k in ("-m", "--module-dir"):
+        v = os.path.expanduser(v)
+        v = os.path.expandvars(v)
+        if not os.path.exists(v):
+            print "The specified module directory %s doesn't exist" % v
+            sys.exit(1)
+        moduledir = v
+
+print "Looking fo all required libraries..."
+try:
+    libs, missing = get_libs(lib="asap/_asap.so")
+    if len(missing):
+        print " The following libraries are missing:"
+        print missing
+        sys.exit(1)
+    else:
+        print "   All required libraries are present."
+except IOError,msg:
+    print "Skipping test. (%s)" % msg
+
+print 'Looking for dependent python modules...'
+try:
+    import matplotlib
+except ImportError:
+    print "Matplotlib not found"
+    sys.exit(1)
+if int(matplotlib.__version__.split(".")[1]) < 87:
+    print "Warning: matplotlib version < 0.87." \
+          "This might cause errors. Please upgrade."
+try:
+    import matplotlib.backends.backend_tkagg
+except ImportError:
+    print "Matplotlib doesn't have Tk support"
+    sys.exit(1)
+try:
+    import numpy
+except ImportError:
+    try:
+        import numarray
+    except ImportError:
+        print "You need to have either 'numpy' or 'numarray' installed."
+        sys.exit(1)
+try:
+    import IPython
+except ImportError:
+    print "IPython should be installed."
+    sys.exit(1)
+
+print "   All required modules were found."
+moddir = os.path.join(moduledir, "asap")
+bindir =  os.path.join(execprefix, "bin")
+try:
+    if os.path.exists(moddir):
+        print "Found previous installation of ASAP. Removing..."
+        shutil.rmtree(moddir)
+    print "Installing asap module in %s" % moddir
+    shutil.copytree("asap", moddir)
+    print "Installing asap  scripts in %s" % bindir
+    if moduledir != sysmoduledir:
+        import sre
+        print "Changing asap startup script to use custom PYTHONPATH"
+        inf = file("bin/asap")
+        outf = file(os.path.join(bindir,"asap"), "w")
+        outline = "export PYTHONPATH=%s" % moduledir
+        regx = sre.compile("\*\*PYTHONPATH\*\*")
+        for line in inf.readlines():
+            if regx.search(line):
+                line = outline
+            outf.write(line)
+        outf.close()
+        os.chmod(os.path.join(bindir,"asap"), 0755)
+    else:
+        shutil.copy2("bin/asap", bindir)
+    shutil.copy2("bin/asap_update_data", bindir)
+    if not os.path.exists("asap/data/ephemerides"):
+        print "Warning - no data directory present"
+        print "Please run asap_update_data after the installation is completed."
+    print "Installation completed."
+except OSError, oe:
+    print oe
