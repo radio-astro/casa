@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <title tal:content="title">ASAP Online Monitor</title>
+        <link rel="stylesheet" href="/asaptest/fields.css" type="text/css">
+        <script type="text/javascript" src="/asapmon/prototype.js"></script>
+        <script type="text/javascript" src="/asapmon/asapmon.js"></script>
+    </head>
+
+<body onload="javascript:repopulate();">
+    <h1 tal:content="title">ASAP Online Monitor</h1>
+    <form name="hidform" id="hidform">
+        <input type="hidden" id="cunit" tal:attributes="value python:fields['units'][fields['cunit']]"/>
+        <input type="hidden" id="cdoppler" tal:attributes="value fields/doppler"/>
+        <input type="hidden" id="cframe" tal:attributes="value fields/frame"/>
+        <input type="hidden" id="cfilesel" tal:attributes="value fields/cfile"/>
+        <input type="hidden" id="nif" tal:attributes="value fields/nif"/>
+        <input type="hidden"
+            tal:repeat="i fields/restn"
+            tal:attributes="id string: cif${repeat/i/index};value i"
+        />
+        <input type="hidden" id="debug" tal:attributes="value fields/debug"/>
+        <input type="hidden" id="sum" tal:attributes="value fields/summary"/>
+        <input type="hidden" id="csource" tal:attributes="value fields/csource"/>
+    </form>
+    <form name="specplot" action="/cgi-bin/asapmon/asapmon.py">
+        <fieldset>
+        <legend>File selection</legend>
+            Directory:
+            <select id="directory" name="dlist" onclick="invalidateFiles();">
+                <option
+                    tal:repeat="entry fields/directories"
+                    tal:content="entry"
+                    tal:attributes=" value repeat/entry/index;selected python:int(fields['cdir'])==int(repeat['entry'].getIndex()) and 'selected' or None"
+                >somewhere over the rainbow</option>
+            </select>
+            <input class="plot" style="display: none" type="button" name="flist" onClick="insertFields();" value="Update --&gt;"></input>
+            <label id="filelbl">
+                <abbr title="Select one or more file(s).">
+                    File:
+                </abbr>
+            <select id="filelist" name="list" multiple size="5" onclick="invalidateSources();">
+                <option
+                    tal:repeat="entry fields/files"
+                    tal:content="entry"
+                    tal:attributes="value repeat/entry/index"
+                >
+                </option>
+            </select>
+            </label>
+            <label id="sourcelbl">
+                <abbr title="Select a source if your file contains multiple sources.">
+                    Source:
+                </abbr>
+            <select id="sourcelist" name="csource" size="5">
+                <option
+                    tal:repeat="entry fields/sourcenames"
+                    tal:content="entry"
+                    tal:attributes="value entry"
+                >
+                </option>
+            </select>
+            </label>
+        </fieldset>
+        <p>
+        <fieldset>
+        <legend>Spectral line settings</legend>
+            <div id="velunit">
+            <fieldset name="unitset" class="velocity">
+                <legend>Unit</legend>
+                <span tal:repeat="u fields/units">
+                    <input type="radio" name="unit"
+                        tal:attributes="value repeat/u/index;
+                                        checked python: int(fields['cunit'])==int(repeat['u'].getIndex()) and 'checked' or None;onclick string:unitswitch('${u}');
+                                        id string: unit${repeat/u/index}"
+                    >
+                    <label tal:content="u"></label>
+
+               </span>
+            </fieldset>
+            </div>
+            <div id="velframe">
+            <fieldset class="velocity">
+                <legend>Frame</legend>
+                <label>
+                    <input type="radio" name="frame" id="frame0" value="LSRK">
+                    LSRK
+                </label>
+                <label>
+                    <input type="radio" name="frame" id="frame1" value="BARY">
+                    BARY
+                </label>
+            </fieldset>
+            </div>
+            <div id="veldoppler">
+            <fieldset class="velocity">
+                <legend>Doppler</legend>
+                <label>
+                    <input type="radio" name="doppler" id="doppler0" value="RADIO">
+                    RADIO
+                </label>
+                <label>
+                    <input type="radio" name="doppler" id="doppler1" value="OPTICAL">
+                    OPTICAL
+                </label>
+            </fieldset>
+            </div>
+            <div id="velrest">
+
+            <fieldset class="velocity">
+                <legend>Rest Frequencies</legend>
+                <table>
+                <tr
+                    tal:repeat="i fields/nif"
+                >
+                <td>
+                <label
+                    tal:attributes="id string: if${i}lbl;name  string: if${i}lbl"
+                    tal:content="string: IF${i}"
+                >IF
+                </label>
+                <select
+                    tal:attributes="id string: rest${i};name string: rest${i}"
+                >
+                <option
+                    tal:repeat="line fields/restfreqs"
+                    tal:content="line"
+                    tal:attributes="value repeat/line/index"
+                ></option>
+                </select>
+                &nbsp;
+                </td>
+                </tr>
+                </table>
+            </fieldset>
+            </div>
+            <div style="clear: both;"></div>
+        </fieldset>
+        <p>
+        <fieldset>
+        <legend>Processing</legend>
+            <div class="labeled floatleft">
+            <label>
+                <abbr title="Build the quotient spectrum: Toff * (on/off) - Toff">
+                    Quotient
+                </abbr>
+                <input type="checkbox" name="quotient" tal:attributes="checked python: fields['quotient'] or None;value fields/quotient">
+            </label>
+            </div>
+            <div  class="labeled floatleft">
+            <label>
+                <abbr title="Fit a polynomial baseline to the data">
+                    Baseline
+                </abbr>
+                <input type="checkbox" id="baseline" name="baseline" tal:attributes="checked python: fields['baseline'] or None;value fields/baseline" onClick="baselineswitch();">
+            </label>
+            </div>
+            <div id="polyorder"  class="labeled floatleft">
+                <label>
+                    <abbr title="Order of the polynomial baseline fit">
+                    Order
+                    </abbr>
+                </label>
+                <select name="polyorder">
+                <option tal:repeat="order fields/border"
+                    tal:content="order" tal:attributes="value order;selected python: int(fields['cpolyorder'])==int(repeat['order'].getIndex()) or None"></option>
+                </select>
+            </div>
+            <div id="baselinerange" class="labeled floatleft">
+                <label id="brange">
+                    <abbr title="Specify Windows in pairs, e.g. [min0,max0],[min1,max1]">
+                        Baseline Windows
+                    </abbr>
+                <input id="brangewindow" name="brangewindow"
+                    tal:attributes="value fields/brangewindow"
+                />
+
+                </label>
+                <label id ="brangeunit"></label>
+            </div>
+            <div class="labeled floatleft">
+            <label>
+                <abbr title="Bin the data by 5 channels">
+                    Bin
+                </abbr>
+                <input type="checkbox" name="bin" tal:attributes="checked python: fields['bin'] or None;value fields/bin">
+            </label>
+            </div>
+            <div class="labeled floatleft">
+            <label>
+                <abbr title="Average all integrations in all selected files (Tsys weighted)">Average
+                </abbr>
+                <input type="checkbox" name="average" tal:attributes="checked python: fields['average'] or None;value fields/average">
+            </label>
+            </div>
+            <div class="labeled floatleft">
+            <label>
+                 <abbr title="Display Stokes IQUV instead of raw pols">Stokes
+                </abbr>
+                <input type="checkbox" name="stokes" tal:attributes="checked python: fields['stokes'] or None;value fields/stokes">
+            </label>
+            </div>
+        <div style="clear: both;">
+        </div>
+        </fieldset>
+        <p>
+        <div id="plotrange">
+            <fieldset>
+                <legend>
+                    <abbr title="Set the min/max for the abcissa, e.g 100,200">
+                        Plot Window
+                    </abbr>
+                </legend>
+                <label id="plotlbl"><input id="plotwindow" name="plotwindow" tal:attributes="value fields/plotwindow"></input></label>
+                <label id="prangeunit"></label>
+            </fieldset>
+            </div>
+
+        <p>
+        <div align="center">
+            <input class="plot" type="submit" name="plot" value="plot">
+            <input class="plot" type="button" id="summary" name="summary" value="summary" onclick="javascript:summaryPopUp();">
+        </div>
+    </form>
+    <div align="center">
+        <img tal:attributes="src fields/imagename">
+        <div style="color: red;font-size: 16pt" tal:content="fields/debug"></div>
+    </div>
+</body>
+</html>

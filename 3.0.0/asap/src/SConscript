@@ -1,0 +1,26 @@
+import os,glob,shutil
+
+# import root environment
+Import( "env")
+myenv = env.Copy()
+
+# gather cpp files
+cpps = env.SGlob("*.cpp")
+pycpps = env.SGlob("python_*.cpp")
+for pf in pycpps: cpps.remove(pf)
+
+# location of libcasav.a
+myenv.Prepend( LIBPATH = ['#/build'] )
+myenv['SHLIBPREFIX']=""   #gets rid of lib prefix
+myenv.Append(CCFLAGS=["-DWCSLIB_GETWCSTAB"])
+# need to create library here to fool  scons linker
+libasap =  myenv.StaticLibrary(target = "asap", source = cpps)
+myenv.Prepend( LIBS =  ['asap'] )
+
+# Finally create the library for the module
+if not hasattr(myenv, "LoadableModule"):
+    myenv.LoadableModule = myenv.SharedLibrary
+so = myenv.LoadableModule( target = "_asap.so", source = pycpps, SHLIBSUFFIX="" )
+#test = myenv.Program("test", cpps)
+Return("so")
+
