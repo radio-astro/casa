@@ -1,0 +1,5 @@
+1000 casa/Arrays/ArrayLogical.cc 
+     = casa/Arrays/Array.h 
+     template Bool anyEQ(Array<Double> const &, Double const &) 
+1000 casa/Containers/BlockIO.cc casa/Containers/Block.h 
+     template ostream & operator<<(ostream &, Block<uInt> const &) 

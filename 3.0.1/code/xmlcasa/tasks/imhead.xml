@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- Copyright (C) 2008                                                -->
+<!-- Associated Universities, Inc. Washington DC, USA.                 -->
+<!--                                                                   -->
+<!-- This library is free software; you can redistribute it and/or     -->
+<!-- modify it under the terms of the GNU Library General Public       -->
+<!-- License as published by the Free Software Foundation; either      -->
+<!-- version 2 of the License, or (at your option) any later version.  -->
+<!--                                                                   -->
+<!-- This library is distributed in the hope that it will be useful,   -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of    -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU -->
+<!-- Library General Public License for more details.                  -->
+<!--                                                                   -->
+<!-- You should have received a copy of the GNU Library General Public -->
+<!-- License along with this library; if not, write to the Free        -->
+<!-- Software Foundation,Inc.,675 Massachusetts Ave,Cambridge, MA 02139, USA.-->
+<!--                                                                   -->
+<!-- Correspondence concerning AIPS++ should be adressed as follows:   -->
+<!--        Internet email: aips2-request@nrao.edu.                    -->
+<!--        Postal address: AIPS++ Project Office                      -->
+<!--                        National Radio Astronomy Observatory       -->
+<!--                        520 Edgemont Road                          -->
+<!--                        Charlottesville, VA 22903-2475 USA         -->
+<!-- ***************************************************************** --> 
+<!-- ***************************************************************** --> 
+<!-- This is the param set the imhead task                             -->
+<!-- This is similar to the AIPS imhead, gethead, and puthead          -->
+<!-- This does the equivalent of                                       -->
+<!-- ia.open('anyfile.im');                                            -->
+<!-- ia.summary();                       # summary mode                -->
+<!-- tb.open('anyfile.im',nomodify=False)                              -->
+<!-- tb.getcolkeywords()                                               -->
+<!-- Extraction of all header            # list mode                   -->
+<!-- List history contents (ia.history)  # history mode                -->
+<!-- Add a new keyword or coordinate     # add mode                    -->
+<!-- tb.putcolkeywords(value=newValue)   # put mode                    -->
+<!-- Delete a new keyword or coordinate  # del mode                    -->
+<!-- print/return( value )               # get mode                    -->
+<!-- ***************************************************************** --> 
+<!-- ***************************************************************** --> 
+<!-- See task_imhead.py for detailed description of the                -->
+<!-- imhead task.                                                      -->
+<!-- ***************************************************************** --> 
+<!-- ***************************************************************** --> 
+
+<task type="function" name="imhead" category="image analysis, information">
+
+<shortdescription>List, get and put image header parameters</shortdescription>
+
+
+<input>
+    <param type="string" name="imagename" mustexist="true" >
+    	<description>Name of the input image</description>
+    	<value></value>
+        <example>imagenam='ngc5921_task.image'</example>
+    </param>
+
+    <param type="string" name="mode" >
+	<description>imhead options: list, summary, get, put</description>
+	<allowed kind="enum">
+	    <value>list</value>
+            <value>fits</value>
+            <value>history</value>
+	    <value>get</value>
+	    <value>put</value>
+	    <value>add</value>
+	    <value>del</value>
+	    <value>summary</value>
+    	</allowed>
+        <value>summary</value>
+    </param>
+
+    <param type="string" name="hdkey" subparam="yes">
+    	<description>The FITS keyword</description>
+        <value></value>
+        <example>hdkey'telescope'</example>
+    </param>
+
+    <param type="any" name="hdvalue" subparam="yes">
+	<any type="variant"/>
+    	<description>Value of hdkey)</description>
+        <value type="string"></value>
+        <example>hdvalue='VLA'</example>
+    </param>
+
+    <param type="string" name="hdtype" subparam="yes">
+    	<description>Data type of the header keyword.</description>
+	<allowed kind="enum">
+	    <value>bool</value>
+            <value>int</value>
+            <value>string</value>
+	    <value>double</value>
+	    <value>complex</value>
+            <value></value>
+    	</allowed>
+        <value></value>
+        <example>hdkey='telescope'</example>
+    </param>
+
+    <param type="string" name="hdcomment" subparam="yes">
+    	<description>Comment associated with the header keyword</description>
+        <value type="string"></value>
+        <example>hdvalue='VLA'</example>
+    </param>
+
+
+    <constraints>
+	<when param="mode">
+  	    <equals value="summary"/>
+  	    <equals value="list"/>
+  	    <equals value="history"/>
+  	    <equals value="fits"/>
+
+	    <equals value="put">
+		<default param="hdkey"><value type="string"></value></default>
+		<default param="hdvalue"><value type="string"></value></default>
+		<default param="hdtype"><value type="string"></value></default>
+		<default param="hdcomment"><value type="string"></value></default>	    </equals>
+
+	    <equals value="add">
+		<default param="hdkey"><value type="string"></value></default>
+		<default param="hdvalue"><value type="string"></value></default>
+		<default param="hdtype"><value type="string"></value></default>
+		<default param="hdcomment"><value type="string"></value></default>
+	    </equals>
+
+	    <equals value="get">
+		<default param="hdkey"><value type="string"></value></default>
+	    </equals>
+
+	    <equals value="del">
+		<default param="hdkey"><value type="string"></value></default>
+	    </equals>
+	</when>
+    </constraints>
+</input>
+
+<returns type="variant" limittypes="string double void" />
+
+<example>
+
+        This task allows the user to manipulate some meta-data parameters in an
+        image.  The mode='list' shows those keywords that are
+        presently implemented, with their values.  The contents associated
+        with the keywords can be obtained (get) and changed (put).
+
+        Additional image parameter listings are available.
+
+        [For visibility files, the taskname='vishead' should be used.]
+
+        The modes that are available are:
+
+	   list    --- Lists the image header keywords and values.
+                       Use this if 'get' and 'put' are executed.
+           get     --- Get the specified keyword value(s) from the image
+	   put     --- Put the specified keyword value(s) into the image 
+
+           history --- Display the history information in hte CASA logger.
+           summary --- Information summarizing the CASA image file.
+           fits    --- Lists the header information in a FITS style (not available)
+	   add     --- Adds a new header key.  Use with caution
+	   del     --- Delete a header key, hdkey.  Use with caution
+	
+        Parameters currently implemented are listed using mode = 'list'
+
+           beammaj	   Major axis of the clean beam
+           beammin         Minor axis of the clean beam
+           beampa          Position angle of the clean beam
+	   bunit	   Image pixel units (K, Jy/beam, etc)
+	   cdeltn	   Pixel size, nth axis  (max n is 4)
+	   crpixn	   Pixel coordinate of reference point, nth axis
+	   crvaln	   Pixel location of reference point, nth axis
+	   ctypen	   Axis name, nth axis
+	   cunitn	   Pixel units, nth axis
+           datamax         Maximum pixel value in image
+           datamin         Minimum pixel value in image
+	   date-obs	   Date of the observation
+	   equinox         Reference frame for directional coordinates
+           imtype          Image type: intensity, 
+           minpos
+           minpixpos
+           maxpos
+           maxpixpos
+	   object	   Source name
+	   observer	   Observer name
+	   projection	   Image projection ('SIN','TAN', or 'ZEA')
+           reffreqtype     Reference frame for the spectral coordinates
+	   restfrequency   Rest Frequency
+	   telescope	   Telescope name
+
+        Keyword arguments:
+
+        imagename --- Name of input image
+	                default: none; example: imagename='ngc5921_task.image'
+        mode      --- Mode: options: 
+                        default: none; 'list', 'summary', 'fits', 'history',
+                        'get', 'put', 'add', and 'del'
+
+                        NOTE:  'add' and 'del' should be used with caution
+
+        hdkey     --- keyword to use with get, put, add, or del
+	                default: none;  example: hdkey='telescope'
+        hdvalue   --- keyword value that is 'got', or to be 'put' or
+                      to be 'added'
+	                default: ''; example: hdvalue='VLA'
+	Examples: 
+		  hdkey='date-obs';hdvalue='2007/06/20/00:00:00'
+		  hdkey='beammajor';hdvalue='55arcsec'
+                  hdkey='beampa'';hdvalue='0deg'
+		  hdkey='restfrequency';hdvalue='1.421GHz'
+		  hdkey='restfrequency';hdvalue='1.421GHz, 115.272GHz'
+		  hdkey='projection';hdvalue='TAN'
+		  hdkey='cdelt4';hdvalue=24415.05
+		  hdkey='cdelt1';hdvalue='7.75e-5deg'
+		  hdkey='crval1';hdvalue=qa.quantity( '763180', 'arsec')
+		  hdkey='crval1';hdvalue='14:07:58'
+		  hdkey='crval4';hdvalue='6250000Hz'
+
+        hdtype    --- Used only with 'add' mode.  It is the data type that
+                           is used to store the hdkey.  It can not be used to
+                           change the data type of an exiting keyword.
+                      options: bool, int, string, doubple, complex
+                      default: none; example hdtype='double'
+
+
+        Note that hdvalue will contain numbers, strings as well as units.
+        
+        Examples:
+
+        1)  get the clean beam from one image and put it in a second image
+
+           Get the clean beam from image1 into hdvalue
+                imagename = 'image1.im'; mode = 'get'; hdkey = 'beam'
+                hdvalue = imhead()
+                print hdvalue   #  to see values
+
+           To then put the clean beam into image2
+                imagename = 'image2.im', mode = 'put'; imhead()
+
+        2)  Most output values are dictionaries:
+
+
+               mode = 'get'; hdkey = 'maxpos'; aa = imhead()
+
+            would give for the command print aa
+                {'value': '03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz', 'unit': ''}
+            print aa['value'] gives 
+                03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz
+            print aa['value'[1][0:12] gives 03:19:48.160
+
+      
+               mode = 'get'; hdkey = 'crpix1'; aa = imhead()
+
+            would give for the command print aa
+                {'value': '128.0', 'unit': ''}
+            print aa['value'] gives 
+                128.0    (a string)
+
+        3)  The use of put is a bit more straight-forward
+
+               mode = 'put'; hdkey = 'crpix1'; hdvalue = '200'; imhead()
+             then
+               mode = 'get'; hdkey = 'crpix1'; aa = imhead()  would give
+                   {'value': '200.0', 'unit': ''}
+
+
+</example>
+
+</task>
+
+</casaxml>
+

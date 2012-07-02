@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="browsetable" category="utility" async="never">
+	<shortdescription>Browse a table (MS, calibration table, image)</shortdescription>
+	<description>
+	</description>
+	<input>
+		<param type="string" name="tablename" kind="table">
+			<description>Name of input table</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+
+       This task brings up a browser that can open and display any CASA table.  The
+       tablename  can be specified on inputs, or any table can be loaded after the
+       browser comes up.
+               
+       Keyword arguments:
+       tablename -- Name of table file on disk (vis, calibration table, image)
+               default: none; example: tablename='ngc5921.ms'
+
+               
+
+       Some comments in using browsetable (see cookbook also):
+
+        Most often you will browse a measurement set.  Either specify the vis name
+        as the tablename, or when the browser comes up,
+
+               click on &lt;file&gt; (upper left), then click on &lt;open table&gt;
+
+       If you want to look at sub-tables, use the tab table keywords along the left side
+       to bring up a panel with the sub-tables listed (Fig 3.8), then choose (left-click)
+       a table and View.
+
+       Note that one useful feature is that you can Edit any table and its contents. Use
+       the Edit tab (to the right of the file tab). Be careful with this, and make a backup
+       copy of the table before editing!
+
+       Use the Close Tables and Exit option from the Files menu to quit the casabrowser
+
+       To get a plot of two table values, click on tools, then click on plot 2D.
+       For example, to get a u-v plots, in the Plotter Option Gui,
+             set Rows:  0   to  &lt;Large Number&gt;
+             X Axis:  UVW      Slice  (set 0)
+             Y Axis:  UVW      Slice  (set 1)
+             click 'Clear and Plot' on right.
+
+       For visibility plots
+             X Axis:  TIME
+             Y Axis:  DATA     Slice Amplitude
+             click 'Clear and Plot' on right.
+  
+              
+ </example>
+ </task>
+ </casaxml>
