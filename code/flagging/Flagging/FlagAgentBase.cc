@@ -775,23 +775,32 @@ FlagAgentBase::setDataSelection(Record config)
 				(polarizationSelection_p.find("ABS") == string::npos) and
 				(polarizationSelection_p.find("NORM") == string::npos))
 		{
-
-			parser.setPolnExpr(polarizationSelection_p);
-
-			if (flagDataHandler_p->parseExpression(parser))
+			// jagonzal (CAS-4234): Sanitize correlation expressions
+			String sanitizedExpression = sanitizeCorrExpression(polarizationSelection_p,flagDataHandler_p->corrProducts_p);
+			if (sanitizedExpression.size() > 0)
 			{
-				polarizationList_p=parser.getPolMap();
-				filterPols_p=true;
+				polarizationSelection_p = sanitizedExpression;
+				parser.setPolnExpr(polarizationSelection_p);
+				if (flagDataHandler_p->parseExpression(parser))
+				{
+					polarizationList_p=parser.getPolMap();
+					filterPols_p=true;
 
-				// Request to pre-load CorrType
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+					// Request to pre-load CorrType
+					flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
-				// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
-				ostringstream polarizationListToPrint (ios::in | ios::out);
-				polarizationListToPrint << polarizationList_p;
+					// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
+					ostringstream polarizationListToPrint (ios::in | ios::out);
+					polarizationListToPrint << polarizationList_p;
 
-				*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-				*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+					*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+					*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+				}
+			}
+			else
+			{
+				AipsError exception(String("None of the requested correlation products (" + polarizationSelection_p + ") is available"));
+				throw (exception);
 			}
 		}
 	}
@@ -861,6 +870,206 @@ FlagAgentBase::setDataSelection(Record config)
 	}
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+// Sanitize correlation expression
+// -----------------------------------------------------------------------
+String
+FlagAgentBase::sanitizeCorrExpression(String corrExpression, std::vector<String> *corrProducts)
+{
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+	String sanitizedExpression = String("");
+	bool didSanitize = false;
+
+	if (corrExpression.find("RR") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("RR")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("RR");
+			}
+			else
+			{
+				sanitizedExpression += String(",RR");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [RR] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("LL") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("LL")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("LL");
+			}
+			else
+			{
+				sanitizedExpression += String(",LL");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [LL] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("RL") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("RL")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("RL");
+			}
+			else
+			{
+				sanitizedExpression += String(",RL");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [RL] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("LR") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("LR")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("LR");
+			}
+			else
+			{
+				sanitizedExpression += String(",LR");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [LR] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("XX") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("XX")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("XX");
+			}
+			else
+			{
+				sanitizedExpression += String(",XX");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [XX] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("YY") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("YY")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("YY");
+			}
+			else
+			{
+				sanitizedExpression += String(",YY");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [YY] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("XY") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("XY")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("XY");
+			}
+			else
+			{
+				sanitizedExpression += String("XY");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [XY] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("YX") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("YX")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("YX");
+			}
+			else
+			{
+				sanitizedExpression += String(",YX");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [YX] not available " << LogIO::POST;
+		}
+	}
+
+	if (corrExpression.find("I") != string::npos)
+	{
+		if (std::find(corrProducts->begin(),corrProducts->end(),String("I")) != corrProducts->end())
+		{
+			if (sanitizedExpression.size() == 0)
+			{
+				sanitizedExpression += String("I");
+			}
+			else
+			{
+				sanitizedExpression += String(",I");
+			}
+		}
+		else
+		{
+			didSanitize = true;
+			*logger_p << LogIO::WARN <<  "Correlation product [I] not available " << LogIO::POST;
+		}
+	}
+
+	if ( (didSanitize) and (sanitizedExpression.size() > 0) )
+	{
+		*logger_p << LogIO::NORMAL <<  "Sanitized correlation expression is: " << sanitizedExpression << LogIO::POST;
+	}
+
+
+	return sanitizedExpression;
 }
 
 void
@@ -1107,11 +1316,24 @@ FlagAgentBase::setAgentParameters(Record config)
 				expression_p = String("NORM ");
 			}
 
-			expression_p += flagDataHandler_p->corrProducts_p->at(0);
-
-			for (uInt corr_i=1;corr_i<flagDataHandler_p->corrProducts_p->size();corr_i++)
+			bool expressionInitialized = false;
+			for (uInt corr_i=0;corr_i<flagDataHandler_p->corrProducts_p->size();corr_i++)
 			{
-				expression_p += String(",") + flagDataHandler_p->corrProducts_p->at(corr_i);
+				// jagonzal (CAS-4234): Now we have the I corr product in the list
+				// but we have to skip it when expanding the "ABS ALL" expressions
+				// because the user must specify WVR implicitly
+				if (flagDataHandler_p->corrProducts_p->at(corr_i) != "I")
+				{
+					if (expressionInitialized)
+					{
+						expression_p += String(",") + flagDataHandler_p->corrProducts_p->at(corr_i);
+					}
+					else
+					{
+						expression_p += flagDataHandler_p->corrProducts_p->at(corr_i);
+						expressionInitialized = true;
+					}
+				}
 			}
 		}
 

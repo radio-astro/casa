@@ -235,6 +235,8 @@ protected:
 	void setDataSelection(Record config);
 	// TODO: This class must be re-implemented in the derived classes
 	virtual void setAgentParameters(Record config);
+	// Method to sanitize correlation expression and keep going
+	String sanitizeCorrExpression(String corrExpression, std::vector<String> *corrProducts);
 
 	void generateAllIndex();
 	void generateRowsIndex(uInt nRows);
