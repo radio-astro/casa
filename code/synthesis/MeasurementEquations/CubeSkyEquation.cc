@@ -1042,7 +1042,7 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
-  vb_p->assign(vb, True);
+  vb_p->assign(vb, False);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
 
