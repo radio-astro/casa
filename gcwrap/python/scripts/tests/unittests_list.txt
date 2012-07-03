@@ -23,7 +23,6 @@ test_fixvis                     dpetry@nrao.edu
 test_flagcmd                    scastro@eso.org
 test_flagdata                   jkern@nrao.edu
 test_flagdata2                  scastro@eso.org
-test_tflagdata                  scastro@eso.org
 test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
@@ -63,6 +62,7 @@ test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 test_listobs                    scastro@eso.org
 #test_listvis                    scastro@eso.org
+test_listpartition              scastro@eso.org
 test_measures			rreid@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp
 test_partition                  jkern@nrao.edu
@@ -102,6 +102,7 @@ test_statwt                     ttsutsum@nrao.edu
 test_uvcontsub			rreid@nrao.edu
 test_uvcontsub3			rreid@nrao.edu
 #test_testconcat                 dpetry@eso.org
+test_tflagdata                  scastro@eso.org
 test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
