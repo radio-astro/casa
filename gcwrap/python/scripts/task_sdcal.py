@@ -237,7 +237,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             if ( tau > 0.0 ):
                     # recalculate az/el (NOT needed for GBT data)
                     if ( antennaname != 'GBT'): scal.recalc_azel()
-                    scal.opacity(tau)
+                    scal.opacity(tau,insitu=True)
 
             # Align frequencies if desired
             #if ( align ):
