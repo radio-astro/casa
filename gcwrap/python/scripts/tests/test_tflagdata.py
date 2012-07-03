@@ -721,6 +721,15 @@ class test_selections(test_base):
         tflagdata(vis=self.vis, antenna='2,3,4', action='calculate')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'Nothing should be flagged when action=calculate')
+
+    def test_missing_corr_product(self):
+        '''CAS-4234: Keep going when one of the corr products is not available but others are present'''
+        tflagdata(vis=self.vis, correlation='LL,LR', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
+        test_eq(tflagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
+        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
 
 class test_selections_alma(test_base):
