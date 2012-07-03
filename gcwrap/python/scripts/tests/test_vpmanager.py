@@ -146,13 +146,31 @@ class vpmanager_test(unittest.TestCase):
         vp.setpbantresptable(telescope='ALMA',
                              antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA-RT',
                              dopb=True)
-        myrec = vp.getvp(telescope='ALMA',
+        myrec1 = vp.getvp(telescope='ALMA',
                          obstime = '2009/07/24/10:00:00',
                          freq = 'TOPO 100GHz',
                          antennatype = 'DV',
                          obsdirection = 'AZEL 30deg 60deg')
+        myrec2 = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'DA',
+                         obsdirection = 'AZEL 30deg 60deg')
+        myrec3 = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'PM',
+                         obsdirection = 'AZEL 30deg 60deg')
+        myrec4 = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'CM',
+                         obsdirection = 'AZEL 30deg 60deg')
         
-        self.assertTrue(myrec['name']=='IMAGE' and myrec['telescope']=='ALMA')
+        self.assertTrue(myrec1['name']=='IMAGE' and myrec1['telescope']=='ALMA')
+        self.assertTrue(myrec2['name']=='IMAGE' and myrec2['telescope']=='ALMA')
+        self.assertTrue(myrec3['name']=='IMAGE' and myrec3['telescope']=='ALMA')
+        self.assertTrue(myrec4['name']=='IMAGE' and myrec4['telescope']=='ALMA')
 
 
     def test10(self):
