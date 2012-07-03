@@ -105,6 +105,12 @@ namespace casa{
 		 const MVFrequency& freqQ, Double pa=0.,
 		 Bool doSquint=True);
 
+    void applyVP(ImageInterface<Complex>& pbImage, 
+		 const String& telescope, const MEpoch& obsTime,
+		 const String& antType0, const String& antType1,
+		 const MVFrequency& freqQ, Double pa=0.,
+		 Bool doSquint=True);
+
     void skyMuller(ImageInterface<Complex>& skyJones);
 
     //    Int getALMABandId(const Double& freq);
@@ -116,6 +122,7 @@ namespace casa{
     
     void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg, Bool Square=False);
     void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg, Bool Square=False);
+    void fillVP(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg, Bool Square=False);
 
     TempImage<Complex> convFunc_p;
     Vector<Double> resolution;
