@@ -776,7 +776,16 @@ FlagAgentBase::setDataSelection(Record config)
 				(polarizationSelection_p.find("NORM") == string::npos))
 		{
 			// jagonzal (CAS-4234): Sanitize correlation expressions
-			String sanitizedExpression = sanitizeCorrExpression(polarizationSelection_p,flagDataHandler_p->corrProducts_p);
+			String sanitizedExpression;
+			if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
+			{
+				sanitizedExpression = sanitizeCorrExpression(polarizationSelection_p,flagDataHandler_p->corrProducts_p);
+			}
+			else
+			{
+				sanitizedExpression = polarizationSelection_p;
+			}
+
 			if (sanitizedExpression.size() > 0)
 			{
 				polarizationSelection_p = sanitizedExpression;
