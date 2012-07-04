@@ -422,6 +422,19 @@ class test_XML(test_base):
         flagcmd(vis=self.vis, action='apply', reason='SHADOW')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 240640)
+        
+    def test_missing_corr(self):
+        '''flagcmd: CAS-4234, non-existing correlation raise no error'''
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        flagcmd(vis=self.vis, inpmode='cmd', command=["correlation='XX,RR,RL'"], action='list',
+                savepars=True)
+        
+        flagcmd(vis=self.vis, action='apply')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        
+        self.assertEqual(res['flagged'], 208000+208000, 'Should only flag RR and RL and not fail')
 
 class test_shadow(test_base):
     def setUp(self):
