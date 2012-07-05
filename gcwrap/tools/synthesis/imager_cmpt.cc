@@ -67,7 +67,7 @@ imager::~imager()
 
 bool
 imager::advise( const bool takeadvice, const double amplitudeloss, const ::casac::variant& fieldofview,
-	       int& pixels, ::casac::record& cell, int& facets, std::string& phasecenter )
+	       int& pixels, ::casac::record& cell, int& facets, string& phasecenter )
 {
    Bool rstat(False);
    if(hasValidMS_p){

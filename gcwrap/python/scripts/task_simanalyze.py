@@ -329,7 +329,7 @@ def simanalyze(
                     beam['positionangle'] = qa.quantity(0.0,'deg')
                     msg('Primary beam: '+str(beam['major']))
                     ia.setrestoringbeam(beam=beam)
-                ia.done()
+                ia.close()
                 if sd_only:
                     beam_current = True
                     bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
@@ -413,7 +413,7 @@ def simanalyze(
             ia.open(imagename+".image")
             beam = ia.restoringbeam()
             beam_current = True
-            ia.done()
+            ia.close()
             # model has units of Jy/pix - calculate beam area from clean image
             # (even if we are not plotting graphics)
             bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
@@ -497,7 +497,7 @@ def simanalyze(
                 ia.open(imagename+".image")
                 beam = ia.restoringbeam()
                 beam_current = True
-                ia.done()
+                ia.close()
                 # model has units of Jy/pix - calculate beam area from clean image
                 cell = util.cellsize(imagename+".image")
                 cell= [ qa.convert(cell[0],'arcsec'),
@@ -555,7 +555,7 @@ def simanalyze(
             # scalar fidelity
             absconv = imagename + '.absconv'
             ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
-            ia.done()
+            ia.close()
             
             ia.open(absconv)
             modelstats = ia.statistics(robust=True, verbose=False,list=False)
@@ -566,7 +566,7 @@ def simanalyze(
                     maxmodel = maxmodel[0]
                 else:
                     maxmodel = 0.
-            ia.done()
+            ia.close()
             scalarfidel = maxmodel/maxdiff
             msg("fidelity range (max model / rms difference) = "+str(scalarfidel),origin="analysis")
 
@@ -673,7 +673,7 @@ def simanalyze(
                     pl.ylim([-3*b,3*b])
                     ax = pl.gca()
                     pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                    ia.done()
+                    ia.close()
                     util.nextfig()
 
                 disprange = []  # first plot will define range
@@ -726,11 +726,11 @@ def simanalyze(
 
         # cleanup - delete newmodel, newmodel.flat etc
         if os.path.exists(imagename+".image.flat"):
-            shutil.rmtree(imagename+".image.flat")  
+            shutil.rmtree(imagename+".image.flat*")  
         if os.path.exists(imagename+".residual.flat"):
-            shutil.rmtree(imagename+".residual.flat")  
+            shutil.rmtree(imagename+".residual.flat*")  
         if os.path.exists(imagename+".flux"):
-            shutil.rmtree(imagename+".flux")  
+            shutil.rmtree(imagename+".flux*")  
         absdiff = imagename + '.absdiff'        
         if os.path.exists(absdiff):
             shutil.rmtree(absdiff)   

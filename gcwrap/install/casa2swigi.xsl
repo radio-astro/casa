@@ -50,6 +50,10 @@
 <xsl:text disable-output-escaping="yes">%apply record &amp;OUTARGREC {record &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
 		      </xsl:when>
+		      <xsl:when test="lower-case(@xsi:type)='mdirection'">
+<xsl:text disable-output-escaping="yes">%apply record &amp;OUTARGREC {record &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='intarray'">
 			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;int&gt;  &amp;OUTARGVEC {std::vector&lt;int&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
@@ -71,7 +75,7 @@
 </xsl:text>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='string'">
-			      <xsl:text disable-output-escaping="yes">%apply std::string  &amp;OUTARGSTR {std::string &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+			      <xsl:text disable-output-escaping="yes">%apply string  &amp;OUTARGSTR {string &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
 		      </xsl:when>
 	      </xsl:choose>

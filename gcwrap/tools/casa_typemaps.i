@@ -555,6 +555,25 @@ using namespace casac;
    }
 }
 
+%typemap(argout) string& OUTARGSTR{
+   PyObject *o = PyString_FromString($1->c_str());
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
 %typemap(argout) std::string& OUTARGSTR{
    PyObject *o = PyString_FromString($1->c_str());
    if((!$result) || ($result == Py_None)){
