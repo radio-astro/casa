@@ -344,38 +344,29 @@ class ImageAnalysis
     //converted to a CoordinateSytem 
 
     ImageInterface<Float> * regrid(
-    	const String& outfile,
-    	const Vector<Int>& shape,
+    	const String& outfile, const Vector<Int>& shape,
         const Record& csys, const Vector<Int>& axes,
         Record& region, const String& mask,
-        const String& method="linear",
-        const Int decimate=10,
-        const Bool replicate=False,
-        const Bool doref=True,
-        const Bool dropdeg=False,
-        const Bool overwrite=False,
-        const Bool force=False,
-        const Bool specAsVelocity=False,
+        const String& method="linear", const Int decimate=10,
+        const Bool replicate=False, const Bool doref=True,
+        const Bool dropdeg=False, const Bool overwrite=False,
+        const Bool force=False, const Bool specAsVelocity=False,
         const Bool extendAxes=False
-    );
+    ) const;
     
 
     // regrids to match the "other" image interface...
     ImageInterface<Float> * regrid(
-	const String& outfile, const ImageInterface<Float>*other,
+    	const String& outfile, const ImageInterface<Float>*other,
         const String& method="linear",
     	const Vector<Int>& axes = Vector<Int>(0),
-	const Record &region = Record(),
-	const String& mask="",
-        const Int decimate=10,
-        const Bool replicate=False,
-        const Bool doref=True,
-        const Bool dropdeg=False,
-        const Bool overwrite=False,
-        const Bool force=False,
-        const Bool specAsVelocity=False,
+    	const Record &region = Record(),
+    	const String& mask="", const Int decimate=10,
+        const Bool replicate=False, const Bool doref=True,
+        const Bool dropdeg=False, const Bool overwrite=False,
+        const Bool force=False, const Bool specAsVelocity=False,
         const Bool extendAxes=False
-    );
+    ) const;
 
     ImageInterface<Float>* rotate(
     	const String& outfile,
@@ -728,7 +719,7 @@ class ImageAnalysis
         const Bool replicate, const Bool doref,
         const Bool dropdeg, const Bool overwrite,
         const Bool force, const Bool extendMask
-    );
+    ) const;
 
     ImageInterface<Float>* _regridByVelocity(
     	const String& outfile, const Vector<Int>& shape,
