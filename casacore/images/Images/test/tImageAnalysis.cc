@@ -29,6 +29,8 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
+#include <lattices/Lattices/LatticeFractile.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 
 void writeTestString(const String& test) {
@@ -143,25 +145,6 @@ int main() {
             AlwaysAssert(fabs(1-z_yval[7]/-0.131597) < 1e-5, AipsError); 
         }
         {
-        	writeTestString("CAS-2359 verification");
-        	CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
-        	TempImage<Float> x(TiledShape(IPosition(3,10,10,1)), csys);
-        	Array<Float> data(IPosition(3,10,10,1));
-        	data.set(0);
-        	ImageAnalysis ia(&x);
-        	Vector<Double> xy;
-        	Vector<Float> zxaxis, zyaxis;
-        	try {
-        		// should throw exception, xy.size() != 2
-        		ia.getFreqProfile(xy, zxaxis, zyaxis);
-        		AlwaysAssert(False, AipsError);
-        	}
-        	catch (AipsError) {}
-        	xy.resize(2);
-        	xy.set(1.0);
-    		AlwaysAssert(! ia.getFreqProfile(xy, zxaxis, zyaxis),AipsError);
-        }
-        {
             writeTestString("histograms() test");
             FITSImage image("histogram_test.fits");
             ImageAnalysis ia(&image);
@@ -209,6 +192,103 @@ int main() {
                 AlwaysAssert(counts(pos) == expCount, AipsError);
             }
         }
+
+        {
+        	writeTestString("CAS-2359 verification");
+        	CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
+        	TempImage<Float> x(TiledShape(IPosition(3,10,10,1)), csys);
+        	Array<Float> data(IPosition(3,10,10,1));
+        	data.set(0);
+        	ImageAnalysis ia(&x);
+        	Vector<Double> xy;
+        	Vector<Float> zxaxis, zyaxis;
+        	try {
+        		// should throw exception, xy.size() != 2
+        		ia.getFreqProfile(xy, zxaxis, zyaxis);
+        		AlwaysAssert(False, AipsError);
+        	}
+        	catch (AipsError x) {
+        		cout << "Exception thrown as expected: " << x.getMesg() << endl;
+        	}
+        	xy.resize(2);
+        	xy.set(1.0);
+    		AlwaysAssert(! ia.getFreqProfile(xy, zxaxis, zyaxis),AipsError);
+        }
+        {
+        	/*
+            writeTestString("CAS-4230 test");
+        	PagedImage<Float> image("uvtaper.cube.hsmooth.image");
+        	ImageAnalysis ia (&image);
+        	cout << "shape " << image.shape() << endl;
+        	IPosition blc(4, 0 , 0, 0, 8210);
+        	IPosition trc(4, 255, 255, 0, 8475);
+
+        	LCBox box(blc, trc, image.shape());
+        	Record statsout;
+        	Record regionRec = box.toRecord("");
+        	Vector<Int> axes(0);
+        	String mask;
+        	Vector<String> plotstats(0);
+        	Vector<Float> includepix(0), excludepix(0);
+        	Int nx = 1, ny = 1;
+        	Bool list = False, force = False, disk = False, robust = True;
+        	Bool verbose = True, extendMask = False;
+        	vector<String> *messageStore = 0;
+
+        	ia.statistics(
+        		statsout, axes, regionRec, mask, plotstats,
+        		includepix, excludepix, "", nx, ny, list,
+        		force, disk, robust, verbose, extendMask, messageStore
+        	);
+        	*/
+        	//FITSImage image("cas-4230.fits");
+        	// LatticeFractile<Float>::unmaskedFractile (image, 0.5);
+
+        }
+
+        {
+        	cout << "*** test regrid by velocity ***" << endl;
+        	TempImage<Float> input(
+        		TiledShape(IPosition(3, 10, 10, 10)),
+        		CoordinateUtil::defaultCoords3D()
+        	);
+        	CoordinateSystem csysTemp = CoordinateUtil::defaultCoords3D();
+        	SpectralCoordinate spec = csysTemp.spectralCoordinate();
+
+        	spec.setRestFrequency(4.0e9);
+        	spec.setReferenceValue(Vector<Double>(1, 4.0e9));
+        	spec.setReferencePixel(Vector<Double>(1, 4.5));
+        	csysTemp.replaceCoordinate(spec, 1);
+        	TempImage<Float> templ(TiledShape(IPosition(3, 10, 10, 10)), csysTemp);
+        	ImageAnalysis ia(&input);
+        	ImageInterface<Float> *output = ia.regrid(
+        		"", &templ, "linear", Vector<Int>(1, 2), Record(),
+        		"", 10, False, True, False, False, False, True
+        	);
+        	SpectralCoordinate specOut = output->coordinates().spectralCoordinate();
+        	SpectralCoordinate specTemp = templ.coordinates().spectralCoordinate();
+        	SpectralCoordinate specIn = input.coordinates().spectralCoordinate();
+        	AlwaysAssert(
+        		specOut.referencePixel()[0] == specTemp.referencePixel()[0],
+        		AipsError
+        	);
+        	Double outRefVel, tempRefVel;
+        	specOut.pixelToVelocity(outRefVel, specOut.referencePixel()[0]);
+        	specTemp.pixelToVelocity(tempRefVel, specTemp.referencePixel()[0]);
+        	AlwaysAssert(outRefVel == tempRefVel, AipsError);
+        	Double inFreq;
+        	specIn.velocityToFrequency(inFreq, outRefVel);
+        	AlwaysAssert(specOut.referenceValue()[0] == inFreq, AipsError);
+        	Double outVel1;
+        	specOut.pixelToVelocity(outVel1, specOut.referencePixel()[0]+1);
+        	Double outVelInc = outVel1 - outRefVel;
+        	Double tempVel1;
+        	specTemp.pixelToVelocity(tempVel1, specTemp.referencePixel()[0]+1);
+        	Double tempVelInc = tempVel1 - tempRefVel;
+        	AlwaysAssert(outVelInc == tempVelInc, AipsError);
+        	cout << tempVelInc << " " << outVelInc << endl;
+        }
+
         cout << "ok" << endl;
 	}
     catch (AipsError x) {
