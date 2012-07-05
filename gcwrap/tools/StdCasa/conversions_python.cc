@@ -451,18 +451,14 @@ int casac::pyarray_check(PyObject *obj) {
     } else if (PyString_Check(ele)) {						\
 	VECTOR[INDEX] = STRINGCVT(PyString_AsString(ele));			\
     } else { \
-		    std::cerr << "No matches yet" << std::endl; \
 	    if (PyNumber_Check(ele)){ \
-		    std::cerr << "it is a number" << std::endl; \
 		    if(PyObject_TypeCheck(ele->ob_type, &PyLong_Type)){ \
 		       VECTOR[INDEX] = INTCVT(PyLong_AsLong(PyNumber_Long(ele)));  		\
-			    std::cerr << "long " << PyLong_AsLong(PyNumber_Long(ele)) << std::endl; \
 		    }else if(PyObject_TypeCheck(ele->ob_type, &PyInt_Type)){ \
 		       VECTOR[INDEX] = INTCVT(PyInt_AsLong(PyNumber_Long(ele)));  		\
 			    std::cerr << "int " << PyInt_AsLong(PyNumber_Long(ele)) << std::endl; \
 		    }else{  \
 		       VECTOR[INDEX] = DOUBLECVT(PyFloat_AsDouble(PyNumber_Float(ele)));  		\
-			    std::cerr << "double " << PyFloat_AsDouble(PyNumber_Long(ele)) << std::endl; \
 		    } \
             }										\
     }										\
