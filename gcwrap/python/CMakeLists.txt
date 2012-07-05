@@ -192,7 +192,6 @@ scripts/update_spw.py
 scripts/viewertool.py
 scripts/vishead_util.py
 scripts/simple_cluster.py
-scripts/simple_summary.py 
 )
 
 add_subdirectory( scripts/tests )
