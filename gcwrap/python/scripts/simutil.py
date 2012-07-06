@@ -2816,12 +2816,10 @@ class simutil:
                       pa=beam['positionangle'],overwrite=True)
         ia.done()
         
-        print  'show cache before', tb.showcache()
         #tmpcnv.open(convolved)
         tmpcnv.setbrightnessunit("Jy/beam")
         tmpcnv.setrestoringbeam(beam=beam)
         tmpcnv.done()
-        print 'show cache', convolved, tb.showcache()
 
 
     def bandname(self, freq):
