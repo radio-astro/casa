@@ -413,7 +413,6 @@ int casac::pyarray_check(PyObject *obj) {
 
 #define PYLIST2VECTOR_PLACEIT(VECTOR,INDEX,BOOLCVT,INTCVT,DOUBLECVT,COMPLEXCVT,STRINGCVT) \
 {										\
-		    std::cerr << "Place it" << std::endl; \
     if (PyBool_Check(ele)) {							\
 										\
 	VECTOR[INDEX] = BOOLCVT( ele == Py_True );				\
@@ -458,6 +457,7 @@ int casac::pyarray_check(PyObject *obj) {
 		       VECTOR[INDEX] = INTCVT(PyInt_AsLong(PyNumber_Long(ele)));  		\
 		    }else{  \
 		       VECTOR[INDEX] = DOUBLECVT(PyFloat_AsDouble(PyNumber_Float(ele)));  		\
+			    std::cerr << "double " << PyFloat_AsDouble(PyNumber_Long(ele)) << std::endl; \
 		    } \
             }										\
     }										\
