@@ -15,7 +15,6 @@ def setjy(vis=None, field=None, spw=None,
   retval = True
   try:
     casalog.origin('setjy')
-
     if listmodels:
       casalog.post("Listing model candidates (listmodels == True).")
       if vis:
@@ -242,10 +241,14 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
 
     mytb = tbtool()
     mytb.open(vis)
-    st = mytb.query(' and '.join(query),
-                    style='python')  # Does style matter here?
+    if(len(query) == 0):
+      retval=mytb.nrows()
+    else:
+      st = mytb.query(' and '.join(query),
+                      style='python')  # Does style matter here?
+      retval = st.nrows()
+      st.done()
     mytb.close()
-    retval = st.nrows()
   return retval
 
 
