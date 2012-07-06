@@ -456,7 +456,6 @@ int casac::pyarray_check(PyObject *obj) {
 		       VECTOR[INDEX] = INTCVT(PyLong_AsLong(PyNumber_Long(ele)));  		\
 		    }else if(PyObject_TypeCheck(ele->ob_type, &PyInt_Type)){ \
 		       VECTOR[INDEX] = INTCVT(PyInt_AsLong(PyNumber_Long(ele)));  		\
-			    std::cerr << "int " << PyInt_AsLong(PyNumber_Long(ele)) << std::endl; \
 		    }else{  \
 		       VECTOR[INDEX] = DOUBLECVT(PyFloat_AsDouble(PyNumber_Float(ele)));  		\
 		    } \
@@ -1013,6 +1012,14 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		    result.push(std::complex<double>(c.real, c.imag));			\
 		} else if (PyString_Check(ele)) {					\
 		    result.push(std::string(PyString_AsString(ele)));			\
+		} else if (PyNumber_Check(ele)) {					\
+		    if(PyObject_TypeCheck(ele->ob_type, &PyLong_Type)){ \
+		       result.push((int)PyLong_AsLong(PyNumber_Long(ele)));  		\
+		    }else if(PyObject_TypeCheck(ele->ob_type, &PyInt_Type)){ \
+		       result.push((int)PyInt_AsLong(PyNumber_Long(ele)));  		\
+		    }else{  \
+		       result.push(double(PyFloat_AsDouble(PyNumber_Float(ele))));  		\
+		    } \
 		} else if (PyList_Check(ele) || PyTuple_Check(ele)) {			\
 		    pyobj2variant(ele,result);						\
 		}									\
