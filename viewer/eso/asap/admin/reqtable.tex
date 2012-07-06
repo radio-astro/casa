@@ -1,0 +1,29 @@
+\documentclass[11pt]{article}
+\usepackage{a4}
+\usepackage{longtable}
+
+% Adjust the page size
+\addtolength{\oddsidemargin}{-0.4in}
+\addtolength{\evensidemargin}{+0.4in}
+\addtolength{\textwidth}{+0.8in}
+
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{1ex}
+
+
+\begin{document}
+
+\begin{longtable}{|l|l|l|c|l|}
+
+\hline
+\bf Requirement & & \bf Status & \bf Priority & \bf Effort \\
+\hline
+\endhead
+\hline
+\endfoot
+\input{reqsum.tex}
+
+\end{longtable}
+
+
+\end{document}

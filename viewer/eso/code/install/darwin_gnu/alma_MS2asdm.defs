@@ -1,0 +1,1 @@
+C++OPTLVL += -g -O2 -march=i586 -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse
