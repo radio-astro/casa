@@ -745,8 +745,7 @@ image* image::convolve2d(
 	try {
 		*_log << _ORIGIN;
 		if (detached()) {
-		        throw AipsError("Unable to create image");
-			return 0;
+			throw AipsError("Unable to create image");
 		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Record *Region = toRecord(region);
@@ -1142,8 +1141,7 @@ record* image::fitprofile(const string& box, const variant& region,
 		return 0;
 	}
 	String regionName;
-	std::auto_ptr<Record> regionPtr(0);
-	_getRegion(regionName, regionPtr, region);
+	std::auto_ptr<Record> regionPtr = _getRegion(region);
 	if (ngauss < 0) {
 		*_log << LogIO::WARN
 			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
@@ -1563,12 +1561,10 @@ image* image::transpose(
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionRecord(0);
-		String regionString;
-		_getRegion(regionString, regionRecord, region);
+		std::auto_ptr<Record> regionRecord = _getRegion(region);
 		fitter.reset(
 			new ImageFitter(
-				image, regionString, regionRecord.get(), box, sChans,
+				image, "", regionRecord.get(), box, sChans,
 				stokes, mask, includepix, excludepix, residual, model,
 				estimates, newestimates, complist, writeControl
 			)
@@ -3111,17 +3107,19 @@ bool image::twopointcorrelation(
 }
 
 ::casac::image* image::subimage(
-	const string& outfile, const record& region,
+	const string& outfile, const variant& region,
 	const variant& vmask, const bool dropDegenerateAxes,
 	const bool overwrite, const bool list, const bool stretch
 ) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
-		        throw AipsError("Unable to create image");
-			return 0;
+			throw AipsError("Unable to create image");
 		}
-		std::auto_ptr<Record> regionRec(toRecord(region));
+		std::auto_ptr<Record> regionRec = _getRegion(region);
+		String regionStr = region.type() == variant::STRING
+			? region.toString()
+			: "";
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3783,33 +3781,30 @@ bool image::isconform(const string& other) {
 		RETHROW(x);
 	}
 }
-void image::_getRegion(
-	String& regionName, std::auto_ptr<Record>& regionRecord,
-	const variant& region
-) const {
-
-	if (
-		region.type() != variant::BOOLVEC
-		&& region.type() != variant::STRING
-		&& region.type() != variant::RECORD
-	) {
-		*_log << "Unsupported type for region " << region.type()
-			<< LogIO::EXCEPTION;
-	}
-
-	regionRecord.reset(0);
-	regionName = (
-		region.type() == variant::STRING || region.size() == 0
-	)
-		? region.size() == 0
-			? ""
-			: region.toString()
-		: "";
-	if (region.type() == variant::RECORD) {
-		variant regionCopy = region;
-		regionRecord.reset(
-			toRecord(regionCopy.asRecord())
+std::auto_ptr<Record> image::_getRegion(const variant& region) const {
+	switch (region.type()) {
+	case variant::BOOLVEC:
+		return std::auto_ptr<Record>(new Record());
+	case variant::STRING:
+		return std::auto_ptr<Record>(
+			region.toString().empty()
+				? new Record()
+				: new Record(
+					CasacRegionManager::regionFromString(
+						_image->getImage()->coordinates(),
+						region.toString(),
+					_image->getImage()->shape()
+				 )
+			)
 		);
+	case variant::RECORD:
+		{
+			std::auto_ptr<variant> clon(region.clone());
+			return std::auto_ptr<Record>(toRecord(clon->asRecord()));
+		}
+	default:
+		*_log << "Unsupported type for region " << region.type()
+		<< LogIO::EXCEPTION;
 	}
 }
 

@@ -54,6 +54,7 @@ importvla.xml
 imregrid.xml
 imsmooth.xml
 imstat.xml
+imsubimage.xml
 imtrans.xml
 imval.xml
 listcal.xml

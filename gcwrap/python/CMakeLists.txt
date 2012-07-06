@@ -118,6 +118,7 @@ scripts/task_importvla.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
 scripts/task_imstat.py
+scripts/task_imsubimage.py
 scripts/task_imtrans.py
 scripts/task_imval.py
 scripts/taskinit.py

@@ -77,26 +77,33 @@ import unittest
 class ia_subimage_test(unittest.TestCase):
     
     def setUp(self):
-        pass
+        self.myia = iatool()
     
     def tearDown(self):
         pass
 
-
     def test_stretch(self):
         """Test the stretch parameter"""
-        myia = iatool()
+        myia = self.myia
         myia.fromshape("mask1.im", [20, 30, 4, 10])
         myia.fromshape("mask2.im", [20, 30, 4, 1])
         myia.fromshape("mask3.im", [20, 30, 4, 2])
 
-        myia.fromshape("", [20,30,4,10])
-
-        mm = myia.subimage("", mask="mask1.im > 10")
+        imname = "xx.im"
+        myia.fromshape(imname, [20,30,4,10])
+        mask1 = "mask1.im > 10"
+        mm = myia.subimage("", mask=mask1)
         self.assertTrue(mm)
-        self.assertRaises(Exception, myia.subimage, "", mask="mask2.im > 10", stretch=False)
-        self.assertTrue(myia.subimage("", mask="mask2.im > 10", stretch=True))
-        self.assertRaises(Exception, myia.subimage, "", mask="mask3.im > 10", stretch=True)
+        mm = imsubimage(imagename=imname, mask=mask1)
+        self.assertTrue(mm)
+        mask2 = "mask2.im > 10"
+        self.assertRaises(Exception, myia.subimage, "", mask=mask2, stretch=False)
+        self.assertFalse(imsubimage(imname, "", mask=mask2, stretch=False))
+        self.assertTrue(myia.subimage("", mask=mask2, stretch=True))
+        self.assertTrue(imsubimage(imname, "", mask=mask2, stretch=True))
+        mask3 = "mask3.im > 10"
+        self.assertRaises(Exception, myia.subimage, "", mask=mask3, stretch=True)
+        self.assertFalse(imsubimage(imname, "", mask=mask3, stretch=True))
 
         
 

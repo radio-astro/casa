@@ -27,9 +27,6 @@ bool detached() const;
 casac::record* recordFromQuantity(casa::Quantity q);
 casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);
 casa::Quantity casaQuantityFromVar(const ::casac::variant& theVar);
-void _getRegion(
-	casa::String& regionName, std::auto_ptr<casa::Record>& regionRecord,
-	const variant& region
-) const;
+std::auto_ptr<casa::Record> _getRegion(const variant& region) const;
 
 

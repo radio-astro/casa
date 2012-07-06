@@ -8745,9 +8745,10 @@ ia.twopointcorrelation()   # Output image is virtual
      <value></value>
      </param>
   
-     <param type="record"  name="region">
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
      <description>Region of interest.  Default is whole image.</description>
-     <value></value>
+     <value type="string"/>
      </param>
   
      <param type="any"  name="mask">
