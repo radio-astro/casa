@@ -294,6 +294,17 @@ Record CasacRegionManager::fromBCS(
     return regionRecord;
 }
 
+Record CasacRegionManager::regionFromString(
+	const CoordinateSystem& csys, const String& regionStr,
+	const IPosition& imShape
+) {
+	CasacRegionManager mgr(csys);
+	Record reg;
+	String diag;
+	mgr._setRegion(reg, diag, regionStr, imShape, "");
+	return reg;
+}
+
 void CasacRegionManager::_setRegion(
 		Record& regionRecord, String& diagnostics,
 		const Record* regionPtr
@@ -309,6 +320,10 @@ void CasacRegionManager::_setRegion(
 	const String& regionName, const IPosition& imShape,
 	const String& imageName
 ) {
+	if (regionName.empty() && imageName.empty()) {
+		regionRecord = Record();
+		diagnostics = "No region string";
+	}
 	// region name provided
 	const static Regex image("(.*)+:(.*)+");
 	const static Regex regionText(
@@ -318,8 +333,8 @@ void CasacRegionManager::_setRegion(
 	File myFile(regionName);
 	if (myFile.exists()) {
 		if (! myFile.isReadable()) {
-			diagnostics = "File " + regionName + " exists but is not readable.";
-			return;
+			*_getLog() << "File " + regionName + " exists but is not readable."
+				<< LogIO::EXCEPTION;
 		}
 		try {
 			std::auto_ptr<Record> rec(readImageFile(regionName, ""));

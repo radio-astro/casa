@@ -84,8 +84,14 @@ public:
 		const String& box, const IPosition& imShape, const String& imageName=""
 	);
 
+
 	static vector<uInt> consolidateAndOrderRanges(
 		const vector<uInt>& ranges
+	);
+
+	static Record regionFromString(
+		const CoordinateSystem& csys, const String& regionStr,
+		const IPosition& imShape
 	);
 
 	// <src>nChannels</src> is the total number of spectral channels in the image
