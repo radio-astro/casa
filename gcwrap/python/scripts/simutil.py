@@ -2743,7 +2743,6 @@ class simutil:
     def convimage(self,modelflat,outflat,complist=""):
         # regrid flat input to flat output shape and convolve
         modelregrid = modelflat+".regrid"
-
         # get outflatcoordsys from outflat
         ia.open(outflat)
         outflatcs=ia.coordsys()
@@ -2755,13 +2754,14 @@ class simutil:
         ia.open(modelflat)
         modelflatcs=ia.coordsys()
         modelflatshape=ia.shape()
-        ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
+        tmpxx=ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                   csys=outflatcs.torecord(),shape=outflatshape)
         # im.regrid assumes a surface brightness, or more accurately doesnt
         # pay attention to units at all, so we now have to scale 
         # by the pixel size to have the right values in jy/pixel, 
 
         # get pixel size from model image coordsys
+        tmpxx.done()
         increments=outflatcs.increment(type="direction")['numeric']
         incellx=qa.quantity(abs(increments[0]),outflatcs.units(type="direction")[0])
         incelly=qa.quantity(abs(increments[1]),outflatcs.units(type="direction")[1])
@@ -2812,13 +2812,16 @@ class simutil:
         convolved = modelregrid + '.conv'
         ia.open(modelregrid)
         ia.setbrightnessunit("Jy/pixel")
-        ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
+        tmpcnv=ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                       pa=beam['positionangle'],overwrite=True)
         ia.done()
-        ia.open(convolved)
-        ia.setbrightnessunit("Jy/beam")
-        ia.setrestoringbeam(beam=beam)
-        ia.done()
+        
+        print  'show cache before', tb.showcache()
+        #tmpcnv.open(convolved)
+        tmpcnv.setbrightnessunit("Jy/beam")
+        tmpcnv.setrestoringbeam(beam=beam)
+        tmpcnv.done()
+        print 'show cache', convolved, tb.showcache()
 
 
     def bandname(self, freq):
