@@ -69,6 +69,7 @@
 #include <casa/Exceptions/Error.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
+#include <display/Display/Options.h>
 #include <algorithm>
 
 
@@ -82,21 +83,20 @@ template <typename T> class anylt {
 	operator bool( ) const { return tally_; }
 
     private:
-		T rhs;
-		bool tally_;
+	T rhs;
+	bool tally_;
 };
 
 template <typename T> class anyge {
     public:
-	anyge( const T &r ) : rhs(r), tally_(false) { }
-	anyge( const anyge &o ) :  rhs(o.rhs),tally_(o.tally_) { }
+	anyge( const T &r ) :  rhs(r), tally_(false) { }
+	anyge( const anyge &o ) : rhs(o.rhs), tally_(o.tally_) { }
 	void operator(  )( const T &lhs ) { if ( lhs >= rhs ) { tally_ = true; } }
 	operator bool( ) const { return tally_; }
 
     private:
 	T rhs;
 	bool tally_;
-
 };
 
 
@@ -105,7 +105,8 @@ const String QtDisplayData::WEDGE_LABEL_CHAR_SIZE = "wedgelabelcharsize";
 const String QtDisplayData::WEDGE_YES = "Yes";
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
-			      String displayType, const viewer::DisplayDataOptions &ddo) :
+			      String displayType, const viewer::DisplayDataOptions &ddo,
+			      const viewer::ImageProperties &props ) :
 	       panel_(panel), 
 	       path_(path),
 	       dataType_(dataType),
@@ -121,16 +122,29 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	       colorBarThicknessOpt_(0),
 	       colorBarLabelSpaceOpt_(0),
 	       colorBarOrientationOpt_(0),
-	       colorBarCharSizeOpt_(0)  {
+	       colorBarCharSizeOpt_(0),
+	       image_properties(props) {
 
   viewer::guiwait wait_cursor;
+
+  QtDisplayData *regrid_to = 0;
+  std::string method = "";
 
   if(dataType=="lel") { 
       name_ = path_;
       if( name_.length() > 25 )
           name_ =  path_.substr(0,15) + "..." + path_.substr(path_.length()-7,path_.length());
   } else {
-      name_ = Path(path_).baseName();
+      List<QtDisplayData*> dds_ = panel_->registeredDDs();
+      method = ddo["regrid"];
+      if ( dds_.len( ) > 0 && method != "" &&
+	   (method == "N" || method == "L" || method == "C") ) {
+	  ListIter<QtDisplayData*> dds(dds_);
+	  dds.toStart( );
+	  regrid_to = dds.getRight( );
+      } else {
+	  name_ = Path(path_).baseName();
+      }
   }
   
   if(displayType!="raster") name_ += "-"+displayType_;
@@ -172,13 +186,23 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 
     	  case ImageOpener::AIPSPP: {
 	  
-    		  if(imagePixelType(path_)==TpFloat) {
-    			  im_  = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
-    			  // regions in image...
-    			  // Vector<String> regions = im_->regionNames( );
-    			  // for ( int i = 0; i < regions.size( ); ++i ) {
-    			  // 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
-    			  // }
+	    if( imagePixelType(path_) == TpFloat ) {
+		im_  = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+		// regions in image...
+		// Vector<String> regions = im_->regionNames( );
+		// for ( int i = 0; i < regions.size( ); ++i ) {
+		// 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
+		// }
+		if ( regrid_to && method != "" ) {
+		    // regrid new image to match the one provided...
+		    ImageAnalysis ia(im_);
+		    // need an option to delete temporary files on exit...
+		    std::string outpath = viewer::options.temporaryDirectory(Path(path_).baseName());
+		    cout << "<<1>> >>>>>> " << outpath << endl;
+		    ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
+		    std::auto_ptr<ImageInterface<Float> > imptr(im_);
+		    im_ = newim;
+	      }
 
     		  } else if(imagePixelType(path_)==TpComplex) {
     			  cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);  }
@@ -843,10 +867,10 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
     // In practice what it means now is that DDs on the PrincipalAxesDD
     // branch get their drawlist cache cleared.  It has no effect
     // (on caching or otherwise) for DDs on the CachingDD branch.
-     
+
     if(needsRefresh)   dd_->refresh(True);
 
-    
+
     held=False;  panel_->viewer()->release();     
 
     if(cbNeedsRefresh) { emit colorBarChange(); }
@@ -1008,6 +1032,10 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 }
 
   
+
+std::string QtDisplayData::regrid_image( const std::string &/*path*/, const std::string &/*method*/, QtDisplayData */*other*/ ) {
+    return "";
+}
     
 
 bool QtDisplayData::isValidColormap( const QString &name ) const {
@@ -1045,6 +1073,12 @@ Bool QtDisplayData::setCMBrtCont(const Vector<Float>& params) {
   clrMap_->setBrightness(params[0]);
   clrMap_->setContrast(params[1]);
   return True;  }
+
+const viewer::ImageProperties &QtDisplayData::imageProperties( ) {
+    if ( image_properties.ok( ) == false )
+	image_properties = path_;
+    return image_properties;
+}
 
 
 void QtDisplayData::unlock( ) {
@@ -1849,24 +1883,8 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
     
 }
 
-IPosition QtDisplayData::getPixels( const WCMotionEvent& ev ){
-	PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
-	IPosition ipos;
-    if(padd) {
-    	Vector<Double> fullWorld, fullPixel;
-    	// determine the full position
-    	if (padd->getFullCoord(fullWorld, fullPixel, ev.world())){
 
-    		// convert to a pixel position
-    		Int length = fullPixel.shape()(0);
-        	ipos(length);
-        	for (Int i = 0; i < length; i++){
-        		ipos(i) = Int(fullPixel(i) + 0.5);
-        	}
-    	}
-    }
-    return ipos;
-}
+
 
 
 String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
@@ -1889,7 +1907,6 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     
     
     stringstream ss;
-
     ss << dd_->showValue(ev.world());
     /*
     if (eim_) {
@@ -1919,14 +1936,11 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     else ss << '\t';
     
     ss << dd_->showPosition(ev.world());
-    IPosition pixels = getPixels( ev );
-    emit pixelsChanged(pixels(0), pixels(1));
-    return String(ss.str());
-  }
-  catch (const AipsError &x) {
-	  return "";
-  }
-}
+    
+    return String(ss.str());  } 
+  
+  
+  catch (const AipsError &x) { return "";  }  }
 
  
 

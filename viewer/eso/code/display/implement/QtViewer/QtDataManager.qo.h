@@ -85,6 +85,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   Bool isQualImg(const QString &extexpr);
 
 
+  std::string guimethod_to_iamethod( const QString & );
+
   enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
 		  DIRECTORY, QUALIMG, CASAREGION, DS9REGION };
   enum DISPLAYTYPE { RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
@@ -127,6 +129,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
  
  private:
   
+  void update_regrid_options( );
   void fill_image_info( const std::string &/*path*/ );
 
   QWidget *parent_;
