@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>691</width>
+    <width>700</width>
     <height>407</height>
    </rect>
   </property>
@@ -98,7 +98,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>300</width>
+          <width>330</width>
           <height>165</height>
          </size>
         </property>
@@ -152,7 +152,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>288</width>
+                 <width>318</width>
                  <height>50</height>
                 </rect>
                </property>
@@ -167,15 +167,15 @@
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>120</height>
+             <height>160</height>
             </size>
            </property>
            <widget class="QGroupBox" name="ibox11">
             <property name="geometry">
              <rect>
-              <x>8</x>
+              <x>0</x>
               <y>0</y>
-              <width>135</width>
+              <width>160</width>
               <height>41</height>
              </rect>
             </property>
@@ -196,93 +196,7 @@
               <rect>
                <x>0</x>
                <y>20</y>
-               <width>133</width>
-               <height>16</height>
-              </rect>
-             </property>
-             <property name="palette">
-              <palette>
-               <active>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>232</red>
-                   <green>232</green>
-                   <blue>232</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </active>
-               <inactive>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>232</red>
-                   <green>232</green>
-                   <blue>232</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </inactive>
-               <disabled>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>212</red>
-                   <green>208</green>
-                   <blue>200</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </disabled>
-              </palette>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="acceptDrops">
-              <bool>false</bool>
-             </property>
-             <property name="maxLength">
-              <number>50</number>
-             </property>
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </widget>
-           <widget class="QGroupBox" name="ibox12">
-            <property name="geometry">
-             <rect>
-              <x>150</x>
-              <y>0</y>
-              <width>135</width>
-              <height>41</height>
-             </rect>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>value</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
-            </property>
-            <widget class="QLineEdit" name="itext12">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>20</y>
-               <width>133</width>
+               <width>159</width>
                <height>16</height>
               </rect>
              </property>
@@ -345,9 +259,9 @@
            <widget class="QGroupBox" name="ibox21">
             <property name="geometry">
              <rect>
-              <x>8</x>
+              <x>0</x>
               <y>36</y>
-              <width>135</width>
+              <width>160</width>
               <height>41</height>
              </rect>
             </property>
@@ -368,93 +282,7 @@
               <rect>
                <x>0</x>
                <y>20</y>
-               <width>133</width>
-               <height>16</height>
-              </rect>
-             </property>
-             <property name="palette">
-              <palette>
-               <active>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>232</red>
-                   <green>232</green>
-                   <blue>232</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </active>
-               <inactive>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>232</red>
-                   <green>232</green>
-                   <blue>232</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </inactive>
-               <disabled>
-                <colorrole role="Base">
-                 <brush brushstyle="SolidPattern">
-                  <color alpha="255">
-                   <red>212</red>
-                   <green>208</green>
-                   <blue>200</blue>
-                  </color>
-                 </brush>
-                </colorrole>
-               </disabled>
-              </palette>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="acceptDrops">
-              <bool>false</bool>
-             </property>
-             <property name="maxLength">
-              <number>50</number>
-             </property>
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </widget>
-           <widget class="QGroupBox" name="ibox22">
-            <property name="geometry">
-             <rect>
-              <x>150</x>
-              <y>36</y>
-              <width>135</width>
-              <height>41</height>
-             </rect>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>value</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
-            </property>
-            <widget class="QLineEdit" name="itext22">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>20</y>
-               <width>133</width>
+               <width>159</width>
                <height>16</height>
               </rect>
              </property>
@@ -517,9 +345,9 @@
            <widget class="QGroupBox" name="ibox31">
             <property name="geometry">
              <rect>
-              <x>8</x>
+              <x>0</x>
               <y>75</y>
-              <width>135</width>
+              <width>160</width>
               <height>41</height>
              </rect>
             </property>
@@ -540,7 +368,265 @@
               <rect>
                <x>0</x>
                <y>20</y>
-               <width>133</width>
+               <width>159</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>212</red>
+                   <green>208</green>
+                   <blue>200</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
+             <property name="maxLength">
+              <number>50</number>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="ibox41">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>110</y>
+              <width>160</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>value</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <widget class="QLineEdit" name="itext41">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>20</y>
+               <width>159</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>212</red>
+                   <green>208</green>
+                   <blue>200</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
+             <property name="maxLength">
+              <number>50</number>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="ibox12">
+            <property name="geometry">
+             <rect>
+              <x>162</x>
+              <y>0</y>
+              <width>160</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>value</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <widget class="QLineEdit" name="itext12">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>20</y>
+               <width>159</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>212</red>
+                   <green>208</green>
+                   <blue>200</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
+             <property name="maxLength">
+              <number>50</number>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="ibox22">
+            <property name="geometry">
+             <rect>
+              <x>162</x>
+              <y>36</y>
+              <width>160</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>value</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <widget class="QLineEdit" name="itext22">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>20</y>
+               <width>159</width>
                <height>16</height>
               </rect>
              </property>
@@ -603,9 +689,9 @@
            <widget class="QGroupBox" name="ibox32">
             <property name="geometry">
              <rect>
-              <x>150</x>
+              <x>162</x>
               <y>75</y>
-              <width>135</width>
+              <width>160</width>
               <height>41</height>
              </rect>
             </property>
@@ -626,7 +712,93 @@
               <rect>
                <x>0</x>
                <y>20</y>
-               <width>133</width>
+               <width>159</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="palette">
+              <palette>
+               <active>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </active>
+               <inactive>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>232</red>
+                   <green>232</green>
+                   <blue>232</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </inactive>
+               <disabled>
+                <colorrole role="Base">
+                 <brush brushstyle="SolidPattern">
+                  <color alpha="255">
+                   <red>212</red>
+                   <green>208</green>
+                   <blue>200</blue>
+                  </color>
+                 </brush>
+                </colorrole>
+               </disabled>
+              </palette>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="acceptDrops">
+              <bool>false</bool>
+             </property>
+             <property name="maxLength">
+              <number>50</number>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="ibox42">
+            <property name="geometry">
+             <rect>
+              <x>163</x>
+              <y>110</y>
+              <width>160</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>value</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+            <widget class="QLineEdit" name="itext42">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>20</y>
+               <width>159</width>
                <height>16</height>
               </rect>
              </property>
@@ -869,6 +1041,55 @@
           <property name="text">
            <string>LEL</string>
           </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="regrid">
+          <property name="minimumSize">
+           <size>
+            <width>90</width>
+            <height>45</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>regrid velocity axis...</string>
+          </property>
+          <property name="title">
+           <string>velocity regrid</string>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+          <widget class="QComboBox" name="regrid_method">
+           <property name="geometry">
+            <rect>
+             <x>-1</x>
+             <y>18</y>
+             <width>88</width>
+             <height>26</height>
+            </rect>
+           </property>
+           <item>
+            <property name="text">
+             <string>none</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bilinear</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>nearest</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bicubic</string>
+            </property>
+           </item>
+          </widget>
          </widget>
         </item>
        </layout>

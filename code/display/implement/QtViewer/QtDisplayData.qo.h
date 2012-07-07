@@ -38,6 +38,7 @@
 #include <display/Display/DisplayEnums.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
+#include <display/Utilities/ImageProperties.h>
 #include <vector>
 
 
@@ -72,7 +73,8 @@ class QtDisplayData : public QObject {
   static std::string path(const DisplayData *);
   
   QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType, String displayType,
-		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ) );
+		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ),
+		 const viewer::ImageProperties &props = viewer::ImageProperties( ) );
   ~QtDisplayData();
   
   virtual std::string name() { return name_;  }
@@ -233,6 +235,7 @@ class QtDisplayData : public QObject {
   //# the QDD's image is complex.  However, if it _is_ non-zero, you should
   //# be able to assume it will exist for the life of the QDD).
   ImageInterface<Float>* imageInterface() { return im_;  }
+  const viewer::ImageProperties &imageProperties( );
  
   // force unlocking of paged images
   void unlock( );
@@ -326,8 +329,6 @@ class QtDisplayData : public QObject {
 
   void statsReady(const String&);
 
-  void pixelsChanged( int pixX, int pixY );
-
  protected slots:
   
   // Set the color bar orientation option according to the master
@@ -371,6 +372,7 @@ class QtDisplayData : public QObject {
   // Can this QDD use a color bar?
   virtual Bool usesColorBar_() { return displayType_=="raster";  }
 
+  std::string regrid_image( const std::string&/*path*/, const std::string&/*method*/, QtDisplayData*/*other*/ );
 
   typedef std::map<const DisplayData*,QtDisplayData*> data_to_qtdata_map_type;
   static data_to_qtdata_map_type dd_source_map;
@@ -378,7 +380,7 @@ class QtDisplayData : public QObject {
  private:
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
-  IPosition getPixels( const WCMotionEvent& ev );
+
 
   //# data
   QtDisplayPanelGui *panel_;
@@ -449,8 +451,9 @@ class QtDisplayData : public QObject {
   // Size of label characters on color bar (affects margins only).
   //# (WedgeDD reacts to this option, but it is also monitored on this level).
   DParameterRange<Float>* colorBarCharSizeOpt_;  
-  
-  
+
+  viewer::ImageProperties image_properties;
+
 };
 
 

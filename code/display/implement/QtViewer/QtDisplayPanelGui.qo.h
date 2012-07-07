@@ -46,6 +46,7 @@
 #include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
+#include <display/Utilities/ImageProperties.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -130,7 +131,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   // Check return value for 0, or connect to the createDDFailed()
   // signal, to handle failure.
   QtDisplayData* createDD( String path, String dataType, String displayType, Bool autoRegister=True,
-			   const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
+			   const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions(),
+			   const viewer::ImageProperties &props=viewer::ImageProperties( ) );
    
   // Removes the QDD from the list and deletes it (if it existed -- 
   // Return value: whether qdd was in the list in the first place).
@@ -150,6 +152,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   // retrieve a DD with given name (0 if none).
   QtDisplayData* dd(const std::string& name);
+  // retrieve the controlling DD...
+  QtDisplayData* dd( );
   
   // Check that a given DD is on the list.  Use qdd pointer or its name.
   //<group>
@@ -474,7 +478,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
-		  QtDisplayData* qdd );
+		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
 

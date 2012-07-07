@@ -27,6 +27,7 @@
 
 #ifndef DISPLAY_OPTIONS_H__
 #define DISPLAY_OPTIONS_H__
+#include <set>
 #include <string>
 
 namespace casa {
@@ -40,6 +41,7 @@ namespace casa {
 		};
 
 		std::string temporaryPath( ) const { return kernel->temporaryPath( ); }
+		std::string temporaryDirectory( const std::string &/*base_dir_name*/ );
 
 		~Options( ) { delete kernel; }
 
@@ -50,6 +52,7 @@ namespace casa {
 		Options( const Options & ) { }
 		const Options &operator=(const Options&) { return *this; }
 		void init( Kernel *k ) { kernel = k; }
+		std::set<std::string> returned_paths;
 		Kernel *kernel;
 	};
 
