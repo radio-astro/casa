@@ -2635,13 +2635,13 @@ CoordinateSystem* CoordinateSystem::restore(const RecordInterface &container,
     PtrBlock<Coordinate *> tmp;
     Int nc = 0;                         // num coordinates
     PtrBlock<Coordinate *> coords;
-    String linear   = "linear";
-    String direction = "direction";
-    String spectral = "spectral";
-    String stokes   = "stokes";
-    String quality  = "quality";
-    String tabular  = "tabular";
-    String coordsys = "coordsys";
+    static const String linear   = "linear";
+    static const String direction = "direction";
+    static const String spectral = "spectral";
+    static const String stokes   = "stokes";
+    static const String quality  = "quality";
+    static const String tabular  = "tabular";
+    static const String coordsys = "coordsys";
     while(True) {
 	ostringstream onum;
 	onum << nc;
@@ -2650,11 +2650,14 @@ CoordinateSystem* CoordinateSystem::restore(const RecordInterface &container,
 	if (subrec.isDefined(linear + num)) {
 	    coords.resize(nc);
 	    coords[nc-1] = LinearCoordinate::restore(subrec, linear+num);
-	} else if (subrec.isDefined(direction + num)) {
+	}
+	else if (subrec.isDefined(direction + num)) {
 	    coords.resize(nc);
-	    coords[nc-1] = 
-		DirectionCoordinate::restore(subrec, direction+num);
-	} else if (subrec.isDefined(spectral + num)) {
+	    coords[nc-1] = DirectionCoordinate::restore(
+	    	subrec, direction+num
+	    );
+	}
+	else if (subrec.isDefined(spectral + num)) {
 	    coords.resize(nc);
 	    coords[nc-1] = SpectralCoordinate::restore(subrec, spectral+num);
 	} else if (subrec.isDefined(stokes + num)) {
