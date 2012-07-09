@@ -364,6 +364,7 @@ class ImageAnalysis
     ImageInterface<Float> * regrid(
 	const String& outfile, const ImageInterface<Float>*other,
         const String& method="linear",
+        const Bool specAsVelocity=False,
     	const Vector<Int>& axes = Vector<Int>(0),
 	const Record &region = Record(),
 	const String& mask="",
@@ -373,7 +374,6 @@ class ImageAnalysis
         const Bool dropdeg=False,
         const Bool overwrite=False,
         const Bool force=False,
-        const Bool specAsVelocity=False,
         const Bool extendAxes=False
     );
 
