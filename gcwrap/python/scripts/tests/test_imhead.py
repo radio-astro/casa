@@ -369,23 +369,13 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'put', 'object', testval )
             newval = imhead( input_file, 'get', 'object' )
             got = imhead( input_file, 'get', 'object' )
-            if (got['value'] != testval):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\nError: set/get object value failed in to set new value"
-    
+            self.assertTrue(got['value'] == testval)
             if ( val != None ):
                 imhead( input_file, 'put', 'object', val['value'] )
         except:
-            retValue['success'] = False
-            retValue['error_msgs'] += "\nError: set/get object value failed in image " + input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success'] = False
-                retValue['error_msgs'] += \
-                     +"\nError: Get/Set object failed"\
-                     +"\n       Original value: " + str(val)\
-                     +"\n       Current value:  " + str(newval)\
-                     +"\n       Expected value: " + str(val)
+            self.assertFalse( val!=None and val == newval )
     
         #######  IMTYPE  #############
         val   = None
@@ -397,18 +387,9 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'put', 'imtype', val['value'] )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get imtype value failed in image "+input_file
+            self.assertTrue(False)
         else:        
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError: Get/Set imtyp failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: ''"
-        
+            self.assertFalse( val!=None and val == newval )
     
         #######  TELESCOPE  #############
         val   = None
@@ -420,18 +401,9 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):        
                 imhead( input_file, 'put', 'telescope', val['value'] )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get telescope value failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set telescope Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'myTelescope'"
-    
+            self.assertFalse( val!=None and val == newval )
          
         #######  OBSERVER  #############
         val   = None
@@ -443,18 +415,9 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'put', 'observer', val['value'] )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get observer value failed in image "+input_file
+            self.assertTrue(False)
         else:        
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError: Get/Set observer failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'me'"
-    
+            self.assertFalse( val!=None and val == newval )
     
         #######  DATE-OBS  #############
         val   = None
@@ -466,18 +429,10 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'put', 'date-obs', str(val['value'])+str(val['unit']) )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get date-obs value failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set date-obs Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '2007/06/20/00:00:00'"
-    
+            self.assertFalse( val!=None and val == newval )
+              
         #######  EQUINOX  #############
         val   = None
         newval= None
@@ -488,43 +443,32 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'put', 'equinox', val['value'] )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get equinox value failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set equinox Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'B1950'"
-    
-    
+            self.assertFalse(val!=None and val == newval )
         #######  RESTFREQUENCY  #############
         val   = None
         newval= None
         try:                    
             val=imhead( input_file, 'get', 'restfreq' )
+            print "*** val " + str(val)
             imhead( input_file, 'put', 'restfreq', '1.421GHz' )
+            print "kk"
             imhead( input_file, 'put', 'restfreq', '15.272GHz, 1.67GHz' )
+            print "yy"
             newval=imhead( input_file, 'get', 'restfreq' )
-            if ( val != None ):        
+            print "newval " + str(newval)
+            if ( val != None ):  
+                print "val2 " + str(val)      
                 #imhead( input_file, 'put', 'restfreq', str(val['value'])+str(val['unit']) )
                 imhead( input_file, 'put', 'restfreq', val['value'])
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get rest frequency value failed in image "+input_file
+                print "done"
+        except Exception, instance:
+            print str(instance)
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set rest frequency Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '1.421GHz, 115.272GHz'"
-           
+            self.assertFalse( val!=None and val == newval )
+                
     
     
         #######  PROJECTION  #############
@@ -537,18 +481,9 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'put', 'projection', val['value'] )            
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get  value failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set projection Failed"\
-                        +"\n      Original value: "+str(val)\
-                        +"\n      Expected value: 'TAN'"
-    
-    
+            self.assertFalse( val!=None and val == newval )
         #######  BEAM MAJOR  #############
         val   = None
         newval= None
@@ -559,19 +494,10 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):        
                 imhead( input_file, 'put', 'beammajor', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                 +"\nError: set/get beam's major axis failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val!=None and val != newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set beam's major axis Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '12arcsec'"
-                
-    
+            self.assertFalse( val!=None and val != newval )
+         
         #######  BEAM  MINOR #############
         val   = None
         newval= None
@@ -850,17 +776,12 @@ class imhead_test(unittest.TestCase):
                 imhead( input_file, 'add', 'beampa', \
                         str(val_pa['value'])+str(val_pa['unit']) )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del/add beam failed in image "+input_file
+            self.assertTrue(false)
         else:
-            if ( isinstance(newval,str) and \
-                 newval.replace(' ','').find('NotKnown') > -1  ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError del/add beam Failed"\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'Not Known, Not Known, Not Known'"
+            self.assertFalse(
+                isinstance(newval,str)
+                and newval.replace(' ','').find('NotKnown') > -1
+            )
     
     
         #######  OBJECT  #############
@@ -870,26 +791,12 @@ class imhead_test(unittest.TestCase):
             val=imhead( input_file, 'get', 'object' )
             imhead( input_file, 'del', 'object' )
             newval=imhead( input_file, 'get', 'object' )
-    
-            try:
-                newval=imhead( input_file, 'get', 'object' )
-            except:
-                pass
-            if ( val != None ):
-                imhead( input_file, 'add', 'object', val['value'])
+            print "*** val " + str(val)
+            print "*** new " + str(newval)
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del/add objec failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val == newval ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError del/add object Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'Not Known'"
-    
+            self.assertTrue( val != newval )
     
         #######  IMTYPE  #############
         val = None
@@ -906,19 +813,9 @@ class imhead_test(unittest.TestCase):
             if ( val != None ):
                 imhead( input_file, 'add', 'imtype', val['value'] )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del/add imtype failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( val == newval ):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError del/add object Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n        Expected value: ", "None"
-    
-    
+            self.assertTrue( val != newval )
     
         #######  USER DEFINED KEYWORD #############
         ###
@@ -930,17 +827,9 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'add', 'test', initVal )
             val=imhead( input_file, 'get', 'test', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del/add user defined keyword 'test' failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( initVal != val['value'] ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError del/add object Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: "+initVal
+            self.assertTrue( initVal == val['value'] )
                 
         val2='Updated user keyword'
         newval=None
@@ -948,38 +837,28 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'put', 'test', val2 )
             newval=imhead( input_file, 'get', 'test' )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del/add user defined keyword 'test' failed in image "+input_file
+            self.assertTrue(False)
         else:
-            if ( initVal != val['value'] ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError del/add object Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: "+val2
-        
+            self.assertTrue( initVal == val['value'] )
+    
         casalog.post( 'The next operation will cause an exception.', 'WARN' )
         results=None
         try:
             imhead( input_file, 'del', 'test')
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: del user defined keyword 'test' failed in image "+input_file
+            self.assertTrue(False)
         try:
             results=imhead( input_file, 'get', 'test' )
         except:
             pass
         else:
-            if ( results!=None \
-                 and ( (isinstance(results,bool) and results==True )\
-                 or (isinstance(results,dict) and results!={} ) ) ):
-                retValue['success']=False            
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError: Unable to delete user defined keyword: 'test'"
-    
+            self.assertFalse(
+                results!=None
+                 and (
+                    (isinstance(results,bool) and results==True )
+                    or (isinstance(results,dict) and results!={} )
+                )
+            )
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
