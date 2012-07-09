@@ -91,7 +91,7 @@ public:
 
 	static Record regionFromString(
 		const CoordinateSystem& csys, const String& regionStr,
-		const IPosition& imShape
+		const String& imageName, const IPosition& imShape
 	);
 
 	// <src>nChannels</src> is the total number of spectral channels in the image
