@@ -953,7 +953,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 	   SINGLETON((int)PyLong_AsLong(PyNumber_Long(obj)));  		\
 	}else if(PyObject_TypeCheck(obj->ob_type, &PyInt_Type)){ \
 	   SINGLETON((int)PyInt_AsLong(PyNumber_Long(obj)));  		\
-	}else{  \
+	}else if(PyObject_TypeCheck(obj->ob_type, &PyFloat_Type)){  \
 	   SINGLETON(double(PyFloat_AsDouble(PyNumber_Float(obj))));  		\
 	} \
     } \
