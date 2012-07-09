@@ -39,7 +39,6 @@ scripts/get_user.py
 scripts/importarchive.py
 scripts/listing.py
 scripts/mindpipes.py
-scripts/pCASA.py
 scripts/ngc5921_usecase.py
 scripts/odict.py
 scripts/parallel_go.py
@@ -47,6 +46,7 @@ scripts/parallelSplit.py
 scripts/parameter_check.py
 scripts/parameter_dictionary.py
 scripts/partitionhelper.py
+scripts/pCASA.py
 scripts/plotcomp.py
 scripts/pointcal.py
 scripts/predictcomp_helper.py
@@ -56,6 +56,7 @@ scripts/regression_utility.py
 scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
+scripts/sdutil.py
 scripts/setjy_helper.py
 scripts/simutil.py
 scripts/solar_system_setjy.py
