@@ -359,12 +359,16 @@ class ImageAnalysis
     ImageInterface<Float> * regrid(
     	const String& outfile, const ImageInterface<Float>*other,
         const String& method="linear",
+        const Bool specAsVelocity=False,
     	const Vector<Int>& axes = Vector<Int>(0),
-    	const Record &region = Record(),
-    	const String& mask="", const Int decimate=10,
-        const Bool replicate=False, const Bool doref=True,
-        const Bool dropdeg=False, const Bool overwrite=False,
-        const Bool force=False, const Bool specAsVelocity=False,
+	const Record &region = Record(),
+	const String& mask="",
+        const Int decimate=10,
+        const Bool replicate=False,
+        const Bool doref=True,
+        const Bool dropdeg=False,
+        const Bool overwrite=False,
+        const Bool force=False,
         const Bool extendAxes=False
     ) const;
 

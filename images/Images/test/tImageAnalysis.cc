@@ -262,8 +262,9 @@ int main() {
         	TempImage<Float> templ(TiledShape(IPosition(3, 10, 10, 10)), csysTemp);
         	ImageAnalysis ia(&input);
         	ImageInterface<Float> *output = ia.regrid(
-        		"", &templ, "linear", Vector<Int>(1, 2), Record(),
-        		"", 10, False, True, False, False, False, True
+			"", &templ, "linear", True,
+			Vector<Int>(1, 2), Record(),
+        		"", 10, False, True, False, False, False
         	);
         	SpectralCoordinate specOut = output->coordinates().spectralCoordinate();
         	SpectralCoordinate specTemp = templ.coordinates().spectralCoordinate();

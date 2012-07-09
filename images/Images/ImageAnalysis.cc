@@ -3592,13 +3592,13 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 ImageInterface<Float>* ImageAnalysis::regrid(
 	const String &outFile,
 	const ImageInterface<Float> *other,
-	const String &methodU, const Vector<Int> &inaxes,
+	const String &methodU, 	const Bool specAsVelocity,
+	const Vector<Int> &inaxes,
 	const Record &Region, const String &mask,
 	const Int decimate,
 	const Bool replicate, const Bool doRefChange,
 	const Bool dropDegenerateAxes, const Bool overwrite,
-	const Bool forceRegrid, const Bool specAsVelocity,
-	const Bool extendMask
+	const Bool forceRegrid, const Bool extendMask
 ) const {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
