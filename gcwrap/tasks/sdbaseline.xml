@@ -52,9 +52,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="string" name="specunit">
-	    <description>units for spectral axis (channel,km/s,GHz)</description>
-	    <value></value>
-	    <allowed kind="enum">
+	<description>units for spectral axis (channel,km/s,GHz)</description>
+	<value></value>
+	<allowed kind="enum">
 	    <value></value>
 	    <value>channel</value>
 	    <value>km/s</value>
@@ -62,7 +62,13 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <value>MHz</value>
 	    <value>kHz</value>
 	    <value>Hz</value>
-    </allowed>
+        </allowed>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+        <description>rest frequency (default unit: Hz)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
     </param>
 
     <param type="string" name="frame">
@@ -254,6 +260,17 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="telescopeparm"><value type='string'></value></default>
 	        </equals>
 	    </when>
+	    <when param="specunit">
+		<equals value=""/>
+		<equals value="channel"/>
+		<equals value="GHz"/>
+		<equals value="MHz"/>
+		<equals value="kHz"/>
+		<equals value="Hz"/>
+		<equals value="km/s">
+			<default param="restfreq"><value type='string'></value></default>
+                </equals>
+	    </when>
 	    <when param="maskmode">
 		<equals value="auto">
 			<default param="thresh"><value>5.0</value></default>
@@ -320,6 +337,25 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: '' (=current)
                 example: this will be the units for masklist
+            &gt;&gt;&gt; blfunc expandable parameters
+                 restfreq -- rest frequency
+                         available type includes float, int, string, list of float, 
+                         list of int, list of string, and list of dictionary. the 
+                         default unit of restfreq in case of float, int, or string 
+                         without unit is Hz. string input can be a value only 
+                         (treated as Hz) or a value followed by unit for which 'GHz',
+                         'MHz','kHz',and 'Hz' are available. 
+                         a list can be used to set different rest frequencies for 
+                         each IF. the length of list input must be nIF. dictionary 
+                         input should be a pair of molecule name and frequency with 
+                         keys of 'name' and 'value', respectively. values in the 
+                         dictionary input follows the same manner as for single 
+                         float or string input. 
+                         example: 345.796
+                                  '1420MHz'
+                                  [345.8, 347.0, 356.7]
+                                  ['345.8MHz', '347.0MHz', '356.7MHz']
+                                  [{'name':'CO','value':345}]
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

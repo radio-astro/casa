@@ -1,6 +1,7 @@
 import os
 from taskinit import *
 
+import sdutil
 import asap as sd
 from asap._asap import Scantable
 from asap import _to_list
@@ -8,38 +9,20 @@ from asap.scantable import is_scantable
 import math
 import pylab as pl
 
-def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
 	try:
-		#load the data with or without averaging
-		if infile=='':
-			raise Exception, 'infile is undefined'
-		
-		filename = os.path.expandvars(infile)
-		filename = os.path.expanduser(filename)
-		if not os.path.exists(filename):
-			s = "File '%s' not found." % (filename)
-			raise Exception, s
-		
-		# Default file name
-		if ( outfile == '' ):
-			project = infile.rstrip('/') + '_bs'
-		else:
-			project = outfile
-		outfilename = os.path.expandvars(project)
-		outfilename = os.path.expanduser(outfilename)
-		if not overwrite and (outform!='ascii' and outform!='ASCII'):
-			if os.path.exists(outfilename):
-				s = "Output file '%s' exist." % (outfilename)
-				raise Exception, s
-		
-		sorg=sd.scantable(infile,average=False,antenna=antenna)
+		sdutil.assert_infile_exists(infile)
+
+		project = sdutil.get_default_outfile_name(infile, outfile, "_bs")
+		sdutil.assert_outfile_canoverwrite_or_nonexistent(project, outform, overwrite)
+
+		sorg = sd.scantable(infile, average=False, antenna=antenna)
 		
 		if ( abs(plotlevel) > 1 ):
 			casalog.post( "Initial Raw Scantable:" )
-			#casalog.post( s._summary() )
 			sorg._summary()
 		
 		# check if the data contains spectra
@@ -47,29 +30,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			s = "Cannot process the input data. It contains only single channel data."
 			raise Exception, s
 
-		# A scantable selection
-		# Scan selection
-		scans = _to_list(scanlist,int) or []
-
-		# IF selection
-		ifs = _to_list(iflist,int) or []
-
-		# Select polarizations
-		pols = _to_list(pollist,int) or []
-
-		# Actual selection
-		sel = sd.selector(scans=scans, ifs=ifs, pols=pols)
-
-		# Select source names
-		if ( field != '' ):
-			sel.set_name(field)
-			# NOTE: currently can only select one
-			# set of names this way, will probably
-			# need to do a set_query eventually
-
-
 		try:
-			#Apply the selection
+			sel = sdutil.get_selector(scanlist, iflist, pollist, field)
 			sorg.set_selection(sel)
 			del sel
 		except Exception, instance:
@@ -85,6 +47,17 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		else:
 			s = sorg
 		del sorg
+
+		# set restfreq
+		if (specunit == 'km/s'):
+			if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
+				mesg = "Restfreq must be given."
+				raise Exception, mesg
+			elif (len(str(restfreq)) > 0):
+				molids = s._getmolidcol_list()
+				s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
+				s._setmolidcol_list(molids)
+
 
 		# get telescope name
 		#'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -383,6 +356,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			spefile = project
 		
                 s.save(spefile,outform,overwrite)
+
 		if outform != 'ASCII': casalog.post( "Wrote output "+outform+" file "+spefile )
 		
                 del s
