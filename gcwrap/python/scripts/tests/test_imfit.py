@@ -100,21 +100,18 @@ def near (first, second, epsilon):
 
 def near_abs(first, second, epsilon):
     return abs(first - second) <= epsilon
-
 # Do the got and expected images match?
 # @param got The name of the test image
 # @param expected The name of the expected image
 # @param difference The name of the difference image to write
-def check_image(got, expected, difference):
+def check_image(got, expected):
     myia = iatool()
-    myia.open(got);
-    expr = "\"" + got + "\" - \"" + expected + "\"";
-    myia.imagecalc(difference, expr, True);
+    myia.open(got)
+    gotpix = myia.getchunk()
+    myia.open(expected)
+    exppix = myia.getchunk()
     myia.done()
-    myia.open(difference);
-    stats = myia.statistics()
-    myia.done()
-    return stats['sumsq'] == 0
+    return (gotpix - exppix == 0).all()
 
 # count the number of lines in the specified file in which the spcified string occurs
 def count_matches(filename, match_string):
@@ -519,10 +516,10 @@ class imfit_test(unittest.TestCase):
             if (not res['converged'][0]):
                 success = False
                 msgs + test + "fit did not converge unexpectedly"
-            if (not check_image(residual, expected_residual, 'residualDifference.im')):
+            if (not check_image(residual, expected_residual)):
                 success = False
                 msgs += test + "Did not get expected residual image\n"
-            if (not check_image(model, expected_model, 'modelDifference.im')):
+            if (not check_image(model, expected_model)):
                 success = False
                 msgs += test + "Did not get expected model image\n"
     

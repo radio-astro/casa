@@ -1141,7 +1141,7 @@ record* image::fitprofile(const string& box, const variant& region,
 		return 0;
 	}
 	String regionName;
-	std::auto_ptr<Record> regionPtr = _getRegion(region);
+	std::auto_ptr<Record> regionPtr = _getRegion(region, True);
 	if (ngauss < 0) {
 		*_log << LogIO::WARN
 			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
@@ -1561,7 +1561,7 @@ image* image::transpose(
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		std::auto_ptr<Record> regionRecord = _getRegion(region);
+		std::auto_ptr<Record> regionRecord = _getRegion(region, True);
 		fitter.reset(
 			new ImageFitter(
 				image, "", regionRecord.get(), box, sChans,
@@ -3116,7 +3116,7 @@ bool image::twopointcorrelation(
 		if (detached()) {
 			throw AipsError("Unable to create image");
 		}
-		std::auto_ptr<Record> regionRec = _getRegion(region);
+		std::auto_ptr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
 			? region.toString()
 			: "";
@@ -3281,20 +3281,15 @@ image::toworld(const ::casac::variant& value, const std::string& format) {
 		if (isunset(value)) {
 			pixel.resize(0);
 		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
-			//cout << "double vec " << endl;
 			pixel = value.getDoubleVec();
 		} else if (value.type() == ::casac::variant::INTVEC) {
-			//cout << "int vec " << endl;
-
 			variant vcopy = value;
 			Vector<Int> ipixel = vcopy.asIntVec();
-			//cout << "* ipixel " << ipixel << endl;
 			Int n = ipixel.size();
 			pixel.resize(n);
 			for (int i = 0; i < n; i++)
 				pixel[i] = ipixel[i];
 		} else if (value.type() == ::casac::variant::RECORD) {
-			//cout << "record " << endl;
 			::casac::variant localvar(value);
 			Record *tmp = toRecord(localvar.asRecord());
 			if (tmp->isDefined("numeric")) {
@@ -3310,7 +3305,6 @@ image::toworld(const ::casac::variant& value, const std::string& format) {
 					<< LogIO::EXCEPTION;
 			return rstat;
 		}
-		//cout << "*** pixel " << pixel << endl;
 		rstat = fromRecord(_image->toworld(pixel, format));
 
 	} catch (AipsError x) {
@@ -3667,7 +3661,6 @@ void image::outputvariant(::casac::variant& v) {
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	//cout << "all is well so far" << endl;
 }
 
 casac::record*
@@ -3781,26 +3774,35 @@ bool image::isconform(const string& other) {
 		RETHROW(x);
 	}
 }
-std::auto_ptr<Record> image::_getRegion(const variant& region) const {
+
+std::auto_ptr<Record> image::_getRegion(
+	const variant& region, const bool nullIfEmpty
+) const {
 	switch (region.type()) {
 	case variant::BOOLVEC:
-		return std::auto_ptr<Record>(new Record());
+		return std::auto_ptr<Record>(nullIfEmpty ? 0 : new Record());
 	case variant::STRING:
 		return std::auto_ptr<Record>(
 			region.toString().empty()
-				? new Record()
+				? nullIfEmpty ? 0 : new Record()
 				: new Record(
 					CasacRegionManager::regionFromString(
 						_image->getImage()->coordinates(),
-						region.toString(),
-					_image->getImage()->shape()
-				 )
-			)
+						region.toString(), _image->name(),
+						_image->getImage()->shape()
+					)
+				)
 		);
 	case variant::RECORD:
 		{
 			std::auto_ptr<variant> clon(region.clone());
-			return std::auto_ptr<Record>(toRecord(clon->asRecord()));
+			return std::auto_ptr<Record>(
+				nullIfEmpty && region.size() == 0
+					? 0
+					: toRecord(
+						std::auto_ptr<variant>(region.clone())->asRecord()
+					)
+			);
 		}
 	default:
 		*_log << "Unsupported type for region " << region.type()
