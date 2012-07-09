@@ -121,7 +121,7 @@ class imcollapse_test(unittest.TestCase):
             got.open(gotImage)
         else:
             got = gotImage
-        self.assertTrue(got.shape() == expected.shape())
+        self.assertTrue(all(got.shape() == expected.shape()))
         diffData = got.getchunk() - expected.getchunk()
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
@@ -145,12 +145,13 @@ class imcollapse_test(unittest.TestCase):
     def test_exceptions(self):
         """imcollapse: Test various exception cases"""
         
+        bogus = "mybogus.im"
         def testit(
             imagename, function, axes, outfile, region,
             box, chans, stokes, mask, overwrite, wantreturn
         ):
             for i in [0,1]:
-                if (i==0):
+                if (i==0 and len(imagename) > 0 and imagename != bogus):
                     self.assertRaises(
                         Exception, run_collapse, imagename,
                         function, axes, outfile, region, box,
@@ -168,7 +169,7 @@ class imcollapse_test(unittest.TestCase):
         # no image name given
         testit("", "mean", 0, "", "", "", "", "", "", False, True)
         # bad image name given
-        testit("mybogus.im", "mean", 0, "", "", "", "", "", "", False, True)
+        testit(bogus, "mean", 0, "", "", "", "", "", "", False, True)
         # no function given
         testit(good_image, "", 0, "", "", "", "", "", "", False, True)
         # bogus function given
@@ -325,7 +326,7 @@ class imcollapse_test(unittest.TestCase):
         )
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
-        self.assertTrue(mytool2.shape() == expected)
+        self.assertTrue(all(mytool2.shape() == expected))
         
         mytool = run_imcollapse(
             good_image, "mean", 2, "", "", "",
@@ -333,7 +334,7 @@ class imcollapse_test(unittest.TestCase):
         )
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
-        self.assertTrue(mytool2.shape() == expected)
+        self.assertTrue(all(mytool2.shape() == expected))
  
     def test_7(self):
         """imcollapse: verify collapsing along multiple axes works"""
