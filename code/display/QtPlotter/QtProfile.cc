@@ -38,7 +38,9 @@
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
+#include <display/QtPlotter/ColorSummaryWidget.qo.h>
 #include <display/QtPlotter/Util.h>
+#include <display/QtPlotter/LegendPreferences.qo.h>
 
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
@@ -88,7 +90,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0)/*newCollapseVals(True)*/
+         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
+         colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
     setupUi(this);
 
@@ -107,9 +110,19 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeErrorType(const QString &)));
 
+    pixelCanvas = this->canvasHolder->getCanvas();
     QPalette pal = pixelCanvas->palette();
     pal.setColor(QPalette::Background, Qt::white);
     pixelCanvas->setPalette(pal);
+
+    initPreferences();
+
+    //Plot colors we will use
+    colorSummaryWidget = new ColorSummaryWidget( this );
+    colorSummaryWidget->setColorCanvas( pixelCanvas );
+
+    //User legend preferences
+    legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
     // read the preferred ctype from casarc
     QString pref_ctype = read( ".freqcoord.type");
@@ -170,7 +183,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionMoveUp, SIGNAL(triggered()), this, SLOT(up()));
     connect(actionMoveDown, SIGNAL(triggered()), this, SLOT(down()));
     connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
-
+    connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
+    connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
     initSpectrumPosition();
 
     //Spectral Line Fitting & Moments/Collapse initialization
@@ -740,14 +754,18 @@ void QtProfile::down()
        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 }
 
+void QtProfile::initPreferences(){
+	profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
+			pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
+			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
+				this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
+	profilePrefs->syncUserPreferences();
+}
+
 void QtProfile::preferences()
 {
-	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), 
-		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
-		pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
-			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
-	profilePrefs->showNormal();
+	profilePrefs->show();
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
@@ -771,7 +789,8 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		SettingsWidget::setOptical( opticalFitter );
 		specFitSettingsWidget->reset();
 		momentSettingsWidget->reset();
-		pixelCanvas -> setOptical( opticalFitter );
+		pixelCanvas -> setTraditionalColors( opticalFitter );
+		actionColors-> setVisible( !opticalFitter );
 	}
 
 	if (update){
@@ -910,6 +929,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+
 
 
 	xpos = "";
@@ -2495,5 +2515,13 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::pixelsChanged( int pixX, int pixY ){
 		specFitSettingsWidget->pixelsChanged( pixX, pixY );
+	}
+
+	void QtProfile::curveColorPreferences(){
+		colorSummaryWidget->show();
+	}
+
+	void QtProfile::legendPreferences(){
+		legendPreferencesDialog->show();
 	}
 }

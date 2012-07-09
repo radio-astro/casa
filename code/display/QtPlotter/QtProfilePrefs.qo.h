@@ -80,6 +80,7 @@ public:
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
 			bool displayStepFunction, bool opticalFitter);
 	~QtProfilePrefs();
+	void syncUserPreferences();
 
 signals:
 	void currentPrefs(int stateAutoX, int stateAutoY, int showGrid, int stateMProf,
@@ -88,7 +89,34 @@ signals:
 
 private slots:
 	void accepted();
+	void rejected();
 	void adjustBoxes(int st);
+
+private:
+	void initializeConnections();
+	void persist();
+	void reset();
+
+
+	static const QString X_AUTO_SCALE;
+	static const QString Y_AUTO_SCALE;
+	static const QString SHOW_GRID;
+	static const QString OVERLAY;
+	static const QString RELATIVE;
+	static const QString TOOLTIPS;
+	static const QString TOP_AXIS;
+	static const QString STEP_FUNCTION;
+	static const QString OPTICAL;
+
+	bool xAutoScaleDefault;
+	bool yAutoScaleDefault;
+	bool showGridDefault;
+	bool overlayDefault;
+	bool relativeDefault;
+	bool toolTipsDefault;
+	bool topAxisDefault;
+	bool stepFunctionDefault;
+	bool opticalDefault;
 };
 
 }

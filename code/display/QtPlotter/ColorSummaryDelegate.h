@@ -22,41 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef CANVASCURVE_H_
-#define CANVASCURVE_H_
+#ifndef COLORSUMMARYDELEGATE_H_
+#define COLORSUMMARYDELEGATE_H_
 
-#include <casa/aips.h>
-#include <vector>
-#include <QColor>
-#include <QString>
+#include <QStyledItemDelegate>
 
 namespace casa {
 
-typedef std::vector<double> CurveData;
-typedef std::vector<double> ErrorData;
-
-class CanvasCurve {
+class ColorSummaryDelegate : public QStyledItemDelegate {
 public:
-	CanvasCurve();
-	CanvasCurve( CurveData curveData, ErrorData errorData,
-			QString legend, QColor curveColor);
-	QColor getColor() const;
-	QString getLegend() const;
-	void setLegend( const QString& legend );
-	CurveData getCurveData();
-	CurveData getErrorData();
-	QString getToolTip( double x, double y , const double X_ERROR,
-			const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
-	void getMinMax(Double& xmin, Double& xmax, Double& ymin,
-			Double& ymax, bool plotError ) const;
-	virtual ~CanvasCurve();
-
-private:
-	QColor curveColor;
-	QString legend;
-	CurveData curveData;
-	ErrorData errorData;
+	ColorSummaryDelegate(QObject* parent = 0);
+	void paint( QPainter * painter, const QStyleOptionViewItem &option,
+			const QModelIndex & index ) const;
+	virtual ~ColorSummaryDelegate();
 };
 
 } /* namespace casa */
-#endif /* CANVASCURVE_H_ */
+#endif /* COLORSUMMARYDELEGATE_H_ */

@@ -45,6 +45,8 @@
 #include <sys/time.h>
 
 
+
+
 namespace casa {
 
 /**
@@ -99,6 +101,7 @@ void SpecFitThread::run(){
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
     : QWidget(parent), fitter( NULL ), specFitThread( NULL ),
       progressDialog("Calculating fit(s)...", "Cancel", 0, 100, this),
+      plotDialog( this ), searchDialog( this ),
       POINT_COUNT(20), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
@@ -128,12 +131,16 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	connect( ui.polyFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(polyFitChanged(int)) );
 	connect( ui.gaussCountSpinBox, SIGNAL(valueChanged(int)), this, SLOT(adjustTableRowCount(int)));
 	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(specLineFit()));
+	connect( ui.plotButton, SIGNAL(clicked()), this, SLOT(showPlots()));
 	connect( ui.cleanButton, SIGNAL(clicked()), this, SLOT(clean()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(setOutputLogFile()));
 	connect( ui.viewButton, SIGNAL(clicked()), this, SLOT(viewOutputLogFile()));
 	connect( ui.saveOutputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(saveOutputChanged(int)));
+	connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(searchMolecules()));
 
 	ui.viewButton->setEnabled( false );
+	ui.plotButton->setEnabled( false );
+	ui.searchButton->setEnabled( false );
 }
 
 void SpecFitSettingsWidgetRadio::setCanvas( QtCanvas* canvas ){
@@ -566,6 +573,9 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 		Vector<double> xPixels;
 		Vector<double> yPixels;
 		taskMonitor->getPixelBounds( xPixels, yPixels );
+		if ( xPixels.size() < 2 || yPixels.size() < 2 ){
+			return;
+		}
 		if ( pixelX < xPixels[0] || pixelX > xPixels[1] ){
 			return;
 		}
@@ -595,7 +605,7 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 			QString curveName = curves[i]->getCurveName();
 
 			//Send the curve to the canvas for plotting.
-			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
 
 			for ( int i = 0; i < POINT_COUNT; i++ ){
 				yCumValues[i] = yCumValues[i]+yValues[i];
@@ -669,6 +679,7 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 		}
 	}
 	ui.viewButton->setEnabled( true );
+	//ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 }
 
 
@@ -861,6 +872,17 @@ void SpecFitSettingsWidgetRadio::clearEstimates(){
 
 void SpecFitSettingsWidgetRadio::pixelsChanged( int pixX, int pixY ){
 	drawCurves( pixX, pixY);
+}
+
+
+
+
+void SpecFitSettingsWidgetRadio::showPlots(){
+	plotDialog.show();
+}
+
+void SpecFitSettingsWidgetRadio::searchMolecules(){
+	searchDialog.show();
 }
 
 SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()

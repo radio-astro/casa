@@ -80,6 +80,20 @@ public:
 	const static String LINELIST;
 	const static String ISSPLAT;
 
+	const static String RECORD_VALUE;
+	const static String RECORD_UNIT;
+	const static String RECORD_SPECIES;
+	const static String RECORD_RECOMMENDED;
+	const static String RECORD_CHEMNAME;
+	const static String RECORD_FREQUENCY;
+	const static String RECORD_QNS;
+	const static String RECORD_INTENSITY;
+	const static String RECORD_SMU2;
+	const static String RECORD_LOGA;
+	const static String RECORD_EL;
+	const static String RECORD_EU;
+	const static String RECORD_LINE_LIST;
+
 	SplatalogueTable(
 		SetupNewTable& snt, uInt nrow,
 		const String& freqUnit, const String& smu2Unit,

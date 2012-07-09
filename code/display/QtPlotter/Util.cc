@@ -28,8 +28,11 @@
 #include <iostream>
 #include <QMessageBox>
 #include <QWidget>
-using namespace std;
+
 namespace casa {
+
+	const QString Util::ORGANIZATION = "NRAO/CASA";
+	const QString Util::APPLICATION = "Spectral Profiler";
 
 	Util::Util() {
 	// TODO Auto-generated constructor stub

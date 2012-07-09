@@ -58,7 +58,6 @@
 #include <vector>
 #include <graphics/X11/X_exit.h>
 
-
 namespace casa { 
 
 #define QT_DIAMOND_SIZE 5
@@ -84,8 +83,11 @@ public:
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
-	QString getCurveName(int);
+	QString getCurveName(int id);
+	void setCurveName(int id, const QString& name );
+	QColor getCurveColor( int id );
 	int getLineCount();
+	void curveLabelsChanged();
 	void clearCurve();
 	void setDataRange();
 	void setImageMode(bool);
@@ -154,8 +156,23 @@ public:
 	//step function.
 	bool isDisplayStepFunction() const;
 	void setDisplayStepFunction( bool displayAsStepFunction );
-	void setOptical( bool optical );
+
+	//Used for customizing the curve colors on the canvas.
+	void setTraditionalCurveColors( const QList<QString>& colors );
+	void setMainCurveColors( const QList<QString>& colors );
+	void setFitCurveColors( const QList<QString>& colors );
+	void setSummaryCurveColors( const QList<QString>& colors );
+
+	//If this flag is set, only 'traditional' colors will be used.
+	void setTraditionalColors( bool traditionalColors );
 	static const QString FONT_NAME;
+
+	//Customization of the curve legend.
+	void setShowLegend( bool visible );
+	bool isShowLegend() const;
+	void setLegendPosition( int position );
+	int getLegendPosition() const;
+	//CanvasCurve& getCurve( int id );
 
 public slots:
    void zoomIn();
@@ -168,6 +185,7 @@ signals:
 	void xRangeChanged(float xmin, float xmax);
 	void channelSelect(float xvalue);
 	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
+	void curvesChanged();
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -179,7 +197,6 @@ protected:
 	void keyReleaseEvent(QKeyEvent *event);
 	void wheelEvent(QWheelEvent *event);
 
-protected:
 	void updateRubberBandRegion();
 	void updatexRangeBandRegion();
 	void drawGrid(QPainter *painter);
@@ -187,7 +204,6 @@ protected:
 	void drawLabels(QPainter *painter);
 	void drawWelcome(QPainter *painter);
 	void drawCurves(QPainter *painter);
-	void drawRects(QPainter *painter);
 	void drawxRange(QPainter *painter);
 	void defaultZoomIn();
 	void defaultZoomOut();
@@ -299,7 +315,12 @@ private:
 
 	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
 
-	enum { MARGIN = 80 , FRACZOOM=20};
+	const int MARGIN_LEFT;
+	const int MARGIN_BOTTOM;
+	const int MARGIN_TOP;
+	const int MARGIN_RIGHT;
+	const int FRACZOOM;
+	//enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
 	GraphLabel xLabel[2];
@@ -361,14 +382,27 @@ private:
 	 * @param colorCategory the type of item that needs to be drawn.
 	 */
 	QColor getDiscreteColor(ColorCategory colorCategory, int id=0);
-	QColor getCurveColorPrimary();
-	QColor getCurveColorSecondary();
-	QColor getCurveColor();
-	QColor getTraditionalColor(int id);
+	QList<QString> mainCurveColorList;
+	QList<QString> fitCurveColorList;
+	QList<QString> fitSummaryCurveColorList;
+	QList<QString>  traditionalCurveColorList;
+
 	int curveCount;
 	int curveCountPrimary;
 	int curveCountSecondary;
-	bool optical;
+
+	//The optical spectral line fitting curve needs to use
+	//the traditional color list rather than a customizable one.
+	//That is the purpose of this flag.
+	bool traditionalColors;
+
+	//Whether the pixel canvas should show a legend with the curves.
+	bool showLegend;
+
+	//Where the curve legend should appear relative to this
+	//canvas.
+	int legendPosition;
+
 };
 
 }

@@ -55,6 +55,10 @@ ErrorData CanvasCurve::getErrorData(){
 	return errorData;
 }
 
+void CanvasCurve::setLegend( const QString& legendStr ){
+	legend = legendStr;
+}
+
 QString CanvasCurve::getToolTip( double x, double y , const double X_ERROR,
 		const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const {
 	QString toolTipStr;

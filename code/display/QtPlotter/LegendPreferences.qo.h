@@ -22,41 +22,52 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef CANVASCURVE_H_
-#define CANVASCURVE_H_
+#ifndef LEGEND_PREFERENCES_QO_H
+#define LEGEND_PREFERENCES_QO_H
 
-#include <casa/aips.h>
-#include <vector>
-#include <QColor>
-#include <QString>
+#include <QDialog>
+
+#include <display/QtPlotter/LegendPreferences.ui.h>
 
 namespace casa {
 
-typedef std::vector<double> CurveData;
-typedef std::vector<double> ErrorData;
+class CanvasHolder;
 
-class CanvasCurve {
+//Allows the user to customize properties of the spectral profile legend.
+class LegendPreferences : public QDialog
+{
+    Q_OBJECT
+
 public:
-	CanvasCurve();
-	CanvasCurve( CurveData curveData, ErrorData errorData,
-			QString legend, QColor curveColor);
-	QColor getColor() const;
-	QString getLegend() const;
-	void setLegend( const QString& legend );
-	CurveData getCurveData();
-	CurveData getErrorData();
-	QString getToolTip( double x, double y , const double X_ERROR,
-			const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
-	void getMinMax(Double& xmin, Double& xmax, Double& ymin,
-			Double& ymax, bool plotError ) const;
-	virtual ~CanvasCurve();
+    LegendPreferences(CanvasHolder* canvas, QWidget *parent = 0);
+    void show();
+    ~LegendPreferences();
+
+private slots:
+	void legendVisibilityChanged();
+	void legendLocationChanged( int index );
+	void accept();
+	void reject();
 
 private:
-	QColor curveColor;
-	QString legend;
-	CurveData curveData;
-	ErrorData errorData;
-};
+	void initializeUserPreferences();
+	void initializeCurveLabels();
+	void curveLabelChange();
+	void persist();
+	void canvasLegendChange();
+	void colorBarVisibilityChange();
 
-} /* namespace casa */
-#endif /* CANVASCURVE_H_ */
+	bool showLegendDefault;
+	bool showColorBarDefault;
+	int legendPositionDefault;
+
+	const static QString LEGEND_VISIBLE;
+	const static QString LEGEND_LOCATION;
+	const static QString LEGEND_COLOR_BAR;
+    Ui::LegendPreferences ui;
+    CanvasHolder* canvasHolder;
+
+};
+}
+
+#endif // LEGENDPREFERENCES_H

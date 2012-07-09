@@ -29,6 +29,8 @@
 #include <QProgressDialog>
 #include <display/QtPlotter/SpecFitSettingsWidgetRadio.ui.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
+#include <display/QtPlotter/SpecFitPlotDialog.qo.h>
+#include <display/QtPlotter/SearchMoleculesDialog.qo.h>
 #include <casa/Containers/Record.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
@@ -52,6 +54,7 @@ public:
     void reset();
     void pixelsChanged( int pixX, int pixY );
 
+
 private slots:
 	void polyFitChanged( int state );
 	void adjustTableRowCount( int count );
@@ -63,6 +66,8 @@ private slots:
 	void specFitEstimateSpecified(double xValue,double yValue, bool centerPeak);
 	void fitDone();
 	void cancelFit();
+	void showPlots();
+	void searchMolecules();
 
 private:
 	/**
@@ -94,6 +99,9 @@ private:
     ImageProfileFitter* fitter;
     SpecFitThread* specFitThread;
     QProgressDialog progressDialog;
+    SpecFitPlotDialog plotDialog;
+    SearchMoleculesDialog searchDialog;
+
     QString outputLogPath;
     QList<QList<SpecFit*> > curveList;
     int POINT_COUNT;

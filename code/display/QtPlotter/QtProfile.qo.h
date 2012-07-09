@@ -38,6 +38,7 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
+
 #include <display/Display/PanelDisplay.h>
 #include <display/Utilities/Lowlevel.h>
 
@@ -72,6 +73,9 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 namespace casa { 
 
 class QtProfilePrefs;
+class ColorSummaryWidget;
+class LegendPreferences;
+class QtCanvas;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
 //a communications interface between the class doing spectral line
@@ -158,6 +162,8 @@ public slots:
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
 			bool displayStepFunction, bool opticalFitter);
+	void curveColorPreferences();
+	void legendPreferences();
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -271,6 +277,8 @@ private:
    //Conversion
    QString getRaDec(double x, double y);
 
+   void initPreferences();
+
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 
@@ -345,6 +353,11 @@ private:
    enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
 	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
+
+   ColorSummaryWidget* colorSummaryWidget;
+   LegendPreferences* legendPreferencesDialog;
+   QtCanvas* pixelCanvas;
+   QtProfilePrefs* profilePrefs;
 
    private slots:
    	    void setPosition();

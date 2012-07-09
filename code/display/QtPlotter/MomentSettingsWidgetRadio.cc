@@ -29,6 +29,7 @@
 
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/MomentCollapseThreadRadio.h>
+#include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MeasurementSets/MS1ToMS2Converter.h>
@@ -40,7 +41,7 @@
 namespace casa {
 
 MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
-    : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL )
+    : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL ), thresholdingBinDialog( NULL )
 {
 	ui.setupUi(this);
 
@@ -72,9 +73,19 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 
 	connect( ui.collapseButton, SIGNAL(clicked()), this, SLOT( collapseImage()));
 	connect( ui.channelIntervalCountSpinBox, SIGNAL( valueChanged(int)), this, SLOT(adjustTableRows(int)));
-	connect( ui.includePixelsCheckBox, SIGNAL(stateChanged(int)), this, SLOT(includePixelsChanged(int)));
-	connect( ui.excludePixelsCheckBox, SIGNAL(stateChanged(int)), this, SLOT(excludePixelsChanged(int)));
+	connect( ui.includeRadioButton, SIGNAL(clicked()), this, SLOT(thresholdingChanged()));
+	connect( ui.excludeRadioButton, SIGNAL(clicked()), this, SLOT(thresholdingChanged()));
+	connect( ui.noneRadioButton, SIGNAL(clicked()), this, SLOT(thresholdingChanged()));
 	connect( ui.outputButton, SIGNAL(clicked()), this, SLOT( setCollapsedImageFile()));
+	connect( ui.graphThresholdButton, SIGNAL(clicked()), this, SLOT( graphicalThreshold()));
+	connect( ui.symmetricIntervalCheckBox, SIGNAL(stateChanged(int)), this, SLOT(symmetricThresholdChanged(int)));
+	connect( ui.maxThresholdLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(thresholdTextChanged( const QString&)));
+	thresholdingChanged();
+
+	//Make sure the min and max thresholds accept only doubles.
+	const QDoubleValidator* validator = new QDoubleValidator( this );
+	ui.minThresholdLineEdit->setValidator( validator );
+	ui.maxThresholdLineEdit->setValidator( validator );
 
 	//For random number generation.
 	QTime time = QTime::currentTime();
@@ -129,6 +140,49 @@ String MomentSettingsWidgetRadio::populateChannels(uInt* nSelectedChannels ){
 	return channelStr;
 }
 
+bool MomentSettingsWidgetRadio::populateThresholds( Vector<Float>& includeThreshold,
+		Vector<Float>& excludeThreshold ){
+	bool validThresholds = true;
+	if ( ui.includeRadioButton->isChecked() ){
+		validThresholds = populateThreshold( includeThreshold );
+	}
+	else if ( ui.excludeRadioButton->isChecked() ){
+		validThresholds = populateThreshold( excludeThreshold );
+	}
+	return validThresholds;
+}
+
+bool MomentSettingsWidgetRadio::populateThreshold( Vector<Float>& threshold ){
+
+	bool validThreshold = true;
+
+	//Neither threshold should be blank
+	QString minThresholdStr = ui.minThresholdLineEdit->text();
+	QString maxThresholdStr = ui.maxThresholdLineEdit->text();
+	if ( minThresholdStr.isEmpty() || maxThresholdStr.isEmpty() ){
+		validThreshold = false;
+		QString msg = "Please specify thresholding limit(s).";
+		Util::showUserMessage( msg, this );
+	}
+	else {
+		double minThreshold = minThresholdStr.toDouble();
+		double maxThreshold = maxThresholdStr.toDouble();
+
+		//Minimum should be less than the maximum
+		if ( minThreshold > maxThreshold ){
+			validThreshold = false;
+			QString msg = "Minimum threshold should be less than the maximum threshold.";
+			Util::showUserMessage( msg, this );
+		}
+		else {
+			threshold.resize( 2 );
+			threshold[0] = minThreshold;
+			threshold[1] = maxThreshold;
+		}
+	}
+	return validThreshold;
+}
+
 Vector<Int> MomentSettingsWidgetRadio::populateMoments(){
 	//Set up which moments we want
 	QList<QListWidgetItem*> selectedItems = ui.momentList->selectedItems();
@@ -168,8 +222,14 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	//Note default stddev is 0. Must be nonnegative.
 	Double stddev = 0;
 
+	//Initialize the include/exclude pixels
 	Vector<Float> excludepix;
 	Vector<Float> includepix;
+	bool validThresholds = populateThresholds( includepix, excludepix );
+	if ( !validThresholds ){
+		return;
+	}
+
 	Vector<Int> smoothaxes;
 	Vector<String> smoothtypes;
 	Vector<Quantity> smoothwidths;
@@ -285,30 +345,23 @@ void MomentSettingsWidgetRadio::reset(){
 	}
 }
 
-void MomentSettingsWidgetRadio::includePixelsChanged( int state ){
+void MomentSettingsWidgetRadio::thresholdingChanged( ){
 	bool enabled = false;
-	if ( state == Qt::Checked ){
+	if ( ui.includeRadioButton->isChecked() || ui.excludeRadioButton->isChecked() ){
 		enabled = true;
 	}
-	else {
-		ui.minIncludeLineEdit->clear();
-		ui.maxIncludeLineEdit->clear();
-	}
-	ui.minIncludeLineEdit->setEnabled( enabled );
-	ui.maxIncludeLineEdit->setEnabled( enabled );
 
-}
-void MomentSettingsWidgetRadio::excludePixelsChanged( int state ){
-	bool enabled = false;
-	if ( state == Qt::Checked ){
-		enabled = true;
+	ui.maxThresholdLineEdit->setEnabled( enabled );
+	ui.symmetricIntervalCheckBox->setEnabled( enabled );
+	if ( !ui.symmetricIntervalCheckBox->isChecked() ){
+		ui.minThresholdLineEdit->setEnabled( enabled );
 	}
-	else {
-		ui.minExcludeLineEdit->clear();
-		ui.maxExcludeLineEdit->clear();
+	if ( !enabled ){
+		ui.minThresholdLineEdit->clear();
+		ui.maxThresholdLineEdit->clear();
 	}
-	ui.minExcludeLineEdit->setEnabled( enabled );
-	ui.maxExcludeLineEdit->setEnabled( enabled );
+	//Until we get to qwt6
+	ui.graphThresholdButton->setEnabled( false );
 }
 
 
@@ -331,10 +384,54 @@ void MomentSettingsWidgetRadio::setCollapsedImageFile(){
 
 }
 
+void MomentSettingsWidgetRadio::symmetricThresholdChanged( int checkedState ){
+	if ( checkedState == Qt::Checked ){
+		ui.minThresholdLineEdit->setEnabled( false );
+		//Copy the next from the max to the min.
+		QString maxText = ui.maxThresholdLineEdit->text();
+		thresholdTextChanged( maxText );
+	}
+	else {
+		ui.minThresholdLineEdit->setEnabled( true );
+	}
+}
+
+void MomentSettingsWidgetRadio::thresholdTextChanged( const QString& text ){
+	if ( ui.symmetricIntervalCheckBox->isChecked() ){
+		Bool validDouble = false;
+		if ( !text.isEmpty() ){
+			double thresholdValue = text.toDouble( &validDouble );
+			if ( validDouble ){
+				thresholdValue = -1 * thresholdValue;
+				QString oppositeText = QString::number( thresholdValue );
+				ui.minThresholdLineEdit->setText( oppositeText );
+			}
+			else {
+				//Shouldn't get here, but just in case let the user know there is
+				//a problem.
+				QString msg( "Please specify a valid number for the threshold.");
+				Util::showUserMessage( msg, this );
+			}
+		}
+	}
+}
+
+void MomentSettingsWidgetRadio::graphicalThreshold(){
+	if ( thresholdingBinDialog == NULL ){
+		thresholdingBinDialog = new ThresholdingBinPlotDialog( this );
+	}
+	ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage());
+	thresholdingBinDialog->setImage( image );
+
+	thresholdingBinDialog->show();
+}
+
 MomentSettingsWidgetRadio::~MomentSettingsWidgetRadio(){
 	if ( imageAnalysis != NULL ){
 		delete imageAnalysis;
 	}
 }
+
+
 
 }

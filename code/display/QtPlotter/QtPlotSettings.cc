@@ -62,11 +62,11 @@ void QtPlotSettings::scroll(int dx, int dy)
 void QtPlotSettings::zoomOut( double zoomFactor ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
-		int prevSpanX = spanX(axisIndex);
+		double prevSpanX = spanX(axisIndex);
 		minX[i] = minX[i] - zoomFactor * prevSpanX;
 		maxX[i] = maxX[i] + zoomFactor * prevSpanX;
 	}
-	int prevSpanY = spanY();
+	double prevSpanY = spanY();
 	minY = minY - zoomFactor * prevSpanY;
 	maxY = maxY + zoomFactor * prevSpanY;
 	adjust();
@@ -75,11 +75,11 @@ void QtPlotSettings::zoomOut( double zoomFactor ){
 void QtPlotSettings::zoomIn( double zoomFactor ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
-		int prevSpanX = spanX( axisIndex );
+		double prevSpanX = spanX( axisIndex );
 		minX[i] = minX[i] + zoomFactor * prevSpanX;
 		maxX[i] = maxX[i] - zoomFactor * prevSpanX;
 	}
-	int prevSpanY = spanY();
+	double prevSpanY = spanY();
 	minY = minY + zoomFactor * prevSpanY;
 	maxY = maxY - zoomFactor * prevSpanY;
 	adjust();

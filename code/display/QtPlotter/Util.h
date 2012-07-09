@@ -32,6 +32,8 @@ class QWidget;
 namespace casa { //# NAMESPACE CASA - BEGIN
 	class Util {
 		public:
+			static const QString ORGANIZATION;
+			static const QString APPLICATION;
 			static void showUserMessage( QString& msg, QWidget* parent);
 			static double degMinSecToRadians( int degrees, int mins, float secs );
 			static double hrMinSecToRadians( int hours, int mins, float secs );
@@ -43,6 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static double toDecimalDegrees( int hrs, int mins, float seconds );
 			static const double PI;
 			static const double TIME_CONV;
+
 	};
 }
 #endif /* UTIL_H_ */

@@ -50,11 +50,17 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/QtDrawer.qo.h
   QtPlotter/MomentSettingsWidgetOptical.qo.h
   QtPlotter/MomentSettingsWidgetRadio.qo.h
+  QtPlotter/SpecFitPlotDialog.qo.h
   QtPlotter/SpecFitLogDialog.qo.h
   QtPlotter/SettingsWidget.qo.h
+  QtPlotter/SearchMoleculesDialog.qo.h
+  QtPlotter/ColorSummaryWidget.qo.h
   QtPlotter/SpecFitSettingsFixedTableCell.qo.h
   QtPlotter/SpecFitSettingsWidgetOptical.qo.h
   QtPlotter/SpecFitSettingsWidgetRadio.qo.h
+  QtPlotter/ThresholdingBinPlotDialog.qo.h
+  QtPlotter/LegendPreferences.qo.h
+  QtPlotter/CanvasHolder.qo.h
   QtViewer/FileBox.qo.h
   QtViewer/MakeMask.qo.h
   QtViewer/MakeRegion.qo.h
@@ -119,13 +125,19 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtDataMgrMsSelect.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
+  QtPlotter/CanvasHolder.ui
   QtPlotter/SpecFitLogDialog.ui
+  QtPlotter/SpecFitPlotDialog.ui
   QtPlotter/MomentSettingsWidgetOptical.ui
   QtPlotter/MomentSettingsWidgetRadio.ui
   QtPlotter/SettingsWidget.ui
+  QtPlotter/SearchMoleculesDialog.ui
+  QtPlotter/ColorSummaryWidget.ui
   QtPlotter/SpecFitSettingsWidgetRadio.ui
   QtPlotter/SpecFitSettingsWidgetOptical.ui
   QtPlotter/SpecFitSettingsFixedTableCell.ui
+  QtPlotter/ThresholdingBinPlotDialog.ui
+  QtPlotter/LegendPreferences.ui
   RegionShapes/QtDS9WriteOptions.ui
   RegionShapes/QtEditRegionShape.ui
   RegionShapes/QtNewRegionShape.ui
@@ -354,10 +366,15 @@ casa_add_library( display
   QtPlotter/QtDrawSettings.cc
   QtPlotter/QtDrawer.cc
   QtPlotter/CanvasCurve.cc
+  QtPlotter/CanvasHolder.cc
+  QtPlotter/ColorSummaryWidget.cc
+  QtPlotter/ColorSummaryDelegate.cc
   QtPlotter/Util.cc
   QtPlotter/ProfileFitMarker.cc
   QtPlotter/WorldCanvasTranslator.cc
   QtPlotter/SpecFitLogDialog.cc
+  QtPlotter/SpecFitPlotDialog.cc
+  QtPlotter/SearchMoleculesDialog.cc
   QtPlotter/MomentSettingsWidgetOptical.cc
   QtPlotter/MomentSettingsWidgetRadio.cc
   QtPlotter/SettingsWidget.cc
@@ -369,6 +386,8 @@ casa_add_library( display
   QtPlotter/SpecFitSettingsFixedTableCell.cc
   QtPlotter/MomentCollapseThreadRadio.cc
   QtPlotter/ProfileTaskMonitor.cc
+  QtPlotter/ThresholdingBinPlotDialog.cc
+  QtPlotter/LegendPreferences.cc
   QtViewer/QtOptions.cc
   QtViewer/FileBox.cc
   QtViewer/QtWCBox.cc
