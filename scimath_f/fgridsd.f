@@ -60,9 +60,13 @@ C
 
       real pos(2), rloc(2)
       integer loc(2), off(2)
-      integer rbeg, rend, irad
+      integer rbeg, rend
+      integer irad((2*support+1)**2)
       integer ix, iy, ipol, ichan
       integer apol, achan
+      integer ir
+      integer xloc(2*support+1), yloc(2*support+1)
+      integer ax, ay
 
       if(irow.ge.0) then
          rbeg=irow+1
@@ -76,6 +80,26 @@ C
          if(rflag(irow).eq.0) then
          call sgridsd(xy(1,irow), sampling, pos, loc, off)
          if (ogridsd(nx, ny, loc, support)) then
+            ir=1
+            norm=-(support+1)*sampling+off(1)
+            rloc(2)=-(support+1)*sampling+off(2)
+            do iy=1,2*support+1
+               rloc(2)=rloc(2)+sampling
+               rloc(1)=norm
+               do ix=1,2*support+1
+                  rloc(1)=rloc(1)+sampling
+                  irad(ir)=sqrt(rloc(1)**2+rloc(2)**2)+1
+                  ir=ir+1
+               end do
+            end do
+            xloc(1)=loc(1)-support
+            do ix=2,2*support+1
+               xloc(ix)=xloc(ix-1)+1
+            end do
+            yloc(1)=loc(2)-support
+            do iy=2,2*support+1
+               yloc(iy)=yloc(iy-1)+1
+            end do
             do ichan=1, nvischan
                achan=chanmap(ichan)+1
                if((achan.ge.1).and.(achan.le.nchan).and.
@@ -91,19 +115,22 @@ C
      $                          conjg(values(ipol,ichan,irow))
                         end if
                         norm=0.0
-                        do iy=-support,support
-                           rloc(2)=sampling*iy+off(2)
-                           do ix=-support,support
-                              rloc(1)=sampling*ix+off(1)
-                              irad=sqrt(rloc(1)**2+rloc(2)**2)+1
-                              wt=convFunc(irad)
-                              grid(loc(1)+ix,loc(2)+iy,apol,achan)=
-     $                             grid(loc(1)+ix,loc(2)+iy,apol,achan)+
+                        ir=1
+C                        do iy=-support,support
+                        do iy=1,2*support+1
+                           ay=yloc(iy)
+C                           do ix=-support,support
+                           do ix=1,2*support+1
+                              ax=xloc(ix)
+                              wt=convFunc(irad(ir))
+                              grid(ax,ay,apol,achan)=
+     $                             grid(ax,ay,apol,achan)+
      $                             nvalue*wt
-                              wgrid(loc(1)+ix,loc(2)+iy,apol,achan)=
-     $                          wgrid(loc(1)+ix,loc(2)+iy,apol,achan)+
+                              wgrid(ax,ay,apol,achan)=
+     $                          wgrid(ax,ay,apol,achan)+
      $                          weight(ichan,irow)*wt
                               norm=norm+wt
+                              ir=ir+1
                            end do
                         end do
                         sumwt(apol,achan)=sumwt(apol,achan)+
@@ -259,9 +286,12 @@ C
 
       real pos(2), rloc(2)
       integer loc(2), off(2)
-      integer rbeg, rend, irad
+      integer rbeg, rend
+      integer irad((2*support+1)**2)
       integer ix, iy, ipol, ichan
       integer apol, achan
+      integer ir
+      integer xloc(2*support+1), yloc(2*support+1)
       integer ax, ay
 
       if(irow.ge.0) then
@@ -276,6 +306,26 @@ C
          if(rflag(irow).eq.0) then
          call sgridsd(xy(1,irow), sampling, pos, loc, off)
          if (ogridsd(nx, ny, loc, support)) then
+            ir=1
+            norm=-(support+1)*sampling+off(1)
+            rloc(2)=-(support+1)*sampling+off(2)
+            do iy=1,2*support+1
+               rloc(2)=rloc(2)+sampling
+               rloc(1)=norm
+               do ix=1,2*support+1
+                  rloc(1)=rloc(1)+sampling
+                  irad(ir)=sqrt(rloc(1)**2+rloc(2)**2)+1
+                  ir=ir+1
+               end do
+            end do
+            xloc(1)=loc(1)-support
+            do ix=2,2*support+1
+               xloc(ix)=xloc(ix-1)+1
+            end do
+            yloc(1)=loc(2)-support
+            do iy=2,2*support+1
+               yloc(iy)=yloc(iy-1)+1
+            end do
             do ichan=1, nvischan
                achan=chanmap(ichan)+1
                if((achan.ge.1).and.(achan.le.nchan).and.
@@ -285,14 +335,14 @@ C
                      if((flag(ipol,ichan,irow).ne.1).and.
      $                    (apol.ge.1).and.(apol.le.npol)) then
                         norm=0.0
-                        do iy=-support,support
-                           ay=loc(2)+iy
-                           rloc(2)=sampling*iy+off(2)
-                           do ix=-support,support
-                              ax=loc(1)+ix
-                              rloc(1)=sampling*ix+off(1)
-                              irad=sqrt(rloc(1)**2+rloc(2)**2)+1
-                              wt=convFunc(irad)
+                        ir=1
+C                        do iy=-support,support
+                        do iy=1,2*support+1
+                           ay=yloc(iy)
+C                           do ix=-support,support
+                           do ix=1,2*support+1
+                              ax=xloc(ix)
+                              wt=convFunc(irad(ir))
                               grid(ax,ay,apol,achan)=
      $                             grid(ax,ay,apol,achan)+
      $                             weight(ichan,irow)*wt*
@@ -301,6 +351,7 @@ C
      $                          wgrid(ax,ay,apol,achan)+
      $                          weight(ichan,irow)*wt
                               norm=norm+wt
+                              ir=ir+1
 C-------------------------------------------------------------------
 C update variables for clipping
 C-------------------------------------------------------------------
