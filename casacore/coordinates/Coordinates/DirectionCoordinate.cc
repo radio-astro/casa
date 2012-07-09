@@ -1249,26 +1249,38 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
 						  const String &fieldName)
 {
     if (!container.isDefined(fieldName)) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "field " << fieldName << " is not defined.";
+    	throw AipsError(oss.str());
     }
     Record subrec(container.asRecord(fieldName));
     
     // We should probably do more type-checking as well as checking
     // for existence of the fields.
     if (! subrec.isDefined("system")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "system is not defined.";
+    	throw AipsError(oss.str());
     }
     String system;
     subrec.get("system", system);
     MDirection::Types sys;
-    Bool ok = MDirection::getType(sys, system);
-    if (!ok) {
-	return 0;
+    if (! MDirection::getType(sys, system)) {
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "Unknown reference frame ID " << system;
+    	throw AipsError(oss.str());
     }
+
     
     if (!subrec.isDefined("projection") || 
 	!subrec.isDefined("projection_parameters")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "Projection parameters are not defined.";
+    	throw AipsError(oss.str());
     }
     String projname;
     subrec.get("projection", projname);
@@ -1277,25 +1289,37 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     Projection proj(Projection::type(projname), projparms);
 //
     if (!subrec.isDefined("crval")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "crval is not defined.";
+    	throw AipsError(oss.str());
     }
     Vector<Double> crval;
     subrec.get("crval", crval);
 //
     if (!subrec.isDefined("crpix")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "crpix is not defined.";
+    	throw AipsError(oss.str());
     }
     Vector<Double> crpix;
     subrec.get("crpix", crpix);
 //
     if (!subrec.isDefined("cdelt")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "cdelt is not defined.";
+    	throw AipsError(oss.str());
     }
     Vector<Double> cdelt;
     subrec.get("cdelt", cdelt);
 //
     if (!subrec.isDefined("pc")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "pc is not defined.";
+    	throw AipsError(oss.str());
     }
     Matrix<Double> pc;
     subrec.get("pc", pc);
@@ -1312,13 +1336,19 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     }
 //    
     if (!subrec.isDefined("axes")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "axes is not defined.";
+    	throw AipsError(oss.str());
     }
     Vector<String> axes;
     subrec.get("axes", axes);
 //
     if (!subrec.isDefined("units")) {
-	return 0;
+    	ostringstream oss;
+    	oss << "DirectionCoordinate::restore: "
+    		<< "units is not defined.";
+    	throw AipsError(oss.str());
     }
     Vector<String> units;
     subrec.get("units", units);
