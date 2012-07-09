@@ -49,6 +49,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 		del sorg
 
 		# set restfreq
+		modified_molid = False
 		if (specunit == 'km/s'):
 			if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
 				mesg = "Restfreq must be given."
@@ -56,7 +57,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			elif (len(str(restfreq)) > 0):
 				molids = s._getmolidcol_list()
 				s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
-				s._setmolidcol_list(molids)
+				modified_molid = True
 
 
 		# get telescope name
@@ -354,6 +355,10 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 		else:
 			outform = 'ASAP'
 			spefile = project
+
+		#restore the original moleculeID column
+		if modified_molid:
+			s._setmolidcol_list(molids)
 		
                 s.save(spefile,outform,overwrite)
 
