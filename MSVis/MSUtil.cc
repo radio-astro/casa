@@ -184,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan]))) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan]);
 	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan]))) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan]);    
       }
-      obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(spw[ispw])));
+      obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(spw[ispw]));
       MFrequency::Convert toframe(obsMFreqType,
 				  MFrequency::Ref(freqframe, frame));
       for (uInt j=0; j< nTimes; ++j){
