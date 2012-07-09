@@ -78,7 +78,8 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
 
             try: 
                 #Apply the selection
-                s.set_selection(sel)
+                if not sel.is_empty():
+                    s.set_selection(sel)
                 del sel
             except Exception, instance:
                 #print '***Error***',instance
@@ -92,7 +93,8 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             if ( timeaverage ):
               if tweight=='none':
                 errmsg = "Please specify weight type of time averaging"
-                raise Exception,errmsg 
+                raise Exception,errmsg
+              # NOTE: sd.average_time always returns new instance even if insitu=True
               stave = sd.average_time(s, weight=tweight)
               if ( polaverage ):
                 if pweight=='none':
@@ -100,11 +102,13 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
                   raise Exception,errmsg 
                 if len(stave.getpolnos())<2:
                    casalog.post('Single polarization, ignore polarization averaging option','WARN')
-                   spave = stave.copy()
+                   #spave = stave.copy()
+                   spave = stave
                 else:
                    spave = stave.average_pol(weight=pweight)
               else:
-                spave = stave.copy()
+                #spave = stave.copy()
+                spave = stave
 
               del stave
 
@@ -115,11 +119,14 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
                   raise Exception,errmsg 
                 if len(s.getpolnos())<2:
                   casalog.post('Single polarization, ignore polarization averaging option','WARN')
-                  spave=s.copy()
+                  #spave=s.copy()
+                  spave=s
                 else:
+                  # NOTE: average_pol always returns new instance even if insitu=True
                   spave = s.average_pol(weight=pweight)
               else:
-                spave = s.copy()
+                #spave = s.copy()
+                spave = s
 
             del s
 
@@ -141,6 +148,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             spave.save(project, outform, overwrite)
 
             # DONE
+            
 
         except Exception, instance:
                 #print '***Error***',instance
