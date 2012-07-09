@@ -607,9 +607,9 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, sp
             #print "Imaging...."
             casalog.post( "pointingcolumn used: %s" % pointingcolumn )
             casalog.post( "Imaging...." )
-            #im.open(infile)
-            #im.selectvis(field=0, spw='', baseline=antsel)
-            im.selectvis(vis=infile, field=0, spw='', baseline=antsel)
+            im.open(infile)
+            im.selectvis(field=0, spw=spw, baseline=antsel)
+            #im.selectvis(vis=infile, field=0, spw=spw, baseline=antsel)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=spw, stokes=stokes, movingsource=ephemsrcname)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
