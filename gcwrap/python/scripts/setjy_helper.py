@@ -94,7 +94,10 @@ class ss_setjy_helper:
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
 
-	  tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
+	  #tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
+          # use first timestamp to be consistent with the ALMA Control
+          tc = trange['time'][0] #in sec.
+
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
@@ -137,7 +140,7 @@ class ss_setjy_helper:
 	  inparams[srcnames[fid]]['freqlist']=freqlist
 	  inparams[srcnames[fid]]['framelist']=framelist
 	  inparams[srcnames[fid]]['reffreqs']=reffreqs
-
+          myms.close()
 	# call Bryan's code
 	# errcode: list of list - inner list - each values for range of freqs
 	# flluxes: list of list 
@@ -263,6 +266,10 @@ class ss_setjy_helper:
 	    comp = clrecs[ky]['component0']
 	    srcn = ky.split('_')[0]
 	    ispw = ky.split('_')[1]
+            casalog.post(" direction set in the componentlist: RA=%s rad, Dec%s rad" %
+                (float('%.5g' % comp['shape']['direction']['m0']['value']),
+                 float('%.5g' % comp['shape']['direction']['m1']['value'])),'INFO1')
+
 	    casalog.post(" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" % 
 		(srcn, ispw, float('%.5g' % comp['flux']['value'][0]), 
 		 float('%.5g' % comp['flux']['value'][1]),
