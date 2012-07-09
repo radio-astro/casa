@@ -31,9 +31,9 @@ def getScanNrows(msfile, myscan):
     ms.close()
     
     Nrows = 0
-    subscans = scand['summary'][str(myscan)]
+    subscans = scand[str(myscan)]
     for ii in subscans.keys():
-        Nrows += scand['summary'][str(myscan)][ii]['nRow']
+        Nrows += scand[str(myscan)][ii]['nRow']
     
     return Nrows
 
@@ -90,12 +90,12 @@ def getSpwIds(msfile, myscan):
     scand = ms.getscansummary()
     ms.close()
     
-    subscans = scand['summary'][str(myscan)]
+    subscans = scand[str(myscan)]
     aspws = np.array([],dtype=int)
     
     for ii in subscans.keys():
         sscanid = ii
-        spwids = scand['summary'][str(myscan)][sscanid]['SpwIds']
+        spwids = scand[str(myscan)][sscanid]['SpwIds']
         aspws = np.append(aspws,spwids)
     
     # Sort spws  and remove duplicates

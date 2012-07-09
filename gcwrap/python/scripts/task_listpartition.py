@@ -100,11 +100,10 @@ def listpartition(vis=None, createdict=None, listfile=None):
             scandict = scanlist[ims]
             
             # Get spw dictionary for this sub-MS
-            # NOTE: the keys of spwdict['spwInfo'].keys() are NOT the spw Ids
+            # NOTE: the keys of spwdict.keys() are NOT the spw Ids
             spwdict = spwlist[ims]
             
             # The keys are the scan numbers
-#            scans = scandict['summary'].keys()
             scans = scandict.keys()
             
             # Get information per scan
@@ -113,7 +112,6 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 scanid = ii
                 newscandict = {}
 
-#                sscans = scandict['summary'][scanid].keys()
                 sscans = scandict[scanid].keys()
                 
                 # Get spws and nrows per sub-scan
@@ -121,11 +119,9 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 aspws = np.array([],dtype=int)
                 for kk in sscans:
                     sscanid = kk
-#                    nrows += scandict['summary'][scanid][sscanid]['nRow']
                     nrows += scandict[scanid][sscanid]['nRow']
 
                     # Get the spws for each sub-scan
-#                    spwids = scandict['summary'][scanid][sscanid]['SpwIds']
                     spwids = scandict[scanid][sscanid]['SpwIds']
                     aspws = np.append(aspws,spwids)
 
@@ -144,11 +140,8 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 # Now get the number of channels per spw
                 for ind in range(spwsize):
                     spwid = uniquespws[ind]
-#                    for sid in spwdict['spwInfo'].keys():
                     for sid in spwdict.keys():
-#                        if spwdict['spwInfo'][sid]['SpectralWindowId'] == spwid:
                         if spwdict[sid]['SpectralWindowId'] == spwid:
-#                            nchans = spwdict['spwInfo'][sid]['NumChan']
                             nchans = spwdict[sid]['NumChan']
                             charray[ind] = nchans
                             continue
