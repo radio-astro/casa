@@ -970,18 +970,25 @@ void QtCanvas::drawLabels(QPainter *painter)
     		yPosition = MARGIN / 3 ;
     	}
     	painter->drawText(MARGIN, yPosition, getRectWidth(), MARGIN / 2,
-            Qt::AlignHCenter | Qt::AlignTop, labelText );
+    			Qt::AlignHCenter | Qt::AlignTop, labelText );
     }
-    QPainterPath text;     
+    //QPainterPath text;
     QFont font(yLabel.fontName, yLabel.fontSize);
     font.setBold( true );
     QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text); 
-    text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);                   
-    font.setPixelSize(50);
+    //text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);
     painter->rotate(-90);
-    painter->translate(- height() / 2, MARGIN / 6);
-    painter->fillPath(text, yLabel.color);
-    painter->translate(height() / 2, - MARGIN / 6);
+
+    // old code start
+    //painter->translate(- height() / 2, MARGIN / 6);
+    //painter->fillPath(text, yLabel.color);
+    //painter->translate(height() / 2, - MARGIN / 6);
+    // old code end
+
+    // new code start
+    painter->drawText(- height(), 0, height(), MARGIN / 2, Qt::AlignHCenter | Qt::AlignTop, yLabel.text);
+    // new code end
+
     painter->rotate(90);
     
     painter->setPen(pen);                   
