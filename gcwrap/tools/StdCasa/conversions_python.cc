@@ -948,6 +948,15 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 	SINGLETON(std::complex<double>(c.real,c.imag) );				\
 											\
     }											\
+    else if (PyNumber_Check(obj)) {					\
+	if(PyObject_TypeCheck(obj->ob_type, &PyLong_Type)){ \
+	   SINGLETON((int)PyLong_AsLong(PyNumber_Long(obj)));  		\
+	}else if(PyObject_TypeCheck(obj->ob_type, &PyInt_Type)){ \
+	   SINGLETON((int)PyInt_AsLong(PyNumber_Long(obj)));  		\
+	}else{  \
+	   SINGLETON(double(PyFloat_AsDouble(PyNumber_Float(obj))));  		\
+	} \
+    } \
 											\
     CREATION										\
 											\
