@@ -77,6 +77,7 @@ import numpy
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
 gauss_triplet = "gauss_triplet.fits"
+two_lorentzians = "two_lorentzians.fits"
 invalid_fits = "invalid_fits.im"
 solims = [
     "amp", "ampErr", "center", "centerErr",
@@ -121,9 +122,7 @@ def run_fitprofile (
         gmfwhmest=gmfwhmest, gmfix=gmfix, logfile=logfile,
         pfunc=pfunc, goodamprange=goodamprange,
         goodcenterrange=goodcenterrange,
-        goodfwhmrange=goodfwhmrange, sigma=sigma, outsigma=outsigma
->>>>>>> .merge-right.r18376
-    )
+        goodfwhmrange=goodfwhmrange, sigma=sigma, outsigma=outsigma    )
     myia.close()
     myia.done()
     return res
@@ -134,7 +133,7 @@ def run_specfit(
     residual="", amp="", amperr="", center="", centererr="",
     fwhm="", fwhmerr="", integral="", integralerr="",
     wantreturn=True, estimates="", logresults=None,
-    gampest="", gcenterest="", gfwhmest="", gfix="",
+    pampest="", pcenterest="", pfwhmest="", pfix="",
     gmncomps=0, gmampcon="", gmcentercon="",
     gmfwhmcon="", gmampest=[0], gmcenterest=[0],
     gmfwhmest=[0], gmfix="", logfile="", pfunc="",
@@ -180,7 +179,7 @@ class specfit_test(unittest.TestCase):
             got.open(gotImage)
         else:
             got = gotImage
-        self.assertTrue(got.shape() == expected.shape())
+        self.assertTrue((got.shape() == expected.shape()).all())
         gotchunk = got.getchunk()
         expchunk = expected.getchunk()
         if (numpy.isnan(gotchunk).any()):
@@ -574,7 +573,7 @@ class specfit_test(unittest.TestCase):
                 imagename=polyim, box="", region="", chans="",
                 stokes="", axis=2, mask="", ngauss=0, poly=3,
                 multifit=True, model="", residual="", estimates="",
-                gampest=[50, 10], gcenterest=[90, 30], gfwhmest=[10, 7]
+                pampest=[50, 10], pcenterest=[90, 30], pfwhmest=[10, 7]
             )
             self.assertTrue(len(res["converged"].ravel()) == 81)
             # fit #0 did not converge
