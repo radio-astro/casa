@@ -29,6 +29,7 @@
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/QtViewer/QtDisplayData.qo.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/FITSImgParser.h>
@@ -42,6 +43,8 @@
 
 #include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
 #include <sstream>
+
+#include <casa/Utilities/GenSort.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -77,6 +80,8 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
     ifields.push_back(infofield_list_t::value_type(ibox22,itext22));
     ifields.push_back(infofield_list_t::value_type(ibox31,itext31));
     ifields.push_back(infofield_list_t::value_type(ibox32,itext32));
+    ifields.push_back(infofield_list_t::value_type(ibox41,itext41));
+    ifields.push_back(infofield_list_t::value_type(ibox42,itext42));
 
 #if defined(__APPLE__)
     QFont field_font( "Lucida Grande", 10 );
@@ -429,6 +434,7 @@ void QtDataManager::changeItemSelection(){
       lelEdit_->deactivate();
       QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
       showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
+      update_regrid_options( );
   }
 }
 
@@ -608,7 +614,13 @@ void QtDataManager::createButtonClicked() {
 			ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
 	}
 
-	panel_->createDD( path, datatype, displaytype, True, ddo );
+	// pass along regridding information to QtDisplayPanelGui...
+	if ( treeWidget_ != 0 && treeWidget_->currentItem( ) != 0 &&
+	     dataType_.value(uiDataType_[treeWidget_->currentItem()->text(1)]) == "image" ) {
+	    ddo.insert( "regrid", guimethod_to_iamethod(regrid_method->currentText( )) );
+	}
+	
+	panel_->createDD( path, datatype, displaytype, True, ddo, image_properties );
 
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
 }
@@ -753,6 +765,15 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	return True;
 }
 
+// finally, this string is examined by LatticeSlice1D<T>::stringToMethod,
+// which only looks at the first letter...
+std::string QtDataManager::guimethod_to_iamethod( const QString &type ) {
+    if ( type == "bicubic" ) return "C";
+    if ( type == "bilinear" ) return "L";
+    if ( type == "nearest" ) return "N";
+    return "";
+}
+
  void QtDataManager::showlelButtonClicked( bool clicked ) {
      if ( clicked ) {
 	lelGB_->show( );
@@ -772,7 +793,46 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
  }
 
 
+    void QtDataManager::update_regrid_options( ) {
+
+	// start out with the regrid combo-box hidden...
+	regrid->hide( );
+
+	// hide regrid option unless an image file is selected...
+	if ( treeWidget_ == 0 || treeWidget_->currentItem( ) == 0 ||
+	     dataType_.value(uiDataType_[treeWidget_->currentItem()->text(1)]) != "image" )
+	    return;
+
+	QtDisplayData *cdd = 0;
+	if ( panel_->nDDs( ) == 0 || (cdd = panel_->dd( )) == 0 ) return;
+
+	const viewer::ImageProperties &cproperties = cdd->imageProperties( );
+	if ( cproperties.ok( ) == false || cproperties.hasSpectralAxis( ) == false ) return;
+
+	Vector<double> controlling_velo_range = cproperties.veloRange( "km/s" );
+	if ( controlling_velo_range.size( ) != 2 ) return;
+
+	// at this point the already-loaded image has a spectral axis...
+	// show the combo-box, but disable it...
+	regrid->show( );
+	regrid_method->setCurrentIndex(0);
+	regrid->setDisabled(true);
+
+	Vector<double> new_velo_range = image_properties.veloRange( "km/s" );
+	if ( new_velo_range.size( ) != 2 ) return;
+
+	GenSort<double>::sort(new_velo_range);
+	GenSort<double>::sort(controlling_velo_range);
+	if ( (new_velo_range[0] <= controlling_velo_range[0] && new_velo_range[1] >= controlling_velo_range[0]) ||
+	     (new_velo_range[0] <= controlling_velo_range[1] && new_velo_range[1] >= controlling_velo_range[1]) ||
+	     (new_velo_range[0] >= controlling_velo_range[0] && new_velo_range[1] <= controlling_velo_range[1]) ) {
+	    regrid->setDisabled(false);
+	}
+
+    }
+
     void QtDataManager::fill_image_info( const std::string &path ) {
+
 	for ( infofield_list_t::iterator it = ifields.begin( ); it != ifields.end( ); ++it ) {
 	    (*it).first->hide( );
 	}
@@ -791,12 +851,42 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	(*it).second->setCursorPosition(0);
 	++it;
 
-	if ( image_properties.hasDirectionAxis( ) ) {
+	std::vector<std::string> beamvec = image_properties.restoringBeamAsStr( );
+	if ( beamvec.size( ) == 3 ) {
 	    (*it).first->show( );
-	    (*it).first->setTitle("direction type");
-	    (*it).second->setText(QString::fromStdString(image_properties.directionType( )));
+	    (*it).first->setTitle("restoring beam");
+	    std::string beam = beamvec[0] + ", " + beamvec[1] + ", " + beamvec[2];
+	    (*it).second->setText(QString::fromStdString(beam));
 	    (*it).second->setCursorPosition(0);
 	    ++it;
+	} else {
+	    ++it;	// align ra/dec & freq/velo (may need to be made smarter)
+	}
+
+	if ( image_properties.hasDirectionAxis( ) ) {
+	    std::vector<std::string> ra_range = image_properties.raRangeAsStr( );
+	    std::vector<std::string> dec_range = image_properties.decRangeAsStr( );
+	    if ( ra_range.size( ) == 2 && dec_range.size( ) == 2 ) {
+		(*it).first->show( );
+		(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " right ascension" );
+		std::string ra_str = ra_range[0] + ", " + ra_range[1];
+		(*it).second->setText(QString::fromStdString(ra_str));
+		(*it).second->setCursorPosition(0);
+		++it;
+		(*it).first->show( );
+		(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " declination" );
+		std::string dec_str = dec_range[0] + ", " + dec_range[1];
+		(*it).second->setText(QString::fromStdString(dec_str));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    } else {
+		(*it).first->show( );
+		(*it).first->setTitle("direction type");
+		(*it).second->setText(QString::fromStdString(image_properties.directionType( )));
+		(*it).second->setCursorPosition(0);
+		++it;
+	    }
+
 	}
 
 	if ( image_properties.hasSpectralAxis( ) ) {
@@ -804,7 +894,7 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 		(*it).first->show( );
 		(*it).first->setTitle("frequency range");
 		buf.str("");
-		buf << image_properties.freqRange()[0] << " - " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+		buf << image_properties.freqRange()[0] << ", " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
 		(*it).second->setText(QString::fromStdString(buf.str( )));
 		(*it).second->setCursorPosition(0);
 		++it;
@@ -814,20 +904,13 @@ Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 		(*it).first->show( );
 		(*it).first->setTitle("velocity range");
 		buf.str("");
-		buf << image_properties.veloRange()[0] << " - " << image_properties.veloRange()[1] << " km/s" ;
+		buf << image_properties.veloRange()[0] << ", " << image_properties.veloRange()[1] << " km/s" ;
 		(*it).second->setText(QString::fromStdString(buf.str( )));
 		(*it).second->setCursorPosition(0);
 		++it;
 	    }
 	}
 
-	if ( image_properties.beamArea( ) > 0 ) {
-	    (*it).first->show( );
-	    (*it).first->setTitle("beam area");
-	    (*it).second->setText(QString::number(image_properties.beamArea( )));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
-	}
     }
 
 } //# NAMESPACE CASA - END

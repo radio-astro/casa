@@ -44,7 +44,7 @@ namespace casa {
 	//        <li> regions are produced by a factory to permit the creation of gui specific regions </li>
 	//    </ul>
 	class QtPolygon : public QtRegion, public Polygon {
-
+	    Q_OBJECT
 	    public:
 
 		const std::string name( ) const { return QtRegion::name( ); }
