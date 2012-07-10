@@ -13,6 +13,8 @@ import casadef
 import numpy as np
 from math import *
 from get_user import get_user
+# jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+import traceback
 
 a=inspect.stack()
 stacklevel=0
@@ -92,6 +94,8 @@ class cluster(object):
       #print 'HOME:', self.homepath
       #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
+
+      self.__cluster_running=False
 
    def _ip(self, host):
       """Returns a unique IP address of the given hostname,
@@ -214,11 +218,13 @@ class cluster(object):
             try:
                int(words[1])
             except:
-               print "the '%s' must be an integer number:" % words[1] 
+               # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+               traceback.print_tb(sys.exc_info()[2])
                continue
                
             # start all nodes
             self.__init_now=False
+            print "start_engine(%s,%s,%s)" % (str(words[0]),str(words[1]),str(words[2]))
             self.start_engine(words[0], int(words[1]), words[2])
 
          clf.close()
@@ -230,6 +236,9 @@ class cluster(object):
          self.__engines=self.__client.pull(['id', 'host', 'pid', 'inited'])
       self.__new_engs=[]
       self.__init_now=True
+
+      # jagonzal (CAS-4292): To make sure the cluster was already started
+      self.__cluster_running=True
 
    def __start_controller(self):
       '''(Internal) Start the controller.
@@ -351,7 +360,8 @@ class cluster(object):
          try:
             bashrc.write('export %s="%s"\n' % (param,os.environ[param]))
          except:
-            #print 'environment variable', param, 'not found'
+            # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+            traceback.print_tb(sys.exc_info()[2])
             pass
 
       bashrc.write("export HOSTNAME=`uname -n`")
@@ -482,11 +492,15 @@ class cluster(object):
          os.remove(self.__ipythondir+'/'+self.__stop_controller_file)
          os.remove(self.__ipythondir+'/'+self.__stop_engine_file)
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
 
       try:
          self.__controller=None
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
 
       print "controller stopped"
@@ -498,6 +512,11 @@ class cluster(object):
       This function stops all the running engines and the controller.
 
       '''
+
+      # jagonzal: Make sure the cluster was already started
+      if not (self.__cluster_running):
+         return
+
       # shutdown all engines
       elist=[]
       for i in self.__engines:
@@ -509,19 +528,28 @@ class cluster(object):
          try:
             self.stop_node(i)
          except:
+            # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+            traceback.print_tb(sys.exc_info()[2])
             continue
 
       # shutdone controller
       try:
          self.__stop_controller()
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
 
       try:
          self.activate()
          self.__client=None
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
+
+      # jagonzal (CAS-4292): To make sure the cluster was already started
+      self.__cluster_running=False
 
       #print 'cluster shutdown'
 
@@ -556,23 +584,26 @@ class cluster(object):
      try:
        phome=os.environ["PYTHONHOME"]
      except:
+       # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+       traceback.print_tb(sys.exc_info()[2])
        pass
-       #print 'environment variable PYTHONHOME not found'
      
      if phome=='':
         try:
            v=str.split(os.environ["CASAPATH"], ' ')
            phome=v[0]+'/'+v[1]
         except:
+           # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+           traceback.print_tb(sys.exc_info()[2])
            pass
-           #print 'environment variable CASAPATH not found'
 
      dhome=''
      try:
        dhome=os.environ["CASAARCH"]
      except:
+       # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+       traceback.print_tb(sys.exc_info()[2])
        pass
-       #print 'environment variable CASAARCH not found'
 
      if phome=='':
         print 'could not locate casa_in_py.py'
@@ -623,9 +654,9 @@ class cluster(object):
 
       try:
          tobeinit=self.__client.pull('id')
-         #print tobeinit
       except:
-         print "cluster not running"
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          return None
          
 
@@ -668,6 +699,10 @@ class cluster(object):
          try:
             inited=self.__client.pull('inited', i)
          except:
+
+            # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+            traceback.print_tb(sys.exc_info()[2])
+
             #not inited
             tobeinit.append(i)
             self.__client.execute('id=%d'%i, i)
@@ -716,11 +751,11 @@ class cluster(object):
 
       '''
       try:
-         #self.__client.pull(['work_dir', 'thelogfile'])
          self.__client.execute('tmp=work_dir+"/"+thelogfile')
          return self.__client.pull('tmp')
       except:
-         print "cluster not running"
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          return None
 
    def read_casalogs(self):
@@ -901,6 +936,8 @@ class cluster(object):
       try:
          nx=int(ceil(abs(float(end - start))/len(task_id)))
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
 
       #print nx, nchan, len(task_id)
@@ -941,6 +978,8 @@ class cluster(object):
       try:
          nx=int(ceil(abs(float(nchan))/len(task_id)))
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          pass
 
       #print nx, nchan, len(task_id)
@@ -1211,6 +1250,8 @@ class cluster(object):
       try:
          return self.__client.get_ids()
       except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          return []
 
    def get_nodes(self):
@@ -1282,7 +1323,8 @@ class cluster(object):
                 end=time.time()
              base[i]='%.2f sec' % (end-prop[i][timer])
           except:
-             pass
+             # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+             traceback.print_tb(sys.exc_info()[2])
          
       print 'Timer:\n', base 
       return
@@ -1394,7 +1436,8 @@ class cluster(object):
           try:
               self.__client.push(dict(kwargs),i)
           except:
-              ok=Fale 
+              # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+              traceback.print_tb(sys.exc_info()[2])
 
       return ok
 
@@ -1433,6 +1476,8 @@ class cluster(object):
           try:
               rslt=self.__client.pull(key,i)
           except:
+              # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+              traceback.print_tb(sys.exc_info()[2])
               pass 
           if rslt!=None:
               base[i]=rslt[0]
@@ -1444,8 +1489,17 @@ class cluster(object):
 
 
       '''
-      #this one is not very useful
-      return self.__client.get_result()[i]
+      # jagonzal (CAS-): We have to capture the engine's exceptions at this level
+      try:
+           res = self.__client.get_result()[i]
+      except client.CompositeError, e:
+           print e
+           res = None
+      finally:
+           # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+           traceback.print_tb(sys.exc_info()[2])
+
+      return res
 
    def activate(self):
       '''set the cluster to parallel execution mode
@@ -1544,6 +1598,8 @@ class cluster(object):
                                try:
                                    a=int(v)
                                except:
+                                   # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+                                   traceback.print_tb(sys.exc_info()[2])
                                    pass
                                if a!=-1 and a==j:
                                    val=par[v]
@@ -1585,9 +1641,9 @@ class cluster(object):
             if verbose:
                print "job '%s' done" % job
             return True
-      except e:
-         print e
-         #print "could not get the status of job '%s'" % job
+      except:
+         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         traceback.print_tb(sys.exc_info()[2])
          return False
 
    def howto(self):
