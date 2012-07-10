@@ -111,6 +111,7 @@
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
+#include <synthesis/TransformMachines/SetJyGridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -4743,8 +4744,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         // If a model image has been specified, 
         //  rescale it according to the I f.d. determined above
 
+	Vector<Double> freqscaling;
+	Vector<Double> freqsOfScale;
+
         if(model != ""){
-          tmodimage = sjy_prepImage(os, fluxStd, fluxUsed, model, msc.spectralWindow(),
+          tmodimage = sjy_prepImage(os, fluxStd, fluxUsed, freqsOfScale, freqscaling, model, msc.spectralWindow(),
                                     rawspwid, chanDep, mfreqs, selspw, fieldName,
                                     fieldDir, freqUnit, fluxdens, precompute, spix,
                                     reffreq);
@@ -4793,7 +4797,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         }
 
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
-                              timerange, scanstr, obsidstr);
+                              timerange, scanstr, obsidstr, freqsOfScale, freqscaling);
 	
         if(tmodimage)
           delete tmodimage;
@@ -4924,7 +4928,7 @@ Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
 Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                                    const Int rawspwid, const Int fldid,
                                    const String& clname, const String& timerange,
-                                   const String& scanstr, const String& obsidstr)
+                                   const String& scanstr, const String& obsidstr, const Vector<Double>& freqsOfScale, const Vector<Double>& freqscaling)
 {
   Bool made_visibilities = False;
 
@@ -4952,11 +4956,18 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
     if(tmodimage){
       if(sm_p)
         destroySkyEquation();
+      if(freqsOfScale.nelements() > 0){
+	delete ft_p;
+	ft_p=NULL;
+	ftmachine_p="SetJyGridFT";
+	createFTMachine();
+	(static_cast<SetJyGridFT*>(ft_p))->setScale(freqsOfScale, freqscaling);
+      }
       if(!ft_p)
         createFTMachine();
       sm_p = new CleanImageSkyModel();
       sm_p->add(*tmodimage, 1);
-      ft_p->setFreqInterpolation("linear");
+      ft_p->setFreqInterpolation("nearest");
       setSkyEquation();
       se_p->predict(False);
       destroySkyEquation();
@@ -5084,7 +5095,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
 }
 
 TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
-                                        Vector<Double>& fluxUsed, const String& model,
+                                        Vector<Double>& fluxUsed, Vector<Double>& freqsOfScale, Vector<Double>& freqscale, const String& model,
                                         const ROMSSpWindowColumns& spwcols,
                                         const Int rawspwid, const Bool chanDep,
                                         const Vector<Vector<MFrequency> >& mfreqs,
@@ -5099,6 +5110,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
   Vector<Double> freqInc = spwcols.chanWidth()(rawspwid);
   Double medianFreq = median(freqArray);
+
+  freqsOfScale.resize();
+  freqscale.resize();
 
   // 2 channel extra
   Double freqWidth = max(freqArray) - min(freqArray) + 2 * max(freqInc);
@@ -5149,28 +5163,63 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   spcsys.setWorldAxisUnits(Vector<String>(1,
                                           mfreqs[selspw][0].getUnit().getName()));
   spcsys.setIncrement(Vector<Double>(1, freqWidth));
-  // make a cube model
-  if(chanDep && (fluxUsedPerChan.ncolumn() > 1)){
+  // make a cube model if the model is a cube already
+  if(modimage.shape()(freqAxis) >1){
+    // model image is a cube...just regrid it then
+    os << LogIO::NORMAL
+       << "The model image is a cube, so it is being regridded but without scaling the flux density."
+       << LogIO::POST;
     spcsys = SpectralCoordinate(
-                      MFrequency::castType(mfreqs[selspw][0].getRef().getType()),
+				MFrequency::castType(mfreqs[selspw][0].getRef().getType()),
                                 freqArray, spcsys.restFrequency());
+    imshape(freqAxis)=freqArray.nelements();
+    csys.replaceCoordinate(spcsys, icoord);
+    tmodimage = new TempImage<Float>(imshape, csys);
+    sjy_regridCubeChans(tmodimage, modimage, freqAxis);
+    //return from here itself
+    return tmodimage;
+  }
+ 
+  if(chanDep && (fluxUsedPerChan.ncolumn() > 1)){
+    //spcsys = SpectralCoordinate(
+    //                  MFrequency::castType(mfreqs[selspw][0].getRef().getType()),
+    //                            freqArray, spcsys.restFrequency());
     if(freqAxis < 2 || polAxis < 2)
       throw(AipsError("Cannot setjy with a model that has spectral or stokes axis before direction axes.\n Please reorder the axes of the image"));
+    freqscale.resize(freqArray.nelements());
+    freqsOfScale.resize(freqArray.nelements());
+    freqsOfScale=freqArray;
+    freqscale=1.0;
     if(freqAxis == 2) {//pol and freq are swapped
-      imshape(3) = freqArray.nelements();
+      imshape[2]=imshape[3];
+      imshape[3] = 1;      
       Vector<Int> trans(4);
       trans[0] = 0; trans[1] = 1; trans[2] = 3; trans[3] = 2;
       csys.transpose(trans, trans);
     }
     else{
-      imshape(freqAxis) = freqArray.nelements();
+      imshape(freqAxis) = 1;
     }
   } 
 
   csys.replaceCoordinate(spcsys, icoord);
   tmodimage = new TempImage<Float>(imshape, csys);
-  tmodimage->set(0.0f);
-	  
+  IPosition blcin(modimage.shape().nelements(), 0);
+  IPosition trcin=modimage.shape()-1;
+  IPosition blcout(imshape.nelements(), 0); 
+  IPosition trcout=imshape-1;
+  
+  for (uInt ipol=0; ipol < imshape[2]; ++ipol){
+    blcin[polAxis]=ipol;
+    trcin[polAxis]=ipol;
+    blcout[2]=ipol;
+    trcout[2]=ipol;
+    Slicer slin(blcin, trcin, Slicer::endIsLast);
+    Slicer slout(blcout, trcout, Slicer::endIsLast);
+    SubImage<Float> subimout(*tmodimage, slout, True);
+    SubImage<Float> subimin(modimage, slin, False);
+    subimout.copyData(subimin);
+  }
   os << LogIO::DEBUG1
      << "freqUnit.getName() = " << freqUnit.getName()
      << LogIO::POST;
@@ -5206,10 +5255,10 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
          << "Using model image " << modimage.name() // Loglevel INFO
          << LogIO::POST;
     // scale the image
-    if(imshape(3) > 1){
+    if(freqscale.nelements() > 0){
       if(modimage.shape()(freqAxis) == 1){
-        IPosition blc(imshape.nelements(), 0);
-        IPosition trc = imshape - 1;
+	//     IPosition blc(imshape.nelements(), 0);
+        //IPosition trc = imshape - 1;
         os << LogIO::NORMAL
            << "Scaling spw " << selspw << "'s model image by channel to I = " 
            << fluxUsedPerChan.row(0) 
@@ -5217,20 +5266,15 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
            << LogIO::POST;
         writeHistory(os);
         for(uInt k = 0; k < fluxUsedPerChan.ncolumn(); ++k){
-          Float scale = fluxUsedPerChan.column(k)(0)/sumI;
-          blc[3] = k;
-          trc[3] = k;
-          Slicer sl(blc, trc, Slicer::endIsLast);
-          SubImage<Float> subim(*tmodimage, sl, True);
-          subim.copyData((LatticeExpr<Float>)(modimage*scale));
+          freqscale[k] = fluxUsedPerChan.column(k)(0)/sumI;
+          //blc[3] = k;
+          //trc[3] = k;
+          //Slicer sl(blc, trc, Slicer::endIsLast);
+          //SubImage<Float> subim(*tmodimage, sl, True);
+          //subim.copyData((LatticeExpr<Float>)(modimage*scale));
         }
       }
-      else{// model image is a cube...just regrid it then
-        os << LogIO::NORMAL
-           << "The model image is a cube, so it is being regridded but without scaling the flux density."
-           << LogIO::POST;
-        sjy_regridCubeChans(tmodimage, modimage, freqAxis);
-      }
+   
     }
     else{
       // Scale factor
@@ -5249,10 +5293,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
     writeHistory(os);
-    if(imshape(3) > 1 && modimage.shape()(freqAxis) != 1)
-      sjy_regridCubeChans(tmodimage, modimage, freqAxis);
-    else
-      tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+    tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
   if(selspw == 0){

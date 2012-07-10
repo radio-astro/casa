@@ -42,6 +42,7 @@
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/SetJyGridFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -329,6 +330,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       return new MultiTermFT(ftrec);
     if(name=="MosaicFT")
       return new MosaicFT(ftrec);
+    if(name=="SetJyGridFT")
+      return new SetJyGridFT(ftrec);
     return NULL;
   }
 

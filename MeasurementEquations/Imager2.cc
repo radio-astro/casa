@@ -114,6 +114,7 @@
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/rGridFT.h>
+#include <synthesis/TransformMachines/SetJyGridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -2940,6 +2941,18 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code end here
   //===============================================================
+  else if(ftmachine_p=="SetJyGridFT"){
+    Vector<Double> freqs(0);
+    Vector<Double> scale(0);
+    os << LogIO::DEBUG1
+       << "SetJy Fourier transforms"
+       << LogIO::POST;
+    ft_p=new SetJyGridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
+		    phaseCenter_p,
+		    padding, False, useDoublePrecGrid, freqs, scale);
+    cft_p = new SimpleComponentFTMachine();
+
+  }
   else {
     os << LogIO::NORMAL // Loglevel INFO
        << "Performing interferometric gridding..."

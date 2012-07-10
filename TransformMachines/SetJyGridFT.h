@@ -117,7 +117,7 @@ public:
 			Bool withImage=False);
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
-
+  virtual void setScale(const Vector<Double>& freq, const Vector<Double>& scale);
 
   virtual String name();
 

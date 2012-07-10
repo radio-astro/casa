@@ -45,7 +45,7 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/TransformMachines/rGridFT.h>
+#include <synthesis/TransformMachines/SetJyGridFT.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
@@ -224,15 +224,15 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ift_));
     }
   }
-  else if (ft.name() == "rGridFT") {
-    ft_=new rGridFT(static_cast<rGridFT &>(ft));
-    ift_=new rGridFT(static_cast<rGridFT &>(ft));
+  else if (ft.name() == "SetJyGridFT") {
+    ft_=new SetJyGridFT(static_cast<SetJyGridFT &>(ft));
+    ift_=new SetJyGridFT(static_cast<SetJyGridFT &>(ft));
     // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     for (Int k=1; k < (nmod); ++k){ 
-      ftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ft_));
-      iftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ift_));
+      ftm_p[k]=new SetJyGridFT(static_cast<SetJyGridFT &>(*ft_));
+      iftm_p[k]=new SetJyGridFT(static_cast<SetJyGridFT &>(*ift_));
     }
   }
   else if (ft.name() == "MultiTermFT") {
