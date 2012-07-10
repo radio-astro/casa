@@ -12,9 +12,49 @@ def setjy(vis=None, field=None, spw=None,
           scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
           standard=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
+
+  casalog.origin('setjy')
+
+  # Take care of the trivial parallelization
+  if (ParallelTaskHelper.isParallelMS(vis)):
+    # jagonzal: We actually operate in parallel when usescratch=True because only
+    # in this case there is a good trade-off between the parallelization overhead
+    # and speed up due to the load involved with MODEL_DATA column creation
+    if (usescratch):
+      helper = ParallelTaskHelper('setjy', locals())
+      retval = helper.go()
+    # jagonzal: When usescratch=False, we operate sequentially, but it is necessary
+    # to iterate trough the list of individual sub-MSs, because each one has its own
+    # set of keywords (where the visibility model header is set)
+    else:
+      myms = mstool()
+      myms.open(vis)
+      mses = myms.getreferencedtables()
+      myms.close()
+      retval = {}
+      for m in mses:
+        retval[m] = setjy_core(m, field, spw, selectdata, timerange, 
+                               scan, observation, modimage, listmodels, scalebychan, 
+                               fluxdensity, spix, reffreq, standard, usescratch)
+  else:
+    retval = setjy_core(vis, field, spw, selectdata, timerange, 
+                        scan, observation, modimage, listmodels, scalebychan, 
+                        fluxdensity, spix, reffreq, standard, usescratch)
+
+  return retval
+
+
+def setjy_core(vis=None, field=None, spw=None,
+               selectdata=None, timerange=None, scan=None, observation=None,
+               modimage=None, listmodels=None,
+               scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
+               standard=None, usescratch=None):
+  """Fills the model column for flux density calibrators."""
+
   retval = True
   try:
-    casalog.origin('setjy')
+
+    # Here we only list the models available, but don't perform any operation
     if listmodels:
       casalog.post("Listing model candidates (listmodels == True).")
       if vis:
@@ -40,6 +80,8 @@ def setjy(vis=None, field=None, spw=None,
         ssmoddirs=None
         for d in calmoddirs:
           lsmodims(d)
+
+    # Actual operation, when either the MODEL_DATA column or visibility model header are set
     else:
       if not os.path.isdir(vis):
         casalog.post(vis + " must be a valid MS unless listmodels is True.",
@@ -50,32 +92,30 @@ def setjy(vis=None, field=None, spw=None,
       myim = imtool()
 
       if type(vis) == str and os.path.isdir(vis):
-        n_selected_rows = nselrows(vis, field, spw, observation, timerange,
-                                   scan)
+        n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan)
 
-        if not n_selected_rows:
-          casalog.post("No rows were selected.", "SEVERE")
-          return False
-        elif isinstance(n_selected_rows, dict):
-        #if ParallelTaskHelper.isParallelMS(vis):
-          # 11/28/2011: task_flagdata makes parellization look really easy, but it
-          # doesn't actually work on either of the computers I tried.
-          # Take care of the trivial parallelization
-          #helper = ParallelTaskHelper('setjy', locals())
-          #helper.go()
-          #return
-
-          # setjy should only operate on member MSes that have the selection anyway.
-          for m in n_selected_rows:
-            if n_selected_rows[m] > 0:
-              myim.selectvis(vis=m, usescratch=usescractch)
+        # jagonzal: When  usescratch=True, creating the MODEL column only on a sub-set of
+        # Sub-MSs causes problems because ms::open requires all the tables in ConCatTable 
+        # to have the same description (MODEL data column must exist in all Sub-MSs)
+        #
+        # This is a bit of an over-doing but it is necessary for the sake of transparency
+        #
+        # Besides, this is also the same behavior as when running setjy vs a normal MS
+        #
+        # Finally, This does not affect the normal MS case because nselrows throws an
+        # exception when the user enters an invalid data selection, but it works for the 
+        # MMS case because every sub-Ms contains a copy of the entire MMS sub-tables
+        if ((not n_selected_rows) and (not usescratch)):
+          # jagonzal: Turn this SEVERE into WARNING, as explained above
+          casalog.post("No rows were selected.", "WARNING")
+          return True
         else:
           myim.open(vis, usescratch=usescratch)
+
       else:
         raise Exception, 'Visibility data set not found - please verify the name'
 
-      # If modimage is not an absolute path, see if we can find exactly
-      # 1 match in the likely places.
+      # If modimage is not an absolute path, see if we can find exactly 1 match in the likely places.
       if modimage and modimage[0] != '/':
         cwd = os.path.abspath('.')
         calmoddirs = [cwd]
@@ -113,7 +153,7 @@ def setjy(vis=None, field=None, spw=None,
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
 
-      # split the process for solar system objects
+      # Split the process for solar system objects
       if standard=="Butler-JPL-Horizons 2012":
         casalog.post("Using Butler-JPL-Horizons 2012")
         ssmoddirs = findCalModels(target='SolarSystemModels',
@@ -131,16 +171,19 @@ def setjy(vis=None, field=None, spw=None,
                  standard=standard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan)
         myim.close()
+
+  # This block should catch errors mainly from the actual operation mode 
   except Exception, instance:
-    #print '*** Error ***',instance
     casalog.post('%s' % instance,'SEVERE')
     retval = False
+
   return retval
+
 
 def better_glob(pats):
   """
-  Unlike ls, glob.glob('pat1 pat2') does not return the union of matches to pat1
-  and pat2.  This does.
+  Unlike ls, glob.glob('pat1 pat2') does not return  
+  the union of matches to pat1 and pat2.  This does.
   """
   retset = set([])
   patlist = pats.split()
@@ -148,11 +191,12 @@ def better_glob(pats):
     retset.update(glob(p))
   return retset
   
+
 def lsmodims(path, modpat='*', header='Candidate modimages'):
   """
   Does an ls -d of files or directories in path matching modpat.
   
-  header describes what is being listed.
+  Header describes what is being listed.
   """
   if os.path.isdir(path):
     if better_glob(path + '/' + modpat):
@@ -162,6 +206,7 @@ def lsmodims(path, modpat='*', header='Candidate modimages'):
     else:
       print "\nNo %s matching '%s' found in %s" % (header.lower(),
                                                    modpat, path)
+
 
 def findCalModels(target='CalModels',
                   roots=['.', casa['dirs']['data']],
@@ -177,9 +222,7 @@ def findCalModels(target='CalModels',
   retset = set([])
   for root in roots:
     # Do a walk to find target directories in root.
-    # 7/5/2011:
-    # glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't
-    # work.
+    # 7/5/2011: glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't work.
     for path, dirs, fnames in os.walk(root, followlinks=True):
       excludes = permexcludes[:]
       for ext in exts:
@@ -191,64 +234,60 @@ def findCalModels(target='CalModels',
         retset.add(path)
   return retset             
 
-def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
-  """
-  Returns the number of rows in vis selected by field, spw, obs,
-  timerange, and scan.  Empty strings or Nones are treated as '*'.
 
-  If vis is a multims, the return value will be a dict keyed by
-  the paths of the member MSes.
-  """
+def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
+
   retval = 0
   myms = mstool()
-  if ParallelTaskHelper.isParallelMS(vis):
-    myms.open(vis)
-    mses = myms.getreferencedtables()
-    myms.close()
-    retval = {}
-    for m in mses:
-      retval[m] = nselrows(m, field, spw, obs, timerange, scan)
-  else:
-    msselargs = {'vis': vis}
-    if field:
-      msselargs['field'] = field
-    if spw:
-      msselargs['spw'] = spw
-    if obs:
-      msselargs['observation'] = obs
-    if timerange:
-      msselargs['time'] = timerange
-    if scan:
-      msselargs['scan'] = scan
+
+  msselargs = {'vis': vis}
+  if field:
+    msselargs['field'] = field
+  if spw:
+    msselargs['spw'] = spw
+  if obs:
+    msselargs['observation'] = obs
+  if timerange:
+    msselargs['time'] = timerange
+  if scan:
+    msselargs['scan'] = scan
       
-    # ms.msseltoindex only goes by the subtables - it does NOT check
-    # whether the main table has any rows matching the selection.
+  # ms.msseltoindex only goes by the subtables - it does NOT check
+  # whether the main table has any rows matching the selection.
+  try:
     selindices = myms.msseltoindex(**msselargs)
+  except Exception, instance:
+    casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
+    raise instance
 
-    query = []
-    if field:
-      query.append("FIELD_ID in " + str(selindices['field'].tolist()))
-    if spw:
-      query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
-    if obs:
-      query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
+  query = []
+  if field:
+    query.append("FIELD_ID in " + str(selindices['field'].tolist()))
+  if spw:
+    query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
+  if obs:
+    query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
 
-    # I don't know why ms.msseltoindex takes a time argument - it doesn't seem to
-    # appear in the output.
+  # I don't know why ms.msseltoindex takes a time argument 
+  # - It doesn't seem to appear in the output.
     
-    if scan:
-      query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
+  if scan:
+    query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
 
-    mytb = tbtool()
-    mytb.open(vis)
-    if(len(query) == 0):
-      retval=mytb.nrows()
-    else:
-      st = mytb.query(' and '.join(query),
-                      style='python')  # Does style matter here?
-      retval = st.nrows()
-      st.done()
+  mytb = tbtool()
+  mytb.open(vis)
+
+  if (len(query)>0):
+    retval = mytb.nrows()
     mytb.close()
+  else:
+    try:
+      st = mytb.query(' and '.join(query),style='python')  # Does style matter here?
+      retval = st.nrows()
+      mytb.close()
+    except Exception, instance:
+      casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
+      mytb.close()
+      raise instance
+
   return retval
-
-
