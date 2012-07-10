@@ -24,7 +24,7 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
 
     # If no units, assume mJy for consistency with auto/clean tasks.
     # But convert to Jy, because that's what units the images are in.
-    threshold = qa.getvalue(qa.convert(qa.quantity(threshold,'mJy'),'Jy'))
+    threshold = qa.getvalue(qa.convert(qa.quantity(threshold,'mJy'),'Jy'))[0]
     casalog.post("Setting threshold to " + str(threshold) + "Jy", "INFO")
 
     newIsland = numpy.zeros(1, dtype=[('box','4i4'),('npix','i4')])
@@ -35,7 +35,6 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
     for escapeme in ['-', '+', '*', '/' ]:
         escaped_imagename = re.sub("[" + escapeme + "]", "\\" + escapeme, escaped_imagename)         
     mask = escaped_imagename+'>'+str(threshold)
-    print "Mask is: "+mask
     fullmask = ia.getregion(mask=mask, getmask=True)
     if not(fullmask.max()):
         casalog.post('Maximum flux in image is below threshold.', 'WARN')
@@ -78,7 +77,6 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
        pomax=n3
 
     if chanrange:
-       print chanrange 
        try:
           if str.count(chanrange, '~') == 1:
              ch1=int(str.split(chanrange, '~')[0])
@@ -87,19 +85,18 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
              ch1=int(chanrange)
              ch2=ch1
           if ch1 > ch2 or ch1 < 0 or ch2 > chmax:
-             print 'invalid channel range'
+             casalog('invalid channel range', "SEVERE")
              return
           if ch1>chmin:
              chmin = ch1
           if ch2<chmax:
              chmax = ch2
        except:
-          print 'bad format for chanrange'
+          casalog('bad format for chanrange', "SEVERE")
           return
     #print 'chmin', chmin, 'chmax', chmax
           
     if polrange:
-       print polrange 
        try:
           if str.count(polrange, '~') == 1:
              po1=int(str.split(polrange, '~')[0])
@@ -108,14 +105,14 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
              po1=int(polrange)
              po2=po1
           if po1 > po2 or po1 < 0 or po2 > pomax:
-             print 'invalid stokes range'
+             casalog( 'invalid stokes range', "SEVERE")
              return
           if po1>pomin:
              pomin = po1
           if po2<pomax:
              pomax = po2
        except:
-          print 'bad format for polrange'
+          casalog( 'bad format for polrange', "SEVERE")
           return
     #print 'pomin', pomin, 'pomax', pomax
           
@@ -205,18 +202,18 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
                 f.write(outstring + "\n")
     casalog.post("Wrote " + str(totregions) + " regions to file " + regionfile, 'INFO')
     if writemask:
-        ia.fromimage(infile=imagename, outfile=maskname, overwrite=True)
-        ia.done()
-        ia.open(maskname)
-        ia.putchunk(outputmask)
-    ia.done()
+        myia = iatool()
+        myia.fromimage(infile=imagename, outfile=maskname, overwrite=True)
+        myia.done()
+        myia.open(maskname)
+        myia.putchunk(outputmask)
+        myia.done()
     f.close()
     return True
 
-# there may be a way to do this with the qa tool, but I cannot figure it out
 def quantity_to_string(quantity, unit=None, quotes=True):
     if unit != None:
-        quantity = qa.convert(quantity)
+        quantity = qa.convert(quantity, unit)
     string = str(quantity['value']) + quantity['unit']
     if quotes:
         string = "'" + string + "'"

@@ -1745,9 +1745,9 @@ image* image::pbcor(
 	// Recover some pixels and their mask from a region in the image
 	try {
 		*_log << LogOrigin(_class, __FUNCTION__);
-		if (detached())
+		if (detached()) {
 			return false;
-
+		}
 		Array<Float> pixels;
 		Array<Bool> pixelmask;
 
@@ -1797,7 +1797,8 @@ image* image::pbcor(
 			}
 			return new ::casac::variant(d_pixels, s_shape);
 		}
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
