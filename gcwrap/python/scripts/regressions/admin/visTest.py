@@ -54,7 +54,7 @@ class VisTest:
         phastats=self.msTool.statistics("DATA","phase")
 
 	if self.write:
-            listnam=string.split(self.msTool.name(strippath=False), '/')
+            listnam=string.split(self.msTool.name(), '/')
             imnam=listnam[len(listnam)-2]+'_'+listnam[len(listnam)-1]
             saveDir=self.imDir+imnam+'-ampuv.png'
             self.ampuv(saveDir)
