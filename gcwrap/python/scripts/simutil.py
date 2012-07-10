@@ -2498,6 +2498,7 @@ class simutil:
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
 
+
         return model_refdir,model_cell,model_size,model_nchan,model_center,model_width,model_stokes
 
 
@@ -2701,19 +2702,26 @@ class simutil:
         if nchan>1:
             if verbose: self.msg("creating moment zero image "+flat,origin="analysis")
             ia.open(image)
-            ia.moments(moments=[-1],outfile=flat,overwrite=True)
+            flat_ia = ia.moments(moments=[-1],outfile=flat,overwrite=True)
             ia.done()
+            flat_ia.close()
+            del flat_ia
         else:
             if verbose: self.msg("removing degenerate image axes in "+flat,origin="analysis")
             # just remove degenerate axes from image
-            ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
+            flat_ia = ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
+            flat_ia.close()
+
             # seems no way to just drop the spectral and keep the stokes. 
             if nstokes<=1:
                 os.rename(flat,flat+".tmp")
                 ia.open(flat+".tmp")
-                ia.adddegaxes(outfile=flat,stokes='I',overwrite=True)
+                flat_ia = ia.adddegaxes(outfile=flat,stokes='I',overwrite=True)
                 ia.done()
+                flat_ia.close()
                 shutil.rmtree(flat+".tmp")
+            del flat_ia
+
         if nstokes>1:
             os.rename(flat,flat+".tmp")
             po.open(flat+".tmp")

@@ -532,11 +532,13 @@ def simanalyze(
             # immath does Jy/bm if image but only if ia.setbrightnessunit("Jy/beam") in convimage()
             convolved = modelflat + ".regrid.conv"
             difference = imagename + '.diff'
-            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
+            diff_ia = ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
 
             # get rms of difference image for fidelity calculation
-            ia.open(difference)
-            diffstats = ia.statistics(robust=True, verbose=False,list=False)
+            #ia.open(difference)
+            diffstats = diff_ia.statistics(robust=True, verbose=False,list=False)
+            diff_ia.close()
+            del diff_ia
             maxdiff = diffstats['medabsdevmed']
             if maxdiff != maxdiff: maxdiff = 0.
             if type(maxdiff) != type(0.):
@@ -546,16 +548,20 @@ def simanalyze(
                     maxdiff = 0.
             # Make fidelity image.
             absdiff = imagename + '.absdiff'
-            ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
+            calc_ia = ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
                                                           maxdiff/pl.sqrt(2.0)), overwrite=True)
+            calc_ia.close()
             fidelityim = imagename + '.fidelity'
-            ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite=True)
+            calc_ia = ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite=True)
+            calc_ia.close()
             msg("fidelity image calculated",origin="analysis")
 
             # scalar fidelity
             absconv = imagename + '.absconv'
-            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
-            ia.close()
+            calc_ia = ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
+            if ia.isopen(): ia.close() #probably not necessary
+            calc_ia.close()
+            del calc_ia
 
             ia.open(absconv)
             modelstats = ia.statistics(robust=True, verbose=False,list=False)

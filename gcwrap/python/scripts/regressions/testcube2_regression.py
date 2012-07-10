@@ -64,7 +64,7 @@ endProc = time.clock()
 test_name = """simdata observation of test cube"""
 ms.open(project+"/"+project+".alma.out01.ms")
 newdata= ms.getdata(items="data")['data']
-
+ms.close()
 
 refshape=[2,10,882000]
 
