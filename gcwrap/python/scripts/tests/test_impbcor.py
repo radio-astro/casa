@@ -91,17 +91,6 @@ def run_pbcor(
     imagename, pbimage, outfile, overwrite, region, box, chans,
     stokes, mask, mode, cutoff
 ):
-    print iamgename
-    print pbimage
-    print outfile
-    print overwrite
-    print region
-    print box
-    print chans
-    print stokes
-    print mask
-    print mode
-    print cutoff
     myia = iatool()
     myia.open(imagename)
     res = myia.pbcor(
@@ -149,7 +138,7 @@ class impbcor_test(unittest.TestCase):
             got.open(gotImage)
         else:
             got = gotImage
-        self.assertTrue(got.shape() == expected.shape())
+        self.assertTrue((got.shape() == expected.shape()).all())
         diffData = got.getchunk() - expected.getchunk()
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
