@@ -10,13 +10,13 @@ def simanalyze(
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, imdirection=None,
     niter=None, threshold=None,
-    weighting=None, mask=None, outertaper=None, stokes=None,     
-    analyze=None, 
-    showuv=None, showpsf=None, showmodel=None, 
-    showconvolved=None, showclean=None, showresidual=None, showdifference=None, 
+    weighting=None, mask=None, outertaper=None, stokes=None,
+    analyze=None,
+    showuv=None, showpsf=None, showmodel=None,
+    showconvolved=None, showclean=None, showresidual=None, showdifference=None,
     showfidelity=None,
     graphics=None,
-    verbose=None, 
+    verbose=None,
     overwrite=None,
     async=False):
 
@@ -32,9 +32,9 @@ def simanalyze(
         if (string.find(a[k][1], 'ipython console') > 0):
             stacklevel = k
     myf = sys._getframe(stacklevel).f_globals
-     
+    
     # create the utility object:
-    util = simutil() 
+    util = simutil()
     if verbose: util.verbose = True
     msg = util.msg
 
@@ -78,12 +78,12 @@ def simanalyze(
             msg("Found %i sky model images:" % nmodels)
             for ff in skymodels:
                 msg("   "+ff)
-            msg("Using "+skymodels[0])        
+            msg("Using "+skymodels[0])
         if nmodels>=1:
             skymodel=skymodels[0]
         else:
             skymodel=""
-            
+        
         if os.path.exists(skymodel):
             msg("Sky model image "+skymodel+" found.")
         else:
@@ -93,7 +93,7 @@ def simanalyze(
                 msg("Found %i sky model images:" % nmodels)
                 for ff in skymodels:
                     msg("   "+ff)
-                msg("Using "+skymodels[0])        
+                msg("Using "+skymodels[0])
             if nmodels>=1:
                 skymodel=skymodels[0]
             else:
@@ -113,13 +113,13 @@ def simanalyze(
         # modifymodel just collects info if skymodel==newmodel
         returnpars = util.modifymodel(skymodel,skymodel,
                                       "","","","","",-1,
-                                      flatimage=False) 
+                                      flatimage=False)
         if not returnpars:
             return False
 
         (model_refdir,model_cell,model_size,
          model_nchan,model_center,model_width,
-         model_stokes) = returnpars 
+         model_stokes) = returnpars
 
 
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
@@ -165,7 +165,7 @@ def simanalyze(
             else:
                 imsize=[imsize0,imsize0]
 
-            
+
 
 
             # check for default measurement sets:
@@ -174,7 +174,7 @@ def simanalyze(
             # is the user requesting this ms?
             default_requested=[]
             for i in range(n_default): default_requested.append(False)
-            
+
 
             # parse ms parameter and check for existance;
             # initial ms list
@@ -189,7 +189,7 @@ def simanalyze(
             mstoimage=[]
             tpmstoimage=None
 
-            for ms0 in mslist0:                
+            for ms0 in mslist0:
                 if not len(ms0): continue
                 ms1 = ms0.replace('$project',project)
 
@@ -224,9 +224,9 @@ def simanalyze(
 
                     # check if the ms is tp data or not.
                     if util.ismstp(ms1,halt=False):
-                        mstype.append('TP')                       
+                        mstype.append('TP')
                         tpmstoimage = ms1
-                        # XXX TODO more than one TP ms will not be handled 
+                        # XXX TODO more than one TP ms will not be handled
                         # correctly
                         msg("Found a total power measurement set, %s." % ms1)
                     else:
@@ -273,7 +273,7 @@ def simanalyze(
                     minimsize = 8* int(psfsize/cell_asec)
 
                 if imsize[0] < minimsize: imsize[0] = minimsize
-                if imsize[1] < minimsize: imsize[1] = minimsize                
+                if imsize[1] < minimsize: imsize[1] = minimsize
 
 
             # Do single dish imaging first if tpmstoimage exists.
@@ -357,7 +357,7 @@ def simanalyze(
             foo=foo.replace("/","")
             project=project+foo
 
-            imagename = fileroot + "/" + project 
+            imagename = fileroot + "/" + project
 
             # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
             tb.open(mstoimage[0]+"/SOURCE")
@@ -375,7 +375,7 @@ def simanalyze(
 
 
 
-            
+
             # clean insists on using an existing model if its present
             if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
             if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
@@ -426,12 +426,12 @@ def simanalyze(
 
 
 
-                        
+
 
 
         if image:
-            # show model, convolved model, clean image, and residual 
-            if grfile:            
+            # show model, convolved model, clean image, and residual
+            if grfile:
                 file = fileroot + "/" + project + ".image.png"
             else:
                 file = ""
@@ -453,10 +453,10 @@ def simanalyze(
                 util.nextfig()
 
                 # convolved sky model - units of Jy/bm
-                disprange = []  
+                disprange = []
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
-                
+
                 # clean image - also in Jy/beam
                 # although because of DC offset, better to reset disprange
                 disprange = []
@@ -469,7 +469,7 @@ def simanalyze(
                     # clean residual image - Jy/bm
                     discard = util.statim(imagename+".residual.flat",disprange=disprange)
                 util.endfig(show=grscreen,filename=file)
-        
+
 
 
 
@@ -480,7 +480,7 @@ def simanalyze(
 
             if not image:
                 imagename = fileroot + "/" + project
-            
+
             if not os.path.exists(imagename+".image"):
                 msg("Can't find a simulated image - expecting "+imagename,priority="error")
                 return False
@@ -520,12 +520,12 @@ def simanalyze(
                         msg(imagename+".residual not found -- residual will not be plotted",priority="warn")
                     showresidual = False
                 outflat_current = True
-                
+
             # regridded and convolved input:?
             if not convsky_current:
                 util.convimage(modelflat,imagename+".image.flat")
                 convsky_current = True
-            
+
             # now should have all the flat, convolved etc even if didn't run "image" 
 
             # make difference image.
@@ -533,14 +533,14 @@ def simanalyze(
             convolved = modelflat + ".regrid.conv"
             difference = imagename + '.diff'
             ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
-            
+
             # get rms of difference image for fidelity calculation
             ia.open(difference)
             diffstats = ia.statistics(robust=True, verbose=False,list=False)
-            maxdiff = diffstats['medabsdevmed']            
+            maxdiff = diffstats['medabsdevmed']
             if maxdiff != maxdiff: maxdiff = 0.
             if type(maxdiff) != type(0.):
-                if maxdiff.__len__() > 0: 
+                if maxdiff.__len__() > 0:
                     maxdiff = maxdiff[0]
                 else:
                     maxdiff = 0.
@@ -556,13 +556,13 @@ def simanalyze(
             absconv = imagename + '.absconv'
             ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
             ia.close()
-            
+
             ia.open(absconv)
             modelstats = ia.statistics(robust=True, verbose=False,list=False)
-            maxmodel = modelstats['max']            
+            maxmodel = modelstats['max']
             if maxmodel != maxmodel: maxmodel = 0.
             if type(maxmodel) != type(0.):
-                if maxmodel.__len__() > 0: 
+                if maxmodel.__len__() > 0:
                     maxmodel = maxmodel[0]
                 else:
                     maxmodel = 0.
@@ -602,8 +602,8 @@ def simanalyze(
                     multi = [2,2,1]
                 else:
                     multi = [2,3,1]
-                    
-            if grfile:            
+
+            if grfile:
                 file = fileroot + "/" + project + ".analysis.png"
             else:
                 file = ""
@@ -636,25 +636,25 @@ def simanalyze(
                     util.nextfig()
 
                 if showpsf:
-                    if image: 
+                    if image:
                         psfim = imagename + ".psf"
                     else:
                         psfim = project + ".quick.psf"
                         if not os.path.exists(psfim):
                             if len(mslist)>1:
                                 msg("Using only "+msfile+" for psf generation",priority="warn")
-                            im.open(msfile)  
+                            im.open(msfile)
                             # TODO spectral parms
                             im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([minimsize,128]))
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
                             # beam is set above (even in "analyze" only)
-                            # note that if image, beam has fields 'major' whereas if not, it 
-                            # has fields like 'bmaj'.  
-                            # beam=im.fitpsf(psf=psfim)  
+                            # note that if image, beam has fields 'major' whereas if not, it
+                            # has fields like 'bmaj'.
+                            # beam=im.fitpsf(psf=psfim)
                             im.done()
-                    ia.open(psfim)            
+                    ia.open(psfim)
                     beamcs = ia.coordsys()
                     beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1][0],beamcs.findcoordinate("stokes")[1][0]],dropdeg=True)
                     nn = beam_array.shape
@@ -686,7 +686,7 @@ def simanalyze(
                     discard = util.statim(modelflat+".regrid.conv")
                     # if disprange gets set here, it'll be Jy/bm
                     util.nextfig()
-                
+
                 if showclean:
                     # own scaling because of DC/zero spacing offset
                     discard = util.statim(imagename+".image.flat")
@@ -708,7 +708,7 @@ def simanalyze(
                     util.nextfig()
 
                 util.endfig(show=grscreen,filename=file)
-            
+
             sim_min,sim_max,sim_rms,sim_units = util.statim(imagename+".image.flat",plot=False)
             # if not displaying still print stats:
             # 20100505 ia.stats changed to return Jy/bm:
@@ -726,21 +726,21 @@ def simanalyze(
 
         # cleanup - delete newmodel, newmodel.flat etc
         if os.path.exists(imagename+".image.flat"):
-            shutil.rmtree(imagename+".image.flat*")  
+            shutil.rmtree(imagename+".image.flat")
         if os.path.exists(imagename+".residual.flat"):
-            shutil.rmtree(imagename+".residual.flat*")  
+            shutil.rmtree(imagename+".residual.flat")
         if os.path.exists(imagename+".flux"):
-            shutil.rmtree(imagename+".flux*")  
-        absdiff = imagename + '.absdiff'        
+            shutil.rmtree(imagename+".flux")
+        absdiff = imagename + '.absdiff'
         if os.path.exists(absdiff):
-            shutil.rmtree(absdiff)   
-        absconv = imagename + '.absconv'        
+            shutil.rmtree(absdiff)
+        absconv = imagename + '.absconv'
         if os.path.exists(absconv):
-            shutil.rmtree(absconv)  
+            shutil.rmtree(absconv)
 #        if os.path.exists(imagename+".diff"):
-#            shutil.rmtree(imagename+".diff")  
+#            shutil.rmtree(imagename+".diff")
         if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
-            shutil.rmtree(imagename+".quick.psf")  
+            shutil.rmtree(imagename+".quick.psf")
 
 
     except TypeError, e:
