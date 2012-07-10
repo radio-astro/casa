@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# Remove makefiles in order not to conflict with other build systems
-find . -name makefile | xargs rm -f
-find . -name GNUmakefile | xargs rm -f 
-
-AUTORECONF_OPTIONS='--verbose --install --force' ./autogen.sh
-
