@@ -1097,7 +1097,7 @@ import platform
 ##
 
 if (platform.architecture()[0]=='64bit'):
-    if os.environ.has_key('DISPLAY') and os.environ['DISPLAY']!="":
+    if os.environ.has_key('DISPLAY') and os.environ['DISPLAY']!="" and not casa['flags'].has_key('--nogui'):
         pl.ioff( )
         pl.clf( )
         pl.ion( )
