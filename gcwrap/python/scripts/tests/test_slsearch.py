@@ -82,7 +82,8 @@ def run_search(
     append
 ):
     mysl = sltool()
-    mysl.open(table)
+    if (not mysl.open(table)):
+        raise Exception
     try: 
         restool = mysl.search(
             outfile=outfile, freqrange=freqrange,
@@ -97,9 +98,7 @@ def run_search(
         return restool
     except Exception, instance:
         mysl.close()
-        
         raise instance
-#        throw(instance)
 
 def run_slsearch(
     table, outfile, freqrange, species, reconly,
