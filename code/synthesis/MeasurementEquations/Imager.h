@@ -778,7 +778,10 @@ protected:
   Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                              const Int rawspwid, const Int fldid,
                              const String& clname, const String& timerange="",
-                             const String& scanstr="", const String& obsidstr="");
+                             const String& scanstr="", 
+			     const String& obsidstr="", 
+			    const Vector<Double>& freqofscale=Vector<Double>(0),
+			     const Vector<Double>& scale=Vector<Double>(0) );
   // Returns whether it found a source.
   Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                        Vector<Vector<Flux<Double> > >& returnFluxes,
@@ -791,7 +794,9 @@ protected:
                        const MDirection& fieldDir, const String& standard);
   // Returns NULL if no image is prepared.
   TempImage<Float>* sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
-                                  Vector<Double>& fluxUsed, const String& model,
+                                  Vector<Double>& fluxUsed, 
+				  Vector<Double>& freq, 
+				  Vector<Double>& scale, const String& model,
                                   const ROMSSpWindowColumns& spwcols,
                                   const Int rawspwid, const Bool chanDep,
                                   const Vector<Vector<MFrequency> >& mfreqs,
