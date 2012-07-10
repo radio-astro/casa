@@ -26,28 +26,31 @@ reffile = refpath+'reflistvis'
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'OrionS_rawACSmod'
 msfile3 = 'as1039q4_ut.ms'
-res = None
 out = 'listvis'
 
 class listvis_test1(unittest.TestCase):
 
     def setUp(self):
-        self.res = None
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
-        if (not os.path.exists(msfile1)):            
-            shutil.copytree(datapath+msfile1, msfile1)
-        
-        if (not os.path.exists(msfile2)):            
-            shutil.copytree(datapath+msfile2, msfile2)
+        fpath = os.path.join(datapath, msfile1)
+        os.symlink(fpath, msfile1)       
 
-        if (not os.path.exists(msfile3)):            
-            shutil.copytree(datapath+msfile3, msfile3)
+        fpath = os.path.join(datapath, msfile2)
+        os.symlink(fpath, msfile2)       
+
+        fpath = os.path.join(datapath, msfile3)
+        os.symlink(fpath, msfile3)       
 
         default(listvis)
         
     
     def tearDown(self):
-        pass        
+        if os.path.exists(msfile1):
+            os.unlink(msfile1)
+        if os.path.exists(msfile2):
+            os.unlink(msfile2)
+        if os.path.exists(msfile3):
+            os.unlink(msfile3)       
 
     def test1(self):
         '''Listvis 1: Data column'''
@@ -116,21 +119,18 @@ class listvis_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file.'%(output,reference))
         
-class listvis_test2(unittest.TestCase):
+class listvis_cleanup(unittest.TestCase):
 
     def setUp(self):
         pass
     
     def tearDown(self):
-        # It will ignore errors in case the files don't exist
-        shutil.rmtree(msfile1,ignore_errors=True)
-        shutil.rmtree(msfile2,ignore_errors=True)
-        shutil.rmtree(msfile3,ignore_errors=True)
-#        os.system('rm -rf ' + out+'*')
+        os.system('rm -rf ' + out+'*')
+        os.system('rm -rf ' + 'compare*')
         
     def test1a(self):
         '''Listvis: Cleanup'''
         pass
         
 def suite():
-    return [listvis_test1,listvis_test2]
+    return [listvis_test1,listvis_cleanup]
