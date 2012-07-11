@@ -49,6 +49,15 @@ int main() {
 		AlwaysAssert(beam[1] == 1.25, AipsError);
 		AlwaysAssert(near(beam[2], 57.2958), AipsError);
 
+		GaussianBeam gbeam;
+		AlwaysAssert(
+			StokesImageUtil::FitGaussianPSF(gaussianModel, gbeam),
+			AipsError
+		);
+		AlwaysAssert(gbeam.getMajor("arcsec") == 2.5, AipsError);
+		AlwaysAssert(gbeam.getMinor("arcsec") == 1.25, AipsError);
+		AlwaysAssert(near(gbeam.getPA(Unit("deg")), 57.2958, 1e-6), AipsError);
+
 		TempImage<Float> t(
 			TiledShape(gaussianModel.shape()),
 			gaussianModel.coordinates()
@@ -59,13 +68,11 @@ int main() {
 		Quantity bmaj(5, "arcsec");
 		Quantity bmin(2.5, "arcsec");
 		Quantity bpa(20, "deg");
-		StokesImageUtil::Convolve(
-			t, bmaj, bmin, bpa, b
-		);
+		gbeam = GaussianBeam(bmaj, bmin, bpa);
+		StokesImageUtil::Convolve(t, gbeam, b);
 		FITSImage exp(datadir + "expected_convolved.fits");
 
 		AlwaysAssert(allEQ(t.get(), exp.get()), AipsError);
-
 	}
 	catch (AipsError x) {
 		cout << x.getMesg() << endl;

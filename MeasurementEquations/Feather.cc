@@ -99,10 +99,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     elpb.applyPB(elbeamo, elbeamo, wcenter, Quantity(0.0, "deg"), 
 			   BeamSquint::NONE);
-    extraconv.resize(3);
     StokesImageUtil::To(fftim, elbeamo);
+
+    GaussianBeam beam;
+
     StokesImageUtil::FitGaussianPSF(fftim, 
-				    extraconv(0), extraconv(1), extraconv(2)); 
+				   beam);
+
+    extraconv.resize(3);
+    extraconv(0) = beam.getMajor();
+    extraconv(1) = beam.getMinor();
+    extraconv(2) = beam.getPA();
 
     LatticeFFT::cfft2d(elbeamo);
     image.copyData((LatticeExpr<Complex>)( image*elbeamo) );
@@ -129,22 +136,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-      
-     Vector<Quantum<Double> > hBeam, lBeam, extraconv;
+      GaussianBeam hBeam , lBeam;
+      Vector<Quantity> extraconv;
       ImageInfo highInfo=high.imageInfo();
       hBeam=highInfo.restoringBeam();
       ImageInfo lowInfo=low0.imageInfo();
       lBeam=lowInfo.restoringBeam();
-      if((hBeam.nelements()<3)||!((hBeam(0).get("arcsec").getValue()>0.0)
-				  &&(hBeam(1).get("arcsec").getValue()>0.0))) {
+      if(hBeam.isNull()) {
 	os << LogIO::WARN 
 	   << "High resolution image does not have any resolution information - will be unable to scale correctly.\n" 
 	   << LogIO::POST;
       }
       
       PBMath * myPBp = 0;
-      if(((lowPSF=="") &&((lBeam.nelements()==0))) || 
-	 ((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) ) {
+      if((lowPSF=="") && lBeam.isNull()) {
 	// create the low res's PBMath object, needed to apply PB 
 	// to make high res Fourier weight image
 	if (useDefaultPB) {
@@ -237,8 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(lowPSF=="") {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using primary beam to determine weighting.\n" << LogIO::POST;
-	if((lBeam.nelements()==0) || 
-	   ((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0))) {
+	if(lBeam.isNull()) {
 	  cweight.set(1.0);
 	  if (myPBp != 0) {
 	    myPBp->applyPB(cweight, cweight, wcenter, Quantity(0.0, "deg"), 
@@ -249,10 +253,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << LogIO::NORMAL // Loglevel INFO
                << "Determining scaling from SD Primary Beam.\n"
 	       << LogIO::POST;
-	    lBeam.resize(3);
 	    StokesImageUtil::To(lowpsf0, cweight);
 	    StokesImageUtil::FitGaussianPSF(lowpsf0, 
-					    lBeam(0), lBeam(1), lBeam(2)); 
+					    lBeam);
 	  }
 	  delete myPBp;
 	}
@@ -265,8 +268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition center(4, Int((cweight.shape()(0)/4)*2), 
 			   Int((cweight.shape()(1)/4)*2),0,0);
 	  lowpsf0.putAt(1.0, center);
-	  StokesImageUtil::Convolve(lowpsf0, lBeam(0), lBeam(1),
-				    lBeam(2), False);
+	  StokesImageUtil::Convolve(lowpsf0, lBeam, False);
 	  StokesImageUtil::From(cweight, lowpsf0);
 
 	}
@@ -297,12 +299,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition axes(2,0,1);   // if its a cube, regrid the spectral too
 	  ir.regrid(lowpsf0, Interpolate2D::LINEAR, axes, lowpsf);
 	}
-	if((lBeam.nelements()==0) || 
-	   ((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0))) {
+	if(lBeam.isNull()) {
 	  os << LogIO::NORMAL // Loglevel INFO
              << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
-	  lBeam.resize(3);
-	  StokesImageUtil::FitGaussianPSF(lowpsf, lBeam(0), lBeam(1), lBeam(2));
+	  StokesImageUtil::FitGaussianPSF(lowpsf, lBeam);
 	}
 	StokesImageUtil::From(cweight, lowpsf0);
       }
@@ -311,13 +311,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(effDiam >0.0){
 	//cerr << "in effdiam" << effDiam << endl;
 	applyDishDiam(cweight, effDiam, lowpsf0, extraconv);
-	lBeam.resize(3);
 	lowpsf0.copyData((LatticeExpr<Float>)(lowpsf0/max(lowpsf0)));
-	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
+	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam);
 	Int directionIndex=
 	  cweight.coordinates().findCoordinate(Coordinate::DIRECTION);
-		Image2DConvolver<Float> ic;
-	ic.convolve(
+	Image2DConvolver<Float>::convolve(
 		    os, low, low, VectorKernel::toKernelType("gauss"), IPosition(2, directionIndex, directionIndex+1),
 		    extraconv, True, 1.0, True
 		    );
@@ -430,13 +428,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            << "Multiplying single dish data by user specified factor "
            << sdScale << ".\n" << LogIO::POST;
       Float sdScaling  = sdScale;
-      if((hBeam(0).get("arcsec").getValue()>0.0)
-	 &&(hBeam(1).get("arcsec").getValue()>0.0)&&
-       (lBeam(0).get("arcsec").getValue()>0.0)&&
-	 (lBeam(1).get("arcsec").getValue()>0.0)) {
+      if (! hBeam.isNull() && ! lBeam.isNull()) {
+
 	Float beamFactor=
-	  hBeam(0).get("arcsec").getValue()*hBeam(1).get("arcsec").getValue()/
-	  (lBeam(0).get("arcsec").getValue()*lBeam(1).get("arcsec").getValue());
+	  hBeam.getArea("arcsec2")/lBeam.getArea("arcsec2");
 	os << LogIO::NORMAL // Loglevel INFO
            << "Applying additional scaling for ratio of the volumes of the high to the low resolution images : "
 	   <<  beamFactor << ".\n" << LogIO::POST;

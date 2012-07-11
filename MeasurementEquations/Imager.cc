@@ -269,9 +269,7 @@ traceEvent(1,"Entering imager::defaults",25);
   mDataStart_p=MRadialVelocity(Quantity(0.0, "km/s"), MRadialVelocity::LSRK);
   mDataStep_p=MRadialVelocity(Quantity(0.0, "km/s"), MRadialVelocity::LSRK);
   beamValid_p=False;
-  bmaj_p=Quantity(0, "arcsec");
-  bmin_p=Quantity(0, "arcsec");
-  bpa_p=Quantity(0, "deg");
+  beam_p = GaussianBeam();
   images_p.resize(0);
   masks_p.resize(0);
   fluxMasks_p.resize(0);
@@ -3159,7 +3157,7 @@ Bool Imager::restore(const Vector<String>& model,
 	psf=imageNames(0)+".psf";
 	if(!clone(imageNames(0), psf)) return False;
 	Imager::makeimage("psf", psf);
-	fitpsf(psf, bmaj_p, bmin_p, bpa_p);
+	fitpsf(psf, beam_p);
 	beamValid_p=True;
       }
 
@@ -3353,14 +3351,14 @@ Bool Imager::approximatepsf(const String& psf)
 
     PagedImage<Float> elpsf(psf);
     elpsf.copyData(sm_p->PSF(0));
-    Quantity mbmaj, mbmin, mbpa;
-    StokesImageUtil::FitGaussianPSF(elpsf, mbmaj, mbmin, mbpa);
+    GaussianBeam mbeam;
+    StokesImageUtil::FitGaussianPSF(elpsf, mbeam);
     LatticeExprNode sumPSF = sum(elpsf);
     Float volume=sumPSF.getFloat();
     os << LogIO::NORMAL << "Approximate PSF  "  << ": size " // Loglevel INFO
-       << mbmaj.get("arcsec").getValue() << " by "
-       << mbmin.get("arcsec").getValue() << " (arcsec) at pa " 
-       << mbpa.get("deg").getValue() << " (deg)" << endl
+       << mbeam.getMajor("arcsec") << " by "
+       << mbeam.getMinor("arcsec") << " (arcsec) at pa "
+       << mbeam.getPA(Unit("deg")) << " (deg)" << endl
        << "and volume = " << volume << " pixels " << LogIO::POST;
     
     
@@ -3382,7 +3380,7 @@ Bool Imager::approximatepsf(const String& psf)
 
 Bool Imager::smooth(const Vector<String>& model, 
 		    const Vector<String>& image, Bool usefit, 
-		    Quantity& mbmaj, Quantity& mbmin, Quantity& mbpa,
+		    GaussianBeam& mbeam,
 		    Bool normalizeVolume)
 {
   if(!valid()) return False;
@@ -3413,9 +3411,8 @@ Bool Imager::smooth(const Vector<String>& model,
     if(usefit) {
       if(beamValid_p) {
 	os << LogIO::NORMAL << "Using previous beam" << LogIO::POST; // Loglevel INFO
-	mbmaj=bmaj_p;
-	mbmin=bmin_p;
-	mbpa=bpa_p;
+	mbeam = beam_p;
+
       }
       else {
 	os << LogIO::NORMAL // Loglevel INFO
@@ -3424,10 +3421,8 @@ Bool Imager::smooth(const Vector<String>& model,
 	psf=model(0)+".psf";
 	if(!clone(model(0), psf)) return False;
 	Imager::makeimage("psf", psf);
-	fitpsf(psf, mbmaj, mbmin, mbpa);
-	bmaj_p=mbmaj;
-	bmin_p=mbmin;
-	bpa_p=mbpa;
+	fitpsf(psf, mbeam);
+	beam_p = mbeam;
 	beamValid_p=True;
       }
     }
@@ -3445,11 +3440,11 @@ Bool Imager::smooth(const Vector<String>& model,
 				   imageNames(thismodel));
       imageImage.table().markForDelete();
       imageImage.copyData(modelImage);
-      StokesImageUtil::Convolve(imageImage, mbmaj, mbmin, mbpa,
+      StokesImageUtil::Convolve(imageImage, mbeam,
 				normalizeVolume);
       
       ImageInfo ii = imageImage.imageInfo();
-      ii.setRestoringBeam(mbmaj, mbmin, mbpa); 
+      ii.setRestoringBeam(mbeam);
       imageImage.setImageInfo(ii);
       imageImage.setUnits(Unit("Jy/beam"));
       imageImage.table().unmarkForDelete();
@@ -4148,9 +4143,10 @@ Bool Imager::mem(const String& algorithm,
       Vector<Float> beam(3);
       beam=sm_p->beam(0);
       if(beam[0] > 0){
-	bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
-	bmin_p=Quantity(abs(beam(1)), "arcsec");
-	bpa_p=Quantity(beam(2), "deg");
+    	  beam_p.setMajorMinor(
+    			Quantity(abs(beam(0)), "arcsec"), Quantity(abs(beam(1)), "arcsec")
+    		);
+    	  beam_p.setPA(Quantity(beam(2), "deg"));
 	beamValid_p=True;
       }
     }
@@ -4304,7 +4300,7 @@ Bool Imager::nnls(const String&,  const Int niter, const Float tolerance,
     }
     
     // Get the PSF fit while we are here
-    StokesImageUtil::FitGaussianPSF(sm_p->PSF(0), bmaj_p, bmin_p, bpa_p);
+    StokesImageUtil::FitGaussianPSF(sm_p->PSF(0), beam_p);
     beamValid_p=True;
    
     
@@ -5415,9 +5411,7 @@ Bool Imager::make(const String& model)
 }
 
 // Fit the psf. If psf is blank then make the psf first.
-Bool Imager::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
-		    Quantity& mbpa)
-{
+Bool Imager::fitpsf(const String& psf, GaussianBeam& mbeam) {
 
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::fitpsf",23);
@@ -5467,16 +5461,14 @@ Bool Imager::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
     }
 
     PagedImage<Float> psfImage(lpsf);
-    StokesImageUtil::FitGaussianPSF(psfImage, mbmaj, mbmin, mbpa);
-    bmaj_p=mbmaj;
-    bmin_p=mbmin;
-    bpa_p=mbpa;
+    StokesImageUtil::FitGaussianPSF(psfImage, mbeam);
+    beam_p = mbeam;
     beamValid_p=True;
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "  Beam fit: " << bmaj_p.get("arcsec").getValue() << " by "
-       << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-       << bpa_p.get("deg").getValue() << " (deg) " << endl;
+       << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
+       << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+       << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
 
     this->unlock();
     
@@ -5538,16 +5530,12 @@ Bool Imager::settaylorterms(const Int intaylor,const Double inreffreq)
 };
 
 // Set the beam
-Bool Imager::setbeam(const Quantity& mbmaj, const Quantity& mbmin,
-		     const Quantity& mbpa)
+Bool Imager::setbeam(const GaussianBeam& mbeam)
 {
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "setbeam()", WHERE));
-  
-  bmaj_p=mbmaj;
-  bmin_p=mbmin;
-  bpa_p=mbpa;
+  beam_p = mbeam;
   beamValid_p=True;
     
   return True;
@@ -6354,7 +6342,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
     PagedImage<Float> low0(sdImage);
     String sdObs=low0.coordinates().obsInfo().telescope();
 
-    Vector<Quantum<Double> > lBeam;
+    GaussianBeam lBeam;
     ImageInfo lowInfo=low0.imageInfo();
     lBeam=lowInfo.restoringBeam();
   
@@ -6379,8 +6367,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
 
       TempImage<Float> beamTemp(model.shape(), model.coordinates());
       //Make the PB accordingly
-      if((lBeam.nelements()==0) || 
-	 (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
+      if(lBeam.isNull()) {
       
 	if (doDefaultVP_p) { 
 	  if(telescope_p!=""){
@@ -6408,8 +6395,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
 	  Table vpTable(vpTableStr_p);
 	  this->makePBImage(vpTable, beamTemp);	
 	}
-	lBeam.resize(3);
-	StokesImageUtil::FitGaussianPSF(beamTemp, lBeam(0), lBeam(1), lBeam(2));
+	StokesImageUtil::FitGaussianPSF(beamTemp, lBeam);
 	LatticeExprNode sumImage = sum(beamTemp);
 	beamFactor=sumImage.getFloat();
 	
@@ -6431,10 +6417,9 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
       }
       LatticeExprNode sumImage = sum(lowpsf);
       beamFactor=sumImage.getFloat();
-      if((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
+      if(lBeam.isNull()) {
 	os << LogIO::NORMAL << "Finding SD beam from given PSF" << LogIO::POST; // Loglevel PROGRESS
-	lBeam.resize(3);
-	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
+	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam);
       }
     }
     
@@ -6445,8 +6430,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
          << "Multiplying single dish data by user specified factor "
          << sdScale_p << LogIO::POST;
     Float sdScaling  = sdScale_p;
-    if((lBeam(0).get("arcsec").getValue()>0.0)&&
-       (lBeam(1).get("arcsec").getValue()>0.0)) {
+    if(! lBeam.isNull()) {
       Int directionIndex=model.coordinates().findCoordinate(Coordinate::DIRECTION);
       DirectionCoordinate
 	directionCoord=model.coordinates().directionCoordinate(directionIndex);
@@ -6465,7 +6449,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
 	lowpsf.set(0.0);
 	IPosition center(4, Int((nx_p/4)*2), Int((ny_p/4)*2),0,0);
         lowpsf.putAt(1.0, center);
-	StokesImageUtil::Convolve(lowpsf, lBeam(0), lBeam(1),lBeam(2), False);
+	StokesImageUtil::Convolve(lowpsf, lBeam, False);
 	LatticeExprNode sumImage = sum(lowpsf);
 	beamFactor=1.0/sumImage.getFloat();
 
