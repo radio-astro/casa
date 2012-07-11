@@ -812,7 +812,35 @@ class sdcal_test9(sdcal_avetest_base,unittest.TestCase):
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[0])
-        
+        self._checkFrequencies(outname)
+
+    def _checkFrequencies(self,outfile):
+        tb.open(self.rawfile.rstrip('/')+'/FREQUENCIES')
+        rpin=tb.getcol('REFPIX')
+        rvin=tb.getcol('REFVAL')
+        icin=tb.getcol('INCREMENT')
+        tb.close
+        tb.open(outfile.rstrip('/')+'/FREQUENCIES')
+        rpout=tb.getcol('REFPIX')
+        rvout=tb.getcol('REFVAL')
+        icout=tb.getcol('INCREMENT')
+        tb.close
+        ic=[icin[2:4].max(),icin[0:2].max()]
+        ledge=[rvin[2]-ic[0]*(rpin[2]+0.5),
+               rvin[0]-ic[1]*(rpin[0]+0.5)]
+        redge=[rvin[2]+ic[0]*(8191-rpin[2]+0.5),
+               rvin[0]+ic[1]*(8191-rpin[0]+0.5)]
+        eps = 1.0e-15
+        for i in xrange(2):
+            self.assertEqual(ic[i],icout[i],
+                             msg='INCREMENT for FREQ_ID=%s differ'%(i))
+            fmin=rvout[i]-icout[i]*(rpout[i]+0.5)
+            self.assertTrue(abs((fmin-ledge[i])/ledge[i]) < eps,
+                             msg='Left frequency edge for FREQ_ID=%s does not match'%(i))
+            fmax=rvout[i]+icout[i]*(8191-rpout[i]+0.5)
+            self.assertTrue(abs((fmax-redge[i])/redge[i]) < eps,
+                             msg='Right frequency edge for FREQ_ID=%s does not match'%(i))
+
 
 
 def suite():
