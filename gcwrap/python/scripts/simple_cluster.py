@@ -13,7 +13,6 @@ import pylab as pl
  
 from tasksinfo import *
 import scipy as sp
-import traceback
 
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
@@ -636,7 +635,7 @@ class simple_cluster:
                 cpu[10]=(cpu[8]-cpu[9])/float(cpu[8])
             except:
                 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-                traceback.print_tb(sys.exc_info()[2])
+                # traceback.print_tb(sys.exc_info()[2])
                 pass
             self._rsrc[self._hosts[i][0]]=cpu 
     
@@ -1086,7 +1085,7 @@ class simple_cluster:
                     curr[a]=b['pending']
             except:
                 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-                traceback.print_tb(sys.exc_info()[2])
+                # traceback.print_tb(sys.exc_info()[2])
                 pass
             #print 'curr', curr
             for job in self._jobs.keys():
@@ -2283,7 +2282,7 @@ class simple_cluster:
                     nchan=int(ceil(abs(float(spwchan))/nengs))
                 except:
                     # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-                    traceback.print_tb(sys.exc_info()[2])
+                    # traceback.print_tb(sys.exc_info()[2])
                     pass
         
                 for j in xrange(len(ids)):
