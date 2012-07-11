@@ -97,6 +97,7 @@
 
 #include <memory>
 
+
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
