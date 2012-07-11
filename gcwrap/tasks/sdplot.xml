@@ -51,19 +51,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <description>units for spectral axis (channel,km/s,GHz)</description>
 	    <value></value>
 	    <allowed kind="enum">
-	    <value></value>
-	    <value>channel</value>
-	    <value>km/s</value>
-	    <value>GHz</value>
-	    <value>MHz</value>
-	    <value>kHz</value>
-	    <value>Hz</value>
-    </allowed>
+	        <value></value>
+	        <value>channel</value>
+	        <value>km/s</value>
+	        <value>GHz</value>
+	        <value>MHz</value>
+	        <value>kHz</value>
+	        <value>Hz</value>
+	    </allowed>
     </param>
 
-    <param type="any" name="restfreq">
-            <description>rest frequency (float value or string with unit)</description>
-            <any type="variant" limittype="string double"/>
+    <param type="any" name="restfreq" subparam="true">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
             <value type="string"/>
     </param>
 
@@ -280,6 +280,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="telescopeparm"><value>""</value></default>
 	        </equals>
 	    </when>
+	    <when param="specunit">
+		<equals value=""/>
+	        <equals value="channel"/>
+	        <equals value="km/s">
+                       <default param="restfreq"><value type='string'></value></default>
+                </equals>
+	        <equals value="GHz"/>
+	        <equals value="MHz"/>
+	        <equals value="kHz"/>
+	        <equals value="Hz"/>
+	    </when>
             <when param="kernel">
                 <equals value="none"/>
                 <equals value="hanning"/>
@@ -372,10 +383,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: '' (=current)
                 example: this will be the units for masklist
-        restfreq -- rest frequency used for specunit='km/s'
-                default: '' (use current setting)
-                example: 4.6e10 (float value), '46GHz' (string with unit)
-                         Allowed units are 'THz', 'GHz', 'MHz', 'kHz', and 'Hz'
+            &gt;&gt;&gt; specunit expandable parameter
+                 restfreq -- rest frequency
+                         default: '' (use current setting)
+                         example: 4.6e10 (float value in Hz),
+                                  '46GHz' (string with unit),
+                                  ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
+                                  [{'name':'CO','value':345e9}] (a value with name)
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

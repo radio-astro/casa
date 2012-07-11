@@ -5,6 +5,7 @@ import asap as sd
 import pylab as pl
 from asap import _to_list
 from asap.scantable import is_scantable
+import sdutil
 
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
@@ -14,20 +15,16 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         ### Now the actual task code
         ###
         try:
-            if infile=='':
-                raise Exception, 'infile is undefined'
-
-            filename = os.path.expandvars(infile)
-            filename = os.path.expanduser(filename)
-            if not os.path.exists(filename):
-                s = "File '%s' not found." % (filename)
-                raise Exception, s
+            # Make sure infile exists
+            sdutil.assert_infile_exists(infile)
+            
             if not overwrite and not outfile=='':
                 outfilename = os.path.expandvars(outfile)
                 outfilename = os.path.expanduser(outfilename)
                 if os.path.exists(outfilename):
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
+            
             isScantable = is_scantable(infile)
 
             #load the data without time/pol averaging
@@ -39,28 +36,9 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             doCopy = doCopy and isScantable
 
             # A scantable selection
-            # Scan selection
-            scans = _to_list(scanlist,int) or []
-
-            # IF selection
-            ifs = _to_list(iflist,int) or []
-
-            # Select polarizations
-            pols = _to_list(pollist,int) or []
-
-            # Beam selection
-            beams = _to_list(beamlist,int) or []
-
-            # Actual selection
-            sel = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
-
-            # Select source names
-            if ( field != '' ):
-                    sel.set_name(field)
-                    # NOTE: currently can only select one
-                    # set of names this way, will probably
-                    # need to do a set_query eventually
-
+            sel = sdutil.get_selector(in_scans=scanlist, in_ifs=iflist,
+                                      in_pols=pollist, in_field=field,
+                                      in_beams=beamlist)
             try:
                 #Apply the selection
                 sorg.set_selection(sel)
@@ -167,16 +145,9 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     s.set_unit(specunit)
 
             # set rest frequency
-            if ( specunit == 'km/s' and restfreq != '' ):
-                    if ( type(restfreq) == float ):
-                            fval = restfreq
-                    elif qa.compare(restfreq, 'Hz'):
-                            qrfhz = qa.convert(restfreq, 'Hz')
-                            fval = qrfhz['value']
-                    else:
-                            errstr = "Invalid rest frequency %s. Must be in the unit of '*Hz' " % restfreq
-                            raise Exception, errstr
-                    casalog.post( 'Set rest frequency to %d Hz' %(fval) )
+            if ( specunit == 'km/s' and len(str(restfreq)) > 0 ):
+                    fval = sdutil.normalise_restfreq(restfreq)
+                    casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                     s.set_restfreqs(freqs=fval)
 
             # reset frame and doppler if needed

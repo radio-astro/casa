@@ -1,6 +1,9 @@
+from casac import casac
 import os
 import asap as sd
 from asap import _to_list
+
+qatool = casac.quanta()
 
 def assert_infile_exists(infile=None):
     if (infile == ""):
@@ -33,11 +36,13 @@ def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overw
 def get_listvalue(value):
     return _to_list(value, int) or []
 
-def get_selector(in_scans=None, in_ifs=None, in_pols=None, in_field=None):
+def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
+                 in_field=None, in_beams=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)
-    selector = sd.selector(scans=scans, ifs=ifs, pols=pols)
+    beams = get_listvalue(in_beams)
+    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
 
     if (in_field != ""):
         # NOTE: currently can only select one
@@ -49,6 +54,18 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, in_field=None):
 
 
 def get_restfreq_in_Hz(s_restfreq):
+    #### This function can be altered by the following 10 lines ###
+#     if not qatool.isquantity(s_restfreq):
+#         mesg = "Input value is not a quantity"
+#         raise Exception, mesg
+#     if qatool.compare(s_restfreq,'Hz'):
+#         return qatool.convert(s_restfreq, 'Hz')['value']
+#     elif qatool.quantity(s_restfreq)['unit'] == '':
+#         return float(s_restfreq)
+#     else:
+#         mesg = "wrong unit of restfreq."
+#         raise Exception, mesg
+    ###############################################################
     value = 0.0
     unit = ""
     s = s_restfreq.replace(" ","")
