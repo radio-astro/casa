@@ -140,7 +140,8 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
       test20-21 --- header control (spectral plotting)
       test22-23,28 --- plot layout control (spectral plotting)
       test24-25 --- row panelling or stacking (spectral plotting)
-      test26-27 --- flagg application
+      test26-27 --- flag application
+      test29-30 --- restfreq
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -633,6 +634,42 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
                         subplot=subplot,header=header,outfile=outfile)
+        self.assertEqual(result,None)
+        self._checkOutFile(outfile)
+
+    def testplot29( self ):
+        """
+        Test 29: plot with user defined restfreq (a list of num and qauntity)
+        """
+        tid = "29"
+        outfile = self.figroot+tid+self.figsuff
+        infile = self.infile
+        iflist = [1,2]
+        specunit = 'km/s'
+        restfreq = ['45.3GHz', 44.075e9]
+        panel = 'i'
+        header = False
+        result = sdplot(infile=infile,iflist=iflist,panel = panel,
+                        specunit=specunit,restfreq=restfreq,
+                        header=header,outfile=outfile)
+        self.assertEqual(result,None)
+        self._checkOutFile(outfile)
+
+    def testplot30( self ):
+        """
+        Test 30: plot with user defined restfreq (a list of dict)
+        """
+        tid = "30"
+        outfile = self.figroot+tid+self.figsuff
+        infile = self.infile
+        iflist = [2]
+        specunit = 'km/s'
+        restfreq = [{'name': 'ch3oh', 'value': 44.075e9}]
+        panel = 'i'
+        header = False
+        result = sdplot(infile=infile,iflist=iflist,panel = panel,
+                        specunit=specunit,restfreq=restfreq,
+                        header=header,outfile=outfile)
         self.assertEqual(result,None)
         self._checkOutFile(outfile)
 
