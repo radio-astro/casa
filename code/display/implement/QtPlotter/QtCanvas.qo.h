@@ -82,8 +82,8 @@ public:
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 
-	CurveData* getCurveData(int);
-	ErrorData* getCurveError(int id);
+	CurveData getCurveData(int);
+	ErrorData getCurveError(int id);
 	QString getCurveName(int);
 	int getLineCount();
 	void clearCurve();
@@ -98,7 +98,7 @@ public:
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
 	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, ZOOM_COLOR, REGION_COLOR,
-					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR };
+					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 
@@ -154,6 +154,7 @@ public:
 	//step function.
 	bool isDisplayStepFunction() const;
 	void setDisplayStepFunction( bool displayAsStepFunction );
+	void setOptical( bool optical );
 	static const QString FONT_NAME;
 
 public slots:
@@ -190,7 +191,7 @@ protected:
 	void drawxRange(QPainter *painter);
 	void defaultZoomIn();
 	void defaultZoomOut();
-	void refreshPixmap();
+
 
 private:
 
@@ -200,13 +201,12 @@ private:
 	 * @param data a vector containing the (x,y) points that make up the curve.
 	 * @param error a vector containing errors associated with the curve.
 	 * @param lb a human readable identifier for the curve.
-	 * @param colorCategory an indication of the importance of curve being added.  Default
-	 * 	is set to a standalone main curve, but the parameter could also indicate a primary
-	 * 	or secondary curve that depends on a main curve for its meaning.
+	 * @param colorCategory an indication of the type of curve this is (main curve,
+	 * 		secondary spectral fitting curve, etc).
 	 */
 	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(),
-				const QString& lb="", ColorCategory colorCategory=CURVE_COLOR);
-
+				const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
+	void refreshPixmap();
 
 	/**
 	 * Attempts to display a tool tip indicated a data point corresponding
@@ -360,14 +360,15 @@ private:
 	 * by color.  Similar items should always have the same colorCategory.
 	 * @param colorCategory the type of item that needs to be drawn.
 	 */
-	QColor getDiscreteColor(ColorCategory colorCategory);
+	QColor getDiscreteColor(ColorCategory colorCategory, int id=0);
 	QColor getCurveColorPrimary();
 	QColor getCurveColorSecondary();
 	QColor getCurveColor();
+	QColor getTraditionalColor(int id);
 	int curveCount;
 	int curveCountPrimary;
 	int curveCountSecondary;
-
+	bool optical;
 };
 
 }
