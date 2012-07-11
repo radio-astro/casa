@@ -18,59 +18,73 @@ Features tested:
 '''
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
 inpms = 'uid___A002_X1c6e54_X223-thinned.ms'
-outms = 'output.ms'
+outms = inpms
+inpms2 = 'uid___A002_X1c6e54_X223-thinned.mms'
+outms2 = inpms2
 
 class fixplanets_test1(unittest.TestCase):
     def setUp(self):
         res = None
         shutil.rmtree(outms, ignore_errors=True)
         shutil.copytree(datapath + inpms, outms)
+        shutil.rmtree(outms2, ignore_errors=True)
+        shutil.copytree(datapath + inpms2, outms2)
         default(fixplanets)
         
     def tearDown(self):
         shutil.rmtree(outms, ignore_errors=True)
+        shutil.rmtree(outms2, ignore_errors=True)
         
     def test1(self):
         '''Does a standard fixplanets work on an MS imported from an ASDM from April 2011'''
-        rval = fixplanets(outms, 'Titan', True)
+        for myms in [outms,outms2]:
+            rval = fixplanets(myms, 'Titan', True)
                 
-        self.assertTrue(rval)
+            self.assertTrue(rval)
 
     def test2(self):
         '''Does the setting of a given direction work on an MS imported from an ASDM from April 2011'''
-        rval = fixplanets(outms, 'Titan', False, 'J2000 0h0m0s 0d0m0s')
+        for myms in [outms,outms2]:
+            rval = fixplanets(myms, 'Titan', False, 'J2000 0h0m0s 0d0m0s')
                 
-        self.assertTrue(rval)
+            self.assertTrue(rval)
 
     def test3(self):
         '''Does the setting of a given direction with ref !=J2000 and != sol.sys. object give the expected error?'''
-        rval = fixplanets(outms, 'Titan', False, 'B1950 0h0m0s 0d0m0s')
+        for myms in [outms,outms2]:
+            rval = fixplanets(myms, 'Titan', False, 'B1950 0h0m0s 0d0m0s')
                 
-        self.assertFalse(rval)
+            self.assertFalse(rval)
 
     def test4(self):
         '''Does the setting of a given direction work with a sol system ref frame?'''
-        rval = fixplanets(outms, 'Titan', False, 'SATURN 0h0m0s 0d0m0s')
+        for myms in [outms,outms2]:
+            rval = fixplanets(myms, 'Titan', False, 'SATURN 0h0m0s 0d0m0s')
                 
-        self.assertTrue(rval)
+            self.assertTrue(rval)
 
     def test5(self):
         '''Does a standard fixplanets work on an MS imported from an ASDM from April 2011 with parameter reftime'''
-        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='median')
+        for myms in [outms,outms2]:
+            rval = fixplanets(vis=myms, field='Titan', fixuvw=True, reftime='median')
                 
-        self.assertTrue(rval)
+            self.assertTrue(rval)
 
     def test6(self):
         '''Does a standard fixplanets with put of bounds parameter reftime give the expected error'''
-        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='2012/07/11/08:41:32')
+        for myms in [outms,outms2]:
+            rval = fixplanets(vis=myms, field='Titan', fixuvw=True, reftime='2012/07/11/08:41:32')
                 
-        self.assertFalse(rval)
+            self.assertFalse(rval)
 
     def test7(self):
         '''Does a standard fixplanets with wrong parameter reftime give the expected error'''
-        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='MUDIAN')
+        for myms in [outms,outms2]:
+            rval = fixplanets(vis=myms, field='Titan', fixuvw=True, reftime='MUDIAN')
                 
-        self.assertFalse(rval)
+            self.assertFalse(rval)
+
+
 
     
 def suite():

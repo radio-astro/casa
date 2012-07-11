@@ -1,5 +1,7 @@
 from taskinit import *
 import shutil
+from parallel.parallel_task_helper import ParallelTaskHelper
+
 
 def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'):
     """
@@ -52,21 +54,58 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
 
     """
 
+    casalog.origin('fixplanets')
+
+    rval = True
+
+    if (ParallelTaskHelper.isParallelMS(vis)):
+        myms = mstool()
+        myms.open(vis)
+        mses = myms.getreferencedtables()
+        myms.close()
+        retval = {}
+        nfail = 0
+        for m in mses:
+            retval[m] = fixplanets_core(m, field, fixuvw, direction, refant, reftime)
+            if not retval[m]:
+                rval = False
+                nfail+=1
+        if not rval:
+            casalog.post('*** Summary: there were failures in '+str(nfail)+' SUBMSs:', 'WARN')
+            for m in mses:
+                if not retval[m]:
+                    casalog.post(os.path.basename(m)+': '+str(retval[m]), 'WARN')
+                else:
+                    casalog.post(os.path.basename(m)+': '+str(retval[m]), 'NORMAL')
+
+    else:
+        rval = fixplanets_core(vis, field, fixuvw, direction, refant, reftime)
+
+    return rval
+
+  
+
+def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='first'):
+    
     tbt = casac.table()
 
-    casalog.origin('fixplanets')
+    casalog.post( "*** Operating on "+os.path.basename(vis), 'NORMAL')
+
     try:
         fields = ms.msseltoindex(vis=vis,field=field)['field']
         numfields = 0 
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
-            return False
+            return True
         
         tbt.open(vis+"/FIELD")
         oldrefcol = []
         if('PhaseDir_Ref' in tbt.colnames()):
             oldrefcol = tbt.getcol('PhaseDir_Ref')
         tbt.close()
+
+        fixplanetstemp = 'fixplanetstemp-'+os.path.basename(vis) # temp file name
+        fixplanetstemp2 = 'fixplanetstemp2-'+os.path.basename(vis) # temp file name
         
         for fld in fields:
             thenewra_rad = 0.
@@ -75,24 +114,36 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             thenewrefstr = ''
             if(direction==''): # use information from the pointing table
                 # find median timestamp for this field in the main table
-                shutil.rmtree('fixplanetstemp', ignore_errors=True)
+                shutil.rmtree(fixplanetstemp, ignore_errors=True)
                 thetime = 0
                 if(reftime.lower()=='median'):
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
+                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name=fixplanetstemp, columns='TIME')
                     tbt.close()
-                    tbt.open('fixplanetstemp')
-                    thetime = tbt.getcell('TIME',tbt.nrows()/2)
-                    casalog.post( "MEDIAN TIME "+str(thetime), 'NORMAL')
-                    tbt.close()
+                    tbt.open(fixplanetstemp)
+                    if(tbt.nrows()>0):
+                        thetime = tbt.getcell('TIME',tbt.nrows()/2)
+                        casalog.post( "MEDIAN TIME "+str(thetime), 'NORMAL')
+                        tbt.close()
+                    else:
+                        casalog.post( "No pointing table rows for field "+field, 'NORMAL')
+                        tbt.close()
+                        shutil.rmtree(fixplanetstemp, ignore_errors=True)
+                        return True
                 elif(reftime.lower()=='first'):
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
                     tbt.close()
-                    tbt.open('fixplanetstemp')
-                    thetime = tbt.getcell('TIME',0)
-                    casalog.post( "FIRST TIME "+str(thetime), 'NORMAL')
-                    tbt.close()
+                    tbt.open(fixplanetstemp)
+                    if(tbt.nrows()>0):
+                        thetime = tbt.getcell('TIME',0)
+                        casalog.post( "FIRST TIME "+str(thetime), 'NORMAL')
+                        tbt.close()
+                    else:
+                        casalog.post( "No pointing table rows for field "+field, 'NORMAL')
+                        tbt.close()
+                        shutil.rmtree(fixplanetstemp, ignore_errors=True)
+                        return True
                 else:
                     try:
                         myqa = qa.quantity(reftime)
@@ -100,13 +151,19 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                     except Exception, instance:
                         raise TypeError, "reftime parameter is not a valid date (e.g. YYYY/MM/DD/hh:mm:ss)" %reftime
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
                     tbt.close()
-                    tbt.open('fixplanetstemp')
-                    thefirsttime = tbt.getcell('TIME',0)
-                    thelasttime = tbt.getcell('TIME',tbt.nrows()-1)
-                    tbt.close()
-                    shutil.rmtree('fixplanetstemp', ignore_errors=True)
+                    tbt.open(fixplanetstemp)
+                    if(tbt.nrows()>0):
+                        thefirsttime = tbt.getcell('TIME',0)
+                        thelasttime = tbt.getcell('TIME',tbt.nrows()-1)
+                        tbt.close()
+                    else:
+                        casalog.post( "No pointing table rows for field "+field, 'NORMAL')
+                        tbt.close()
+                        shutil.rmtree(fixplanetstemp, ignore_errors=True)
+                        return True        
+                    shutil.rmtree(fixplanetstemp, ignore_errors=True)
                     if (thefirsttime<=thetime and thetime<=thelasttime):
                         casalog.post( "GIVEN TIME "+reftime+" == "+str(thetime), 'NORMAL')
                     else:
@@ -114,6 +171,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                       +str(thefirsttime)+'s'+" - "
                                       +str(thelasttime)+'s'+")", 'SEVERE')
                         raise TypeError
+                shutil.rmtree(fixplanetstemp, ignore_errors=True)
 
                 # determine reference antenna
                 antids = ms.msseltoindex(vis=vis,baseline=refant)['antenna1']
@@ -131,33 +189,34 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                     return False
 
                 # get direction for the timestamp from pointing table
+                shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                 tbt.open(vis+'/POINTING')
                 ttb = tbt.query('TRACKING==True AND NEARABS(TIME,'+str(thetime)+',INTERVAL/2.) AND ANTENNA_ID=='
                                 +str(antid),
-                                name='fixplanetstemp2')
+                                name=fixplanetstemp2)
                 nr = ttb.nrows()
                 ttb.close()
                 if(nr==0):
-                    shutil.rmtree('fixplanetstemp2', ignore_errors=True)
+                    shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                     ttb2 = tbt.query('TRACKING==True AND NEARABS(TIME,'+str(thetime)+',3.) AND ANTENNA_ID=='
                                      +str(antid), # search within 3 seconds
-                                     name='fixplanetstemp2')
+                                     name=fixplanetstemp2)
                     nr = ttb2.nrows()
                     ttb2.close()
                     if(nr==0):
                         casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)+" with TRACKING==True within 3 seconds of TIME "+str(thetime), 'NORMAL')
                         casalog.post( "Will try without requiring TRACKING==True ...", 'NORMAL')
-                        shutil.rmtree('fixplanetstemp2', ignore_errors=True)
+                        shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                         ttb3 = tbt.query('NEARABS(TIME,'+str(thetime)+',INTERVAL/2.) AND ANTENNA_ID=='
                                          +str(antid), 
-                                         name='fixplanetstemp2')
+                                         name=fixplanetstemp2)
                         nr = ttb3.nrows()
                         ttb3.close()
                         if(nr==0):
-                            shutil.rmtree('fixplanetstemp2', ignore_errors=True)
+                            shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                             ttb4 = tbt.query('NEARABS(TIME,'+str(thetime)+',3.) AND ANTENNA_ID=='
                                              +str(antid), # search within 3 seconds
-                                             name='fixplanetstemp2')
+                                             name=fixplanetstemp2)
                             nr = ttb4.nrows()
                             ttb4.close()
                             if(nr==0):
@@ -165,7 +224,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                 casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)+" within 3 seconds of TIME "+str(thetime), 'SEVERE')
                                 return False # give up
                 tbt.close()
-                tbt.open('fixplanetstemp2')
+                tbt.open(fixplanetstemp2)
                 thedir = tbt.getcell('DIRECTION',0)
                 tbt.close()
                 casalog.post( ' field id '+str(fld)+ ' AZ EL '+str(thedir[0])+" "+str(thedir[1]), 'NORMAL')
@@ -189,8 +248,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 thenewra_rad = thedirmemod['m0']['value']
                 thenewdec_rad = thedirmemod['m1']['value']
                 me.done()
-                shutil.rmtree('fixplanetstemp', ignore_errors=True)
-                shutil.rmtree('fixplanetstemp2', ignore_errors=True)
+                shutil.rmtree(fixplanetstemp2, ignore_errors=True)
             else: # direction is not an empty string, use this instead of the pointing table information
                 if(type(direction)==str):
                     dirstr = direction.split(' ')
