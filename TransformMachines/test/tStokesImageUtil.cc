@@ -1,4 +1,3 @@
-//# tVisModelData.cc: Tests the Synthesis model data serving
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,29 +24,15 @@
 //#
 //# $Id$
 
-/*
-#include <casa/Arrays/ArrayMath.h>
-#include <components/ComponentModels/ComponentList.h>
-#include <components/ComponentModels/ComponentShape.h>
-#include <components/ComponentModels/Flux.h>
-#include <tables/Tables/ExprNode.h>
-#include <measures/Measures/MeasTable.h>
-
-#include <synthesis/TransformMachines/VisModelData.h>
-#include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/TransformMachines/GridFT.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <casa/OS/Timer.h>
-*/
 #include <casa/OS/EnvVar.h>
 #include <images/Images/FITSImage.h>
-#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <images/Images/TempImage.h>
 
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <casa/namespace.h>
 
-int main(int argc, char **argv) {
+int main() {
 	try {
 		String casapath = EnvironmentVariable::get("CASAPATH");
 		String *parts = new String[2];
@@ -63,6 +48,24 @@ int main(int argc, char **argv) {
 		AlwaysAssert(beam[0] == 2.5, AipsError);
 		AlwaysAssert(beam[1] == 1.25, AipsError);
 		AlwaysAssert(near(beam[2], 57.2958), AipsError);
+
+		TempImage<Float> t(
+			TiledShape(gaussianModel.shape()),
+			gaussianModel.coordinates()
+		);
+		t.put(gaussianModel.get());
+
+		Bool b = True;
+		Quantity bmaj(5, "arcsec");
+		Quantity bmin(2.5, "arcsec");
+		Quantity bpa(20, "deg");
+		StokesImageUtil::Convolve(
+			t, bmaj, bmin, bpa, b
+		);
+		FITSImage exp(datadir + "expected_convolved.fits");
+
+		AlwaysAssert(allEQ(t.get(), exp.get()), AipsError);
+
 	}
 	catch (AipsError x) {
 		cout << x.getMesg() << endl;
