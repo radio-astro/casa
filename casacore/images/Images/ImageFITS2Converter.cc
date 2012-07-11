@@ -615,22 +615,14 @@ Bool ImageFITSConverter::removeFile (String& error, const File& outFile,
    return True;
 }
 
-Bool ImageFITSConverter::ImageToFITSOut(String &error,
-		LogIO &os,
-		ImageInterface<Float>& image,
-		FitsOutput *outfile,
-		uInt memoryInMB,
-		Bool preferVelocity,
-		Bool opticalVelocity,
-		Int BITPIX, Float minPix, Float maxPix,
-		Bool degenerateLast,
-		Bool verbose, Bool stokesLast,
-		Bool preferWavelength,
-		Bool airWavelength,
-		Bool primHead,
-		Bool allowAppend,
-		const String& origin)
-{
+Bool ImageFITSConverter::ImageToFITSOut(
+	String &error, LogIO &os, const ImageInterface<Float>& image,
+	FitsOutput *outfile, uInt memoryInMB, Bool preferVelocity,
+	Bool opticalVelocity, Int BITPIX, Float minPix, Float maxPix,
+	Bool degenerateLast, Bool verbose, Bool stokesLast,
+	Bool preferWavelength, Bool airWavelength, Bool primHead,
+	Bool allowAppend, const String& origin
+) {
 	//
 	// Get coordinates and test that axis removal has been
 	// mercifully absent
@@ -860,7 +852,9 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	}
 	//
 	ImageInfo ii = image.imageInfo();
-	if (!ii.toFITS (error, header)) return False;
+	if (!ii.toFITS (error, header)) {
+		return False;
+	}
 	//
 	header.define("COMMENT1", ""); // inserts spaces
 	// I should FITS-ize the units
@@ -1049,7 +1043,7 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 	//
 	// HISTORY
 	//
-	LoggerHolder& logger = image.logger();
+	const LoggerHolder& logger = image.logger();
 	//
 	vector<String> historyChunk;
 	uInt nstrings;
@@ -1280,17 +1274,19 @@ Bool ImageFITSConverter::ImageToFITSOut(String &error,
 		}
 		if (fits32) {
 			delete fits32; fits32 = 0;
-		} else if (fits16) {
+		}
+		else if (fits16) {
 			delete fits16; fits16 = 0;
 			delete buffer16; buffer16 = 0;
-		} else {
+		}
+		else {
 			AlwaysAssert(0, AipsError); // NOTREACHED
 		}
 		//
 		if (pMeter) delete pMeter;
 		if (pMask!=0) delete pMask;
-
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		error = "Unknown error copying image to FITS file";
 		if (outfile) {
 			delete outfile;

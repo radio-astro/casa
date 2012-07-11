@@ -9,6 +9,7 @@ CAS-2533.im/table.dat
 CAS-2533.im/table.f0_TSM0
 CAS-2533.im/table.f0
 histogram_test.fits
+imageStats.fits
 imagetestimage.fits
 jyperpixelimage.fits
 linearCoords.fits
@@ -28,6 +29,16 @@ test_image.im/logtable/table.info
 test_image.im/logtable/table.lock
 test_image2dconvolver_convolved.fits
 test_image2dconvolver.fits
+test_image2dconvolver_multibeam.im/logtable/table.dat
+test_image2dconvolver_multibeam.im/logtable/table.info
+test_image2dconvolver_multibeam.im/logtable/table.info
+test_image2dconvolver_multibeam.im/logtable/table.f0
+test_image2dconvolver_multibeam.im/logtable/table.lock
+test_image2dconvolver_multibeam.im/table.dat
+test_image2dconvolver_multibeam.im/table.f0
+test_image2dconvolver_multibeam.im/table.f0_TSM0
+test_image2dconvolver_multibeam.im/table.info
+test_image2dconvolver_multibeam.im/table.lock
 
 )
 
@@ -71,6 +82,7 @@ tImageMetaData
 tImagePolarimetry
 tImageRegrid
 tImageSourceFinder
+tImageStatistics
 tImageUtilities
 tLELSpectralIndex
 tMIRIADImage
@@ -80,6 +92,7 @@ tRebinImage
 tSepImConvolver
 tSubImage
 tTempImage
+tImageBeamSet
 )
 
 foreach (test ${tests})

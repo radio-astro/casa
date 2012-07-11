@@ -52,13 +52,14 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-//#include <images/Images/ImageAnalysis.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/Table.h>
 #include <tables/LogTables/NewFile.h>
 #include <casa/System/PGPlotter.h>
 #include <casa/namespace.h>
+
+#include <memory>
 
 namespace casa { //# name space casa begins
 
@@ -196,34 +197,24 @@ namespace casa { //# name space casa begins
 			    Double clip, Double sigma, 
 			    const String& outfile){
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "depolratio");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
-      *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
-	      << LogIO::POST;
+      *itsLog <<"No attached image, please use open "
+	      << LogIO::EXCEPTION;
       return rstat;
     }
     const ImageInterface<Float> *im1=itsImPol->imageInterface();
-    ImageInterface<Float>* im2 = 0;
-    if(Table::isReadable(String(infile))){
-      im2= new PagedImage<Float> (String(infile));
-    }
-    else{
-      *itsLog << LogIO::SEVERE <<"Cannot read " << infile 
-	      << LogIO::POST;
-      return rstat;
-    }
+    std::auto_ptr<ImageInterface<Float> > im2;
+    ImageUtilities::openImage(im2, infile, *itsLog);
     ImageExpr<Float> tmpim=itsImPol->depolarizationRatio(*im1, *im2, 
 							 debias, 
 							 Float(clip),
 							 Float(sigma));
-    if(im2) 
-      delete im2;
 
     String err;
     if(!copyImage(returnim, tmpim, outfile, True)){
-      *itsLog << LogIO::SEVERE <<"Could not convert ratio image "   
-	      << LogIO::POST;
-      return rstat;
+      *itsLog <<"Could not convert ratio image "
+	      << LogIO::EXCEPTION;
     }
     rstat = True;
     return rstat;
@@ -233,7 +224,7 @@ namespace casa { //# name space casa begins
   
   Bool ImagePol::complexlinpol(const String& outfile){
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "complexlinpol");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -278,7 +269,7 @@ namespace casa { //# name space casa begins
 
   // sigma
   Float ImagePol::sigma(Float clip) const {
-    *itsLog << LogOrigin("imagepol", "sigma(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -303,7 +294,7 @@ namespace casa { //# name space casa begins
   }
 
   Float ImagePol::sigmaStokesI(Float clip) const {
-    *itsLog << LogOrigin("imagepol", "sigmaStokesI(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -395,7 +386,7 @@ namespace casa { //# name space casa begins
   Bool ImagePol::linPolInt(ImageInterface<Float>*& rtnim, Bool debias,
 			   Float clip, Float sigma, const String& outfile) {
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "linPolInt(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -411,7 +402,7 @@ namespace casa { //# name space casa begins
 
 
   Float ImagePol::sigmaLinPolInt(Float clip, Float sigma) const {
-    *itsLog << LogOrigin("imagepol", "sigmaLinPolInt(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -425,7 +416,7 @@ namespace casa { //# name space casa begins
   Bool ImagePol::totPolInt(ImageInterface<Float>*& rtnim, Bool debias,
 			   Float clip, Float sigma, const String& outfile){
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "totPolInt(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -439,7 +430,7 @@ namespace casa { //# name space casa begins
   }
 
   Float ImagePol::sigmaTotPolInt(Float clip, Float sigma) const {
-    *itsLog << LogOrigin("imagepol", "sigmaTotPolInt(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -497,6 +488,8 @@ namespace casa { //# name space casa begins
     makeImage (pOutComplex, outfile, cSysPol, shapePol,
 	       itsImPol->isMasked(), False);
 
+    std::auto_ptr<ImageInterface<Complex> > x(pOutComplex);
+
     // Make Expr
     ImageExpr<Complex> expr = itsImPol->complexFractionalLinearPolarization();
     fiddleStokesCoordinate(*pOutComplex, Stokes::PFlinear);
@@ -504,18 +497,14 @@ namespace casa { //# name space casa begins
     // Copy to output
     pOutComplex->setCoordinateInfo(expr.coordinates());
     LatticeUtilities::copyDataAndMask(*itsLog, *pOutComplex, expr);
-    //
-    const ImageInterface<Float>* p = itsImPol->imageInterface();
-    copyMiscellaneous (*pOutComplex, *p);
-    //
-    delete pOutComplex;
+    copyMiscellaneous (*pOutComplex, *(itsImPol->imageInterface()));
   }
 
   // Linearly polarized position angle
   Bool ImagePol::linPolPosAng(ImageInterface<Float>*& rtnim,
 			      const String& outfile) {
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "linPolPosAng(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -534,7 +523,7 @@ namespace casa { //# name space casa begins
   Bool ImagePol::sigmaLinPolPosAng(ImageInterface<Float>*& rtnim, Float clip,
 				   Float sigma, const String& outfile) {
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "sigmaLinPolPosAng(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -572,7 +561,7 @@ namespace casa { //# name space casa begins
   Bool ImagePol::sigmaFracLinPol(ImageInterface<Float>*& rtnim, Float clip,
 				 Float sigma, const String& outfile){
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "sigmaFracLinPol(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -609,7 +598,7 @@ namespace casa { //# name space casa begins
   Bool ImagePol::sigmaFracTotPol(ImageInterface<Float>*& rtnim, Float clip,
 		       Float sigma, const String& outfile){
     Bool rstat(False);
-    *itsLog << LogOrigin("imagepol", "sigmaFracTotPol(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -630,11 +619,10 @@ namespace casa { //# name space casa begins
 			    Bool debias, Float clip,
 			    Float sigma, const String& outfile) {
     Bool rstat(false);
-    *itsLog << LogOrigin("imagepol", "depolarizationRatio(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
-      *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
-	      << LogIO::POST;
-      return rstat;
+      *itsLog << "No attached image, please use open "
+	      << LogIO::EXCEPTION;
     }
     //
     const ImageInterface<Float>* imagePointer1 = itsImPol->imageInterface();
@@ -661,7 +649,7 @@ namespace casa { //# name space casa begins
 				 Bool debias, Float clip,
 				 Float sigma, const String& outfile) {
     Bool rstat(false);
-    *itsLog << LogOrigin("imagepol", "sigmaDepolarizationRatio(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -695,12 +683,18 @@ namespace casa { //# name space casa begins
 			      const String& outfileImag,
 			      Bool zeroZeroLag) {
 
-    *itsLog << LogOrigin("imagepol", "fourierRotationMeasure(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__, WHERE);
     if(itsImPol==0){
-      *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
-	      << LogIO::POST;
+      *itsLog <<"No attached image, please use open "
+	      << LogIO::EXCEPTION;
       return;
     }
+    if (itsImPol->imageInterface()->imageInfo().hasMultipleBeams()) {
+    	*itsLog << "Cannot run " << __FUNCTION__
+    		<< " on an image with multiple beams"
+    		<< LogIO::EXCEPTION;
+    }
+
 
     // Make output complex image
     ImageInterface<Complex>* pOutComplex = 0;
@@ -784,7 +778,7 @@ namespace casa { //# name space casa begins
 		       const String& plotter,
 		       Int nx, Int ny) {
 
-    *itsLog << LogOrigin("imagepol", "rotationMeasure(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
@@ -865,7 +859,7 @@ namespace casa { //# name space casa begins
 		    const String& imag, const String& amp,
 		    const String& phase) {
 
-    *itsLog << LogOrigin("imagepol", "makeComplex(...)");
+    *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;

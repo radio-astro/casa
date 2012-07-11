@@ -27,6 +27,7 @@
 
 #include <images/Images/SubImage.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -322,8 +323,41 @@ void testExtend() {
     }
 }
 
-
-
+void testBeams() {
+	IPosition shape(4, 10, 11, 4, 13);
+	TempImage<Float> x(
+		shape, CoordinateUtil::defaultCoords4D()
+	);
+	ImageInfo info = x.imageInfo();
+	Quantity pa(5, "deg");
+	info.setAllBeams(shape[3], shape[2], GaussianBeam());
+	for (uInt i=0; i<shape[2]; i++) {
+		for (uInt j=0; j<shape[3]; j++) {
+			Quantity maj(i + j + 2, "arcsec");
+			Quantity min(i + j + 1, "arcsec");
+			info.setBeam(j, i, maj, min, pa);
+		}
+	}
+	x.setImageInfo(info);
+	Vector<Double> blc(4, 1.7);
+	Vector<Double> trc(4, 4.2);
+	trc[2] = 3.5;
+	trc[3] = 5.7;
+	LCBox box(blc, trc, shape);
+	SubImage<Float> subim = SubImage<Float>::createSubImage(
+	    x, box.toRecord(""), "", new LogIO(),
+	    False, AxesSpecifier(False), True
+	);
+	for (uInt i=0; i<subim.shape()[2]; i++) {
+		for (uInt j=0; j<subim.shape()[3]; j++) {
+			AlwaysAssert(
+				subim.imageInfo().restoringBeam(j, i)
+				== info.restoringBeam(j+2, i+2),
+				AipsError
+			);
+		}
+	}
+}
 
 int main ()
 {
@@ -359,7 +393,10 @@ int main ()
     testAxes();
     // test extending mask
     testExtend();
-  } catch (AipsError x) {
+    // test per plane beams
+    testBeams();
+  }
+  catch (AipsError x) {
     cerr << "Caught exception: " << x.getMesg() << endl;
     cout << "FAIL" << endl;
     return 1;

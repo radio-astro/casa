@@ -63,8 +63,6 @@
 
 #include <casa/OS/Timer.h>
 
-
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T>
@@ -177,9 +175,10 @@ LatticeStatistics<T> &LatticeStatistics<T>::operator=(const LatticeStatistics<T>
 
 // Deal with lattice pointer
 
-      if (pInLattice_p!=0) delete pInLattice_p;
+      if (pInLattice_p!=0) {
+    	  delete pInLattice_p;
+      }
       pInLattice_p = other.pInLattice_p->cloneML();
-
 // Delete storage lattice 
 
       if (pStoreLattice_p != 0) {
@@ -187,34 +186,39 @@ LatticeStatistics<T> &LatticeStatistics<T>::operator=(const LatticeStatistics<T>
          pStoreLattice_p = 0;
       }
       needStorageLattice_p = True;
-
 // Do the rest
 
       os_p = other.os_p;
+	   cursorAxes_p.resize(other.cursorAxes_p.shape());
       cursorAxes_p = other.cursorAxes_p;
+	   displayAxes_p.resize(other.displayAxes_p.size());
       displayAxes_p = other.displayAxes_p; 
+      nxy_p.resize(other.nxy_p.size());
       nxy_p = other.nxy_p;
+      statsToPlot_p.resize(other.statsToPlot_p.size());
       statsToPlot_p = other.statsToPlot_p; 
+	   range_p.resize(other.range_p.size());
       range_p = other.range_p;
       plotter_p = other.plotter_p; 
       doList_p = other.doList_p;
       noInclude_p = other.noInclude_p; 
       noExclude_p = other.noExclude_p;
       goodParameterStatus_p = other.goodParameterStatus_p;
-//
       doneSomeGoodPoints_p = other.doneSomeGoodPoints_p;
       someGoodPointsValue_p = other.someGoodPointsValue_p;
       haveLogger_p = other.haveLogger_p;
       showProgress_p = other.showProgress_p;
       fixedMinMax_p = other.fixedMinMax_p;
+      minPos_p.resize(other.minPos_p.size());
       minPos_p = other.minPos_p; 
+      maxPos_p.resize(other.maxPos_p.size());
       maxPos_p = other.maxPos_p;
+      blcParent_p.resize(other.blcParent_p.size());
       blcParent_p = other.blcParent_p;
       forceDisk_p = other.forceDisk_p;
       doRobust_p = other.doRobust_p;
       doList_p = other.doList_p;
       error_p = other.error_p;
-//
       doneFullMinMax_p= other.doneFullMinMax_p;
       minFull_p = other.minFull_p;
       maxFull_p = other.maxFull_p;
@@ -503,15 +507,14 @@ Bool LatticeStatistics<T>::getConvertedStatistic (Array<T>& stats,
 }
 
 
-template <class T>
-Bool LatticeStatistics<T>::getStatistic (Array<AccumType>& stats, 
-                                         LatticeStatsBase::StatisticsTypes type,
-                                         Bool dropDeg)
-{
+template <class T> Bool LatticeStatistics<T>::getStatistic(
+	Array<AccumType>& stats,
+	LatticeStatsBase::StatisticsTypes type,
+	Bool dropDeg
+) {
    if (!goodParameterStatus_p) {
      return False;
    }
-
    if (needStorageLattice_p) generateStorageLattice();
    if (type==LatticeStatsBase::NPTS) {
       return retrieveStorageStatistic(stats, NPTS, dropDeg);
@@ -560,53 +563,52 @@ Bool LatticeStatistics<T>::getStatistic (Array<AccumType>& stats,
 
 
 template <class T>
-Bool LatticeStatistics<T>::getStats(Vector<AccumType>& stats,
-                                    const IPosition& pos,
-                                    const Bool posInLattice)
-// 
-// This function retrieves the statistics from the storage
-// lattice at the specified location.  
-//
-// Inputs
-//   posInLattice   If true the location is given as image coordinates
-//                  The non-display axis values will be ignored.
-//                  Otherwise the position should be for the
-//                  display axes only.
-//
-{
-// Check class status
- 
-   if (!goodParameterStatus_p) {
-     return False; 
-   }
+Bool LatticeStatistics<T>::getStats(
+	Vector<AccumType>& stats, const IPosition& pos,
+	const Bool posInLattice
+) {
+	// This function retrieves the statistics from the storage
+	// lattice at the specified location.
 
-// Retrieve storage array statistics
+	// Inputs
+	//   posInLattice   If true the location is given as image coordinates
+	//                  The non-display axis values will be ignored.
+	//                  Otherwise the position should be for the
+	//                  display axes only.
 
-   stats.resize(NSTATS);
-   if (!retrieveStorageStatistic(stats, pos, posInLattice)) return False;
+	// Check class status
+	if (!goodParameterStatus_p) {
+		return False;
+	}
+	// Retrieve storage array statistics
 
-// Compute the rest
+	stats.resize(NSTATS);
+	if (!retrieveStorageStatistic(stats, pos, posInLattice)) {
+		return False;
+	}
+	// Compute the rest
 
-   const AccumType& n = stats(NPTS);
-   if (!LattStatsSpecialize::hasSomePoints(n)) {
-      stats.resize(0);
-      return  True;
-   }
-//
-   //stats(MEAN) = LattStatsSpecialize::getMean(stats(SUM), n);
-   //stats(VARIANCE) = LattStatsSpecialize::getVariance(stats(SUM),
-   //                                                   stats(SUMSQ), n);
-   stats(SIGMA) = LattStatsSpecialize::getSigma(stats(VARIANCE));
-   stats(RMS) =  LattStatsSpecialize::getRms(stats(SUMSQ), n);  
-//
-   Double beamArea;
-   if (getBeamArea(beamArea)) {
-      stats(FLUX) = stats(SUM) / beamArea;
-   } else {
-      stats(FLUX) = 0;
-   }
-//
-   return True;
+	const AccumType& n = stats(NPTS);
+	if (!LattStatsSpecialize::hasSomePoints(n)) {
+		stats.resize(0);
+		return  True;
+	}
+	//stats(MEAN) = LattStatsSpecialize::getMean(stats(SUM), n);
+	//stats(VARIANCE) = LattStatsSpecialize::getVariance(stats(SUM),                                               stats(SUMSQ), n);
+	stats(SIGMA) = LattStatsSpecialize::getSigma(stats(VARIANCE));
+	stats(RMS) =  LattStatsSpecialize::getRms(stats(SUMSQ), n);
+	Array<Double> beamArea;
+	if (_getBeamArea(beamArea)) {
+		IPosition beamPos = pos;
+		if (posInLattice) {
+			this->_latticePosToStoragePos(beamPos, pos);
+		}
+		stats(FLUX) = stats(SUM) / beamArea(beamPos);
+	}
+	else {
+		stats(FLUX) = 0;
+	}
+	return True;
 }
 
 
@@ -671,9 +673,7 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
 //             size on output if there were no good points.
 //
 {
-
 // Rezize slice to nothing first
-
    slice.resize(IPosition(0,0));
 
 // Generate storage lattice if required
@@ -692,7 +692,6 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
    const uInt n1 = nPtsIt.vector().nelements();
 
 // Setup
-
    slice.resize(nPts.shape());
    slice = 0.0;
    VectorIterator<AccumType> sliceIt(slice);
@@ -716,26 +715,27 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
        }
    }
    else if (type==FLUX) {
-       Double beamArea;
-       if (!getBeamArea(beamArea)) {
+       Array<Double> beamArea;
+       if (! _getBeamArea(beamArea)) {
           slice.resize(IPosition(0,0));
           return False;
        }
-
        retrieveStorageStatistic (sum, SUM, dropDeg);
        ReadOnlyVectorIterator<AccumType> sumIt(sum);
-
+       ReadOnlyVectorIterator<Double> beamAreaIter(beamArea);
        while (!nPtsIt.pastEnd()) {
           for (uInt i=0; i<n1; i++) {
              if (LattStatsSpecialize::hasSomePoints(nPtsIt.vector()(i))) {
-                sliceIt.vector()(i) = sumIt.vector()(i) / beamArea;
+                sliceIt.vector()(i) = sumIt.vector()(i) / beamAreaIter.vector()(i);
              }
           }
           nPtsIt.next();
           sumIt.next();
           sliceIt.next();
+          beamAreaIter.next();
        }
-    } else if (type==SIGMA) {
+    }
+   else if (type==SIGMA) {
        Array<AccumType> variance;
        retrieveStorageStatistic (variance, VARIANCE, dropDeg);
        ReadOnlyVectorIterator<AccumType> varianceIt(variance);
@@ -1101,7 +1101,6 @@ Bool LatticeStatistics<T>::getLayerStats(
 
    if (needStorageLattice_p) {
        if (!generateStorageLattice()) { 
-         cout << "could not generate storage lattice" << endl;
          return False;
       }
    }
@@ -1319,7 +1318,6 @@ Bool LatticeStatistics<T>::getLayerStats(
 
     if (needStorageLattice_p) {
 	if (!generateStorageLattice()) {
-	    cout << "could not generate storage lattice" << endl;
 	    return False;
 	}
     }
@@ -1726,7 +1724,6 @@ Bool LatticeStatistics<T>::display()
 // statistics as a function of the display axes
 
 {
-
    if (!goodParameterStatus_p) {
      return False;
    }
@@ -1790,8 +1787,20 @@ Bool LatticeStatistics<T>::display()
 
 // Get beam area
 
-   Double beamArea;
-   Bool hasBeam = getBeamArea(beamArea);
+   /*
+	* dmehring 2012may23: Changing beam area from Double to Array<Double> to support
+	* per plane beams. However, I'm quite confused at what this method is doing and so
+    * am not sure how to integrate the beamArea array into it. Is plotting of statistics
+    * even supported any longer? It doesn't seem to be from the casapy user interface;
+    * in ImageAnalysis::statistics, the plotting device is explicitly set "/NULL" independent
+    * of user inputs. Until I'm sure how to handle the Array of beam areas correctly and have
+    * definitive proof plotting of statistics is actually still used, I'm commenting out the
+    * beam specific code here and in the nested loop below.
+
+   Array<Double> beamArea;
+   Bool hasBeam = _getBeamArea(beamArea);
+   */
+   Bool hasBeam = False;
 //
    for (pixelIterator.reset(); !pixelIterator.atEnd(); pixelIterator++) {
  
@@ -1802,7 +1811,12 @@ Bool LatticeStatistics<T>::display()
          const AccumType& nPts = matrix(i,NPTS);
          if (LattStatsSpecialize::hasSomePoints(nPts)) {
             ord(i,MEAN) = LattStatsSpecialize::getMean(matrix(i,SUM), nPts);
-            if (hasBeam) ord(i,FLUX) = matrix(i,SUM) / beamArea;
+            /*
+             * see 2012may23 comment above
+            if (hasBeam) {
+            	ord(i,FLUX) = matrix(i,SUM) / beamArea;
+            }
+            */
             ord(i,SIGMA) = LattStatsSpecialize::getSigma(ord(i,VARIANCE));
             ord(i,RMS) =  LattStatsSpecialize::getRms(matrix(i,SUMSQ), nPts);  
           }
@@ -1812,7 +1826,9 @@ Bool LatticeStatistics<T>::display()
 // There is no easy way to do this other than as I have
 
       for (uInt i=0; i<LatticeStatsBase::NACCUM; i++) {
-         for (uInt j=0; j<n1; j++) ord(j,i) = matrix(j,i);
+         for (uInt j=0; j<n1; j++) {
+        	 ord(j,i) = matrix(j,i);
+         }
       }
 
 
@@ -2047,7 +2063,6 @@ Bool LatticeStatistics<T>::plotStats (Bool hasBeam,
 //   stats   Statistics matrix
 //
 {
-
 // The plotting for Complex just take the real part which is
 // not very useful.  Until I do someting better, stub it out
 
@@ -2533,10 +2548,21 @@ void LatticeStatistics<T>::closePlotting()
 // virtual functions
 
 template <class T>
-Bool LatticeStatistics<T>::getBeamArea (Double& beamArea) const
-{
-   beamArea = -1.0;
-   return False;
+Bool LatticeStatistics<T>::_getBeamArea(
+	Array<Double>& beamArea
+) const {
+	if (pStoreLattice_p->ndim() == 1) {
+		beamArea.resize(IPosition(1, 0));
+	}
+	else {
+		IPosition shape(pStoreLattice_p->ndim() - 1);
+		for (uInt i=0; i<shape.nelements(); i++) {
+			shape[i] = pStoreLattice_p->shape()[i];
+		}
+		beamArea.resize(shape);
+	}
+	beamArea.set(-1.0);
+	return False;
 }
 
 
@@ -2644,8 +2670,8 @@ void LatticeStatistics<T>::getLabels(String& hLabel, String& xLabel, const IPosi
 
 template <class T>
 Bool LatticeStatistics<T>::retrieveStorageStatistic(Array<AccumType>& slice, 
-                                                    LatticeStatsBase::StatisticsTypes type,
-                                                    Bool dropDeg)
+                                                    const LatticeStatsBase::StatisticsTypes type,
+                                                    const Bool dropDeg)
 //
 // Retrieve values from storage lattice
 //
@@ -2656,11 +2682,12 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Array<AccumType>& slice,
 //
 // Returns false if internal class state is bad.
 {
-
 // Generate storage lattice if required
 
    if (needStorageLattice_p) {
-      if (!generateStorageLattice()) return False;
+      if (!generateStorageLattice()) {
+    	  return False;
+      }
    }
 
 // Were there some good points ?  
@@ -2688,9 +2715,10 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Array<AccumType>& slice,
 
 
 template <class T>
-Bool LatticeStatistics<T>::retrieveStorageStatistic(Vector<AccumType>& slice, 
-                                                    const IPosition& pos,
-                                                    const Bool posInLattice)
+Bool LatticeStatistics<T>::retrieveStorageStatistic(
+	Vector<AccumType>& slice,  const IPosition& pos,
+    const Bool posInLattice
+) {
 //
 // Retrieve values from storage lattice
 //
@@ -2704,18 +2732,7 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Vector<AccumType>& slice,
 // Input/output
 //   slice        The statistics; should be long enough on input
 //
-{
-
-
-// Make sure we have a correctly size position
-
-   if (posInLattice) {
-      if (pos.nelements() != pInLattice_p->ndim()) {
-         error_p = "Incorrectly sized position given";
-         slice.resize(0);
-         return False;
-      }
-   } else {
+   if (! posInLattice) {
       if (pos.nelements() != displayAxes_p.nelements()) {
          error_p = "Incorrectly sized position given";
          slice.resize(0);
@@ -2727,7 +2744,9 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Vector<AccumType>& slice,
 // Generate storage lattice if required
 
    if (needStorageLattice_p) {
-      if (!generateStorageLattice()) return False;
+      if (!generateStorageLattice()) {
+    	  return False;
+      }
    }
 
 // Get accumulation sums slice from storage lattice.
@@ -2736,23 +2755,16 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Vector<AccumType>& slice,
    const uInt nDim = displayAxes_p.nelements();
    IPosition slicePos(nDim+1,0);
    if (posInLattice) {
+	   _latticePosToStoragePos(slicePos, pos);
+   }
+   else {
 
-// Discard non display axes
-
-      for (uInt i=0; i<nDim; i++) {
-         slicePos(i) = pos(displayAxes_p(i));
-      }
-   } else {
-
-// Use position as is
+	   // Use position as is
 
       for (uInt i=0; i<nDim; i++) {
          slicePos(i) = pos(i);
       }
    }
-
-
-// Get slice
 
    IPosition sliceShape(nDim+1,1);
    sliceShape(nDim) = LatticeStatsBase::NACCUM;
@@ -2765,13 +2777,38 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Vector<AccumType>& slice,
    slicePos = 0;
    for (uInt i=0; i<LatticeStatsBase::NACCUM; i++) {
       slicePos(nDim) = i;
-      slice(i) = tSlice(slicePos);         
+      slice(i) = tSlice(slicePos);
    }
    return True;
 }
 
+template <class T> void LatticeStatistics<T>::_latticePosToStoragePos(
+	IPosition& storagePos, const IPosition& latticePos
+) {
+    if (latticePos.nelements() != pInLattice_p->ndim()) {
+    	ostringstream oss;
+    	oss << "LatticeStatistics::" << __FUNCTION__
+    		<< "Incorrectly sized position given";
+    	storagePos.resize(0);
+    	throw AipsError(oss.str());
+    }
 
-
+    if (storagePos.size() < displayAxes_p.size()) {
+    	ostringstream oss;
+    	oss << "LatticeStatistics::" << __FUNCTION__
+    		<< "storage position does not have enough elements";
+    }
+    if (latticePos.size() < displayAxes_p.size()) {
+    	ostringstream oss;
+    	oss << "LatticeStatistics::" << __FUNCTION__
+    		<< "lattice position does not have enough elements";
+    }
+    // do NOT resize storagePos. It can have more elements than
+    // latticePos as defined by the caller.
+    for (uInt i=0; i<displayAxes_p.nelements(); i++) {
+    	storagePos[i] = latticePos(displayAxes_p[i]);
+    }
+}
 
 template <class T>
 Bool LatticeStatistics<T>::someGoodPoints ()
@@ -2781,7 +2818,6 @@ Bool LatticeStatistics<T>::someGoodPoints ()
 // looking again if we already looked !
 //
 {
-
    if (doneSomeGoodPoints_p) {
       return someGoodPointsValue_p;
    } else {
@@ -2863,7 +2899,6 @@ void LatticeStatistics<T>::summStats ()
 //
 {
 // Fish out statistics with a slice
-
    const IPosition shape = statsSliceShape();
    Array<AccumType> stats(shape);
    pStoreLattice_p->getSlice (stats, IPosition(1,0), shape, IPosition(1,1));
@@ -2920,11 +2955,10 @@ void LatticeStatistics<T>::displayStats (
     AccumType var, AccumType rms, AccumType sigma,
     AccumType dMin, AccumType dMax
 ) {
-
 // Get beam
 
-   Double beamArea;
-   Bool hasBeam = getBeamArea(beamArea);
+   Array<Double> beamArea;
+   Bool hasBeam = _getBeamArea(beamArea);
 
 // Have to convert LogIO object to ostream before can apply
 // the manipulators.  Also formatting Complex numbers with
@@ -2967,8 +3001,9 @@ void LatticeStatistics<T>::displayStats (
       os_p.post();
 //
       if (hasBeam) {
+    	  // beamArea guaranteed to only have one value in this method.
          os_p << "Flux density  = ";
-         os0 << sum/beamArea;
+         os0 << sum/(*(beamArea.begin()));
          os_p.output() << setw(oWidth) << String(os0) << " Jy" << endl;
          os_p.post();
       }

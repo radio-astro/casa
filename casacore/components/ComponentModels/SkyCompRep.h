@@ -52,6 +52,7 @@ class RecordInterface;
 class SpectralModel;
 class TwoSidedShape;
 class Unit;
+class GaussianBeam;
 template <class Ms> class MeasRef;
 template <class T> class Cube;
 template <class T> class Vector;
@@ -265,7 +266,7 @@ public:
   // the component is lost.
   Vector<Double> toPixel (
 		  const Unit& brightnessUnitOut,
-          const Vector<Quantum<Double> >& restoringBeam,
+          const GaussianBeam& restoringBeam,
           const CoordinateSystem& cSys,
           Stokes::StokesTypes stokes
   ) const;
@@ -286,7 +287,7 @@ public:
   // The SkyComponent is given a  constant spectrum.
   void fromPixel (Double& fluxRatio, const Vector<Double>& parameters,
                   const Unit& brightnessUnitIn,
-                  const Vector<Quantum<Double> >& restoringBeam,
+                  const GaussianBeam& restoringBeam,
                   const CoordinateSystem& cSys,
                   ComponentType::Shape componentShape,
                   Stokes::StokesTypes stokes);
@@ -308,7 +309,7 @@ public:
 		const Quantum<Double>& peakFlux,
 		const Quantum<Double>& majorAxis,
 		const Quantum<Double>& minorAxis,
-		const Vector<Quantum<Double> >& restoringBeam
+		const GaussianBeam& restoringBeam
 	);
 
 	// Convert an integral flux density to peak flux density.  The brightness unit
@@ -321,7 +322,7 @@ public:
 		const Unit& brightnessUnit,
 		const Quantity& majorAxis,
 		const Quantity& minorAxis,
-		const Vector<Quantity>& restoringBeam
+		const GaussianBeam& restoringBeam
 	);
 
 private:
@@ -337,7 +338,7 @@ private:
   static Unit defineBrightnessUnits (
 		  LogIO& os, const Unit& brightnessUnitIn,
 		  const DirectionCoordinate& dirCoord,
-		  const Vector<Quantum<Double> >& restoringBeam,
+		  const GaussianBeam& restoringBeam,
 		  const Bool integralIsJy
   );
 

@@ -586,10 +586,12 @@ void FITSImage::setup()
    getImageAttributes(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
                       recsize, recno, dataType, scale_p, offset_p, shortMagic_p,
                       longMagic_p, hasBlanks_p, fullName,  whichRep_p, whichHDU_p);
+   // shape must be set before image info in cases of multiple beams
+   shape_p = TiledShape (shape, TiledFileAccess::makeTileShape(shape));
+
    setMiscInfoMember (miscInfo);
 
 // set ImageInterface data
-
    setCoordsMember (cSys);
    setImageInfo (imageInfo);
 
@@ -620,7 +622,6 @@ void FITSImage::setup()
 // See if there is a mask specifier.  Defaults to apply mask.
 
    if (maskSpec_p.useDefault()) {
-
 // We would like to use any mask.  For 32 f.p. bit we don't know if there
 // are masked pixels (they are NaNs).  For Integer types we do know if there
 // the magic value has been set (suggests there are masked pixels) and 
@@ -633,11 +634,6 @@ void FITSImage::setup()
 
       hasBlanks_p = False;
    }
-
-// Form the tile shape.
-
-   shape_p = TiledShape (shape, TiledFileAccess::makeTileShape(shape));
-
 // Open the image.
    open();
 }

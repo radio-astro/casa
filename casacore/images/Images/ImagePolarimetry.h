@@ -344,6 +344,9 @@ private:
    PtrBlock<ImageInterface<Float>* > itsStokesPtr;
    PtrBlock<LatticeStatistics<Float>* > itsStokesStatsPtr;
 
+   Matrix<Bool> _beamsEqMat;
+
+
 // Delete all private pointers
    void cleanup();
 
@@ -433,6 +436,40 @@ private:
 
 // Subtract profile mean from image
    void subtractProfileMean (ImageInterface<Float>& im, uInt axis) const;
+
+   void _createBeamsEqMat();
+
+   Bool _checkBeams(
+		   const Vector<StokesTypes>& stokes,
+		   const Bool requireChannelEquality,
+		   const Bool throws=True
+   ) const;
+
+   Bool _checkIQUBeams(
+		   const Bool requireChannelEquality,
+		   const Bool throws=True
+   ) const;
+
+   Bool _checkIVBeams(
+		   const Bool requireChannelEquality,
+		   const Bool throws=True
+   ) const;
+
+   Bool _checkQUBeams(
+		   const Bool requireChannelEquality,
+		   const Bool throws=True
+   ) const;
+
+   static void _checkBeams(
+		   const ImagePolarimetry& im1, const ImagePolarimetry& im2,
+		   const Vector<StokesTypes>& stokes
+   );
+
+   void _setInfo(ImageInterface<Complex>& im, const StokesTypes stokes) const;
+
+   void _setInfo(ImageInterface<Float>& im, const StokesTypes stokes) const;
+
+   void _setDoLinDoCirc(Bool& doLin, Bool& doCirc) const;
 
 };
 

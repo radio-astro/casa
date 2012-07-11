@@ -50,8 +50,9 @@
 #include <casa/IO/RegularFileIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Utilities/Assert.h>
-#include <casa/Utilities/PtrHolder.h>
 #include <casa/iostream.h>
+
+#include <memory>
 
 #include <casa/namespace.h>
 void doOpens()
@@ -71,9 +72,9 @@ void doOpens()
       ImageFITSConverter::ImageToFITS(error, img, name2,
 				      64, True, True, -32, 1, -1,
 				      True);
-//
+
       {
-         PtrHolder<ImageInterface<Float> > im;
+         std::auto_ptr<ImageInterface<Float> > im;
          ImageUtilities::openImage(im, name1, os);
       }
       {
@@ -166,6 +167,15 @@ void listWorld (const Vector<Quantum<Double> >& wPars)
            << ", " << wPars(4) << endl;
    }
 }
+
+void listWorld (const GaussianBeam& wPars)
+{
+   cerr << "World" << endl;
+   if (! wPars.isNull()){
+      cerr << "  Major, minor, pa = " << wPars.getMajor()
+    		<< ", " << wPars.getMinor() << ", " << wPars.getPA() << endl;
+   }
+}
    
 void listPixel(const Vector<Double>& pPars)
 {
@@ -229,7 +239,7 @@ void doConversions()
       for (uInt i=0; i<3; i++) {
          pPars2(i+2) = pPars(i);
       }
-      Vector<Quantum<Double> > wPars2;
+      GaussianBeam wPars2;
       ImageUtilities::pixelWidthsToWorld (os, wPars2, pPars2, cSys, pixelAxes);     
 //
       listWorld(wPars);
@@ -273,28 +283,39 @@ void doBin()
 void doDeconvolveFromBeam() {
 	LogOrigin lor("tImageUtilities", "doDeconvolveFromBeam()", WHERE);
 	LogIO os(lor);
-	Quantity maj(5, "arcsec");
-	Quantity min(5, "arcsec");
-	Quantity pa(0, "deg");
+	Angular2DGaussian convolved(
+		Quantity(5, "arcsec"),
+		Quantity(5, "arcsec"),
+		Quantity(0, "deg")
+	);
+	Angular2DGaussian deconvolved;
 	Bool fitSuccess = False;
-	Vector<Quantity> beam(3);
-	beam[0] = Quantity(4, "arcsec");
-	beam[1] = Quantity(4, "arcsec");
-	beam[2] = Quantity(0, "deg");
+	GaussianBeam beam(
+		Quantity(4, "arcsec"), Quantity(4, "arcsec"),
+		Quantity(0, "deg")
+	);
 
-	Bool isPointSource = ImageUtilities::deconvolveFromBeam(maj, min, pa, fitSuccess, os, beam);
+	Bool isPointSource = ImageUtilities::deconvolveFromBeam(
+		deconvolved, convolved, fitSuccess, os, beam
+	);
+	Angular2DGaussian exp(
+		Quantity(3, "arcsec"),
+		Quantity(3, "arcsec"),
+		Quantity(0, "deg")
+	);
 	AlwaysAssert(! isPointSource, AipsError);
 	AlwaysAssert(fitSuccess, AipsError);
-	AlwaysAssert(maj.getValue("arcsec") == 3, AipsError);
-	AlwaysAssert(min.getValue("arcsec") == 3, AipsError);
-	AlwaysAssert(pa.getValue("deg") == 0, AipsError);
+	AlwaysAssert(deconvolved == exp, AipsError);
 
 	// make beam larger than the source so the fit fails
-	beam[0] = Quantity(6, "arcsec");
-	beam[1] = Quantity(6, "arcsec");
-	beam[2] = Quantity(0, "deg");
+	beam = GaussianBeam(
+		Quantity(6, "arcsec"), Quantity(6, "arcsec"),
+		Quantity(0, "deg")
+	);
 
-	isPointSource = ImageUtilities::deconvolveFromBeam(maj, min, pa, fitSuccess, os, beam);
+	isPointSource = ImageUtilities::deconvolveFromBeam(
+		deconvolved, convolved, fitSuccess, os, beam
+	);
 	AlwaysAssert(! fitSuccess, AipsError);
 
 	// TODO test for point source, I can't figure out how to actually set parameters so the method

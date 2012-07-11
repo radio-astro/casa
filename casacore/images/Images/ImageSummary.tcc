@@ -46,6 +46,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/Stokes.h>
 #include <casa/Utilities/ValType.h>
+#include <components/ComponentModels/GaussianBeam.h>
 
 #include <casa/iomanip.h>
 #include <casa/iostream.h>
@@ -350,13 +351,6 @@ String ImageSummary<T>::defaultMaskName() const
 }
 
 template <class T> 
-Vector<Quantum<Double> > ImageSummary<T>::restoringBeam () const
-{
-   return imageInfo_p.restoringBeam();
-}
-
-
-template <class T> 
 String ImageSummary<T>::imageType  () const
 {
    return pImage_p->imageType();
@@ -394,18 +388,67 @@ Vector<String> ImageSummary<T>::list (LogIO& os, const MDoppler::Types velocityT
 
 // Restoring beam
 
-   Vector<Quantum<Double> > rb = imageInfo_p.restoringBeam();
-   if (rb.nelements()>0) {
-      rb(0).convert(Unit("deg"));
-      rb(1).convert(Unit("deg"));
-      if (rb(0).getValue()<1.0 || rb(1).getValue()<1.0) {
-         rb(0).convert(Unit("arcsec"));
-         rb(1).convert(Unit("arcsec"));
-      }
-      rb(2).convert(Unit("deg"));
-      os.output() << "Restoring Beam   : " << rb(0) << ", " << rb(1) << ", " << rb(2) << endl;
-   } 
-//
+   if ( imageInfo_p.hasBeam()) {
+	   if (imageInfo_p.hasSingleBeam()) {
+		   GaussianBeam rb = imageInfo_p.restoringBeam();
+		   Quantity majAx = rb.getMajor();
+		   majAx.convert("deg");
+		   Quantity minAx = rb.getMinor();
+		   minAx.convert("deg");
+		   if (majAx.getValue()<1.0 || minAx.getValue()<1.0) {
+			   majAx.convert(Unit("arcsec"));
+			   minAx.convert(Unit("arcsec"));
+		   }
+		   Quantity pa = rb.getPA(True);
+		   pa.convert(Unit("deg"));
+		   os.output() << "Restoring Beam   : " << majAx
+			   << ", " << minAx << ", " << pa << endl;
+	   }
+	   else {
+		   const Array<GaussianBeam>& beams = imageInfo_p.getBeamSet().getBeams();
+
+		   Unit u("deg");
+		   for (
+				   Array<GaussianBeam>::const_iterator iter = beams.begin();
+				   iter != beams.end(); iter++
+		   ) {
+			   if (
+				iter->getMajor("deg") < 1.0
+				|| iter->getMinor("deg") < 1.0
+			   ) {
+				   u = Unit("arcsec");
+				   break;
+			   }
+		   }
+		   String beamHeader = "Restoring Beams (";
+		   if (imageInfo_p.nChannels() > 0) {
+			   beamHeader += "Channel#, ";
+		   }
+		   if (imageInfo_p.nStokes() > 0) {
+			   beamHeader += "Polarization#, ";
+		   }
+		   beamHeader += "Major, Minor, PA)";
+		   os.output() << beamHeader << endl;
+		   for (
+				   IPosition pos(beams.ndim(), 0);
+				   pos < beams.shape(); pos.next(beams.shape())
+		   ) {
+			   os.output() << pos[0] << ", ";
+			   if (pos.size() == 2) {
+				   os.output() << pos[1] << ", ";
+			   }
+			   Quantity majAx = beams(pos).getMajor();
+			   majAx.convert(u);
+			   Quantity minAx = beams(pos).getMinor();
+			   minAx.convert(u);
+			   Quantity pa = beams(pos).getPA(True);
+			   pa.convert("deg");
+			   os.output() << majAx
+					   << ", " << minAx << ", " << pa << endl;
+		   }
+	   }
+   }
+
    if (postLocally) {
       os.postLocally();
    } else {

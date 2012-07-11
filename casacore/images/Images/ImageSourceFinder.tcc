@@ -496,7 +496,6 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
 // Fill SkyComponents
 
    os << LogIO::NORMAL << "Found " << nFound << " sources" << LogIO::POST;
-   const ImageInfo& info = image.imageInfo();
    const Unit& bU = image.units();
    Double rat;
 
@@ -524,9 +523,11 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
          pars(5) = ss(k,2);
       }
 //   
+      GaussianBeam beam = image.imageInfo().restoringBeam();
       try {
-         SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, info, cSys, bU,
-                                                                cType, pars, stokes, xIsLong);
+            // FIXME need to deal with multi beam images
+          SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, cSys, bU,
+                                                                cType, pars, stokes, xIsLong, beam);
          listOut.add(sky);
       }  catch (AipsError x) {
          os << LogIO::WARN << "Could not convert fitted pixel parameters to world for source " << k+1 << endl;
@@ -537,9 +538,10 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
          pars2(0) = rs2(k,0);
          pars2(1) = rs2(k,1); 
          pars2(2) = rs2(k,2);
-         SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, info, cSys, bU,
+         // FIXME need to deal with multi beam images
+         SkyComponent sky = ImageUtilities::encodeSkyComponent (os, rat, cSys, bU,
                                                                 ComponentType::POINT, 
-                                                                pars2, stokes, xIsLong);
+                                                                pars2, stokes, xIsLong, beam);
          listOut.add(sky);
       }
    } 

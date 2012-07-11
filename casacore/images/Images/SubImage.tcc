@@ -29,9 +29,11 @@
 
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ExtendImage.h>
+#include <images/Images/ImageMetaData.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCLELMask.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/LCMask.h>
 #include <lattices/Lattices/SubLattice.h>
@@ -59,23 +61,23 @@ SubImage<T>::SubImage (
 	ImageInterface<T>& image,
 	AxesSpecifier axesSpec
 )
-	: itsImagePtr(image.cloneII()) {
-	itsSubLatPtr.reset(new SubLattice<T> (image, axesSpec));
+: itsImagePtr(image.cloneII()),
+  itsSubLatPtr(new SubLattice<T> (image, axesSpec)) {
 	setCoords (image.coordinates());
-	setMembers (*itsImagePtr);
+
+	setMembers (image.imageInfo().getBeamSet());
 }
 
 template<class T>
 SubImage<T>::SubImage (ImageInterface<T>& image,
 		       Bool writableIfPossible,
 		       AxesSpecifier axesSpec)
-: itsImagePtr (image.cloneII())
-{
-	itsSubLatPtr.reset(
-		new SubLattice<T> (image, writableIfPossible, axesSpec)
-	);
+: itsImagePtr (image.cloneII()),
+  itsSubLatPtr(
+		  new SubLattice<T> (image, writableIfPossible, axesSpec)
+) {
 	setCoords (image.coordinates());
-	setMembers (*itsImagePtr);
+	setMembers (image.imageInfo().getBeamSet());
 }
 
 template<class T>
@@ -84,34 +86,46 @@ SubImage<T>::SubImage (
 	const LattRegionHolder& region,
 	AxesSpecifier axesSpec
 )
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (
+: itsImagePtr (image.cloneII()),
+  itsSubLatPtr(
+		  new SubLattice<T> (
 			image,
-			region.toLatticeRegion(image.coordinates(),
-			image.shape()),
-			axesSpec)
-		);
+			region.toLatticeRegion(
+				image.coordinates(), image.shape()
+			),
+			axesSpec
+		)
+	) {
 	const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 
 	Vector<Float> blc, inc;
 	convertIPosition(blc, slicer.start());
 	convertIPosition(inc, slicer.stride());
 
-	setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
-	setMembers (*itsImagePtr);
+	CoordinateSystem subCoords = image.coordinates().subImage (blc, inc, slicer.length().asVector());
+	setCoords (subCoords);
+	SubLattice<T> tmp(
+		image,
+		region.toLatticeRegion(
+			image.coordinates(), image.shape()
+		)
+	);
+	ImageBeamSet hpBeams = _beamsForSubImage(
+		tmp.shape(), subCoords
+	);
+	setMembers (hpBeams);
 }
 
 template<class T>
-SubImage<T>::SubImage (ImageInterface<T>& image,
-		       const LattRegionHolder& region,
-		       Bool writableIfPossible,
-		       AxesSpecifier axesSpec)
+SubImage<T>::SubImage (
+	ImageInterface<T>& image,
+	const LattRegionHolder& region,
+	Bool writableIfPossible,
+	AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
 {
     LatticeRegion latReg = region.toLatticeRegion(
-				 image.coordinates(),
-				 image.shape()
+		image.coordinates(), image.shape()
     );
     itsSubLatPtr.reset(
     	new SubLattice<T> (
@@ -122,14 +136,21 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 		)
     );
 
-
     const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 
 	Vector<Float> blc, inc;
 	convertIPosition(blc, slicer.start());
 	convertIPosition(inc, slicer.stride());
-	setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
-	setMembers (*itsImagePtr);
+	CoordinateSystem subCoords = image.coordinates().subImage (blc, inc, slicer.length().asVector());
+	setCoords (subCoords);
+	SubLattice<T> tmp(
+    	image,
+    	latReg
+	);
+	ImageBeamSet hpBeams = _beamsForSubImage(
+		tmp.shape(), subCoords
+	);
+	setMembers(hpBeams);
 }
 
 template<class T>
@@ -138,14 +159,21 @@ SubImage<T>::SubImage (
 	const Slicer& slicer,
 	AxesSpecifier axesSpec
 )
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(new SubLattice<T> (image, slicer, axesSpec));
+	: itsImagePtr (image.cloneII()),
+	itsSubLatPtr(new SubLattice<T> (image, slicer, axesSpec)) {
 	const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
 	Vector<Float> blc, inc;
 	convertIPosition(blc, refslicer.start());
 	convertIPosition(inc, refslicer.stride());
-	setCoords (image.coordinates().subImage (blc, inc, refslicer.length().asVector()));
-	setMembers (*itsImagePtr);
+	CoordinateSystem subCoords = image.coordinates().subImage(
+			blc, inc, refslicer.length().asVector()
+		);
+	setCoords (subCoords);
+	SubLattice<T> tmp(image, slicer);
+	ImageBeamSet hpBeams = _beamsForSubImage(
+			tmp.shape(), subCoords
+		);
+	setMembers (hpBeams);
 }
 
 template<class T>
@@ -155,31 +183,33 @@ SubImage<T>::SubImage (
 	Bool writableIfPossible,
 	AxesSpecifier axesSpec
 )
-	: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
+	: itsImagePtr (image.cloneII()),
+	  itsSubLatPtr(
 		new SubLattice<T> (
 			image, slicer, writableIfPossible,
 			axesSpec
 		)
-	);
+	) {
 	const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
 	Vector<Float> blc, inc;
 	convertIPosition(blc, refslicer.start());
 	convertIPosition(inc, refslicer.stride());
-	setCoords(
-		image.coordinates().subImage(
+	CoordinateSystem subCoords = image.coordinates().subImage(
 			blc, inc, refslicer.length().asVector()
-		)
+		);
+	setCoords(subCoords);
+	SubLattice<T> tmp(image, slicer);
+	ImageBeamSet hpBeams = _beamsForSubImage(
+		tmp.shape(), subCoords
 	);
-	setMembers (*itsImagePtr);
+	setMembers(hpBeams);
 }
 
 template<class T>
 SubImage<T>::SubImage (const SubImage<T>& other)
 : ImageInterface<T> (other),
-  itsImagePtr (other.itsImagePtr->cloneII())
-{
-	itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
+  itsImagePtr (other.itsImagePtr->cloneII()),
+  itsSubLatPtr(new SubLattice<T> (*other.itsSubLatPtr)) {
 }
 
 template<class T>
@@ -202,13 +232,30 @@ ImageInterface<T>* SubImage<T>::cloneII() const
   return new SubImage<T> (*this);
 }
 
-template<class T>
-void SubImage<T>::setMembers (const ImageInterface<T>& image)
-{
-  this->setImageInfo (image.imageInfo());
-  this->setMiscInfoMember (image.miscInfo());
-  this->setUnitMember (image.units());
-  logger().addParent (image.logger());
+template<class T> void SubImage<T>::setMembers (
+	const ImageBeamSet& hpBeams
+) {
+	ImageInfo info = itsImagePtr->imageInfo();
+	if (info.getBeamSet().shape() != hpBeams.shape()) {
+		if (hpBeams.size() == 1) {
+			info.removeRestoringBeam();
+			info.setRestoringBeam(
+				hpBeams(IPosition(hpBeams.ndim(), 0, 0))
+			);
+		}
+		else {
+			CoordinateSystem csys = itsImagePtr->coordinates();
+			info.setBeams(hpBeams);
+		}
+	}
+	if (! this->setImageInfo (info)) {
+		throw AipsError(
+			"SubImage<T>::setMembers: Unable to set image info"
+		);
+	}
+	this->setMiscInfoMember (itsImagePtr->miscInfo());
+	this->setUnitMember (itsImagePtr->units());
+	logger().addParent (itsImagePtr->logger());
 }
 
 template<class T>
@@ -557,6 +604,140 @@ void SubImage<T>::convertIPosition(Vector<Float>& x, const IPosition& pos) const
   x.resize(pos.nelements());
   for (uInt i=0; i<x.nelements(); i++) x[i] = Float(pos(i));
 }
+
+template<class T>
+ImageBeamSet SubImage<T>::_beamsForSubImage(
+	const IPosition& subShape,
+	const CoordinateSystem& subCoords
+) {
+	const ImageBeamSet& origBeams = itsImagePtr->imageInfo().getBeamSet();
+	const CoordinateSystem& origCoords = itsImagePtr->coordinates();
+	if (origBeams.nelements() < 2) {
+		return origBeams;
+	}
+	if (origBeams.ndim() >= 3) {
+		throw AipsError(
+			"origBeams has too many dimensions"
+		);
+	}
+	if (itsImagePtr->ndim() != origCoords.nPixelAxes()) {
+		throw AipsError(
+			"origShape does not have the same dimensionality of origCoords"
+		);
+	}
+	if (subShape.nelements() != subCoords.nPixelAxes()) {
+		throw AipsError(
+			"subShape does not have the same dimensionality of subCoords"
+		);
+	}
+	if (subShape.nelements() != itsImagePtr->ndim()) {
+		throw AipsError(
+			"subShape does not have the same dimensionality as origShape"
+		);
+	}
+	for (uInt i=0; i<itsImagePtr->ndim(); i++) {
+		if (subShape[i] > itsImagePtr->shape()[i]) {
+			throw AipsError(
+				"subShape is greater than origShape"
+			);
+		}
+	}
+	Vector<String> origNames = origCoords.worldAxisNames();
+	Vector<String> subNames = subCoords.worldAxisNames();
+	if (! allTrue(origNames == subNames)) {
+		throw AipsError(
+			"subCoords has different axes than origCoords"
+		);
+	}
+	Bool hasSpecAxis = origCoords.hasSpectralAxis();
+	Bool hasPolAxis = origCoords.hasPolarizationCoordinate();
+	if (
+		(
+			origBeams.ndim() == 2 && ! (hasSpecAxis && hasPolAxis)
+		)
+		|| (
+			origBeams.ndim() == 1
+			&& (
+				! (hasSpecAxis || hasPolAxis)
+				|| (hasSpecAxis && hasPolAxis)
+			)
+		)
+	) {
+		throw AipsError(
+			"Inconsistent beam set shape and coordinate system"
+		);
+	}
+	Int specBegin = hasSpecAxis
+		? Int(
+			origCoords.spectralCoordinate().referencePixel()[0]
+			- subCoords.spectralCoordinate().referencePixel()[0]
+		)
+		: 0;
+	AlwaysAssert(specBegin >= 0, AipsError);
+	uInt polBegin = 0;
+	Int specAxisNumber = origCoords.spectralAxisNumber();
+	uInt nChanOrig = hasSpecAxis ? itsImagePtr->shape()[specAxisNumber] : 0;
+	uInt nChanSub = hasSpecAxis ? subShape[specAxisNumber] : 0;
+	Int polAxisNumber = origCoords.polarizationAxisNumber();
+	uInt nPolOrig = hasPolAxis ? itsImagePtr->shape()[polAxisNumber] : 0;
+	uInt nPolSub = hasPolAxis ? subShape[polAxisNumber] : 0;
+	if (nChanOrig == nChanSub && nPolOrig == nPolSub) {
+		return origBeams;
+	}
+	if (hasPolAxis) {
+		String beginStokes = subCoords.stokesAtPixel(0);
+		Bool found = False;
+		for (uInt i=0; i<nPolOrig; i++) {
+			if (origCoords.stokesAtPixel(i) == beginStokes) {
+				polBegin = i;
+				found = True;
+				break;
+			}
+		}
+		if (! found) {
+			throw AipsError(
+				"origCoords and subCoords to not have consistent stokes axes"
+			);
+		}
+	}
+	ImageBeamSet beams;
+	if (hasSpecAxis && hasPolAxis) {
+		Vector<ImageBeamSet::AxisType> axisTypes(2);
+		axisTypes[0] = ImageBeamSet::SPECTRAL;
+		axisTypes[1] = ImageBeamSet::POLARIZATION;
+
+		beams = ImageBeamSet(IPosition(2, nChanSub, nPolSub), axisTypes);
+		IPosition subPos = beams.shape();
+		IPosition origPos = origBeams.shape();
+		for (uInt i=0; i<nChanSub; i++) {
+			subPos[0] = i;
+			origPos[0] = i + specBegin;
+			for (uInt j=0; j<nPolSub; j++) {
+				subPos[1] = j;
+				origPos[1] = j + polBegin;
+				beams(subPos) = origBeams(origPos);
+			}
+		}
+	}
+	else if (hasSpecAxis) {
+		Vector<ImageBeamSet::AxisType> axisTypes(1);
+		axisTypes[0] = ImageBeamSet::SPECTRAL;
+		beams = ImageBeamSet(IPosition(1, nChanSub), axisTypes);
+		for (uInt i=0; i<nChanSub; i++) {
+			beams[i] = origBeams[i + specBegin];
+		}
+	}
+	else if (hasPolAxis) {
+		Vector<ImageBeamSet::AxisType> axisTypes(1);
+		axisTypes[0] = ImageBeamSet::POLARIZATION;
+		beams = ImageBeamSet(IPosition(1, nPolSub), axisTypes);
+		for (uInt i=0; i<nPolSub; i++) {
+			beams[i] = origBeams[i + polBegin];
+		}
+	}
+	return beams;
+}
+
 
 } //# NAMESPACE CASA - END
 

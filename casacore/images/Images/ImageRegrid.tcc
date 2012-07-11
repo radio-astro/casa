@@ -128,6 +128,28 @@ void ImageRegrid<T>::regrid(
 			)
 		);
 	}
+	if (inImage.imageInfo().hasMultipleBeams()) {
+		if (
+			inImage.coordinates().hasSpectralAxis()
+			&& anyTrue(outPixelAxesU.asVector()
+				== inImage.coordinates().spectralAxisNumber())
+		) {
+			LogIO log;
+			log << LogOrigin("ImageRegrid", __FUNCTION__)
+				<< "This image has multiple beams. The spectral axis cannot be rebinned"
+				<< LogIO::EXCEPTION;
+		}
+		if (
+			inImage.coordinates().hasPolarizationCoordinate()
+			&& anyTrue(outPixelAxesU.asVector()
+				== inImage.coordinates().polarizationAxisNumber())
+		) {
+			LogIO log;
+			log << LogOrigin("ImageRegrid", __FUNCTION__)
+				<< "This image has multiple beams. The polarization axis cannot be rebinned"
+				<< LogIO::EXCEPTION;
+		}
+	}
 	const Bool outIsMasked = outImage.isMasked() && outImage.hasPixelMask()
 			&& outImage.pixelMask().isWritable();
 	const CoordinateSystem& inCoords = inImage.coordinates();
@@ -1972,7 +1994,6 @@ void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
    if (outShape.nelements()==0) {
       os << "The output shape is illegal" << LogIO::EXCEPTION;
    }
-//
    Int n1 = outPixelAxes.nelements();
    const Int nOut = outShape.nelements();
    if (n1 > nOut) {
@@ -2050,7 +2071,6 @@ void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
          found(outPixelAxes(i)) = True;
       }
    }
-
 // CHeck non-regriddded axis shapes are ok
 
    for (Int i=0; i<nOut; i++) {
