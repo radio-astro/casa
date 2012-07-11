@@ -1482,9 +1482,9 @@ String Imager::state()
     os << "General: " << endl;
     os << "  MeasurementSet is " << ms_p->tableName() << endl;
     if(beamValid_p) {
-      os << "  Beam fit: " << bmaj_p.get("arcsec").getValue() << " by "
-	 << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-	 << bpa_p.get("deg").getValue() << " (deg) " << endl;
+      os << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
+	 << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+	 << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
     }
     else {
       os << "  Beam fit is not valid" << endl;
@@ -2050,9 +2050,11 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
     Vector<Float> beam(3);
     beam=sm_p->beam(0);
     if(beam[0] > 0.0){
-      bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
-      bmin_p=Quantity(abs(beam(1)), "arcsec");
-      bpa_p=Quantity(beam(2), "deg");
+    	beam_p.setMajorMinor(
+    		Quantity(abs(beam(0)), "arcsec"),
+    		Quantity(abs(beam(1)), "arcsec")
+    	);
+      beam_p.setPA(Quantity(beam(2), "deg"));
       beamValid_p=True;
       printBeam = true;
       os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
@@ -2063,9 +2065,9 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
     os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
   }
   if(printBeam)
-    os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
-       << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-       << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
+    os << LogIO::NORMAL << beam_p.getMajor("arcsec") << " by " // Loglevel INFO
+       << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+       << beam_p.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 }
 
 Bool Imager::restoreImages(const Vector<String>& restoredNames)
@@ -2107,7 +2109,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
     }
     
     Bool dorestore=False;
-    if( (bmaj_p.getValue() >0.0) && (bmin_p.getValue() > 0.0))
+    if( ! beam_p.isNull())
       dorestore=True;
     
     if(restoredNames.nelements()>0) {
@@ -2122,7 +2124,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 				modelIm.coordinates());
 	    restored.copyData(modelIm);
 	   
-	    StokesImageUtil::Convolve(restored, bmaj_p, bmin_p, bpa_p);
+	    StokesImageUtil::Convolve(restored, beam_p);
 	  }
 	  // We can work only if the residual image was defined.
 	  if(residIm.name() != "") {
@@ -2192,7 +2194,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 					    restoredNames(thismodel));
 	      diskrestore.copyData(restored);
 	      ImageInfo ii = modelIm.imageInfo();
-	      ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
+	      ii.setRestoringBeam(beam_p);
 	      diskrestore.setImageInfo(ii);
 	      diskrestore.setUnits(Unit("Jy/beam"));
 	      copyMask(diskrestore, restored, "mask0");

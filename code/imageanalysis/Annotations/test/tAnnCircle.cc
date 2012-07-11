@@ -38,6 +38,9 @@ int main () {
 		LogIO log;
 		IPosition shape(4, 400, 400, 1, 5500);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		Vector<Double> refpix = csys.referencePixel();
+		refpix[0] = 200;
+		csys.setReferencePixel(refpix);
 		AnnRegion::unitInit();
 		{
 			log << LogIO::NORMAL

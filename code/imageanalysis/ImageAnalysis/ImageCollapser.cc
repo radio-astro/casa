@@ -74,7 +74,7 @@ ImageCollapser::ImageCollapser(
 	),
 	_invertAxesSelection(invertAxesSelection),
 	_axes(axes), _aggType(aggregateType) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+    *_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (_aggType == UNKNOWN) {
 		*_getLog() << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
 	}
@@ -184,7 +184,9 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 				data, mask, _axes, subImage, False,
 				True, True, lattStatType
 			);
-			Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
+			Array<Float> dataCopy = (_axes.size() <= 1)
+				? data
+				: data.addDegenerate(_axes.size() - 1);
 			IPosition newOrder(outImage->ndim(), -1);
 			uInt nAltered = _axes.size();
 			uInt nUnaltered = outImage->ndim() - nAltered;
@@ -235,10 +237,22 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 				outImage->putAt(function(data(s)), start);
 			}
 		}
-
-
 	}
-	ImageUtilities::copyMiscellaneous(*outImage, subImage);
+	if (subImage.imageInfo().hasMultipleBeams()) {
+		*_getLog() << LogIO::WARN << "Input image has per plane beams. "
+			<< "The output image will arbitrarily have a single beam which "
+			<< "is the first beam available in the subimage." << LogIO::POST;
+		ImageUtilities::copyMiscellaneous(*outImage, subImage, False);
+		ImageInfo info = subImage.imageInfo();
+		vector<Vector<Quantity> > out;
+		GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
+        info.removeRestoringBeam();
+		info.setRestoringBeam(beam);
+		outImage->setImageInfo(info);
+	}
+	else {
+		ImageUtilities::copyMiscellaneous(*outImage, subImage, True);
+	}
 	if (! _getOutname().empty()) {
 		outImage->flush();
 	}

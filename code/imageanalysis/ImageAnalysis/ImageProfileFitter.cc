@@ -1346,136 +1346,6 @@ void ImageProfileFitter::_makeSolutionImage(
 	}
 	image.setUnits(Unit(unit));
 }
-/*
-// moved from ImageAnalysis
-void ImageProfileFitter::_fitProfile(
-	const Bool fitIt
-) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	// Set default axis
-	const uInt nDim = _subImage.ndim();
-	CoordinateSystem cSys = _subImage.coordinates();
-	String doppler = "";
-	ImageUtilities::getUnitAndDoppler(
-		_xUnit, doppler, _fitAxis, cSys
-	);
-
-	Bool xAbs = True;
-	// Figure out the abcissa type specifying what abcissa domain the fitter
-	// is operating in.  Convert the CoordinateSystem to this domain
-	// and set it back in the image
-	String errMsg;
-	ImageFit1D<Float>::AbcissaType abcissaType;
-	/*
-	Bool ok = ImageFit1D<Float>::setAbcissaState(
-		errMsg, abcissaType, cSys, _xUnit, doppler, _fitAxis
-	);
-	// end block comment
-	if (
-		! ImageFit1D<Float>::setAbcissaState(
-			errMsg, abcissaType, cSys, "pix", doppler, _fitAxis
-		)
-	) {
-		*_getLog() << "Error setting abcissa state: " << errMsg << LogIO::EXCEPTION;
-	}
-	// _subImage.setCoordinateInfo(cSys);
-
-	ImageFit1D<Float> fitter;
-	if (_sigma.get()) {
-		fitter.setImage(_subImage, *_sigma, _fitAxis);
-	}
-	else {
-		fitter.setImage(_subImage, _fitAxis);
-	}
-	// Set data region averaging data in region.  We could also set the
-	// ImageRegion from that passed in to this function rather than making
-	// a SubImage. But the way I have done it, the 'mask' keyword is
-	// handled automatically there.
-	Slicer sl(IPosition(nDim, 0), _subImage.shape(), Slicer::endIsLength);
-	LCSlicer lslice(sl);
-	ImageRegion region(lslice);
-	if (! fitter.setData(region, abcissaType, xAbs)) {
-		*_getLog() << fitter.errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// Now we do one of three things:
-	// 1) make a fit and evaluate
-	// 2) evaluate a model
-	// 3) make an estimate and evaluate
-	Vector<Float> model(0), residual(0);
-
-	if (fitIt) {
-		if (_nonPolyEstimates.nelements() > 0) {
-			fitter.setElements(_nonPolyEstimates);
-		} else {
-			// Set auto estimate
-			if (! fitter.setGaussianElements(_nGaussSinglets)) {
-				*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
-			}
-		}
-		if (_polyOrder >= 0) {
-			// Add baseline
-			PolynomialSpectralElement polyEl(_polyOrder);
-			fitter.addElement(polyEl);
-		}
-		if (fitter.fit()) {
-			_flagFitterIfNecessary(fitter);
-			if (fitter.isValid()) {
-				if (! _model.empty()) {
-					model = fitter.getFit();
-					ImageCollapser collapser(
-						&_subImage, IPosition(1, _fitAxis), True,
-						ImageCollapser::ZERO, _model, True
-					);
-					std::auto_ptr<PagedImage<Float> > modelImage(
-						static_cast<PagedImage<Float>*>(
-							collapser.collapse(True)
-						)
-					);
-					modelImage->put(model.reform(modelImage->shape()));
-					modelImage->flush();
-				}
-				if (! _residual.empty()) {
-					residual = fitter.getResidual(-1, True);
-					ImageCollapser collapser(
-						&_subImage, IPosition(1, _fitAxis), True,
-						ImageCollapser::ZERO, _residual, True
-					);
-					std::auto_ptr<PagedImage<Float> > residualImage(
-						static_cast<PagedImage<Float>*>(
-							collapser.collapse(True)
-						)
-					);
-					residualImage->put(residual.reform(residualImage->shape()));
-					residualImage->flush();
-				}
-			}
-		}
-		else {
-			*_getLog() << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
-		}
-	}
-	else {
-		if (_nonPolyEstimates.nelements() > 0) {
-			fitter.setElements(_nonPolyEstimates); // Set list
-			model = fitter.getEstimate(); // Evaluate list
-			residual = fitter.getResidual(-1, False);
-		}
-		else {
-			if (fitter.setGaussianElements(_nGaussSinglets)) { // Auto estimate
-				model = fitter.getEstimate(); // Evaluate
-				residual = fitter.getResidual(-1, False);
-			}
-			else {
-				*_getLog() << LogIO::SEVERE << fitter.errorMessage()
-					<< LogIO::POST;
-			}
-		}
-	}
-	_fitters.resize(IPosition(1,1));
-	_fitters(IPosition(1, 0)) = fitter;
-}
-*/
 
 void ImageProfileFitter::_fitallprofiles() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
@@ -1625,11 +1495,6 @@ void ImageProfileFitter::_fitProfiles(
 		if (newEstimates.nelements() > 0) {
 			newEstimates.add(*polyEl);
 		}
-		/*
-		else {
-			fitter.addElement(*polyEl);
-		}
-		*/
 	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
@@ -1639,11 +1504,6 @@ void ImageProfileFitter::_fitProfiles(
 			*_getLog() << LogIO::NORMAL << "Fitting profile number "
 				<< count << " of " << nPoints << LogIO::POST;
 		}
-		/*
-		ImageFit1D<Float> fitter = (_sigma.get() == 0)
-			? ImageFit1D<Float>(_subImage, _fitAxis)
-			: ImageFit1D<Float>(_subImage, *_sigma, _fitAxis);
-			*/
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts) {
 			IPosition sliceShape = inShape;

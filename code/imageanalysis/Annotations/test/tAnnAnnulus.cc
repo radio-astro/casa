@@ -37,6 +37,9 @@ int main () {
 	try {
 		LogIO log;
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		Vector<Double> refpix = csys.referencePixel();
+		refpix[0] = 200;
+		csys.setReferencePixel(refpix);
 		IPosition shape(4, 400,400,1,5500);
 		AnnRegion::unitInit();
 		{
@@ -44,7 +47,7 @@ int main () {
 				<<"Test mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
 			Bool thrown = True;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "pix");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -81,7 +84,7 @@ int main () {
 				<< "Test that bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
 			Bool thrown = True;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "cm");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -119,7 +122,7 @@ int main () {
 				<< "Test that inner radius larger than outer radius throws exception"
 				<< LogIO::POST;
 			Bool thrown = True;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity inner(30, "arcsec");
 			Quantity outer(20, "arcsec");
@@ -157,7 +160,7 @@ int main () {
 				<< "Test that shape and coordinate system mismatch throws exception"
 				<< LogIO::POST;
 			Bool thrown = True;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -192,7 +195,6 @@ int main () {
 			AlwaysAssert(thrown, AipsError);
 		}
 		{
-			cout << __FILE__ << " " << __LINE__ << endl;
 			log << LogIO::NORMAL << "Test precision"
 				<< LogIO::POST;
 			Quantity centerx(-0.01, "deg");
@@ -206,54 +208,7 @@ int main () {
 			);
 			cout << ann << endl;
 		}
-		/*
-		{
 
-			Quantity centerx(0.6, "arcmin");
-			Quantity centery(1.2, "arcmin");
-			Quantity inner(3, "arcmin");
-			Quantity outer(4, "arcmin");
-
-			Quantity beginFreq, endFreq;
-			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
-			);
-			String freqRefFrameString = MFrequency::showType(
-				csys.spectralCoordinate().frequencySystem()
-			);
-			String dopplerString = MDoppler::showType(
-				csys.spectralCoordinate().velocityDoppler()
-			);
-			Quantity restfreq(
-				csys.spectralCoordinate().restFrequency(), "Hz"
-			);
-			Vector<Stokes::StokesTypes> stokes(0);
-			AnnAnnulus annulus(
-				centerx, centery, inner, outer, dirTypeString,
-				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
-			);
-
-			vector<Quantity> wblc, wtrc;
-			annulus.worldBoundingBox(wblc, wtrc);
-			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+outer).getValue("arcmin")), AipsError);
-			AlwaysAssert(near(wblc[1].getValue("arcmin"), (centery-outer).getValue("arcmin")), AipsError);
-			AlwaysAssert(near(wtrc[0].getValue("arcmin"), (centerx-outer).getValue("arcmin")), AipsError);
-			AlwaysAssert(near(wtrc[1].getValue("arcmin"), (centery+outer).getValue("arcmin")), AipsError);
-
-
-			vector<Double> pblc, ptrc;
-			annulus.pixelBoundingBox(pblc, ptrc);
-			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
-			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
-
-			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin"), 3e-6), AipsError);
-			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
-			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
-			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
-		}
-		*/
-		/*
 		{
 			log << LogIO::NORMAL
 				<< "Test center with no conversion"
@@ -327,7 +282,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test precessing from B1950 to J2000"
 				<< LogIO::POST;
-			Quantity centerx(-0.8, "deg");
+			Quantity centerx(0.05, "deg");
 			Quantity centery(0, "deg");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
@@ -722,14 +677,12 @@ int main () {
 			cout << annulus << endl;
 			annulus.setLabel("");
 			cout << annulus << endl;
-			int font_style = annulus.getFontStyle();
+			//int font_style = annulus.getFontStyle();
 			annulus.setFontStyle(AnnotationBase::ITALIC_BOLD);
 			ostringstream oss;
 			annulus.print(oss);
 			cout << oss.str() << endl;
 		}
-
-		*/
 	}
 	catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;

@@ -492,6 +492,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
 Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredNames, 
                                                                            const Vector<String> &residualNames)
 {
+  LogIO os(LogOrigin("WBCleanImageSkyModel", "calculateAlphaBeta", WHERE));
   Int index=0;
   Bool writeerror=True;
   
@@ -664,7 +665,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
   //  if(ntaylor_p>2) os << "Calculating Spectral Index and Curvature" << LogIO::POST;
   
   
-  Quantity bmaj=0.0,bmin=0.0,bpa=0.0;
+  GaussianBeam beam;
   Int index=0;
   
   for(Int field=0;field<nfields_p;field++)
@@ -686,7 +687,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	  betaname = (imageNames[baseindex]) +  String(".beta");
 	}
       
-      StokesImageUtil::FitGaussianPSF(PSF(baseindex), bmaj, bmin, bpa);
+      StokesImageUtil::FitGaussianPSF(PSF(baseindex), beam);
       
       /* Create empty alpha image */
       PagedImage<Float> imalpha(image(baseindex).shape(),image(baseindex).coordinates(),alphaname); 
@@ -734,7 +735,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 	  index = getModelIndex(field,i);
 	  LatticeExpr<Float> cop(image(index));
 	  imalpha.copyData(cop);
-	  StokesImageUtil::Convolve(imalpha, bmaj, bmin, bpa);
+	  StokesImageUtil::Convolve(imalpha, beam);
 	  //cout << "Clean Beam from WBC : " << bmaj  << " , " << bmin << " , " << bpa << endl;
           //cout << "SkyModel internally-recorded beam for index " << index << " : " << beam(index) << endl;
 	  //LatticeExpr<Float> le(imalpha); 
@@ -758,7 +759,7 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
       imalpha.copyData(alphacalc);
       
       ImageInfo ii = imalpha.imageInfo();
-      ii.setRestoringBeam(bmaj, bmin, bpa);
+      ii.setRestoringBeam(beam);
       
       imalpha.setImageInfo(ii);
       //imalpha.setUnits(Unit("Spectral Index"));

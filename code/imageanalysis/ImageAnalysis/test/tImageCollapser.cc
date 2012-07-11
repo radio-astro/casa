@@ -73,12 +73,10 @@ void checkImage(
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
 	AlwaysAssert(max(abs(fracDiffRef)) <= 1.5e-6, AipsError);
-	Vector<Quantity> beam = gotImage->imageInfo().restoringBeam();
-	AlwaysAssert(beam.size() == 3, AipsError);
-	cout << "out beam " << beam << endl;
-	AlwaysAssert(near(beam[0].getValue("arcsec"), 1.0), AipsError);
-	AlwaysAssert(near(beam[1].getValue("arcsec"), 1.0), AipsError);
-	AlwaysAssert(near(beam[2].getValue("deg"), 40.0), AipsError);
+	GaussianBeam beam = gotImage->imageInfo().restoringBeam();
+	AlwaysAssert(near(beam.getMajor().getValue("arcsec"), 1.0), AipsError);
+	AlwaysAssert(near(beam.getMinor().getValue("arcsec"), 1.0), AipsError);
+	AlwaysAssert(near(beam.getPA().getValue("deg"), 40.0), AipsError);
 
 }
 

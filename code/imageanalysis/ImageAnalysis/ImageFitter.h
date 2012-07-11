@@ -163,6 +163,7 @@ private:
 	uInt _curChan;
 	Double _zeroLevelOffsetEstimate;
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
+	Int _stokesPixNumber, _chanPixNumber;
 
 	const static String _class;
 

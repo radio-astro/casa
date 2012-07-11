@@ -36,6 +36,7 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <lattices/Lattices/LatticeCleaner.h>
+#include <components/ComponentModels/GaussianBeam.h>
 
 #include <casa/namespace.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -163,8 +164,7 @@ public:
 
   // Restore
   Bool restore(const String& model,
-	       const String& image,
-	       Quantity& bmaj, Quantity& bmin, Quantity& bpa);
+	       const String& image, GaussianBeam& mbeam);
 
   // Residual
   Bool residual(const String& model, 
@@ -173,7 +173,7 @@ public:
   // Smooth
   Bool smooth(const String& model, 
 	      const String& image,
-	      Quantity& bmaj, Quantity& bmin, Quantity& bpa,
+	      GaussianBeam& mbeam,
 	      Bool normalizeVolume);
 
   // Clean algorithm
@@ -262,16 +262,14 @@ public:
 		 const Quantity& threshold);
 
   // Fit the psf
-  Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
-	      Quantity& mbpa);
+  Bool fitpsf(const String& psf, GaussianBeam& beam);
 
   // Convolve one image with another
   Bool convolve(const String& convolvedmodel, 
 		const String& model);
 
   // Make a Gaussian -- you might want to use it for convolution, etc
-  Bool makegaussian(const String& gaussianimage, Quantity& mbmaj, Quantity& mbmin,
-	      Quantity& mbpa, Bool normalizeVolume);
+  Bool makegaussian(const String& gaussianimage, GaussianBeam& mbeam, Bool normalizeVolume);
 
   
 
@@ -314,7 +312,8 @@ private:
   Int nx_p, ny_p, npol_p, nchan_p;
   Int chanAxis_p, polAxis_p;
   String mode_p;
-  Quantity bmaj_p, bmin_p, bpa_p;
+  GaussianBeam beam_p;
+//  Quantity bmaj_p, bmin_p, bpa_p;
   Bool beamValid_p;
   String dirtyName_p;
   String psfName_p;
