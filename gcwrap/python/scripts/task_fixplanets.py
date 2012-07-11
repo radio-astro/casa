@@ -28,7 +28,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                             3 (antenna id 3)
 
     reftime    -- if using pointing table information, use it from this timestamp
-                  default: 'first' unflagged timestamp
+                  default: 'first'
                   examples: 'median' will use the median timestamp for the given field
 		              using only the unflagged maintable rows 
                             '2012/07/11/08:41:32' will use the given timestamp (must be
@@ -38,8 +38,8 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
           will look up the pointing direction from antenna 0 for field 'Titan' in 
-          the POINTING table based on the first timestamp in the unflagged main table
-          rows for this field, enter this direction in the FIELD and SOURCE tables, and then 
+          the POINTING table based on the first timestamp in the main table rows for 
+          this field, enter this direction in the FIELD and SOURCE tables, and then 
           recalculate the UVW coordinates for this field.
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
@@ -77,27 +77,36 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 # find median timestamp for this field in the main table
                 shutil.rmtree('fixplanetstemp', ignore_errors=True)
                 thetime = 0
-                tbt.open(vis)
-                tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
-                tbt.close()
-                tbt.open('fixplanetstemp')
-                themediantime = tbt.getcell('TIME',tbt.nrows()/2)
-                thefirsttime = tbt.getcell('TIME',0)
-                thelasttime = tbt.getcell('TIME',tbt.nrows()-1)
-                tbt.close()
-                shutil.rmtree('fixplanetstemp', ignore_errors=True)
                 if(reftime.lower()=='median'):
-                    thetime = themediantime
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thetime = tbt.getcell('TIME',tbt.nrows()/2)
                     casalog.post( "MEDIAN TIME "+str(thetime), 'NORMAL')
+                    tbt.close()
                 elif(reftime.lower()=='first'):
-                    thetime = thefirsttime
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thetime = tbt.getcell('TIME',0)
                     casalog.post( "FIRST TIME "+str(thetime), 'NORMAL')
+                    tbt.close()
                 else:
                     try:
                         myqa = qa.quantity(reftime)
                         thetime = qa.convert(myqa,'s')['value']
                     except Exception, instance:
                         raise TypeError, "reftime parameter is not a valid date (e.g. YYYY/MM/DD/hh:mm:ss)" %reftime
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thefirsttime = tbt.getcell('TIME',0)
+                    thelasttime = tbt.getcell('TIME',tbt.nrows()-1)
+                    tbt.close()
+                    shutil.rmtree('fixplanetstemp', ignore_errors=True)
                     if (thefirsttime<=thetime and thetime<=thelasttime):
                         casalog.post( "GIVEN TIME "+reftime+" == "+str(thetime), 'NORMAL')
                     else:

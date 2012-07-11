@@ -81,9 +81,9 @@ Changes FIELD and SOURCE table entries based on user given direction or on POINT
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
           will look up the pointing direction from antenna 0 for field 'Titan' in 
-          the POINTING table based on the first timestamp in the unflagged main table 
-          rows for this field, enter this direction in the FIELD and SOURCE tables, and 
-          then recalculate the UVW coordinates for this field.
+          the POINTING table based on the first timestamp in the main table rows for 
+          this field, enter this direction in the FIELD and SOURCE tables, and then 
+          recalculate the UVW coordinates for this field.
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
           will set the directions for field 'Titan' in the FIELD and SOURCE table to the
