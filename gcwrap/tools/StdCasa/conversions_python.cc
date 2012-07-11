@@ -451,13 +451,10 @@ int casac::pyarray_check(PyObject *obj) {
 	VECTOR[INDEX] = STRINGCVT(PyString_AsString(ele));			\
     } else { \
 	    if (PyNumber_Check(ele)){ \
-		    if(PyObject_TypeCheck(ele->ob_type, &PyLong_Type)){ \
+		    if(!strncmp(ele->ob_type->tp_name, "numpy.int", 9)){ \
 		       VECTOR[INDEX] = INTCVT(PyLong_AsLong(PyNumber_Long(ele)));  		\
-		    }else if(PyObject_TypeCheck(ele->ob_type, &PyInt_Type)){ \
-		       VECTOR[INDEX] = INTCVT(PyInt_AsLong(PyNumber_Long(ele)));  		\
-		    }else{  \
+		    }else if(!strncmp(ele->ob_type->tp_name, "numpy.float", 11)){ \
 		       VECTOR[INDEX] = DOUBLECVT(PyFloat_AsDouble(PyNumber_Float(ele)));  		\
-			    std::cerr << "double " << PyFloat_AsDouble(PyNumber_Long(ele)) << std::endl; \
 		    } \
             }										\
     }										\
@@ -949,11 +946,9 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 											\
     }											\
     else if (PyNumber_Check(obj)) {					\
-	if(PyObject_TypeCheck(obj->ob_type, &PyLong_Type)){ \
+	if(!strncmp(obj->ob_type->tp_name, "numpy.int", 9)){ \
 	   SINGLETON((int)PyLong_AsLong(PyNumber_Long(obj)));  		\
-	}else if(PyObject_TypeCheck(obj->ob_type, &PyInt_Type)){ \
-	   SINGLETON((int)PyInt_AsLong(PyNumber_Long(obj)));  		\
-	}else if(PyObject_TypeCheck(obj->ob_type, &PyFloat_Type)){  \
+	}else if(!strncmp(obj->ob_type->tp_name, "numpy.float", 11)){ \
 	   SINGLETON(double(PyFloat_AsDouble(PyNumber_Float(obj))));  		\
 	} \
     } \
@@ -1022,11 +1017,9 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		} else if (PyString_Check(ele)) {					\
 		    result.push(std::string(PyString_AsString(ele)));			\
 		} else if (PyNumber_Check(ele)) {					\
-		    if(PyObject_TypeCheck(ele->ob_type, &PyLong_Type)){ \
+		    if(!strncmp(ele->ob_type->tp_name, "numpy.int", 9)){ \
 		       result.push((int)PyLong_AsLong(PyNumber_Long(ele)));  		\
-		    }else if(PyObject_TypeCheck(ele->ob_type, &PyInt_Type)){ \
-		       result.push((int)PyInt_AsLong(PyNumber_Long(ele)));  		\
-		    }else{  \
+		    }else if(!strncmp(ele->ob_type->tp_name, "numpy.float", 11)){ \
 		       result.push(double(PyFloat_AsDouble(PyNumber_Float(ele))));  		\
 		    } \
 		} else if (PyList_Check(ele) || PyTuple_Check(ele)) {			\
