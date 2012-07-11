@@ -1020,33 +1020,6 @@ int main()
          }
          delete plc;
       }
-
-      {
-    	  // assure that changing reference frequency does not change
-    	  // reference velocity nor reference pixel
-          SpectralCoordinate lc = makeLinearCoordinate(
-        	MFrequency::TOPO, f0, finc, refchan, restFreq
-          );
-          Double refFreq1 = lc.referenceValue()[0];
-          Double refVel1;
-          lc.frequencyToVelocity(refVel1, lc.referenceValue()[0]);
-          Double refpix1 = lc.referencePixel()[0];
-          Double vel;
-          lc.frequencyToVelocity(vel, 4e9);
-          cout << "*** vel " << vel << endl;
-
-          lc.setReferenceValue(Vector<Double>(1, 4e9));
-          Double refFreq2 = lc.referenceValue()[0];
-          AlwaysAssert(refFreq1 != refFreq2, AipsError);
-          Double refVel2;
-          lc.frequencyToVelocity(refVel2, lc.referenceValue()[0]);
-          cout << "vels " << refVel1 << " " << refVel2 << endl;
-          AlwaysAssert(refVel1 == refVel2, AipsError);
-          Double refpix2 = lc.referencePixel()[0];
-          AlwaysAssert(refpix1 == refpix2, AipsError);
-
-      }
-
 //
 // Test FITS conversion
 //
