@@ -43,20 +43,28 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_getchunk.py
   test_gencal.py
   test_hanningsmooth.py
+  test_ia_adddegaxes.py
+  test_ia_continuumsub.py
+  test_ia_convertflux.py
   test_ia_convolve.py
   test_ia_convolve2d.py
   test_ia_decompose.py
+  test_ia_deconvolvecomponentlist.py
+  test_ia_deconvolvefrombeam.py
   test_ia_fft.py
   test_ia_getregion.py
   test_ia_hanning.py
   test_ia_histograms.py
+  test_ia_imageconcat.py
   test_ia_isconform.py
   test_ia_modify.py
   test_ia_rebin.py
   test_ia_replacemaskedpixels.py
+  test_ia_restoringbeam.py
   test_ia_rotate.py
   test_ia_sepconvolve.py
   test_ia_subimage.py
+  test_ia_summary.py
   test_ia_toascii.py
   test_ia_tofits.py
   test_ia_twopointcorrelation.py
@@ -89,6 +97,22 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_plotants.py
   test_plotms.py
   test_plotuv.py
+  test_po_complexfraclinpol.py
+  test_po_complexlinpol.py  
+  test_po_depolratio.py
+  test_po_fourierrotationmeasure.py
+  test_po_fraclinpol.py
+  test_po_fractotpol.py
+  test_po_linpolint.py
+  test_po_linpolposang.py
+  test_po_rotationmeasure.py
+  test_po_sigma.py
+  test_po_sigmadepolratio.py
+  test_po_sigmafraclinpol.py
+  test_po_sigmafractotpol.py
+  test_po_sigmalinpolint.py
+  test_po_sigmalinpolposang.py
+  test_po_totpolint.py
   test_report.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py

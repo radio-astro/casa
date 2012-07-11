@@ -6,6 +6,7 @@ from tasks import *
 from taskinit import *
 import unittest
 import math
+import numpy
 
 #run using
 # `which casapy` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem test_imstat
@@ -29,10 +30,12 @@ class imstat_test(unittest.TestCase):
 
     def setUp(self):
         self.res = None
+        self._myia = iatool.create()
         default(clean)
         self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/imstat/'
     
     def tearDown(self):
+        self._myia.done()
         for dir in [
             self.moment, self.s150, self.s15, self.s0_015, self.s0_0015,
             self.s0_00015, self.linear_coords, self.fourdim
@@ -82,7 +85,9 @@ class imstat_test(unittest.TestCase):
         shutil.copytree(self.datapath+self.s15, self.s15)
         _myia = iatool()
         _myia.open(self.s15)
+        print "*** before "
         stats = _myia.statistics()
+        print "*** after"
         _myia.close()
         self.assertTrue(stats['blcf'] == '15:24:08.404, +04.31.59.181, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:04.016, +05.04.44.999, I, 1.41332e+09Hz')
@@ -306,17 +311,83 @@ class imstat_test(unittest.TestCase):
     def test011(self):
         """ test multiple region support"""
         shape = [10, 10, 10]
-        ia.fromshape("test011.im", shape)
+        myia = self._myia
+        myia.fromshape("test011.im", shape)
         box = "0, 0, 2, 2, 4, 4, 6, 6"
         chans = "0~4, 6, >8"
         reg = rg.frombcs(
-            ia.coordsys().torecord(), shape,
+            myia.coordsys().torecord(), shape,
             box=box, chans=chans
         )
-        bb = ia.statistics(region=reg)
+        bb = myia.statistics(region=reg)
         self.assertTrue(bb["npts"][0] == 126)
-        bb = imstat(imagename=ia.name(), chans=chans, box=box)
+        bb = imstat(imagename=myia.name(), chans=chans, box=box)
         self.assertTrue(bb["npts"][0] == 126)
+            
+    def test012(self):
+        """ Test multi beam support"""
+        myia = self._myia
+        shape = [15, 20, 4, 10]
+        myia.fromshape("", shape)
+        xx = numpy.array(range(shape[0]*shape[1]))
+        xx.resize(shape[0], shape[1])
+        myia.putchunk(xx, replicate=True)
+        myia.setbrightnessunit("Jy/pixel")
+        def check(myia, axes, exp):
+            for i in range(shape[2]):
+                for j in range(shape[3]):
+                    got = myia.statistics(
+                        axes=axes,
+                        region=rg.box(
+                            blc = [0, 0, i, j],
+                            trc=[shape[0]-1, shape[1]-1, i, j]
+                        )
+                    )
+                    self.assertTrue(len(got.keys()) == len(exp.keys()))
+                    for k in got.keys():
+                        if (type(got[k]) == type(got["rms"])):
+                            if (k != "blc" and k != "trc"):
+                                self.assertTrue((got[k] == exp[k][0][0]).all())
+                            
+        axes = [0, 1]
+        exp = myia.statistics(axes=axes)
+        self.assertFalse(exp.has_key("flux"))
+        check(myia, axes, exp)
+        myia.setbrightnessunit("Jy/beam")
+        self.assertTrue(myia.brightnessunit() == "Jy/beam")
+        major = qa.quantity("3arcmin")
+        minor = qa.quantity("2.5arcmin")
+        pa= qa.quantity("20deg")
+        myia.setrestoringbeam(
+            major=major, minor=minor, pa=pa
+        )
+        self.assertTrue(myia.brightnessunit() == "Jy/beam")
+        exp = myia.statistics(axes=axes)
+        self.assertTrue(exp.has_key("flux"))
+        check(myia, axes, exp)
+        myia.setrestoringbeam(remove=True)
+        self.assertTrue(
+            myia.setrestoringbeam(
+                major=major, minor=minor, pa=pa,
+                channel=0, polarization=0
+            )
+        )
+        exp = myia.statistics(axes=axes)
+        self.assertTrue(exp.has_key("flux"))
+        check(myia, axes, exp)
+        nmajor = qa.add(major, qa.quantity("0.1arcmin"))
+        self.assertTrue(
+            myia.setrestoringbeam(
+                major=nmajor, minor=minor, pa=pa,
+                channel=1, polarization=1
+            )
+        )
+        exp = myia.statistics(axes=axes)
+        self.assertTrue(exp.has_key("flux"))
+        self.assertTrue(
+            abs(1 - qa.getvalue(nmajor)*exp["flux"][1][1]/(qa.getvalue(major)*exp["flux"][0][0]))
+            < 1e-7
+        )        
  
 def suite():
     return [imstat_test]

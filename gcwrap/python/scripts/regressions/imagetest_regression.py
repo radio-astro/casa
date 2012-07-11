@@ -1,3 +1,15 @@
+
+       New Development: Yes/No
+            JIRA Issue: No/Yes List JIRA ticket.
+        Ready for Test: Yes/No
+     Interface Changes: Yes/No
+What Interface Changed: Please list interface changes
+         Test Programs: List test programs
+  Put in Release Notes: Yes/No
+             Module(s): Module Names change impacts.
+           Description: Describe your changes here...
+
+	
 ##############################################################################
 #                                                                            #
 # Test Name:                                                                 #
@@ -4974,117 +4986,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         return cleanup(testdir)
 
-
-    def test27():
-        #
-        # Test methods
-        #   regrid
-        #
-        # Not very extensive
-        info('');
-        info('');
-        info('');
-        info('Test 27 - regrid');
-        # Make the directory
-        testdir = 'imagetest_temp'
-        if not cleanup(testdir):
-            return False
-        try:
-            os.mkdir(testdir)
-        except IOError, e:
-            note(e, "SEVERE")
-            raise RuntimeError, "mkdir " + testdir + " fails!"
-        # Make RA/DEC/Spectral image
-        imname = testdir+'/'+'ia.fromshape.image1'
-        imshape = [32,32,32]
-        myim = ia.newimagefromshape(imname, imshape)
-        if not myim:
-            stop('ia.fromshape constructor 1 failed')
-        if not myim.set(1.0):
-            fail('failed myim.set')
-        #
-        # Forced failures
-        #
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(axes=[20])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 1 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(shape=[10,20,30,40])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 2 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(csys='fish')
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 3 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(method='doggies')
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 4 unexpectedly did not fail')
-        #
-        # Regrid it to itself (all axes)
-        #
-        iDone = 1
-        #      for method in ["near","linear","cubic"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method)
-            if not myim2:
-                fail('failed regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (1), method='+method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed ('+ iDone + ')')
-            iDone = iDone + 1
-        #
-        #      for method in ["cubic","linear","near"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method, axes=[0,1])
-            if not myim2: fail('failed to regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (2), method='+ method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed (' + iDone + ')')
-            iDone = iDone + 1
-        #
-        #      for method in ["near","linear","cubic"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method, axes=[2])
-            if not myim2: fail('failed regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (3), method=' + method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed (' + iDone + ')')
-            iDone = iDone + 1
-        #
-        ok = myim.done()
-        if not ok:
-            stop('Done failed (' + iDone + ')')
-        iDone = iDone + 1
-        #
-        return cleanup(testdir)
-
     def test28():
         #
         # Test methods
@@ -5948,55 +5849,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         return cleanup(testdir)
 
-    def test38():
-        #
-        # Test methods
-        #   rebin
-        #
-        info('')
-        info('')
-        info('')
-        info('Test 38 - rebin')
-        # Make images
-        shp2 = [20,40]
-        d2 = ia.makearray(1.0, [shp2[0], shp2[1]])
-        #
-        myim2 = ia.newimagefromarray(pixels=d2)
-        if not myim2:
-            stop('ia.fromarray constructor 1 failed')
-        #
-        # Forced failures
-        #
-        try:
-            myim2b = true
-            note('Expect SEVERE error and Exception here')
-            myim2b = myim2.rebin(bin=[-100,2])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2b = false
-        if myim2b:
-            stop('rebin 1 unexpectedly did not fail')
-        #
-        # Some simple run tests.
-        #
-	try :
-           myim2b = myim2.rebin(outfile='', bin=[2,2])
-	except Exception, e:
-           note('Caught , rebin 2')
-	   print myim2b
-        if not myim2b:
-            stop('rebin 2 failed')
-        p = myim2b.getchunk()
-        if not alleqnum(p,1.0,tolerance=0.0001):
-            stop('rebin 2 gives wrong values')
-        #
-        ok = myim2.done()
-        if not ok: fail()
-        ok = myim2b.done()
-        if not ok: fail()
-        #
-        return True
-    
     def test39():
         #
         # Test methods
@@ -6135,7 +5987,6 @@ def imagetest(which=None, size=[32,32,8]):
     test24()
     test25()
     test26()  # needs comparison to numpy.fft result implemented
-    test27()
     test28()
     test29()
     test30()  # are abs/rel/world/pixel output values correct?
@@ -6144,7 +5995,6 @@ def imagetest(which=None, size=[32,32,8]):
     test34()
     test36()
     test37()
-    test38()
     test39()  # update once functionals is available
     test40()  # doesn't do much without gui
     print ''

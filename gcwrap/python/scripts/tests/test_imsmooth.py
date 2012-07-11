@@ -117,7 +117,7 @@ def _near(got, expected, tol):
         tol
     )
 
-class imsmooth_test1(unittest.TestCase):
+class imsmooth_test(unittest.TestCase):
     
     def setUp(self):
         if(os.path.exists(list[0])):
@@ -128,6 +128,11 @@ class imsmooth_test1(unittest.TestCase):
         for file in list:
             os.system('cp -r ' +datapath + file +' ' + file)
 
+        if(os.path.exists(targetres_im)):
+            os.system('rm -rf ' +targetres_im)
+        self.ia = iatool.create()
+        self.datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
+        os.system('cp -r ' + self.datapath + targetres_im +' ' + targetres_im)
 
     def tearDown(self):
         for file in list:
@@ -135,6 +140,8 @@ class imsmooth_test1(unittest.TestCase):
             os.system('rm -rf input_test*')
             os.system('rm -rf rgn*')
             os.system('rm -rf smooth*')
+        os.system('rm -rf ' +targetres_im)
+        os.system('rm -rf tr!.im')
     
     ####################################################################
     # Incorrect inputs to parameters.  The parameters are:
@@ -1106,20 +1113,21 @@ class imsmooth_test1(unittest.TestCase):
         print "*** finishing " + str(retValue['success'])
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-class imsmooth_test2(unittest.TestCase):    
-
-    def setUp(self):
-        if(os.path.exists(targetres_im)):
+    """
+    class imsmooth_test2(unittest.TestCase):    
+    
+        def setUp(self):
+            if(os.path.exists(targetres_im)):
+                os.system('rm -rf ' +targetres_im)
+            self.ia = iatool.create()
+            self.datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
+            os.system('cp -r ' + self.datapath + targetres_im +' ' + targetres_im)
+    
+    
+        def tearDown(self):
             os.system('rm -rf ' +targetres_im)
-        
-        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
-        os.system('cp -r ' +datapath + targetres_im +' ' + targetres_im)
-
-
-    def tearDown(self):
-        os.system('rm -rf ' +targetres_im)
-        os.system('rm -rf tr!.im')
-
+            os.system('rm -rf tr!.im')
+    """
     def test_targetres(self):
         '''Imsmooth: Targetres tests'''
         
@@ -1237,7 +1245,34 @@ class imsmooth_test2(unittest.TestCase):
         )
         self.assertTrue(zz and type(zz) == type(True))
     
+    def test_multibeam(self):
+        """Test per plane beams"""
+        myia = self.ia
+        myia.open(self.datapath + "test_image2dconvolver_multibeam.im")
+        major = "10arcmin"
+        minor = "8arcmin"
+        pa = "80deg"
+        got = myia.convolve2d(axes=[0, 1], major=major, minor=minor, pa=pa)
+        shape = myia.shape()
+        for i in range(5):
+            blc=[0, 0, i]
+            trc=[shape[0]-1, shape[1]-1, i]
+            reg = rg.box(blc=blc, trc=trc)
+            xx = myia.subimage(region=reg)
+            exp = xx.convolve2d(axes=[0, 1], major=major, minor=minor, pa=pa)
+            expbeam = exp.restoringbeam()
+            gotbeam = got.restoringbeam(channel=i)
+            for j in ["major", "minor", "positionangle"]:
+                self.assertTrue(_near(gotbeam[j], expbeam[j], 1e-7))
+            self.assertTrue(abs(got.getchunk(blc=blc, trc=trc) - exp.getchunk()).max() < 3e-5)
+            exp.done()
+            xx.done()
+        got.done()
+                            
+            
+        
+        
     
 def suite():
-    return [imsmooth_test1,imsmooth_test2]    
+    return [imsmooth_test]    
     

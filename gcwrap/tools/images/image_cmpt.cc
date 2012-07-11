@@ -216,9 +216,9 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 }
 
 // FIXME need to support region records as input
-casac::image * image::collapse(
+image * image::collapse(
 	const string& function, const variant& axes,
-	const string& outfile, const string& region, const string& box,
+	const string& outfile, const variant& region, const string& box,
 	const string& chans, const string& stokes, const string& mask,
 	const bool overwrite, const bool stretch
 ) {
@@ -251,14 +251,19 @@ casac::image * image::collapse(
 				iter != myAxes.end(); iter++
 			) {
 				if (*iter < 0) {
-					throw AipsError(
-							"At least one specified axis does not exist");
+					*_log << "At least one specified axis does not exist"
+						<< LogIO::EXCEPTION;
 				}
 			}
 		}
 		else {
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
+		String regStr = region.type() == variant::STRING ? region.toString() : "";
+		std::auto_ptr<Record> regRec(
+			region.type() == variant::RECORD
+			? toRecord(region.getRecord()) : 0
+		);
 		String aggString = function;
 		aggString.trim();
 		aggString.downcase();
@@ -267,7 +272,7 @@ casac::image * image::collapse(
 				<< LogIO::EXCEPTION;
 		}
 		ImageCollapser collapser(
-			aggString, _image->getImage(), region, 0, box,
+			aggString, _image->getImage(), regStr, regRec.get(), box,
 			chans, stokes, mask, myAxes, outfile, overwrite
 		);
 		collapser.setStretch(stretch);
@@ -301,10 +306,10 @@ image* image::imageconcat(
 	try {
 		image *rstat(0);
 		Vector<String> inFiles;
-		if (infiles.type() == ::casac::variant::BOOLVEC) {
+		if (infiles.type() == variant::BOOLVEC) {
 			inFiles.resize(0); // unset
 		}
-		else if (infiles.type() == ::casac::variant::STRING) {
+		else if (infiles.type() == variant::STRING) {
 			sepCommaEmptyToVectorStrings(inFiles, infiles.toString());
 		}
 		else if (infiles.type() == variant::STRINGVEC) {
@@ -324,6 +329,8 @@ image* image::imageconcat(
 		return rstat;
 	}
 	catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -466,19 +473,22 @@ bool image::fromimage(const string& outfile, const string& infile,
 	}
 }
 
-bool image::fromshape(const string& outfile, const vector<int>& shape,
-		const record& csys, const bool linear, const bool overwrite,
-		const bool log) {
+bool image::fromshape(
+	const string& outfile, const vector<int>& shape,
+	const record& csys, const bool linear, const bool overwrite,
+	const bool log
+) {
 	try {
+		*_log << _ORIGIN;
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
 		_image.reset(new ImageAnalysis());
-		*_log << _ORIGIN;
 		auto_ptr<Record> coordinates(toRecord(csys));
 		return _image->imagefromshape(outfile, Vector<Int> (shape),
 				*coordinates, linear, overwrite, log);
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -486,32 +496,33 @@ bool image::fromshape(const string& outfile, const vector<int>& shape,
 }
 
 ::casac::image *
-image::adddegaxes(const std::string& outfile, const bool direction,
-		const bool spectral, const std::string& stokes, const bool linear,
-		const bool tabular, const bool overwrite) {
-	::casac::image *rstat = 0;
+image::adddegaxes(
+	const std::string& outfile, const bool direction,
+	const bool spectral, const std::string& stokes, const bool linear,
+	const bool tabular, const bool overwrite
+) {
 	try {
 		*_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
+		if (detached()) {
+			return 0;
+		}
 		PtrHolder<ImageInterface<Float> > outimage;
-		_image->adddegaxes(outfile, outimage, direction, spectral, stokes,
-				linear, tabular, overwrite);
-		rstat = new ::casac::image(outimage.ptr());
+		ImageUtilities::addDegenerateAxes(
+			*_log, outimage, *_image->getImage(), outfile,
+			direction, spectral, stokes, linear, tabular, overwrite
+		);
+		return new image(outimage.ptr());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
-::casac::image *
-image::convolve(
-	const std::string& outFile, const ::casac::variant& kernel,
-	const double in_scale, const ::casac::record& region,
-	const ::casac::variant& vmask, const bool overwrite,
+::casac::image* image::convolve(
+	const string& outFile, const variant& kernel,
+	const double in_scale, const record& region,
+	const variant& vmask, const bool overwrite,
 	const bool stretch, const bool async
 ) {
 	try {
@@ -522,75 +533,70 @@ image::convolve(
 
 		Array<Float> kernelArray;
 		String kernelFileName = "";
-		if (kernel.type() == ::casac::variant::DOUBLEVEC) {
-			std::vector<double> kernelVector = kernel.toDoubleVec();
+		if (kernel.type() == variant::DOUBLEVEC) {
+			vector<double> kernelVector = kernel.toDoubleVec();
 			Vector<Int> shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Double> localkern(kernelVector);
-			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
+			convertArray(kernelArray, localkern.reform(IPosition(shape)));
 		}
-		else if (kernel.type() == ::casac::variant::INTVEC) {
-			std::vector<int> kernelVector = kernel.toIntVec();
+		else if (kernel.type() == variant::INTVEC) {
+			vector<int> kernelVector = kernel.toIntVec();
 			Vector<Int> shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Int> localkern(kernelVector);
-			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
+			convertArray(kernelArray, localkern.reform(IPosition(shape)));
 		}
-		else if (kernel.type() == ::casac::variant::STRING || kernel.type()
-				== ::casac::variant::STRINGVEC) {
-
+		else if (
+			kernel.type() == variant::STRING
+			|| kernel.type() == variant::STRINGVEC
+		) {
 			kernelFileName = kernel.toString();
 		}
 		else {
-			*_log << LogIO::SEVERE
-					<< "kernel is not understood, try using an array or an image "
-					<< LogIO::POST;
-			return 0;
+			*_log << "kernel is not understood, try using an array or an image "
+				<< LogIO::EXCEPTION;
 		}
 
 		String theMask;
 		Record *theMaskRegion;
-		if (vmask.type() == ::casac::variant::BOOLVEC) {
+		if (vmask.type() == variant::BOOLVEC) {
 			theMask = "";
 		}
-		else if (vmask.type() == ::casac::variant::STRING || vmask.type()
-				== ::casac::variant::STRINGVEC) {
+		else if (
+			vmask.type() == variant::STRING
+			|| vmask.type() == variant::STRINGVEC
+		) {
 			theMask = vmask.toString();
 		}
-		else if (vmask.type() == ::casac::variant::RECORD) {
-			::casac::variant localvar(vmask);
+		else if (vmask.type() == variant::RECORD) {
+			variant localvar(vmask);
 			theMaskRegion = toRecord(localvar.asRecord());
-			*_log << LogIO::SEVERE
-					<< "Don't support region masking yet, only valid LEL "
-					<< LogIO::POST;
-			return 0;
+			*_log << "Don't support region masking yet, only valid LEL "
+				<< LogIO::EXCEPTION;
 		}
 		else {
-			*_log << LogIO::SEVERE
-					<< "Mask is not understood, try a valid LEL string "
-					<< LogIO::POST;
-			return 0;
+			*_log << "Mask is not understood, try a valid LEL string "
+				<< LogIO::EXCEPTION;
 		}
 
 		Record *Region = toRecord(region);
-
-		std::auto_ptr<ImageInterface<Float> > tmpIm(
+		return new image(
 			_image->convolve(
 				outFile, kernelArray,
 				kernelFileName, in_scale, *Region,
 				theMask, overwrite, async, stretch
-			)
+			), False
 		);
-		return new ::casac::image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
 ::casac::record*
-image::boundingbox(const ::casac::record& region) {
+image::boundingbox(const record& region) {
 	::casac::record *rstat = 0;
 	try {
 		*_log << _ORIGIN;
@@ -675,65 +681,66 @@ bool image::close() {
 	}
 }
 
-::casac::image *
-image::continuumsub(const std::string& outline, const std::string& outcont,
-		const ::casac::record& region, const std::vector<int>& channels,
-		const std::string& pol, const int in_fitorder, const bool overwrite) {
-	::casac::image *rstat = 0;
+image* image::continuumsub(
+	const string& outline, const string& outcont,
+	const record& region, const vector<int>& channels,
+	const string& pol, const int in_fitorder, const bool overwrite
+) {
 	try {
 		*_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
+		if (detached()) {
+			return 0;
+		}
 		Record * leRegion = toRecord(region);
 		Vector<Int> theChannels(channels);
 		if (theChannels.size() == 1 && theChannels[0] == -1) {
 			theChannels.resize(0);
 		}
-		ImageInterface<Float> * theResid = _image->continuumsub(outline,
-				outcont, *leRegion, theChannels, pol, in_fitorder, overwrite);
-		if (!theResid) {
-			*_log << LogIO::SEVERE << "continuumsub failed " << LogIO::POST;
-		} else {
-			rstat = new ::casac::image(theResid);
-			delete theResid;
+		std::auto_ptr<ImageInterface<Float> > theResid(
+			_image->continuumsub(
+				outline, outcont, *leRegion, theChannels,
+				pol, in_fitorder, overwrite
+			)
+		);
+		if (!theResid.get()) {
+			*_log << "continuumsub failed " << LogIO::EXCEPTION;
 		}
-	} catch (AipsError x) {
+		return new ::casac::image(theResid.get());
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
-::casac::record *
-image::convertflux(const ::casac::variant& qvalue,
-		const ::casac::variant& major, const ::casac::variant& minor,
-		const std::string& type, const bool toPeak) {
-	::casac::record *rstat = 0;
-
+::casac::record* image::convertflux(
+	const variant& qvalue, const variant& major,
+	const ::casac::variant& minor,
+	const string& type, const bool toPeak,
+	const int channel, const int polarization
+) {
 	try {
 		*_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
-		Quantum<Double> value = casaQuantity(qvalue);
-		Quantum<Double> majorAxis = casaQuantity(major);
-		Quantum<Double> minorAxis = casaQuantity(minor);
-
-		//
-
+		if (detached()) {
+			return 0;
+		}
+		casa::Quantity value = casaQuantity(qvalue);
+		casa::Quantity majorAxis = casaQuantity(major);
+		casa::Quantity minorAxis = casaQuantity(minor);
 		Bool noBeam = False;
-		casa::Quantity rtn = _image->convertflux(noBeam, value, majorAxis,
-				minorAxis, type, toPeak);
-		rstat = recordFromQuantity(rtn);
-
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		return recordFromQuantity(
+			_image->convertflux(
+				noBeam, value, majorAxis, minorAxis, type,
+				toPeak, False, channel, polarization
+			)
+		);
+	}
+	catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 image* image::convolve2d(
@@ -766,17 +773,16 @@ image* image::convolve2d(
 			Axes[0] = 0;
 			Axes[1] = 1;
 		}
-		std::auto_ptr<ImageInterface<Float> > tmpIm(
+		return new image(
 			_image->convolve2d(
 				outFile, Axes, type, majorKernel, minorKernel,
 				paKernel, in_scale, *Region, mask, overwrite,
 				stretch
-			)
+			), False
 		);
-		return new image(tmpIm.get());
 	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -884,55 +890,64 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
 	}
 }
 
-::casac::record *
-image::deconvolvecomponentlist(const ::casac::record& complist) {
-	::casac::record *rstat = 0;
+record* image::deconvolvecomponentlist(
+	const record& complist, const int channel, const int polarization
+) {
+	*_log << _ORIGIN;
+	if (detached()) {
+		return 0;
+	}
 	try {
-		*_log << _ORIGIN;
-		if (detached())
-			return rstat;
-
-		String error;
-		Record *compList = toRecord(complist);
-		Record outRec = _image->deconvolvecomponentlist(*compList);
-		rstat = fromRecord(outRec);
-
-	} catch (AipsError x) {
+		std::auto_ptr<Record> compList(toRecord(complist));
+		return fromRecord(
+			_image->deconvolvecomponentlist(
+				*compList, channel, polarization
+			)
+		);
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
-::casac::record *
-image::deconvolvefrombeam(const ::casac::variant& source,
-		const ::casac::variant& beam) {
+record* image::deconvolvefrombeam(
+	const ::casac::variant& source,
+	const ::casac::variant& beam
+) {
 
-	::casac::record *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "decovolvefrombeam");
-		casa::Vector<casa::Quantity> sourceParam;
-		casa::Vector<casa::Quantity> beamParam;
-		if (!toCasaVectorQuantity(source, sourceParam)
-				|| (sourceParam.nelements() == 0)) {
+		*_log << _ORIGIN;
+		Vector<casa::Quantity> sourceParam, beamParam;
+		Angular2DGaussian mySource;
+		if (
+			! toCasaVectorQuantity(source, sourceParam)
+			|| (sourceParam.nelements() == 0)
+			|| sourceParam.nelements() > 3
+		) {
 			throw(AipsError("Cannot understand source values"));
-		} else {
+		}
+		else {
 			if (sourceParam.nelements() == 1) {
 				sourceParam.resize(3, True);
 				sourceParam[1] = sourceParam[0];
-				sourceParam[2] = casa::Quantity(0.0, "deg");
+				sourceParam[2] = casa::Quantity(0, "deg");
 			}
-			if (sourceParam.nelements() == 2) {
+			else if (sourceParam.nelements() == 2) {
 				sourceParam.resize(3, True);
-				sourceParam[2] = casa::Quantity(0.0, "deg");
+				sourceParam[2] = casa::Quantity(0, "deg");
 			}
-
+			mySource = Angular2DGaussian(
+				sourceParam[0], sourceParam[1], sourceParam[2]
+			);
 		}
-		if (!toCasaVectorQuantity(beam, beamParam) || (beamParam.nelements()
-				== 0)) {
+		if (
+			! toCasaVectorQuantity(beam, beamParam)
+			|| (beamParam.nelements() == 0)) {
 			throw(AipsError("Cannot understand beam values"));
-		} else {
+		}
+		else {
 			if (beamParam.nelements() == 1) {
 				beamParam.resize(3, True);
 				beamParam[1] = beamParam[0];
@@ -942,36 +957,35 @@ image::deconvolvefrombeam(const ::casac::variant& source,
 				beamParam.resize(3, True);
 				beamParam[2] = casa::Quantity(0.0, "deg");
 			}
-
 		}
-
+		GaussianBeam myBeam(beamParam[0], beamParam[1], beamParam[2]);
 		Bool success = False;
-		Bool retval = _image->deconvolveFromBeam(sourceParam[0],
-				sourceParam[1], sourceParam[2], success, beamParam);
-
-		casa::Record outrec1;
-		casa::Record deconval;
-		casa::Record tmprec;
-		casa::String error;
-		QuantumHolder(sourceParam[0]).toRecord(error, tmprec);
-		deconval.defineRecord("major", tmprec);
-		QuantumHolder(sourceParam[1]).toRecord(error, tmprec);
-		deconval.defineRecord("minor", tmprec);
-		QuantumHolder(sourceParam[2]).toRecord(error, tmprec);
-		deconval.defineRecord("pa", tmprec);
+		Angular2DGaussian decon;
+		Bool retval = ImageUtilities::deconvolveFromBeam(
+			decon, mySource, success, *_log, myBeam
+		);
+		/*
+		Bool retval = _image->deconvolveFromBeam(
+			sourceParam[0], sourceParam[1], sourceParam[2],
+			success, beamParam
+		);
+		*/
+		Record deconval = decon.toRecord();
+		deconval.defineRecord("pa", deconval.asRecord("positionangle"));
+		deconval.removeField("positionangle");
 		deconval.define("success", success);
+		Record outrec1;
 		outrec1.define("return", retval);
 		outrec1.defineRecord("fit", deconval);
-		rstat = fromRecord(outrec1);
-
-	} catch (AipsError x) {
+		return fromRecord(outrec1);
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
-
 }
+
 bool image::remove(const bool finished, const bool verbose) {
 	bool rstat(false);
 	try {
@@ -1437,16 +1451,6 @@ record* image::fitprofile(const string& box, const variant& region,
 	}
 }
 
-image* image::reorder(
-	const std::string& outfile,
-	const variant& order
-) {
-	*_log << LogOrigin(_class, __FUNCTION__);
-	*_log << LogIO::WARN << "DEPRECATION WARNING: ia.reorder() has been deprecated and will be "
-		<< "removed in an upcoming version. Please use ia.transpose() instead." << LogIO::POST;
-	return transpose(outfile, order);
-}
-
 image* image::transpose(
 	const std::string& outfile,
 	const variant& order
@@ -1818,7 +1822,7 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		// handle default coord
 		std::vector<int> ncoord(coord);
 		if (ncoord.size() == 1 && ncoord[0] == -1) {
-			int n = (_image->getImage()->shape()).size();
+			int n = _image->getImage()->ndim();
 			ncoord.resize(n);
 			for (int i = 0; i < n; i++) {
 				//ncoord[i]=i;
@@ -1966,26 +1970,24 @@ image::insert(const std::string& infile, const ::casac::record& region,
 		const std::vector<double>& locate) {
 	::casac::image *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "insert");
-		if (detached())
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
 			return rstat;
+		}
 
 		Vector<Double> locatePixel(locate);
-		if (locatePixel.size() == 1) {
-			if (locatePixel[0] < 0)
-				locatePixel.resize(0);
+		if (locatePixel.size() == 1 && locatePixel[0] < 0) {
+			locatePixel.resize(0);
 		}
-		Record *Region = toRecord(region);
-		rstat
-				= new ::casac::image(_image->insert(infile, *Region,
-						locatePixel));
-		delete Region;
+		std::auto_ptr<Record> Region(toRecord(region));
+		return new ::casac::image(
+			_image->insert(infile, *Region, locatePixel)
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::isopen() {
@@ -2236,20 +2238,19 @@ image::moments(
 }
 
 std::string image::name(const bool strippath) {
-	std::string rstat;
 	try {
-		*_log << LogOrigin("image", "name");
+		*_log << _ORIGIN;
 		if (detached()) {
-			rstat = "none";
-		} else {
-			rstat = _image->name(strippath);
+			return "none";
+		}
+		else {
+			return _image->name(strippath);
 		}
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::open(const std::string& infile) {
@@ -2288,7 +2289,7 @@ bool image::open(const casa::ImageInterface<casa::Float>* inImage) {
 image::pixelvalue(const std::vector<int>& pixel) {
 	::casac::record *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "pixelvalue");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -2350,7 +2351,7 @@ bool image::putregion(const ::casac::variant& v_pixels,
 		const bool replicateArray) {
 	bool rstat(false);
 	try {
-		*_log << LogOrigin("image", "putregion");
+		*_log << _ORIGIN;
 		if (detached())
 			return rstat;
 
@@ -2487,7 +2488,7 @@ image* image::regrid(
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-		std::auto_ptr<ImageInterface<Float> >pImOut(
+		return new image(
 			_image->regrid(
 				outfile, Vector<Int> (inshape), *coordinates,
 				axes, *Region, mask, methodU, decimate, replicate,
@@ -2495,8 +2496,8 @@ image* image::regrid(
 				forceRegrid, specAsVelocity, stretch
 			)
 		);
-		return new image(pImOut.get());
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		RETHROW(x);
 	}
 }
@@ -2580,22 +2581,23 @@ bool image::replacemaskedpixels(
 	}
 }
 
-::casac::record*
-image::restoringbeam() {
-	::casac::record *rstat = 0;
+record*
+image::restoringbeam(int channel, int polarization) {
 	try {
-		*_log << LogOrigin("image", "restoringbeam");
-		if (detached())
-			return rstat;
-
-		rstat = fromRecord(_image->restoringbeam());
-		return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		return fromRecord(
+			_image->getImage()->imageInfo().beamToRecord(
+				channel, polarization
+			)
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::image* image::sepconvolve(
@@ -2794,52 +2796,50 @@ bool image::setmiscinfo(const ::casac::record& info) {
 
 std::vector<int> image::shape() {
 	std::vector<int> rstat(0);
-	*_log << LogOrigin("image", "shape");
-	if (detached())
+	*_log << LogOrigin("image", __FUNCTION__);
+	if (detached()) {
 		return rstat;
+	}
 	try {
-		Vector<Int> dummy = _image->getImage()->shape().asVector();
-		dummy.tovector(rstat);
+		_image->getImage()->shape().asVector().tovector(rstat);
+		return rstat;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
-bool image::setrestoringbeam(const ::casac::variant& major,
-		const ::casac::variant& minor, const ::casac::variant& pa,
-		const ::casac::record& beam, const bool deleteIt, const bool log) {
-	bool rstat(false);
+bool image::setrestoringbeam(
+	const variant& major, const variant& minor,
+	const variant& pa, const record& beam,
+	const bool deleteIt, const bool log,
+	const int channel, const int polarization
+) {
 	try {
-		*_log << LogOrigin("image", "setrestoringbeam");
-		if (detached())
-			return rstat;
-
-		//
-		casa::Quantity beam0(casaQuantityFromVar(major));
-		casa::Quantity beam1(casaQuantityFromVar(minor));
-		casa::Quantity beam2(casaQuantityFromVar(pa));
-
-		Record *rec = toRecord(beam);
-		rstat = _image->setrestoringbeam(beam0, beam1, beam2, *rec, deleteIt,
-				log);
-		delete rec;
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return false;
+		}
+		std::auto_ptr<Record> rec(toRecord(beam));
+		return _image->setrestoringbeam(
+			casaQuantityFromVar(major), casaQuantityFromVar(minor),
+			casaQuantityFromVar(pa), *rec, deleteIt,
+			log, channel, polarization
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
-::casac::record* image::statistics(
-	const std::vector<int>& axes, const ::casac::record& region,
-	const ::casac::variant& mask,
-	const std::vector<std::string>& plotstats,
-	const std::vector<double>& includepix,
-	const std::vector<double>& excludepix, const std::string& plotter,
+record* image::statistics(
+	const vector<int>& axes, const record& region,
+	const variant& mask,
+	const vector<string>& plotstats,
+	const vector<double>& includepix,
+	const vector<double>& excludepix, const string& plotter,
 	const int nx, const int ny, const bool list, const bool force,
 	const bool disk, const bool robust, const bool verbose,
 	const bool /* async */, const bool stretch, const string& logfile,
@@ -2911,163 +2911,6 @@ bool image::setrestoringbeam(const ::casac::variant& major,
 		calculator.setLogfile(logfile);
 		calculator.setLogfileAppend(append);
 		return fromRecord(calculator.calculate());
-
-		/*
-		Record retval;
-		if (
-			! _image->statistics(
-				retval, tmpaxes, *regionRec, mtmp,
-				plotStats, tmpinclude, tmpexclude, plotter,
-				nx, ny, list, force, disk, robust, False,
-				stretch
-			)
-		) {
-			return 0;
-		}
-		if (verbose || ! logfile.empty()) {
-			ImageCollapser collapsed(
-				_image->getImage(), axes, False,
-				ImageCollapser::ZERO, "", False
-			);
-			std::auto_ptr<ImageInterface<Float> > tempIm(
-				collapsed.collapse(True)
-			);
-			CoordinateSystem csys = tempIm->coordinates();
-			Vector<String> worldAxes = csys.worldAxisNames();
-			IPosition imShape = tempIm->shape();
-			vector<uInt> colwidth;
-			Int stokesCol = -1;
-			Int freqCol = -1;
-			Int raCol = -1;
-			Int decCol = -1;
-			IPosition otherCol;
-			for (Int i=worldAxes.size()-1; i>=0; i--) {
-				String gg = worldAxes[i];
-				gg.upcase();
-				if (gg == "RIGHT ASCENSION") {
-					raCol = i;
-				}
-				else if (gg == "DECLINATION") {
-					decCol = i;
-				}
-				else if (gg == "FREQUENCY") {
-					freqCol = i;
-				}
-				else if (gg == "STOKES") {
-					stokesCol = i;
-				}
-				else {
-					otherCol.append(IPosition(1, i));
-				}
-			}
-			IPosition idx(worldAxes.size(), 0);
-			uInt myloc = 0;
-			IPosition reportAxes;
-
-			if (stokesCol >= 0) {
-				idx[myloc] = stokesCol;
-				if (imShape[stokesCol] > 1) {
-					reportAxes.prepend(IPosition(1, stokesCol));
-				}
-				myloc++;
-			}
-			if (freqCol >= 0) {
-				idx[myloc] = freqCol;
-				if (imShape[freqCol] > 1) {
-					reportAxes.prepend(IPosition(1, freqCol));
-				}
-				myloc++;
-			}
-			if (decCol >= 0) {
-				idx[myloc] = decCol;
-				if (imShape[decCol] > 1) {
-					reportAxes.prepend(IPosition(1, decCol));
-				}
-				myloc++;
-			}
-			if (raCol >= 0) {
-				idx[myloc] = raCol;
-				if (imShape[raCol] > 1) {
-					reportAxes.prepend(IPosition(1, raCol));
-				}
-				myloc++;
-			}
-			if (otherCol.nelements() > 0) {
-				idx.prepend(otherCol);
-				for (uInt i=0; i<otherCol.nelements(); i++) {
-					if (imShape[otherCol[i] > 1]) {
-						reportAxes.append(IPosition(1, otherCol[i]));
-					}
-				}
-			}
-			ostringstream oss;
-			for (uInt i=0; i<reportAxes.nelements(); i++) {
-				String gg = worldAxes[reportAxes[i]];
-				gg.upcase();
-				uInt width = gg == "STOKES" ? 6 : gg == "FREQUENCY"?  16: 15;
-				colwidth.push_back(width);
-				oss << setw(width) << worldAxes[reportAxes[i]] << "(Pixel)" << " ";
-				width = 6;
-				colwidth.push_back(width);
-			}
-			Vector<Int> axesMap = reportAxes.asVector();
-			GenSort<Int>::sort(axesMap);
-			oss << "Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     " << endl;
-			for (uInt i=0; i<7; i++) {
-				colwidth.push_back(12);
-			}
-			TileStepper ts(
-				tempIm->niceCursorShape(),
-				IPosition(tempIm->ndim(), 1), idx
-			);
-			RO_MaskedLatticeIterator<Float> inIter(
-				*tempIm, ts
-			);
-			Vector<Double> world;
-			IPosition arrayIndex(axesMap.nelements(), 0);
-			IPosition position(tempIm->ndim(), 0);
-			oss << std::scientific;
-			uInt width = 13;
-			Vector<Vector<String> > coords(reportAxes.size());
-			for (uInt i=0; i<reportAxes.size(); i++) {
-				Vector<Double> indices(imShape[reportAxes[i]]);
-				indgen(indices);
-				uInt prec = reportAxes[i] == freqCol ? 9 : 5;
-				ImageUtilities::pixToWorld(
-					coords[i], csys, reportAxes[i], axes,
-					IPosition(imShape.nelements(),0), imShape-1, indices, prec
-				);
-			}
-			for (inIter.reset(); ! inIter.atEnd(); inIter++) {
-				position = inIter.position();
-				csys.toWorld(world, position);
-				uInt colNum = 0;
-				for (uInt i=0; i<reportAxes.nelements(); i++) {
-					oss << setw(colwidth[colNum]);
-					oss	<< coords[i][position[reportAxes[i]]];// world[reportAxes[i]];
-					colNum++;
-					oss << " " << setw(colwidth[colNum])
-						<< position[reportAxes[i]] << " ";
-					colNum++;
-				}
-				for (uInt i=0; i<axesMap.nelements(); i++) {
-					arrayIndex[i] = position[axesMap[i]];
-				}
-				oss << std::setw(width) << retval.asArrayDouble("npts")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("sum")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("mean")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
-					<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex) << endl;
-			}
-			if (verbose) {
-				*_log << LogIO::NORMAL << oss.str() << LogIO::POST;
-			}
-		}
-
-		return fromRecord(retval);
-		*/
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3100,7 +2943,8 @@ bool image::twopointcorrelation(
 			outFile, *Region, mask, iAxes,
 			method, overwrite, stretch
 		);
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3139,25 +2983,21 @@ bool image::twopointcorrelation(
 	}
 }
 
-std::vector<std::string> image::summary( const std::string& doppler, const bool list,
-	       	const bool pixelorder, casac::record& header) {
-	std::vector<string> rstat;
+record* image::summary(
+		const std::string& doppler, const bool list, const bool pixelorder) {
 	try {
-		*_log << LogOrigin("image", "summary");
+		*_log << _ORIGIN;
 		if (detached()) {
-			return rstat;
+			return 0;
 		}
-		Record retval;
-		rstat = fromVectorString(_image->summary(retval, doppler, list,
-				pixelorder));
-		header = *fromRecord(retval);
-
+		return fromRecord(
+			_image->summary(doppler, list, pixelorder)
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::tofits(
@@ -3195,11 +3035,12 @@ bool image::tofits(
 		}
 		return _image->tofits(
 			fitsfile, velocity, optical, bitpix, minpix,
-			maxpix, *pRegion, mask, overwrite, dropdeg, deglast,
-			dropstokes, stokeslast, wavelength, airwavelength, origin,
-			stretch
+			maxpix, *pRegion, mask, overwrite, dropdeg,
+			deglast, dropstokes, stokeslast, wavelength,
+			airwavelength, origin, stretch
 		);
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -3350,9 +3191,13 @@ image::setboxregion(const std::vector<double>& blc,
 	casac::record* rstat = 0;
 	try {
 
-		*_log << LogOrigin("image", "setboxregion");
-		if (detached())
+		*_log << _ORIGIN;
+		*_log << LogIO::WARN
+			<< "THIS METHOD IS DEPRECATED AND WILL BE REMOVED. USE rg.box() INSTEAD."
+			<< LogIO::POST;
+		if (detached()) {
 			return rstat;
+		}
 
 		Record tempR(_image->setboxregion(Vector<Double> (blc),
 				Vector<Double> (trc), frac, infile));
@@ -3646,6 +3491,7 @@ image::makearray(const double v, const std::vector<int>& shape) {
 	return rstat;
 }
 
+/*
 void image::outputvariant(::casac::variant& v) {
 	try {
 		int len = 5;
@@ -3663,6 +3509,7 @@ void image::outputvariant(::casac::variant& v) {
 		RETHROW(x);
 	}
 }
+*/
 
 casac::record*
 image::recordFromQuantity(const casa::Quantity q) {

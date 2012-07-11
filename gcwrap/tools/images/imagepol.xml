@@ -510,7 +510,7 @@ tb.open('cplx')
 
 <description> 
 
-This function <!-- (short-hand name {\stff clp}) --> produces
+This function produces
 the complex fractional linear polarization; $(Q+iU)/I$ and writes
 it to a disk image file.
 

@@ -15,6 +15,37 @@ stars = "*************"
 
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imregrid/'
 
+def alleqnum(x,num,tolerance=0):
+    if len(x.shape)==1:
+        for i in range(x.shape[0]):
+            if not (abs(x[i]-num) < tolerance):
+                print "x[",i,"]=", x[i]
+                return False
+    if len(x.shape)==2:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                if not (abs(x[i][j]-num) < tolerance):
+                    print "x[",i,"][",j,"]=", x[i][j]
+                    return False
+    if len(x.shape)==3:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                for k in range(x.shape[2]):
+                    if not (abs(x[i][j][k]-num) < tolerance):
+                        print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
+                        return False
+    if len(x.shape)==4:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                for k in range(x.shape[2]):
+                    for l in range(x.shape[3]):
+                        if not (abs(x[i][j][k][l]-num) < tolerance):
+                            print "x[",i,"][",j,"][",k,"][",l,"]=", x[i][j][k]
+                            return False
+    if len(x.shape)>4:
+        stop('unhandled array shape in alleq')
+    return True
+
 def test_start(msg):
     global total, current_test
     total += 1
@@ -40,9 +71,11 @@ out5 = 'template'
 class imregrid_test(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self._myia = iatool()
     
     def tearDown(self):
+        self._myia.done()
+
         os.system('rm -rf ' +IMAGE)
         os.system('rm -rf ' +out1)
         os.system('rm -rf ' +out2)
@@ -52,14 +85,15 @@ class imregrid_test(unittest.TestCase):
 
         
     def test1(self):    
-        myia = iatool()  
+        myia = self._myia  
         myia.maketestimage(outfile = IMAGE)
         default('imregrid')
         
-        imregrid(imagename = IMAGE,
-                 template = IMAGE,
-                 output = out1)# identity regrid
-        
+        imregrid(
+            imagename = IMAGE,
+            template = IMAGE,
+            output = out1
+        )
         
         im1 = myia.newimage(IMAGE)
         im2 = myia.newimage(out1)
@@ -217,7 +251,7 @@ class imregrid_test(unittest.TestCase):
         expected = "expected.im"
         shutil.copytree(datapath + image, image)
         shutil.copytree(datapath + expected, expected)
-        myia = iatool()
+        myia = self._myia
         myia.open(expected)
         csys = myia.coordsys().torecord()
         myia.done()
@@ -243,7 +277,7 @@ class imregrid_test(unittest.TestCase):
         
     def test_stretch(self):
         """ ia.regrid(): Test stretch parameter"""
-        yy = iatool()
+        yy = self._myia
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -275,7 +309,7 @@ class imregrid_test(unittest.TestCase):
         imagename = "test_axes.im"
         templatename = "test_axes.tmp"
         output = "test_axes.out"
-        myia = iatool()
+        myia = self._myia
         myia.fromshape(imagename, [10, 10, 10])
         exp = myia.coordsys().increment()["numeric"]
         myia.fromshape(templatename, [10, 10, 10])
@@ -289,6 +323,67 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue((got == exp).all())
         myia.done()
         
+    def test_general(self):
+        """ imregrid general tests """
+        # moved from iamgetest_regression
+        
+        # Make RA/DEC/Spectral image
+        
+        imname = 'ia.fromshape.image1'
+        imshape = [32,32,32]
+        myia = self._myia
+        myim = myia.newimagefromshape(imname, imshape)
+        self.assertTrue(myim)
+        self.assertTrue(myim.set(1.0))
+        # Forced failures
+        self.assertRaises(Exception, myim.regrid, axes=[20])
+        self.assertRaises(Exception, myim.regrid, shape=[10,20,30,40])       
+        self.assertRaises(Exception, myim.regrid, csys='fish')
+        self.assertRaises(Exception, myim.regrid, method='doggies')
+
+        # Regrid it to itself (all axes        #
+        iDone = 1
+        #      for method in ["near","linear","cubic"]:
+        for method in ["cubic"]:
+            myim2 = myim.regrid(method=method)
+            self.assertTrue(myim2)
+            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
+            self.assertTrue(alleqnum(p,1,tolerance=1e-3))
+            self.assertTrue(myim2.done())
+            iDone = iDone + 1
+            
+        #      for method in ["cubic","linear","near"]:
+        for method in ["cubic"]:
+            myim2 = myim.regrid(method=method, axes=[0,1])
+            self.assertTrue(myim2)
+            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
+            self.assertTrue(alleqnum(p,1,tolerance=1e-3))
+            self.assertTrue(myim2.done())
+            iDone = iDone + 1
+
+        #      for method in ["near","linear","cubic"]:
+        for method in ["cubic"]:
+            myim2 = myim.regrid(method=method, axes=[2])
+            self.assertTrue(myim2)
+            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
+            self.assertTrue(alleqnum(p,1,tolerance=1e-3))
+            self.assertTrue(myim2.done())
+            iDone = iDone + 1
+        #
+        self.assertTrue(myim.done())
+        
+    def test_multibeam(self):
+        """imregrid, test multibeam image"""
+        myia = self._myia
+        myia.fromshape("", [10, 10, 10])
+        csys = myia.coordsys()
+        refpix = csys.increment()["numeric"][2]
+        refpix = refpix * 0.9
+        csys.setincrement(refpix, "spectral")
+        
+        myia.setrestoringbeam(major="4arcsec", minor="2arcsec", pa="0deg", channel=0, polarization=-1)
+        regridded = myia.regrid(axes=[0, 1], csys=csys.torecord())
+        self.assertRaises(Exception, myia.regrid, axes=[0,1,2], csys=csys.torecord())
             
 def suite():
     return [imregrid_test]

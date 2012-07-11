@@ -426,11 +426,11 @@ imager::fitpsf( const std::string& psf, const bool async,
   */
    Bool rstat(False);
    try {
-      casa::Quantity cbmaj, cbmin, cbpa;
-      rstat = itsImager->fitpsf(psf, cbmaj, cbmin, cbpa);
-      bpa   = *recordFromQuantity(cbpa);
-      bmaj  = *recordFromQuantity(cbmaj);
-      bmin  = *recordFromQuantity(cbmin);
+	   GaussianBeam beam;
+	   rstat = itsImager->fitpsf(psf, beam);
+	   bpa   = *recordFromQuantity(beam.getPA());
+	   bmaj  = *recordFromQuantity(beam.getMajor());
+	   bmin  = *recordFromQuantity(beam.getMinor());
    }
    catch(AipsError x){
      //*itsLog << LogIO::SEVERE << "Exception Reported: "
@@ -1248,9 +1248,9 @@ imager::setbeam(const ::casac::variant& bmaj, const ::casac::variant& bmin,
 {
    Bool rstat(False);
    if(hasValidMS_p){
-      try{
-        rstat = itsImager->setbeam(casaQuantity(bmaj), casaQuantity(bmin),
-                                   casaQuantity(bpa));
+	  try{
+		  rstat = itsImager->setbeam(GaussianBeam(casaQuantity(bmaj), casaQuantity(bmin),
+				  casaQuantity(bpa)));
       }
       catch(AipsError x){
          //*itsLog << LogIO::SEVERE << "Exception Reported: "
@@ -1725,8 +1725,10 @@ imager::smooth(const std::vector<std::string>& model, const std::vector<std::str
          casa::Quantity qbpa(casaQuantity(bpa));
          Vector<String> amodel(toVectorString(model));
          Vector<String> aimage(toVectorString(image));
+         GaussianBeam beam(qbmaj, qbmin, qbpa);
+
          rstat = itsImager->smooth(amodel, aimage, usefit,
-                         qbmaj, qbmin, qbpa, normalize);
+        		 beam, normalize);
        } catch  (AipsError x) {
           //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x);

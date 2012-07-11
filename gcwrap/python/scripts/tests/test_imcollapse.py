@@ -475,7 +475,36 @@ class imcollapse_test(unittest.TestCase):
         got = mytool.toworld([0,0,0])["numeric"][2]
         mytool.done()
         frac = got/expected - 1
-        self.assertTrue(frac < 1e-6 and frac > -1e-6) 
+        self.assertTrue(frac < 1e-6 and frac > -1e-6)
+        
+    def test_beams(self):
+        """test per plane beams"""
+        myia = iatool.create()
+        myia.fromshape("", [10, 10, 10, 4])
+        myia.setrestoringbeam(
+            major="4arcsec", minor="3arcsec",
+            pa="20deg", channel=1, polarization=1
+        )
+        for i in range (myia.shape()[2]):
+            for j in range(myia.shape()[3]):
+                major = qa.quantity(4 + i + j, "arcsec")
+                minor = qa.quantity(2 + i + 0.5*j, "arcsec")
+                pa = qa.quantity(10*i + j, "deg")
+                myia.setrestoringbeam(
+                    major=major, minor=minor, pa=pa,
+                    channel=i, polarization=j
+                )
+        reg = rg.box(blc=[1,1,1,1], trc=[2,2,2,2])
+        collapsed = myia.collapse(function="mean", axes=2, outfile="", region=reg)
+        beam = collapsed.restoringbeam()
+        self.assertTrue(len(beam) == 3)
+        self.assertTrue(beam["major"] == qa.quantity(6, "arcsec"))
+        self.assertTrue(beam["minor"] == qa.quantity(3.5, "arcsec"))
+        self.assertTrue(beam["positionangle"] == qa.quantity(11, "deg"))
+        myia.done()
+        collapsed.done()
+
+
 
 def suite():
     return [imcollapse_test]

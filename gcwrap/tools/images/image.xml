@@ -26,7 +26,7 @@ include "image.g"
 <code>
 	<include>tools/images/image_forward.h</include>
 	<private>
-		<include>tools/images/image_private.h</include>	</private>
+		<include>tools/images/image_private.h</include> </private>
 </code>
 
 
@@ -1255,9 +1255,15 @@ myim.done()
             <description>Output image file name. If blank, no image is written but a new image tool referencing the collapsed image is returned.</description>
             <value></value>
         </param>
+        <param type="any" direction="in" name="region">
+            <any type="variant" limittypes="string record"/>
+            <description>Region specification. See help par.region. Default is to use the full image.</description>
+            <value type="string"></value>
+<!--
         <param type="string"  name="region">
             <description>Region specification. See help par.region. Default is to not use a region.</description>
             <value></value>
+            -->
         </param>
         <param type="string"  name="box">
             <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
@@ -1313,6 +1319,11 @@ collapsed_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
 of the the first and last values of that axis in the specified region of the input image.
+
+If the input image has per plane beams, the beam at the origin of the subimage determined by
+the selected region is arbitrarily made the global beam of the output image. In general, you should
+understand the pitfalls of collapsing images with multiple beams (ie that employing an aggregate
+function on pixels with varying beam sizes more often than not leads to ill-defined results).
     </description>
     <example>
 """
@@ -2874,6 +2885,15 @@ only Stokes I, even if the original image had other stokes planes.
      <description>Convert to peak or integral flux desnity</description>
      <value>true</value>
      </param>
+     
+     <param type="int" direction="in" name="channel">
+        <description>Channel to use if and only if image has per plane beams.</description>
+        <value>-1</value>
+     </param>
+     <param type="int" direction="in" name="polarization">
+        <description>Zero-based polarization number to use for beam if and only if image has per plane beams.</description>
+        <value>-1</value>
+     </param>
 </input>
 <returns type="record"/>
 
@@ -2977,7 +2997,7 @@ ia.close()
 
 <description>
 
-This function <!-- (short-hand name {\stff c2d}) --> does Fourier-based
+This function does Fourier-based
 convolution of an \imagefile\ by the given 2D kernel.  
 
 If {\stfaf outfile} is unset, the image is written to the specified
@@ -2992,8 +3012,7 @@ You specify which 2 pixel axes of the image you wish to convolve via the
 {\stfaf axes} argument.
 
 You specify the type of convolution kernel with {\stfaf type} (minimum
-match is active); currently only {\cf 'gaussian'}  is available.  With
-time others will be implemented.
+match is supported); currently only {\cf 'gaussian'}  is available.
 
 You specify the parameters of the convolution kernel via the arguments
 {\stfaf major}, {\stfaf minor}, and {\stfaf pa}.   These arguments can
@@ -3051,7 +3070,9 @@ Secondly,if the input image units are Jy/beam, then
 the output image will also have units of Jy/beam and be appropriately
 scaled.  In addition, the restoring beam of the output image
 will be the convolution of the input image restoring beam and the
-convolution kernel.
+convolution kernel (in the case of an image with per-plane beams, for
+each plane the kernel is convolved with the appropriate beam and the
+result is associated with that plane in the output image).
 
 If you do not leave {\stfaf scale} unset, then the convolution kernel
 will be scaled by this value (it has peak unity before application
@@ -3161,7 +3182,7 @@ this Coordinate System using the {\cf fromshape} function.
      </param>
 </input>
 
-<returns type="coordsys"/>
+<returns type="casacoordsys"/>
 <description>
 
 This function stores the Coordinate System of an image in a {\stf
@@ -3203,19 +3224,19 @@ constructor.
    <shortdescription>Convert from pixel to world coordinate wrapped as Measures</shortdescription>
 <!--   
 <output>
-     <param type="record" name="intensity">
+     <param type="record" direction="out" name="intensity">
      <description>Returned intensity quantity for pixel</description>
      </param>
 
-     <param type="record" name="direction">
+     <param type="record" direction="out" name="direction">
      <description>Returned direction measure for pixel</description>
      </param>
 
-     <param type="record" name="frequency">
+     <param type="record" direction="out" name="frequency">
      <description>Returned frequency measure for pixel</description>
      </param>
 
-     <param type="record" name="velocity">
+     <param type="record" direction="out" name="velocity">
      <description>Returned radial velocity measure for pixel</description>
      </param>
 </output>
@@ -3461,17 +3482,29 @@ ia.close()
      <param type="record"  name="complist">
      <description>Componentlist to deconvolve</description>
      </param>
+     <param type="int" direction="in" name="channel">
+        <description>Zero-based channel number to use for beam for per plane images. Not used if the image has a single beam.</description>
+        <value>-1</value>
+     </param>
+     <param type="int" direction="in" name="polarization">
+        <description>Zero-based polarization number to use for beam for per plane images. Not used if the image has a single beam.</description>
+        <value>-1</value>
+     </param>
 </input>
 <returns type="record">Componentlist tool or fail</returns>
 
 <description>
 
-This function <!-- (short-hand name {\stff dcl}) --> deconvolves (a
+This method deconvolves (a
 record representation of) a Componentlist \tool\ from the restoring
 beam, returning (a record representation of) a new Componentlist \tool.
 If there is no restoring beam, a fail is generated.
 
 Currently, only deconvolution of Gaussian components is supported.
+
+For images with per-plane beam, the user must choose which beam is used for
+the deconvolution by setting channel and/or polarization. Only a single beam
+is used to deconvolve all components.
 
 See also functions <link anchor="images:image.setrestoringbeam.function">setrestoringbeam</link> and
 <link anchor="images:image.restoringbeam.function">restoringbeam</link>.
@@ -3833,7 +3866,7 @@ images only are written out.
      <value>false</value>
      </param>
 </input>
-<returns type="record">>Componentlist tool or fail</returns>
+<returns type="record">Componentlist tool or fail</returns>
 
 <description>
 
@@ -4478,7 +4511,10 @@ In cases where the fit did not converge, these values are set to NaN.
 
 The region can either be specified by a box(es) or a region (there is no
 garauntee which will be used if both are specified, so be certain that only one is).
-Ranges of pixel values can be included or excluded from the fit.
+Ranges of pixel values can be included or excluded from the fit. If specified using
+the box parameter, multiple boxes can be given using the format
+box="blcx1, blcy1, trcx1, trcy1, blcx2, blcy2, trcx2, trcy2, ... , blcxN, blcyN, trcxN, trcyN"
+where N is the number of boxes. In this case, the union of the specified boxes will be used.
 
 If specified, the residual and/or model images for
 successful fits will be written.
@@ -5417,6 +5453,9 @@ If {\stfaf locate} vector is given, then those values that are given,
 give the absolute pixel in the output (this) image of the bottom left
 corner of the input (sub)image.  For those values that are not given,
 the input image is symmetrically placed in the output image. 
+
+The current image referenced with the image tool is overwritten with
+the inserted image.
 
 </description>
 <example>
@@ -7230,28 +7269,6 @@ ia.close()
 
 </method>
 
-
-
-<method type="function" name="reorder">
-    <shortdescription>THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD. Transpose the image.</shortdescription>
-    <input>
-        <param type="string"  name="outfile">
-            <description>Output image file name.  Default is unset.</description>
-            <value/>
-        </param>
-        <param type="any"  name="order">
-            <any type="variant"/>
-            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
-            <value/>
-        </param>
-    </input>
-    <returns type="image"/>
-    <description>
-        THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD.
-        See help for ia.transpose() for details.
-    </description>
-</method>
-
 <method type="function" name="transpose">
     <shortdescription>Transpose the image.</shortdescription>
     <input>
@@ -7689,47 +7706,48 @@ together.  The expression must conform with the
 image {\sff zz1}.
 </example>
 
-<!-- 
-<example>
-
-"""
-#
-print "\t\t replacemaskedpixels Ex 5 \t"
-ia.maketestimage('zz3',overwrite=true)  
-ia.maketestimage('zz2',overwrite=true)  
-ia.maketestimage('zz1',overwrite=true)  
-ia.calcmask('zz1&lt;0')
-#r = drm.quarter()
-r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-#ia.replacemaskedpixels('zz2[$r]+zz3[$r]', region=r)
-ia.replacemaskedpixels('zz2+zz3')
-ia.close()
-#
-"""
-
-
-In this example, the replacement values are taken
-from a LEL expression adding two other images
-together.  Because expression must conform with the
-image {\sff zz1} after application of the region,
-we must specify the region in the expression as well.
-
-</example>
--->
-
 </method>
 
- 
-   <method type="function" name="restoringbeam">
-   <shortdescription>Get the restoringbeam</shortdescription>
-   
-   <returns type="record">record or fail</returns>
+<method type="function" name="restoringbeam">
+    <shortdescription>Get the restoring beam(s).</shortdescription>
+    <input>
+        <param type="int" direction="in" name="channel">
+            <description>The zero-based spectral channel number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="polarization">
+            <description>The zero-based polarization plane number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+    </input>
+    <returns type="record">record or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff rb}) --> gets the restoring beam, if any.
-It is returned in a record with fields 'major', 'minor' and
-'postionangle'.   Each of these fields contains a quantity. If there
-is no restoring beam, this function returds an empty record.
+This function gets the restoring beam(s), if any. If the image has a traditional
+restoring beam, that is returned no matter what channel and polarization are set to.
+If the image has per-plane beams and at least one of channel or polarization is
+set to a non-negative value, the beam for that particular plane is returned. In both
+these cases, the returned record contains fields 'major', 'minor' and
+'postionangle'.   Each of these fields contains a quantity.
+
+If the image contains multiple beams and both channel and polarization are negative,
+a record containing all the beams is returned. This record contains three fields.
+"nChannels" contains an integer value equal to the number of channels, "nStokes"
+contains an integer value equal to the number of polarizations, and "beams" contains
+a record of information for all beams.
+ If the image has no polarization
+axis or no spectral axis, the fields in the "beams" record run from "*0" to the number
+of spectral channels or number of polarizations less one, eg "*31" for an image with 32 channels.
+Each of these fields references a beam subrecord with the structure described above for a single beam.
+
+If the image contains both a spectral axis and a polarization axis, the record returned contains
+fields running from "*0" to the number of spectral channels less one, eg "*31" for an image
+with 32 spectral channels. Each of these fields has an associated subrecord with fields running
+from "*0" to the number of polarizations less one, eg "*3" in an image with 4 polarizations.
+Each one of those fields is associated with a beam record for that corresponding channel and
+polarization. The beam record has a structure described above for a single beam.
+
+If there is no restoring beam, this function returds an empty record.
 
 You can set the restoring beam with function 
 <link anchor="images:image.setrestoringbeam.function">setrestoringbeam</link>.
@@ -7817,7 +7835,7 @@ ia.close()
 
 <description>
 
-This function <!-- (short-hand name {\stff sc}) --> does Fourier-based 
+This function  does Fourier-based 
 convolution of an \imagefile\ by a specified separable kernel.  
 
 If {\stfaf outfile} is given, the image is written to the specified
@@ -8212,6 +8230,48 @@ ia.close()
 </method>
 
  
+<method type="function" name="setrestoringbeam">
+    <shortdescription>Set the restoringbeam</shortdescription>
+    <input>
+        <param type="any" direction="in" name="major">
+            <any type="variant"/>
+            <description>Major axis FWHM, Quantity or float (e.g., 1arcsec).  Default is unset.</description>
+            <value>1arcsec</value>
+        </param>
+        <param type="any" direction="in" name="minor">
+            <any type="variant"/>
+            <description>Minor axis FWHM, Quantity or float (e.g., 1arcsec). Default is unset.</description>
+            <value>1arcsec</value>
+        </param>
+        <param type="any" direction="in" name="pa">
+            <any type="variant"/>
+            <description>Position angle, Quantity or float (e.g., '5deg'). Default is unset.</description>
+            <value>0deg</value>
+        </param>
+        <param type="record" direction="in" name="beam">
+            <description>The complete restoring beam (output of restoringbeam()).  Default is unset.</description>
+            <value></value>
+        </param>
+        <param type="bool" direction="in" name="remove">
+            <description>Delete the restoring beam?</description>
+            <value>false</value>
+        </param>
+        <param type="bool" direction="in" name="log">
+            <description>Write new beam values to the logger?</description>
+            <value>true</value>
+        </param>
+        <param type="int" direction="in" name="channel">
+            <description>Zero-based channel number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
+            <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="polarization">
+            <description>Zero-based polarization number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
+            <value>-1</value>
+        </param>
+            
+    </input>
+<!--
+=======
    <method type="function" name="setrestoringbeam">
    <shortdescription>Set the restoringbeam</shortdescription>
    
@@ -8252,12 +8312,12 @@ ia.close()
      <value>true</value>
      </param>
 </input>
+>>>>>>> .r20204
+-->
+    <returns type="bool">T or fail</returns>
+    <description>
 
-<returns type="bool">T or fail</returns>
-<description>
-
-This function <!-- (short-hand name {\stff srb}) --> sets the restoring beam.
-Do not do this unless it is a correct thing to do !
+This function sets the restoring beam(s) for an image.
 
 You may supply the beam in one of two ways.  
 
@@ -8265,19 +8325,60 @@ First, you can use the argument {\stfaf beam} which you must assign to a
 record containing  fields 'major', 'minor' and 'positionangle'.  
 Each of these fields contains a quantity.   This record is in the same
 format as  one returned by function
-<link anchor="images:image.restoringbeam.function">restoringbeam</link>. If you leave {\stfaf
-beam} unset, no action with it is taken. If the function argument
-{\stfaf beam} is used, the arguments {\stfaf major, minor, \&amp; pa} are
+<link anchor="images:image.restoringbeam.function">restoringbeam</link>. 
+If {\stfaf beam} is used, the arguments {\stfaf major, minor, \&amp; pa} are
 ignored.
 
 Second, you can use the arguments {\stfaf major}, {\stfaf minor}
 and {\stfaf pa}.   Only the ones that you assign are used.
 Each argument should be assigned either a quantity or a float (units
 are implicitly those of the current beam - or if none, arcsec for
-the axes and degrees for the position angle).
+the axes and degrees for the position angle). These parameters are only
+used if {\stfaf beam} is not specified.
 
-You may also delete the restoring beam by setting {\stfaf delete=T}
-(all other arguments are then ignored).
+An image must have exactly one of the following states:
+
+1. An image can have a single "traditional" beam. In that case, the beam applies
+to every channel and polarization in the image.
+
+2. If an image has more than one spectral channel or more than one polarization,
+it can have a set of "per plane" beams. In this case, the image must have
+exactly one beam per spectral channel and polarization combination in the image. So,
+an image with 32 channels and 4 polarizations must have 128 per plane beams if it
+has a per-plane beam set. An image with 32 channels and no polarizations must have
+32 per-plane beams, and an image with 4 polarizations and no spectral channels must
+have 4 per-plane beams if it has a set of per-plane beams.
+
+3. An image can have neither a traditional beam nor a per-plane beam set.
+
+It is never permissible for an image to have both a traditional (global) beam and
+a set of per-plane beams. Task and method behavior is undefined in that case and
+any resulting products are considered corrupt.
+
+These are the rules for setting and modifying beams.
+
+If an image has no beams, a traditional (global) beam can be added by setting
+both channel and polarization to negative values.
+
+If an image has no beams, a set of per-plane beams can be added by setting either
+or both channel and/or polarization to a non-negative value. In this case, a number
+of per-plane beams are added consistent with the image and they are all set to be
+the same with parameters equal to those specified by either the beam or major/minor/pa
+parameters.
+
+If an image has a traditional beam, it can be modified by setting both channel and
+polarization to negative values. If one or both is not set to a negative value, a warning
+is emitted, false is returned, and nothing is modified.
+
+If an image has a set of per plane beams, one at a time of these can be modified by 
+setting the appropriate channel number and/or polarization number. All the per-plane
+beams can be modified to the same values in one go by setting both channel and
+polarization to negative values.
+
+You may also delete the the traditional beam or all per-plane beams
+by setting {\stfaf delete=T}. If set
+to true, all other parameters are then ignored; any and all existing beams
+will be deleted.
 
 </description>
 
@@ -8399,7 +8500,7 @@ ia.close()
      </param>
   
      <param type="bool"  name="verbose">
-     <description>If T then print useful messages to the logger</description>
+     <description>If T then log statistics</description>
      <value>true</value>
      </param>
   
@@ -8412,14 +8513,13 @@ ia.close()
         <value>false</value>
      </param>
      <param type="string"  name="logfile">
-          <description>Name of file to which to write statistics.</description>
-          <value/>
+        <description>Name of file to which to write statistics.</description>
+        <value/>
      </param>
      <param type="bool"  name="append">
           <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
           <value>true</value>
      </param>
-
 </input>
 
 <returns type="record">
@@ -8844,12 +8944,6 @@ ia.close()
    <method type="function" name="summary">
    <shortdescription>Summarize basic information about the image</shortdescription>
    
-<output>  
-     <param type="record" name="header">
-     <description>Header information</description>
-     </param>
-</output>  
-  
 <input>
      <param type="string"  name="doppler">
      <description>If there is a spectral axis, list velocity too, with this doppler definition</description>
@@ -8866,7 +8960,7 @@ ia.close()
      <value>true</value>
      </param>
 </input>
-<returns type="stringArray">Array of Strings</returns>
+<returns type="record"/>
 <description>
 
 This function summarizes miscellaneous information such as shape, Coordinate System,
@@ -8911,16 +9005,15 @@ following fields filled in:
     \item[hasmask]    True if the image has a mask.
     \item[defaultmask]The name of the mask which is applied by default.
     \item[masks]      The names of all the masks stored in this image.
-    \item[restoringbeam] The restoring beam if present.
+    \item[restoringbeam] The restoring beam(s) if present.
     \item[imagetype]   The image type.
 \end{description}
 
 If you set {\stfaf list=F}, then the summary will not be written to
-the logger.  <!-- However, in addition to the output record,--> The
+the logger.  The
 return value of the function, in the {\stfaf header} field is a
 vector string containing the formatted output that would normally
-have gone to the logger. <!--  If {\stfaf list=T} the return value is
-always T or a fail.-->
+have gone to the logger. 
 
 </description>
 <example>
@@ -9319,7 +9412,7 @@ formatted as measures instead.
      <any type="variant"/>
      <description>Absolute pixel coordinate.  Numeric vector is allowed.
      Default is reference pixel.</description>
-     <value></value>
+     <value/>
      </param>
 
      <param type="string"  name="format">
@@ -9794,7 +9887,7 @@ used to create a 2D temporary image.
         <param type="any"  name="pbimage">
             <any type="variant"/>
             <description>Name of the primary beam image which must exist or array of values for the pb response. Default ""</description>
-            <value></value>
+            <value type="string"/>
         </param>
         <param type="string"  name="outfile">
             <description>Output image name. If empty, no image is written. Default ""</description>
@@ -9906,7 +9999,7 @@ cube = ia.makearray(0,[4,4,4])
 
 
    <method type="function" name="setboxregion">
-   <shortdescription>Set a pixel box region of interest in the image</shortdescription>
+   <shortdescription>DEPRECATED. Use rg.box() instead. Set a pixel box region of interest in the image</shortdescription>
    
 <input>
   
@@ -9987,7 +10080,7 @@ ia.echo(x)
 </example>
 </method>
 
- 
+ <!--
    <method type="function" name="outputvariant">
    <shortdescription>returns a variant</shortdescription>
 
@@ -10015,7 +10108,7 @@ exit() # This is last example so lets exit().
 
 </example>
 </method>
-
+-->
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
 

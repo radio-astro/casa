@@ -80,7 +80,7 @@ class ia_subimage_test(unittest.TestCase):
         self.myia = iatool()
     
     def tearDown(self):
-        pass
+        self._myia.done()
 
     def test_stretch(self):
         """Test the stretch parameter"""
@@ -105,7 +105,45 @@ class ia_subimage_test(unittest.TestCase):
         self.assertRaises(Exception, myia.subimage, "", mask=mask3, stretch=True)
         self.assertFalse(imsubimage(imname, "", mask=mask3, stretch=True))
 
-        
+    def test_beams(self):
+        """ Test per plane beams """
+        myia = self._myia
+
+        # simple copy
+        myia.fromshape("", [10, 10, 10, 4])
+        myia.setrestoringbeam(
+            "4arcsec", "2arcsec", "5deg", channel=0, polarization=0
+        )
+        for i in range(10):
+            for j in range(4):
+                myia.setrestoringbeam(
+                    qa.quantity(i + j + 2, "arcsec"),
+                    qa.quantity(i + j + 1, "arcsec"),
+                    qa.quantity("5deg"),
+                    channel=i, polarization=j
+                )
+        box = rg.box([2, 2, 2, 2], [5, 5, 5, 3])
+        subim = myia.subimage("", region=box)
+        for i in range(subim.shape()[2]):
+            for j in range(subim.shape()[3]):
+                self.assertTrue(
+                    subim.restoringbeam(channel=i, polarization=j)
+                    == myia.restoringbeam(channel=i+2, polarization=j+2)
+                )
+        box = rg.box([2, 2, 2, 2], [5, 5, 5, 2])
+        subim = myia.subimage("", region=box, dropdeg=T)
+        for i in range(subim.shape()[2]):
+            self.assertTrue(
+                subim.restoringbeam(channel=i, polarization=-1)
+                == myia.restoringbeam(channel=i+2, polarization=2)
+            )
+        box = rg.box([2, 2, 6, 1], [5, 5, 6, 3])
+        subim = myia.subimage("", region=box, dropdeg=T)
+        for i in range(subim.shape()[2]):
+            self.assertTrue(
+                subim.restoringbeam(channel=-1, polarization=i)
+                == myia.restoringbeam(channel=6, polarization=i+1)
+            )
 
 def suite():
     return [ia_subimage_test]

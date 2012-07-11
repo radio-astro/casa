@@ -19,6 +19,7 @@
 #include <deconvolver_cmpt.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <casa/Logging/LogIO.h>
+#include <components/ComponentModels/GaussianBeam.h>
 //#include <casa/System/PGPlotterNull.h>
 //#include <graphics/Graphics/PGPlotterLocal.h>
 
@@ -367,7 +368,8 @@ deconvolver::makegaussian(const std::string& gaussianimage, const ::casac::varia
     if(String(bpa.toString()) != String("")){
       pa=casaQuantity(bpa);
     }
-    return itsDeconv->makegaussian(String(gaussianimage), maj, min, pa, 
+    GaussianBeam beam(maj, min, pa);
+    return itsDeconv->makegaussian(String(gaussianimage), beam,
 				   normalize);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -463,8 +465,8 @@ deconvolver::restore(const std::string& model, const std::string& image, const :
     if(String(bpa.toString()) != String("")){
       pa=casaQuantity(bpa);
     }
-
-    return itsDeconv->restore(String(model), String(image), maj, min, pa);
+    GaussianBeam beam(maj, min, pa);
+    return itsDeconv->restore(String(model), String(image), beam);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -506,8 +508,8 @@ deconvolver::smooth(const std::string& model, const std::string& image, const ::
     }
     
 
-
-    return itsDeconv->smooth(String(model), String(image), maj, min, pa, 
+    GaussianBeam beam(maj, min, pa);
+    return itsDeconv->smooth(String(model), String(image), beam,
 			     normalize);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

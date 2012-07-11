@@ -86,6 +86,7 @@ gauss_no_pol = "gauss_no_pol.fits"
 jyperbeamkms = "jyperbeamkmpersec.fits";
 masked_image = 'myout.im'
 multiplane_image = "gauss_multiplane.fits"
+multibeam_image = "gauss_multibeam.im"
 two_gauss_multiplane_estimates="estimates_2gauss_multiplane.txt"
 msgs = ''
 
@@ -129,7 +130,7 @@ class imfit_test(unittest.TestCase):
             noisy_image, noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image, multiplane_image, two_gauss_multiplane_estimates
+            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
             if not os.path.exists(f):
                 if (os.path.isdir(datapath + f)):
@@ -144,7 +145,7 @@ class imfit_test(unittest.TestCase):
             noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image, multiplane_image, two_gauss_multiplane_estimates
+            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(f)):
                 os.system("rm -rf " + f)
@@ -805,7 +806,7 @@ class imfit_test(unittest.TestCase):
                 # flux density test
                 if (not near(got, expectedFlux[j], 1e-5)):
                     success = False
-                    msgs += method + " " + stokes + " flux density test failure, got " + str(got) + " expected " + str(expectedFlux[j]) + "\n"
+                    msgs += method + " " + str(stokes) + " flux density test failure, got " + str(got) + " expected " + str(expectedFlux[j]) + "\n"
     
                 # RA test
                 got = clist['component0']['shape']['direction']['m0']['value']
@@ -1378,6 +1379,12 @@ class imfit_test(unittest.TestCase):
 
         self.assertTrue(success,msgs)
         
+    def test_multibeam(self):
+        myia = iatool.create()
+        myia.open(multibeam_image)
+        # just confirm it finishes successfully
+        res = myia.fitcomponents()
+        self.assertTrue(res["converged"].all())
 
 def suite():
     return [imfit_test]
