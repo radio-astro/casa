@@ -771,6 +771,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		SettingsWidget::setOptical( opticalFitter );
 		specFitSettingsWidget->reset();
 		momentSettingsWidget->reset();
+		pixelCanvas -> setOptical( opticalFitter );
 	}
 
 	if (update){
@@ -1713,7 +1714,7 @@ bool QtProfile::exportASCIISpectrum(QString &fn)
     for (int k = 1; k < i; k++) {
       ts << "\n";
       ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-      CurveData data = *(pixelCanvas->getCurveData(k));
+      CurveData data = pixelCanvas->getCurveData(k);
       int j = data.size() / 2;
       for (int m = 0; m < j; m++) {
          ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
@@ -2311,7 +2312,6 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
-
 		if ( over != NULL ){
 			QHashIterator<QString, ImageAnalysis*> i(*over);
 

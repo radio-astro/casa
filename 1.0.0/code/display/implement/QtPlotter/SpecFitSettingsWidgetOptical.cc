@@ -1,3 +1,27 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "SpecFitSettingsWidgetOptical.qo.h"
 #include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
@@ -51,6 +75,7 @@ void SpecFitSettingsWidgetOptical::reset(){
 }
 
 void SpecFitSettingsWidgetOptical::specLineFit(){
+	//pixelCanvas->clearCurve();
 	*logger << LogOrigin("SpecFitOptical", "specLineFit");
 
 	// get the values
@@ -145,7 +170,7 @@ void SpecFitSettingsWidgetOptical::specLineFit(){
 			// overplot the fit values
 			QString fileName = getFileName();
 			QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
-			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName);
+			pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName, QtCanvas::CURVE_TRADITIONAL );
 		}
 		postStatus((fitter->report(*logger, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str());
 	}
