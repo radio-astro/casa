@@ -37,6 +37,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/GaussianShape.h>
@@ -60,15 +61,18 @@
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/iostream.h>
-#include <coordinates/Coordinates/GaussianConvert.h>
 
+#include <memory>
 
+// debug
+#include <components/ComponentModels/Flux.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-void ImageUtilities::openImage (ImageInterface<Float>*& pImage,
-                                const String& fileName, LogIO& os)
-{
+void ImageUtilities::openImage(
+	ImageInterface<Float>*& pImage,
+	const String& fileName, LogIO& os
+) {
    if (fileName.empty()) {
       os << "The image filename is empty" << LogIO::EXCEPTION;   
    }
@@ -89,14 +93,14 @@ void ImageUtilities::openImage (ImageInterface<Float>*& pImage,
    }
 }
 
-void ImageUtilities::openImage (PtrHolder<ImageInterface<Float> >& image,
-                                const String& fileName, LogIO& os)
-{
+void ImageUtilities::openImage(
+	std::auto_ptr<ImageInterface<Float> >& image,
+	const String& fileName, LogIO& os
+) {
    ImageInterface<Float>* p = 0;
    ImageUtilities::openImage(p, fileName, os);
-   image.set(p);
+   image.reset(p);
 }
-
 
 Bool ImageUtilities::pixToWorld (
 	Vector<String>& sWorld,	CoordinateSystem& cSysIn,
@@ -183,9 +187,6 @@ Bool ImageUtilities::pixToWorld (
    return True;
 }
 
-
-
-
 String ImageUtilities::shortAxisName (const String& axisName)
 //
 // Look for "Right Ascension", "Declination", "Velocity",
@@ -214,10 +215,10 @@ String ImageUtilities::shortAxisName (const String& axisName)
 
 
 SkyComponent ImageUtilities::encodeSkyComponent(
-    LogIO& logIO, Double& facToJy, const ImageInfo& ii,
+    LogIO& logIO, Double& facToJy,
     const CoordinateSystem& cSys, const Unit& brightnessUnit,
     ComponentType::Shape type, const Vector<Double>& parameters,
-    Stokes::StokesTypes stokes, Bool xIsLong
+    Stokes::StokesTypes stokes, Bool xIsLong, const GaussianBeam& beam
 ) {
     // Input:
     //   pars(0) = FLux     image units  (e.g. peak flux in Jy/beam)
@@ -243,17 +244,16 @@ SkyComponent ImageUtilities::encodeSkyComponent(
         pa();                         // +/- pi
         pars(5) = pa.radian();
     }
-
-    Vector<Quantity> beam = ii.restoringBeam();
-    if (brightnessUnit.getName().contains("beam") && beam.size() != 3) {
-    	beam = makeFakeBeam(logIO, cSys);
+    GaussianBeam cbeam = beam;
+    if (brightnessUnit.getName().contains("beam") &&  beam.isNull()) {
+    	cbeam = makeFakeBeam(logIO, cSys);
     }
-    sky.fromPixel(facToJy, pars, brightnessUnit, beam, cSys, type, stokes);
 
-    return sky;
+    sky.fromPixel(facToJy, pars, brightnessUnit, cbeam, cSys, type, stokes);
+        return sky;
 } 
 
-Vector<Quantity> ImageUtilities::makeFakeBeam(
+GaussianBeam ImageUtilities::makeFakeBeam(
 		LogIO& logIO, const CoordinateSystem& csys, Bool suppressWarnings
 	) {
     Int dirCoordinate = csys.findCoordinate(Coordinate::DIRECTION);
@@ -263,12 +263,10 @@ Vector<Quantity> ImageUtilities::makeFakeBeam(
     }
     const DirectionCoordinate& dirCoord = csys.directionCoordinate(dirCoordinate);
 
-    Vector<Quantity> beam;
-    beam.resize(3);
     Vector<Double> inc = dirCoord.increment();
-    beam[0] = Quantity(abs(inc[0]), "rad");
-    beam[1] = Quantity(abs(inc[1]), "rad");
-    beam[2] = Quantity(0,"rad");
+    Quantity majAx(abs(inc[0]), "rad");
+    Quantity minAx(abs(inc[1]), "rad");
+    Quantity pa(0,"rad");
     if (! suppressWarnings) {
     	logIO << LogIO::WARN
     			<< "No restoring beam defined even though the "
@@ -278,15 +276,17 @@ Vector<Quantity> ImageUtilities::makeFakeBeam(
     			<< "header."
     			<< LogIO::POST;
     }
-    return beam;
+    return GaussianBeam(majAx, minAx, pa);
 }
 
 // moved from ImageAnalysis. See comments in ImageUtilities.h
+// TODO the only thing that uses this is ImageFitter. So move it there
 SkyComponent ImageUtilities::encodeSkyComponent(
     LogIO& os, Double& facToJy,
     const ImageInterface<Float>& subIm, ComponentType::Shape model,
     const Vector<Double>& parameters, Stokes::StokesTypes stokes,
-    Bool xIsLong, Bool deconvolveIt
+    Bool xIsLong, Bool deconvolveIt, const GaussianBeam& beam
+
 ) {
     //
     // This function takes a vector of doubles and converts them to
@@ -308,19 +308,17 @@ SkyComponent ImageUtilities::encodeSkyComponent(
     //   facToJy = converts brightness units to Jy
     //
 
-	const ImageInfo& ii = subIm.imageInfo();
 	const CoordinateSystem& cSys = subIm.coordinates();
 	const Unit& bU = subIm.units();
 	SkyComponent sky = ImageUtilities::encodeSkyComponent(
-		os, facToJy, ii, cSys, bU, model,
-		parameters, stokes, xIsLong
+		os, facToJy, cSys, bU, model,
+		parameters, stokes, xIsLong, beam
 	);
 	if (!deconvolveIt) {
 		return sky;
     }
 	
-    Vector<Quantum<Double> > beam = ii.restoringBeam();
-	if (beam.nelements() == 0) {
+	if (beam.isNull()) {
 		os << LogIO::WARN
 				<< "This image does not have a restoring beam so no deconvolution possible"
 				<< LogIO::POST;
@@ -342,69 +340,80 @@ SkyComponent ImageUtilities::encodeSkyComponent(
 
 // moved from ImageAnalysis. See comments in ImageUtilities.h
 SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
-        const SkyComponent& skyIn, const Vector<Quantum<Double> >& beam,
+        const SkyComponent& skyIn, const GaussianBeam& beam,
         const DirectionCoordinate& dirCoord) {
-    SkyComponent skyOut;
-    skyOut = skyIn.copy();
-    const ComponentShape& shapeIn = skyIn.shape();
-    ComponentType::Shape type = shapeIn.type();
+	const ComponentShape& shapeIn = skyIn.shape();
+	ComponentType::Shape type = shapeIn.type();
+	if (type == ComponentType::POINT) {
+		return skyIn;
+	}
+
+    SkyComponent skyOut = skyIn.copy();
 
     // Put beam p.a. into XY frame
-    Vector<Quantum<Double> > beam2 = putBeamInXYFrame(beam, dirCoord);
-    if (type == ComponentType::POINT) {
-        // do nothing apparently
-    } else if (type == ComponentType::GAUSSIAN) {
+    GaussianBeam beam2 = putBeamInXYFrame(beam, dirCoord);
+
+    if (type == ComponentType::GAUSSIAN) {
         // Recover shape
         const TwoSidedShape& ts = dynamic_cast<const TwoSidedShape&> (shapeIn);
-        Quantum<Double> major = ts.majorAxis();
-        Quantum<Double> minor = ts.minorAxis();
-        Quantum<Double> pa = ts.positionAngle();
+        Quantity major = ts.majorAxis();
+        Quantity minor = ts.minorAxis();
+        Quantity pa = ts.positionAngle();
         // Adjust position angle to XY pixel frame  (pos +x -> +y)
         Vector<Double> p = ts.toPixel(dirCoord);
+
         // Deconvolve.
-        Quantum<Double> paXYFrame(p(4), Unit("rad"));
-        Quantum<Double> paXYFrame2(paXYFrame);
+        Quantity paXYFrame(p(4), Unit("rad"));
+        Angular2DGaussian source(major, minor, paXYFrame);
+        Angular2DGaussian deconvolvedSize;
+        Quantity paXYFrame2(paXYFrame);
         Bool fitSuccess;
         // TODO atm we do not check for fit success, but probably should. fitSuccess is new
         // and part of unrelated work.
-        ImageUtilities::deconvolveFromBeam(major, minor, paXYFrame, fitSuccess, os, beam2);
+        deconvolveFromBeam(deconvolvedSize, source, fitSuccess, os, beam2);
 
         // Account for frame change of position angle
-        Quantum<Double> diff = paXYFrame2 - paXYFrame;
+        Quantity diff = paXYFrame2 - paXYFrame;
         pa -= diff;
         const MDirection dirRefIn = shapeIn.refDirection();
-        GaussianShape shapeOut(dirRefIn, major, minor, pa);
+        GaussianShape shapeOut(
+        	dirRefIn, deconvolvedSize.getMajor(),
+        	deconvolvedSize.getMinor(),
+        	deconvolvedSize.getPA(True)
+        );
         skyOut.setShape(shapeOut);
-    } else {
-        os << "Cannot deconvolve components of type " << shapeIn.ident()
-                << LogIO::EXCEPTION;
     }
-    return skyOut;
+    else {
+        os << "Cannot deconvolve components of type " << shapeIn.ident()
+    	    << LogIO::EXCEPTION;
+    }
+	return skyOut;
 }
 
-Vector<Quantum<Double> > ImageUtilities::putBeamInXYFrame(
-    const Vector<Quantum<Double> >& beam, const DirectionCoordinate& dirCoord
-)
+GaussianBeam ImageUtilities::putBeamInXYFrame(
+    const GaussianBeam& beam, const DirectionCoordinate& dirCoord
+) {
 // moved from ImageAnalysis
-//
+
 // The beam is spatially invariant across an image, and its position
 // must be fit in the pixel coordinate system to make any sense.
 // However, its position angle is positive N->E which means
 // some attempt to look at the increments has been made...
 // We want positive +x -> +y  so have to try and do this.
-{
-    Vector<Quantum<Double> > beam2 = beam.copy();
+    GaussianBeam beam2 = beam;
     Vector<Double> inc = dirCoord.increment();
-    Double pa = beam(2).getValue(Unit("rad"));
-    Double pa2 = beam2(2).getValue(Unit("rad"));
+    Double pa = beam.getPA(True).getValue(Unit("rad"));
+    Double pa2 = beam2.getPA().getValue(Unit("rad"));
     //
     if (inc(1) > 0) {
         if (inc(0) < 0) {
             pa2 = C::pi_2 + pa;
-        } else {
+        }
+        else {
             pa2 = C::pi_2 - pa;
         }
-    } else {
+    }
+    else {
         if (inc(0) < 0) {
             pa2 = C::pi + C::pi_2 - pa;
         } else {
@@ -413,10 +422,10 @@ Vector<Quantum<Double> > ImageUtilities::putBeamInXYFrame(
     }
     //
     Double pa3 = fmod(pa2, C::pi);
-    if (pa3 < 0.0)
+    if (pa3 < 0.0) {
         pa3 += C::pi;
-    beam2(2).setValue(pa3);
-    beam2(2).setUnit(Unit("rad"));
+    }
+    beam2.setPA(Quantity(pa3, "rad"));
     return beam2;
 }
 
@@ -442,7 +451,7 @@ Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
 //   pars(5) = pa radians (pos +x -> +y)
 //
 {
-   Vector<Quantum<Double> > beam = ii.restoringBeam();
+   GaussianBeam beam = ii.restoringBeam();
 
 // pars(1,2) = longitude, latitude centre
 
@@ -467,64 +476,39 @@ Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
 }
 
 Bool ImageUtilities::deconvolveFromBeam(
-    Quantity& majorFit, Quantity& minorFit,
-    Quantity& paFit, Bool& successFit, LogIO& os, const Vector<Quantity >& beam,
+	Angular2DGaussian& deconvolvedSize, const Angular2DGaussian& convolvedSize,
+	Bool& successFit, LogIO& os, const GaussianBeam& beam,
     const Bool verbose
-   ) {
+) {
     // moved from ImageAnalysis
 
     // The position angle of the component is measured in the frame
     // of the local coordinate system.  Since the restoring beam
     // is invariant over the image, we need to rotate the restoring
     // beam into the same coordinate system as the component.
-    //
     Bool isPointSource = False;
-    Quantum<Double> majorOut;
-    Quantum<Double> minorOut;
-    Quantum<Double> paOut;
+    Quantity majorOut;
+    Quantity minorOut;
+    Quantity paOut;
     try {
-        isPointSource = GaussianConvert::deconvolve(majorOut, minorOut, paOut,
-                majorFit, minorFit, paFit, beam(0), beam(1), beam(2));
-    } catch (AipsError x) {
+        isPointSource = beam.deconvolve(deconvolvedSize, convolvedSize);
+        successFit = True;
+        return isPointSource;
+    }
+    catch (AipsError x) {
     	successFit = False;
     	if (verbose) {
     		os << LogIO::WARN << "Could not deconvolve beam from source - "
                 << x.getMesg() << endl;
     		ostringstream oss;
-    		oss << "Model = " << majorFit << ", " << minorFit << ", " << paFit
+    		oss << "Model = " << convolvedSize
     			<< endl;
-    		oss << "Beam  = " << beam(0) << ", " << beam(1) << ", " << beam(2)
-            	<< endl;
+    		oss << "Beam  = " << beam << endl;
     		os << String(oss) << LogIO::POST;
     	}
         return False;
     }
-    majorFit = majorOut;
-    minorFit = minorOut;
-    paFit = paOut;
-    successFit = True;
-    return isPointSource;
 }
-
-Bool ImageUtilities::deconvolveFromBeam(
-    Quantity& majorOut, Quantity& minorOut,
-    Quantity& paOut, Bool& successFit, LogIO& os,
-    const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam,
-    const Bool verbose
-) {
-	Quantity tmpMaj = sourceIn[0];
-	Quantity tmpMin = sourceIn[1];
-	Quantity tmpPA = sourceIn[2];
-
-	Bool isPointSource = deconvolveFromBeam(
-	    tmpMaj, tmpMin, tmpPA, successFit, os, beam, verbose
-	);
-	majorOut = tmpMaj;
-	minorOut = tmpMin;
-	paOut = tmpPA;
-	return isPointSource;
-}
-
 
 void ImageUtilities::worldWidthsToPixel (LogIO& os,
                                          Vector<Double>& dParameters,
@@ -667,7 +651,7 @@ void ImageUtilities::worldWidthsToPixel (LogIO& os,
 
 
 Bool ImageUtilities::pixelWidthsToWorld(
-	LogIO& os, Vector<Quantity>& wParameters,
+	LogIO& os, GaussianBeam& wParameters,
 	const Vector<Double>& pParameters, const CoordinateSystem& cSys,
 	const IPosition& pixelAxes, Bool doRef
 ) {
@@ -695,7 +679,7 @@ Bool ImageUtilities::pixelWidthsToWorld(
 		}
 	}
 	else {
-		wParameters.resize(3);
+		wParameters = GaussianBeam();
 		// Major/minor
 		Quantity q0 = pixelWidthToWorld(
 			os, pParameters(4), pParameters(2),
@@ -705,24 +689,21 @@ Bool ImageUtilities::pixelWidthsToWorld(
 			os, pParameters(4), pParameters(3),
 			cSys, pixelAxes
 		);
+		// Position angle; radians; +x -> +y
 		if (q0.getValue() < q1.getValue(q0.getFullUnit())) {
 			flipped = True;
-			wParameters(0) = q1;
-			wParameters(1) = q0;
+			wParameters = GaussianBeam(q1, q0, Quantity(pParameters(4), "rad"));
+
 		}
 		else {
-			wParameters(0) = q0;
-			wParameters(1) = q1;
+			wParameters = GaussianBeam(q0, q1, Quantity(pParameters(4), "rad"));
 		}
-		// Position angle; radians; +x -> +y
-		wParameters(2).setValue(pParameters(4));
-		wParameters(2).setUnit(Unit("rad"));
 	}
 	return flipped;
 }
 
 Bool ImageUtilities::skyPixelWidthsToWorld (LogIO& os, 
-                                            Vector<Quantum<Double> >& wParameters,
+                                            GaussianBeam& wParameters,
                                             const CoordinateSystem& cSys, 
                                             const Vector<Double>& pParameters,
                                             const IPosition& pixelAxes, Bool doRef)
@@ -772,7 +753,8 @@ Bool ImageUtilities::skyPixelWidthsToWorld (LogIO& os,
    if (doRef) {
       cParameters(0) = dCoord.referencePixel()(whereIsX);     // x centre
       cParameters(1) = dCoord.referencePixel()(whereIsY);     // y centre
-   } else {
+   }
+   else {
       if (xIsLong) {
          cParameters(0) = pParameters(0);
          cParameters(1) = pParameters(1);
@@ -781,13 +763,11 @@ Bool ImageUtilities::skyPixelWidthsToWorld (LogIO& os,
          cParameters(1) = pParameters(0);
       }
    }
-//  
    Bool flipped = gaussShape.fromPixel (cParameters, dCoord);
-   wParameters.resize(3);
-   wParameters(0) = gaussShape.majorAxis();
-   wParameters(1) = gaussShape.minorAxis();
-   wParameters(2) = gaussShape.positionAngle();
-//
+   wParameters = GaussianBeam(
+		   gaussShape.majorAxis(), gaussShape.minorAxis(),
+		   gaussShape.positionAngle()
+   );
    return flipped;
 }  
    

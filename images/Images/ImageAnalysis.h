@@ -39,6 +39,8 @@
 #include <casa/Utilities/PtrHolder.h>
 #include <measures/Measures/Stokes.h>
 
+#include <memory>
+
 namespace casa {
 
 class DirectionCoordinate;
@@ -122,15 +124,6 @@ class ImageAnalysis
                         const Record& csys, const Bool linear = True, 
                         const Bool overwrite = False, const Bool log = True);
 
-    Bool adddegaxes(const String& outfile, 
-                    PtrHolder<ImageInterface<Float> >& ph, 
-                    const Bool direction, 
-                    const Bool spectral, 
-                    const String& stokes, 
-                    const Bool linear = False, 
-                    const Bool tabular = False, 
-                    const Bool overwrite = False);
-
     ImageInterface<Float> * convolve(
     	const String& outfile,
         Array<Float>& kernel,
@@ -162,12 +155,17 @@ class ImageAnalysis
                                          const Bool overwrite = false);
 
     // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
-    // was assumed to do the conversion.
-    Quantity convertflux(Bool& fakeBeam, const Quantity& value, const Quantity& major,
-                         const Quantity& minor, 
-                         const String& type = "Gaussian", 
-                         const Bool topeak = True,
-                         Bool supressNoBeamWarnings = False);
+    // was assumed to do the conversion. <src>channel</src> and <src>polarization</src> are
+    // used only in the case the image has per plane beams.
+    Quantity convertflux(
+    	Bool& fakeBeam, const Quantity& value, const Quantity& major,
+        const Quantity& minor,
+        const String& type = "Gaussian",
+        const Bool topeak = True,
+        const Bool supressNoBeamWarnings = False,
+        const Int channel=-1,
+        const Int polarization=-1
+    ) const;
 
     ImageInterface<Float>* convolve2d(
     		const String& outfile, const Vector<Int>& axes,
@@ -215,7 +213,9 @@ class ImageAnalysis
 		   const Bool stretch=False
    );
 
-    Record deconvolvecomponentlist(Record& complist);
+    Record deconvolvecomponentlist(
+    	const Record& complist, const Int channel, const Int polarization
+    );
 
     Bool remove(Bool verbose=true);
 
@@ -228,13 +228,6 @@ class ImageAnalysis
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
-
-    ImageInterface<Float>* fitpolynomial(const String& residfile, 
-                                         const String& fitfile, 
-                                         const String& sigmafile, 
-                                         const Int axis, const Int order, 
-                                         Record& region, const String& mask, 
-                                         const bool overwrite = false);
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
                   const Vector<Int>& blc, const Vector<Int>& trc, 
@@ -393,8 +386,6 @@ class ImageAnalysis
         const Bool list=False, const Bool extendMask=False
     );
 
-    Record restoringbeam();
-
     ImageInterface<Float>* sepconvolve(
     	const String& outfile,
         const Vector<Int>& axes,
@@ -418,9 +409,14 @@ class ImageAnalysis
 
     bool setmiscinfo(const Record& info);
 
-    Bool setrestoringbeam(const Quantity& major, const Quantity& minor, 
-                          const Quantity& pa, const Record& beam, 
-                          const Bool remove = False, const Bool log = True);
+    inline static String className() {const static String x = "ImageAnalysis"; return x; }
+
+    Bool setrestoringbeam(
+    	const Quantity& major, const Quantity& minor,
+        const Quantity& pa, const Record& beam,
+        const Bool remove = False, const Bool log = True,
+        Int channel=-1, Int polarization=-1
+    );
 
     // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
     // returned to caller for eg logging to file.
@@ -448,9 +444,11 @@ class ImageAnalysis
                                      const Bool overwrite = False, 
                                      const Bool list = True, const Bool extendMask=False);
 
-    Vector<String> summary(Record& header, const String& doppler = "RADIO", 
-                            const Bool list = True, 
-                            const Bool pixelorder = True);
+    Record summary(
+    	const String& doppler = "RADIO",
+    	const Bool list = True,
+    	const Bool pixelorder = True
+    );
 
     Bool tofits(
     	const String& outfile, const Bool velocity, const Bool optical,
@@ -573,16 +571,6 @@ class ImageAnalysis
     // Create a pagedimage if imagename is not "" else create a tempimage
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
-    // Deconvolve from beam
-    // return True if the deconvolved source is a point source, False otherwise
-    // The returned value of successFit is True if the deconvolution could be performed, False otherwise.
-    casa::Bool
-      deconvolveFromBeam(Quantity& majorFit,
-                         Quantity& minorFit,
-                         Quantity& paFit,
-                         Bool& successFit,
-                         const Vector<Quantity>& beam);
-
     // get the associated ImageInterface object
     const ImageInterface<Float>* getImage() const;
 
@@ -603,19 +591,16 @@ class ImageAnalysis
 
  private:
     
-    ImageInterface<Float> *pImage_p;
-    LogIO *itsLog;
-
-  
+    std::auto_ptr<ImageInterface<Float> > _image;
+    std::auto_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    ImageStatistics<casa::Float>* pStatistics_p;
-    ImageHistograms<casa::Float>* pHistograms_p;
-    //
+    std::auto_ptr<ImageStatistics<Float> > _statistics;
+    std::auto_ptr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
-    ImageRegion* pOldStatsRegionRegion_p;
+    std::auto_ptr<ImageRegion> _oldStatsRegionRegion;
     casa::ImageRegion* pOldStatsMaskRegion_p;
     casa::ImageRegion* pOldHistRegionRegion_p;
     casa::ImageRegion* pOldHistMaskRegion_p;
@@ -734,6 +719,16 @@ class ImageAnalysis
     	const Bool dropdeg, const Bool overwrite,
     	const Bool force, const Bool extendMask
     ) const;
+
+    ImageInterface<Float>* _fitpolynomial(
+    	const String& residfile,
+    	const String& fitfile,
+    	const String& sigmafile,
+    	const Int axis, const Int order,
+    	Record& region, const String& mask,
+    	const bool overwrite = false
+    );
+
 };
 
 } // casac namespace

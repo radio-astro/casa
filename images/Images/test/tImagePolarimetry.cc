@@ -48,6 +48,7 @@
 #include <casa/Quanta/QC.h>
 #include <casa/System/PGPlotter.h>
 #include <casa/BasicSL/String.h>
+#include <lattices/Lattices/LatticeAddNoise.h>
 
 #include <casa/iostream.h>
 
@@ -356,9 +357,250 @@ try {
      }
    }
 
+   // multibeam
+   {
+	   TiledShape shape(IPosition(4, 10, 10, 4, 10));
+	   CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+	   TempImage<Float> t(shape, csys);
+	   Vector<Double> pars(2, 1);
+	   LatticeAddNoise lan(Random::NORMAL, pars);
+	   lan.add(t);
+	   ImageInfo info = t.imageInfo();
+	   t.set(1);
+	   info.setAllBeams(
+			   10, 4,
+			   GaussianBeam(
+					   Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+					   Quantity(10, "deg")
+			   )
+	   );
+	   for (uInt i=0; i<10; i++) {
+		   for (uInt j=0; j<4; j++) {
+			   info.setBeam(
+					   i, j,
+					   GaussianBeam(
+							   Quantity(4+i, "arcsec"),
+							   Quantity(2, "arcsec"),
+							   Quantity(10, "deg")
+					   )
+			   );
+		   }
+	   }
+	   t.setImageInfo(info);
+	   info.setBeam(
+			   4, 1,
+			   GaussianBeam(
+					   Quantity(5, "arcsec"), Quantity(2, "arcsec"),
+					   Quantity(10, "deg")
+			   )
+	   );
+	   info.setBeam(
+			   4, 2,
+			   GaussianBeam(
+					   Quantity(6, "arcsec"), Quantity(2, "arcsec"),
+					   Quantity(10, "deg")
+			   )
+	   );
+	   info.setBeam(
+			   4, 3,
+			   GaussianBeam(
+					   Quantity(7, "arcsec"), Quantity(2, "arcsec"),
+					   Quantity(10, "deg")
+			   )
+	   );
+	   TempImage<Float> u = t;
+	   lan = LatticeAddNoise(Random::NORMAL, pars);
+	   lan.add(u);
+	   u.setImageInfo(info);
+	   ImagePolarimetry tp(t);
+	   ImagePolarimetry up(u);
 
-}   catch (AipsError x) {
+	   tp.complexFractionalLinearPolarization();
+	   Bool except = False;
+	   try {
+		   up.complexFractionalLinearPolarization();
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.complexLinearPolarization();
+	   except = False;
+	   try {
+		   up.complexLinearPolarization();
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   ImagePolarimetry::depolarizationRatio(t, t, True);
+	   except = False;
+	   try {
+		   ImagePolarimetry::depolarizationRatio(u, u, True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+	   except = False;
+	   try {
+		   ImagePolarimetry::depolarizationRatio(t, u, True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   IPosition shape1 = tp.singleStokesShape(csys, Stokes::Plinear);
+	   TempImage<Complex> polFFT(shape1, t.coordinates());
+	   except = False;
+	  	   try {
+	  		   tp.fourierRotationMeasure(polFFT, False);
+	  	   }
+	  	   catch (AipsError) {
+	  		   except = True;
+	  	   }
+	  	   AlwaysAssert(except, AipsError);
+	   except = False;
+	   try {
+		   up.fourierRotationMeasure(polFFT, False);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.fracLinPol(True);
+	   except = False;
+	   try {
+		   up.fracLinPol(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.fracTotPol(True);
+	   except = False;
+	   try {
+		   up.fracTotPol(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.linPolInt(True);
+	   except = False;
+	   try {
+		   up.linPolInt(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.linPolPosAng(True);
+	   except = False;
+	   try {
+		   up.linPolPosAng(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   ImageInterface<Float> *dummy = 0;
+	   ImageInterface<Float> *xx = new TempImage<Float>(
+			   TiledShape(IPosition(2, 10, 10)), CoordinateUtil::defaultCoords2D()
+	   );
+	   PGPlotter plotter;
+	   Int specAxis = 3;
+	   Float min = 0;
+	   tp.rotationMeasure(
+			   xx, dummy, dummy, dummy, dummy, dummy, plotter,
+			   specAxis, min
+	   );
+	   except = False;
+	   try {
+		   up.rotationMeasure(
+				   xx, dummy, dummy, dummy, dummy, dummy, plotter, specAxis, min
+		   );
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.sigma();
+	   up.sigma();
+
+	   ImagePolarimetry::sigmaDepolarizationRatio (t, t, True);
+	   except = False;
+	   try {
+		   ImagePolarimetry::sigmaDepolarizationRatio (t, u, True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.sigmaFracLinPol();
+	   except = False;
+	   try {
+		   up.sigmaFracLinPol();
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.sigmaFracTotPol();
+	   except = False;
+	   try {
+		   up.sigmaFracTotPol();
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.sigmaLinPolInt();
+	   except = False;
+	   try {
+		   up.sigmaLinPolInt();
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.sigmaLinPolPosAng(True);
+	   except = False;
+	   try {
+		   up.sigmaLinPolPosAng(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+
+	   tp.totPolInt(True);
+	   except = False;
+	   try {
+		   up.totPolInt(True);
+	   }
+	   catch (AipsError) {
+		   except = True;
+	   }
+	   AlwaysAssert(except, AipsError);
+   }
+}
+catch (AipsError x) {
      cerr << "aipserror: error " << x.getMesg() << endl;
+     cout << "FAIL" << endl;
      return 1;
 } 
   cout << "ok" << endl;

@@ -45,12 +45,10 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/DataType.h>
 
-
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
 #include <casa/stdlib.h>
 #include <casa/sstream.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -96,7 +94,8 @@ ImageStatistics<T>::ImageStatistics(const ImageStatistics<T> &other)
 // Copy constructor.  Storage image is not copied.
 //
 : LatticeStatistics<T>(other),
-  pInImage_p(0), blc_(other.getBlc()), precision_(other.getPrecision())
+  pInImage_p(0), blc_(other.getBlc()), precision_(other.getPrecision()),
+  _showRobust(other._showRobust)
 {
    pInImage_p = other.pInImage_p->cloneII();
 }
@@ -111,8 +110,9 @@ ImageStatistics<T> &ImageStatistics<T>::operator=(const ImageStatistics<T> &othe
     	  delete pInImage_p;
       }
       pInImage_p = other.pInImage_p->cloneII();
-      precision_ = other.getPrecision();
-      blc_ = other.getBlc();
+      precision_ = other.precision_;
+      blc_ = other.blc_;
+      _showRobust = other._showRobust;
    }
    return *this;
 }
@@ -153,38 +153,111 @@ Bool ImageStatistics<T>::setNewImage(const ImageInterface<T>& image)
 
 
 
-template <class T>
-Bool ImageStatistics<T>::getBeamArea (Double& beamArea) const
-
-// Get beam volume if present.  ALl this beamy stuff should go to
-// a class called GaussianBeam and be used by GaussianCOnvert as well
-
-{
-   beamArea = -1.0;
-   ImageInfo ii = pInImage_p->imageInfo();
-   Vector<Quantum<Double> > beam = ii.restoringBeam();
-   CoordinateSystem cSys = pInImage_p->coordinates();
-   String imageUnits = pInImage_p->units().getName();
-   imageUnits.upcase();
-
-   Int afterCoord = -1;   
-   Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
-   // use contains() not == so moment maps are dealt with nicely
-   if (beam.nelements()==3 && dC!=-1 && imageUnits.contains("JY/BEAM")) {
-      DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
-      Vector<String> units(2);
-      units(0) = units(1) = "rad";
-      dCoord.setWorldAxisUnits(units);
-      Vector<Double> deltas = dCoord.increment();
-
-      Double major = beam(0).getValue(Unit("rad"));
-      Double minor = beam(1).getValue(Unit("rad"));
-      beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
-      return True;
-   }
-   else {
-      return False;
-   }
+template <class T> Bool ImageStatistics<T>::_getBeamArea(
+	Array<Double>& beamArea
+) const {
+	// Get beam volume if present.  ALl this beamy stuff should go to
+	// a class called GaussianBeam and be used by GaussianCOnvert as well
+	ImageInfo ii = pInImage_p->imageInfo();
+	Bool hasMultiBeams = ii.hasMultipleBeams();
+	Bool hasSingleBeam = ! hasMultiBeams && ii.hasBeam();
+	CoordinateSystem cSys = pInImage_p->coordinates();
+	String imageUnits = pInImage_p->units().getName();
+	imageUnits.upcase();
+	// use contains() not == so moment maps are dealt with nicely
+	if (
+		(hasMultiBeams || hasSingleBeam)
+		&& cSys.hasDirectionCoordinate()
+		&& imageUnits.contains("JY/BEAM")
+	) {
+		DirectionCoordinate dCoord = cSys.directionCoordinate();
+		Vector<String> units(2, "rad");
+		dCoord.setWorldAxisUnits(units);
+		Vector<Double> deltas = dCoord.increment();
+		IPosition beamAreaShape;
+		if (this->_storageLatticeShape().size() == 1) {
+			beamAreaShape.resize(1);
+			beamAreaShape[0] = 1;
+		}
+		else {
+			beamAreaShape.resize(this->_storageLatticeShape().size() - 1);
+			for (uInt i=0; i< beamAreaShape.size(); i++) {
+				beamAreaShape[i] = this->_storageLatticeShape()[i];
+			}
+		}
+		beamArea.resize(beamAreaShape);
+		beamArea.set(-1.0);
+		Double coeff = 1 / abs(deltas(0) * deltas(1));
+		if (hasSingleBeam) {
+			beamArea.set(
+				ii.restoringBeam(-1, -1).getArea("rad2") * coeff
+			);
+			return True;
+		}
+		else {
+			// per plane beams
+			// ensure both the spectral and polarization axes are display axes
+			Bool foundSpec = ! cSys.hasSpectralAxis() || False;
+			Bool foundPol = ! cSys.hasPolarizationCoordinate() || False;
+			Int specAxis = foundSpec ? -1 : cSys.spectralAxisNumber();
+			Int polAxis = foundPol ? -1 : cSys.polarizationAxisNumber();
+			Bool found = False;
+			const ImageBeamSet& beams = ii.getBeamSet();
+			Int storageSpecAxis = -1;
+			Int storagePolAxis = -1;
+			for (uInt i=0; i<displayAxes_p.size(); i++) {
+				if (displayAxes_p[i] == specAxis) {
+					foundSpec = True;
+					storageSpecAxis = i;
+				}
+				else if (displayAxes_p[i] == polAxis) {
+					foundPol = True;
+					storagePolAxis = i;
+				}
+				if (found = foundSpec && foundPol) {
+					break;
+				}
+			}
+			if (found) {
+				IPosition beamsShape = beams.shape();
+				if (cSys.hasSpectralAxis()) {
+					AlwaysAssert(
+						beamsShape[0] == beamAreaShape[storageSpecAxis],
+						AipsError
+					);
+				}
+				Int beamPolAxis = -1;
+				if (cSys.hasPolarizationCoordinate()) {
+					beamPolAxis = specAxis < 0 ? 0 : 1;
+					AlwaysAssert(
+						beamsShape[beamPolAxis] == beamAreaShape[storagePolAxis],
+						AipsError
+					);
+				}
+				IPosition curPos(beamAreaShape.nelements(), 0);
+				GaussianBeam curBeam;
+				IPosition curBeamPos(beams.shape().nelements(), 0);
+				for (
+					IPosition curPos(beamAreaShape.size(), 0);
+					curPos<beamAreaShape; curPos.next(beamAreaShape)
+				) {
+					if (storageSpecAxis >= 0) {
+						curBeamPos[0] = curPos[storageSpecAxis];
+					}
+					if (storagePolAxis >= 0) {
+						curBeamPos[beamPolAxis] = curPos[storagePolAxis];
+					}
+					curBeam = beams(curBeamPos);
+					beamArea(curPos) = coeff * curBeam.getArea("rad2");
+				}
+				return True;
+			}
+		}
+	}
+	// if per-plane beams, either the spectral axis and/or the
+	// polarization axis is not a display axis
+	// or else the image has no beam
+	return False;
 }
 
 
@@ -361,10 +434,6 @@ void ImageStatistics<T>::displayStats(
 	}
 
 
-	// Get beam
-	Double beamArea;
-	Bool hasBeam = getBeamArea(beamArea);
-
 	// Find world coordinates of min and max. We list pixel coordinates
 	// of min/max relative to the start of the parent lattice
 	//if (!fixedMinMax_p) {
@@ -401,13 +470,17 @@ void ImageStatistics<T>::displayStats(
 	messages.push_back("Values --- ");
 	// os_p << "Values --- " << LogIO::POST;
 	ostringstream oss;
+	Array<Double> beamArea;
+	Bool hasBeam = _getBeamArea(beamArea);
 	if ( hasBeam ) {
+		// beamArea guaranteed to only have one value in this method.
+
 		// normalisation of units with "beam" in them is not (well) implemented, so brute force it
 		Int iBeam = sbunit.find("/beam");
 		String fUnit = (iBeam >= 0)
 			? sbunit.substr(0, iBeam) + sbunit.substr(iBeam+5)
 			: "Jy";
-		oss << "         -- flux density [flux]:     " << sum/beamArea
+		oss << "         -- flux density [flux]:     " << sum/(*(beamArea.begin()))
 			<< " " << fUnit;
 		messages.push_back(oss.str());
 		oss.str("");
@@ -449,8 +522,6 @@ void ImageStatistics<T>::displayStats(
 		messages.push_back(oss.str());
 		oss.str("");
 	}
-
-
 
 	///////////////////////////////////////////////////////////////////////
 	//                 Do Statistical Section

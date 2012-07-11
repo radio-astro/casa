@@ -189,6 +189,7 @@ int main() {
                 else if (pos[0] == Int((nbins-1)/2)) {
                     expCount = 48;
                 }
+                cout << "*** count " << counts(pos) << " exp " << expCount << endl;
                 AlwaysAssert(counts(pos) == expCount, AipsError);
             }
         }

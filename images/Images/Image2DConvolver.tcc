@@ -46,6 +46,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/ImageUtilities.h>
+#include <images/Images/SubImage.h>
 #include <casa/Logging/LogIO.h>
 #include <scimath/Mathematics/Convolver.h>
 #include <casa/Quanta/Quantum.h>
@@ -53,6 +54,8 @@
 #include <casa/Quanta/Unit.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
+
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -92,8 +95,10 @@ template <class T> void Image2DConvolver<T>::convolve(
 		os << "You must give two pixel axes to convolve" << LogIO::EXCEPTION;
 	}
 	const Int nDim = imageIn.ndim();
-	if (pixelAxes(0)<0 || pixelAxes(0)>=nDim ||
-		pixelAxes(1)<0 || pixelAxes(1)>=nDim) {
+	if (
+		pixelAxes(0) < 0 || pixelAxes(0) >= nDim
+		|| pixelAxes(1) < 0 || pixelAxes(1) >= nDim
+	) {
 		os << "The pixel axes " << pixelAxes << " are illegal" << LogIO::EXCEPTION;
 	}
 	if (nDim < 2) {
@@ -104,69 +109,157 @@ template <class T> void Image2DConvolver<T>::convolve(
 	if (!inShape.isEqual(outShape)) {
 		os << "Input and output images must have the same shape" << LogIO::EXCEPTION;
 	}
-
 	// Generate Kernel Array (height unity)
-
 	Array<T> kernel;
-	T kernelVolume = makeKernel(os, kernel, kernelType, parameters, pixelAxes, imageIn);
+	T kernelVolume = _makeKernel(os, kernel, kernelType, parameters, pixelAxes, imageIn);
+
 
 	// Figure out output image restoring beam (if any), output units and scale
 	// factor for convolution kernel array
 
-	Vector<Quantity> beamOut;
+	GaussianBeam beamOut;
 	const CoordinateSystem& cSys = imageIn.coordinates();
 	const ImageInfo& imageInfo = imageIn.imageInfo();
 	const Unit& brightnessUnit = imageIn.units();
 	String brightnessUnitOut;
-	_dealWithRestoringBeam(
-		os, brightnessUnitOut, beamOut, kernel, kernelVolume,
-		kernelType, parameters, pixelAxes, cSys, imageInfo,
-		brightnessUnit, autoScale, scale
-	);
-
-	// Convolve.  We have already scaled the convolution kernel (with some
-	// trickery cleverer than what ImageConvolver can do) so no more scaling
-
-	ImageConvolver<T> aic;
-	aic.convolve(
-		os, imageOut, imageIn, kernel, ImageConvolver<T>::NONE,
-		1.0, copyMiscellaneous
-	);
-	// Overwrite some bits and pieces in the output image to do with the
-	// restoring beam  and image units
-	imageOut.setUnits(brightnessUnitOut);
 	ImageInfo iiOut = imageOut.imageInfo();
-	Bool holdsOneSkyAxis;
-	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
-	if (hasSky && beamOut.nelements() == 3) {
-		iiOut.setRestoringBeam(beamOut);
-		imageOut.setImageInfo(iiOut);
-	}
-	else {
-		// If one of the axes is in the sky plane, we must
-		// delete the restoring beam as it is no longer meaningful
-		if (holdsOneSkyAxis) {
-			os << LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
-			os << "The output image does not have a valid spatial restoring beam" << LogIO::POST;
-			iiOut.removeRestoringBeam();
-			imageOut.setImageInfo(iiOut);
+	if (imageInfo.hasMultipleBeams()) {
+		uInt nChan = imageInfo.nChannels();
+		uInt nPol = imageInfo.nStokes();
+		// initialize all beams to be null
+		iiOut.setAllBeams(nChan, nPol, GaussianBeam());
+		uInt count = (nChan > 0 && nPol > 0)
+			? nChan * nPol
+				: nChan > 0
+				  ? nChan
+				  : nPol;
+		Int specAxis = cSys.spectralAxisNumber();
+		Int polAxis = cSys.polarizationAxisNumber();
+		IPosition start(imageIn.ndim(), 0);
+		IPosition end = imageIn.shape();
+		if (nChan > 0) {
+			end[specAxis] = 1;
+		}
+		if (nPol > 0) {
+			end[polAxis] = 1;
+		}
+		Int channel = -1;
+		Int polarization = -1;
+		for (uInt i=0; i<count; i++) {
+			if (nChan > 0) {
+				channel = i % nChan;
+				start[specAxis] = channel;
+			}
+			if (nPol > 0) {
+				polarization = nChan > 0
+					? i % nChan
+					: i;
+				start[polAxis] = polarization;
+			}
+			Slicer slice(start, end);
+			SubImage<T> subImage(imageIn, slice);
+			CoordinateSystem subCsys = subImage.coordinates();
+			if (subCsys.hasSpectralAxis()) {
+				Vector<Double> subRefPix = subCsys.referencePixel();
+				subRefPix[specAxis] = 0;
+				subCsys.setReferencePixel(subRefPix);
+
+			}
+			_dealWithRestoringBeam(
+				os, brightnessUnitOut, beamOut, kernel, kernelVolume,
+				kernelType, parameters, pixelAxes, subCsys,
+				imageInfo.restoringBeam(channel, polarization),
+				brightnessUnit, autoScale, scale
+			);
+			TempImage<Float> subImageOut(
+				subImage.shape(), subImage.coordinates()
+			);
+			ImageConvolver<T> aic;
+			aic.convolve(
+				os, subImageOut, subImage, kernel,
+				ImageConvolver<T>::NONE, 1.0, copyMiscellaneous
+			);
+			{
+				Bool doMask = imageOut.isMasked() && imageOut.hasPixelMask();
+				Lattice<Bool>* pMaskOut = 0;
+				if (doMask) {
+					pMaskOut = &imageOut.pixelMask();
+					if (! pMaskOut->isWritable()) {
+						doMask = False;
+					}
+				}
+				IPosition cursorShape = subImageOut.niceCursorShape();
+				IPosition outPos = start;
+				LatticeStepper stepper(
+					subImageOut.shape(), cursorShape, LatticeStepper::RESIZE
+				);
+				RO_MaskedLatticeIterator<T> iter(subImageOut, stepper);
+				for (iter.reset(); !iter.atEnd(); iter++) {
+					IPosition cursorShape = iter.cursorShape();
+					imageOut.putSlice(iter.cursor(), outPos);
+					if (doMask) {
+						pMaskOut->putSlice(iter.getMask(), outPos);
+					}
+					outPos = outPos + cursorShape;
+				}
+			}
+			iiOut.setBeam(
+				channel, polarization, beamOut
+			);
 		}
 	}
+	else {
+		_dealWithRestoringBeam(
+			os, brightnessUnitOut, beamOut, kernel, kernelVolume,
+			kernelType, parameters, pixelAxes, cSys, imageInfo.restoringBeam(),
+			brightnessUnit, autoScale, scale
+		);
+		// cout << std::setprecision(11) << kernel << endl;
+
+		//cout << std::setprecision(12) << beamOut << " " << kernelVolume << endl;
+		//cout << parameters << " " << pixelAxes << imageInfo.restoringBeam() << endl;
+		//cout << brightnessUnit.getName() << " " << autoScale << " " << scale << endl;
+		// Convolve.  We have already scaled the convolution kernel (with some
+		// trickery cleverer than what ImageConvolver can do) so no more scaling
+		ImageConvolver<T> aic;
+		aic.convolve(
+			os, imageOut, imageIn, kernel, ImageConvolver<T>::NONE,
+			1.0, copyMiscellaneous
+		);
+		// Overwrite some bits and pieces in the output image to do with the
+		// restoring beam  and image units
+		Bool holdsOneSkyAxis;
+		Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+		if (hasSky && ! beamOut.isNull()) {
+			iiOut.setRestoringBeam(beamOut);
+		}
+		else {
+			// If one of the axes is in the sky plane, we must
+			// delete the restoring beam as it is no longer meaningful
+			if (holdsOneSkyAxis) {
+				os << LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
+				os << "The output image does not have a valid spatial restoring beam" << LogIO::POST;
+				iiOut.removeRestoringBeam();
+			}
+		}
+	}
+	imageOut.setUnits(brightnessUnitOut);
+	imageOut.setImageInfo(iiOut);
 }
 
 // Private functions
 
-template <class T>
-T Image2DConvolver<T>::makeKernel(LogIO& os, Array<T>& kernelArray, 
-                                  VectorKernel::KernelTypes kernelType,
-                                  const Vector<Quantum<Double> >& parameters,
-                                  const IPosition& pixelAxes,
-                                  const ImageInterface<T>& imageIn) const
-{
+template <class T> T Image2DConvolver<T>::_makeKernel(
+	LogIO& os, Array<T>& kernelArray,
+	VectorKernel::KernelTypes kernelType,
+	const Vector<Quantity>& parameters,
+	const IPosition& pixelAxes,
+	const ImageInterface<T>& imageIn
+) {
 
 // Check number of parameters
 
-   checkKernelParameters(os, kernelType, parameters);
+   _checkKernelParameters(os, kernelType, parameters);
 
 // Convert kernel widths to pixels from world.  Demands major and minor
 // both in pixels or both in world, else exception
@@ -202,19 +295,19 @@ T Image2DConvolver<T>::makeKernel(LogIO& os, Array<T>& kernelArray,
 
 // Fill kernel Matrix with functional (height unity)
 
-   return fillKernel (kernelMatrix, kernelType, kernelShape, pixelAxes, dParameters);
+   return _fillKernel (kernelMatrix, kernelType, kernelShape, pixelAxes, dParameters);
 }
 
 
-template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
+template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam(
 	LogIO& os, String& brightnessUnitOut,
-	Vector<Quantity>& beamOut, Array<T>& kernelArray,
+	GaussianBeam& beamOut, Array<T>& kernelArray,
 	const T kernelVolume, const VectorKernel::KernelTypes,
 	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes, const CoordinateSystem& cSys,
-	const ImageInfo& imageInfo, const Unit& brightnessUnitIn,
+	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
 	const Bool autoScale, const Double scale
-) const {
+) {
 	// Find out if convolution axes hold the sky.  Scaling from
 	// Jy/beam and Jy/pixel only really makes sense if this is True
 	Bool holdsOneSkyAxis;
@@ -225,9 +318,7 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 	else {
 		os << "You are not convolving the sky" << LogIO::POST;
 	}
-	// Generate an array holding the restoring beam if needed
-	Vector<Quantity> beamIn = imageInfo.restoringBeam();
-	beamOut.resize(0);
+	beamOut = GaussianBeam();
 	String bUnitIn = upcase(brightnessUnitIn.getName());
 	const Vector<Double>& refPix = cSys.referencePixel();
 	if (hasSky && bUnitIn == "JY/PIXEL") {
@@ -235,28 +326,26 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 		// and output units are Jy/beam.  All other cases require
 		// numerical convolution of beams
 		brightnessUnitOut = "Jy/beam";
-		beamOut.resize(3);
 		// Exception already generated if only one of major and minor in pixel units
-		if (parameters(0).getFullUnit().getName() == "pix") {
+		Quantity majAx = parameters(0);
+		Quantity minAx = parameters(1);
+		if (majAx.getFullUnit().getName() == "pix") {
 			Vector<Double> pixelParameters(5);
 			pixelParameters(0) = refPix(pixelAxes(0));
 			pixelParameters(1) = refPix(pixelAxes(1));
 			pixelParameters(2) = parameters(0).getValue();
 			pixelParameters(3) = parameters(1).getValue();
 			pixelParameters(4) = parameters(2).getValue(Unit("rad"));
-			Vector<Quantum<Double> > worldParameters;
+			GaussianBeam worldParameters;
 			ImageUtilities::pixelWidthsToWorld(
 				os, worldParameters, pixelParameters,
 				cSys, pixelAxes, False
 			);
-			beamOut(0) = worldParameters(0);
-			beamOut(1) = worldParameters(1);
+			majAx = worldParameters.getMajor();
+			minAx = worldParameters.getMinor();
 		}
-		else {
-			beamOut(0) = parameters(0);
-			beamOut(1) = parameters(1);
-		}
-		beamOut(2) = parameters(2);                // Input p.a. is positive N->E
+		beamOut = GaussianBeam(majAx, minAx, parameters(2));
+		// Input p.a. is positive N->E
 		if (!autoScale) {
 			T t = static_cast<T>(scale);
 			kernelArray *= t;
@@ -269,10 +358,8 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 		// pertains ?  If not, all we can do is use user scaling or normalize the convolution
 		// kernel to unit volume.  There is no point to convolving the input beam either as it pertains
 		// only to the sky
-		if (hasSky && bUnitIn==String("JY/BEAM") && beamIn.nelements() == 3) {
-
+		if (hasSky && bUnitIn == String("JY/BEAM") && ! beamIn.isNull()) {
 			// Convert restoring beam parameters to pixels.  Output pa is pos +x -> +y in pixel frame.
-
 			Vector<Quantity> wParameters(5);
 			const Vector<Double> refVal = cSys.referenceValue();
 			const Vector<String> units = cSys.worldAxisUnits();
@@ -280,16 +367,14 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 			wParameters(0) = Quantity(refVal(wAxis), units(wAxis));
 			wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
 			wParameters(1) = Quantity(refVal(wAxis), units(wAxis));
-			for (uInt i=0; i<3; i++) {
-				wParameters(i+2) = beamIn(i);
-			}
+			wParameters(2) = beamIn.getMajor();
+			wParameters(3) = beamIn.getMinor();
+			wParameters(4) = beamIn.getPA(True);
 			Vector<Double> dParameters;
 			ImageUtilities::worldWidthsToPixel(
 				os, dParameters, wParameters, cSys, pixelAxes, False
 			);
-         
 			// Create 2-D beam array shape
-
 			IPosition dummyAxes(2, 0, 1);
 			IPosition beamShape = shapeOfKernel(
 				VectorKernel::GAUSSIAN,
@@ -299,25 +384,38 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 			// Create beam Matrix and fill with height unity
    
 			Matrix<T> beamMatrixIn(beamShape(0), beamShape(1));
-			fillKernel(
+			_fillKernel(
 				beamMatrixIn, VectorKernel::GAUSSIAN, beamShape,
                 dummyAxes, dParameters
 			);
 
+			IPosition shape = beamMatrixIn.shape();
+			/*
+		    cout << std::setprecision(11)
+				<< "*** beam matrix in " << beamMatrixIn(IPosition(2, shape[0]/2+1, shape[1]/2+1))
+				<< endl;
+				*/
 			// Get 2-D version of convolution kenrel
-
 			Array<T> kernelArray2 = kernelArray.nonDegenerate(pixelAxes);
 			Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
-         
 			// Convolve input restoring beam array by convolution kernel array
-
 			Matrix<T> beamMatrixOut;
+			//cout << "*** beamMatrixIn " << beamMatrixIn << endl;
+			//cout << "*** kernelMatrix " << kernelMatrix << endl;
 			Convolver<T> conv(beamMatrixIn, kernelMatrix.shape());   // matrixIn     = input restoring beam
+
 			conv.linearConv(beamMatrixOut, kernelMatrix);
-
+			/*
+			cout << std::setprecision(11)
+				<< "*** kernel matrix out " << kernelMatrix(IPosition(2, shape[0]/2+1, shape[1]/2+1))
+				<< endl;
+			cout << std::setprecision(11)
+				<< "*** beam matrix out " << beamMatrixOut(IPosition(2, shape[0]/2+1, shape[1]/2+1))
+				<< endl;
+				*/
 			// Scale kernel
-
 			T maxValOut = max(beamMatrixOut);
+			//cout << "*** maxValOut " << maxValOut << endl;
 			if (autoScale) {
 				brightnessUnitOut = "Jy/beam";
 				kernelArray /= maxValOut;
@@ -326,20 +424,17 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 				T t = static_cast<T>(scale);
 				kernelArray *= t;
 			}
-
 			// Fit output beam matrix with a Gaussian, for better or worse
 			// Fit2D is not templated.  So all our templating is useless
 			// other than for Float until I template Fit2D
-
 			Fit2D fitter(os);
 			const uInt n = beamMatrixOut.shape()(0);
 			Vector<Double> bParameters = fitter.estimate(Fit2D::GAUSSIAN, beamMatrixOut);
+		//	cout << std::setprecision(11) << bParameters << endl;
 			Vector<Bool> bParameterMask(bParameters.nelements(), True);
 			bParameters(1) = (n-1)/2;          // x centre
 			bParameters(2) = bParameters(1);    // y centre
-
 			// Set range so we don't include too many pixels in fit which will make it very slow
-
 			fitter.addModel (Fit2D::GAUSSIAN, bParameters, bParameterMask);
 			Array<Float> sigma;
 			fitter.setIncludeRange(maxValOut/10.0, maxValOut+0.1);
@@ -352,9 +447,7 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 				os << "Failed to fit the output beam" << LogIO::EXCEPTION;
 			}
 			Vector<Double> bSolution = fitter.availableSolution();
-
 			// Convert to world units. Ho hum.
-                            
 			Vector<Double> pixelParameters(5);
 			pixelParameters(0) = refPix(pixelAxes(0));
 			pixelParameters(1) = refPix(pixelAxes(1));
@@ -364,6 +457,7 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 			ImageUtilities::pixelWidthsToWorld(
 				os, beamOut, pixelParameters, cSys, pixelAxes, False
 			);
+
 		}
 		else {
 			if (autoScale) {
@@ -377,18 +471,21 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam (
 		}
 	}
 	// Put beam position angle into range +/- 180 in case it has eluded us so far
-	if (beamOut.nelements() == 3) {
-		MVAngle pa(beamOut(2).getValue(Unit("rad")));
+	if (! beamOut.isNull()) {
+		MVAngle pa(beamOut.getPA(True).getValue(Unit("rad")));
 		pa();
-		beamOut(2) = Quantity(pa.degree(), Unit("deg"));
+		beamOut = GaussianBeam(
+			beamOut.getMajor(), beamOut.getMinor(),
+			Quantity(pa.degree(), Unit("deg"))
+		);
 	}
 }
 
-template <class T>
-void Image2DConvolver<T>::checkKernelParameters(LogIO& os, 
-                                                VectorKernel::KernelTypes kernelType,
-                                                const Vector<Quantum<Double> >& parameters) const
-{
+template <class T> void Image2DConvolver<T>::_checkKernelParameters(
+	LogIO& os,
+	VectorKernel::KernelTypes kernelType,
+	const Vector<Quantum<Double> >& parameters
+) {
    if (kernelType==VectorKernel::BOXCAR) {
       os << "Boxcar kernel not yet implemented" << LogIO::EXCEPTION;
 //
@@ -405,16 +502,15 @@ void Image2DConvolver<T>::checkKernelParameters(LogIO& os,
 }
 
 
-template <class T>
-IPosition Image2DConvolver<T>::shapeOfKernel (VectorKernel::KernelTypes kernelType,
-                                              const Vector<Double>& parameters,
-                                              uInt ndim,
-                                              const IPosition& axes) const
+template <class T> IPosition Image2DConvolver<T>::shapeOfKernel(
+	const VectorKernel::KernelTypes kernelType,
+	const Vector<Double>& parameters,
+	const uInt ndim, const IPosition& axes
+) {
 //
 // Work out how big the array holding the kernel should be.
 // Simplest algorithm possible. Shape is presently square.
 //
-{
 
 // Find 2D shape
 
@@ -442,8 +538,9 @@ IPosition Image2DConvolver<T>::shapeOfKernel (VectorKernel::KernelTypes kernelTy
 }
    
 template <class T>
-uInt Image2DConvolver<T>::sizeOfGaussian (Double width, Double nSigma) const
-{
+uInt Image2DConvolver<T>::sizeOfGaussian(
+	const Double width, const Double nSigma
+) {
 // +/- 5sigma is a volume error of less than 6e-5%
 
    Double sigma = width / sqrt(Double(8.0) * C::ln2);
@@ -451,13 +548,13 @@ uInt Image2DConvolver<T>::sizeOfGaussian (Double width, Double nSigma) const
 }
 
 
-template <class T>
-T Image2DConvolver<T>::fillKernel (Matrix<T>& kernelMatrix, 
-                                   VectorKernel::KernelTypes kernelType,
-                                   const IPosition& kernelShape,
-                                   const IPosition& axes,
-                                   const Vector<Double>& parameters) const
-{
+template <class T> T Image2DConvolver<T>::_fillKernel(
+	Matrix<T>& kernelMatrix,
+	VectorKernel::KernelTypes kernelType,
+	const IPosition& kernelShape,
+	const IPosition& axes,
+	const Vector<Double>& parameters
+) {
 
 // Centre functional in array (shape is odd)
 // Need to think about these T castes for Complex images
@@ -474,6 +571,10 @@ T Image2DConvolver<T>::fillKernel (Matrix<T>& kernelMatrix,
    T pa = static_cast<T>(parameters(2));
    T ratio = static_cast<T>(parameters(1) / parameters(0));
    T major = static_cast<T>(parameters(0));
+   /*
+   cout << "*** x " << std::setprecision(11) << height << " " << xCentre << " " << yCentre << " "
+		   << " " << major << " " <<  ratio << " " << pa << endl;
+		   */
    if (kernelType==VectorKernel::GAUSSIAN) {
        fillGaussian (maxValKernel, volumeKernel, kernelMatrix, height,
                      xCentre, yCentre, major, ratio, pa);
@@ -489,15 +590,14 @@ T Image2DConvolver<T>::fillKernel (Matrix<T>& kernelMatrix,
    return volumeKernel;
 }         
 
-template <class T>
-void Image2DConvolver<T>::fillGaussian (T& maxVal, T& volume,
-                                        Matrix<T>& pixels, T height, T xCentre,
-                                        T yCentre, T majorAxis, T ratio,
-                                        T positionAngle) const
+template <class T> void Image2DConvolver<T>::fillGaussian(
+	T& maxVal, T& volume, Matrix<T>& pixels, T height,
+	T xCentre, T yCentre, T majorAxis, T ratio,
+	T positionAngle
+) {
 // 
 // pa positive in +x ->+y pixel coordinate frame
 //
-{
    uInt n1 = pixels.shape()(0);
    uInt n2 = pixels.shape()(1);
    AlwaysAssert(n1==n2,AipsError);

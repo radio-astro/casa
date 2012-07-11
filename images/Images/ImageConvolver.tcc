@@ -86,7 +86,6 @@ void ImageConvolver<T>::convolve(LogIO& os,
                                  Bool copyMiscellaneous, Bool warnOnly)
 {
 // Check Coordinates
-
     checkCoordinates (os, imageIn.coordinates(), kernel.coordinates(),
                       warnOnly);
 
@@ -120,13 +119,11 @@ void ImageConvolver<T>::convolve(LogIO& os,
 {
 
 // Check
-
    const IPosition& inShape = imageIn.shape();
    const IPosition& outShape = imageOut.shape();
    if (!inShape.isEqual(outShape)) {
       os << "Input and output images must have same shape" << LogIO::EXCEPTION;
    }
-// 
     if (kernel.ndim() > imageIn.ndim()) {
         os << "Kernel lattice has more axes than the image!" << LogIO::EXCEPTION;
     }
@@ -135,7 +132,6 @@ void ImageConvolver<T>::convolve(LogIO& os,
 
     Lattice<T>* pNewKernel = 0;
     LatticeUtilities::addDegenerateAxes (pNewKernel, kernel, inShape.nelements());
-
     std::auto_ptr<Lattice<T> > pnkMgr(pNewKernel);
 // Normalize kernel.  
   
@@ -149,7 +145,6 @@ void ImageConvolver<T>::convolve(LogIO& os,
        node = LatticeExprNode(*pNewKernel);
     }
     LatticeExpr<T> kernelExpr(node);
-
 // Create convolver
 
     LatticeConvolver<T> lc(kernelExpr, imageIn.shape(),  ConvEnums::LINEAR);
@@ -164,7 +159,6 @@ void ImageConvolver<T>::convolve(LogIO& os,
 // and set to zero where masked
 
       LatticeUtilities::copyDataAndMask(os, imageOut, imageIn, True);
-
 // Convolve in situ
 
       lc.convolve(imageOut);
@@ -176,16 +170,12 @@ void ImageConvolver<T>::convolve(LogIO& os,
     }
 
 // Overwrite output CoordinateSystem 
-
    imageOut.setCoordinateInfo (imageIn.coordinates());
-
 // Copy miscellaneous things across as required
 
     if (copyMiscellaneous) ImageUtilities::copyMiscellaneous(imageOut, imageIn);
-
 // Delete the restoring beam (should really check that the beam is in the
 // plane of convolution)
-
     ImageInfo ii = imageOut.imageInfo();
     ii.removeRestoringBeam();
     imageOut.setImageInfo (ii);

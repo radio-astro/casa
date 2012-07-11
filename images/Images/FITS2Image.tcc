@@ -191,7 +191,7 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
 // Try and find the restoring beam in the history cards if
 // its not in the header
 
-    if (imageInfo.restoringBeam().nelements() != 3) {
+    if (! imageInfo.hasSingleBeam()) {
        imageInfo.getRestoringBeam(log);
     }
 }
@@ -349,7 +349,7 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
 // Try and find the restoring beam in the history cards if
 // its not in the header
 
-    if (imageInfo.restoringBeam().nelements() != 3) {
+    if (! imageInfo.hasSingleBeam()) {
        imageInfo.getRestoringBeam(log);
     }
 }

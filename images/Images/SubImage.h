@@ -277,7 +277,7 @@ private:
   void setCoords (const CoordinateSystem& coords);
 
   // Set the other members in the parent.
-  void setMembers (const ImageInterface<T>& image);
+  void setMembers(const ImageBeamSet& hpBeams);
 
   // Helper
    void convertIPosition(Vector<Float>& x, const IPosition& pos) const;
@@ -285,6 +285,19 @@ private:
   //# itsImagePtr points to the parent image.
   std::auto_ptr<ImageInterface<T> > itsImagePtr;
   std::auto_ptr<SubLattice<T> >    itsSubLatPtr;
+
+
+  // Given an original image shape and coordinate system and a subimage shape and
+  // coordinate system, get the corresponding per plane beam array. The subimage
+  // coordinate system must have been made with origCoords.subimage() and both must
+  // have the same types of axes in the same order. The shapes must have the same
+  // number of dimensions and all members of <src>subShape</src> must be greater or
+  // equal to 1 and less than the corresponding members of <src>origShape</src>.
+  ImageBeamSet _beamsForSubImage(
+  	const IPosition& subShape,
+  	const CoordinateSystem& subCoords
+  );
+
 
   //# Make members of parent class known.
 public:

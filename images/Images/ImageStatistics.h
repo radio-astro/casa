@@ -167,8 +167,11 @@ private:
 // Get label for higher order axes
    virtual void getLabels(String& higherOrder, String& xAxis, const IPosition& dPos) const;
 
-// Get beam volume if possible
-   virtual Bool getBeamArea (Double& beamArea) const;
+    // Get beam volume if possible. Return False if the beam area could not be
+    // calculated.
+    virtual Bool _getBeamArea(
+    	Array<Double>& beamArea
+    ) const;
 
 // List min and max with world coordinates
    virtual void listMinMax (ostringstream& osMin,

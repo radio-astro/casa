@@ -191,11 +191,10 @@ class IPosition;
 
 template <class T> class LatticeStatistics : public LatticeStatsBase
 {
-// TypeDef
-
-typedef typename NumericTraits<T>::PrecisionType AccumType;
 
 public:
+
+	typedef typename NumericTraits<T>::PrecisionType AccumType;
 
 // Constructor takes the lattice and a <src>LogIO</src> object for logging.
 // You can specify whether you want to see progress meters or not.
@@ -377,8 +376,10 @@ protected:
 // See for example, class ImageStatistics.  When you provide
 // the beam, then the Flux statistic, if requested, can be
 // computed.  Returns False if beam not available, else True.
-// The implementation here returns False.
-   virtual Bool getBeamArea (Double& beamArea) const;
+// The implementation here returns False. Callers are responsible
+   // for deleting the <src>beamArea</src> pointer which is created
+
+   virtual Bool _getBeamArea (Array<Double>& beamArea) const;
 
    virtual void listMinMax (ostringstream& osMin,
                             ostringstream& osMax,
@@ -417,6 +418,9 @@ protected:
 //
 // set stream manipulators
    void setStream (ostream& os, Int oPrec);
+
+   // get the storage lattice shape
+   inline IPosition _storageLatticeShape() const { return pStoreLattice_p->shape(); }
 
 private:
    const MaskedLattice<T>* pInLattice_p;
@@ -508,8 +512,8 @@ private:
 
 // Retrieve a statistic from the storage lattice and return in an array
    Bool retrieveStorageStatistic (Array<AccumType>& slice, 
-                                  LatticeStatsBase::StatisticsTypes type, 
-                                  Bool dropDeg);
+                                  const LatticeStatsBase::StatisticsTypes type,
+                                  const Bool dropDeg);
 
 // Retrieve a statistic from the storage lattice at the specified
 // location and return in an array
@@ -527,6 +531,17 @@ private:
 
 // Stretch min and max by 5%
    void stretchMinMax (AccumType& dMin, AccumType& dMax) const;
+
+   // convert a position in the input lattice to the corresponding
+   // position in the stats storage lattice. The number of elements
+   // in storagePos will not be changed and only the first N elements
+   // will be modified where N = the number of elements in latticePos.
+   // <src>storagePos</src> must therefore have at least as many elements
+   // as <src>latticePos</src>. Returns False if
+   //<src>latticePos</src> is inconsistent with the input lattice.
+   void _latticePosToStoragePos(
+		 IPosition& storagePos, const IPosition& latticePos
+   );
 };
 
 

@@ -174,7 +174,7 @@ SkyComponent SkyComponent::copy() const {
 
 void SkyComponent::fromPixel (Double& fluxRatio, const Vector<Double>& parameters,
                               const Unit& brightnessUnitIn,
-                              const Vector<Quantum<Double> >& restoringBeam,
+                              const GaussianBeam& restoringBeam,
                               const CoordinateSystem& cSys,
                               ComponentType::Shape componentShape,
                               Stokes::StokesTypes stokes)
@@ -184,7 +184,7 @@ void SkyComponent::fromPixel (Double& fluxRatio, const Vector<Double>& parameter
 }
 
 Vector<Double> SkyComponent::toPixel (const Unit& brightnessUnitIn,
-                                      const Vector<Quantum<Double> >& restoringBeam,
+                                      const GaussianBeam& restoringBeam,
                                       const CoordinateSystem& cSys,
                                       Stokes::StokesTypes stokes) const
 {
