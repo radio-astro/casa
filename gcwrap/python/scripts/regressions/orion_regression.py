@@ -271,7 +271,7 @@ test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Joint Deconvolution', 'max',  1.10, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
-	      ('SD Model (MS)',       'flux', 357, ' ', 'SD Model (MS)', 'SD Model MS'),
+	      ('SD Model (MS)',       'flux', 347, ' ', 'SD Model (MS)', 'SD Model MS'),
 	      ('SD Model (MEM)',      'flux', 286, '', 'SD Model (MEM)', 'Joint Deconvolution'),
 	      ('Joint Deconvolution', 'flux', 226, '', 'Joint Decon2')) # 360.468
 
