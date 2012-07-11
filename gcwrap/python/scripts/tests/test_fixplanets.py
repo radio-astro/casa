@@ -54,6 +54,23 @@ class fixplanets_test1(unittest.TestCase):
                 
         self.assertTrue(rval)
 
+    def test5(self):
+        '''Does a standard fixplanets work on an MS imported from an ASDM from April 2011 with parameter reftime'''
+        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='median')
+                
+        self.assertTrue(rval)
+
+    def test6(self):
+        '''Does a standard fixplanets with put of bounds parameter reftime give the expected error'''
+        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='2012/07/11/08:41:32')
+                
+        self.assertFalse(rval)
+
+    def test7(self):
+        '''Does a standard fixplanets with wrong parameter reftime give the expected error'''
+        rval = fixplanets(vis=outms, field='Titan', fixuvw=True, reftime='MUDIAN')
+                
+        self.assertFalse(rval)
 
     
 def suite():

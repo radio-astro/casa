@@ -1,7 +1,7 @@
 from taskinit import *
 import shutil
 
-def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
+def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'):
     """
     Fix FIELD, SOURCE, and UVW for given fields based on given direction or pointing
     table information
@@ -27,13 +27,20 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
                   examples: 'DV06' (antenna with name DV06)
                             3 (antenna id 3)
 
+    reftime    -- if using pointing table information, use it from this timestamp
+                  default: 'first'
+                  examples: 'median' will use the median timestamp for the given field
+		              using only the unflagged maintable rows 
+                            '2012/07/11/08:41:32' will use the given timestamp (must be
+                            within the observaton time)
+
     Examples:
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
-          will look up the pointing direction for field 'Titan' in the POINTING table
-          based on the median time in unflagged main table rows for this field,
-          enter this direction in the FIELD and SOURCE tables, and then recalculate
-          the UVW coordinates for this field.
+          will look up the pointing direction from antenna 0 for field 'Titan' in 
+          the POINTING table based on the first timestamp in the main table rows for 
+          this field, enter this direction in the FIELD and SOURCE tables, and then 
+          recalculate the UVW coordinates for this field.
 
     fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
           will set the directions for field 'Titan' in the FIELD and SOURCE table to the
@@ -69,13 +76,44 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
             if(direction==''): # use information from the pointing table
                 # find median timestamp for this field in the main table
                 shutil.rmtree('fixplanetstemp', ignore_errors=True)
-                tbt.open(vis)
-                tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
-                tbt.close()
-                tbt.open('fixplanetstemp')
-                thetime = tbt.getcell('TIME',tbt.nrows()/2)
-                casalog.post( "TIME "+str(thetime), 'NORMAL')
-                tbt.close()
+                thetime = 0
+                if(reftime.lower()=='median'):
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thetime = tbt.getcell('TIME',tbt.nrows()/2)
+                    casalog.post( "MEDIAN TIME "+str(thetime), 'NORMAL')
+                    tbt.close()
+                elif(reftime.lower()=='first'):
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thetime = tbt.getcell('TIME',0)
+                    casalog.post( "FIRST TIME "+str(thetime), 'NORMAL')
+                    tbt.close()
+                else:
+                    try:
+                        myqa = qa.quantity(reftime)
+                        thetime = qa.convert(myqa,'s')['value']
+                    except Exception, instance:
+                        raise TypeError, "reftime parameter is not a valid date (e.g. YYYY/MM/DD/hh:mm:ss)" %reftime
+                    tbt.open(vis)
+                    tbt.query('FIELD_ID=='+str(fld), name='fixplanetstemp', columns='TIME')
+                    tbt.close()
+                    tbt.open('fixplanetstemp')
+                    thefirsttime = tbt.getcell('TIME',0)
+                    thelasttime = tbt.getcell('TIME',tbt.nrows()-1)
+                    tbt.close()
+                    shutil.rmtree('fixplanetstemp', ignore_errors=True)
+                    if (thefirsttime<=thetime and thetime<=thelasttime):
+                        casalog.post( "GIVEN TIME "+reftime+" == "+str(thetime), 'NORMAL')
+                    else:
+                        casalog.post( "GIVEN TIME "+reftime+" == "+str(thetime)+" is not within the observation time ("
+                                      +str(thefirsttime)+'s'+" - "
+                                      +str(thelasttime)+'s'+")", 'SEVERE')
+                        raise TypeError
 
                 # determine reference antenna
                 antids = ms.msseltoindex(vis=vis,baseline=refant)['antenna1']
@@ -151,7 +189,8 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
                 thenewra_rad = thedirmemod['m0']['value']
                 thenewdec_rad = thedirmemod['m1']['value']
                 me.done()
-                shutil.rmtree('fixplanetstemp*', ignore_errors=True)
+                shutil.rmtree('fixplanetstemp', ignore_errors=True)
+                shutil.rmtree('fixplanetstemp2', ignore_errors=True)
             else: # direction is not an empty string, use this instead of the pointing table information
                 if(type(direction)==str):
                     dirstr = direction.split(' ')
