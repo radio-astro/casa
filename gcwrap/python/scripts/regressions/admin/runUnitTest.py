@@ -1,18 +1,18 @@
 
 """ Script to run unit tests from the command line as: 
-    casapy [casa-options] -c runUnitTest.py testname1 testname2...
+    casapy [casa-options] -c runUnitTest.py testname1 testname2 ...
     casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
-    casapy [casa-options] -c runUnitTest.py --help
+    casapy [casa-options] -c runUnitTest.py --Help
     casapy [casa-options] -c runUnitTest.py --list
-    casapy [casa-options] -c runUnitTest.py
+    casapy [casa-options] -c runUnitTest.py --list
+    casapy [casa-options] -c runUnitTest.py --file Tests.txt
     
     or from inside casapy:
     runUnitTest.main(['testname']) 
     runUnitTest.main()
-    runUnitTest.main(['--short'])
     
-    NOTE: Tests scripts must be located in ....scripts/tests and installed before usage.
-    """
+    NOTE: It will search for scripts in the casapy installation directory, which usually is in:
+           <casa_install_dir>/python/2.6/tests"""
 
 # The main class in testwrapper.py is:
 # class UnitTest, methods: getUnitTest(), getFuncTest()
@@ -23,6 +23,7 @@
 
 import os
 import sys
+import getopt
 import traceback
 import unittest
 import string
@@ -34,6 +35,9 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
+#DATA_DIR = CASA_DIR+'/data/'
+#print 'HELLOR DATA_DIR'
+#print DATA_DIR
 if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/tests/'
@@ -52,34 +56,35 @@ from testwrapper import *
 # to this program
 LISTofTESTS = TESTS_DIR+'unittests_list.txt'
 
-SHORT_LIST = [
-             'test_importevla',
-             'test_listvis',
-             'test_plotms',
-             'test_sdplot',
-             'test_sdsave',
-             'test_viewer'
-             ]
+#SHORT_LIST = [
+#             'test_importevla',
+#             'test_listvis',
+#             'test_plotms',
+#             'test_sdplot',
+#             'test_sdsave',
+#             'test_viewer'
+#             ]
 
 # memory mode variable
 MEM = 0
 
 def usage():
-    print '*************************************************************************'
-    print '\nRunUnitTest will execute unit test(s) of CASA tasks.'
+    print '========================================================================='
+    print '\nRunUnitTest will execute Python unit test(s) of CASA tasks.'
     print 'Usage:\n'
-    print 'casapy [casapy-options] -c runUnitTest.py [options]\n'
-    print 'options:'
-    print 'no option:        runs all tests defined in unittests_list.txt'
-    print '<test_name>:      runs only <test_name> (more tests are separated by spaces)'
-    print '--short:          runs only a short list of tests defined in SHORT_LIST'
-    print '--file <list>:    runs the tests defined in <list>; one test per line'
-    print '--list:           prints the full list of available tests from unittests_list.txt'
-    print '--mem:            runs the tests in debugging mode'
-    print '--help:           prints this message\n'
-    print 'NOTE: tests must be located in ....scripts/tests\n'
+    print 'casapy [casapy-options] -c runUnitTest.py [options] test_name\n'
+    print 'Options:'
+    print '   no option         run all tests defined in active/gcwrap/python/scripts/tests/unittests_list.txt'
+    print '   <test_name>       run only <test_name> (more tests are separated by spaces)'
+    print '   --file <list>     run the tests defined in an ASCII file <list>; one test per line'
+    print '   --datadir <dir>   set an env. variable to a directory, TEST_DATADIR=<dir> that can be used inside the tests'
+    print '   --mem             show the memory used by the tests and the number of files left open'
+    print '   --list            print the list of tests from active/gcwrap/python/scripts/tests/unittests_list.txt'
+    print '   --Help            print this message and exit\n'
+    print 'NOTE: it will look for tests in the install directory, which usually is \r'
+    print '      <casa_install_dir>/python/2.6/tests'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
-    print '**************************************************************************'
+    print '=========================================================================='
 
 def list_tests():
     print 'Full list of unit tests'
@@ -134,6 +139,11 @@ def readfile(FILE):
     infile.close()
     return List
 
+def settestdir(datadir):
+    '''Set an environmental variable for the data directory'''
+    os.environ.__setitem__('TEST_DATADIR',datadir)
+    return
+
 
 # Define which tests to run    
 whichtests = 0
@@ -146,7 +156,7 @@ def main(testnames=[]):
     regstate = False
         
     listtests = testnames
-    if listtests == '--help':
+    if listtests == '--Help':
         usage()
         sys.exit()
     if listtests == '--list':
@@ -159,10 +169,7 @@ def main(testnames=[]):
         listtests = readfile(LISTofTESTS)
         if listtests == []:
             raise Exception, 'List of tests \"%s\" is empty or does not exist'%LISTofTESTS
-    elif (listtests == SHORT_LIST or listtests == ['--short']
-          or listtests == ['SHORT_LIST']):
-        whichtests = 2
-        listtests = SHORT_LIST
+
     elif (type(testnames) != type([])):
         if (os.path.isfile(testnames)):
             # How to prevent it from opening a real test???
@@ -184,7 +191,7 @@ def main(testnames=[]):
     
     # Create a working directory
     workdir = WDIR
-    print 'Creating working directory '+ workdir
+    print 'Creating work directory '+ workdir
     if os.access(workdir, os.F_OK) is False:
         os.makedirs(workdir)
     else:
@@ -233,18 +240,6 @@ def main(testnames=[]):
             os.chdir(PWD)
             raise Exception, 'ERROR: There are no valid tests to run'
                                                                      
-    elif(whichtests == 2):
-        '''Run the SHORT_LIST of tests only'''
-        
-        # Assemble the short list of tests
-        listtests = SHORT_LIST        
-        list = []    
-        for f in listtests:
-            try:
-                tests = UnitTest(f).getUnitTest()
-                list = list+tests
-            except:
-                traceback.print_exc()
                 
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
@@ -264,6 +259,10 @@ def main(testnames=[]):
         os.chdir(PWD)
 
 
+# ------------------ NOTE ---------------------------------------------
+# Once CASA moves to Python 2.7, the getpopt module should be replaced
+# by argparse. The next section will need to be updated accordingly
+# ---------------------------------------------------------------------
 if __name__ == "__main__":
     # Get command line arguments
     
@@ -271,59 +270,89 @@ if __name__ == "__main__":
         # If called with ... -c runUnitTest.py from the command line,
         # then parse the command line parameters
         i = sys.argv.index("-c")
-        if "--mem" in sys.argv:
-            # run tests in mem mode            
-            MEM = 1
-            sys.argv.pop(sys.argv.index("--mem"))
-            
         if len(sys.argv) >= i + 2 and \
                re.compile("runUnitTest\.py$").search(sys.argv[i + 1]):
-
-            this_file = sys.argv[i+1]
-
-            # Get the tests to run
-            testnames = []
-    
-            la = [] + sys.argv
             
-            if len(sys.argv) == i+2:
-                # Will run all tests
+        
+            try:
+                # Get only this script options
+                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmf:d:", ["Help","list","mem","file=","datadir="])
+                
+            except getopt.GetoptError, err:
+                # Print help information and exit:
+                print str(err) # will print something like "option -a not recognized"
+                usage()
+                os._exit(2)
+                
+            # List of tests to run
+            testnames = []
+            
+            # Boolean for file with tests.
+            # One could allow the use of --file with specific tests given in
+            # the command line by removing this option and appending to the
+            # testnames list in the args handling
+            hasfile = False
+            
+            # If no option is given to this script, run all tests that are defined in
+            # ../gcwrap/python/scripts/tests/unittests_list.txt
+            if opts == [] and args == []:
                 whichtests = 0
                 testnames = []
-            elif len(sys.argv) > i+2:
-                # Will run specific tests.
-                whichtests = 1
-                
-                while len(la) > 0:
-                    elem = la.pop()
-                    if elem == '--help':
+            # run all tests in memory mode
+            elif (args == [] and opts.__len__() == 1 and opts[0][0] == "--mem"):
+                MEM = 1
+                whichtests = 0
+                testnames = []     
+            # All other options       
+            else:
+                for o, a in opts:
+                    if o in ("-H", "--Help"):
                         usage()
-                        os._exit(0)
-                    if elem == '--list':
+                        os._exit(0) 
+                    elif o in ("-l", "--list"):
                         list_tests()
                         os._exit(0)
-                    if elem == '--file':
-                        # read list from a text file
-                        index = i + 3
-                        testnames = sys.argv[index]
-                        break
-                    if elem == '--short':
-                        # run only the SHORT_LIST
-                        whichtests = 2
-                        testnames = SHORT_LIST
-                        break    
-                    if elem == this_file:
-                        break
+                    elif o in ("-m", "--mem"):
+                        # run specific tests in mem mode            
+                        MEM = 1
+                    elif o in ("-f", "--file"):
+                        hasfile = True
+                        testnames = a
+                    elif o in ("-d", "--datadir"):
+                        # This will create an environmental variable called
+                        # TEST_DATADIR that can be read by the tests to use
+                        # an alternative location for the data. This is used 
+                        # to test tasks with MMS data
+                        # directory with test data
+                        datadir = a
+                        if not os.path.isdir(datadir):                            
+                            raise Exception, 'Value of --datadir is not a directory -> '+datadir  
+                        
+                        # Set an environmental variable for the data directory
+                        settestdir(datadir)
+                        if not os.environ.has_key('TEST_DATADIR'):    
+                            raise Exception, 'Could not create environmental variable TEST_DATADIR'
+                        
+                        print os.environ.get('TEST_DATADIR')
+                        
+                    else:
+                        assert False, "unhandled option"
                 
-                    testnames.append(elem)
+                # Deal with other arguments
+                if args != [] and not hasfile:
+                    testnames = args
+                    
         else:
             testnames = []
+        
     else:
         # Not called with -c (but possibly execfile() from iPython)
         testnames = []
 
-#    os._exit(0)
+                    
     try:
         main(testnames)
     except:
         traceback.print_exc()
+        
+
