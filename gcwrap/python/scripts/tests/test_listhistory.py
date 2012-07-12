@@ -1,4 +1,5 @@
 import os
+import io
 import sys
 import shutil
 import commands
@@ -7,36 +8,48 @@ from tasks import *
 from taskinit import *
 import unittest
 
+datapath = os.environ.get('CASAPATH').split()[0] +\
+                            '/data/regression/exportasdm/input/'
+
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/listhistory/'
+
+print 'Listhistory tests will use data from '+datapath         
+
 class listhistory_test(unittest.TestCase):
-    
+
     # Input and output names
     msfile = 'Itziar.ms'
-    res = None
+#    if testmms:
+#        msfile = 'pItziar.mms'
+#    else:
+#        msfile = 'Itziar.ms'        
 
     def setUp(self):
-        self.res = None
-        default(listhistory)
-        
-        if(os.path.exists(self.msfile)):
-            os.system('rm -rf ' + self.msfile)
-
-        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
-                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
-    
+        fpath = os.path.join(datapath,self.msfile)
+        if os.path.lexists(fpath):
+            os.symlink(fpath, self.msfile)
+        else:
+            self.fail('Data does not exist -> '+fpath)
+            
     def tearDown(self):
-        if (os.path.exists(self.msfile)):
-            os.system('rm -rf ' + self.msfile)
+        if os.path.lexists(self.msfile):
+            os.unlink(self.msfile)
         
     def test1(self):
         '''Test 1: Empty input should return False'''
-        msfile = ''
-        self.res = listhistory(msfile)
-        self.assertFalse(self.res)
+        myms = ''
+        res = listhistory(myms)
+        self.assertFalse(res)
         
     def test2(self):
         '''Test 2: Good input should return None'''
-        self.res=listhistory(self.msfile)
-        self.assertEqual(self.res,None)
+        res = listhistory(self.msfile)
+        self.assertEqual(res,None)
         
     def test3(self):
         '''Test 3: Compare length of reference and new lists'''
@@ -45,24 +58,33 @@ class listhistory_test(unittest.TestCase):
         open(logfile,"w").close
         casalog.setlogfile(logfile)
         
-        self.res = listhistory(self.msfile)
+        res = listhistory(self.msfile)
         cmd="sed -n \"/Begin Task/,/End Task/p\" %s > %s " %(logfile,newfile)
-	os.system(cmd)
+        os.system(cmd)
     
         # Get the number of lines in file
         refnum=13
+#        if self.testmms:
+#            refnum = 38
+
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
         output=commands.getoutput(cmd)
         num = int(output)
         self.assertEqual(refnum,num)
 
+
+class listhistory_cleanup(unittest.TestCase):
+    
+    def tearDown(self):
+        os.system('rm -rf *Itziar.*')
+
+    def test_cleanup(self):
+        '''listhistory: Cleanup'''
+        pass
         
 def suite():
-    return [listhistory_test]
+    return [listhistory_test, listhistory_cleanup]
 
-       
-        
-        
-        
+               
         
         
