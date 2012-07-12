@@ -1,15 +1,3 @@
-
-       New Development: Yes/No
-            JIRA Issue: No/Yes List JIRA ticket.
-        Ready for Test: Yes/No
-     Interface Changes: Yes/No
-What Interface Changed: Please list interface changes
-         Test Programs: List test programs
-  Put in Release Notes: Yes/No
-             Module(s): Module Names change impacts.
-           Description: Describe your changes here...
-
-	
 ##############################################################################
 #                                                                            #
 # Test Name:                                                                 #
@@ -448,7 +436,7 @@ def imagetest(which=None, size=[32,32,8]):
         t2 = zeroToPi (pain)
         d3 = abs(t1-t2)
         if (d1>1e-5 or d2>1e-5 or d3>1e-5):
-            msg = 'deconvolvecomponentlist ' + iTest + ' gave wrong results'
+            msg = 'deconvolvecomponentlist ' + str(iTest) + ' gave wrong results'
             fail(msg)
         #
         if not newcl.done(): fail('failed done')
@@ -753,9 +741,9 @@ def imagetest(which=None, size=[32,32,8]):
     def coordcheck(im1, axes, testdir):
         #im1 = ia.newimage(im1name)
         ok = im1.summary(list=F)
-        if not ok[0]:
+        if not ok]:
             fail('summary 1 failed in coordcheck')
-        rec1 = ok[1]
+        rec1 = ok
         imname = testdir + "/" + "coordcheck.image"
         cs2 = im1.coordsys(axes)
         if not cs2:
@@ -773,9 +761,9 @@ def imagetest(which=None, size=[32,32,8]):
         ia.close()  # close coordcheck.image
         im2 = ia.newimage(imname)
         ok = im2.summary(list=F)
-        if not ok[0]:
+        if not ok:
             fail('summary 2 failed in coordcheck')
-        rec2 = ok[1]
+        rec2 = ok
         #
         if rec1.has_key('axisnames') and rec2.has_key('axisnames'):
             rec1axes=[]
@@ -947,8 +935,7 @@ def imagetest(which=None, size=[32,32,8]):
 
         # Summarise the image
         info('Summarize image');
-        ok = man.summary()
-        header = ok[1]
+        header = man.summary()
         info('')
 
         # Do statistics
@@ -3440,11 +3427,9 @@ def imagetest(which=None, size=[32,32,8]):
             #
             # Summary
             #
-            result = myim.summary(list=F)
-            if not result:
+            header = myim.summary(list=F)
+            if not header:
                 fail('unable to retrieve summary')
-            header = result[1]
-            nfields = 13
             ok = header.has_key('ndim') and header.has_key('shape')
             ok = ok and header.has_key('tileshape')
             ok = ok and header.has_key('axisnames')
@@ -3459,10 +3444,6 @@ def imagetest(which=None, size=[32,32,8]):
             ok = ok and header.has_key('masks')
             if not ok:
                 stop('summary record is invalid')
-            if header.has_key('restoringbeam'): nfields += 1
-            if (len(header.keys()) != nfields):
-                stop('summary record has the wrong number of fields')
-            #
             if not myim.done():
                 fail('failed in myim.done')
         ok = cleanup(testdir)
@@ -5172,7 +5153,7 @@ def imagetest(which=None, size=[32,32,8]):
         #
         # Convolution kernel has peak 1.0*scale
         #
-        myim2 = myim.convolve2d (scale=2.0, major='20arcsec', minor='10arcsec')
+        myim2 = myim.convolve2d (scale=2.0, major='20arcsec', minor='10arcsec', pa="0deg")
         if not myim2: stop('convolve2d 6 failed')
         stats = myim2.statistics(list=F)
         if not stats: fail('failed to get statistics')
