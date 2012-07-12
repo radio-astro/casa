@@ -366,15 +366,15 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
         Quantity paXYFrame(p(4), Unit("rad"));
         Angular2DGaussian source(major, minor, paXYFrame);
         Angular2DGaussian deconvolvedSize;
-        Quantity paXYFrame2(paXYFrame);
         Bool fitSuccess;
         // TODO atm we do not check for fit success, but probably should. fitSuccess is new
         // and part of unrelated work.
         deconvolveFromBeam(deconvolvedSize, source, fitSuccess, os, beam2);
 
         // Account for frame change of position angle
-        Quantity diff = paXYFrame2 - paXYFrame;
+        Quantity diff = paXYFrame - deconvolvedSize.getPA();
         pa -= diff;
+        deconvolvedSize.setPA(pa);
         const MDirection dirRefIn = shapeIn.refDirection();
         GaussianShape shapeOut(
         	dirRefIn, deconvolvedSize.getMajor(),
