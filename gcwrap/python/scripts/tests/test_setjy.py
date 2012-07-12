@@ -420,8 +420,9 @@ class test_MultipleObservations(SetjyUnitTestBase):
         self.check_eq(self.result[0], 1.0+0.0j, 0.003)
         """Was obsID 1 set?"""
         self.check_eq(self.result[1],
-	        numpy.array([ 1.21551239-0.33617234j,  1.19003308-0.41755155j,
-	                      1.15911222-0.49702403j,  1.12289071-0.57422638j]),
+	#        numpy.array([ 1.21551239-0.33617234j,  1.19003308-0.41755155j,
+	#                      1.15911222-0.49702403j,  1.12289071-0.57422638j]),
+	        numpy.array([ 1.26114714+0.j,  1.26116526+0.j, 1.26118350+0.j,  1.26120162+0.j]),
 			      0.003)
         """Was obsID 2 left alone?"""
         self.check_eq(self.result[2], 1.0+0.0j, 0.003)

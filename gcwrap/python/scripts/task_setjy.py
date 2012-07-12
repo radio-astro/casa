@@ -10,7 +10,7 @@ def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, observation=None,
           modimage=None, listmodels=None,
           scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-          standard=None, usescratch=None):
+          standard=None, useephemdir=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
   casalog.origin('setjy')
@@ -35,11 +35,11 @@ def setjy(vis=None, field=None, spw=None,
       for m in mses:
         retval[m] = setjy_core(m, field, spw, selectdata, timerange, 
                                scan, observation, modimage, listmodels, scalebychan, 
-                               fluxdensity, spix, reffreq, standard, usescratch)
+                               fluxdensity, spix, reffreq, standard, useephedir, usescratch)
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, observation, modimage, listmodels, scalebychan, 
-                        fluxdensity, spix, reffreq, standard, usescratch)
+                        fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
 
   return retval
 
@@ -48,7 +48,7 @@ def setjy_core(vis=None, field=None, spw=None,
                selectdata=None, timerange=None, scan=None, observation=None,
                modimage=None, listmodels=None,
                scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-               standard=None, usescratch=None):
+               standard=None, useephemdir=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
   retval = True
@@ -84,9 +84,10 @@ def setjy_core(vis=None, field=None, spw=None,
     # Actual operation, when either the MODEL_DATA column or visibility model header are set
     else:
       if not os.path.isdir(vis):
-        casalog.post(vis + " must be a valid MS unless listmodels is True.",
-                     "SEVERE")
-        return False
+        #casalog.post(vis + " must be a valid MS unless listmodels is True.",
+        #             "SEVERE")
+        raise Exception, "%s is not a valid MS" % vis 
+        #return False
 
       myms = mstool()
       myim = imtool()
@@ -164,7 +165,11 @@ def setjy_core(vis=None, field=None, spw=None,
 
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
-                         timerange=timerange,observation=str(observation), scan=scan)
+                         timerange=timerange,observation=str(observation), scan=scan, useephemdir=useephemdir)
+        #myim.close()
+        #print "after setSolarObjectJy"
+        #outt=tb.showcache()
+        #print "outt=",outt
       else:
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
