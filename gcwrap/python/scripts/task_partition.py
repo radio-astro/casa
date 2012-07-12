@@ -5,6 +5,7 @@ import copy
 import math
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
+import partitionhelper as ph
 import simple_cluster
 
 class PartitionHelper(ParallelTaskHelper):
@@ -292,9 +293,10 @@ class PartitionHelper(ParallelTaskHelper):
         '''
         
         if self._arg['createmms']:
+            casalog.post("Finalizing MMS structure")
             outputList = self._jobQueue.getOutputJobs()
-            # We created a data directory and many SubMSs build the reference
-            # MSs
+            # We created a data directory and many SubMSs,
+            # now build the reference MS
             if self._arg['calmsselection'] in ['auto','manual']:
                 # A Cal MS was created in the data directory, see if it was
                 # successful, if so build a reference MS
@@ -309,7 +311,7 @@ class PartitionHelper(ParallelTaskHelper):
                     subMSList.append(job.getCommandArguments()['outputvis'])
 
             if len(subMSList) == 0:
-                print "Error: no subMSs were created."
+                casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
 
             # Really should double check here before creating.
@@ -334,6 +336,7 @@ class PartitionHelper(ParallelTaskHelper):
             ## to have the members inside the outputvis
             
             origpath = os.getcwd()
+
             # need to be in the containing directory of outputvis in order
             # to have the right relative paths in the MMS header
             if not (thecontainingdir==''):
@@ -348,13 +351,23 @@ class PartitionHelper(ParallelTaskHelper):
                                            True,  # nomodify
                                            False, # lock
                                            False) # copysubtables
+                shutil.move(thems+'/SUBMSS', tmpmsname)
+                shutil.rmtree(thems, ignore_errors=True)
+                shutil.move(tmpmsname, thems)
+
+                # finally create symbolic links to the subtables of the first SubMS
+                os.chdir(origpath)
+                os.chdir(thems)
+                mastersubms = os.path.basename(subMSList[0].rstrip('/'))
+                thesubtables = ph.getSubtables('SUBMSS/'+mastersubms)
+                for s in thesubtables:
+                    os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
+
             except:
-                print "Problem in createmultims: ", sys.exc_info()[0]
+                casalog.post("Problem in MMS creation: "+sys.exc_info()[0], 'WARN')
                 os.chdir('origpath')
                 raise
-            shutil.move(thems+'/SUBMSS', tmpmsname)
-            shutil.rmtree(thems, ignore_errors=True)
-            shutil.move(tmpmsname, thems)
+
             os.chdir(origpath)
             
         # Probably should check to see if anything failed

@@ -3,6 +3,7 @@ import shutil
 import stat
 import time
 from taskinit import *
+import partitionhelper as ph
 
 def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale,createmms):
 	"""Concatenate two visibility data sets.
@@ -226,6 +227,16 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 			shutil.move(concatvis+'/SUBMSS', tmpmsname)
 			shutil.rmtree(concatvis, ignore_errors=True)
 			shutil.move(tmpmsname, concatvis)
+
+			# finally create symbolic links to the subtables of the first SubMS
+			origpath = os.getcwd()
+			os.chdir(concatvis)
+			mastersubms = os.path.basename('SUBMSS/'+os.path.basename(mmsmembers[0]))
+			thesubtables = ph.getSubtables('SUBMSS/'+mastersubms)
+			for s in thesubtables:
+				os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
+			os.chdir(origpath)
+			
 		else:
 
 			m.close()
