@@ -27,7 +27,7 @@ class ImageTest:
         if not findstok[0]:
             myImagename=imageName+".k"
             self.imTool.adddegaxes(stokes=True,outfile=myImagename,overwrite=True)
-            mystokpix=self.imTool.summary()[1]['ndim'] # ct from 0
+            mystokpix=self.imTool.summary()['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
@@ -41,7 +41,7 @@ class ImageTest:
         if not findspec[0]:
             myImagename=imageName+".s"
             self.imTool.adddegaxes(spectral=True,outfile=myImagename,overwrite=True)
-            myspecpix=self.imTool.summary()[1]['ndim'] # ct from 0
+            myspecpix=self.imTool.summary()['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
