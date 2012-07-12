@@ -3,7 +3,7 @@ from taskinit import *
 import simple_cluster
 import os
 import copy
-
+import shutil
 
 class ParallelTaskHelper:
     '''
@@ -79,7 +79,7 @@ class ParallelTaskHelper:
             raise ValueError, "Unable to open MS %s." % vis
 
         if not msTool.ismultims():
-            raise ValueError, "MS %s is not a refernce MS." % vis
+            raise ValueError, "MS %s is not a reference MS." % vis
 
         rtnValue = msTool.getreferencedtables()
         if not isinstance(rtnValue, list):
@@ -89,9 +89,61 @@ class ParallelTaskHelper:
         return rtnValue
 
     @staticmethod
+    def restoreSubtableAgreement(vis, mastersubms='', subtables=[]):
+        '''
+        Tidy up the MMS vis by replacing the subtables of all SubMSs
+        by the subtables from the SubMS given by "mastersubms".
+        If specified, only the subtables in the list "subtables"
+        are replaced, otherwise all.
+        If "mastersubms" is not given, the first SubMS of the MMS
+        will be used as master.
+        '''
+
+        msTool = mstool();
+        msTool.open(vis)
+        theSubMSs = msTool.getreferencedtables()
+        msTool.close()
+
+        tbTool = tbtool();
+        
+        if mastersubms=='':
+            tbTool.open(vis)
+            myKeyw = tbTool.getkeywords()
+            tbTool.close()
+            mastersubms=os.path.dirname(myKeyw['ANTENNA'].split(' ')[1]) #assume ANTENNA is present
+
+        mastersubms = os.path.abspath(mastersubms)
+            
+        theSubTables = []
+        tbTool.open(mastersubms)
+        myKeyw = tbTool.getkeywords()
+        tbTool.close()
+        for k in myKeyw.keys():
+            theKeyw = myKeyw[k]
+            if (type(theKeyw)==str and theKeyw.split(' ')[0]=='Table:'
+                and not theKeyw=='SORTED_TABLE'):
+                theSubTables.append(os.path.basename(theKeyw.split(' ')[1]))
+
+        if subtables==[]:
+            subtables=theSubTables
+        else:
+            for s in subtables:
+                if not (s in theSubTables):
+                    raise ValueError, s+' is not a subtable of '+ mastersubms
+
+        for r in theSubMSs:
+            if not r==mastersubms:
+                for s in subtables:
+                    shutil.rmtree(r+'/'+s, ignore_errors=True)
+                    #print "Copying from "+mastersubms+'/'+s+" to "+ r+'/'+s
+                    shutil.copytree(mastersubms+'/'+s, r+'/'+s)
+
+        return True
+
+    @staticmethod
     def isParallelMS(vis):
         '''
-        This task really will let us know if we can do the simple form
+        This method will let us know if we can do the simple form
         of parallelization by invoking on many refernced mss.
         '''
         msTool = mstool()
