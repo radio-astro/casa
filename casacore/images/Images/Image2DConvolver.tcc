@@ -308,6 +308,7 @@ template <class T> void Image2DConvolver<T>::_dealWithRestoringBeam(
 	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
 	const Bool autoScale, const Double scale
 ) {
+	os << LogOrigin("Image2DConvolver", __FUNCTION__);
 	// Find out if convolution axes hold the sky.  Scaling from
 	// Jy/beam and Jy/pixel only really makes sense if this is True
 	Bool holdsOneSkyAxis;
