@@ -590,8 +590,229 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
             ret = False
         return ret
     
+class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdsave. Test scantable sotrage and insitu
+    parameters
+
+    The list of tests:
+    testMT  --- storage = 'memory', insitu = True
+    testMF  --- storage = 'memory', insitu = False
+    testDT  --- storage = 'disk', insitu = True
+    testDF  --- storage = 'disk', insitu = False
+
+    Note on handlings of disk storage:
+       Task script restores MOLECULE_ID column.
+
+    Tested items:
+       1. Number of rows in tables and list of IDs of output scantable.
+       2. Units and coordinates of output scantable.
+       3. units and coordinates of input scantables before/after run.
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    outname = sdsave_unittest_base.taskname+'_test'
+    pollist = [1]
+    iflist = [2]
+    restfreq = [44.075e9]
+    # Reference data of output scantable
+    refout = {"nRow": 8, "SCANNOS": [21,23], "POLNOS": pollist,\
+              "IFNOS": iflist, "MOLNOS": [1], "RestFreq": restfreq}
+
+    def setUp( self ):
+        # copy input scantables
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        # back up the original settings
+        self.storage = sd.rcParams['scantable.storage']
+        self.insitu = sd.rcParams['insitu']
+
+        default(sdsave)
+
+    def tearDown( self ):
+        # restore settings
+        sd.rcParams['scantable.storage'] = self.storage
+        sd.rcParams['insitu'] = self.insitu
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+
+    # Helper functions for testing
+    def _get_scantable_params( self, scanname ):
+        self._checkfile(scanname)
+        res = {}
+        testvals = ["scannos", "polnos", "ifnos", "molnos"]
+        scan = sd.scantable(scanname,average=False)
+        res['nRow'] = scan.nrow()
+        for val in testvals:
+            res[val.upper()] =  getattr(scan,"get"+val)()
+        # rest frequencies
+        rflist = []
+        for molno in res["MOLNOS"]:
+            rflist.append(scan.get_restfreqs(molno)[0])
+        res["RestFreq"] = rflist
+        del scan
+        return res
+
+    def _compare_scantable_params( self, test , refval):
+        if type(test) == str:
+            testval = self._get_scantable_params(test)
+        elif type(test) == dict:
+            testval = test
+        else:
+            msg = "Invalid test value (should be either dict or file name)."
+            raise Exception, msg
+        #print "Test data = ", testval
+        #print "Ref data =  ", refval
+        if not type(refval) == dict:
+            raise Exception, "The reference data should be a dictionary"
+        for key, rval in refval.iteritems():
+            if not testval.has_key(key):
+                raise KeyError, "Test data does not have key, '%s'" % key
+            if type(rval) in [list, tuple, numpy.ndarray]:
+                self.assertEqual(len(testval[key]), len(rval), \
+                                 msg = "Number of elements in '%s' differs." % key)
+                for i in range(len(rval)):
+                    rv = rval[i]
+                    if type(rv) == float:
+                        self.assertAlmostEqual(testval[key][i], rv, \
+                                               msg = "%s[%d] differs: %s (expected: %s) "\
+                                               % (key, i, str(testval[key][i]), str(rv)))
+                    else:
+                        self.assertEqual(testval[key][i], rv, \
+                                         msg = "%s[%d] differs: %s (expected: %s) "\
+                                         % (key, i, str(testval[key][i]), str(rv)))
+            else:
+                if type(rval) == float:
+                    self.assertAlmostEqual(testval[key], rval, \
+                                     msg = "%s differs: %s (expected: %s)" \
+                                     % (key, str(testval[key]), rval))
+                else:
+                    self.assertEqual(testval[key], rval, \
+                                     msg = "%s differs: %s (expected: %s)" \
+                                     % (key, str(testval[key]), rval))
+    
+
+    # Actual tests
+    def testMT( self ):
+        """Storage Test MT: sdsave on storage='memory' and insitu=T"""
+        tid = "MT"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testMF( self ):
+        """Storage Test MF: sdsave on storage='memory' and insitu=F"""
+        tid = "MF"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testDT( self ):
+        """Storage Test DT: sdsave on storage='disk' and insitu=T"""
+        tid = "DT"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testDF( self ):
+        """Storage Test DF: sdsave on storage='disk' and insitu=F"""
+        tid = "DF"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6]
+            sdsave_test6,sdsave_storageTest]

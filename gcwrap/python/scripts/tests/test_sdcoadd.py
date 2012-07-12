@@ -365,7 +365,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
 
 class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdstat. Test scantable sotrage and insitu
+    Unit tests for task sdcoadd. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -403,10 +403,16 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
             if os.path.exists(infile):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
+        # back up the original settings
+        self.storage = sd.rcParams['scantable.storage']
+        self.insitu = sd.rcParams['insitu']
 
         default(sdcoadd)
 
     def tearDown( self ):
+        # restore settings
+        sd.rcParams['scantable.storage'] = self.storage
+        sd.rcParams['insitu'] = self.insitu
         for thefile in self.inlist:
             if (os.path.exists(thefile)):
                 shutil.rmtree(thefile)

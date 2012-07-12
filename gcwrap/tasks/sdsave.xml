@@ -99,6 +99,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </allowed>
     </param>
 
+    <param type="any" name="restfreq">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+            <value type="string"/>
+    </param>
+
     <param type="string" name="outfile">
 	    <description>output file name</description>
 	    <value></value>
@@ -195,6 +201,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          options: 'none'
                                   'var'  (1/var(spec) weighted)
                                   'tsys' (1/Tsys**2 weighted)
+        restfreq -- rest frequencies of output data
+                Available types are a number, string, a list of numbers or
+                strings (see examples below), and list of dictionaries. 
+                The default unit of restfreq is Hz, if not specified.
+                A list can be used to set different rest frequencies to
+                each IF. the length of list input must be nIF. Dictionary 
+                input should be a pair of molecule name and frequency with 
+                keys of 'name' and 'value', respectively. The 'value's in the 
+                dictionary input follows the same manner as for single 
+                float or string input. 
+                default: '' (use current setting)
+                example: 4.6e10 (float value in Hz),
+                         '46GHz' (string with unit),
+                         ['345.8GHz', '347.0GHz', 356.7e9] (for each IF)
+                         [{'name':'CO','value':345e9}] (a value with name)
         outfile -- name of output dataset
                 default: '' 
         outform -- output data format
