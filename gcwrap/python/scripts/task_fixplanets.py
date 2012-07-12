@@ -53,43 +53,10 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
           the first example above.)
 
     """
-
+    
     casalog.origin('fixplanets')
 
-    rval = True
-
-    if (ParallelTaskHelper.isParallelMS(vis)):
-        myms = mstool()
-        myms.open(vis)
-        mses = myms.getreferencedtables()
-        myms.close()
-        retval = {}
-        nfail = 0
-        for m in mses:
-            retval[m] = fixplanets_core(m, field, fixuvw, direction, refant, reftime)
-            if not retval[m]:
-                rval = False
-                nfail+=1
-        if not rval:
-            casalog.post('*** Summary: there were failures in '+str(nfail)+' SUBMSs:', 'WARN')
-            for m in mses:
-                if not retval[m]:
-                    casalog.post(os.path.basename(m)+': '+str(retval[m]), 'WARN')
-                else:
-                    casalog.post(os.path.basename(m)+': '+str(retval[m]), 'NORMAL')
-
-    else:
-        rval = fixplanets_core(vis, field, fixuvw, direction, refant, reftime)
-
-    return rval
-
-  
-
-def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='first'):
-    
-    tbt = casac.table()
-
-    casalog.post( "*** Operating on "+os.path.basename(vis), 'NORMAL')
+    tbt = tbtool()
 
     try:
         fields = ms.msseltoindex(vis=vis,field=field)['field']
@@ -118,7 +85,8 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
                 thetime = 0
                 if(reftime.lower()=='median'):
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name=fixplanetstemp, columns='TIME')
+                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False',
+                              name=fixplanetstemp, columns='TIME')
                     tbt.close()
                     tbt.open(fixplanetstemp)
                     if(tbt.nrows()>0):
@@ -204,7 +172,8 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
                     nr = ttb2.nrows()
                     ttb2.close()
                     if(nr==0):
-                        casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)+" with TRACKING==True within 3 seconds of TIME "+str(thetime), 'NORMAL')
+                        casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)
+                                      +" with TRACKING==True within 3 seconds of TIME "+str(thetime), 'NORMAL')
                         casalog.post( "Will try without requiring TRACKING==True ...", 'NORMAL')
                         shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                         ttb3 = tbt.query('NEARABS(TIME,'+str(thetime)+',INTERVAL/2.) AND ANTENNA_ID=='
@@ -221,14 +190,16 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
                             ttb4.close()
                             if(nr==0):
                                 tbt.close()
-                                casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)+" within 3 seconds of TIME "+str(thetime), 'SEVERE')
+                                casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)
+                                              +" within 3 seconds of TIME "+str(thetime), 'SEVERE')
                                 return False # give up
                 tbt.close()
                 tbt.open(fixplanetstemp2)
                 thedir = tbt.getcell('DIRECTION',0)
                 tbt.close()
                 casalog.post( ' field id '+str(fld)+ ' AZ EL '+str(thedir[0])+" "+str(thedir[1]), 'NORMAL')
-                thedirme = me.direction(rf='AZELGEO',v0=qa.quantity(thedir[0][0], 'rad'), v1=qa.quantity(thedir[1][0],'rad'))
+                thedirme = me.direction(rf='AZELGEO',v0=qa.quantity(thedir[0][0], 'rad'),
+                                        v1=qa.quantity(thedir[1][0],'rad'))
                 # convert AZEL to J2000 coordinates
                 me.doframe(me.epoch(rf='UTC', v0=qa.quantity(thetime,'s')))
 
@@ -237,7 +208,8 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
                 theposref = tbt.getcolkeyword('POSITION', 'MEASINFO')['Ref']
                 theposunits =  tbt.getcolkeyword('POSITION', 'QuantumUnits')
                 tbt.close()
-                casalog.post( "Ref. antenna position is "+str(thepos)+' ('+theposunits[0]+', '+theposunits[1]+', '+theposunits[2]+')('+theposref+')', 'NORMAL')
+                casalog.post( "Ref. antenna position is "+str(thepos)+' ('+theposunits[0]+', '+theposunits[1]+', '
+                              +theposunits[2]+')('+theposref+')', 'NORMAL')
                 me.doframe(me.position(theposref,
                                        qa.quantity(thepos[0],theposunits[0]),
                                        qa.quantity(thepos[1],theposunits[1]),
@@ -374,7 +346,9 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
             tbt.putcol('DIRECTION', newsdir)
             tbt.close()
             casalog.post("SOURCE table DIRECTION column changed.", 'NORMAL')
-                
+
+        # end for
+
         if(fixuvw):
             casalog.post("Fixing the UVW coordinates ...", 'NORMAL')
 
@@ -396,6 +370,10 @@ def fixplanets_core(vis, field, fixuvw=False, direction='', refant=0, reftime='f
 
         else:
             casalog.post("UVW coordinates not changed.", 'NORMAL')
+
+        if (ParallelTaskHelper.isParallelMS(vis)):
+            casalog.post("Tidying up the MMS subtables ...", 'NORMAL')
+            ParallelTaskHelper.restoreSubtableAgreement(vis)
 
         return True
 
