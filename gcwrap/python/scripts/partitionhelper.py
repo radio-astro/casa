@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 import string
-from taskinit import casalog,ms
+from taskinit import *
 import numpy as np
 
 
@@ -25,10 +25,12 @@ def getScanNrows(msfile, myscan):
                 assert nr==refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'%(MS, s, nr, refN)
 
     '''
-        
-    ms.open(msfile)
-    scand = ms.getscansummary()
-    ms.close()
+
+    msTool=mstool()
+
+    msTool.open(msfile)
+    scand = msTool.getscansummary()
+    msTool.close()
     
     Nrows = 0
     subscans = scand[str(myscan)]
@@ -67,7 +69,7 @@ def getSpwIds(msfile, myscan):
        return a numpy array with the Spw IDs. Note that the returned spw IDs are sorted.
        
        To compare with the dictionary returned by listpartition, do the following:
-        
+       
         resdict = listpartition(vis='part.mms', createdict=True)
         for k in resdict.keys():
             subms = resdict[k]['MS']
@@ -85,10 +87,12 @@ def getSpwIds(msfile, myscan):
                         print "Spw=%s is not in reference array %s"%(spws[indices[i]], refspws)
                     
     '''
-        
-    ms.open(msfile)
-    scand = ms.getscansummary()
-    ms.close()
+
+    msTool=mstool()
+            
+    msTool.open(msfile)
+    scand = msTool.getscansummary()
+    msTool.close()
     
     subscans = scand[str(myscan)]
     aspws = np.array([],dtype=int)
@@ -105,6 +109,19 @@ def getSpwIds(msfile, myscan):
     return uniquespws
 
 
+def getSubtables(vis):
+    tbTool = tbtool()
+    theSubTables = []
+    tbTool.open(vis)
+    myKeyw = tbTool.getkeywords()
+    tbTool.close()
+    for k in myKeyw.keys():
+        theKeyw = myKeyw[k]
+        if (type(theKeyw)==str and theKeyw.split(' ')[0]=='Table:'
+            and not theKeyw=='SORTED_TABLE'):
+            theSubTables.append(os.path.basename(theKeyw.split(' ')[1]))
+            
+    return theSubTables
 
 
 

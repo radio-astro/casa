@@ -4,6 +4,7 @@ import simple_cluster
 import os
 import copy
 import shutil
+import partitionhelper as ph
 
 class ParallelTaskHelper:
     '''
@@ -88,6 +89,7 @@ class ParallelTaskHelper:
         msTool.close()
         return rtnValue
 
+
     @staticmethod
     def restoreSubtableAgreement(vis, mastersubms='', subtables=[]):
         '''
@@ -114,15 +116,7 @@ class ParallelTaskHelper:
 
         mastersubms = os.path.abspath(mastersubms)
             
-        theSubTables = []
-        tbTool.open(mastersubms)
-        myKeyw = tbTool.getkeywords()
-        tbTool.close()
-        for k in myKeyw.keys():
-            theKeyw = myKeyw[k]
-            if (type(theKeyw)==str and theKeyw.split(' ')[0]=='Table:'
-                and not theKeyw=='SORTED_TABLE'):
-                theSubTables.append(os.path.basename(theKeyw.split(' ')[1]))
+        theSubTables = ph.getSubtables(mastersubms)
 
         if subtables==[]:
             subtables=theSubTables
