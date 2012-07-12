@@ -54,65 +54,65 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
 
 
 def get_restfreq_in_Hz(s_restfreq):
-    #### This function could be altered by the following 10 lines ###
-#     if not qatl.isquantity(s_restfreq):
-#         mesg = "Input value is not a quantity"
-#         raise Exception, mesg
-#     if qatl.compare(s_restfreq,'Hz'):
-#         return qatl.convert(s_restfreq, 'Hz')['value']
-#     elif qatl.quantity(s_restfreq)['unit'] == '':
-#         return float(s_restfreq)
-#     else:
-#         mesg = "wrong unit of restfreq."
-#         raise Exception, mesg
-    ###############################################################
-    value = 0.0
-    unit = ""
-    s = s_restfreq.replace(" ","")
-
-    for i in range(len(s))[::-1]:
-        if s[i].isalpha():
-            unit = s[i] + unit
-        else:
-            value = float(s[0:i+1])
-            break
-
-    if (unit == "") or (unit.lower() == "hz"):
-        return value
-    elif (len(unit) == 3) and (unit[1:3].lower() == "hz"):
-        unitprefix = unit[0]
-        factor = 1.0
-
-        if (unitprefix == "a"):
-            factor = 1.0e-18
-        elif (unitprefix == "f"):
-            factor = 1.0e-15
-        elif (unitprefix == "p"):
-            factor = 1.0e-12
-        elif (unitprefix == "n"):
-            factor = 1.0e-9
-        elif (unitprefix == "u"):
-            factor = 1.0e-6
-        elif (unitprefix == "m"):
-            factor = 1.0e-3
-        elif (unitprefix == "k"):
-            factor = 1.0e+3
-        elif (unitprefix == "M"):
-            factor = 1.0e+6
-        elif (unitprefix == "G"):
-            factor = 1.0e+9
-        elif (unitprefix == "T"):
-            factor = 1.0e+12
-        elif (unitprefix == "P"):
-            factor = 1.0e+15
-        elif (unitprefix == "E"):
-            factor = 1.0e+18
-        
-        return value*factor
+    if not qatl.isquantity(s_restfreq):
+        mesg = "Input value is not a quantity: %s" % (str(s_restfreq))
+        raise Exception, mesg
+    if qatl.compare(s_restfreq,'Hz'):
+        return qatl.convert(s_restfreq, 'Hz')['value']
+    elif qatl.quantity(s_restfreq)['unit'] == '':
+        return float(s_restfreq)
     else:
         mesg = "wrong unit of restfreq."
         raise Exception, mesg
-
+###############################################################
+# def get_restfreq_in_Hz(s_restfreq):
+#     value = 0.0
+#     unit = ""
+#     s = s_restfreq.replace(" ","")
+# 
+#     for i in range(len(s))[::-1]:
+#         if s[i].isalpha():
+#             unit = s[i] + unit
+#         else:
+#             value = float(s[0:i+1])
+#             break
+# 
+#     if (unit == "") or (unit.lower() == "hz"):
+#         return value
+#     elif (len(unit) == 3) and (unit[1:3].lower() == "hz"):
+#         unitprefix = unit[0]
+#         factor = 1.0
+# 
+#         if (unitprefix == "a"):
+#             factor = 1.0e-18
+#         elif (unitprefix == "f"):
+#             factor = 1.0e-15
+#         elif (unitprefix == "p"):
+#             factor = 1.0e-12
+#         elif (unitprefix == "n"):
+#             factor = 1.0e-9
+#         elif (unitprefix == "u"):
+#             factor = 1.0e-6
+#         elif (unitprefix == "m"):
+#             factor = 1.0e-3
+#         elif (unitprefix == "k"):
+#             factor = 1.0e+3
+#         elif (unitprefix == "M"):
+#             factor = 1.0e+6
+#         elif (unitprefix == "G"):
+#             factor = 1.0e+9
+#         elif (unitprefix == "T"):
+#             factor = 1.0e+12
+#         elif (unitprefix == "P"):
+#             factor = 1.0e+15
+#         elif (unitprefix == "E"):
+#             factor = 1.0e+18
+#         
+#         return value*factor
+#     else:
+#         mesg = "wrong unit of restfreq."
+#         raise Exception, mesg
+###############################################################
 
 def normalise_restfreq(in_restfreq):
     if isinstance(in_restfreq, float):

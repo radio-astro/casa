@@ -47,8 +47,9 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             frame_org = coord[1]
             doppler_org = coord[2]
             del coord
-            
-            restore = (frame != '') or (doppler != '') or (len(restfreq) > 0)\
+
+            rfset = (restfreq != '') and (restfreq != [])
+            restore = (frame != '') or (doppler != '') or rfset \
                      or (fluxunit != '' and fluxunit != fluxunit_org)\
                      or (specunit != '' and specunit != specunit_org)
             restore = restore and is_scantable(infile) and \
@@ -194,7 +195,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     s.set_unit(specunit)
 
             # set restfrequency
-            if ( len(restfreq) > 0 ):
+            if ( rfset ):
                     molids = s._getmolidcol_list()
                     s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
 
@@ -639,7 +640,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                 s.set_unit(specunit_org)
                                 s.set_doppler(doppler_org)
                                 s.set_freqframe(frame_org)
-                                if len(restfreq) > 0:
+                                if rfset:
                                         s._setmolidcol_list(molids)
                         # Final clean up
                         del s

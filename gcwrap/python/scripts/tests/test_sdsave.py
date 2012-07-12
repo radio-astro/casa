@@ -589,7 +589,379 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
             print 'Bad column: %s'%(badcols)
             ret = False
         return ret
+
+###
+# Test rest frequency
+###
+class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdsave. Test scantable available restfreq
+
+    The list of tests:
+    test701-704  --- a value (float, int, quantity w/ and w/o a unit)
+    test711-715  --- a list [length=1]
+                     (float, int, quantity w/ and w/o a unit, dict)
+    test721-725  --- a list [length>1]
+                     (float, int, quantity w/ and w/o a unit, dict)
+    test731-733  --- a bad quantity unit (a value, a list)
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    outname = sdsave_unittest_base.taskname+'_test'
+    iflist = [1,2]
+    frf = [45.301e9,44.075e9]
+    irf = [45301000000,44075000000]
+    qurf = ['45301.MHz','44.075GHz']
+    qrf = [str(frf[0]), str(irf[1])]
+    drf = [{'name': "IF1 Rest", 'value': frf[0]}, \
+           {'name': "IF2 Rest", 'value': qurf[1]}]
+    badq = ['45301.km','44.075bad']
+
+    def setUp( self ):
+        # copy input scantables
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+
+    # Helper functions for testing
+    def _check_restfreq( self, outfile, restfreq, iflist ):
+        self._checkfile(outfile)
+        #print "To be checked 0 : ifnos =", iflist, ", restfreqs = ", restfreq
+        if not (type(restfreq) in (list, tuple, numpy.ndarray)):
+            print "rest freq is not an array type"
+            restfreq = [restfreq] * len(iflist)
+        elif len(restfreq) == 1:
+            print "rest freq is length 1"
+            restfreq = restfreq * len(iflist)
+        #print "To be checked: ifnos =", iflist, ", restfreqs = ", restfreq
+        scan = sd.scantable(outfile, average = False)
+        for i in range(len(restfreq)):
+            ifno = iflist[i]
+            rf = restfreq[i]
+            if type(rf) == dict:
+                rf = rf['value']
+            if qa.isquantity(rf):
+                rfv = qa.convert(rf,'Hz')['value']
+            else:
+                rfv = float(rf)
+            scan.set_selection(ifs=[ifno])
+            molid = scan.getmolnos()
+            self.assertTrue(len(molid)==1,msg="IFNO=%d has multiple MOLECULE_IDs: %s" % (ifno,str(molid)))
+            newrf = scan.get_restfreqs(molid[0])
+            #self.assertTrue(len(newrf)==1,msg="IFNO=%d has multiple rest frequencies: %s" % (ifno,str(newrf)))
+            self.assertEqual(newrf[0], rfv,\
+                             msg="Rest frequency differs(IFNO=%d): %f (expected: %f)" % (ifno, newrf[0], rfv))
+            print "Rest frequency (IFNO=%d): %f (expected: %f)" % (ifno, newrf[0], rfv)
     
+    # Actual tests
+    def test701( self ):
+        """Test 701: restfreq (a float value)"""
+        tid = "701"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.frf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test702( self ):
+        """Test 702: restfreq (an int value)"""
+        tid = "702"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.irf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test703( self ):
+        """Test 703: restfreq (a quantity with unit)"""
+        tid = "703"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qurf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test704( self ):
+        """Test 704: restfreq (a quantity withOUT unit)"""
+        tid = "704"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qrf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test711( self ):
+        """Test 711: restfreq (a list of float value [length = 1])"""
+        tid = "711"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.frf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test712( self ):
+        """Test 712: restfreq (a list of int value [length = 1])"""
+        tid = "712"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.irf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test713( self ):
+        """Test 713: restfreq (a list of quantity with unit [length = 1])"""
+        tid = "713"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.qurf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test714( self ):
+        """Test 714: restfreq (a list of quantity withOUT unit [length = 1])"""
+        tid = "714"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.qrf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test715( self ):
+        """Test 715: restfreq (a list of dictionary [length = 1])"""
+        tid = "715"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.drf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test721( self ):
+        """Test 721: restfreq (a list of float value [length > 1])"""
+        tid = "721"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.frf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test722( self ):
+        """Test 722: restfreq (a list of int value [length > 1])"""
+        tid = "722"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.irf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test723( self ):
+        """Test 723: restfreq (a list of quantity with unit [length > 1])"""
+        tid = "723"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qurf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test724( self ):
+        """Test 724: restfreq (a list of quantity withOUT unit [length > 1])"""
+        tid = "724"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qrf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test725( self ):
+        """Test 725: restfreq (a list of dictionary [length > 1])"""
+        tid = "725"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.drf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq[0], iflist)
+
+    def test731( self ):
+        """Test 731: restfreq (a BAD quantity unit)"""
+        tid = "731"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.badq[0]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertFalse(result)
+
+    def test732( self ):
+        """Test 732: restfreq (a list of BAD quantity unit [length = 1])"""
+        tid = "732"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.badq[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertFalse(result)
+
+    def test733( self ):
+        """Test 733: restfreq (a list of BAD quantity unit [length > 1])"""
+        tid = "733"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.badq
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertFalse(result)
+
+
+###
+# Test combinations of scantable.storage='disk'/'memory' and insitu=T/F
+###
 class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdsave. Test scantable sotrage and insitu
@@ -815,4 +1187,4 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6,sdsave_storageTest]
+            sdsave_test6,sdsave_test7,sdsave_storageTest]

@@ -16,6 +16,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
 
         try:
             restore = False
+            rfset = (restfreq != '') and (restfreq != [])
             #load the data with or without averaging
             if infile == '':
                 raise Exception, 'infile is undefined'
@@ -129,7 +130,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             else:
                 #spave = s.copy()
                 spave = s
-                if (len(restfreq) > 0) and is_scantable(infile) and \
+                if rfset and is_scantable(infile) and \
                        sd.rcParams['scantable.storage'] == 'disk':
                     molids = s._getmolidcol_list()
                     restore = True
@@ -137,7 +138,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             del s
 
             # set rest frequency
-            if (len(restfreq) > 0 ):
+            if ( rfset ):
                 spave.set_restfreqs(sdutil.normalise_restfreq(restfreq))
 
             # save

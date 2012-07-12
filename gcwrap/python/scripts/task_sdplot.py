@@ -30,7 +30,8 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             #load the data without time/pol averaging
             sorg = sd.scantable(infile,average=scanaverage,antenna=antenna)
 
-            doCopy = (frame != '') or (doppler != '') or (restfreq != '') \
+            rfset = (restfreq != '') and (restfreq != [])
+            doCopy = (frame != '') or (doppler != '') or rfset \
                      or (fluxunit != '' and fluxunit != sorg.get_fluxunit()) \
                      or (specunit != '' and specunit != sorg.get_unit())
             doCopy = doCopy and isScantable
@@ -145,7 +146,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     s.set_unit(specunit)
 
             # set rest frequency
-            if ( specunit == 'km/s' and len(str(restfreq)) > 0 ):
+            if ( specunit == 'km/s' and rfset ):
                     fval = sdutil.normalise_restfreq(restfreq)
                     casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                     s.set_restfreqs(freqs=fval)
