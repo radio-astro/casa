@@ -42,6 +42,9 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 			this, SLOT(accepted()));
 	connect(buttonBox, SIGNAL(rejected()),
 			this, SLOT(close()));
+
+	opticalSpecFitCheckBox->setVisible(false);
+	stepFunctionCheckBox->setVisible(false);
 }
 
 QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
@@ -75,6 +78,9 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 			this, SLOT(accepted()));
 	connect(buttonBox, SIGNAL(rejected()),
 			this, SLOT(close()));
+
+	opticalSpecFitCheckBox->setVisible(false);
+	stepFunctionCheckBox->setVisible(false);
 }
 
 void QtProfilePrefs::accepted(){
