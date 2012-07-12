@@ -79,7 +79,7 @@ void SettingsWidget::reset( bool taskChanged ){
 			taskHelper = taskHelperRadio;
 		}
 		if ( opticalChange ){
-			qDebug() << "Resetring optical";
+		  //qDebug() << "Resetring optical";
 			taskHelper -> setOptical( optical );
 			taskHelper -> reset();
 		}
