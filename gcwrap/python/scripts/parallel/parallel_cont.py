@@ -562,11 +562,10 @@ class imagecont():
         #if inimshape[0:3]!=cubeshape[0:3]: 
         #        return False
         nchTile=1
-        if((ibig.summary()[1]['tileshape'][3]%subshape[3] ==0) or (subshape[3] > ibig.summary()[1]['tileshape'][3])):
-            nchTile=max(ibig.summary()[1]['tileshape'][3], subshape[3])
+        if((ibig.summary()['tileshape'][3]%subshape[3] ==0) or (subshape[3] > ibig.summary()['tileshape'][3])):
+            nchTile=max(ibig.summary()['tileshape'][3], subshape[3])
         else:
             nchTile=subshape[3]
-        
         trc=np.array([int(cubeshape[0]-1),int(cubeshape[1]-1),int(cubeshape[2]-1),nchTile-1])
         arr=ibig.getchunk(blc=blc.tolist(), trc=trc.tolist())
         nchanchunk=cubeshape[3]/nchTile
