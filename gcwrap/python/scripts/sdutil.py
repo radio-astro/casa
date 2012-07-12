@@ -3,7 +3,7 @@ import os
 import asap as sd
 from asap import _to_list
 
-qatool = casac.quanta()
+qatl = casac.quanta()
 
 def assert_infile_exists(infile=None):
     if (infile == ""):
@@ -54,13 +54,13 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
 
 
 def get_restfreq_in_Hz(s_restfreq):
-    #### This function can be altered by the following 10 lines ###
-#     if not qatool.isquantity(s_restfreq):
+    #### This function could be altered by the following 10 lines ###
+#     if not qatl.isquantity(s_restfreq):
 #         mesg = "Input value is not a quantity"
 #         raise Exception, mesg
-#     if qatool.compare(s_restfreq,'Hz'):
-#         return qatool.convert(s_restfreq, 'Hz')['value']
-#     elif qatool.quantity(s_restfreq)['unit'] == '':
+#     if qatl.compare(s_restfreq,'Hz'):
+#         return qatl.convert(s_restfreq, 'Hz')['value']
+#     elif qatl.quantity(s_restfreq)['unit'] == '':
 #         return float(s_restfreq)
 #     else:
 #         mesg = "wrong unit of restfreq."
