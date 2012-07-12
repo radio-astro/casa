@@ -1003,8 +1003,7 @@ def imagepoltest(which=None):
         # Check results
         #
         ampim = ia.newimagefromfile(ampname)
-        sum = ampim.summary(list=F)
-        srec=sum[1]
+        srec = ampim.summary(list=F)
         rminc = srec['incr'][3]
         rmrefpix = srec['refpix'][3]
         idx = int((rm+rminc/2.0)/float(rminc) + rmrefpix)
