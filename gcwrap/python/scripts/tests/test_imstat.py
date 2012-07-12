@@ -30,7 +30,7 @@ class imstat_test(unittest.TestCase):
 
     def setUp(self):
         self.res = None
-        self._myia = iatool.create()
+        self._myia = iatool()
         default(clean)
         self.datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/imstat/'
     
@@ -56,11 +56,11 @@ class imstat_test(unittest.TestCase):
         _myia.open(self.moment)
         summary = _myia.summary()
         _myia.close()
-        rainc = qa.abs(qa.quantity(summary[1]['incr'][0],'rad'))
+        rainc = qa.abs(qa.quantity(summary['incr'][0],'rad'))
         rainc = qa.convert(rainc,'arcsec')
-        decinc = qa.abs(qa.quantity(summary[1]['incr'][1],'rad'))
+        decinc = qa.abs(qa.quantity(summary['incr'][1],'rad'))
         decinc = qa.convert(decinc,'arcsec')
-        beam = summary[1]['restoringbeam']['restoringbeam']
+        beam = summary['restoringbeam']
         major = beam['major']
         minor = beam['minor']
         pixperbeam = qa.div(qa.mul(major,minor),(qa.mul(rainc,decinc)))['value']*(math.pi/(4*math.log(2)))
