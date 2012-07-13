@@ -181,7 +181,7 @@ def makeMMS(outputvis, submslist, tmpmsname=''):
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)
         os.chdir(thems)
-        mastersubms = os.path.basename(subMSList[0].rstrip('/'))
+        mastersubms = os.path.basename(submslist[0].rstrip('/'))
         thesubtables = getSubtables('SUBMSS/'+mastersubms)
         for s in thesubtables:
             os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
