@@ -689,10 +689,10 @@ Unit SkyCompRep::defineBrightnessUnits (
 	DirectionCoordinate dirCoord2 = dirCoord;
 	dirCoord2.setWorldAxisUnits(units);
 	Vector<Double> inc = dirCoord2.increment();
-	UnitMap::putUser("pixel", UnitVal(abs(inc(0)*inc(1)), String("rad2")));
 
 	// Define "beam" units if needed
-
+	// ugh this gets confusing because of the static nature of UnitMap. In some
+	// cases elsewhere beam and pixel are dimensionless
 	if (brightnessUnitIn.getName().contains("beam")) {
 		if (! restoringBeam.isNull()) {
 			// GaussianBeam rB = restoringBeam;
@@ -704,6 +704,7 @@ Unit SkyCompRep::defineBrightnessUnits (
 			throw AipsError("No beam defined even though the image brightness units are " + brightnessUnitIn.getName());
 		}
 	}
+	UnitMap::putUser("pixel", UnitVal(abs(inc(0)*inc(1)), String("rad2")));
 
 	// We must tell the old unit that it has been redefined
 
@@ -769,6 +770,7 @@ Quantity SkyCompRep::peakToIntegralFlux (
 		tmp.scale(C::pi);
 	}
 	else {
+		SkyCompRep::undefineBrightnessUnits();
 		os << "Unrecognized shape for flux density conversion" << LogIO::EXCEPTION;
 	}
 	Quantity fluxIntegral;
@@ -784,7 +786,7 @@ Quantity SkyCompRep::peakToIntegralFlux (
 		fluxIntegral.convert("Jy.km/s");
 	}
 	else {
-		os << LogIO::SEVERE << "Cannot convert units of Flux integral to Jy - will assume Jy"
+		os << LogIO::WARN << "Cannot convert units of Flux integral to Jy - will assume Jy"
 			<< LogIO::POST;
 		fluxIntegral.setUnit(Unit("Jy"));
 	}
@@ -833,6 +835,7 @@ Quantity SkyCompRep::integralToPeakFlux (
 		tmp.scale(1.0 / C::pi);
 	}
 	else {
+		SkyCompRep::undefineBrightnessUnits();
 		os << "Unrecognized shape for flux density conversion" << LogIO::EXCEPTION;
 	}
 
@@ -851,7 +854,7 @@ Quantity SkyCompRep::integralToPeakFlux (
 
 Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 {
-   LogIO os(LogOrigin("SkyCompRep", "convertToJy()"));
+   LogIO os(LogOrigin("SkyCompRep", __FUNCTION__));
       
 // We need to find the ratio that converts the input peak brightness
 // from whatevers/per whatever to Jy per whatever.  E.g. mJy/beam
@@ -859,11 +862,17 @@ Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 // is needed regardless of the component type.  So we start by
 // Defining /beam and /pixel units to be dimensionless
 
+
    Unit unitIn = brightnessUnit;
+   // This is not thread safe, but in general anything
+   // that relies on UnitMap is not because of UnitMap's
+   // static nature
+   SkyCompRep::undefineBrightnessUnits();
+
    UnitMap::putUser("pixel", UnitVal(1.0,String("")));
    UnitMap::putUser("beam",  UnitVal(1.0,String("")));
    unitIn = Unit(unitIn.getName());                // Tell system to update this unit
-//
+
    Quantum<Double> tmp(1.0, unitIn);
    Double facToJy = 1.0;
    if (tmp.isConform(Unit("Jy"))) {
@@ -877,7 +886,7 @@ Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 	   facToJy = tmp2.getValue() / tmp.getValue();
    }
    else {
-      os << LogIO::SEVERE << "Cannot convert units of brightness to Jy - will assume Jy"
+      os << LogIO::WARN << "Cannot convert units of brightness to Jy - will assume Jy"
          << LogIO::POST;
       facToJy = 1.0;
    }
@@ -885,7 +894,6 @@ Double SkyCompRep::convertToJy (const Unit& brightnessUnit)
 // Undefine /beam and /pixel
 
    SkyCompRep::undefineBrightnessUnits();
-//
    return facToJy;
 }
 
