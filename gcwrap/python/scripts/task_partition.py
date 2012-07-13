@@ -314,61 +314,63 @@ class PartitionHelper(ParallelTaskHelper):
                 casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
 
-            # Really should double check here before creating.
-            if os.path.exists(self._arg['outputvis']):
-                raise ValueError, "Output MS already exists"
+            ph.makeMMS(self._arg['outputvis'], subMSList)
 
-            ## make a MMS with all sub-MSs contain in a SUBMSS subdirectory
-            thems = self._arg['outputvis']
-            themsname = os.path.basename(thems.rstrip('/'))
-            thecontainingdir = os.path.dirname(thems.rstrip('/'))
-            thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+##             # Really should double check here before creating.
+##             if os.path.exists(self._arg['outputvis']):
+##                 raise ValueError, "Output MS already exists"
 
-            os.mkdir(thems)
-            shutil.move(thesubmscontainingdir, thems+'/SUBMSS')
+##             ## make a MMS with all sub-MSs contain in a SUBMSS subdirectory
+##             thems = self._arg['outputvis']
+##             themsname = os.path.basename(thems.rstrip('/'))
+##             thecontainingdir = os.path.dirname(thems.rstrip('/'))
+##             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+
+##             os.mkdir(thems)
+##             shutil.move(thesubmscontainingdir, thems+'/SUBMSS')
             
-            thesubmss = []
-            for submsname in subMSList:
-                thesubmsname = os.path.basename(submsname.rstrip('/'))
-                thesubmss.append(themsname+'/SUBMSS/'+thesubmsname)
+##             thesubmss = []
+##             for submsname in subMSList:
+##                 thesubmsname = os.path.basename(submsname.rstrip('/'))
+##                 thesubmss.append(themsname+'/SUBMSS/'+thesubmsname)
 
-            ## create the MMS via a temporary directory in order to be able
-            ## to have the members inside the outputvis
+##             ## create the MMS via a temporary directory in order to be able
+##             ## to have the members inside the outputvis
             
-            origpath = os.getcwd()
+##             origpath = os.getcwd()
 
-            # need to be in the containing directory of outputvis in order
-            # to have the right relative paths in the MMS header
-            if not (thecontainingdir==''):
-                os.chdir(thecontainingdir)
-            tmpmsname = themsname+'_createmms_tmp'
-            shutil.rmtree(tmpmsname, ignore_errors=True)
-            self._msTool.close()
-            try:
-                self._msTool.createmultims(tmpmsname,
-                                           thesubmss,
-                                           [],
-                                           True,  # nomodify
-                                           False, # lock
-                                           False) # copysubtables
-                shutil.move(thems+'/SUBMSS', tmpmsname)
-                shutil.rmtree(thems, ignore_errors=True)
-                shutil.move(tmpmsname, thems)
+##             # need to be in the containing directory of outputvis in order
+##             # to have the right relative paths in the MMS header
+##             if not (thecontainingdir==''):
+##                 os.chdir(thecontainingdir)
+##             tmpmsname = themsname+'_createmms_tmp'
+##             shutil.rmtree(tmpmsname, ignore_errors=True)
+##             self._msTool.close()
+##             try:
+##                 self._msTool.createmultims(tmpmsname,
+##                                            thesubmss,
+##                                            [],
+##                                            True,  # nomodify
+##                                            False, # lock
+##                                            False) # copysubtables
+##                 shutil.move(thems+'/SUBMSS', tmpmsname)
+##                 shutil.rmtree(thems, ignore_errors=True)
+##                 shutil.move(tmpmsname, thems)
 
-                # finally create symbolic links to the subtables of the first SubMS
-                os.chdir(origpath)
-                os.chdir(thems)
-                mastersubms = os.path.basename(subMSList[0].rstrip('/'))
-                thesubtables = ph.getSubtables('SUBMSS/'+mastersubms)
-                for s in thesubtables:
-                    os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
+##                 # finally create symbolic links to the subtables of the first SubMS
+##                 os.chdir(origpath)
+##                 os.chdir(thems)
+##                 mastersubms = os.path.basename(subMSList[0].rstrip('/'))
+##                 thesubtables = ph.getSubtables('SUBMSS/'+mastersubms)
+##                 for s in thesubtables:
+##                     os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
 
-            except:
-                casalog.post("Problem in MMS creation: "+sys.exc_info()[0], 'WARN')
-                os.chdir('origpath')
-                raise
+##             except:
+##                 casalog.post("Problem in MMS creation: "+sys.exc_info()[0], 'WARN')
+##                 os.chdir('origpath')
+##                 raise
 
-            os.chdir(origpath)
+##             os.chdir(origpath)
             
         # Probably should check to see if anything failed
         # This should be done in the base class
