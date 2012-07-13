@@ -635,10 +635,8 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         self._checkfile(outfile)
         #print "To be checked 0 : ifnos =", iflist, ", restfreqs = ", restfreq
         if not (type(restfreq) in (list, tuple, numpy.ndarray)):
-            print "rest freq is not an array type"
             restfreq = [restfreq] * len(iflist)
         elif len(restfreq) == 1:
-            print "rest freq is length 1"
             restfreq = restfreq * len(iflist)
         #print "To be checked: ifnos =", iflist, ", restfreqs = ", restfreq
         scan = sd.scantable(outfile, average = False)
@@ -669,7 +667,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         iflist = self.iflist
         restfreq = self.frf[1]
 
-        print "Setting restfreq = %s" % (str(restfreq))
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
         result = sdsave(infile=infile,outfile=outfile,\
                         scanaverage=False,timeaverage=False,polaverage=False,\
                         iflist=iflist,restfreq=restfreq)
@@ -687,7 +685,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         iflist = self.iflist
         restfreq = self.irf[1]
 
-        print "Setting restfreq = %s" % (str(restfreq))
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
         result = sdsave(infile=infile,outfile=outfile,\
                         scanaverage=False,timeaverage=False,polaverage=False,\
                         iflist=iflist,restfreq=restfreq)
@@ -723,7 +721,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         iflist = self.iflist
         restfreq = self.qrf[1]
 
-        print "Setting restfreq = %s" % (str(restfreq))
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
         result = sdsave(infile=infile,outfile=outfile,\
                         scanaverage=False,timeaverage=False,polaverage=False,\
                         iflist=iflist,restfreq=restfreq)
