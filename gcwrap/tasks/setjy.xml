@@ -147,10 +147,16 @@
                     </notequals>
                   </when>
                   <when param="standard">
+                  <equals type="string" value="Perley-Butler 2010"/>
+		  <equals type="string" value="Perley-Taylor 99"/>
+	          <equals type="string" value="Baars"/>
+	          <equals type="string" value="Perley 90"/>
+		  <equals type="string" value="Perley-Taylor 95"/>
                   <equals type="string" value="Butler-JPL-Horizons 2012">
                     <default param="useephemdir"><value type="bool">False</value>
                     </default>
                   </equals>
+                  <equals type="string" value="Butler-JPL-Horizons 2010"/>
                   </when>
                 </constraints>
 	</input>
