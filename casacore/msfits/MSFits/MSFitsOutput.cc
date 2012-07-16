@@ -1197,10 +1197,16 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                             outptr[0] = realcorr[j] / wgtaver[j];
                             outptr[1] = imagcorr[j] / wgtaver[j];
                             outptr[2] = wgtaver[j] / flagcounter;
-                        } else {
+                        } 
+                        else if (wgtaverf[j] > 0) {
                             outptr[0] = realcorrf[j] / wgtaverf[j];
                             outptr[1] = imagcorrf[j] / wgtaverf[j];
                             outptr[2] = -wgtaverf[j] / avgchan;
+                        }
+                        else {
+                            outptr[0] = 0;
+                            outptr[1] = 0;
+                            outptr[2] = 0;
                         }
                         if (rowFlag) {
                             //calculate the average even if row flagged, just in case
