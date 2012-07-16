@@ -1204,8 +1204,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                             outptr[2] = -wgtaverf[j] / avgchan;
                         }
                         else {
-                            outptr[0] = 0;
-                            outptr[1] = 0;
+                            outptr[0] = realcorrf[j] / avgchan;
+                            outptr[1] = imagcorrf[j] / avgchan;
                             outptr[2] = 0;
                         }
                         if (rowFlag) {
@@ -1951,7 +1951,9 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
         if (fieldnum < fieldidMap.nelements() && fieldidMap[fieldnum] >= 0) {
             *idno = 1 + fieldidMap[fieldnum];
             dir = msfc.phaseDirMeas(fieldnum);
-            *source = inname(fieldnum) + "                ";
+            //*source = inname(fieldnum) + "                ";
+            *source = inname(fieldnum) + String::toString(fieldnum) + "    ";
+
             if (dir.type() == MDirection::B1950) {
                 *epoch = 1950.;
             }
@@ -1968,7 +1970,7 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
                 if (rownrs.nelements() > 0) {
                     uInt rownr = rownrs(0);
                     // Name in SOURCE table overides name in FIELD table
-                    *source = sourceColumns->name()(rownr) + "                ";
+                    // *source = sourceColumns->name()(rownr) + "                ";
                     //cout << "sysvel is Null: "
                     //     << sourceColumns->sysvel().isNull() << endl;
                     if (!sourceColumns->sysvel().isNull()
@@ -1995,12 +1997,12 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
                     *calcode = sourceColumns->code()(rownr) + "    ";
 
                     // Directions have to be converted from radians to degrees.
-                    if (sourceColumns->direction().isDefined(rownr)) {
-                        dir = sourceColumns->directionMeas()(rownr);
-                    }
-                    if (dir.type() == MDirection::B1950) {
-                        *epoch = 1950.;
-                    }
+                    //if (sourceColumns->direction().isDefined(rownr)) {
+                    //    dir = sourceColumns->directionMeas()(rownr);
+                    //}
+                    //if (dir.type() == MDirection::B1950) {
+                    //    *epoch = 1950.;
+                    //}
                 }
             }
 
