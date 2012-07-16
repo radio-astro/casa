@@ -4328,10 +4328,12 @@ Bool ImageAnalysis::setrestoringbeam(
 	Quantity bmajor, bminor, bpa;
 	if (rec.nfields() != 0) {
 		String error;
+		// instantiating this object will do implicit consistency checks
+		// on the passed-in record
 		GaussianBeam beam = GaussianBeam::fromRecord(rec);
 
 		bmajor = beam.getMajor();
-		bminor = beam.getMajor();
+		bminor = beam.getMinor();
 		bpa = beam.getPA(True);
 	}
 	else {
