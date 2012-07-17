@@ -1206,94 +1206,94 @@ void MSLister::polarizationSetup(MeasurementSet *pMS) {
 // number of elements in indexPols_p.
 void MSLister::polarizationParse(String correlation) {
 
-  logStream_p << LogIO::DEBUG1 << "Begin: MSLister::polarizationParse" << LogIO::POST;
+	logStream_p << LogIO::DEBUG1 << "Begin: MSLister::polarizationParse" << LogIO::POST;
 
-  Regex alpha("[A-Za-z]"); // Any letter
-  if(correlation.empty() || !(correlation.contains(alpha))) {
-    // If correlation is empty (no correlation selection) select all
-    // polarizations by default.  Fill indexPols_p with indices 0
-    // through (npols_p - 1).
-    logStream_p << LogIO::NORMAL1
-                << "No correlation selection; selecting all by default."
-                << LogIO::POST;
-    nIndexPols_p = npols_p;
-    indexPols_p.resize(nIndexPols_p);
-    for(uInt i=0; i<nIndexPols_p; i++) { indexPols_p(i) = i; }
-    return;
-  }
-  correlation.upcase(); // transform to uppercase
+	Regex alpha("[A-Za-z]"); // Any letter
+	if(correlation.empty() || !(correlation.contains(alpha))) {
+		// If correlation is empty (no correlation selection) select all
+		// polarizations by default.  Fill indexPols_p with indices 0
+		// through (npols_p - 1).
+		logStream_p << LogIO::NORMAL1
+				<< "No correlation selection; selecting all by default."
+				<< LogIO::POST;
+		nIndexPols_p = npols_p;
+		indexPols_p.resize(nIndexPols_p);
+		for(uInt i=0; i<nIndexPols_p; i++) { indexPols_p(i) = i; }
+		return;
+	}
+	correlation.upcase(); // transform to uppercase
 
-  try {
-    // Parse correlation parameter value.  Put each substring into
-    // Vector<String> parseCorrs. nParseCorrs holds the number of
-    // elements in parseCorrs.
+	try {
+		// Parse correlation parameter value.  Put each substring into
+		// Vector<String> parseCorrs. nParseCorrs holds the number of
+		// elements in parseCorrs.
 
-    Vector<String> parseCorrs;
-    Int nParseCorrs=0;
-    // Use Regex to do the parsing.
-    Regex startRegex("^[^A-Za-z]"); // leading non-letter
-    Regex cRegex("^[A-Za-z]{1,2}"); // 1 polarization selection
-    // strip all leading whitespace
-    logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
-    while(correlation.contains(startRegex)) { correlation.del(startRegex); }
-    logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
-    // Acquire 1 polarization selection
-    while(correlation.contains(cRegex)) {
-      parseCorrs.shape(nParseCorrs); // get size of parseCorrs
-      parseCorrs.resize(++nParseCorrs,True); // append one element to parseCorrs
-      // Store polarization in parseCorrs
-      parseCorrs(nParseCorrs - 1) = correlation.through(cRegex);
-      correlation.del(cRegex); // remove polarization
-    logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
-      // strip all leading whitespace
-      while(correlation.contains(startRegex)) { correlation.del(startRegex); }
-    logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
-    }
+		Vector<String> parseCorrs;
+		Int nParseCorrs=0;
+		// Use Regex to do the parsing.
+		Regex startRegex("^[^A-Za-z]"); // leading non-letter
+		Regex cRegex("^[A-Za-z]{1,2}"); // 1 polarization selection
+		// strip all leading whitespace
+		logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
+		while(correlation.contains(startRegex)) { correlation.del(startRegex); }
+		logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
+		// Acquire 1 polarization selection
+		while(correlation.contains(cRegex)) {
+			parseCorrs.shape(nParseCorrs); // get size of parseCorrs
+			parseCorrs.resize(++nParseCorrs,True); // append one element to parseCorrs
+			// Store polarization in parseCorrs
+			parseCorrs(nParseCorrs - 1) = correlation.through(cRegex);
+			correlation.del(cRegex); // remove polarization
+			logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
+			// strip all leading whitespace
+			while(correlation.contains(startRegex)) { correlation.del(startRegex); }
+			logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
+		}
 
-    logStream_p << LogIO::NORMAL2 << "Correlation selections identified:" << endl
-                << parseCorrs << endl
-                << "Number of polarization selections = " << nParseCorrs
-                << LogIO::POST;
+		logStream_p << LogIO::NORMAL2 << "Correlation selections identified:" << endl
+				<< parseCorrs << endl
+				<< "Number of polarization selections = " << nParseCorrs
+				<< LogIO::POST;
 
-  // Query the number of elements of indexPols_p; store in nIndexPols_p.
-    nIndexPols_p = nParseCorrs;
-    indexPols_p.resize(nIndexPols_p);
+		// Query the number of elements of indexPols_p; store in nIndexPols_p.
+		nIndexPols_p = nParseCorrs;
+		indexPols_p.resize(nIndexPols_p);
 
-  // Verify that each polarization in parseCorrs actually exists
-  // in this data set.
-    for(Int i=0; i<nParseCorrs; i++) {
-      Bool verifyCorr = False;
-      for(uInt j=0; j<npols_p; j++) {
-        // REMOVE COMMENTED DEBUGGING MESSAGES LATER
-        ///logStream_p << LogIO::DEBUG2 << "index j = " << j << LogIO::POST;
-        if(parseCorrs(i) == pols_p(j)) {
-          logStream_p << LogIO::DEBUG2 << "parseCorrs(" << i << ") = "
-                      << parseCorrs(i) << ", and pols_p(" << j << ") = "
-                      << pols_p(j) << LogIO::POST;
-          verifyCorr = True;
-          // Build indexPols_p here.
-          ///logStream_p << LogIO::DEBUG2 << "verifyCorr assigned True." << LogIO::POST;
-          indexPols_p(i) = j;  // indexPols_p holds indices to pols_p
-          ///logStream_p << LogIO::DEBUG2 << "end of j loop" << LogIO::POST;
-        }
-      }
-      if(! verifyCorr) { // If polarization not found in data, throw exception
-        throw(AipsError("Selected correlation '" + parseCorrs(i)
-                        + "' does not exist."));
-      }
-    }
+		// Verify that each polarization in parseCorrs actually exists
+		// in this data set.
+		for(Int i=0; i<nParseCorrs; i++) {
+			Bool verifyCorr = False;
+			for(uInt j=0; j<npols_p; j++) {
+				// REMOVE COMMENTED DEBUGGING MESSAGES LATER
+				///logStream_p << LogIO::DEBUG2 << "index j = " << j << LogIO::POST;
+				if(parseCorrs(i) == pols_p(j)) {
+					logStream_p << LogIO::DEBUG2 << "parseCorrs(" << i << ") = "
+							<< parseCorrs(i) << ", and pols_p(" << j << ") = "
+							<< pols_p(j) << LogIO::POST;
+					verifyCorr = True;
+					// Build indexPols_p here.
+					///logStream_p << LogIO::DEBUG2 << "verifyCorr assigned True." << LogIO::POST;
+					indexPols_p(i) = j;  // indexPols_p holds indices to pols_p
+					///logStream_p << LogIO::DEBUG2 << "end of j loop" << LogIO::POST;
+				}
+			}
+			if(! verifyCorr) { // If polarization not found in data, throw exception
+				throw(AipsError("Selected correlation '" + parseCorrs(i)
+						+ "' does not exist."));
+			}
+		}
 
-    logStream_p << LogIO::DEBUG1 << "indexPols_p = " << indexPols_p << endl
-                << "pols_p = " << pols_p << LogIO::POST;
+		logStream_p << LogIO::DEBUG1 << "indexPols_p = " << indexPols_p << endl
+				<< "pols_p = " << pols_p << LogIO::POST;
 
-  } // end try
+	} // end try
 
-// Catch an exception if a selected correlation does not exist.
-  catch(AipsError x){
-    logStream_p << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-                << LogIO::POST;
-    throw(AipsError("Error in MSLister::polarizationParse"));
-  }
+	// Catch an exception if a selected correlation does not exist.
+	catch(AipsError x){
+		logStream_p << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+                		<< LogIO::POST;
+		throw(AipsError("Error in MSLister::polarizationParse"));
+	}
 }
 
 //
