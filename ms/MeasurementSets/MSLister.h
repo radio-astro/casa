@@ -226,8 +226,8 @@ private:
   // pols_p holds the polarization names contained in the MS
   // in the same order that the polarization data are listed in the 
   // main table.
-  void polarizationSetup(MeasurementSet *pMS);
-  
+  void _polarizationSetup(const uInt selPolID);
+
   // Parse the correlation parameter value; fill indexPols_p to output
   // selected polarizations.  If correlation is empty, all polarizations
   // are selected.
