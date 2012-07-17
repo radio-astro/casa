@@ -97,6 +97,9 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   // access to our viewer
   QtViewer *viewer( ) { return v_; }
+
+  // access our logger...
+  LogIO &logIO( ) { return logger; }
   
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
