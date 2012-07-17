@@ -386,7 +386,32 @@ void MSLister::selectvis(const String& timerange,
 
     // Check to see if selection returned any rows.
     Bool nonTrivial = pMSSelection->getSelectedMS(*pMSSel_p, "");
-
+    Vector<Int> selSPW = pMSSelection->getSpwList();
+	ROMSDataDescColumns ddCols(pMS_p->dataDescription());
+	ROScalarColumn<Int> ddpolIDs = ddCols.polarizationId();
+	ROScalarColumn<Int> spwIDs = ddCols.spectralWindowId();
+	Vector<Int> selDDIDs(selSPW.size());
+	uInt idx = 0;
+	for (uInt i=0; i<selSPW.size(); i++) {
+		for (uInt j=0; j<spwIDs.nrow(); j++) {
+			if (selSPW[i] == spwIDs(j)) {
+				selDDIDs[idx] = j;
+				idx++;
+				break;
+			}
+		}
+	}
+	uInt selDDID = selDDIDs[0];
+	if (selDDIDs.size() > 1) {
+		for (uInt i=1; i<selDDIDs.size(); i++) {
+			if (ddpolIDs(selDDIDs[i]) != selDDID) {
+				throw AipsError(
+					"The selection corresponds to multiple polarization configurations. Try reducing the number of selected spectral windows."
+				);
+			}
+		}
+    }
+    Int selPolID = ddpolIDs(selDDID);
     /* // Write the selected MS to disk
     // This proved to be useful for investigating strange listvis output;
     // it's easier to snoop inside a small subset of an MS than to snoop inside
@@ -480,7 +505,7 @@ void MSLister::selectvis(const String& timerange,
               << msSpWinC.numChan().getColumn()
               << LogIO::POST;
 
-    polarizationSetup(pMSSel_p);
+    _polarizationSetup(selPolID);
     logStream_p << LogIO::DEBUG2 << "polarizationSetup done." << LogIO::POST;
     // ROMSPolarizationColumns msPolC(pMSSel_p->polarization());
     // npols_p = msPolC.corrType()(0).nelements();
@@ -628,7 +653,6 @@ void MSLister::listData(const int pageRows,
       //  appears to be necessary (instead of V-double) despite the get()
       //  function's claim to do type promotion.
       Vector <Double>       rowTime,uvdist;
-      Vector <Int>          datadescid;
       Vector <Int>          ant1,ant2,spwinid,fieldid;
       Array <Bool>          flag;
       Array <Float>         ampl,phase;
@@ -684,7 +708,7 @@ void MSLister::listData(const int pageRows,
       //  flag, uvdist, datadescid, fieldid
       flag = dataRecords_p.asArrayBool(RecordFieldId("flag"));
       uvdist = dataRecords_p.asArrayDouble(RecordFieldId("uvdist"));
-      datadescid = dataRecords_p.asArrayInt(RecordFieldId("data_desc_id"));
+      Vector<Int> datadescid = dataRecords_p.asArrayInt("data_desc_id");
       fieldid = dataRecords_p.asArrayInt(RecordFieldId("field_id"));
       uvw = dataRecords_p.asArrayDouble(RecordFieldId("uvw"));
       //  dataColSel(0) (the data identified by this variable)
@@ -1184,13 +1208,14 @@ Int MSLister::columnWidth(const Vector<String> antNames) {
   return maxWidth;
 }
 
-void MSLister::polarizationSetup(MeasurementSet *pMS) {
+void MSLister::_polarizationSetup(const uInt selPolID) {
+
 // Setup the class polarization information.
 // pols_p holds the polarization names, in the same order as the main
 // table data.
 
+	/*
   logStream_p << LogIO::DEBUG1 << "Begin: MSLister::polarizationSetup" << LogIO::POST;
-
   ROMSPolarizationColumns msPolC(pMS->polarization());
   npols_p = msPolC.corrType()(0).nelements();
   pols_p.resize(npols_p,False);
@@ -1198,6 +1223,16 @@ void MSLister::polarizationSetup(MeasurementSet *pMS) {
     // Store polarization strings in pols_p
     pols_p(i)=Stokes::name(Stokes::type(msPolC.corrType()(0)(IPosition(1,i))));
   }
+  */
+
+	// gauranteed to have 1 row here
+	ROMSPolarizationColumns polCols(pMS_p->polarization());
+	Array<Int> pols = polCols.corrType()(selPolID);
+	npols_p = pols.size();
+	pols_p.resize(npols_p);
+	for (uInt i=0; i<npols_p; i++) {
+		pols_p[i] = Stokes::name(Stokes::type(pols(IPosition(1,i))));
+	}
 }
 
 // Parse the correlation (polarization) selection string.
