@@ -198,7 +198,6 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		    ImageAnalysis ia(im_);
 		    // need an option to delete temporary files on exit...
 		    std::string outpath = viewer::options.temporaryDirectory(Path(path_).baseName());
-		    cout << "<<1>> >>>>>> " << outpath << endl;
 		    ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
 		    std::auto_ptr<ImageInterface<Float> > imptr(im_);
 		    im_ = newim;
