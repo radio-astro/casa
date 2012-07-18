@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 21116 2011-07-21 11:23:15Z gervandiepen $
+//# $Id: Table.h 21252 2012-07-17 09:28:31Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -90,6 +90,10 @@ template<class T> class CountedPtr;
 //   <li> Update         update existing table
 //   <li> Delete         delete table
 // </ul>
+// The function <src>openTable</src> makes it possible to open a subtable
+// of a table in a convenient way, even if the table is only a reference
+// to another table (e.g., a selection).
+//
 // Creating a new table requires more work, because columns have
 // to be bound to storage managers or virtual column engines.
 // Class SetupNewTable is needed for this purpose. The Tables module
@@ -291,6 +295,10 @@ public:
     // of the subtables that have to be concantenated as well.
     // <br>In this way a concatenation of multiple MS-s can be made, where it
     // can be specified that, say, the SYSCAL table has to be concatenated too.
+    // <br> When a concatenated table is written and if a non-empty
+    // <src>subDirName</src> is given, the tables to be concatenated will be
+    // moved to that subdirectory in the directory of the concatenated table.
+    // This option is mainly used by the MSS structure used in CASA.
     // <br>
     // The only open options allowed are Old and Update.
     // Locking options can be given (see class
@@ -305,10 +313,12 @@ public:
     // of the already open table.
     // <group>
     explicit Table (const Block<Table>& tables,
-		    const Block<String>& subTables = Block<String>());
+		    const Block<String>& subTables = Block<String>(),
+                    const String& subDirName = String());
     explicit Table (const Block<String>& tableNames,
 		    const Block<String>& subTables = Block<String>(),
-		    TableOption = Table::Old, const TSMOption& = TSMOption());
+		    TableOption = Table::Old, const TSMOption& = TSMOption(),
+                    const String& subDirName = String());
     Table (const Block<String>& tableNames,
 	   const Block<String>& subTables,
 	   const TableLock& lockOptions,
@@ -327,6 +337,37 @@ public:
 
     // Assignment (reference semantics).
     Table& operator= (const Table&);
+
+    // Try to open a table. The name of the table can contain subtable names
+    // using :: as separator. In this way it is possible to directly open a
+    // subtable of a RefTable or ConcatTable, which is not possible if the
+    // table name is specified with slashes.
+    // <br>The open process is as follows:
+    // <ul>
+    //  <li> It is tried to open the table with the given name.
+    //  <li> If unsuccessful, the name is split into its parts using ::
+    //       The first part is the main table which will be opened temporarily.
+    //       The other parts are the successive subtable names (usually one).
+    //       Each subtable is opened by looking it up in the keywords of the
+    //       table above. The final subtable is returned.
+    // </ul>
+    // <br>An exception is thrown if the table cannot be opened.
+    // <example>
+    // Open the ANTENNA subtable of an MS which might be a selection of
+    // a real MS.
+    // <srcblock>
+    // Table tab(Table::openTable ("sel.ms::ANTENNA");
+    // </srcblock>
+    // </example>
+    // <group>
+    static Table openTable (const String& tableName,
+                            TableOption = Table::Old,
+                            const TSMOption& = TSMOption());
+    static Table openTable (const String& tableName,
+                            const TableLock& lockOptions,
+                            TableOption = Table::Old,
+                            const TSMOption& = TSMOption());
+    // </group>
 
     // Get the names of the tables this table consists of.
     // For a plain table it returns its name,
