@@ -161,18 +161,6 @@ ms::createmultims(const std::string &outputTableName,
     for (uInt idx=0; idx<subtableVector.nelements(); idx++)
       subtableVector[idx] = subtableNames[idx];
 
-    TableLock tlock(TableLock::AutoNoReadLocking);
-
-    {
-      ConcatTable concatTable(tableNameVector,
-                              subtableVector,
-                              Table::New,
-                              tlock,
-                              TSMOption::Default);
-      concatTable.tableInfo().setSubType("CONCATENATED");
-      concatTable.rename(outputTableName, Table::New);
-    }
-
     if((tableNameVector.nelements()>1) && copysubtables){
       *itsLog << LogIO::NORMAL << "Copying subtables from " << tableNameVector[0] 
 	      << " to the other MMS members." << LogIO::POST;
@@ -183,6 +171,20 @@ ms::createmultims(const std::string &outputTableName,
 				  False); // noRows==False, i.e. subtables are copied
       }
     }
+
+    TableLock tlock(TableLock::AutoNoReadLocking);
+
+    {
+      ConcatTable concatTable(tableNameVector,
+                              subtableVector,
+			      "SUBMSS", // move all member tables into subdirectory SUBMSS
+                              Table::New,
+                              tlock,
+                              TSMOption::Default);
+      concatTable.tableInfo().setSubType("CONCATENATED");
+      concatTable.rename(outputTableName, Table::New);
+    }
+
 
   } catch (AipsError ex) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << ex.getMesg()

@@ -124,11 +124,9 @@ def getSubtables(vis):
     return theSubTables
 
 
-def makeMMS(outputvis, submslist, tmpmsname=''):
+def makeMMS(outputvis, submslist):
     '''
-    Create a MMS named outputvis from the submss in list submslist.
-    All submss must be in the same directory and that directory
-    must contain nothing else
+    Create an MMS named outputvis from the submss in list submslist.
     '''
 
     if os.path.exists(outputvis):
@@ -138,49 +136,20 @@ def makeMMS(outputvis, submslist, tmpmsname=''):
         raise ValueError, "No SubMSs given"
 
     ## make an MMS with all sub-MSs contained in a SUBMSS subdirectory
-    thems = outputvis
-    themsname = os.path.basename(thems.rstrip('/'))
-    thecontainingdir = os.path.dirname(thems.rstrip('/'))
-    thesubmscontainingdir = os.path.dirname(submslist[0].rstrip('/'))
-
-    os.mkdir(thems)
-    shutil.move(thesubmscontainingdir, thems+'/SUBMSS')
-
-    thesubmss = []
-    for submsname in submslist:
-        thesubmsname = os.path.basename(submsname.rstrip('/'))
-        thesubmss.append(themsname+'/SUBMSS/'+thesubmsname)
-
-
-    ## create the MMS via a temporary directory in order to be able
-    ## to have the members inside the outputvis
-            
     origpath = os.getcwd()
-
-    # need to be in the containing directory of outputvis in order
-    # to have the right relative paths in the MMS header
-    if not (thecontainingdir==''):
-        os.chdir(thecontainingdir)
-
-    if tmpmsname=='':
-        tmpmsname = themsname+'_createmms_tmp'
-    shutil.rmtree(tmpmsname, ignore_errors=True)
 
     try:
         mymstool = mstool()
-        mymstool.createmultims(tmpmsname,
-                               thesubmss,
+        mymstool.createmultims(outputvis,
+                               submslist,
                                [],
                                True,  # nomodify
                                False, # lock
                                False) # copysubtables
-        shutil.move(thems+'/SUBMSS', tmpmsname)
-        shutil.rmtree(thems, ignore_errors=True)
-        shutil.move(tmpmsname, thems)
-
+        mymstool.close()
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)
-        os.chdir(thems)
+        os.chdir(outputvis)
         mastersubms = os.path.basename(submslist[0].rstrip('/'))
         thesubtables = getSubtables('SUBMSS/'+mastersubms)
         for s in thesubtables:

@@ -863,131 +863,10 @@ class test_concat(unittest.TestCase):
                 
         self.assertTrue(retValue['success'])
 
+
+
     def test9(self):
-        '''Concat 9: 4 parts, same sources but different spws, virtual concat'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        self.res = concat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'],concatvis=msname, createmms=True)
-        self.assertEqual(self.res,None)
-
-        print myname, ": Now checking output ..."
-        print myname, ": Try opening as MS ..."
-
-        try:
-            ms.open(msname)
-        except:
-            print myname, ": Error  Cannot open MS table", tablename
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
-        else:
-            ms.close()
-            if 'test9.ms' in glob.glob("*.ms"):
-                shutil.rmtree('test9.ms',ignore_errors=True)
-            shutil.copytree(msname,'test9.ms')
-            print myname, ": OK. Checking tables in detail ..."
-            retValue['success']=True
-
-            # check source table
-            name = "part1.ms/SOURCE"
-            #             col name, row number, expected value, tolerance
-            expected = [
-                ['SOURCE_ID',           55, 13, 0],
-                ['SPECTRAL_WINDOW_ID',  55, 3, 0]
-                ]
-            results = checktable(name, expected, True)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            # check spw table
-            name = "part1.ms/SPECTRAL_WINDOW"
-            #             col name, row number, expected value, tolerance
-            expected = [
-                ['NUM_CHAN',           3, 128, 0]
-                ]
-            results = checktable(name, expected, True)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-
-        self.assertTrue(retValue['success'])
-
-
-    def test10(self):
-        '''Concat 10: 3 parts, different sources, different spws,  copypointing=False, visweightscale=[3.,2.,1.], virtual concat'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        self.res = concat(vis=['part1.ms','part2-mod.ms','part3.ms'],concatvis=msname, copypointing=False,
-                          visweightscale=[3.,2.,1.], createmms=True)
-        self.assertEqual(self.res,None)
-        
-        print myname, ": Now checking output ..."
-        print myname, ": Try opening as MS ..."
-        try:
-            ms.open(msname)
-        except:
-            print myname, ": Error  Cannot open MS table", tablename
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
-        else:
-            ms.close()
-            if 'test10.ms' in glob.glob("*.ms"):
-                shutil.rmtree('test10.ms',ignore_errors=True)
-            shutil.copytree(msname,'test10.ms')
-            print myname, ": OK. Checking tables in detail ..."
-            retValue['success']=True
-
-            # check source table
-            name = "part1.ms/SOURCE"
-            #             col name, row number, expected value, tolerance
-            expected = [
-                ['SOURCE_ID',           41, 13, 0],
-                ['SPECTRAL_WINDOW_ID',  41, 2, 0]
-                ]
-            results = checktable(name, expected, True)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-            # check spw table
-            name = "part1.ms/SPECTRAL_WINDOW"
-            #             col name, row number, expected value, tolerance
-            expected = [
-                ['NUM_CHAN',           2, 128, 0]
-                ]
-            results = checktable(name, expected, True)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-
-            # collecting parameters for subsequent test of MAIN table
-            msnrows = []
-            oldweightbeg = []
-            oldweightend = []
-            ii = 0
-            for myms in ['part1.ms','part2-mod.ms','part3.ms']:
-                tb.open(myms)
-                msnrows.append(tb.nrows())
-                oldweightbeg.append(tb.getcell('WEIGHT',0))
-                oldweightend.append(tb.getcell('WEIGHT',tb.nrows()-1))
-                tb.close()
-
-            name = "" # i.e. Main
-            #             col name, row number, expected value, tolerance
-            expected = [
-                    ['WEIGHT', 0, 3.*oldweightbeg[0], 1E-6], # scaling uses float precision
-                    ['WEIGHT', msnrows[0]-1, 3.*oldweightend[0], 1E-6],
-                    ['WEIGHT', msnrows[0], 2.*oldweightbeg[1], 1E-6],
-                    ['WEIGHT', msnrows[0]+msnrows[1]-1, 2.*oldweightend[1], 1E-6],
-                    ['WEIGHT', msnrows[0]+msnrows[1], oldweightbeg[2], 1E-6],
-                    ['WEIGHT', msnrows[0]+msnrows[1]+msnrows[2]-1, oldweightend[2], 1E-6]
-                ]
-
-            results = checktable(name, expected)
-            if not results:
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-
-        self.assertTrue(retValue['success'])
-
-    def test11(self):
-        '''Concat 11: 3 parts, different sources, same spws, different scratch columns: no, yes, no'''
+        '''Concat 9: 3 parts, different sources, same spws, different scratch columns: no, yes, no'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part2-mod2-wscratch.ms',ignore_errors=True)
@@ -1083,8 +962,8 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
         
-    def test12(self):
-        '''Concat 12: 3 parts, different sources, same spws, different scratch columns: yes, no, no'''
+    def test10(self):
+        '''Concat 10: 3 parts, different sources, same spws, different scratch columns: yes, no, no'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part1-wscratch.ms',ignore_errors=True)
