@@ -256,7 +256,7 @@ template<class T> void ImageConcat<T>::setImage(
 		const ImageInterface<T>* pImLast = dynamic_cast<const ImageInterface<T>*>(latticeConcat_p.lattice(nIm-1));
 		const CoordinateSystem& cSysLast = pImLast->coordinates();
 		if (latticeConcat_p.isTempClose()) latticeConcat_p.tempClose(nIm-1);
-		checkContiguous (isContig_p, warnContig_p, pImLast->shape(), cSysLast, cSys,
+		_checkContiguous (isContig_p, warnContig_p, pImLast->shape(), cSysLast, cSys,
 				os, latticeConcat_p.axis(), relax);
 
 		// Compare coordinate descriptors not on concatenation axis
@@ -277,7 +277,6 @@ template<class T> void ImageConcat<T>::setImage(
 template<class T> void ImageConcat<T>::_doBeam(
 		const ImageInterface<T>& image, const Bool relax
 ) {
-
 	LogIO os(LogOrigin("ImageConcat", __FUNCTION__, WHERE));
 	ImageInfo info = this->imageInfo();
 	ImageInfo myInfo = image.imageInfo();
@@ -299,7 +298,7 @@ template<class T> void ImageConcat<T>::_doBeam(
 			if (relax) {
 				if (_warnBeam) {
 					os << LogIO::WARN << msg
-							<< "The resulting image will not have a beam" << endl;
+						<< "The resulting image will not have a beam" << endl;
 				}
 				_warnBeam = False;
 			}
@@ -648,7 +647,7 @@ LatticeIterInterface<T>* ImageConcat<T>::makeIter (const LatticeNavigator& nav,
 // Private functions
 
 template<class T>
-void ImageConcat<T>::checkContiguous (Bool& isContig, Bool& warnContig, const IPosition& shape1,
+void ImageConcat<T>::_checkContiguous (Bool& isContig, Bool& warnContig, const IPosition& shape1,
                                       const CoordinateSystem& cSys1,
                                       const CoordinateSystem& cSys2,
                                       LogIO& os, uInt axis, Bool relax) 
@@ -678,9 +677,12 @@ void ImageConcat<T>::checkContiguous (Bool& isContig, Bool& warnContig, const IP
       if (stokes.nelements()==0) {
          if (relax) {
             if (warnContig) {
+            	String coordType = cSys1.spectralAxisNumber() == (Int)axis
+            		? "Spectral"
+            		: "Tabular";
                os << LogIO::WARN
                   << "Images are not contiguous along the concatenation axis" << endl;
-               os << "For this axis, a non-regular TabularCoordinate will be made"
+               os << "For this axis, a non-regular " << coordType << "Coordinate will be made"
                   << LogIO::POST;
                warnContig = False;
             }
@@ -699,9 +701,12 @@ void ImageConcat<T>::checkContiguous (Bool& isContig, Bool& warnContig, const IP
       if (abs(axisVal2-axisVal1) > 0.01*abs(inc)) {
          if (relax) {
             if (warnContig) {
+            	String coordType = cSys1.spectralAxisNumber() == (Int)axis
+            		? "Spectral"
+            		: "Tabular";
                os << LogIO::WARN
                   << "Images are not contiguous along the concatenation axis" << endl;
-               os << "For this axis, a non-regular TabularCoordinate will be made"
+               os << "For this axis, a non-regular " << coordType << "Coordinate will be made"
                   << LogIO::POST;
                warnContig = False;
             }
@@ -823,7 +828,7 @@ void ImageConcat<T>::setCoordinates()
 // 
 // 
 {
-    LogIO os(LogOrigin("ImageConcat", "setCoordinates(...)", WHERE));
+    LogIO os(LogOrigin("ImageConcat", __FUNCTION__, WHERE));
 
 // If the images are not contiguous along the concatenation axis,
 // make an irregular TabularCoordinate.  As usual Stokes demands
@@ -965,18 +970,33 @@ void ImageConcat<T>::setCoordinates()
       Bool ok = True;
       String msg;
       try {
-         TabularCoordinate tc(pixelValues_p, worldValues_p, unit, name);
-         cSys.replaceCoordinate(tc, uInt(coord));
-         if (!ImageInterface<T>::setCoordinateInfo(cSys)) {
-            throw(AipsError("Failed to save new CoordinateSystem with TabularCoordinate"));        
-         }
-      } catch (AipsError x) {
+    	  if (originalAxisType_p == Coordinate::SPECTRAL) {
+    		  SpectralCoordinate origSpCoord = cSys.spectralCoordinate();
+    		  SpectralCoordinate newSp(
+    				  origSpCoord.frequencySystem(False), worldValues_p,
+    				  origSpCoord.restFrequency()
+    		  );
+    		  cSys.replaceCoordinate(newSp, uInt(coord));
+    	  }
+    	  else {
+    		  TabularCoordinate tc(pixelValues_p, worldValues_p, unit, name);
+    		  cSys.replaceCoordinate(tc, uInt(coord));
+
+    	  }
+    	  if (!ImageInterface<T>::setCoordinateInfo(cSys)) {
+    		  String ctype = originalAxisType_p == Coordinate::SPECTRAL
+    				  ? "Spectral" : "Tabular";
+    		  os << "Failed to save new CoordinateSystem with "
+    				  << ctype << "Coordinate" << LogIO::EXCEPTION;
+    	  }
+      }
+      catch (AipsError x) {
          ok = False;
          msg = x.getMesg();
       } 
       if (!ok) {
          if (warnTab_p) {
-            os << LogIO::WARN << "Could not create TabularCoordinate because " << msg << LogIO::POST;
+            os << LogIO::WARN << "Could not create Coordinate because " << msg << LogIO::POST;
             os << LogIO::WARN << "CoordinateSystem set to that of first image instead" << LogIO::POST;
             warnTab_p = False;
          }
