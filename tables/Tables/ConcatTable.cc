@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.cc 21212 2012-03-23 15:01:08Z gervandiepen $
+//# $Id: ConcatTable.cc 21254 2012-07-18 06:20:53Z gervandiepen $
 
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/ConcatColumn.h>
@@ -34,6 +34,7 @@
 #include <casa/Containers/BlockIO.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/OS/Path.h>
+#include <casa/OS/Directory.h>
 #include <casa/BasicMath/Math.h>
 #include <tables/Tables/TableError.h>
 #include <casa/Utilities/Assert.h>
@@ -58,9 +59,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   ConcatTable::ConcatTable (const Block<BaseTable*>& tables,
-			    const Block<String>& subTables)
+			    const Block<String>& subTables,
+                            const String& subDirName)
     : BaseTable       ("", Table::Scratch, 0),
       subTableNames_p (subTables),
+      subDirName_p    (subDirName),
       colMap_p        (static_cast<ConcatColumn*>(0)),
       changed_p       (True)
   {
@@ -79,23 +82,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     nrrow_p = rows_p.nrow();
     initialize();
-    //# The initial table info is a copy of the original.
-    tableInfo() = baseTabPtr_p[0]->tableInfo();
-    // Add a line for each table.
-    tableInfo().readmeAddLine ("Concatenation of the following tables:");
-    for (uInt i=0; i<tables.nelements(); ++i) {
-      tableInfo().readmeAddLine ("  " + tables[i]->tableName());
-    }
+    addInfo();
     noWrite_p = False;
   }
 
   ConcatTable::ConcatTable (const Block<String>& tableNames,
 			    const Block<String>& subTables,
+                            const String& subDirName,
 			    int option,
 			    const TableLock& lockOptions,
                             const TSMOption& tsmOption)
     : BaseTable       ("", Table::Scratch, 0),
       subTableNames_p (subTables),
+      subDirName_p    (subDirName),
       colMap_p        (static_cast<ConcatColumn*>(0)),
       changed_p       (True)
   {
@@ -105,13 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     openTables (tableNames, option, lockOptions, tsmOption);
     initialize();
-    //# The initial table info is a copy of the original.
-    tableInfo() = baseTabPtr_p[0]->tableInfo();
-    // Add a line for each table.
-    tableInfo().readmeAddLine ("Concatenation of the following tables:");
-    for (uInt i=0; i<tableNames.nelements(); ++i) {
-      tableInfo().readmeAddLine ("  " + tableNames[i]);
-    }
+    addInfo();
     noWrite_p = False;
   }
 
@@ -133,6 +126,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+
+  void ConcatTable::addInfo()
+  {
+    //# The initial table info is a copy of the original.
+    tableInfo() = baseTabPtr_p[0]->tableInfo();
+    // Add a line for each table.
+    tableInfo().readmeAddLine ("Virtual concatenation of the following tables:");
+    for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
+      if (subDirName_p.empty()) {
+	tableInfo().readmeAddLine ("  " + baseTabPtr_p[i]->tableName());
+      } else {
+	tableInfo().readmeAddLine ("  " + subDirName_p + "/" +
+                                   Path(baseTabPtr_p[i]->tableName()).baseName());
+      }	
+    }
+  }
 
   void ConcatTable::getPartNames (Block<String>& names, Bool recursive) const
   {
@@ -204,14 +213,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void ConcatTable::flush (Bool fsync, Bool recursive)
   {
+    // Flush the underlying table.
+    for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
+      baseTabPtr_p[i]->flush (fsync, recursive);
+    }
     if (!isMarkedForDelete()) {
       if (openedForWrite()) {
 	writeConcatTable (fsync);
       }
-    }
-    // Flush the underlying table.
-    for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
-      baseTabPtr_p[i]->flush (fsync, recursive);
     }
   }
 
@@ -236,11 +245,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (changed_p) {
       AipsIO ios;
       writeStart (ios, True);
+      // writeStart has made the table directory.
+      // Create the subDir directory if given.
+      String sdName;
+      if (! subDirName_p.empty()) {
+        sdName = tableName() + '/' + subDirName_p + '/';
+        Directory dir(sdName);
+	dir.create();
+      }
       ios << "ConcatTable";
       ios.putstart ("ConcatTable", 0);
       // Make the name of the base tables relative to this table.
+      // First move a table if subDirName_p is set.
       ios << uInt(baseTabPtr_p.nelements());
       for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
+        if (! subDirName_p.empty()) {
+          baseTabPtr_p[i]->rename
+            (sdName + Path(baseTabPtr_p[i]->tableName()).baseName(),
+             Table::New);
+        }
 	ios << Path::stripDirectory (baseTabPtr_p[i]->tableName(),
 				     tableName());
       }
@@ -278,7 +301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     getTableInfo();
   }
 
-  void ConcatTable::openTables (const Block<String>& tableNames, Int option,
+  void ConcatTable::openTables (const Block<String>& tableNames, int option,
 				const TableLock& lockOptions,
                                 const TSMOption& tsmOption)
   {

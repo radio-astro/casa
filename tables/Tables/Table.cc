@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: Table.cc 21252 2012-07-17 09:28:31Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -49,7 +49,6 @@
 #include <casa/OS/File.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/DirectoryIterator.h>
-#include <casa/OS/EnvVar.h>
 #include <casa/iostream.h>
 
 
@@ -193,7 +192,8 @@ Table::Table (SetupNewTable& newtab, const TableLock& lockOptions,
 }
 
 Table::Table (const Block<Table>& tables,
-	      const Block<String>& subTables)
+	      const Block<String>& subTables,
+              const String& subDirName)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
@@ -202,18 +202,19 @@ Table::Table (const Block<Table>& tables,
     for (uInt i=0; i<tables.nelements(); ++i) {
       btab[i] = tables[i].baseTablePtr();
     }
-    baseTabPtr_p = new ConcatTable (btab, subTables);
+    baseTabPtr_p = new ConcatTable (btab, subTables, subDirName);
     baseTabPtr_p->link();
 }
 
 Table::Table (const Block<String>& tableNames,
 	      const Block<String>& subTables,
-	      TableOption option, const TSMOption& tsmOpt)
+	      TableOption option, const TSMOption& tsmOpt,
+              const String& subDirName)
 : baseTabPtr_p     (0),
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    baseTabPtr_p = new ConcatTable (tableNames, subTables,
+  baseTabPtr_p = new ConcatTable (tableNames, subTables, subDirName,
 				    option, TableLock(), tsmOpt);
     baseTabPtr_p->link();
 }
@@ -226,7 +227,7 @@ Table::Table (const Block<String>& tableNames,
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-    baseTabPtr_p = new ConcatTable (tableNames, subTables,
+  baseTabPtr_p = new ConcatTable (tableNames, subTables, String(),
 				    option, lockOptions, tsmOpt);
     baseTabPtr_p->link();
 }
@@ -259,8 +260,6 @@ Table::~Table()
         unlock();
 #endif
 	BaseTable::unlink (baseTabPtr_p);
-
-
     }
 }
 
@@ -276,6 +275,56 @@ Table& Table::operator= (const Table& that)
 	baseTabPtr_p->link();
     }
     return *this;
+}
+
+Table Table::openTable (const String& tableName,
+                        TableOption option,
+                        const TSMOption& tsmOption)
+{
+  return openTable (tableName, TableLock(), option, tsmOption);
+}
+
+Table Table::openTable (const String& tableName,
+                        const TableLock& lockOptions,
+                        TableOption option,
+                        const TSMOption& tsmOption)
+{
+  // See if the table can be opened as such.
+  if (Table::isReadable(tableName)) {
+    return Table(tableName, lockOptions, option, tsmOption);
+  }
+  // Try to open the table using subtables by splitting at ::
+  Table tab;
+  String name = tableName;
+  String msg;
+  int j = name.index("::");
+  if (j >= 0) {
+    String tabName (name.before(j));
+    name = name.after(j+1);
+    if (Table::isReadable (tabName)) {
+      tab = Table(tabName, lockOptions, option, tsmOption);
+      while (! name.empty()) {
+        j = name.index("::");
+        if (j >= 0) {
+          tabName = name.before(j);
+          name = name.after(j+1);
+        } else {
+          tabName = name;
+          name = String();
+        }
+        if (! tab.keywordSet().isDefined(tabName)) {
+          msg = " (subtable " + tabName + " is unknown)";
+          tab = Table();
+          break;
+        }
+        tab = tab.keywordSet().asTable (tabName);
+      }
+    }
+  }
+  if (tab.isNull()) {
+    throw TableError ("Table " + tableName + " does not exist" + msg);
+  }
+  return tab;
 }
 
 
@@ -430,6 +479,7 @@ Table Table::copyToMemoryTable (const String& newName, Bool noRows) const
   return newtab;
 }
 
+
 //# Open the table file and read it in if necessary.
 void Table::open (const String& name, const String& type, int tableOption,
 		  const TableLock& lockOptions, const TSMOption& tsmOpt)
@@ -446,17 +496,14 @@ void Table::open (const String& name, const String& type, int tableOption,
     //# Look if the table is already in the cache.
     //# If so, link to it.
     BaseTable* btp = lookCache (absName, tableOption, lockOptions);
-
     if (btp != 0) {
 	baseTabPtr_p = btp;
     }else{
         //# Check if the table directory exists.
         File dir(absName);
-
         if (!dir.exists()) {
             throw TableNoFile(absName);
         }
-
         if (!dir.isDirectory()) {
             throw TableNoDir(absName);
         }
@@ -522,14 +569,13 @@ BaseTable* Table::makeBaseTable (const String& name, const String& type,
     return baseTabPtr;
 }
 	
-BaseTable*
-Table::lookCache (const String& name, int tableOption,
-                  const TableLock& lockOptions)
+BaseTable* Table::lookCache (const String& name, int tableOption,
+			     const TableLock& lockOptions)
 {
     //# Exit if table is not in cache yet.
     PlainTable* btp = PlainTable::tableCache()(name);
     if (btp == 0) {
-        return btp;
+	return btp;
     }
     //# Check if option matches. It does if equal.
     //# Otherwise it does if option in cached table is "more".
@@ -537,21 +583,21 @@ Table::lookCache (const String& name, int tableOption,
     //# a new table is created with the same name as an open table.
     int cachedTableOption = btp->tableOption();
     if ((tableOption == cachedTableOption)
-            ||  ((cachedTableOption == Table::New
-                    ||  cachedTableOption == Table::NewNoReplace
-                    ||  cachedTableOption == Table::Update)
-                    &&  (tableOption == Table::Update
-                            ||  tableOption == Table::Old))) {
-        btp->mergeLock (lockOptions);
-        return btp;
+    ||  ((cachedTableOption == Table::New
+      ||  cachedTableOption == Table::NewNoReplace
+      ||  cachedTableOption == Table::Update)
+     &&  (tableOption == Table::Update
+      ||  tableOption == Table::Old))) {
+	btp->mergeLock (lockOptions);
+	return btp;
     }
     if (cachedTableOption == Table::Old  &&  tableOption == Table::Update) {
-        btp->mergeLock (lockOptions);
-        btp->reopenRW();
-        return btp;
+	btp->mergeLock (lockOptions);
+	btp->reopenRW();
+	return btp;
     }
     throw (TableInvOper ("Table " + name +
-                         " cannot be opened/created (already in cache)"));
+			 " cannot be opened/created (already in cache)"));
     return 0;
 }
 
