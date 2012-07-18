@@ -262,10 +262,13 @@ private:
    Double coordConvert(Int& worldAxis, LogIO& os,
                        const CoordinateSystem& cSys,
                        uInt axis, Double pixelCoord) const;
-   void checkContiguous (Bool& isContig, Bool& warnContig, const IPosition& shape1,
-                         const CoordinateSystem& cSys1,
-                         const CoordinateSystem& cSys2,
-                         LogIO& os, uInt axis, Bool relax);
+   void _checkContiguous(
+		   Bool& isContig, Bool& warnContig, const IPosition& shape1,
+		   const CoordinateSystem& cSys1,
+		   const CoordinateSystem& cSys2,
+		   LogIO& os, uInt axis, Bool relax
+   );
+
    void checkNonConcatAxisCoordinates (Bool& warnRefPix, Bool& warnRefVal,
                                        Bool& warnInc, LogIO& os,
                                        const ImageInterface<T>& image,

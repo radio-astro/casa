@@ -332,7 +332,7 @@ template<class T> Bool ImageInterface<T>::setImageInfo(
 			}
 			else {
 				logSink() << "The per plane beams array defines a spectral axis but "
-					<< "this image does not have a spectral axis" << LogIO::EXCEPTION;
+					<< this->name() << " does not have a spectral axis" << LogIO::EXCEPTION;
 			}
 		}
 		else if (coords_p.hasSpectralAxis() && beamChannels != shape()[coords_p.spectralAxisNumber()]) {
