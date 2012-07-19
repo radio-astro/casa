@@ -35,7 +35,7 @@ def setjy(vis=None, field=None, spw=None,
       for m in mses:
         retval[m] = setjy_core(m, field, spw, selectdata, timerange, 
                                scan, observation, modimage, listmodels, scalebychan, 
-                               fluxdensity, spix, reffreq, standard, useephedir, usescratch)
+                               fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, observation, modimage, listmodels, scalebychan, 
