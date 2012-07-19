@@ -693,6 +693,18 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
         case -1:
             corrType_p(i) = Stokes::RR;
             break;
+        case 4:
+            corrType_p(i) = Stokes::V;
+            break;
+        case 3:
+            corrType_p(i) = Stokes::U;
+            break;
+        case 2:
+            corrType_p(i) = Stokes::Q;
+            break;
+        case 1:
+            corrType_p(i) = Stokes::I;
+            break;
         default:
             if (corrType_p(i) < 0) {
                 itsLog << "Unknown Correlation type: " << corrType_p(i)
