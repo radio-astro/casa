@@ -258,5 +258,10 @@ void ImageBeamSet::set(const GaussianBeam& beam) {
 	_beams.set(beam);
 }
 
+ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
+	os << beamSet.getBeams();
+	return os;
+}
+
 
 }
