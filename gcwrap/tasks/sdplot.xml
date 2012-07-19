@@ -13,13 +13,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>ASAP SD plotting task </shortdescription>
 
   <description>ASAP SD plotting task
-        
-        Modified 2011-06-29 WK
-        Modified 2008-09-17 KS
-        Modified 2008-09-15 TT
-        Modified 2008-07-31 TT
-        Modified 2008-07-15 KS
-        Modified 2008-01-30 TT
+
         Task Version 2007-03-04 STM
 </description>
 
@@ -157,13 +151,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="plottype">
-            <description>type of plot (spectra, totalpower, azel, pointing)</description>
+            <description>type of plot (spectra, totalpower, azel, pointing, grid)</description>
             <value>spectra</value>
             <allowed kind="enum">
             <value>pointing</value>
             <value>azel</value>
             <value>totalpower</value>
             <value>spectra</value>
+            <value>grid</value>
 	    </allowed>
     </param>
 
@@ -226,6 +221,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="bool" name="histogram" subparam='true'>
             <description>plot histogram</description>
             <value>False</value>
+    </param>
+
+    <param type="string" name="center" subparam="true">
+            <description>the central direction of gridding. (default: map center)</description>
+            <value></value>
+    </param>
+
+    <param type="doubleArray" name="cell" subparam="true">
+            <description>x and y cell size. (default map extent/subplot number)</description>
+            <value type="vector"></value>
     </param>
 
     <param type="bool" name="header">
@@ -314,6 +319,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="linestyles"><value type="string">none</value></default>
                         <default param="linewidth"><value>1</value></default>
                         <default param="histogram"><value>False</value></default>
+                </equals>
+                <equals value="grid">
+                        <default param="center"><value type="string"></value></default>
+                        <default param="cell"><value type="vector"></value></default>
+                        <default param="subplot"><value type="int">-1</value></default>
+                        <default param="flrange"><value type="vector"></value></default>
+                        <default param="sprange"><value type="vector"></value></default>
+                        <default param="colormap"><value type="string">none</value></default>
+                        <default param="linestyles"><value type="string">none</value></default>
+                        <default param="linewidth"><value>1</value></default>
+                        <!-- <default param="histogram"><value>False</value></default> -->
                 </equals>
                 <equals value="totalpower"/>
                 <equals value="pointing"/>
@@ -457,23 +473,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
         plottype -- type of plot
-                 options: 'spectra','totalpower','pointing','azel'
+                 options: 'spectra','totalpower','pointing','azel','grid'
                  default: 'spectra'
-            &gt;&gt;&gt; plottype expandable parameter
-                 stack -- code for stacking on single plot for spectral plotting
-                         options: 'p','b','i','t','s','r' or
-                                  'pol', 'beam', 'if', 'time', 'scan', 'row'
-                         default: 'p'
-                         example: maximum of 16 stacked spectra
-                                  stack by pol, beam, if, time, scan
-                         Note stack selection is ignored when panel='r'.
-                 panel -- code for splitting into multiple panels for spectral plotting
-                         options: 'p','b','i','t','s','r' or
-                                  'pol', 'beam', 'if', 'time', 'scan', 'row'
-                         default: 'i'
-                         example: maximum of 16 panels
-                                  panel by pol, beam, if, time, scan
-                         Note panel selection is ignored when stack='r'.
+            &gt;&gt;&gt; plottype expandable parameters
+                stack -- code for stacking on single plot for spectral plotting
+                        options: 'p','b','i','t','s','r' or
+                                 'pol', 'beam', 'if', 'time', 'scan', 'row'
+                        default: 'p'
+                        example: maximum of 16 stacked spectra
+                                 stack by pol, beam, if, time, scan
+                        Note stack selection is ignored when panel='r'.
+                panel -- code for splitting into multiple panels for spectral plotting
+                        options: 'p','b','i','t','s','r' or
+                                 'pol', 'beam', 'if', 'time', 'scan', 'row'
+                        default: 'i'
+                        example: maximum of 16 panels
+                                 panel by pol, beam, if, time, scan
+                        Note panel selection is ignored when stack='r'.
                 flrange -- range for flux axis of plot for spectral plotting
                         options: (list) [min,max]
                         default: [] (full range)
@@ -498,9 +514,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         options: (float) doppler velocity (km/s)
                         default: 0.0
                         example: linedop=-30.0
+                center -- the central direction of gridding
+                        default: '' (map center)
+                        example: 'J2000 19h30m00 -40d00m00'
+                        Note currently only supports 'J2000' as direction frame
+                cell -- x and y cell size of gridding
+                        default: [] (map extent devided by # of subplots in x and y)
+                        example: cell=['1.0arcmin','1.0arcmin']
+                                 cell='1.0arcmin' (equivalent to the example above)
+                        Note default number of subplots is 1 x 1 in plottype='grid'.
                 subplot -- number of subplots (row and column) on a page
                            NOTICE plotter will slow down when a large number is specified
-                           default: -1 (auto)
+                           default: -1 (auto. for plottype='spectra', 1x1 for plottype='grid')
                            example: 23 (2 rows by 3 columns)
                 colormap -- the colours to be used for plot lines. 
                         default: None

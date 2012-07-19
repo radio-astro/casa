@@ -7,7 +7,7 @@ from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 
-def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
     casalog.origin('sdplot')
 
@@ -202,6 +202,53 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             spave=stave
         del stave
 
+        # Grid scantable
+        if plottype == 'grid':
+            if subplot < 11:
+                casalog.post("Setting default subplot layout (1x1).",priority="WARN")
+                subplot = 11
+            nx = (subplot % 10)
+            ny = int(subplot/10)
+            if center != '':
+                ldirstr = center.split(' ')
+                if len(ldirstr) == 2:
+                    center = "J2000 "+center
+                elif len(ldirstr) == 3:
+                    if ldirstr[0].upper() != "J2000":
+                        raise ValueError, "Currently only J2000 is supported"
+                else:
+                    errmsg = "Invalid grid center: %s" % (center)
+                    raise ValueError, errmsg
+            cellx = ''
+            celly = ''
+            if type(cell) == str:
+                cellx = cell
+                celly = cell
+            elif len(cell) == 2:
+                cellx = cell[0]
+                celly = cell[1]
+            elif len(cell) == 1:
+                cellx = cell[0]
+                celly = cell[0]
+            # Do only the first IFNO and POLNO
+            ifnos = spave.getifnos()
+            polnos = spave.getpolnos()
+            if len(ifnos) > 1 or len(polnos) > 1:
+                casalog.post("Only the first IFNO (%d) and POLNO (%d) is plotted." % (ifnos[0], polnos[0]),priority="WARN")
+
+            
+            gridder = sd.asapgrid2(spave)
+            del spave
+            gridder.setIF(ifnos[0])
+            gridder.setPolList([polnos[0]])
+            gridder.defineImage(center=center,cellx=cellx,celly=celly,nx=nx,ny=ny)
+            gridder.setFunc(func='BOX')
+            gridder.setWeight('uniform')
+            gridder.grid()
+            
+            spave = gridder.getResult()
+            del gridder
+
 
         # Reload plotter if necessary
         sd.plotter._assert_plotter(action="reload")
@@ -331,11 +378,27 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             sd.plotter.set_legend(mode=loc,refresh=refresh)
 
             # The actual plotting
-            sd.plotter.plot()
+            if plottype == 'grid':
+                # Need to specify center and spacing in the epoch and
+                # unit of DIRECTION column (currently assuming J2000 and rad)
+                # TODO: need checking epoch and unit of DIRECTION in scantable
+                crad = None
+                spacing = None
+                if center != '':
+                    epoch, ra, dec = center.split(' ')
+                    cme = me.direction(epoch, ra, dec)
+                    crad = [qa.convert(cme['m0'],'rad')['value'], \
+                            qa.convert(cme['m1'],'rad')['value']]
+                if cellx != '' and celly != '':
+                    spacing = [qa.convert(cellx, 'rad')['value'], \
+                               qa.convert(celly, 'rad')['value']]
+                sd.plotter.plotgrid(center=crad,spacing=spacing,rows=ny,cols=nx)
+            else:
+                sd.plotter.plot()
 
             # Line catalog
             dolinc=False
-            if ( linecat != 'none' and linecat != '' ):
+            if plottype != 'grid' and ( linecat != 'none' and linecat != '' ):
                 # Use jpl catalog for now (later allow custom catalogs)
 
                 casapath=os.environ['CASAPATH'].split()
@@ -371,6 +434,8 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             # set margin for the header
             sd.plotter._plotter.figure.subplots_adjust(top=0.8)
         datname='Data File:     '+infile
+        if plottype == 'grid':
+             datname += " (gridded)"
         sd.plotter.print_header(plot=(header and asaplot),fontsize=headsize,
                                 logger=True,selstr=ssel,extrastr=datname)
         del ssel, datname
