@@ -275,7 +275,7 @@ template<class T> void ImageConcat<T>::setImage(
 }
 
 template<class T> void ImageConcat<T>::_doBeam(
-		const ImageInterface<T>& image, const Bool relax
+	const ImageInterface<T>& image, const Bool relax
 ) {
 	LogIO os(LogOrigin("ImageConcat", __FUNCTION__, WHERE));
 	ImageInfo info = this->imageInfo();
@@ -294,7 +294,7 @@ template<class T> void ImageConcat<T>::_doBeam(
 	else {
 		// output has no beam
 		if (image.imageInfo().hasBeam()) {
-			String msg = "The first image does not have a beam while another does";
+			String msg = "One image does not have a beam while another does";
 			if (relax) {
 				if (_warnBeam) {
 					os << LogIO::WARN << msg
@@ -433,11 +433,11 @@ template<class T> void ImageConcat<T>::_appendBeams(
 		infoThis.nChannels() != nChanThis
 		|| infoThis.nStokes() != nStokesThis
 	) {
-		const Array<GaussianBeam>& beamsHold = infoThis.getBeamSet().getBeams();
+		const Array<GaussianBeam> beamsHold = infoThis.getBeamSet().getBeams();
 		infoThis.removeRestoringBeam();
 		infoThis.setAllBeams(nChanThis, nStokesThis, GaussianBeam());
 		ImageBeamSet beamSet = infoThis.getBeamSet();
-		beamSet(IPosition(beamSet.ndim(), 0), beamsHold.shape() -1) = beamsHold;
+		beamSet(IPosition(beamSet.ndim(), 0), beamsHold.shape()-1) = beamsHold;
 		infoThis.setBeams(beamSet);
 	}
 	if (infoThat.hasSingleBeam()) {
