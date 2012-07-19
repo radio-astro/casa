@@ -45,11 +45,11 @@ class listvis_test1(unittest.TestCase):
         
     
     def tearDown(self):
-        if os.path.exists(msfile1):
+        if os.path.lexists(msfile1):
             os.unlink(msfile1)
-        if os.path.exists(msfile2):
+        if os.path.lexists(msfile2):
             os.unlink(msfile2)
-        if os.path.exists(msfile3):
+        if os.path.lexists(msfile3):
             os.unlink(msfile3)       
 
     def test1(self):
