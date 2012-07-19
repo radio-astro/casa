@@ -95,8 +95,6 @@ class cluster(object):
       #atexit.register(self.stop_cluster)
       atexit.register(cluster.stop_cluster,self)
 
-      self.__cluster_running=False
-
    def _ip(self, host):
       """Returns a unique IP address of the given hostname,
       i.e. not 127.0.0.1 for localhost but localhost's global IP"""
@@ -177,7 +175,10 @@ class cluster(object):
             print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
          print "start engine %s on %s" % (i, node_name)
       self.__engines=self.__update_cluster_info(num_engine, work_dir)
-      
+
+   # jagonzal (CAS-4292): This method crashes when initializing the nodes via __init_nodes,
+   # so it is deprecated. Instead it is necessary to use directly the start_engine method 
+   # which does not only start the engine, but also initializes it using scripts
    def start_cluster(self, cl_file):
       '''Start engines that listed in a file
 
@@ -236,9 +237,6 @@ class cluster(object):
          self.__engines=self.__client.pull(['id', 'host', 'pid', 'inited'])
       self.__new_engs=[]
       self.__init_now=True
-
-      # jagonzal (CAS-4292): To make sure the cluster was already started
-      self.__cluster_running=True
 
    def __start_controller(self):
       '''(Internal) Start the controller.
@@ -513,8 +511,11 @@ class cluster(object):
 
       '''
 
-      # jagonzal: Make sure the cluster was already started
-      if not (self.__cluster_running):
+      # jagonzal (CAS-4292): We have to check the controller instance directly because the method
+      # start_cluster does not work properly (crashes when initializing the nodes via __init_nodes).
+      # Actually start_cluster is deprecated, and it is necessary to use directly the start_engine 
+      # method which does not only start the engine, but also initializes it using scripts
+      if (self.__controller==None):
          return
 
       # shutdown all engines
@@ -529,7 +530,7 @@ class cluster(object):
             self.stop_node(i)
          except:
             # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-            # traceback.print_tb(sys.exc_info()[2])
+            traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
             continue
 
       # shutdone controller
@@ -537,19 +538,18 @@ class cluster(object):
          self.__stop_controller()
       except:
          # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-         # traceback.print_tb(sys.exc_info()[2])
+         traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
          pass
 
       try:
-         self.activate()
+         # jagonzal (CAS-4106): We have to shut down the client, not activate it
+         # besides, the activate method only enables parallel magic commands
+         # self.activate()
          self.__client=None
       except:
          # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-         # traceback.print_tb(sys.exc_info()[2])
+         traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
          pass
-
-      # jagonzal (CAS-4292): To make sure the cluster was already started
-      self.__cluster_running=False
 
       #print 'cluster shutdown'
 

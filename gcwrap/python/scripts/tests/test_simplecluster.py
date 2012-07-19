@@ -13,7 +13,6 @@ import multiprocessing
 class test_simplecluster(unittest.TestCase):
 
     projectname="test_simplecluster"
-    resultfile="test_simplecluster.result"
     clusterfile="test_simplecluster_config.txt"
     monitorFile="monitoring.log"
     cluster=None
@@ -27,11 +26,9 @@ class test_simplecluster(unittest.TestCase):
         # Stop thread services and cluster
         self.cluster.stop_cluster()
         # Remove log files, cluster files, and monitoring files
-        # self.cleanUp()
+        self.cleanUp()
 
     def cleanUp(self):
-        if os.path.exists(self.resultfile):
-            os.remove(self.resultfile)
         logfiles=glob.glob("engine-*.log")
         for i in logfiles:
             os.remove(i)
@@ -46,12 +43,15 @@ class test_simplecluster(unittest.TestCase):
         # Create cluster object
         if (len(userMonitorFile) > 0):
             self.cluster = simple_cluster(userMonitorFile)
+            self.monitorFile = userMonitorFile
         else:
             self.cluster = simple_cluster()
+            self.monitorFile = "monitoring.log"
         # Create cluster file
         self.createClusterFile()
         # Initialize cluster object
         self.cluster.init_cluster(self.clusterfile, self.projectname)
+            
         # Wait unit cluster is producing monitoring info
         if (len(userMonitorFile) > 0):
             self.waitForFile(userMonitorFile, 20)
@@ -76,7 +76,6 @@ class test_simplecluster(unittest.TestCase):
 
         self.initCluster()
 
-        # Check parameters vs actual cluster configuration
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
         self.assertTrue(cluster_list[0][1]==self.ncpu)
@@ -86,8 +85,9 @@ class test_simplecluster(unittest.TestCase):
 
     def test2_monitoringDefault(self):
         """Test 2: Check default monitoring file exists"""
-
+        
         self.initCluster()
+            
         fid = open('monitoring.log', 'r')
         line = fid.readline()
         self.assertTrue(line.find('Host')>=0)
@@ -107,7 +107,7 @@ class test_simplecluster(unittest.TestCase):
 
     def test3_monitoringUser(self):
         """Test 3: Check custom monitoring file exists"""
-
+        
         self.initCluster('userMonitorFile.log')
 
         fid = open('userMonitorFile.log', 'r')
@@ -129,8 +129,9 @@ class test_simplecluster(unittest.TestCase):
 
     def test4_monitoringStandAlone(self):
         """Test 4: Check the dict structure of the stand-alone method """
-
+        
         self.initCluster('userMonitorFile.log')
+                
         state = self.cluster.show_state()
         for engine in range(self.ncpu):
             self.assertTrue(state[self.host][engine].has_key('Status'))
@@ -242,8 +243,35 @@ class test_setjy_mms(test_simplecluster):
         # Remove MMS
         os.system('rm -rf ' + self.vis)
 
-    def test1_setjy_scratchless_mode_multiple_model(self):
-        """Test 1: Set vis model header in multiple fields """
+    def test1_setjy_scratchless_mode_single_model(self):
+        """Test 1: Set vis model header in one single field """
+
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=False)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                model = tblocal.getkeyword('model_0')
+                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
+            elif (fieldId == 1):
+                keywords = tblocal.getkeywords()
+                self.assertFalse(keywords.has_key('model_0'))
+            elif (fieldId == 2):
+                keywords = tblocal.getkeywords()
+                self.assertFalse(keywords.has_key('model_0'))
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+            
+    def test2_setjy_scratch_mode_multiple_model(self):
+        """Test 2: Set MODEL_DATA in multiple fields"""
 
         setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=False)
         setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], usescratch=False)
@@ -270,9 +298,34 @@ class test_setjy_mms(test_simplecluster):
                 raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
                 tblocal.close()
             tblocal.close()
+            
+    def test3_setjy_scratch_mode_single_model(self):
+        """Test 3: Set MODEL_DATA in one single field"""
 
-    def test2_setjy_scratch_mode_multiple_model(self):
-        """Test 2: Set MODEL_DATA in multiple fields"""
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=True)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            print subMS
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1331.0)
+            elif (fieldId == 1):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1.0)
+            elif (fieldId == 2):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1.0)
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+
+    def test4_setjy_scratch_mode_multiple_model(self):
+        """Test 4: Set MODEL_DATA in multiple fields"""
 
         setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=True)
         setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], usescratch=True)

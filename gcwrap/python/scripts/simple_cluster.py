@@ -464,6 +464,8 @@ class simple_cluster:
     ###########################################################################
     ###   cluster management
     ###########################################################################
+    # jagonzal (CAS-4292): This method is deprecated, because I'd like to 
+    # avoid brute-force methods like killall which just hide state errors
     def cold_start(self):
         '''kill all engines on all hosts. Shutdown current cluster.
         
@@ -474,10 +476,11 @@ class simple_cluster:
         '''
         if not self._configdone:
             return
+        # jagonzal (CAS-4292): Stop the cluster via parallel_go before using brute-force killall
+        self.stop_cluster()
         for i in range(len(self._hosts)):
             cmd='ssh '+self._hosts[i][0]+' "killall -9 ipengine"'
             os.system(cmd)
-        self._cluster.stop_cluster()
     
     def stop_nodes(self):
         '''Stop all engines on all hosts of current cluster.
@@ -2204,7 +2207,8 @@ class simple_cluster:
         self.stop_monitor()
         self.stop_resource()
         # Now we can stop the cluster w/o problems
-        self.cold_start()
+        # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
+        self._cluster.stop_cluster()
     
     ###########################################################################
     ###   example to distribute clean task over engines
