@@ -24,10 +24,7 @@ class listhistory_test(unittest.TestCase):
 
     # Input and output names
     msfile = 'Itziar.ms'
-#    if testmms:
-#        msfile = 'pItziar.mms'
-#    else:
-#        msfile = 'Itziar.ms'        
+    itismms = testmms
 
     def setUp(self):
         fpath = os.path.join(datapath,self.msfile)
@@ -64,8 +61,8 @@ class listhistory_test(unittest.TestCase):
     
         # Get the number of lines in file
         refnum=13
-#        if self.testmms:
-#            refnum = 38
+        if self.itismms:
+            refnum = 37
 
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
         output=commands.getoutput(cmd)
