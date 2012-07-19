@@ -4,7 +4,6 @@
     casapy [casa-options] -c runUnitTest.py testname1[test_r,test23] testname2...
     casapy [casa-options] -c runUnitTest.py --Help
     casapy [casa-options] -c runUnitTest.py --list
-    casapy [casa-options] -c runUnitTest.py --list
     casapy [casa-options] -c runUnitTest.py --file Tests.txt
     
     or from inside casapy:
@@ -35,9 +34,7 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
-#DATA_DIR = CASA_DIR+'/data/'
-#print 'HELLOR DATA_DIR'
-#print DATA_DIR
+
 if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/tests/'
@@ -51,19 +48,10 @@ import testwrapper
 from testwrapper import *
 
 
-# Tests included in the following file are run automatically by
-# Hudson. This is also the list of tests run when no options are given
+# This is the list of tests that run when no options are given
 # to this program
 LISTofTESTS = TESTS_DIR+'unittests_list.txt'
 
-#SHORT_LIST = [
-#             'test_importevla',
-#             'test_listvis',
-#             'test_plotms',
-#             'test_sdplot',
-#             'test_sdsave',
-#             'test_viewer'
-#             ]
 
 # memory mode variable
 MEM = 0
@@ -333,7 +321,6 @@ if __name__ == "__main__":
                         if not os.environ.has_key('TEST_DATADIR'):    
                             raise Exception, 'Could not create environmental variable TEST_DATADIR'
                         
-                        print os.environ.get('TEST_DATADIR')
                         
                     else:
                         assert False, "unhandled option"
