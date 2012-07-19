@@ -1,11 +1,250 @@
 import os
 import sys
 import shutil
-import string
-from taskinit import *
 import numpy as np
+import pprint as pp
+import traceback
+import time
+from __main__ import *
+from taskinit import *
+from tasks import *
 
 
+class createMMS():
+    def __init__(self,\
+                 inpdir=None, \
+                 mmsdir=None, \
+                 createmslink=False, \
+                 cleanup=False):
+
+        '''Run the partition task to create MMSs from a directory with MSs'''
+        casalog.origin('createMMS')
+        
+        self.inpdir = inpdir
+        self.outdir = mmsdir
+        self. createmslink = createmslink
+        self.mmsdir = '/tmp/mmsdir'
+        self.cleanup = cleanup        
+        
+        # Input directory is mandatory
+        if self.inpdir is None:
+            casalog.post('You must give an input directory to this script') 
+            self.usage()
+            return
+            
+        if not os.path.exists(self.inpdir):
+            casalog.post('Input directory inpdir does not exist -> '+self.inpdir,'ERROR') 
+            self.usage()
+            return
+        
+        if not os.path.isdir(self.inpdir):                            
+            casalog.post('Value of inpdir is not a directory -> '+self.inpdir,'ERROR') 
+            self.usage()
+            return
+
+
+        # Only work with absolute paths
+        self.inpdir = os.path.abspath(self.inpdir)
+        casalog.post('Will read input MS from '+self.inpdir)
+
+        # Verify output directory
+        if self.outdir is None:
+            self.mmsdir = os.path.join(os.getcwd(),'mmsdir')
+        elif self.outdir == '/':
+            casalog.post('inpdir is set to root!', 'WARN')
+            self.mmsdir = os.path.join(os.getcwd(),'mmsdir')
+        else:
+            self.outdir = os.path.abspath(self.outdir)
+            self.mmsdir = self.outdir
+
+        # Cleanup output directory
+        if self.cleanup:
+            casalog.post('Cleaning up output directory '+self.mmsdir)
+            if os.path.isdir(self.mmsdir):
+                shutil.rmtree(self.mmsdir)
+        
+        if not os.path.exists(self.mmsdir):
+            os.makedirs(self.mmsdir)
+            
+        
+        casalog.post('Will save output MMS to '+self.mmsdir)
+
+        # Walk through input directory
+        files = os.walk(self.inpdir,followlinks=True).next()
+
+        # Get MS list
+        mslist = []
+        mslist = self.getMSlist(files)
+                        
+        casalog.post('List of MSs in input directory')
+        pp.pprint(mslist)        
+        
+        # Get non-directory entries
+        nonmslist = []
+        nonmslist = self.getFileslist(files)
+
+        casalog.post('List of other files in input directory')
+        pp.pprint(nonmslist)
+                    
+    
+        # Create an MMS for each MS in list
+        for ms in mslist:
+            casalog.post('Will create an MMS for '+ms)
+            ret = self.runPartition(ms, self.mmsdir, self.createmslink)
+            if not ret:
+                sys.exit(2)
+            
+            # Verify later if this is still needed
+            time.sleep(10)
+        
+            casalog.origin('createMMS')
+            casalog.post('--------------- Successfully created MMS')
+                    
+                
+        # Create links to the other files
+        for file in nonmslist:
+            casalog.post('Creating symbolic links to other files')
+            bfile = os.path.basename(file)
+            lfile = os.path.join(self.mmsdir, bfile)
+            os.symlink(file, lfile)
+            
+            
+
+
+    def getMSlist(self, files):
+        '''Get a list of MSs from a directory.
+           files -> a tuple that is returned by the following call:
+           files = os.walk(self.inpdir,followlinks=True).next() 
+           
+           It will test if a directory is an MS and will only return
+           true MSs, that contain the file table.data. It will skip
+           directories that start with .
+           '''
+        
+        topdir = files[0]
+        mslist = []
+        
+        # Loop through list of directories
+        for d in files[1]:
+            # Skip . entries
+            if d.startswith('.'):
+                continue
+            
+            # Full path for directory
+            dir = os.path.join(topdir,d)
+            
+            # Listing of this directory
+            ldir = os.listdir(dir)
+            
+            # Skip MMSs
+            if ldir.__contains__('SUBMSS'):
+                continue
+                
+            # It is not an MS, go to next file
+            if not ldir.__contains__('table.dat'):
+                continue
+            
+            # It is probably an MS
+            mslist.append(dir)
+        
+        return mslist
+
+    def getFileslist(self, files):
+        '''Get a list of non-MS files from a directory.
+           files -> a tuple that is returned by the following call:
+           files = os.walk(self.inpdir,followlinks=True).next() 
+           
+           It will only return files, not directories. It will skip
+           files that start with .
+           '''
+                
+        topdir = files[0]
+        fileslist = []
+        
+        for f in files[2]:
+            # Skip . entries
+            if f.startswith('.'):
+                continue
+            
+            # Full path for file
+            file = os.path.join(topdir, f)
+            fileslist.append(file)
+            
+        return fileslist
+
+
+    def runPartition(self, ms, mmsdir, createlink):
+        '''Run partition with default values to create an MMS.
+           ms         --> full pathname of the MS
+           mmsdir     --> directory to save the MMS to
+           createlink --> when True, it will create a symbolic link to the
+                         just created MMS in the same directory with extension .ms        
+        '''
+        from tasks import partition
+
+        if not os.path.lexists(ms):
+            return False
+        
+        # Create MMS name
+        bname = os.path.basename(ms)
+        if bname.endswith('.ms'):
+            mmsname = bname.replace('.ms','.mms')
+        else:
+            mmsname = bname+'.mms'
+        
+        mms = os.path.join(self.mmsdir, mmsname)
+        if os.path.lexists(mms):
+            casalog.post('Output MMS already exist -->'+mms,'ERROR')
+            return False
+        
+        # Check for remainings of corrupted mms
+        corrupted = mms.replace('.mms','.data')
+        if os.path.exists(corrupted):
+            casalog.post('Cleaning up left overs','WARN')
+            shutil.rmtree(corrupted)
+        
+        # Run partition   
+        default('partition')
+        partition(vis=ms, outputvis=mms, createmms=True)
+        casalog.origin('createMMS')
+        
+        # Check if MMS was created
+        if not os.path.exists(mms):
+            casalog.post('Cannot create MMS ->'+mms, 'ERROR')
+            return False
+        
+        # If requested, create a link to this MMS
+        if createlink:
+            here = os.getcwd()
+            os.chdir(mmsdir)
+            mmsname = os.path.basename(mms)
+            lms = mmsname.replace('.mms', '.ms')
+            casalog.post('Creating symbolic link to MMS')
+            os.symlink(mmsname, lms)
+            os.chdir(here)
+                
+        return True
+        
+    def usage(self):
+        print '========================================================================='
+        print '          createMMS will create a directory with multi-MSs.'
+        print 'Usage:\n'
+        print '  import partitionhelper as ph'
+        print '  ph.createMMS(inpdir=\'dir\') \n'
+        print 'Options:'
+        print '   inpdir <dir>        directory with input MS.'
+        print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
+        print '                       the MMS in a directory called mmsdir in the current directory.'
+        print '   createmslink=False  if True it will create a link to the MMS with extension .ms.'
+        print '   cleanup=False       if True it will remove the output directory before starting.\n'
+        print ' NOTE: this script will run using the default values of partition. It will fail if '
+        print ' run on single dish data because the datacolumn needs to be set in partition.\n'
+        print ' The script will not walk through sub-directories of inpdir. It will also skip '
+        print ' files or directories that start with a .'
+        print '=========================================================================='
+        return
+        
+        
 def getScanNrows(msfile, myscan):
     '''Get the number of rows of a scan in a MS. It will add the nrows of all sub-scans.
        msfile  --> name of the MS
@@ -162,3 +401,6 @@ def makeMMS(outputvis, submslist, copysubtables=False):
     os.chdir(origpath)
 
     return True
+
+
+
