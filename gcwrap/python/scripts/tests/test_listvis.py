@@ -28,20 +28,10 @@ msfile2 = 'OrionS_rawACSmod'
 msfile3 = 'as1039q4_ut.ms'
 out = 'listvis'
 
-datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
-
-testmms = False
-if os.environ.has_key('TEST_DATADIR'):   
-    testmms = True
-    DATADIR = str(os.environ.get('TEST_DATADIR'))
-    if os.path.isdir(DATADIR):
-        datapath = DATADIR+'/listvis/'
-
-print 'Listvis tests will use data from '+datapath         
-
 class listvis_test1(unittest.TestCase):
 
     def setUp(self):
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
         fpath = os.path.join(datapath, msfile1)
         os.symlink(fpath, msfile1)       
 
