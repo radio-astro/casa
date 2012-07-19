@@ -411,6 +411,42 @@ int main() {
     		  }
     	  }
 		  AlwaysAssert(newsp.restFrequency() == restfreq1, AipsError);
+
+
+    	  cout << "Noncontiguous spectral axis test concating 3 images - CAS-4319" << endl;
+		  Vector<Double> hfreqs(3);
+		  hfreqs[0] = 1.61e9;
+		  hfreqs[1] = 1.62e9;
+		  hfreqs[2] = 1.64e9;
+		  Double restfreq3 = 1.6e9;
+		  SpectralCoordinate sp3(MFrequency::LSRK, hfreqs, restfreq3);
+		  csys.replaceCoordinate(sp3, 1);
+    	  TempImage<Float> t3(TiledShape(IPosition(3, 1, 1, 3)), csys);
+    	  ImageInfo info3 = t3.imageInfo();
+    	  GaussianBeam beam3(Quantity(10, "arcsec"), Quantity(7, "arcsec"), Quantity(80, "deg"));
+    	  info3.setRestoringBeam(beam3);
+    	  t3.setImageInfo(info3);
+    	  concat.setImage(t3, True);
+    	  newsp = concat.coordinates().spectralCoordinate();
+    	  for (uInt i=0; i<10; i++) {
+    		  newsp.toWorld(world, i);
+    		  GaussianBeam beam = concat.imageInfo().restoringBeam(i, -1);
+    		  if (i < 4) {
+    			  AlwaysAssert(world == freqs[i], AipsError);
+    			  AlwaysAssert(beam == beam1, AipsError);
+    		  }
+    		  else if (i < 7) {
+    			  AlwaysAssert(world == gfreqs[i-4], AipsError);
+    			  AlwaysAssert(beam == beam2, AipsError);
+    		  }
+    		  else {
+    			  AlwaysAssert(world == hfreqs[i-7], AipsError);
+    			  AlwaysAssert(beam == beam3, AipsError);
+    		  }
+    	  }
+    	  AlwaysAssert(newsp.restFrequency() == restfreq1, AipsError);
+
+
       }
   } catch(AipsError x) {
     cerr << x.getMesg() << endl;
