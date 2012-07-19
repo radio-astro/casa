@@ -213,6 +213,10 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     function may take some time if the measurement set to be copied is
     large. The measurement set needs to be opened for writing for this to work.
 
+    The virtconcatenate function enables virtual concatenation, i.e. the
+    data is not rewritten but just reindexed such that the two input MSs have
+    the same subtables. They can then be turned into a multi-MS.
+
   \medskip\noindent\textbf{Sorting the main table by time}
 
     The timesort function permits you to sort the MS main table by time in
@@ -2821,6 +2825,76 @@ for i in range(len(tcoord)):
     Its going to assume a frequency tolerance of 1GHz and position tolerance 
     of 1 arcsec in deciding if the spw and field in the measurementsets are
     similar or not. 
+  </example>
+</method>
+
+   <method type="function" name="virtconcatenate">
+   <shortdescription>Concatenate two measurement sets virtually</shortdescription>
+   
+  <keyword>concatenate</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>The name of the measurement set to append</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="auxfilename">
+     <description>The name of a auxiliary file which is needed when more than two MSs are to be concatenated.</description>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="freqtol">
+     <description>Frequency difference  within which 2
+ spectral windows are considered similar; e.g '10Hz'</description>
+     <any type="variant"/>
+     <value>1Hz</value>
+     </param>
+    
+     <param type="any" direction="in" name="dirtol">
+     <description>Direction difference within which 2 fields are considered the same; e.g '1mas'</description>
+     <any type="variant"/>
+     <value>1mas</value>
+     </param>
+
+     <param type="float" direction="in" name="weightscale">
+     <description>Scale the weights of the MS to be appended by this factor</description>
+     <value>1.</value>
+     </param>
+
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function virtually concatenates two measurement sets together
+    such that they can later be turned into a multi-MS with createmultims(). 
+
+    You need to open the measurement set for writing in order to use this function.
+
+  </description>
+  <example>
+    
+      
+      ms.open("3C273XC1.ms", nomodify=False)
+      ms.virtconcatenate("3C273XC1-2.ms", '3Caux.dat', '1GHz', '1arcsec')
+      ms.virtconcatenate("3C273XC1-3.ms", '3Caux.dat', '1GHz', '1arcsec')
+      ms.close()
+      os.remove('3Caux.dat')
+      m.createmultims(concatvis, 
+                      ["3C273XC1.ms","3C273XC1-2.ms","3C273XC1-3.ms"],
+		      [],
+		      True, # nomodify
+		      False,# lock
+		      True) # copysubtables from first to all other members
+      ms.close()
+    
+    This example virtually appends the data from the 3C273XC1-2 and 3C273XC1-3 to
+    the end of the 3C273XC1 measurement set. Its going to assume a
+    frequency tolerance of 1GHz and position tolerance of 1 arcsec in
+    deciding if the spw and field in the measurementsets are
+    similar or not. The file 3Caux.dat which is created in the process is
+    no longer needed after the last call to virtconcatenate() and can
+    be deleted.
   </example>
 </method>
 

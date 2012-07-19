@@ -57,6 +57,7 @@ imstat.xml
 imsubimage.xml
 imtrans.xml
 imval.xml
+imview.xml
 listcal.xml
 listhistory.xml
 listfits.xml
@@ -65,6 +66,8 @@ listpartition.xml
 listsdm.xml
 listvis.xml
 mosaic.xml
+msview.xml
+msmoments.xml 
 oldflagcmd.xml
 peel.xml
 plotants.xml
@@ -114,10 +117,8 @@ uvmodelfit.xml
 uvsub.xml
 viewer.xml
 wvrgcal.xml
-imview.xml
-msview.xml
+virtualconcat.xml
 vishead.xml
 visstat.xml
-widefield.xml
-msmoments.xml )
+widefield.xml )
 

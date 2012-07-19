@@ -844,7 +844,7 @@ class test_concat(unittest.TestCase):
             retValue['success']=True        
     
             # check Main table
-            tb.open('test7.ms')
+            tb.open('test8.ms')
             ant1 = tb.getcol('ANTENNA1')
             ant2 = tb.getcol('ANTENNA2')
             tb.close()
@@ -932,9 +932,9 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
-            if 'test11.ms' in glob.glob("*.ms"):
-                shutil.rmtree('tes11.ms',ignore_errors=True)
-            shutil.copytree(msname,'test11.ms')
+            if 'test9.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test9.ms',ignore_errors=True)
+            shutil.copytree(msname,'test9.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -1029,9 +1029,9 @@ class test_concat(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
         else:
             ms.close()
-            if 'test12.ms' in glob.glob("*.ms"):
-                shutil.rmtree('tes12.ms',ignore_errors=True)
-            shutil.copytree(msname,'test12.ms')
+            if 'test10.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test10.ms',ignore_errors=True)
+            shutil.copytree(msname,'test10.ms')
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 

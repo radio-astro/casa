@@ -124,7 +124,7 @@ def getSubtables(vis):
     return theSubTables
 
 
-def makeMMS(outputvis, submslist):
+def makeMMS(outputvis, submslist, copysubtables=False):
     '''
     Create an MMS named outputvis from the submss in list submslist.
     '''
@@ -145,7 +145,7 @@ def makeMMS(outputvis, submslist):
                                [],
                                True,  # nomodify
                                False, # lock
-                               False) # copysubtables
+                               copysubtables) # copysubtables
         mymstool.close()
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)

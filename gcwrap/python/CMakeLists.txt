@@ -182,6 +182,7 @@ scripts/task_uvcontsub3.py
 scripts/task_uvmodelfit.py
 scripts/task_uvsub.py
 scripts/task_viewer.py
+scripts/task_virtualconcat.py
 scripts/task_wvrgcal.py
 scripts/task_msview.py
 scripts/task_imview.py

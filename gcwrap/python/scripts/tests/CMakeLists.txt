@@ -149,6 +149,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_uvcontsub.py
   test_uvcontsub3.py
   test_viewer.py
+  test_virtualconcat.py
   test_vishead.py
   test_visstat.py
   test_vpmanager.py

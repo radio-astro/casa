@@ -148,7 +148,7 @@ ms::createmultims(const std::string &outputTableName,
                   const bool lock,
 		  const bool copysubtables)
 {
-  *itsLog << LogOrigin(__func__, outputTableName);
+  *itsLog << LogOrigin("ms", "createmultims");
 
   try {
     Block<String> tableNameVector(tableNames.size());
@@ -2135,7 +2135,6 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 		dirtolerance=casaQuantity(dirtol);
 	    }
 	    
-	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
 	    mscat.setWeightScale(weightscale);
 	    mscat.concatenate(appendedMS, static_cast<uint>(handling), destmsfile);
@@ -2217,6 +2216,68 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
     Table::relinquishAutoLocks(True);
     return rstat;
 }
+
+bool
+ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const ::casac::variant& freqtol, 
+		    const ::casac::variant& dirtol, const float weightscale)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "virtconcatenate");
+	    
+	    if (!Table::isReadable(msfile)) {
+		*itsLog << "Cannot read the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    MeasurementSet appendedMS(msfile, Table::Update);
+
+	    if (!appendedMS.isWritable()) {
+		*itsLog << "Cannot write to the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    MSConcat mscat(*itsMS);
+	    Quantum<Double> dirtolerance;
+	    Quantum<Double> freqtolerance;
+	    if(freqtol.toString().empty()){
+		freqtolerance=casa::Quantity(1.0,"Hz");
+	    }
+	    else{
+		freqtolerance=casaQuantity(freqtol);
+	    }
+	    if(dirtol.toString().empty()){
+		dirtolerance=casa::Quantity(1.0, "mas");
+	    }
+	    else{
+		dirtolerance=casaQuantity(dirtol);
+	    }
+	    
+	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setWeightScale(weightscale);
+
+	    mscat.virtualconcat(appendedMS, True, casa::String(auxfile));
+
+	    String message = String(msfile) + " virtually concatenated with " + itsMS->tableName();
+	    ostringstream param;
+	    param << "msfile='" << msfile
+		  << "' freqTol='" << casaQuantity(freqtol) 
+		  << "' dirTol='" << casaQuantity(dirtol) << "'";
+	    String paramstr=param.str();
+	    writehistory(std::string(message.data()), std::string(paramstr.data()),
+			 std::string("ms::virtconcatenate()"), msfile, "ms");
+	}
+	rstat = True;
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	Table::relinquishAutoLocks(True);
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks(True);
+    return rstat;
+}
+
 
 bool
 ms::timesort(const std::string& msname)
