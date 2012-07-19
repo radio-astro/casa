@@ -183,6 +183,8 @@ private:
 
 };
 
+ostream &operator<<(ostream &os, const ImageBeamSet& beamSet);
+
 }
 
 #endif
