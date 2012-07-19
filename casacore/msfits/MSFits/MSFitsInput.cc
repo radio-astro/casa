@@ -2840,6 +2840,9 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
                 << "Could not find the number of fields of the uv table"
                 << LogIO::EXCEPTION;
     }
+ 
+    String object = (kw = kwl(FITS::OBJECT)) ? kw->asString()
+            : "unknown";
 
     Vector<String> TType(nFields);
     Vector<Double> TScal(nFields);
@@ -2887,14 +2890,7 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
     Int iSource = getIndex(TType, "SOURCE");
     Int iFreq = getIndex(TType, "FREQSEL");
     Int iVis = getIndex(TType, "VISIBILITIES");
-    if (iFreq < 0) {
-         itsLog << "Fits UV table required column 'FREQSEL' is missing! "
-                << LogIO::EXCEPTION;
-    }
-    if (iSource < 0) {
-         itsLog << "Fits UV table required column 'SOURCE' is missing! "
-                << LogIO::EXCEPTION;
-    }
+
 
 
     //receptorAngle_p.resize(1);
@@ -2943,13 +2939,11 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
         //cout << "nr=" << tb.nrow() << " nc=" << tb.isNull() << endl;
 
         try {
-            ROScalarColumn<Float> colFrqSel(tb, TType(iFreq));
             ROScalarColumn<Float> colDate(tb, TType(iTime0));
             ROScalarColumn<Float> colUU(tb, TType(iU));
             ROScalarColumn<Float> colVV(tb, TType(iV));
             ROScalarColumn<Float> colWW(tb, TType(iW));
             ROScalarColumn<Float> colBL(tb, TType(iBsln));
-            ROScalarColumn<Float> colSU(tb, TType(iSource));
             ROArrayColumn<Float> colVis(tb, TType(iVis));
 
             Int visL = 1;
@@ -2969,11 +2963,16 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
 
 
             // Extract fqid
-            Int freqId = (Int) colFrqSel.asfloat(0);
+            Int freqId = 1;
+            if (iFreq >= 0) {
+                ROScalarColumn<Float> colFrqSel(tb, TType(iFreq));
+                freqId = (Int) colFrqSel.asfloat(0);
+            }
 
             // Extract field Id
             Int fieldId = 0;
             if (iSource >= 0) {
+                ROScalarColumn<Float> colSU(tb, TType(iSource));
                 // make 0-based
                 fieldId = (Int) colSU.asfloat(0) - 1;
             }
@@ -3122,7 +3121,8 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
                 // determine the spectralWindowId
                 Int spW = ifno;
                 if (iFreq >= 0) {
-                    spW = (Int) colFrqSel.asfloat(0) - 1; // make 0-based
+                    //spW = (Int) colFrqSel.asfloat(0) - 1; // make 0-based
+                    spW = freqId - 1; // make 0-based
                     if (nIF_p > 0) {
                         spW *= nIF_p;
                         spW += ifno;
@@ -3162,6 +3162,22 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
     receptorAngle_p.resize(2 * nAnt_p);
     receptorAngle_p = 0;
     // set the Measure References
+
+    if (iSource < 0) {
+        //cout << "fill field---------" 
+        //       << "\ncoordType=" << coordType_p
+        //       << "\nrefVal=" << refVal_p
+        //       << "\nrefPix=" << refPix_p
+        //       << "\ndelta=" << delta_p
+        //       << "\nnPixel_p=" << nPixel_p
+        //       << endl;
+        double ra=0.;
+        double dec=0.;
+        ra = refVal_p(getIndex(coordType_p, "RA"));
+        dec = refVal_p(getIndex(coordType_p, "DEC"));
+        fillFieldTable(ra, dec, object);
+
+    }
 
 
 }
@@ -3582,6 +3598,32 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt) {
 
 }
 
+void MSFitsInput::fillFieldTable(double ra, double dec, String source) {
+    MSFieldColumns& msField(msc_p->field());
+
+    ms_p.field().addRow();
+
+    msField.sourceId().put(0, 0); 
+    msField.code().put(0, "");
+    msField.name().put(0, source);
+    Int numPoly = 0;
+
+    //MDirection::Types epochRef = MDirection::APP;
+    MDirection::Types epochRef = epochRef_p;
+    MVDirection refDir;
+
+    refDir = MVDirection(ra * C::degree, dec * C::degree);
+    Vector<MDirection> radecMeas(1);
+    radecMeas(0).set(refDir, MDirection::Ref(epochRef));
+
+    msField.time().put(0, obsTime(0));
+    msField.numPoly().put(0, numPoly);
+    msField.delayDirMeasCol().put(0, radecMeas);
+    msField.phaseDirMeasCol().put(0, radecMeas);
+    msField.referenceDirMeasCol().put(0, radecMeas);
+    msField.flagRow().put(0, False);
+
+}
 
 } //# NAMESPACE CASA - END
 
