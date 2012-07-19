@@ -121,6 +121,584 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   return fixedShape;
 }
 
+  void MSConcat::virtualconcat(MeasurementSet& otherMS, 
+			       const Bool checkShapeAndCateg,
+			       const String& obsidAndScanTableName) 
+{
+  LogIO log(LogOrigin("MSConcat", "virtualconcat", WHERE));
+
+
+  Bool reindexObsidAndScan=!obsidAndScanTableName.empty();
+
+  // check if certain columns are present and set flags accordingly
+  Bool doCorrectedData=False, doModelData=False;
+  Bool doFloatData=False;
+
+  if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
+      otherMS.tableDesc().isColumn("FLOAT_DATA"))
+    doFloatData=True;
+  else if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
+	   !otherMS.tableDesc().isColumn("FLOAT_DATA")){
+    log << itsMS.tableName() 
+	<< " has FLOAT_DATA column but not " << otherMS.tableName()
+	<< LogIO::EXCEPTION;
+    log << "Cannot concatenate these MSs yet...you may split the corrected column of the SD as a work around." 
+	<< LogIO::EXCEPTION; 
+  }
+  if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
+      otherMS.tableDesc().isColumn("MODEL_DATA"))
+    doModelData=True;
+  else if (itsMS.tableDesc().isColumn("MODEL_DATA") && 
+	   !otherMS.tableDesc().isColumn("MODEL_DATA")){
+    log << itsMS.tableName() 
+	<< " has MODEL_DATA column but not " << otherMS.tableName()
+	<< LogIO::EXCEPTION;
+    log << "You may wish to create this column by loading " 
+	<< otherMS.tableName() 
+	<< " in imager or calibrater "  	
+	<< LogIO::EXCEPTION;
+  }
+  if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
+      otherMS.tableDesc().isColumn("CORRECTED_DATA"))
+    doCorrectedData=True;
+  else if (itsMS.tableDesc().isColumn("CORRECTED_DATA") && 
+	   !otherMS.tableDesc().isColumn("CORRECTED_DATA"))
+    log << itsMS.tableName() 
+	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
+	<< LogIO::EXCEPTION;
+
+
+  if(checkShapeAndCateg){
+    // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
+    //   is the same
+    if (otherMS.nrow() > 0) {
+      if (itsFixedShape.nelements() > 0) {
+	const ROMSPolarizationColumns otherPolCols(otherMS.polarization());
+	const ROMSSpWindowColumns otherSpwCols(otherMS.spectralWindow());
+	const ROMSDataDescColumns otherDDCols(otherMS.dataDescription());
+	const uInt nShapes = otherDDCols.nrow();
+	for (uInt s = 0; s < nShapes; s++) {
+	  checkShape(getShape(otherDDCols, otherSpwCols, otherPolCols, s));
+	}
+      }
+      const ROMSMainColumns otherMainCols(otherMS);
+      checkCategories(otherMainCols);
+    }
+  }
+
+  // merge STATE
+  Block<uInt> newStateIndices; // INTO TABLE
+  Bool doState = False;
+  // STATE is a required subtable but can be empty in which case the state id in the main table is -1
+  Bool itsStateNull = (itsMS.state().isNull() || (itsMS.state().nrow() == 0));
+  Bool otherStateNull = (otherMS.state().isNull() || (otherMS.state().nrow() == 0));
+
+  if(itsStateNull && otherStateNull){
+    log << LogIO::NORMAL << "No valid state tables present. Result won't have one either." << LogIO::POST;
+  }
+  else if(itsStateNull && !otherStateNull){
+    log << LogIO::WARN << itsMS.tableName() << " does not have a valid state table," << endl
+	<< "  the MS to be appended, however, has one. Result won't have one." 
+	<< LogIO::POST;
+    doState = True; // i.e. the appended MS Main table state id will have to be set to -1
+  }
+  else if(!itsStateNull && otherStateNull){
+    log << LogIO::WARN << itsMS.tableName() << " does have a valid state table," << endl
+	<< "  the MS to be appended, however, doesn't. Result won't have one." 
+	<< LogIO::POST;
+    doState = True; // i.e. itsMS Main table state id will have to be set to -1
+
+    Vector<uInt> delrows(itsMS.state().nrow());
+    indgen(delrows);
+    itsMS.state().removeRow(delrows); 
+  }
+  else{ // both state tables are filled
+    const uInt oldStateRows = itsMS.state().nrow();
+    newStateIndices = copyState(otherMS.state());
+    const uInt addedRows = itsMS.state().nrow() - oldStateRows;
+    const uInt matchedRows = otherMS.state().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the state subtable" << LogIO::POST;
+    doState = True; // state id entries in the main table will have to be modified for otherMS
+  }
+
+  //See if there is a SOURCE table and concatenate and reindex it
+  {
+    uInt oldSRows = itsMS.source().nrow();
+    copySource(otherMS); 
+    if(Table::isReadable(itsMS.sourceTableName())){
+      uInt addedRows =  itsMS.source().nrow() - oldSRows;
+      if(addedRows>0){
+	log << "Added " << addedRows 
+	    << " rows to the source subtable" << LogIO::POST;
+      }
+    }
+  }
+
+  // DATA_DESCRIPTION
+  uInt oldRows = itsMS.dataDescription().nrow();
+  uInt oldSPWRows = itsMS.spectralWindow().nrow();
+  const Block<uInt> newDDIndices = copySpwAndPol(otherMS.spectralWindow(),
+						 otherMS.polarization(),
+						 otherMS.dataDescription());
+  {
+    uInt addedRows = itsMS.dataDescription().nrow() - oldRows;
+    uInt matchedRows = otherMS.dataDescription().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the data description subtable" << LogIO::POST;
+    addedRows = itsMS.spectralWindow().nrow() - oldSPWRows;
+    matchedRows = otherMS.spectralWindow().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the spectral window subtable" << LogIO::POST;
+  }
+
+  // correct the spw entries in the SOURCE table and remove redundant rows
+  oldRows = itsMS.source().nrow();
+  updateSource();
+  if(Table::isReadable(itsMS.sourceTableName())){
+    uInt removedRows =  oldRows - itsMS.source().nrow();
+    if(removedRows>0){
+      log << "Removed " << removedRows 
+	  << " redundant rows from the source subtable" << LogIO::POST;
+    }
+  }
+
+  // merge ANTENNA and FEED
+  oldRows = itsMS.antenna().nrow();
+  uInt oldFeedRows = itsMS.feed().nrow();
+  const Block<uInt> newAntIndices = copyAntennaAndFeed(otherMS.antenna(), 
+						       otherMS.feed()); 
+  {
+    uInt addedRows = itsMS.antenna().nrow() - oldRows;
+    uInt matchedRows = otherMS.antenna().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the antenna subtable" << endl;
+    addedRows = itsMS.feed().nrow() - oldFeedRows;
+    log << "Added " << addedRows 
+	<< " rows to the feed subtable" << endl;
+  }
+
+  //for(uint ii=0; ii<newAntIndices.size(); ii++){
+  //  cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
+  //}
+
+  // FIELD
+  oldRows = itsMS.field().nrow();
+  const Block<uInt> newFldIndices = copyField(otherMS.field()); 
+  {
+    const uInt addedRows = itsMS.field().nrow() - oldRows;
+    const uInt matchedRows = otherMS.field().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the field subtable" << LogIO::POST;
+  }
+
+  // OBSERVATION
+  copyObservation(otherMS.observation(), True);
+
+  // POINTING
+  if(!copyPointing(otherMS.pointing(), newAntIndices)){
+    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  }
+
+  //////////////////////////////////////////////////////
+
+  // copying all subtables over to otherMS
+  // will need to be done when creating the MMS from the concatenated MSs
+
+  //////////////////////////////////////////////////////
+
+  MSMainColumns mainCols(itsMS);
+  MSMainColumns otherMainCols(otherMS);
+
+  const uInt otherRows = otherMS.nrow();
+  const uInt theseRows = itsMS.nrow();
+
+  // create column objects for those columns which potentially need to be modified
+  
+  ArrayColumn<Complex> otherData;
+  ArrayColumn<Float> otherFloatData;
+  ArrayColumn<Complex> otherModelData, otherCorrectedData;
+  
+  if(doFloatData){
+    otherFloatData.reference(otherMainCols.floatData());
+  }
+  else{
+    otherData.reference(otherMainCols.data());
+  }
+  
+  if(doCorrectedData){
+    otherCorrectedData.reference(otherMainCols.correctedData());
+  }
+  if(doModelData){
+    otherModelData.reference(otherMainCols.modelData());
+  }
+  
+  ArrayColumn<Double>& otherUvw = otherMainCols.uvw();
+  ArrayColumn<Float>& otherWeight = otherMainCols.weight();
+  ArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
+
+  ScalarColumn<Int>& otherAnt1Col = otherMainCols.antenna1();
+  ScalarColumn<Int>& otherAnt2Col = otherMainCols.antenna2();
+  ScalarColumn<Int>& otherDDIdCol = otherMainCols.dataDescId();
+  ScalarColumn<Int>& otherFieldIdCol = otherMainCols.fieldId();
+  ScalarColumn<Int>& otherScanCol = otherMainCols.scanNumber();
+  ScalarColumn<Int>& otherStateIdCol = otherMainCols.stateId();
+  ScalarColumn<Int>& otherObsIdCol =otherMainCols.observationId();
+
+  ScalarColumn<Int>& thisScanCol = mainCols.scanNumber();
+  ScalarColumn<Int>& thisStateIdCol = mainCols.stateId();
+  ScalarColumn<Int>& thisObsIdCol = mainCols.observationId();
+
+  Vector<Int> otherAnt1 = otherAnt1Col.getColumn();
+  Vector<Int> otherAnt2 = otherAnt2Col.getColumn();
+  Vector<Int> otherDDId = otherDDIdCol.getColumn();
+  Vector<Int> otherFieldId = otherFieldIdCol.getColumn();
+  Vector<Int> otherScan = otherScanCol.getColumn();
+  Vector<Int> otherStateId(otherMS.nrow(),-1); 
+  Vector<Int> otherObsIds;
+
+  if (doState && !otherStateNull){
+    otherStateId = otherStateIdCol.getColumn();
+  }
+
+  Int defaultScanOffset=0;
+  SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
+  SimpleOrderedMap <Int, Int> encountered(-1);
+
+  if(reindexObsidAndScan){
+
+    otherObsIds = otherObsIdCol.getColumn();
+    Vector<Int> theseObsIds=thisObsIdCol.getColumn();
+    Vector<Int> theseScans=thisScanCol.getColumn();
+    
+    if(doObsA_p){ // the obs ids changed for the first table
+      for(uInt r = 0; r < theseRows; r++) {
+	if(newObsIndexA_p.isDefined(theseObsIds[r])){ // apply change 
+	  theseObsIds[r] = newObsIndexA_p(theseObsIds[r]);
+	}
+      }
+      thisObsIdCol.putColumn(theseObsIds);
+    }  
+
+    // SCAN NUMBER
+    // find the distinct ObsIds in use in this MS
+    // and the maximum scan ID in each of them
+    
+    vector<Int> distinctObsIdSet;
+    vector<Int> minScan;
+    Int maxScanThis=0;
+    
+    // read the initial values from a file if it exists
+    std::ifstream ifs;
+    ifs.open(obsidAndScanTableName.c_str(), ifstream::in);
+    if (ifs.good()) {
+      log << LogIO::NORMAL << "Reading from " << obsidAndScanTableName << LogIO::POST;
+      uInt n;
+      Int tobsid, tminscan; 
+      ifs >> n;
+      for(uInt i=0; i<n; i++){
+	if(ifs.good()){
+	  ifs >> tobsid; distinctObsIdSet.push_back(tobsid);
+	  ifs >> tminscan; minScan.push_back(tminscan);
+	}
+	else{
+	  log << LogIO::WARN << "Error reading file " << obsidAndScanTableName << LogIO::POST;
+	  break;
+	}
+      }
+      if(ifs.good()){
+	ifs >> 	maxScanThis;
+      }
+      else{
+	log << LogIO::WARN << "Error reading file " << obsidAndScanTableName << LogIO::POST;
+	log << LogIO::WARN << "Will continue with uninitialized obsid and scans information" << LogIO::POST;
+	distinctObsIdSet.resize(0);
+	minScan.resize(0);
+	maxScanThis=0;
+      }
+      //cout << "distinctObsIdSet " << Vector<Int>(distinctObsIdSet) << endl;
+      //cout << "minScan " << Vector<Int>(minScan) << endl;
+      //cout << "maxScanThis " << maxScanThis << endl;
+    }
+    else{
+      log << LogIO::NORMAL << "Will create auxiliary file " << obsidAndScanTableName << LogIO::POST;
+    }
+    ifs.close();
+    
+    for(uInt r = 0; r < theseRows; r++) {
+      Int oid = theseObsIds[r];
+      Int scanid = theseScans[r];
+      Bool found = False;
+      uInt i;
+      for(i=0; i<distinctObsIdSet.size(); i++){
+	if(distinctObsIdSet[i]==oid){
+	  found = True;
+	  break;
+	}
+      }
+      if(found){
+	if(scanid<minScan[i]){
+	  minScan[i] = scanid;
+	}
+      }
+      else {
+	distinctObsIdSet.push_back(oid);
+	minScan.push_back(scanid); 
+      }
+      if(scanid>maxScanThis){
+	maxScanThis = scanid;
+      }
+    }
+    
+    // update or create the file with the initial values for the next concat
+    std::ofstream ofs;
+    ofs.open (obsidAndScanTableName.c_str(), ofstream::out);
+    if (!ofs) {
+      log << LogIO::WARN << "Error opening file " << obsidAndScanTableName 
+	  << "will continue but the next virtual concat will lack this information:" << LogIO::POST;
+      log << "distinctObsIdSet " << Vector<Int>(distinctObsIdSet) << endl;
+      log << "minScan " << Vector<Int>(minScan) << endl;
+      log << "maxScanThis " << maxScanThis << LogIO::POST;
+    }
+    else{
+      log << LogIO::NORMAL << "Writing to " << obsidAndScanTableName << LogIO::POST;
+      uInt n = distinctObsIdSet.size();
+      ofs << n << endl;
+      for(uInt i=0; i<n; i++){
+	ofs << distinctObsIdSet[i] << endl;
+	ofs << minScan[i] << endl;
+      }
+      ofs << maxScanThis << endl;
+    }
+    ofs.close();
+    
+    // set the offset added to scan numbers in each observation
+    for(uInt i=0; i<distinctObsIdSet.size(); i++){
+      Int scanOffset;
+      scanOffset = minScan[i] - 1; // assume scan numbers originally start at 1
+      if(scanOffset<0){
+	log << LogIO::WARN << "Zero or negative scan numbers in MS. May lead to duplicate scan numbers in concatenated MS." 
+	    << LogIO::POST;
+	scanOffset = 0;
+      }
+      if(scanOffset==0){
+	encountered.define(distinctObsIdSet[i],0); // used later to decide whether to notify user
+      }
+      scanOffsetForOid.define(distinctObsIdSet[i], scanOffset); 
+    }
+    
+    {
+      ROTableVector<Int> ScanTabVectOther(otherScan);
+      Int minScanOther = min(ScanTabVectOther);
+      defaultScanOffset = maxScanThis + 1 - minScanOther;
+      if(defaultScanOffset<0){
+	defaultScanOffset=0;
+      }
+    }
+    
+  } // end if reindexObsidAndScan
+  
+  if(doState && otherStateNull){ // the state ids for the first table will have to be set to -1
+    Vector<Int> tempV(theseRows, -1);
+    thisStateIdCol.putColumn(tempV);
+  }  
+  
+  // finished all modifications of MS Main table one
+  
+  // now start modifications of the second one 
+
+  log << LogIO::NORMAL << "Working on appended Main table ..." << LogIO::POST;
+
+  
+  Bool copyWtSp = (!otherWeightSp.isNull()) && otherWeightSp.isDefined(0);
+  
+  // MAIN
+  
+  Bool doWeightScale = (itsWeightScale!=1.);
+  
+  if(reindexObsidAndScan){
+    for (uInt r = 0; r < otherRows; r++) {
+      Int oid = 0;
+      if(doObsB_p && newObsIndexB_p.isDefined(otherObsIds[r])){ 
+	// the obs ids have been changed for the table to be appended
+	oid = newObsIndexB_p(otherObsIds[r]);
+      }
+      else{ // this OBS id didn't change
+	oid = otherObsIds[r];
+      }
+      
+      if(oid != otherObsIds[r]){ // obsid actually changed
+	if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
+	  scanOffsetForOid.define(oid, defaultScanOffset);
+	}
+	if(!encountered.isDefined(oid) && scanOffsetForOid(oid)!=0){
+	  log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
+	      << " for observations with Obs ID " << oid
+	      << " in order to make scan numbers unique." << LogIO::POST;
+	  encountered.define(oid,0);
+	}
+	otherScan[r] = otherScan[r] + scanOffsetForOid(oid);
+      }
+
+      otherObsIds[r] = oid;
+
+    }
+  }
+    
+  if(doState){
+    for (uInt r = 0; r < otherRows; r++) {
+      if(!(itsStateNull || otherStateNull)){
+	otherStateId[r] = newStateIndices[otherStateId[r]];
+      }
+    }  
+  }
+
+  for (uInt r = 0; r < otherRows; r++) {
+    
+    Int newA1 = newAntIndices[otherAnt1[r]];
+    Int newA2 = newAntIndices[otherAnt2[r]];
+    Bool doConjugateVis = False;
+    if(newA1>newA2){ // swap indices and multiply UVW by -1
+      //cout << "   corrected order r: " << r << " " << newA2 << " " << newA1 << endl;
+      otherAnt1[r] = newA2;
+      otherAnt2[r] = newA1;
+      Array<Double> newUvw;
+      newUvw.assign(otherUvw(r));
+      //cout << "   old UVW " << newUvw;
+      newUvw *= -1.;
+      //cout << ", new UVW " << newUvw << endl;
+      otherUvw.put(r, newUvw);
+      doConjugateVis = True;
+    }
+    else{
+      otherAnt1[r] = newA1;
+      otherAnt2[r] = newA2;
+    }    
+    
+    if(itsChanReversed[otherDDId[r]]){
+
+      Vector<Int> datShape;
+      Matrix<Complex> reversedData;
+      Matrix<Float> reversedFloatData;
+      if(doFloatData){
+	datShape=otherFloatData.shape(r).asVector();
+	reversedFloatData.resize(datShape[0], datShape[1]);
+      }
+      else{
+	datShape=otherData.shape(r).asVector();
+	reversedData.resize(datShape[0], datShape[1]);
+      }
+      Matrix<Complex> reversedCorrData(datShape[0], datShape[1]);
+      Matrix<Complex> reversedModData(datShape[0], datShape[1]);
+      for (Int k1=0; k1 < datShape[0]; ++k1){
+	for(Int k2=0; k2 < datShape[1]; ++k2){
+	  if(doFloatData){
+	    reversedFloatData(k1,k2)=(Matrix<Float>(otherFloatData(r)))(k1,
+									datShape[1]-1-k2);
+	  }
+	  else{
+	    reversedData(k1,k2)=(Matrix<Complex>(otherData(r)))(k1,
+								datShape[1]-1-k2);
+	  }
+	  if(doModelData){
+	    reversedModData(k1,k2)=(Matrix<Complex>(otherModelData(r)))(k1,
+									datShape[1]-1-k2);
+	  }
+	  if(doCorrectedData){
+	    reversedCorrData(k1,k2)=(Matrix<Complex>(otherCorrectedData(r)))(k1,
+									     datShape[1]-1-k2);
+	  }
+	  
+	}
+      } 
+      if(doFloatData){
+	otherFloatData.put(r, reversedFloatData);
+      }
+      else{
+	if(doConjugateVis){
+	  otherData.put(r, conj(reversedData));	  
+	}
+	else{
+	  otherData.put(r, reversedData);
+	}
+      }
+      if(doCorrectedData){
+	if(doConjugateVis){
+	  otherCorrectedData.put(r, conj(reversedCorrData));
+	}
+	else{
+	  otherCorrectedData.put(r, reversedCorrData);
+	}
+      }
+      if(doModelData){
+	if(doConjugateVis){
+	  otherModelData.put(r, conj(reversedModData));
+	}
+	else{
+	  otherModelData.put(r, reversedModData);
+	}
+      }
+    }
+    else{ // no reversal
+      if(!doFloatData){
+	if(doConjugateVis){ // conjugate because order of antennas was reversed
+	  otherData.put(r, conj(otherData(r)));
+	}
+      }
+      if(doModelData){
+	if(doConjugateVis){
+	  otherModelData.put(r, conj(otherModelData(r)));
+	}
+      } 
+      if(doCorrectedData){
+	if(doConjugateVis){
+	  otherCorrectedData.put(r, conj(otherCorrectedData(r)));
+	}
+      }
+    } // end if itsChanReversed
+
+    otherDDId[r] = newDDIndices[otherDDId[r]];
+    otherFieldId[r] = newFldIndices[otherFieldId[r]];
+    
+    if(doWeightScale){
+      otherWeight.put(r, otherWeight(r)*itsWeightScale);
+      if (copyWtSp) otherWeightSp.put(r, otherWeightSp(r)*itsWeightScale);
+    }
+    
+  } // end for
+  
+  // write the scalar columns
+
+  log << LogIO::NORMAL << "Writing the scalar columns ..." << LogIO::POST;
+  
+  otherAnt1Col.putColumn(otherAnt1);
+  otherAnt2Col.putColumn(otherAnt2);
+  otherDDIdCol.putColumn(otherDDId);
+  otherFieldIdCol.putColumn(otherFieldId);
+  
+  if(doState && !(itsStateNull || otherStateNull)){
+    otherStateIdCol.putColumn(otherStateId);
+  }
+  
+  if(reindexObsidAndScan){
+    otherScanCol.putColumn(otherScan);
+    otherObsIdCol.putColumn(otherObsIds);
+  }
+  
+  if(doModelData){ //update the MODEL_DATA keywords
+    updateModelDataKeywords(otherMS);
+  }
+  
+}
+
+
+  //--------------------------------------------------------------------
+
   void MSConcat::concatenate(const MeasurementSet& otherMS, 
 			     const uInt handling,
 			     const String& destMSName)
@@ -322,7 +900,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
   // OBSERVATION
-  copyObservation(otherMS.observation());
+  copyObservation(otherMS.observation(), True);
 
   // POINTING
   if(handling<2){
@@ -620,6 +1198,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     
     
     if(itsChanReversed[otherDDId(r)]){
+
+      cout << " concat reversed!" << endl;
+
       Vector<Int> datShape;
       Matrix<Complex> reversedData;
       Matrix<Float> reversedFloatData;
@@ -740,6 +1321,10 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
 }
+
+
+
+//-----------------------------------------------------------------------
 
 void MSConcat::setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol){
   itsFreqTol=freqTol;
