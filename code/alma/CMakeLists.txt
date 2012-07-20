@@ -24,12 +24,6 @@
 #set( CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -pg" )
 
 add_definitions( -DWITHOUT_ACS )
-if( APPLE AND
-    NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
-    NOT _gcc_machine MATCHES x86_64 AND
-    NOT _gcc_machine MATCHES 11.0 )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586" )
-endif()
 
 casa_add_library( alma
 ASDM/AlmaRadiometerRow.cc
