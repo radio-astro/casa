@@ -180,7 +180,8 @@ def setjy_core(vis=None, field=None, spw=None,
   # This block should catch errors mainly from the actual operation mode 
   except Exception, instance:
     casalog.post('%s' % instance,'SEVERE')
-    retval = False
+    retval=False
+    raise instance
 
   return retval
 
@@ -293,6 +294,6 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
     except Exception, instance:
       casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
       mytb.close()
-      raise instance
+      raise Exception, instance
 
   return retval
