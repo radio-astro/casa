@@ -18,6 +18,18 @@ Unit tests for task listvis. It tests the following parameters:
     
 '''
 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/listvis/'
+
+print 'Listvis tests will use data from '+datapath         
+
 # Reference files
 refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
 reffile = refpath+'reflistvis'
@@ -31,7 +43,6 @@ out = 'listvis'
 class listvis_test1(unittest.TestCase):
 
     def setUp(self):
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
         fpath = os.path.join(datapath, msfile1)
         os.symlink(fpath, msfile1)       
 
