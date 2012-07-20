@@ -25,6 +25,7 @@ scripts/assignmentFilter.py
 scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
+scripts/casapy_engine.py
 scripts/caltab_convert2.py
 scripts/check_exceptionhandling.py
 scripts/check_input_saverestore.py

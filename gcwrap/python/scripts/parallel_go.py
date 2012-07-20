@@ -637,6 +637,9 @@ class cluster(object):
      try:
         #self.__client.execute('from casa_in_py import *')
         #print '-----', sdir+'casa_in_py.py'
+        # jagonzal (CAS-4322): Load casapy environment (casa dictionary, environmental variables, etc)
+        # For example casa['dirs']['data'] is used in setjy
+        self.__client.execute("execfile(scriptdir+'casapy_engine.py')", i)
         self.__client.execute("execfile(scriptdir+'casa_in_py.py')", i)
         self.__client.execute('inited=True', i)
      except IOError, e:
