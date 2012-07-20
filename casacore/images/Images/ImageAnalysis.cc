@@ -157,16 +157,15 @@ _log(new LogIO()), _statistics(0), _histograms(0),
 }
 
 ImageAnalysis::~ImageAnalysis() {
-  
-        if (_image.get() != 0) {
-	  if((_image->isPersistent()) && ((_image->imageType()) == "PagedImage")){
-	    ImageOpener::ImageTypes type = ImageOpener::imageType(_image->name());
-	    if (type == ImageOpener::AIPSPP) {
-	      (static_cast<PagedImage<Float> *>(_image.get()))->table().relinquishAutoLocks(True);
-	      (static_cast<PagedImage<Float> *>(_image.get()))->table().unlock();
-	    }
-	  }
-   	}
+	if (_image.get() != 0) {
+		if((_image->isPersistent()) && ((_image->imageType()) == "PagedImage")){
+			ImageOpener::ImageTypes type = ImageOpener::imageType(_image->name());
+			if (type == ImageOpener::AIPSPP) {
+				Table::relinquishAutoLocks(True);
+				(static_cast<PagedImage<Float> *>(_image.get()))->table().unlock();
+			}
+		}
+	}
 	deleteHistAndStats();
 }
 
@@ -3406,7 +3405,6 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	const Bool extendMask
 ) const {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-
 	Int dbg = 0;
 	String method2 = methodU;
 	method2.upcase();
@@ -3482,22 +3480,22 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 			<< "' of shape " << outShape << LogIO::POST;
 		imOut.reset(new PagedImage<Float> (outShape, cSys, outFile));
 	}
-	std::auto_ptr<ImageInterface<Float> > pImOut(imOut->cloneII());
-	pImOut->set(0.0);
-	ImageUtilities::copyMiscellaneous(*pImOut, subImage);
+	//std::auto_ptr<ImageInterface<Float> > pImOut(imOut->cloneII());
+	imOut->set(0.0);
+	ImageUtilities::copyMiscellaneous(*imOut, subImage);
 	String maskName("");
-	makeMask(*pImOut, maskName, True, True, *_log, True);
+	makeMask(*imOut, maskName, True, True, *_log, True);
 	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.disableReferenceConversions(!doRefChange);
 	ir.regrid(
-		*pImOut, method, axes2, subImage,
+		*imOut, method, axes2, subImage,
 		replicate, decimate, True,
 		forceRegrid
 	);
 	// Cleanup and return image
-	return pImOut.release();
+	return imOut.release();
 }
 
 ImageInterface<Float>* ImageAnalysis::regrid(
@@ -3511,7 +3509,6 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 	const Bool extendMask
 ) const {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-
 	// must deal with default shape and dropDegenerateAxes
 	Vector<Int> tmpShape;
 	Vector<Int> tmpShape2;
@@ -3529,7 +3526,8 @@ ImageInterface<Float>* ImageAnalysis::regrid(
 			tmpShape2.resize(j);
 			tmpShape = tmpShape2;
 		}
-	} else {
+	}
+	else {
 		tmpShape = inshape;
 	}
 	std::auto_ptr<CoordinateSystem> csys(
