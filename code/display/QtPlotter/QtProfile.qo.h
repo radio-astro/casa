@@ -159,9 +159,10 @@ public slots:
 	void left();
 	void right();
 	void preferences();
+	void frameChanged( int );
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter);
+			bool displayStepFunction, bool opticalFitter, bool showChannelLine );
 	void curveColorPreferences();
 	void legendPreferences();
 
@@ -358,6 +359,8 @@ private:
    LegendPreferences* legendPreferencesDialog;
    QtCanvas* pixelCanvas;
    QtProfilePrefs* profilePrefs;
+   int frameIndex;
+
 
    private slots:
    	    void setPosition();

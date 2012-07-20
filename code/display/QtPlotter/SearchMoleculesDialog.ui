@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>451</height>
+    <height>462</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,6 +59,27 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="catalogLabel">
+       <property name="text">
+        <string>&lt;font color='black'&gt;Catalog:&lt;/font&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="catalogLineEdit"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="openButton">
+       <property name="text">
+        <string>Browse...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer">
@@ -76,12 +97,16 @@
      <item>
       <widget class="QLabel" name="searchLabel">
        <property name="text">
-        <string>&lt;font color='black'&gt;Search:&lt;/font&gt;</string>
+        <string>&lt;font color='black'&gt;Chemical Name:&lt;/font&gt;</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="searchLineEdit"/>
+      <widget class="QLineEdit" name="searchLineEdit">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -152,13 +177,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="openButton">
-       <property name="text">
-        <string>Open...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="searchButton">
        <property name="text">
         <string>Search</string>
@@ -168,14 +186,52 @@
     </layout>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="resultsLabel">
      <property name="text">
-      <string>&lt;font color='black'&gt;Results:&lt;/font&gt;</string>
+      <string>&lt;font color='black'&gt;Search Results:&lt;/font&gt;</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QTableWidget" name="searchResultsTable"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="applyButton">
+       <property name="text">
+        <string>Apply</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="closeButton">
+       <property name="text">
+        <string>Close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

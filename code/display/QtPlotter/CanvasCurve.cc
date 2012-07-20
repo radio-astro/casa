@@ -32,19 +32,28 @@ CanvasCurve::CanvasCurve(){
 }
 
 CanvasCurve::CanvasCurve( CurveData cData, ErrorData eData,
-			QString legendTitle, QColor cColor){
+			QString legendTitle, QColor cColor, int curveLevel ){
 	curveData = cData;
 	errorData = eData;
 	legend = legendTitle;
 	curveColor = cColor;
+	curveType = curveLevel;
 }
 
 QColor CanvasCurve::getColor() const{
 	return curveColor;
 }
 
+void CanvasCurve::setColor( QColor color ){
+	curveColor = color;
+}
+
 QString CanvasCurve::getLegend() const{
 	return legend;
+}
+
+int CanvasCurve::getCurveType() const {
+	return curveType;
 }
 
 CurveData CanvasCurve::getCurveData(){

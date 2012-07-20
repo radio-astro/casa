@@ -64,7 +64,7 @@
 using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-const int QtDisplayPanel::LEFT_MARGIN_SPACE_DEFAULT = 13;
+const int QtDisplayPanel::LEFT_MARGIN_SPACE_DEFAULT = 15;//13
 const int QtDisplayPanel::BOTTOM_MARGIN_SPACE_DEFAULT = 13;
 const int QtDisplayPanel::TOP_MARGIN_SPACE_DEFAULT = 4;
 const int QtDisplayPanel::RIGHT_MARGIN_SPACE_DEFAULT = 4;

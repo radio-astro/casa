@@ -39,10 +39,12 @@ class CanvasCurve {
 public:
 	CanvasCurve();
 	CanvasCurve( CurveData curveData, ErrorData errorData,
-			QString legend, QColor curveColor);
+			QString legend, QColor curveColor, int curveType );
 	QColor getColor() const;
+	void setColor( QColor color );
 	QString getLegend() const;
 	void setLegend( const QString& legend );
+	int getCurveType() const;
 	CurveData getCurveData();
 	CurveData getErrorData();
 	QString getToolTip( double x, double y , const double X_ERROR,
@@ -56,6 +58,7 @@ private:
 	QString legend;
 	CurveData curveData;
 	ErrorData errorData;
+	int curveType;
 };
 
 } /* namespace casa */

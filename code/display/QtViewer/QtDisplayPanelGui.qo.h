@@ -269,7 +269,10 @@ class QtDisplayPanelGui : public QtPanelBase,
 
     void axisToolUpdate( QtDisplayData *controlling_dd );
 
-    void colorBarOrientationChange();     
+    void colorBarOrientationChange();
+
+    //Notification that the frame has changed.
+    void frameChanged( int );
   
     void overlay(QHash<QString, ImageInterface<float>*>);
 

@@ -30,7 +30,7 @@
 #include <display/QtPlotter/SpecFitSettingsWidgetRadio.ui.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/SpecFitPlotDialog.qo.h>
-#include <display/QtPlotter/SearchMoleculesDialog.qo.h>
+#include <display/QtPlotter/GaussianEstimateDialog.qo.h>
 #include <casa/Containers/Record.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
@@ -57,7 +57,7 @@ public:
 
 private slots:
 	void polyFitChanged( int state );
-	void adjustTableRowCount( int count );
+	void gaussCountChanged( int count );
 	void clean();
 	void specLineFit();
 	void setOutputLogFile();
@@ -67,7 +67,9 @@ private slots:
 	void fitDone();
 	void cancelFit();
 	void showPlots();
-	void searchMolecules();
+	void specifyGaussianEstimates();
+	void gaussianEstimatesChanged();
+	//void gaussEstimateUnitsChanged( QString unitStr );
 
 private:
 	/**
@@ -87,12 +89,14 @@ private:
 	void clear();
 	void resolveOutputLogFile( );
 	void processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
+	void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 	bool processFitResultGaussian( const SpectralElement* solution,
 			int index, QList<SpecFit*>& curves);
 	bool processFitResultPolynomial( const SpectralElement* solution,
 				QList<SpecFit*>& curves);
 	double toPixels( double val) const;
 	void drawCurves( int pixelX, int pixelY );
+	SpectralCoordinate getSpectralCoordinate() const;
 
 	enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
     Ui::SpecFitSettingsWidgetRadio ui;
@@ -100,7 +104,8 @@ private:
     SpecFitThread* specFitThread;
     QProgressDialog progressDialog;
     SpecFitPlotDialog plotDialog;
-    SearchMoleculesDialog searchDialog;
+    GaussianEstimateDialog gaussEstimateDialog;
+
 
     QString outputLogPath;
     QList<QList<SpecFit*> > curveList;

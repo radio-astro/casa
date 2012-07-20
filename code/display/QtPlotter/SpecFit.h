@@ -33,6 +33,7 @@ namespace casa {
 class SpecFit {
 public:
 	SpecFit( QString suffix );
+	SpecFit( const SpecFit& other );
 	QString getSuffix();
 	virtual bool isXPixels();
 	virtual void evaluate( Vector<Float>& xValues ) = 0;
@@ -43,13 +44,16 @@ public:
 	QString getCurveName() const;
 	bool isSpecFitFor( int pixelX, int pixelY ) const;
 	void setFitCenter( int pixelX, int pixelY );
+	SpecFit& operator=(const SpecFit& other );
 	virtual ~SpecFit();
 
 protected:
+	void initialize( const SpecFit& other );
 	Vector<Float> xValues;
 	Vector<Float> yValues;
 
 private:
+
 	QString suffix;
 	QString curveName;
 	int centerX;

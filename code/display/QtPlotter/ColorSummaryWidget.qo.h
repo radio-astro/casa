@@ -49,6 +49,7 @@ private slots:
 	void addColorProfile();
 	void addColorFit();
 	void addColorFitSummary();
+	void channelLineColorChanged();
 
 	//Methods to remove colors in various categories
 	void removeColorProfile();
@@ -82,6 +83,7 @@ private:
 	void persistColorList( QSettings& settings, QListWidget* list,
 			const QString& baseStr, const QString& countStr );
 	void persist();
+	void setChannelLineLabelColor( QString colorName  );
 
     Ui::ColorSummaryWidget ui;
     QtCanvas* pixelCanvas;
@@ -92,6 +94,7 @@ private:
     QList<QString> customMainList;
     QList<QString> customFitList;
     QList<QString> customFitSummaryList;
+    QColor channelLineColor;
     enum ColorCategory {MAIN_COLOR, FIT_COLOR, SUMMARY_FIT_COLOR, END_COLOR_CATEGORY };
     enum SchemeCategory {TRADITIONAL,ALTERNATIVE, CUSTOM };
 
@@ -102,6 +105,7 @@ private:
     static const QString CUSTOM_FIT_COLOR_COUNT;
     static const QString CUSTOM_SUMMARY_COLOR_COUNT;
     static const QString COLOR_SCHEME_PREFERENCE;
+    static const QString CHANNEL_LINE_COLOR;
 
     bool traditionalChange;
     bool alternativeChange;

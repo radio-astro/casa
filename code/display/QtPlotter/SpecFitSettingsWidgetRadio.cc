@@ -35,6 +35,8 @@
 #include <display/QtPlotter/SpecFitGaussian.h>
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
+#include <display/QtPlotter/conversion/Converter.h>
+#include <display/QtPlotter/conversion/ConverterChannel.h>
 
 #include <QFileDialog>
 #include <QTemporaryFile>
@@ -101,7 +103,7 @@ void SpecFitThread::run(){
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
     : QWidget(parent), fitter( NULL ), specFitThread( NULL ),
       progressDialog("Calculating fit(s)...", "Cancel", 0, 100, this),
-      plotDialog( this ), searchDialog( this ),
+      plotDialog( this ), gaussEstimateDialog( this ),
       POINT_COUNT(20), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
@@ -129,18 +131,19 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	saveOutputChanged( saveOutput );
 
 	connect( ui.polyFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(polyFitChanged(int)) );
-	connect( ui.gaussCountSpinBox, SIGNAL(valueChanged(int)), this, SLOT(adjustTableRowCount(int)));
+	connect( ui.gaussCountSpinBox, SIGNAL(valueChanged(int)), this, SLOT(gaussCountChanged(int)));
 	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(specLineFit()));
 	connect( ui.plotButton, SIGNAL(clicked()), this, SLOT(showPlots()));
 	connect( ui.cleanButton, SIGNAL(clicked()), this, SLOT(clean()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(setOutputLogFile()));
 	connect( ui.viewButton, SIGNAL(clicked()), this, SLOT(viewOutputLogFile()));
 	connect( ui.saveOutputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(saveOutputChanged(int)));
-	connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(searchMolecules()));
-
+	connect( ui.advancedGaussianEstimatesButton, SIGNAL(clicked()), this, SLOT(specifyGaussianEstimates()));
+	connect( &gaussEstimateDialog, SIGNAL( accepted()), this, SLOT(gaussianEstimatesChanged()));
+	//connect( &gaussEstimateDialog, SIGNAL( gaussEstimateUnitsChanged(QString)), this, SLOT( gaussEstimateUnitsChanged(QString)));
 	ui.viewButton->setEnabled( false );
 	ui.plotButton->setEnabled( false );
-	ui.searchButton->setEnabled( false );
+	ui.advancedGaussianEstimatesButton->setEnabled( false );
 }
 
 void SpecFitSettingsWidgetRadio::setCanvas( QtCanvas* canvas ){
@@ -236,26 +239,47 @@ void SpecFitSettingsWidgetRadio::setUnits( QString units ){
 	if ( bracketIndex > 0 ){
 		units = "";
 	}
-	QString oldUnits = ui.channelUnitLabel->text();
+	QString oldUnits = ui.rangeGroupBox->title();
 	if ( oldUnits != units ){
 		clear();
-		ui.channelUnitLabel->setText( units );
+		int startIndex = units.indexOf( "[");
+		int endIndex = units.indexOf( "]");
+		if ( startIndex > 0 && endIndex > 0 ){
+			units = units.mid(startIndex, endIndex + 1 - startIndex);
+		}
+		ui.rangeGroupBox->setTitle( units );
 	}
 }
 
-void SpecFitSettingsWidgetRadio::adjustTableRowCount( int count ){
+void SpecFitSettingsWidgetRadio::gaussCountChanged( int count ){
 	int oldRowCount = ui.estimateTable->rowCount();
-	ui.estimateTable -> setRowCount( count );
 	//We are adding rows.
 	if ( oldRowCount < count ){
 		for ( int i = oldRowCount; i < count; i++ ){
-			SpecFitSettingsFixedTableCell* cellWidget = new SpecFitSettingsFixedTableCell();
+			ui.estimateTable->insertRow( i );
+			SpecFitSettingsFixedTableCell* cellWidget = new SpecFitSettingsFixedTableCell(ui.estimateTable);
 			ui.estimateTable->setCellWidget( i, FIXED, cellWidget );
 			ui.estimateTable->resizeRowToContents( i );
-
+		}
+	}
+	else if ( oldRowCount > count ){
+		for ( int i = oldRowCount-1; i>=count; i--){
+			SpecFitSettingsFixedTableCell* cellWidget = dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->item(i, FIXED ));
+			delete cellWidget;
+			ui.estimateTable->removeRow(i);
 		}
 	}
 	ui.estimateTable->resizeColumnToContents( FIXED );
+
+	//Enable/disable the advanced gaussian estimate button based
+	//on whether there will be any Gaussians to fit.
+	if ( count > 0 ){
+		ui.advancedGaussianEstimatesButton->setEnabled( true );
+	}
+	else {
+		ui.advancedGaussianEstimatesButton->setEnabled( false );
+	}
+	gaussEstimateDialog.setGaussCount( ui.gaussCountSpinBox->value() );
 }
 
 void SpecFitSettingsWidgetRadio::setRange(float xmin, float xmax ){
@@ -344,6 +368,21 @@ bool SpecFitSettingsWidgetRadio::isValidEstimate( QString& peakStr,
 	return validEstimate;
 }
 
+void SpecFitSettingsWidgetRadio::getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const {
+	QTableWidgetItem* peakItem = ui.estimateTable->item(index, PEAK );
+	if ( peakItem != NULL ){
+		peakStr = peakItem->text();
+	}
+	QTableWidgetItem* centerItem = ui.estimateTable->item( index, CENTER );
+	if ( centerItem != NULL ){
+		centerStr = centerItem->text();
+	}
+	QTableWidgetItem* fwhmItem = ui.estimateTable->item( index, FWHM );
+	if ( fwhmItem != NULL ){
+		fwhmStr = fwhmItem->text();
+	}
+}
+
 SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 		Bool& validEstimates ){
 	SpectralList spectralList;
@@ -351,22 +390,11 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 	if ( nGauss > 0 ){
 		int potentialEstimateCount = ui.estimateTable->rowCount();
 		if ( nGauss == potentialEstimateCount ){
-			for ( int i = 0; i < potentialEstimateCount; i++  ){
-				QTableWidgetItem* peakItem = ui.estimateTable->item(i, PEAK );
-				QString peakStr;
-				if ( peakItem != NULL ){
-					peakStr = peakItem->text();
-				}
-				QTableWidgetItem* centerItem = ui.estimateTable->item( i, CENTER );
-				QString centerStr;
-				if ( centerItem != NULL ){
-					centerStr = centerItem->text();
-				}
-				QTableWidgetItem* fwhmItem = ui.estimateTable->item( i, FWHM );
-				QString fwhmStr;
-				if ( fwhmItem != NULL ){
-					fwhmStr = fwhmItem->text();
-				}
+			for ( int i = 0; i < potentialEstimateCount; i++ ){
+			    QString peakStr;
+			    QString centerStr;
+			    QString fwhmStr;
+			    getEstimateStrings( i, peakStr, centerStr, fwhmStr );
 				SpecFitSettingsFixedTableCell* fixedItem = dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
 				QString fixedStr;
 				if ( fixedItem != NULL ){
@@ -400,40 +428,26 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 	return spectralList;
 }
 
-
-double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
-
-	//Decide if we are currently in frequency, velocity or wavelength.
-	Bool velocityUnits = false;
-	Bool wavelengthUnits = false;
-	String xAxisUnits = getXAxisUnit();
-	getConversion( xAxisUnits, velocityUnits, wavelengthUnits );
-
+SpectralCoordinate SpecFitSettingsWidgetRadio::getSpectralCoordinate() const {
 	const ImageInterface<Float>* img = this->getImage();
 	CoordinateSystem cSys = img->coordinates();
 	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+	return spectralCoordinate;
+}
 
-	//Frequency
-	//TODO:: Need to take care of channels case
-	Double pixelVal;
-	if ( !velocityUnits && !wavelengthUnits ){
-		spectralCoordinate.toPixel( pixelVal, val );
+
+double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
+	String xAxisUnit = getXAxisUnit();
+	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
+	double pixelValue = val;
+	//We are not already in pixels = channels
+	if ( xAxisUnit.length() > 0 ){
+		QString unitStr( xAxisUnit.c_str());
+		Converter* converter = Converter::getConverter( unitStr, unitStr, &spectralCoordinate );
+		pixelValue = converter->toPixel( val );
+		delete converter;
 	}
-	//Velocity
-	else if ( velocityUnits ){
-		spectralCoordinate.setVelocity( xAxisUnits );
-		spectralCoordinate.velocityToPixel( pixelVal, val );
-	}
-	//Wavelength
-	else {
-		spectralCoordinate.setWavelengthUnit( xAxisUnits );
-		Vector<Double> frequencyVector(1);
-		Vector<Double> wavelengthVector(1);
-		wavelengthVector[0] = val;
-		spectralCoordinate.wavelengthToFrequency(frequencyVector, wavelengthVector );
-		spectralCoordinate.toPixel( pixelVal, frequencyVector[0]);
-	}
-	return pixelVal;
+	return pixelValue;
 }
 
 void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ){
@@ -678,8 +692,8 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 			Util::showUserMessage( msg, this );
 		}
 	}
-	ui.viewButton->setEnabled( true );
-	//ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
+	//ui.viewButton->setEnabled( true );
+	ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 }
 
 
@@ -874,16 +888,102 @@ void SpecFitSettingsWidgetRadio::pixelsChanged( int pixX, int pixY ){
 	drawCurves( pixX, pixY);
 }
 
-
-
-
 void SpecFitSettingsWidgetRadio::showPlots(){
 	plotDialog.show();
 }
 
-void SpecFitSettingsWidgetRadio::searchMolecules(){
-	searchDialog.show();
+//Called when the Gauss Estimate dialog is shown.  We populate it with the
+//current information.
+void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
+
+	//Let the dialog know the x axis units we are using
+	String axisUnitStr = getXAxisUnit();
+	QString unitStr( axisUnitStr.c_str());
+	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
+	Converter* converter = NULL;
+	if ( axisUnitStr == "" ){
+		converter = new ConverterChannel( &spectralCoordinate );
+	}
+	gaussEstimateDialog.setSpecFitUnits( unitStr );
+
+	//List the dialog know about the spectral axis so it can translate
+	//units
+	gaussEstimateDialog.setSpectralCoordinate( spectralCoordinate );
+
+	//Provide the dialog with the data and the main curve color
+	gaussEstimateDialog.setCurveData( getXValues(), taskMonitor->getYValues());
+	gaussEstimateDialog.setCurveColor( pixelCanvas->getCurveColor(0));
+
+	//If there are any estimates specified, tell the dialog about them.
+	int estimateCount = ui.estimateTable->rowCount();
+	QList<SpecFitGaussian> estimates;
+	for ( int i = 0; i < estimateCount; i++ ){
+		QString peakStr;
+		QString centerStr;
+		QString fwhmStr;
+		getEstimateStrings( i, peakStr, centerStr, fwhmStr );
+		float peak = static_cast<float>(peakStr.toDouble());
+		float center = static_cast<float>(centerStr.toDouble());
+		float fwhm = static_cast<float>(fwhmStr.toDouble());
+		if ( converter != NULL ){
+			float fwhmPt = center - fwhm;
+			center = converter->convert( center );
+			fwhmPt = converter->convert( fwhmPt );
+			fwhm = qAbs( center - fwhmPt );
+		}
+		estimates.append(SpecFitGaussian(peak,center,fwhm,i) );
+		SpecFitSettingsFixedTableCell* cellWidget =
+					dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
+		if ( cellWidget != NULL ){
+			estimates[i].setPeakFixed( cellWidget->isPeakFixed());
+			estimates[i].setCenterFixed( cellWidget->isCenterFixed());
+			estimates[i].setFwhmFixed( cellWidget->isFWHMFixed());
+		}
+	}
+	delete converter;
+	gaussEstimateDialog.setEstimates( estimates );
+	gaussEstimateDialog.show();
 }
+
+void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
+	int count = ui.gaussCountSpinBox->value();
+	QString dialogUnits = gaussEstimateDialog.getUnits();
+	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
+	QString xAxisUnit(this->getXAxisUnit().c_str());
+	Converter* converter = Converter::getConverter( dialogUnits, xAxisUnit, &spectralCoordinate );
+	for ( int i = 0; i < count; i++ ){
+		SpecFitGaussian estimate = gaussEstimateDialog.getEstimate( i );
+		float peakVal = estimate.getPeak();
+		float centerVal = estimate.getCenter();
+		float fwhmVal = estimate.getFWHM();
+		float fwhmPt = centerVal - fwhmVal;
+		if ( xAxisUnit.length() > 0 ){
+			centerVal = converter->convert( centerVal );
+			fwhmPt = converter->convert( fwhmPt );
+		}
+		else {
+			centerVal = converter->toPixel( centerVal );
+			fwhmPt = converter->toPixel( fwhmPt );
+		}
+		fwhmVal = qAbs(centerVal - fwhmPt);
+
+		setEstimateValue( i, PEAK, peakVal );
+		setEstimateValue( i, CENTER, centerVal );
+		setEstimateValue( i, FWHM, fwhmVal );
+		bool fixedPeak = estimate.isPeakFixed();
+		bool fixedCenter = estimate.isCenterFixed();
+		bool fixedFwhm = estimate.isFwhmFixed();
+		SpecFitSettingsFixedTableCell* cellWidget =
+			dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
+		if ( cellWidget != NULL ){
+			cellWidget->setFixedPeak( fixedPeak );
+			cellWidget->setFixedCenter( fixedCenter );
+			cellWidget->setFixedFwhm( fixedFwhm );
+		}
+	}
+	delete converter;
+}
+
 
 SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()
 {

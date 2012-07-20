@@ -54,8 +54,8 @@ QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
            MARGIN_LEFT(80), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(10), FRACZOOM(20),
           title(), yLabel(), welcome(),
-          showTopAxis( true ), showToolTips( true ), displayStepFunction( false ),
-          gaussianContextMenu( this ), showLegend( true ), legendPosition( 0 )
+          showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
+          gaussianContextMenu( this ), frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
 
 
@@ -205,7 +205,7 @@ QColor QtCanvas::getCurveColor( int id ){
 void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
                                     const QString& lbl, ColorCategory level ){
 	QColor curveColor = getDiscreteColor( level, id );
-	CanvasCurve curve( data, error, lbl, curveColor );
+	CanvasCurve curve( data, error, lbl, curveColor, level );
 	curveMap[id]     = curve;
     refreshPixmap();
     emit curvesChanged();
@@ -816,15 +816,12 @@ void QtCanvas::refreshPixmap()
 	QPainter painter(&pixmap);
 
 	drawLabels(&painter);
-	if (!imageMode)
-	{
+	if (!imageMode){
 		drawGrid(&painter);
 		drawCurves(&painter);
-		//if (xRangeIsShown)
-		//	drawxRange(&painter);
+		drawFrameMarker(&painter);
 	}
-	else
-	{
+	else {
 		drawBackBuffer(&painter);
 		drawTicks(&painter);
 	}
@@ -833,6 +830,21 @@ void QtCanvas::refreshPixmap()
 	}
 	update();
 }
+
+void QtCanvas::drawFrameMarker( QPainter* painter ){
+	QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
+	QtPlotSettings settings = zoomStack[curZoom];
+	QPen framePen( frameMarkerColor );
+	QPen oldPen = painter->pen();
+	painter->setPen( framePen );
+	int xPixel = getPixelX( framePositionX );
+	if ( showFrameMarker ){
+	    painter->drawLine(xPixel, rect.top(), xPixel, rect.bottom());
+	}
+}
+
+
+
 void QtCanvas::drawBackBuffer(QPainter *painter)
 {
     //QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
@@ -1139,6 +1151,15 @@ void QtCanvas::setFitCurveColors( const QList<QString>& colors ){
 
 void QtCanvas::setSummaryCurveColors( const QList<QString>& colors ){
 	fitSummaryCurveColorList = colors;
+}
+
+void QtCanvas::curveColorsChanged(){
+	for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
+		ColorCategory level = static_cast<ColorCategory>(curveMap[i].getCurveType());
+		QColor newCurveColor = getDiscreteColor( level, i );
+		curveMap[i].setColor( newCurveColor );
+	}
+	refreshPixmap();
 }
 
 
@@ -1631,16 +1652,35 @@ void QtCanvas::setLegendPosition( int position ){
 	}
 }
 
+bool QtCanvas::isShowChannelLine(){
+	return showFrameMarker;
+}
+
+void QtCanvas::setShowChannelLine( bool showLine ){
+	bool oldShowFrameMarker = showFrameMarker;
+	showFrameMarker = showLine;
+	if ( oldShowFrameMarker != showFrameMarker ){
+		refreshPixmap();
+	}
+}
+
+void QtCanvas::setChannelLineColor( QColor color ){
+	frameMarkerColor = color;
+}
+
 int QtCanvas::getLegendPosition() const {
 	return legendPosition;
 }
-
-/*CanvasCurve& QtCanvas::getCurve( int id ){
-	return curveMap[id];
-}*/
 
 void QtCanvas::curveLabelsChanged(){
 	refreshPixmap();
 }
 
+void QtCanvas::setFrameMarker( float framePosX ){
+	float oldFramePosX = framePositionX;
+	framePositionX = framePosX;
+	if ( oldFramePosX != framePositionX ){
+		refreshPixmap();
+	}
+}
 }

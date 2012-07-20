@@ -26,7 +26,7 @@
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/ColorSummaryDelegate.h>
 #include <display/QtPlotter/Util.h>
-#include <QDebug>
+
 #include <QColorDialog>
 
 namespace casa {
@@ -38,6 +38,7 @@ const QString ColorSummaryWidget::CUSTOM_PROFILE_COLOR_COUNT = "Custom Profile C
 const QString ColorSummaryWidget::CUSTOM_FIT_COLOR_COUNT = "Custom Fit Color Count";
 const QString ColorSummaryWidget::CUSTOM_SUMMARY_COLOR_COUNT = "Custom Summary Color Count";
 const QString ColorSummaryWidget::COLOR_SCHEME_PREFERENCE = "Color Scheme Preference";
+const QString ColorSummaryWidget::CHANNEL_LINE_COLOR = "Channel Line Color";
 
 ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
     : QDialog(parent), traditionalChange( false ), alternativeChange( false ){
@@ -60,6 +61,7 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	connect( ui.alternativeRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
 	connect( ui.customRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
 
+	connect( ui.channelLineColorButton, SIGNAL(clicked()), this, SLOT(channelLineColorChanged()));
 
 	//Initialize properties of the list
 	ui.profileCurveList->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -71,7 +73,6 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	ui.profileCurveList->setItemDelegate( new ColorSummaryDelegate( this ));
 	ui.fitCurveList->setItemDelegate(  new ColorSummaryDelegate( this ));
 	ui.fitCurveSummaryList->setItemDelegate( new ColorSummaryDelegate( this ));
-	qDebug() << "Color widget constructor initializing colors";
 
 	//Read in the color schemes
 	initializePresetColors();
@@ -82,18 +83,21 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	//Display the appropriate colors in the three
 	//GUI lists.
 	populateColorLists();
+
+
 }
 
 void ColorSummaryWidget::initializePresetColors(){
 	 mainCurveColorList << "#0000FF" <<  "#9102D4" << "#BA81D4"<< "#000099"<< "#0000D4";
-	 fitCurveColorList << "#006400" << "#00B000" << "#5C8A00" << "#75B000" <<
-	  			"#426300" << "#00957B" << "#00E0BB" << "#00E025" << "#00BA1F" <<
-	  			"#96E000";
-	 fitSummaryCurveColorList <<  "#CA5F00"<<"#8A6C00" << "#B08A00" << "#D6A800" <<
+	 fitCurveColorList <<  "#CA5F00"<<"#8A6C00" << "#B08A00" << "#D6A800" <<
 	  			"#A34C00"  << "#7F3A00";
+	 fitSummaryCurveColorList << "#00957B" <<"#00E0BB" << "#006400" << "#00B000" << "#5C8A00" << "#75B000" <<
+		"#426300" << "#00E025" << "#00BA1F" << "#96E000";
+
 	 traditionalCurveColorList << "red" << "blue" << "green" << "cyan" << "lightGray" <<
 	      		"magenta" << "yellow" << "darkRed" << "darkBlue" << "darkGreen" <<
 	      		"darkCyan" << "darkGray" << "darkMagenta" << "gold" << "gray";
+	 channelLineColor = Qt::magenta;
 }
 
 void ColorSummaryWidget::initializeUserColors(){
@@ -127,6 +131,11 @@ void ColorSummaryWidget::initializeUserColors(){
 	else {
 		ui.traditionalRadioButton->setChecked( true );
 	}
+	QColor basicColor = Qt::magenta;
+	QString channelLineColorStr = settings.value( CHANNEL_LINE_COLOR, basicColor.name()).toString();
+	channelLineColor.setNamedColor( channelLineColorStr );
+	setChannelLineLabelColor( channelLineColorStr );
+
 }
 
 void ColorSummaryWidget::readCustomColor( QSettings& settings,
@@ -135,7 +144,6 @@ void ColorSummaryWidget::readCustomColor( QSettings& settings,
 	for ( int i = 0; i < colorCount; i++ ){
 		QString lookupStr = baseLookup + QString::number(i);
 		QString colorName = settings.value( lookupStr ).toString();
-		qDebug() << "Read color " << lookupStr << " value " << colorName;
 		colorList.append( colorName );
 	}
 }
@@ -180,6 +188,11 @@ void ColorSummaryWidget::addColor( QListWidget* list ){
 	}
 }
 
+void ColorSummaryWidget::setChannelLineLabelColor( QString colorName  ){
+	QString styleColor =  "QLabel { background-color: " + colorName + "; }";
+	ui.channelLineColorLabel->setStyleSheet( styleColor );
+}
+
 //---------------------------------------------------------------------
 //          Removing colors
 //---------------------------------------------------------------------
@@ -197,7 +210,6 @@ void ColorSummaryWidget::removeColorFitSummary() {
 }
 
 void ColorSummaryWidget::removeColor( QListWidget* list ){
-	qDebug() << "Before remove count is " << list->count();
 	int row = list->currentRow();
 	if ( row >= 0 ){
 		QListWidgetItem* listItem = list->takeItem( row );
@@ -210,9 +222,6 @@ void ColorSummaryWidget::removeColor( QListWidget* list ){
 		QString msg( "Please select a color in the list to delete.");
 		Util::showUserMessage( msg, this );
 	}
-	int rowCount = list->count();
-	qDebug() << "After remove count is "<< rowCount;
-
 }
 
 //----------------------------------------------------------------------
@@ -233,6 +242,14 @@ void ColorSummaryWidget::colorSchemeChanged(){
 	ui.deleteSummaryFitCurveButton->setVisible( editable );
 }
 
+
+void ColorSummaryWidget::channelLineColorChanged(){
+	QColor selectedColor = QColorDialog::getColor( channelLineColor, this );
+	if ( selectedColor.isValid() ){
+		channelLineColor = selectedColor;
+		setChannelLineLabelColor( selectedColor.name() );
+	}
+}
 
 
 //-------------------------------------------------------------------------
@@ -300,15 +317,13 @@ void ColorSummaryWidget::persistColorList( QSettings& settings, QListWidget* lis
 		if ( listItem != NULL ){
 			QColor listColor = listItem->backgroundColor();
 			QString colorStr = listColor.name();
-			qDebug() << "Persisting " << persistStr << " value=" << colorStr;
 			settings.setValue( persistStr, colorStr );
 		}
 	}
 }
 
 void ColorSummaryWidget::pixelCanvasColorChange(){
-	bool traditionalColors = ui.traditionalRadioButton->isChecked();
-	pixelCanvas->setTraditionalColors( traditionalColors );
+
 	if ( ui.customRadioButton->isChecked() ){
 		pixelCanvas->setMainCurveColors( customMainList );
 		pixelCanvas->setFitCurveColors( customFitList );
@@ -322,11 +337,15 @@ void ColorSummaryWidget::pixelCanvasColorChange(){
 	else {
 		pixelCanvas->setTraditionalCurveColors( traditionalCurveColorList);
 	}
+	bool traditionalColors = ui.traditionalRadioButton->isChecked();
+	pixelCanvas->setTraditionalColors( traditionalColors );
+
+	pixelCanvas->setChannelLineColor( channelLineColor );
+	pixelCanvas->curveColorsChanged();
 }
 
 void ColorSummaryWidget::accept(){
 	//Tell the canvas about the color changes
-	qDebug() << "Accepting color changes";
 	pixelCanvasColorChange();
 	//Persist the color changes
 	persist();
@@ -359,6 +378,7 @@ void ColorSummaryWidget::persist(){
 		persistColorList( settings, ui.fitCurveList, CUSTOM_FIT_COLOR, CUSTOM_FIT_COLOR_COUNT );
 		persistColorList( settings, ui.fitCurveSummaryList, CUSTOM_SUMMARY_COLOR, CUSTOM_SUMMARY_COLOR_COUNT );
 	}
+	settings.setValue( CHANNEL_LINE_COLOR, channelLineColor.name());
 }
 
 void ColorSummaryWidget::reject(){
@@ -366,7 +386,7 @@ void ColorSummaryWidget::reject(){
 	customMainList.clear();
 	customFitList.clear();
 	customFitSummaryList.clear();
-	qDebug() << "Rejecting color list";
+
 	initializeUserColors();
 	//Put the old colors back into the list
 	populateColorLists();

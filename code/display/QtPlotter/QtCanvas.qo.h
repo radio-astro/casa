@@ -80,11 +80,13 @@ public:
 
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
+	void setFrameMarker( float framePositionX );
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
 	QString getCurveName(int id);
 	void setCurveName(int id, const QString& name );
+	void curveColorsChanged();
 	QColor getCurveColor( int id );
 	int getLineCount();
 	void curveLabelsChanged();
@@ -93,6 +95,8 @@ public:
 	void setImageMode(bool);
 	QPixmap* graph();
 	void drawBackBuffer(QPainter *);
+	//Draws a vertical line indicating the current frame.
+	void drawFrameMarker( QPainter* );
 
 	//Plotting curves
 	void plotPolyLines(QString);
@@ -115,6 +119,10 @@ public:
 
 	void setTitle(const QString &text, int fontSize = 13,const QString &font = FONT_NAME);
 	QString getTitle(){return title.text;};
+
+	bool isShowChannelLine();
+	void setShowChannelLine( bool showLine );
+	void setChannelLineColor( QColor color );
 
 	void setXLabel(const QString &text, int fontSize = 10,
 			const QString &font = FONT_NAME, QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
@@ -172,7 +180,6 @@ public:
 	bool isShowLegend() const;
 	void setLegendPosition( int position );
 	int getLegendPosition() const;
-	//CanvasCurve& getCurve( int id );
 
 public slots:
    void zoomIn();
@@ -360,6 +367,7 @@ private:
 
 	bool showTopAxis;
 	bool showToolTips;
+	bool showFrameMarker;
 	bool displayStepFunction;
 	QString toolTipXUnit;
 	QString toolTipYUnit;
@@ -382,6 +390,7 @@ private:
 	 * @param colorCategory the type of item that needs to be drawn.
 	 */
 	QColor getDiscreteColor(ColorCategory colorCategory, int id=0);
+	QColor frameMarkerColor;
 	QList<QString> mainCurveColorList;
 	QList<QString> fitCurveColorList;
 	QList<QString> fitSummaryCurveColorList;
@@ -402,6 +411,10 @@ private:
 	//Where the curve legend should appear relative to this
 	//canvas.
 	int legendPosition;
+
+	//The x location for the vertical line representing the
+	//current frame position.
+	float framePositionX;
 
 };
 

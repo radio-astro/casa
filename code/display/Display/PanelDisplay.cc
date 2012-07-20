@@ -60,7 +60,7 @@ PanelDisplay::PanelDisplay(PixelCanvas* pixelcanvas,
   myWCLI = new ConstListIter<WorldCanvas* >(itsWCList);
   itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
   itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
-  itslpgm = 10;
+  itslpgm =10;
   itsrpgm = 1; //4
   itstpgm = 1; //4
   itsbpgm = 7;

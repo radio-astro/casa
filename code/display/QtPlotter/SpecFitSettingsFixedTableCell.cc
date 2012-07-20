@@ -23,7 +23,6 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "SpecFitSettingsFixedTableCell.qo.h"
-#include <QDebug>
 
 SpecFitSettingsFixedTableCell::SpecFitSettingsFixedTableCell(QWidget *parent)
     : QWidget(parent),
@@ -37,6 +36,30 @@ SpecFitSettingsFixedTableCell::SpecFitSettingsFixedTableCell(QWidget *parent)
 QSize SpecFitSettingsFixedTableCell::sizeHint() const {
 	QSize suggestedSize( 150, 35 );
 	return suggestedSize;
+}
+
+void SpecFitSettingsFixedTableCell::setFixedCenter( bool fixed ){
+	ui.centerCheckBox->setChecked( fixed );
+}
+
+void SpecFitSettingsFixedTableCell::setFixedPeak( bool fixed ){
+	ui.peakCheckBox->setChecked( fixed );
+}
+
+void SpecFitSettingsFixedTableCell::setFixedFwhm( bool fixed ){
+	ui.fwhmCheckBox->setChecked( fixed );
+}
+
+bool SpecFitSettingsFixedTableCell::isCenterFixed() const {
+	return ui.centerCheckBox->isChecked();
+}
+
+bool SpecFitSettingsFixedTableCell::isFWHMFixed() const {
+	return ui.fwhmCheckBox->isChecked();
+}
+
+bool SpecFitSettingsFixedTableCell::isPeakFixed() const {
+	return ui.peakCheckBox->isChecked();
 }
 
 QString SpecFitSettingsFixedTableCell::getFixedStr() const {

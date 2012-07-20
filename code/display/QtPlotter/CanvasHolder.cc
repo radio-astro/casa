@@ -24,7 +24,6 @@
 //#
 #include "CanvasHolder.qo.h"
 
-#include <QDebug>
 #include <QFormLayout>
 
 namespace casa {
@@ -91,13 +90,8 @@ void CanvasHolder::refreshLegend(){
 		//Put the new legend items in
 		QFormLayout* layout = new QFormLayout( legend );
 		int curveCount = pixelCanvas.getLineCount();
-		qDebug() << "Number of curves is " << curveCount;
 		for ( int i = 0; i < curveCount; i++ ){
-			qDebug() << "Making layout";
-			//QHBoxLayout* itemLayout = new QHBoxLayout();
-			//CanvasCurve curve = pixelCanvas.getCurve(i);
-			QColor itemColor = pixelCanvas.getCurveColor(i);//curve.getColor();
-			qDebug() << "Curve color is " << itemColor;
+			QColor itemColor = pixelCanvas.getCurveColor(i);
 			QString itemLabel = pixelCanvas.getCurveName( i );
 
 			QLabel* colorLabel = NULL;
@@ -106,7 +100,6 @@ void CanvasHolder::refreshLegend(){
 				QPixmap labelColor( 20, 5 );
 				labelColor.fill( itemColor );
 				colorLabel->setPixmap( labelColor );
-				//itemLayout->addWidget( colorLabel );
 			}
 
 			QLabel* textLabel = new QLabel( legend );
@@ -115,7 +108,6 @@ void CanvasHolder::refreshLegend(){
 				fontColor = itemColor.name();
 			}
 			QString labelTxt("<font color='"+fontColor+"'>"+itemLabel+"</font>");
-			qDebug() << "Setting text to " << labelTxt;
 			textLabel->setText( labelTxt );
 			textLabel->setAlignment(Qt::AlignLeft);
 			layout->addRow(colorLabel, textLabel );
@@ -144,7 +136,6 @@ void CanvasHolder::addVerticalLegend( QBoxLayout* horizontalLayout ){
 void CanvasHolder::changeLegendDisplay(){
 
 	//Delete the existing layout.
-	qDebug() << "Changing Legend display";
 	refreshLegend();
 	QBoxLayout* holderLayout = dynamic_cast<QBoxLayout*>(layout());
 	if ( holderLayout != NULL ){
@@ -163,7 +154,6 @@ void CanvasHolder::changeLegendDisplay(){
 	}
 	else if ( legendLocation == CANVAS_BELOW ){
 		QVBoxLayout* holderLayout = new QVBoxLayout( this );
-		qDebug() << "Made canvas below layout";
 		holderLayout->addWidget( &pixelCanvas );
 		if ( showLegend ){
 			addHorizontalLegend( holderLayout );
@@ -172,7 +162,6 @@ void CanvasHolder::changeLegendDisplay(){
 	}
 	//The pixel canvas will show the legend internally (or not)
 	else {
-		qDebug() << "Default layout";
 		QVBoxLayout* holderLayout = new QVBoxLayout( this );
 		holderLayout -> addWidget( &pixelCanvas );
 		setLayout( holderLayout );
@@ -180,7 +169,6 @@ void CanvasHolder::changeLegendDisplay(){
 }
 
 QtCanvas* CanvasHolder::getCanvas(){
-	qDebug() << "CanvasHolder returning the pixel canvas";
 	return &pixelCanvas;
 }
 

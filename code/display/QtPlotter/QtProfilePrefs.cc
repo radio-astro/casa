@@ -40,6 +40,7 @@ const QString QtProfilePrefs::TOOLTIPS = "Tooltips";
 const QString QtProfilePrefs::TOP_AXIS = "Top Axis";
 const QString QtProfilePrefs::STEP_FUNCTION = "Step Function";
 const QString QtProfilePrefs::OPTICAL = "Optical";
+const QString QtProfilePrefs::CHANNEL_LINE = "Channel Line";
 
 QtProfilePrefs::~QtProfilePrefs()
 {
@@ -54,7 +55,7 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 
 QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 		int stateGrid, int stateMProf, int stateRel, bool showToolTips,
-		bool showTopAxis, bool displayAsStepFunction, bool opticalFit )
+		bool showTopAxis, bool displayAsStepFunction, bool opticalFit, bool channelLine )
 :QDialog(parent)
 {
 	// paint the GUI
@@ -92,6 +93,9 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 
 	relative->setEnabled(overlayDefault);
 
+	channelLineDefault = settings.value( CHANNEL_LINE, channelLine ).toBool();
+	channelLineCheckBox->setChecked( channelLineDefault );
+
 	initializeConnections();
 }
 
@@ -100,7 +104,7 @@ void QtProfilePrefs::syncUserPreferences(){
 	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
 		(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 		topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
-		opticalSpecFitCheckBox->checkState() ) ;
+		opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
 }
 
 void QtProfilePrefs::initializeConnections(){
@@ -120,6 +124,7 @@ void QtProfilePrefs::reset(){
 	stepFunctionCheckBox->setChecked( stepFunctionDefault );
 	relative->setChecked( relativeDefault );
 	relative->setEnabled( overlayDefault );
+	channelLineCheckBox->setChecked( channelLineDefault );
 }
 
 void QtProfilePrefs::persist(){
@@ -152,6 +157,9 @@ void QtProfilePrefs::persist(){
 
 	relativeDefault = relative->isChecked();
 	settings.setValue( RELATIVE, relativeDefault );
+
+	channelLineDefault = channelLineCheckBox->isChecked();
+	settings.setValue( CHANNEL_LINE, channelLineDefault );
 }
 
 
@@ -160,7 +168,7 @@ void QtProfilePrefs::accepted(){
 	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
 			(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 			topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
-			opticalSpecFitCheckBox->checkState() ) ;
+			opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
 	close();
 }
 

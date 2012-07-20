@@ -78,14 +78,14 @@ public:
 	QtProfilePrefs(QWidget *parent = 0);
 	QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter);
+			bool displayStepFunction, bool opticalFitter, bool channelLine);
 	~QtProfilePrefs();
 	void syncUserPreferences();
 
 signals:
 	void currentPrefs(int stateAutoX, int stateAutoY, int showGrid, int stateMProf,
 			int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter);
+			bool displayStepFunction, bool opticalFitter, bool channelLine);
 
 private slots:
 	void accepted();
@@ -107,6 +107,7 @@ private:
 	static const QString TOP_AXIS;
 	static const QString STEP_FUNCTION;
 	static const QString OPTICAL;
+	static const QString CHANNEL_LINE;
 
 	bool xAutoScaleDefault;
 	bool yAutoScaleDefault;
@@ -117,6 +118,7 @@ private:
 	bool topAxisDefault;
 	bool stepFunctionDefault;
 	bool opticalDefault;
+	bool channelLineDefault;
 };
 
 }

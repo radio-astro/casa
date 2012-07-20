@@ -935,7 +935,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
   Int play  = qdp_->animating();
   Bool modez = qdp_->modeZ();
   
-
+  emit frameChanged( frm );
   frameEdit_->setText(QString::number(frm));
   nFrmsLbl_ ->setText(QString::number(len));
   
@@ -1462,8 +1462,10 @@ void QtDisplayPanelGui::showImageProfile() {
 					this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
 			connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
 					this, SLOT(doSelectChannel(const Vector<float>&,float)));
-
-
+			connect( pdd, SIGNAL(pixelsChanged(int,int)), profile_,
+				 SLOT(pixelsChanged(int,int)) );
+			connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
+			
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
 			    if (pos) {
@@ -1622,6 +1624,10 @@ void QtDisplayPanelGui::showImageProfile() {
 	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
 	qrs->generateExistingRegionUpdates( );
     }
+
+    //Let the profiler know about the current frame.
+    int frameIndex = qdp_->frame();
+    profile_->frameChanged( frameIndex );
 
 }
 

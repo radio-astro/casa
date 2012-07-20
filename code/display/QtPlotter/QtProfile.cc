@@ -757,9 +757,9 @@ void QtProfile::down()
 void QtProfile::initPreferences(){
 	profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
 			pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
-			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
-				this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
+			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(), pixelCanvas->isShowChannelLine());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool, bool)),
+				this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool, bool)));
 	profilePrefs->syncUserPreferences();
 }
 
@@ -769,7 +769,8 @@ void QtProfile::preferences()
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
-				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter ){
+				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
+				bool showChannelLine){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
@@ -778,6 +779,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowGrid(showGrid);
 	pixelCanvas->setShowToolTips( showToolTips );
 	pixelCanvas->setShowTopAxis( showTopAxis );
+	pixelCanvas->setShowChannelLine( showChannelLine );
 	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 	topAxisCType -> setEnabled( showTopAxis );
 	
@@ -818,7 +820,7 @@ void QtProfile::changeCoordinate(const QString &text) {
 
 
 void QtProfile::changeFrame(const QString &text) {
-	//cout << "In change frame with input: " << text.toStdString() <<" coordinateType: " << coordinateType.c_str()<< endl;
+	//qDebug() << "In change frame with input: " << text <<" coordinateType: " << coordinateType.c_str();
 	spcRefFrame=String(text.toStdString());
 	//changeCoordinateType(QString(coordinateType.c_str()));
 	changeCoordinateType(QString(ctypeUnit.c_str()));
@@ -853,8 +855,10 @@ void QtProfile::changeCoordinateType(const QString &text ) {
 
 		//cout << "put to rc.viewer: " << text.toStdString() << endl;
 	persist( ".freqcoord.type", text);
-	if(lastPX.nelements() > 0){ // update display with new coord type
+	if(lastPX.nelements() > 0){
+		// update display with new coord type
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+		frameChanged( -1 );
 	}
 
 }
@@ -2523,5 +2527,14 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::legendPreferences(){
 		legendPreferencesDialog->show();
+	}
+
+	void QtProfile::frameChanged( int frameNumber ){
+		if ( frameNumber >= 0 ){
+			frameIndex = frameNumber;
+		}
+		if ( 0 <= frameIndex && frameIndex < static_cast<int>(z_xval.size()) ){
+			pixelCanvas->setFrameMarker( z_xval[frameIndex]);
+		}
 	}
 }

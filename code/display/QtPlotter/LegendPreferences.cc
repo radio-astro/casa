@@ -26,7 +26,6 @@
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/CanvasHolder.qo.h>
 #include <QSettings>
-#include <QDebug>
 #include <QListWidgetItem>
 
 namespace casa {
@@ -97,7 +96,6 @@ void LegendPreferences::initializeUserPreferences(){
 	bool showColorBar = settings.value( LEGEND_COLOR_BAR, showColorBarDefault).toBool();
 	ui.colorBarCheckBox->setChecked( showColorBar );
 
-	qDebug() << "Initialize user preferences visibility=" << legendVisible;
 	legendVisibilityChanged( );
 }
 
@@ -159,10 +157,10 @@ void LegendPreferences::curveLabelChange(){
 
 void LegendPreferences::accept(){
 	//Tell the canvas about the legend changes
-	qDebug() << "Accepting legend changes";
 	canvasLegendChange();
 	colorBarVisibilityChange();
 	curveLabelChange();
+
 	//Persist the legend changes
 	persist();
 

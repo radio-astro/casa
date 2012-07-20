@@ -38,6 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static double degMinSecToRadians( int degrees, int mins, float secs );
 			static double hrMinSecToRadians( int hours, int mins, float secs );
 			static QString toHTML( const QString& baseStr );
+
 		private:
 			Util();
 			virtual ~Util();

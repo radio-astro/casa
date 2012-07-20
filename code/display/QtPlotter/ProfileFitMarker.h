@@ -50,8 +50,6 @@ private:
 	double fwhmHeight;
 	bool centerPeakSpecified;
 	bool fwhmSpecified;
-	//static const QString CENTER_PEAK_LABEL;
-	//static const QString FWHM_LABEL;
 };
 
 } /* namespace casa */

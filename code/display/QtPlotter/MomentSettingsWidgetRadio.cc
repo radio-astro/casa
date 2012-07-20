@@ -33,7 +33,7 @@
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MeasurementSets/MS1ToMS2Converter.h>
-#include <QDebug>
+
 #include <QFileDialog>
 #include <QTime>
 #include <QTemporaryFile>

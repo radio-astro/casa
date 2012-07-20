@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>178</width>
-    <height>296</height>
+    <height>312</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,6 +92,16 @@
     <widget class="QCheckBox" name="opticalSpecFitCheckBox">
      <property name="text">
       <string>Optical</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="channelLineCheckBox">
+     <property name="text">
+      <string>Channel Line</string>
      </property>
      <property name="checked">
       <bool>true</bool>

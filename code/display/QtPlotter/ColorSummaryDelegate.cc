@@ -31,7 +31,6 @@
  * a black box around it.
  */
 #include "ColorSummaryDelegate.h"
-#include <QDebug>
 #include <QPen>
 #include <QPainter>
 
