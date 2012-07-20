@@ -385,6 +385,17 @@ class imregrid_test(unittest.TestCase):
         regridded = myia.regrid(axes=[0, 1], csys=csys.torecord())
         self.assertRaises(Exception, myia.regrid, axes=[0,1,2], csys=csys.torecord())
             
+    def test_CAS_4315(self):
+        """ test ia.regrid does not leave image open after tool is closed"""
+        ia.fromshape("",[100,100,1,1])
+        ib = ia.regrid(
+            outfile='moulou1', csys=ia.coordsys().torecord(), axes=[0,1],
+            overwrite=True, shape=[100, 100, 1, 1]
+        )
+        ib.done()
+        self.assertTrue(len(tb.showcache()) == 0)
+        
+            
 def suite():
     return [imregrid_test]
     

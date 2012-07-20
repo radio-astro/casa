@@ -2495,7 +2495,7 @@ image* image::regrid(
 				axes, *Region, mask, methodU, decimate, replicate,
 				doRefChange, dropDegenerateAxes, overwrite,
 				forceRegrid, specAsVelocity, stretch
-			)
+			), False
 		);
 	}
 	catch (AipsError x) {
