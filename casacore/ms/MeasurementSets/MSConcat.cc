@@ -369,6 +369,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   Int defaultScanOffset=0;
   SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
   SimpleOrderedMap <Int, Int> encountered(-1);
+  vector<Int> distinctObsIdSet;
+  vector<Int> minScan;
 
   if(reindexObsidAndScan){
 
@@ -389,8 +391,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     // find the distinct ObsIds in use in this MS
     // and the maximum scan ID in each of them
     
-    vector<Int> distinctObsIdSet;
-    vector<Int> minScan;
     Int maxScanThis=0;
     
     // read the initial values from a file if it exists
@@ -427,56 +427,37 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     }
     else{
       log << LogIO::NORMAL << "Will create auxiliary file " << obsidAndScanTableName << LogIO::POST;
+
+      // determine the values for distinctObsIdSet, minScan, maxScanThis from scratch
+      for(uInt r = 0; r < theseRows; r++) {
+	Int oid = theseObsIds[r];
+	Int scanid = theseScans[r];
+	Bool found = False;
+	uInt i;
+	for(i=0; i<distinctObsIdSet.size(); i++){
+	  if(distinctObsIdSet[i]==oid){
+	    found = True;
+	    break;
+	  }
+	}
+	if(found){
+	  if(scanid<minScan[i]){
+	    minScan[i] = scanid;
+	  }
+	}
+	else {
+	  distinctObsIdSet.push_back(oid);
+	  minScan.push_back(scanid); 
+	}
+	if(scanid>maxScanThis){
+	  maxScanThis = scanid;
+	}
+      }
+
     }
     ifs.close();
     
-    for(uInt r = 0; r < theseRows; r++) {
-      Int oid = theseObsIds[r];
-      Int scanid = theseScans[r];
-      Bool found = False;
-      uInt i;
-      for(i=0; i<distinctObsIdSet.size(); i++){
-	if(distinctObsIdSet[i]==oid){
-	  found = True;
-	  break;
-	}
-      }
-      if(found){
-	if(scanid<minScan[i]){
-	  minScan[i] = scanid;
-	}
-      }
-      else {
-	distinctObsIdSet.push_back(oid);
-	minScan.push_back(scanid); 
-      }
-      if(scanid>maxScanThis){
-	maxScanThis = scanid;
-      }
-    }
-    
-    // update or create the file with the initial values for the next concat
-    std::ofstream ofs;
-    ofs.open (obsidAndScanTableName.c_str(), ofstream::out);
-    if (!ofs) {
-      log << LogIO::WARN << "Error opening file " << obsidAndScanTableName 
-	  << "will continue but the next virtual concat will lack this information:" << LogIO::POST;
-      log << "distinctObsIdSet " << Vector<Int>(distinctObsIdSet) << endl;
-      log << "minScan " << Vector<Int>(minScan) << endl;
-      log << "maxScanThis " << maxScanThis << LogIO::POST;
-    }
-    else{
-      log << LogIO::NORMAL << "Writing to " << obsidAndScanTableName << LogIO::POST;
-      uInt n = distinctObsIdSet.size();
-      ofs << n << endl;
-      for(uInt i=0; i<n; i++){
-	ofs << distinctObsIdSet[i] << endl;
-	ofs << minScan[i] << endl;
-      }
-      ofs << maxScanThis << endl;
-    }
-    ofs.close();
-    
+        
     // set the offset added to scan numbers in each observation
     for(uInt i=0; i<distinctObsIdSet.size(); i++){
       Int scanOffset;
@@ -493,8 +474,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     }
     
     {
-      ROTableVector<Int> ScanTabVectOther(otherScan);
-      Int minScanOther = min(ScanTabVectOther);
+      Int minScanOther = min(otherScan);
       defaultScanOffset = maxScanThis + 1 - minScanOther;
       if(defaultScanOffset<0){
 	defaultScanOffset=0;
@@ -548,6 +528,57 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       otherObsIds[r] = oid;
 
     }
+
+    // update or create the file with the initial values for the next concat
+
+    Int maxScanOther = 0;
+    for(uInt r = 0; r < otherRows; r++) {
+      Int oid = otherObsIds[r];
+      Int scanid = otherScan[r];
+      Bool found = False;
+      uInt i;
+      for(i=0; i<distinctObsIdSet.size(); i++){
+	if(distinctObsIdSet[i]==oid){
+	  found = True;
+	  break;
+	}
+      }
+      if(found){
+	if(scanid<minScan[i]){
+	  minScan[i] = scanid;
+	}
+      }
+      else {
+	distinctObsIdSet.push_back(oid);
+	minScan.push_back(scanid); 
+      }
+      if(scanid>maxScanOther){
+	maxScanOther = scanid;
+      }
+    }
+
+    std::ofstream ofs;
+    ofs.open (obsidAndScanTableName.c_str(), ofstream::out);
+    if (!ofs) {
+      log << LogIO::WARN << "Error opening file " << obsidAndScanTableName 
+	  << "will continue but the next virtual concat will lack this information:" << LogIO::POST;
+      log << "distinctObsIdSet " << Vector<Int>(distinctObsIdSet) << endl;
+      log << "minScan " << Vector<Int>(minScan) << endl;
+      log << "maxScan " << maxScanOther << LogIO::POST;
+    }
+    else{
+      log << LogIO::NORMAL << "Writing to " << obsidAndScanTableName << LogIO::POST;
+      uInt n = distinctObsIdSet.size();
+      ofs << n << endl;
+      for(uInt i=0; i<n; i++){
+	ofs << distinctObsIdSet[i] << endl;
+	ofs << minScan[i] << endl;
+      }
+      ofs << maxScanOther << endl; // note: this max is determined after the modification of scanOther 
+    }
+    ofs.close();
+
+
   }
     
   if(doState){
