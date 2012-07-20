@@ -56,14 +56,6 @@ from testwrapper import *
 # to this program
 LISTofTESTS = TESTS_DIR+'unittests_list.txt'
 
-#SHORT_LIST = [
-#             'test_importevla',
-#             'test_listvis',
-#             'test_plotms',
-#             'test_sdplot',
-#             'test_sdsave',
-#             'test_viewer'
-#             ]
 
 # memory mode variable
 MEM = 0
@@ -333,7 +325,6 @@ if __name__ == "__main__":
                         if not os.environ.has_key('TEST_DATADIR'):    
                             raise Exception, 'Could not create environmental variable TEST_DATADIR'
                         
-                        print os.environ.get('TEST_DATADIR')
                         
                     else:
                         assert False, "unhandled option"
