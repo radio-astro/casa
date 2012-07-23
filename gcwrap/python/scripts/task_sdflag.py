@@ -6,7 +6,7 @@ from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -303,7 +303,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     from matplotlib import rc as rcp
                     rcp('lines', linewidth=1)
                     guiflagger = flagplotter(visible=True)
-                    guiflagger._plotter.legend(loc=1)
+                    #guiflagger.set_legend(loc=1,refresh=False)
+                    guiflagger.set_showflagged(showflagged)
                     guiflagger.plot(s)
                     finish=raw_input("Press enter to finish interactive flagging:")
                     guiflagger._plotter.unmap()

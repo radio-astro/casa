@@ -90,6 +90,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
+    <param type="bool" name="showflagged" subparam="true">
+            <description>show flagged data on plots</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
             <description>name of output file (See a WARNING in help document)</description>
             <value></value>
@@ -129,6 +134,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <equals type="bool" value="True">
                             <default param="clipminmax"><value type="doubleArray"></value></default>
                             <default param="clipoutside"><value type="bool">True</value></default>
+                    </equals>
+            </when>
+            <when param="interactive">
+                    <equals type="bool" value="False"/>
+                    <equals type="bool" value="True">
+                            <default param="showflagged"><value type="bool">False</value></default>
                     </equals>
             </when>
     </constraints>
@@ -184,6 +195,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         interactive -- determines interactive flagging
                 options: (bool) True,False
                 default: False
+             >>> interactive expandable parameters
+                showflagged -- show flagged data on plots
+                        default: False
         outfile -- Name of output file
                 default: ''
                 Note: by default (outfile=''), actual output file name is set as follows: 
