@@ -33,6 +33,7 @@
 #include <casa/Arrays/Slicer.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Stack.h>
+#include <casa/Containers/RecordInterface.h>
 #include <casa/Quanta/MVDoppler.h>
 #include <casa/aips.h>
 #include <measures/Measures/MCDoppler.h>
