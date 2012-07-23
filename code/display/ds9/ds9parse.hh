@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.6.  */
 
 /* Skeleton interface for Bison LALR(1) parsers in C++
    
-      Copyright (C) 2002-2011 Free Software Foundation, Inc.
+      Copyright (C) 2002-2012 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,41 +30,33 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+/**
+ ** \file /Users/drs/develop/casa/code/build/display/ds9parse.hh
+ ** Define the casa::viewer::parser class.
+ */
+
 /* C++ LALR(1) parser skeleton written by Akim Demaille.  */
 
-#ifndef PARSER_HEADER_H
-# define PARSER_HEADER_H
+#ifndef CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_DS9PARSE_HH
+# define CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_DS9PARSE_HH
 
 
 
 #include <string>
 #include <iostream>
-#include <display/ds9/stack.hh>
-#include <display/ds9/location.hh>
+#include "stack.hh"
+#include "location.hh"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 1
 #endif
 
-/* Enabling verbose error messages.  */
-#ifdef YYERROR_VERBOSE
-# undef YYERROR_VERBOSE
-# define YYERROR_VERBOSE 1
-#else
-# define YYERROR_VERBOSE 1
-#endif
-
-/* Enabling the token table.  */
-#ifndef YYTOKEN_TABLE
-# define YYTOKEN_TABLE 0
-#endif
-
 
 namespace casa { namespace viewer {
 
-/* Line 35 of lalr1.cc  */
-#line 68 "/Users/drs/dev/viewer/code/build/display/ds9parse.hh"
+/* Line 36 of lalr1.cc  */
+#line 60 "/Users/drs/develop/casa/code/build/display/ds9parse.hh"
 
   /// A Bison parser.
   class ds9parse
@@ -75,8 +67,8 @@ namespace casa { namespace viewer {
     union semantic_type
     {
 
-/* Line 35 of lalr1.cc  */
-#line 171 "implement/ds9/ds9parse.yy"
+/* Line 36 of lalr1.cc  */
+#line 171 "ds9/ds9parse.yy"
 
 #define MKBUFSIZE 2048
   double real;
@@ -86,8 +78,8 @@ namespace casa { namespace viewer {
 
 
 
-/* Line 35 of lalr1.cc  */
-#line 91 "/Users/drs/dev/viewer/code/build/display/ds9parse.hh"
+/* Line 36 of lalr1.cc  */
+#line 83 "/Users/drs/develop/casa/code/build/display/ds9parse.hh"
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -334,16 +326,14 @@ namespace casa { namespace viewer {
     /// For a rule, its LHS.
     static const unsigned char yyr1_[];
     /// For a rule, its RHS length.
-    static const unsigned char yyr2_[];
-
-#if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
-    /// For a symbol, its name in clear.
-    static const char* const yytname_[];
-#endif
+    static const unsigned char yyr2_[]; 
 
     /// Convert the symbol name \a n to a form suitable for a diagnostic.
     static std::string yytnamerr_ (const char *n);
 
+
+    /// For a symbol, its name in clear.
+    static const char* const yytname_[];
 #if YYDEBUG
     /// A type to store symbol numbers and -1.
     typedef short int rhs_number_type;
@@ -401,9 +391,9 @@ namespace casa { namespace viewer {
 
 } } // casa::viewer
 
-/* Line 35 of lalr1.cc  */
-#line 406 "/Users/drs/dev/viewer/code/build/display/ds9parse.hh"
+/* Line 36 of lalr1.cc  */
+#line 396 "/Users/drs/develop/casa/code/build/display/ds9parse.hh"
 
 
 
-#endif /* ! defined PARSER_HEADER_H */
+#endif /* !CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_DS9PARSE_HH  */

@@ -16,7 +16,7 @@
 // compiling the scanner...
 #ifndef __FLEX_LEXER_H
 #define yyFlexLexer ds9lex_FlexLexer
-#include <FlexLexer.h>
+#include <display/ds9/ds9FlexLexer.h>
 #undef yyFlexLexer
 #endif
 
@@ -32,7 +32,7 @@ namespace casa {
 	// class. Flex itself creates a class named yyFlexLexer, which is renamed using
 	// macros to ds9lex_FlexLexer. However we change the context of the generated
 	// yylex() function to be contained within the ds9lex class. This is required
-	// because the yylex() defined in ds9lex_FlexLexer has no parameters. */
+	// because the yylex() defined in ds9lex_display/ds9/ds9FlexLexer.has no parameters. */
 	class ds9lex : public ds9lex_FlexLexer {
 	    public:
 		// Create a new scanner object. The streams arg_yyin and arg_yyout default
