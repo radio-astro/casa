@@ -11,7 +11,7 @@ import numpy
 import re
 import string
 
-from sdcal_cli import sdcal_cli as sdcal
+from sdcal import sdcal
 import asap as sd
 
 #
@@ -196,21 +196,35 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         self.res=sdcal()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of time averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of polarization averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test003(self):
         """Test 003: Invalid calibration mode"""
+        # argument verification error
         self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
         self.assertFalse(self.res)
 
@@ -219,9 +233,17 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
         outfile='calpsGBT.cal.asap'
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
-        self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
-        os.system( 'rm -rf %s'%outfile )        
-        self.assertFalse(self.res)
+        try:
+            self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Output file \'%s\' exist.'%(outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        finally:
+            os.system( 'rm -rf %s'%outfile )        
+
 
 
 ###
