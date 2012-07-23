@@ -6,26 +6,35 @@ import time
 import signal
 
 
+homedir = os.getenv('HOME')
+if homedir == None :
+   print "Environment variable HOME is not set, please set it"
+   sys.exit(1)
+home=os.environ['HOME']
+
+
 try:
-    import casac 
+   import IPython
 except ImportError, e:
-    print "failed to load casa:\n", e
-    sys.exit(1)
-
-
+   print 'Failed to load IPython: ', e
+   exit(1)
+   
+   
 try:
     import matplotlib
 except ImportError, e:
     print "failed to load matplotlib:\n", e
     print "sys.path =", "\n\t".join(sys.path)
+
+
+try:
+    import casac 
+except ImportError, e:
+    print "failed to load casa:\n", e
+    sys.exit(1)
     
     
 from asap_init import *
-
-homedir = os.getenv('HOME')
-if homedir == None :
-   print "Environment variable HOME is not set, please set it"
-   sys.exit(1)
 
 
 import casadef
@@ -102,8 +111,25 @@ if os.uname()[0]=='Darwin' :
         # In the distro of the app then the apps dir is not there and you find things in MacOS
         if not os.path.exists(casa['helpers']['logger']) :
             casa['helpers']['logger'] = casa_path[0]+'/Resources/Logger.app/Contents/MacOS/casalogger'
+            
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## ensure default initialization occurs before this point...
+##
+##      prelude.py  =>  setup/modification of casa settings
+##      init.py     =>  user setup (with task access)
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/prelude.py' )
+    except:
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/prelude.py'
+        sys.exit(1)
 
 
+# Check IPYTHONDIR is defined by user and make it if not there
 ipythonenv  = casa['dirs']['rc'] + '/ipython'
 ipythonpath = casa['dirs']['rc'] + '/ipython'
 try :
@@ -111,8 +137,6 @@ try :
 except :
    pass
 
-
-# Check IPYTHONDIR is defined by user and make it if not there
 if(not os.environ.has_key('IPYTHONDIR')):
     os.environ['IPYTHONDIR']=ipythonpath
 if(not os.path.exists(os.environ['IPYTHONDIR'])):
@@ -120,7 +144,6 @@ if(not os.path.exists(os.environ['IPYTHONDIR'])):
 
 
 os.environ['__CASARCDIR__']=casa['dirs']['rc']
-
 
 
 # Special case if the back-end is set to MacOSX reset it
@@ -133,10 +156,6 @@ if matplotlib.get_backend() == "MacOSX" :
 # switch the backend to Agg only if it's TkAgg
 if not os.environ.has_key('DISPLAY') and matplotlib.get_backend() == "TkAgg" :
    matplotlib.use('Agg')
-
-
-# We put in all the task declarations here...
-from taskinit import *
 
 
 showconsole = False
@@ -164,10 +183,9 @@ T     = True
 false = False
 F     = False
 
-
-# Case where casapy is run non-interactively
-ipython = False
-
+# Import tasks but don't load task manager and dbus
+os.environ['CASA_ENGINE']="YES"
+from tasks import *
 
 # Setup available tasks
 from math import *
@@ -175,24 +193,19 @@ from parameter_dictionary import *
 from task_help import *
 
 
-# Import testing environment
-import publish_summary
-import runUnitTest
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##
+##      prelude.py  =>  setup/modification of casa settings (above)
+##      init.py     =>  user setup (with task access)
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/init.py' )
+    except:
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
+        sys.exit(1)
 
-
-home=os.environ['HOME']
-
-
-# Assignment protection
-fullpath=casadef.python_library_directory + '/assignmentFilter.py'
-if os.environ.has_key('__CASAPY_PYTHONDIR'):
-    fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
-
-
-# Try loading ASAP
-try:
-    asap_init()
-except:
-    pass
 
 casa['state']['startup'] = False

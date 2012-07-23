@@ -203,15 +203,17 @@ def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=
 ###done with common tools
 
 # setup viewer tool
-try : 
-   if casa.has_key('state') and casa['state'].has_key('startup') :
-	ving = viewertool.viewertool( False, pre_launch=casa['state']['startup'] )
-	if casa['flags'].has_key('--nogui') :
-		vi = ving
-	else:
-		vi = viewertool.viewertool( True, pre_launch=casa['state']['startup'] )
-except :
-	print "Unable to start viewer, maybe no dbus available?"
+# jagonzal (CAS-4322): Don't load task manager at the engine level
+if not os.environ.has_key('CASA_ENGINE'):
+	try : 
+		if casa.has_key('state') and casa['state'].has_key('startup') :
+			ving = viewertool.viewertool( False, pre_launch=casa['state']['startup'] )
+			if casa['flags'].has_key('--nogui') :
+				vi = ving
+			else:
+				vi = viewertool.viewertool( True, pre_launch=casa['state']['startup'] )
+	except :
+		print "Unable to start viewer, maybe no dbus available?"
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
