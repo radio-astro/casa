@@ -89,6 +89,7 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
                      #print 'No output written.'
                      casalog.post( str(instance), priority = 'ERROR' )
                      casalog.post( 'No output written.', priority = 'ERROR' )
+                     raise Exception, instance
                      return
                   if fluxunit_now == '':
                      fluxunit_now=thisscan.get_fluxunit()
@@ -147,6 +148,7 @@ def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, dop
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
         finally:
                 try:
