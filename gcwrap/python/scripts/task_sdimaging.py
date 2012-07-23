@@ -17,6 +17,8 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             if os.path.isdir(infile):
                 tb.open(infile)
                 tbkeys=tb.getkeywords()
+                if 'FIELD' not in tbkeys:
+                    raise Exception, 'infile must be in MS format'
                 #ftab=tbkeys['FIELD'].split()[-1]
                 ftab=tbkeys['FIELD'].lstrip('Table: ')
                 #spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
@@ -191,4 +193,5 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             im.close()
             #print '***Error***',instance
             casalog.post( str(instance), priority = 'ERROR' )
+            raise Exception, instance
             return
