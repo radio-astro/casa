@@ -4,7 +4,6 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import *
 import unittest
 import sha
 import time
@@ -12,8 +11,7 @@ import numpy
 import re
 import string
 
-asap_init()
-from sdimaging import sdimaging
+from sdimaging_cli import sdimaging_cli as sdimaging
 import asap as sd
 
 #

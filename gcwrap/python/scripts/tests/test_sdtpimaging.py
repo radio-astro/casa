@@ -4,14 +4,12 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 import sha
 import time
 import numpy
 
-asap_init()
-from sdtpimaging import sdtpimaging
+from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
 import asap as sd
 
 # Unit test of sdtpimaging task.

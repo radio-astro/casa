@@ -4,14 +4,12 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 import sha
 import time
 import numpy
 
-asap_init()
-from sdsave import sdsave
+from sdsave_cli import sdsave_cli as sdsave
 import asap as sd
 
 # Unit test of sdsave task.
