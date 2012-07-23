@@ -28,6 +28,7 @@
 #include <QtGui/QDialog>
 #include <display/QtPlotter/GaussianEstimateDialog.ui.h>
 #include <display/QtPlotter/SearchMoleculesDialog.qo.h>
+#include <display/QtPlotter/SelectEstimateDialog.qo.h>
 #include <display/QtPlotter/SpecFitGaussian.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
@@ -49,7 +50,6 @@ public:
     void setCurveData( const Vector<float>& xValues, const Vector<float>& yValues);
     void setRangeX( Float min, Float max );
     void setRangeY( Float min, Float max );
-    //void setUnits( QString unitStr );
     void setSpecFitUnits( const QString& specUnits );
     void setSpectralCoordinate( SpectralCoordinate coordinate );
     QString getUnits() const;
@@ -57,15 +57,15 @@ public:
     SpecFitGaussian getEstimate(int index );
     void setEstimates( QList<SpecFitGaussian>& estimates );
 
-/*signals:
-	void gaussEstimateUnitsChanged( QString unitStr );*/
-
 private slots:
 	void searchMolecules();
 	void molecularLinesChanged();
 	void unitsChanged( int index );
 	void plotsCoordinatedChanged( int );
 	void coordinatedValuesChanged( float );
+	void updateMolecularLines();
+	void clearGraphs();
+	void clearSelectedPlots();
 
 private:
 	void resetEstimates();
@@ -74,7 +74,7 @@ private:
 	void setCurveColor();
 	void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
 	Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
-	void translateEstimateUnits( SpecFitGaussian& estimate, Converter* converter );
+	//void translateEstimateUnits( SpecFitGaussian& estimate, Converter* converter );
 	Vector<float> xVals;
     Vector<float> yVals;
     QColor curveColor;
@@ -86,6 +86,8 @@ private:
     bool plotsCoordinated;
     SpectralCoordinate spectralCoordinate;
     QWidget* plotHolderWidget;
+    SelectEstimateDialog selectEstimateDialog;
+    SelectEstimateDialog clearPlotDialog;
 };
 }
 #endif // GAUSSIANESTIMATEDIALOG_QO_H

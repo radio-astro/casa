@@ -29,11 +29,15 @@
 #include <casa/Arrays/Vector.h>
 #include <display/QtPlotter/GaussianEstimateWidget.ui.h>
 #include <display/QtPlotter/SpecFitGaussian.h>
+#include <display/QtPlotter/conversion/Converter.h>
 
 class QwtPlot;
 class QwtPlotCurve;
 
 namespace casa {
+
+class MolecularLine;
+class SpectralCoordinate;
 
 class GaussianEstimateWidget : public QWidget
 {
@@ -46,11 +50,14 @@ public:
     void setTitle( const QString& titleStr );
     void setRangeX( Float xValue, Float yValue );
     void setRangeY( Float xValue, Float yValue );
-    void molecularLineChanged( float peak, float center );
+    void molecularLineChanged( float peak, float center, const QString& label);
     SpecFitGaussian getEstimate();
     void setEstimate( const SpecFitGaussian& estimate );
-    void resetEstimate();
+    void unitsChanged( const QString& oldUnits, const QString& newUnits,
+    	SpectralCoordinate* spectralCoordinate );
     void setSliderValueFWHM( float value );
+    void updateUIBasedOnEstimate();
+    void clearMolecularLines();
     ~GaussianEstimateWidget();
 
 signals:
@@ -87,8 +94,10 @@ private:
     float reasonableFWHM( float value ) const;
     float reasonableCenter( float value ) const;
     float reasonablePeak( float value ) const;
+
     QwtPlotCurve* initCurve( QColor color );
     void clearCurve( QwtPlotCurve*& curve );
+
     QwtPlot* plot;
     QwtPlotCurve* curve;
     QwtPlotCurve* fitCurve;
@@ -102,6 +111,7 @@ private:
     Float maxY;
     QColor curveColor;
     QColor fitCurveColor;
+    QMap<QString,MolecularLine*> molecularLineMap;
 };
 }
 

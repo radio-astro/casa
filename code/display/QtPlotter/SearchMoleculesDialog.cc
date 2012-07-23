@@ -10,8 +10,12 @@
 
 namespace casa {
 
+const QString SearchMoleculesDialog::SPLATALOGUE_UNITS="GHz";
+const double SearchMoleculesDialog::SPLATALOGUE_DEFAULT_MIN = 84;
+const double SearchMoleculesDialog::SPLATALOGUE_DEFAULT_MAX = 90;
+
 SearchMoleculesDialog::SearchMoleculesDialog(QWidget *parent)
-    : QDialog(parent)
+    : QDialog(parent), unitStr( SPLATALOGUE_UNITS )
 {
 	ui.setupUi(this);
 	QList<QString> frequencyUnitList;
@@ -20,13 +24,20 @@ SearchMoleculesDialog::SearchMoleculesDialog(QWidget *parent)
 	for ( int i = 0; i < frequencyUnitList.size(); i++ ){
 		ui.rangeUnitComboBox->addItem( frequencyUnitList[i]);
 	}
+	ui.redShiftUnitLabel->setText( Util::toHTML(unitStr ));
+	ui.rangeUnitComboBox->setCurrentIndex(frequencyUnitList.indexOf(SPLATALOGUE_UNITS));
+	connect( ui.rangeUnitComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT( searchUnitsChanged(const QString&)));
 
 	QDoubleValidator* validator = new QDoubleValidator( this );
 	ui.rangeMinLineEdit->setValidator( validator );
 	ui.rangeMaxLineEdit->setValidator( validator );
+	ui.redShiftLineEdit->setValidator( validator );
+	ui.redShiftLineEdit->setText( QString::number(0) );
+
+
 	connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(search()));
 	connect( ui.openButton, SIGNAL(clicked()), this, SLOT(openCatalog()));
-	connect( ui.applyButton, SIGNAL(clicked()), this, SLOT(accept()));
+	connect( ui.applyButton, SIGNAL(clicked()), this, SIGNAL(moleculesSelected()));
 	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(reject()));
 
 	initializeTable();
@@ -40,6 +51,10 @@ SearchMoleculesDialog::SearchMoleculesDialog(QWidget *parent)
 	}
 }
 
+//-------------------------------------------------------------------------------------
+//                        Initialization
+//-------------------------------------------------------------------------------------
+
 void SearchMoleculesDialog::initializeTable(){
 	QStringList tableHeaders(QStringList() << "Species" << "Chemical Name" <<
 				"Frequency" << "Resolved QNs" << "Intensity" << "EL");
@@ -49,24 +64,23 @@ void SearchMoleculesDialog::initializeTable(){
 	//ui.searchResultsTable->setSelectionMode( QAbstractItemView::SingleSelection );
 }
 
-void SearchMoleculesDialog::setTableValue(int row, int col, double val ){
-	QString numberStr = QString::number( val );
-	setTableValue( row, col, numberStr );
+void SearchMoleculesDialog::setRange( float min, float max, QString units ){
+	if ( unitStr != units ){
+		Converter* converter = Converter::getConverter( units, unitStr, &spectralCoordinate );
+		min = converter->convert( min );
+		max = converter->convert( max );
+		delete converter;
+	}
+	ui.rangeMinLineEdit->setText( QString::number( min ));
+	ui.rangeMaxLineEdit->setText( QString::number( max ));
 }
 
-void SearchMoleculesDialog::setTableValue( int row, int col, const QString& val ){
-	QTableWidgetItem* tableItem = new QTableWidgetItem();
-	tableItem -> setText( val );
-	ui.searchResultsTable->setItem( row, col, tableItem );
+void SearchMoleculesDialog::setSpectralCoordinate( SpectralCoordinate coordinate ){
+	spectralCoordinate = coordinate;
 }
-
-void SearchMoleculesDialog::setTableValueHTML( int row, int col, const QString& val ){
-	QLabel* label = new QLabel( this );
-	label->setTextFormat(Qt::RichText);
-	QString htmlStr = "<html>"+val+"</html>";
-	label->setText( val );
-	ui.searchResultsTable->setCellWidget( row, col, label );
-}
+//--------------------------------------------------------------------------------------
+//                        Signal/Slot
+//--------------------------------------------------------------------------------------
 
 void SearchMoleculesDialog::openCatalog(){
 	QString dPath = QFileDialog::getExistingDirectory( this,
@@ -74,6 +88,138 @@ void SearchMoleculesDialog::openCatalog(){
 			"/home");
 	databasePath = dPath.toStdString();
 	ui.catalogLineEdit->setText( dPath );
+}
+
+void SearchMoleculesDialog::convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter ){
+	QString editText = lineEdit->text();
+	if ( editText != NULL && !editText.isEmpty()){
+		if ( converter != NULL ){
+			double val = editText.toDouble();
+			val = converter->convert( val );
+			lineEdit->setText( QString::number( val ));
+		}
+	}
+}
+
+
+void SearchMoleculesDialog::searchUnitsChanged( const QString& newUnits ){
+	//If the units have changed
+	if ( unitStr != newUnits ){
+		//Change the redshift to the new units
+		ui.redShiftUnitLabel->setText( newUnits );
+
+		//Readjust the text fields giving the search lookup range & redshift
+		Converter* converter = Converter::getConverter( unitStr, newUnits, &spectralCoordinate );
+		convertRangeLineEdit(ui.rangeMinLineEdit, converter);
+		convertRangeLineEdit(ui.rangeMaxLineEdit, converter);
+		convertRangeLineEdit(ui.redShiftLineEdit, converter);
+		delete converter;
+	}
+	unitStr = newUnits;
+}
+
+
+
+//------------------------------------------------------------------------------------
+//                 Performing the search and displaying the results
+//-----------------------------------------------------------------------------------
+
+void SearchMoleculesDialog::initializeSearchRange( QLineEdit* lineEdit, Double& value, double redShift ){
+	QString valueStr = lineEdit->text();
+	if ( !valueStr.isEmpty() ){
+		value = valueStr.toDouble();
+		value = value + redShift;
+		QString redShiftStr = ui.redShiftLineEdit->text();
+		if ( unitStr != SPLATALOGUE_UNITS ){
+			Converter* converter = Converter::getConverter(unitStr, SPLATALOGUE_UNITS, &spectralCoordinate );
+			value = converter->convert( value );
+			delete converter;
+		}
+	}
+	//Just adjust the default values by the redshift
+	else {
+		value = value + redShift;
+	}
+}
+
+void SearchMoleculesDialog::search(){
+
+	//First decide if we have a database to search
+	//We will try to use a user specified one.  Otherwise, we
+	//will try the default.
+	if ( databasePath.length() == 0 ){
+		databasePath = defaultDatabasePath;
+	}
+
+	if ( databasePath.length() > 0 ){
+
+		//Get the search parameters
+		QString searchList = ui.searchLineEdit->text();
+		QList<QString> moleculeList;
+		if ( ! searchList.isEmpty() ){
+			moleculeList = searchList.split(",");
+		}
+		Vector<String> chemNames( moleculeList.size());
+		for ( int i = 0; i < moleculeList.size(); i++ ){
+			chemNames[i] = moleculeList[i].trimmed().toStdString();
+			//qDebug() << "Chemical name="<<chemNames[i].c_str();
+		}
+
+		//Create a temporary file for the search results
+		QTemporaryFile tmpFile( "SearchMoleculesResults" );
+		QString path = tmpFile.fileName();
+		String resultTableName( path.toStdString());
+
+		Vector<String> species;
+		Vector<String> qns;
+		Double intensityLow = -1;
+		Double intensityHigh = -1;
+		Double smu2Low = -1;
+		Double smu2High = -1;
+		Double logaLow = -1;
+		Double logaHigh = -1;
+		Double elLow = -1;
+		Double elHigh = -1;
+		Double euLow = -1;
+		Double euHigh = -1;
+		Bool includeRRLs = true;
+		Bool onlyRRLs = false;
+
+		//Set the range for the search
+		Double minValue = SPLATALOGUE_DEFAULT_MIN;
+		Double maxValue = SPLATALOGUE_DEFAULT_MAX;
+		double redShift = getRedShiftAdjustment();
+		initializeSearchRange( ui.rangeMinLineEdit, minValue, redShift );
+		initializeSearchRange( ui.rangeMaxLineEdit, maxValue, redShift );
+
+		try {
+			SplatalogueTable splatalogueTable( databasePath );
+			const SearchEngine searcher( &splatalogueTable, false, "", false );
+			SplatalogueTable *resTable = searcher.search( resultTableName, minValue, maxValue,
+				species, false, chemNames, qns, intensityLow, intensityHigh,
+				smu2Low, smu2High, logaLow, logaHigh,
+				elLow, elHigh, euLow, euHigh,
+				includeRRLs, onlyRRLs );
+			Record resultsRecord = resTable->toRecord();
+			displaySearchResults( resultsRecord );
+			delete resTable;
+		}
+		catch( AipsError& err ){
+			QString msg( "Search was unsuccessful.\nPlease check that a valid local database has been specified.");
+			Util::showUserMessage( msg, this );
+		}
+	}
+	else {
+		//Tell the user we could not find a database to search.
+		if ( databasePath.length() == 0 ){
+			QString msg( "Could not find a local Splatalogue database!/nTry specifying one in the local file system.");
+			Util::showUserMessage(msg, this );
+		}
+		else {
+			QString msg( "Local splatalogue database was not valid.");
+			Util::showUserMessage( msg, this );
+		}
+	}
 }
 
 void SearchMoleculesDialog::displaySearchResults( const Record& results ){
@@ -133,80 +279,21 @@ void SearchMoleculesDialog::displaySearchResults( const Record& results ){
 	}
 }
 
-void SearchMoleculesDialog::search(){
-
-	//First decide if we have a database to search
-	//We will try to use a user specified one.  Otherwise, we
-	//will try the default.
-	if ( databasePath.length() == 0 ){
-		databasePath = defaultDatabasePath;
+double SearchMoleculesDialog::getRedShiftAdjustment() const{
+	QString redShiftStr = ui.redShiftLineEdit->text();
+	double redShift = 0;
+	if ( ! redShiftStr.isEmpty() ){
+		redShift = redShiftStr.toDouble();
 	}
+	return redShift;
+}
 
-	if ( databasePath.length() > 0 ){
+//-----------------------------------------------------------------------------
+//                        Accessors
+//-----------------------------------------------------------------------------
 
-		//Get the search parameters
-		QString searchList = ui.searchLineEdit->text();
-		QList<QString> moleculeList;
-		if ( ! searchList.isEmpty() ){
-			moleculeList = searchList.split(",");
-		}
-		Vector<String> chemNames( moleculeList.size());
-		for ( int i = 0; i < moleculeList.size(); i++ ){
-			chemNames[i] = moleculeList[i].trimmed().toStdString();
-			//qDebug() << "Chemical name="<<chemNames[i].c_str();
-		}
-
-		//Create a temporary file for the search results
-		QTemporaryFile tmpFile( "SearchMoleculesResults" );
-		QString path = tmpFile.fileName();
-		String resultTableName( path.toStdString());
-
-		Vector<String> species;
-		Vector<String> qns;
-		Double intensityLow = 0;
-		Double intensityHigh = 0;
-		Double smu2Low = 0;
-		Double smu2High = 0;
-		Double logaLow = 0;
-		Double logaHigh = 0;
-		Double elLow = 0;
-		Double elHigh = 0;
-		Double euLow = 0;
-		Double euHigh = 0;
-		Bool includeRRLs = true;
-		Bool onlyRRLs = false;
-		double minValue = ui.rangeMinLineEdit->text().toDouble();
-		double maxValue = ui.rangeMaxLineEdit->text().toDouble();
-		QString unitStr = ui.rangeUnitComboBox->currentText();
-
-		try {
-			SplatalogueTable splatalogueTable( databasePath );
-			const SearchEngine searcher( &splatalogueTable, false, "", false );
-			SplatalogueTable *resTable = searcher.search( resultTableName, minValue, maxValue,
-				species, false, chemNames, qns, intensityLow, intensityHigh,
-				smu2Low, smu2High, logaLow, logaHigh,
-				elLow, elHigh, euLow, euHigh,
-				includeRRLs, onlyRRLs );
-			Record resultsRecord = resTable->toRecord();
-			displaySearchResults( resultsRecord );
-			delete resTable;
-		}
-		catch( AipsError& err ){
-			QString msg( "Search was unsuccessful.\nPlease check that a valid local database has been specified.");
-			Util::showUserMessage( msg, this );
-		}
-	}
-	else {
-		//Tell the user we could not find a database to search.
-		if ( databasePath.length() == 0 ){
-			QString msg( "Could not find a local Splatalogue database!/nTry specifying one in the local file system.");
-			Util::showUserMessage(msg, this );
-		}
-		else {
-			QString msg( "Local splatalogue database was not valid.");
-			Util::showUserMessage( msg, this );
-		}
-	}
+QString SearchMoleculesDialog::getUnit() const {
+	return unitStr;
 }
 
 QList<int> SearchMoleculesDialog::getLineIndices() const{
@@ -224,20 +311,55 @@ QList<int> SearchMoleculesDialog::getLineIndices() const{
 
 void SearchMoleculesDialog::getLine(int lineIndex, Float& peak, Float& center,
 		QString& molecularName ) const {
-	QTableWidgetItem* speciesItem = ui.searchResultsTable->item(lineIndex, COL_SPECIES );
+	double redshift = getRedShiftAdjustment();
+
+	//Name
+	QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_SPECIES ));
 	if ( speciesItem != NULL ){
 		molecularName = speciesItem->text();
 	}
+	else {
+		qDebug() << "speciesItem was null";
+	}
+
+	//Frequency
 	QTableWidgetItem* frequencyItem = ui.searchResultsTable->item(lineIndex, COL_FREQUENCY );
 	if ( frequencyItem != NULL ){
 		QString freqStr = frequencyItem->text();
 		center = freqStr.toFloat();
+		center = center - redshift;
 	}
+
+	//Intensity
 	QTableWidgetItem* peakItem = ui.searchResultsTable->item(lineIndex, COL_INTENSITY );
 	if ( peakItem != NULL ){
 		QString peakStr = peakItem->text();
 		peak = peakStr.toFloat();
 	}
+}
+
+
+//--------------------------------------------------------------------------------------
+//                   Utiltiy - Search Results Table
+//--------------------------------------------------------------------------------------
+
+void SearchMoleculesDialog::setTableValue(int row, int col, double val ){
+	QString numberStr = QString::number( val );
+	setTableValue( row, col, numberStr );
+}
+
+void SearchMoleculesDialog::setTableValue( int row, int col, const QString& val ){
+	QTableWidgetItem* tableItem = new QTableWidgetItem();
+	tableItem -> setText( val );
+	ui.searchResultsTable->setItem( row, col, tableItem );
+}
+
+void SearchMoleculesDialog::setTableValueHTML( int row, int col, const QString& val ){
+	QLabel* label = new QLabel( this );
+	label->setTextFormat(Qt::RichText);
+	QString htmlStr = "<html>"+val+"</html>";
+	label->setText( val );
+	ui.searchResultsTable->setCellWidget( row, col, label );
 }
 
 SearchMoleculesDialog::~SearchMoleculesDialog()

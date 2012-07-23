@@ -44,7 +44,7 @@ const QList<QString> Converter::FREQUENCY_UNITS =
 		"10KHz" << "100KHz" << "MHz" <<
 		"10MHz" << "100MHz" << "GHz";
 const QList<QString> Converter::WAVELENGTH_UNITS =
-	QList<QString>() << "Angstrom" << "nm" << "10nm" << "100nm" << "um" << "10um" << "100um" << "mm";
+	QList<QString>() << "Angstrom" << "nm" << "10nm" << "100nm" << "um" << "10um" << "100um" << "mm" << "cm";
 const QList<QString> Converter::VELOCITY_UNITS =
 	QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
 

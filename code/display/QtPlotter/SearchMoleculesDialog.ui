@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>462</height>
+    <height>495</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Search Molecules</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -128,35 +128,89 @@
      <property name="title">
       <string>Range</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QLabel" name="rangeMinLabel">
-        <property name="text">
-         <string>&lt;font color='black'&gt;Min:&lt;/font&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="rangeMinLabel">
+          <property name="text">
+           <string>&lt;font color='black'&gt;Min:&lt;/font&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="rangeMinLineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="maxLabel">
+          <property name="text">
+           <string>&lt;font color='black'&gt;Max:&lt;/font&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="rangeMaxLineEdit"/>
+        </item>
+        <item>
+         <widget class="QComboBox" name="rangeUnitComboBox"/>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QLineEdit" name="rangeMinLineEdit"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="maxLabel">
-        <property name="text">
-         <string>&lt;font color='black'&gt;Max:&lt;/font&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="rangeMaxLineEdit"/>
-      </item>
-      <item>
-       <widget class="QComboBox" name="rangeUnitComboBox"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="redshiftLabel">
+          <property name="text">
+           <string>Redshift:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="redShiftLineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="redShiftUnitLabel">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -220,7 +274,7 @@
      <item>
       <widget class="QPushButton" name="applyButton">
        <property name="text">
-        <string>Apply</string>
+        <string>Apply...</string>
        </property>
       </widget>
      </item>

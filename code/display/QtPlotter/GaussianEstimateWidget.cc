@@ -24,6 +24,8 @@
 //#
 #include "GaussianEstimateWidget.qo.h"
 #include <display/QtPlotter/GaussianEstimateWidget.qo.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <display/QtPlotter/MolecularLine.h>
 #include <QVector>
 #include <QDebug>
 #include <QDoubleValidator>
@@ -162,10 +164,7 @@ void GaussianEstimateWidget::setCurveData(const Vector<float>& xValues, const Ve
 		curve = new QwtPlotCurve();
 		curve->attach( plot );
 	}
-	/*qDebug() << "xValues couling into curve are:";
-	for ( int i = 0; i < xVals.size(); i++ ){
-		qDebug() << " x="<<xVals[i];
-	}*/
+
 	curve->setData( xVals, yVals );
 	plot->replot();
 }
@@ -181,24 +180,27 @@ void GaussianEstimateWidget::setCurveColor( QColor color ){
 //                         Estimates
 //---------------------------------------------------------------------
 
-void GaussianEstimateWidget::resetEstimate(){
+/*void GaussianEstimateWidget::resetEstimate(){
 	setEstimate( gaussianEstimate );
-}
+}*/
 
 void GaussianEstimateWidget::setEstimate( const SpecFitGaussian& estimate ){
 	gaussianEstimate = estimate;
+	updateUIBasedOnEstimate();
+}
 
-	ui.fixCenterCheckBox->setChecked( estimate.isCenterFixed());
-	ui.fixPeakCheckBox->setChecked( estimate.isPeakFixed());
-	ui.fixFWHMCheckBox->setChecked( estimate.isFwhmFixed());
+void GaussianEstimateWidget::updateUIBasedOnEstimate(){
+	ui.fixCenterCheckBox->setChecked( gaussianEstimate.isCenterFixed());
+	ui.fixPeakCheckBox->setChecked( gaussianEstimate.isPeakFixed());
+	ui.fixFWHMCheckBox->setChecked( gaussianEstimate.isFwhmFixed());
 
-	float peak = estimate.getPeak();
-	float center = estimate.getCenter();
-	float fwhm = estimate.getFWHM();
+	float peak   = gaussianEstimate.getPeak();
+	float center = gaussianEstimate.getCenter();
+	float fwhm   = gaussianEstimate.getFWHM();
 
-	peak = reasonablePeak( peak );
+	peak   = reasonablePeak( peak );
 	center = reasonableCenter( center );
-	fwhm = reasonableFWHM( fwhm );
+	fwhm   = reasonableFWHM( fwhm );
 
 	//Note: Normally setSliderValue peak will call peakChanged. However,
 	//if we are just changing units, the position of the slider may not
@@ -211,6 +213,27 @@ void GaussianEstimateWidget::setEstimate( const SpecFitGaussian& estimate ){
 	peakChanged( peak );
 	centerChanged( center );
 	fwhmChanged( fwhm );
+}
+
+void GaussianEstimateWidget::unitsChanged( const QString& oldUnits, const QString& newUnits,
+	SpectralCoordinate* spectralCoordinate ){
+	Converter* converter = Converter::getConverter( oldUnits, newUnits, spectralCoordinate );
+	double centerVal = gaussianEstimate.getCenter();
+	double fwhm = gaussianEstimate.getFWHM();
+	double fwhmPoint = centerVal - fwhm;
+	centerVal = converter->convert( centerVal );
+	fwhmPoint = converter->convert( fwhmPoint );
+	gaussianEstimate.setCenter( static_cast<float>(centerVal) );
+	gaussianEstimate.setFWHM( static_cast<float>(qAbs(centerVal - fwhmPoint)) );
+	QList<QString> keys = molecularLineMap.keys();
+	for ( int i = 0; i < keys.size(); i++ ){
+		MolecularLine* molecularLine = molecularLineMap[keys[i]];
+		float center = molecularLine->getCenter();
+		center = converter->convert( center );
+		molecularLine->setCenter( center );
+	}
+	updateUIBasedOnEstimate();
+	delete converter;
 }
 
 SpecFitGaussian GaussianEstimateWidget::getEstimate(){
@@ -278,7 +301,9 @@ float GaussianEstimateWidget::reasonableCenter( float value ) const {
 				break;
 			}
 		}
-		val = xValues[maxYIndex];
+		if ( maxYIndex < static_cast<int>(xValues.size()) ){
+			val = xValues[maxYIndex];
+		}
 	}
 	return val;
 }
@@ -363,14 +388,34 @@ void GaussianEstimateWidget::fwhmFixedChanged( bool checked ){
 //                    Molecular Lines
 //--------------------------------------------------------------------
 
-void GaussianEstimateWidget::molecularLineChanged( float peak, float center ){
+void GaussianEstimateWidget::molecularLineChanged( float peak, float center,
+		const QString& label){
+
 	//Update the sliders which should update everything else.
-	//qDebug() << "Molecular line changed peak="<<peak<<" center="<<center;
 	setSliderValuePeak( peak );
 	setSliderValueCenter( center );
+	QString key = label + QString::number(center);
+	if ( ! molecularLineMap.contains( key )){
+		MolecularLine* molecularLine = new MolecularLine();
+		molecularLine->attach( plot );
+		molecularLine->setCenter( center );
+		molecularLine->setPeak( peak );
+		molecularLine->setLabel( label );
+		plot->replot();
+		molecularLineMap.insert( key, molecularLine );
+	}
 }
 
-
+void GaussianEstimateWidget::clearMolecularLines(){
+	QList<QString> keys = molecularLineMap.keys();
+	for ( int i = 0; i < keys.size(); i++ ){
+		MolecularLine* molecularLine = molecularLineMap[ keys[i]];
+		molecularLineMap.remove( keys[i]);
+		molecularLine->detach( );
+		delete molecularLine;
+	}
+	plot->replot();
+}
 
 //---------------------------------------------------------------------
 //                    Scaling values
@@ -449,8 +494,9 @@ void GaussianEstimateWidget::clearCurve( QwtPlotCurve*& curve ){
 }
 
 GaussianEstimateWidget::~GaussianEstimateWidget(){
-	delete fitCurve;
-	delete curve;
+	clearMolecularLines();
+	clearCurve( curve );
+	clearCurve( fitCurve );
 	delete plot;
 }
 }

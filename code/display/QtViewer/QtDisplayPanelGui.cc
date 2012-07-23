@@ -1462,8 +1462,6 @@ void QtDisplayPanelGui::showImageProfile() {
 					this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
 			connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
 					this, SLOT(doSelectChannel(const Vector<float>&,float)));
-			connect( pdd, SIGNAL(pixelsChanged(int,int)), profile_,
-				 SLOT(pixelsChanged(int,int)) );
 			connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 			
 			{
