@@ -126,6 +126,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                 s.set_selection(sel)
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
             del sel
 
@@ -353,5 +354,6 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority='ERROR' )
+                raise Exception, instance
                 return
 
