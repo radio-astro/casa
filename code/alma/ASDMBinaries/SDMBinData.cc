@@ -1860,9 +1860,11 @@ namespace sdmbin {
 		    msDataPtr_->dataDescId       = v_ddList[ndd].getTagValue();
 		  msDataPtr_->phaseDir           = phaseDir;                     // TODO Apply the polynomial formula
 		  msDataPtr_->stateId            = stateId;
-		  msDataPtr_->msState            = getMSState( subscanNum, v_stateId,
+		  /* This part is now done in the filler itself -  MC 23 Jul 2012
+		    msDataPtr_->msState            = getMSState( subscanNum, v_stateId,
 							       v_antSet, v_feedSet, v_ddList,
 							       na, nfe, ndd, timeOfDump);
+		  */
 		  msDataPtr_->v_dataShape        = v_dataShape;
 		  msDataPtr_->time               = 86400.*timeMJD;
 		  msDataPtr_->interval           = interval;
@@ -1981,9 +1983,11 @@ namespace sdmbin {
 		    msDataPtr_->dataDescId           = v_ddList[ndd].getTagValue();
 		    msDataPtr_->fieldId              = fieldId;
 		    msDataPtr_->phaseDir             = phaseDir;
+		    /* This part is now done in the filler itself -  MC 23 Jul 2012
 		    msDataPtr_->msState              = getMSState( subscanNum, v_stateId,
 								   v_antSet, v_feedSet, v_ddList,
 								   na1, nfe, ndd, timeOfDump);
+		    */
                      // TODO Apply the polynomial formula
 		    msDataPtr_->v_dataShape          = v_dataShape;
 		    msDataPtr_->interval             = interval;
@@ -2393,9 +2397,9 @@ namespace sdmbin {
 
   const VMSData* SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc){
 
-    bool coutest=false;
+    //bool coutest=false;
 
-    if(coutest)cout<<"Entree ds getDataCols"<<endl;
+    if (verbose_) cout << "SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc) : entering." << endl;
 
     if(v_msDataPtr_.size()>0){
       if(coutDeleteInfo_)cout << "delete v_msDataPtr_[n]->xData" << endl;
@@ -2411,11 +2415,10 @@ namespace sdmbin {
     }
 
     v_msDataPtr_.clear();
-    if(coutest)cout<<"pret a entrer ds getData"<<endl;
     v_msDataPtr_ = getData( e_qcm, es_qapc );
 
     int numRows=v_msDataPtr_.size();
-    if(coutest)cout<<"Number of MS row for this SDM BLOB: " << numRows <<endl;
+    if(verbose_)cout<<"Number of MS row for this SDM BLOB: " << numRows <<endl;
 
     if(coutDeleteInfo_&&vmsDataPtr_!=0)cout << "delete vmsDataPtr_" << endl;
     if(vmsDataPtr_!=0)delete vmsDataPtr_;
@@ -2437,7 +2440,7 @@ namespace sdmbin {
       if(v_msDataPtr_[n]->v_atmPhaseCorrection.size()>numApcMax)
 	numApcMax=v_msDataPtr_[n]->v_atmPhaseCorrection.size();
     }
-    if(coutest)cout<<"numApcMax="<<numApcMax<<endl;
+    if(verbose_)cout<<"numApcMax="<<numApcMax<<endl;
 
     multimap<int,unsigned int> mm_dd;
     if(ddfirst_){
@@ -2520,8 +2523,8 @@ namespace sdmbin {
 
     }
 
-    if(coutest)cout<<"Exit from getDataCols"<<endl;
     detachDataObject();
+    if (verbose_) cout << "SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc) : exiting." << endl;
     return vmsDataPtr_;
   }
 
@@ -3013,10 +3016,12 @@ namespace sdmbin {
 		  else
 		    msDataPtr_->dataDescId       = v_ddList[ndd].getTagValue();
 		  msDataPtr_->phaseDir           = phaseDir;                     // TODO Apply the polynomial formula
+		  /*
 		  msDataPtr_->stateId            = stateId;
 		  msDataPtr_->msState            = getMSState( subscanNum, v_stateId,
 							       v_antSet, v_feedSet, v_ddList,
 							       na, nfe, ndd, timeOfDump);
+		  */
 		  msDataPtr_->v_dataShape        = v_dataShape;
 		  msDataPtr_->time               = 86400.*timeMJD;
 		  msDataPtr_->interval           = interval;
@@ -3134,9 +3139,11 @@ namespace sdmbin {
 		    msDataPtr_->dataDescId           = v_ddList[ndd].getTagValue();
 		    msDataPtr_->fieldId              = fieldId;
 		    msDataPtr_->phaseDir             = phaseDir;
+		    /* This part is now done in the filler itself -  MC 23 Jul 2012
 		    msDataPtr_->msState              = getMSState( subscanNum, v_stateId,
 								   v_antSet, v_feedSet, v_ddList,
 								   na1, nfe, ndd, timeOfDump);
+		    */
                      // TODO Apply the polynomial formula
 		    msDataPtr_->v_dataShape          = v_dataShape;
 		    msDataPtr_->interval             = interval;
@@ -3470,7 +3477,7 @@ namespace sdmbin {
 				  vector<Tag>  v_antennaId, vector<int> v_feedId, vector<Tag> v_ddId,
 				  unsigned int na, unsigned int nfe, unsigned int nspw, ArrayTime timeOfDump)
   {
-    bool coutest=false;
+    if (verbose_) cout << "SDMBinData::getMSState : entering." << endl;
     static unsigned int                                     subscan    = 0;
     static vector<StateRow*>                                v_sdmState;
     static vector<vector<vector<vector<CalDeviceRow*> > > > vvvv_calDevice;
@@ -3482,7 +3489,7 @@ namespace sdmbin {
       for(unsigned int n=0 ; n<v_stateId.size(); n++)
 	v_sdmState[n] = sdmStates.getRowByKey(v_stateId[n]);
       //}
-    if(coutest)cout<<"v_sdmState="<<v_sdmState.size()<<endl;
+    if(verbose_)cout<<"v_sdmState="<<v_sdmState.size()<<endl;
 
     msState.sig  = v_sdmState[na]->getSig();
     msState.ref  = v_sdmState[na]->getRef();
@@ -3490,8 +3497,8 @@ namespace sdmbin {
     msState.load = 0;
 
     if(!v_sdmState[na]->getOnSky()){
-      if(coutest)cout<<"subscan="<<subscan<<" subscanNum="<<subscanNum<<endl;
-      if(subscan!=subscanNum){
+      if(verbose_)cout<<"subscan="<<subscan<<" subscanNum="<<subscanNum<<endl;
+      //if(subscan!=subscanNum){
 	vector<CalDeviceRow*> v_calDev;
 	vector<CalDeviceRow*>* v_calDevPtr = 0;
 	CalDeviceTable&       calDevices       = datasetPtr_->getCalDevice();
@@ -3505,7 +3512,7 @@ namespace sdmbin {
 	  for(unsigned int n_f=0; n_f<v_feedId.size(); n_f++){
 	    vvvv_calDevice[n_a][n_f].resize(v_spwId.size());
 	    for(unsigned int n_s=0; n_s<v_spwId.size(); n_s++){
-	      if(coutest)cout<<" antId=" << v_antennaId[n_a].toString()
+	      if(verbose_)cout<<" antId=" << v_antennaId[n_a].toString()
 			     <<" feedId="<< v_feedId[n_f]
 			     <<" spwId=" << v_spwId[n_s].toString()
 			     <<endl;
@@ -3513,11 +3520,22 @@ namespace sdmbin {
 	      if ( (v_calDevPtr = calDevices.getByContext( v_antennaId[n_a],
 							   v_spwId[n_s],
 							   (int) v_feedId[n_f])) != 0)
-		vvvv_calDevice[n_a][n_f][n_s] = *v_calDevPtr; 
+		vvvv_calDevice[n_a][n_f][n_s] = *v_calDevPtr;
+	      else {
+		ostringstream oss;
+		oss << "Could not find a row in the table CalDevice for antennaId = "
+		     << v_antennaId[n_a].getTagValue()
+		     <<", spectralWindowId = "
+		     << v_spwId[n_s].getTagValue()
+		     << ", feedId = "
+		     << v_feedId[n_f]
+		     << endl;
+		Error(FATAL, oss.str());
+	      }
 	    }
 	  }
 	}
-      }
+	//}
       int nt=-1;
       vector<CalDeviceRow*> v_ts=vvvv_calDevice[na][nfe][nspw];   // the time series
       if(!v_ts.size())Error(FATAL, string("The CalDevice is empty, I can't go further."));
@@ -3570,7 +3588,7 @@ namespace sdmbin {
     }
     msState.subscanNum = subscanNum;
 
-    if(coutest){
+    if(verbose_){
       cout<<"State: ";
       if(msState.sig)cout<<" sig Y"; else cout<<" sig N";
       if(msState.sig)cout<<" ref Y"; else cout<<" ref N";
@@ -3582,6 +3600,7 @@ namespace sdmbin {
     // TODO the OBS_MODE
 
     subscan = subscanNum;
+    if (verbose_) cout << "SDMBinData::getMSState : exiting." << endl;
     return msState;
   }
 
