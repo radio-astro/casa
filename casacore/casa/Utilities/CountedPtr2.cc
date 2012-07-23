@@ -42,9 +42,9 @@ void throw_Null_CountedPtr_dereference_error() {
     String CasaThreadNeutral = "CasaThreadNeutral:NO";
 #endif // defined (CASA_THREAD_NEUTRAL)
 
-#if defined (USE_BOOST_SHARED_PTR)
+#if defined (USE_SHARED_PTR)
 
-#warning "****** Using boost::shared_ptr implementation in CountedPtr."
+#warning "****** Using shared pointer implementation in CountedPtr."
 
 #endif
 
