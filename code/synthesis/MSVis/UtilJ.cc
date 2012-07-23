@@ -5,7 +5,7 @@
  *      Author: jjacobs
  */
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <errno.h>
@@ -13,7 +13,7 @@
 #include <casa/aips.h>
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
-#include <casa/Utilities/CasaThreadNeutrality.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <sys/time.h>
 #include <execinfo.h>
 #include <algorithm>
@@ -24,6 +24,7 @@ using std::max;
 using std::min;
 
 using namespace casa;
+using namespace std;
 
 #include "UtilJ.h"
 
