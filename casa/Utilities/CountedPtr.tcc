@@ -29,7 +29,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-#if ! defined (USE_BOOST_SHARED_PTR)
+#if ! defined (USE_SHARED_PTR)
 
 template<class t> 
 void PtrRep<t>::freeVal() {

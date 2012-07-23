@@ -30,12 +30,23 @@
 
 #include <casa/aips.h>
 
-// Normally the build system will provide a definition for
-// USE_BOOST_SHARED_PTR or not as it sees fit
+// Uncommenting out the following two lines will define USE_SHARED_PTR and
+// cause the implementtion of CountedPtr to use a thread-safe smart
+// pointer implementation class inside (at this writing this will be
+// boost::shared_ptr but will eventually be std::shared_ptr).
+// Another effect is that portions of the measures framework will use
+// boost::recursive_mutex to make those classes friendly to multithreading.
 //
-#include <casa/Utilities/CasaThreadNeutrality.h>
+// N.B.: I would not recommend mixing defined/undefined for the two symbols.
+//
+// Changing the setting will causes a major rebuild of both the casacore
+// and code projects since CountedPtr underlies most data structures and
+// because of the template nature of CountedPtr. (jjacobs 7/19/12)
+//
+////#define USE_SHARED_PTR
+////#define CASA_THREAD_NEUTRAL
 
-#if ! defined (USE_BOOST_SHARED_PTR)
+#if ! defined (USE_SHARED_PTR)
 
 //====================================================================
 //====================================================================
@@ -574,7 +585,7 @@ public:
 
 // Keep this definition local
 
-#else // when defined (USE_BOOST_SHARED_PTR) is true
+#else // when defined (USE_SHARED_PTR) is true
 
 
 #include <boost/shared_ptr.hpp>
@@ -786,6 +797,7 @@ public:
 protected:
 
     typedef boost::shared_ptr<t> PointerRep;
+
     PointerRep pointerRep_p;
 
     t *
