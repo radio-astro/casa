@@ -243,15 +243,15 @@ if( APPLE )
 	if( NOT _gfortran_version STREQUAL "4.4" AND
 			NOT _gfortran_version STREQUAL "4.2" AND
 			NOT LLVMCOMPILER )
-	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
+	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}" )
 	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
 	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit"  )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit"  )
         endif()
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
 	if( NOT _cxx_version STREQUAL "4.4" )
-	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
+	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
 	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
