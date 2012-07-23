@@ -164,6 +164,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
         finally:
                 try:
