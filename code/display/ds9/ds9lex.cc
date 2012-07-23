@@ -1,6 +1,6 @@
-#line 2 "/Users/drs/dev/viewer/code/build/display/ds9lex.cc"
+#line 2 "/Users/drs/develop/casa/code/build/display/ds9lex.cc"
 
-#line 4 "/Users/drs/dev/viewer/code/build/display/ds9lex.cc"
+#line 4 "/Users/drs/develop/casa/code/build/display/ds9lex.cc"
 
 #define  YY_INT_ALIGNED short int
 
@@ -164,12 +164,7 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
-extern yy_size_t yyleng;
+extern int yyleng;
 
 #define EOB_ACT_CONTINUE_SCAN 0
 #define EOB_ACT_END_OF_FILE 1
@@ -193,6 +188,11 @@ extern yy_size_t yyleng;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -211,7 +211,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	yy_size_t yy_n_chars;
+	int yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -308,7 +308,7 @@ typedef unsigned char YY_CHAR;
 
 #define yytext_ptr yytext
 
-#include <display/ds9/FlexLexer.h>
+#include <FlexLexer.h>
 
 /* Done after the current pattern has been matched and before the
  * corresponding action - sets up yytext.
@@ -1475,7 +1475,7 @@ static yyconst flex_int16_t yy_chk[4143] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "implement/ds9/ds9lex.ll"
+#line 1 "ds9/ds9lex.ll"
 // Copyright (C) 1999-2010
 // Smithsonian Astrophysical Observatory, Cambridge, MA, USA
 // Copyright (C) 2011
@@ -1501,7 +1501,7 @@ static yyconst flex_int16_t yy_chk[4143] =
 //                        National Radio Astronomy Observatory
 //                        520 Edgemont Road
 //                        Charlottesville, VA 22903-2475 USA
-#line 34 "implement/ds9/ds9lex.ll"
+#line 34 "ds9/ds9lex.ll"
   #include <display/ds9/ds9lex.h>
 
   #include <stdio.h>
@@ -1518,7 +1518,7 @@ static yyconst flex_int16_t yy_chk[4143] =
   casa::viewer::ds9lex *mklexx;
 
 /* rules */
-#line 1522 "/Users/drs/dev/viewer/code/build/display/ds9lex.cc"
+#line 1522 "/Users/drs/develop/casa/code/build/display/ds9lex.cc"
 
 #define INITIAL 0
 #define DISCARD 1
@@ -1619,10 +1619,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 57 "implement/ds9/ds9lex.ll"
+#line 57 "ds9/ds9lex.ll"
 
 
-#line 1626 "/Users/drs/dev/viewer/code/build/display/ds9lex.cc"
+#line 1626 "/Users/drs/develop/casa/code/build/display/ds9lex.cc"
 
 	if ( !(yy_init) )
 		{
@@ -1704,7 +1704,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 59 "implement/ds9/ds9lex.ll"
+#line 59 "ds9/ds9lex.ll"
 { // special case-- #\n
 		  BEGIN INITIAL;
 		  yyless(0);             // put back the terminator
@@ -1714,7 +1714,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 66 "implement/ds9/ds9lex.ll"
+#line 66 "ds9/ds9lex.ll"
 {  // Discard reset of line
 		  BEGIN INITIAL;
 		  int ll = yyleng <(MKBUFSIZE-1) ? yyleng:(MKBUFSIZE-1);
@@ -1725,572 +1725,572 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 74 "implement/ds9/ds9lex.ll"
+#line 74 "ds9/ds9lex.ll"
 {return token::AMPLIFIER_;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 75 "implement/ds9/ds9lex.ll"
+#line 75 "ds9/ds9lex.ll"
 {return token::ANNULUS_;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 76 "implement/ds9/ds9lex.ll"
+#line 76 "ds9/ds9lex.ll"
 {return token::ARCMIN_;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 77 "implement/ds9/ds9lex.ll"
+#line 77 "ds9/ds9lex.ll"
 {return token::ARCSEC_;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 78 "implement/ds9/ds9lex.ll"
+#line 78 "ds9/ds9lex.ll"
 {return token::ARROW_;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 79 "implement/ds9/ds9lex.ll"
+#line 79 "ds9/ds9lex.ll"
 {return token::B1950_;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 80 "implement/ds9/ds9lex.ll"
+#line 80 "ds9/ds9lex.ll"
 {return token::BACKGROUND_;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 81 "implement/ds9/ds9lex.ll"
+#line 81 "ds9/ds9lex.ll"
 {return token::BEGIN_;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 82 "implement/ds9/ds9lex.ll"
+#line 82 "ds9/ds9lex.ll"
 {return token::BOX_;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 83 "implement/ds9/ds9lex.ll"
+#line 83 "ds9/ds9lex.ll"
 {return token::BOXCIRCLE_;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 84 "implement/ds9/ds9lex.ll"
+#line 84 "ds9/ds9lex.ll"
 {return token::BPANDA_;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 85 "implement/ds9/ds9lex.ll"
+#line 85 "ds9/ds9lex.ll"
 {return token::CALLBACK_;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 86 "implement/ds9/ds9lex.ll"
+#line 86 "ds9/ds9lex.ll"
 {return token::CIRCLE_;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 87 "implement/ds9/ds9lex.ll"
+#line 87 "ds9/ds9lex.ll"
 {return token::CIRCLE3D_;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 88 "implement/ds9/ds9lex.ll"
+#line 88 "ds9/ds9lex.ll"
 {return token::COLOR_;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 89 "implement/ds9/ds9lex.ll"
+#line 89 "ds9/ds9lex.ll"
 {return token::COMPASS_;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 90 "implement/ds9/ds9lex.ll"
+#line 90 "ds9/ds9lex.ll"
 {return token::COMPOSITE_;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 91 "implement/ds9/ds9lex.ll"
+#line 91 "ds9/ds9lex.ll"
 {return token::CPANDA_;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 92 "implement/ds9/ds9lex.ll"
+#line 92 "ds9/ds9lex.ll"
 {return token::CROSS_;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 93 "implement/ds9/ds9lex.ll"
+#line 93 "ds9/ds9lex.ll"
 {return token::DASH_;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 94 "implement/ds9/ds9lex.ll"
+#line 94 "ds9/ds9lex.ll"
 {return token::DASHLIST_;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 95 "implement/ds9/ds9lex.ll"
+#line 95 "ds9/ds9lex.ll"
 {return token::DEBUG_;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 96 "implement/ds9/ds9lex.ll"
+#line 96 "ds9/ds9lex.ll"
 {return token::DEGREES_;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 97 "implement/ds9/ds9lex.ll"
+#line 97 "ds9/ds9lex.ll"
 {return token::DELETE_;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 98 "implement/ds9/ds9lex.ll"
+#line 98 "ds9/ds9lex.ll"
 {return token::DETECTOR_;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 99 "implement/ds9/ds9lex.ll"
+#line 99 "ds9/ds9lex.ll"
 {return token::DIAMOND_;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 100 "implement/ds9/ds9lex.ll"
+#line 100 "ds9/ds9lex.ll"
 {return token::EDIT_;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 101 "implement/ds9/ds9lex.ll"
+#line 101 "ds9/ds9lex.ll"
 {return token::ELLIPSE_;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 102 "implement/ds9/ds9lex.ll"
+#line 102 "ds9/ds9lex.ll"
 {return token::ECLIPTIC_;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 103 "implement/ds9/ds9lex.ll"
+#line 103 "ds9/ds9lex.ll"
 {return token::EPANDA_;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 104 "implement/ds9/ds9lex.ll"
+#line 104 "ds9/ds9lex.ll"
 {return token::END_;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 105 "implement/ds9/ds9lex.ll"
+#line 105 "ds9/ds9lex.ll"
 {return token::FALSE_;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 106 "implement/ds9/ds9lex.ll"
+#line 106 "ds9/ds9lex.ll"
 {return token::FIELD_;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 107 "implement/ds9/ds9lex.ll"
+#line 107 "ds9/ds9lex.ll"
 {return token::FIXED_;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 108 "implement/ds9/ds9lex.ll"
+#line 108 "ds9/ds9lex.ll"
 {return token::FK4_;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 109 "implement/ds9/ds9lex.ll"
+#line 109 "ds9/ds9lex.ll"
 {return token::FK5_;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 110 "implement/ds9/ds9lex.ll"
+#line 110 "ds9/ds9lex.ll"
 {return token::FONT_;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 111 "implement/ds9/ds9lex.ll"
+#line 111 "ds9/ds9lex.ll"
 {return token::GALACTIC_;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 112 "implement/ds9/ds9lex.ll"
+#line 112 "ds9/ds9lex.ll"
 {return token::GLOBAL_;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 113 "implement/ds9/ds9lex.ll"
+#line 113 "ds9/ds9lex.ll"
 {return token::HIGHLITE_;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 114 "implement/ds9/ds9lex.ll"
+#line 114 "ds9/ds9lex.ll"
 {return token::ICRS_;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 115 "implement/ds9/ds9lex.ll"
+#line 115 "ds9/ds9lex.ll"
 {return token::IGNORE_;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 116 "implement/ds9/ds9lex.ll"
+#line 116 "ds9/ds9lex.ll"
 {return token::INCLUDE_;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 117 "implement/ds9/ds9lex.ll"
+#line 117 "ds9/ds9lex.ll"
 {return token::IMAGE_;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 118 "implement/ds9/ds9lex.ll"
+#line 118 "ds9/ds9lex.ll"
 {return token::KEY_;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 119 "implement/ds9/ds9lex.ll"
+#line 119 "ds9/ds9lex.ll"
 {return token::J2000_;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 120 "implement/ds9/ds9lex.ll"
+#line 120 "ds9/ds9lex.ll"
 {return token::LINE_;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 121 "implement/ds9/ds9lex.ll"
+#line 121 "ds9/ds9lex.ll"
 {return token::LINEAR_;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 122 "implement/ds9/ds9lex.ll"
+#line 122 "ds9/ds9lex.ll"
 {return token::MOVE_;}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 123 "implement/ds9/ds9lex.ll"
+#line 123 "ds9/ds9lex.ll"
 {return token::N_;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 124 "implement/ds9/ds9lex.ll"
+#line 124 "ds9/ds9lex.ll"
 {return token::NO_;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 125 "implement/ds9/ds9lex.ll"
+#line 125 "ds9/ds9lex.ll"
 {return token::OFF_;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 126 "implement/ds9/ds9lex.ll"
+#line 126 "ds9/ds9lex.ll"
 {return token::ON_;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 127 "implement/ds9/ds9lex.ll"
+#line 127 "ds9/ds9lex.ll"
 {return token::CPANDA_;}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 128 "implement/ds9/ds9lex.ll"
+#line 128 "ds9/ds9lex.ll"
 {return token::PHYSICAL_;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 129 "implement/ds9/ds9lex.ll"
+#line 129 "ds9/ds9lex.ll"
 {return token::PIE_;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 130 "implement/ds9/ds9lex.ll"
+#line 130 "ds9/ds9lex.ll"
 {return token::PIXELS_;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 131 "implement/ds9/ds9lex.ll"
+#line 131 "ds9/ds9lex.ll"
 {return token::POINT_;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 132 "implement/ds9/ds9lex.ll"
+#line 132 "ds9/ds9lex.ll"
 {return token::POLYGON_;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 133 "implement/ds9/ds9lex.ll"
+#line 133 "ds9/ds9lex.ll"
 {return token::PROJECTION_;}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 134 "implement/ds9/ds9lex.ll"
+#line 134 "ds9/ds9lex.ll"
 {return token::PROPERTY_;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 135 "implement/ds9/ds9lex.ll"
+#line 135 "ds9/ds9lex.ll"
 {return token::ROTATE_;}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 136 "implement/ds9/ds9lex.ll"
+#line 136 "ds9/ds9lex.ll"
 {return token::ROTBOX_;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 137 "implement/ds9/ds9lex.ll"
+#line 137 "ds9/ds9lex.ll"
 {return token::RULER_;}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 138 "implement/ds9/ds9lex.ll"
+#line 138 "ds9/ds9lex.ll"
 {return token::SELECT_;}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 139 "implement/ds9/ds9lex.ll"
+#line 139 "ds9/ds9lex.ll"
 {return token::SOURCE_;}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 140 "implement/ds9/ds9lex.ll"
+#line 140 "ds9/ds9lex.ll"
 {return token::TAG_;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 141 "implement/ds9/ds9lex.ll"
+#line 141 "ds9/ds9lex.ll"
 {return token::TEXT_;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 142 "implement/ds9/ds9lex.ll"
+#line 142 "ds9/ds9lex.ll"
 {return token::TEXTANGLE_;}
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 143 "implement/ds9/ds9lex.ll"
+#line 143 "ds9/ds9lex.ll"
 {return token::TEXTROTATE_;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 144 "implement/ds9/ds9lex.ll"
+#line 144 "ds9/ds9lex.ll"
 {return token::TILE_;}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 145 "implement/ds9/ds9lex.ll"
+#line 145 "ds9/ds9lex.ll"
 {return token::TRUE_;}
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 146 "implement/ds9/ds9lex.ll"
+#line 146 "ds9/ds9lex.ll"
 {return token::VECTOR_;}
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 147 "implement/ds9/ds9lex.ll"
+#line 147 "ds9/ds9lex.ll"
 {return token::VERSION_;}
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 148 "implement/ds9/ds9lex.ll"
+#line 148 "ds9/ds9lex.ll"
 {return token::UPDATE_;}
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 149 "implement/ds9/ds9lex.ll"
+#line 149 "ds9/ds9lex.ll"
 {return token::UNHIGHLITE_;}
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 150 "implement/ds9/ds9lex.ll"
+#line 150 "ds9/ds9lex.ll"
 {return token::UNSELECT_;}
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 151 "implement/ds9/ds9lex.ll"
+#line 151 "ds9/ds9lex.ll"
 {return token::WCS_;}
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 152 "implement/ds9/ds9lex.ll"
+#line 152 "ds9/ds9lex.ll"
 {return token::WCSA_;}
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 153 "implement/ds9/ds9lex.ll"
+#line 153 "ds9/ds9lex.ll"
 {return token::WCSB_;}
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 154 "implement/ds9/ds9lex.ll"
+#line 154 "ds9/ds9lex.ll"
 {return token::WCSC_;}
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 155 "implement/ds9/ds9lex.ll"
+#line 155 "ds9/ds9lex.ll"
 {return token::WCSD_;}
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 156 "implement/ds9/ds9lex.ll"
+#line 156 "ds9/ds9lex.ll"
 {return token::WCSE_;}
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 157 "implement/ds9/ds9lex.ll"
+#line 157 "ds9/ds9lex.ll"
 {return token::WCSF_;}
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 158 "implement/ds9/ds9lex.ll"
+#line 158 "ds9/ds9lex.ll"
 {return token::WCSG_;}
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 159 "implement/ds9/ds9lex.ll"
+#line 159 "ds9/ds9lex.ll"
 {return token::WCSH_;}
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 160 "implement/ds9/ds9lex.ll"
+#line 160 "ds9/ds9lex.ll"
 {return token::WCSI_;}
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 161 "implement/ds9/ds9lex.ll"
+#line 161 "ds9/ds9lex.ll"
 {return token::WCSJ_;}
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 162 "implement/ds9/ds9lex.ll"
+#line 162 "ds9/ds9lex.ll"
 {return token::WCSK_;}
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 163 "implement/ds9/ds9lex.ll"
+#line 163 "ds9/ds9lex.ll"
 {return token::WCSL_;}
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 164 "implement/ds9/ds9lex.ll"
+#line 164 "ds9/ds9lex.ll"
 {return token::WCSM_;}
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 165 "implement/ds9/ds9lex.ll"
+#line 165 "ds9/ds9lex.ll"
 {return token::WCSN_;}
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 166 "implement/ds9/ds9lex.ll"
+#line 166 "ds9/ds9lex.ll"
 {return token::WCSO_;}
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 167 "implement/ds9/ds9lex.ll"
+#line 167 "ds9/ds9lex.ll"
 {return token::WCSP_;}
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 168 "implement/ds9/ds9lex.ll"
+#line 168 "ds9/ds9lex.ll"
 {return token::WCSQ_;}
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 169 "implement/ds9/ds9lex.ll"
+#line 169 "ds9/ds9lex.ll"
 {return token::WCSR_;}
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 170 "implement/ds9/ds9lex.ll"
+#line 170 "ds9/ds9lex.ll"
 {return token::WCSS_;}
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 171 "implement/ds9/ds9lex.ll"
+#line 171 "ds9/ds9lex.ll"
 {return token::WCST_;}
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 172 "implement/ds9/ds9lex.ll"
+#line 172 "ds9/ds9lex.ll"
 {return token::WCSU_;}
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 173 "implement/ds9/ds9lex.ll"
+#line 173 "ds9/ds9lex.ll"
 {return token::WCSV_;}
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 174 "implement/ds9/ds9lex.ll"
+#line 174 "ds9/ds9lex.ll"
 {return token::WCSW_;}
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 175 "implement/ds9/ds9lex.ll"
+#line 175 "ds9/ds9lex.ll"
 {return token::WCSX_;}
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 176 "implement/ds9/ds9lex.ll"
+#line 176 "ds9/ds9lex.ll"
 {return token::WCSY_;}
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 177 "implement/ds9/ds9lex.ll"
+#line 177 "ds9/ds9lex.ll"
 {return token::WCSZ_;}
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 178 "implement/ds9/ds9lex.ll"
+#line 178 "ds9/ds9lex.ll"
 {return token::WCS0_;}
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 179 "implement/ds9/ds9lex.ll"
+#line 179 "ds9/ds9lex.ll"
 {return token::WIDTH_;}
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 180 "implement/ds9/ds9lex.ll"
+#line 180 "ds9/ds9lex.ll"
 {return token::X_;}
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 181 "implement/ds9/ds9lex.ll"
+#line 181 "ds9/ds9lex.ll"
 {return token::Y_;}
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 182 "implement/ds9/ds9lex.ll"
+#line 182 "ds9/ds9lex.ll"
 {return token::YES_;}
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 185 "implement/ds9/ds9lex.ll"
+#line 185 "ds9/ds9lex.ll"
 { // Integer
 		  yylval->integer = atoi(yytext);
 		  return token::INT;
 		}
 	YY_BREAK
 case 113:
-#line 191 "implement/ds9/ds9lex.ll"
+#line 191 "ds9/ds9lex.ll"
 case 114:
 YY_RULE_SETUP
-#line 191 "implement/ds9/ds9lex.ll"
+#line 191 "ds9/ds9lex.ll"
 { // Real Number
 		  yylval->real = atof(yytext);
 		  return token::REAL;
 		}
 	YY_BREAK
 case 115:
-#line 197 "implement/ds9/ds9lex.ll"
+#line 197 "ds9/ds9lex.ll"
 case 116:
 YY_RULE_SETUP
-#line 197 "implement/ds9/ds9lex.ll"
+#line 197 "ds9/ds9lex.ll"
 { // degrees
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2298,10 +2298,10 @@ YY_RULE_SETUP
 		}	
 	YY_BREAK
 case 117:
-#line 204 "implement/ds9/ds9lex.ll"
+#line 204 "ds9/ds9lex.ll"
 case 118:
 YY_RULE_SETUP
-#line 204 "implement/ds9/ds9lex.ll"
+#line 204 "ds9/ds9lex.ll"
 { // radians
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2309,10 +2309,10 @@ YY_RULE_SETUP
 		}
 	YY_BREAK
 case 119:
-#line 211 "implement/ds9/ds9lex.ll"
+#line 211 "ds9/ds9lex.ll"
 case 120:
 YY_RULE_SETUP
-#line 211 "implement/ds9/ds9lex.ll"
+#line 211 "ds9/ds9lex.ll"
 { // physical coords
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2320,10 +2320,10 @@ YY_RULE_SETUP
 		}
 	YY_BREAK
 case 121:
-#line 218 "implement/ds9/ds9lex.ll"
+#line 218 "ds9/ds9lex.ll"
 case 122:
 YY_RULE_SETUP
-#line 218 "implement/ds9/ds9lex.ll"
+#line 218 "ds9/ds9lex.ll"
 { // image coords
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2331,10 +2331,10 @@ YY_RULE_SETUP
 		}
 	YY_BREAK
 case 123:
-#line 225 "implement/ds9/ds9lex.ll"
+#line 225 "ds9/ds9lex.ll"
 case 124:
 YY_RULE_SETUP
-#line 225 "implement/ds9/ds9lex.ll"
+#line 225 "ds9/ds9lex.ll"
 { // minutes of arc
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2342,10 +2342,10 @@ YY_RULE_SETUP
 		}	
 	YY_BREAK
 case 125:
-#line 232 "implement/ds9/ds9lex.ll"
+#line 232 "ds9/ds9lex.ll"
 case 126:
 YY_RULE_SETUP
-#line 232 "implement/ds9/ds9lex.ll"
+#line 232 "ds9/ds9lex.ll"
 { // seconds of arc
 		  yytext[yyleng-1] = '\0';
 		  yylval->real = atof(yytext);
@@ -2353,10 +2353,10 @@ YY_RULE_SETUP
 		}
 	YY_BREAK
 case 127:
-#line 239 "implement/ds9/ds9lex.ll"
+#line 239 "ds9/ds9lex.ll"
 case 128:
 YY_RULE_SETUP
-#line 239 "implement/ds9/ds9lex.ll"
+#line 239 "ds9/ds9lex.ll"
 { // Sexagesimal
 		  int ll = yyleng <(MKBUFSIZE-1) ? yyleng:(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext,ll);
@@ -2365,10 +2365,10 @@ YY_RULE_SETUP
 		}	
 	YY_BREAK
 case 129:
-#line 247 "implement/ds9/ds9lex.ll"
+#line 247 "ds9/ds9lex.ll"
 case 130:
 YY_RULE_SETUP
-#line 247 "implement/ds9/ds9lex.ll"
+#line 247 "ds9/ds9lex.ll"
 { // HMS
 		  int ll = yyleng <(MKBUFSIZE-1) ? yyleng:(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext,ll);
@@ -2377,10 +2377,10 @@ YY_RULE_SETUP
 		}	
 	YY_BREAK
 case 131:
-#line 255 "implement/ds9/ds9lex.ll"
+#line 255 "ds9/ds9lex.ll"
 case 132:
 YY_RULE_SETUP
-#line 255 "implement/ds9/ds9lex.ll"
+#line 255 "ds9/ds9lex.ll"
 { // DMS
 		  int ll = yyleng <(MKBUFSIZE-1) ? yyleng:(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext,ll);
@@ -2389,10 +2389,10 @@ YY_RULE_SETUP
 		}	
 	YY_BREAK
 case 133:
-#line 263 "implement/ds9/ds9lex.ll"
+#line 263 "ds9/ds9lex.ll"
 case 134:
 YY_RULE_SETUP
-#line 263 "implement/ds9/ds9lex.ll"
+#line 263 "ds9/ds9lex.ll"
 { // Quoted String
 		  int ll = (yyleng-2)<(MKBUFSIZE-1) ? (yyleng-2):(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext+1,ll); // skip the " " 
@@ -2402,7 +2402,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-#line 270 "implement/ds9/ds9lex.ll"
+#line 270 "ds9/ds9lex.ll"
 { // Quoted String
 		  int ll = (yyleng-2)<(MKBUFSIZE-1) ? (yyleng-2):(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext+1,ll); // skip the '{'
@@ -2412,7 +2412,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 277 "implement/ds9/ds9lex.ll"
+#line 277 "ds9/ds9lex.ll"
 { // General String
 		  int ll = yyleng <(MKBUFSIZE-1) ? yyleng:(MKBUFSIZE-1);
 		  strncpy(yylval->str,yytext,ll);
@@ -2422,21 +2422,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 284 "implement/ds9/ds9lex.ll"
+#line 284 "ds9/ds9lex.ll"
 { // White Spaces
 		} 
 	YY_BREAK
 case 138:
 /* rule 138 can match eol */
 YY_RULE_SETUP
-#line 287 "implement/ds9/ds9lex.ll"
+#line 287 "ds9/ds9lex.ll"
 { // windows line feed
 		  return token::EOL_;
 		}
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 291 "implement/ds9/ds9lex.ll"
+#line 291 "ds9/ds9lex.ll"
 { // fake line feed
 		  return token::EOL_;
 		}
@@ -2444,31 +2444,31 @@ YY_RULE_SETUP
 case 140:
 /* rule 140 can match eol */
 YY_RULE_SETUP
-#line 295 "implement/ds9/ds9lex.ll"
+#line 295 "ds9/ds9lex.ll"
 { // linefeed
 		  return token::EOL_;
 		}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(DISCARD):
-#line 299 "implement/ds9/ds9lex.ll"
+#line 299 "ds9/ds9lex.ll"
 { // eof
 		  return token::EOF_;
 		}
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 303 "implement/ds9/ds9lex.ll"
+#line 303 "ds9/ds9lex.ll"
 { // Else, return the char
 		  return static_cast<token_type>(*yytext);
 		}
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 307 "implement/ds9/ds9lex.ll"
+#line 307 "ds9/ds9lex.ll"
 ECHO;
 	YY_BREAK
-#line 2472 "/Users/drs/dev/viewer/code/build/display/ds9lex.cc"
+#line 2472 "/Users/drs/develop/casa/code/build/display/ds9lex.cc"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2742,7 +2742,7 @@ int yyFlexLexer::yy_get_next_buffer()
 
 	else
 		{
-			yy_size_t num_to_read =
+			int num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -2756,7 +2756,7 @@ int yyFlexLexer::yy_get_next_buffer()
 
 			if ( b->yy_is_our_buffer )
 				{
-				yy_size_t new_size = b->yy_buf_size * 2;
+				int new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -2787,7 +2787,7 @@ int yyFlexLexer::yy_get_next_buffer()
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), num_to_read );
+			(yy_n_chars), (size_t) num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -2897,7 +2897,7 @@ int yyFlexLexer::yy_get_next_buffer()
 	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
 		{ /* need to shift things up to make room */
 		/* +2 for EOB chars. */
-		register yy_size_t number_to_move = (yy_n_chars) + 2;
+		register int number_to_move = (yy_n_chars) + 2;
 		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
 					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
 		register char *source =
@@ -2940,7 +2940,7 @@ int yyFlexLexer::yy_get_next_buffer()
 
 		else
 			{ /* need more input */
-			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -2964,7 +2964,7 @@ int yyFlexLexer::yy_get_next_buffer()
 				case EOB_ACT_END_OF_FILE:
 					{
 					if ( yywrap(  ) )
-						return 0;
+						return EOF;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
 						YY_NEW_FILE;
@@ -3210,7 +3210,7 @@ void yyFlexLexer::yypop_buffer_state (void)
  */
 void yyFlexLexer::yyensure_buffer_stack(void)
 {
-	yy_size_t num_to_alloc;
+	int num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -3365,7 +3365,7 @@ void ds9lex_free (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 307 "implement/ds9/ds9lex.ll"
+#line 307 "ds9/ds9lex.ll"
 
 
 
