@@ -53,9 +53,9 @@ namespace casa {
 	// non-const because later it would be nice to have the option of
 	// marking temporaries so that the could be automatically deleted
 	// upon exit...
-	std::string Options::temporaryDirectory( const std::string &base_dir_name ) {
+	std::string Options::temporaryDirectory( const std::string &base_dir_name, bool /*remove*/ ) {
 	    std::string result;
-	    std::string tmppath = temporaryPath( );
+	    std::string tmppath = tmp( );
 	    std::string dirname;
 	    unsigned int count = 1;
 	    char buf[4];

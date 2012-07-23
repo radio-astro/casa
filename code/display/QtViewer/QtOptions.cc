@@ -30,7 +30,7 @@
 
 namespace casa {
     namespace viewer {
-	std::string QtOptionsKernel::temporaryPath( ) const {
+	std::string QtOptionsKernel::tmp( ) const {
 	    return QDir::tempPath( ).toStdString( );
 	}
 

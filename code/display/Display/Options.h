@@ -37,15 +37,14 @@ namespace casa {
 	    public:
 		class Kernel {
 		    public:
-			virtual std::string temporaryPath( ) const = 0;
+			virtual std::string tmp( ) const = 0;
 		};
 
-		std::string temporaryPath( ) const { return kernel->temporaryPath( ); }
-		std::string temporaryDirectory( const std::string &/*base_dir_name*/ );
-
-		~Options( ) { delete kernel; }
+		std::string tmp( ) const { return kernel->tmp( ); }
+		std::string temporaryDirectory( const std::string &base_dir_name, bool remove=true );
 
 		Options( ) { }
+		virtual ~Options( ) { delete kernel; }
 
 	    private:
 		friend class options_init_;

@@ -33,7 +33,7 @@ namespace casa {
     namespace viewer {
 	class QtOptionsKernel : public Options::Kernel {
 	    public:
-		std::string temporaryPath( ) const;
+		std::string tmp( ) const;
 	};
     }
 }

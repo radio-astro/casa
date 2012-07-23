@@ -741,7 +741,7 @@ WorldCanvasHolder *DisplayData::findHolder(const WorldCanvas *wCanvas) {
 
 void DisplayData::delTmpData(String &tmpData){
 	Path tmpPath(tmpData);
-	Path tmpDir(String(viewer::options.temporaryPath( )));
+	Path tmpDir(String(viewer::options.tmp( )));
 	Path tmpPathDir(tmpPath.dirName());
 	String tmpPathDirString(tmpPathDir.absoluteName());
 	if (tmpPathDirString.find(tmpDir.absoluteName())!=0){
