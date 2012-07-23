@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.6.  */
+/* A Bison parser, made by GNU Bison 2.5.  */
 
 /* Skeleton implementation for Bison LALR(1) parsers in C++
    
-      Copyright (C) 2002-2012 Free Software Foundation, Inc.
+      Copyright (C) 2002-2011 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@
 
 /* First part of user declarations.  */
 
-/* Line 278 of lalr1.cc  */
-#line 22 "ds9/ds9parse.yy"
+/* Line 293 of lalr1.cc  */
+#line 22 "implement/ds9/ds9parse.yy"
 
 #ifdef yylex
 #undef yylex
@@ -175,16 +175,16 @@ static casa::viewer::SkyFrame checkWCSSky();
 enum {CIRCLE,BOX,DIAMOND,CROSS,XPT,ARROW,BOXCIRCLE};
 
 
-/* Line 278 of lalr1.cc  */
-#line 180 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
+/* Line 293 of lalr1.cc  */
+#line 180 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 
 
-#include "ds9parse.hh"
+#include <display/ds9/ds9parse.hh>
 
 /* User implementation prologue.  */
 
-/* Line 284 of lalr1.cc  */
-#line 327 "ds9/ds9parse.yy"
+/* Line 299 of lalr1.cc  */
+#line 327 "implement/ds9/ds9parse.yy"
 
 #include <display/ds9/ds9lex.h>
 
@@ -195,17 +195,8 @@ enum {CIRCLE,BOX,DIAMOND,CROSS,XPT,ARROW,BOXCIRCLE};
 #define yylex driver.lexer->lex
 
 
-/* Line 284 of lalr1.cc  */
-#line 200 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
-
-
-# ifndef YY_NULL
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULL nullptr
-#  else
-#   define YY_NULL 0
-#  endif
-# endif
+/* Line 299 of lalr1.cc  */
+#line 200 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 
 #ifndef YY_
 # if defined YYENABLE_NLS && YYENABLE_NLS
@@ -219,26 +210,25 @@ enum {CIRCLE,BOX,DIAMOND,CROSS,XPT,ARROW,BOXCIRCLE};
 # endif
 #endif
 
-#define YYRHSLOC(Rhs, K) ((Rhs)[K])
 /* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
    If N is 0, then set CURRENT to the empty location which ends
    the previous symbol: RHS[0] (always defined).  */
 
-# ifndef YYLLOC_DEFAULT
-#  define YYLLOC_DEFAULT(Current, Rhs, N)                               \
-    do                                                                  \
-      if (N)                                                            \
-        {                                                               \
-          (Current).begin  = YYRHSLOC (Rhs, 1).begin;                   \
-          (Current).end    = YYRHSLOC (Rhs, N).end;                     \
-        }                                                               \
-      else                                                              \
-        {                                                               \
-          (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;      \
-        }                                                               \
-    while (/*CONSTCOND*/ false)
-# endif
-
+#define YYRHSLOC(Rhs, K) ((Rhs)[K])
+#ifndef YYLLOC_DEFAULT
+# define YYLLOC_DEFAULT(Current, Rhs, N)                               \
+ do                                                                    \
+   if (N)                                                              \
+     {                                                                 \
+       (Current).begin = YYRHSLOC (Rhs, 1).begin;                      \
+       (Current).end   = YYRHSLOC (Rhs, N).end;                        \
+     }                                                                 \
+   else                                                                \
+     {                                                                 \
+       (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;        \
+     }                                                                 \
+ while (false)
+#endif
 
 /* Suppress unused-variable warnings by "using" E.  */
 #define YYUSE(e) ((void) (e))
@@ -291,8 +281,8 @@ do {					\
 
 namespace casa { namespace viewer {
 
-/* Line 352 of lalr1.cc  */
-#line 296 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
+/* Line 382 of lalr1.cc  */
+#line 286 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 
   /* Return YYSTR after stripping away unnecessary quotes and
      backslashes, so that it's suitable for yyerror.  The heuristic is
@@ -359,9 +349,6 @@ namespace casa { namespace viewer {
   {
     YYUSE (yylocationp);
     YYUSE (yyvaluep);
-    std::ostream& yyo = debug_stream ();
-    std::ostream& yyoutput = yyo;
-    YYUSE (yyoutput);
     switch (yytype)
       {
          default:
@@ -482,15 +469,15 @@ namespace casa { namespace viewer {
 
     /* User initialization code.  */
     
-/* Line 538 of lalr1.cc  */
-#line 163 "ds9/ds9parse.yy"
+/* Line 565 of lalr1.cc  */
+#line 163 "implement/ds9/ds9parse.yy"
 {
     // initialize the initial location object
     yylloc.begin.filename = yylloc.end.filename = &driver.streamname;
 }
 
-/* Line 538 of lalr1.cc  */
-#line 494 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
+/* Line 565 of lalr1.cc  */
+#line 481 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 
     /* Initialize the stacks.  The initial state will be pushed in
        yynewstate, since the latter expects the semantical and the
@@ -608,316 +595,316 @@ namespace casa { namespace viewer {
       {
 	  case 7:
 
-/* Line 663 of lalr1.cc  */
-#line 348 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 348 "implement/ds9/ds9parse.yy"
     {std::cerr << "DS9 Regions File 3.1" << std::endl;}
     break;
 
   case 9:
 
-/* Line 663 of lalr1.cc  */
-#line 351 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 351 "implement/ds9/ds9parse.yy"
     {globalTile = (yysemantic_stack_[(2) - (2)].integer);}
     break;
 
   case 10:
 
-/* Line 663 of lalr1.cc  */
-#line 353 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 353 "implement/ds9/ds9parse.yy"
     {globalSystem=(casa::viewer::CoordSystem)(yysemantic_stack_[(1) - (1)].integer);}
     break;
 
   case 12:
 
-/* Line 663 of lalr1.cc  */
-#line 354 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 354 "implement/ds9/ds9parse.yy"
     {globalSystem=globalWCS; globalSky=(casa::viewer::SkyFrame)(yysemantic_stack_[(1) - (1)].integer);}
     break;
 
   case 14:
 
-/* Line 663 of lalr1.cc  */
-#line 355 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 355 "implement/ds9/ds9parse.yy"
     {globalSystem=globalWCS; globalSky=NATIVEWCS;}
     break;
 
   case 21:
 
-/* Line 663 of lalr1.cc  */
-#line 364 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 364 "implement/ds9/ds9parse.yy"
     {globalTile = (yysemantic_stack_[(2) - (2)].integer);}
     break;
 
   case 22:
 
-/* Line 663 of lalr1.cc  */
-#line 365 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 365 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 25:
 
-/* Line 663 of lalr1.cc  */
-#line 369 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 369 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 28:
 
-/* Line 663 of lalr1.cc  */
-#line 373 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 373 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 29:
 
-/* Line 663 of lalr1.cc  */
-#line 373 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 373 "implement/ds9/ds9parse.yy"
     {strncpy(localComment,(yysemantic_stack_[(4) - (3)].str),80);}
     break;
 
   case 31:
 
-/* Line 663 of lalr1.cc  */
-#line 375 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 375 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 32:
 
-/* Line 663 of lalr1.cc  */
-#line 376 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 376 "implement/ds9/ds9parse.yy"
     {strncpy(localComment,(yysemantic_stack_[(5) - (4)].str),80);}
     break;
 
   case 34:
 
-/* Line 663 of lalr1.cc  */
-#line 380 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 380 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 35:
 
-/* Line 663 of lalr1.cc  */
-#line 380 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 380 "implement/ds9/ds9parse.yy"
     {strncpy(localComment,(yysemantic_stack_[(3) - (2)].str),80);}
     break;
 
   case 37:
 
-/* Line 663 of lalr1.cc  */
-#line 382 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 382 "implement/ds9/ds9parse.yy"
     {DISCARD_(1);}
     break;
 
   case 38:
 
-/* Line 663 of lalr1.cc  */
-#line 382 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 382 "implement/ds9/ds9parse.yy"
     {strncpy(localComment,(yysemantic_stack_[(4) - (3)].str),80);}
     break;
 
   case 40:
 
-/* Line 663 of lalr1.cc  */
-#line 386 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 386 "implement/ds9/ds9parse.yy"
     {YYACCEPT;}
     break;
 
   case 41:
 
-/* Line 663 of lalr1.cc  */
-#line 389 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 389 "implement/ds9/ds9parse.yy"
     {(yyval.real)=(yysemantic_stack_[(1) - (1)].real);}
     break;
 
   case 42:
 
-/* Line 663 of lalr1.cc  */
-#line 390 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 390 "implement/ds9/ds9parse.yy"
     {(yyval.real)=(yysemantic_stack_[(1) - (1)].integer);}
     break;
 
   case 43:
 
-/* Line 663 of lalr1.cc  */
-#line 393 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 393 "implement/ds9/ds9parse.yy"
     {set_debug_level(1);}
     break;
 
   case 44:
 
-/* Line 663 of lalr1.cc  */
-#line 394 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 394 "implement/ds9/ds9parse.yy"
     {set_debug_level(0);}
     break;
 
   case 45:
 
-/* Line 663 of lalr1.cc  */
-#line 397 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 397 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=((yysemantic_stack_[(1) - (1)].integer) ? 1 : 0);}
     break;
 
   case 46:
 
-/* Line 663 of lalr1.cc  */
-#line 399 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 399 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=1;}
     break;
 
   case 47:
 
-/* Line 663 of lalr1.cc  */
-#line 400 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 400 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=1;}
     break;
 
   case 48:
 
-/* Line 663 of lalr1.cc  */
-#line 401 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 401 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=1;}
     break;
 
   case 49:
 
-/* Line 663 of lalr1.cc  */
-#line 402 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 402 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=1;}
     break;
 
   case 50:
 
-/* Line 663 of lalr1.cc  */
-#line 404 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 404 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=0;}
     break;
 
   case 51:
 
-/* Line 663 of lalr1.cc  */
-#line 405 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 405 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=0;}
     break;
 
   case 52:
 
-/* Line 663 of lalr1.cc  */
-#line 406 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 406 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=0;}
     break;
 
   case 53:
 
-/* Line 663 of lalr1.cc  */
-#line 407 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 407 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=0;}
     break;
 
   case 60:
 
-/* Line 663 of lalr1.cc  */
-#line 422 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 422 "implement/ds9/ds9parse.yy"
     {cStatus = 0;}
     break;
 
   case 61:
 
-/* Line 663 of lalr1.cc  */
-#line 423 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 423 "implement/ds9/ds9parse.yy"
     {cStatus = 1;}
     break;
 
   case 62:
 
-/* Line 663 of lalr1.cc  */
-#line 424 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 424 "implement/ds9/ds9parse.yy"
     {cStatus = 1;}
     break;
 
   case 63:
 
-/* Line 663 of lalr1.cc  */
-#line 427 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 427 "implement/ds9/ds9parse.yy"
     {(yyval.real) = fr->mapAngleToRef(0,localSystem,localSky);}
     break;
 
   case 64:
 
-/* Line 663 of lalr1.cc  */
-#line 428 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 428 "implement/ds9/ds9parse.yy"
     {(yyval.real) = (yysemantic_stack_[(1) - (1)].real);}
     break;
 
   case 65:
 
-/* Line 663 of lalr1.cc  */
-#line 431 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 431 "implement/ds9/ds9parse.yy"
     {(yyval.real) = fr->mapAngleToRef(degToRad((yysemantic_stack_[(1) - (1)].real)),localSystem,localSky);}
     break;
 
   case 66:
 
-/* Line 663 of lalr1.cc  */
-#line 432 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 432 "implement/ds9/ds9parse.yy"
     {(yyval.real) = fr->mapAngleToRef(degToRad((yysemantic_stack_[(1) - (1)].real)),localSystem,localSky);}
     break;
 
   case 67:
 
-/* Line 663 of lalr1.cc  */
-#line 433 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 433 "implement/ds9/ds9parse.yy"
     {(yyval.real) = fr->mapAngleToRef((yysemantic_stack_[(1) - (1)].real),localSystem,localSky);}
     break;
 
   case 68:
 
-/* Line 663 of lalr1.cc  */
-#line 436 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 436 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), localSystem, DEGREES);}
     break;
 
   case 69:
 
-/* Line 663 of lalr1.cc  */
-#line 437 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 437 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), PHYSICAL);}
     break;
 
   case 70:
 
-/* Line 663 of lalr1.cc  */
-#line 438 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 438 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), IMAGE);}
     break;
 
   case 71:
 
-/* Line 663 of lalr1.cc  */
-#line 439 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 439 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), checkWCSSystem(), DEGREES);}
     break;
 
   case 72:
 
-/* Line 663 of lalr1.cc  */
-#line 440 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 440 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), checkWCSSystem(), ARCMIN);}
     break;
 
   case 73:
 
-/* Line 663 of lalr1.cc  */
-#line 441 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 441 "implement/ds9/ds9parse.yy"
     {(yyval.real) = FITSPTR->mapLenToRef((yysemantic_stack_[(1) - (1)].real), checkWCSSystem(), ARCSEC);}
     break;
 
   case 74:
 
-/* Line 663 of lalr1.cc  */
-#line 445 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 445 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), localSystem, DEGREES);
 	  (yyval.vector)[0] = r[0];
@@ -928,8 +915,8 @@ namespace casa { namespace viewer {
 
   case 75:
 
-/* Line 663 of lalr1.cc  */
-#line 452 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 452 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), PHYSICAL);
 	  (yyval.vector)[0] = r[0];
@@ -940,8 +927,8 @@ namespace casa { namespace viewer {
 
   case 76:
 
-/* Line 663 of lalr1.cc  */
-#line 459 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 459 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), IMAGE);
 	  (yyval.vector)[0] = r[0];
@@ -952,8 +939,8 @@ namespace casa { namespace viewer {
 
   case 77:
 
-/* Line 663 of lalr1.cc  */
-#line 466 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 466 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)),checkWCSSystem(),DEGREES);
 	  (yyval.vector)[0] = r[0];
@@ -964,8 +951,8 @@ namespace casa { namespace viewer {
 
   case 78:
 
-/* Line 663 of lalr1.cc  */
-#line 473 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 473 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)),checkWCSSystem(),ARCMIN);
 	  (yyval.vector)[0] = r[0];
@@ -976,8 +963,8 @@ namespace casa { namespace viewer {
 
   case 79:
 
-/* Line 663 of lalr1.cc  */
-#line 480 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 480 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r=FITSPTR->mapLenToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)),checkWCSSystem(),ARCSEC);
 	  (yyval.vector)[0] = r[0];
@@ -988,36 +975,36 @@ namespace casa { namespace viewer {
 
   case 80:
 
-/* Line 663 of lalr1.cc  */
-#line 488 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 488 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 81:
 
-/* Line 663 of lalr1.cc  */
-#line 491 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 491 "implement/ds9/ds9parse.yy"
     {(yyval.real) = parseSEXStr((yysemantic_stack_[(1) - (1)].str));}
     break;
 
   case 82:
 
-/* Line 663 of lalr1.cc  */
-#line 494 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 494 "implement/ds9/ds9parse.yy"
     {(yyval.real) = parseHMSStr((yysemantic_stack_[(1) - (1)].str));}
     break;
 
   case 83:
 
-/* Line 663 of lalr1.cc  */
-#line 497 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 497 "implement/ds9/ds9parse.yy"
     {(yyval.real) = parseDMSStr((yysemantic_stack_[(1) - (1)].str));}
     break;
 
   case 84:
 
-/* Line 663 of lalr1.cc  */
-#line 501 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 501 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r;
 	  casa::viewer::CoordSystem sys = checkWCSSystem();
@@ -1034,8 +1021,8 @@ namespace casa { namespace viewer {
 
   case 85:
 
-/* Line 663 of lalr1.cc  */
-#line 514 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 514 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)),
 	  checkWCSSystem(), checkWCSSky());
@@ -1047,8 +1034,8 @@ namespace casa { namespace viewer {
 
   case 86:
 
-/* Line 663 of lalr1.cc  */
-#line 522 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 522 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)),
 	  checkWCSSystem(), checkWCSSky());
@@ -1060,8 +1047,8 @@ namespace casa { namespace viewer {
 
   case 87:
 
-/* Line 663 of lalr1.cc  */
-#line 530 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 530 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), localSystem, localSky);
 	  (yyval.vector)[0] = r[0];
@@ -1072,8 +1059,8 @@ namespace casa { namespace viewer {
 
   case 88:
 
-/* Line 663 of lalr1.cc  */
-#line 537 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 537 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), 
 	    checkWCSSystem(), checkWCSSky());
@@ -1085,8 +1072,8 @@ namespace casa { namespace viewer {
 
   case 89:
 
-/* Line 663 of lalr1.cc  */
-#line 545 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 545 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), IMAGE);
 	  (yyval.vector)[0] = r[0];
@@ -1097,8 +1084,8 @@ namespace casa { namespace viewer {
 
   case 90:
 
-/* Line 663 of lalr1.cc  */
-#line 552 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 552 "implement/ds9/ds9parse.yy"
     {
 	  casa::viewer::Vector r = FITSPTR->mapToRef(doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real)), PHYSICAL);
 	  (yyval.vector)[0] = r[0];
@@ -1108,526 +1095,526 @@ namespace casa { namespace viewer {
 
   case 91:
 
-/* Line 663 of lalr1.cc  */
-#line 559 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 559 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = IMAGE;}
     break;
 
   case 92:
 
-/* Line 663 of lalr1.cc  */
-#line 560 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 560 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = PHYSICAL;}
     break;
 
   case 93:
 
-/* Line 663 of lalr1.cc  */
-#line 561 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 561 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = DETECTOR;}
     break;
 
   case 94:
 
-/* Line 663 of lalr1.cc  */
-#line 562 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 562 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = AMPLIFIER;}
     break;
 
   case 95:
 
-/* Line 663 of lalr1.cc  */
-#line 563 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 563 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = (yysemantic_stack_[(1) - (1)].integer); globalWCS = (casa::viewer::CoordSystem)(yysemantic_stack_[(1) - (1)].integer);}
     break;
 
   case 96:
 
-/* Line 663 of lalr1.cc  */
-#line 566 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 566 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCS;}
     break;
 
   case 97:
 
-/* Line 663 of lalr1.cc  */
-#line 567 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 567 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSA;}
     break;
 
   case 98:
 
-/* Line 663 of lalr1.cc  */
-#line 568 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 568 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSB;}
     break;
 
   case 99:
 
-/* Line 663 of lalr1.cc  */
-#line 569 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 569 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSC;}
     break;
 
   case 100:
 
-/* Line 663 of lalr1.cc  */
-#line 570 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 570 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSD;}
     break;
 
   case 101:
 
-/* Line 663 of lalr1.cc  */
-#line 571 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 571 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSE;}
     break;
 
   case 102:
 
-/* Line 663 of lalr1.cc  */
-#line 572 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 572 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSF;}
     break;
 
   case 103:
 
-/* Line 663 of lalr1.cc  */
-#line 573 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 573 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSG;}
     break;
 
   case 104:
 
-/* Line 663 of lalr1.cc  */
-#line 574 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 574 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSH;}
     break;
 
   case 105:
 
-/* Line 663 of lalr1.cc  */
-#line 575 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 575 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSI;}
     break;
 
   case 106:
 
-/* Line 663 of lalr1.cc  */
-#line 576 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 576 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSJ;}
     break;
 
   case 107:
 
-/* Line 663 of lalr1.cc  */
-#line 577 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 577 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSK;}
     break;
 
   case 108:
 
-/* Line 663 of lalr1.cc  */
-#line 578 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 578 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSL;}
     break;
 
   case 109:
 
-/* Line 663 of lalr1.cc  */
-#line 579 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 579 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSM;}
     break;
 
   case 110:
 
-/* Line 663 of lalr1.cc  */
-#line 580 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 580 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSN;}
     break;
 
   case 111:
 
-/* Line 663 of lalr1.cc  */
-#line 581 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 581 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSO;}
     break;
 
   case 112:
 
-/* Line 663 of lalr1.cc  */
-#line 582 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 582 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSP;}
     break;
 
   case 113:
 
-/* Line 663 of lalr1.cc  */
-#line 583 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 583 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSQ;}
     break;
 
   case 114:
 
-/* Line 663 of lalr1.cc  */
-#line 584 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 584 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSR;}
     break;
 
   case 115:
 
-/* Line 663 of lalr1.cc  */
-#line 585 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 585 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSS;}
     break;
 
   case 116:
 
-/* Line 663 of lalr1.cc  */
-#line 586 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 586 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCST;}
     break;
 
   case 117:
 
-/* Line 663 of lalr1.cc  */
-#line 587 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 587 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSU;}
     break;
 
   case 118:
 
-/* Line 663 of lalr1.cc  */
-#line 588 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 588 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSV;}
     break;
 
   case 119:
 
-/* Line 663 of lalr1.cc  */
-#line 589 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 589 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSW;}
     break;
 
   case 120:
 
-/* Line 663 of lalr1.cc  */
-#line 590 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 590 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSX;}
     break;
 
   case 121:
 
-/* Line 663 of lalr1.cc  */
-#line 591 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 591 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSY;}
     break;
 
   case 122:
 
-/* Line 663 of lalr1.cc  */
-#line 592 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 592 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCSZ;}
     break;
 
   case 123:
 
-/* Line 663 of lalr1.cc  */
-#line 593 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 593 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = WCS0;}
     break;
 
   case 124:
 
-/* Line 663 of lalr1.cc  */
-#line 596 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 596 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = FK4;}
     break;
 
   case 125:
 
-/* Line 663 of lalr1.cc  */
-#line 597 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 597 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = FK4;}
     break;
 
   case 126:
 
-/* Line 663 of lalr1.cc  */
-#line 598 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 598 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = FK5;}
     break;
 
   case 127:
 
-/* Line 663 of lalr1.cc  */
-#line 599 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 599 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = FK5;}
     break;
 
   case 128:
 
-/* Line 663 of lalr1.cc  */
-#line 600 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 600 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = ICRS;}
     break;
 
   case 129:
 
-/* Line 663 of lalr1.cc  */
-#line 601 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 601 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = GALACTIC;}
     break;
 
   case 130:
 
-/* Line 663 of lalr1.cc  */
-#line 602 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 602 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = ECLIPTIC;}
     break;
 
   case 131:
 
-/* Line 663 of lalr1.cc  */
-#line 605 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 605 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=DEGREES;}
     break;
 
   case 132:
 
-/* Line 663 of lalr1.cc  */
-#line 606 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 606 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=ARCMIN;}
     break;
 
   case 133:
 
-/* Line 663 of lalr1.cc  */
-#line 607 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 607 "implement/ds9/ds9parse.yy"
     {(yyval.integer)=ARCSEC;}
     break;
 
   case 134:
 
-/* Line 663 of lalr1.cc  */
-#line 610 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 610 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::SELECT;}
     break;
 
   case 135:
 
-/* Line 663 of lalr1.cc  */
-#line 611 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 611 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::HIGHLITE;}
     break;
 
   case 136:
 
-/* Line 663 of lalr1.cc  */
-#line 612 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 612 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::DASH;}
     break;
 
   case 137:
 
-/* Line 663 of lalr1.cc  */
-#line 613 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 613 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::FIXED;}
     break;
 
   case 138:
 
-/* Line 663 of lalr1.cc  */
-#line 614 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 614 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::EDIT;}
     break;
 
   case 139:
 
-/* Line 663 of lalr1.cc  */
-#line 615 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 615 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::MOVE;}
     break;
 
   case 140:
 
-/* Line 663 of lalr1.cc  */
-#line 616 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 616 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::ROTATE;}
     break;
 
   case 141:
 
-/* Line 663 of lalr1.cc  */
-#line 617 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 617 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::DELETE;}
     break;
 
   case 142:
 
-/* Line 663 of lalr1.cc  */
-#line 618 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 618 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::INCLUDE;}
     break;
 
   case 143:
 
-/* Line 663 of lalr1.cc  */
-#line 619 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 619 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = Marker::SOURCE;}
     break;
 
   case 144:
 
-/* Line 663 of lalr1.cc  */
-#line 622 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 622 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::SELECTCB;}
     break;
 
   case 145:
 
-/* Line 663 of lalr1.cc  */
-#line 623 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 623 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::UNSELECTCB;}
     break;
 
   case 146:
 
-/* Line 663 of lalr1.cc  */
-#line 624 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 624 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::HIGHLITECB;}
     break;
 
   case 147:
 
-/* Line 663 of lalr1.cc  */
-#line 625 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 625 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::UNHIGHLITECB;}
     break;
 
   case 148:
 
-/* Line 663 of lalr1.cc  */
-#line 626 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 626 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::MOVEBEGINCB;}
     break;
 
   case 149:
 
-/* Line 663 of lalr1.cc  */
-#line 627 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 627 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::MOVECB;}
     break;
 
   case 150:
 
-/* Line 663 of lalr1.cc  */
-#line 628 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 628 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::MOVEENDCB;}
     break;
 
   case 151:
 
-/* Line 663 of lalr1.cc  */
-#line 629 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 629 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::EDITBEGINCB;}
     break;
 
   case 152:
 
-/* Line 663 of lalr1.cc  */
-#line 630 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 630 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::EDITCB;}
     break;
 
   case 153:
 
-/* Line 663 of lalr1.cc  */
-#line 631 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 631 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::EDITENDCB;}
     break;
 
   case 154:
 
-/* Line 663 of lalr1.cc  */
-#line 632 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 632 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::ROTATEBEGINCB;}
     break;
 
   case 155:
 
-/* Line 663 of lalr1.cc  */
-#line 633 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 633 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::ROTATECB;}
     break;
 
   case 156:
 
-/* Line 663 of lalr1.cc  */
-#line 634 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 634 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::ROTATEENDCB;}
     break;
 
   case 157:
 
-/* Line 663 of lalr1.cc  */
-#line 635 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 635 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::DELETECB;}
     break;
 
   case 158:
 
-/* Line 663 of lalr1.cc  */
-#line 636 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 636 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::TEXTCB;}
     break;
 
   case 159:
 
-/* Line 663 of lalr1.cc  */
-#line 637 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 637 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::COLORCB;}
     break;
 
   case 160:
 
-/* Line 663 of lalr1.cc  */
-#line 638 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 638 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::LINEWIDTHCB;}
     break;
 
   case 161:
 
-/* Line 663 of lalr1.cc  */
-#line 639 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 639 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::PROPERTYCB;}
     break;
 
   case 162:
 
-/* Line 663 of lalr1.cc  */
-#line 640 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 640 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::FONTCB;}
     break;
 
   case 163:
 
-/* Line 663 of lalr1.cc  */
-#line 641 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 641 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::KEYCB;}
     break;
 
   case 164:
 
-/* Line 663 of lalr1.cc  */
-#line 642 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 642 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CallBack::UPDATECB;}
     break;
 
   case 167:
 
-/* Line 663 of lalr1.cc  */
-#line 650 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 650 "implement/ds9/ds9parse.yy"
     {
 	  setProps(&globalProps,(yysemantic_stack_[(3) - (1)].integer),(yysemantic_stack_[(3) - (3)].integer));
 	  setProps(&localProps,(yysemantic_stack_[(3) - (1)].integer),(yysemantic_stack_[(3) - (3)].integer));
@@ -1636,8 +1623,8 @@ namespace casa { namespace viewer {
 
   case 168:
 
-/* Line 663 of lalr1.cc  */
-#line 655 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 655 "implement/ds9/ds9parse.yy"
     {
 	  strncpy(globalColor,(yysemantic_stack_[(3) - (3)].str),16);
 	  strncpy(localColor,(yysemantic_stack_[(3) - (3)].str),16);
@@ -1646,8 +1633,8 @@ namespace casa { namespace viewer {
 
   case 169:
 
-/* Line 663 of lalr1.cc  */
-#line 659 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 659 "implement/ds9/ds9parse.yy"
     {
 	  strcpy(globalColor,"#");
 	  strncat(globalColor,(yysemantic_stack_[(4) - (4)].str),16);
@@ -1657,8 +1644,8 @@ namespace casa { namespace viewer {
 
   case 170:
 
-/* Line 663 of lalr1.cc  */
-#line 665 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 665 "implement/ds9/ds9parse.yy"
     {
 	  globalDash[0] = localDash[0] =(yysemantic_stack_[(4) - (3)].integer);
 	  globalDash[1] = localDash[1] =(yysemantic_stack_[(4) - (4)].integer);
@@ -1667,15 +1654,15 @@ namespace casa { namespace viewer {
 
   case 171:
 
-/* Line 663 of lalr1.cc  */
-#line 669 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 669 "implement/ds9/ds9parse.yy"
     {globalWidth = localWidth = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 172:
 
-/* Line 663 of lalr1.cc  */
-#line 671 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 671 "implement/ds9/ds9parse.yy"
     {
 	  strncpy(globalFont,(yysemantic_stack_[(3) - (3)].str),32);
 	  strncpy(localFont,(yysemantic_stack_[(3) - (3)].str),32);
@@ -1684,8 +1671,8 @@ namespace casa { namespace viewer {
 
   case 173:
 
-/* Line 663 of lalr1.cc  */
-#line 676 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 676 "implement/ds9/ds9parse.yy"
     {
 	  strncpy(globalText,(yysemantic_stack_[(3) - (3)].str),80);
 	  strncpy(localText,(yysemantic_stack_[(3) - (3)].str),80);
@@ -1694,8 +1681,8 @@ namespace casa { namespace viewer {
 
   case 174:
 
-/* Line 663 of lalr1.cc  */
-#line 681 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 681 "implement/ds9/ds9parse.yy"
     {
 	  setProps(&globalProps,Marker::DASH,1);
 	  setProps(&localProps,Marker::DASH,1);
@@ -1704,8 +1691,8 @@ namespace casa { namespace viewer {
 
   case 175:
 
-/* Line 663 of lalr1.cc  */
-#line 686 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 686 "implement/ds9/ds9parse.yy"
     {
 	  setProps(&globalProps,Marker::SOURCE,1);
 	  setProps(&localProps,Marker::SOURCE,1);
@@ -1714,8 +1701,8 @@ namespace casa { namespace viewer {
 
   case 176:
 
-/* Line 663 of lalr1.cc  */
-#line 691 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 691 "implement/ds9/ds9parse.yy"
     {
 	  setProps(&globalProps,Marker::SOURCE,0);
 	  setProps(&localProps,Marker::SOURCE,0);
@@ -1724,15 +1711,15 @@ namespace casa { namespace viewer {
 
   case 177:
 
-/* Line 663 of lalr1.cc  */
-#line 695 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 695 "implement/ds9/ds9parse.yy"
     {globalPoint = localPoint = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 178:
 
-/* Line 663 of lalr1.cc  */
-#line 697 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 697 "implement/ds9/ds9parse.yy"
     {
 	  globalPoint = localPoint = (yysemantic_stack_[(4) - (3)].integer);
 	  globalPointSize = localPointSize = (yysemantic_stack_[(4) - (4)].integer);
@@ -1741,8 +1728,8 @@ namespace casa { namespace viewer {
 
   case 179:
 
-/* Line 663 of lalr1.cc  */
-#line 702 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 702 "implement/ds9/ds9parse.yy"
     {
 	  globalLine1 = localLine1 = (yysemantic_stack_[(4) - (3)].integer);
 	  globalLine2 = localLine2 = (yysemantic_stack_[(4) - (4)].integer);
@@ -1751,15 +1738,15 @@ namespace casa { namespace viewer {
 
   case 180:
 
-/* Line 663 of lalr1.cc  */
-#line 706 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 706 "implement/ds9/ds9parse.yy"
     {globalVector = localVector = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 181:
 
-/* Line 663 of lalr1.cc  */
-#line 708 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 708 "implement/ds9/ds9parse.yy"
     {
 	  globalComposite = localComposite = (yysemantic_stack_[(3) - (3)].integer);
 	}
@@ -1767,15 +1754,15 @@ namespace casa { namespace viewer {
 
   case 182:
 
-/* Line 663 of lalr1.cc  */
-#line 711 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 711 "implement/ds9/ds9parse.yy"
     {}
     break;
 
   case 183:
 
-/* Line 663 of lalr1.cc  */
-#line 713 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 713 "implement/ds9/ds9parse.yy"
     {
 	  strncpy(globalCompassNorth,(yysemantic_stack_[(7) - (4)].str),80);
 	  strncpy(globalCompassEast,(yysemantic_stack_[(7) - (5)].str),80);
@@ -1788,29 +1775,29 @@ namespace casa { namespace viewer {
 
   case 184:
 
-/* Line 663 of lalr1.cc  */
-#line 721 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 721 "implement/ds9/ds9parse.yy"
     {globalTextAngle = localTextAngle = (yysemantic_stack_[(3) - (3)].real);}
     break;
 
   case 185:
 
-/* Line 663 of lalr1.cc  */
-#line 722 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 722 "implement/ds9/ds9parse.yy"
     {globalTextRotate = localTextRotate = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 186:
 
-/* Line 663 of lalr1.cc  */
-#line 723 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 723 "implement/ds9/ds9parse.yy"
     {globalWCS = (casa::viewer::CoordSystem)(yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 187:
 
-/* Line 663 of lalr1.cc  */
-#line 727 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 727 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(4) - (1)].integer);
 	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(4) - (2)].integer);
@@ -1821,8 +1808,8 @@ namespace casa { namespace viewer {
 
   case 188:
 
-/* Line 663 of lalr1.cc  */
-#line 734 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 734 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1833,8 +1820,8 @@ namespace casa { namespace viewer {
 
   case 189:
 
-/* Line 663 of lalr1.cc  */
-#line 741 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 741 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1845,8 +1832,8 @@ namespace casa { namespace viewer {
 
   case 190:
 
-/* Line 663 of lalr1.cc  */
-#line 748 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 748 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
 	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (1)].integer);
@@ -1857,8 +1844,8 @@ namespace casa { namespace viewer {
 
   case 191:
 
-/* Line 663 of lalr1.cc  */
-#line 755 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 755 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
 	  globalRulerSkyFrame = localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (1)].integer);
@@ -1869,8 +1856,8 @@ namespace casa { namespace viewer {
 
   case 192:
 
-/* Line 663 of lalr1.cc  */
-#line 762 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 762 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1881,8 +1868,8 @@ namespace casa { namespace viewer {
 
   case 193:
 
-/* Line 663 of lalr1.cc  */
-#line 769 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 769 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = WCS;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1893,8 +1880,8 @@ namespace casa { namespace viewer {
 
   case 194:
 
-/* Line 663 of lalr1.cc  */
-#line 776 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 776 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = IMAGE;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1905,8 +1892,8 @@ namespace casa { namespace viewer {
 
   case 195:
 
-/* Line 663 of lalr1.cc  */
-#line 783 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 783 "implement/ds9/ds9parse.yy"
     {
 	  globalRulerCoordSystem = localRulerCoordSystem = IMAGE;
 	  globalRulerSkyFrame = localRulerSkyFrame = FK5;
@@ -1917,8 +1904,8 @@ namespace casa { namespace viewer {
 
   case 196:
 
-/* Line 663 of lalr1.cc  */
-#line 792 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 792 "implement/ds9/ds9parse.yy"
     {
 	  globalCompassCoordSystem = localCompassCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  globalCompassSkyFrame = localCompassSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (2)].integer);
@@ -1927,8 +1914,8 @@ namespace casa { namespace viewer {
 
   case 197:
 
-/* Line 663 of lalr1.cc  */
-#line 797 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 797 "implement/ds9/ds9parse.yy"
     {
 	  globalCompassCoordSystem = localCompassCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(1) - (1)].integer);
 	  globalCompassSkyFrame = localCompassSkyFrame = FK5;
@@ -1937,8 +1924,8 @@ namespace casa { namespace viewer {
 
   case 198:
 
-/* Line 663 of lalr1.cc  */
-#line 802 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 802 "implement/ds9/ds9parse.yy"
     {
 	  globalCompassCoordSystem = localCompassCoordSystem = WCS;
 	  globalCompassSkyFrame = localCompassSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(1) - (1)].integer);
@@ -1947,8 +1934,8 @@ namespace casa { namespace viewer {
 
   case 199:
 
-/* Line 663 of lalr1.cc  */
-#line 807 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 807 "implement/ds9/ds9parse.yy"
     {
 	  globalCompassCoordSystem = localCompassCoordSystem = WCS;
 	  globalCompassSkyFrame = localCompassSkyFrame = FK5;
@@ -1957,8 +1944,8 @@ namespace casa { namespace viewer {
 
   case 200:
 
-/* Line 663 of lalr1.cc  */
-#line 813 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 813 "implement/ds9/ds9parse.yy"
     {
 	  // global properties
 	  globalSystem = PHYSICAL;
@@ -2003,22 +1990,22 @@ namespace casa { namespace viewer {
 
   case 203:
 
-/* Line 663 of lalr1.cc  */
-#line 859 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 859 "implement/ds9/ds9parse.yy"
     {setProps(&localProps,(yysemantic_stack_[(3) - (1)].integer),(yysemantic_stack_[(3) - (3)].integer));}
     break;
 
   case 204:
 
-/* Line 663 of lalr1.cc  */
-#line 860 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 860 "implement/ds9/ds9parse.yy"
     {strncpy(localColor,(yysemantic_stack_[(3) - (3)].str),16);}
     break;
 
   case 205:
 
-/* Line 663 of lalr1.cc  */
-#line 861 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 861 "implement/ds9/ds9parse.yy"
     {
 	  strcpy(localColor,"#");
 	  strncat(localColor,(yysemantic_stack_[(4) - (4)].str),16);
@@ -2027,8 +2014,8 @@ namespace casa { namespace viewer {
 
   case 206:
 
-/* Line 663 of lalr1.cc  */
-#line 866 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 866 "implement/ds9/ds9parse.yy"
     {
 	  localDash[0] =(yysemantic_stack_[(4) - (3)].integer);
 	  localDash[1] =(yysemantic_stack_[(4) - (4)].integer);
@@ -2037,99 +2024,99 @@ namespace casa { namespace viewer {
 
   case 207:
 
-/* Line 663 of lalr1.cc  */
-#line 870 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 870 "implement/ds9/ds9parse.yy"
     {localWidth = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 208:
 
-/* Line 663 of lalr1.cc  */
-#line 871 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 871 "implement/ds9/ds9parse.yy"
     {strncpy(localFont,(yysemantic_stack_[(3) - (3)].str),32);}
     break;
 
   case 209:
 
-/* Line 663 of lalr1.cc  */
-#line 872 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 872 "implement/ds9/ds9parse.yy"
     {strncpy(localText,(yysemantic_stack_[(3) - (3)].str),80);}
     break;
 
   case 210:
 
-/* Line 663 of lalr1.cc  */
-#line 873 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 873 "implement/ds9/ds9parse.yy"
     {taglist.push_back((yysemantic_stack_[(3) - (3)].str));}
     break;
 
   case 211:
 
-/* Line 663 of lalr1.cc  */
-#line 874 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 874 "implement/ds9/ds9parse.yy"
     {/*cblist.push_back(new CallBack(fr->getInterp(),(CallBack::Type)$3,$4,$5));*/}
     break;
 
   case 212:
 
-/* Line 663 of lalr1.cc  */
-#line 875 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 875 "implement/ds9/ds9parse.yy"
     {setProps(&localProps,Marker::DASH,1);}
     break;
 
   case 213:
 
-/* Line 663 of lalr1.cc  */
-#line 876 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 876 "implement/ds9/ds9parse.yy"
     {setProps(&localProps,Marker::SOURCE,1);}
     break;
 
   case 214:
 
-/* Line 663 of lalr1.cc  */
-#line 877 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 877 "implement/ds9/ds9parse.yy"
     {setProps(&localProps,Marker::SOURCE,0);}
     break;
 
   case 215:
 
-/* Line 663 of lalr1.cc  */
-#line 879 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 879 "implement/ds9/ds9parse.yy"
     {localPoint = (yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 216:
 
-/* Line 663 of lalr1.cc  */
-#line 880 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 880 "implement/ds9/ds9parse.yy"
     {localPoint = (yysemantic_stack_[(4) - (3)].integer); localPointSize = (yysemantic_stack_[(4) - (4)].integer);}
     break;
 
   case 217:
 
-/* Line 663 of lalr1.cc  */
-#line 881 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 881 "implement/ds9/ds9parse.yy"
     {localLine1=(yysemantic_stack_[(4) - (3)].integer); localLine2=(yysemantic_stack_[(4) - (4)].integer);}
     break;
 
   case 218:
 
-/* Line 663 of lalr1.cc  */
-#line 882 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 882 "implement/ds9/ds9parse.yy"
     {localVector=(yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 219:
 
-/* Line 663 of lalr1.cc  */
-#line 883 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 883 "implement/ds9/ds9parse.yy"
     {localComposite=(yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 221:
 
-/* Line 663 of lalr1.cc  */
-#line 886 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 886 "implement/ds9/ds9parse.yy"
     {
 	  strncpy(localCompassNorth,(yysemantic_stack_[(7) - (4)].str),80);
 	  strncpy(localCompassEast,(yysemantic_stack_[(7) - (5)].str),80);
@@ -2140,22 +2127,22 @@ namespace casa { namespace viewer {
 
   case 222:
 
-/* Line 663 of lalr1.cc  */
-#line 892 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 892 "implement/ds9/ds9parse.yy"
     {localTextAngle=(yysemantic_stack_[(3) - (3)].real);}
     break;
 
   case 223:
 
-/* Line 663 of lalr1.cc  */
-#line 893 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 893 "implement/ds9/ds9parse.yy"
     {localTextRotate=(yysemantic_stack_[(3) - (3)].integer);}
     break;
 
   case 227:
 
-/* Line 663 of lalr1.cc  */
-#line 900 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 900 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(4) - (1)].integer);
 	  localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(4) - (2)].integer);
@@ -2166,8 +2153,8 @@ namespace casa { namespace viewer {
 
   case 228:
 
-/* Line 663 of lalr1.cc  */
-#line 907 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 907 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  localRulerSkyFrame = FK5;
@@ -2178,8 +2165,8 @@ namespace casa { namespace viewer {
 
   case 229:
 
-/* Line 663 of lalr1.cc  */
-#line 914 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 914 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  localRulerSkyFrame = FK5;
@@ -2190,8 +2177,8 @@ namespace casa { namespace viewer {
 
   case 230:
 
-/* Line 663 of lalr1.cc  */
-#line 921 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 921 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = WCS;
 	  localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (1)].integer);
@@ -2202,8 +2189,8 @@ namespace casa { namespace viewer {
 
   case 231:
 
-/* Line 663 of lalr1.cc  */
-#line 928 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 928 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = WCS;
 	  localRulerSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (1)].integer);
@@ -2214,8 +2201,8 @@ namespace casa { namespace viewer {
 
   case 232:
 
-/* Line 663 of lalr1.cc  */
-#line 935 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 935 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = WCS;
 	  localRulerSkyFrame = FK5;
@@ -2226,8 +2213,8 @@ namespace casa { namespace viewer {
 
   case 233:
 
-/* Line 663 of lalr1.cc  */
-#line 942 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 942 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = WCS;
 	  localRulerSkyFrame = FK5;
@@ -2238,8 +2225,8 @@ namespace casa { namespace viewer {
 
   case 234:
 
-/* Line 663 of lalr1.cc  */
-#line 949 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 949 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = IMAGE;
 	  localRulerSkyFrame = FK5;
@@ -2250,8 +2237,8 @@ namespace casa { namespace viewer {
 
   case 235:
 
-/* Line 663 of lalr1.cc  */
-#line 956 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 956 "implement/ds9/ds9parse.yy"
     {
 	  localRulerCoordSystem = IMAGE;
 	  localRulerSkyFrame = FK5;
@@ -2262,8 +2249,8 @@ namespace casa { namespace viewer {
 
   case 236:
 
-/* Line 663 of lalr1.cc  */
-#line 965 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 965 "implement/ds9/ds9parse.yy"
     {
 	  localCompassCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(2) - (1)].integer);
 	  localCompassSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(2) - (2)].integer);
@@ -2272,8 +2259,8 @@ namespace casa { namespace viewer {
 
   case 237:
 
-/* Line 663 of lalr1.cc  */
-#line 970 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 970 "implement/ds9/ds9parse.yy"
     {
 	  localCompassCoordSystem = (casa::viewer::CoordSystem)(yysemantic_stack_[(1) - (1)].integer);
 	  localCompassSkyFrame = FK5;
@@ -2282,8 +2269,8 @@ namespace casa { namespace viewer {
 
   case 238:
 
-/* Line 663 of lalr1.cc  */
-#line 975 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 975 "implement/ds9/ds9parse.yy"
     {
 	  localCompassCoordSystem = WCS;
 	  localCompassSkyFrame = (casa::viewer::SkyFrame)(yysemantic_stack_[(1) - (1)].integer);
@@ -2292,8 +2279,8 @@ namespace casa { namespace viewer {
 
   case 239:
 
-/* Line 663 of lalr1.cc  */
-#line 980 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 980 "implement/ds9/ds9parse.yy"
     {
 	  localCompassCoordSystem = WCS;
 	  localCompassSkyFrame = FK5;
@@ -2302,71 +2289,71 @@ namespace casa { namespace viewer {
 
   case 240:
 
-/* Line 663 of lalr1.cc  */
-#line 986 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 986 "implement/ds9/ds9parse.yy"
     {aNum=0; aAngNum=0;}
     break;
 
   case 241:
 
-/* Line 663 of lalr1.cc  */
-#line 986 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 986 "implement/ds9/ds9parse.yy"
     {localCpanda = 2;}
     break;
 
   case 242:
 
-/* Line 663 of lalr1.cc  */
-#line 987 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 987 "implement/ds9/ds9parse.yy"
     {localCpanda=0;}
     break;
 
   case 243:
 
-/* Line 663 of lalr1.cc  */
-#line 990 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 990 "implement/ds9/ds9parse.yy"
     {aNum=0; aAngNum=0, aAngle=0;}
     break;
 
   case 244:
 
-/* Line 663 of lalr1.cc  */
-#line 991 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 991 "implement/ds9/ds9parse.yy"
     {aAngle=(yysemantic_stack_[(10) - (9)].real);localEpanda=2;}
     break;
 
   case 245:
 
-/* Line 663 of lalr1.cc  */
-#line 992 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 992 "implement/ds9/ds9parse.yy"
     {localEpanda=0;}
     break;
 
   case 246:
 
-/* Line 663 of lalr1.cc  */
-#line 995 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 995 "implement/ds9/ds9parse.yy"
     {aNum=0; aAngNum=0, aAngle=0;}
     break;
 
   case 247:
 
-/* Line 663 of lalr1.cc  */
-#line 996 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 996 "implement/ds9/ds9parse.yy"
     {aAngle=(yysemantic_stack_[(10) - (9)].real);localBpanda=2;}
     break;
 
   case 248:
 
-/* Line 663 of lalr1.cc  */
-#line 997 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 997 "implement/ds9/ds9parse.yy"
     {localBpanda=0;}
     break;
 
   case 249:
 
-/* Line 663 of lalr1.cc  */
-#line 1000 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1000 "implement/ds9/ds9parse.yy"
     {
 	  // needed for annulus, ellipse annulus, and box annulus
 	  aNum = 2;
@@ -2414,71 +2401,71 @@ namespace casa { namespace viewer {
 
   case 250:
 
-/* Line 663 of lalr1.cc  */
-#line 1045 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1045 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CIRCLE;}
     break;
 
   case 251:
 
-/* Line 663 of lalr1.cc  */
-#line 1046 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1046 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = BOX;}
     break;
 
   case 252:
 
-/* Line 663 of lalr1.cc  */
-#line 1047 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1047 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = DIAMOND;}
     break;
 
   case 253:
 
-/* Line 663 of lalr1.cc  */
-#line 1048 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1048 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = CROSS;}
     break;
 
   case 254:
 
-/* Line 663 of lalr1.cc  */
-#line 1049 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1049 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = XPT;}
     break;
 
   case 255:
 
-/* Line 663 of lalr1.cc  */
-#line 1050 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1050 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = ARROW;}
     break;
 
   case 256:
 
-/* Line 663 of lalr1.cc  */
-#line 1051 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1051 "implement/ds9/ds9parse.yy"
     {(yyval.integer) = BOXCIRCLE;}
     break;
 
   case 257:
 
-/* Line 663 of lalr1.cc  */
-#line 1054 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1054 "implement/ds9/ds9parse.yy"
     {setProps(&localProps, Marker::INCLUDE, 1);}
     break;
 
   case 258:
 
-/* Line 663 of lalr1.cc  */
-#line 1055 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1055 "implement/ds9/ds9parse.yy"
     {setProps(&localProps, Marker::INCLUDE, 0);}
     break;
 
   case 259:
 
-/* Line 663 of lalr1.cc  */
-#line 1059 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1059 "implement/ds9/ds9parse.yy"
     {fr->createTextCmd(coordtovec((yysemantic_stack_[(6) - (3)].vector)),
 	    localTextAngle,localTextRotate,
 	    localColor,localDash,localWidth,localFont,
@@ -2487,8 +2474,8 @@ namespace casa { namespace viewer {
 
   case 260:
 
-/* Line 663 of lalr1.cc  */
-#line 1064 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1064 "implement/ds9/ds9parse.yy"
     {fr->createCompositeCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    (yysemantic_stack_[(8) - (5)].real), localComposite,
 	    localColor,localDash,localWidth,localFont,
@@ -2497,8 +2484,8 @@ namespace casa { namespace viewer {
 
   case 261:
 
-/* Line 663 of lalr1.cc  */
-#line 1069 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1069 "implement/ds9/ds9parse.yy"
     {fr->createVectCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
 	    (yysemantic_stack_[(10) - (5)].real),(yysemantic_stack_[(10) - (7)].real),
 	    localVector,
@@ -2508,8 +2495,8 @@ namespace casa { namespace viewer {
 
   case 262:
 
-/* Line 663 of lalr1.cc  */
-#line 1075 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1075 "implement/ds9/ds9parse.yy"
     {
 	  // hard coded into projection.tcl
 	  fr->createProjectionCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
@@ -2523,8 +2510,8 @@ namespace casa { namespace viewer {
 
   case 263:
 
-/* Line 663 of lalr1.cc  */
-#line 1085 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1085 "implement/ds9/ds9parse.yy"
     {fr->createRulerCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    coordtovec((yysemantic_stack_[(8) - (5)].vector)),
    	    localRulerCoordSystem, localRulerSkyFrame,
@@ -2535,8 +2522,8 @@ namespace casa { namespace viewer {
 
   case 264:
 
-/* Line 663 of lalr1.cc  */
-#line 1092 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1092 "implement/ds9/ds9parse.yy"
     {fr->createCompassCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)), 
 	   (yysemantic_stack_[(8) - (5)].real),
 	   localCompassNorth, localCompassEast, 
@@ -2548,8 +2535,8 @@ namespace casa { namespace viewer {
 
   case 265:
 
-/* Line 663 of lalr1.cc  */
-#line 1100 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1100 "implement/ds9/ds9parse.yy"
     {
 	  // hard coded into projection.tcl
 	  fr->createCircle3dCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
@@ -2562,8 +2549,8 @@ namespace casa { namespace viewer {
 
   case 266:
 
-/* Line 663 of lalr1.cc  */
-#line 1111 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1111 "implement/ds9/ds9parse.yy"
     {fr->createCircleCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    (yysemantic_stack_[(8) - (5)].real),
 	    localColor,localDash,localWidth,localFont,
@@ -2572,8 +2559,8 @@ namespace casa { namespace viewer {
 
   case 267:
 
-/* Line 663 of lalr1.cc  */
-#line 1116 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1116 "implement/ds9/ds9parse.yy"
     {fr->createAnnulusCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
 	    (yysemantic_stack_[(10) - (5)].real),(yysemantic_stack_[(10) - (7)].real),1,
 	    localColor,localDash,localWidth,localFont,
@@ -2582,8 +2569,8 @@ namespace casa { namespace viewer {
 
   case 268:
 
-/* Line 663 of lalr1.cc  */
-#line 1122 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1122 "implement/ds9/ds9parse.yy"
     {
 	  aAnnuli[0] = (yysemantic_stack_[(12) - (5)].real);
 	  aAnnuli[1] = (yysemantic_stack_[(12) - (7)].real);
@@ -2596,8 +2583,8 @@ namespace casa { namespace viewer {
 
   case 269:
 
-/* Line 663 of lalr1.cc  */
-#line 1132 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1132 "implement/ds9/ds9parse.yy"
     {fr->createAnnulusCmd(coordtovec((yysemantic_stack_[(12) - (3)].vector)),
 	    (yysemantic_stack_[(12) - (5)].real),(yysemantic_stack_[(12) - (7)].real),(yysemantic_stack_[(12) - (9)].integer),
 	    localColor,localDash,localWidth,localFont,
@@ -2606,8 +2593,8 @@ namespace casa { namespace viewer {
 
   case 270:
 
-/* Line 663 of lalr1.cc  */
-#line 1138 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1138 "implement/ds9/ds9parse.yy"
     {
 	  switch (localCpanda) {
 	  case 0: /* ignore it */
@@ -2632,8 +2619,8 @@ namespace casa { namespace viewer {
 
   case 271:
 
-/* Line 663 of lalr1.cc  */
-#line 1160 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1160 "implement/ds9/ds9parse.yy"
     {
 	  // for ellipse annulus
 	  aStatus = 1;
@@ -2660,8 +2647,8 @@ namespace casa { namespace viewer {
 
   case 272:
 
-/* Line 663 of lalr1.cc  */
-#line 1184 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1184 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  fr->createEllipseAnnulusCmd(coordtovec((yysemantic_stack_[(12) - (3)].vector)),
@@ -2674,8 +2661,8 @@ namespace casa { namespace viewer {
 
   case 273:
 
-/* Line 663 of lalr1.cc  */
-#line 1194 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1194 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  fr->createEllipseAnnulusCmd(coordtovec((yysemantic_stack_[(14) - (3)].vector)),
@@ -2688,8 +2675,8 @@ namespace casa { namespace viewer {
 
   case 274:
 
-/* Line 663 of lalr1.cc  */
-#line 1204 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1204 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  aVector[0] = coordtovec((yysemantic_stack_[(14) - (5)].vector));
@@ -2704,8 +2691,8 @@ namespace casa { namespace viewer {
 
   case 275:
 
-/* Line 663 of lalr1.cc  */
-#line 1217 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1217 "implement/ds9/ds9parse.yy"
     {	
 	  // old saoimage syntax
 	  aStatus = 2;
@@ -2715,8 +2702,8 @@ namespace casa { namespace viewer {
 
   case 276:
 
-/* Line 663 of lalr1.cc  */
-#line 1224 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1224 "implement/ds9/ds9parse.yy"
     {
 	  switch (localEpanda) {
 	  case 0: /* ignore it */
@@ -2743,8 +2730,8 @@ namespace casa { namespace viewer {
 
   case 277:
 
-/* Line 663 of lalr1.cc  */
-#line 1248 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1248 "implement/ds9/ds9parse.yy"
     {
 	  // for box annulus
 	  aStatus = 3;
@@ -2771,8 +2758,8 @@ namespace casa { namespace viewer {
 
   case 278:
 
-/* Line 663 of lalr1.cc  */
-#line 1271 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1271 "implement/ds9/ds9parse.yy"
     {fr->createBoxCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
 	    coordtovec((yysemantic_stack_[(10) - (5)].vector)),
 	    (yysemantic_stack_[(10) - (7)].real),
@@ -2782,8 +2769,8 @@ namespace casa { namespace viewer {
 
   case 279:
 
-/* Line 663 of lalr1.cc  */
-#line 1278 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1278 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  fr->createBoxAnnulusCmd(coordtovec((yysemantic_stack_[(12) - (3)].vector)),
@@ -2796,8 +2783,8 @@ namespace casa { namespace viewer {
 
   case 280:
 
-/* Line 663 of lalr1.cc  */
-#line 1288 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1288 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  aVector[0] = coordtovec((yysemantic_stack_[(14) - (5)].vector));
@@ -2812,8 +2799,8 @@ namespace casa { namespace viewer {
 
   case 281:
 
-/* Line 663 of lalr1.cc  */
-#line 1300 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1300 "implement/ds9/ds9parse.yy"
     {
 	  // prefered syntax
 	  fr->createBoxAnnulusCmd(coordtovec((yysemantic_stack_[(14) - (3)].vector)),
@@ -2826,8 +2813,8 @@ namespace casa { namespace viewer {
 
   case 282:
 
-/* Line 663 of lalr1.cc  */
-#line 1311 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1311 "implement/ds9/ds9parse.yy"
     {	
 	  // old saoimage syntax
 	  aStatus = 4;
@@ -2837,8 +2824,8 @@ namespace casa { namespace viewer {
 
   case 283:
 
-/* Line 663 of lalr1.cc  */
-#line 1318 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1318 "implement/ds9/ds9parse.yy"
     {
 	  switch (localBpanda) {
 	  case 0: /* ignore it */
@@ -2865,8 +2852,8 @@ namespace casa { namespace viewer {
 
   case 284:
 
-/* Line 663 of lalr1.cc  */
-#line 1342 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1342 "implement/ds9/ds9parse.yy"
     {fr->createLineCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    coordtovec((yysemantic_stack_[(8) - (5)].vector)),
 	    localLine1,localLine2,
@@ -2876,8 +2863,8 @@ namespace casa { namespace viewer {
 
   case 285:
 
-/* Line 663 of lalr1.cc  */
-#line 1349 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1349 "implement/ds9/ds9parse.yy"
     {
 	  switch (localPoint) {
 	  case CIRCLE:
@@ -2921,8 +2908,8 @@ namespace casa { namespace viewer {
 
   case 286:
 
-/* Line 663 of lalr1.cc  */
-#line 1389 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1389 "implement/ds9/ds9parse.yy"
     {fr->createCirclePointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2930,8 +2917,8 @@ namespace casa { namespace viewer {
 
   case 287:
 
-/* Line 663 of lalr1.cc  */
-#line 1393 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1393 "implement/ds9/ds9parse.yy"
     {fr->createBoxPointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2939,8 +2926,8 @@ namespace casa { namespace viewer {
 
   case 288:
 
-/* Line 663 of lalr1.cc  */
-#line 1397 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1397 "implement/ds9/ds9parse.yy"
     {fr->createDiamondPointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2948,8 +2935,8 @@ namespace casa { namespace viewer {
 
   case 289:
 
-/* Line 663 of lalr1.cc  */
-#line 1401 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1401 "implement/ds9/ds9parse.yy"
     {fr->createCrossPointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2957,8 +2944,8 @@ namespace casa { namespace viewer {
 
   case 290:
 
-/* Line 663 of lalr1.cc  */
-#line 1405 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1405 "implement/ds9/ds9parse.yy"
     {fr->createExPointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2966,8 +2953,8 @@ namespace casa { namespace viewer {
 
   case 291:
 
-/* Line 663 of lalr1.cc  */
-#line 1409 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1409 "implement/ds9/ds9parse.yy"
     {fr->createArrowPointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2975,8 +2962,8 @@ namespace casa { namespace viewer {
 
   case 292:
 
-/* Line 663 of lalr1.cc  */
-#line 1413 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1413 "implement/ds9/ds9parse.yy"
     {fr->createBoxCirclePointCmd(coordtovec((yysemantic_stack_[(7) - (4)].vector)), localPointSize, 
 	    localColor,localDash,localWidth,localFont,
 	    localText,localProps,localComment,taglist /*,cblist*/);}
@@ -2984,15 +2971,15 @@ namespace casa { namespace viewer {
 
   case 293:
 
-/* Line 663 of lalr1.cc  */
-#line 1417 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1417 "implement/ds9/ds9parse.yy"
     {polylist.clear();}
     break;
 
   case 294:
 
-/* Line 663 of lalr1.cc  */
-#line 1419 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1419 "implement/ds9/ds9parse.yy"
     {fr->createPolygonCmd(polylist, 
 	      localColor,localDash,localWidth,localFont,
 	      localText,localProps,localComment,taglist /*,cblist*/);}
@@ -3000,8 +2987,8 @@ namespace casa { namespace viewer {
 
   case 299:
 
-/* Line 663 of lalr1.cc  */
-#line 1430 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1430 "implement/ds9/ds9parse.yy"
     {fr->createTextCmd(coordtovec((yysemantic_stack_[(6) - (3)].vector)),
 	    localTextAngle,localTextRotate,
 	    localColor,localDash,localWidth,localFont,
@@ -3010,15 +2997,15 @@ namespace casa { namespace viewer {
 
   case 300:
 
-/* Line 663 of lalr1.cc  */
-#line 1434 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1434 "implement/ds9/ds9parse.yy"
     {strncpy(localText,(yysemantic_stack_[(6) - (5)].str),80);}
     break;
 
   case 301:
 
-/* Line 663 of lalr1.cc  */
-#line 1436 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1436 "implement/ds9/ds9parse.yy"
     {fr->createTextCmd(coordtovec((yysemantic_stack_[(9) - (3)].vector)),
 	    localTextAngle,localTextRotate,
 	    localColor,localDash,localWidth,localFont,
@@ -3027,8 +3014,8 @@ namespace casa { namespace viewer {
 
   case 302:
 
-/* Line 663 of lalr1.cc  */
-#line 1441 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1441 "implement/ds9/ds9parse.yy"
     {fr->createCompositeCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    (yysemantic_stack_[(8) - (5)].real), localComposite,
 	    localColor,localDash,localWidth,localFont,
@@ -3037,8 +3024,8 @@ namespace casa { namespace viewer {
 
   case 303:
 
-/* Line 663 of lalr1.cc  */
-#line 1446 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1446 "implement/ds9/ds9parse.yy"
     {fr->createVectCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
 	    (yysemantic_stack_[(10) - (5)].real),(yysemantic_stack_[(10) - (7)].real),
 	    localVector,
@@ -3048,8 +3035,8 @@ namespace casa { namespace viewer {
 
   case 304:
 
-/* Line 663 of lalr1.cc  */
-#line 1452 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1452 "implement/ds9/ds9parse.yy"
     {
 	  // hard coded into projection.tcl
 	  fr->createProjectionCmd(coordtovec((yysemantic_stack_[(10) - (3)].vector)),
@@ -3063,8 +3050,8 @@ namespace casa { namespace viewer {
 
   case 305:
 
-/* Line 663 of lalr1.cc  */
-#line 1462 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1462 "implement/ds9/ds9parse.yy"
     {fr->createRulerCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
 	    coordtovec((yysemantic_stack_[(8) - (5)].vector)),
    	    localRulerCoordSystem, localRulerSkyFrame,
@@ -3075,8 +3062,8 @@ namespace casa { namespace viewer {
 
   case 306:
 
-/* Line 663 of lalr1.cc  */
-#line 1469 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1469 "implement/ds9/ds9parse.yy"
     {fr->createCompassCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)), 
 	   (yysemantic_stack_[(8) - (5)].real),
 	   localCompassNorth, localCompassEast, 
@@ -3088,8 +3075,8 @@ namespace casa { namespace viewer {
 
   case 307:
 
-/* Line 663 of lalr1.cc  */
-#line 1477 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1477 "implement/ds9/ds9parse.yy"
     {
 	  // hard coded into circle3d.tcl
 	  fr->createCircle3dCmd(coordtovec((yysemantic_stack_[(8) - (3)].vector)),
@@ -3102,15 +3089,15 @@ namespace casa { namespace viewer {
 
   case 310:
 
-/* Line 663 of lalr1.cc  */
-#line 1491 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1491 "implement/ds9/ds9parse.yy"
     {polylist.push_back(coordtovec((yysemantic_stack_[(1) - (1)].vector)));}
     break;
 
   case 313:
 
-/* Line 663 of lalr1.cc  */
-#line 1499 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1499 "implement/ds9/ds9parse.yy"
     {
 	  if (aNum < MAXANNULI)
 	    aAnnuli[aNum++] = (yysemantic_stack_[(1) - (1)].real);
@@ -3119,8 +3106,8 @@ namespace casa { namespace viewer {
 
   case 316:
 
-/* Line 663 of lalr1.cc  */
-#line 1510 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1510 "implement/ds9/ds9parse.yy"
     {
 	  if (aAngNum < MAXANGLES)
 	    aAngles[aAngNum++] = (yysemantic_stack_[(1) - (1)].real);
@@ -3129,15 +3116,15 @@ namespace casa { namespace viewer {
 
   case 319:
 
-/* Line 663 of lalr1.cc  */
-#line 1520 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1520 "implement/ds9/ds9parse.yy"
     {aVector[aNum++] = doubletovec((yysemantic_stack_[(3) - (1)].real),(yysemantic_stack_[(3) - (3)].real));}
     break;
 
   case 320:
 
-/* Line 663 of lalr1.cc  */
-#line 1524 "ds9/ds9parse.yy"
+/* Line 690 of lalr1.cc  */
+#line 1524 "implement/ds9/ds9parse.yy"
     {
 	  // old style annulus
 	  switch (aStatus) {
@@ -3168,8 +3155,8 @@ namespace casa { namespace viewer {
 
 
 
-/* Line 663 of lalr1.cc  */
-#line 3173 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
+/* Line 690 of lalr1.cc  */
+#line 3160 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 	default:
           break;
       }
@@ -3411,7 +3398,7 @@ namespace casa { namespace viewer {
           }
       }
 
-    char const* yyformat = YY_NULL;
+    char const* yyformat = 0;
     switch (yycount)
       {
 #define YYCASE_(N, S)                         \
@@ -4363,7 +4350,7 @@ namespace casa { namespace viewer {
        0
   };
 
-
+#if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
   /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
      First, the terminals, then, starting at \a yyntokens_, nonterminals.  */
   const char*
@@ -4399,8 +4386,9 @@ namespace casa { namespace viewer {
   "localCpanda", "$@10", "localEpanda", "$@11", "localBpanda", "$@12",
   "initLocal", "pointProp", "include", "nonshape", "shape", "$@13", "$@14",
   "polyNodes", "polyNode", "aRads", "aRad", "aAngs", "aAng", "vRads",
-  "vRad", "postLocal", YY_NULL
+  "vRad", "postLocal", 0
   };
+#endif
 
 #if YYDEBUG
   /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
@@ -4714,11 +4702,12 @@ namespace casa { namespace viewer {
 
 } } // casa::viewer
 
-/* Line 1108 of lalr1.cc  */
-#line 4719 "/Users/drs/develop/casa/code/build/display/ds9parse.cc"
+/* Line 1136 of lalr1.cc  */
+#line 4707 "/Users/drs/dev/viewer/code/build/display/ds9parse.cc"
 
-/* Line 1109 of lalr1.cc  */
-#line 1551 "ds9/ds9parse.yy"
+
+/* Line 1138 of lalr1.cc  */
+#line 1551 "implement/ds9/ds9parse.yy"
 
 
 static void setProps(unsigned short* props, unsigned short prop, int value)

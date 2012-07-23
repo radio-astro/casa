@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.6.  */
+/* A Bison parser, made by GNU Bison 2.5.  */
 
 /* Stack handling for Bison parsers in C++
    
-      Copyright (C) 2002-2012 Free Software Foundation, Inc.
+      Copyright (C) 2002-2011 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,25 +30,21 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/**
- ** \file /Users/drs/develop/casa/code/build/display/stack.hh
- ** Define the casa::viewer::stack class.
- */
+#ifndef BISON_STACK_HH
+# define BISON_STACK_HH
 
-#ifndef CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_STACK_HH
-# define CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_STACK_HH
-
-# include <deque>
+#include <deque>
 
 
 namespace casa { namespace viewer {
 
-/* Line 37 of stack.hh  */
-#line 48 "/Users/drs/develop/casa/code/build/display/stack.hh"
+/* Line 1149 of lalr1.cc  */
+#line 43 "/Users/drs/dev/viewer/code/build/display/stack.hh"
   template <class T, class S = std::deque<T> >
   class stack
   {
   public:
+
     // Hide our reversed order.
     typedef typename S::reverse_iterator iterator;
     typedef typename S::const_reverse_iterator const_iterator;
@@ -87,7 +83,7 @@ namespace casa { namespace viewer {
     pop (unsigned int n = 1)
     {
       for (; n; --n)
-        seq_.pop_front ();
+	seq_.pop_front ();
     }
 
     inline
@@ -101,6 +97,7 @@ namespace casa { namespace viewer {
     inline const_iterator end () const { return seq_.rend (); }
 
   private:
+
     S seq_;
   };
 
@@ -109,9 +106,10 @@ namespace casa { namespace viewer {
   class slice
   {
   public:
-    slice (const S& stack, unsigned int range)
-      : stack_ (stack)
-      , range_ (range)
+
+    slice (const S& stack,
+	   unsigned int range) : stack_ (stack),
+				 range_ (range)
     {
     }
 
@@ -123,13 +121,15 @@ namespace casa { namespace viewer {
     }
 
   private:
+
     const S& stack_;
     unsigned int range_;
   };
 
 } } // casa::viewer
 
-/* Line 119 of stack.hh  */
-#line 134 "/Users/drs/develop/casa/code/build/display/stack.hh"
+/* Line 1235 of lalr1.cc  */
+#line 133 "/Users/drs/dev/viewer/code/build/display/stack.hh"
 
-#endif /* !CASA_VIEWER_USERS_DRS_DEVELOP_CASA_CODE_BUILD_DISPLAY_STACK_HH  */
+#endif // not BISON_STACK_HH[]dnl
+
