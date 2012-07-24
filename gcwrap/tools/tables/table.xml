@@ -1169,7 +1169,34 @@ table tool has open.
 # 3C273XC1.MS
 
 </example>
+
 </method>
+
+
+<method type="function" name="createmultitable">
+        <shortdescription>
+	Create a virtually concatenated table
+	</shortdescription>
+        <description>
+        </description>
+        <input>
+                <param name="outputTableName" type ="string">
+		<description>name of the concatenated table</description>
+		</param>
+
+                <param name="tables" type="stringArray">
+		<description>list of the names of the tables to be concatenated</description>
+		</param>
+
+                <param name="subdirname" type="string">
+		<description>optional name of the subdirectory into which the input tables are moved</description>
+		</param>
+        </input>
+        <returns type="bool"/>
+        <example>
+        </example>
+</method>
+
 
    <method type="function" name="toasciifmt">
    <shortdescription>Write \casa\ table into an ASCII format </shortdescription>

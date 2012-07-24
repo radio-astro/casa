@@ -535,6 +535,45 @@ table::browse()
  return rstat;
 }
 
+bool
+table::createmultitable(const std::string &outputTableName,
+			const std::vector<std::string> &tableNames,
+			const std::string &subDirName)
+{
+  *itsLog << LogOrigin("tb", "createmultitable");
+
+  try {
+    Block<String> tableNameVector(tableNames.size());
+    Block<String> subtableVector(0);
+
+    /* Copy the input vectors into Block */
+    for (uInt idx=0; idx<tableNameVector.nelements(); idx++)
+       tableNameVector[idx] = tableNames[idx];
+
+    TableLock tlock(TableLock::AutoNoReadLocking);
+
+    {
+      ConcatTable concatTable(tableNameVector,
+                              subtableVector,
+			      subDirName, // move all member tables into this subdirectory
+                              Table::New,
+                              tlock,
+                              TSMOption::Default);
+      concatTable.tableInfo().setSubType("CONCATENATED");
+      concatTable.rename(outputTableName, Table::New);
+    }
+
+
+  } catch (AipsError ex) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << ex.getMesg()
+            << LogIO::POST;
+    return false;
+  }
+  return true;
+}
+
+
+
 std::string
 table::name()
 {
@@ -543,9 +582,9 @@ table::name()
    if(itsTable){
       myName = itsTable->table().tableName();
    } else {
-      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-    }
-    return myName;
+      *itsLog << LogIO::NORMAL << "No table opened." << LogIO::POST;
+   }
+   return myName;
 }
 
 bool
