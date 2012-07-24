@@ -843,8 +843,10 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		list_elements = true;
 		if ( number_elements < 0 )
 		    number_elements = element_size;
-		if ( element_size != number_elements )
-		    return 0;
+                // to allow irregular shaped python list 
+                // (e.g. [[1,2,3],[4]]
+		//if ( element_size != number_elements )
+		//    return 0;
 
 		std::vector<int> element_shape;
 		int result = unmap_array_pylist( ele, element_shape, vnt, stride*array_size, i*stride+offset );
