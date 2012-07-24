@@ -271,6 +271,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   uInt oldFeedRows = itsMS.feed().nrow();
   const Block<uInt> newAntIndices = copyAntennaAndFeed(otherMS.antenna(), 
 						       otherMS.feed()); 
+  Bool antIndexTrivial = True;
   {
     uInt addedRows = itsMS.antenna().nrow() - oldRows;
     uInt matchedRows = otherMS.antenna().nrow() - addedRows;
@@ -280,6 +281,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     addedRows = itsMS.feed().nrow() - oldFeedRows;
     log << "Added " << addedRows 
 	<< " rows to the feed subtable" << endl;
+    antIndexTrivial = (addedRows>0);
   }
 
   //for(uint ii=0; ii<newAntIndices.size(); ii++){
@@ -301,11 +303,16 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation(), True);
 
   // POINTING
-  if(!copyPointing(otherMS.pointing(), newAntIndices)){
-    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  if(!antIndexTrivial){
+    if(!copyPointingB(otherMS.pointing(), newAntIndices)){
+      log << LogIO::WARN << "Could not reindex Pointing subtable " << LogIO::POST ;
+    }
+    else{
+      log << LogIO::NORMAL << "Reindexed Pointing subtable " << LogIO::POST ;
+    }    
   }
-
-  //////////////////////////////////////////////////////
+  
+  /////////////////////////////////////////////////////
 
   // copying all subtables over to otherMS
   // will need to be done when creating the MMS from the concatenated MSs
@@ -354,8 +361,14 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   ScalarColumn<Int>& thisStateIdCol = mainCols.stateId();
   ScalarColumn<Int>& thisObsIdCol = mainCols.observationId();
 
-  Vector<Int> otherAnt1 = otherAnt1Col.getColumn();
-  Vector<Int> otherAnt2 = otherAnt2Col.getColumn();
+  Vector<Int> otherAnt1;
+  Vector<Int> otherAnt2;
+
+  if(!antIndexTrivial){
+    otherAnt1 = otherAnt1Col.getColumn();
+    otherAnt2 = otherAnt2Col.getColumn();
+  }
+
   Vector<Int> otherDDId = otherDDIdCol.getColumn();
   Vector<Int> otherFieldId = otherFieldIdCol.getColumn();
   Vector<Int> otherScan = otherScanCol.getColumn();
@@ -591,25 +604,29 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   for (uInt r = 0; r < otherRows; r++) {
     
-    Int newA1 = newAntIndices[otherAnt1[r]];
-    Int newA2 = newAntIndices[otherAnt2[r]];
     Bool doConjugateVis = False;
-    if(newA1>newA2){ // swap indices and multiply UVW by -1
-      //cout << "   corrected order r: " << r << " " << newA2 << " " << newA1 << endl;
-      otherAnt1[r] = newA2;
-      otherAnt2[r] = newA1;
-      Array<Double> newUvw;
-      newUvw.assign(otherUvw(r));
-      //cout << "   old UVW " << newUvw;
-      newUvw *= -1.;
-      //cout << ", new UVW " << newUvw << endl;
-      otherUvw.put(r, newUvw);
-      doConjugateVis = True;
+
+    if(!antIndexTrivial){
+      Int newA1 = newAntIndices[otherAnt1[r]];
+      Int newA2 = newAntIndices[otherAnt2[r]];
+
+      if(newA1>newA2){ // swap indices and multiply UVW by -1
+	//cout << "   corrected order r: " << r << " " << newA2 << " " << newA1 << endl;
+	otherAnt1[r] = newA2;
+	otherAnt2[r] = newA1;
+	Array<Double> newUvw;
+	newUvw.assign(otherUvw(r));
+	//cout << "   old UVW " << newUvw;
+	newUvw *= -1.;
+	//cout << ", new UVW " << newUvw << endl;
+	otherUvw.put(r, newUvw);
+	doConjugateVis = True;
+      }
+      else{
+	otherAnt1[r] = newA1;
+	otherAnt2[r] = newA2;
+      }    
     }
-    else{
-      otherAnt1[r] = newA1;
-      otherAnt2[r] = newA2;
-    }    
     
     if(itsChanReversed[otherDDId[r]]){
 
@@ -707,8 +724,10 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   log << LogIO::NORMAL << "Writing the scalar columns ..." << LogIO::POST;
   
-  otherAnt1Col.putColumn(otherAnt1);
-  otherAnt2Col.putColumn(otherAnt2);
+  if(!antIndexTrivial){
+    otherAnt1Col.putColumn(otherAnt1);
+    otherAnt2Col.putColumn(otherAnt2);
+  }
   otherDDIdCol.putColumn(otherDDId);
   otherFieldIdCol.putColumn(otherFieldId);
   
@@ -1226,11 +1245,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     else{
       thisStateId.put(curRow, otherStateId, r);
     }
-    
-    
+        
     if(itsChanReversed[otherDDId(r)]){
-
-      cout << " concat reversed!" << endl;
 
       Vector<Int> datShape;
       Matrix<Complex> reversedData;
@@ -1499,6 +1515,85 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
       pointCol.antennaId().put(k, newAntIndices[antennaIDs[k]]);
     }
+  }
+    return True;
+
+}
+
+Bool MSConcat::copyPointingB(MSPointing& otherPoint,const 
+			    Block<uInt>& newAntIndices ){
+
+  // prepare otherPoint such that it can be virtually concatenated later
+  // (don't write the itsMS)
+
+  LogIO os(LogOrigin("MSConcat", "copyPointing"));
+
+  Bool itsPointingNull = (itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0));
+  Bool otherPointingNull = (otherPoint.isNull() || (otherPoint.nrow() == 0));
+
+  if(itsPointingNull &&  otherPointingNull){ // neither of the two MSs do have valid pointing tables
+    os << LogIO::NORMAL << "No valid pointing tables present. Result won't have one either." << LogIO::POST;
+    return True;
+  }
+  else if(itsPointingNull && !otherPointingNull){
+    os << LogIO::WARN << itsMS.tableName() << " does not have a valid pointing table," << endl
+       << "  the MS to be appended, however, has one. Result won't have one." 
+       << LogIO::POST;
+
+    Vector<uInt> delrows(otherPoint.nrow());
+    indgen(delrows);
+    otherPoint.removeRow(delrows); 
+
+    return False;
+  }
+  else if(!itsPointingNull && otherPointingNull){
+    os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
+       << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
+             
+    Vector<uInt> delrows(itsMS.pointing().nrow());
+    indgen(delrows);
+    itsMS.pointing().removeRow(delrows); 
+
+    return False;
+
+  }
+     
+  Int rowToBeAdded=otherPoint.nrow();
+  //reassigning antennas to the new indices of the ANTENNA table
+
+  if(rowToBeAdded > 0){
+    MSPointingColumns pointCol(otherPoint);
+    // check antenna IDs
+    Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
+    Bool idsOK = True;
+    uInt maxID = newAntIndices.nelements()-1;
+    for (Int k=0; k < rowToBeAdded; k++){
+      if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
+	idsOK = False;
+	break;
+      }
+      else{
+	antennaIDs[k] = newAntIndices[antennaIDs[k]];
+      }
+    }
+    if(!idsOK){
+      os << LogIO::WARN 
+	 << "Found invalid antenna ids in the POINTING table; the POINTING table will be emptied as it is inconsistent" 
+	 << LogIO::POST;
+
+      Vector<uInt> delrows(itsMS.pointing().nrow());
+      indgen(delrows);
+      itsMS.pointing().removeRow(delrows); 
+
+      Vector<uInt> rowtodel(otherPoint.nrow());
+      indgen(rowtodel);
+      otherPoint.removeRow(rowtodel);
+      
+      return False;
+    } 
+	
+    pointCol.antennaId().putColumn(antennaIDs);
+
   }
     return True;
 
