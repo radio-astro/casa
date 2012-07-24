@@ -441,7 +441,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         del ssel, datname
 
         # Hardcopy
-        if ( plottype in ['spectra','totalpower'] and outfile != '' ):
+        if (outfile != '' ) and not ( plottype in ['azel','pointing']):
             # currently no way w/o screen display first
             sd.plotter.save(outfile)
 
