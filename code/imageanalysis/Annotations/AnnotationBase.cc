@@ -555,7 +555,7 @@ void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
 	_params[LABELOFF] = String::toString(offset[0]) + "," + String::toString(offset[1]);
 }
 
-vector<Int> AnnotationBase::getlabelOffset() const {
+vector<Int> AnnotationBase::getLabelOffset() const {
 	return _labelOff;
 }
 
