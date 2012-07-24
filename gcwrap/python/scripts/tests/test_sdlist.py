@@ -4,12 +4,10 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
 
-asap_init()
 from sdlist import sdlist
 
 class sdlist_test(unittest.TestCase):

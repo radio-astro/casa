@@ -4,11 +4,9 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 
-asap_init()
 from sdcoadd import sdcoadd
 import asap as sd
 from asap.scantable import is_scantable, is_ms
