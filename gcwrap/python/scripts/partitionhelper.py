@@ -10,7 +10,7 @@ from taskinit import *
 from tasks import *
 
 
-class createMMS():
+class convertToMMS():
     def __init__(self,\
                  inpdir=None, \
                  mmsdir=None, \
@@ -18,7 +18,7 @@ class createMMS():
                  cleanup=False):
 
         '''Run the partition task to create MMSs from a directory with MSs'''
-        casalog.origin('createMMS')
+        casalog.origin('convertToMMS')
         
         self.inpdir = inpdir
         self.outdir = mmsdir
@@ -97,15 +97,15 @@ class createMMS():
             # Verify later if this is still needed
             time.sleep(10)
         
-            casalog.origin('createMMS')
+            casalog.origin('convertToMMS')
             casalog.post('--------------- Successfully created MMS')
                     
                 
         # Create links to the other files
         for file in nonmslist:
-            casalog.post('Creating symbolic links to other files')
             bfile = os.path.basename(file)
             lfile = os.path.join(self.mmsdir, bfile)
+            casalog.post('Creating symbolic links to '+bfile)
             os.symlink(file, lfile)
             
             
@@ -206,7 +206,7 @@ class createMMS():
         # Run partition   
         default('partition')
         partition(vis=ms, outputvis=mms, createmms=True)
-        casalog.origin('createMMS')
+        casalog.origin('convertToMMS')
         
         # Check if MMS was created
         if not os.path.exists(mms):
@@ -227,10 +227,10 @@ class createMMS():
         
     def usage(self):
         print '========================================================================='
-        print '          createMMS will create a directory with multi-MSs.'
+        print '          convertToMMS will create a directory with multi-MSs.'
         print 'Usage:\n'
         print '  import partitionhelper as ph'
-        print '  ph.createMMS(inpdir=\'dir\') \n'
+        print '  ph.convertToMMS(inpdir=\'dir\') \n'
         print 'Options:'
         print '   inpdir <dir>        directory with input MS.'
         print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
