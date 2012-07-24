@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 import time
 import filecmp
 from matplotlib import pylab as pl
 
-asap_init()
 from sdplot import sdplot
 import asap as sd
 from asap.scantable import is_scantable

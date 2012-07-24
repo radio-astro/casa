@@ -4,10 +4,8 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 
-asap_init()
 import asap as sd
 from sdflag import sdflag
 

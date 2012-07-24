@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
 from numpy import array
 
-asap_init()
 import asap as sd
 from sdbaseline import sdbaseline
 from sdstat import sdstat
