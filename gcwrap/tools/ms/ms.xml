@@ -732,6 +732,11 @@ the ms definition itself. -->
                   <value>false</value>
                 </param>		
 
+                <param name="omitsubtables" type="stringArray">
+		<description>Omit the subtables from this list when copying subtables</description>
+		<value></value>
+		</param>
+
         </input>
         <returns type="bool"/>
         <example>

@@ -185,8 +185,23 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 
 		m.close()
 
-		ph.makeMMS(concatvis, mmsmembers,
-			   True) # copysubtables from first to all other members
+		# concatenate the POINTING tables
+		masterptable = mmsmembers[0]+'/POINTING'
+		ptablemembers = []
+		if os.path.exists(masterptable):
+			i = 0
+			for i in xrange(len(mmsmembers)):
+				ptable = mmsmembers[i]+'/POINTING'
+				if os.path.exists(ptable):
+					shutil.move(ptable, ptable+str(i))
+					ptablemembers.append(ptable+str(i))
+			#end for
+			t.createmultitable(masterptable, ptablemembers, 'SUBTBS')
+		# endif
+
+	 	ph.makeMMS(concatvis, mmsmembers,
+ 			   True, # copy subtables from first to all other members 
+ 			   ['POINTING']) # excluding POINTING which will be linked
 		
 		if keepcopy:
 			for elvis in originalvis:

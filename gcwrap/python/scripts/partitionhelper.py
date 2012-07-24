@@ -367,9 +367,10 @@ def getSubtables(vis):
     return theSubTables
 
 
-def makeMMS(outputvis, submslist, copysubtables=False):
+def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
     '''
     Create an MMS named outputvis from the submss in list submslist.
+    The subtables in omitsubtables are linked instead of copied.
     '''
 
     if os.path.exists(outputvis):
@@ -388,7 +389,8 @@ def makeMMS(outputvis, submslist, copysubtables=False):
                                [],
                                True,  # nomodify
                                False, # lock
-                               copysubtables) # copysubtables
+                               copysubtables,
+                               omitsubtables) # when copying the subtables, omit these 
         mymstool.close()
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)
@@ -397,6 +399,16 @@ def makeMMS(outputvis, submslist, copysubtables=False):
         thesubtables = getSubtables('SUBMSS/'+mastersubms)
         for s in thesubtables:
             os.symlink('SUBMSS/'+mastersubms+'/'+s, s)
+
+        # AND put links for those subtables omitted
+        os.chdir('SUBMSS/'+mastersubms)
+        for i in xrange(1,len(submslist)):
+            thesubms = os.path.basename(submslist[i].rstrip('/'))
+            os.chdir('../'+thesubms)
+            for s in omitsubtables:
+                shutil.rmtree(s, ignore_errors=True)
+                os.symlink('../'+mastersubms+'/'+s, s)
+
 
     except:
         os.chdir(origpath)

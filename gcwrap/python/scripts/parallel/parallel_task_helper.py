@@ -125,12 +125,25 @@ class ParallelTaskHelper:
                 if not (s in theSubTables):
                     raise ValueError, s+' is not a subtable of '+ mastersubms
 
+        origpath = os.getcwd()      
+        masterbase = os.path.basename(mastersubms)
+        
         for r in theSubMSs:
-            if not r==mastersubms:
+            rbase = os.path.basename(r)
+            if not rbase==masterbase:
                 for s in subtables:
-                    shutil.rmtree(r+'/'+s, ignore_errors=True)
-                    #print "Copying from "+mastersubms+'/'+s+" to "+ r+'/'+s
-                    shutil.copytree(mastersubms+'/'+s, r+'/'+s)
+                    theSubTab = r+'/'+s
+                    if os.path.islink(theSubTab): # don't copy over links
+                        if(os.path.basename(os.path.dirname(os.path.realpath(theSubTab)))!=masterbase):
+                            # the mastersubms has changed: make new link
+                            os.chdir(r)
+                            shutil.rmtree(s, ignore_errors=True)
+                            os.symlink('../'+masterbase+'/'+s, s)
+                            os.chdir(origpath)
+                    else:    
+                        shutil.rmtree(theSubTab, ignore_errors=True)
+                        #print "Copying from "+mastersubms+'/'+s+" to "+ theSubTab
+                        shutil.copytree(mastersubms+'/'+s, theSubTab)
 
         return True
 

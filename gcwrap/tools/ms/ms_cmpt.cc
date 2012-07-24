@@ -146,13 +146,15 @@ ms::createmultims(const std::string &outputTableName,
                   const std::vector<std::string> &subtableNames,
                   const bool nomodify,
                   const bool lock,
-		  const bool copysubtables)
+		  const bool copysubtables,
+		  const std::vector<std::string> &omitSubtableNames)
 {
   *itsLog << LogOrigin("ms", "createmultims");
 
   try {
     Block<String> tableNameVector(tableNames.size());
     Block<String> subtableVector(subtableNames.size());
+    Block<String> omitSubtables(omitSubtableNames.size());
 
     /* Copy the input vectors into Block */
     for (uInt idx=0; idx<tableNameVector.nelements(); idx++)
@@ -161,6 +163,9 @@ ms::createmultims(const std::string &outputTableName,
     for (uInt idx=0; idx<subtableVector.nelements(); idx++)
       subtableVector[idx] = subtableNames[idx];
 
+    for (uInt idx=0; idx<omitSubtables.nelements(); idx++)
+      omitSubtables[idx] = omitSubtableNames[idx];
+
     if((tableNameVector.nelements()>1) && copysubtables){
       *itsLog << LogIO::NORMAL << "Copying subtables from " << tableNameVector[0] 
 	      << " to the other MMS members." << LogIO::POST;
@@ -168,7 +173,8 @@ ms::createmultims(const std::string &outputTableName,
       for(uInt idx=1; idx<tableNameVector.nelements(); idx++){
 	Table otherTab(tableNameVector[idx], Table::Update);
 	TableCopy::copySubTables (otherTab, firstTab, 
-				  False); // noRows==False, i.e. subtables are copied
+				  False, // noRows==False, i.e. subtables are copied
+				  omitSubtables);
       }
     }
 
