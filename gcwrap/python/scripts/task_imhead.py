@@ -281,7 +281,7 @@ def imhead(
     data_unit = ''
     try:
         ia.open(imagename)
-        hd_dict = ia.summary(list=False)[1]
+        hd_dict = ia.summary(list=False)
         stats = ia.statistics(verbose=False, list=False)
         csys = ia.coordsys()
         misc_info = ia.miscinfo()
