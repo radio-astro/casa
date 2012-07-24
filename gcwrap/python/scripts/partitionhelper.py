@@ -118,7 +118,8 @@ class convertToMMS():
            
            It will test if a directory is an MS and will only return
            true MSs, that contain the file table.data. It will skip
-           directories that start with .
+           directories that start with . and those that do not end with
+           extension .ms.
            '''
         
         topdir = files[0]
@@ -128,6 +129,9 @@ class convertToMMS():
         for d in files[1]:
             # Skip . entries
             if d.startswith('.'):
+                continue
+            
+            if not d.endswith('.ms'):
                 continue
             
             # Full path for directory
