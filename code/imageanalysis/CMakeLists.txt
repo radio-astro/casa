@@ -112,6 +112,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
