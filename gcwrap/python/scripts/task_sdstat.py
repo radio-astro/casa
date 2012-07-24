@@ -80,6 +80,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 s.set_selection(sel)
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
 
             # get telescope name
@@ -630,6 +631,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
         finally:
                 try:

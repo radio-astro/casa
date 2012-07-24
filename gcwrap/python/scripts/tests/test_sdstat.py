@@ -890,6 +890,39 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT Quantums"
         self._compareStats(currstat,self.minmaxvrf_line2)
 
+class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Test the case when the task throws exception.
+    """
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdstat/'
+    taskname = "sdstat"
+    outroot = taskname+'_test'
+    outsuff = ".out"
+    infile = 'OrionS_rawACSmod_calTPave.asap'
+
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdstat)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    def testNoData(self):
+        try:
+            res = sdstat(infile=self.infile,iflist=99)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Selection contains no data. Not applying it.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 def suite():
-    return [sdstat_basicTest, sdstat_restfreqTest, sdstat_storageTest]
+    return [sdstat_basicTest, sdstat_restfreqTest, sdstat_storageTest,
+            sdstat_exceptions]
