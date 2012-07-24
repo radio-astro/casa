@@ -153,26 +153,45 @@ class sdscale_test0(unittest.TestCase,sdscale_unittest_base):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         res=sdscale()
         self.assertFalse(res)        
 
     def test001(self):
         """Test 001: Existing outfile with overwrite=False"""
         os.system('cp -r %s %s'%(self.rawfile,self.outfile))
-        res=sdscale(infile=self.rawfile,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Output file \'%s\' exist.'%(self.outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Bad shaped factor"""
         factor = [2.0,3.0]
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=False,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=False,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Vector size must be 1 or be same as number of channel.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test003(self):
-        """Test 003: Vector factor for scalar Tsys"""
+        """Test 003: Try to scale non-conform Tsys"""
         factor=[1.0,2.0,3.0,4.0]
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=True,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 ###
 # Test on scaling 1
@@ -339,8 +358,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 202: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test203(self):
         """Test 203: 1D array factor without Tsys scaling"""
@@ -373,8 +398,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 206: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test207(self):
         """Test 207: 2D array ([nrow,nchan]) factor without Tsys scaling"""
@@ -442,15 +473,27 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 302: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('ArrayColumn::getColumn cannot be done for column SPECTRA; the array shapes vary: Table array conformance error')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test303(self):
         """Test 303: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('All spectra in the input scantable must have the same number of channel for vector operation.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test304(self):
         """Test 304: 2D array ([nrow,1]) factor with Tsys scaling"""
@@ -546,15 +589,27 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 402: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('ArrayColumn::getColumn cannot be done for column SPECTRA; the array shapes vary: Table array conformance error')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test403(self):
         """Test 403: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('All spectra in the input scantable must have the same number of channel for vector operation.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test404(self):
         """Test 404: 2D array ([nrow,1]) factor with Tsys scaling"""
@@ -578,11 +633,14 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 406: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertFalse(res)
-        #self.assertEqual(res,None,
-        #                 msg='Any error occurred during calibration')
-        #self._compare(self.outfile,self.rawfile,factor,scaletsys)
+        try:
+            res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('SPECTRA and TSYS must conform in shape if you want to apply operation on Tsys.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))            
 
     def test407(self):
         """Test 407: 2D array ([nrow,nchan]) factor without Tsys scaling"""
