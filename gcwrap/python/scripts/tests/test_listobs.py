@@ -17,9 +17,20 @@ Unit tests for task listobs. It tests the following parameters:
     
 '''
 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/listobs/'
+
+print 'Listobs tests will use data from '+datapath         
+
 # Reference files
-refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
-reffile = refpath+'reflistobs'
+reffile = datapath+'reflistobs'
 
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
@@ -29,7 +40,6 @@ class listobs_test1(unittest.TestCase):
 
     def setUp(self):
         self.res = None
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
         if (not os.path.exists(msfile1)):            
             shutil.copytree(datapath+msfile1, msfile1)
 
