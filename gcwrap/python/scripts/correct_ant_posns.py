@@ -71,7 +71,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
     q1 = qa.quantity(time_range[0][0],'s')
     date_time = qa.time(q1,form='ymd')[0]
 # date_time looks like: '2011/08/10/06:56:49'
-    [obs_year,obs_month,obs_day,obs_time_string] = date_time[0].split('/')
+    [obs_year,obs_month,obs_day,obs_time_string] = date_time.split('/')
     if (int(obs_year) < 2010):
         if (print_offsets):
             print 'Does not work for VLA observations'
