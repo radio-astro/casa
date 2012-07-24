@@ -61,8 +61,8 @@ public:
     }
 
     void setMaxY( double value );
-    int getNumTicksX( AxisIndex index ) const {
-    	return numXTicks[index];
+    int getNumTicksX( ) const {
+    	return numXTicks;
     }
     int getNumTicksY() const {
     	return numYTicks;
@@ -73,11 +73,14 @@ public:
 private:
 
     void adjustAxis(double &min, double &max, int &numTicks);
+    void adjustAxisTop( double &min, double &max );
     double minX[END_AXIS_INDEX];
     double maxX[END_AXIS_INDEX];
-    int numXTicks[END_AXIS_INDEX];
+    int numXTicks;
     double minY;
     double maxY;
+    double percentMinXChange;
+    double percentMaxXChange;
     int numYTicks;
 };
 

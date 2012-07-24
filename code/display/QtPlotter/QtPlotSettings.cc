@@ -37,9 +37,9 @@ QtPlotSettings::QtPlotSettings()
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		minX[axisIndex] = TICK_MIN;
 		maxX[axisIndex] = TICK_MAX;
-		numXTicks[axisIndex] = TICK_COUNT;
+		//numXTicks[axisIndex] = TICK_COUNT;
 	}
-
+	numXTicks = TICK_COUNT;
     minY = TICK_MIN;
     maxY = TICK_MAX;
     numYTicks = TICK_COUNT;
@@ -49,7 +49,7 @@ void QtPlotSettings::scroll(int dx, int dy)
 {
 	for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
-		double stepX = spanX( axisIndex ) / numXTicks[i];
+		double stepX = spanX( axisIndex ) / numXTicks/*[i]*/;
 		minX[i] += dx * stepX;
 		maxX[i] += dx * stepX;
 	}
@@ -86,9 +86,15 @@ void QtPlotSettings::zoomIn( double zoomFactor ){
 }
 
 void QtPlotSettings::adjust(){
-	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
-		adjustAxis(minX[i], maxX[i], numXTicks[i]);
-	}
+	//Adjust the bottom axis allowing it to set the number of ticks.
+	adjustAxis( minX[0], maxX[0], numXTicks);
+
+	//Adjust the top axis using the same number of ticks.  Use the
+	//percentage change adjustment to the bottom axis to adjust the
+	//top axis min and max by the same amount.
+	adjustAxisTop( minX[1], maxX[1]);
+
+	//Now adjust the y-axis
     adjustAxis(minY, maxY, numYTicks);
 }
 
@@ -98,14 +104,25 @@ void QtPlotSettings::adjustAxis(double &min, double &max,
     const int MinTicks = 4;
     double grossStep = fabs(max - min) / MinTicks;
     double step = std::pow(10, floor(log10(grossStep)));
-
-    if (5 * step < grossStep)
+    if (5 * step < grossStep){
         step *= 5;
-    else if (2 * step < grossStep)
+    }
+    else if (2 * step < grossStep){
         step *= 2;
+    }
     numTicks = (int)fabs(ceil(max / step) - floor(min / step));
-    min = floor(min / step) * step;
-    max = ceil(max / step) * step;
+    double newMin = floor(min / step) * step;
+    double newMax = ceil(max / step) * step;
+    percentMinXChange = (min - newMin)/ min;
+    percentMaxXChange = (newMax - max)/ max;
+    min = newMin;
+    max = newMax;
+}
+
+void QtPlotSettings::adjustAxisTop(double &min, double &max)
+{
+    min = min - percentMinXChange * min;
+    max = max + percentMaxXChange * max;
 }
 
 void QtPlotSettings::setMinX( AxisIndex index, double value ){

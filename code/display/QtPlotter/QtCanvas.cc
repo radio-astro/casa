@@ -52,7 +52,7 @@ QtCanvas::~QtCanvas()
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
-           MARGIN_LEFT(80), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(10), FRACZOOM(20),
+           MARGIN_LEFT(80), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(25), FRACZOOM(20),
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           gaussianContextMenu( this ), frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
@@ -149,8 +149,9 @@ void QtCanvas::zoomIn(){
     	emit xRangeChanged(1.0,0.0);
     }
     else {
-    	if (curveMap.size() != 0)
+    	if (curveMap.size() != 0){
     		defaultZoomIn();
+    	}
     }
 }
 
@@ -246,7 +247,8 @@ void QtCanvas::setDataRange()
 	settings.adjust();
 
 	if ( curZoom > 0 ) {
-		// if the canvas is zoomed, keep the zoom level, update unzoomed state...
+		// if the canvas is zoomed, keep the zoom level,
+		//update unzoomed state...
 		zoomStack[0] = settings;
 		refreshPixmap();
 	} else {
@@ -276,6 +278,7 @@ void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescendi
 		}
 	}
 	adjustExtremes( &min, &max );
+
 	//Switch the min and max if we need to draw the labels on the top
 	//axis in descending order.
 	if ( topAxisDescending ){
@@ -298,13 +301,11 @@ void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescendi
 QSize QtCanvas::minimumSizeHint() const
 {
 	return QSize( 4 * MARGIN_LEFT, 4 * MARGIN_BOTTOM);
-    //return QSize(4 * MARGIN, 4 * MARGIN);
 }
 
 QSize QtCanvas::sizeHint() const
 {
 	return QSize( 8 * MARGIN_LEFT, 6 * MARGIN_BOTTOM );
-    //return QSize(8 * MARGIN, 6 * MARGIN);
 }
 
 
@@ -346,22 +347,18 @@ QString QtCanvas::findCoords( double x, double y ) const {
 }
 
 int QtCanvas::getRectHeight() const {
-	//return height() - 2 * MARGIN;
 	return height() - MARGIN_TOP - MARGIN_BOTTOM;
 }
 
 int QtCanvas::getRectWidth() const {
-	//return width() - 2 * MARGIN;
 	return width() - MARGIN_LEFT - MARGIN_RIGHT;
 }
 
 int QtCanvas::getRectBottom() const {
-	//return height() - MARGIN;
 	return height() - MARGIN_BOTTOM;
 }
 
 int QtCanvas::getRectLeft() const {
-	//return MARGIN;
 	return MARGIN_LEFT;
 }
 
@@ -421,7 +418,6 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     }
     if ( xcursor.isValid( ) ) {
     	painter.setPen(xcursor);
-    	//QLine line( (int) currentCursorPosition.x( ), MARGIN, (int) currentCursorPosition.x( ), height() - MARGIN );
     	QLine line( (int) currentCursorPosition.x( ), MARGIN_TOP, (int) currentCursorPosition.x( ), height() - MARGIN_TOP );
     	painter.drawLine(line);
     }
@@ -432,8 +428,6 @@ void QtCanvas::paintEvent(QPaintEvent *event)
         int xEnd = getPixelX( xRangeEnd );
 		xRangeRect.setLeft(xStart);
 		xRangeRect.setRight(xEnd);
-		//xRangeRect.setBottom(MARGIN);
-		//xRangeRect.setTop(height()-MARGIN-1);
 		xRangeRect.setBottom( MARGIN_TOP );
 		xRangeRect.setTop( height() - MARGIN_BOTTOM - 1);
 		QColor shadeColor(100, 100, 100, 100);
@@ -484,8 +478,6 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 			xRangeIsShown = true;
 			xRangeRect.setLeft(event->pos().x());
 			xRangeRect.setRight(event->pos().x());
-			//xRangeRect.setBottom(MARGIN);
-			//xRangeRect.setTop(height()-MARGIN-1);
 			xRangeRect.setBottom(MARGIN_TOP);
 			xRangeRect.setTop( height() - MARGIN_BOTTOM - 1);
 			xRectStart= event->pos().x();
@@ -504,12 +496,8 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 
 	else if (event->button() == Qt::RightButton) {
 		if ( ! event->modifiers().testFlag(Qt::ShiftModifier)){
-			//cout << "Right button! " << endl;
-			//int x = event->pos().x() - MARGIN;
-			//int y = event->pos().y() - MARGIN;
 			int x = event->pos().x() - MARGIN_LEFT;
 			int y = event->pos().y() - MARGIN_TOP;
-			//cout << "x=" << x << " y=" << y << endl;
 			QtPlotSettings prevSettings = zoomStack[curZoom];
 			QtPlotSettings settings;
 
@@ -517,7 +505,6 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 			double dy = prevSettings.spanY() / ( getRectHeight() );
 			x = (int)(prevSettings.getMinX(QtPlotSettings::xBottom) + dx * x);
 			y = (int)(prevSettings.getMaxY() - dy * y);
-			//cout << "x=" << x << " y=" << y << endl;
 
 			std::map<int, CurveData>::const_iterator it = markerStack.begin();
 
@@ -593,8 +580,6 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 			double currMinX = currSettings.getMinX(QtPlotSettings::xBottom);
 			xRangeStart = currMinX + dx * double( xRectStart - MARGIN_LEFT);
 			xRangeEnd = currMinX + dx * double( xRectEnd - MARGIN_LEFT );
-			//xRangeStart = currMinX + dx * double(xRectStart-MARGIN);
-			//xRangeEnd   = currMinX + dx * double(xRectEnd-MARGIN);
 			if (xRangeStart<xRangeEnd)
 				emit xRangeChanged(xRangeStart, xRangeEnd);
 			else
@@ -629,12 +614,9 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 			}
 
 			// zero the coordinates on the plot region
-			//rect.translate(-MARGIN, -MARGIN);
 			QtPlotSettings currSettings = zoomStack[curZoom];
 			double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
 			double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
-			//xRangeStart = currMinX + dx * (xRectStart-MARGIN);
-			//xRangeEnd   = currMinX + dx * (xRectEnd-MARGIN);
 			xRangeStart = currMinX + dx * (xRectStart - MARGIN_LEFT );
 			xRangeEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
 			if (xRangeStart<xRangeEnd)
@@ -683,7 +665,6 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 			//    return;
 
 			// zero the coordinates on the plot region
-			//rect.translate(-MARGIN, -MARGIN);
 			rect.translate( - MARGIN_LEFT, - MARGIN_TOP);
 
 			QtPlotSettings prevSettings = zoomStack[curZoom];
@@ -871,7 +852,6 @@ QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::A
 
 void QtCanvas::drawGrid(QPainter *painter)
 	{
-    //QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
 	QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
     QtPlotSettings settings = zoomStack[curZoom];
     QPen quiteDark(QPalette::Dark);
@@ -879,7 +859,7 @@ void QtCanvas::drawGrid(QPainter *painter)
 
    for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
         QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(j);
-        int xTickCount = settings.getNumTicksX( axisIndex );
+        int xTickCount = settings.getNumTicksX( );
         for (int i = 0; i <= xTickCount; ++i) {
         	int x = rect.left() + (i * (rect.width() - 1) / xTickCount );
 
@@ -932,8 +912,7 @@ void QtCanvas::drawGrid(QPainter *painter)
                           QString::number(label));
     }
     painter->drawRect(rect);
-    //painter->setPen(Qt::red);
-    //painter->drawRect(rubberBandRect);
+
 }
 void QtCanvas::drawTicks(QPainter *painter)
 {
@@ -941,16 +920,13 @@ void QtCanvas::drawTicks(QPainter *painter)
 	QPen quiteDark(QPalette::Dark);
 	QPen light(QPalette::Highlight);
 	for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
-		//int startY = MARGIN;
 		int startY = MARGIN_TOP;
 		if ( j == QtPlotSettings::xTop ){
-			//startY = height() - MARGIN;
 			startY = height() - MARGIN_TOP;
 		}
-		//QRect rect(MARGIN, startY, getRectWidth(), getRectHeight());
 		QRect rect( MARGIN_LEFT, startY, getRectWidth(), getRectHeight());
 		QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(j);
-		int tickCountX = settings.getNumTicksX( axisIndex );
+		int tickCountX = settings.getNumTicksX( /*axisIndex*/ );
 		for (int i = 0; i <= tickCountX; ++i){
 			int x = rect.left() + (i * (rect.width() - 1) / tickCountX );
 			QString tickLabel = getXTickLabel( i, tickCountX, axisIndex );
@@ -976,14 +952,11 @@ void QtCanvas::drawTicks(QPainter *painter)
         painter->drawLine(rect.left(), y, rect.left() + 5, y);
         painter->drawText( rect.left() - MARGIN_LEFT / 2, y - 10,
         					MARGIN_LEFT - 5, 20,
-        /*painter->drawText(rect.left() - MARGIN / 2, y - 10,
-                          MARGIN - 5, 20,*/
                           Qt::AlignRight | Qt::AlignVCenter,
                           QString::number(label));
     }
     painter->drawRect(rect);
-    //painter->setPen(Qt::red);
-    //painter->drawRect(rubberBandRect);
+
 }
 
 void QtCanvas::drawLabels(QPainter *painter)
@@ -996,7 +969,6 @@ void QtCanvas::drawLabels(QPainter *painter)
     titleFont.setBold( true );
     painter->setFont( titleFont );
     painter->drawText( MARGIN_LEFT, 15, getRectWidth(), MARGIN_TOP / 2,
-    //painter->drawText(MARGIN, 8, getRectWidth(), MARGIN / 2,
                           Qt::AlignHCenter | Qt::AlignTop, title.text);
 
 
@@ -1010,21 +982,17 @@ void QtCanvas::drawLabels(QPainter *painter)
     	QFont axisLabelFont(xLabel[axisIndex].fontName, xLabel[axisIndex].fontSize);
     	axisLabelFont.setBold( true );
     	painter->setFont( axisLabelFont );
-    	//int yPosition = height() - MARGIN / 2;
     	int yPosition = height() - MARGIN_BOTTOM / 2;
     	QString labelText = xLabel[axisIndex].text;
     	if ( axisIndex == QtPlotSettings::xTop ){
-    		//yPosition = MARGIN / 3 ;
     		yPosition = MARGIN_TOP / 2;
     	}
     	painter->drawText(MARGIN_LEFT, yPosition, getRectWidth(), MARGIN_TOP / 2,
             Qt::AlignHCenter | Qt::AlignTop, labelText );
     }
-    //QPainterPath text;     
     QFont font(yLabel.fontName, yLabel.fontSize);
     font.setBold( true );
-    QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text); 
-    //text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);                   
+    QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text);
     font.setPixelSize(50);
     painter->rotate(-90);
     //painter->translate(- height() / 2, MARGIN / 6);
@@ -1051,7 +1019,6 @@ void QtCanvas::drawWelcome(QPainter *painter)
     painter->setPen(welcome.color);
     painter->setFont(QFont(title.fontName, welcome.fontSize));
     painter->drawText( MARGIN_LEFT, MARGIN_TOP,
-    //painter->drawText(MARGIN, MARGIN,
                       getRectWidth(), getRectHeight(),
                       Qt::AlignHCenter | Qt::AlignVCenter, 
                       welcome.text);
@@ -1064,8 +1031,6 @@ void QtCanvas::drawWelcome(QPainter *painter)
 void QtCanvas::drawxRange(QPainter *painter){
 	int xStart = getPixelX( xRangeStart );
 	int xEnd = getPixelX( xRangeEnd );
-    /*xRangeRect.setBottom(MARGIN);
-	xRangeRect.setTop(height()-MARGIN-1);*/
 	xRangeRect.setBottom( MARGIN_TOP );
 	xRangeRect.setTop(height() - MARGIN_BOTTOM-1);
 	xRangeRect.setRight(xStart);
@@ -1078,64 +1043,7 @@ void QtCanvas::setTraditionalColors( bool traditionalColors ){
 	this->traditionalColors = traditionalColors;
 }
 
-/*QColor QtCanvas::getTraditionalColor(int d)
-{
-	// maps an integer value against the 14 usefull colors
-	// defined in Qt::GlobalColor;
-	// is repetitive, but should suffice for all practical
-	// purposes;
-	QColor lColor;
-	const int cpicker = d % 14;
 
-	switch (cpicker) {
-	case 0:
-		lColor = Qt::red;
-		break;
-	case 1:
-		lColor = Qt::blue;
-		break;
-	case 2:
-		lColor = Qt::green;
-		break;
-	case 3:
-		lColor = Qt::cyan;
-		break;
-	case 4:
-		lColor = Qt::lightGray;
-		break;
-	case 5:
-		lColor = Qt::magenta;
-		break;
-	case 6:
-		lColor = Qt::yellow;
-		break;
-	case 7:
-		lColor = Qt::darkRed;
-		break;
-	case 8:
-		lColor = Qt::darkBlue;
-		break;
-	case 9:
-		lColor = Qt::darkGreen;
-		break;
-	case 10:
-		lColor = Qt::darkCyan;
-		break;
-	case 11:
-		lColor = Qt::darkGray;
-		break;
-	case 12:
-		lColor = Qt::darkMagenta;
-		break;
-	case 13:
-		lColor = Qt::darkYellow;
-		break;
-	default:
-		// should never get here
-		lColor = Qt::gray;
-	}
-	return lColor;
-}*/
 
 void QtCanvas::setTraditionalCurveColors( const QList<QString>& colors ){
 	traditionalCurveColorList = colors;
@@ -1237,7 +1145,6 @@ void QtCanvas::drawCurves(QPainter *painter)
 	QColor defaultColor = pen.color();
     
     QtPlotSettings settings = zoomStack[curZoom];
-    //QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
     QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
     painter->setClipRect(rect.x() + 1, rect.y() + 1,
                          rect.width() - 2, rect.height() - 2);
@@ -1345,8 +1252,6 @@ void QtCanvas::drawCurves(QPainter *painter)
    		 QFont curveLabelFont(xLabel[QtPlotSettings::xBottom].fontName, xLabel[QtPlotSettings::xBottom].fontSize);
    		 painter->setFont( curveLabelFont);
    		 painter->drawText(MARGIN_LEFT+4, MARGIN_TOP + (5 +id*15),
-   		 //painter->drawText(MARGIN + 4, MARGIN + (5 + id * 15),
-   				 //getRectWidth(), MARGIN / 2,
    				 getRectWidth(), MARGIN_TOP / 2,
    				 Qt::AlignLeft | Qt::AlignTop, (*it).second.getLegend());
    	 }

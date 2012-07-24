@@ -63,20 +63,26 @@ public:
 	void setEndValue( float val );
 	float getStartValue() const;
 	float getEndValue() const;
+	String getErrorMessage() const;
 	const Record& getResults() const;
 private:
 	ImageProfileFitter* fitter;
 	Record results;
 	float startValue;
 	float endValue;
+	String errorMsg;
 };
 
 const Record& SpecFitThread::getResults() const {
 	return results;
 }
 
+String SpecFitThread::getErrorMessage() const {
+	return errorMsg;
+}
+
 SpecFitThread::SpecFitThread( ImageProfileFitter* profileFitter ):
-		fitter( profileFitter ){
+		fitter( profileFitter ), errorMsg(""){
 }
 
 void SpecFitThread::setStartValue( float val ){
@@ -93,7 +99,12 @@ float SpecFitThread::getEndValue() const {
 	return endValue;
 }
 void SpecFitThread::run(){
-	results = fitter->fit();
+	try {
+		results = fitter->fit();
+	}
+	catch( AipsError aipsError ){
+		errorMsg = aipsError.getMesg();
+	}
 }
 
 
@@ -515,68 +526,77 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 	const int PROGRESS_END = 100;
 	progressDialog.setValue( static_cast<int>(finishedProgress) );
 
-	const Record& results = specFitThread->getResults();
+	String errorMsg = specFitThread->getErrorMessage();
+	if ( errorMsg.length() == 0 ){
+		const Record& results = specFitThread->getResults();
 
-	//Decide if we got any valid fits
-	Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
-	Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
-	float progressIncrement = 90.0f / ntrue( succeeded );
-	if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
+		//Decide if we got any valid fits
+		Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
+		Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
+		float progressIncrement = 90.0f / ntrue( succeeded );
+		if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
 
-		//Tell the user basic information about the fit.
-		Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
-		String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
-		msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
-		msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
-		postStatus( msg );
+			//Tell the user basic information about the fit.
+			Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+			String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
+			msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
+			msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
+			postStatus( msg );
 
-		//Initialize the x-values.  In the case of a polynomial fit, the
-		//x values need to be in pixels.
-		Vector<Float> xValues( POINT_COUNT );
-		Vector<Float> xValuesPix( POINT_COUNT );
-		float startVal = specFitThread->getStartValue();
-		float endVal = specFitThread->getEndValue();
-		float dx = (endVal - startVal) / POINT_COUNT;
-		for( int i = 0; i < POINT_COUNT; i++ ){
-			xValues[i] = startVal + i * dx;
-			xValuesPix[i] = toPixels( xValues[i] );
+			//Initialize the x-values.  In the case of a polynomial fit, the
+			//x values need to be in pixels.
+			Vector<Float> xValues( POINT_COUNT );
+			Vector<Float> xValuesPix( POINT_COUNT );
+			float startVal = specFitThread->getStartValue();
+			float endVal = specFitThread->getEndValue();
+			float dx = (endVal - startVal) / POINT_COUNT;
+			for( int i = 0; i < POINT_COUNT; i++ ){
+				xValues[i] = startVal + i * dx;
+				xValuesPix[i] = toPixels( xValues[i] );
+			}
+
+			//Go through each of the fits.  This could be 1 if multifit is not
+			//checked.  On the other hand it could be hundreds if multifit is checked.
+			std::vector<bool> successVector;
+			succeeded.tovector( successVector );
+			for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ){
+				if ( fitCancelled ){
+					break;
+				}
+				//The fit succeeded.
+				if ( successVector[i] ){
+					//Initialize a SpecFit curve for the fit.
+					processFitResults( xValues, xValuesPix );
+				}
+				finishedProgress = finishedProgress + progressIncrement;
+
+				progressDialog.setValue( static_cast<int>(finishedProgress) );
+			}
+
+			progressDialog.setValue( PROGRESS_END );
+			if ( !fitCancelled ){
+				if ( !ui.multiFitCheckBox->isChecked() ){
+					drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
+				}
+				else {
+					QString msg( "Hover the mouse over the point\n in the selected rectangle of the Viewer Display Panel\n to see the fitted profile at each point");
+					Util::showUserMessage( msg, this );
+				}
+			}
 		}
-
-		//Go through each of the fits.  This could be 1 if multifit is not
-		//checked.  On the other hand it could be hundreds if multifit is checked.
-		std::vector<bool> successVector;
-		succeeded.tovector( successVector );
-		for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ){
-			if ( fitCancelled ){
-				break;
-			}
-			//The fit succeeded.
-			if ( successVector[i] ){
-				//Initialize a SpecFit curve for the fit.
-				processFitResults( xValues, xValuesPix );
-			}
-			finishedProgress = finishedProgress + progressIncrement;
-
-			progressDialog.setValue( static_cast<int>(finishedProgress) );
-		}
-
-		progressDialog.setValue( PROGRESS_END );
-		if ( !fitCancelled ){
-			if ( !ui.multiFitCheckBox->isChecked() ){
-				drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
-			}
-			else {
-				QString msg( "Hover the mouse over the point\n in the selected rectangle of the Viewer Display Panel\n to see the fitted profile at each point");
-				Util::showUserMessage( msg, this );
-			}
+		else {
+			progressDialog.setValue( PROGRESS_END );
+			String msg = String("Data could not be fitted!");
+			QString msgStr(msg.c_str());
+			postStatus(msg);
+			Util::showUserMessage( msgStr, this);
 		}
 	}
 	else {
 		progressDialog.setValue( PROGRESS_END );
-		String msg = String("Data could not be fitted!");
-		QString msgStr(msg.c_str());
-		postStatus(msg);
-		Util::showUserMessage( msgStr, this);
+		QString msg( "Data could not be fitted!\n");
+		msg.append( errorMsg.c_str());
+		Util::showUserMessage( msg, this );
 	}
 }
 
@@ -692,7 +712,7 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 			Util::showUserMessage( msg, this );
 		}
 	}
-	//ui.viewButton->setEnabled( true );
+    ui.viewButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 	ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 }
 
@@ -781,9 +801,9 @@ void SpecFitSettingsWidgetRadio::cancelFit(){
 
 void SpecFitSettingsWidgetRadio::specLineFit(){
 	*logger << LogOrigin("SpecFitOptical", "specLineFit");
-
-	if ( isValidChannelRangeValue( ui.minLineEdit->text(), "Start" ) &&
-			isValidChannelRangeValue( ui.maxLineEdit->text(), "End" )){
+	bool validMin = isValidChannelRangeValue( ui.minLineEdit->text(), "Start" );
+	bool validMax = isValidChannelRangeValue( ui.maxLineEdit->text(), "End" );
+	if ( validMin && validMax ){
 		// convert input values to Float
 		float startVal=ui.minLineEdit->text().toFloat();
 		float endVal  =ui.maxLineEdit->text().toFloat();
@@ -811,6 +831,16 @@ void SpecFitSettingsWidgetRadio::specLineFit(){
 			}
 			doFit( startVal, endVal, gaussCount, polyFit, polyN );
 		}
+	}
+	else {
+		QString msg="Please specify a valid range.";
+		if ( !validMin ){
+			msg.append( "\nMinimum value "+ui.minLineEdit->text()+" was not valid.");
+		}
+		if ( !validMax ){
+			msg.append( "\nMaximum value "+ui.maxLineEdit->text()+" was not valid.");
+		}
+		Util::showUserMessage( msg, this );
 	}
 }
 
