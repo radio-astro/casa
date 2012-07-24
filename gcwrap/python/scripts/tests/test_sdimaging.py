@@ -11,7 +11,7 @@ import numpy
 import re
 import string
 
-from sdimaging_cli import sdimaging_cli as sdimaging
+from sdimaging import sdimaging
 import asap as sd
 
 #
@@ -138,42 +138,65 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         res=sdimaging()
         self.assertFalse(res)
 
     def test001(self):
         """Test001: Bad specunit"""
+        # argument verification error
         res=sdimaging(infile=self.rawfile,specunit='frequency',outfile=self.outfile)
         self.assertFalse(res)
 
     def test002(self):
         """Test002: Bad field id"""
         outfile=self.prefix+self.postfix
-        res=sdimaging(infile=self.rawfile,field=self.badid,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,field=self.badid,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('field id %s does not exist'%(self.badid))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test003(self):
         """Test003: Bad spectral window id"""
-        res=sdimaging(infile=self.rawfile,spw=self.badid,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,spw=self.badid,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('spw id %s does not exist'%(self.badid))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test004(self):
         """Test004: Bad antenna id"""
+        # not throw any exception, but return False
         res=sdimaging(infile=self.rawfile,antenna=self.badid,outfile=self.outfile)
         self.assertFalse(res)
         
     def test005(self):
         """Test005: Bad stokes parameter"""
-        res=sdimaging(infile=self.rawfile,stokes='BAD',outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,stokes='BAD',outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Stokes selection BAD is currently not supported.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test006(self):
         """Test006: Bad gridfunction"""
+        # argument verification error
         res=sdimaging(infile=self.rawfile,gridfunction='BAD',outfile=self.outfile)
         self.assertFalse(res)
 
     def test007(self):
         """Test007: Bad scanlist"""
+        # empty selection, but not throw exception
         res=sdimaging(infile=self.rawfile,scanlist=[self.badid],outfile=self.outfile)
         self.assertFalse(res)
 
@@ -182,16 +205,29 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         f=open(self.outfile,'w')
         print >> f, 'existing file'
         f.close()
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('file %s exists'%(self.outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test009(self):
         """Test009: Bad phasecenter string"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter='This is bad')
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter='This is bad')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Empty QuantumHolder argument for asQuantumDouble')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test010(self):
         """Test010: Bad phasecenter reference (J2000 is assumed)"""
+        # default for unknown direction frame is J2000 
         refimage=self.outfile+'2'
         sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'))
         sdimaging(infile=self.rawfile,outfile=refimage,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter)
@@ -207,23 +243,38 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 
     def test011(self):
         """Test011: Bad pointingcolumn name"""
+        # argument verification error
         res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,pointingcolumn='non_exist')
         self.assertFalse(res)
 
     def test012(self):
         """Test012: Bad imsize"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[0,0],phasecenter=self.phasecenter)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[0,0],phasecenter=self.phasecenter)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('%s does not exist'%(self.outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test013(self):
         """Test013: Bad cell size"""
+        # empty image will be created
         res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
         self.assertFalse(res)
 
     def test014(self):
         """Test014: Too fine resolution (smaller than original channel width"""
-        res=sdimaging(infile=self.rawfile,specunit='GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=10,start=1.4202,step=1.0e-10)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,specunit='GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=10,start=1.4202,step=1.0e-10)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('calcChanFreqs failed, check input start and width parameters')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
 
 ###
 # Test channel imaging

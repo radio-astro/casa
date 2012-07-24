@@ -9,7 +9,7 @@ import sha
 import time
 import numpy
 
-from sdsave_cli import sdsave_cli as sdsave
+from sdsave import sdsave
 import asap as sd
 
 # Unit test of sdsave task.
@@ -135,18 +135,31 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         self.res=sdsave()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdsave(infile=self.infile,timeaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdsave(infile=self.infile,timeaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of time averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdsave(infile=self.infile,polaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdsave(infile=self.infile,polaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of polarization averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 ###
@@ -265,8 +278,15 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
     def test204(self):
         """Test 204: test failure case that unexisting antenna is specified"""
-        self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
-        self.assertFalse(self.res,False)
+        try:
+            self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            # the task failed to import data so that failed to open output file
+            pos=str(e).find('Failed to open file')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test205(self):
         """Test 205: test to read USB spectral window"""
@@ -918,11 +938,16 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.badq[0]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
-                        scanaverage=False,timeaverage=False,polaverage=False,\
-                        iflist=iflist,restfreq=restfreq)
-
-        self.assertFalse(result)
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('wrong unit of restfreq')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test732( self ):
         """Test 732: restfreq (a list of BAD quantity unit [length = 1])"""
@@ -933,11 +958,17 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = [ self.badq[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
-                        scanaverage=False,timeaverage=False,polaverage=False,\
-                        iflist=iflist,restfreq=restfreq)
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Input value is not a quantity: ')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
-        self.assertFalse(result)
 
     def test733( self ):
         """Test 733: restfreq (a list of BAD quantity unit [length > 1])"""
@@ -948,11 +979,17 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
         restfreq = self.badq
 
         print "Setting restfreq = %s" % (str(restfreq))
-        result = sdsave(infile=infile,outfile=outfile,\
-                        scanaverage=False,timeaverage=False,polaverage=False,\
-                        iflist=iflist,restfreq=restfreq)
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
 
-        self.assertFalse(result)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('wrong unit of restfreq')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 ###

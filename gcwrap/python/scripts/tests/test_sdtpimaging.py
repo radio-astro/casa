@@ -9,7 +9,7 @@ import sha
 import time
 import numpy
 
-from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
+from sdtpimaging import sdtpimaging
 import asap as sd
 
 # Unit test of sdtpimaging task.
@@ -76,51 +76,87 @@ class sdtpimaging_test0(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         self.res=sdtpimaging()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Bad antenna id"""
-        self.res=sdtpimaging(infile=self.infile,antenna='99')
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdtpimaging(infile=self.infile,spw=2,antenna='99')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('No matching antenna ID or name in the data, please check antenna parameter')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Bad stokes string"""
-        self.res=sdtpimaging(infile=self.infile,stokes='J')
-        self.assertFalse(self.res)
+        try:
+            self.res=sdtpimaging(infile=self.infile,spw=2,stokes='J')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('stokes=J specified but the data contains only [\'XX\']')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test003(self):
         """Test 003: Try to create image without output image name"""
-        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile='')
-        self.assertFalse(self.res)
+        try:
+            self.res=sdtpimaging(infile=self.infile,spw=2,createimage=True,outfile='')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify out image name')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test004(self):
         """Test 004: Negative imsize"""
-        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,imsize=[-1])
-        self.assertFalse(self.res)
+        try:
+            self.res=sdtpimaging(infile=self.infile,spw=2,createimage=True,outfile=self.outimage,imsize=[-1])
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            # failed to create image so that outimage not exist
+            pos=str(e).find('%s does not exist'%(self.outimage))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
-    def test005(self):
-        """Test 005: Negative cell size"""
-        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,cell=[-1])
-        self.assertFalse(self.res)
+# this test is meaningless w.r.t. its original purpose
+#    def test005(self):
+#        """Test 005: Negative cell size"""
+#        self.res=sdtpimaging(infile=self.infile,spw=2,createimage=True,outfile=self.outimage,cell=[-1])
+#        self.assertFalse(self.res)
 
     def test006(self):
         """Test 006: Bad phase center string"""
-        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,phasecenter='XXX')
-        self.assertFalse(self.res)
+        try:
+            self.res=sdtpimaging(infile=self.infile,spw=2,createimage=True,outfile=self.outimage,phasecenter='XXX')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Could not interprete phasecenter parameter')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test007(self):
         """Test 007: Bad pointing column name"""
+        # argument verification error
         self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,pointingcolumn='XXX')
         self.assertFalse(self.res)
 
     def test008(self):
         """Test 008: Unexisting grid function"""
+        # argument verification error
         self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,gridfunction='XXX')
         self.assertFalse(self.res)
  
     def test009(self):
         """Test 009: Invalid calmode"""
+        # argument verification error
         self.res=sdtpimaging(infile=self.infile,calmode='ps')
         self.assertFalse(self.res)
  
