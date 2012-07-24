@@ -540,6 +540,7 @@ void AnnotationBase::setLabelPosition(const String& position) {
 		);
 	}
 	_labelPos = c;
+	_params[LABELPOS] = _labelPos;
 }
 
 void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
@@ -551,6 +552,7 @@ void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
 		);
 	}
 	_labelOff = offset;
+	_params[LABELOFF] = String::toString(offset[0]) + "," + String::toString(offset[1]);
 }
 
 vector<Int> AnnotationBase::getlabelOffset() const {
