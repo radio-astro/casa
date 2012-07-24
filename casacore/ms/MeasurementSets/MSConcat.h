@@ -118,6 +118,7 @@ private:
   void checkShape(const IPosition& otherShape) const;
   void checkCategories(const ROMSMainColumns& otherCols) const;
   Bool copyPointing(const MSPointing& otherPoint, const Block<uInt>& newAntIndices);
+  Bool copyPointingB(MSPointing& otherPoint, const Block<uInt>& newAntIndices);
   Int copyObservation(const MSObservation& otherObs, const Bool remRedunObsId=True);
                              // by default remove redundant observation table rows
   Block<uInt> copyAntennaAndFeed(const MSAntenna& otherAnt,
