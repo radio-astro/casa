@@ -12,12 +12,12 @@ import os
 import sys
 import partitionhelper as ph
 
-def mmstest(taskname):
+def mmstest(mytask):
     # **** Data for test_listhistory.py
     TESTPATH = DATAPATH + 'unittest/'
-    INPPATH = TESTPATH + taskname
-    MMSPATH = './unittest_mms/'+taskname
-    print '--------- Will create MMS data for test_'+taskname
+    INPPATH = TESTPATH + mytask
+    MMSPATH = './unittest_mms/'+mytask
+    print '--------- Will create MMS data for test_'+mytask
     ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, createmslink=True, cleanup=True)
 
       
@@ -28,27 +28,32 @@ if not os.environ.has_key('CASAPATH'):
     
 DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
+
+def main():
+    # BEGINNING OF BLOCK THAT WILL CREATE MMS DATA. 
+    # Comment out the tasks that you do not want to create data for.
     
-# BEGINNING OF BLOCK THAT WILL CREATE MMS DATA
-
-# **** Data for test_listhistory.py
-tasktest = 'listhistory'
-mmstest(tasktest)
-
-# **** Data for test_listvis.py
-tasktest = 'listvis'
-mmstest(tasktest)
-# NOTE:
-# You need to run partition by hand to create an MMS for the single-dish data set
-SDPATH = DATAPATH + 'unittest/listvis/'
-SDMMS = './unittest_mms/listvis/'
-partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', datacolumn='float_data', createmms=True)
-
-# **** Data for test_listobs.py
-tasktest = 'listobs'
-mmstest(tasktest)
+    thislist = [
+                'listhistory',
+                'listvis',
+                'listobs'
+                ]
     
-
+    # Loop through task list
+    for t in thislist:
+        mmstest(t)
+        
+    # NOTE for test_listvis data:
+    # You need to run partition by hand to create an MMS for the single-dish data set
+    SDPATH = DATAPATH + 'unittest/listvis/'
+    SDMMS = './unittest_mms/listvis/'
+    from tasks import partition
+    
+    partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', datacolumn='float_data', createmms=True)
+    
+    
+if __name__ == "__main__":
+    main()
     
     
     

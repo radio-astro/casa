@@ -31,6 +31,7 @@ casa_add_python( tools tools_regressions_admin_python python/${PYTHONV}
   report.py
   tableMaker.py
   testwrapper.py
+  make_mmsdata.py
   tw_func.py
   tw_plotmem.py
   tw_utils.py
@@ -45,4 +46,5 @@ install( PROGRAMS
          tests_list.txt
          runUnitTest.py
 	 execute.py
+         make_mmsdata.py
          DESTINATION python/${PYTHONV}/regressions/admin )
