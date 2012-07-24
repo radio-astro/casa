@@ -73,6 +73,7 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
                 casalog.post( 'No output written.' )
+                raise Exception, instance
                 return
 
             # Copy scantable when usign disk storage not to modify
@@ -181,6 +182,7 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
         except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
 
 
