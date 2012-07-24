@@ -8,6 +8,7 @@ from asap_init import *
 import unittest
 import time
 import filecmp
+from matplotlib import pylab as pl
 
 asap_init()
 from sdplot import sdplot
@@ -29,9 +30,11 @@ class sdplot_unittest_base:
     minsize = 20000
     # save figure for reference?
     saveref = True
+    #saveref = False
     # GUI settings
     oldgui = sd.rcParams['plotter.gui']  # store previous GUI setting
     usegui = False   # need to set GUI status constant to compare
+    #usegui = True   # need to set GUI status constant to compare
 
     # compare two figures
     def _checkOutFile( self, filename, compare=True ):
@@ -61,6 +64,32 @@ class sdplot_unittest_base:
                 msg = "Unable to copy Figure '"+filename+"' to "+self.prevdir+".\n"
                 msg += "The figure remains in "+self.prevdir
                 casalog.post(msg,'WARN')
+
+    # get plot information
+    def _get_plot_info( self ):
+        retdic = {}
+        ax0 = sd.plotter._plotter.subplots[0]['axes']
+        retdic['npanel'] = len(sd.plotter._plotter.subplots)
+        retdic['nstack'] = len(sd.plotter._plotter.subplots[0]['lines'])
+        retdic['rows'] = sd.plotter._rows
+        retdic['cols'] = sd.plotter._cols
+        retdic['xlabel'] = ax0.get_xlabel()
+        retdic['xlim'] = ax0.get_xlim()
+        retdic['ylabel'] = ax0.get_ylabel()
+        retdic['ylim'] = ax0.get_ylim()
+        retdic['title0'] = ax0.get_title()
+        retdic['label0'] = ax0.get_lines()[0].get_label()
+        return retdic
+
+    def _mergeDict( self, base, add ):
+        self.assertTrue(isinstance(base,dict) and \
+                        isinstance(add, dict),\
+                        "Need to specify two dictionaries to merge")
+        retdic = base.copy()
+        for key, val in add.iteritems():
+            retdic[key] = val
+        return retdic
+        
 
     # compare two dictionaries
     def _compareDictVal( self, testdict, refdict, reltol=1.0e-5, complist=None ):
@@ -131,17 +160,17 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
     Test plot parameters only. Least data filterings and no averaging.
     
     The list of tests:
-      test00    --- default parameters (raises an error)
-      test01-03 --- possible plot types
-      test04-07 --- possible axes (spectral plotting)
-      test08-12 --- panelling and stacking (spectral plotting)
-      test13-15 --- plot range control (spectral plotting)
-      test16-19 --- plot style control (spectral plotting)
-      test20-21 --- header control (spectral plotting)
-      test22-23,28 --- plot layout control (spectral plotting)
-      test24-25 --- row panelling or stacking (spectral plotting)
-      test26-27 --- flag application
-      test29-30 --- restfreq
+      testplot00    --- default parameters (raises an error)
+      testplot01-03 --- possible plot types
+      testplot04-07 --- possible axes (spectral plotting)
+      testplot08-12 --- panelling and stacking (spectral plotting)
+      testplot13-15 --- plot range control (spectral plotting)
+      testplot16-19 --- plot style control (spectral plotting)
+      testplot20-21 --- header control (spectral plotting)
+      testplot22-23,28 --- plot layout control (spectral plotting)
+      testplot24-25 --- row panelling or stacking (spectral plotting)
+      testplot26-27 --- flag application
+      testplot29-30 --- restfreq
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -154,6 +183,9 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
     figroot = sdplot_unittest_base.taskname + '_test'
     figsuff = '.png'
     fig=None
+    baseinfo = {'npanel': 2, 'nstack': 2,
+               'xlabel': 'Channel',
+               'ylabel': 'Brightness Temperature (K)'}
 
     def setUp( self ):
         # switch on/off GUI
@@ -198,7 +230,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=self.infile,plottype=plottype,header=header,
                         outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        self.assertEqual(len(pl.gcf().axes),2)
+        self.assertEqual(len(pl.gca().get_lines()),1)
+        self.assertEqual(pl.gca().get_xlabel(),'Time (UT [hour])')
+        self.assertEqual(pl.gca().get_ylabel(),'Az [deg.]')
         self._checkOutFile(outfile)
 
     def testplot02( self ):
@@ -210,7 +247,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=self.infile,plottype=plottype,header=header,
                         outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        self.assertEqual(len(pl.gcf().axes),1)
+        self.assertEqual(len(pl.gca().get_lines()),1)
+        self.assertEqual(pl.gca().get_xlabel(),'RA [deg.]')
+        self.assertEqual(pl.gca().get_ylabel(),'Declination [deg.]')
         self._checkOutFile(outfile)
 
     def testplot03( self ):
@@ -224,7 +266,13 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,plottype=plottype,header=header,
                         outfile=outfile)
+        locinfo = {'npanel': 1, 'nstack': 1,
+                   'xlabel': 'row number',
+                   'ylabel': 'Brightness Temperature (K)'}
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, locinfo)
         self._checkOutFile(outfile)
 
     def testplot04( self ):
@@ -243,7 +291,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
                         header=header,outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, self.baseinfo)
         self._checkOutFile(outfile)
 
     def testplot05( self ):
@@ -262,7 +313,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
                         header=header,outfile=outfile)
+        locinfo = {'xlabel': 'LSRK Frequency (%s)' % specunit}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot06( self ):
@@ -281,7 +337,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
                         header=header,outfile=outfile)
+        locinfo = {'xlabel': 'LSRK RADIO velocity (%s)' % (specunit)}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot07( self ):
@@ -300,12 +361,17 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
                         header=header,outfile=outfile)
+        locinfo = {'ylabel': 'Flux density (Jy)'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot08( self ):
         """
-        Test 8: test panelling and stacking (spectral plotting) --- panel='pol', stack='beam' (2px2s)
+        Test 8: test panelling and stacking (spectral plotting) --- panel='pol', stack='scan' (2px2s)
         """
         tid = "08"
         outfile = self.figroot+tid+self.figsuff
@@ -315,12 +381,17 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'title0': 'XX', 'label0': 'Scan 21 (OrionS)'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot09( self ):
         """
-        Test 9: test panelling and stacking (spectral plotting) --- panel='beam', stack='if' (2px4s)
+        Test 9: test panelling and stacking (spectral plotting) --- panel='scan', stack='if' (2px4s)
         """
         tid = "09"
         outfile = self.figroot+tid+self.figsuff
@@ -330,7 +401,13 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'nstack': 4,
+                   'title0': 'Scan 21 (OrionS)', 'label0': 'IF0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot10( self ):
@@ -345,12 +422,18 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 4, 'nstack': 8,
+                   'title0': 'IF0', 'label0': '2006/01/19/01:48:38'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot11( self ):
         """
-        Test 11: test panelling and stacking (spectral plotting) --- panel='time', stack='scan' (8px1s)
+        Test 11: test panelling and stacking (spectral plotting) --- panel='time', stack='beam' (8px1s)
         """
         tid = "11"
         outfile = self.figroot+tid+self.figsuff
@@ -360,12 +443,18 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 8,'nstack': 1,
+                   'title0': '2006/01/19/01:48:38','label0': 'Beam 0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot12( self ):
         """
-        Test 12: test panelling and stacking (spectral plotting) --- panel='scan', stack='pol' (1px2s)
+        Test 12: test panelling and stacking (spectral plotting) --- panel='beam', stack='pol' (1px2s)
         """
         tid = "12"
         outfile = self.figroot+tid+self.figsuff
@@ -375,7 +464,13 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1,'nstack': 2,
+                   'title0': 'Beam 0', 'label0': 'XX'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot13( self ):
@@ -390,7 +485,14 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1,'nstack': 2,
+                   'title0': 'IF0', 'label0': 'XX',
+                   'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot14( self ):
@@ -405,7 +507,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,flrange=flrange,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1, 'ylim': flrange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot15( self ):
@@ -421,7 +528,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         header=header,flrange=flrange,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlim': sprange, 'ylim': flrange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot16( self ):
@@ -437,7 +549,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         header=header,histogram=histogram,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot17( self ):
@@ -453,7 +570,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         header=header,colormap=colormap,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot18( self ):
@@ -469,7 +591,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         header=header,linewidth=linewidth,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot19( self ):
@@ -487,7 +614,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         linewidth=linewidth,linestyles=linestyles,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot20( self ):
@@ -501,7 +633,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         headsize = 11
         result = sdplot(infile=infile,iflist=iflist,headsize=headsize,
                         outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, self.baseinfo)
         self._checkOutFile(outfile, compare=False)
 
     def testplot21( self ):
@@ -514,7 +649,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         iflist = [0,2]
         result = sdplot(infile=infile,iflist=iflist,
                         outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, self.baseinfo)
         self._checkOutFile(outfile, compare=False)
 
     def testplot22( self ):
@@ -530,7 +668,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
                         margin=margin,header=header,outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, self.baseinfo)
         self._checkOutFile(outfile)
 
     def testplot23( self ):
@@ -546,7 +687,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
                         legendloc=legendloc,header=header,outfile=outfile)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, self.baseinfo)
         self._checkOutFile(outfile)
 
     def testplot24( self ):
@@ -560,7 +704,13 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,panel=panel,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 16, 'nstack': 1,
+                   'title0': 'row 0', 'label0': 'XX'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot25( self ):
@@ -574,7 +724,13 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,stack=stack,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1, 'nstack': 16,
+                   'title0': '', 'label0': 'row 0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot26( self ):
@@ -634,7 +790,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         header = False
         result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
                         subplot=subplot,header=header,outfile=outfile)
+        locinfo = {'rows': 2, 'cols': 4}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot29( self ):
@@ -652,7 +813,14 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,iflist=iflist,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
+        locinfo = {'xlim': (-170.62517234590837, 160.27007370505743),
+                   'xlabel': 'LSRK RADIO velocity (km/s)',
+                   'title0': 'IF1', 'label0': 'XX'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
     def testplot30( self ):
@@ -670,7 +838,14 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,iflist=iflist,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
+        locinfo = {'npanel': 1, 'xlabel': 'LSRK RADIO velocity (km/s)',
+                   'xlim': (-169.54464299991017, 170.54735123960856),
+                   'title0': 'IF2'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
         self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile)
 
 
@@ -904,6 +1079,83 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(self.infile,initval)
 
+
+# class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
+#     """
+#     Unit tests of task sdplot. Test plottype='grid'
+    
+#     The list of tests:
+#     testgrid01  --- 
+
+#     Note: input data is generated from a intermediate data of
+#     single dish regression data,
+#     'FLS3a_calfs', as follows:
+#     sdsave(infile='FLS3a_calfs',outfile='FLS3a_calfs.asap')
+#     sdgrid(infiled=['FLS3a_calfs.asap'], ifno=0, npix=[6,6],
+#            outfile='FLS3a_calfs.6x6.asap')
+#     """
+#     # Input and output names
+#     infile = ''
+#     figroot = sdplot_unittest_base.taskname + '_grid'
+#     figsuff = '.png'
+#     fig=None
+
+#     # common parameter values
+#     type = 'grid'
+#     header = False
+#     pollist = [0]
+
+#     baseinfo = {'npanel': 36, 'nstack': 1,
+#                 'rows': 6, 'cols': 6,
+#                'xlabel': 'Channel',
+#                'ylabel': 'Brightness Temperature (K)'}
+
+#     def setUp( self ):
+#         # switch on/off GUI
+#         sd.rcParams['plotter.gui'] = self.usegui
+#         sd.plotter.__init__()
+#         # Fresh copy of input data
+#         if os.path.exists(self.infile):
+#             shutil.rmtree(self.infile)
+#         shutil.copytree(self.datapath+self.infile, self.infile)
+#         # Generate directory to save figures
+#         if not os.path.exists(self.currdir):
+#             os.makedirs(self.currdir)
+#         # Create a directory to store the figures for future comparison
+#         if (not os.path.exists(self.prevdir)) and self.saveref:
+#             try: os.makedirs(self.prevdir)
+#             except OSError:
+#                 msg = "Unable to create directory, "+self.prevdir+".\n"
+#                 msg += "Plot figures will remain in "+self.currdir
+#                 casalog.post(msg,'WARN')
+        
+#         default(sdplot)
+
+#     def tearDown( self ):
+#         if (os.path.exists(self.infile)):
+#             shutil.rmtree(self.infile)
+#         # restore GUI setting
+#         sd.rcParams['plotter.gui'] = self.oldgui
+#         sd.plotter.__init__()
+
+#     # helper functions of tests
+
+#     # Actual tests
+#     def testgrid01( self ):
+#         """testgrid: default gridding (1x1)"""
+#         tid="01"
+#         outfile = self.figroot+tid+self.figsuff
+#         result = sdplot(infile=self.infile, pollist=self.pollist,
+#                         plottype = self.type, header=self.header,
+#                         outfile=outfile)
+#         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
+#                    'title0': 'J2000 17:17.58 +59.30.02.0'}
+#         refinfo = self._mergeDict(self.baseinfo,locinfo)
+#         # Tests
+#         self.assertEqual(result,None)
+#         currinfo = self._get_plot_info()
+#         self._compareDictVal(currinfo, refinfo)
+#         self._checkOutFile(outfile)
 
 def suite():
     return [sdplot_basicTest, sdplot_storageTest]
