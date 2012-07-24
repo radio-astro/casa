@@ -1165,6 +1165,7 @@ void VisBuffer::sortCorr()
       p2 = p3;
       p3 = tmp;
     }
+
     // Do modelVisCube if present
     if (modelVisCubeOK_p && modelVisCube_p.nelements() > 0) {
       blc(0) = trc(0) = 1;

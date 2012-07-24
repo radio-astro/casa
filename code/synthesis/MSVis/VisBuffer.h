@@ -887,8 +887,11 @@ private:
 
         newStatus = force || oldStatus;
 
-        if (newStatus) {
+        if (oldStatus) {
             newCache.assign (((& other) ->* oldCache) ());
+        }
+        else if (force) {
+            newCache.resize(); // guarantee it's cleared.
         }
     }
 
@@ -909,10 +912,15 @@ private:
 
         newStatus = force || oldStatus;
 
-        if (newStatus) {
+        if (oldStatus) {
 
             newCache = ((& other) ->* oldCache) ();
         }
+        else if (force){
+
+            newCache = T ();
+        }
+
     }
 
     virtual void setAllCacheStatuses (bool status);

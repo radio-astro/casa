@@ -83,12 +83,15 @@ casa_add_library( synthesis
   MSVis/VBRemapper.cc
   MSVis/VisBuffAccumulator.cc
   MSVis/VisBuffer.cc
+  MSVis/VisBuffer2.cc
+  MSVis/VisBufferImpl.cc
   MSVis/VisBufferAsync.cc
   MSVis/VisBufferAsyncWrapper.cc
   MSVis/VisBufferUtil.cc
   MSVis/VisBuffGroup.cc
   MSVis/VisBuffGroupAcc.cc
   MSVis/VisibilityIterator.cc
+  MSVis/VisibilityIterator2.cc
   MSVis/VisibilityIteratorImpl.cc
   MSVis/VisibilityIteratorImplAsync.cc
   MSVis/VisibilityProcessing.cc 
