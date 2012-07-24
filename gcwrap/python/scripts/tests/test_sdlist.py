@@ -97,6 +97,27 @@ class sdlist_test(unittest.TestCase):
                          msg="The task returned '"+str(result)+"' instead of None")
         self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
         
+    def test04(self):
+        """Test 4: Test overwrite=False"""
+        tid = "04"
+        infile = self.infile2
+        outfile = self.outroot+tid+".out"
+        result = sdlist(infile=infile,outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        self.assertTrue(os.path.exists(outfile),
+                        msg="Output file doesn't exist after the 1st run.")
+        # overwrite 'outfile'
+        infile = self.infile1
+        outfile = self.outroot+tid+".out"
+        try:
+            result = sdlist(infile=infile,outfile=outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Output file \'%s\' exist.'%(outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
 def suite():
     return [sdlist_test]
