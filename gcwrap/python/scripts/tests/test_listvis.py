@@ -31,12 +31,14 @@ if os.environ.has_key('TEST_DATADIR'):
 print 'Listvis tests will use data from '+datapath         
 
 # Reference files
-refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
-reffile = refpath+'reflistvis'
+reffile = datapath+'reflistvis'
 
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'OrionS_rawACSmod'
+if testmms:
+    msfile2 = 'OrionS_rawACSmod.mms'
+    
 msfile3 = 'as1039q4_ut.ms'
 out = 'listvis'
 
