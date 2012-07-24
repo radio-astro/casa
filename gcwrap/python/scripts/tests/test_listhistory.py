@@ -9,7 +9,7 @@ from taskinit import *
 import unittest
 
 datapath = os.environ.get('CASAPATH').split()[0] +\
-                            '/data/regression/exportasdm/input/'
+                            '/data/regression/unittest/listhistory/'
 
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
