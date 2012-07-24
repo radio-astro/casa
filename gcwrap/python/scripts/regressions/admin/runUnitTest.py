@@ -133,7 +133,8 @@ def readfile(FILE):
 
 def settestdir(datadir):
     '''Set an environmental variable for the data directory'''
-    os.environ.__setitem__('TEST_DATADIR',datadir)
+    absdatadir = os.path.abspath(datadir)
+    os.environ.__setitem__('TEST_DATADIR',absdatadir)
     return
 
 
