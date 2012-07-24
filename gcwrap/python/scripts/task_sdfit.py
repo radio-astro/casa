@@ -74,6 +74,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
             except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
             del sel
 
@@ -602,6 +603,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
         except Exception, instance:
                 #print '***Error***', instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
 
         finally:

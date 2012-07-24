@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
 from numpy import array
 
-asap_init()
 import asap as sd
 from sdfit import sdfit
 
@@ -335,6 +333,34 @@ class sdfit_test(unittest.TestCase):
                 within_errorrange = (abs(ans - val) <= abs(err * threshold))
                 self.assertTrue(within_errorrange)
 
+class sdfit_test_exceptions(unittest.TestCase):
+    """
+    test the case when sdfit throws exception.
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
+    # Input and output names
+    infile_gaussian   = 'Artificial_Gaussian.asap'
+
+    def setUp(self):
+        if os.path.exists(self.infile_gaussian):
+            shutil.rmtree(self.infile_gaussian)
+        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
+        default(sdfit)
+
+    def tearDown(self):
+        if os.path.exists(self.infile_gaussian):
+            shutil.rmtree(self.infile_gaussian)
+
+    def testNoData(self):
+        try:
+            res = sdfit(infile=self.infile_gaussian,iflist=99)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Selection contains no data. Not applying it.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 def suite():
-    return [sdfit_test]
+    return [sdfit_test, sdfit_test_exceptions]
