@@ -11,7 +11,12 @@ import numpy
 import re
 import string
 
-from sdcal import sdcal
+# to rethrow exception 
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
+from sdcal_cli import sdcal_cli as sdcal
+#from sdcal import sdcal
 import asap as sd
 
 #
