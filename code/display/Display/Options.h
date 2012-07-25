@@ -44,8 +44,21 @@ namespace casa {
 		};
 
 		std::string tmp( ) const { return kernel->tmp( ); }
-		std::string temporaryFile( const std::string &base_dir_name, bool remove=true )
-			{ return _temporary_path_( "file", base_dir_name, remove ); }
+
+		// this returns a path to be used as a temporary file, and by default,
+		// deletes the file when the viewer exits... the "base_name" is just
+		// the name to be used as a starting point for finding a unique file
+		// name, an example would be "my_tmp_file"... but it could be anything...
+		// this function guarantees that no two returned strings will be
+		// identical... and that all will be valid path names...
+		std::string temporaryFile( const std::string &base_name, bool remove=true )
+			{ return _temporary_path_( "file", base_name, remove ); }
+		// this returns a path to be used as a tempoary directory, and by default,
+		// deletes the directory when the viewer exits... the "base_dir_name"
+		// is just the name to be used as a starting point for finding a unique
+		// directory name, an example would be "my_tmpdir"... this function
+		// guarantees that no two returned strings will be identical... and
+		// that all will be valid path names...
 		std::string temporaryDirectory( const std::string &base_dir_name, bool remove=true )
 			{ return _temporary_path_( "dir", base_dir_name, remove ); }
 
