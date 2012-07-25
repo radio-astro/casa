@@ -150,13 +150,127 @@ class sdplot_unittest_base:
         else:
             return [input]
     
+#####
+# Tests on bad parameters and exceptions
+#####
+class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
+    """
+    Test bad input parameters and exceptions
+    
+    The list of tests:
+      test_default    --- default parameters (raises an error)
 
+    Note: input data is generated from a single dish regression data,
+    'OrionS_rawACSmod', as follows:
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+                calmode='ps',tau=0.09,outfile=self.infile)
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    outfile = sdplot_unittest_base.taskname + '_testErr.png'
+    badid = 99
+    badstr = "bad"
+
+    def setUp( self ):
+        # switch on/off GUI
+        sd.rcParams['plotter.gui'] = self.usegui
+        sd.plotter.__init__()
+        # Fresh copy of input data
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(sdplot)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        # restore GUI setting
+        sd.rcParams['plotter.gui'] = self.oldgui
+        sd.plotter.__init__()
+
+    # Actual tests
+    def test_default( self ):
+        """test_default: Default parameters (should Fail)"""
+        result = sdplot()
+        self.assertFalse(result)
+
+    def test_overwrite( self ):
+        """test_overwrite: Specify existing output file name with overwrite=False (task script raises Exception)"""
+        res1 = sdplot(infile=self.infile,outfile=self.outfile)
+        self.assertEqual(res1,None)
+        try:
+            res2 = sdplot(infile=self.infile,
+                          outfile=self.outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, err:
+            pos=str(err).find("Output file '%s' exist." % self.outfile)
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(err)))
+    def test_badSelection( self ):
+        """test_badSelection: Invalid data selection (no data selected) """
+        # the AipsError raised in cpp is caught and rethrown in
+        # the middle of task script
+        iflist = [self.badid]
+        try:
+            result = sdplot(infile=self.infile,iflist=iflist)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, err:
+            pos=str(err).find("Selection contains no data. Not applying it.")
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(err)))
+
+    def test_noTweight( self ):
+        """test_noTweight: Time averaging without tweight"""
+        # this error is handled in task interface in sdplot
+        result = sdplot(infile=self.infile,timeaverage=True,tweight='')
+        self.assertFalse(result)
+
+    def test_noPweight( self ):
+        """test_noPweight: Polarization averaging without pweight"""
+        # this error is handled in task interface in sdplot
+        result = sdplot(infile=self.infile,polaverage=True,pweight='')
+        self.assertFalse(result)
+
+    def test_badLincat( self ):
+        """test_badLinecat: Invalid line catalog (cpp throws AipsError)"""
+        # The aips error thrown in cpp is caught and rethrown at the end
+        # of task script
+        type = "spectra"
+        linecat = self.badstr
+        try:
+            result = sdplot(infile=self.infile,plottype=type,linecat=linecat)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, err:
+            pos=str(err).find("No match.")
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(err)))
+
+    def test_badStack( self ):
+        """test_badStack: Invalid stack mode (python tool raises TypeError)"""
+        type = "spectra"
+        stack = " "
+        try:
+            result = sdplot(infile=self.infile,plottype=type,stack=stack)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, err:
+            pos=str(err).find("Invalid mode")
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(err)))
+
+
+#####
+# Tests on basic task parameters
+#####
 class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
     """
     Test plot parameters only. Least data filterings and no averaging.
     
     The list of tests:
-      testplot00    --- default parameters (raises an error)
       testplot01-03 --- possible plot types
       testplot04-07 --- possible axes (spectral plotting)
       testplot08-12 --- panelling and stacking (spectral plotting)
@@ -212,11 +326,6 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         sd.plotter.__init__()
 
     # Actual tests
-    def testplot00( self ):
-        """Test 0: Default parameters"""
-        result = sdplot()
-        self.assertFalse(result)   
-
     def testplot01( self ):
         """Test 1: test plot type --- az/el"""
         tid = "01"
@@ -845,6 +954,9 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self._checkOutFile(outfile)
 
 
+#####
+# Tests on scantable storage and insitu
+#####
 class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
     """
     Unit tests of task sdplot. Test scantable sotrage and insitu
@@ -1075,7 +1187,9 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         # Compare units and coords of input scantable before/after run
         self._comp_unit_coord(self.infile,initval)
 
-
+#####
+# Tests on plottype='grid'
+#####
 class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     """
     Unit tests of task sdplot. Test plottype='grid'
@@ -1409,4 +1523,5 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
 
 
 def suite():
-    return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest]
+    return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
+            sdplot_errorTest]

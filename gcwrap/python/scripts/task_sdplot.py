@@ -45,6 +45,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             sorg.set_selection(sel)
         except Exception, instance:
             casalog.post( str(instance), priority = 'ERROR' )
+            raise Exception, instance
             return
         # For printing header information
         ssel=sel.__str__()
@@ -412,7 +413,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                     linc=sd.linecatalog(catname)
                     dolinc=True
                 except:
-                    casalog.post( "Could not find catalog at "+catname, priority = False )
+                    casalog.post( "Could not find catalog at "+catname, priority = "WARN" )
                     dolinc=False
                 if ( dolinc ):
                     if ( len(sprange)>1 ):
@@ -453,5 +454,6 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 
     except Exception, instance:
         casalog.post( str(instance), priority = 'ERROR' )
+        raise Exception, instance
         return
 
