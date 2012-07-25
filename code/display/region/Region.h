@@ -162,6 +162,8 @@ namespace casa {
 		virtual void textPositionDelta( int &/*x*/, int &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
 
 		virtual void setLabel( const std::string &l ) = 0;
+		virtual void setLabelPosition( TextPosition ) = 0;
+		virtual void setLabelDelta( const std::vector<int> & ) = 0;
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
 		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
 		virtual void setAnnotation(bool) = 0;

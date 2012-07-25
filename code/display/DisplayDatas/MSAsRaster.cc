@@ -352,7 +352,7 @@ void MSAsRaster::selectVS_( const viewer::DisplayDataOptions &ddo ) {
       mssel_ = new MeasurementSet( );
       Vector<Vector<Slice> > chansel;
       Vector<Vector<Slice> > corrsel;
-      bool res = mssSetData( *itsMS, *mssel_, chansel, corrsel, "",
+      /*bool res =*/ mssSetData( *itsMS, *mssel_, chansel, corrsel, "",
 			     ddo["time"], ddo["antenna"], ddo["field"], ddo["spw"],
 			     ddo["uvrange"], ddo["msexpr"], ddo["corr"], ddo["scan"], ddo["array"] );
 

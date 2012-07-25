@@ -79,6 +79,8 @@ namespace casa {
 
 		// set attributes when loading a casa region text file...
 		virtual void setLabel( const std::string &l );
+		void setLabelPosition( Region::TextPosition );
+		void setLabelDelta( const std::vector<int> & );
 		virtual void setFont( const std::string &font="", int font_size=0, int font_style=0, const std::string &font_color="" );
 		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine );
 		virtual void setAnnotation(bool ann);

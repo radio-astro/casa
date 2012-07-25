@@ -108,7 +108,7 @@ void WCTool::operator()(const WCRefreshEvent &ev) {
   refresh(ev);
 }
 
-void WCTool::keyPressed(const WCPositionEvent &ev) {
+void WCTool::keyPressed(const WCPositionEvent &) {
 }
 
 void WCTool::keyReleased(const WCPositionEvent &) {

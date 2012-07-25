@@ -360,6 +360,28 @@ namespace casa {
 
 
 	void QtRegionState::setTextValue( const std::string &l ) { text->setText( QString::fromStdString(l) ); }
+	void QtRegionState::setTextPosition( Region::TextPosition pos ) {
+	    switch ( pos ) {
+		case Region::TopText:
+		    text_position->setValue(2);
+		    break;
+		case Region::RightText:
+		    text_position->setValue(3);
+		    break;
+		case Region::BottomText:
+		    text_position->setValue(4);
+		    break;
+		case Region::LeftText:
+		    text_position->setValue(1);
+		    break;
+	    }
+	}
+	void QtRegionState::setTextDelta( const std::vector<int> &delta ) {
+	    if ( delta.size( ) == 2 ) {
+		x_off->setValue(delta[0]);
+		y_off->setValue(delta[1]);
+	    }
+	}
 
 	void QtRegionState::setTextFont( const std::string &f ) {
 	    QString font( QString::fromStdString(f) );

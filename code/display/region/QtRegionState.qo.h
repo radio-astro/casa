@@ -41,6 +41,8 @@ namespace casa {
 		void textPositionDelta( int &x, int &y ) const;
 
 		void setTextValue( const std::string &l );
+		void setTextPosition( Region::TextPosition );
+		void setTextDelta( const std::vector<int> & );
 		void setTextFont( const std::string &f );
 		void setTextFontSize( int s );
 		void setTextFontStyle( int s );

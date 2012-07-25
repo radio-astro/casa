@@ -53,7 +53,7 @@ namespace casa {
 	    // remove all the references 
 	    for ( creator_map_type::iterator it = creator_map.begin( );
 		  it != creator_map.end(); ++it ) {
-		Region::RegionTypes tt = (*it).first;
+		// Region::RegionTypes tt = (*it).first;
 		creator_list_type::iterator me_in_list = std::find((*it).second->begin(),(*it).second->end(),this);
 		if ( me_in_list != (*it).second->end( ) ) {
 		    (*it).second->erase(me_in_list);

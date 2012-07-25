@@ -93,6 +93,8 @@ namespace casa {
 	}
 
 	void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
+	void QtRegion::setLabelPosition( Region::TextPosition pos ) { mystate->setTextPosition( pos ); }
+	void QtRegion::setLabelDelta( const std::vector<int> &delta ) { mystate->setTextDelta( delta ); }
 
 	void QtRegion::setFont( const std::string &font, int font_size, int font_style, const std::string &font_color ) {
 	    if ( font != "" ) mystate->setTextFont(font);
@@ -256,7 +258,7 @@ namespace casa {
 		AnnRegion *reg = dynamic_cast<AnnRegion*>(ann);
 		if ( reg ) reg->setAnnotationOnly((*iter)->isAnnotation( ));
 
-		int number_frames = (*iter)->numFrames( );
+		// int number_frames = (*iter)->numFrames( );
 		ann->setLabel( (*iter)->textValue( ) );
 
 		ann->setColor( (*iter)->lineColor( ) );
@@ -266,6 +268,21 @@ namespace casa {
 		ann->setFont( (*iter)->textFont( ) );
 		ann->setFontSize( (*iter)->textFontSize( ) );
 		int font_style = (*iter)->textFontStyle( );
+
+		switch ( textPosition( ) ) {
+		case Region::BottomText: ann->setLabelPosition("bottom"); break;
+		    case Region::LeftText: ann->setLabelPosition("left"); break;
+		    case Region::RightText: ann->setLabelPosition("right"); break;
+		    default: ann->setLabelPosition("top");
+		}
+		ann->setLabelColor(textColor( ));
+
+		vector<int> delta(2);
+		textPositionDelta( delta[0], delta[1] );
+		if ( delta[0] != 0 || delta[1] != 0 ) {
+		    ann->setLabelOffset(delta);
+		}
+		
 
 		ann->setFontStyle( font_style & Region::ItalicText && font_style & Region::BoldText ? AnnotationBase::ITALIC_BOLD :
 				   font_style & Region::ItalicText ? AnnotationBase::ITALIC :
@@ -293,12 +310,12 @@ namespace casa {
 
 	    fetch_region_details(type, pixel_pts, world_pts);
 
-	    for ( int i=0; i < pixel_pts.size(); ++i ) {
+	    for ( unsigned int i=0; i < pixel_pts.size(); ++i ) {
 		pixelx.push_back(pixel_pts[i].first);
 		pixely.push_back(pixel_pts[i].second);
 	    }
 
-	    for ( int i=0; i < world_pts.size(); ++i ) {
+	    for ( unsigned int i=0; i < world_pts.size(); ++i ) {
 		worldx.push_back(world_pts[i].first);
 		worldy.push_back(world_pts[i].second);
 	    }
@@ -334,6 +351,9 @@ namespace casa {
 			    emit regionUpdate( id_, worldx, worldy, pixelx, pixely );
 		    }
 		    break;
+
+		case RegionChangeDelete:
+		case RegionChangeStatsUpdate:
 		case RegionChangeLabel:
 		    // fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
 		    // 	     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );

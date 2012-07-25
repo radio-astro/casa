@@ -103,6 +103,8 @@ namespace casa {
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
+		void setLabelPosition( TextPosition pos ) { QtRegion::setLabelPosition(pos); }
+		void setLabelDelta( const std::vector<int> &delta ) { QtRegion::setLabelDelta(delta); }
 		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
 				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
 		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine )

@@ -240,7 +240,7 @@ namespace casa {
 	    const DisplayData *dd = wc->displaylist().front();
 	    std::vector<int> axes = dd->displayAxes( );
 	    IPosition shape(viewer_cs.nPixelAxes( ));
-	    for ( int i=0; i < shape.size( ); ++i )
+	    for ( unsigned int i=0; i < shape.size( ); ++i )
 		shape(i) = dd->dataShape( )[axes[i]];
 
 	    try {
@@ -253,13 +253,13 @@ namespace casa {
 			const AnnEllipse *ellipse=0;
 			const AnnSymbol *symbol=0;
 			const AnnPolygon *polygon = 0;
-			if ( rectangle=dynamic_cast<const AnnRectBox*>(annotation) ) {
+			if ( (rectangle=dynamic_cast<const AnnRectBox*>(annotation)) ) {
 			    load_crtf_rectangle( wc, cstype, rectangle );
-			} else if ( ellipse = dynamic_cast<const AnnEllipse*>(annotation) ) {
+			} else if ( (ellipse = dynamic_cast<const AnnEllipse*>(annotation)) ) {
 			    load_crtf_ellipse( wc, cstype, ellipse );
-			} else if ( symbol = dynamic_cast<const AnnSymbol*>(annotation) ) {
+			} else if ( (symbol = dynamic_cast<const AnnSymbol*>(annotation)) ) {
 			    load_crtf_point( wc, cstype, symbol );
-			} else if ( polygon = dynamic_cast<const AnnPolygon*>(annotation) ) {
+			} else if ( (polygon = dynamic_cast<const AnnPolygon*>(annotation)) ) {
 			    load_crtf_polygon( wc, cstype, polygon );
 			}
 		    }
@@ -308,8 +308,13 @@ namespace casa {
 	    int font_style = get_font_style(rectangle->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(rectangle->getLineStyle( ));
 
-	    rect_creators.front( )->create( Region::RectRegion, wc, pts, rectangle->getLabel( ), rectangle->getFont( ),
-					    rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
+	    String label_position = rectangle->getLabelPosition( );
+	    rect_creators.front( )->create( Region::RectRegion, wc, pts,
+					    rectangle->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					    rectangle->getLabelOffset( ),
+					    rectangle->getFont( ), rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
 					    rectangle->getColorString( ), line_style, rectangle->isAnnotationOnly( ) );
 	}
 
@@ -339,9 +344,14 @@ namespace casa {
 	    int font_style = get_font_style(ellipse->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(ellipse->getLineStyle( ));
 
-	    ellipse_creators.front( )->create( Region::EllipseRegion, wc, pts, ellipse->getLabel( ), ellipse->getFont( ),
-					    ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
-					    ellipse->getColorString( ), line_style, ellipse->isAnnotationOnly( ) );
+	    String label_position = ellipse->getLabelPosition( );
+	    ellipse_creators.front( )->create( Region::EllipseRegion, wc, pts,
+					       ellipse->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								       label_position == "right" ? Region::RightText :
+								       label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					       ellipse->getLabelOffset( ),
+					       ellipse->getFont( ), ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
+					       ellipse->getColorString( ), line_style, ellipse->isAnnotationOnly( ) );
 	}
 
 
@@ -364,8 +374,13 @@ namespace casa {
 	    int font_style = get_font_style(symbol->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(symbol->getLineStyle( ));
 
-	    point_creators.front( )->create( Region::PointRegion, wc, pts, symbol->getLabel( ), symbol->getFont( ),
-					     symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
+	    String label_position = symbol->getLabelPosition( );
+	    point_creators.front( )->create( Region::PointRegion, wc, pts,
+					     symbol->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					     symbol->getLabelOffset( ),
+					     symbol->getFont( ), symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
 					     symbol->getColorString( ), line_style, false );
 	}
 
@@ -378,7 +393,7 @@ namespace casa {
 	    if ( corners.size() < 3 ) return;
 
 	    std::vector<std::pair<double,double> > pts(corners.size());
-	    for ( int i=0; i < corners.size( ); ++i ) {
+	    for ( unsigned int i=0; i < corners.size( ); ++i ) {
 		MDirection corner = MDirection::Convert(corners[i], cstype)();
 		casa::Vector<double> point = corner.getAngle("rad").getValue( );
 		try { world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second ); } catch(...) { return; }
@@ -390,15 +405,20 @@ namespace casa {
 	    int font_style = get_font_style(polygon->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(polygon->getLineStyle( ));
 
-	    poly_creators.front( )->create( Region::PolyRegion, wc, pts, polygon->getLabel( ), polygon->getFont( ),
-					    polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
+	    String label_position = polygon->getLabelPosition( );
+	    poly_creators.front( )->create( Region::PolyRegion, wc, pts,
+					    polygon->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					    polygon->getLabelOffset( ),
+					    polygon->getFont( ), polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
 					    polygon->getColorString( ), line_style, polygon->isAnnotationOnly( ) );
 	}
 
 	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) :
 		RegionSource( rc, shared_kernel_ptr_type(new QtRegionSourceKernel(panel)) ) { }
 
-	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel ) :
+	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui */*panel*/, const shared_kernel_ptr_type &kernel ) :
 		RegionSource( rc, kernel ) { }
 
     }
