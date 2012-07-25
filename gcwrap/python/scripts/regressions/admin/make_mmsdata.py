@@ -36,7 +36,8 @@ def main():
     thislist = [
                 'listhistory',
                 'listvis',
-                'listobs'
+                'listobs',
+                'gencal'
                 ]
     
     # Loop through task list

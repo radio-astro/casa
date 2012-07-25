@@ -19,6 +19,19 @@ Unit tests for gencal
 # the AIPS REWAY results) add reference mses
 # and do tests against them
 # 
+
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/gencal/'
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/gencal/'
+
+print 'Gencal tests will use data from '+datapath         
+
+
 class gencal_antpostest(unittest.TestCase):
 
     # Input and output names
@@ -31,7 +44,6 @@ class gencal_antpostest(unittest.TestCase):
             #os.system('rm -rf ' + self.msfile)
             shutil.rmtree(self.msfile)
 
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/gencal/'
         #datapath='/export/home/tengu/alma/casatest/gencal_antoffset/testdata/'
         shutil.copytree(datapath+self.msfile, self.msfile)
 
