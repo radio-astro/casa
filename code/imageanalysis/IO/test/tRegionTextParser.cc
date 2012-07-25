@@ -29,6 +29,8 @@
 #include <casa/OS/EnvVar.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <imageanalysis/Annotations/AnnSymbol.h>
 
 #include <casa/namespace.h>
 
@@ -104,6 +106,37 @@ int main() {
 		);
 		for (uInt i=0; i<parser3.getLines().size(); i++) {
 			cout << parser3.getLines()[i] << endl;
+		}
+		{
+			cout << "Test label offset parsing (CAS-4358)" << endl;
+			Quantity x(0, "deg");
+			Quantity y(0, "deg");
+			Char s = 'o';
+
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			AnnSymbol symbol(
+				x, y, dirTypeString,
+				csys, s
+			);
+			String label = "mylabel";
+			symbol.setLabel(label);
+			AlwaysAssert(symbol.getLabel() == label, AipsError);
+			symbol.setLabelPosition("bottom");
+			vector<Int> offset(2);
+			offset[0] = -1;
+			offset[1] = 4;
+			symbol.setLabelOffset(offset);
+			AlwaysAssert(symbol.getLabelOffset() == offset, AipsError);
+			cout << symbol << endl;
+			ostringstream oss;
+			oss << symbol;
+			RegionTextParser parser4(csys, IPosition(4, 200, 200, 4, 1), oss.str());
+			Vector<AsciiAnnotationFileLine> lines = parser4.getLines();
+			AlwaysAssert(lines.size() == 1, AipsError);
+			AlwaysAssert(lines[0].getAnnotationBase()->getLabelOffset() == offset, AipsError);
+
 		}
 
 

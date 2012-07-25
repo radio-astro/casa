@@ -552,7 +552,7 @@ void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
 		);
 	}
 	_labelOff = offset;
-	_params[LABELOFF] = String::toString(offset[0]) + "," + String::toString(offset[1]);
+	_params[LABELOFF] = "[" + String::toString(offset[0]) + ", " + String::toString(offset[1]) + "]";
 }
 
 vector<Int> AnnotationBase::getLabelOffset() const {
@@ -662,7 +662,7 @@ ostream& AnnotationBase::print(
 			String quote = iter->first == LABEL
 				|| (
 					iter->second.contains(' ')
-					&& iter->first != RANGE
+					&& (iter->first != RANGE && iter->first != LABELOFF)
 				)
 				? "\"" : "";
 			os << keywordToString((Keyword)iter->first)

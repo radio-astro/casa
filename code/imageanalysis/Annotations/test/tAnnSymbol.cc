@@ -192,6 +192,16 @@ int main () {
 			symbol.setLabelPosition("bottom");
 			symbol.setLabelOffset(vector<Int>(2, 5));
 			cout << symbol << endl;
+			log << LogIO::NORMAL
+				<< "Test label offset parsing (CAS-4358)"
+				<< LogIO::POST;
+			vector<Int> offset(2);
+			offset[0] = -1;
+			offset[1] = 4;
+			symbol.setLabelOffset(offset);
+			AlwaysAssert(symbol.getLabelOffset() == offset, AipsError);
+			cout << symbol << endl;
+
 		}
 	} catch (AipsError x) {
 		log << LogIO::SEVERE

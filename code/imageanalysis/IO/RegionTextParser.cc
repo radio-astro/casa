@@ -696,12 +696,12 @@ RegionTextParser::_getCurrentParamSet(
 				if (
 					! v.contains(
 						Regex(
-							sInt + "[:space:]*,[:space:]*" + sInt
+							sInt + "[[:space:]]*,[[:space:]]*" + sInt
 						)
 					)
 				) {
-					*_log << preamble << "Illegal label offset specification "
-						<< v << LogIO::EXCEPTION;
+					*_log << preamble << "Illegal label offset specification \""
+						<< v << "\"" << LogIO::EXCEPTION;
 				}
 				// the brackets have been stripped, add them back to make it easier
 				// to parse with a method already in existence
