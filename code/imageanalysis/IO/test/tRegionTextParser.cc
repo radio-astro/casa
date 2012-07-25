@@ -129,6 +129,8 @@ int main() {
 			offset[1] = 4;
 			symbol.setLabelOffset(offset);
 			AlwaysAssert(symbol.getLabelOffset() == offset, AipsError);
+			String labelcolor = "orange";
+			symbol.setLabelColor(labelcolor);
 			cout << symbol << endl;
 			ostringstream oss;
 			oss << symbol;
@@ -136,6 +138,7 @@ int main() {
 			Vector<AsciiAnnotationFileLine> lines = parser4.getLines();
 			AlwaysAssert(lines.size() == 1, AipsError);
 			AlwaysAssert(lines[0].getAnnotationBase()->getLabelOffset() == offset, AipsError);
+			AlwaysAssert(lines[0].getAnnotationBase()->getLabelColorString() == labelcolor, AipsError);
 
 		}
 
