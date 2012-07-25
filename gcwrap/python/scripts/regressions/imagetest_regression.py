@@ -741,7 +741,7 @@ def imagetest(which=None, size=[32,32,8]):
     def coordcheck(im1, axes, testdir):
         #im1 = ia.newimage(im1name)
         ok = im1.summary(list=F)
-        if not ok]:
+        if not ok:
             fail('summary 1 failed in coordcheck')
         rec1 = ok
         imname = testdir + "/" + "coordcheck.image"
