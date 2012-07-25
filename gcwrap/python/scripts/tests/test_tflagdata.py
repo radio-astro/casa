@@ -37,19 +37,32 @@ def create_input(str_text, filename):
     
     return
 
+# Path for data
+datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/flagdata/'
+    if os.path.isdir(DATADIR):
+        testmms = True
+        datapath = DATADIR
+
+print 'Tflagdata tests will use data from '+datapath         
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
     def setUp_flagdatatest(self):
         self.vis = "flagdatatest.ms"
+        if testmms:
+            self.vis = "flagdatatest.mms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
@@ -58,28 +71,28 @@ class test_base(unittest.TestCase):
 
     def setUp_ngc5921(self):
         self.vis = "ngc5921.ms"
+        if testmms:
+            self.vis = 'ngc5921.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
-            print "Importing data..."
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
+        if testmms:
+            self.vis = 'flagdatatest-alma.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)
@@ -87,14 +100,14 @@ class test_base(unittest.TestCase):
 
     def setUp_data4tfcrop(self):
         self.vis = "Four_ants_3C286.ms"
+        if testmms:
+            self.vis = 'Four_ants_3C286.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)
@@ -102,14 +115,14 @@ class test_base(unittest.TestCase):
 
     def setUp_shadowdata2(self):
         self.vis = "shadowtest_part.ms"
+        if testmms:
+            self.vis = "shadowtest_part.mms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)
@@ -117,14 +130,14 @@ class test_base(unittest.TestCase):
         
     def setUp_multi(self):
         self.vis = "multiobs.ms"
+        if testmms:
+            self.vis = 'multiobs.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)
@@ -1039,7 +1052,7 @@ class test_clip(test_base):
     	
         
 
-# Dummy class which cleans up created files
+# Cleanup class 
 class cleanup(test_base):
     
     def tearDown(self):
