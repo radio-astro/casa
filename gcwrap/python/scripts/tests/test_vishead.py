@@ -4,6 +4,7 @@ import string
 import numpy
 import os
 import shutil
+from __main__ import default
 from task_vishead import vishead
 import unittest
 
@@ -19,7 +20,20 @@ Unit tests for task vishead. It tests the following modes:
 
 '''
 
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/vishead/'
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR+'/vishead/'):
+        testmms = True
+        datapath = DATADIR+'/vishead/'
+
+print 'Vishead tests will use data from '+datapath         
+
 input_file = 'n4826_16apr98.ms'  # 128 channels
+if testmms:
+    input_file = 'n4826_16apr98.mms'
 stars = "*************"
 
 stop_on_first_error = False
@@ -72,11 +86,12 @@ class vishead_test(unittest.TestCase):
         if(os.path.exists(input_file)):
             os.system('rm -rf ' +input_file)
 
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST2/NGC4826/'
-        os.system('cp -r ' +datapath + input_file +' ' + input_file)
+        os.system('cp -rL ' +datapath + input_file +' ' + input_file)
+        default('vishead')
 
     def tearDown(self):
-        os.system('rm -rf ' +input_file)
+        if os.path.exists(input_file):
+            os.system('rm -rf ' +input_file)
         
     def test_list(self):
         '''Vishead: List mode'''

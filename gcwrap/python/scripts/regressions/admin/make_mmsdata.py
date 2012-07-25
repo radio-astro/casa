@@ -37,7 +37,8 @@ def main():
                 'listhistory',
                 'listvis',
                 'listobs',
-                'gencal'
+                'gencal',
+                'vishead'
                 ]
     
     # Loop through task list
