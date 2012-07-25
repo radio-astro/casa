@@ -1624,9 +1624,10 @@ void QtDisplayPanelGui::showImageProfile() {
     }
 
     //Let the profiler know about the current frame.
-    int frameIndex = qdp_->frame();
-    profile_->frameChanged( frameIndex );
-
+    if ( profile_ ) {
+	int frameIndex = qdp_->frame();
+	profile_->frameChanged( frameIndex );
+    }
 }
 
 
@@ -1647,7 +1648,7 @@ void QtDisplayPanelGui::refreshImageProfile() {
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	if ( rdds.len() > 0 ) {
 	    showImageProfile( );
-	    profile_->redraw( );
+	    if ( profile_ ) profile_->redraw( );
 	} else {
 	    profile_->hide();
 	    delete profile_;
