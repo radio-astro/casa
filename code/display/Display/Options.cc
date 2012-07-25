@@ -56,7 +56,7 @@ namespace casa {
 	// non-const because later it would be nice to have the option of
 	// marking temporaries so that the could be automatically deleted
 	// upon exit...
-	std::string Options::_temporary_path_( const std::string &type, const std::string &base_dir_name, bool remove ) {
+	std::string Options::_temporary_path_( const std::string &base_dir_name, bool remove ) {
 	    std::string result;
 	    std::string tmppath = tmp( );
 	    struct stat statbuf;
@@ -70,7 +70,7 @@ namespace casa {
 	    }
 
 	    if ( result != std::string( ) )
-		returned_paths->insert(path_map::value_type(result,std::pair<std::string,bool>(type,remove)));
+		returned_paths->insert(path_map::value_type(result,std::pair<std::string,bool>("unused",remove)));
 
 	    return result;
 	}

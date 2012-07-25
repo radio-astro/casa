@@ -45,22 +45,15 @@ namespace casa {
 
 		std::string tmp( ) const { return kernel->tmp( ); }
 
-		// this returns a path to be used as a temporary file, and by default,
-		// deletes the file when the viewer exits... the "base_name" is just
-		// the name to be used as a starting point for finding a unique file
-		// name, an example would be "my_tmp_file"... but it could be anything...
-		// this function guarantees that no two returned strings will be
-		// identical... and that all will be valid path names...
-		std::string temporaryFile( const std::string &base_name, bool remove=true )
-			{ return _temporary_path_( "file", base_name, remove ); }
-		// this returns a path to be used as a tempoary directory, and by default,
-		// deletes the directory when the viewer exits... the "base_dir_name"
+		// this returns a path to be used as a temporary file or directory, and
+		// by default, deletes the file when the viewer exits... the "base_name"
 		// is just the name to be used as a starting point for finding a unique
-		// directory name, an example would be "my_tmpdir"... this function
-		// guarantees that no two returned strings will be identical... and
-		// that all will be valid path names...
-		std::string temporaryDirectory( const std::string &base_dir_name, bool remove=true )
-			{ return _temporary_path_( "dir", base_dir_name, remove ); }
+		// file name, an example would be "my_tmp_file"... but it could be
+		// anything (not including directories, i.e. "/")... this function
+		// guarantees that no two returned strings will be identical... and that
+		// all will be valid path names...
+		std::string temporaryPath( const std::string &base_name, bool remove=true )
+			{ return _temporary_path_( base_name, remove ); }
 
 		Options( ) { }  /*** initialized by options_init_  ***/
 		~Options( ) { } /*** finalized by options_init_    ***/
@@ -76,7 +69,7 @@ namespace casa {
 		path_map *returned_paths;
 		Kernel *kernel;
 
-		std::string _temporary_path_( const std::string &/*type*/, const std::string &/*base_dir_name*/, bool /*remove*/ );
+		std::string _temporary_path_( const std::string &/*base_dir_name*/, bool /*remove*/ );
 	};
 
 	extern Options options;
