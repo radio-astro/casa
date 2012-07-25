@@ -28,14 +28,12 @@ class sdplot_unittest_base:
     minsize = 20000
     # save figure for reference?
     saveref = True
-    #saveref = False
     # GUI settings
     oldgui = sd.rcParams['plotter.gui']  # store previous GUI setting
     usegui = False   # need to set GUI status constant to compare
-    #usegui = True   # need to set GUI status constant to compare
 
     # compare two figures
-    def _checkOutFile( self, filename, compare=True ):
+    def _checkOutFile( self, filename, compare=False ):
         self.assertTrue(os.path.exists(filename),"'%s' does not exists." % filename)
         self.assertTrue(os.path.isfile(filename),\
                         "Not a regular file. (A directory?): %s" % filename)
@@ -1078,82 +1076,337 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         self._comp_unit_coord(self.infile,initval)
 
 
-# class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
-#     """
-#     Unit tests of task sdplot. Test plottype='grid'
+class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
+    """
+    Unit tests of task sdplot. Test plottype='grid'
     
-#     The list of tests:
-#     testgrid01  --- 
+    The list of tests:
+    testgrid01 - 08 --- test gridding
+    testgrid09 - 11 --- test plot range
+    testgrid12 - 14 --- test color and line
 
-#     Note: input data is generated from a intermediate data of
-#     single dish regression data,
-#     'FLS3a_calfs', as follows:
-#     sdsave(infile='FLS3a_calfs',outfile='FLS3a_calfs.asap')
-#     sdgrid(infiled=['FLS3a_calfs.asap'], ifno=0, npix=[6,6],
-#            outfile='FLS3a_calfs.6x6.asap')
-#     """
-#     # Input and output names
-#     infile = ''
-#     figroot = sdplot_unittest_base.taskname + '_grid'
-#     figsuff = '.png'
-#     fig=None
+    Note: input data is generated from a intermediate data of
+    single dish regression data,
+    'FLS3a_calfs', as follows:
+    sdsave(infile='FLS3a_calfs',outfile='FLS3a_calfs.asap')
+    sdgrid(infiled=['FLS3a_calfs.asap'], ifno=0, npix=[6,6],
+           outfile='FLS3a_calfs.6x6.asap')
+    """
+    # Input and output names
+    infile = 'FLS3a_calfs.6x6.asap'
+    #infile = 'FLS3a_calfs.asap'
+    figroot = sdplot_unittest_base.taskname + '_grid'
+    figsuff = '.png'
+    fig=None
 
-#     # common parameter values
-#     type = 'grid'
-#     header = False
-#     pollist = [0]
+    # common parameter values
+    type = 'grid'
+    header = False
+    pollist = [0]
+    subplot = 66
+    cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
+    center="J2000 17:17:58.94 +59.30.01.962"
 
-#     baseinfo = {'npanel': 36, 'nstack': 1,
-#                 'rows': 6, 'cols': 6,
-#                'xlabel': 'Channel',
-#                'ylabel': 'Brightness Temperature (K)'}
+    baseinfo = {'npanel': 36, 'nstack': 1,
+                'rows': 6, 'cols': 6,
+               'xlabel': 'Channel',
+               'ylabel': 'Brightness Temperature (K)'}
 
-#     def setUp( self ):
-#         # switch on/off GUI
-#         sd.rcParams['plotter.gui'] = self.usegui
-#         sd.plotter.__init__()
-#         # Fresh copy of input data
-#         if os.path.exists(self.infile):
-#             shutil.rmtree(self.infile)
-#         shutil.copytree(self.datapath+self.infile, self.infile)
-#         # Generate directory to save figures
-#         if not os.path.exists(self.currdir):
-#             os.makedirs(self.currdir)
-#         # Create a directory to store the figures for future comparison
-#         if (not os.path.exists(self.prevdir)) and self.saveref:
-#             try: os.makedirs(self.prevdir)
-#             except OSError:
-#                 msg = "Unable to create directory, "+self.prevdir+".\n"
-#                 msg += "Plot figures will remain in "+self.currdir
-#                 casalog.post(msg,'WARN')
+    # Test settings
+    saveref = False
+    usegui = True
+    compare = (not usegui)
+    
+    def setUp( self ):
+        # switch on/off GUI
+        sd.rcParams['plotter.gui'] = self.usegui
+        sd.plotter.__init__()
+        # Fresh copy of input data
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        # Generate directory to save figures
+        if not os.path.exists(self.currdir):
+            os.makedirs(self.currdir)
+        # Create a directory to store the figures for future comparison
+        if (not os.path.exists(self.prevdir)) and self.saveref:
+            try: os.makedirs(self.prevdir)
+            except OSError:
+                msg = "Unable to create directory, "+self.prevdir+".\n"
+                msg += "Plot figures will remain in "+self.currdir
+                casalog.post(msg,'WARN')
         
-#         default(sdplot)
+        default(sdplot)
 
-#     def tearDown( self ):
-#         if (os.path.exists(self.infile)):
-#             shutil.rmtree(self.infile)
-#         # restore GUI setting
-#         sd.rcParams['plotter.gui'] = self.oldgui
-#         sd.plotter.__init__()
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        # restore GUI setting
+        sd.rcParams['plotter.gui'] = self.oldgui
+        sd.plotter.__init__()
 
-#     # helper functions of tests
+    # helper functions of tests
 
-#     # Actual tests
-#     def testgrid01( self ):
-#         """testgrid: default gridding (1x1)"""
-#         tid="01"
-#         outfile = self.figroot+tid+self.figsuff
-#         result = sdplot(infile=self.infile, pollist=self.pollist,
-#                         plottype = self.type, header=self.header,
-#                         outfile=outfile)
-#         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-#                    'title0': 'J2000 17:17.58 +59.30.02.0'}
-#         refinfo = self._mergeDict(self.baseinfo,locinfo)
-#         # Tests
-#         self.assertEqual(result,None)
-#         currinfo = self._get_plot_info()
-#         self._compareDictVal(currinfo, refinfo)
-#         self._checkOutFile(outfile)
+    # Actual tests
+    def testgrid01( self ):
+        """testgrid01: default gridding (1x1)"""
+        tid="01"
+        outfile = self.figroot+tid+self.figsuff
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, header=self.header,
+                        outfile=outfile)
+        locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
+                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid02( self ):
+        """testgrid02: default center"""
+        tid="02"
+        outfile = self.figroot+tid+self.figsuff
+        cell = self.cell
+        subplot = self.subplot
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type,
+                        cell=cell, subplot=subplot,
+                        header=self.header, outfile=outfile)
+        locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid03( self ):
+        """testgrid03: default cell"""
+        tid="03"
+        outfile = self.figroot+tid+self.figsuff
+        center = self.center
+        subplot = self.subplot
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, center=center,
+                        subplot=subplot,
+                        header=self.header, outfile=outfile)
+        locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid04( self ):
+        """testgrid04: default subplot  (1x1)"""
+        tid="04"
+        outfile = self.figroot+tid+self.figsuff
+        center = self.center
+        cell = self.cell
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, center=center,
+                        cell=cell,
+                        header=self.header, outfile=outfile)
+        locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
+                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid05( self ):
+        """testgrid05: test center (1x1)"""
+        tid="05"
+        outfile = self.figroot+tid+self.figsuff
+        center = self.center
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, center=center,
+                        header=self.header, outfile=outfile)
+        locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
+                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid06( self ):
+        """testgrid06: test cell  (1x1)"""
+        tid="06"
+        outfile = self.figroot+tid+self.figsuff
+        cell = self.cell
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, cell=cell,
+                        header=self.header, outfile=outfile)
+        locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
+                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid07( self ):
+        """testgrid07: test subplot"""
+        tid="07"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        header=self.header, outfile=outfile)
+        locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid08( self ):
+        """testgrid08: test grid"""
+        tid="08"
+        outfile = self.figroot+tid+self.figsuff
+        center = self.center
+        cell = self.cell
+        subplot = self.subplot
+
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, center=center,
+                        cell=cell, subplot=subplot,
+                        header=self.header, outfile=outfile)
+        locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid09( self ):
+        """testgrid09: test sprange"""
+        tid="09"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        sprange = [200,800]
+
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        sprange=sprange,
+                        header=self.header, outfile=outfile)
+        locinfo = {#'npanel': 1, 'rows': 1, 'cols': 1,
+                   'xlim': sprange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid10( self ):
+        """testgrid10: test flrange"""
+        tid="10"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        flrange = [-2.,10.]
+
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        flrange=flrange,
+                        header=self.header, outfile=outfile)
+        locinfo = {#'npanel': 1, 'rows': 1, 'cols': 1,
+                   'ylim': flrange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid11( self ):
+        """testgrid11: test sprange and flrange"""
+        tid="11"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        sprange = [200,800]
+        flrange = [-2.,10.]
+
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        sprange=sprange, flrange=flrange,
+                        header=self.header, outfile=outfile)
+        locinfo = {#'npanel': 1, 'rows': 1, 'cols': 1,
+                   'xlim': sprange, 'ylim': flrange}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid12( self ):
+        """testgrid12: test colormap"""
+        tid="12"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        colormap = "orange pink"
+        
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        colormap=colormap,
+                        header=self.header, outfile=outfile)
+        locinfo = {}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid13( self ):
+        """testgrid13: test linestyles"""
+        tid="13"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        linestyles = "dashdot"
+        
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        linestyles=linestyles,
+                        header=self.header, outfile=outfile)
+        locinfo = {}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testgrid14( self ):
+        """testgrid14: test linewidth"""
+        tid="14"
+        outfile = self.figroot+tid+self.figsuff
+        subplot = self.subplot
+        linewidth=3
+        
+        result = sdplot(infile=self.infile, pollist=self.pollist,
+                        plottype=self.type, subplot=subplot,
+                        linewidth=linewidth,
+                        header=self.header, outfile=outfile)
+        locinfo = {}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
 
 def suite():
-    return [sdplot_basicTest, sdplot_storageTest]
+    return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest]
