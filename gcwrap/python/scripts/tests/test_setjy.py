@@ -490,12 +490,14 @@ class test_ModImage(SetjyUnitTestBase):
             if use_standard:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
+                                           scalebychan=False,
                                            standard='Perley-Taylor 99',
                                            usescratch=True,
                                            async=False)
             else:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
+                                           scalebychan=False,
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            usescratch=True,

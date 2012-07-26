@@ -89,7 +89,7 @@
 
 		<param type="bool" name="scalebychan">
 		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
-		  <value>False</value>
+		  <value>True</value>
 		</param>
 		<param type="any" name="fluxdensity">
 			<any type="variant" limittypes="int intArray doubleArray"/>
@@ -308,12 +308,12 @@
            standard.  For standard='Butler-JPL-Horizons 2010', the recognized
            Solar System objects are listed. 
 
-    scalebychan=False
-            This determines whether the fluxdensity set in the model is
+    scalebychan -- This determines whether the fluxdensity set in the model is
             calculated on a per channel basis. If False then it only one
             fluxdensity value is calculated per spw.  (Either way, all channels
             in spw are modified.)  It is effectively True if fluxdensity[0] &gt;
-            0.0.
+            0.0. 
+            default: True
 
     fluxdensity -- Specified flux density [I,Q,U,V] in Jy
             default: -1, uses [1,0,0,0] flux density for unrecognized sources,
@@ -434,8 +434,8 @@
        &gt;&gt;&gt; standard="Butler-JPL-Horizons 2012" expandable parameter
 
             useephemdir -- If True: use the direction from the ephemeris table for 
-                the solar system object. Default: False -use the direction information 
-                in the MS(i.e. Field table) 
+                the solar system object. 
+                default: False -use the direction information in the MS(i.e. Field table) 
 
         usescratch  -- If True: the model visibility will be evaluated and saved on 
 	disk in the MODEL_DATA column. This will increase your ms in size 
@@ -444,6 +444,7 @@
         and model visibilities are evaluated when calculating calibration or 
         plotting in plotms.
         Use True if you need to interact with the MODEL_DATA in python, say.
+        default: False        
             
 </example>
 </task>
