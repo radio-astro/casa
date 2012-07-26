@@ -37,7 +37,7 @@ class test_simplecluster(unittest.TestCase):
         if os.path.exists(self.monitorFile):
             os.remove(self.monitorFile)
 
-    def initCluster(self,userMonitorFile=""):
+    def initCluster(self,userMonitorFile="",max_engines=0.,max_memory=0.,memory_per_engine=512.):
         # First of all clean up files from previous sessions
         self.cleanUp()
         # Create cluster object
@@ -47,19 +47,19 @@ class test_simplecluster(unittest.TestCase):
         else:
             self.cluster = simple_cluster()
             self.monitorFile = "monitoring.log"
-        # Create cluster file
-        self.createClusterFile()
+        # Create cluster configuration file
+        self.createClusterFile(max_engines,max_memory,memory_per_engine)
         # Initialize cluster object
         self.cluster.init_cluster(self.clusterfile, self.projectname)
-            
         # Wait unit cluster is producing monitoring info
         if (len(userMonitorFile) > 0):
             self.waitForFile(userMonitorFile, 20)
         else:
             self.waitForFile('monitoring.log', 20)
 
-    def createClusterFile(self):
-        msg=self.host + ', ' + str(self.ncpu) + ', ' + self.cwd
+    def createClusterFile(self,max_engines=0.,max_memory=0.,memory_per_engine=512.):
+            
+        msg=self.host + ', ' + str(max_engines) + ', ' + self.cwd + ', ' + str(max_memory) + ', ' + str(memory_per_engine) 
         f=open(self.clusterfile, 'w')
         f.write(msg)
         f.close()
@@ -74,6 +74,7 @@ class test_simplecluster(unittest.TestCase):
     def test1_defaultCluster(self):
         """Test 1: Create a default cluster"""
 
+        # Create cluster file
         self.initCluster()
 
         cluster_list = self.cluster.get_hosts()
@@ -82,10 +83,49 @@ class test_simplecluster(unittest.TestCase):
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()
-
-    def test2_monitoringDefault(self):
-        """Test 2: Check default monitoring file exists"""
         
+    def test2_availableResourcesCluster(self):
+        """Test 2: Create a custom cluster to use all the available resources"""
+
+        # Create cluster file
+        self.initCluster(max_engines=1.,max_memory=1.,memory_per_engine=1024.)
+
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][1]==self.ncpu)
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()        
+        
+    def test3_halfCPUCluster(self):
+        """Test 3: Create a custom cluster to use half of available CPU capacity"""
+
+        # Create cluster file
+        self.initCluster(max_engines=0.5,max_memory=1.,memory_per_engine=512.)
+
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][1]==int(0.5*self.ncpu))
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()    
+        
+    def test3_halfMemoryCluster(self):
+        """Test 3: Create a custom cluster to use half of available CPU capacity"""
+
+        # Create cluster file
+        self.initCluster(max_engines=1.,max_memory=0.5,memory_per_engine=1536.)
+
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()                
+
+    def test4_monitoringDefault(self):
+        """Test 4: Check default monitoring file exists"""
+        
+        # Create cluster file
         self.initCluster()
             
         fid = open('monitoring.log', 'r')
@@ -105,9 +145,10 @@ class test_simplecluster(unittest.TestCase):
 
         self.stopCluster()
 
-    def test3_monitoringUser(self):
-        """Test 3: Check custom monitoring file exists"""
+    def test5_monitoringUser(self):
+        """Test 5: Check custom monitoring file exists"""
         
+        # Create cluster file
         self.initCluster('userMonitorFile.log')
 
         fid = open('userMonitorFile.log', 'r')
@@ -127,9 +168,10 @@ class test_simplecluster(unittest.TestCase):
 
         self.stopCluster()
 
-    def test4_monitoringStandAlone(self):
-        """Test 4: Check the dict structure of the stand-alone method """
+    def test6_monitoringStandAlone(self):
+        """Test 6: Check the dict structure of the stand-alone method """
         
+        # Create cluster file
         self.initCluster('userMonitorFile.log')
                 
         state = self.cluster.show_state()

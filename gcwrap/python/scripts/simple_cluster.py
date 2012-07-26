@@ -98,17 +98,18 @@ class simple_cluster:
             xyzd=str.split(sLine, ',')
             #print xyzd, len(xyzd)
             if len(xyzd)<3:
-                print 'node config should be: "hostname, numengine, workdir"'
+                print 'node config should be at least: "hostname, numengine, workdir"'
                 print '           instead of:', sLine 
                 print 'this entry will be ignored'
                 continue
-            try:
-                a=int(xyzd[1])
-            except:
-                print 'the numofenging should be a integer instead of:', xyzd[1]
-                print 'this entry will be ignored'
-                continue
-            [a, b, c]=[str.strip(xyzd[0]), int(xyzd[1]), str.strip(xyzd[2])]
+            # jagonzal (CAS-4276): (Max) number of engines is not an integer any more
+            # try:
+            #     a=int(xyzd[1])
+            # except:
+            #     print 'the numofenging should be a integer instead of:', xyzd[1]
+            #     print 'this entry will be ignored'
+            #     continue
+            [a, b, c]=[str.strip(xyzd[0]), float(xyzd[1]), str.strip(xyzd[2])]
             if len(a)<1:
                 print 'the hostname can not be empty'
                 print 'this entry will be ignored'
@@ -117,17 +118,168 @@ class simple_cluster:
                 print 'the workdir can not be empty'
                 print 'this entry will be ignored'
                 continue
-            self._hosts.append([a, b, c])
+            
+            ### jagonzal (CAS-4276): New cluster specification file ###
+             
+            # Retrieve available resources to cap number of engines deployed 
+            hostname = str(xyzd[0])
+            (ncores_available,memory_available,cpu_available) = self.check_host_resources(hostname)
+            max_mem = memory_available
+            max_engines = ncores_available
+            
+            # Compute equivalent number of cores iddle
+            ncores_available = int(round(ncores_available*cpu_available/100.0))
+            
+            # Determine maximum number of engines that can be deployed at target node
+            max_engines_user = b
+            if (max_engines_user<=0):
+                max_engines = ncores_available
+            elif (max_engines_user<=1):
+                max_engines = int(round(max_engines_user*ncores_available))
+            else:
+                max_engines = max_engines_user
+                
+            casalog.post("Will deploy up to %s engines at node %s" % (str(max_engines),hostname))
+            
+            # Determine maximum memory that can be used at target node
+            if len(xyzd)>=4:
+                max_mem_user = float(xyzd[3])
+                if (max_mem_user<=0):
+                    max_mem = memory_available
+                elif (max_mem_user<=1):
+                    max_mem = int(round(max_mem_user*memory_available))
+                else:
+                    max_mem = max_mem_user
+                    
+            casalog.post("Will use up to %sMB of memory at node %s" % (str(max_mem),hostname))
+            
+            # User can provide an estimation of the amount of RAM memory necessary per engine        
+            mem_per_engine = 512
+            if len(xyzd)>=5:
+                mem_per_engine_user = float(xyzd[4])
+                if (mem_per_engine_user>512):
+                    mem_per_engine = mem_per_engine_user
+            
+            # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
+            nengines=int(round(max_mem/mem_per_engine))
+            casalog.post("Required memory per engine (%sMB) allows to deploy up to %s engines at node %s " 
+                         % (str(mem_per_engine),str(nengines),hostname))
+            
+            if (nengines>max_engines): 
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain"
+                              % (hostname,str(nengines),str(max_engines)))
+                nengines = max_engines
+            
+                        
+            omp_num_nthreads = 1
+            while (nengines*omp_num_nthreads*2 <= max_engines):
+                omp_num_nthreads *= 2
+                
+            if (omp_num_nthreads>1):
+                casalog.post("Enabling openMP to %s threads per engine at node %s" % (str(omp_num_nthreads),hostname))
+                
+            self._hosts.append([a, nengines, c, omp_num_nthreads])
         for i in range(len(self._hosts)):
             self._rsrc[self._hosts[i][0]]=[]
         #print self._hosts
     
         self._configdone=self.validate_hosts()
+
         if not self._configdone:
             print 'failed to config the cluster'
         if self._project=="":
             #print 'project name not set'
             pass
+
+    def check_host_resources(self,hostname):
+        """
+        jagonzal (CAS-4276 - New cluster specification file): Retrieve resources available
+        at target node in order to dynamically deploy the engines to fit the idle capacity
+        """
+        
+        ncores = 0
+        memory = 0.
+        cmd_os = "ssh " + hostname + " 'uname -s'"
+        os = commands.getoutput(cmd_os)
+        if (os == "Linux"):
+            cmd_ncores = "ssh " + hostname + " 'cat /proc/cpuinfo' "           
+            res_ncores = commands.getoutput(cmd_ncores)
+            str_ncores = res_ncores.count("processor")
+            
+            try:
+                ncores = int(str_ncores)
+            except:
+                casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
+                pass
+            
+            cmd_memory = "ssh " + hostname + " 'cat /proc/meminfo | grep MemFree' "
+            str_memory = commands.getoutput(cmd_memory)
+            str_memory = string.replace(str_memory,"MemFree:","")
+            str_memory = string.replace(str_memory,"kB","")
+            str_memory = string.replace(str_memory," ","")
+            
+            try:
+                memory = float(str_memory)/1024.
+            except:
+                casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
+                pass
+            
+            cmd_cpu = "ssh " + hostname + " 'top -b -n 1 | grep Cpu' "
+            str_cpu = commands.getoutput(cmd_cpu)
+            list_cpu = string.split(str_cpu,',')
+            str_cpu = "100"
+            for item in list_cpu:
+                if item.count("%id")>0:
+                    str_cpu = string.replace(item,"%id","")
+                    str_cpu = string.replace(str_cpu," ","")
+            
+            try:
+                cpu = float(str_cpu)
+            except:
+                casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
+            
+        else:
+            cmd_ncores = "ssh " + hostname + " 'sysctl -n hw.ncpu'"
+            res_ncores = commands.getoutput(cmd_ncores)
+            str_ncores = res_ncores
+            
+            try:
+                ncores = int(str_ncores)
+            except:
+                casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
+                pass            
+            
+            cmd_memory = "ssh " + hostname + " 'vm_stat | grep free' "
+            str_memory = commands.getoutput(cmd_memory)
+            str_memory = string.replace(str_memory,"Pages free:","")
+            str_memory = string.replace(str_memory,"kB","")
+
+            try:
+                memory = (float(str_memory)*4096.)/(1024*1024)
+            except:
+                casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
+                pass
+            
+            cmd_cpu = "ssh " + hostname + " 'top -l1 | grep usage' "
+            str_cpu = commands.getoutput(cmd_cpu)
+            list_cpu = string.split(str_cpu,',')
+            str_cpu = "100"
+            for item in list_cpu:
+                if item.count("% idle")>0:
+                    str_cpu = string.replace(item,"% idle","")
+                    str_cpu = string.replace(str_cpu," ","")
+            
+            try:
+                cpu = float(str_cpu)
+            except:
+                casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')            
+        
+        ncores = int(ncores)
+        memory = int(round(memory))
+        casalog.post("Host %s, Number of cores %s, Memory available %sMB, CPU capacity available %s%%" % (hostname,str(ncores),str(memory),str(cpu)))
+        
+        return (ncores,memory,cpu)
+            
     
     def validate_hosts(self):
         '''Validate the cluster specification.
@@ -504,7 +656,13 @@ class simple_cluster:
             return
         for i in range(len(self._hosts)):
             self._cluster.start_engine(self._hosts[i][0], self._hosts[i][1], 
-                                   self._hosts[i][2]+'/'+self._project)
+                                   self._hosts[i][2]+'/'+self._project,self._hosts[i][3])
+            if (self._hosts[i][3]>1):
+                omp_num_threads = self._cluster.execute("print os.environ['OMP_NUM_THREADS']",i)[0]['stdout']
+                if (omp_num_threads.count(str(self._hosts[i][3]))>0):
+                    casalog.post("Open MP enabled at host %s,  OMP_NUM_THREADS=%s" % (self._hosts[i][0],str(self._hosts[i][3])))
+                else:
+                    casalog.post("Problem enabling Open MP at host %s: %s" % (self._hosts[i][0],omp_num_threads),'WARNING')
     
     def get_host(self, id):
         '''Find out the name of the node that hosts this engine.
@@ -2176,7 +2334,7 @@ class simple_cluster:
             import multiprocessing
             ncpu=multiprocessing.cpu_count()
             (sysname, nodename, release, version, machine)=os.uname()
-            msg=nodename+', '+str(ncpu)+', '+os.getcwd()
+            msg=nodename+', '+str(0)+', '+os.getcwd()
             # jagonzal (CAS-4293): Write default cluster config file in the 
             # current directory to avoid problems with writing permissions
             clusterfile='default_cluster'
