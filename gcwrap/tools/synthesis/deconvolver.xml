@@ -6,46 +6,16 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/tools/xml/casa.xsd">
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\providecommand{\pixonURL}{http://www.pixon.com/}
-\providecommand{\rsiURL}{http://www.rsinc.com/}
-
- 
-        <tool name="deconvolver" module="deconvolver">
-        <shortdescription>deconvolver tool</shortdescription>
+  
+  <tool name="deconvolver" module="deconvolver">
+    <shortdescription>deconvolver tool</shortdescription>
        
-<code>
-<include>tools/synthesis/deconvolver_forward.h</include>
-<private>
+    <code>
+      <include>tools/synthesis/deconvolver_forward.h</include>
+      <private>
 	<include>tools/synthesis/deconvolver_private.h</include>
-</private>
-</code>
+      </private>
+    </code>
  
 <description>
 deconvolver is a tool that deconvolves a known point spread function
@@ -579,7 +549,7 @@ If in doubt use
 
  
 </input>
-<returns type="bool"/>
+<returns type="record"/>
 </method>
  
    <method type="function" name="dirtyname">
@@ -737,184 +707,184 @@ for details about ``methods'' used to update the GUI.
 <returns type="bool"/>
 </method>
  
-   <method type="function" name="clean">
-   <shortdescription>Make a clean image with Hogbom or MultiScale Clean</shortdescription>
-   
-<description>
+<method type="function" name="clean">
+  <shortdescription>Make a clean image with Hogbom or MultiScale Clean</shortdescription>
+  
+  <description>
+    
+    Makes a clean image using either the Hogbom or MultiScale
+    algorithms. The MultiScale algorithm is the default. The clean is
+    performed on the residual image calculated from the dirty image minus
+    the point spread function convolved with the model currently selected.
+    Thus if you want to restart a clean, simply set the model to the model
+    that was previously produced by clean.
+    
+    Rather than explicit CLEAN boxes, mask images are used to constrain
+    the region that is to be deconvolved. To make mask images,
+    use either <link anchor="deconvolver:deconvolver.boxmask.function">boxmask</link> (to define a mask
+    via the corner locations blc and trc) or 
+    <link anchor="deconvolver:deconvolver.mask.function">mask</link> (to define a mask via
+    thresholding an existing image). The default mask is the inner quarter
+    of the image.
+    
+    The CLEAN deconvolution is joint in whatever Stokes parameters are
+    present. Thus it searchs for peaks in either $I$ or $I+|V|$ or
+    $I+\sqrt{Q^2+U^2+V^2}$, the rationale for the latter two forms being
+    to be biased towards finding strongly polarized pixels first (these
+    forms are also the maximum eigenvalue of the coherency matrix).  The
+    PSF is constrained to be the same in all polarizations (a feature of
+    this implementation, not of the Hamaker-Bregman-Sault formalism).
+    
+    The clean algorithms possible are:
+    \begin{description}
+    \item[Hogbom] The classic algorithm: delta function units of emission
+    are found iteratively by searching for the peak. Each point is
+    subtracted from the full residual image using the shifted and scaled
+    point spread function.
+    
+    \item[Multi-Scale] As the Multi-Scale Clean algorithm is quite new,
+    we provide entensive information on its use.
+    
+    In the Multi-scale Clean, the image is cleaned simultaneously with
+    several different beams given by the point spread function convolved
+    with components of various shapes and sizes.  The components we use in
+    this implementation are upside-down paraboloids multiplied by first
+    order spheroidal functions (ie, the same functions used in gridding
+    Fourier plane data).  The paraboloids are truncated at zero, and the
+    multiplication by the spheroidal function results in a smooth shape
+    with minimal power at long baselines.  This shape is scaled to the
+    component sizes specified in
+    <link anchor="deconvolver:deconvolver.setscales.function">setscales</link>.  As these
+    functions have finite extent (unlike a Gaussian), they can easily be
+    used with mask images.
+    
+    For each iteration, the scale size which is able to subtract the most
+    flux is chosen (but with a caveat, see below).  The model is then
+    built up out of the spheroidal functions of the various scale
+    sizes. The scale sizes are set by the
+    <link anchor="deconvolver:deconvolver.setscales.function">setscales</link> function, which
+    will permit the user to specify the scale sizes explicitly, or will
+    optionally take the number of scale sizes to clean for and calculate
+    the scale sizes themselves from a power law.
+    
+    Most images deconvolved with Multi-scale Clean will be dominated by
+    extended structure, and the largest scale size will initially remove
+    the most flux from the dirty image.  As the algorithm reduces the
+    residuals on the largest scale, the residuals on the smaller scales
+    will also be reduced, even without cleaning on those size scales (a
+    falling sea sinks all boats).  However, at some point, the residual
+    image will be dominated by features on smaller size scales.  These
+    smaller features will be both positive and negative (ie, to correct
+    for the largest size scale being the wrong shape for the true emission
+    features).  Later in the algorithm, the magnitude of the residuals on
+    all scales will be approximately equal.  At this stage, most of the
+    deconvolvable flux has been assimilated into the largest scale size
+    components and detailed corrections to the large scale components must
+    be made.  At this point, the user may consider switching to a faster
+    algorithm such as the Clark Clean.
+    
+    Masking is fully available with Multi-scale Clean.  No component is
+    permitted to place any of its wings outside of the user-supplied
+    mask.  If the masking were based upon the different scale components'
+    center positions, then the large scale components could place their
+    wings outside the mask, but the smaller scale components would
+    not be able to make fine scale corrections.  Hence, the
+    Multi-scale Clean uses a different mask for each different size
+    scale internally.  If the mask is too restrictive or the scales
+    are too large, the algorithm may not be able to fit the large
+    scales into the mask at all, and the user is warned of this
+    condition.
+    
+    Traditional Clean algorithms use a small loop gain such as 0.1 to
+    avoid confusing emission and sidelobes when extended emission is
+    present.  However, as MultiScale Clean can image large extended
+    structure in a single spheroidal component, a loop gain in the range
+    0.5 to 1.0 can be used.  If the largest residual oscillates between
+    positive and negative with iteration number, as it can for some
+    brightness distributions which include point sources, a lower loop
+    gain will improve the imaging and the convergence.
+    
+    A mild bias favoring cleaning small scale emission has been built into
+    the Multi-scale algorithm.  To illustrate the requirement of this bias,
+    consider the case of a bright point source with very faint extended
+    emission.  Each scale may find its optimal component to subtract at
+    the position of the bright point source, but each successively larger
+    component will integrate more extended flux.  Hence, the largeest
+    scale component will be removed from the residuals.  If most of the
+    flux were in the point source, then several smaller negative
+    components must be subtracted from the largest component, and finally
+    the point component itself may be removed after the extended emission
+    has been taken care of.  To prevent this situation from occurring,
+    we bias the selection of small-sized components.
+    
+    \end{description}
+    
+    Note that for all of these functions except fullmsclean, only a
+    quarter of the image may be cleaned. If no mask is set, then the
+    cleaned region defaults to the inner quarter. If a mask larger than a
+    quarter of the image is set, then only the quarter starting at the
+    bottom left corner is used. Algorithm fullmsclean will deconvolve the
+    entire field. This is useful when performing a limited accuracy 
+    deconvolution (as needed for example in wide-field imaging) but will
+    diverge if pushed too deep.
+    
+    The clean threshold may be either absolute ('0.5Jy') or relative
+    ('1\%').
+    
+  </description>
+  <input>
+    
+    <param type="string" name="algorithm">
+      <description>Algorithm to use</description>
+      <value>fullmsclean</value>
+      <value>msclean</value>
+      <value>hogbom</value>
+    </param>
+    
+    <param type="int" name="niter">
+      <description>Number of Iterations, set to zero for no CLEANing</description>
+      <value>1000</value>
+    </param>
+    
+    <param type="double" name="gain">
+      <description>Loop Gain for CLEANing, try 0.7 for msclean or fullmsclean</description>
+      <value>0.1</value>
+    </param>
+    
+    <param type="any" name="threshold">
+      <any type="variant"/>
+      <description>Flux level at which to stop CLEANing</description>
+      <value>0Jy</value>
+    </param>
+    
+    <param type="bool" name="displayprogress">
+      <description>Display progress</description>
+      <value>false</value>
+    </param>
+    
+    <param type="string" name="model">
+      <description>Name of images</description>
+      <value></value>
+    </param>
+    
+    <param type="string" name="mask">
+      <description>Name of mask images used for CLEANing</description>
+      <value></value>
+    </param>
+    
+    <param type="bool" name="async">
+      <description>Run asynchronously in the background?</description>
+      <value>false</value>
+    </param>
+  </input>
+  
+  <returns type="record"/>
+  <example>
+    
+    deco.clean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
+    mask='3C283XC1.mask', niter=1000, gain=0.25, threshold=0.03)
 
-Makes a clean image using either the Hogbom or MultiScale
-algorithms. The MultiScale algorithm is the default. The clean is
-performed on the residual image calculated from the dirty image minus
-the point spread function convolved with the model currently selected.
-Thus if you want to restart a clean, simply set the model to the model
-that was previously produced by clean.
-
-Rather than explicit CLEAN boxes, mask images are used to constrain
-the region that is to be deconvolved. To make mask images,
-use either <link anchor="deconvolver:deconvolver.boxmask.function">boxmask</link> (to define a mask
-via the corner locations blc and trc) or 
-<link anchor="deconvolver:deconvolver.mask.function">mask</link> (to define a mask via
-thresholding an existing image). The default mask is the inner quarter
-of the image.
-
-The CLEAN deconvolution is joint in whatever Stokes parameters are
-present. Thus it searchs for peaks in either $I$ or $I+|V|$ or
-$I+\sqrt{Q^2+U^2+V^2}$, the rationale for the latter two forms being
-to be biased towards finding strongly polarized pixels first (these
-forms are also the maximum eigenvalue of the coherency matrix).  The
-PSF is constrained to be the same in all polarizations (a feature of
-this implementation, not of the Hamaker-Bregman-Sault formalism).
-
-The clean algorithms possible are:
-\begin{description}
-\item[Hogbom] The classic algorithm: delta function units of emission
-are found iteratively by searching for the peak. Each point is
-subtracted from the full residual image using the shifted and scaled
-point spread function.
-
-\item[Multi-Scale] As the Multi-Scale Clean algorithm is quite new,
- we provide entensive information on its use.
-
-In the Multi-scale Clean, the image is cleaned simultaneously with
-several different beams given by the point spread function convolved
-with components of various shapes and sizes.  The components we use in
-this implementation are upside-down paraboloids multiplied by first
-order spheroidal functions (ie, the same functions used in gridding
-Fourier plane data).  The paraboloids are truncated at zero, and the
-multiplication by the spheroidal function results in a smooth shape
-with minimal power at long baselines.  This shape is scaled to the
-component sizes specified in
-<link anchor="deconvolver:deconvolver.setscales.function">setscales</link>.  As these
-functions have finite extent (unlike a Gaussian), they can easily be
-used with mask images.
-
-For each iteration, the scale size which is able to subtract the most
-flux is chosen (but with a caveat, see below).  The model is then
-built up out of the spheroidal functions of the various scale
-sizes. The scale sizes are set by the
-<link anchor="deconvolver:deconvolver.setscales.function">setscales</link> function, which
-will permit the user to specify the scale sizes explicitly, or will
-optionally take the number of scale sizes to clean for and calculate
-the scale sizes themselves from a power law.
-
-Most images deconvolved with Multi-scale Clean will be dominated by
-extended structure, and the largest scale size will initially remove
-the most flux from the dirty image.  As the algorithm reduces the
-residuals on the largest scale, the residuals on the smaller scales
-will also be reduced, even without cleaning on those size scales (a
-falling sea sinks all boats).  However, at some point, the residual
-image will be dominated by features on smaller size scales.  These
-smaller features will be both positive and negative (ie, to correct
-for the largest size scale being the wrong shape for the true emission
-features).  Later in the algorithm, the magnitude of the residuals on
-all scales will be approximately equal.  At this stage, most of the
-deconvolvable flux has been assimilated into the largest scale size
-components and detailed corrections to the large scale components must
-be made.  At this point, the user may consider switching to a faster
-algorithm such as the Clark Clean.
-
-Masking is fully available with Multi-scale Clean.  No component is
-permitted to place any of its wings outside of the user-supplied
-mask.  If the masking were based upon the different scale components'
-center positions, then the large scale components could place their
-wings outside the mask, but the smaller scale components would
-not be able to make fine scale corrections.  Hence, the
-Multi-scale Clean uses a different mask for each different size
-scale internally.  If the mask is too restrictive or the scales
-are too large, the algorithm may not be able to fit the large
-scales into the mask at all, and the user is warned of this
-condition.
-
-Traditional Clean algorithms use a small loop gain such as 0.1 to
-avoid confusing emission and sidelobes when extended emission is
-present.  However, as MultiScale Clean can image large extended
-structure in a single spheroidal component, a loop gain in the range
-0.5 to 1.0 can be used.  If the largest residual oscillates between
-positive and negative with iteration number, as it can for some
-brightness distributions which include point sources, a lower loop
-gain will improve the imaging and the convergence.
-
-A mild bias favoring cleaning small scale emission has been built into
-the Multi-scale algorithm.  To illustrate the requirement of this bias,
-consider the case of a bright point source with very faint extended
-emission.  Each scale may find its optimal component to subtract at
-the position of the bright point source, but each successively larger
-component will integrate more extended flux.  Hence, the largeest
-scale component will be removed from the residuals.  If most of the
-flux were in the point source, then several smaller negative
-components must be subtracted from the largest component, and finally
-the point component itself may be removed after the extended emission
-has been taken care of.  To prevent this situation from occurring,
-we bias the selection of small-sized components.
-
-\end{description}
-
-Note that for all of these functions except fullmsclean, only a
-quarter of the image may be cleaned. If no mask is set, then the
-cleaned region defaults to the inner quarter. If a mask larger than a
-quarter of the image is set, then only the quarter starting at the
-bottom left corner is used. Algorithm fullmsclean will deconvolve the
-entire field. This is useful when performing a limited accuracy 
-deconvolution (as needed for example in wide-field imaging) but will
-diverge if pushed too deep.
-
-The clean threshold may be either absolute ('0.5Jy') or relative
-('1\%').
-
-</description>
-<input>
-
-     <param type="string" name="algorithm">
-     <description>Algorithm to use</description>
-     <value>fullmsclean</value>
-     <value>msclean</value>
-     <value>hogbom</value>
-     </param>
-
-     <param type="int" name="niter">
-     <description>Number of Iterations, set to zero for no CLEANing</description>
-     <value>1000</value>
-     </param>
-
-     <param type="double" name="gain">
-     <description>Loop Gain for CLEANing, try 0.7 for msclean or fullmsclean</description>
-     <value>0.1</value>
-     </param>
-
-     <param type="any" name="threshold">
-     <any type="variant"/>
-     <description>Flux level at which to stop CLEANing</description>
-     <value>0Jy</value>
-     </param>
-
-     <param type="bool" name="displayprogress">
-     <description>Display progress</description>
-     <value>false</value>
-     </param>
-
-     <param type="string" name="model">
-     <description>Name of images</description>
-     <value></value>
-     </param>
-
-     <param type="string" name="mask">
-     <description>Name of mask images used for CLEANing</description>
-     <value></value>
-     </param>
-
-     <param type="bool" name="async">
-     <description>Run asynchronously in the background?</description>
-     <value>false</value>
-     </param>
-</input>
-
-<returns type="bool"/>
-<example>
-
-deco.clean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
-mask='3C283XC1.mask', niter=1000, gain=0.25, threshold=0.03)
-
-</example>
+  </example>
 </method>
 
 

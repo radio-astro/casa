@@ -249,13 +249,22 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
   return false;
 }
 
-  bool deconvolver::fullclarkclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask, const double cyclefactor){
+ casac::record*  deconvolver::fullclarkclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask, const double cyclefactor){
+   casac::record* rstat(0);
     try {
       casa::Quantity thresh(0.0, "Jy");
       if(String(threshold.toString()) != String("")){
 	thresh=casaQuantity(threshold);
       }
-      return itsDeconv->clarkclean(niter, gain, thresh, String(model), String(mask), cyclefactor);
+      
+      Float maxResidual;
+      Int iterations;
+      Bool converged= itsDeconv->clarkclean(niter, gain, thresh, String(model), String(mask), maxResidual, iterations, cyclefactor);
+      Record theRec;
+      theRec.define("converged", converged);
+      theRec.define("maxresidual", maxResidual);
+      theRec.define("iterations", iterations);
+      rstat = fromRecord(theRec);
 
     }
     catch  (AipsError x) {
@@ -263,7 +272,7 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
       RETHROW(x);
     }
     
-    return false;
+    return rstat;
   }
 
 
@@ -323,7 +332,7 @@ deconvolver::psfname()
 }
 
 bool
-deconvolver::make(const std::string& image, const bool async)
+deconvolver::make(const std::string& image, const bool /*async*/)
 {
   try {
 
@@ -352,7 +361,7 @@ deconvolver::convolve(const std::string& convolvemodel, const std::string& model
 }
 
 bool
-deconvolver::makegaussian(const std::string& gaussianimage, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool normalize, const bool async)
+deconvolver::makegaussian(const std::string& gaussianimage, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool normalize, const bool /*async*/)
 {
   try {
 
@@ -390,7 +399,7 @@ deconvolver::state()
 }
 
 bool
-deconvolver::updatestate(const std::string& f, const std::string& method)
+deconvolver::updatestate(const std::string& /*f*/, const std::string& /*method*/)
 {
 
   cout << "Not implemented" << endl;
@@ -399,24 +408,31 @@ deconvolver::updatestate(const std::string& f, const std::string& method)
 }
 
 
-bool
-deconvolver::clean(const std::string& algorithm, const int niter, const double gain, const ::casac::variant& threshold, const bool displayprogress, const std::string& model, const std::string& mask, const bool async)
+casac::record* 
+deconvolver::clean(const std::string& algorithm, const int niter, const double gain, const ::casac::variant& threshold, const bool displayprogress, const std::string& model, const std::string& mask, const bool /*async*/)
 {
+  casac::record* rstat(0);
   try {
-
+    
     casa::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String("")){
       thresh=casaQuantity(threshold);
     }
-   
-    return itsDeconv->clean(String(algorithm), niter, gain, thresh, 
-			    displayprogress, String(model), String(mask));
+    Float maxResidual=0.0;
+    Int iterations=0;
+    Bool converged=itsDeconv->clean(String(algorithm), niter, gain, thresh, 
+				    displayprogress, String(model), String(mask), maxResidual, iterations);
+    Record theRec;
+    theRec.define("converged", converged);
+    theRec.define("maxresidual", maxResidual);
+    theRec.define("iterations", iterations);
+    rstat = fromRecord(theRec);  
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
   
-  return false;
+  return rstat;
 }
 
 bool
@@ -435,7 +451,7 @@ deconvolver::setscales(const std::string& scalemethod, const int nscales, const 
 }
 
 bool
-deconvolver::ft(const std::string& model, const std::string& transform, const bool async)
+deconvolver::ft(const std::string& model, const std::string& transform, const bool /*async*/)
 {
   try {
     
@@ -449,7 +465,7 @@ deconvolver::ft(const std::string& model, const std::string& transform, const bo
 }
 
 bool
-deconvolver::restore(const std::string& model, const std::string& image, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool async)
+deconvolver::restore(const std::string& model, const std::string& image, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool /*async*/)
 {
   try {
 
@@ -476,7 +492,7 @@ deconvolver::restore(const std::string& model, const std::string& image, const :
 }
 
 bool
-deconvolver::residual(const std::string& model, const std::string& image, const bool async)
+deconvolver::residual(const std::string& model, const std::string& image, const bool /*async*/)
 {
 
   try {
@@ -490,7 +506,7 @@ deconvolver::residual(const std::string& model, const std::string& image, const 
 }
 
 bool
-deconvolver::smooth(const std::string& model, const std::string& image, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool normalize, const bool async)
+deconvolver::smooth(const std::string& model, const std::string& image, const ::casac::variant& bmaj, const ::casac::variant& bmin, const ::casac::variant& bpa, const bool normalize, const bool /*async*/)
 {
 
   try {
@@ -520,7 +536,7 @@ deconvolver::smooth(const std::string& model, const std::string& image, const ::
 }
 
 bool
-deconvolver::mem(const std::string& entropy, const int niter, const ::casac::variant& sigma, const ::casac::variant& targetflux, const bool constrainflux, const bool displayprogress, const std::string& model, const std::string& prior, const std::string& mask, const bool imageplane, const bool async)
+deconvolver::mem(const std::string& entropy, const int niter, const ::casac::variant& sigma, const ::casac::variant& targetflux, const bool constrainflux, const bool displayprogress, const std::string& model, const std::string& prior, const std::string& mask, const bool imageplane, const bool /*async*/)
 {
   try {
     casa::Quantity targflux(1.0, "Jy");
@@ -544,7 +560,7 @@ deconvolver::mem(const std::string& entropy, const int niter, const ::casac::var
 }
 
 bool
-deconvolver::makeprior(const std::string& prior, const std::string& templateimage, const ::casac::variant& lowclipfrom, const ::casac::variant& lowclipto, const ::casac::variant& highclipfrom, const ::casac::variant& highclipto, const std::vector<int>& blc, const std::vector<int>& trc, const bool async)
+deconvolver::makeprior(const std::string& prior, const std::string& templateimage, const ::casac::variant& lowclipfrom, const ::casac::variant& lowclipto, const ::casac::variant& highclipfrom, const ::casac::variant& highclipto, const std::vector<int>& blc, const std::vector<int>& trc, const bool /*async*/)
 {
 
   try {
