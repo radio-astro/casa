@@ -76,7 +76,7 @@ copytime=time.time()
 ####set flux scale fo calibrater
 print '--setjy - 22apr98--'
 default('setjy')
-setjy(vis='n4826_22apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.])
+setjy(vis='n4826_22apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=False)
 setjy1time=time.time()
 ## Flag bad data non-interactively
 print '--flag data - 22apr97--'
@@ -184,7 +184,7 @@ copy2time=time.time()
 ## Set the flux density of 3C273 to 23 Jy
 print '--setjy - 16apr98--'
 default('setjy')
-setjy(vis='n4826_16apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.])
+setjy(vis='n4826_16apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=False)
 setjy2time=time.time()
 ## Flag end channels
 print '--flagdata - 16apr98 --'

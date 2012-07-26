@@ -115,7 +115,7 @@ test_sdscale                    takeshi.nakazato@nao.ac.jp
 test_sdsmooth                   kana.sugi@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
-test_setjy			rreid@nrao.edu
+test_setjy			ttsutsum@nrao.edu
 test_simobserve                 kana.sugi@ezweb.ne.jp
 #test_simplecluster              hye@nrao.edu
 test_smoothcal                  scastro@eso.org

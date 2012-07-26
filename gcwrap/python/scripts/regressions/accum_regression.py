@@ -116,7 +116,7 @@ try:
     print '--Setjy--'
     default('setjy')
     
-    setjy(vis=msfile,field='0',standard='Perley-Taylor 99')
+    setjy(vis=msfile,field='0',scalebychan=False,standard='Perley-Taylor 99')
     
     # Record setjy completion time
     if benchmarking:

@@ -288,7 +288,7 @@ class test_setjy_mms(test_simplecluster):
     def test1_setjy_scratchless_mode_single_model(self):
         """Test 1: Set vis model header in one single field """
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=False)
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -315,8 +315,8 @@ class test_setjy_mms(test_simplecluster):
     def test2_setjy_scratch_mode_multiple_model(self):
         """Test 2: Set MODEL_DATA in multiple fields"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=False)
-        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], usescratch=False)
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -344,7 +344,7 @@ class test_setjy_mms(test_simplecluster):
     def test3_setjy_scratch_mode_single_model(self):
         """Test 3: Set MODEL_DATA in one single field"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=True)
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True)
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -369,8 +369,8 @@ class test_setjy_mms(test_simplecluster):
     def test4_setjy_scratch_mode_multiple_model(self):
         """Test 4: Set MODEL_DATA in multiple fields"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], usescratch=True)
-        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], usescratch=True)
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True)
+        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True)
         
         mslocal = mstool()
         mslocal.open(self.vis)

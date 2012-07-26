@@ -481,6 +481,7 @@ if(mystep in thesteps):
 	setjy(vis=name+'-line-vs.ms',
               field='Titan',
               standard='Butler-JPL-Horizons 2010', 
+              scalebychan=False,
 	      spw='0,1,2,3')
 
     timing()

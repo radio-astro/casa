@@ -569,6 +569,9 @@ if ( setjymode == 'flux' ):
     # enforce older standard
     standard='Perley-Taylor 99'  
 
+    # old default
+    scalebychan=False
+
     # Loop over spw
     for spw in usespwlist:
         fluxdensity = fcalmodel[fluxcalfield][spw]
@@ -604,6 +607,8 @@ else:
 
     # enforce older standard
     standard='Perley-Taylor 99'  
+
+    scalebychan=False
 
     saveinputs('setjy',prefix+'.setjy.saved')
     setjy()
@@ -810,6 +815,8 @@ if ( setpolmodel and polcalmode.count('X') > 0 ):
     print "Use setjy to set IQU fluxes of "+polxfield
     field = polxfield
 
+    scalebychan=False
+
     for spw in usespwlist:
         fluxdensity = polmodel[field][spw]['flux']
     
@@ -949,6 +956,8 @@ if ( pcalmodel.has_key(polxfield) ):
         
         print "Use setjy to set IQU fluxes of "+polxfield
         field = polxfield
+
+        scalebychan=False
         
         for spw in usespwlist:
             fluxdensity = polmodel[field][spw]['flux']

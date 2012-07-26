@@ -354,6 +354,8 @@ modimage = ''
 # Setjy knows about this source so we don't need anything more
 standard='Perley-Taylor 99'  # enforce older standard
 
+scalebychan=False
+
 usescratch=False
 
 setjy()
