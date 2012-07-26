@@ -164,6 +164,10 @@ public:
 
   // what iteration number to start on
   void startingIteration(const Int starting = 0) {itsStartingIter = starting; }
+  
+ //Total flux accumulated so far
+  Float totalFlux() const {return itsTotalFlux;}
+
 
   // Clean an image. 
   //return value gives you a hint of what's happening
