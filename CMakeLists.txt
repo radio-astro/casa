@@ -47,26 +47,6 @@ if (HDF5_ROOT_DIR)
     set (ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
 endif (HDF5_ROOT_DIR)
 
-##################################################
-#
-# NRAO/ALMA Thread Neutrality handling
-#
-
-include (ThreadNeutral OPTIONAL RESULT_VARIABLE foundIt)
-
-if (foundIt STREQUAL NOTFOUND)
-
-    configure_file (casa/Utilities/CasaThreadNeutrality.h.in
-                    ${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h)
-
-endif (foundIt STREQUAL NOTFOUND)
-
-#
-# end {NRAO/ALMA Thread Neutrality handling}
-#
-##################################################
-
-
 #################################
 #
 # Find out which modules to build.
