@@ -96,8 +96,9 @@ public:
   virtual Bool solve (SkyEquation& me);
 
   //Do the image-based clean
+  //iterused and maxresidual are return values
   static Bool clean(ImageInterface<Float>& image, ImageInterface<Float> & residual, ImageInterface<Float>& psf, 
-		    ImageInterface<Float>& mask, Float gain, Int numIter,  Float thresh, Float cycleFactor, Bool useMask=False, Bool doPolJoint=True);
+		    ImageInterface<Float>& mask, Float& maxresidual, Int& iterused, Float gain, Int numIter,  Float thresh, Float cycleFactor, Bool useMask=False, Bool doPolJoint=True);
  
 private:
    //make a mask sub-lattice
