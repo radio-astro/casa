@@ -569,7 +569,6 @@ Utilities/Template.h
 Utilities/Template.tcc
 Utilities/ValType.h
 Utilities/ValTypeId.h
-${CMAKE_BINARY_DIR}/casa/Utilities/CasaThreadNeutrality.h
 DESTINATION include/casacore/casa/Utilities
 )
 
