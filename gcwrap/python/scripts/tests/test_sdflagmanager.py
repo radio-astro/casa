@@ -154,8 +154,6 @@ class sdflagmanager_test(unittest.TestCase):
 
 
 
-
-
     def _compareBLparam(self,out,reference):
         # test if baseline parameters are equal to the reference values
         # currently comparing every lines in the files

@@ -138,11 +138,12 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     sel.set_polarisations(pols)
 
             try:
-                #Apply the selection
-                s.set_selection(sel)
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                return
+		    #Apply the selection
+		    s.set_selection(sel)
+	    except Exception, instance:
+		    casalog.post( str(instance), priority = 'ERROR' )
+		    raise Exception, instance
+
 
             # flag mode
 	    flgmode = flagmode.lower()
@@ -390,5 +391,6 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
         except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+		raise Exception, instance
         finally:
                 casalog.post('')

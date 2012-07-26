@@ -37,6 +37,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 		except Exception, instance:
 			casalog.post( str(instance), priority = 'ERROR' )
 			casalog.post( 'No output written.' )
+			raise Exception, instance
 			return
 
 		# Copy scantable when usign disk storage not to modify
@@ -368,4 +369,4 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 	
 	except Exception, instance:
 		casalog.post( str(instance), priority = 'ERROR' )
-		return
+		raise Exception, instance
