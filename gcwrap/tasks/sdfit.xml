@@ -10,14 +10,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdfit" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: fit a spectral line</shortdescription>
+<shortdescription>ASAP SD task: fit a spectral line</shortdescription>
 
   <description>
-        ASAP SD line-fitting task:
+    ASAP SD line-fitting task:
 
-        Modified 2008-01-29 TT
-        Task Version 2007-03-04 STM
-</description>
+    Modified 2008-01-29 TT
+    Task Version 2007-03-04 STM
+  </description>
 
   <input>
 
@@ -55,6 +55,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>kHz</value>
             <value>Hz</value>
     </allowed>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+        <description>rest frequency (default unit: Hz)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
     </param>
 
     <param type="string" name="frame">
@@ -176,6 +182,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="telescopeparm"><value type='string'></value></default>
                 </equals>
             </when>
+	    <when param="specunit">
+		<equals value=""/>
+		<equals value="channel"/>
+		<equals value="GHz"/>
+		<equals value="MHz"/>
+		<equals value="kHz"/>
+		<equals value="Hz"/>
+		<equals value="km/s">
+			<default param="restfreq"><value type='string'></value></default>
+                </equals>
+	    </when>
             <when param="fitmode">
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
@@ -189,18 +206,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </when>
     </constraints>
 
-    </input>
-    <output>
+  </input>
+  <output>
     <param type="any" name="xstat">
 	    <description>RETURN ONLY: a Python dictionary of line statistics</description>
             <any type='variant'/>
 	    <value>{}</value>
     </param>
-    </output>
+  </output>
 
-  <returns type="void"/>
+<returns type="void"/>
 
-  <example>
+<example>
         Keyword arguments:
         infile -- name of input SD dataset
                 default: none - must input file name
@@ -230,6 +247,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
                 default: '' (=current)
+                example: this will be the units for masklist
+            &gt;&gt;&gt; specunit expandable parameters
+                 restfreq -- rest frequency
+                         available type includes float, int, string, list of float, 
+                         list of int, list of string, and list of dictionary. the 
+                         default unit of restfreq in case of float, int, or string 
+                         without unit is Hz. string input can be a value only 
+                         (treated as Hz) or a value followed by unit for which 'GHz',
+                         'MHz','kHz',and 'Hz' are available. 
+                         a list can be used to set different rest frequencies for 
+                         each IF. the length of list input must be nIF. dictionary 
+                         input should be a pair of molecule name and frequency with 
+                         keys of 'name' and 'value', respectively. values in the 
+                         dictionary input follows the same manner as for single 
+                         float or string input. 
+                         example: 345.796
+                                  '1420MHz'
+                                  [345.8, 347.0, 356.7]
+                                  ['345.8MHz', '347.0MHz', '356.7MHz']
+                                  [{'name':'CO','value':345}]
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

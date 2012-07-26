@@ -1,11 +1,12 @@
 import os
 from taskinit import *
 
+import sdutil
 import asap as sd
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
+def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
@@ -85,6 +86,17 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
 		    s = sorg
 	    del sorg
 	    
+	    # set restfreq
+	    modified_molid = False
+	    if (specunit == 'km/s'):
+		    if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
+			    mesg = "Restfreq must be given."
+			    raise Exception, mesg
+		    elif (len(str(restfreq)) > 0):
+			    molids = s._getmolidcol_list()
+			    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
+			    modified_molid = True
+
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
             antennaname = s.get_antennaname()
@@ -592,6 +604,10 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                     #print fitparams
                     store_fit(fitfunc, outfile, fitparams, s, overwrite)
                 
+	    #restore the original moleculeID column
+	    if modified_molid:
+		    s._setmolidcol_list(molids)
+	    
             # Final clean up
             del f
             del s

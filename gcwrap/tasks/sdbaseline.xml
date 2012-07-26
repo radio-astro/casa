@@ -334,10 +334,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                                  telescopeparm='FIX' to change default fluxunit
                                  see description below
         specunit -- units for spectral axis
-                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
                 default: '' (=current)
                 example: this will be the units for masklist
-            &gt;&gt;&gt; blfunc expandable parameters
+            &gt;&gt;&gt; specunit expandable parameters
                  restfreq -- rest frequency
                          available type includes float, int, string, list of float, 
                          list of int, list of string, and list of dictionary. the 

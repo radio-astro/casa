@@ -58,6 +58,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </allowed>
     </param>
 
+    <param type="any" name="restfreq" subparam="true">
+        <description>rest frequency (default unit: Hz)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
+    </param>
+
     <param type="string" name="frame">
 	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
 	    <value></value>
@@ -346,6 +352,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="telescopeparm"><value>""</value></default>
 	        </equals>
 	    </when>
+	    <when param="specunit">
+		<equals value=""/>
+		<equals value="channel"/>
+		<equals value="GHz"/>
+		<equals value="MHz"/>
+		<equals value="kHz"/>
+		<equals value="Hz"/>
+		<equals value="km/s">
+			<default param="restfreq"><value type='string'></value></default>
+                </equals>
+	    </when>
             <when param="average">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
@@ -438,6 +455,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
                 default: '' (=current)
                 example: this will be the units for masklist
+            &gt;&gt;&gt; specunit expandable parameters
+                 restfreq -- rest frequency
+                         available type includes float, int, string, list of float, 
+                         list of int, list of string, and list of dictionary. the 
+                         default unit of restfreq in case of float, int, or string 
+                         without unit is Hz. string input can be a value only 
+                         (treated as Hz) or a value followed by unit for which 'GHz',
+                         'MHz','kHz',and 'Hz' are available. 
+                         a list can be used to set different rest frequencies for 
+                         each IF. the length of list input must be nIF. dictionary 
+                         input should be a pair of molecule name and frequency with 
+                         keys of 'name' and 'value', respectively. values in the 
+                         dictionary input follows the same manner as for single 
+                         float or string input. 
+                         example: 345.796
+                                  '1420MHz'
+                                  [345.8, 347.0, 356.7]
+                                  ['345.8MHz', '347.0MHz', '356.7MHz']
+                                  [{'name':'CO','value':345}]
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

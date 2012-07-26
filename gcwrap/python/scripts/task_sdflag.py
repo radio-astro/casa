@@ -1,12 +1,13 @@
 import os
 from taskinit import *
 
+import sdutil
 import asap as sd
 from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -43,15 +44,26 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 		    s = sorg
 	    del sorg
 
+	    # set restfreq
+	    modified_molid = False
+	    if (specunit == 'km/s'):
+		    if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
+			    mesg = "Restfreq must be given."
+			    raise Exception, mesg
+		    elif (len(str(restfreq)) > 0):
+			    molids = s._getmolidcol_list()
+			    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
+			    modified_molid = True
+
             #check the format of the infile
             if isinstance(infile, str):
-              if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
-                if os.path.exists(filename+'/table.f1'):
-                  format = 'MS2'
-                else:
-                  format = 'ASAP'
-              else:
-                  format = 'SDFITS'
+		    if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
+			    if os.path.exists(filename+'/table.f1'):
+				    format = 'MS2'
+			    else:
+				    format = 'ASAP'
+		    else:
+			    format = 'SDFITS'
 
 	    # Check the formats of infile and outfile are identical when overwrite=True.
 	    # (CAS-3096). If not, print warning message and exit.
@@ -91,10 +103,33 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             #Currently only channel based flag is allowed
             # so make sure the input data is channel 
             unit_in=s.get_unit()
-            if unit_in!='channel':
-                s.set_unit('channel')
+            #if unit_in!='channel':
+            #    s.set_unit('channel')
+	    
+	    # set default spectral axis unit
+	    if ( specunit != '' ):
+		    s.set_unit(specunit)
 
-            antennaname = s.get_antennaname()
+	    # reset frame and doppler if needed
+	    if ( frame != '' ):
+		    s.set_freqframe(frame)
+	    else:
+		    casalog.post( 'Using current frequency frame' )
+	    
+	    if ( doppler != '' ):
+		    if ( doppler == 'radio' ):
+			    ddoppler = 'RADIO'
+		    elif ( doppler == 'optical' ):
+			    ddoppler = 'OPTICAL'
+		    elif ( doppler == 'z' ):
+			    ddoppler = 'Z'
+		    else:
+			    ddoppler = doppler
+			
+		    s.set_doppler(ddoppler)
+	    else:
+		    casalog.post( 'Using current doppler convention' )
+
 
             # Select scan and field
             sel = sd.selector()
@@ -382,6 +417,11 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             s.set_unit(unit_in) 
             sel.reset()
             s.set_selection(sel)
+
+	    #restore the original moleculeID column
+	    if modified_molid:
+		    s._setmolidcol_list(molids)
+	    
             s.save(spefile,outform,overwrite)
 	    
             if outform!='ASCII':
