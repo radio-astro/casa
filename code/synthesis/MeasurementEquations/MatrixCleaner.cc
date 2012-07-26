@@ -81,6 +81,7 @@ MatrixCleaner::MatrixCleaner():
   itsScaleSizes(0),
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.0),
+  itsTotalFlux(0.0),
   itsChoose(True),
   itsDoSpeedup(False),
   itsIgnoreCenterBox(False),
@@ -112,6 +113,7 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
   itsScaleSizes(0),
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.),
+  itsTotalFlux(0.0),
   itsChoose(True),
   itsDoSpeedup(False),
   itsIgnoreCenterBox(False),
@@ -190,6 +192,7 @@ MatrixCleaner & MatrixCleaner::operator=(const MatrixCleaner & other) {
     itsDidStopPointMode = other.itsDidStopPointMode;
     itsJustStarting = other.itsJustStarting;
     itsStrengthOptimum = other.itsStrengthOptimum;
+    itsTotalFlux=other.itsTotalFlux;
     itsMaskThreshold = other.itsMaskThreshold;
     psfShape_p.resize(0, False);
     psfShape_p=other.psfShape_p;
@@ -472,7 +475,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     #pragma omp parallel default(shared) private(scale)
     {
       #pragma omp  for 
-      for (scale=0; scale<nScalesToClean; scale++) {
+      for (scale=0; scale<nScalesToClean; ++scale) {
 	// Find absolute maximum for the dirty image
 	Matrix<Float> dirtySub=(itsDirtyConvScales[scale])(blcDirty,trcDirty);
 	maxima(scale)=0;
@@ -508,6 +511,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 
     // Now add to the total flux
     totalFlux += (itsStrengthOptimum*itsGain);
+    itsTotalFlux=totalFlux;
     totalFluxScale(optimumScale) += (itsStrengthOptimum*itsGain);
 
     if(ii==itsStartingIter ) {
@@ -634,7 +638,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     #pragma omp parallel default(shared) private(scale)
     {
       #pragma omp  for 			
-      for (scale=0;scale<nScalesToClean;scale++) {
+      for (scale=0;scale<nScalesToClean; ++scale) {
       
 	Matrix<Float> dirtySub=(itsDirtyConvScales[scale])(blc,trc);
 	//AlwaysAssert(itsPsfConvScales[index(scale,optimumScale)], AipsError);

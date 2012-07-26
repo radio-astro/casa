@@ -33,7 +33,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImageMSCleaner::ImageMSCleaner(): psf_p(0), dirty_p(0), mask_p(0), nPsfChan_p(0), 
 				    nImChan_p(0), nPsfPol_p(0), nImPol_p(0), chanAxis_p(-1), 
-				    polAxis_p(-1), nMaskChan_p(0), nMaskPol_p(0), maskThresh_p(0.9)
+				    polAxis_p(-1), nMaskChan_p(0), nMaskPol_p(0), maskThresh_p(0.9), maxResidual_p(0.0)
  {
 
 
@@ -42,7 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 ImageInterface<Float>& dirty): psf_p(&psf), 
 								      dirty_p(&dirty), mask_p(0), 
 								      nMaskChan_p(0), nMaskPol_p(0),
-								      maskThresh_p(0.9){
+								maskThresh_p(0.9), maxResidual_p(0.0){
     
     chanAxis_p=CoordinateUtil::findSpectralAxis(dirty_p->coordinates());
     Vector<Stokes::StokesTypes> whichPols;
@@ -82,6 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       polAxis_p=other.polAxis_p;
       scales_p=other.scales_p;
       maskThresh_p=other.maskThresh_p;
+      maxResidual_p=other.maxResidual_p;
     }
     return *this;
   }
@@ -355,6 +356,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	  }
 	  result=matClean_p.clean(subModel, True);
+	  //Update the private flux and residuals here
+	  maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
 	  if(!getModel)
 	    modelimage.putSlice(bufMod, sl.start());
 	  
@@ -393,6 +396,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  matClean_p.makeScaleMasks();
 	}
 	result=matClean_p.clean(subModel, True);
+	//Update the private flux and residuals here
+	maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
 	if(!getModel)
 	  modelimage.putSlice(bufMod, sl.start());
       }      
@@ -415,6 +420,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       getModel=modelimage.get(buf0, True);
       subModel.reference(buf0);
       result=matClean_p.clean(subModel, True);
+      //Update the private flux and residuals here
+      maxResidual_p=max(maxResidual_p, matClean_p.strengthOptimum()); 
       if(!getModel)
 	modelimage.put(subModel);
     }

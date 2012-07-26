@@ -822,7 +822,8 @@ Bool Deconvolver::smooth(const String& model,
 //will clean casa axes order images 
 Bool Deconvolver::clarkclean(const Int niter, 
 			     const Float gain, const Quantity& threshold, 
-			     const String& model, const String& maskName, 
+			     const String& model, const String& maskName,
+			     Float& maxresidual, Int& iterused,
 			     Float cycleFactor){
 
   Bool retval=False;
@@ -840,11 +841,11 @@ Bool Deconvolver::clarkclean(const Int niter,
     hasMask=Table::isReadable(maskName);
   if(hasMask){
     PagedImage<Float> mask(maskName);
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, gain, niter, thresh, cycleFactor, True, True); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, maxresidual, iterused, gain, niter, thresh, cycleFactor, True, True); 
   }
   else{
     ImageInterface<Float> *tmpMask=0;
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, gain, niter, thresh, cycleFactor, False, True); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, maxresidual, iterused, gain, niter, thresh, cycleFactor, False, True); 
   }
     
   return retval;
@@ -1100,9 +1101,9 @@ Bool Deconvolver::clarkclean(const Int niter,
 
 
 
-Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
-			const Float gain, const Quantity& threshold, 
-			const Bool displayProgress){
+Bool Deconvolver::setupLatCleaner(const String& /*algorithm*/, const Int /*niter*/,
+				  const Float /*gain*/, const Quantity& /*threshold*/, 
+				  const Bool /*displayProgress*/){
 
   LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
   
@@ -1143,7 +1144,7 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
 Bool Deconvolver::clean(const String& algorithm, const Int niter,
 			const Float gain, const Quantity& threshold, 
 			const Bool displayProgress,
-			const String& model, const String& mask)
+			const String& model, const String& mask, Float& maxResidual, Int& iterationsDone)
 {
   
   if(!valid()) return False;
@@ -1157,8 +1158,8 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
       return False;
     }
-    Int psfnchan=psf_p->shape()(chanAxis_p);
-    Int masknchan=0;
+    //Int psfnchan=psf_p->shape()(chanAxis_p);
+    //Int masknchan=0;
   
     String imagename(model);
     // Make first image with the required shape and coordinates only if
@@ -1195,6 +1196,8 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     Bool result=False;
 
     result=cleaner_p->clean(modelImage, algorithm, niter, gain, threshold, displayProgress);
+    maxResidual=cleaner_p->maxResidual();
+    iterationsDone=cleaner_p->numberIterations();
     dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
     psf_p->table().relinquishAutoLocks(True);
@@ -1482,7 +1485,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	     << LogIO::POST;
 	} 
       } 
-      SubImage<Float> * priorQ;
+      SubImage<Float> * priorQ=NULL;
       if(prior !=0){	
 
 	if (imagePlane) {
@@ -1493,7 +1496,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	}
 	 myMemer.setPrior(*priorQ);
       }
-      SubImage<Float> *maskQ;
+      SubImage<Float> *maskQ=NULL;
       if(mask !=0){	
 
 	if (imagePlane) {
