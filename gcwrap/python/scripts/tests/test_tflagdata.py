@@ -404,45 +404,45 @@ class test_msselection(test_base):
 
     def test_simple(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9", basecnt=True)['baseline'].keys()
-        assert "9&&9" not in baselines
-        assert "9&&10" in baselines
-        assert "9&&11" in baselines
-        assert "10&&10" not in baselines
-        assert "10&&11" not in baselines
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="VA09", basecnt=True)['baseline'].keys()
+        assert "VA09&&VA09" not in baselines
+        assert "VA09&&VA10" in baselines
+        assert "VA09&&VA11" in baselines
+        assert "VA10&&VA10" not in baselines
+        assert "VA10&&VA11" not in baselines
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10", basecnt=True)['baseline'].keys()
-        assert "9&&9" not in baselines
-        assert "9&&10" in baselines
-        assert "9&&11" in baselines
-        assert "10&&10" not in baselines
-        assert "10&&11" in baselines
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="VA09,VA10", basecnt=True)['baseline'].keys()
+        assert "VA09&&VA09" not in baselines
+        assert "VA09&&VA10" in baselines
+        assert "VA09&&VA11" in baselines
+        assert "VA10&&VA10" not in baselines
+        assert "VA10&&VA11" in baselines
 
     def test_amp(self):
         '''tflagdata: select only cross-correlations'''
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9,10&",basecnt=True)['baseline'].keys()
-        assert "9&&9" not in baselines
-        assert "9&&10" in baselines
-        assert "9&&11" not in baselines
-        assert "10&&10" not in baselines
-        assert "10&&11" not in baselines
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="VA09,VA10&",basecnt=True)['baseline'].keys()
+        assert "VA09&&VA09" not in baselines
+        assert "VA09&&VA10" in baselines
+        assert "VA09&&VA11" not in baselines
+        assert "VA10&&VA10" not in baselines
+        assert "VA10&&VA11" not in baselines
 
-        baselines = tflagdata(vis = self.vis, mode="summary", antenna="9&10",basecnt=True)['baseline'].keys()
-        assert "9&&9" not in baselines
-        assert "9&&10" in baselines
-        assert "9&&11" not in baselines
-        assert "10&&10" not in baselines
-        assert "10&&11" not in baselines
+        baselines = tflagdata(vis = self.vis, mode="summary", antenna="VA09&VA10",basecnt=True)['baseline'].keys()
+        assert "VA09&&VA09" not in baselines
+        assert "VA09&&VA10" in baselines
+        assert "VA09&&VA11" not in baselines
+        assert "VA10&&VA10" not in baselines
+        assert "VA10&&VA11" not in baselines
         
     def test_autocorr1(self):
         '''tflagdata: flag only auto-correlations with antenna selection'''
-        tflagdata(vis=self.vis, mode='manual', antenna='5&&&')
+        tflagdata(vis=self.vis, mode='manual', antenna='VA05&&&')
         s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
-        assert s['5&&5']['flagged'] == 7560
-        assert s['1&&5']['flagged'] == 0
-        assert s['2&&5']['flagged'] == 0
-        assert s['5&&10']['flagged'] == 0
-        assert s['5&&11']['flagged'] == 0
+        assert s['VA05&&VA05']['flagged'] == 7560
+        assert s['VA01&&VA05']['flagged'] == 0
+        assert s['VA02&&VA05']['flagged'] == 0
+        assert s['VA05&&VA10']['flagged'] == 0
+        assert s['VA05&&VA11']['flagged'] == 0
 
         s = tflagdata(vis = self.vis, mode="summary")
         self.assertEqual(s['flagged'], 7560)
@@ -466,15 +466,15 @@ class test_msselection(test_base):
         tflagdata(vis=self.vis, mode='list', inpfile=filename, reason='AUTO', action='apply')
         s = tflagdata(vis = self.vis, mode="summary", basecnt=True)
         self.assertEqual(s['scan']['4']['flagged'], 0)
-        self.assertEqual(s['baseline']['9&&28']['flagged'], 0)
-        self.assertEqual(s['baseline']['9&&9']['flagged'], 3528)
+        self.assertEqual(s['baseline']['VA09&&VA28']['flagged'], 0)
+        self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3528)
         
         # select only the third line scan=4
         tflagdata(vis=self.vis, mode='list', inpfile=filename, reason='ALL', action='apply')
         s = tflagdata(vis = self.vis, mode="summary", basecnt=True)
         self.assertEqual(s['scan']['4']['flagged'], 95256)
-        self.assertEqual(s['baseline']['9&&28']['flagged'], 252)
-        self.assertEqual(s['baseline']['9&&9']['flagged'], 3780)
+        self.assertEqual(s['baseline']['VA09&&VA28']['flagged'], 252)
+        self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3780)
         self.assertEqual(s['flagged'], 190386)
                 
 
@@ -486,35 +486,36 @@ class test_statistics_queries(test_base):
     def test_CAS2021(self):
         '''tflagdata: test antenna negation selection'''
         
-        tflagdata(vis=self.vis, antenna='!5', savepars=False) 
+        tflagdata(vis=self.vis, antenna='!VA05', savepars=False) 
         s = tflagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
-        assert s['1&&5']['flagged'] == 0 
-        assert s['2&&5']['flagged'] == 0
-        assert s['3&&5']['flagged'] == 0
-        assert s['4&&5']['flagged'] == 0
-        assert s['5&&6']['flagged'] == 0
-        assert s['5&&7']['flagged'] == 0
-        assert s['5&&8']['flagged'] == 0
-        assert s['5&&9']['flagged'] == 0
-        assert s['5&&10']['flagged'] == 0
-        assert s['5&&11']['flagged'] == 0
-        assert s['5&&12']['flagged'] == 0
-        assert s['5&&13']['flagged'] == 0
-        assert s['5&&14']['flagged'] == 0
-        assert s['5&&15']['flagged'] == 0
-        assert s['5&&16']['flagged'] == 0
-        assert s['5&&17']['flagged'] == 0
-        assert s['5&&18']['flagged'] == 0
-        assert s['5&&19']['flagged'] == 0
-        assert s['5&&20']['flagged'] == 0
-        assert s['5&&21']['flagged'] == 0
-        assert s['5&&22']['flagged'] == 0
-        assert s['5&&24']['flagged'] == 0
-        assert s['5&&25']['flagged'] == 0
-        assert s['5&&26']['flagged'] == 0
-        assert s['5&&27']['flagged'] == 0
-        assert s['5&&28']['flagged'] == 0
-        assert s['5&&5']['flagged'] == 7560 ; assert s['5&&5']['total'] == 7560
+        assert s['VA01&&VA05']['flagged'] == 0 
+        assert s['VA02&&VA05']['flagged'] == 0
+        assert s['VA03&&VA05']['flagged'] == 0
+        assert s['VA04&&VA05']['flagged'] == 0
+        assert s['VA05&&VA06']['flagged'] == 0
+        assert s['VA05&&VA07']['flagged'] == 0
+        assert s['VA05&&VA08']['flagged'] == 0
+        assert s['VA05&&VA09']['flagged'] == 0
+        assert s['VA05&&VA10']['flagged'] == 0
+        assert s['VA05&&VA11']['flagged'] == 0
+        assert s['VA05&&VA12']['flagged'] == 0
+        assert s['VA05&&VA13']['flagged'] == 0
+        assert s['VA05&&VA14']['flagged'] == 0
+        assert s['VA05&&VA15']['flagged'] == 0
+        assert s['VA05&&VA16']['flagged'] == 0
+        assert s['VA05&&VA17']['flagged'] == 0
+        assert s['VA05&&VA18']['flagged'] == 0
+        assert s['VA05&&VA19']['flagged'] == 0
+        assert s['VA05&&VA20']['flagged'] == 0
+        assert s['VA05&&VA21']['flagged'] == 0
+        assert s['VA05&&VA22']['flagged'] == 0
+        assert s['VA05&&VA24']['flagged'] == 0
+        assert s['VA05&&VA25']['flagged'] == 0
+        assert s['VA05&&VA26']['flagged'] == 0
+        assert s['VA05&&VA27']['flagged'] == 0
+        assert s['VA05&&VA28']['flagged'] == 0
+        assert s['VA05&&VA05']['flagged'] == 7560
+        assert s['VA05&&VA05']['total'] == 7560
 
 
     def test_CAS2212(self):
@@ -538,12 +539,12 @@ class test_statistics_queries(test_base):
         
         tflagdata(vis=self.vis, correlation='LL', savepars=False)
         tflagdata(vis=self.vis, spw='0:17~19', savepars=False)
-        tflagdata(vis=self.vis, antenna='5&&9', savepars=False)
-        tflagdata(vis=self.vis, antenna='14', savepars=False)
+        tflagdata(vis=self.vis, antenna='VA05&&VA09', savepars=False)
+        tflagdata(vis=self.vis, antenna='VA14', savepars=False)
         tflagdata(vis=self.vis, field='1', savepars=False)
         s = tflagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True, basecnt=True)
-        assert s['antenna'].keys() == ['14']
-        assert '5&&9' in s['baseline'].keys()
+        assert s['antenna'].keys() == ['VA14']
+        assert 'VA05&&VA09' in s['baseline'].keys()
         assert set(s['spw:channel'].keys()) == set(['0:17', '0:18', '0:19'])
         assert s['correlation'].keys() == ['LL']  # LL
         assert s['field'].keys() == ['1445+09900002_0']
@@ -641,13 +642,13 @@ class test_selections(test_base):
     def test_scan(self):
         '''tflagdata: scan selection and manualflag compatibility'''
         tflagdata(vis=self.vis, scan='3', mode='manualflag', savepars=False)
-        res = tflagdata(vis=self.vis, mode='summary', antenna='2')
+        res = tflagdata(vis=self.vis, mode='summary', antenna='VA02')
         self.assertEqual(res['flagged'],52416)
                 
     def test_antenna(self):
         '''tflagdata: antenna selection'''
-        tflagdata(vis=self.vis, antenna='2', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
+        tflagdata(vis=self.vis, antenna='VA02', savepars=False)
+        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='VA02'), 196434, 196434)
 
     def test_spw(self):
         '''tflagdata: spw selection'''
@@ -712,7 +713,7 @@ class test_selections(test_base):
     def test_uvrange(self):
         '''tflagdata: uvrange selection'''
         tflagdata(vis=self.vis, uvrange='200~400m', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 55944)
+        test_eq(tflagdata(vis=self.vis, mode='summary', antenna='VA02'), 196434, 55944)
 
     def test_timerange(self):
         '''tflagdata: timerange selection'''
