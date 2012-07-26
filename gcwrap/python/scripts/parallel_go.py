@@ -128,7 +128,7 @@ class cluster(object):
       else:
          return ['ssh', '-f', '-q', '-x', host, cmd]
 
-   def start_engine(self, node_name, num_engine, work_dir=None):
+   def start_engine(self, node_name, num_engine, work_dir=None, omp_num_nthreads=1):
       '''Start engines on the given node.
       @param node_name The name of the computer to host the engines.
       @param num_engine The number of the engines to initialize for this run. 
@@ -174,7 +174,7 @@ class cluster(object):
          if sts[1] != 0:
             print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
          print "start engine %s on %s" % (i, node_name)
-      self.__engines=self.__update_cluster_info(num_engine, work_dir)
+      self.__engines=self.__update_cluster_info(num_engine, work_dir,omp_num_nthreads)
 
    # jagonzal (CAS-4292): This method crashes when initializing the nodes via __init_nodes,
    # so it is deprecated. Instead it is necessary to use directly the start_engine method 
@@ -515,9 +515,31 @@ class cluster(object):
       # start_cluster does not work properly (crashes when initializing the nodes via __init_nodes).
       # Actually start_cluster is deprecated, and it is necessary to use directly the start_engine 
       # method which does not only start the engine, but also initializes it using scripts
-      if (self.__controller==None):
+      if ((self.__controller==None) or (self.__client==None)):
+         return
+      # jagonzal (CAS-CHANGE): Do not use brute-force kill to schut down cluster
+      else:
+         # Kill the engines and controller using kernel.multiengineclient interface
+         try:
+             self.__client.kill(True,self.__engines,False)
+             del self.__client
+         except:
+             traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
+         # Remove initialization/shut-down scripts
+         try:
+             os.remove(self.__ipythondir+'/'+self.__cluster_rc_file)
+             os.remove(self.__ipythondir+'/'+self.__start_engine_file)
+             os.remove(self.__ipythondir+'/'+self.__stop_node_file)
+             os.remove(self.__ipythondir+'/'+self.__stop_controller_file)
+         except:
+             traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
+         # Reset state and exit
+         self.__client=None
+         self.__controller=None
          return
 
+      ### jagonzal (CAS-4292): Code below is deprecated ###
+      
       # shutdown all engines
       elist=[]
       for i in self.__engines:
@@ -667,7 +689,7 @@ class cluster(object):
          self.__init_nodes(tobeinit)
          self.__engines=self.__client.pull(['id', 'host', 'pid', 'inited'])
 
-   def __update_cluster_info(self, num_engine, work_dir=None):
+   def __update_cluster_info(self, num_engine, work_dir=None,omp_num_nthreads=1):
       '''(Internal) Construct the list of engines.
 
       @param num_engine The number of new engines 
@@ -716,6 +738,8 @@ class cluster(object):
             self.__client.execute('job=None', i)
             self.__client.execute('import signal', i)
             self.__client.execute('original_sigint_handler = signal.signal(signal.SIGINT,signal.SIG_IGN)', i)
+            # jagonzal (CAS-4276): New cluster specification file allows to automatically set the number of open MP threads
+            self.__client.execute("os.environ['OMP_NUM_THREADS']='"+str(omp_num_nthreads)+"'", i)
 
             if work_dir!=None and os.path.isdir(work_dir):
                self.__client.push(dict(work_dir=work_dir), i)
@@ -1296,6 +1320,13 @@ class cluster(object):
       '''
       return self.__client.execute(job,block=False,targets=nodes)
   
+   def execute(self,job,nodes):
+      '''execute a job on a subset of engines in blocking mode
+
+
+      '''
+      return self.__client.execute(job,block=True,targets=nodes)  
+  
    def queue_status(self):
       '''query to queue status
 
@@ -1381,6 +1412,7 @@ class cluster(object):
       '''
       self.__client.set_properties(
                 properties, targets, block)
+
 
    def keys(self):
       '''get all keys from all engines
