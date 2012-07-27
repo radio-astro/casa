@@ -155,9 +155,7 @@ class imfit_test(unittest.TestCase):
 
     def test_fit_using_full_image(self):
         '''Imfit: Fit using full image'''
-        success = True
         test = "fit_using_full_image: "
-        global msgs
         def run_fitcomponents():
             myia = iatool()
             myia.open(noisy_image)
@@ -175,7 +173,11 @@ class imfit_test(unittest.TestCase):
             else:
                 code = run_imfit
                 method += test + "imfit: "
-            res = code()
+            self._check_results(code())
+            
+    def _check_results(self, res):
+            success = True
+            global msgs
             clist = res['results']
             if (not res['converged'][0]):
                 success = False
@@ -226,7 +228,7 @@ class imfit_test(unittest.TestCase):
                 success = False
                 msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
 
-        self.assertTrue(success,msgs)
+            self.assertTrue(success,msgs)
         
     
     def test_fit_using_box(self):
@@ -1380,11 +1382,41 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(success,msgs)
         
     def test_multibeam(self):
-        myia = iatool.create()
+        myia = iatool()
         myia.open(multibeam_image)
         # just confirm it finishes successfully
         res = myia.fitcomponents()
         self.assertTrue(res["converged"].all())
+        
+    def test_strange_units(self):
+        '''Imfit: Test strange units'''
+        myia = iatool()
+        test = "test_strange_units: "
+        myia.open(noisy_image)
+        outname = "bad_units.im"
+        subim = myia.subimage(outname)
+        myia.done()
+        unit = "erg"
+        subim.setbrightnessunit(unit)
+        self.assertTrue(subim.brightnessunit() == unit)
+        subim.done()
+        def run_fitcomponents():
+            myia.open(outname)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=outname)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            self._check_results(code())
 
 def suite():
     return [imfit_test]
