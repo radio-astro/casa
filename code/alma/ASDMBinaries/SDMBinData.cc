@@ -130,13 +130,14 @@ namespace sdmbin {
 
   string SDMBinData::reasonToReject(MainRow* const mainRowPtr){
 
-    bool                  coutest=false;
+    //bool                  coutest=false;
     bool                  ok;
     string                reason = "";
     ConfigDescriptionRow* cdr    = mainRowPtr->getConfigDescriptionUsingConfigDescriptionId();
     ScanRow*              sr;
 
-    if(coutest){
+    if(verbose_){
+      cout << "SDMBinData::reasonToReject(MainRow* const mainRowPtr) : entering." << endl;
       cout<<cdr->getConfigDescriptionId().toString()<<endl;
       vector<DataDescriptionRow*> v_ddr=cdr->getDataDescriptionsUsingDataDescriptionId();
       for(unsigned int n=0; n<v_ddr.size(); n++)cout<<v_ddr[n]->getDataDescriptionId().toString()<<" ";
@@ -155,52 +156,67 @@ namespace sdmbin {
     vector<ScanIntent> v_si=sr->getScanIntent();
     ok=false;
     for(unsigned int n=0 ; n<v_si.size(); n++)if(es_si_[v_si[n]])ok=true;
-    if(!ok)return "no overlap with the scan intent set {"+es_si_.str()+"}";
+    if(!ok){
+      reason += " no overlap with the scan intent set {"+es_si_.str()+"}";
+    }
 
     // the processor type:
-    if(!es_pt_[cdr->getProcessorUsingProcessorId()->getProcessorType()])  
-      return "no overlap with the processor type set {"+es_pt_.str()+"}";
-
+    if(!es_pt_[cdr->getProcessorUsingProcessorId()->getProcessorType()]) {  
+      reason +=  " no overlap with the processor type set {"+es_pt_.str()+"}";
+    }
 
     // the correlation mode:
-    if(!es_cm_[cdr->getCorrelationMode()])
-      return "no overlap with the corretion mode set {"+es_cm_.str()+"}";
+    if(!es_cm_[cdr->getCorrelationMode()]) {
+      reason += "no overlap with the corretion mode set {"+es_cm_.str()+"}";
+    }
 
     // the spectral resolution type:
     vector<SpectralResolutionType>  v_srt;
     if (cdr->isAssocNatureExists()) v_srt=cdr->getAssocNature();
-    if(coutest)
+    if(verbose_)
       for(unsigned int n=0; n<v_srt.size(); n++)
 	cout<<"v_srt["<<n<<"]="<<Enum<SpectralResolutionType>(v_srt[n]).str()<<endl;
     ok=false;
     EnumSet<SpectralResolutionType> es_srt; es_srt.set(v_srt); v_srt = es_srt.flip().toEnumType();
-    if(coutest)
+    if(verbose_)
       for(unsigned int n=0; n<v_srt.size(); n++)
 	cout<<"v_srt["<<n<<"].flip()="<<Enum<SpectralResolutionType>(v_srt[n]).str()<<endl;
     for(unsigned int n=0; n<v_srt.size(); n++)if(es_srt_[v_srt[n]])ok=true;
-    if(!ok)return "no overlap with the spectral resolution type set {"+es_srt_.str()+"}";
-
+    if(!ok) {
+      reason += " no overlap with the spectral resolution type set {"+es_srt_.str()+"}";
+    }
 
     // the time sampling:
-    if(!es_ts_[mainRowPtr->getTimeSampling()])
-	return "no overlap with the time sampling set {"+es_ts_.str()+"}";
-
+    if(!es_ts_[mainRowPtr->getTimeSampling()]) {
+	reason += " no overlap with the time sampling set {"+es_ts_.str()+"}";
+    }
 
     // the correlation mode data subset
-    if(e_qcm_[CROSS_ONLY] && cdr->getCorrelationMode()==AUTO_ONLY)
-      return "no cross correlations";
-    if(e_qcm_[AUTO_ONLY] && cdr->getCorrelationMode()==CROSS_ONLY)
-      return "auto correlations";
+    if(e_qcm_[CROSS_ONLY] && cdr->getCorrelationMode()==AUTO_ONLY) {
+      reason += " no cross correlations";
+    }
 
+    if(e_qcm_[AUTO_ONLY] && cdr->getCorrelationMode()==CROSS_ONLY) {
+      reason += " no auto correlations";
+    }
 
 
     // the apc axis
-    EnumSet<AtmPhaseCorrection> es_apc;
-    vector<AtmPhaseCorrection>  v_apc=cdr->getAtmPhaseCorrection();
-    ok=false;
-    for(unsigned int n=0; n<v_apc.size(); n++)if(es_qapc_[v_apc[n]])ok=true;
-    if(!ok)return "no overlap with the APC set {"+es_qapc_.str()+"}";
+    // We pay attention to it if and only if the processor is not a radiometer.
+    //
+    if (processorType(mainRowPtr) != RADIOMETER) {
+      EnumSet<AtmPhaseCorrection> es_apc;
+      vector<AtmPhaseCorrection>  v_apc=cdr->getAtmPhaseCorrection();
+      ok=false;
+      for(unsigned int n=0; n<v_apc.size(); n++)if(es_qapc_[v_apc[n]])ok=true;
+      if(!ok) {
+	reason += " no overlap with the APC set {"+es_qapc_.str()+"}";
+      }
+    }
 
+    if(verbose_){
+      cout << "SDMBinData::reasonToReject(MainRow* const mainRowPtr) : exiting." << endl;
+    }
     return reason;
   }
 
@@ -277,11 +293,33 @@ namespace sdmbin {
     return true;
   }
 
+  ProcessorType SDMBinData::processorType(MainRow* const mainRowPtr) const {
+    if (verbose_) cout << "SDMBinData::processorType(MainRow* const mainRowPtr) : entering" << endl;
+    Tag cdId = mainRowPtr->getConfigDescriptionId();
+    ConfigDescriptionTable& cT = mainRowPtr->getTable().getContainer().getConfigDescription();
+    ConfigDescriptionRow* cR = cT.getRowByKey(cdId);
+    Tag pId = cR->getProcessorId();
+    ProcessorTable& pT =  mainRowPtr->getTable().getContainer().getProcessor();
+    ProcessorRow* pR = pT.getRowByKey(pId);
+    ProcessorType processorType =  mainRowPtr->getTable().getContainer().getProcessor().getRowByKey(pId)->getProcessorType();
+    return processorType;
+    if (verbose_) cout << "SDMBinData::processorType(MainRow* const mainRowPtr) : exiting" << endl;
+  }
+
   bool SDMBinData::acceptMainRow( MainRow* const mainRowPtr){
 
-    bool coutest=false;
+    //bool coutest=false;
 
-    if( reasonToReject(mainRowPtr).length() )return false;
+    if (verbose_) cout << "SDMBinData::acceptMainRow( MainRow* const mainRowPtr) : entering." << endl;
+
+    string whyToReject = reasonToReject(mainRowPtr);
+    if( whyToReject.length() ){
+      if (verbose_) {
+	cout << "Main row rejected , reason : " << whyToReject << endl;
+	cout << "SDMBinData::acceptMainRow( MainRow* const mainRowPtr) : exiting." << endl;
+      }
+      return false;
+    }
 
     ConfigDescriptionRow* cdr  = mainRowPtr->getConfigDescriptionUsingConfigDescriptionId();
 
@@ -293,7 +331,7 @@ namespace sdmbin {
 
 
     // process the config description (if not yet done) for this row:
-    Tag cdId = cdr->getConfigDescriptionId();                       if(coutest)cout<< "ici 1"<<cdId.toString() <<endl;
+    Tag cdId = cdr->getConfigDescriptionId();                       if(verbose_)cout<< "ici 1"<<cdId.toString() <<endl;
     set<Tag>::iterator
       itcdIdf=s_cdId_.find(cdId),
       itcdIde=s_cdId_.end();
@@ -302,7 +340,7 @@ namespace sdmbin {
 					       cdr->getSwitchCycleId(),
 					       cdr->getDataDescriptionId(),
 					       cdr->getCorrelationMode(),
-					       cdr->getAtmPhaseCorrection());                    if(coutest)cout << "ici 3"<<endl;
+					       cdr->getAtmPhaseCorrection());                    if(verbose_)cout << "ici 3"<<endl;
 
       unsigned int numAnt=cdr->getNumAntenna();
       vector<int>  v_phasedArrayList;  for(unsigned int na=0; na<numAnt; na++)v_phasedArrayList.push_back(0);
@@ -311,15 +349,15 @@ namespace sdmbin {
 							cdr->getFeedId(),
 							v_phasedArrayList,
 							v_antennaUsedArray,
-							dataDescriptionsSet);  if(coutest)cout << "ici 4"<<endl;
+							dataDescriptionsSet);  if(verbose_)cout << "ici 4"<<endl;
       m_cdId_baselinesSet_.insert(make_pair(cdId,baselinesSetPtr));
       s_cdId_.insert(cdId);
     }else{
       map<Tag,BaselinesSet*>::iterator itcdIdblsf=m_cdId_baselinesSet_.find(cdId);
-      if(coutest)cout<<"reuse cdId="<<cdId.toString()<<endl;
+      if(verbose_)cout<<"reuse cdId="<<cdId.toString()<<endl;
     }
 
-    if(coutest)cout << "ici 4 dataOID="<<mainRowPtr->getDataUID().getEntityId().toString()<<endl;
+    if(verbose_)cout << "ici 4 dataOID="<<mainRowPtr->getDataUID().getEntityId().toString()<<endl;
 
     int iostat = 0;
     if (bdfMemoryMapped) {
@@ -329,16 +367,18 @@ namespace sdmbin {
       iostat = attachStreamDataObject(mainRowPtr->getDataUID().getEntityId().toString());
     }
     if(iostat==0){
-      if(coutest){
+      if(verbose_){
 	cout<<"Summary of the data object properties at URI: "<<dataOID_<<endl;
 	cout<<"v_dataDump_.size()="<<v_dataDump_.size()<<endl;
 	v_dataDump_[0]->summary();
       }
     }else{
       Error(WARNING,string("No data retrieving for this SDM mainTable row"));
+      if (verbose_) cout << "SDMBinData::acceptMainRow( MainRow* const mainRowPtr) : exiting." << endl;
       return false;
     }
 
+    if (verbose_) cout << "SDMBinData::acceptMainRow( MainRow* const mainRowPtr) : exiting." << endl;
     return true;
   }
 
@@ -1065,14 +1105,12 @@ namespace sdmbin {
   }
 
   int SDMBinData::attachStreamDataObject(const string& dataOID ){
-
-    bool coutest=false;
-
-    if(coutest)cout<<"Entering  attachStreamDataObject"<<endl;
+    
+    if(verbose_)cout<<"SDMBinData::attachStreamDataObject(const string& dataOID ): entering"<<endl;
     
     sdmdosr.close();
 
-    if(coutest)cout<<"attach BLOB "<<dataOID<<endl;
+    if(verbose_)cout<<"attach BLOB "<<dataOID<<endl;
 
     // transforme le dataOID en file name (re-utilise code ds la methode beginWithMimeHeader de SDMBLOBs)  TODO
     string filename=dataOID;
@@ -1081,7 +1119,7 @@ namespace sdmbin {
     while(np!=string::npos){ np=filename.find("/",np); if(np!=string::npos){ filename.replace(np,1,"_"); np++; } }
     np=filename.find(":",0);
     while(np!=string::npos){ np=filename.find(":",np); if(np!=string::npos){ filename.replace(np,1,"_"); np++; } }
-    if(coutest)cout<<"filename="<<filename<<" execBlockDir_="<<execBlockDir_<<endl;
+    if(verbose_)cout<<"filename="<<filename<<" execBlockDir_="<<execBlockDir_<<endl;
     static DIR* dirp;
 //     ostringstream dir; dir<<execBlockDir_<<"/SDMBinaries";
     ostringstream dir; dir<<execBlockDir_<<"/ASDMBinary";
@@ -1090,12 +1128,12 @@ namespace sdmbin {
       Error(FATAL,(char *) "Could not open directory %s",dir.str().c_str());
     closedir(dirp);
     filename=dir.str()+"/"+filename;
-    if(coutest)cout<<"filename="<<filename<<endl;
+    if(verbose_)cout<<"filename="<<filename<<endl;
 
     try {
       sdmdosr.open(filename);
       dataOID_ = dataOID;
-      if(coutest){
+      if(verbose_){
 	cout<<"============================"<<endl;
 	cout<< sdmdosr.toString()<<endl;
 	cout<<"============================"<<endl;
@@ -1142,7 +1180,7 @@ namespace sdmbin {
       vector< vector< Enum<NetSideband> > > vv_e_sideband;
       vector< vector< SDMDataObject::SpectralWindow* > > vv_image;
 
-      if(coutest)cout<<"e_cm="<<e_cm.str()<<endl;
+      if(verbose_)cout<<"e_cm="<<e_cm.str()<<endl;
 
       for(unsigned int nbb=0; nbb<v_baseband.size(); nbb++){
 	vector<SDMDataObject::SpectralWindow>  v_spw = v_baseband[nbb].spectralWindows(); v_numSpectralWindow.push_back(v_spw.size());
@@ -1157,7 +1195,7 @@ namespace sdmbin {
 	  v_e_sideband.push_back(Enum<NetSideband>(v_spw[nspw].sideband()));
 	  v_image.push_back(NULL);                                   // TODO waiting for implementation
 	  v_numBin.push_back(v_spw[nspw].numBin());
-	  if(coutest)cout<<"v_spw["<<nspw<<"].numSpectralPoint()="<<v_spw[nspw].numSpectralPoint()<<endl;
+	  if(verbose_)cout<<"v_spw["<<nspw<<"].numSpectralPoint()="<<v_spw[nspw].numSpectralPoint()<<endl;
 	  v_numSpectralPoint.push_back(v_spw[nspw].numSpectralPoint());
 	  if(e_cm[AUTO_ONLY])
 	    v_numSdPolProduct.push_back(v_spw[nspw].sdPolProducts().size());
@@ -1240,7 +1278,7 @@ namespace sdmbin {
       for(unsigned int n=0; n<v_dataDump_.size(); n++)delete v_dataDump_[n];
       v_dataDump_.clear();
 
-      if(coutest)cout<<"numTime="<<numTime<<endl;
+      if(verbose_)cout<<"numTime="<<numTime<<endl;
 
       if(numTime){  // MIME content with a structure of dimensionality 0
 
@@ -1272,7 +1310,7 @@ namespace sdmbin {
 	unsigned int crossDataSize=0;       EnumSet<AxisName> es_crossDataAxes;
 
 	if((itf=m_dc_sizeAndAxes.find(FLAGS))!=ite){
-	  if(coutest)cout<<"Flags have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"Flags have been declared in the main header"<<endl;
 	  flagsSize    = itf->second.first;
 	  es_flagsAxes = itf->second.second;
 	  numFlags     = dataSubset.flags( flagsPtr );
@@ -1283,7 +1321,7 @@ namespace sdmbin {
 	}
 
 	if((itf=m_dc_sizeAndAxes.find(ACTUAL_TIMES))!=ite){
-	  if(coutest)cout<<"ActualTimes have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"ActualTimes have been declared in the main header"<<endl;
 	  actualTimesSize    = itf->second.first;
 	  es_actualTimesAxes = itf->second.second;
 	  numActualTimes     = dataSubset.actualTimes( actualTimesPtr );
@@ -1294,7 +1332,7 @@ namespace sdmbin {
 	}
 
 	if((itf=m_dc_sizeAndAxes.find(ACTUAL_DURATIONS))!=ite){
-	  if(coutest)cout<<"ActualDurations have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"ActualDurations have been declared in the main header"<<endl;
 	  actualDurationsSize    = itf->second.first;
 	  es_actualDurationsAxes = itf->second.second;
 	  numActualDurations     = dataSubset.actualDurations( actualDurationsPtr );
@@ -1305,7 +1343,7 @@ namespace sdmbin {
 	}
 
 	if((itf=m_dc_sizeAndAxes.find(CROSS_DATA))!=ite){
-	  if(coutest)cout<<"CrossData have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"CrossData have been declared in the main header"<<endl;
 	  crossDataSize    = itf->second.first;
 	  es_crossDataAxes = itf->second.second;
 	  switch(dataSubset.crossDataType()){
@@ -1331,7 +1369,7 @@ namespace sdmbin {
 	}
 
 	if((itf=m_dc_sizeAndAxes.find(ZERO_LAGS))!=ite && crossDataSize ){
-	  if(coutest)cout<<"ZeroLags have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"ZeroLags have been declared in the main header"<<endl;
 	  zeroLagsSize = itf->second.first;
 	  es_zeroLagsAxes = itf->second.second;
 	  numZeroLags = dataSubset.zeroLags( zeroLagsPtr );
@@ -1342,7 +1380,7 @@ namespace sdmbin {
 	}
 
 	if((itf=m_dc_sizeAndAxes.find(AUTO_DATA))!=ite){
-	  if(coutest)cout<<"AutoData have been declared in the main header"<<endl;
+	  if(verbose_)cout<<"AutoData have been declared in the main header"<<endl;
 	  autoDataSize    = itf->second.first;
 	  es_autoDataAxes = itf->second.second;
 	  numAutoData     = dataSubset.autoData( autoDataPtr );
@@ -1412,11 +1450,11 @@ namespace sdmbin {
 
 	  dataDumpPtr->setContextUsingProjectPath(dataSubset.projectPath());
 
-	  if(coutest)cout<<"store dataDump"<<endl;
+	  if(verbose_)cout<<"store dataDump"<<endl;
 	  v_dataDump_.push_back(dataDumpPtr);
-	  if(coutest)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
+	  if(verbose_)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
 	}
-	if(coutest)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
+	if(verbose_)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
 
       }else{
 
@@ -1435,14 +1473,14 @@ namespace sdmbin {
 // 	dumpNum      = integNumCounter_++;
 
 	const vector<SDMDataSubset>& v_dataSubset = sdmdosr.allRemainingSubsets();	
-	if(coutest)cout<<"ici 0 v_dataSubset.size()="<<v_dataSubset.size()<<endl;
+	if(verbose_)cout<<"ici 0 v_dataSubset.size()="<<v_dataSubset.size()<<endl;
 	for(unsigned int nt=0; nt<v_dataSubset.size(); nt++){
 
 	  //int nt = 0;
 	  //while (sdmdosr.hasSubset() ) {
 	  //const SDMDataSubset& currentSubset = sdmdosr.getSubset();
 	  const SDMDataSubset& currentSubset = v_dataSubset[nt];
-	  if(coutest){
+	  if(verbose_){
 	    cout<<"filename="<<filename<<endl;
 	    cout << currentSubset.toString();
 	    cout<<"ici 1"<<endl;
@@ -1450,11 +1488,11 @@ namespace sdmbin {
 
 	  dumpNum     = nt+1;  //nt++;
 
-	  timeOfInteg  = currentSubset.time();        if(coutest)cout<<"attachDataObject: "<<timeOfInteg<<endl;
-	  timeCentroid = currentSubset.time();        if(coutest)cout<<"attachDataObject: "<<timeCentroid<<endl;
-	  interval     = currentSubset.interval();    if(coutest)cout<<"attachDataObject: "<<interval<<endl;
+	  timeOfInteg  = currentSubset.time();        if(verbose_)cout<<"attachDataObject: "<<timeOfInteg<<endl;
+	  timeCentroid = currentSubset.time();        if(verbose_)cout<<"attachDataObject: "<<timeCentroid<<endl;
+	  interval     = currentSubset.interval();    if(verbose_)cout<<"attachDataObject: "<<interval<<endl;
 	  exposure     = interval;
-	  if(coutest){
+	  if(verbose_){
 	    for(unsigned int i=0; i<v_numSpectralWindow.size(); i++){
 	      for(unsigned int j=0; j<v_numSpectralWindow[i]; j++)
 		cout<<"vv_numSpectralPoint[i][j]="<<vv_numSpectralPoint[i][j]<<endl;
@@ -1486,45 +1524,45 @@ namespace sdmbin {
 	  if(e_cm[CROSS_ONLY]    )dataDumpPtr->setScaleFactor(vv_scaleFactor);
 	  if(e_cm[CROSS_AND_AUTO])dataDumpPtr->setScaleFactor(vv_scaleFactor);
 
-	  if(coutest)cout<<"m_dc_sizeAndAxes.size()="<< m_dc_sizeAndAxes.size() << endl;
+	  if(verbose_)cout<<"m_dc_sizeAndAxes.size()="<< m_dc_sizeAndAxes.size() << endl;
 	  if((itf=m_dc_sizeAndAxes.find(FLAGS))!=ite){
-	    if(coutest)cout<<"Flags have been declared in the main header"<<endl;
+	    if(verbose_)cout<<"Flags have been declared in the main header"<<endl;
 	    const unsigned int* flagsPtr;
 	    unsigned int long numFlags = currentSubset.flags( flagsPtr );
-	    if(coutest)cout<<numFlags<<" "<<itf->second.first<<endl;
+	    if(verbose_)cout<<numFlags<<" "<<itf->second.first<<endl;
 	    if(numFlags)dataDumpPtr->attachFlags( itf->second.first, itf->second.second,
 						  numFlags, flagsPtr);
 	  }
 
 	  if((itf=m_dc_sizeAndAxes.find(ACTUAL_TIMES))!=ite){
-	    if(coutest)cout<<"ActualTimes have been declared in the main header"<<endl;
+	    if(verbose_)cout<<"ActualTimes have been declared in the main header"<<endl;
 	    const int64_t* actualTimesPtr;
 	    unsigned long int numActualTimes = currentSubset.actualTimes( actualTimesPtr );
-	    if(coutest)cout<<numActualTimes<<" "<<itf->second.first<<endl;
+	    if(verbose_)cout<<numActualTimes<<" "<<itf->second.first<<endl;
 	    if(numActualTimes)dataDumpPtr->attachActualTimes( itf->second.first, itf->second.second,
 							      numActualTimes, actualTimesPtr);
 	  }
 
 	  if((itf=m_dc_sizeAndAxes.find(ACTUAL_DURATIONS))!=ite){
-	    if(coutest)cout<<"ActualDurations have been declared in the main header"<<endl;
+	    if(verbose_)cout<<"ActualDurations have been declared in the main header"<<endl;
 	    const int64_t* actualDurationsPtr;
 	    unsigned long int numActualDurations = currentSubset.actualDurations( actualDurationsPtr );
-	    if(coutest)cout<<numActualDurations<<" "<<itf->second.first<<endl;
+	    if(verbose_)cout<<numActualDurations<<" "<<itf->second.first<<endl;
 	    if(numActualDurations)dataDumpPtr->attachActualDurations( itf->second.first, itf->second.second,
 								      numActualDurations, actualDurationsPtr);
 	  }
 
 	  if((itf=m_dc_sizeAndAxes.find(ZERO_LAGS))!=ite){
-	    if(coutest)cout<<"ZeroLags have been declared in the main header"<<endl;
+	    if(verbose_)cout<<"ZeroLags have been declared in the main header"<<endl;
 	    const float* zeroLagsPtr;
 	    unsigned long int numZeroLags = currentSubset.zeroLags( zeroLagsPtr );
-	    if(coutest)cout<<numZeroLags<<" "<<itf->second.first<<endl;
+	    if(verbose_)cout<<numZeroLags<<" "<<itf->second.first<<endl;
 	    if(numZeroLags)dataDumpPtr->attachZeroLags( itf->second.first, itf->second.second,
 							numZeroLags, zeroLagsPtr);
 	  }
 
 	  if((itf=m_dc_sizeAndAxes.find(CROSS_DATA))!=ite){
-	    if(coutest)cout<<"CrossData have been declared in the main header ";
+	    if(verbose_)cout<<"CrossData have been declared in the main header ";
 	    unsigned long int numCrossData;
 	    switch(currentSubset.crossDataType()){
 	    case INT16_TYPE:
@@ -1533,8 +1571,8 @@ namespace sdmbin {
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
 							      numCrossData, crossDataPtr);
 	      }
-	      if(coutest)cout<<"SHORT_TYPE"<<endl;
-	      if(coutest)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataShort()<<endl;
+	      if(verbose_)cout<<"SHORT_TYPE"<<endl;
+	      if(verbose_)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataShort()<<endl;
 	      break;
 	    case INT32_TYPE:
 	      { const int* crossDataPtr;
@@ -1542,8 +1580,8 @@ namespace sdmbin {
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
 							      numCrossData, crossDataPtr);
 	      }
-	      if(coutest)cout<<"INT_TYPE"<<endl;
-	      if(coutest)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataLong()<<endl;
+	      if(verbose_)cout<<"INT_TYPE"<<endl;
+	      if(verbose_)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataLong()<<endl;
 	      break;
 	    case FLOAT32_TYPE:
 	      { const float* crossDataPtr;
@@ -1551,8 +1589,8 @@ namespace sdmbin {
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
 							      numCrossData, crossDataPtr);
 	      }
-	      if(coutest)cout<<"FLOAT_TYPE"<<endl;
-	      if(coutest)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataFloat()<<endl;
+	      if(verbose_)cout<<"FLOAT_TYPE"<<endl;
+	      if(verbose_)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataFloat()<<endl;
 	      break;
 	    default:
 	      Enum<PrimitiveDataType> e_pdt=currentSubset.crossDataType();
@@ -1562,17 +1600,17 @@ namespace sdmbin {
 	  }
 
 	  if((itf=m_dc_sizeAndAxes.find(AUTO_DATA))!=ite){
-	    if(coutest)cout<<"AutoData have been declared in the main header"<<endl;
+	    if(verbose_)cout<<"AutoData have been declared in the main header"<<endl;
 	    const float*      floatDataPtr=NULL;
 	    unsigned long int numFloatData = currentSubset.autoData( floatDataPtr );
-	    if(coutest)cout<<numFloatData<<" "<<itf->second.first<<"  "<<floatDataPtr<<endl;
+	    if(verbose_)cout<<numFloatData<<" "<<itf->second.first<<"  "<<floatDataPtr<<endl;
 	    if(numFloatData){
 	      if(numFloatData!=itf->second.first)
 		Error(FATAL,(char *) "Size of autoData, %d, not compatible with the declared size of %d",
 		      numFloatData,itf->second.first);
 	      dataDumpPtr->attachAutoData( itf->second.first, itf->second.second,
 					   numFloatData, floatDataPtr);
-	      if(coutest)cout<<"autoData attached,  const pointer:"<<dataDumpPtr->autoData()<<endl;
+	      if(verbose_)cout<<"autoData attached,  const pointer:"<<dataDumpPtr->autoData()<<endl;
 // 	      const long unsigned int* aptr=dataDumpPtr->flags();
 	    }else if(numFloatData==0){
 	       if(!e_cm[CROSS_ONLY])
@@ -1581,20 +1619,20 @@ namespace sdmbin {
 	    }
 	  }
 
-	  if (coutest) cout << "About to setContextUsingProjectPath" << endl;
+	  if (verbose_) cout << "About to setContextUsingProjectPath" << endl;
 	  dataDumpPtr->setContextUsingProjectPath(currentSubset.projectPath());
-	  if (coutest) cout << "Back from setContextUsingProjectPath" << endl;
-	  const unsigned int* bptr=dataDumpPtr->flags(); if(bptr==NULL)if(coutest)cout<<"No flags"<<endl;
-	  if(coutest)cout<<"store dataDump"<<endl;
+	  if (verbose_) cout << "Back from setContextUsingProjectPath" << endl;
+	  const unsigned int* bptr=dataDumpPtr->flags(); if(bptr==NULL)if(verbose_)cout<<"No flags"<<endl;
+	  if(verbose_)cout<<"store dataDump"<<endl;
 	  v_dataDump_.push_back(dataDumpPtr);
-	  if(coutest)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
+	  if(verbose_)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
 	}
-	if(coutest)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
+	if(verbose_)cout<<"v_dataDumpPtr_.size()="<< v_dataDump_.size()<<endl;
       }
-      if(coutest)cout<<"numTime="<<numTime<<", about to return 0"<<endl;
+      if(verbose_)cout<<"numTime="<<numTime<<", about to return 0"<<endl;
 
 //       for (unsigned long int nt = 0; nt <v_dataSubset.size(); nt++) {
-// 	if(coutest)cout << currentSubset.toString();
+// 	if(verbose_)cout << currentSubset.toString();
 //       }
       return 0;
     }
@@ -1604,6 +1642,7 @@ namespace sdmbin {
     catch (SDMDataObjectException e)       { cout << e.getMessage()          << endl; }
     catch (std::exception e)                    { cout << e.what()                << endl; }
     catch (...)                            { cout << "Unexpected exception." << endl; }
+    if(verbose_)cout<<"SDMBinData::attachStreamDataObject(const string& dataOID ): exiting"<<endl;
     return 1;
 }
 
@@ -1629,10 +1668,9 @@ namespace sdmbin {
   }
 
   vector<MSData*>  SDMBinData::getData( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc){
-
-    bool coutest=false;
-
-    if(coutest)
+    
+    if (verbose_) cout << "SDMBinData::getData( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc): entering" << endl;
+    if(verbose_)
       cout<<"Enter in method getData(e_qcm="<<e_qcm.str()
 	  <<",es_qapc="<<es_qapc.str()<<")"
 	  << endl;
@@ -1651,6 +1689,14 @@ namespace sdmbin {
     vector<AtmPhaseCorrection>  v_apc = cdPtr->getAtmPhaseCorrection();
     Enum<CorrelationMode>       e_cm; e_cm = cdPtr->getCorrelationMode();
 
+    EnumSet<AtmPhaseCorrection> es_qapc_uncorrected, es_qapc_old;
+;
+    es_qapc_uncorrected.fromString("AP_UNCORRECTED");
+    if (processorType(mainRowPtr_) == RADIOMETER) {
+      es_qapc_old = es_qapc_;
+      es_qapc_ = es_qapc_uncorrected;
+    }
+    
     if(!canSelect_ && (e_qcm.count() || es_qapc.count()) ){
 
       Error(FATAL,string("This method cannot be used in this context!\n Use the method with no argument getData()"));
@@ -1666,7 +1712,7 @@ namespace sdmbin {
 
     }
 
-    if(coutest){
+    if(verbose_){
       cout<<"e_qcm=  "<<e_qcm.str()  <<" e_qcm_=  "<<e_qcm_.str()  <<" e_cm="<<e_cm.str()<<endl;
       cout<<"es_qapc="<<es_qapc.str()<<" es_qapc_="<<es_qapc_.str();
       for(unsigned int n=0; n<v_apc.size(); n++)
@@ -1703,7 +1749,7 @@ namespace sdmbin {
       Error(FATAL,"Tree hierarchy not present for configDescId " + configDescriptionId.toString());
     baselinesSet_=itf->second;
 
-    if(coutest)cout<<configDescriptionId.toString()<<endl;
+    if(verbose_)cout<<configDescriptionId.toString()<<endl;
 
 
 
@@ -1738,7 +1784,7 @@ namespace sdmbin {
 //     vector<unsigned int> v_dataShape;
 //     v_msDataPtr_[n]->v_dataShape = v_dataShape;
 
-    if(coutest)cout <<"ici AA: e_qcm_="<<e_qcm_.str()<<endl;
+    if(verbose_)cout <<"ici AA: e_qcm_="<<e_qcm_.str()<<endl;
 
     for(unsigned int na=0; na<v_antSet.size(); na++)
       v_stateId.push_back(v_statePtr[na]->getStateId());
@@ -1788,11 +1834,11 @@ namespace sdmbin {
 
     if(e_cm[CROSS_ONLY]==false && e_qcm_[CROSS_ONLY]==false ){       // retrieve only AUTO_DATA
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
-	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());               if(coutest)cout<<timeOfDump<<" ns"<<endl;
-	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());       if(coutest)cout<<timeCentroidOfDump.toString()<<" ns"<<endl;
-	timeMJD           = timeOfDump.getMJD();                              if(coutest)cout<<timeMJD<<" h = "<<86400.*timeMJD<<" s"<<endl;
-	interval          = (double)v_dataDump_[nt]->interval()/1000000000LL; if(coutest)cout<<interval<<" s"<<endl;
-	timeCentroidMJD   = timeCentroidOfDump.getMJD();                      if(coutest)cout<< timeCentroidMJD<<endl;
+	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());               if(verbose_)cout<<timeOfDump<<" ns"<<endl;
+	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());       if(verbose_)cout<<timeCentroidOfDump.toString()<<" ns"<<endl;
+	timeMJD           = timeOfDump.getMJD();                              if(verbose_)cout<<timeMJD<<" h = "<<86400.*timeMJD<<" s"<<endl;
+	interval          = (double)v_dataDump_[nt]->interval()/1000000000LL; if(verbose_)cout<<interval<<" s"<<endl;
+	timeCentroidMJD   = timeCentroidOfDump.getMJD();                      if(verbose_)cout<< timeCentroidMJD<<endl;
 	exposure          = (double)v_dataDump_[nt]->exposure()/1000000000LL;
 	floatDataDumpPtr_ = v_dataDump_[nt]->autoData();             // used by getData(na, nfe, ndd, nbi)
 	//cout << "floatDataDumpPtr_ = " << floatDataDumpPtr_ << endl;
@@ -1814,7 +1860,7 @@ namespace sdmbin {
 // 	}
 
 
-	if(coutest)cout <<"ici BB"<<endl;
+	if(verbose_)cout <<"ici BB"<<endl;
 
 	vector<AtmPhaseCorrection> v_uapc; v_uapc.push_back(AP_UNCORRECTED);
 
@@ -1826,7 +1872,7 @@ namespace sdmbin {
 	      numBin = baselinesSet_->numBin(ndd);
 	      numPol = baselinesSet_->numPol(baselinesSet_->getBasebandIndex(ndd));
 	      if(numPol==4)numPol=3;                                 // if XX,XY,YX,YY then auto XX,XY,YY 
-	      if(coutest)cout<<"numPol="<<numPol
+	      if(verbose_)cout<<"numPol="<<numPol
 			     <<"  na="  <<na
 			     <<" ant="  <<v_antSet[na].getTagValue()
 			     <<endl;
@@ -1877,7 +1923,7 @@ namespace sdmbin {
 		  msDataPtr_->projectPath        = v_projectNodes;
 		  v_msDataPtr_.push_back(msDataPtr_);                      // store in vector for export
 		}
-		if(coutest)cout << "B/ msDataPtr_->numData=" <<msDataPtr_->numData << endl;
+		if(verbose_)cout << "B/ msDataPtr_->numData=" <<msDataPtr_->numData << endl;
 	      }
 	    }
 	  }
@@ -1885,7 +1931,7 @@ namespace sdmbin {
       }
     }
 
-    if(coutest)cout <<"ici CC: "<<e_qcm_.str()<<endl;
+    if(verbose_)cout <<"ici CC: "<<e_qcm_.str()<<endl;
     vector<AtmPhaseCorrection> v_atmPhaseCorrection = cdPtr->getAtmPhaseCorrection();
     bool queryCrossData = false;
     if(e_qcm_[CROSS_ONLY])     queryCrossData=true;
@@ -1895,12 +1941,12 @@ namespace sdmbin {
 
       // select the queried apc
       vector<unsigned int> v_napc;
-      EnumSet<AtmPhaseCorrection> es_apc; es_apc.set(v_atmPhaseCorrection);    if(coutest)cout<<es_apc.str()<<endl;
-      if(coutest)cout <<"es_apc from BLOB: " << es_apc.str()   << endl;
-      if(coutest)cout <<"es_qapc_ queried: " << es_qapc_.str() << endl;
+      EnumSet<AtmPhaseCorrection> es_apc; es_apc.set(v_atmPhaseCorrection);    if(verbose_)cout<<es_apc.str()<<endl;
+      if(verbose_)cout <<"es_apc from BLOB: " << es_apc.str()   << endl;
+      if(verbose_)cout <<"es_qapc_ queried: " << es_qapc_.str() << endl;
       for(unsigned int napc=0; napc<v_atmPhaseCorrection.size(); napc++)
 	if(es_qapc_[v_atmPhaseCorrection[napc]])v_napc.push_back(napc);
-      if(coutest)for(unsigned int n=0; n<v_napc.size(); n++)cout<<"v_napc["<<n<<"]="<<v_napc[n]<<endl;
+      if(verbose_)for(unsigned int n=0; n<v_napc.size(); n++)cout<<"v_napc["<<n<<"]="<<v_napc[n]<<endl;
 
       if(!v_napc.size()){
 	Error(WARNING,(char *) "No visibilities with AtmPhaseCorrection in the set {%s}",
@@ -1908,17 +1954,17 @@ namespace sdmbin {
 	return v_msDataPtr_;
       }
 
-      if(coutest)cout<<"ici DD"<<endl;
+      if(verbose_)cout<<"ici DD"<<endl;
 
 
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
-	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());                if(coutest)cout<<timeOfDump<<endl;
-	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());        if(coutest)cout<< timeCentroidOfDump.toString() <<endl;
-	timeMJD           = timeOfDump.getMJD();                               if(coutest)cout<<timeMJD<<" h"<<endl;
+	timeOfDump        = ArrayTime((int64_t)v_dataDump_[nt]->time());                if(verbose_)cout<<timeOfDump<<endl;
+	timeCentroidOfDump= ArrayTime((int64_t)v_dataDump_[nt]->timeCentroid());        if(verbose_)cout<< timeCentroidOfDump.toString() <<endl;
+	timeMJD           = timeOfDump.getMJD();                               if(verbose_)cout<<timeMJD<<" h"<<endl;
 	interval          = (double)v_dataDump_[nt]->interval()/1000000000LL;
-	timeCentroidMJD   = timeCentroidOfDump.getMJD();                       if(coutest)cout<< timeCentroidMJD<<" h"<<endl;
+	timeCentroidMJD   = timeCentroidOfDump.getMJD();                       if(verbose_)cout<< timeCentroidMJD<<" h"<<endl;
 	exposure          = (double)v_dataDump_[nt]->exposure()/1000000000LL;;
-	if(coutest)cout<<"ici DD 1"<<endl;
+	if(verbose_)cout<<"ici DD 1"<<endl;
 	shortDataPtr_ = NULL;
 	longDataPtr_  = NULL;
 	floatDataPtr_ = NULL;
@@ -1930,7 +1976,7 @@ namespace sdmbin {
 	  floatDataPtr_    = v_dataDump_[nt]->crossDataFloat();
 	else
 	  Error(FATAL, string("Cross data typed float not yet supported"));
-	if(coutest)cout<<"ici DD 2"<<endl;
+	if(verbose_)cout<<"ici DD 2"<<endl;
 	unsigned int scn=0;
 	for(unsigned int na1=0; na1<v_antSet.size(); na1++){
 	  // we will assume that na2 has the same stateId (perhaps we should return a vector?)!
@@ -1938,20 +1984,20 @@ namespace sdmbin {
 	  for(unsigned int na2=na1+1; na2<v_antSet.size(); na2++){
 	    for(unsigned int nfe=0; nfe<numFeed; nfe++){
 	      for(unsigned int ndd=0; ndd<v_ddList.size(); ndd++){
-		if(coutest)cout<<"ici DD 3   numApc="<<baselinesSet_->numApc()<<endl;
+		if(verbose_)cout<<"ici DD 3   numApc="<<baselinesSet_->numApc()<<endl;
 		numBin = baselinesSet_->numBin(ndd);
 		numPol = baselinesSet_->numPol(baselinesSet_->getBasebandIndex(ndd));   // nb of pol product (max is 4)
-		if(coutest)cout<<"ici DD 4   numBin="<<numBin<<"  numPol="<<numPol<<endl;
+		if(verbose_)cout<<"ici DD 4   numBin="<<numBin<<"  numPol="<<numPol<<endl;
 		v_dataShape[0]=baselinesSet_->numPol(ndd);
 		v_dataShape[1]=baselinesSet_->numChan(ndd);
 		v_dataShape[2]=baselinesSet_->numApc();
 		v_dataShape[2]=1;               // qapc being not an EnumSet (MS limitation for floatData column)
 		for(unsigned int nbi=0; nbi<numBin; nbi++){
-		  if(coutest){
+		  if(verbose_){
 		    cout<<"timeCentroidMJD="<<timeCentroidMJD<<endl;
 		  }
 		  // the data and binary meta-data
-		  if (coutest) {
+		  if (verbose_) {
 		    cout << "nt = " << nt << endl;
 		    cout << "size of v_dataDump_ = " << v_dataDump_.size() << endl;
 		  }
@@ -1971,7 +2017,7 @@ namespace sdmbin {
 		  msDataPtr_->timeCentroid  = 86400.*timeCentroidMJD; // default value would there be no bin actualTimes
 		  msDataPtr_->exposure      = exposure;               // default value would there be no bin actualDurations
 		  msDataPtr_->flag          = 0;                      // default value is "false"  would there be no bin flags
-		  if(coutest)cout<<"ici DD 7 msDataPtr_->numData="<<msDataPtr_->numData<<endl;
+		  if(verbose_)cout<<"ici DD 7 msDataPtr_->numData="<<msDataPtr_->numData<<endl;
 		  // the associated SDM meta-data
 		  if(msDataPtr_->numData>0){
 		    msDataPtr_->processorId          = cdPtr->getProcessorId().getTagValue();
@@ -2000,7 +2046,7 @@ namespace sdmbin {
 		  }
 		  // store in vector for export
 		  if(msDataPtr_->numData>0)v_msDataPtr_.push_back(msDataPtr_);
-		  if(coutest)cout << "A/ msDataPtr_->numData=" << msDataPtr_->numData << endl;
+		  if(verbose_)cout << "A/ msDataPtr_->numData=" << msDataPtr_->numData << endl;
 		  scn++;
 		}
 	      }
@@ -2008,11 +2054,15 @@ namespace sdmbin {
 	  }
 	}
       }
-      if(coutest)cout<<"v_msDataPtr_.size()="<< v_msDataPtr_.size() << endl;
+      if(verbose_)cout<<"v_msDataPtr_.size()="<< v_msDataPtr_.size() << endl;
     }
 
-
     detachDataObject();
+    if (processorType(mainRowPtr_) == RADIOMETER) {
+      es_qapc_ = es_qapc_old;
+    }
+
+    if (verbose_) cout << "SDMBinData::getData( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc): exiting" << endl;
     return v_msDataPtr_;
   }
 
@@ -2397,8 +2447,6 @@ namespace sdmbin {
 
   const VMSData* SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc){
 
-    //bool coutest=false;
-
     if (verbose_) cout << "SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc) : entering." << endl;
 
     if(v_msDataPtr_.size()>0){
@@ -2530,7 +2578,7 @@ namespace sdmbin {
 
 
   const VMSData* SDMBinData::getDataCols(){
-
+    if (verbose_) cout << "SDMBinData::getDataCols() : entering." << endl; 
     Enum<CorrelationMode>       e_qcm;
     EnumSet<AtmPhaseCorrection> es_qapc;
     if(canSelect_){
@@ -2538,7 +2586,9 @@ namespace sdmbin {
       e_qcm   = e_qcm_;
       es_qapc = es_qapc_;
     }
-    return getDataCols( e_qcm, es_qapc );
+    const VMSData* result = getDataCols( e_qcm, es_qapc );
+    if (verbose_) cout << "SDMBinData::getDataCols() : exiting." << endl; 
+    return result;
   }
 
   void  SDMBinData::deleteMsData(MSData* msDataPtr){
