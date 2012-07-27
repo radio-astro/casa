@@ -618,6 +618,9 @@ class SubMS
   // Sets mapper to to a map from the distinct values of inv, in increasing
   // order, to 0, 1, 2, ..., mapper.size() - 1.
   static void make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv);
+  // Sets mapper to form a map from inv whose elements are mapped values. It skips
+  // to store in mapper if the value is -1
+  static void make_map2(std::map<Int, Int>& mapper, const Vector<Int>& inv);
 
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 

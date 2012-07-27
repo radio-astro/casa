@@ -1832,6 +1832,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     time.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
     msField.time().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refstr);
 
+    // fieldRelabel_p size: nrow of a input MS, -1 for unselected field ids 
     fieldRelabel_p.resize(mscIn_p->field().nrow());
     fieldRelabel_p.set(-1);
 
@@ -6951,8 +6952,8 @@ void SubMS::fill_vbmaps(std::map<VisBufferComponents::EnumType, std::map<Int, In
 
   if(fieldid_p.nelements() < mscIn_p->field().nrow()){
     std::map<Int, Int> fldMapper;
-
-    make_map(fldMapper, fieldRelabel_p);
+    
+    make_map2(fldMapper, fieldRelabel_p);
     vbmaps[VisBufferComponents::FieldId] = fldMapper;
   }
 
@@ -8324,6 +8325,27 @@ void SubMS::make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv)
     ++remaval;
   }
 }
+
+void SubMS::make_map2(std::map<Int, Int>& mapper, const Vector<Int>& inv)
+{
+  LogIO os(LogOrigin("SubMS", "make_map2()"));
+  // This method assumes the int vector contains mapping scheme already
+  // if inv[i] is not selected one => -1 so should be skipped
+  // ith vector element is mapped value of index i
+  // Created for remapping of field Ids with fieldRelable_p (TT 2012.07.27)
+  for(Vector<Int>::const_iterator vs_iter = inv.begin();
+     vs_iter != inv.end(); ++vs_iter){
+    if (*vs_iter!=-1) {
+      Int dist=std::distance(inv.begin(),vs_iter);
+      mapper.insert(std::make_pair(dist, *vs_iter));
+      os << LogIO::DEBUG1
+         << " *vs_iter="<< *vs_iter
+         << " index="<< dist 
+         << LogIO::POST;
+    }
+  }
+}
+  //
 
 void SubMS::remap(Vector<Int>& col, const Vector<Int>& mapper)
 {
