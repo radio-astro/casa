@@ -86,7 +86,7 @@ class vishead_test(unittest.TestCase):
         if(os.path.exists(input_file)):
             os.system('rm -rf ' +input_file)
 
-        os.system('cp -rL ' +datapath + input_file +' ' + input_file)
+        os.system('cp -RL ' +datapath + input_file +' ' + input_file)
         default('vishead')
 
     def tearDown(self):
