@@ -100,12 +100,8 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
-            #Currently only channel based flag is allowed
-            # so make sure the input data is channel 
+
             unit_in=s.get_unit()
-            #if unit_in!='channel':
-            #    s.set_unit('channel')
-	    
 	    # set default spectral axis unit
 	    if ( specunit != '' ):
 		    s.set_unit(specunit)

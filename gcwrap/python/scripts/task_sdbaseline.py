@@ -143,7 +143,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			else:
 				# Unknown telescope type
 				casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
-		
+
+		unit_in = s.get_unit()
 		# set default spectral axis unit
 		if ( specunit != '' ):
 			s.set_unit(specunit)
@@ -357,6 +358,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			outform = 'ASAP'
 			spefile = project
 
+		#restore the original spectral axis unit
+		s.set_unit(unit_in)
 		#restore the original moleculeID column
 		if modified_molid:
 			s._setmolidcol_list(molids)
