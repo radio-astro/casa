@@ -525,17 +525,25 @@ class cluster(object):
              del self.__client
          except:
              traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
+         # Update cluster info
+         self.__engines=self.__update_cluster_info(len(self.__engines))
          # Remove initialization/shut-down scripts
          try:
              os.remove(self.__ipythondir+'/'+self.__cluster_rc_file)
              os.remove(self.__ipythondir+'/'+self.__start_engine_file)
              os.remove(self.__ipythondir+'/'+self.__stop_node_file)
              os.remove(self.__ipythondir+'/'+self.__stop_controller_file)
+             
+             os.remove(self.__prefix+self.__cluster_rc_file)
+             os.remove(self.__prefix+self.__start_engine_file)            
          except:
              traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
-         # Reset state and exit
+         # Reset state
          self.__client=None
-         self.__controller=None
+         self.__controller=None             
+         # jagonzal (CAS-4370): Remove all the ipcontroller/ipengine files because
+         # otherwise it might confuse future cluster/MultiEngineClient instances
+         self.wash_logs()
          return
 
       ### jagonzal (CAS-4292): Code below is deprecated ###
@@ -586,9 +594,10 @@ class cluster(object):
          #print "no wash because there is a running controller"
          return True
 
-      os.system("rm -rf %s/log/casacontroller*" % self.__ipythondir)
-      os.system("rm -rf %s/log/casaengine*" % self.__ipythondir)
-      os.system("rm -rf %s/log/ipcontroller*" % self.__ipythondir)
+      # jagonzal (CAS-4370): Remove all the ipcontroller/ipengine files because
+      # otherwise it might confuse future cluster/MultiEngineClient instances
+      os.system("rm -rf %s/log/*" % self.__ipythondir)
+      os.system("rm -rf %s/security/*" % self.__ipythondir)
 
    def __init_nodes(self, i):
      '''(Internal) Initialize engines
