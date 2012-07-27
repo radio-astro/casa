@@ -79,7 +79,7 @@ class test_simplecluster(unittest.TestCase):
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]==self.ncpu)
+        self.assertTrue(cluster_list[0][1]<=self.ncpu)
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()
@@ -92,7 +92,7 @@ class test_simplecluster(unittest.TestCase):
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]==self.ncpu)
+        self.assertTrue(cluster_list[0][1]<=self.ncpu)
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()        
@@ -105,7 +105,7 @@ class test_simplecluster(unittest.TestCase):
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]==int(0.5*self.ncpu))
+        self.assertTrue(cluster_list[0][1]<=int(0.5*self.ncpu))
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()    
@@ -175,7 +175,8 @@ class test_simplecluster(unittest.TestCase):
         self.initCluster('userMonitorFile.log')
                 
         state = self.cluster.show_state()
-        for engine in range(self.ncpu):
+        cluster_list = self.cluster.get_hosts()
+        for engine in range(cluster_list[0][1]):
             self.assertTrue(state[self.host][engine].has_key('Status'))
             self.assertTrue(state[self.host][engine].has_key('Sub-MS'))
             self.assertTrue(state[self.host][engine].has_key('Read'))
