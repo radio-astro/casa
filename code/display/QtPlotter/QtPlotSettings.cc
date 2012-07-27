@@ -24,9 +24,11 @@
 //#
 
 #include <display/QtPlotter/QtPlotSettings.h>
+#include <display/QtPlotter/conversion/Converter.h>
 #include <assert.h>
 #include <QtGui>
 namespace casa { 
+
 
 QtPlotSettings::QtPlotSettings()
 {
@@ -37,7 +39,6 @@ QtPlotSettings::QtPlotSettings()
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		minX[axisIndex] = TICK_MIN;
 		maxX[axisIndex] = TICK_MAX;
-		//numXTicks[axisIndex] = TICK_COUNT;
 	}
 	numXTicks = TICK_COUNT;
     minY = TICK_MIN;
@@ -45,13 +46,16 @@ QtPlotSettings::QtPlotSettings()
     numYTicks = TICK_COUNT;
 }
 
-void QtPlotSettings::scroll(int dx, int dy)
-{
+void QtPlotSettings::scroll(int dx, int dy){
 	for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		double stepX = spanX( axisIndex ) / numXTicks/*[i]*/;
 		minX[i] += dx * stepX;
 		maxX[i] += dx * stepX;
+		if ( axisIndex == QtPlotSettings::xBottom ){
+			originalMinX = minX[i];
+			originalMaxX = maxX[i];
+		}
 	}
 
     double stepY = spanY() / numYTicks;
@@ -59,48 +63,55 @@ void QtPlotSettings::scroll(int dx, int dy)
     maxY += dy * stepY;
 }
 
-void QtPlotSettings::zoomOut( double zoomFactor ){
+void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		double prevSpanX = spanX(axisIndex);
 		minX[i] = minX[i] - zoomFactor * prevSpanX;
 		maxX[i] = maxX[i] + zoomFactor * prevSpanX;
+		if ( axisIndex == QtPlotSettings::xBottom ){
+			originalMinX = minX[i];
+			originalMaxX = maxX[i];
+		}
 	}
 	double prevSpanY = spanY();
 	minY = minY - zoomFactor * prevSpanY;
 	maxY = maxY + zoomFactor * prevSpanY;
-	adjust();
+	adjust( topUnits, bottomUnits );
 }
 
-void QtPlotSettings::zoomIn( double zoomFactor ){
+void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		double prevSpanX = spanX( axisIndex );
 		minX[i] = minX[i] + zoomFactor * prevSpanX;
 		maxX[i] = maxX[i] - zoomFactor * prevSpanX;
+		if ( axisIndex == QtPlotSettings::xBottom ){
+			originalMinX = minX[i];
+			originalMaxX = maxX[i];
+		}
 	}
 	double prevSpanY = spanY();
 	minY = minY + zoomFactor * prevSpanY;
 	maxY = maxY - zoomFactor * prevSpanY;
-	adjust();
+	adjust( topUnits, bottomUnits );
 }
 
-void QtPlotSettings::adjust(){
+void QtPlotSettings::adjust( const QString& topUnits, const QString& bottomUnits){
 	//Adjust the bottom axis allowing it to set the number of ticks.
 	adjustAxis( minX[0], maxX[0], numXTicks);
 
-	//Adjust the top axis using the same number of ticks.  Use the
-	//percentage change adjustment to the bottom axis to adjust the
-	//top axis min and max by the same amount.
-	adjustAxisTop( minX[1], maxX[1]);
+	//Adjust the top axis using the same number of ticks.  Use a
+	//converter to get its min and max based on the min and max of
+	//the bottom axis.
+	adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits);
 
 	//Now adjust the y-axis
     adjustAxis(minY, maxY, numYTicks);
 }
 
 void QtPlotSettings::adjustAxis(double &min, double &max,
-                                   int &numTicks)
-{
+                                   int &numTicks ){
     const int MinTicks = 4;
     double grossStep = fabs(max - min) / MinTicks;
     double step = std::pow(10, floor(log10(grossStep)));
@@ -113,24 +124,59 @@ void QtPlotSettings::adjustAxis(double &min, double &max,
     numTicks = (int)fabs(ceil(max / step) - floor(min / step));
     double newMin = floor(min / step) * step;
     double newMax = ceil(max / step) * step;
-    percentMinXChange = (min - newMin)/ min;
-    percentMaxXChange = (newMax - max)/ max;
+    minPercentage = (min - newMin) / (max - min);
+    maxPercentage = (newMax - max) / (max - min );
     min = newMin;
     max = newMax;
 }
 
-void QtPlotSettings::adjustAxisTop(double &min, double &max)
+
+
+void QtPlotSettings::adjustAxisTop(double &min, double &max,
+		const QString& topUnits, const QString& bottomUnits)
 {
-    min = min - percentMinXChange * min;
-    max = max + percentMaxXChange * max;
+	Converter* converter = Converter::getConverter( bottomUnits, topUnits);
+	//Top axis is not channels
+	if ( topUnits != "" ){
+		min = converter->convert( minX[QtPlotSettings::xBottom] );
+		max = converter->convert( maxX[QtPlotSettings::xBottom] );
+	}
+	//Top axis is channels, but bottom axis is not
+	else if ( topUnits == "" && bottomUnits != "" ){
+		//Run fake values through adjust so we have accurate percentages
+		double fakeMin = originalMinX;
+		double fakeMax = originalMaxX;
+		int fakeTicks = 0;
+		adjustAxis( fakeMin, fakeMax, fakeTicks );
+		double newMin = min - minPercentage * (max - min);
+		double newMax = max + maxPercentage * (max - min);
+		min = newMin;
+		max = newMax;
+	}
+	//Both axis are using channels
+	else {
+		min = minX[QtPlotSettings::xBottom];
+		max = maxX[QtPlotSettings::xBottom];
+	}
+	delete converter;
+	if ( bottomUnits == ""){
+		minPercentage = 0;
+		maxPercentage = 0;
+	}
 }
 
 void QtPlotSettings::setMinX( AxisIndex index, double value ){
  	minX[static_cast<int>(index)] = value;
+ 	if ( index == QtPlotSettings::xBottom ){
+ 		originalMinX = value;
+ 	}
 }
 
 void QtPlotSettings::setMaxX( AxisIndex index, double value ){
      maxX[static_cast<int>(index)] = value;
+     if ( index == QtPlotSettings::xBottom ){
+    	 originalMaxX = value;
+     }
 }
 
 void QtPlotSettings::setMinY( double value ){

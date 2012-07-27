@@ -40,6 +40,7 @@
 //# this include:
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String WCAxisLabeller::LABEL_CHAR_SIZE = "labelcharsize";

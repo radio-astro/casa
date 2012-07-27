@@ -24,15 +24,13 @@
 //#
 
 #include "ConverterWavelengthFrequency.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/conversion/ConverterFrequency.h>
 #include <QDebug>
 #include <assert.h>
 namespace casa {
 
-ConverterWavelengthFrequency::ConverterWavelengthFrequency(const QString& oldUnits,
-		const QString& newUnits, SpectralCoordinate* spectralCoordinate ) :
-		ConverterWavelength( oldUnits, newUnits, spectralCoordinate ){
+ConverterWavelengthFrequency::ConverterWavelengthFrequency(const QString& oldUnits,const QString& newUnits) :
+		ConverterWavelength( oldUnits, newUnits ){
 }
 
 Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldValues ){
@@ -40,9 +38,9 @@ Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldV
 	bool wavelengthRecognized = setWavelengthUnits( oldUnits );
 	bool successfulConversion = false;
 	if ( wavelengthRecognized ){
-		successfulConversion = spectralCoordinate->wavelengthToFrequency( resultValues, oldValues );
+		successfulConversion = spectralCoordinate.wavelengthToFrequency( resultValues, oldValues );
 		if ( successfulConversion ){
-			Vector<String> coordUnits = spectralCoordinate->worldAxisUnits();
+			Vector<String> coordUnits = spectralCoordinate.worldAxisUnits();
 			assert ( coordUnits.size() == 1 );
 			String coordUnit = coordUnits[0];
 			QString coordUnitStr( coordUnit.c_str());

@@ -32,6 +32,7 @@
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/DisplayDatas/DisplayData.h>
+#include <display/DisplayDatas/AxesDisplayData.h>
 #include <display/DisplayEvents/PCITFiddler.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/DisplayEvents/MWCPolylineTool.h>
@@ -1098,7 +1099,6 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
   // itself (e.g. via scripting or save-restore); that will assure that
   // the options gui does receive all option updates (via the optionsChanged
   // signal) and updates its user interface accordingly.
-  
   Record chgdOpts;
   try {
     
@@ -1647,12 +1647,18 @@ void QtDisplayPanel::setPanelGeometry( PanelDisplay* pd, float orgn, float siz )
 void QtDisplayPanel::setLabelFontSize(  ){
     //Try to set an appropriate axis font based on the number of
 	//plots we are displaying
-	float defaultAxisLabelSize = 1.7f;
+
+	//Changed from hard-coded 1.7f to a defined constant in response
+	//to a defect.  AxisDisplayData defines a default character size (currently 1.2f)
+	//that is used by the viewer when it first comes up.  The character size "jumped" from what
+	//was originally displayed when the change defined here took effect for the first
+	//time.  The constant defined is AxisDisplayData should be changed if a larger
+	//initial character size is desired.
+	float defaultAxisLabelSize = AxesDisplayData::AXIS_LABEL_DEFAULT_CHAR_SIZE;//Was 1.7
 	int rowCount = pd_->getRowCount();
 	int columnCount = pd_->getColumnCount();
 	int divisions = max(rowCount, columnCount);
 	float adjustedAxisLabelSize = defaultAxisLabelSize /divisions;
-
 	//optns.define( QtDisplayData::WEDGE_LABEL_CHAR_SIZE, adjustedAxisLabelSize );
 	List<DisplayData*>* rdds = pd_->displayDatas();
 	if ( rdds -> len() > 0 ){

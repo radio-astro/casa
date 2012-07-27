@@ -24,17 +24,16 @@
 //#
 
 #include "ConverterFrequency.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <QDebug>
 namespace casa {
 
-ConverterFrequency::ConverterFrequency(const QString& oldUnits, const QString& newUnits, SpectralCoordinate* spectralCoordinate) :
-	Converter( oldUnits, newUnits, spectralCoordinate ){
+ConverterFrequency::ConverterFrequency(const QString& oldUnits, const QString& newUnits) :
+	Converter( oldUnits, newUnits ){
 }
 
 double ConverterFrequency::toPixel( double value ) {
 	Double pixelValue;
-	Vector<String> spectralUnits = spectralCoordinate->worldAxisUnits();
+	Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
 	String spectralUnit = spectralUnits[0];
 	QString spectralUnitStr( spectralUnit.c_str());
 	if ( spectralUnitStr != oldUnits ){
@@ -43,7 +42,7 @@ double ConverterFrequency::toPixel( double value ) {
 		convertFrequency( freqValues, oldUnits, spectralUnitStr );
 		value = freqValues[0];
 	}
-	spectralCoordinate->toPixel( pixelValue, value );
+	spectralCoordinate.toPixel( pixelValue, value );
 	return pixelValue;
 }
 

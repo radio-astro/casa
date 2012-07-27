@@ -29,25 +29,24 @@
 #include <QList>
 #include <QString>
 #include <casa/Arrays/Vector.h>
-
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 namespace casa {
-
-class SpectralCoordinate;
 
 class Converter {
 public:
-	Converter( const QString& oldUnits, const QString& newUnits, SpectralCoordinate* spectralCoordinate );
+	Converter( const QString& oldUnits, const QString& newUnits);
 
 	//Factory for producing the appropriate converter.
 	//Note:  user is responsible for deleting the converter.
-	static Converter* getConverter( const QString& oldUnits,
-				const QString& newUnits, SpectralCoordinate* spectralCoordinate );
-
+	static Converter* getConverter( const QString& oldUnits,const QString& newUnits );
+	static void setSpectralCoordinate( SpectralCoordinate coordinate );
 	static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex);
 
 	bool setVelocityUnits( const QString& units );
 	bool setWavelengthUnits( const QString& units );
 	QString getNewUnits() const;
+	static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
+
 
 	//Abstract methods to be implemented by subclasses.
 	//virtual float convert( float oldValue ) const = 0;
@@ -60,9 +59,10 @@ protected:
 	static const QList<QString> FREQUENCY_UNITS;
 	static const QList<QString> WAVELENGTH_UNITS;
 	static const QList<QString> VELOCITY_UNITS;
+	static const QList<QString> BEAM_UNITS;
 	QString oldUnits;
 	QString newUnits;
-	SpectralCoordinate* spectralCoordinate;
+	static SpectralCoordinate spectralCoordinate;
 	typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
 
 private:

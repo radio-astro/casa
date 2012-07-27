@@ -33,7 +33,7 @@ namespace casa {
 //used by the spectral axis.
 class ConverterChannel : public Converter {
 public:
-	ConverterChannel( SpectralCoordinate* spectralCoordinate );
+	ConverterChannel( const QString& oldUnits, const QString& newUnits );
 
 	virtual double toPixel( double value );
 	virtual Vector<double> convert( const Vector<double>& oldValues );

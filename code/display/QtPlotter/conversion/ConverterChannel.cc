@@ -24,31 +24,40 @@
 //#
 
 #include "ConverterChannel.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <QDebug>
 namespace casa {
 
-ConverterChannel::ConverterChannel(SpectralCoordinate* spectralCoordinate) : Converter( "", "", spectralCoordinate){
-	Vector<String> newUnitVector = spectralCoordinate->worldAxisUnits();
-	newUnits = newUnitVector[0].c_str();
-	oldUnits = "channels";
+ConverterChannel::ConverterChannel(const QString& oldUnits, const QString& newUnits) :
+		Converter( oldUnits, newUnits){
+
+	//Old units will be channels.
+	//New units could be anything.
+
 }
 
 
 double ConverterChannel::toPixel( double value ){
 	Double pixelValue;
-	spectralCoordinate->toPixel( pixelValue, value );
+	spectralCoordinate.toPixel( pixelValue, value );
 	return pixelValue;
 }
 
 Vector<double> ConverterChannel::convert( const Vector<double>& oldValues ){
 	Vector<double> resultValues( oldValues.size());
-
-	for ( int i = 0; i < resultValues.size(); i++ ){
+	for ( int i = 0; i < static_cast<int>(resultValues.size()); i++ ){
 		Double result;
-		bool correct = spectralCoordinate->toWorld( result, oldValues[i]);
+		bool correct = spectralCoordinate.toWorld( result, oldValues[i]);
 		if ( correct ){
-			resultValues[i] = result;
+			Vector<String> worldUnitsVector = spectralCoordinate.worldAxisUnits();
+			QString worldUnit(worldUnitsVector[0].c_str());
+			if ( worldUnit == newUnits ){
+				resultValues[i] = result;
+			}
+			else {
+				Converter* helper = Converter::getConverter( worldUnit, newUnits);
+				resultValues[i] = helper->convert( result );
+				delete helper;
+			}
 		}
 		else {
 			qDebug() << "Could not convert channel="<<oldValues[i];
@@ -58,9 +67,10 @@ Vector<double> ConverterChannel::convert( const Vector<double>& oldValues ){
 }
 
 double ConverterChannel::convert ( double oldValue ){
-	Double worldValue;
-	spectralCoordinate->toWorld( worldValue, oldValue );
-	return worldValue;
+	Vector<double> oldValues(1);
+	oldValues[0] = oldValue;
+	Vector<double> newValues = convert( oldValues );
+	return newValues[0];
 }
 
 ConverterChannel::~ConverterChannel() {

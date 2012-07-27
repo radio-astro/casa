@@ -97,7 +97,11 @@ p, li { white-space: pre-wrap; }
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="axisUnitsComboBox"/>
+      <widget class="QComboBox" name="axisUnitsComboBox">
+       <property name="toolTip">
+        <string>Select the x-axis units.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_6">
@@ -114,6 +118,10 @@ p, li { white-space: pre-wrap; }
      </item>
      <item>
       <widget class="QCheckBox" name="coordinateCheckBox">
+       <property name="toolTip">
+        <string>If this box is checked the full width at half maximum (FWHM)
+values of all the estimate(s) will be the same.</string>
+       </property>
        <property name="text">
         <string>Coordinate FWHM</string>
        </property>
@@ -193,6 +201,9 @@ p, li { white-space: pre-wrap; }
      </item>
      <item>
       <widget class="QPushButton" name="searchButton">
+       <property name="toolTip">
+        <string>Search for molecular lines.</string>
+       </property>
        <property name="text">
         <string>Search...</string>
        </property>
@@ -203,6 +214,9 @@ p, li { white-space: pre-wrap; }
      </item>
      <item>
       <widget class="QPushButton" name="clearButton">
+       <property name="toolTip">
+        <string>Clear the plots.</string>
+       </property>
        <property name="text">
         <string>Clear...</string>
        </property>
@@ -210,6 +224,10 @@ p, li { white-space: pre-wrap; }
      </item>
      <item>
       <widget class="QPushButton" name="okButton">
+       <property name="toolTip">
+        <string>Close this dialog and use the specified initial estimate(s) for Gaussian
+curve fitting. </string>
+       </property>
        <property name="text">
         <string>OK</string>
        </property>
@@ -220,6 +238,10 @@ p, li { white-space: pre-wrap; }
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Close this dialog without specifying initial Gaussian
+estimates.</string>
+       </property>
        <property name="text">
         <string>Cancel</string>
        </property>

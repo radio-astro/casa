@@ -67,16 +67,12 @@ void SelectEstimateDialog::setEstimateCount( int count ){
 
 QList<int> SelectEstimateDialog::getSelectedEstimates(){
 	QList<int> selectedEstimates;
-	qDebug() << "Number of estimates is " << estimateCount;
 	for ( int i = 0; i < estimateCount; i++ ){
 		QListWidgetItem* item = ui.listWidget->item( i );
-		qDebug() << "Item i="<<i<<" selected is " << item->isSelected();
 		if ( item->checkState() == Qt::Checked ){
-			qDebug()<< "Added " << i;
 			selectedEstimates.append( i );
 		}
 	}
-	qDebug() << "Returning " << selectedEstimates.size() << " estimates.";
 	return selectedEstimates;
 }
 

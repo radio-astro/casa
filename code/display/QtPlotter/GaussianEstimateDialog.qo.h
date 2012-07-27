@@ -51,7 +51,6 @@ public:
     void setRangeX( Float min, Float max );
     void setRangeY( Float min, Float max );
     void setSpecFitUnits( const QString& specUnits );
-    void setSpectralCoordinate( SpectralCoordinate coordinate );
     QString getUnits() const;
     void setCurveColor( QColor color );
     SpecFitGaussian getEstimate(int index );
@@ -84,7 +83,7 @@ private:
     QList<GaussianEstimateWidget*> plots;
     Ui::GaussianEstimateDialogClass ui;
     bool plotsCoordinated;
-    SpectralCoordinate spectralCoordinate;
+
     QWidget* plotHolderWidget;
     SelectEstimateDialog selectEstimateDialog;
     SelectEstimateDialog clearPlotDialog;

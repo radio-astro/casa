@@ -37,6 +37,7 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterChannel.h>
+#include <display/Display/Options.h>
 
 #include <QFileDialog>
 #include <QTemporaryFile>
@@ -419,9 +420,8 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 
 						//Gaussian Estimate must be in pixels.
 						double centerValPix = toPixels( centerVal );
-						double fwhmValPtPix = toPixels( centerVal - fwhmVal/2 );
-						double fwhmValPix = fabs(centerValPix - fwhmValPtPix) * 2;
-
+						double fwhmValPtPix = toPixels( centerVal - fwhmVal );
+						double fwhmValPix = fabs(centerValPix - fwhmValPtPix);
 						GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 						estimate->fixByString( fixedStr.toStdString());
 						spectralList.add( *estimate );
@@ -449,12 +449,11 @@ SpectralCoordinate SpecFitSettingsWidgetRadio::getSpectralCoordinate() const {
 
 double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
 	String xAxisUnit = getXAxisUnit();
-	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
 	double pixelValue = val;
 	//We are not already in pixels = channels
 	if ( xAxisUnit.length() > 0 ){
 		QString unitStr( xAxisUnit.c_str());
-		Converter* converter = Converter::getConverter( unitStr, unitStr, &spectralCoordinate );
+		Converter* converter = Converter::getConverter( unitStr, unitStr );
 		pixelValue = converter->toPixel( val );
 		delete converter;
 	}
@@ -521,6 +520,49 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 	}
 }
 
+QString SpecFitSettingsWidgetRadio::settingsToString() const {
+	QString logMessage = "\n\n\n-------------------------------------Viewer Settings-------------------------------------\n\n";
+	logMessage.append( "Range:  Min="+ui.minLineEdit->text()+" Max="+ui.maxLineEdit->text()+" "+ this->getXAxisUnit().c_str()+"\n" );
+	logMessage.append( "Multifit: ");
+	const QString trueStr( "true" );
+	const QString falseStr( "false" );
+	if( ui.multiFitCheckBox->isChecked() ){
+		logMessage.append( trueStr + "\n");
+	}
+	else {
+		logMessage.append( falseStr +"\n");
+	}
+	logMessage.append( "Polynomial Fit:");
+	if (ui.polyFitCheckBox->isChecked()){
+		logMessage.append( trueStr );
+		logMessage.append(" Order="+QString::number(ui.polyOrderSpinBox->value())+"\n");
+	}
+	else {
+		logMessage.append( falseStr );
+		logMessage.append( "\n");
+	}
+	logMessage.append( "Gaussian Fit Count: "+ QString::number(ui.gaussCountSpinBox->value())+"\n");
+	int estimateCount = ui.estimateTable->rowCount();
+	for ( int i = 0; i < estimateCount; i++ ){
+		QString peakStr;
+		QString centerStr;
+		QString fwhmStr;
+		QString fixedStr;
+		getEstimateStrings( i, peakStr, centerStr, fwhmStr );
+		SpecFitSettingsFixedTableCell* fixedItem = dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
+		if ( fixedItem != NULL ){
+			fixedStr = fixedItem->getFixedStr();
+		}
+		logMessage.append( "  Estimate "+QString::number((i+1))+":  Peak="+peakStr+" "+getYUnitPrefix()+getYUnit()+" Center="+centerStr+" "+
+				getXAxisUnit().c_str()+" FWHM="+fwhmStr+" "+getXAxisUnit().c_str() );
+		if ( !fixedStr.isNull() && !fixedStr.isEmpty()){
+			logMessage.append(" Fixed="+fixedStr);
+		}
+		logMessage.append( "\n");
+	}
+	return logMessage;
+}
+
 void SpecFitSettingsWidgetRadio::fitDone(){
 	float finishedProgress = 10;
 	const int PROGRESS_END = 100;
@@ -538,10 +580,11 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 
 			//Tell the user basic information about the fit.
 			Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
-			String msg( "Fits succeeded: "+String::toString(ntrue(succeeded))+"\n");
-			msg.append( "Fits converged: "+String::toString(ntrue(converged))+"\n");
-			msg.append( "Fits valid: "+String::toString(ntrue(valid))+"\n");
+			String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
+			msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
+			msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");
 			postStatus( msg );
+
 
 			//Initialize the x-values.  In the case of a polynomial fit, the
 			//x values need to be in pixels.
@@ -583,6 +626,7 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 					Util::showUserMessage( msg, this );
 				}
 			}
+			viewOutputLogFile();
 		}
 		else {
 			progressDialog.setValue( PROGRESS_END );
@@ -634,13 +678,13 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 
 		Vector<Float> xValues = curves[0]->getXValues();
 		for ( int i = 0; i < curves.size(); i++ ){
+			curves[i]->evaluate( xValues );
 
 			Vector<Float> yValues = curves[i]->getYValues();
 			QString curveName = curves[i]->getCurveName();
 
 			//Send the curve to the canvas for plotting.
 			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-
 			for ( int i = 0; i < POINT_COUNT; i++ ){
 				yCumValues[i] = yCumValues[i]+yValues[i];
 			}
@@ -649,7 +693,7 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 		//Add a curve that represents the sum of all the individual fits
 		if ( curves.size() > 1 ){
 			QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
-			pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
+			pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
 		}
 	}
 }
@@ -741,6 +785,8 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 
 	//Get the peak, center, and fwhm from the estimate
 	float peakVal = static_cast<float>(pcf->getAmpl());
+	QString newUnits = getYUnitPrefix()+getYUnit();
+	peakVal = Converter::convertJyBeams( "Jy/beam", newUnits, peakVal );
 	Double centerValPix = pcf->getCenter();
 	double fwhmValPix = pcf->getFWHM();
 	if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
@@ -775,9 +821,8 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 void SpecFitSettingsWidgetRadio::resolveOutputLogFile( ){
 	if (outputLogPath.isEmpty()){
 		QString baseName = taskMonitor->getFileName();
-		QTemporaryFile tmpFile( baseName );
-		tmpFile.open();
-		outputLogPath = tmpFile.fileName();
+		std::string filePath = viewer::options.temporaryPath( baseName.toStdString()+"LOG" );
+		outputLogPath = filePath.c_str();
 	}
 }
 
@@ -847,7 +892,7 @@ void SpecFitSettingsWidgetRadio::specLineFit(){
 void SpecFitSettingsWidgetRadio::setOutputLogFile(){
 	string homedir = getenv("HOME");
 	QFileDialog fd( this, tr("Specify File for Output Logging"),
-			QString(homedir.c_str()), "");
+			QString(homedir.c_str()), "Text Files(*.txt)");
 	fd.setFileMode( QFileDialog::AnyFile );
 	if ( fd.exec() ){
 		QStringList fileNames = fd.selectedFiles();
@@ -866,11 +911,25 @@ void SpecFitSettingsWidgetRadio::viewOutputLogFile(){
 			Util::showUserMessage ( msg, this);
 		}
 		else {
-			if ( !outputLogFile.open( QIODevice::ReadOnly )){
+			//If possible add the viewer settings to the output log.
+			QString viewerSettings = settingsToString();
+			if ( !outputLogFile.open( QIODevice::Append | QIODevice::Text)){
+				qDebug() << "Could not write to the output log file";
+			}
+			else {
+				//Write the viewer settings to the log file
+				QTextStream out(&outputLogFile );
+				out << viewerSettings;
+				out.flush();
+				outputLogFile.close();
+			}
+
+			if ( !outputLogFile.open( QIODevice::ReadOnly) ){
 				QString msg("Could not open output file for reading: "+outputLogPath+"\n  Please check it has proper permissions.");
 				Util::showUserMessage( msg, this);
 			}
 			else {
+				//Now read in the contents of the file to the viewer.
 				QTextStream ts( &outputLogFile );
 				QString logResults;
 				while ( ! ts.atEnd() ){
@@ -908,7 +967,6 @@ void SpecFitSettingsWidgetRadio::clearEstimates(){
 					cellWidget->clear();
 				}
 			}
-
 		}
 	}
 	ui.estimateTable->resizeColumnToContents( FIXED );
@@ -929,16 +987,7 @@ void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
 	//Let the dialog know the x axis units we are using
 	String axisUnitStr = getXAxisUnit();
 	QString unitStr( axisUnitStr.c_str());
-	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
-	Converter* converter = NULL;
-	if ( axisUnitStr == "" ){
-		converter = new ConverterChannel( &spectralCoordinate );
-	}
 	gaussEstimateDialog.setSpecFitUnits( unitStr );
-
-	//List the dialog know about the spectral axis so it can translate
-	//units
-	gaussEstimateDialog.setSpectralCoordinate( spectralCoordinate );
 
 	//Provide the dialog with the data and the main curve color
 	gaussEstimateDialog.setCurveData( getXValues(), taskMonitor->getYValues());
@@ -955,12 +1004,7 @@ void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
 		float peak = static_cast<float>(peakStr.toDouble());
 		float center = static_cast<float>(centerStr.toDouble());
 		float fwhm = static_cast<float>(fwhmStr.toDouble());
-		if ( converter != NULL ){
-			float fwhmPt = center - fwhm;
-			center = converter->convert( center );
-			fwhmPt = converter->convert( fwhmPt );
-			fwhm = qAbs( center - fwhmPt );
-		}
+
 		estimates.append(SpecFitGaussian(peak,center,fwhm,i) );
 		SpecFitSettingsFixedTableCell* cellWidget =
 					dynamic_cast<SpecFitSettingsFixedTableCell*>(ui.estimateTable->cellWidget(i,FIXED));
@@ -970,7 +1014,6 @@ void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
 			estimates[i].setFwhmFixed( cellWidget->isFWHMFixed());
 		}
 	}
-	delete converter;
 	gaussEstimateDialog.setEstimates( estimates );
 	gaussEstimateDialog.show();
 }
@@ -978,9 +1021,8 @@ void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
 void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
 	int count = ui.gaussCountSpinBox->value();
 	QString dialogUnits = gaussEstimateDialog.getUnits();
-	SpectralCoordinate spectralCoordinate = getSpectralCoordinate();
 	QString xAxisUnit(this->getXAxisUnit().c_str());
-	Converter* converter = Converter::getConverter( dialogUnits, xAxisUnit, &spectralCoordinate );
+	Converter* converter = Converter::getConverter( dialogUnits, xAxisUnit );
 	for ( int i = 0; i < count; i++ ){
 		SpecFitGaussian estimate = gaussEstimateDialog.getEstimate( i );
 		float peakVal = estimate.getPeak();

@@ -537,6 +537,9 @@
              <height>240</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Specify the peak of an initial Gaussian Estimate by moving the slider.  If the center and FWHM are valid values you should see the top of a Gaussian curve on the graph move up and down in response to the slider.</string>
+           </property>
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -598,6 +601,9 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string>Enter the peak of this initial Gaussian estimate.</string>
+           </property>
           </widget>
          </item>
         </layout>
@@ -633,6 +639,10 @@
              <width>40</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="toolTip">
+            <string>If this box is checked, the peak value will
+be fixed when estimating the Gaussian curve.</string>
            </property>
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
@@ -696,6 +706,12 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Specify the center of an initial Gaussian estimate by moving
+the slider.  If the FWHM and peak have valid values you should
+see a Gaussian curve change position on the graph in response
+to the slider.</string>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -709,10 +725,17 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>Enter the center of an initial Gaussian estimate.</string>
+       </property>
       </widget>
      </item>
      <item>
       <widget class="QCheckBox" name="fixCenterCheckBox">
+       <property name="toolTip">
+        <string>If this box is checked, the center value will
+be fixed when estimating the Gaussian curve.</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -755,6 +778,10 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Specify the full width at half miximum (FWHM) value of an initial Gaussian Estimate by moving the slider.  If the center and peak are valid values you should see a Gaussian curve on the graph narrow or become wider in
+response to the slider.</string>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -768,10 +795,18 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>Enter the full width at half maximimum (FWHM) value for an initial Gaussian estimate.</string>
+       </property>
       </widget>
      </item>
      <item>
       <widget class="QCheckBox" name="fixFWHMCheckBox">
+       <property name="toolTip">
+        <string>If this box is checked, the full width at half maximum 
+(FWHM) value will be fixed when estimating the 
+Gaussian curve.</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>

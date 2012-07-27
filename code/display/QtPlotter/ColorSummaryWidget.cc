@@ -334,9 +334,7 @@ void ColorSummaryWidget::pixelCanvasColorChange(){
 		pixelCanvas->setFitCurveColors( fitCurveColorList );
 		pixelCanvas->setSummaryCurveColors( fitSummaryCurveColorList );
 	}
-	else {
-		pixelCanvas->setTraditionalCurveColors( traditionalCurveColorList);
-	}
+	pixelCanvas->setTraditionalCurveColors( traditionalCurveColorList);
 	bool traditionalColors = ui.traditionalRadioButton->isChecked();
 	pixelCanvas->setTraditionalColors( traditionalColors );
 

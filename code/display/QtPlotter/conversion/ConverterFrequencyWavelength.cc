@@ -24,13 +24,12 @@
 //#
 
 #include "ConverterFrequencyWavelength.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <QDebug>
 namespace casa {
 
 ConverterFrequencyWavelength::ConverterFrequencyWavelength(const QString& oldUnits,
-		const QString& newUnits, SpectralCoordinate* spectralCoordinate ):
-		ConverterFrequency( oldUnits, newUnits, spectralCoordinate ){
+		const QString& newUnits):
+		ConverterFrequency( oldUnits, newUnits){
 
 }
 
@@ -43,10 +42,10 @@ Vector<double> ConverterFrequencyWavelength::convert( const Vector<double>& oldV
 	bool successfulConversion = false;
 	if ( unitsUnderstood ){
 
-		successfulConversion = spectralCoordinate->frequencyToWavelength( resultValues, oldValues );
+		successfulConversion = spectralCoordinate.frequencyToWavelength( resultValues, oldValues );
 
 		if ( successfulConversion ){
-			Vector<String> spectralUnits = spectralCoordinate->worldAxisUnits();
+			Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
 			String spectralUnit = spectralUnits[0];
 			QString spectralUnitStr( spectralUnit.c_str() );
 			if ( spectralUnitStr != oldUnits ){

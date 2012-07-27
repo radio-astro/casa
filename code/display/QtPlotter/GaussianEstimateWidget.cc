@@ -24,7 +24,6 @@
 //#
 #include "GaussianEstimateWidget.qo.h"
 #include <display/QtPlotter/GaussianEstimateWidget.qo.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/MolecularLine.h>
 #include <QVector>
 #include <QDebug>
@@ -215,9 +214,8 @@ void GaussianEstimateWidget::updateUIBasedOnEstimate(){
 	fwhmChanged( fwhm );
 }
 
-void GaussianEstimateWidget::unitsChanged( const QString& oldUnits, const QString& newUnits,
-	SpectralCoordinate* spectralCoordinate ){
-	Converter* converter = Converter::getConverter( oldUnits, newUnits, spectralCoordinate );
+void GaussianEstimateWidget::unitsChanged( const QString& oldUnits, const QString& newUnits){
+	Converter* converter = Converter::getConverter( oldUnits, newUnits);
 	double centerVal = gaussianEstimate.getCenter();
 	double fwhm = gaussianEstimate.getFWHM();
 	double fwhmPoint = centerVal - fwhm;

@@ -41,6 +41,7 @@
 #include <display/QtPlotter/ColorSummaryWidget.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/LegendPreferences.qo.h>
+#include <display/QtPlotter/conversion/Converter.h>
 
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
@@ -123,6 +124,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
     //User legend preferences
     legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
+
+    CoordinateSystem cSys = image->coordinates();
+    SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+    Converter::setSpectralCoordinate( spectralCoordinate );
 
     // read the preferred ctype from casarc
     QString pref_ctype = read( ".freqcoord.type");
@@ -914,6 +919,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 		updateAxisUnitCombo( pref_ctype, bottomAxisCType );
 		updateAxisUnitCombo( pref_ctype, topAxisCType );
 	}
+
+	CoordinateSystem cSys = image->coordinates();
+	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+	Converter::setSpectralCoordinate( spectralCoordinate );
 
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);

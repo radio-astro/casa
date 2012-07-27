@@ -22,16 +22,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#include <coordinates/Coordinates/SpectralCoordinate.h>
+
 #include "ConverterVelocityFrequency.h"
 #include <QDebug>
 #include <assert.h>
 
 namespace casa {
 
-ConverterVelocityFrequency::ConverterVelocityFrequency(const QString& oldUnits,
-		const QString& newUnits, SpectralCoordinate* spectralCoordinate ) :
-		ConverterVelocity( oldUnits, newUnits, spectralCoordinate ){
+ConverterVelocityFrequency::ConverterVelocityFrequency(const QString& oldUnits,const QString& newUnits) :
+		ConverterVelocity( oldUnits, newUnits){
 }
 
 
@@ -48,10 +47,10 @@ Vector<double> ConverterVelocityFrequency::convert( const Vector<double>& oldVal
 	Vector<double> resultValues(oldValues.size());
 	bool successfulConversion = false;
 	if ( unitsUnderstood ){
-		successfulConversion = spectralCoordinate->velocityToFrequency( resultValues, oldValues );
+		successfulConversion = spectralCoordinate.velocityToFrequency( resultValues, oldValues );
 		if ( successfulConversion ){
 			//The frequency unit will be whatever the spectralCoordinate is currently using.
-			Vector<String> frequencyUnits = spectralCoordinate->worldAxisUnits();
+			Vector<String> frequencyUnits = spectralCoordinate.worldAxisUnits();
 			assert (frequencyUnits.size() == 1);
 			String frequencyUnit = frequencyUnits[0];
 			QString freqUnitStr( frequencyUnit.c_str());

@@ -27,6 +27,7 @@
 #define QTPLOTSETTINGS_H
 
 #include <cmath>
+#include <QString>
  
 namespace casa { 
 
@@ -34,9 +35,9 @@ class QtPlotSettings
 {
 public:
     QtPlotSettings();
-    void adjust();
-    void zoomOut( double zoomFactor );
-    void zoomIn( double zoomFactor );
+    void adjust( const QString& topUnits, const QString& bottomUnits );
+    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
+    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
     void scroll(int dx, int dy);
     enum AxisIndex {xBottom, xTop, END_AXIS_INDEX };
     double spanX( AxisIndex index ) const {
@@ -73,14 +74,17 @@ public:
 private:
 
     void adjustAxis(double &min, double &max, int &numTicks);
-    void adjustAxisTop( double &min, double &max );
+    void adjustAxisTop( double &min, double &max, const QString& topUnits,
+    		const QString& bottomUnits );
     double minX[END_AXIS_INDEX];
     double maxX[END_AXIS_INDEX];
     int numXTicks;
     double minY;
     double maxY;
-    double percentMinXChange;
-    double percentMaxXChange;
+    double minPercentage;
+    double maxPercentage;
+    double originalMinX;
+    double originalMaxX;
     int numYTicks;
 };
 
