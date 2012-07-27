@@ -84,8 +84,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
@@ -109,8 +109,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
@@ -134,8 +134,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -159,8 +159,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -183,8 +183,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,

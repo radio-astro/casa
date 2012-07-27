@@ -32,6 +32,7 @@
 #include <map>
 #include <QObject>
 #include <display/region/RegionSource.h>
+#include <display/region/QtRegion.qo.h>
 
 class QStackedWidget;
 
@@ -71,7 +72,7 @@ namespace casa {
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
 				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
+		void regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 		void regionUpdateResponse( int, const QString &shape, const QString &name,

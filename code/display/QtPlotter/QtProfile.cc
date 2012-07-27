@@ -92,6 +92,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
          itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
+         current_region_id(0),
          colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
     setupUi(this);
@@ -1366,6 +1367,8 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     	return;
     }
 
+    current_region_id = id_;
+
     copyToLastEvent( c, px, py, wx, wy );
 
     setPlotType( static_cast<int>(wx.size()) );
@@ -1421,12 +1424,19 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 }
 
 
-void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList<double> &world_y,
+void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 			      const QList<int> &pixel_x, const QList<int> &pixel_y ) {
 
     if (!isVisible()) return;
-
     if (!analysis) return;
+    if ( type == viewer::Region::RegionChangeFocus )
+	current_region_id = id_;			// viewer region focus has changed
+    else if ( type == viewer::Region::RegionChangeNewChannel )
+	return;						// viewer moving to new channel
+    else if ( id_ != current_region_id )
+	return;						// some other region
+    
+
     SpectraInfoMap::iterator it = spectra_info_map.find(id_);
     if ( it == spectra_info_map.end( ) ) return;
     QString shape = it->second.shape( );

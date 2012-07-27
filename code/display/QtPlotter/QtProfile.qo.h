@@ -48,6 +48,8 @@
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 
+#include <display/region/QtRegion.qo.h>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -198,8 +200,9 @@ public slots:
 			const QList<int> &pixel_x, const QList<int> &pixel_y,
 			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void updateRegion( int, viewer::Region::RegionChanges,
+			   const QList<double> &world_x, const QList<double> &world_y,
+			   const QList<int> &pixel_x, const QList<int> &pixel_y );
 	void pixelsChanged(int, int );
 
 signals:
@@ -343,6 +346,7 @@ private:
 
 
    typedef std::map<int,spectra_info> SpectraInfoMap;
+   int current_region_id;
    SpectraInfoMap spectra_info_map;
 
    //Used for spectrum positioning

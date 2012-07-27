@@ -1486,9 +1486,9 @@ void QtDisplayPanelGui::showImageProfile() {
 					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 									const QList<double> &, const QList<int> &, const QList<int> &,
 									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs.get( ), SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
+				    connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									       const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
+					     profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									   const QList<int> &, const QList<int> & ) ) );
 				    connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 										       const QList<double> &, const QList<int> &, const QList<int> &,

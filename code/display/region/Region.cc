@@ -246,7 +246,7 @@ namespace casa {
 	    }
 
 	    if ( new_z_index != last_z_index ) {
-		updateStateInfo(true);
+		updateStateInfo( true, RegionChangeNewChannel );
 		invalidateCenterInfo( );
 	    }
 	    last_z_index = new_z_index;
@@ -612,7 +612,7 @@ if (!markCenter()) return;
 		} else if ( x_units == "radians" ) {
 		    xq = Quantity( atof(x.c_str( )), "rad" );
 		} else {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -625,7 +625,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -648,7 +648,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -658,7 +658,7 @@ if (!markCenter()) return;
 
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true );
+		updateStateInfo( true, RegionChangeReset );	// error: reset
 		return false;
 	    }
 
@@ -691,7 +691,7 @@ if (!markCenter()) return;
 		} else if ( y_units == "radians" ) {
 		    yq = Quantity( atof(y.c_str( )), "rad" );
 		} else {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -704,7 +704,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -726,7 +726,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -735,7 +735,7 @@ if (!markCenter()) return;
 
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true );
+		updateStateInfo( true, RegionChangeReset );	// error: reset
 		return false;
 	    }
 

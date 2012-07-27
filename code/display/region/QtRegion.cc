@@ -84,7 +84,7 @@ namespace casa {
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
 
 	    dock_->addRegion(mystate);
-	    signal_region_change( RegionChangeCreate );
+	    signal_region_change( Region::RegionChangeCreate );
 	}
 
 	QtRegion::~QtRegion( ) {
@@ -148,9 +148,9 @@ namespace casa {
 	}
 
         // indicates that region movement requires that the statistcs be updated...
-	void QtRegion::updateStateInfo( bool region_modified ) {
+      void QtRegion::updateStateInfo( bool region_modified, Region::RegionChanges change ) {
 
-	    signal_region_change( RegionChangeUpdate );
+	    signal_region_change( change );
 
 	    // update statistics, when needed...
 	    if ( statistics_visible == false ) {
@@ -198,15 +198,15 @@ namespace casa {
 	void QtRegion::refresh_statistics_event( bool visible ) {
 	    statistics_visible = visible;
 	    if ( hold_signals ) {
-		held_signals[RegionChangeStatsUpdate] = true;
+		held_signals[Region::RegionChangeStatsUpdate] = true;
 		return;
 	    }
-	    updateStateInfo( false );
+	    updateStateInfo( false, Region::RegionChangeFocus );
 	}
 
 	void QtRegion::refresh_position_event( bool visible ) {
 	    position_visible = visible;
-	    updateStateInfo( false );
+	    updateStateInfo( false, Region::RegionChangeUpdate );
 	}
 
 	void QtRegion::translate_x( const QString &x, const QString &x_units, const QString &coordsys ) {
@@ -322,7 +322,7 @@ namespace casa {
 
 	}
 
-	void QtRegion::signal_region_change( RegionChanges change ) {
+	void QtRegion::signal_region_change( Region::RegionChanges change ) {
 
 	    if ( hold_signals > 0 ) {
 		held_signals[change] = true;
@@ -331,8 +331,12 @@ namespace casa {
 
 
 	    switch ( change ) {
-		case RegionChangeUpdate:
-		case RegionChangeCreate:
+		case Region::RegionChangeUpdate:
+		case Region::RegionChangeCreate:
+		case Region::RegionChangeReset:
+		case Region::RegionChangeFocus:
+		case Region::RegionChangeModified:
+		case Region::RegionChangeNewChannel:
 		    {
 			Region::RegionTypes type;
 			QList<int> pixelx, pixely;
@@ -342,19 +346,19 @@ namespace casa {
 
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
-			if ( change == RegionChangeCreate )
+			if ( change == Region::RegionChangeCreate )
 			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
 			else
-			    emit regionUpdate( id_, worldx, worldy, pixelx, pixely );
+			    emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
 		    }
 		    break;
 
-		case RegionChangeDelete:
-		case RegionChangeStatsUpdate:
-		case RegionChangeLabel:
+		case Region::RegionChangeDelete:
+		case Region::RegionChangeStatsUpdate:
+		case Region::RegionChangeLabel:
 		    // fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
 		    // 	     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
 		    break;
@@ -366,27 +370,27 @@ namespace casa {
 	    if ( --hold_signals > 0 ) return;
 	    hold_signals = 0;
 
-	    if ( held_signals[RegionChangeCreate] ) {
-		signal_region_change(RegionChangeCreate);
+	    if ( held_signals[Region::RegionChangeCreate] ) {
+		signal_region_change(Region::RegionChangeCreate);
 	    } else {
-		if ( held_signals[RegionChangeUpdate] ) {
-		    signal_region_change(RegionChangeUpdate);
+		if ( held_signals[Region::RegionChangeUpdate] ) {
+		    signal_region_change(Region::RegionChangeUpdate);
 		}
-		if ( held_signals[RegionChangeLabel] ) {
-		    signal_region_change(RegionChangeLabel);
+		if ( held_signals[Region::RegionChangeLabel] ) {
+		    signal_region_change(Region::RegionChangeLabel);
 		}
 	    }
 
-	    if ( held_signals[RegionChangeStatsUpdate] )
-		updateStateInfo( false );
+	    if ( held_signals[Region::RegionChangeStatsUpdate] )
+		updateStateInfo( false, Region::RegionChangeCreate );
 
 	    clear_signal_cache( );
 	}
 
 	void QtRegion::clear_signal_cache( ) {
-	    held_signals[RegionChangeCreate] = false;
-	    held_signals[RegionChangeUpdate] = false;
-	    held_signals[RegionChangeLabel] = false;
+	    held_signals[Region::RegionChangeCreate] = false;
+	    held_signals[Region::RegionChangeUpdate] = false;
+	    held_signals[Region::RegionChangeLabel] = false;
 	}
 
     }

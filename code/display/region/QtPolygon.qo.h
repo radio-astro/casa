@@ -82,7 +82,7 @@ namespace casa {
 		int zIndex( ) const { return Region::zIndex( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
-		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
+		void updateStateInfo( bool region_modified, RegionChanges change ) { QtRegion::updateStateInfo( region_modified, change ); }
 
 		// indicates that the center info is no longer valid
 		void invalidateCenterInfo( ) {QtRegion::invalidateCenterInfo();};

@@ -114,6 +114,8 @@ namespace casa {
 
 		enum PointLocation { PointInside = 1 << 0, PointHandle = 1 << 1, PointOutside = 1 << 2 };
 
+		enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeReset, RegionChangeFocus, RegionChangeModified, RegionChangeLabel, RegionChangeDelete, RegionChangeStatsUpdate, RegionChangeNewChannel };
+
 		class PointInfo {
 		    public:
 			PointInfo( double x, double y, unsigned int location, unsigned int handle=0 ) :
@@ -221,7 +223,7 @@ namespace casa {
 		virtual void draw( bool other_selected );
 
 		// indicates that region movement requires that the statistcs be updated...
-		virtual void updateStateInfo( bool /*region_modified*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
+		virtual void updateStateInfo( bool /*region_modified*/, Region::RegionChanges /*change*/ ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
 
 		// indicates that the center info is no longer valid
 		virtual void invalidateCenterInfo( ) DISPLAY_PURE_VIRTUAL(Region::invalidateCenterInfo,);
