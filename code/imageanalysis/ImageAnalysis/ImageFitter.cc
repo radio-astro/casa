@@ -71,7 +71,7 @@ namespace casa {
 const String ImageFitter::_class = "ImageFitter";
 
 ImageFitter::ImageFitter(
-	const ImageInterface<Float>* const image, const String& region,
+	const ImageInterface<Float>* const &image, const String& region,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
@@ -85,7 +85,8 @@ ImageFitter::ImageFitter(
 		maskInp, "", False
 	), _regionString(region), _residual(residualInp),_model(modelInp),
 	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
-	_compListName(compListName), _includePixelRange(includepix),
+	_compListName(compListName), _bUnit(image->units().getName()),
+	_includePixelRange(includepix),
 	_excludePixelRange(excludepix), estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
@@ -149,8 +150,7 @@ ComponentList ImageFitter::fit() {
 		region, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
-	Vector<String> allowFluxUnits(1);
-	allowFluxUnits[0] = "Jy.km/s";
+	Vector<String> allowFluxUnits(1, "Jy.km/s");
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
 	String resultsString = _resultsHeadder();
@@ -291,6 +291,8 @@ ComponentList ImageFitter::fit() {
 		}
 	}
 	FluxRep<Double>::clearAllowedUnits();
+	FluxRep<Float>::clearAllowedUnits();
+
 	if (converged && ! _newEstimatesFileName.empty()) {
 		_writeNewEstimatesFile();
 	}
@@ -489,6 +491,37 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 		_chanPixNumber = _chanVec[0];
 	}
 	_fitConverged.resize(nSelectedChannels);
+	// check units
+
+	Quantity q = Quantity(1, _bUnit);
+	Bool unitOK = q.isConform("Jy/rad2")
+		|| q.isConform("Jy*m/s/rad2");
+	if (! unitOK) {
+		Vector<String> angUnits(2, "beam");
+		angUnits[1] = "pixel";
+		for (uInt i=0; i<angUnits.size(); i++) {
+			if (_bUnit.contains(angUnits[i])) {
+				UnitMap::putUser(angUnits[i], UnitVal(1,String("rad2")));
+				if (
+					Quantity(1, _bUnit).isConform("Jy/rad2")
+					|| Quantity(1, _bUnit).isConform("Jy*m/s/rad2")
+				) {
+					unitOK = True;
+				}
+				UnitMap::removeUser(angUnits[i]);
+				UnitMap::clearCache();
+				if (unitOK) {
+					break;
+				}
+			}
+		}
+		if (! unitOK) {
+			*_getLog() << LogIO::WARN << "Unrecognized intensity unit " << _bUnit
+				<< ". Will assume Jy/pixel" << LogIO::POST;
+			_bUnit = "Jy/pixel";
+		}
+	}
+
 }
 
 String ImageFitter::_resultsHeadder() const {
@@ -567,12 +600,12 @@ void ImageFitter::_setFluxes() {
 	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(
 		rmsPeak,
-		_getImage()->units()
+		_bUnit
 	);
 	ImageMetaData md(*_getImage());
 	Quantity resArea;
 	// Bool found = False;
-	Quantity intensityToFluxConversion = _getImage()->units().getName().contains("/beam")
+	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
 
@@ -634,7 +667,7 @@ void ImageFitter::_setFluxes() {
 				peakErrorFromFluxErrorValue
 			)
 		);
-		_peakIntensityErrors[i].setUnit(_getImage()->units());
+		_peakIntensityErrors[i].setUnit(_bUnit);
 		if (rmsPeakErrorValue > peakErrorFromFluxErrorValue) {
 			const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
 			Quantity compArea = gaussShape->getArea();
@@ -664,7 +697,7 @@ void ImageFitter::_setSizes() {
 
 	Quantity rmsPeakError(
 			rmsPeak,
-			_getImage()->units()
+			_bUnit
 	);
 
 
@@ -926,7 +959,7 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fd[0] = fluxDensity.getValue();
 	fd[1] = fluxDensityError.getValue();
 	Quantity peakIntensity = _peakIntensities[compNumber];
-	Quantity intensityToFluxConversion = _getImage()->units().getName().contains("/beam")
+	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
 
@@ -955,10 +988,8 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 			break;
 		}
 	}
-	//String newUnit = tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit();
 	peakIntensity = Quantity(tmpFlux.getValue(), tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit());
 	peakIntensityError = Quantity(tmpFluxError.getValue(), peakIntensity.getUnit());
-
 
 	Vector<Double> pi(2);
 	pi[0] = peakIntensity.getValue();
@@ -1280,7 +1311,7 @@ ComponentList ImageFitter::_fitsky(
 			if (modelType == Fit2D::GAUSSIAN) {
 				parameters = ImageUtilities::decodeSkyComponent(
 					estimate(i), imageInfo, cSys,
-					subImage.units(), stokes, xIsLong
+					_bUnit, stokes, xIsLong
 				);
 			}
 			// The estimate SkyComponent may not be the same type as the
