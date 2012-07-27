@@ -1591,34 +1591,67 @@ void fillMain(int		rowNum,
   vector<double>	correctedUvw ;
   vector<unsigned int>	correctedFlag;
 
-  for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
-
-    if ((msFillers.find(AP_UNCORRECTED) != msFillers.end()) &&
-	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
-      uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					   vmsData_p->vv_dataShape.at(iData).at(1),
-					   iter->second));
+  // Do we have to fill an MS with uncorrected data + radiometric data (radiometric data are considered as uncorrected data)  ?
+  if (msFillers.find(AP_UNCORRECTED) != msFillers.end()) {
+    for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
+      if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+	uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					     vmsData_p->vv_dataShape.at(iData).at(1),
+					     iter->second));
+      }
     }
+  }
 	    
-    if ((msFillers.find(AP_CORRECTED) != msFillers.end()) &&
-	(iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
-      correctedTime.push_back(vmsData_p->v_time.at(iData));
-      correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-      correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-      correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-      correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-      correctedFilteredDD.push_back(filteredDD.at(iData));
-      correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-      correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-      correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-      correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-      correctedUvw.push_back(vv_uvw.at(iData)(0));
-      correctedUvw.push_back(vv_uvw.at(iData)(1));
-      correctedUvw.push_back(vv_uvw.at(iData)(2));
-      correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					 vmsData_p->vv_dataShape.at(iData).at(1),
-					 iter->second));
-      correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+  // Do we have to fill an MS with corrected data + radiometric data ( again considered as uncorrected data) ?
+  if (msFillers.find(AP_CORRECTED) != msFillers.end() ) {
+
+    // Are we with radiometric data ? Then we assume that the data are labelled AP_UNCORRECTED.
+    if (sdmBinData.processorType(r_p) == RADIOMETER) {
+      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
+	if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0), // Force radiometric data to go
+					     vmsData_p->vv_dataShape.at(iData).at(1), // into correctedData.
+					     iter->second));
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+	}
+      }
+    }
+    // No we are in front of non radiometric data ? They must be labelled AP_CORRECTED
+    else {
+      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {      
+	if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					     vmsData_p->vv_dataShape.at(iData).at(1),
+					     iter->second));
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+	}
+      }
     }
   }
 	  
@@ -4323,6 +4356,8 @@ int main(int argc, char *argv[]) {
     UvwCoords uvwCoords(ds);
 
     ostringstream oss;
+    EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
+    es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
 
     // For each selected main row.
     for (int32_t i = 0; i < nMain; i++) {
@@ -4358,7 +4393,7 @@ int main(int argc, char *argv[]) {
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
 	    infostream.str("");
-	    infostream <<"No data retrieved in the Main row #" << mainRowIndex[i] << " (" << sdmBinData.reasonToReject(r) <<")" << endl;
+	    infostream <<"No data retrieved in the Main row #" << mainRowIndex[i] << " (" << sdmBinData.reasonToReject(v[i]) <<")" << endl;
 	    info(infostream.str());
 	    continue;
 	  }
@@ -4377,10 +4412,10 @@ int main(int argc, char *argv[]) {
             //#pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller)
             {
             #pragma omp for ordered
-            for (ispw = 0; ispw < nspw; ispw++) { 
-	      //fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
-	      fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
-            }
+	      for (ispw = 0; ispw < nspw; ispw++) { 
+		//fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
+		fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
+	      }
             }
           }//end of doparallel
           else {
@@ -4391,11 +4426,8 @@ int main(int argc, char *argv[]) {
 	  info(infostream.str());
 	}
 	else {
-
 	  // Open its associate BDF.
-	  //infostream.str("");
-          //infostream << "opening BDF"<< endl;
-          //info(infostream.str());
+
 	  sdmBinData.openMainRow(v[i]);
 	  
 	  uint32_t		N			 = v[i]->getNumIntegration();
