@@ -2346,7 +2346,8 @@ class simple_cluster:
         if not self._configdone:
             return
         self.create_project(project)
-        self.stop_nodes()
+        # jagonzal (CAS-4367): Don't use brute-force killall approach to stop cluster
+        # self.stop_nodes()
         self.stop_resource()
         self.start_cluster()
         self.start_monitor()
