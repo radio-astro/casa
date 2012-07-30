@@ -34,25 +34,43 @@ def main():
     # Comment out the tasks that you do not want to create data for.
     
     thislist = [
-                'listhistory',
-                'listvis',
-                'listobs',
-                'gencal',
-                'vishead'
-                ]
+        #'listhistory',
+        #'listvis',
+        #'listobs',
+        #'gencal',
+        #'vishead',
+        'split'
+        ]
+
     
     # Loop through task list
     for t in thislist:
         mmstest(t)
-        
-    # NOTE for test_listvis data:
-    # You need to run partition by hand to create an MMS for the single-dish data set
-    SDPATH = DATAPATH + 'unittest/listvis/'
-    SDMMS = './unittest_mms/listvis/'
+
     from tasks import partition
+
+    if 'listvis' in thislist:
+        # NOTE for test_listvis data:
+        # You need to run partition by hand to create an MMS for the single-dish data set
+        SDPATH = DATAPATH + 'unittest/listvis/'
+        SDMMS = './unittest_mms/listvis/'
     
-    partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', datacolumn='float_data', createmms=True)
-    
+        partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', datacolumn='float_data', createmms=True)
+
+    if 'split' in thislist:
+        # some additional MMSs
+        SPLITMMSPATH = './unittest_mms/split/'
+        specialcase = ['0420+417/0420+417.ms',
+                       'viewertest/ctb80-vsm.ms',
+                       'split/labelled_by_time+ichan.ms']
+        for myms in specialcase:
+            shutil.rmtree(SPLITMMSPATH+os.path.basename(myms), ignore_errors=True)
+            partition(vis=DATAPATH+myms, outputvis=SPLITMMSPATH+os.path.basename(myms), datacolumn='all')
+
+        # workaround for a partition shortcoming: column keywords not copied
+        tb.open(SPLITMMSPATH+'hasfc.mms/SUBMSS/hasfc.0000.ms/', nomodify=False)
+        tb.putcolkeyword('FLAG_CATEGORY','CATEGORY', ['FLAG_CMD', 'ORIGINAL', 'USER'])
+        tb.close()
     
 if __name__ == "__main__":
     main()
