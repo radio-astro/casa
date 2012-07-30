@@ -20,6 +20,7 @@
 
 casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   __init__.py
+  test_bandpass.py
   test_boxit.py
   test_caltabconvert.py
   test_calanalysis.py
