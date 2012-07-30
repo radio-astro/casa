@@ -14,9 +14,8 @@ def setjy(vis=None, field=None, spw=None,
   """Fills the model column for flux density calibrators."""
 
   casalog.origin('setjy')
-
   # Take care of the trivial parallelization
-  if (ParallelTaskHelper.isParallelMS(vis)):
+  if ( not listmodels and ParallelTaskHelper.isParallelMS(vis)):
     # jagonzal: We actually operate in parallel when usescratch=True because only
     # in this case there is a good trade-off between the parallelization overhead
     # and speed up due to the load involved with MODEL_DATA column creation
@@ -53,7 +52,6 @@ def setjy_core(vis=None, field=None, spw=None,
 
   retval = True
   try:
-
     # Here we only list the models available, but don't perform any operation
     if listmodels:
       casalog.post("Listing model candidates (listmodels == True).")
@@ -166,10 +164,6 @@ def setjy_core(vis=None, field=None, spw=None,
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                          timerange=timerange,observation=str(observation), scan=scan, useephemdir=useephemdir)
-        #myim.close()
-        #print "after setSolarObjectJy"
-        #outt=tb.showcache()
-        #print "outt=",outt
       else:
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
