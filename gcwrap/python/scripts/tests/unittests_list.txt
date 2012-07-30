@@ -7,6 +7,7 @@
 # Do not include the suffix .py
 
 test_boxit                      dmehring@nrao.edu
+test_calanalysis		nelias@nrao.edu
 test_caltabconvert		nelias@nrao.edu
 test_clean                      kgolap@aoc.nrao.edu
 test_cleanhelper                ttsutsum@nrao.edu
