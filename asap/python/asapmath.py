@@ -914,8 +914,14 @@ def apexcal( scantab, scannos=[], calmode='none', verify=False ):
     from asap._asap import stmath
     stm = stmath()
     antname = scantab.get_antennaname()
-    ssub = scantab.get_scan( scannos )
-    scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    selection=selector()
+    selection.set_scans(scannos)
+    orig = scantab.get_selection()
+    scantab.set_selection(orig+selection)
+##     ssub = scantab.get_scan( scannos )
+##     scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    scal = scantable( stm.cwcal( scantab, calmode, antname ) )
+    scantab.set_selection(orig)
     return scal
 
 def almacal( scantab, scannos=[], calmode='none', verify=False ):
@@ -931,8 +937,14 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     """
     from asap._asap import stmath
     stm = stmath()
-    ssub = scantab.get_scan( scannos )
-    scal = scantable( stm.almacal( ssub, calmode ) )
+    selection=selector()
+    selection.set_scans(scannos)
+    orig = scantab.get_selection()
+    scantab.set_selection(orig+selection)
+##     ssub = scantab.get_scan( scannos )
+##     scal = scantable( stm.almacal( ssub, calmode ) )
+    scal = scantable( stm.almacal( scantab, calmode ) )
+    scantab.set_selection(orig)
     return scal
 
 @asaplog_post_dec
@@ -1021,6 +1033,7 @@ def _array2dOp( scan, value, mode="ADD", tsys=False, insitu=None):
     insitu:  if False, a new scantable is returned.
              Otherwise, the array operation is done in-sitsu.
     """
+    if insitu is None: insitu = rcParams['insitu']
     nrow = scan.nrow()
     s = None
     from asap._asap import stmath

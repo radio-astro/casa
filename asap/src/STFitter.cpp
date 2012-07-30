@@ -378,11 +378,12 @@ bool Fitter::fit() {
   fitter.setCriteria(0.001);
 
   // Fit
-  Vector<Float> sigma(x_.nelements());
-  sigma = 1.0;
+//   Vector<Float> sigma(x_.nelements());
+//   sigma = 1.0;
 
   parameters_.resize();
-  parameters_ = fitter.fit(x_, y_, sigma, &m_);
+//   parameters_ = fitter.fit(x_, y_, sigma, &m_);
+  parameters_ = fitter.fit(x_, y_, &m_);  
   if ( !fitter.converged() ) {
      return false;
   }
@@ -395,12 +396,15 @@ bool Fitter::fit() {
 
   chisquared_ = fitter.getChi2();
 
-  residual_.resize();
-  residual_ =  y_;
-  fitter.residual(residual_,x_);
+//   residual_.resize();
+//   residual_ =  y_;
+//   fitter.residual(residual_,x_);
   // use fitter.residual(model=True) to get the model
   thefit_.resize(x_.nelements());
   fitter.residual(thefit_,x_,True);
+  // residual = data - model
+  residual_.resize(x_.nelements()); 
+  residual_ = y_ - thefit_ ;
   return true;
 }
 
@@ -419,11 +423,12 @@ bool Fitter::lfit() {
   //fitter.setCriteria(0.001);
 
   // Fit
-  Vector<Float> sigma(x_.nelements());
-  sigma = 1.0;
+//   Vector<Float> sigma(x_.nelements());
+//   sigma = 1.0;
 
   parameters_.resize();
-  parameters_ = fitter.fit(x_, y_, sigma, &m_);
+//   parameters_ = fitter.fit(x_, y_, sigma, &m_);
+  parameters_ = fitter.fit(x_, y_, &m_);
   std::vector<float> ps;
   parameters_.tovector(ps);
   setParameters(ps);
@@ -433,12 +438,15 @@ bool Fitter::lfit() {
 
   chisquared_ = fitter.getChi2();
 
-  residual_.resize();
-  residual_ =  y_;
-  fitter.residual(residual_,x_);
+//   residual_.resize();
+//   residual_ =  y_;
+//   fitter.residual(residual_,x_);
   // use fitter.residual(model=True) to get the model
   thefit_.resize(x_.nelements());
   fitter.residual(thefit_,x_,True);
+  // residual = data - model
+  residual_.resize(x_.nelements()); 
+  residual_ = y_ - thefit_ ;
   return true;
 }
 

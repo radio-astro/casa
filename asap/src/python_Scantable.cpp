@@ -160,6 +160,8 @@ void python_Scantable() {
     .def("_fft", &ScantableWrapper::execFFT)
     //.def("_sspline_baseline", &ScantableWrapper::smoothingSplineBaseline)
     //.def("_test_cin", &ScantableWrapper::testCin)
+    .def("_getmolidcol_list", &ScantableWrapper::getMoleculeIdColumnData)
+    .def("_setmolidcol_list", &ScantableWrapper::setMoleculeIdColumnData)
   ;
 };
 

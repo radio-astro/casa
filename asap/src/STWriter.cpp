@@ -39,7 +39,9 @@
 #include <casa/Utilities/Assert.h>
 
 #include <atnf/PKSIO/PKSrecord.h>
+#ifndef NOPKSMS
 #include <atnf/PKSIO/PKSMS2writer.h>
+#endif
 #include <atnf/PKSIO/PKSSDwriter.h>
 #include <atnf/PKSIO/SrcType.h>
 
@@ -65,7 +67,11 @@ STWriter::STWriter(const std::string &format)
   String t(format_);
   t.upcase();
   if (t == "MS2") {
+    #ifdef NOPKSMS
+    throw (AipsError("MS2 OUTPUT FORMAT IS NO LONGER SUPPORTED"));
+    #else
     writer_ = new PKSMS2writer();
+    #endif
   } else if (t == "SDFITS") {
     writer_ = new PKSSDwriter();
   } else if (t == "ASCII" || t == "FITS" || t == "CLASS") {
@@ -92,7 +98,11 @@ Int STWriter::setFormat(const std::string &format)
   String t(format_);
   t.upcase();
   if (t== "MS2") {
+    #ifdef NOPKSMS
+    throw (AipsError("MS2 OUTPUT FORMAT IS NO LONGER SUPPORTED"));
+    #else
     writer_ = new PKSMS2writer();
+    #endif
   } else if (t== "SDFITS") {
     writer_ = new PKSSDwriter();
   } else if (t == "ASCII" || t == "FITS" || t == "CLASS") {

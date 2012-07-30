@@ -18,6 +18,7 @@
 #include <casa/OS/SymLink.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/Containers/RecordField.h>
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableDesc.h>
@@ -1910,6 +1911,7 @@ MSWriter::MSWriter(CountedPtr<Scantable> stable)
     isWeather_(False),
     tcalSpec_(False),
     tsysSpec_(False),
+    mstable_(NULL),
     ptTabName_("")
 {
   os_ = LogIO() ;

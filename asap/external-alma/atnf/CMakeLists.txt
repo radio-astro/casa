@@ -14,7 +14,7 @@ include_directories( ${ATNFROOT} )
 # link path
 link_directories( ${ATNFROOT} )
 
-# source files for libpyrap
+# source files for libatnf
 set( ATNF_SRCS
      ${ATNFDIR}/${PKS}/pks_maths.cc
      ${ATNFDIR}/${PKSIO}/ASTEDataset.cc
@@ -32,12 +32,18 @@ set( ATNF_SRCS
      ${ATNFDIR}/${PKSIO}/NROOTFDataset.cc
      ${ATNFDIR}/${PKSIO}/NROReader.cc
      ${ATNFDIR}/${PKSIO}/PKSFITSreader.cc
-     ${ATNFDIR}/${PKSIO}/PKSMS2reader.cc
-     ${ATNFDIR}/${PKSIO}/PKSMS2writer.cc
+#     ${ATNFDIR}/${PKSIO}/PKSMS2reader.cc
+#     ${ATNFDIR}/${PKSIO}/PKSMS2writer.cc
      ${ATNFDIR}/${PKSIO}/PKSreader.cc
      ${ATNFDIR}/${PKSIO}/PKSSDwriter.cc
      ${ATNFDIR}/${PKSIO}/SDFITSreader.cc
      ${ATNFDIR}/${PKSIO}/SDFITSwriter.cc )
+if( PKSMS )
+   set( ATNF_SRCS ${ATNF_SRCS}
+                  ${ATNFDIR}/${PKSIO}/PKSMS2reader.cc
+                  ${ATNFDIR}/${PKSIO}/PKSMS2writer.cc )
+endif()  
+
 add_library( ${ATNFLIB} SHARED ${ATNF_SRCS} )
 target_link_libraries( ${ATNFLIB} 
                        ${CASACORE_LIBRARIES} 

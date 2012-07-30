@@ -304,9 +304,6 @@ public:
     // set dummy epoch
     mf.set( currentTime ) ;
 
-    // initialize dirType
-    dirType = MDirection::N_Types ;
-
     //
     // add rows to scantable
     //
@@ -676,6 +673,9 @@ public:
     String pointingRef = rec.asRecord( "MEASINFO" ).asString( "Ref" ) ;
     MDirection::getType( dirType, pointingRef ) ;
     getpt = True ;
+
+    // initialize toj2000 and toazel
+    initConvert() ;
   }
   void setWeatherTime( const Vector<Double> &t, const Vector<Double> &it )
   {
@@ -709,6 +709,12 @@ public:
   uInt getNumBeam() { return nbeam ; }
   uInt getFilledRowNum() { return rowidx ; }
 private:
+  void initConvert()
+  {
+    toj2000 = MDirection::Convert( dirType, MDirection::Ref( MDirection::J2000, mf ) ) ;
+    toazel = MDirection::Convert( dirType, MDirection::Ref( MDirection::AZELGEO, mf ) ) ;
+  }
+
   void fluxUnit( String &u )
   {
     ROTableColumn col( table, dataColumnName ) ;
@@ -756,6 +762,9 @@ private:
     if ( !getpt ) {
       String ref = dir.getRefString() ;
       MDirection::getType( dirType, ref ) ;
+      
+      // initialize toj2000 and toazel
+      initConvert() ;
     }
 
     rf.resize( numLines ) ;
@@ -953,18 +962,15 @@ private:
         d = interp( pointingTime[idx-1], pointingTime[idx], t,
                     pointingDirection.xyPlane( idx-1 ), pointingDirection.xyPlane( idx ) ) ;
     }
-    mf.resetEpoch( currentTime ) ;
+    mf.set( currentTime ) ;
     Quantum< Vector<Double> > tmp( d.column( 0 ), Unit( "rad" ) ) ;
     if ( dirType != MDirection::J2000 ) {
-      MDirection::Convert toj2000( dirType, MDirection::Ref( MDirection::J2000, mf ) ) ;
       dir = toj2000( tmp ).getAngle( "rad" ).getValue() ;
     }
     else {
       dir = d.column( 0 ) ;
     }
     if ( dirType != MDirection::AZELGEO ) {
-      MDirection::Convert toazel( dirType, MDirection::Ref( MDirection::AZELGEO, mf ) ) ;
-      //MDirection::Convert toazel( dirType, MDirection::Ref( MDirection::AZEL, mf ) ) ;
       azel = toazel( tmp ).getAngle( "rad" ).getValue() ;
     }
     else {
@@ -976,11 +982,9 @@ private:
   void getSourceDirection( Vector<Double> &dir, Vector<Double> &azel, Vector<Double> &srate )
   {
     dir = sourceDir.getAngle( "rad" ).getValue() ;
-    mf.resetEpoch( currentTime ) ;
-    MDirection::Convert toazel( dirType, MDirection::Ref( MDirection::AZELGEO, mf ) ) ;
+    mf.set( currentTime ) ;
     azel = toazel( Quantum< Vector<Double> >( dir, Unit("rad") ) ).getAngle( "rad" ).getValue() ;
     if ( dirType != MDirection::J2000 ) {
-      MDirection::Convert toj2000( dirType, MDirection::Ref( MDirection::J2000, mf ) ) ;
       dir = toj2000( Quantum< Vector<Double> >( dir, Unit("rad") ) ).getAngle( "rad" ).getValue() ;
     }
   }
@@ -1260,6 +1264,9 @@ private:
   MDirection sourceDir;
   MPosition antpos;
   MEpoch currentTime;
+  MeasFrame mf;
+  MDirection::Convert toj2000;
+  MDirection::Convert toazel;
   map<Int,uInt> ifmap;
   Block<uInt> polnos;
   Bool getpt;
@@ -1292,7 +1299,6 @@ private:
   Table srctab;
   Matrix<Float> sp;
   Matrix<uChar> fl;
-  MeasFrame mf;
 
   // MS MAIN columns
   ROTableColumn intervalCol;

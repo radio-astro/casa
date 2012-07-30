@@ -411,18 +411,14 @@ class asapplotter:
         """
         from asap import scantable
         if isinstance(scan, scantable):
-            if self._data is not None:
-                if scan != self._data:
-                    del self._data
-                    self._data = scan
-                    # reset
-                    self._reset()
-                    msg = "A new scantable is set to the plotter. "\
-                          "The masks and data selections are reset."
-                    asaplog.push( msg )
-            else:
-                self._data = scan
-                self._reset()
+            if (self._data is not None) and (scan != self._data):
+                del self._data
+                msg = "A new scantable is set to the plotter. "\
+                      "The masks and data selections are reset."
+                asaplog.push( msg )
+            self._data = scan
+            # reset
+            self._reset()
         else:
             msg = "Input is not a scantable"
             raise TypeError(msg)
@@ -1266,7 +1262,8 @@ class asapplotter:
         """
         visible = rcParams['plotter.gui']
         from matplotlib import pylab as PL
-        from matplotlib.dates import DateFormatter, timezone
+        from matplotlib.dates import DateFormatter
+        from pytz import timezone
         from matplotlib.dates import HourLocator, MinuteLocator,SecondLocator, DayLocator
         from matplotlib.ticker import MultipleLocator
         from numpy import array, pi
@@ -1275,7 +1272,6 @@ class asapplotter:
             from matplotlib.backends.backend_agg import FigureCanvasAgg
             PL.gcf().canvas.switch_backends(FigureCanvasAgg)
         self._data = scan
-        self._outfile = outfile
         dates = self._data.get_time(asdatetime=True)
         t = PL.date2num(dates)
         tz = timezone('UTC')
@@ -1283,7 +1279,7 @@ class asapplotter:
         PL.ioff()
         PL.clf()
         # Adjust subplot margins
-        if len(self._margins) != 6:
+        if not self._margins or len(self._margins) != 6:
             self.set_margin(refresh=False)
         lef, bot, rig, top, wsp, hsp = self._margins
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
@@ -1361,8 +1357,8 @@ class asapplotter:
         PL.ion()
         PL.draw()
         if matplotlib.get_backend() == 'Qt4Agg': PL.gcf().show()
-        if (self._outfile is not None):
-           PL.savefig(self._outfile)
+        if (outfile is not None):
+           PL.savefig(outfile)
 
     def plotpointing(self, scan=None, outfile=None):
         """
@@ -1376,7 +1372,6 @@ class asapplotter:
             from matplotlib.backends.backend_agg import FigureCanvasAgg
             PL.gcf().canvas.switch_backends(FigureCanvasAgg)
         self._data = scan
-        self._outfile = outfile
         dir = array(self._data.get_directionval()).transpose()
         ra = dir[0]*180./pi
         dec = dir[1]*180./pi
@@ -1384,7 +1379,7 @@ class asapplotter:
         #PL.ioff()
         PL.clf()
         # Adjust subplot margins
-        if len(self._margins) != 6:
+        if not self._margins or len(self._margins) != 6:
             self.set_margin(refresh=False)
         lef, bot, rig, top, wsp, hsp = self._margins
         PL.gcf().subplots_adjust(left=lef,bottom=bot,right=rig,top=top,
@@ -1402,13 +1397,13 @@ class asapplotter:
         PL.ion()
         PL.draw()
         if matplotlib.get_backend() == 'Qt4Agg': PL.gcf().show()
-        if (self._outfile is not None):
-           PL.savefig(self._outfile)
+        if (outfile is not None):
+           PL.savefig(outfile)
 
     # plot total power data
     # plotting in time is not yet implemented..
     @asaplog_post_dec
-    def plottp(self, scan=None, outfile=None):
+    def plottp(self, scan=None):
         self._assert_plotter(action="reload")
         self._plotter.hold()
         self._plotter.clear()
@@ -1433,7 +1428,8 @@ class asapplotter:
         #    self._datamask = None
 
         # Adjust subplot margins
-        if len(self._margins) !=6: self.set_margin(refresh=False)
+        if not self._margins or len(self._margins) !=6:
+            self.set_margin(refresh=False)
         lef, bot, rig, top, wsp, hsp = self._margins
         self._plotter.figure.subplots_adjust(
             left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
@@ -1582,3 +1578,258 @@ class asapplotter:
                     self._plotter.figure.texts.pop(self._plotter.figure.texts.index(textobj))
             self._plotter.release()
         self._reset_header()
+
+    # plot spectra by pointing
+    @asaplog_post_dec
+    def plotgrid(self, scan=None,center=None,spacing=None,rows=None,cols=None):
+        """
+        Plot spectra based on direction.
+        
+        Parameters:
+            scan:      a scantable to plot
+            center:    the grid center direction (a list) of plots in the
+                       unit of DIRECTION column.
+                       (default) the center of map region
+            spacing:   a list of horizontal (R.A.) and vertical (Dec.)
+                       spacing in the unit of DIRECTION column.
+                       (default) Calculated by the extent of map region and
+                       the number of rows and cols to cover
+            rows:      number of panels (grid points) in horizontal direction
+            cols:      number of panels (grid points) in vertical direction
+
+        Note:
+        - Only the first IFNO, POLNO, and BEAM in the scantable will be
+        plotted.
+        - This method doesn't re-grid and average spectra in scantable. Use
+        asapgrid module to re-grid spectra before plotting with this method.
+        Only the first spectrum is plotted in case there are multiple
+        spectra which belong to a grid.
+        """
+        from asap import scantable
+        from numpy import array, ma, cos
+        if not self._data and not scan:
+            msg = "No scantable is specified to plot"
+            raise TypeError(msg)
+        if scan: 
+            self.set_data(scan, refresh=False)
+            del scan
+
+        # Rows and cols
+        if rows:
+            self._rows = int(rows)
+        else:
+            msg = "Number of rows to plot are not specified. "
+            if self._rows:
+                msg += "Using previous value = %d" % (self._rows)
+                asaplog.push(msg)
+            else:
+                self._rows = 1
+                msg += "Setting rows = %d" % (self._rows)
+                asaplog.post()
+                asaplog.push(msg)
+                asaplog.post("WARN")
+        if cols:
+            self._cols = int(cols)
+        else:
+            msg = "Number of cols to plot are not specified. "
+            if self._cols:
+                msg += "Using previous value = %d" % (self._cols)
+                asaplog.push(msg)
+            else:
+                self._cols = 1
+                msg += "Setting cols = %d" % (self._cols)
+                asaplog.post()
+                asaplog.push(msg)
+                asaplog.post("WARN")
+
+        # Center and spacing
+        if center is None:
+            #asaplog.post()
+            asaplog.push("Grid center is not specified. Automatically calculated from pointing center.")
+            #asaplog.post("WARN")
+            dirarr = array(self._data.get_directionval()).transpose()
+            #center = [dirarr[0].mean(), dirarr[1].mean()]
+            center = [0.5*(dirarr[0].max() + dirarr[0].min()),
+                      0.5*(dirarr[1].max() + dirarr[1].min())]
+            del dirarr
+        elif (type(center) in (list, tuple)) and len(center) > 1:
+            center = center[0:2]
+        else:
+            msg = "Direction of grid center should be a list of float (R.A., Dec.)"
+            raise ValueError, msg
+        asaplog.push("Grid center: (%f, %f) " % (center[0],center[1]))
+
+        if spacing is None:
+            #asaplog.post()
+            asaplog.push("Grid spacing not specified. Automatically calculated from map coverage")
+            #asaplog.post("WARN")
+            # automatically get spacing
+            dirarr = array(self._data.get_directionval()).transpose()
+            wx = 2. * max(abs(dirarr[0].max()-center[0]),
+                          abs(dirarr[0].min()-center[0]))
+            wy = 2. * max(abs(dirarr[1].max()-center[1]),
+                          abs(dirarr[1].min()-center[1]))
+            ## slightly expand area to plot the edges
+            #wx *= 1.01
+            #wy *= 1.01
+            #xgrid = wx/self._cols
+            #ygrid = wy/self._rows
+            xgrid = wx/max(self._cols-1.,1.)
+            ygrid = wy/max(self._rows-1.,1.)
+            #print "Pointing range: (x, y) = (%f - %f, %f - %f)" %\
+            #  (dirarr[0].min(),dirarr[0].max(),dirarr[1].min(),dirarr[1].max())
+            # identical R.A. and/or Dec. for all spectra.
+            if xgrid == 0:
+                xgrid = 1.
+            if ygrid == 0:
+                ygrid = 1.
+            # spacing should be negative to transpose plot
+            spacing = [- xgrid, - ygrid]
+            del dirarr, xgrid, ygrid
+        #elif isinstance(spacing, str):
+        #    # spacing is a quantity
+        elif (type(spacing) in (list, tuple)) and len(spacing) > 1:
+            for i in xrange(2):
+                val = spacing[i]
+                if not isinstance(val, float):
+                    raise TypeError("spacing should be a list of float")
+                if val > 0.:
+                    spacing[i] = -val
+            spacing = spacing[0:2]
+            # Correction of Dec. effect
+            spacing[0] /= cos(center[1])
+        else:
+            msg = "Invalid spacing."
+            raise TypeError(msg)
+        asaplog.push("Spacing: (%f, %f) (projected)" % (spacing[0],spacing[1]))
+
+        ntotpl = self._rows * self._cols
+        minpos = [center[0]-spacing[0]*self._cols/2.,
+                  center[1]-spacing[1]*self._rows/2.]
+        #print "Plot range: (x, y) = (%f - %f, %f - %f)" %\
+        #      (minpos[0],minpos[0]+spacing[0]*self._cols,
+        #       minpos[1],minpos[1]+spacing[1]*self._rows)
+        ifs = self._data.getifnos()
+        if len(ifs) > 1:
+            msg = "Found multiple IFs in scantable. Only the first IF (IFNO=%d) will be plotted." % ifs[0]
+            asaplog.post()
+            asaplog.push(msg)
+            asaplog.post("WARN")
+        pols = self._data.getpolnos()
+        if len(pols) > 1:
+            msg = "Found multiple POLs in scantable. Only the first POL (POLNO=%d) will be plotted." % pols[0]
+            asaplog.post()
+            asaplog.push(msg)
+            asaplog.post("WARN")
+        beams = self._data.getbeamnos()
+        if len(beams) > 1:
+            msg = "Found multiple BEAMs in scantable. Only the first BEAM (BEAMNO=%d) will be plotted." % beams[0]
+            asaplog.post()
+            asaplog.push(msg)
+            asaplog.post("WARN")
+        self._data.set_selection(ifs=[ifs[0]],pols=[pols[0]],beams=[beams[0]])
+        if self._data.nrow() > ntotpl:
+            msg = "Scantable is finely sampled than plotting grids. "\
+                  + "Only the first spectrum is plotted in each grid."
+            asaplog.post()
+            asaplog.push(msg)
+            asaplog.post("WARN")
+        
+        self._assert_plotter(action="reload")
+        self._plotter.hold()
+        self._plotter.clear()
+        self._plotter.legend()
+        
+        # Adjust subplot margins
+        if not self._margins or len(self._margins) !=6:
+            self.set_margin(refresh=False)
+        self._plotter.set_panels(rows=self._rows,cols=self._cols,
+                                 nplots=ntotpl,margin=self._margins,ganged=True)
+        if self.casabar_exists():
+            self._plotter.figmgr.casabar.set_pagecounter(1)
+            self._plotter.figmgr.casabar.enable_button()
+        # Actual plot
+        npl = 0
+        for irow in range(self._data.nrow()):
+            pos = self._data.get_directionval(irow)
+            ix = int((pos[0] - minpos[0])/spacing[0])
+            if ix < 0 or ix >= self._cols:
+                #print "Row %d : Out of X-range (x = %f) ... skipped" % (irow, pos[0])
+                continue
+            iy = int((pos[1]- minpos[1])/spacing[1])
+            if iy < 0 or iy >= self._cols:
+                #print "Row %d : Out of Y-range (y = %f) ... skipped" % (irow,pos[1])
+                continue
+            ipanel = ix + iy*self._cols
+            if len(self._plotter.subplots[ipanel]['lines']) > 0:
+                #print "Row %d : panel %d lready plotted ... skipped" % (irow,ipanel)
+                # a spectrum already plotted in the panel
+                continue
+            # Plotting this row
+            #print "PLOTTING row %d (panel=%d)" % (irow, ipanel)
+            npl += 1
+            self._plotter.subplot(ipanel)
+            self._plotter.palette(0,colormap=self._colormap, \
+                                  linestyle=0,linestyles=self._linestyles)
+            xlab = self._abcissa and self._abcissa[ipanel] \
+                   or self._data._getabcissalabel(irow)
+            if self._offset and not self._abcissa:
+                xlab += " (relative)"
+            ylab = self._ordinate and self._ordinate[ipanel] \
+                   or self._data._get_ordinate_label()
+            self._plotter.set_axes('xlabel', xlab)
+            self._plotter.set_axes('ylabel', ylab)
+            #from numpy import pi
+            #lbl = "(%f, %f)" % (self._data.get_directionval(irow)[0]*180/pi,self._data.get_directionval(irow)[1]*180./pi)
+            lbl = self._data.get_direction(irow)
+            self._plotter.set_axes('title',lbl)
+
+            y = self._data._getspectrum(irow)
+            # flag application
+            mr = self._data._getflagrow(irow)
+            if mr:  # FLAGROW=True
+                y = ma.masked_array(y,mask=mr)
+            else:
+                m = self._data._getmask(irow)
+                from numpy import logical_not, logical_and
+                ### user mask is not available so far
+                #if self._maskselection and len(self._usermask) == len(m):
+                #    if d[self._stacking](irow) in self._maskselection[self._stacking]:
+                #            m = logical_and(m, self._usermask)
+                y = ma.masked_array(y,mask=logical_not(array(m,copy=False)))
+
+            x = array(self._data._getabcissa(irow))
+            if self._offset:
+                x += self._offset
+            if self._minmaxx is not None:
+                s,e = self._slice_indeces(x)
+                x = x[s:e]
+                y = y[s:e]
+            if len(x) > 1024 and rcParams['plotter.decimate']:
+                fac = len(x)/1024
+                x = x[::fac]
+                y = y[::fac]
+            self._plotter.set_line(label=lbl)
+            plotit = self._plotter.plot
+            if self._hist: plotit = self._plotter.hist
+            if len(x) > 0 and not mr:
+                plotit(x,y)
+#                 xlim= self._minmaxx or [min(x),max(x)]
+#                 allxlim += xlim
+#                 ylim= self._minmaxy or [ma.minimum(y),ma.maximum(y)]
+#                 allylim += ylim
+#             else:
+#                 xlim = self._minmaxx or []
+#                 allxlim += xlim
+#                 ylim= self._minmaxy or []
+#                 allylim += ylim
+            
+            if npl >= ntotpl:
+                break
+            
+        if self._minmaxy is not None:
+            self._plotter.set_limits(ylim=self._minmaxy)
+        self._plotter.release()
+        self._plotter.tidy()
+        self._plotter.show(hardrefresh=False)
+        return

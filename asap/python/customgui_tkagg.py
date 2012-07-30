@@ -116,12 +116,15 @@ class CustomToolbarTkAgg(CustomToolbarCommon, Tk.Frame):
 
     def modify_note(self):
         if not self.figmgr.toolbar.mode == '': return
-        self.figmgr.toolbar.set_message('text: select a position/text')
         if self.mode == 'note':
             self.bNote.config(relief='raised')
             self.mode = 'none'
             self.spec_show()
+            if not self.button:
+                self.notewin.close_widgets()
+                self.__disconnect_event()
             return
+        self.figmgr.toolbar.set_message('text: select a position/text')
         #self.bSpec.config(relief='raised')
         self.bStat.config(relief='raised')
         self.bNote.config(relief='sunken')
@@ -300,7 +303,9 @@ class NotationWindowTkAgg(NotationWindowCommon):
 
     def _get_note(self):
         """Returns a note string specified in the text box"""
-        return self.textbox.get("1.0",Tk.END)
+        # A WORKAROUND for OSX 10.7 (Tk.Text returns unicode but asaplog doesn't accept it)
+        #return self.textbox.get("1.0",Tk.END)
+        return str(self.textbox.get("1.0",Tk.END))
 
     def _clear_textbox(self):
         """Clear the text box"""
@@ -375,7 +380,9 @@ class NotationWindowTkAgg(NotationWindowCommon):
             self._enable_radio()
         self.textwin.deiconify()
         (w,h) = self.textwin.minsize()
-        if w*h <= 1:
+        # WORKAROUND for too small default minsize on OSX 10.7
+        #if w*h <= 1:
+        if w*h <= 1500:
             self.textwin.minsize(width=self.textwin.winfo_width(),
                                  height=self.textwin.winfo_height())
             (w,h) = self.textwin.minsize()
@@ -602,6 +609,9 @@ class CustomFlagToolbarTkAgg(CustomFlagToolbarCommon, Tk.Frame):
             self.bNote.config(relief='raised')
             self.mode = 'none'
             self.spec_show()
+            if not self.button:
+                self.notewin.close_widgets()
+                self.__disconnect_event()
             return
         self.figmgr.toolbar.set_message('text: select a position/text')
         self.bNote.config(relief='sunken')

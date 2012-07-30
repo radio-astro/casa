@@ -883,7 +883,7 @@ bool LFLineListOperations::LaterThan::operator()(const std::pair<int,int> &line2
 //
 //
 
-STLineFinder::STLineFinder() throw() : edge(0,0)
+STLineFinder::STLineFinder() throw() : edge(0,0), err("spurious")
 {
   useScantable = true;
   setOptions();
@@ -1049,6 +1049,7 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
                      // We need only signs resulted from last iteration
                      // because all previous values may be corrupted by the
                      // presence of spectral lines
+
   while (true) {
      // a buffer for new lines found at this iteration
      std::list<pair<int,int> > new_lines;
@@ -1061,8 +1062,10 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
          signs=lfalg.getSigns();
          first_pass=False;
          if (!new_lines.size())
-              throw AipsError("spurious"); // nothing new - use the same
-                                           // code as for a real exception
+//               throw AipsError("spurious"); // nothing new - use the same
+//                                            // code as for a real exception
+              throw err; // nothing new - use the same
+                         // code as for a real exception
      }
      catch(const AipsError &ae) {
          if (first_pass) throw;

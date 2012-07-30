@@ -12,15 +12,17 @@
 #ifndef ASAPSCANTABLEWRAPPER_H
 #define ASAPSCANTABLEWRAPPER_H
 
-#include <vector>
+#include <iostream>
 #include <string>
+#include <vector>
+
 #include <casa/Arrays/Vector.h>
 
 #include "MathUtils.h"
-#include "STFit.h"
-#include "STFitEntry.h"
 #include "Scantable.h"
 #include "STCoordinate.h"
+#include "STFit.h"
+#include "STFitEntry.h"
 
 namespace asap {
 /**
@@ -56,6 +58,10 @@ public:
 
   ScantableWrapper(const ScantableWrapper& mt) :
     table_(mt.getCP()) {;}
+
+  ~ScantableWrapper()
+  {
+  }
 
   void assign(const ScantableWrapper& mt)
     { table_= mt.getCP(); }
@@ -303,6 +309,10 @@ public:
   std::vector<float> execFFT(int whichrow, const std::vector<bool>& mask, bool getRealImag=false, bool getAmplitudeOnly=false)
   { return table_->execFFT(whichrow, mask, getRealImag, getAmplitudeOnly); }
 
+  std::vector<uint> getMoleculeIdColumnData() const
+  { return table_->getMoleculeIdColumnData(); }
+  void setMoleculeIdColumnData(const std::vector<uint>& molids)
+  { table_->setMoleculeIdColumnData(molids); }
 
 
 private:
@@ -311,4 +321,3 @@ private:
 
 } // namespace
 #endif
-

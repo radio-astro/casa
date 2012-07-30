@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "STGrid.h"
-//#include "STGridWrapper.h"
+#include "ScantableWrapper.h"
 
 using namespace boost::python;
 
@@ -16,7 +16,6 @@ namespace asap {
   namespace python {
 
 void python_STGrid() {
-  //class_<STGridWrapper>("stgrid")
   class_<STGrid>("stgrid")
     .def( init <> () )
     .def( init < const std::string > () )
@@ -34,6 +33,25 @@ void python_STGrid() {
     .def("_disableclip", &STGrid::disableClip) 
     .def("_save", &STGrid::saveData)
     ;
+
+  class_<STGrid2>("stgrid2")
+    .def( init <> () )
+    .def( init < const ScantableWrapper & > () )
+    .def( init < const std::vector<ScantableWrapper> & > () )
+    .def("_setif", &STGrid2::setIF)
+    .def("_setpollist", &STGrid2::setPolList)
+    .def("_setscanlist", &STGrid2::setScanList)
+    .def("_defineimage", &STGrid2::defineImage)
+    .def("_setfunc", &STGrid2::setFunc)
+    .def("_grid", &STGrid2::grid)
+    .def("_setin", &STGrid2::setScantable)
+    .def("_setfiles", &STGrid2::setScantableList)
+    .def("_setweight", &STGrid2::setWeight)
+    .def("_enableclip", &STGrid2::enableClip) 
+    .def("_disableclip", &STGrid2::disableClip) 
+    .def("_get", &STGrid2::getResultAsScantable)
+    ;
+    
 };
 
   } // python

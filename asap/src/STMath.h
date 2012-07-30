@@ -401,36 +401,54 @@ private:
   casa::Vector<casa::uChar>
     flagsFromMA(const casa::MaskedArray<casa::Float>& ma);
 
-  vector<float> getSpectrumFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode = "before" ) ;
-  vector<float> getTcalFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
-  vector<float> getTsysFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
-  vector<int> getRowIdFromTime( string reftime, casa::CountedPtr<Scantable>& s ) ;
+  casa::Vector<casa::Float> getSpectrumFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::Matrix<casa::Float>& sp, string mode = "before" ) ;
+  casa::Vector<casa::Float> getTcalFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::CountedPtr<Scantable>& s, string mode="before" ) ;
+  casa::Vector<casa::Float> getTsysFromTime( double reftime, const casa::Vector<casa::Double> &v, const vector<int> &idx, const casa::CountedPtr<Scantable>& s, string mode="before" ) ;
+  vector<int> getRowIdFromTime( double reftime, const casa::Vector<casa::Double>& t ) ;
 
   // Chopper-Wheel type calibration
-  vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
-                                      casa::CountedPtr<Scantable>& off,
-                                      casa::CountedPtr<Scantable>& sky,
-                                      casa::CountedPtr<Scantable>& hot,
-                                      casa::CountedPtr<Scantable>& cold,
-                                      int index,
-                                      string antname ) ;
+  void calibrateCW( casa::CountedPtr<Scantable> &out,
+                    const casa::CountedPtr<Scantable> &on,
+                    const casa::CountedPtr<Scantable> &off,
+                    const casa::CountedPtr<Scantable> &sky,
+                    const casa::CountedPtr<Scantable> &hot,
+                    const casa::CountedPtr<Scantable> &cold,
+                    const casa::Vector<casa::uInt> &rows,
+                    const casa::String &antname ) ;
+
   // Tsys * (ON-OFF)/OFF
-  vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
-                                      casa::CountedPtr<Scantable>& off,
-                                      int index ) ;
-  vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
-                                        casa::CountedPtr<Scantable>& ref,
-                                        casa::CountedPtr<Scantable>& sky,
-                                        casa::CountedPtr<Scantable>& hot,
-                                        casa::CountedPtr<Scantable>& cold,
-                                        int index ) ;
-  vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
-                                        casa::CountedPtr<Scantable>& ref,
-                                        vector< casa::CountedPtr<Scantable> >& sky,
-                                        vector< casa::CountedPtr<Scantable> >& hot,
-                                        vector< casa::CountedPtr<Scantable> >& cold,
-                                        int index ) ;
-  double getMJD( string strtime ) ;
+  void calibrateALMA( casa::CountedPtr<Scantable>& out,
+                      const casa::CountedPtr<Scantable>& on,
+                      const casa::CountedPtr<Scantable>& off,
+                      const casa::Vector<casa::uInt>& rows ) ;
+
+  // Frequency switching
+  void calibrateFS( casa::CountedPtr<Scantable> &sig,
+                    casa::CountedPtr<Scantable> &ref,
+                    const casa::CountedPtr<Scantable> &rsig,
+                    const casa::CountedPtr<Scantable> &rref,
+                    const casa::CountedPtr<Scantable> &sky,
+                    const casa::CountedPtr<Scantable> &hot,
+                    const casa::CountedPtr<Scantable> &cold,
+                    const casa::Vector<casa::uInt> &rows ) ;
+  void calibrateAPEXFS( casa::CountedPtr<Scantable> &sig,
+                        casa::CountedPtr<Scantable> &ref,
+                        const vector< casa::CountedPtr<Scantable> > &on,
+                        const vector< casa::CountedPtr<Scantable> > &sky,
+                        const vector< casa::CountedPtr<Scantable> > &hot,
+                        const vector< casa::CountedPtr<Scantable> > &cold,
+                        const casa::Vector<casa::uInt> &rows ) ;
+  void copyRows( casa::Table &out, 
+                 const casa::Table &in, 
+                 casa::uInt startout, 
+                 casa::uInt startin, 
+                 casa::uInt nrow, 
+                 casa::Bool copySpectra=true,
+                 casa::Bool copyFlagtra=true, 
+                 casa::Bool copyTsys=true ) ; 
+  casa::CountedPtr<Scantable> averageWithinSession( casa::CountedPtr<Scantable> &s,
+                                                    vector<bool> &mask,
+                                                    string weight ) ;
 
   bool insitu_;
 };

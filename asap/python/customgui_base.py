@@ -876,8 +876,12 @@ class CustomFlagToolbarCommon:
 
         self._thisregion['worldx'][1] = xdataend
         lregion = self._thisregion['worldx']
+        # WORKAROUND for the issue axvspan started to reset xlim.
+        axlimx = self._thisregion['axes'].get_xlim()
         pregion = self._thisregion['axes'].axvspan(lregion[0],lregion[1],
                                                    facecolor='0.7')
+        self._thisregion['axes'].set_xlim(axlimx)
+        
         self.plotter._plotter.canvas.draw()
         self._polygons.append(pregion)
         srow = self._getrownum(self._thisregion['axes'])
@@ -958,10 +962,13 @@ class CustomFlagToolbarCommon:
             if regions.has_key(str(irow)):
                 ax = self.plotter._plotter.subplots[irow - int(strow)]['axes']
                 mlist = regions.pop(str(irow))
+                # WORKAROUND for the issue axvspan started to reset xlim.
+                axlimx = ax.get_xlim()
                 for i in range(len(mlist)):
                     self._polygons.append(ax.axvspan(mlist[i][0],mlist[i][1],
                                                      facecolor='0.7'))
-                del ax,mlist
+                ax.set_xlim(axlimx)
+                del ax,mlist,axlimx
             if irow in panels:
                 ax = self.plotter._plotter.subplots[irow - int(strow)]['axes']
                 shadow = Rectangle((0,0),1,1,facecolor='0.7',
@@ -1166,7 +1173,7 @@ class CustomFlagToolbarCommon:
             goback = False
 
         self.plotter._plotter.hold()
-        self.plotter._plotter.legend(1)
+        #self.plotter._plotter.legend(1)
         self._set_plot_counter(pagemode)
         self.plotter._plot(self.plotter._data)
         self.set_pagecounter(self._get_pagenum())
@@ -1188,7 +1195,7 @@ class CustomFlagToolbarCommon:
             # nothing necessary to plot the next page
             return
         # set row and panel counters to those of the 1st panel of previous page
-        maxpanel = 16
+        maxpanel = 25
         # the ID of the last panel in current plot
         lastpanel = self.plotter._ipanel
         # the number of current subplots
@@ -1231,7 +1238,7 @@ class CustomFlagToolbarCommon:
         pass
 
     def _get_pagenum(self):
-        maxpanel = 16
+        maxpanel = 25
         # get the ID of last panel in the current page
         idlastpanel = self.plotter._ipanel
         if self.plotter._rows and self.plotter._cols:

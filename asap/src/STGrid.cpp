@@ -1184,20 +1184,30 @@ void STGrid::mapExtent( Double &xmin, Double &xmax,
   //os << "(ymin,ymax)=(" << ymin << "," << ymax << ")" << LogIO::POST ; 
 }
 
+void STGrid::table( Table &tab, uInt i )
+{
+  if ( i >= 0 && i < nfile_ )
+    tab = Table( infileList_[i] ) ;
+}
+
 void STGrid::selectData()
 {
   LogIO os( LogOrigin("STGrid","selectData",WHERE) ) ;    
   Int ifno = ifno_ ;
   tableList_.resize( nfile_ ) ;
   if ( ifno_ == -1 ) {
-    Table taborg( infileList_[0] ) ;
+    //Table taborg( infileList_[0] ) ;
+    Table taborg ;
+    table( taborg, 0 ) ;
     ROScalarColumn<uInt> ifnoCol( taborg, "IFNO" ) ;
     ifno_ = ifnoCol( 0 ) ;
     os << LogIO::WARN
        << "IFNO is not given. Using default IFNO: " << ifno_ << LogIO::POST ;
   }
   for ( uInt i = 0 ; i < nfile_ ; i++ ) {
-    Table taborg( infileList_[i] ) ;
+    //Table taborg( infileList_[i] ) ;
+    Table taborg ;
+    table( taborg, i ) ;
     TableExprNode node ;
     if ( ifno != -1 || isMultiIF( taborg ) ) {
       os << "apply selection on IFNO" << LogIO::POST ;
@@ -1638,6 +1648,27 @@ string STGrid::saveData( string outfile )
   }
   Table tab ;
   prepareTable( tab, outfile_ ) ;
+  fillTable( tab ) ;
+
+  t1 = mathutil::gettimeofday_sec() ;
+  os << LogIO::DEBUGGING << "saveData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
+
+  return outfile_ ;
+}
+
+void STGrid::prepareTable( Table &tab, String &name ) 
+{
+  Table t( infileList_[0], Table::Old ) ;
+  t.deepCopy( name, Table::New, False, t.endianFormat(), True ) ;
+  tab = Table( name, Table::Update ) ;
+  // 2012/02/13 TN
+  // explicitly copy subtables since no rows including subtables are 
+  // copied by Table::deepCopy with noRows=True
+  TableCopy::copySubTables( tab, t ) ;
+}
+
+void STGrid::fillTable( Table &tab )
+{
   IPosition dshape = data_.shape() ;
   Int nrow = nx_ * ny_ * npol_ ;
   tab.rwKeywordSet().define( "nPol", npol_ ) ;
@@ -1686,29 +1717,15 @@ string STGrid::saveData( string outfile )
   }
   data_.freeStorage( data_p, bdata ) ;
 
-  t1 = mathutil::gettimeofday_sec() ;
-  os << LogIO::DEBUGGING << "saveData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
-
   fillMainColumns( tab ) ;
-
-  return outfile_ ;
-}
-
-void STGrid::prepareTable( Table &tab, String &name ) 
-{
-  Table t( infileList_[0], Table::Old ) ;
-  t.deepCopy( name, Table::New, False, t.endianFormat(), True ) ;
-  tab = Table( name, Table::Update ) ;
-  // 2012/02/13 TN
-  // explicitly copy subtables since no rows including subtables are 
-  // copied by Table::deepCopy with noRows=True
-  TableCopy::copySubTables( tab, t ) ;
 }
 
 void STGrid::fillMainColumns( Table &tab ) 
 {
   // values for fill
-  Table t( infileList_[0], Table::Old ) ;
+  //Table t( infileList_[0], Table::Old ) ;
+  Table t ;
+  table( t, 0 ) ;
   Table tsel = t( t.col( "IFNO" ) == (uInt)ifno_, 1 ) ;
   ROTableRow row( tsel ) ;
   row.get( 0 ) ;
@@ -1776,6 +1793,68 @@ void STGrid::fillMainColumns( Table &tab )
     timeCol.put( i, time ) ;
     intervalCol.put( i, interval ) ;
   }
+}
+
+// STGrid2
+STGrid2::STGrid2()
+  : STGrid()
+{
+}
+
+STGrid2::STGrid2( const ScantableWrapper &s )
+  : STGrid()
+{
+  setScantable( s ) ;
+}
+
+STGrid2::STGrid2( const vector<ScantableWrapper> &v )
+  : STGrid()
+{
+  setScantableList( v ) ;
+}
+
+void STGrid2::setScantable( const ScantableWrapper &s )
+{
+  nfile_ = 1 ;
+  dataList_.resize( nfile_ ) ;
+  dataList_[0] = s ;
+  infileList_.resize( nfile_ ) ;
+  infileList_[0] = s.getCP()->table().tableName() ;
+}
+
+void STGrid2::setScantableList( const vector<ScantableWrapper> &v )
+{
+  nfile_ = v.size() ;
+  dataList_.resize( nfile_ ) ;
+  infileList_.resize( nfile_ ) ;
+  for ( uInt i = 0 ; i < nfile_ ; i++ ) {
+    dataList_[i] = v[i] ;
+    infileList_[i] = v[i].getCP()->table().tableName() ;
+  }
+}
+
+ScantableWrapper STGrid2::getResultAsScantable( int tp )
+{
+  Table::TableType ttype = (tp==0) ? Table::Memory : Table::Plain ;
+  ScantableWrapper sw( ttype ) ;
+  CountedPtr<Scantable> s = sw.getCP() ;
+  s->setHeader( dataList_[0].getCP()->getHeader() ) ;
+  Table tout, tin ;
+  String subt[] = { "FREQUENCIES", "FOCUS", "WEATHER", 
+                    "TCAL", "MOLECULES", "HISTORY", "FIT" } ;
+  for ( uInt i = 0 ; i < 7 ; i++ ) {
+    tout = s->table().rwKeywordSet().asTable(subt[i]) ;
+    tin = dataList_[0].getCP()->table().rwKeywordSet().asTable(subt[i]) ;
+    TableCopy::copyRows( tout, tin ) ;
+  }
+  fillTable( s->table() ) ;
+  return sw ;
+}
+
+void STGrid2::table( Table &tab, uInt i ) 
+{
+  if ( i < nfile_ )
+    tab = dataList_[i].getCP()->table() ;
 }
 
 }

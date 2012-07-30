@@ -108,6 +108,11 @@ private:
 		     const casa::Double interval,
 		     const casa::Double time,
 		     const casa::Bool inverseMask);
+  void doAddSpectrum2(const casa::Vector<casa::Float>& v,
+                      const casa::Vector<casa::Bool>& m,
+                      const casa::Vector<casa::Float>& tsys,
+                      const casa::Double interval,
+                      const casa::Double time);
   casa::Float getTotalWeight(const casa::MaskedArray<casa::Float>& data,
 			     const casa::Vector<casa::Float>& tsys,
 			     const casa::Double interval,

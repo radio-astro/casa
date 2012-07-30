@@ -80,8 +80,9 @@ void RowAccumulator::addSpectrum(const Vector<Float>& v,
 				 const Double interval,
 				 const Double time)
 {
-  doAddSpectrum(v, m, tsys, interval, time, False);
-  doAddSpectrum(v, m, tsys, interval, time, True);  // CAS-2776
+//   doAddSpectrum(v, m, tsys, interval, time, False);
+//   doAddSpectrum(v, m, tsys, interval, time, True);  // CAS-2776
+  doAddSpectrum2( v, m, tsys, interval, time ) ;
 }
 
 void RowAccumulator::doAddSpectrum(const Vector<Float>& v,
@@ -109,6 +110,85 @@ void RowAccumulator::doAddSpectrum(const Vector<Float>& v,
     weightSum_ += wadd;
     n_ += inc;
   }
+}
+
+void RowAccumulator::doAddSpectrum2(const Vector<Float>& v,
+                                    const Vector<Bool>& m,
+                                    const Vector<Float>& tsys,
+                                    const Double interval,
+                                    const Double time)
+{
+  const MaskedArray<Float> vadd(v, m);
+  const MaskedArray<Float> vaddN(v, !m);
+  Float totalWeight = getTotalWeight( vadd, tsys, interval, time, False ) ;
+  Float totalWeightNoMask = getTotalWeight( vaddN, tsys, interval, time, True ) ;
+  // process spectrum with input mask and spectrum with inverted mask 
+  // together
+  // prepare pointers
+  Bool vD, mD ;
+  const Float *v_p = v.getStorage( vD ) ;
+  const Float *v_wp = v_p ;
+  const Bool *m_p = m.getStorage( mD ) ;
+  const Bool *m_wp = m_p ;
+
+  Bool spD, spND, wgtD, wgtND, nD, nND ;
+  Float *sp_p = spectrum_.getRWArrayStorage( spD ) ;
+  Float *sp_wp = sp_p ;
+  Float *wgt_p = weightSum_.getRWArrayStorage( wgtD ) ;
+  Float *wgt_wp = wgt_p ;
+  Float *spN_p = spectrumNoMask_.getRWArrayStorage( spND ) ;
+  Float *spN_wp = spN_p ;
+  Float *wgtN_p = weightSumNoMask_.getRWArrayStorage( wgtND ) ;
+  Float *wgtN_wp = wgtN_p ;
+  uInt *n_p = n_.getRWArrayStorage( nD ) ;
+  uInt *n_wp = n_p ;
+  uInt *nN_p = nNoMask_.getRWArrayStorage( nND ) ;
+  uInt *nN_wp = nN_p ;
+
+  // actual processing
+  uInt len = m.nelements() ;
+  // loop over channels
+  for ( uInt i = 0 ; i < len ; i++ ) {
+    // masks for spectrum_ and spectrumNoMask_ are not needed since 
+    // it is initialized as True for all channels and those are constant
+    if ( *m_wp ) {
+      // mask is True
+      // add v * totalWeight to spectrum_
+      // add totalWeight to weightSum_
+      // increment n_
+      *sp_wp += *v_wp * totalWeight ;
+      *wgt_wp += totalWeight ;
+      *n_wp += 1 ;
+    }
+    else {
+      // mask is False
+      // add v * totalWeightNoMask to spectrumNoMask_
+      // add totalWeightNoMask to weightSumNoMask_
+      // increment nNoMask_
+      *spN_wp += *v_wp * totalWeightNoMask ;
+      *wgtN_wp += totalWeightNoMask ;
+      *nN_wp += 1 ;
+    }
+    sp_wp++ ;
+    wgt_wp++ ;
+    n_wp++ ;
+    spN_wp++ ;
+    wgtN_wp++ ;
+    nN_wp++ ;
+    v_wp++ ;
+    m_wp++ ;
+  }
+
+  // free storage
+  spectrum_.putArrayStorage( sp_p, spD ) ;
+  weightSum_.putArrayStorage( wgt_p, wgtD ) ;
+  spectrumNoMask_.putArrayStorage( spN_p, spND ) ;
+  weightSumNoMask_.putArrayStorage( wgtN_p, wgtND ) ;
+  n_.putArrayStorage( n_p, nD ) ;
+  nNoMask_.putArrayStorage( nN_p, nND ) ;
+
+  v.freeStorage( v_p, vD ) ; 
+  m.freeStorage( m_p, mD ) ;
 }
 
 Float RowAccumulator::getTotalWeight(const MaskedArray<Float>& data,

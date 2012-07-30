@@ -51,7 +51,8 @@ from interactivemask import interactivemask
 from asapfitter import fitter
 from opacity import skydip
 from opacity import model as opacity_model
-from asapgrid import asapgrid
+from asapgrid import asapgrid, asapgrid2
+#from plotter2 import plotter2
 from _asap import srctype
 
 __date__ = '$Date: 2011-12-01 04:05:36 -0500 (Thu, 01 Dec 2011) $'.split()[1]

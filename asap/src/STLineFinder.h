@@ -47,6 +47,7 @@
 // ASAP
 #include "ScantableWrapper.h"
 #include "Scantable.h"
+#include "STFitter.h"
 
 namespace asap {
 
@@ -161,6 +162,8 @@ struct STLineFinder : protected LFLineListOperations {
                    const casa::Float &in_noise_box=-1.,
                    const casa::Bool &in_median = casa::False) throw();
 
+   void setDetailedOptions( const casa::Int &order=9 ) ;
+
    // set the scan to work with (in_scan parameter)
    void setScan(const ScantableWrapper &in_scan) throw(casa::AipsError);
 
@@ -265,6 +268,9 @@ private:
    // true if spectra and mask data should be provided from 
    // scantable (default = true)
    bool useScantable;
+
+   // shared object for nominal throw
+   casa::AipsError err ;
 };
 
 //

@@ -42,6 +42,7 @@
 
 #include <casa/IO/RegularFileIO.h>
 #include <casa/OS/File.h>
+#include <string.h>
 
 //--------------------------------------------------------------- getPKSreader
 

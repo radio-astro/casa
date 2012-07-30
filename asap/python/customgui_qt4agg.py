@@ -130,6 +130,9 @@ class CustomToolbarQT4Agg(CustomToolbarCommon,  qt.QtGui.QToolBar):
             self.bNote.setToolTip("add note on plot")
             self.mode = 'none'
             self.spec_show()
+            if not self.button:
+                self.notewin.close_widgets()
+                self.__disconnect_event()
             return
         self.figmgr.toolbar.set_message("text: select a position/text")
         self.bStat.setChecked(False)
@@ -661,6 +664,9 @@ class CustomFlagToolbarQT4Agg(CustomFlagToolbarCommon,  qt.QtGui.QToolBar):
             self.bNote.setToolTip("add note on plot")
             self.mode = 'none'
             self.spec_show()
+            if not self.button:
+                self.notewin.close_widgets()
+                self.__disconnect_event()
             return
         self.figmgr.toolbar.set_message('text: select a position/text')
         self.bNote.setChecked(True)

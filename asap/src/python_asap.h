@@ -34,6 +34,7 @@
 namespace asap {
   namespace python {
     void translate_ex(const casa::AipsError& e);
+    //void python_Plotter2();
     void python_Scantable();
     void python_STFiller();
     void python_Filler();
@@ -52,6 +53,7 @@ namespace asap {
     void python_STAtmosphere();
     void python_SrcType();
     void python_STGrid();
+    void python_Iterator();
 
   } // python
 } //asap

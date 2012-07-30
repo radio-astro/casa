@@ -26,6 +26,8 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
+#include "ScantableWrapper.h"
+#include "Scantable.h"
 #include "concurrent.h"
 
 using namespace std ;
@@ -66,7 +68,8 @@ public:
   
   string saveData( string outfile="" ) ;
 
-private:
+//private:
+protected:
   void init() ;
 
   // actual gridding
@@ -195,6 +198,8 @@ private:
   void initTable( uInt idx ) ;
   Bool isMultiIF( Table &tab ) ;
   void fillMainColumns( Table &tab ) ;
+  void fillTable( Table &tab ) ;
+  virtual void table( Table &tab, uInt i ) ;
   static bool produceChunk(void *ctx) throw(concurrent::PCException);
   static void consumeChunk(void *ctx) throw(concurrent::PCException);
   static void consumeChunkWithClipping(void *ctx) throw(concurrent::PCException);
@@ -255,6 +260,22 @@ private:
   double eGetData_;
   double eToPixel_;
   double eGGridSD_;
+};
+
+class STGrid2 : public STGrid
+{
+public:
+  STGrid2() ;
+  STGrid2( const ScantableWrapper &s ) ;
+  STGrid2( const vector<ScantableWrapper> &v ) ;
+  void setScantable( const ScantableWrapper &s ) ;
+  void setScantableList( const vector<ScantableWrapper> &v ) ;
+  void selectData() ;
+  virtual void table( Table &tab, uInt i ) ;
+  ScantableWrapper getResultAsScantable( int tp ) ;
+
+private:
+  Block<ScantableWrapper> dataList_ ;
 };
 }
 #endif

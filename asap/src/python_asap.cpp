@@ -67,6 +67,7 @@ void translate_ex(const casa::AipsError& e)
 using namespace boost::python;
 
 BOOST_PYTHON_MODULE(_asap) {
+  //asap::python::python_Plotter2();
   asap::python::python_Scantable();
   asap::python::python_STFiller();
   asap::python::python_Filler();
@@ -85,6 +86,7 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STAtmosphere();
   asap::python::python_SrcType();
   asap::python::python_STGrid();
+  asap::python::python_Iterator();
 
 #ifndef HAVE_LIBPYRAP
   // Use built-in pyconversions.h
