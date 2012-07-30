@@ -702,10 +702,10 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
       const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname, ms_p);
 
       if(!makeSelection()){
-        os << LogIO::SEVERE 
-           << "Failed on selection: the combination of spw, field, antenna, correlation, "
-           << "and timerange may be invalid." 
-           << LogIO::POST;
+        //os << LogIO::WARN 
+        //   << "Failed on selection: the combination of spw, field, antenna, correlation, "
+        //   << "and timerange may be invalid." 
+        //   << LogIO::POST;
         ms_p=MeasurementSet();
         return False;
       }
