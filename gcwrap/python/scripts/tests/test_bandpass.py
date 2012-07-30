@@ -17,6 +17,18 @@ not full unit tests for the bandpass task.
 datapath = os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/unittest/bandpass/'
 
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/bandpass/'
+    if os.path.isdir(DATADIR):
+        testmms = True
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
+
+print 'Bandpass tests will use data from '+datapath         
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -26,17 +38,14 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc5921'
         self.msfile = prefix + '.ms'
-        self.mmsfile = prefix + '.mms'
+        if testmms:
+            self.msfile = prefix + '.mms'
+
+        self.reffile = datapath + prefix
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
             shutil.copytree(fpath, self.msfile)
-        else:
-            self.fail('Data does not exist -> '+fpath)
-
-        fpath = os.path.join(datapath,self.mmsfile)
-        if os.path.lexists(fpath):
-            shutil.copytree(fpath, self.mmsfile)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -48,17 +57,14 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc4826'
         self.msfile = prefix + '.ms'
-        self.mmsfile = prefix + '_spw.mms'
+        if testmms:
+            self.msfile = prefix + '.mms'
+
+        self.reffile = datapath + prefix
 
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):
             shutil.copytree(fpath, self.msfile)
-        else:
-            self.fail('Data does not exist -> '+fpath)
-
-        fpath = os.path.join(datapath,self.mmsfile)
-        if os.path.lexists(fpath):
-            shutil.copytree(fpath, self.mmsfile)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -74,23 +80,18 @@ class bandpass1_test(test_base):
         if os.path.lexists(self.msfile):
             shutil.rmtree(self.msfile)
 
-        if os.path.lexists(self.mmsfile):
-            shutil.rmtree(self.mmsfile)
+        os.system('rm -rf ngc5921*.bcal')
         
     def test1a(self):
-        '''Bandpass 1a: Create cal tables for the MS and MMS in field=0'''
+        '''Bandpass 1a: Create bandpass table using in field=0'''
         msbcal = self.msfile + '.bcal'
+        reference = self.reffile + '.ref1a.bcal'
         bandpass(vis=self.msfile, caltable=msbcal, field='0',opacity=0.0,bandtype='B',
                  solint='inf',combine='scan',refant='VA15')
         self.assertTrue(os.path.exists(msbcal))
-        
-        mmsbcal = self.mmsfile + '.bcal'
-        bandpass(vis=self.mmsfile, caltable=mmsbcal, field='0',opacity=0.0,bandtype='B',
-                 solint='inf',combine='scan',refant='VA15')
-        self.assertTrue(os.path.exists(mmsbcal))
-        
+                
         # Compare the calibration tables
-        self.assertTrue(th.compTables(msbcal, mmsbcal, ['WEIGHT']))
+        self.assertTrue(th.compTables(msbcal, reference, ['WEIGHT']))
 
 
 class bandpass2_test(test_base):
@@ -103,37 +104,24 @@ class bandpass2_test(test_base):
         if os.path.lexists(self.msfile):
             shutil.rmtree(self.msfile)
 
-        if os.path.lexists(self.mmsfile):
-            shutil.rmtree(self.mmsfile)
+
+        os.system('rm -rf ngc4826*.bcal')
         
         
     def test1b(self):
         '''Bandpass 1b: Create cal tables for the MS and MMS split by spws'''
         msbcal = self.msfile + '.bcal'
+        reference = self.reffile + '.ref1b.bcal'
         bandpass(vis=self.msfile, caltable=msbcal, field='0',spw='0', opacity=0.0,bandtype='B',
                  solint='inf',combine='scan',refant='ANT5')
         self.assertTrue(os.path.exists(msbcal))
         
-        mmsbcal = self.mmsfile + '.bcal'
-        bandpass(vis=self.mmsfile, caltable=mmsbcal, field='0',spw='0', opacity=0.0,bandtype='B',
-                 solint='inf',combine='scan',refant='ANT5')
-        self.assertTrue(os.path.exists(mmsbcal))
-        
         # Compare the calibration tables
-        self.assertTrue(th.compTables(msbcal, mmsbcal, ['WEIGHT']))
+        self.assertTrue(th.compTables(msbcal, reference, ['WEIGHT']))
 
-class bandpass_cleanup(unittest.TestCase):
-    
-    def tearDown(self):
-        os.system('rm -rf ngc5921.*')
-        os.system('rm -rf ngc4826*')
-
-    def test_cleanup(self):
-        '''Bandpass: Cleanup'''
-        pass
 
 def suite():
-    return [bandpass1_test, bandpass2_test, bandpass_cleanup]
+    return [bandpass1_test, bandpass2_test]
 
 
 
