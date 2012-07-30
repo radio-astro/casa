@@ -249,6 +249,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
     animDockWidget_  = new QDockWidget();
 		       animDockWidget_->setObjectName("Animator");
+		       animDockWidget_->setWindowTitle("Animator");
 		       addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
 				      animloc == "left" ? Qt::LeftDockWidgetArea :
 				      animloc == "top" ? Qt::TopDockWidgetArea :
@@ -267,6 +268,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
     trkgDockWidget_  = new QDockWidget();
 		       trkgDockWidget_->setObjectName("Position Tracking");
+		       trkgDockWidget_->setWindowTitle("Position Tracking");
 		       addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
 				      trackloc == "left" ? Qt::LeftDockWidgetArea :
 				      trackloc == "top" ? Qt::TopDockWidgetArea :

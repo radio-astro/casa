@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>regions</string>
+   <string>Regions</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <widget class="QStackedWidget" name="regions">
