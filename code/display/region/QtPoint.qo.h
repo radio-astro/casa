@@ -107,8 +107,8 @@ namespace casa {
 		void setLabelDelta( const std::vector<int> &delta ) { QtRegion::setLabelDelta(delta); }
 		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
 				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
-		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine )
-				{ QtRegion::setLine( line_color, line_style ); }
+		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine, unsigned int line_width=1 )
+				{ QtRegion::setLine( line_color, line_style, line_width ); }
 		void setAnnotation(bool ann) { QtRegion::setAnnotation(ann); }
 
 		// functions added with the introduction of RegionToolManager and the

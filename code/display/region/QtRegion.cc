@@ -103,9 +103,10 @@ namespace casa {
 	    if ( font_color != "" ) mystate->setTextColor( font_color );
 	}
 
-	void QtRegion::setLine( const std::string &line_color, Region::LineStyle line_style ) {
+	void QtRegion::setLine( const std::string &line_color, Region::LineStyle line_style, unsigned int line_width ) {
 	    if ( line_color != "" ) mystate->setLineColor( line_color );
 	    mystate->setLineStyle( line_style );
+	    mystate->setLineWidth( line_width );
 	}
 
 	void QtRegion::setAnnotation(bool ann) { mystate->setAnnotation(ann); }

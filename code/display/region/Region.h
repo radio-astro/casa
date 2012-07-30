@@ -167,7 +167,7 @@ namespace casa {
 		virtual void setLabelPosition( TextPosition ) = 0;
 		virtual void setLabelDelta( const std::vector<int> & ) = 0;
 		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
-		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
+		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine, unsigned int line_width=1 ) = 0;
 		virtual void setAnnotation(bool) = 0;
 
 		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,

@@ -437,6 +437,10 @@ namespace casa {
 	    }
 	}
 
+	void QtRegionState::setLineWidth( unsigned int width ) {
+	    line_width->setValue(width);
+	}
+
 	void QtRegionState::setAnnotation( bool ann ) {
 	    region_annotation->setChecked(ann);
 	}

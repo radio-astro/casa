@@ -81,7 +81,7 @@ namespace casa {
 		void setLabelPosition( Region::TextPosition );
 		void setLabelDelta( const std::vector<int> & );
 		virtual void setFont( const std::string &font="", int font_size=0, int font_style=0, const std::string &font_color="" );
-		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine );
+		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine, unsigned int line_width=1 );
 		virtual void setAnnotation(bool ann);
 
 		int numFrames( ) const;

@@ -307,6 +307,7 @@ namespace casa {
 	    if ( rect_creators.size( ) <= 0 ) return;
 	    int font_style = get_font_style(rectangle->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(rectangle->getLineStyle( ));
+	    unsigned int line_width = rectangle->getLineWidth( ); 
 
 	    String label_position = rectangle->getLabelPosition( );
 	    rect_creators.front( )->create( Region::RectRegion, wc, pts,
@@ -315,7 +316,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					    rectangle->getLabelOffset( ),
 					    rectangle->getFont( ), rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
-					    rectangle->getColorString( ), line_style, rectangle->isAnnotationOnly( ) );
+					    rectangle->getColorString( ), line_style, rectangle->getLineWidth( ), rectangle->isAnnotationOnly( ) );
 	}
 
 
@@ -351,7 +352,7 @@ namespace casa {
 								       label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					       ellipse->getLabelOffset( ),
 					       ellipse->getFont( ), ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
-					       ellipse->getColorString( ), line_style, ellipse->isAnnotationOnly( ) );
+					       ellipse->getColorString( ), line_style, ellipse->getLineWidth( ), ellipse->isAnnotationOnly( ) );
 	}
 
 
@@ -381,7 +382,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					     symbol->getLabelOffset( ),
 					     symbol->getFont( ), symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
-					     symbol->getColorString( ), line_style, false );
+					     symbol->getColorString( ), line_style, symbol->getLineWidth( ), false );
 	}
 
 	void QtRegionSourceKernel::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
@@ -412,7 +413,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					    polygon->getLabelOffset( ),
 					    polygon->getFont( ), polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
-					    polygon->getColorString( ), line_style, polygon->isAnnotationOnly( ) );
+					    polygon->getColorString( ), line_style, polygon->getLineWidth( ), polygon->isAnnotationOnly( ) );
 	}
 
 	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) :
