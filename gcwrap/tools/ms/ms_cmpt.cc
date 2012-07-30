@@ -2562,10 +2562,10 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
     const String t_combine = downcase(combine);
 
     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
-      *itsLog << LogIO::SEVERE
-	      << "Error splitting " << itsMS->tableName() << " to "
-	      << t_outputms
-	      << LogIO::POST;
+      //      *itsLog << LogIO::WARN
+      //	      << "Splitting " << itsMS->tableName() << " to "
+      //	      << t_outputms << " failed."
+      //	      << LogIO::POST;
       delete splitter;
       return false;
     }

@@ -1,11 +1,15 @@
 import os, re
 import string
+import time
+import shutil
 from taskinit import casalog, mstool, qa, tbtool, write_history
 from update_spw import update_spwchan
+from parallel.parallel_task_helper import ParallelTaskHelper
+import partitionhelper as ph
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, intent, array, uvrange,
-          correlation, observation, combine, keepflags):
+          correlation, observation, combine, keepflags, keepmms):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -59,9 +63,129 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                   Default '' (none)
     keepflags -- Keep flagged data, if possible
                  Default True
+
+    keepmms -- If the input is a multi-MS, make the output one, too. (experimental)
+               Default: False
+                 
     """
-    retval = True
+
     casalog.origin('split')
+    rval = True
+    try:
+
+        if (keepmms and ParallelTaskHelper.isParallelMS(vis)):
+            myms = mstool()
+            myms.open(vis)
+            mses = myms.getreferencedtables()
+            myms.close() 
+
+            retval = {}
+            nfail = 0
+            if os.path.exists(outputvis):
+                raise ValueError, "Output MS %s already exists - will not overwrite." % outputvis
+            tempout = outputvis+str(time.time())
+            os.mkdir(tempout)
+            successfulmses = []
+            mastersubms = ''
+            masterptab = ''
+            emptyptab = tempout+'/EMPTY_POINTING'
+            nochangeinpointing = (str(antenna)+str(timerange)=='')
+                
+            for m in mses:
+                # resulting pointing table is the same for all
+                #  -> replace by empty table if it is a link and won't be modified anyway
+                #     and put back original into the master after split
+                theptab = m+'/POINTING'
+                replaced = False
+                if nochangeinpointing:
+                    if(os.path.islink(theptab)):
+                        os.remove(theptab)
+                        shutil.copytree(emptyptab, theptab)
+                        replaced=True
+                    elif(masterptab==''):
+                        mastersubms = m
+                        masterptab = m+'/POINTING'
+                        # save time by not copying the POINTING table len(mses) times
+                        mytb = tbtool()
+                        mytb.open(masterptab)
+                        tmpp = mytb.copy(newtablename=emptyptab, norows=True)
+                        mytb.close()
+                        tmpp.close()
+                        
+                outvis = tempout+'/'+os.path.basename(m)
+                retval[m] = split_core(m, outvis, datacolumn, field, spw, width, antenna,
+                                       timebin, timerange, scan, intent, array, uvrange,
+                                       correlation, observation, combine, keepflags)
+                if replaced:
+                    # restore link
+                    os.rmtree(theptab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mses[0])+'/POINTING', theptab)
+                    # (link in target will be created my makeMMS)
+
+                if not retval[m]:
+                    nfail+=1
+                else:
+                    successfulmses.append(outvis)
+
+            if nfail>0:
+                if len(successfulmses)==0:
+                    casalog.post('Split failed in all subMSs.', 'WARN')
+                    rval=False
+                else:
+                    casalog.post('*** Summary: there were failures in '+str(nfail)+' SUBMSs:', 'WARN')
+                    casalog.post('*** (these may be harmless if they are caused by selection):', 'WARN')
+                    for m in mses:
+                        if not retval[m]:
+                            casalog.post(os.path.basename(m)+': '+str(retval[m]), 'WARN')
+                        else:
+                            casalog.post(os.path.basename(m)+': '+str(retval[m]), 'NORMAL') 
+
+                    casalog.post('Will construct MMS from subMSs with successful selection ...', 'NORMAL')
+
+                    if nochangeinpointing: # need to take care of POINTING table
+                        # in case the master subms did not make it
+                        if not (tempout+'/'+os.path.basename(mastersubms) in successfulmses):
+                            # old master subms was not selected.
+                            # copy the original masterptab into the new master
+                            shutil.rmtree(successfulmses[0]+'/POINTING')
+                            shutil.copytree(masterptab, successfulmses[0]+'/POINTING')
+                    
+            if rval:
+                # construct new MMS from the output
+                if(width==1 and str(field)+str(spw)+str(antenna)+str(timerange)+str(scan)+str(intent)\
+                   +str(array)+str(uvrange)+str(correlation)+str(observation)==''):
+                    ph.makeMMS(outputvis, successfulmses)
+                else:
+                    myms.open(successfulmses[0], nomodify=False)
+                    auxfile = "split_aux_"+str(time.time())
+                    for i in xrange(1,len(successfulmses)):
+                        myms.virtconcatenate(successfulmses[i], auxfile, '1Hz', '10mas')
+                    myms.close()
+                    shutil.rmtree(auxfile, ignore_errors=True)
+                    ph.makeMMS(outputvis, successfulmses, True, ['POINTING']) 
+
+
+            shutil.rmtree(tempout, ignore_errors=True)
+
+
+
+        else: # do not output an MMS
+            rval = split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
+                              timebin, timerange, scan, intent, array, uvrange,
+                              correlation, observation, combine, keepflags)
+
+    except Exception, instance:
+            casalog.post("*** Error: %s" % (instance), 'SEVERE')
+            rval = False
+       
+
+    return rval
+
+def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
+               timebin, timerange, scan, intent, array, uvrange,
+               correlation, observation, combine, keepflags):
+
+    retval = True
 
     if not outputvis or outputvis.isspace():
         raise ValueError, 'Please specify outputvis'
@@ -214,7 +338,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
     # Write history to output MS, not the input ms.
     try:
-        param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
+        param_names = split_core.func_code.co_varnames[:split_core.func_code.co_argcount]
         param_vals = [eval(p) for p in param_names]   
         retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
                                 casalog)

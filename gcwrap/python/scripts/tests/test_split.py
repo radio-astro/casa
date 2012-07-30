@@ -30,7 +30,18 @@ from tasks import *
 from taskinit import *
 import unittest
 
-datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/split/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/split/'
+
+print 'split tests will use data from '+datapath         
+
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
@@ -202,7 +213,10 @@ class SplitChecker(unittest.TestCase):
 
 class split_test_tav(SplitChecker):
     need_to_initialize = True
-    inpms = '0420+417/0420+417.ms'
+    inpms = '../../0420+417/0420+417.ms'
+    if datapath.count('unittest_mms')==1:
+        inpms = '0420+417.ms'
+        
     corrsels = ['', 'rr, ll', 'rl, lr', 'rr', 'll']
     records = {}
     #n_tests = 20
@@ -378,7 +392,10 @@ class split_test_tav(SplitChecker):
 class split_test_cav(SplitChecker):
     need_to_initialize = True
     corrsels = ['', 'rr', 'll']
-    inpms = 'viewertest/ctb80-vsm.ms'
+    inpms = '../../viewertest/ctb80-vsm.ms'
+    if datapath.count('unittest_mms')==1:
+        inpms = 'ctb80-vsm.ms'
+
     records = {}
     #n_tests = 12
     #n_tests_passed = 0
@@ -483,7 +500,10 @@ class split_test_cav(SplitChecker):
 class split_test_cav5(SplitChecker):
     need_to_initialize = True
     corrsels = ['', 'll']
-    inpms = 'viewertest/ctb80-vsm.ms'
+    inpms = '../../viewertest/ctb80-vsm.ms'
+    if datapath.count('unittest_mms')==1:
+        inpms = 'ctb80-vsm.ms'
+
     records = {}
     #n_tests = 12
     #n_tests_passed = 0
@@ -577,8 +597,8 @@ class split_test_cdsp(SplitChecker):
         self.__class__.need_to_initialize = False
 
         for inpms in self.corrsels:
-            if not os.path.exists(datapath + 'unittest/split/' + inpms):
-                raise EnvironmentError, "Missing input MS: " + datapath + 'unittest/split/' + inpms
+            if not os.path.exists(datapath + inpms):
+                raise EnvironmentError, "Missing input MS: " + datapath + inpms
             self.res = self.do_split(inpms)
 
     def do_split(self, corrsel):     # corrsel is really an input MS in
@@ -588,7 +608,7 @@ class split_test_cdsp(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nRemapping CALDEVICE and SYSPOWER of", corrsel
-            splitran = split(datapath + 'unittest/split/' + corrsel, outms, datacolumn='data',
+            splitran = split(datapath + corrsel, outms, datacolumn='data',
                              field='', spw='0,2', width=1,
                              antenna='ea05,ea13&',
                              timebin='', timerange='',
@@ -663,7 +683,7 @@ class split_test_cst(SplitChecker):
     """
     need_to_initialize = True
     corrsels = ['']
-    inpms = datapath + 'unittest/split/crazySourceTable.ms' # read-only
+    inpms = datapath + 'crazySourceTable.ms' # read-only
     outms = 'filteredsrctab.ms'
     records = {}
 
@@ -738,7 +758,7 @@ class split_test_state(unittest.TestCase):
     """
     Checks the STATE subtable after selecting by intent.
     """
-    inpms = datapath + 'unittest/split/doppler01fine-01.ms'
+    inpms = datapath + 'doppler01fine-01.ms'
     locms = inpms.split(os.path.sep)[-1]
     outms = 'obstar.ms'
 
@@ -787,7 +807,10 @@ class split_test_cavcd(unittest.TestCase):
     """
     Checks that the CORRECTED_DATA column can be channel averaged.
     """
-    inpms = 'split/labelled_by_time+ichan.ms'    
+    inpms = '../../split/labelled_by_time+ichan.ms'    
+    if datapath.count('unittest_mms')==1:
+        inpms = 'labelled_by_time+ichan.ms'
+
     outms = 'cavcd.ms'
 
     def setUp(self):
@@ -828,7 +851,7 @@ class split_test_genericsubtables(unittest.TestCase):
     """
     Check copying generic subtables
     """
-    inpms = datapath + 'unittest/split/2554.ms'
+    inpms = datapath + '2554.ms'
     outms = 'musthavegenericsubtables.ms'
 
     def setUp(self):
@@ -867,7 +890,9 @@ class split_test_singchan(unittest.TestCase):
     Check selecting a single channel with the spw:chan syntax
     """
     # rename and make readonly when plotxy goes away.
-    inpms = 'viewertest/ctb80-vsm.ms'
+    inpms = '../../viewertest/ctb80-vsm.ms'
+    if datapath.count('unittest_mms')==1:
+        inpms = 'ctb80-vsm.ms'
 
     outms = 'musthavesingchan.ms'
 
@@ -917,7 +942,9 @@ class split_test_blankov(unittest.TestCase):
     Check that outputvis == '' causes a prompt exit.
     """
     # rename and make readonly when plotxy goes away.
-    inpms = 'viewertest/ctb80-vsm.ms'
+    inpms = '../../viewertest/ctb80-vsm.ms'
+    if datapath.count('unittest_mms')==1:
+        inpms = 'ctb80-vsm.ms'
 
     outms = ''
 
@@ -971,7 +998,7 @@ class split_test_almapol(SplitChecker):
     """
     need_to_initialize = True
     corrsels = ['xx,yy']
-    inpms = datapath + 'unittest/split/ixxxyyxyy.ms'
+    inpms = datapath + 'ixxxyyxyy.ms'
     records = {}
 
     def do_split(self, corrsel):
@@ -1025,7 +1052,7 @@ class split_test_unorderedpolspw(SplitChecker):
     Check spw selection from a tricky MS.
     """
     need_to_initialize = True
-    inpms = datapath + '/unittest/split/unordered_polspw.ms'
+    inpms = datapath + 'unordered_polspw.ms'
     corrsels = ['']
     records = {}
     #n_tests = 2
@@ -1067,7 +1094,7 @@ class split_test_sw_and_fc(SplitChecker):
     Check SPECTRAL_WINDOW and FLAG_CMD with chan selection and averaging.
     """
     need_to_initialize = True
-    inpms = datapath + '/unittest/split/2562.ms'
+    inpms = datapath + '2562.ms'
     records = {}
 
     # records uses these as keys, so they MUST be tuples, not lists.
@@ -1264,7 +1291,7 @@ class split_test_optswc(SplitChecker):
     Check propagation of SPECTRAL_WINDOW's optional columns
     """
     need_to_initialize = True
-    inpms = datapath + '/unittest/split/optswc.ms'
+    inpms = datapath + 'optswc.ms'
     records = {}
     expcols = set(['MEAS_FREQ_REF', 'CHAN_FREQ',       'REF_FREQUENCY',
                    'CHAN_WIDTH',    'EFFECTIVE_BW',    'RESOLUTION',
@@ -1329,7 +1356,7 @@ class split_test_tav_then_cvel(SplitChecker):
     #                   'chan': complex(0, 1),
     #                   'STATE_ID': complex(0, 0.1),
     #                   'time': 100.0}, ow=True)
-    inpms = datapath + '/unittest/split/doppler01fine-01.ms'
+    inpms = datapath + 'doppler01fine-01.ms'
     corrsels = ['']
     records = {}
     #n_tests = 6
@@ -1466,7 +1493,7 @@ class split_test_wttosig(SplitChecker):
     Check WEIGHT and SIGMA after various datacolumn selections and averagings.
     """
     need_to_initialize = True
-    inpms = datapath + '/unittest/split/testwtsig.ms'
+    inpms = datapath + 'testwtsig.ms'
     records = {}
 
     # records uses these as keys, so they MUST be tuples, not lists.
@@ -1616,7 +1643,7 @@ class split_test_fc(SplitChecker):
     Check FLAG_CATEGORY after various selections and averagings.
     """
     need_to_initialize = True
-    inpms = datapath + '/unittest/split/hasfc.ms'
+    inpms = datapath + 'hasfc.ms'
     records = {}
 
     # records uses these as keys, so they MUST be tuples, not lists.
