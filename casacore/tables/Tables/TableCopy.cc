@@ -130,10 +130,11 @@ void TableCopy::copyInfo (Table& out, const Table& in)
   out.flushTableInfo();
 }
 
-void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows)
+void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows,
+			       const Block<String> omit)
 {
   copySubTables (out.rwKeywordSet(), in.keywordSet(), out.tableName(),
-		 out.tableType(), in, noRows);
+		 out.tableType(), in, noRows, omit);
   const TableDesc& outDesc = out.tableDesc();
   const TableDesc& inDesc = in.tableDesc();
   for (uInt i=0; i<outDesc.ncolumn(); i++) {
@@ -144,7 +145,7 @@ void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows)
 	TableColumn outCol(out, name);
 	ROTableColumn inCol(in, name);
 	copySubTables (outCol.rwKeywordSet(), inCol.keywordSet(),
-		       out.tableName(), out.tableType(), in, noRows);
+		       out.tableName(), out.tableType(), in, noRows, omit);
       }
     }
   }
@@ -156,11 +157,23 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 			       const String& outName,
 			       Table::TableType outType,
 			       const Table& in,
-			       Bool noRows)
+			       Bool noRows,
+			       const Block<String> omit)
 {
   for (uInt i=0; i<inKeys.nfields(); i++) {
     if (inKeys.type(i) == TpTable) {
       Table inTab = inKeys.asTable(i);
+      String bName = Path(inTab.tableName()).baseName();
+      Bool doOmit = False;
+      for(uInt j=0; j<omit.size(); j++){
+	if(bName==omit[j]){
+	  doOmit=True; 
+	  break;
+	}
+      }
+      if(doOmit){
+	break; // do not copy this subtable if it is in the omit vector
+      }
       // Lock the subtable in case not locked yet.
       // Note it will keep the lock if already locked.
       TableLocker locker(inTab, FileLocker::Read);
@@ -173,7 +186,7 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 	  outKeys.removeField (keyName);
 	}
       } else {
-	String newName = outName + '/' + Path(inTab.tableName()).baseName();
+	String newName = outName + '/' + bName;
 	Table outTab;
 	if (outType == Table::Memory) {
 	  outTab = inTab.copyToMemoryTable (newName, noRows);
@@ -184,7 +197,7 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 	}
 	outKeys.defineTable (inKeys.name(i), outTab);
       }
-    }
+    } // end if is table
   }
 }
 

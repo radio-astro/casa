@@ -54,14 +54,14 @@ def listsdm(sdm=None):
         start = int(rowstart[0].childNodes[0].nodeValue)
         startmjd = float(start)*1.0E-9/86400.0
         t = qa.quantity(startmjd,'d')
-        starttime = qa.time(t,form="ymd",prec=8)
-        startTimeShort.append(qa.time(t,prec=8))
+        starttime = qa.time(t,form="ymd",prec=8)[0]
+        startTimeShort.append(qa.time(t,prec=8)[0])
         rowend = rownode.getElementsByTagName("endTime")
         end = int(rowend[0].childNodes[0].nodeValue)
         endmjd = float(end)*1.0E-9/86400.0
         t = qa.quantity(endmjd,'d')
-        endtime = qa.time(t,form="ymd",prec=8)
-        endTimeShort.append(qa.time(t,prec=8))
+        endtime = qa.time(t,form="ymd",prec=8)[0]
+        endTimeShort.append(qa.time(t,prec=8)[0])
         
         # source name
         rowsrc = rownode.getElementsByTagName("sourceName")
@@ -276,9 +276,9 @@ def listsdm(sdm=None):
     # integration time in seconds, start and end times:
     intTime = eTime - sTime
     t = qa.quantity(sTime/86400.0, 'd')
-    obsStart = qa.time(t, form="ymd", prec=8)
+    obsStart = qa.time(t, form="ymd", prec=8)[0]
     t = qa.quantity(eTime/86400.0, 'd')
-    obsEnd = qa.time(t, form="ymd", prec=8)
+    obsEnd = qa.time(t, form="ymd", prec=8)[0]
     # observer name and obs. info:
     observerName = str(rowlist[0].getElementsByTagName("observerName")[0].childNodes[0].nodeValue)
     configName = str(rowlist[0].getElementsByTagName("configName")[0].childNodes[0].nodeValue)

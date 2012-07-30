@@ -669,6 +669,7 @@ String PlotExportFormat::exportFormat(Type t) {
     case JPG: return "JPG";
     case PS: return "PS";
     case PDF: return "PDF";
+    case TEXT: return "TEXT";
     default: return "";
     }
 }
@@ -681,6 +682,8 @@ PlotExportFormat::Type PlotExportFormat::exportFormat(String t, bool* ok) {
     else if(t == "jpg" || t == "jpeg") return JPG;
     else if(t == "ps")                 return PS;
     else if(t == "pdf")                return PDF;
+    else if(t == "txt" || t == "text" || t == "csv")
+                                       return TEXT;
     
     // error
     if(ok != NULL) *ok = false;
@@ -693,6 +696,7 @@ String PlotExportFormat::extensionFor(Type t) {
     case JPG: return "jpg";
     case PS: return "ps";
     case PDF: return "pdf";
+    case TEXT: return "txt";
     default: return "";
     }
 }
@@ -706,6 +710,9 @@ PlotExportFormat::Type PlotExportFormat::typeForExtension(String f, bool* ok) {
                                      return JPG;
     else if(f.matches("ps", n - 2))  return PS;
     else if(f.matches("pdf", n - 3)) return PDF;
+    else if(f.matches("txt", n - 3) || f.matches("text", n - 4) ||
+            f.matches("csv", n - 3))
+                                     return TEXT;
     
     // error
     if(ok != NULL) *ok = false;
@@ -713,11 +720,12 @@ PlotExportFormat::Type PlotExportFormat::typeForExtension(String f, bool* ok) {
 }
 
 vector<PlotExportFormat::Type> PlotExportFormat::supportedFormats() {
-    vector<Type> v(4);
+    vector<Type> v(NUM_FMTS);
     v[0] = PNG;
     v[1] = JPG;
     v[2] = PS;
     v[3] = PDF;
+    v[4] = TEXT;
     return v;
 }    
 vector<String> PlotExportFormat::supportedFormatStrings() {

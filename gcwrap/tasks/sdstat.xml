@@ -60,6 +60,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </allowed>
     </param>
 
+    <param type="any" name="restfreq" subparam="true">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+            <value type="string"/>
+    </param>
+
     <param type="string" name="frame">
             <description>frequency reference frame, e.g. LSRK (''=current)</description>
             <value></value>
@@ -137,6 +143,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="telescopeparm"><value type='string'></value></default>
                 </equals>
             </when>
+	    <when param="specunit">
+		<equals value=""/>
+	        <equals value="channel"/>
+	        <equals value="km/s">
+                       <default param="restfreq"><value type='string'></value></default>
+                </equals>
+	        <equals value="GHz"/>
+	        <equals value="MHz"/>
+	        <equals value="kHz"/>
+	        <equals value="Hz"/>
+	    </when>
 
     </constraints>
 
@@ -182,6 +199,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
                 default: '' (=current)
+            &gt;&gt;&gt; specunit expandable parameter
+                 restfreq -- rest frequency
+                         default: '' (use current setting)
+                         example: 4.6e10 (float value in Hz),
+                                  '46GHz' (string with unit),
+                                  ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
+                                  [{'name':'CO','value':345e9}] (a value with name)
         frame -- frequency frame for spectral axis
                 options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                          'GEO','GALACTO','LGROUP','CMB'

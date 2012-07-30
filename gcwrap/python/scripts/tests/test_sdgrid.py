@@ -4,7 +4,6 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import *
 import unittest
 import sha
 import time
@@ -12,7 +11,6 @@ import numpy
 import re
 import string
 
-asap_init()
 from sdgrid import sdgrid
 import asap as sd
 
@@ -102,51 +100,77 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         res=sdgrid()
         self.assertFalse(res)
 
     def test001(self):
         """Test001: Invalid IFNO"""
-        res=sdgrid(infiles=self.rawfile,ifno=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdgrid(infiles=self.rawfile,ifno=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('No corresponding rows for given selection: IFNO %s'%(self.badid))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test002: Invalid POLNO"""
-        res=sdgrid(infiles=self.rawfile,pollist=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdgrid(infiles=self.rawfile,pollist=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Empty pollist')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test003(self):
         """Test003: Invalid gridfunction"""
+        # argument verification error
         res=sdgrid(infiles=self.rawfile,gridfunction='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
         self.assertFalse(res)
 
     def test004(self):
         """Test004: Invalid weight type"""
+        # argument verification error
         res=sdgrid(infiles=self.rawfile,weight='NONE',npix=16,cell='20arcsec',outfile=self.outfile)
         self.assertFalse(res)
 
     def test005(self):
         """Test005: Check overwrite option"""
         shutil.copytree(self.rawfile,self.outfile)
-        res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,overwrite=False)
-        self.assertFalse(res)
+        try:
+            res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('file %s exists'%(self.outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
-    def test006(self):
-        """Test006: Invalid npix"""
-        res=sdgrid(infiles=self.rawfile,npix=-99,cell='20arcsec',outfile=self.outfile)
-        self.assertFalse(res)
-
-
-    def test007(self):
-        """Test007: Invalid unit for cell"""
-        res=sdgrid(infiles=self.rawfile,npix=16,cell='20none',outfile=self.outfile)
-        self.assertFalse(res)
-
+# Those two tests are meaningless
+#    def test006(self):
+#        """Test006: Invalid npix"""
+#        res=sdgrid(infiles=self.rawfile,npix=-99,cell='',outfile=self.outfile)
+#        self.assertFalse(res)
+#
+#    def test007(self):
+#        """Test007: Invalid unit for cell"""
+#        res=sdgrid(infiles=self.rawfile,npix=16,cell='20none',outfile=self.outfile)
+#        self.assertFalse(res)
 
     def test008(self):
         """Test008: Invalid format for center coordinate"""
-        res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,center='Invalid format')
-        self.assertFalse(res)
+        try:
+            res=sdgrid(infiles=self.rawfile,npix=16,cell='20arcsec',outfile=self.outfile,center='Invalid format')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Empty QuantumHolder argument for asQuantumDouble')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
         
 

@@ -27,12 +27,8 @@
 #include "ProfileFitMarker.h"
 #include <display/QtPlotter/WorldCanvasTranslator.h>
 #include <QPaintEvent>
-#include <QDebug>
 
 namespace casa {
-
-//const QString ProfileFitMarker::CENTER_PEAK_LABEL = "(C,P)";
-//const QString ProfileFitMarker::FWHM_LABEL = "FWHM";
 
 ProfileFitMarker::ProfileFitMarker( const WorldCanvasTranslator* wct) :
 		worldCanvasTranslator( wct){

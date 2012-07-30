@@ -34,6 +34,7 @@ namespace casa {
 
 class ImageAnalysis;
 class MomentCollapseThreadRadio;
+class ThresholdingBinPlotDialog;
 
 class MomentSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator
 {
@@ -48,12 +49,14 @@ public:
     ~MomentSettingsWidgetRadio();
 
 private slots:
-	void includePixelsChanged( int state );
-	void excludePixelsChanged( int state );
+	void thresholdingChanged();
 	void adjustTableRows( int count );
 	void collapseImage();
 	void setCollapsedImageFile();
 	void collapseDone();
+	void graphicalThreshold();
+	void symmetricThresholdChanged( int checkedState );
+	void thresholdTextChanged( const QString& text );
 
 private:
 	enum SummationIndex {MAX, MEAN, MEDIAN, MIN, RMS, STDDEV, INTEGRATED, ABS_MEAN_DEV, END_INDEX};
@@ -61,13 +64,18 @@ private:
     Ui::MomentSettingsWidgetRadio ui;
     ImageAnalysis* imageAnalysis;
     MomentCollapseThreadRadio* collapseThread;
+    ThresholdingBinPlotDialog* thresholdingBinDialog;
     QString outputFileName;
     QList<QString> momentOptions;
+
+
     void setTableValue(int row, int col, float val );
     String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
     Vector<Int> populateMoments();
     Vector<String> populateMethod() const;
     String populateChannels(uInt * nSelectedChannels);
+    bool populateThresholds( Vector<Float>& includeThreshold, Vector<Float>& excludeThreshold );
+    bool populateThreshold( Vector<Float>& threshold );
 };
 
 }

@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
 from numpy import array
 
-asap_init()
 import asap as sd
 from sdflagmanager import sdflagmanager
 from sdstat import sdstat
@@ -153,8 +151,6 @@ class sdflagmanager_test(unittest.TestCase):
 
         res = (items[0][0] == newname) and (items[0][1] == newcomment)
         self.assertEqual(res, True, msg="The version name is not renamed correctly.")
-
-
 
 
 

@@ -7,8 +7,9 @@ import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable
 import pylab as pl
+import sdutil
 
-def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
+def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
 
 
         casalog.origin('sdstat')
@@ -46,9 +47,10 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
             frame_org = coord[1]
             doppler_org = coord[2]
             del coord
-            
-            restore = (frame != '') or (doppler != '') or \
-                     (fluxunit != '' and fluxunit != fluxunit_org)\
+
+            rfset = (restfreq != '') and (restfreq != [])
+            restore = (frame != '') or (doppler != '') or rfset \
+                     or (fluxunit != '' and fluxunit != fluxunit_org)\
                      or (specunit != '' and specunit != specunit_org)
             restore = restore and is_scantable(infile) and \
                      sd.rcParams['scantable.storage'] == 'disk'
@@ -78,6 +80,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                 s.set_selection(sel)
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
 
             # get telescope name
@@ -191,6 +194,11 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
             # set default spectral axis unit
             if ( specunit != '' ):
                     s.set_unit(specunit)
+
+            # set restfrequency
+            if ( rfset ):
+                    molids = s._getmolidcol_list()
+                    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
 
             # reset frame and doppler if needed
             if ( frame != '' ):
@@ -616,18 +624,6 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                             #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
                             casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
 
-            ## Restore header information in the table
-            #if restore:
-            #        s.set_fluxunit(fluxunit_org)
-            #        s.set_unit(specunit_org)
-            #        s.set_doppler(doppler_org)
-            #        s.set_freqframe(frame_org)
-            #        restore = False
-            #
-            ## Final clean up
-            #del s
-
-            #return retValue
             return retValue
     
             # DONE
@@ -635,6 +631,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
+                raise Exception, instance
                 return
         finally:
                 try:
@@ -645,6 +642,8 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
                                 s.set_unit(specunit_org)
                                 s.set_doppler(doppler_org)
                                 s.set_freqframe(frame_org)
+                                if rfset:
+                                        s._setmolidcol_list(molids)
                         # Final clean up
                         del s
                 except:

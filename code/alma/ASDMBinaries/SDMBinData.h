@@ -167,6 +167,14 @@ class SDMBinData{
   */
   bool sysCalApplied() const;
 
+  /**
+   * A utility method which returns the type of the processor which produced the data referred to by a row of the Main table.
+   *
+   * @param mainRowPtr a pointer to a row of the Main table of an ASDM dataset.
+   * @return a ProcessorType value.
+   */
+  ProcessorType processorType(MainRow* const mainRowPtr) const; 
+
   /** Accessor to the SDM Main table rows
       @param mainRowPtr Pointer to a row of the Main table
       @return true is the SDM row passed the selection criterion, else false

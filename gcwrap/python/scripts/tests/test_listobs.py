@@ -17,9 +17,20 @@ Unit tests for task listobs. It tests the following parameters:
     
 '''
 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR+'/listobs/'
+
+print 'Listobs tests will use data from '+datapath         
+
 # Reference files
-refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
-reffile = refpath+'reflistobs'
+reffile = datapath+'reflistobs'
 
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
@@ -29,7 +40,6 @@ class listobs_test1(unittest.TestCase):
 
     def setUp(self):
         self.res = None
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
         if (not os.path.exists(msfile1)):            
             shutil.copytree(datapath+msfile1, msfile1)
 
@@ -57,9 +67,9 @@ class listobs_test1(unittest.TestCase):
         ms.open(msfile1)
         res = ms.summary(True)
         ms.close()
-        name = res['header']['field_0']['name']
+        name = res['field_0']['name']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
-        name = res['header']['scan_7']['0']['FieldName']
+        name = res['scan_7']['0']['FieldName']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
         
     def test4(self):
@@ -68,8 +78,8 @@ class listobs_test1(unittest.TestCase):
         res = ms.summary(True)
         ms.close()
         # Begin and end times should be different
-        btime = res['header']['scan_1']['0']['BeginTime']
-        etime = res['header']['scan_1']['0']['EndTime']
+        btime = res['scan_1']['0']['BeginTime']
+        etime = res['scan_1']['0']['EndTime']
         self.assertNotEqual(btime, etime, "Begin and End times of scan=1 should not be equal")
         
         # Only one row of scan=1 should be printed

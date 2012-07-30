@@ -121,7 +121,7 @@ def imstats(image):
     nch = ia.shape()[3]
     chn = (ia.toworld([n/2,n/2,0,nch-1],'n')['numeric'][3])/ 1e3
     del1 = (ia.toworld([n/2,n/2,0,1],'n')['numeric'][3] - 1e3*ch0) /1e3
-    wid = (ia.summary()[1]['incr'][3]) /1e3
+    wid = (ia.summary()['incr'][3]) /1e3
     del2 = (1e3*chn - ia.toworld([n/2,n/2,0,nch-2],'n')['numeric'][3]) /1e3
     try:
         mylist = []

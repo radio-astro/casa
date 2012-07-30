@@ -4,11 +4,9 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 
-asap_init()
 from sdcoadd import sdcoadd
 import asap as sd
 from asap.scantable import is_scantable, is_ms
@@ -170,8 +168,14 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
 
     def test00( self ):
         """Test 0: Default parameters (raises an error)"""
-        result = sdcoadd()
-        self.assertFalse(result)
+        try:
+            result = sdcoadd()
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Need at least two data file names')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test01( self ):
         """Test 1: valid infiles (scantables) WITHOUT outfile"""
@@ -218,9 +222,14 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
 
         infiles = self.inlist[0:2]
         outfile = self.outname
-        result2 = sdcoadd(infiles=infiles,outfile=outfile)
-        self.assertFalse(result2)
-
+        try:
+            result2 = sdcoadd(infiles=infiles,outfile=outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Output file \'%s\' exist.'%(outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test05( self ):
         """Test 5: overwrite=True"""
@@ -255,8 +264,14 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         """Test 7: specify only a scantables (raises an error)"""
         infiles = self.inlist[0]
         outfile = self.outname
-        result = sdcoadd(infiles=infiles,outfile=outfile)
-        self.assertFalse(result)
+        try:
+            result = sdcoadd(infiles=infiles,outfile=outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Need at least two data file names')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
@@ -365,7 +380,7 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
 
 class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdstat. Test scantable sotrage and insitu
+    Unit tests for task sdcoadd. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -403,10 +418,16 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
             if os.path.exists(infile):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
+        # back up the original settings
+        self.storage = sd.rcParams['scantable.storage']
+        self.insitu = sd.rcParams['insitu']
 
         default(sdcoadd)
 
     def tearDown( self ):
+        # restore settings
+        sd.rcParams['scantable.storage'] = self.storage
+        sd.rcParams['insitu'] = self.insitu
         for thefile in self.inlist:
             if (os.path.exists(thefile)):
                 shutil.rmtree(thefile)

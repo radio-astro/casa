@@ -38,6 +38,7 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
+
 #include <display/Display/PanelDisplay.h>
 #include <display/Utilities/Lowlevel.h>
 
@@ -46,6 +47,8 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
+
+#include <display/region/QtRegion.qo.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -72,6 +75,9 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 namespace casa { 
 
 class QtProfilePrefs;
+class ColorSummaryWidget;
+class LegendPreferences;
+class QtCanvas;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
 //a communications interface between the class doing spectral line
@@ -155,9 +161,12 @@ public slots:
 	void left();
 	void right();
 	void preferences();
+	void frameChanged( int );
 	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter);
+			bool displayStepFunction, bool opticalFitter, bool showChannelLine );
+	void curveColorPreferences();
+	void legendPreferences();
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -191,8 +200,9 @@ public slots:
 			const QList<int> &pixel_x, const QList<int> &pixel_y,
 			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void updateRegion( int, viewer::Region::RegionChanges,
+			   const QList<double> &world_x, const QList<double> &world_y,
+			   const QList<int> &pixel_x, const QList<int> &pixel_y );
 	void pixelsChanged(int, int );
 
 signals:
@@ -271,6 +281,8 @@ private:
    //Conversion
    QString getRaDec(double x, double y);
 
+   void initPreferences();
+
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 
@@ -334,6 +346,7 @@ private:
 
 
    typedef std::map<int,spectra_info> SpectraInfoMap;
+   int current_region_id;
    SpectraInfoMap spectra_info_map;
 
    //Used for spectrum positioning
@@ -345,6 +358,13 @@ private:
    enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
 	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
    QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
+
+   ColorSummaryWidget* colorSummaryWidget;
+   LegendPreferences* legendPreferencesDialog;
+   QtCanvas* pixelCanvas;
+   QtProfilePrefs* profilePrefs;
+   int frameIndex;
+
 
    private slots:
    	    void setPosition();

@@ -241,15 +241,15 @@ if( APPLE )
 	if( NOT _gfortran_version STREQUAL "4.4" AND
 			NOT _gfortran_version STREQUAL "4.2" AND
 			NOT LLVMCOMPILER )
-	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
+	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}" )
 	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
 	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit"  )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit"  )
         endif()
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
 	if( NOT _cxx_version STREQUAL "4.4" )
-	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
+	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
 	endif()
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
@@ -682,7 +682,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.155
+           VERSION 1.0.160
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -909,7 +909,8 @@ casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost )
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost stdcasa casadbus )
+casa_add_module( spectrallines CASACORE imageanalysis Boost)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost stdcasa casadbus spectrallines)
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)
 casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
@@ -917,7 +918,6 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
-casa_add_module( spectrallines CASACORE imageanalysis Boost)
 casa_add_module( miriad CASACORE Boost)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )

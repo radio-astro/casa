@@ -282,11 +282,10 @@ private:
 //   <li> <src>primHead</src> Write to a primary HDU.
 //   <li> <src>allowAppend</src> Allow to append extension HDU's.
 // </ul>
-   static Bool ImageToFITSOut(String &error,
-  		 LogIO &os,
-  		 ImageInterface<Float> &image,
-  		 FitsOutput *output,
-  		 uInt memoryInMB = 64,
+   static Bool ImageToFITSOut(
+		   String &error, LogIO &os,
+		   const ImageInterface<Float> &image,
+		   FitsOutput *output, uInt memoryInMB = 64,
   		 Bool preferVelocity = True,
   		 Bool opticalVelocity = True,
   		 Int BITPIX=-32,
@@ -298,7 +297,8 @@ private:
   		 Bool airWavelength=False,
   		 Bool primHead=True,
   		 Bool allowAppend=False,
-  		 const String& origin = String());
+  		 const String& origin = String()
+   );
 
 // Put a CASA image with quality coordinate
 // to an opened FITS file

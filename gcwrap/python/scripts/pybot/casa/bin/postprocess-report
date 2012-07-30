@@ -6,8 +6,8 @@ use HTML::Element;
 use File::Basename;
 use FileHandle;
 
-$publish_html_script = "/var/lib/jenkins/regression/casa/bin/publish-current-html";
-$symlinkfile = "/export/data/jenkins/userContent/promotion/stage01/report.html";
+$publish_html_script = "$ENV{'HOME'}/pybot/casa/bin/publish-current-html";
+$symlinkfile = "/home/warp/casa/jenkins/work/userContent/promotion/stage01/report.html";
 
 die "a single argument is required" unless scalar(@ARGV) == 1;
 

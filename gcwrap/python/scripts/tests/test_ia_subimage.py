@@ -77,28 +77,73 @@ import unittest
 class ia_subimage_test(unittest.TestCase):
     
     def setUp(self):
-        pass
+        self.myia = iatool()
     
     def tearDown(self):
-        pass
-
+        self._myia.done()
 
     def test_stretch(self):
         """Test the stretch parameter"""
-        myia = iatool()
+        myia = self.myia
         myia.fromshape("mask1.im", [20, 30, 4, 10])
         myia.fromshape("mask2.im", [20, 30, 4, 1])
         myia.fromshape("mask3.im", [20, 30, 4, 2])
 
-        myia.fromshape("", [20,30,4,10])
-
-        mm = myia.subimage("", mask="mask1.im > 10")
+        imname = "xx.im"
+        myia.fromshape(imname, [20,30,4,10])
+        mask1 = "mask1.im > 10"
+        mm = myia.subimage("", mask=mask1)
         self.assertTrue(mm)
-        self.assertRaises(Exception, myia.subimage, "", mask="mask2.im > 10", stretch=False)
-        self.assertTrue(myia.subimage("", mask="mask2.im > 10", stretch=True))
-        self.assertRaises(Exception, myia.subimage, "", mask="mask3.im > 10", stretch=True)
+        mm = imsubimage(imagename=imname, mask=mask1)
+        self.assertTrue(mm)
+        mask2 = "mask2.im > 10"
+        self.assertRaises(Exception, myia.subimage, "", mask=mask2, stretch=False)
+        self.assertFalse(imsubimage(imname, "", mask=mask2, stretch=False))
+        self.assertTrue(myia.subimage("", mask=mask2, stretch=True))
+        self.assertTrue(imsubimage(imname, "", mask=mask2, stretch=True))
+        mask3 = "mask3.im > 10"
+        self.assertRaises(Exception, myia.subimage, "", mask=mask3, stretch=True)
+        self.assertFalse(imsubimage(imname, "", mask=mask3, stretch=True))
 
-        
+    def test_beams(self):
+        """ Test per plane beams """
+        myia = self._myia
+
+        # simple copy
+        myia.fromshape("", [10, 10, 10, 4])
+        myia.setrestoringbeam(
+            "4arcsec", "2arcsec", "5deg", channel=0, polarization=0
+        )
+        for i in range(10):
+            for j in range(4):
+                myia.setrestoringbeam(
+                    qa.quantity(i + j + 2, "arcsec"),
+                    qa.quantity(i + j + 1, "arcsec"),
+                    qa.quantity("5deg"),
+                    channel=i, polarization=j
+                )
+        box = rg.box([2, 2, 2, 2], [5, 5, 5, 3])
+        subim = myia.subimage("", region=box)
+        for i in range(subim.shape()[2]):
+            for j in range(subim.shape()[3]):
+                self.assertTrue(
+                    subim.restoringbeam(channel=i, polarization=j)
+                    == myia.restoringbeam(channel=i+2, polarization=j+2)
+                )
+        box = rg.box([2, 2, 2, 2], [5, 5, 5, 2])
+        subim = myia.subimage("", region=box, dropdeg=T)
+        for i in range(subim.shape()[2]):
+            self.assertTrue(
+                subim.restoringbeam(channel=i, polarization=-1)
+                == myia.restoringbeam(channel=i+2, polarization=2)
+            )
+        box = rg.box([2, 2, 6, 1], [5, 5, 6, 3])
+        subim = myia.subimage("", region=box, dropdeg=T)
+        for i in range(subim.shape()[2]):
+            self.assertTrue(
+                subim.restoringbeam(channel=-1, polarization=i)
+                == myia.restoringbeam(channel=6, polarization=i+1)
+            )
 
 def suite():
     return [ia_subimage_test]

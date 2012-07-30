@@ -117,7 +117,8 @@ FlagMSHandler::open()
 				case Stokes::I:
 				{
 					*logger_p << LogIO::DEBUG1 << " Correlation product I found, which should correspond to ALMA WVR data - skipping" << LogIO::POST;
-					// corrProducts_p->push_back("I");
+					// jagonzal (CAS-4234): We need this to Sanitize correlation expressions
+					corrProducts_p->push_back("I");
 					break;
 				}
 				case Stokes::Q:

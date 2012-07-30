@@ -71,6 +71,30 @@ QString SpecFit::getCurveName() const {
 	return curveName;
 }
 
+SpecFit::SpecFit( const SpecFit& other ){
+	initialize( other );
+}
+
+SpecFit& SpecFit::operator=(const SpecFit& other ){
+	if ( this != &other ){
+		initialize( other );
+	}
+	return *this;
+}
+
+void SpecFit::initialize( const SpecFit& other ){
+	suffix = other.suffix;
+	curveName = other.curveName;
+	centerX = other.centerX;
+	centerY = other.centerY;
+	Vector<Float> xVals = getXValues();
+	xValues.resize( xVals.size() );
+	xValues = xVals;
+	Vector<Float> yVals = getYValues();
+	yValues.resize( yVals.size());
+	yValues = yVals;
+}
+
 SpecFit::~SpecFit() {
 }
 

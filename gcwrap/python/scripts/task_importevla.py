@@ -401,10 +401,10 @@ def getmsmjds(vis):
         ms_endmjds = timd['time'][1]
         t = qa.quantity(ms_startmjds, 's')
         t1sd = t['value']
-        ms_time1 = qa.time(t, form='ymd', prec=9)
+        ms_time1 = qa.time(t, form='ymd', prec=9)[0]
         t = qa.quantity(ms_endmjds, 's')
         t2sd = t['value']
-        ms_time2 = qa.time(t, form='ymd', prec=9)
+        ms_time2 = qa.time(t, form='ymd', prec=9)[0]
         casalog.post('MS spans timerange ' + ms_time1 + ' to '
                      + ms_time2)
     else:

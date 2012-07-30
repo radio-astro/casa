@@ -98,6 +98,8 @@ public:
 	// get number of iterations for the last fit
 	Double getNumberIterations() const {return _fit.getNumberIterations();}
 
+	const SpectralList &getList() const {return _fit.getList();};
+
 	// get all values for the last fit
 	Vector<Double> getFit() const {return _fit.getFit();};
 

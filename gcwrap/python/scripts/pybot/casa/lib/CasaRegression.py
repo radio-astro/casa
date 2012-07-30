@@ -336,6 +336,7 @@ class CasaRegression:
         ###
         ### list of people to recieve a failure digest
         ###
+        #summary_email_list = self._state['master-email']      #### override to prevent email from going to summary subscribers
         summary_email_recipients = summary_email_list.split(';;')
         summary_email_recipients.append(self._state['master-email'])
         
@@ -399,7 +400,7 @@ class CasaRegression:
             else:
                 mime['Subject'] = "[regression failure] " + regression
             mime['From'] = "CASA Jenkins <" + self._state['master-email'] + ">"
-            #email = self._state['master-email']      #### override to prevent email from going to regression owners
+            #email = self._state['master-email']              #### override to prevent email from going to regression owners
             mime['To'] = full_name + " <" + email + ">"
             s.sendmail( "CASA Jenkins <" + self._state['master-email'] + ">", [full_name + " <" + email + ">", self._state['master'] + " <" + self._state['master-email'] + ">"], mime.as_string( ) )
 

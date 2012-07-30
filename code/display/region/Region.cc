@@ -246,7 +246,7 @@ namespace casa {
 	    }
 
 	    if ( new_z_index != last_z_index ) {
-		updateStateInfo(true);
+		updateStateInfo( true, RegionChangeNewChannel );
 		invalidateCenterInfo( );
 	    }
 	    last_z_index = new_z_index;
@@ -612,7 +612,7 @@ if (!markCenter()) return;
 		} else if ( x_units == "radians" ) {
 		    xq = Quantity( atof(x.c_str( )), "rad" );
 		} else {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -625,7 +625,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -648,7 +648,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -658,7 +658,7 @@ if (!markCenter()) return;
 
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true );
+		updateStateInfo( true, RegionChangeReset );	// error: reset
 		return false;
 	    }
 
@@ -691,7 +691,7 @@ if (!markCenter()) return;
 		} else if ( y_units == "radians" ) {
 		    yq = Quantity( atof(y.c_str( )), "rad" );
 		} else {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -704,7 +704,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -726,7 +726,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
-		    updateStateInfo( true );
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -735,7 +735,7 @@ if (!markCenter()) return;
 
 	    // trap attempts to move region out of visible area...
 	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true );
+		updateStateInfo( true, RegionChangeReset );	// error: reset
 		return false;
 	    }
 
@@ -1766,7 +1766,7 @@ if (!markCenter()) return;
 
 		    Double beamArea = 0;
 		    ImageInfo ii = image->imageInfo();
-		    Vector<Quantum<Double> > beam = ii.restoringBeam();
+		    GaussianBeam beam = ii.restoringBeam();
 		    CoordinateSystem cSys = image->coordinates();
 		    std::string imageUnits = image->units().getName();
 		    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
@@ -1774,16 +1774,16 @@ if (!markCenter()) return;
 		    Int afterCoord = -1;
 		    Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
 		    // use contains() not == so moment maps are dealt with nicely
-		    if ( beam.nelements()==3 && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
+		    if ( ! beam.isNull() && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
 			DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
 			Vector<String> units(2);
 			units(0) = units(1) = "rad";
 			dCoord.setWorldAxisUnits(units);
 			Vector<Double> deltas = dCoord.increment();
 
-			Double major = beam(0).getValue(Unit("rad"));
-			Double minor = beam(1).getValue(Unit("rad"));
-			beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
+			Double major = beam.getMajor("rad");
+			Double minor = beam.getMinor("rad");
+			beamArea = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
 		    }
 
 		    if ( beamArea > 0 ) layerstats->push_back(RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));

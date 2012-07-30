@@ -95,10 +95,10 @@ chan15 = 1.07351000e+10
 chan19 = 1.23351000e+10
 
 def run_frombcs(imagename, box, chans, stokes, stokes_control, region=""):
-    myia = iatool.create()
+    myia = iatool()
     myia.open(imagename)
     mycsys = myia.coordsys()
-    myrg = rgtool.create()
+    myrg = rgtool()
     res = rg.frombcs(
         mycsys.torecord(), myia.shape(), box, chans,
         stokes, stokes_control, region
@@ -238,7 +238,7 @@ class rg_frombcs_test(unittest.TestCase):
         chans = ""
         stokes = ""
         stokes_control = "a"
-        blahia = iatool.create()
+        blahia = iatool()
         blahia.open(image)
         mycsys = blahia.coordsys()
         blahia.done()

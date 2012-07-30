@@ -70,7 +70,6 @@ void SettingsWidget::reset( bool taskChanged ){
 	if ( taskHelper != NULL ){
 		opticalChange = optical != taskHelper->isOptical();
 	}
-
 	if ( taskHelper == NULL || opticalChange || taskChanged ){
 
 		//We are changing from an optical to a radio or vice versa
@@ -81,13 +80,12 @@ void SettingsWidget::reset( bool taskChanged ){
 				stackedLayout = new QStackedLayout( this );
 				//boxLayout->setMargin( 0 );
 		}
-		if ( taskHelper == NULL ){
+		if ( taskHelper == NULL || taskChanged ){
 			if ( specLineFitting ){
 				taskHelperOptical = new SpecFitSettingsWidgetOptical( this );
 				taskHelperRadio = new SpecFitSettingsWidgetRadio( this );
 			}
 			else {
-
 				taskHelperOptical = new MomentSettingsWidgetOptical( this );
 				taskHelperRadio = new MomentSettingsWidgetRadio( this );
 			}

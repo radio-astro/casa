@@ -402,7 +402,7 @@ void TBViewArray::sliceChanged(vector<int> newSlice) {
 }
 
 void TBViewArray::dataChanged(int r, int c) {   
-    cerr << "hi: " << r << " " << c << endl;
+    
     if(!update || r == -1 || c == -1) return;
 
     vector<int> d;

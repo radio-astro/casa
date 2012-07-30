@@ -2,6 +2,7 @@
 import os
 from taskinit import *
 import flaghelper as fh
+from casac import casac
 
 
 def importasdm(
@@ -224,10 +225,10 @@ def importasdm(
                     out = 'ASDM_' + tab.upper()
                     outTabNames.append(out)
                     outTables.append(vis + '/' + out)
-                tbtool = casac.table()
-                tb = tbtool.create()
+                #tbtool = casac.table()
+                tb = casac.table()
                 tb.open(vis, nomodify=False)
-                wtb = tbtool.create()
+                wtb = casac.table()
                 for i in xrange(len(outTables)):
                     wtb.fromASDM(outTables[i], targetTables[i])
                     tb.putkeyword(outTabNames[i], 'Table: %s'

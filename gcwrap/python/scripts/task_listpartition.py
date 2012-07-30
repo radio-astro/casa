@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pprint
 from taskinit import *
+import partitionhelper as ph
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 
@@ -47,7 +48,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
             
                 
         # Is it a multi-MS?
-        ismms = mslocal.ismultims(vis)
+        ismms = mslocal.ismultims()
         
         # List of MSs to process
         mslist = []
@@ -82,7 +83,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
             mslocal1.close()
 
             # Get the data volume in bytes per sub-MS
-            sizelist.append(getDiskUsage(subms))
+            sizelist.append(ph.getDiskUsage(subms))
 
         # Get the information to list in output
         # Dictionary to return
@@ -99,11 +100,11 @@ def listpartition(vis=None, createdict=None, listfile=None):
             scandict = scanlist[ims]
             
             # Get spw dictionary for this sub-MS
-            # NOTE: the keys of spwdict['spwInfo'].keys() are NOT the spw Ids
+            # NOTE: the keys of spwdict.keys() are NOT the spw Ids
             spwdict = spwlist[ims]
             
             # The keys are the scan numbers
-            scans = scandict['summary'].keys()
+            scans = scandict.keys()
             
             # Get information per scan
             tempdict['scanId'] = {}
@@ -111,17 +112,17 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 scanid = ii
                 newscandict = {}
 
-                sscans = scandict['summary'][scanid].keys()
+                sscans = scandict[scanid].keys()
                 
                 # Get spws and nrows per sub-scan
                 nrows = 0
                 aspws = np.array([],dtype=int)
                 for kk in sscans:
                     sscanid = kk
-                    nrows += scandict['summary'][scanid][sscanid]['nRow']
+                    nrows += scandict[scanid][sscanid]['nRow']
 
                     # Get the spws for each sub-scan
-                    spwids = scandict['summary'][scanid][sscanid]['SpwIds']
+                    spwids = scandict[scanid][sscanid]['SpwIds']
                     aspws = np.append(aspws,spwids)
 
                 newscandict['nrows'] = nrows
@@ -139,9 +140,9 @@ def listpartition(vis=None, createdict=None, listfile=None):
                 # Now get the number of channels per spw
                 for ind in range(spwsize):
                     spwid = uniquespws[ind]
-                    for sid in spwdict['spwInfo'].keys():
-                        if spwdict['spwInfo'][sid]['SpectralWindowId'] == spwid:
-                            nchans = spwdict['spwInfo'][sid]['NumChan']
+                    for sid in spwdict.keys():
+                        if spwdict[sid]['SpectralWindowId'] == spwid:
+                            nchans = spwdict[sid]['NumChan']
                             charray[ind] = nchans
                             continue
                     
@@ -226,28 +227,6 @@ def listpartition(vis=None, createdict=None, listfile=None):
     
 
            
-
-def getDiskUsage(msfile):
-    '''Return the size in bytes of an MS'''
-    
-    from subprocess import Popen, PIPE, STDOUT
-
-    # Command line to run
-    ducmd = 'du -hs '+msfile
-    
-    p = Popen(ducmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
-    
-    sizeline = p.stdout.read()
-    
-    # Create a list of the output string, which looks like this:
-    # ' 75M\tuidScan23.data/uidScan23.0000.ms\n'
-    # This will create a list with [size,sub-ms]
-    mssize = sizeline.split()
-
-    return mssize[0]
-
-
-
 def getWidth(adict, par):
     
     width = 0

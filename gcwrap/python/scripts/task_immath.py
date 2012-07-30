@@ -307,7 +307,7 @@ def immath(
                     raise Exception, "Units of polithresh " + initUnit \
                     + " do not conform to input image units of " + bunit \
                     + " so cannot perform thresholding. Please correct units and try again."
-                polithresh = qa.getvalue(polithresh)
+                polithresh = qa.getvalue(polithresh)[0]
             doPolThresh = True
             [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
             lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
@@ -315,15 +315,12 @@ def immath(
             lpol = tmpFilePrefix + "_lpol.im"
             res = _myia.imagecalc(pixels=lpolexpr, outfile=lpol)
             res.done()
-
     elif mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
-
         sigsq=0
-
         if len(sigma)>0:
             qsigma=qa.quantity(sigma)
-            if qa.getvalue(qsigma) >0:
+            if qa.getvalue(qsigma)[0] >0:
                 sigmaunit=qa.getunit(qsigma)
                 try:
                     _myia.open(filenames[0])
@@ -335,7 +332,7 @@ def immath(
                     newsigma=qa.convert(qsigma,iunit)
                 else:
                     newsigma=sigma
-                    sigsq=(qa.getvalue(newsigma))**2
+                    sigsq=(qa.getvalue(newsigma)[0])**2
                 expr+='-%s' % sigsq
             expr+=')'
         # reset stokes selection for pola and poli
@@ -350,7 +347,6 @@ def immath(
             
     # If the user didn't give any region or mask information
     # then just evaluated the expression with the filenames in it.
-
     if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 and len(mask)<1):
         expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
@@ -541,7 +537,7 @@ def __check_stokes(images):
             csys = _myia.coordsys()
             stks=csys.stokes()
             _myia.close()
-            retValue.append(stks)
+            retValue.extend(stks)
         return retValue
        
 # it is important to sort the varnames in reverse order before doing
@@ -566,24 +562,23 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     _myia = iatool()
     if len(filenames) == 1:
         # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
-        if (type(stkslist[0]) != list):
+        if (type(stkslist) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
         _myia.open(filenames[0])
-        stokesPixel = _myia.coordsys().findcoordinate('stokes')[1]
-        if (type(stokesPixel) != int):
+        spixels = _myia.coordsys().findcoordinate('stokes')[1]
+        if (len(spixels) != 1):
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
-
+        stokesPixel = spixels[0]
         trc = _myia.shape()
         blc = []
         for i in range(len(trc)):
             blc.append(0)
             trc[i] = trc[i] - 1
-
         for stokes in (['Q', 'U']):
-            if (stkslist[0].count(stokes) == 0):
+            if (stkslist.count(stokes) == 0):
                 raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
                 + " so pola calculation cannot be done"
-            pixNum = stkslist[0].index(stokes)
+            pixNum = stkslist.index(stokes)
             blc[stokesPixel] = pixNum
             trc[stokesPixel] = pixNum
             myfile = tmpFilePrefix + '_' + stokes
@@ -618,32 +613,33 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     return expr
 
 def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
+    # FIXME good grief, I question that these opcodes should even exist in immath
+    # there is a polarization image tool (po) that does all of this much more nicely
     # calculate a polarization intensity image
     # if 3 files (or 1 file with Q, U, V) total pol intensity image
     # if 2 files (or file file with Q, U) given linear pol intensity image
     # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
-
     if len(filenames) < 1 or len(filenames) > 3:
         raise Exception, 'poli requires one multistokes with Q, U, and optionally V stokes or two single stokes (Q, U) images or three single Stokes (Q,U,V) images'
-
     isQim = False
     isUim = False
     isVim = False
     isLPol = False
     isTPol = False
-    stkslist=__check_stokes(filenames)
 
+    stkslist=__check_stokes(filenames)
     if len(filenames) == 1:
         # do multistokes image
-        if (type(stkslist[0]) != list):
+        if (len(stkslist) < 2):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
         _myia = iatool()
         _myia.open(filenames[0])
-        stokesPixel = _myia.coordsys().findcoordinate('stokes')[1]
-        if (type(stokesPixel) != int):
+        spixels = _myia.coordsys().findcoordinate('stokes')[1]
+        if (len(spixels) != 1):
             _myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
 
+        stokesPixel = spixels[0]
         trc = _myia.shape()
         blc = []
 
@@ -651,11 +647,11 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
             blc.append(0)
             trc[i] = trc[i] - 1
         neededStokes = ['Q', 'U']
-        if (stkslist[0].count('V')):
+        if (stkslist.count('V')):
             neededStokes.append('V')
         Qimage = Uimage = Vimage = ''
         for stokes in (neededStokes):
-            if ((stokes == 'Q' or stokes == 'U') and stkslist[0].count(stokes) == 0):
+            if ((stokes == 'Q' or stokes == 'U') and stkslist.count(stokes) == 0):
                 _myia.close()
                 raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
                 + " so poli calculation cannot be done"
@@ -667,7 +663,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
             elif (stokes == 'V' and tpol):
                 Vimage = myfile
             if createSubims:
-                pixNum = stkslist[0].index(stokes)
+                pixNum = stkslist.index(stokes)
                 blc[stokesPixel] = pixNum
                 trc[stokesPixel] = pixNum
                 _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
@@ -720,7 +716,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
-    myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh))
+    myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh)[0])
     _myia = iatool()
     _myia.open(outfile)
     _myia.calcmask(name='mask0', mask=myexpr)

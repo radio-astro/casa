@@ -244,6 +244,12 @@ try {
 	cout << x.getMesg() << endl;
     } 
     
+    AlwaysAssert(max(A, B) == A, AipsError);
+    AlwaysAssert(max(B, A) == A, AipsError);
+    AlwaysAssert(min(B, A) == B, AipsError);
+    AlwaysAssert(min(A, B) == B, AipsError);
+
+
     cout << endl << "--------------------------" << endl;
     
     return 0;

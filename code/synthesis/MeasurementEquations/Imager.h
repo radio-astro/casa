@@ -363,7 +363,7 @@ class Imager
 	       const Vector<String>& image, const Vector<String>& residual);
 
   // Setbeam
-  Bool setbeam(const Quantity& bmaj, const Quantity& bmin, const Quantity& bpa);
+  Bool setbeam(const GaussianBeam& beam);
 
   // Residual
   Bool residual(const Vector<String>& model, const String& complist,
@@ -375,7 +375,7 @@ class Imager
   // Smooth
   Bool smooth(const Vector<String>& model, 
 	      const Vector<String>& image, Bool usefit,
-	      Quantity& bmaj, Quantity& bmin, Quantity& bpa,
+	      GaussianBeam& mbeam,
 	      Bool normalizeVolume);
 
   // Clean algorithm
@@ -516,8 +516,7 @@ class Imager
   static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
-  Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
-	      Quantity& mbpa);
+  Bool fitpsf(const String& psf, GaussianBeam& mbeam);
 
   // Correct the visibility data (OBSERVED->CORRECTED)
   Bool correct(const Bool doparallactic, const Quantity& t);
@@ -671,7 +670,7 @@ protected:
   Int  tile_p;
   MPosition mLocation_p;
   Bool doVP_p;
-  Quantity bmaj_p, bmin_p, bpa_p;
+  GaussianBeam beam_p;
   Bool beamValid_p;
   Float padding_p;
   Float sdScale_p;
@@ -778,7 +777,10 @@ protected:
   Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                              const Int rawspwid, const Int fldid,
                              const String& clname, const String& timerange="",
-                             const String& scanstr="", const String& obsidstr="");
+                             const String& scanstr="", 
+			     const String& obsidstr="", 
+			    const Vector<Double>& freqofscale=Vector<Double>(0),
+			     const Vector<Double>& scale=Vector<Double>(0) );
   // Returns whether it found a source.
   Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                        Vector<Vector<Flux<Double> > >& returnFluxes,
@@ -791,7 +793,9 @@ protected:
                        const MDirection& fieldDir, const String& standard);
   // Returns NULL if no image is prepared.
   TempImage<Float>* sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
-                                  Vector<Double>& fluxUsed, const String& model,
+                                  Vector<Double>& fluxUsed, 
+				  Vector<Double>& freq, 
+				  Vector<Double>& scale, const String& model,
                                   const ROMSSpWindowColumns& spwcols,
                                   const Int rawspwid, const Bool chanDep,
                                   const Vector<Vector<MFrequency> >& mfreqs,

@@ -26,7 +26,7 @@ include "image.g"
 <code>
 	<include>tools/images/image_forward.h</include>
 	<private>
-		<include>tools/images/image_private.h</include>	</private>
+		<include>tools/images/image_private.h</include> </private>
 </code>
 
 
@@ -985,7 +985,7 @@ result in a more indirect fashion as follows in the following example.
    
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name</description>
      </param>
 </input>
@@ -1024,7 +1024,7 @@ information on foreign images.
    
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name</description>
      </param>
   
@@ -1043,7 +1043,7 @@ how it works is in the online help for that method.
    
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name</description>
      </param>
   
@@ -1093,17 +1093,17 @@ fitsimage.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="pixels">
+     <param type="string"  name="pixels">
      <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -1242,44 +1242,50 @@ myim.done()
 <method type="function" name="collapse">
     <shortdescription>Collapse image along specified axis, computing aggregate function of pixels along that axis.</shortdescription>
     <input>
-        <param type="string" direction="in" name="function">
+        <param type="string"  name="function">
             <description>Aggregate function to apply: max, mean, median, min, rms, stdev, sum, variance.</description>
             <value></value>
         </param>
-        <param type="any" direction="in" name="axes">
+        <param type="any"  name="axes">
             <any type="variant"/>
             <description>Zero-based axis number along which to collapse image.</description>
             <value>0</value>
         </param>
-        <param type="string" direction="in" name="outfile">
+        <param type="string"  name="outfile">
             <description>Output image file name. If blank, no image is written but a new image tool referencing the collapsed image is returned.</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="region">
+        <param type="any" direction="in" name="region">
+            <any type="variant" limittypes="string record"/>
+            <description>Region specification. See help par.region. Default is to use the full image.</description>
+            <value type="string"></value>
+<!--
+        <param type="string"  name="region">
             <description>Region specification. See help par.region. Default is to not use a region.</description>
             <value></value>
+            -->
         </param>
-        <param type="string" direction="in" name="box">
+        <param type="string"  name="box">
             <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="chans">
+        <param type="string"  name="chans">
             <description>Channels to use. Channels must be contigous. Default is to use all channels.</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="stokes">
+        <param type="string"  name="stokes">
             <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="mask">
+        <param type="string"  name="mask">
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-        <param type="bool" direction="in" name="overwrite">
+        <param type="bool"  name="overwrite">
             <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
             <value>false</value>
         </param>
-        <param type="bool" direction="in" name="stretch">
+        <param type="bool"  name="stretch">
             <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
             <value>false</value>
         </param>
@@ -1313,6 +1319,11 @@ collapsed_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
 of the the first and last values of that axis in the specified region of the input image.
+
+If the input image has per plane beams, the beam at the origin of the subimage determined by
+the selected region is arbitrarily made the global beam of the output image. In general, you should
+understand the pitfalls of collapsing images with multiple beams (ie that employing an aggregate
+function on pixels with varying beam sizes more often than not leads to ill-defined results).
     </description>
     <example>
 """
@@ -1334,34 +1345,34 @@ collapsed.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="infiles">
+     <param type="any"  name="infiles">
      <any type = "variant"/>
      <description>List of input \casa\ image files to concatenate;
 wild cards accepted.  Default is empty string.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="axis">
+     <param type="int"  name="axis">
 	     <description>Concatenation pixel axis. Use ia.coordsys().names() to get a list of axes. A negative value means use the spectral axis if there is one, if not an exception is thrown.</description>
      <value>-1</value>
      </param>
   
-     <param type="bool" direction="in" name="relax">
+     <param type="bool"  name="relax">
      <description>Relax constraints that axis coordinate descriptors match</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="tempclose">
+     <param type="bool"  name="tempclose">
      <description>Keep all lattices closed until needed</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -1504,33 +1515,33 @@ bigim.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="pixels">
+     <param type="any"  name="pixels">
 	     <any type="variant"/>
      <description>Numeric array</description>
      <value/>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Make a linear Coordinate System if csys not given</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>Write image creation messages to logger</description>
      <value>true</value>
      </param>
@@ -1627,38 +1638,38 @@ ia.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input ascii disk file name.  Must be specified..</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Shape of image.  Must be specified.</description>
      <value>-1</value>
      </param>
   
-     <param type="string" direction="in" name="sep">
+     <param type="string"  name="sep">
      <description>Separator in ascii file.  Default is space character.</description>
-     <value> </value>
+     <value>:</value>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Coordinate System record from coordsys torecord().
   Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Make a linear Coordinate System if csys not given</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -1773,32 +1784,32 @@ ia.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input FITS disk file name.  Must be specified.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="whichrep">
+     <param type="int"  name="whichrep">
      <description>If this FITS file contains multiple coordinate representations, which one should we read (0-based)</description>
      <value>0</value>
      </param>
   
-     <param type="int" direction="in" name="whichhdu">
+     <param type="int"  name="whichhdu">
      <description>If this FITS file contains multiple images, which one should we read (0-based).</description>
      <value>0</value>
      </param>
   
-     <param type="bool" direction="in" name="zeroblanks">
+     <param type="bool"  name="zeroblanks">
      <description>If there are blanked pixels, set them to zero instead of NaN</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
        </param>
@@ -1860,33 +1871,33 @@ the example we list the names of the fields in this record.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output sub-image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name.  Must be specified.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <any type="variant"/>    
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
     </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -1950,32 +1961,32 @@ of the image, and all pixels of other axes.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Name of output image file.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Shape of image.  Must be specified.</description>
      <value>0</value>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Make a linear Coordinate System if csys not given?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>Write image creation messages to logger</description>
      <value>true</value>
      </param>
@@ -2038,12 +2049,12 @@ of the image {\sff test.data} is created and used to create a 2D temporary image
 
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
 
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?
       </description>
      <value>false</value>
@@ -2083,37 +2094,37 @@ ia.close()             # close to unlock disk image
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="direction">
+     <param type="bool"  name="direction">
      <description>Add direction axes?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="spectral">
+     <param type="bool"  name="spectral">
      <description>Add spectral axis?</description>
      <value>false</value>
      </param>
   
-     <param type="string" direction="in" name="stokes">
+     <param type="string"  name="stokes">
      <description>Add Stokes axis?  Default is empty string.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Add linear axis?</description>
      <value>false</value>
      </param>  
   
-     <param type="bool" direction="in" name="tabular">
+     <param type="bool"  name="tabular">
      <description>Add tabular axis?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -2186,22 +2197,22 @@ In this example, all the images are virtual (temporary images).
    
 <input>
   
-     <param type="string" direction="in" name="type">
+     <param type="string"  name="type">
      <description>Type of distribution, normal</description>
      <value>normal</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="pars">
+     <param type="doubleArray"  name="pars">
      <description>Parameters of distribution</description>
      <value type="vector"><value>0.0</value> <value>1.0</value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="zero">
+     <param type="bool"  name="zero">
      <description>Zero image first?</description>
      <value>false</value>
      </param>
@@ -2295,42 +2306,42 @@ from a normal distribution added.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="kernel">
+     <param type="any"  name="kernel">
      <any type="variant"/>
      <description>Convolution kernel - array or image filename.  Must be specified.</description>
      <value></value>
      </param>
   
-     <param type="double" direction="in" name="scale">
+     <param type="double"  name="scale">
      <description>Scale factor.  Default is autoscale.</description>
      <value>-1.0</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
          <value>false</value>
      </param>
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
@@ -2403,7 +2414,7 @@ im3.done()
    
 <input>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
@@ -2513,7 +2524,7 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="pixels">
+     <param type="string"  name="pixels">
      <description>LEL expression</description>
      </param>
 </input>
@@ -2591,17 +2602,17 @@ This shows a mixed type expression.  The real part of the complex image
    
 <input>
   
-     <param type="string" direction="in" name="mask">
+     <param type="string"  name="mask">
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="string" direction="in" name="name">
+     <param type="string"  name="name">
      <description>Mask name.  Default is auto new name.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="asdefault">
+     <param type="bool"  name="asdefault">
      <description>Make specified mask the default mask?</description>
      <value>true</value>
      </param>
@@ -2724,27 +2735,27 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outline">
+     <param type="string"  name="outline">
      <description>Output line image filename.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="outcont">
+     <param type="string"  name="outcont">
      <description>Output continuum image filename</description>
      <value>continuumsub.im</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region over which output is desired.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="channels">
+     <param type="intArray"  name="channels">
      <description>Channels to use for continuum estimation.  Default is all.</description>
      <value>-1</value>
      </param>
   
-     <param type="string" direction="in" name="pol">
+     <param type="string"  name="pol">
      <description>Polarization to process.  String from
      "I Q U V XX RR" etc.  Default is unset.</description>
      <value>I</value>
@@ -2756,12 +2767,12 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="fitorder">
+     <param type="int"  name="fitorder">
      <description>Polynomial order for continuum estimation</description>
      <value>0</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Auto-overwrite output files if they exist?</description>
      <value>false</value>
      </param>
@@ -2847,32 +2858,41 @@ only Stokes I, even if the original image had other stokes planes.
    
 <input>
   
-     <param type="any" direction="in" name="value">
+     <param type="any"  name="value">
      <any type="variant"/>
      <description>Flux density to convert.  Must be specified.</description>
      <value>0Jy/beam</value>
      </param>
   
-     <param type="any" direction="in" name="major">
+     <param type="any"  name="major">
      <any type="variant"/>
      <description>Major axis of component.  Must be specified.</description>
      <value>1arcsec</value>
      </param>
   
-     <param type="any" direction="in" name="minor">
+     <param type="any"  name="minor">
      <any type="variant"/>
      <description>Minor axis of component.  Must be specified.</description>
      <value>1arcsec</value>
      </param>
   
-     <param type="string" direction="in" name="type">
+     <param type="string"  name="type">
      <description>Type of component.  String from Gaussian, Disk.</description>
      <value>Gaussian</value>
      </param>
   
-     <param type="bool" direction="in" name="topeak">
+     <param type="bool"  name="topeak">
      <description>Convert to peak or integral flux desnity</description>
      <value>true</value>
+     </param>
+     
+     <param type="int" direction="in" name="channel">
+        <description>Channel to use if and only if image has per plane beams.</description>
+        <value>-1</value>
+     </param>
+     <param type="int" direction="in" name="polarization">
+        <description>Zero-based polarization number to use for beam if and only if image has per plane beams.</description>
+        <value>-1</value>
      </param>
 </input>
 <returns type="record"/>
@@ -2913,61 +2933,61 @@ ia.close()
    
  <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to convolve.  Default is [0,1].</description>
      <value type="vector"><value>0</value><value>1</value></value>
      </param>
   
-     <param type="string" direction="in" name="type">
+     <param type="string"  name="type">
      <description>Type of convolution kernel</description>
      <value>gaussian</value>
      </param>
   
-     <param type="any" direction="in" name="major">
+     <param type="any"  name="major">
      <any type="variant"/>
      <description>Major axis, Quantity, string, numeric.  Must be specified.</description>
      <value>0deg</value>
      </param>
   
-     <param type="any" direction="in" name="minor">
+     <param type="any"  name="minor">
      <any type="variant"/>
      <description>Minor axis, Quantity, string, numeric.  Must be specified.</description>
      <value>0deg</value>
      </param>
   
-     <param type="any" direction="in" name="pa">
+     <param type="any"  name="pa">
      <any type="variant"/>
      <description>Position Angle, Quantity, string, numeric.  Default is 0deg.</description>
      <value>0deg</value>
      </param>
   
-     <param type="double" direction="in" name="scale">
+     <param type="double"  name="scale">
      <description>Scale factor.  Default is autoscale.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
         <value>false</value>
      </param>
@@ -2977,7 +2997,7 @@ ia.close()
 
 <description>
 
-This function <!-- (short-hand name {\stff c2d}) --> does Fourier-based
+This function does Fourier-based
 convolution of an \imagefile\ by the given 2D kernel.  
 
 If {\stfaf outfile} is unset, the image is written to the specified
@@ -2992,8 +3012,7 @@ You specify which 2 pixel axes of the image you wish to convolve via the
 {\stfaf axes} argument.
 
 You specify the type of convolution kernel with {\stfaf type} (minimum
-match is active); currently only {\cf 'gaussian'}  is available.  With
-time others will be implemented.
+match is supported); currently only {\cf 'gaussian'}  is available.
 
 You specify the parameters of the convolution kernel via the arguments
 {\stfaf major}, {\stfaf minor}, and {\stfaf pa}.   These arguments can
@@ -3051,7 +3070,9 @@ Secondly,if the input image units are Jy/beam, then
 the output image will also have units of Jy/beam and be appropriately
 scaled.  In addition, the restoring beam of the output image
 will be the convolution of the input image restoring beam and the
-convolution kernel.
+convolution kernel (in the case of an image with per-plane beams, for
+each plane the kernel is convolved with the appropriate beam and the
+result is associated with that plane in the output image).
 
 If you do not leave {\stfaf scale} unset, then the convolution kernel
 will be scaled by this value (it has peak unity before application
@@ -3105,7 +3126,7 @@ are unlike.
    
 <input>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to which the Coordinate System pertains.  Default is all axes.</description>
      <value>-1</value>
      </param>
@@ -3155,13 +3176,13 @@ this Coordinate System using the {\cf fromshape} function.
    
 <input>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to which the Coordinate System pertains</description>
      <value>-1</value>
      </param>
 </input>
 
-<returns type="coordsys"/>
+<returns type="casacoordsys"/>
 <description>
 
 This function stores the Coordinate System of an image in a {\stf
@@ -3203,26 +3224,26 @@ constructor.
    <shortdescription>Convert from pixel to world coordinate wrapped as Measures</shortdescription>
 <!--   
 <output>
-     <param type="record" name="intensity">
+     <param type="record" direction="out" name="intensity">
      <description>Returned intensity quantity for pixel</description>
      </param>
 
-     <param type="record" name="direction">
+     <param type="record" direction="out" name="direction">
      <description>Returned direction measure for pixel</description>
      </param>
 
-     <param type="record" name="frequency">
+     <param type="record" direction="out" name="frequency">
      <description>Returned frequency measure for pixel</description>
      </param>
 
-     <param type="record" name="velocity">
+     <param type="record" direction="out" name="velocity">
      <description>Returned radial velocity measure for pixel</description>
      </param>
 </output>
 -->
 <input>
 
-     <param type="doubleArray" direction="in" name="pixel">
+     <param type="doubleArray"  name="pixel">
      <description>Absolute pixel coordinate.  Default is reference pixel.</description>
      <value>-1</value>
      </param>
@@ -3313,67 +3334,67 @@ at a particular location at a particular time.
    
 <input>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="simple">
+     <param type="bool"  name="simple">
      <description>Skip contour deblending and scan for local maxima</description>
      <value>false</value>
      </param>
   
-     <param type="double" direction="in" name="threshold">
+     <param type="double"  name="threshold">
      <description>Value of minimum positive contour.  Must be set and nonnegative.</description>
      <value>-1</value>
      </param>
   
-     <param type="int" direction="in" name="ncontour">
+     <param type="int"  name="ncontour">
      <description>Number of contours to use in deblending (&gt;= 2)</description>
      <value>11</value>
      </param>
   
-     <param type="int" direction="in" name="minrange">
+     <param type="int"  name="minrange">
      <description>Minimum number of closed contours in a component (&gt; 0)</description>
      <value>1</value>
      </param>
   
-     <param type="int" direction="in" name="naxis">
+     <param type="int"  name="naxis">
      <description>Max number of perpendicular steps between contiguous pixels.  Values of 1, 2 or 3 are allowed.</description>
      <value>2</value>
      </param>
   
-     <param type="bool" direction="in" name="fit">
+     <param type="bool"  name="fit">
      <description>Fit to the components after deblending?</description>
      <value>true</value>
      </param>
   
-     <param type="double" direction="in" name="maxrms">
+     <param type="double"  name="maxrms">
      <description>Maximum RMS of fit residuals to not retry fit (&gt; 0).  Default is unset.</description>
      <value>-1</value>
      </param>
   
-     <param type="int" direction="in" name="maxretry">
+     <param type="int"  name="maxretry">
      <description>Maximum number of times to retry the fit (&gt;= 0).  Default is unset.</description>
      <value>-1</value>
      </param>
   
-     <param type="int" direction="in" name="maxiter">
+     <param type="int"  name="maxiter">
      <description>Maximum number of iterations allowed in a single fit (&gt; 0)</description>
      <value>256</value>
      </param>
   
-     <param type="double" direction="in" name="convcriteria">
+     <param type="double"  name="convcriteria">
      <description>Criterion to establish convergence (&gt;=0)</description>
      <value>0.0001</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
         <value>false</value>
      </param>
@@ -3458,20 +3479,32 @@ ia.close()
    
 <input>
   
-     <param type="record" direction="in" name="complist">
+     <param type="record"  name="complist">
      <description>Componentlist to deconvolve</description>
+     </param>
+     <param type="int" direction="in" name="channel">
+        <description>Zero-based channel number to use for beam for per plane images. Not used if the image has a single beam.</description>
+        <value>-1</value>
+     </param>
+     <param type="int" direction="in" name="polarization">
+        <description>Zero-based polarization number to use for beam for per plane images. Not used if the image has a single beam.</description>
+        <value>-1</value>
      </param>
 </input>
 <returns type="record">Componentlist tool or fail</returns>
 
 <description>
 
-This function <!-- (short-hand name {\stff dcl}) --> deconvolves (a
+This method deconvolves (a
 record representation of) a Componentlist \tool\ from the restoring
 beam, returning (a record representation of) a new Componentlist \tool.
 If there is no restoring beam, a fail is generated.
 
 Currently, only deconvolution of Gaussian components is supported.
+
+For images with per-plane beam, the user must choose which beam is used for
+the deconvolution by setting channel and/or polarization. Only a single beam
+is used to deconvolve all components.
 
 See also functions <link anchor="images:image.setrestoringbeam.function">setrestoringbeam</link> and
 <link anchor="images:image.restoringbeam.function">restoringbeam</link>.
@@ -3520,12 +3553,12 @@ The return value is a record that contains the fit param and the return value is
 </description>
 
 <input>
-  <param type="any" direction="in" name="source">
+  <param type="any"  name="source">
     <any type="variant"/>
     <description>Three quantities that define the source majoraxis, minoraxis and Position angle</description>
     <value></value>
   </param>
-  <param type="any" direction="in" name="beam">
+  <param type="any"  name="beam">
     <any type="variant"/>
     <description>Three quantities that define the beam majoraxis, minoraxis and Position angle</description>
     <value></value>
@@ -3560,11 +3593,11 @@ print 'pa=',recout['fit']['pa']
    <shortdescription>Delete the image file associated with this image tool</shortdescription>
    
 <input>
-     <param type="bool" direction="in" name="done">
+     <param type="bool"  name="done">
      <description>Destroy this tool after deletion</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="verbose">
+     <param type="bool"  name="verbose">
      <description>Send a progress report to the logger.</description>
      <value>true</value>
      </param>
@@ -3609,7 +3642,7 @@ Note: use remove() if the image file is attached to the image tool.
 </shortdescription>
    
 <input>
-     <param type="string" direction="in" name="file">
+     <param type="string"  name="file">
      <description>Name of image file/directory to be removed.  Must be specified.</description>
      </param>
 </input>
@@ -3642,11 +3675,11 @@ ia.removefile('myimage')
    
 <input>
   
-     <param type="bool" direction="in" name="remove">
+     <param type="bool"  name="remove">
      <description>Delete disk file as well?</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="verbose">
+     <param type="bool"  name="verbose">
      <description>Send a progress report to the logger.</description>
      <value>true</value>
      </param>
@@ -3693,42 +3726,42 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="real">
+     <param type="string"  name="real">
      <description>Output real image file name</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="imag">
+     <param type="string"  name="imag">
      <description>Output imaginary image file name</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="amp">
+     <param type="string"  name="amp">
      <description>Output amplitude image file name</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="phase">
+     <param type="string"  name="phase">
      <description>Output phase image file name</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Specify pixel axes to FFT.  Default is sky plane(s).</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
         <value>false</value>
      </param>
@@ -3797,43 +3830,43 @@ images only are written out.
    
 <input>
   
-     <param type="int" direction="in" name="nmax">
+     <param type="int"  name="nmax">
 	     <description>Maximum number of sources to find, &gt; 0</description>
      <value>20</value>
      </param>
   
-     <param type="double" direction="in" name="cutoff">
+     <param type="double"  name="cutoff">
      <description>Fractional cutoff level</description>
      <value>0.1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The 2-D region of interest to fit.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="point">
+     <param type="bool"  name="point">
      <description>Find only point sources?</description>
      <value>true</value>
      </param>
   
-     <param type="int" direction="in" name="width">
+     <param type="int"  name="width">
      <description>Half-width of fit grid when point=F</description>
      <value>5</value>
      </param>
   
-     <param type="bool" direction="in" name="negfind">
+     <param type="bool"  name="negfind">
      <description>Find negative sources as well as positive?</description>
      <value>false</value>
      </param>
 </input>
-<returns type="record">>Componentlist tool or fail</returns>
+<returns type="record">Componentlist tool or fail</returns>
 
 <description>
 
@@ -3891,188 +3924,188 @@ We use the Componentlist GUI to look at the strongest component.
 <method type="function" name="fitprofile">
     <shortdescription>Fit gaussians and/or polynomials to a 1-dimensional profile.</shortdescription>
     <input>
-        <param type="string" direction="in" name="box">
+        <param type="string"  name="box">
             <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
             <value></value>
         </param>
-        <param type="any" direction="in" name="region">
+        <param type="any"  name="region">
             <any type="variant" limittypes="string record"/>
             <description>Region name, Default: no region ("").</description>
             <value type="string"/>
         </param>
-        <param type="string" direction="in" name="chans">
+        <param type="string"  name="chans">
             <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="stokes">
+        <param type="string"  name="stokes">
             <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
             <value></value>
         </param>
-        <param type="int" direction="in" name="axis">
+        <param type="int"  name="axis">
             <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
             <value>-1</value>
         </param>
-        <param type="any" direction="in" name="mask">
+        <param type="any"  name="mask">
             <any type="variant" limittypes="string stringArray"/>
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-        <param type="int" direction="in" name="ngauss">
+        <param type="int"  name="ngauss">
             <description>Number of Gaussian elements.  Default: 1.</description>
             <value>1</value>
         </param>
-        <param type="int" direction="in" name="poly">
+        <param type="int"  name="poly">
             <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
             <value>-1</value>
         </param>
-        <param type="string" direction="in" name="estimates">
+        <param type="string"  name="estimates">
             <description>Name of file containing initial estimates.  Default: No initial estimates ("").</description>
             <value/>
         </param>
-        <param type="int" direction="in" name="minpts">
+        <param type="int"  name="minpts">
             <description>Minimum number of unmasked points necessary to attempt fit.</description>
             <value>0</value>
         </param>
-        <param type="bool" direction="in" name="multifit">
+        <param type="bool"  name="multifit">
             <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
             <value>false</value>
          </param>
-        <param type="string" direction="in" name="model">
+        <param type="string"  name="model">
             <description>Name of model image. Default: do not write the model image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="residual">
+        <param type="string"  name="residual">
             <description>Name of residual image. Default: do not write the residual image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="amp">
+        <param type="string"  name="amp">
             <description>Prefix of name of amplitude solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="amperr">
+        <param type="string"  name="amperr">
             <description>Prefix of name of amplitude error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="center">
+        <param type="string"  name="center">
             <description>Prefix of name of center solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="centererr">
+        <param type="string"  name="centererr">
             <description>Prefix of name of center error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="fwhm">
+        <param type="string"  name="fwhm">
             <description>Prefix of name of FWHM solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="fwhmerr">
+        <param type="string"  name="fwhmerr">
             <description>Prefix of name of FWHM error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="integral">
+        <param type="string"  name="integral">
             <description>Prefix of name of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="integralerr">
+        <param type="string"  name="integralerr">
             <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-        <param type="bool" direction="in" name="stretch">
+        <param type="bool"  name="stretch">
             <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
             <value>false</value>
         </param>
-        <param type="bool" direction="in" name="logresults">
+        <param type="bool"  name="logresults">
             <description>Output results to logger?</description>
             <value>true</value>
         </param>
-        <param type="any" direction="in" name="pampest">
+        <param type="any"  name="pampest">
             <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile amplitudes.</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="pcenterest">
+        <param type="any"  name="pcenterest">
             <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile centers, in pixels.</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="pfwhmest">
+        <param type="any"  name="pfwhmest">
             <any type="variant" limittypes="double doubleArray"/>
             <description>Initial estimate PCF profile FWHMs, in pixels.</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="pfix">
+        <param type="any"  name="pfix">
             <any type="variant" limittypes="string stringArray"/>
             <description>PCF parameters to fix during fit. Any combination of "p", "c", or "f".</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="gmncomps">
+        <param type="any"  name="gmncomps">
             <any type="variant" limittypes="int intArray"/>
             <description>Number of components in each gaussian multiplet to fit</description>
             <value type="int">0</value>
         </param>
-        <param type="any" direction="in" name="gmampcon">
+        <param type="any"  name="gmampcon">
             <any type="variant" limittypes="double doubleArray"/>
             <description>The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="gmcentercon">
+        <param type="any"  name="gmcentercon">
             <any type="variant" limittypes="double doubleArray"/>
             <description>The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
-        <param type="any" direction="in" name="gmfwhmcon">
+        <param type="any"  name="gmfwhmcon">
             <any type="variant" limittypes="double doubleArray"/>
             <description>The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
             <value type="string"/>
         </param>
-        <param type="doubleArray" direction="in" name="gmampest">
+        <param type="doubleArray"  name="gmampest">
             <description>Initial estimate of individual gaussian amplitudes in gaussian multiplets.</description>
             <value>0.0</value>
         </param>
-        <param type="doubleArray" direction="in" name="gmcenterest">
+        <param type="doubleArray"  name="gmcenterest">
             <description>Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.</description>
             <value>0.0</value>
         </param>
-        <param type="doubleArray" direction="in" name="gmfwhmest">
+        <param type="doubleArray"  name="gmfwhmest">
             <description>Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.</description>
             <value>0.0</value>
         </param>
-        <param type="any" direction="in" name="gmfix">
+        <param type="any"  name="gmfix">
             <any type="variant" limittypes="string stringArray"/>
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
-        <param type="string" direction="in" name="logfile">
+        <param type="string"  name="logfile">
             <description>File in which to log results. Default is not to write a logfile.</description>
             <value/>
         </param>
-        <param type="bool" direction="in" name="append">
+        <param type="bool"  name="append">
             <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
             <value>true</value>
         </param>
-        <param type="any" direction="in" name="pfunc">
+        <param type="any"  name="pfunc">
             <any type="variant" limittypes="string stringArray"/>
             <description>PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
             <value type="string"/>
         </param>
-        <param type="doubleArray" direction="in" name="goodamprange">
+        <param type="doubleArray"  name="goodamprange">
             <description>Acceptable amplitude solution range. [0.0] => all amplitude solutions are acceptable.</description>
             <value>0.0</value>
         </param>
-        <param type="doubleArray" direction="in" name="goodcenterrange">
+        <param type="doubleArray"  name="goodcenterrange">
             <description>Acceptable center solution range in pixels relative to region start. [0.0] => all center solutions are acceptable.</description>
             <value>0.0</value>
         </param>
-        <param type="doubleArray" direction="in" name="goodfwhmrange">
+        <param type="doubleArray"  name="goodfwhmrange">
             <description>Acceptable FWHM solution range in pixels. [0.0] => all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
-        <param type="any" direction="in" name="sigma">
+        <param type="any"  name="sigma">
             <any type="variant" limittypes="string doubleArray intArray"/>
             <description>Standard deviation array or image name.</description>
             <value type="string"/>
         </param>
-        <param type="string" direction="in" name="outsigma">
+        <param type="string"  name="outsigma">
             <description>Name of output image used for standard deviations. Ignored if sigma is empty.</description>
             <value/>
         </param>
@@ -4352,95 +4385,95 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
 <method type="function" name="fitcomponents">
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
-        <param type="string" direction="in" name="box">
+        <param type="string"  name="box">
             <value></value>
             <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
         </param>
         
-        <param type="any" direction="in" name="region">
+        <param type="any"  name="region">
             <any type="variant"/>
             <description>The 2-D region of interest to fit. Default is entire plane. If both box and region are specified, box is used and region is not.</description>
             <value></value>
         </param>
         
-        <param type="any" direction="in" name="chans">
+        <param type="any"  name="chans">
             <any type="variant"/>
             <description>The frequency planes to use in the fit. Default is 0 (first plane).</description>
             <value></value>
         </param>
         
-        <param type="string" direction="in" name="stokes">
+        <param type="string"  name="stokes">
             <description>The polarization to use in the fit. Default is to use the first stokes plane.</description>
             <value/>
         </param>
         
-        <param type="any" direction="in" name="mask">
+        <param type="any"  name="mask">
             <any type="variant"/>
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
     
-        <param type="doubleArray" direction="in" name="includepix">
+        <param type="doubleArray"  name="includepix">
             <description>Range of pixel values to include.  Default is to include all pixels.</description>
             <value>-1</value>
         </param>
     
-        <param type="doubleArray" direction="in" name="excludepix">
+        <param type="doubleArray"  name="excludepix">
             <description>Range of pixel values to exclude.  Default is to exclude no pixels.</description>
             <value>-1</value>
         </param>
     
-        <param type="string" direction="in" name="residual">
+        <param type="string"  name="residual">
             <description>Name of the residual image to write. Default is not to write the residual.</description>
             <value></value>
         </param>
     
-        <param type="string" direction="in" name="model">
+        <param type="string"  name="model">
             <description>Name of the model image to write. Default is not to write the model.</description>
             <value></value>
         </param>
     
-        <param type="string" direction="in" name="estimates">
+        <param type="string"  name="estimates">
             <description>Name of the input estimates file. Default is to auto-estimate in which case a single gaussian will be fit.</description>
             <value></value>
         </param>
         
-        <param type="string" direction="in" name="logfile">
+        <param type="string"  name="logfile">
             <description>File in which to log results. Default is not to write a logfile.</description>
             <value></value>
         </param>
         
-        <param type="bool" direction="in" name="append">
+        <param type="bool"  name="append">
             <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
             <value>true</value>
         </param>
         
-        <param type="string" direction="in" name="newestimates">
+        <param type="string"  name="newestimates">
             <description>File to which to write results in "estimates" format suitable as estimates input for another run. Default is do not write an estimates file.</description>
             <value></value>
         </param>
     
-        <param type="string" direction="in" name="complist">
+        <param type="string"  name="complist">
             <description>Output component list table name. Default is do not write a component list table.</description>
             <value></value>
         </param>
-        <param type="bool" direction="in" name="overwrite">
+        <param type="bool"  name="overwrite">
             <description>Overwrite component list if it already exists. Default is False.</description>
             <value>false</value>
         </param>
-        <param type="bool" direction="in" name="dooff">
+        <param type="bool"  name="dooff">
             <description>Also fit a zero level offset? Default is False</description>
             <value>false</value>
         </param>
-        <param type="double" direction="in" name="offset">
+        <param type="double"  name="offset">
             <description>Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
             <value>0.0</value>
         </param>
-        <param type="bool" direction="in" name="fixoffset">
+        <param type="bool"  name="fixoffset">
             <description>Keep the zero level offset fixed during fit? Default is False </description>
             <value>false</value>
         </param>
-        <param type="bool" direction="in" name="stretch">
+        <param type="bool"  name="stretch">
             <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
             <value>false</value>
         </param>
@@ -4478,7 +4511,10 @@ In cases where the fit did not converge, these values are set to NaN.
 
 The region can either be specified by a box(es) or a region (there is no
 garauntee which will be used if both are specified, so be certain that only one is).
-Ranges of pixel values can be included or excluded from the fit.
+Ranges of pixel values can be included or excluded from the fit. If specified using
+the box parameter, multiple boxes can be given using the format
+box="blcx1, blcy1, trcx1, trcy1, blcx2, blcy2, trcx2, trcy2, ... , blcxN, blcyN, trcxN, trcyN"
+where N is the number of boxes. In this case, the union of the specified boxes will be used.
 
 If specified, the residual and/or model images for
 successful fits will be written.
@@ -4627,10 +4663,10 @@ ia.fitcomponents(region=region, chans=chans, excludepix=excludepix, estimates=es
    
 <input>  
   
-     <param type="record" direction="in" name="record">
+     <param type="record"  name="record">
      <description>Record containing the image</description>
      </param>
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <value></value>
      <description>The name of the diskfile to be created for image from 
      record
@@ -4675,37 +4711,37 @@ ia.fromrecord(rec, "testimage")
    
 <input>
   
-     <param type="intArray" direction="in" name="blc">
+     <param type="intArray"  name="blc">
      <description>Bottom-Left-Corner (beginning) of pixel section.  Default is start of image.</description>
      <value>-1</value>
      </param>
   
-     <param type="intArray" direction="in" name="trc">
+     <param type="intArray"  name="trc">
      <description>Top-Right-Corner (end) of pixel section.  Default is end of image.</description>
      <value>-1</value>
      </param>
   
-     <param type="intArray" direction="in" name="inc">
+     <param type="intArray"  name="inc">
      <description>increment (stride) along axes</description>
      <value>1</value>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to average over.  Default is none.</description>
      <value>-1</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List bounding box to logger?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="getmask">
+     <param type="bool"  name="getmask">
      <description>Get the pixel mask rather than the pixel values</description>
      <value>false</value>
      </param>
@@ -4775,36 +4811,36 @@ ia.close()
 
 <input>
 
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
 
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to average over.  Default is none.</description>
      <value>-1</value>
      </param>
 
-     <param type="variant" direction="in" name="mask">
+     <param type="variant"  name="mask">
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
 
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the bounding box to the logger</description>
      <value>false</value>
      </param>
 
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
 
-     <param type="bool" direction="in" name="getmask">
+     <param type="bool"  name="getmask">
      <description>Get the pixel mask rather than pixel values</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -4885,30 +4921,30 @@ In this example we recover first the pixels and then the pixel mask.
    
 <input>
   
-     <param type="doubleArray" direction="in" name="x">
+     <param type="doubleArray"  name="x">
      <description>Polyline x vertices in absolute pixel coordinates</description>
      </param>
   
-     <param type="doubleArray" direction="in" name="y">
+     <param type="doubleArray"  name="y">
      <description>Polyline y vertices in absolute pixel coordinates</description>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Pixel axes of plane holding slice.  Default is first two axes.</description>
      <value type="vector"><value>0</value><value>1</value></value>
      </param>
   
-     <param type="intArray" direction="in" name="coord">
+     <param type="intArray"  name="coord">
      <description>Specify pixel coordinate for other axes.  Default is first pixel.</description>
      <value>-1</value>
      </param>
   
-     <param type="int" direction="in" name="npts">
+     <param type="int"  name="npts">
      <description>Number of points in slice.  Default is auto determination.</description>
      <value>0</value>
      </param>
   
-     <param type="string" direction="in" name="method">
+     <param type="string"  name="method">
      <description>The interpolation method, String from 'nearest', 'linear', 'cubic'</description>
      <value>linear</value>
      </param>
@@ -4962,43 +4998,43 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Dictionary (record) defining the region of interest, most often obtained from an rg tool method.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="int" direction="in" name="axis">
+     <param type="int"  name="axis">
 	     <description>Zero based axis to convolve. ia.coordsys().names() gives the order of the axes in the image. Less than 0 means use the spectral axis if there is one, if not an exception is thrown.</description>
      <value>-10</value>
      </param>
   
-     <param type="bool" direction="in" name="drop">
+     <param type="bool"  name="drop">
      <description>Drop every other pixel on output?</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -5121,88 +5157,88 @@ and acquires just a read lock.
    
 <input>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>List of axes to compute histograms over.  Default is all axes.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="int" direction="in" name="nbins">
+     <param type="int"  name="nbins">
      <description>Number of bins in histograms, &gt; 0</description>
      <value>25</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="includepix">
+     <param type="doubleArray"  name="includepix">
      <description>Range of pixel values to include.  Default is to include all pixels.</description>
      <value>-1</value>
      </param>
   
-     <param type="bool" direction="in" name="gauss">
+     <param type="bool"  name="gauss">
      <description>If T overlay a Gaussian on each histogram</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="cumu">
+     <param type="bool"  name="cumu">
      <description>If T plot cumulative histograms, otherwise plot non-cumulatively</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>If T plot the ordinate logarithmically, otherwise plot linearly</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>If T then list some statistics as well</description>
      <value>true</value>
      </param>
   
-     <param type="string" direction="in" name="plotter">
+     <param type="string"  name="plotter">
      <description>The PGPLOT device name to make plots on.  Default is no plotting.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="nx">
+     <param type="int"  name="nx">
      <description>The number of subplots per page in the x direction, &gt; 0</description>
      <value>1</value>
      </param>
   
-     <param type="int" direction="in" name="ny">
+     <param type="int"  name="ny">
 	     <description>The number of subplots per page in the y direction; &gt; 0</description>
      <value>1</value>
      </param>
   
-     <param type="intArray" direction="in" name="size">
+     <param type="intArray"  name="size">
      <description>Size of plotter.  Default is [600, 450].</description>
      <value type="vector"><value>600</value><value>450</value></value>
      </param>
   
-     <param type="bool" direction="in" name="force">
+     <param type="bool"  name="force">
      <description>If T then force the stored statistical accumulations to be regenerated</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="disk">
+     <param type="bool"  name="disk">
      <description>If T then force the storage image to disk</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -5331,12 +5367,12 @@ we are plotting the function is run synchronously).-->
 
 <input>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List history to the logger?</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="browse">
+     <param type="bool"  name="browse">
      <description>Browse history with table browser? (NOT IMPLEMENTED YET!)</description>
      <value>false</value>
      </param>
@@ -5385,17 +5421,17 @@ ia.history(list=T, browse=F)       # List history to logger
    
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Image file name.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest of the input image.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="doubleArray" direction="in" name="locate">
+     <param type="doubleArray"  name="locate">
      <description>Location of input image in output image.  Default is centrally located.</description>
      <value>-1</value>
      </param>
@@ -5417,6 +5453,9 @@ If {\stfaf locate} vector is given, then those values that are given,
 give the absolute pixel in the output (this) image of the bottom left
 corner of the input (sub)image.  For those values that are not given,
 the input image is symmetrically placed in the output image. 
+
+The current image referenced with the image tool is overwritten with
+the inserted image.
 
 </description>
 <example>
@@ -5528,12 +5567,12 @@ ia.close(remove=true)
 
 <input>
   
-     <param type="bool" direction="in" name="writelock">
+     <param type="bool"  name="writelock">
      <description>Acquire a read/write (T) or a readonly (F) lock</description>
      <value>false</value>
      </param>
   
-     <param type="int" direction="in" name="nattempts">
+     <param type="int"  name="nattempts">
 	     <description>Number of attempts, &gt; 0.  Default is unlimiited.</description>
      <value>0</value>
      </param>
@@ -5577,20 +5616,20 @@ and acquire a readonly lock.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output Complex (disk) image file name</description>
      </param>
   
-     <param type="string" direction="in" name="imag">
+     <param type="string"  name="imag">
      <description>Imaginary image file name</description>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -5636,12 +5675,12 @@ ia.close(remove=true)
 
 <input>
   
-     <param type="string" direction="in" name="op">
+     <param type="string"  name="op">
      <description>The operation.  One of 'set', 'delete', 'rename', 'get', 'copy' or 'default'</description>
      <value>default</value>
      </param>
   
-     <param type="stringArray" direction="in" name="name">
+     <param type="stringArray"  name="name">
      <description>Name of mask or masks.</description>
      <value></value>
      </param>
@@ -5795,37 +5834,37 @@ ia.close()
    
 <input>
   
-     <param type="record" direction="in" name="model">
+     <param type="record"  name="model">
      <description>Record representation of a ComponentList model</description>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The 2-D region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <description>Mask to use. See help par.mask. Default is none.</description>
 	     <any type="variant"/>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="subtract">
+     <param type="bool"  name="subtract">
      <description>Subtract or add the model</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List informative messages to the logger</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-    <param type="bool" direction="in" name="stretch">
+    <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -5877,27 +5916,27 @@ In this example we subtract the model returned by the fitcomponents function.
    
 <input>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The 2-D region of interest to fit.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="point">
+     <param type="bool"  name="point">
      <description>Find only point sources?</description>
      <value>true</value>
      </param>
   
-     <param type="int" direction="in" name="width">
+     <param type="int"  name="width">
      <description>Half-width of fit grid when point=F</description>
      <value>5</value>
      </param>
   
-     <param type="bool" direction="in" name="negfind">
+     <param type="bool"  name="negfind">
      <description>Find negative sources as well as positive?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the fitted parameters to the logger?</description>
      <value>true</value>
      </param>
@@ -5945,28 +5984,28 @@ ia.close()
    
 <input>
   
-     <param type="intArray" direction="in" name="moments">
+     <param type="intArray"  name="moments">
      <description>List of moments that you would like to compute.  Default is integrated spectrum.</description>
      <value>0</value>
      </param>
   
-     <param type="int" direction="in" name="axis">
+     <param type="int"  name="axis">
      <description>The moment axis. Default is the spectral axis if there is one.</description>
      <value>-10</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region specification. See help par.region. Default is to not use a region.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="stringArray" direction="in" name="method">
+     <param type="stringArray"  name="method">
      <description>List of windowing and/or fitting functions you would
      like to invoke.  Vector of strings from 'window', 'fit' and
      'interactive'.  The default is to not invoke the window or fit
@@ -5974,12 +6013,12 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="smoothaxes">
+     <param type="intArray"  name="smoothaxes">
      <description>List of axes to smooth.  Default is no smoothing.</description>
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="smoothtypes">
+     <param type="any"  name="smoothtypes">
      <any type="variant"/>
      <description>List of smoothing kernel types, one for each axis to
      smooth.  Vector of strings from 'gauss', 'boxcar', 'hanning'.
@@ -5987,7 +6026,7 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="doubleArray" direction="in" name="smoothwidths">
+     <param type="doubleArray"  name="smoothwidths">
      <description>List of widths (full width for boxcar, full width at
      half maximum for gaussian, 3 for Hanning) in pixels for the
      smoothing kernels. Vector of numeric. Default is no
@@ -5995,82 +6034,82 @@ ia.close()
      <value>0.0</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="includepix">
+     <param type="doubleArray"  name="includepix">
      <description>Range of pixel values to include.  Vector of 1 or 2 doubles.
       Default is include all pixel.</description>
      <value>-1</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="excludepix">
+     <param type="doubleArray"  name="excludepix">
      <description>Range of pixel values to exclude.
       Default is exclude no pixels.</description>
      <value>-1</value>
      </param>
   
-     <param type="double" direction="in" name="peaksnr">
+     <param type="double"  name="peaksnr">
      <description>The SNR ratio below which the spectrum will be rejected as noise (used by the window and fit functions only)</description>
      <value>3.0</value>
      </param>
   
-     <param type="double" direction="in" name="stddev">
+     <param type="double"  name="stddev">
      <description>Standard deviation of the noise signal in the image (used by the window and fit functions only)</description>
      <value>0.0</value>
      </param>
   
-     <param type="string" direction="in" name="doppler">
+     <param type="string"  name="doppler">
      <description>Velocity doppler definition for velocity computations along spectral axes</description>
      <value>RADIO</value>
      </param>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name (or root for multiple moments).
      Default is input + an auto-determined suffix.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="smoothout">
+     <param type="string"  name="smoothout">
      <description>Output file name for convolved image.  Default is don't
      save the convolved image.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="plotter">
+     <param type="string"  name="plotter">
      <description>The PGPLOT device name to make plots on.
       Default is no plotting.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="nx">
+     <param type="int"  name="nx">
      <description>The number of subplots per page in the x direction.</description>
      <value>1</value>
      </param>
   
-     <param type="int" direction="in" name="ny">
+     <param type="int"  name="ny">
      <description>The number of subplots per page in the y direction.</description>
      <value>1</value>
      </param>
   
-     <param type="bool" direction="in" name="yind">
+     <param type="bool"  name="yind">
      <description>Scale the y axis of the profile plots independently</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="drop">
+     <param type="bool"  name="drop">
      <description>Drop moments axis from output images?</description>
      <value>true</value>
      </param>
   
-    <param type="bool" direction="in" name="stretch">
+    <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? </description>
          <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
@@ -6406,7 +6445,7 @@ image is temporary and accessed via the returned Image tool.
    
 <input>
   
-     <param type="bool" direction="in" name="strippath">
+     <param type="bool"  name="strippath">
      <description>Strip off the path before the actual file name?</description>
      <value>false</value>
      </param>
@@ -6446,7 +6485,7 @@ ia.close()
 
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile" mustexist="True">
      <description>image file name</description>
      </param>
 </input>
@@ -6492,7 +6531,7 @@ The {\stff open} function first closes the old \imagefile.
    
 <input>
   
-     <param type="intArray" direction="in" name="pixel">
+     <param type="intArray"  name="pixel">
      <description>Pixel coordinate</description>
      <value>-1</value>
      </param>
@@ -6547,33 +6586,33 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="pixels">
+     <param type="any"  name="pixels">
 	     <any type="variant"/>
      <description>Numeric array.  Required input.</description>
      </param>
   
-     <param type="intArray" direction="in" name="blc">
+     <param type="intArray"  name="blc">
      <description>Bottom-Left-Corner (start) of location in image.
      Default is start of image.</description>
      <value>-1</value>
      </param>
   
-     <param type="intArray" direction="in" name="inc">
+     <param type="intArray"  name="inc">
      <description>increment (stride) along axes</description>
      <value>1</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List bounding box to logger?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="locking">
+     <param type="bool"  name="locking">
      <description>Unlock image after use?</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="replicate">
+     <param type="bool"  name="replicate">
      <description>Replicate array through image</description>
      <value>false</value>
      </param>
@@ -6704,39 +6743,39 @@ ia.close()
    
 <input>
   
-     <param type="any" direction="in" name="pixels">
+     <param type="any"  name="pixels">
 	     <any type="variant"/>
      <description>The pixel values.  Default is none.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="pixelmask">
+     <param type="any"  name="pixelmask">
 	     <any type="variant"/>
      <description>The pixel mask values.  Default is none.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the bounding box and any mask creation to the logger</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="usemask">
+     <param type="bool"  name="usemask">
      <description>Honour the mask when putting pixels</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="locking">
+     <param type="bool"  name="locking">
      <description>Unlock image after use?</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="replicate">
+     <param type="bool"  name="replicate">
      <description>Replicate array through image</description>
      <value>false</value>
      </param>
@@ -6823,41 +6862,41 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      </param>
   
-     <param type="intArray" direction="in" name="bin">
+     <param type="intArray"  name="bin">
      <description>Binning factors for each axis</description>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -6910,83 +6949,83 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Shape of output image.  Default is input shape.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Coordinate System for output image.  Default is input image coordinate system.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>The output pixel axes to regrid.  Default is all.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is the whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
 	     <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="string" direction="in" name="method">
+     <param type="string"  name="method">
      <description>The interpolation method.  String from 'nearest', 'linear', 'cubic'.</description>
      <value>linear</value>
      </param>
   
-     <param type="int" direction="in" name="decimate">
+     <param type="int"  name="decimate">
      <description>Decimation factor for coordinate grid computation</description>
      <value>10</value>
      </param>
   
-     <param type="bool" direction="in" name="replicate">
+     <param type="bool"  name="replicate">
      <description>Replicate image rather than regrid?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="doref">
+     <param type="bool"  name="doref">
      <description>Turn on reference frame changes</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="force">
+     <param type="bool"  name="force">
      <description>Force specified axes to be regridded</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="asvelocity">
+     <param type="bool"  name="asvelocity">
         <description>Regrid spectral axis in velocity space rather than frequency space?</description>
         <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -7230,36 +7269,14 @@ ia.close()
 
 </method>
 
-
-
-<method type="function" name="reorder">
-    <shortdescription>THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD. Transpose the image.</shortdescription>
-    <input>
-        <param type="string" direction="in" name="outfile">
-            <description>Output image file name.  Default is unset.</description>
-            <value/>
-        </param>
-        <param type="any" direction="in" name="order">
-            <any type="variant"/>
-            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
-            <value/>
-        </param>
-    </input>
-    <returns type="image"/>
-    <description>
-        THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD.
-        See help for ia.transpose() for details.
-    </description>
-</method>
-
 <method type="function" name="transpose">
     <shortdescription>Transpose the image.</shortdescription>
     <input>
-        <param type="string" direction="in" name="outfile">
+        <param type="string"  name="outfile">
             <description>Output image file name.  Default is unset.</description>
             <value/>
         </param>
-        <param type="any" direction="in" name="order">
+        <param type="any"  name="order">
             <any type="variant"/>
             <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
             <value/>
@@ -7311,64 +7328,64 @@ ia.done()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Shape of output image.  Default is shape of input image.</description>
      <value>-1</value>
      </param>
   
-     <param type="any" direction="in" name="pa">
+     <param type="any"  name="pa">
      <any type="variant"/>
      <description>Angle by which to rotate.  Default is no rotation.</description>
      <value>0deg</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="string" direction="in" name="method">
+     <param type="string"  name="method">
      <description>The interpolation method.  String from 'nearest',
       'linear', or 'cubic'.</description>
      <value>cubic</value>
      </param>
   
-     <param type="int" direction="in" name="decimate">
+     <param type="int"  name="decimate">
      <description>Decimation factor for coordinate grid computation</description>
      <value>0</value>
      </param>
   
-     <param type="bool" direction="in" name="replicate">
+     <param type="bool"  name="replicate">
      <description>Replicate image rather than regrid?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -7469,11 +7486,11 @@ displays the before and after images.
    
 <input>
   
-     <param type="string" direction="in" name="name">
+     <param type="string"  name="name">
      <description>The new image file name</description>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite target file if it already exists</description>
      <value>false</value>
      </param>
@@ -7510,32 +7527,32 @@ print ia.name(strippath=T)
    
 <input>
   
-     <param type="any" direction="in" name="pixels">
+     <param type="any"  name="pixels">
 	     <any type="variant"/>
      <description>The new value(s), Numeric scalar or LEL expression</description>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="update">
+     <param type="bool"  name="update">
      <description>Update mask as well?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the bounding box to the logger</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -7689,47 +7706,48 @@ together.  The expression must conform with the
 image {\sff zz1}.
 </example>
 
-<!-- 
-<example>
-
-"""
-#
-print "\t\t replacemaskedpixels Ex 5 \t"
-ia.maketestimage('zz3',overwrite=true)  
-ia.maketestimage('zz2',overwrite=true)  
-ia.maketestimage('zz1',overwrite=true)  
-ia.calcmask('zz1&lt;0')
-#r = drm.quarter()
-r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-#ia.replacemaskedpixels('zz2[$r]+zz3[$r]', region=r)
-ia.replacemaskedpixels('zz2+zz3')
-ia.close()
-#
-"""
-
-
-In this example, the replacement values are taken
-from a LEL expression adding two other images
-together.  Because expression must conform with the
-image {\sff zz1} after application of the region,
-we must specify the region in the expression as well.
-
-</example>
--->
-
 </method>
 
- 
-   <method type="function" name="restoringbeam">
-   <shortdescription>Get the restoringbeam</shortdescription>
-   
-   <returns type="record">record or fail</returns>
+<method type="function" name="restoringbeam">
+    <shortdescription>Get the restoring beam(s).</shortdescription>
+    <input>
+        <param type="int" direction="in" name="channel">
+            <description>The zero-based spectral channel number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="polarization">
+            <description>The zero-based polarization plane number for a per-plane beam. Default -1</description>
+            <value>-1</value>
+        </param>
+    </input>
+    <returns type="record">record or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff rb}) --> gets the restoring beam, if any.
-It is returned in a record with fields 'major', 'minor' and
-'postionangle'.   Each of these fields contains a quantity. If there
-is no restoring beam, this function returds an empty record.
+This function gets the restoring beam(s), if any. If the image has a traditional
+restoring beam, that is returned no matter what channel and polarization are set to.
+If the image has per-plane beams and at least one of channel or polarization is
+set to a non-negative value, the beam for that particular plane is returned. In both
+these cases, the returned record contains fields 'major', 'minor' and
+'postionangle'.   Each of these fields contains a quantity.
+
+If the image contains multiple beams and both channel and polarization are negative,
+a record containing all the beams is returned. This record contains three fields.
+"nChannels" contains an integer value equal to the number of channels, "nStokes"
+contains an integer value equal to the number of polarizations, and "beams" contains
+a record of information for all beams.
+ If the image has no polarization
+axis or no spectral axis, the fields in the "beams" record run from "*0" to the number
+of spectral channels or number of polarizations less one, eg "*31" for an image with 32 channels.
+Each of these fields references a beam subrecord with the structure described above for a single beam.
+
+If the image contains both a spectral axis and a polarization axis, the record returned contains
+fields running from "*0" to the number of spectral channels less one, eg "*31" for an image
+with 32 spectral channels. Each of these fields has an associated subrecord with fields running
+from "*0" to the number of polarizations less one, eg "*3" in an image with 4 polarizations.
+Each one of those fields is associated with a beam record for that corresponding channel and
+polarization. The beam record has a structure described above for a single beam.
+
+If there is no restoring beam, this function returds an empty record.
 
 You can set the restoring beam with function 
 <link anchor="images:image.setrestoringbeam.function">setrestoringbeam</link>.
@@ -7759,56 +7777,56 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>Axes to convolve.  Default is [0,1,...].</description>
      <value>-1</value>
      </param>
   
-     <param type="stringArray" direction="in" name="types">
+     <param type="stringArray"  name="types">
      <description>Type of convolution kernel.
      Vector of strings from 'boxcar', 'gaussian', and 'hanning'.
      Default is appropriately sized vector of 'gaussian'.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="widths">
+     <param type="any"  name="widths">
      <any type="variant"/>
      <description>Convolution kernel widths, Vector of numeric, quantity or string</description>
      <value></value>
      </param>
   
-     <param type="double" direction="in" name="scale">
+     <param type="double"  name="scale">
      <description>Scale factor.  Default is autoscale.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
 	     <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -7817,7 +7835,7 @@ ia.close()
 
 <description>
 
-This function <!-- (short-hand name {\stff sc}) --> does Fourier-based 
+This function  does Fourier-based 
 convolution of an \imagefile\ by a specified separable kernel.  
 
 If {\stfaf outfile} is given, the image is written to the specified
@@ -7913,24 +7931,24 @@ ia.close()
    
 <input>
   
-     <param type="variant" direction="in" name="pixels">
+     <param type="variant"  name="pixels">
      <description>The pixel value, LEL scalar expression or numeric scalar.
       Default is unset.</description>
      <value/>
      </param>
   
-     <param type="int" direction="in" name="pixelmask">
+     <param type="int"  name="pixelmask">
      <description>The pixel mask value.  Either 0 or 1 if set.
       Default is unset.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the bounding box and any mask creation to the logger</description>
      <value>false</value>
      </param>
@@ -8003,7 +8021,7 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="unit">
+     <param type="string"  name="unit">
      <description>New brightness unit</description>
      </param>
 </input>
@@ -8037,7 +8055,7 @@ print ia.brightnessunit()
    
 <input>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Record describing new Coordinate System</description>
      </param>
 </input>
@@ -8083,12 +8101,12 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="origin">
+     <param type="string"  name="origin">
      <description>Used to set message origin.  Default is image::sethistory.</description>
      <value></value>
      </param>
 
-     <param type="stringArray" direction="in" name="history">
+     <param type="stringArray"  name="history">
      <description>New history</description>
      <value></value>
      </param>
@@ -8132,7 +8150,7 @@ ia.close()
    
 <input>
   
-     <param type="record" direction="in" name="info">
+     <param type="record"  name="info">
      <description>Miscellaneous REPLACEMENT header</description>
      </param>
 </input>
@@ -8212,52 +8230,94 @@ ia.close()
 </method>
 
  
+<method type="function" name="setrestoringbeam">
+    <shortdescription>Set the restoringbeam</shortdescription>
+    <input>
+        <param type="any" direction="in" name="major">
+            <any type="variant"/>
+            <description>Major axis FWHM, Quantity or float (e.g., 1arcsec).  Default is unset.</description>
+            <value>1arcsec</value>
+        </param>
+        <param type="any" direction="in" name="minor">
+            <any type="variant"/>
+            <description>Minor axis FWHM, Quantity or float (e.g., 1arcsec). Default is unset.</description>
+            <value>1arcsec</value>
+        </param>
+        <param type="any" direction="in" name="pa">
+            <any type="variant"/>
+            <description>Position angle, Quantity or float (e.g., '5deg'). Default is unset.</description>
+            <value>0deg</value>
+        </param>
+        <param type="record" direction="in" name="beam">
+            <description>The complete restoring beam (output of restoringbeam()).  Default is unset.</description>
+            <value></value>
+        </param>
+        <param type="bool" direction="in" name="remove">
+            <description>Delete the restoring beam?</description>
+            <value>false</value>
+        </param>
+        <param type="bool" direction="in" name="log">
+            <description>Write new beam values to the logger?</description>
+            <value>true</value>
+        </param>
+        <param type="int" direction="in" name="channel">
+            <description>Zero-based channel number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
+            <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="polarization">
+            <description>Zero-based polarization number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
+            <value>-1</value>
+        </param>
+            
+    </input>
+<!--
+=======
    <method type="function" name="setrestoringbeam">
    <shortdescription>Set the restoringbeam</shortdescription>
    
 <input>
   
-     <param type="any" direction="in" name="major">
+     <param type="any"  name="major">
      <any type="variant"/>
      <description>Major axis FWHM, Quantity or float (e.g., 1arcsec).  Default is unset.</description>
      <value>1arcsec</value>
      </param>
   
-     <param type="any" direction="in" name="minor">
+     <param type="any"  name="minor">
      <any type="variant"/>
      <description>Minor axis FWHM, Quantity or float (e.g., 1arcsec).
       Default is unset.</description>
      <value>1arcsec</value>
      </param>
   
-     <param type="any" direction="in" name="pa">
+     <param type="any"  name="pa">
      <any type="variant"/>
      <description>Position angle, Quantity or float (e.g., '5deg').
       Default is unset.</description>
      <value>0deg</value>
      </param>
   
-     <param type="record" direction="in" name="beam">
+     <param type="record"  name="beam">
      <description>The complete restoring beam (output of restoringbeam()).  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="remove">
+     <param type="bool"  name="remove">
      <description>Delete the restoring beam?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>Write new beam values to the logger?</description>
      <value>true</value>
      </param>
 </input>
+>>>>>>> .r20204
+-->
+    <returns type="bool">T or fail</returns>
+    <description>
 
-<returns type="bool">T or fail</returns>
-<description>
-
-This function <!-- (short-hand name {\stff srb}) --> sets the restoring beam.
-Do not do this unless it is a correct thing to do !
+This function sets the restoring beam(s) for an image.
 
 You may supply the beam in one of two ways.  
 
@@ -8265,19 +8325,60 @@ First, you can use the argument {\stfaf beam} which you must assign to a
 record containing  fields 'major', 'minor' and 'positionangle'.  
 Each of these fields contains a quantity.   This record is in the same
 format as  one returned by function
-<link anchor="images:image.restoringbeam.function">restoringbeam</link>. If you leave {\stfaf
-beam} unset, no action with it is taken. If the function argument
-{\stfaf beam} is used, the arguments {\stfaf major, minor, \&amp; pa} are
+<link anchor="images:image.restoringbeam.function">restoringbeam</link>. 
+If {\stfaf beam} is used, the arguments {\stfaf major, minor, \&amp; pa} are
 ignored.
 
 Second, you can use the arguments {\stfaf major}, {\stfaf minor}
 and {\stfaf pa}.   Only the ones that you assign are used.
 Each argument should be assigned either a quantity or a float (units
 are implicitly those of the current beam - or if none, arcsec for
-the axes and degrees for the position angle).
+the axes and degrees for the position angle). These parameters are only
+used if {\stfaf beam} is not specified.
 
-You may also delete the restoring beam by setting {\stfaf delete=T}
-(all other arguments are then ignored).
+An image must have exactly one of the following states:
+
+1. An image can have a single "traditional" beam. In that case, the beam applies
+to every channel and polarization in the image.
+
+2. If an image has more than one spectral channel or more than one polarization,
+it can have a set of "per plane" beams. In this case, the image must have
+exactly one beam per spectral channel and polarization combination in the image. So,
+an image with 32 channels and 4 polarizations must have 128 per plane beams if it
+has a per-plane beam set. An image with 32 channels and no polarizations must have
+32 per-plane beams, and an image with 4 polarizations and no spectral channels must
+have 4 per-plane beams if it has a set of per-plane beams.
+
+3. An image can have neither a traditional beam nor a per-plane beam set.
+
+It is never permissible for an image to have both a traditional (global) beam and
+a set of per-plane beams. Task and method behavior is undefined in that case and
+any resulting products are considered corrupt.
+
+These are the rules for setting and modifying beams.
+
+If an image has no beams, a traditional (global) beam can be added by setting
+both channel and polarization to negative values.
+
+If an image has no beams, a set of per-plane beams can be added by setting either
+or both channel and/or polarization to a non-negative value. In this case, a number
+of per-plane beams are added consistent with the image and they are all set to be
+the same with parameters equal to those specified by either the beam or major/minor/pa
+parameters.
+
+If an image has a traditional beam, it can be modified by setting both channel and
+polarization to negative values. If one or both is not set to a negative value, a warning
+is emitted, false is returned, and nothing is modified.
+
+If an image has a set of per plane beams, one at a time of these can be modified by 
+setting the appropriate channel number and/or polarization number. All the per-plane
+beams can be modified to the same values in one go by setting both channel and
+polarization to negative values.
+
+You may also delete the the traditional beam or all per-plane beams
+by setting {\stfaf delete=T}. If set
+to true, all other parameters are then ignored; any and all existing beams
+will be deleted.
 
 </description>
 
@@ -8323,24 +8424,24 @@ ia.close()
    <shortdescription>Compute statistics from the image</shortdescription>
    
 <input>
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>List of axes to evaluate statistics over.
      Default is all axes.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>Region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="stringArray" direction="in" name="plotstats">
+     <param type="stringArray"  name="plotstats">
      <description>List of statistics to plot
      String containing any
            combination of 'npts', 'sum', 'flux', 'sumsq', 'min', 
@@ -8351,75 +8452,74 @@ ia.close()
      <value type="vector"></value>
      </param>
   
-     <param type="doubleArray" direction="in" name="includepix">
+     <param type="doubleArray"  name="includepix">
      <description>Range of pixel values to include.  Vector of 1 or 2 doubles.
      Default is to include all pixels.</description>
      <value>-1</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="excludepix">
+     <param type="doubleArray"  name="excludepix">
      <description>Range of pixel values to exclude.  Vector of 1 or 2 doubles.
      Default is exclude no pixels.</description>
      <value>-1</value>
      </param>
   
-     <param type="string" direction="in" name="plotter">
+     <param type="string"  name="plotter">
      <description>The PGPLOT device name to make plots on.  Default is no plotting.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="nx">
+     <param type="int"  name="nx">
      <description>The number of subplots per page in the x direction, &gt; 0</description>
      <value>1</value>
      </param>
   
-     <param type="int" direction="in" name="ny">
+     <param type="int"  name="ny">
      <description>The number of subplots per page in the y direction, &gt; 0</description>
      <value>1</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>If True print bounding box and statistics to logger.</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="force">
+     <param type="bool"  name="force">
      <description>If T then force the stored statistical accumulations to be regenerated</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="disk">
+     <param type="bool"  name="disk">
      <description>If T then force the storage image to disk</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="robust">
+     <param type="bool"  name="robust">
      <description>If T then compute robust statistics as well</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="verbose">
-     <description>If T then print useful messages to the logger</description>
+     <param type="bool"  name="verbose">
+     <description>If T then log statistics</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
-     <param type="string" direction="in" name="logfile">
-          <description>Name of file to which to write statistics.</description>
-          <value/>
+     <param type="string"  name="logfile">
+        <description>Name of file to which to write statistics.</description>
+        <value/>
      </param>
-     <param type="bool" direction="in" name="append">
+     <param type="bool"  name="append">
           <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
           <value>true</value>
      </param>
-
 </input>
 
 <returns type="record">
@@ -8651,40 +8751,40 @@ the the record containing the statistics arrays.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="intArray" direction="in" name="axes">
+     <param type="intArray"  name="axes">
      <description>The pixel axes to compute structure function over.
      The default is sky or first two axes.</description>
      <value>-1</value>
      </param>
   
-     <param type="string" direction="in" name="method">
+     <param type="string"  name="method">
      <description>The method of computation.
      String from 'structurefunction'.</description>
      <value>structurefunction</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>     
@@ -8740,37 +8840,38 @@ ia.twopointcorrelation()   # Output image is virtual
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
      <description>Region of interest.  Default is whole image.</description>
-     <value></value>
+     <value type="string"/>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List informative messages to the logger</description>
      <value>true</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? </description>
      <value>false</value>
      </param>
@@ -8843,29 +8944,23 @@ ia.close()
    <method type="function" name="summary">
    <shortdescription>Summarize basic information about the image</shortdescription>
    
-<output>  
-     <param type="record" name="header">
-     <description>Header information</description>
-     </param>
-</output>  
-  
 <input>
-     <param type="string" direction="in" name="doppler">
+     <param type="string"  name="doppler">
      <description>If there is a spectral axis, list velocity too, with this doppler definition</description>
      <value>RADIO</value>
      </param>
   
-     <param type="bool" direction="in" name="list">
+     <param type="bool"  name="list">
      <description>List the summary to the logger</description>
      <value>true</value>
      </param>
   
-     <param type="bool" direction="in" name="pixelorder">
+     <param type="bool"  name="pixelorder">
      <description>List axis descriptors in pixel or world axis order</description>
      <value>true</value>
      </param>
 </input>
-<returns type="stringArray">Array of Strings</returns>
+<returns type="record"/>
 <description>
 
 This function summarizes miscellaneous information such as shape, Coordinate System,
@@ -8910,16 +9005,15 @@ following fields filled in:
     \item[hasmask]    True if the image has a mask.
     \item[defaultmask]The name of the mask which is applied by default.
     \item[masks]      The names of all the masks stored in this image.
-    \item[restoringbeam] The restoring beam if present.
+    \item[restoringbeam] The restoring beam(s) if present.
     \item[imagetype]   The image type.
 \end{description}
 
 If you set {\stfaf list=F}, then the summary will not be written to
-the logger.  <!-- However, in addition to the output record,--> The
+the logger.  The
 return value of the function, in the {\stfaf header} field is a
 vector string containing the formatted output that would normally
-have gone to the logger. <!--  If {\stfaf list=T} the return value is
-always T or a fail.-->
+have gone to the logger. 
 
 </description>
 <example>
@@ -8962,91 +9056,91 @@ listed in square brackets.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
 	     <description>FITS file name.
      Default is input name + '.fits'</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="velocity">
+     <param type="bool"  name="velocity">
      <description>prefer velocity (rather than frequency) as primary spectral axis?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="optical">
+     <param type="bool"  name="optical">
      <description>use the optical (rather than radio) velocity convention?</description>
      <value>true</value>
      </param>
   
-     <param type="int" direction="in" name="bitpix">
+     <param type="int"  name="bitpix">
      <description>Bits per pixel, -32 (floating point) or 16 (integer)</description>
      <value>-32</value>
      </param>
   
-     <param type="double" direction="in" name="minpix">
+     <param type="double"  name="minpix">
      <description>Minimum pixel value for BITPIX=16,
      Default is to autoscale if minpix &gt; maxpix.</description>
      <value>1</value>
      </param>
   
-     <param type="double" direction="in" name="maxpix">
+     <param type="double"  name="maxpix">
      <description>Maximum pixel value for BITPIX=16, Default
      is to autoscale if maxpix &lt; minpix.</description>
      <value>-1</value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="deglast">
+     <param type="bool"  name="deglast">
      <description>Put degenerate axes last in header?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="dropstokes">
+     <param type="bool"  name="dropstokes">
      <description>Drop Stokes axis?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="stokeslast">
+     <param type="bool"  name="stokeslast">
      <description>Put Stokes axis last in header?</description>
      <value>true</value>
      </param>
 
-     <param type="bool" direction="in" name="wavelength">
+     <param type="bool"  name="wavelength">
      <description>Write spectral axis in units of wavelength (instead of velocity or frequency)?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="airwavelength">
+     <param type="bool"  name="airwavelength">
      <description>When wirting the spectral axis in units of wavelength, use air wavelength instead of vacuum wavelength?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="async">
+     <param type="bool"  name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -9130,44 +9224,44 @@ ia.close()
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>ASCII file name.
      Default is input name + '.ascii'.</description>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.
      Default is whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
      </param>
   
-     <param type="string" direction="in" name="sep">
+     <param type="string"  name="sep">
      <description>Separator of data in ascii file.
      Default is space character.</description>
-     <value> </value>
+     <value>:</value>
      </param>
   
-     <param type="string" direction="in" name="format">
+     <param type="string"  name="format">
      <description>Format of data in ascii file</description>
      <value>%e</value>
      </param>
   
-     <param type="double" direction="in" name="maskvalue">
+     <param type="double"  name="maskvalue">
      <description>Value to replace masked pixels by, -999 is no change.</description>
      <value>-999</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
-     <param type="bool" direction="in" name="stretch">
+     <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
@@ -9261,7 +9355,7 @@ a script to make sure this variable is an Image
    
 <input>
 
-     <param type="any" direction="in" name="value">
+     <param type="any"  name="value">
 	     <any type="variant"/>
      <description>Absolute world coordinate,
       Numeric vector, vector of quantities or record.
@@ -9314,14 +9408,14 @@ formatted as measures instead.
    
 <input>
 
-     <param type="any" direction="in" name="value">
+     <param type="any"  name="value">
      <any type="variant"/>
      <description>Absolute pixel coordinate.  Numeric vector is allowed.
      Default is reference pixel.</description>
-     <value></value>
+     <value/>
      </param>
 
-     <param type="string" direction="in" name="format">
+     <param type="string"  name="format">
      <description>What type of formatting?
      String from combination of 'n' (numeric), 'q' (quantity),
      'm' (measure), 's' (string).</description>
@@ -9410,33 +9504,33 @@ other process can gain immediate access to the \imagefile.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="pixels">
+     <param type="any"  name="pixels">
 	     <any type="variant"/>
      <description>A numeric array is required.</description>
      <value/>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Make a linear Coordinate System if csys not given</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>Write image creation messages to logger</description>
      <value>true</value>
      </param>
@@ -9510,32 +9604,32 @@ temporary image.
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input FITS disk file name.  Required.</description>
      <value></value>
      </param>
   
-     <param type="int" direction="in" name="whichrep">
+     <param type="int"  name="whichrep">
      <description>If this FITS file contains multiple coordinate representations, which one should we read</description>
      <value>0</value>
      </param>
   
-     <param type="int" direction="in" name="whichhdu">
+     <param type="int"  name="whichhdu">
      <description>If this FITS file contains multiple images, which one should we read (0-based).</description>
      <value>0</value>
      </param>
   
-     <param type="bool" direction="in" name="zeroblanks">
+     <param type="bool"  name="zeroblanks">
      <description>If there are blanked pixels, set them to zero instead of NaN</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -9601,33 +9695,33 @@ the example we list the names of the fields in this record.
    
 <input>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name.  Required.</description>
      <value></value>
      </param>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Output sub-image file name.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="record" direction="in" name="region">
+     <param type="record"  name="region">
      <description>The region of interest.  Default is the whole image.</description>
      <value></value>
      </param>
   
-     <param type="any" direction="in" name="mask">
+     <param type="any"  name="mask">
      <any type="variant"/>    
      <description>Mask to use. See help par.mask. Default is none.</description>
      <value type="string"/>
     </param>
   
-     <param type="bool" direction="in" name="dropdeg">
+     <param type="bool"  name="dropdeg">
      <description>Drop degenerate axes</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
@@ -9701,32 +9795,32 @@ of the image, and all pixels of other axes.-->
    
 <input>
   
-     <param type="string" direction="in" name="outfile">
+     <param type="string"  name="outfile">
      <description>Name of output image file.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Shape of image.  Required.</description>
      <value>0</value>
      </param>
   
-     <param type="record" direction="in" name="csys">
+     <param type="record"  name="csys">
      <description>Record describing Coordinate System.  Default is unset.</description>
      <value></value>
      </param>
   
-     <param type="bool" direction="in" name="linear">
+     <param type="bool"  name="linear">
      <description>Make a linear Coordinate System if csys not given?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="overwrite">
+     <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
   
-     <param type="bool" direction="in" name="log">
+     <param type="bool"  name="log">
      <description>Write image creation messages to logger</description>
      <value>true</value>
      </param>
@@ -9790,51 +9884,51 @@ used to create a 2D temporary image.
         Construct a primary beam corrected image from an image and a primary beam
     </shortdescription>
     <input>
-        <param type="any" direction="in" name="pbimage">
+        <param type="any"  name="pbimage">
             <any type="variant"/>
             <description>Name of the primary beam image which must exist or array of values for the pb response. Default ""</description>
-            <value></value>
+            <value type="string"/>
         </param>
-        <param type="string" direction="in" name="outfile">
+        <param type="string"  name="outfile">
             <description>Output image name. If empty, no image is written. Default ""</description>
             <value/>
         </param>
-        <param type="bool" direction="in" name="overwrite">
+        <param type="bool"  name="overwrite">
             <description>Overwrite the output if it exists? Default False</description>
             <value>false</value>
         </param>
-        <param type="string" direction="in" name="box">
+        <param type="string"  name="box">
             <value></value>
             <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
         </param>
-        <param type="any" direction="in" name="region">
+        <param type="any"  name="region">
             <any type="variant"/>
             <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
             <value></value>
         </param>
-        <param type="string" direction="in" name="chans">
+        <param type="string"  name="chans">
             <description>The frequency planes to correct. Default is all frequencies.</description>
             <value></value>
         </param>
         
-        <param type="string" direction="in" name="stokes">
+        <param type="string"  name="stokes">
             <description>The correlations to correct. Default is all.</description>
             <value/>
         </param>
-        <param type="string" direction="in" name="mask">
+        <param type="string"  name="mask">
             <any type="variant"/>
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-        <param type="string" direction="in" name="mode">
+        <param type="string"  name="mode">
             <description>Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"</description>
             <value>divide</value>
         </param>
-        <param type="float" direction="in" name="cutoff">
+        <param type="float"  name="cutoff">
             <description>PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff</description>
             <value>-1.0</value>
         </param>
-        <param type="bool" direction="in" name="stretch">
+        <param type="bool"  name="stretch">
             <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
             <value>false</value>
         </param>
@@ -9872,11 +9966,11 @@ used to create a 2D temporary image.
 
 <input>
   
-     <param type="double" direction="in" name="v">
+     <param type="double"  name="v">
      <description>Value with which to initial array elements</description>
      <value>0.0</value>
      </param>
-     <param type="intArray" direction="in" name="shape">
+     <param type="intArray"  name="shape">
      <description>Vector containing array dimensions.</description>
      <value>0</value>
      </param>
@@ -9905,28 +9999,28 @@ cube = ia.makearray(0,[4,4,4])
 
 
    <method type="function" name="setboxregion">
-   <shortdescription>Set a pixel box region of interest in the image</shortdescription>
+   <shortdescription>DEPRECATED. Use rg.box() instead. Set a pixel box region of interest in the image</shortdescription>
    
 <input>
   
-     <param type="doubleArray" direction="in" name="blc">
+     <param type="doubleArray"  name="blc">
      <description>Bottom-Left-Corner (beginning) of pixel section.
      Default is blc of image.</description>
      <value>-1</value>
      </param>
   
-     <param type="doubleArray" direction="in" name="trc">
+     <param type="doubleArray"  name="trc">
      <description>Top-Right-Corner (end) of pixel section.
      Default is trc of image.</description>
      <value>-1</value>
      </param>
   
-     <param type="bool" direction="in" name="frac">
+     <param type="bool"  name="frac">
      <description>Pixel or fractional coordinates</description>
      <value>false</value>
      </param>
   
-     <param type="string" direction="in" name="infile">
+     <param type="string"  name="infile">
      <description>Input image file name</description>
      <value></value>
      </param>
@@ -9959,11 +10053,11 @@ ia.close()
    <shortdescription>returns input record</shortdescription>
 
 <input>
-     <param type="record" direction="in" name="v">
+     <param type="record"  name="v">
      <description>a measure value</description>
      </param>
 
-     <param type="bool" direction="in" name="godeep">
+     <param type="bool"  name="godeep">
      <description>force the use of MeasureHolder record conversions</description>
      <value>false</value>
      </param>
@@ -9986,7 +10080,7 @@ ia.echo(x)
 </example>
 </method>
 
- 
+ <!--
    <method type="function" name="outputvariant">
    <shortdescription>returns a variant</shortdescription>
 
@@ -10014,12 +10108,12 @@ exit() # This is last example so lets exit().
 
 </example>
 </method>
-
+-->
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
 
 <input>
-     <param type="string" direction="in" name="other">
+     <param type="string"  name="other">
         <description>name of image to test</description>
      </param>
 </input>

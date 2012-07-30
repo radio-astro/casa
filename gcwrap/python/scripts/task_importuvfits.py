@@ -12,14 +12,14 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
     vis -- Name of output visibility file (MS)
         default = none; example: vis='3C273XC1.ms'
     antnamescheme -- Naming scheme for VLA/JVLA/CARMA antennas
-        default = new;
-        new: Antenna name is not a number, 'VA04' or 'EA04'
-             With this scheme, data selection via
-             antenna names and indices is non-ambiguous.
+        default = old;
         old: Antenna name is a number, '04'
              This option exists for backwards compatibility
              but can lead to ambiguous results when antenna
              indices are used for data selection.
+        new: Antenna name is not a number, 'VA04' or 'EA04'
+             With this scheme, data selection via
+             antenna names and indices is non-ambiguous.
     async --  Run asynchronously
         default = false; do not run asychronously
 

@@ -127,9 +127,7 @@ void Deconvolver::defaults()
   mode_p="none";
   beamValid_p=False;
   scalesValid_p=False;
-  bmaj_p=Quantity(0, "arcsec");
-  bmin_p=Quantity(0, "arcsec");
-  bpa_p=Quantity(0, "deg");
+  beam_p = GaussianBeam();
   residEqn_p = 0;
   latConvEqn_p = 0;
   cleaner_p = 0;
@@ -239,8 +237,8 @@ Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
       
       try{
 	os << "Fitting PSF" << LogIO::POST;
-	fitpsf(psf, bmaj_p, bmin_p, bpa_p);
-	if((bmaj_p.get().getValue()>0.0)&&(bmaj_p.get().getValue()>0.0)) {
+	fitpsf(psf, beam_p);
+	if(! beam_p.isNull()) {
 	  os << "  Fitted beam is valid"<< LogIO::POST;
 	}
 	else {
@@ -345,8 +343,7 @@ Bool Deconvolver::reopen()
 }
 
 // Fit the psf. If psf is blank then make the psf first.
-Bool Deconvolver::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
-		 Quantity& mbpa)
+Bool Deconvolver::fitpsf(const String& psf, GaussianBeam& beam)
 {
   if(!valid()) return False;
   
@@ -362,15 +359,13 @@ Bool Deconvolver::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
     }
     
     PagedImage<Float> psfImage(psf);
-    StokesImageUtil::FitGaussianPSF(psfImage, mbmaj, mbmin, mbpa);
-    bmaj_p=mbmaj;
-    bmin_p=mbmin;
-    bpa_p=mbpa;
+    StokesImageUtil::FitGaussianPSF(psfImage, beam);
+    beam_p = beam;
     beamValid_p=True;
     
-    os << "  Beam fit: " << bmaj_p.get("arcsec").getValue() << " by "
-       << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-       << bpa_p.get("deg").getValue() << " (deg) " << endl;
+    os << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
+       << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+       << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
@@ -473,9 +468,9 @@ String Deconvolver::state() const
       psf_p->table().unlock();
     }
     if(beamValid_p) {
-      os << "  Beam fit: " << bmaj_p.get("arcsec").getValue() << " by "
-	 << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-	 << bpa_p.get("deg").getValue() << " (deg) " << endl;
+      os << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
+	 << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+	 << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
     }
     else {
       os << "  Beam fit is not valid" << endl;
@@ -494,7 +489,7 @@ String Deconvolver::state() const
 
 // Restore: at least one model must be supplied
 Bool Deconvolver::restore(const String& model, const String& image,
-			  Quantity& mbmaj, Quantity& mbmin, Quantity& mbpa)
+			  GaussianBeam& mbeam)
 {
   
   if(!valid()) return False;
@@ -536,21 +531,19 @@ Bool Deconvolver::restore(const String& model, const String& image,
 
     TempImage<Float> dirtyModelImage(modelImage_p->shape(),modelImage_p->coordinates());
     imageImage.copyData(*modelImage_p);
-    if((mbmaj.get().getValue()>0.0)&&(mbmaj.get().getValue()>0.0)) {
-      os << "  Using specified beam: " << mbmaj.get("arcsec").getValue() << " by "
-	 << mbmin.get("arcsec").getValue() << " (arcsec) at pa " 
-	 << mbpa.get("deg").getValue() << " (deg) " << endl;
-      StokesImageUtil::Convolve(imageImage, mbmaj, mbmin, mbpa, False);
+    if(! mbeam.isNull()) {
+      os << "  Using specified beam: " << mbeam.getMajor("arcsec") << " by "
+	 << mbeam.getMinor("arcsec") << " (arcsec) at pa "
+	 << mbeam.getPA(Unit("deg")) << " (deg) " << endl;
+      StokesImageUtil::Convolve(imageImage, mbeam, False);
     }
     else {
-      if((bmaj_p.get().getValue()>0.0)&&(bmaj_p.get().getValue()>0.0)) {
-	os << "  Using fitted beam: " << bmaj_p.get("arcsec").getValue() << " by "
-	   << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-	   << bpa_p.get("deg").getValue() << " (deg) " << endl;
-	StokesImageUtil::Convolve(imageImage, bmaj_p, bmin_p, bpa_p, False);
-	mbmaj = bmaj_p;
-        mbmin = bmin_p;
-        mbpa = bpa_p;
+      if(! beam_p.isNull()) {
+	os << "  Using fitted beam: " << beam_p.getMajor("arcsec") << " by "
+	   << beam_p.getMinor("arcsec") << " (arcsec) at pa "
+	   << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
+	StokesImageUtil::Convolve(imageImage, beam_p, False);
+	mbeam = beam_p;
       }
       else {
 	os << LogIO::SEVERE << "Restoring beam not specified" << LogIO::POST;
@@ -565,7 +558,7 @@ Bool Deconvolver::restore(const String& model, const String& image,
     imageImage.copyData(LatticeExpr<Float>(imageImage+*dirty_p - dirtyModelImage));
     {
       ImageInfo ii = imageImage.imageInfo();
-      ii.setRestoringBeam(mbmaj, mbmin, mbpa); 
+      ii.setRestoringBeam(mbeam);
       imageImage.setImageInfo(ii);
       imageImage.setUnits(Unit("Jy/beam"));
     }
@@ -772,7 +765,7 @@ Deconvolver::allQuarters(PagedImage<Float>& in)
 
 Bool Deconvolver::smooth(const String& model, 
 			 const String& image,
-			 Quantity& mbmaj, Quantity& mbmin, Quantity& mbpa,
+			 GaussianBeam& mbeam,
 			 Bool normalizeVolume)
 {
   if(!valid()) return False;
@@ -788,12 +781,11 @@ Bool Deconvolver::smooth(const String& model,
       return False;
     }
     
-    if(mbmaj.getValue()==0.0) {
+    if(mbeam.getMajor().getValue()==0.0) {
       if(beamValid_p) {
 	os << "Using previous beam fit" << LogIO::POST;
-	mbmaj=bmaj_p;
-	mbmin=bmin_p;
-	mbpa=bpa_p;
+	mbeam = beam_p;
+
       }
       else {
 	os << LogIO::SEVERE << "Specified beam is invalid" << LogIO::POST;
@@ -807,10 +799,10 @@ Bool Deconvolver::smooth(const String& model,
 				 image);
 //
     imageImage.copyData(modelImage);
-    StokesImageUtil::Convolve(imageImage, mbmaj, mbmin, mbpa, normalizeVolume);
+    StokesImageUtil::Convolve(imageImage, mbeam, normalizeVolume);
     {
       ImageInfo ii = imageImage.imageInfo();
-      ii.setRestoringBeam(mbmaj, mbmin, mbpa); 
+      ii.setRestoringBeam(mbeam);
       imageImage.setImageInfo(ii);
       imageImage.setUnits(Unit("Jy/beam"));
     }
@@ -830,7 +822,8 @@ Bool Deconvolver::smooth(const String& model,
 //will clean casa axes order images 
 Bool Deconvolver::clarkclean(const Int niter, 
 			     const Float gain, const Quantity& threshold, 
-			     const String& model, const String& maskName, 
+			     const String& model, const String& maskName,
+			     Float& maxresidual, Int& iterused,
 			     Float cycleFactor){
 
   Bool retval=False;
@@ -848,11 +841,11 @@ Bool Deconvolver::clarkclean(const Int niter,
     hasMask=Table::isReadable(maskName);
   if(hasMask){
     PagedImage<Float> mask(maskName);
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, gain, niter, thresh, cycleFactor, True, True); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, maxresidual, iterused, gain, niter, thresh, cycleFactor, True, True); 
   }
   else{
     ImageInterface<Float> *tmpMask=0;
-    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, gain, niter, thresh, cycleFactor, False, True); 
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, maxresidual, iterused, gain, niter, thresh, cycleFactor, False, True); 
   }
     
   return retval;
@@ -1108,9 +1101,9 @@ Bool Deconvolver::clarkclean(const Int niter,
 
 
 
-Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
-			const Float gain, const Quantity& threshold, 
-			const Bool displayProgress){
+Bool Deconvolver::setupLatCleaner(const String& /*algorithm*/, const Int /*niter*/,
+				  const Float /*gain*/, const Quantity& /*threshold*/, 
+				  const Bool /*displayProgress*/){
 
   LogIO os(LogOrigin("Deconvolver", "clean()", WHERE));
   
@@ -1151,7 +1144,7 @@ Bool Deconvolver::setupLatCleaner(const String& algorithm, const Int niter,
 Bool Deconvolver::clean(const String& algorithm, const Int niter,
 			const Float gain, const Quantity& threshold, 
 			const Bool displayProgress,
-			const String& model, const String& mask)
+			const String& model, const String& mask, Float& maxResidual, Int& iterationsDone)
 {
   
   if(!valid()) return False;
@@ -1165,8 +1158,8 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
       os << LogIO::SEVERE << "Need a name for model " << LogIO::POST;
       return False;
     }
-    Int psfnchan=psf_p->shape()(chanAxis_p);
-    Int masknchan=0;
+    //Int psfnchan=psf_p->shape()(chanAxis_p);
+    //Int masknchan=0;
   
     String imagename(model);
     // Make first image with the required shape and coordinates only if
@@ -1203,6 +1196,8 @@ Bool Deconvolver::clean(const String& algorithm, const Int niter,
     Bool result=False;
 
     result=cleaner_p->clean(modelImage, algorithm, niter, gain, threshold, displayProgress);
+    maxResidual=cleaner_p->maxResidual();
+    iterationsDone=cleaner_p->numberIterations();
     dirty_p->table().relinquishAutoLocks(True);
     dirty_p->table().unlock();
     psf_p->table().relinquishAutoLocks(True);
@@ -1490,7 +1485,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	     << LogIO::POST;
 	} 
       } 
-      SubImage<Float> * priorQ;
+      SubImage<Float> * priorQ=NULL;
       if(prior !=0){	
 
 	if (imagePlane) {
@@ -1501,7 +1496,7 @@ Bool Deconvolver::mem(const String& entropy, const Int niter,
 	}
 	 myMemer.setPrior(*priorQ);
       }
-      SubImage<Float> *maskQ;
+      SubImage<Float> *maskQ=NULL;
       if(mask !=0){	
 
 	if (imagePlane) {
@@ -1843,7 +1838,7 @@ Bool Deconvolver::setscales(const String& scaleMethod,
     }
   
     // Validate scales
-    Float scaleInc=bmin_p.get("arcsec").getValue()/abs(cells(0)/C::arcsec);
+    Float scaleInc=beam_p.getMinor().get("arcsec").getValue()/abs(cells(0)/C::arcsec);
 
     Vector<Float> scaleSizes(nscales);  
     os << "Creating " << nscales << 
@@ -1912,8 +1907,7 @@ Bool Deconvolver::convolve(const String& convolvedName,
    return True;
 };
 
-Bool Deconvolver::makegaussian(const String& gaussianName, Quantity& mbmaj, Quantity& mbmin,
-			       Quantity& mbpa, Bool normalizeVolume)
+Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, Bool normalizeVolume)
 {
   LogIO os(LogOrigin("Deconvolver", "makegaussian()", WHERE));
   if(!dirty_p) {
@@ -1959,7 +1953,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, Quantity& mbmaj, Quan
 
 
   }
-  StokesImageUtil::Convolve(gaussian, mbmaj, mbmin, mbpa, normalizeVolume);
+  StokesImageUtil::Convolve(gaussian, mbeam, normalizeVolume);
   return True;
 };
 

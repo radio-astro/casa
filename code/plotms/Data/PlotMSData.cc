@@ -252,6 +252,8 @@ PlotLogMessage* PlotMSData::locateRange(const Vector<PlotRegion>& regions) {
 PlotLogMessage* PlotMSData::flagRange(const PlotMSFlagging& flagging,
         const Vector<PlotRegion>& regions, bool flag) {
     return itsIndexer_->flagRange(flagging, regions, flag); }
+Record PlotMSData::locateInfo(const Vector<PlotRegion>& regions) {
+    return itsIndexer_->locateInfo(regions); }
 
 #else
 PlotLogMessage* PlotMSData::locateRange(const Vector<PlotRegion>& regions) {
@@ -259,6 +261,8 @@ PlotLogMessage* PlotMSData::locateRange(const Vector<PlotRegion>& regions) {
 PlotLogMessage* PlotMSData::flagRange(const PlotMSFlagging& flagging,
         const Vector<PlotRegion>& regions, bool flag) {
     return itsCache_->flagRange(flagging, regions, flag); }
+Record PlotMSData::locateInfo(const Vector<PlotRegion>& regions) {
+    return itsCache_->locateInfo(regions); }
 
 #endif
 

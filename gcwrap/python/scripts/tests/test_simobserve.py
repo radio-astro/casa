@@ -342,7 +342,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          indirection=indirection)
-        self.assertEqual(res,None)
+        self.assertEqual(res,False)
         # Need to compare MS with one generated with J2000
 
         
@@ -364,7 +364,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          incenter=incenter)
-        self.assertEqual(res,None)
+        self.assertEqual(res,False)
         # Need to compare MS with one generated with J2000
         
         
@@ -376,7 +376,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          inwidth=inwidth)
-        self.assertEqual(res,None)
+        self.assertEqual(res,False)
         # Need to compare MS with one generated with J2000
 
 
@@ -453,7 +453,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          direction=direction)
-        self.assertEqual(res,None)
+        self.assertEqual(res,False)
         # Need to compare MS with one generated with J2000
 
 
@@ -515,7 +515,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          caldirection=caldirection)
-        self.assertEqual(res,None)
+        self.assertEqual(res,False)
         # Need to compare MS with one generated with J2000
 
 

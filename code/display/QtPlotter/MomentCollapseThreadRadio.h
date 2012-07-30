@@ -36,7 +36,6 @@ namespace casa {
 class ImageAnalysis;
 template <class T> class ImageInterface;
 
-
 class CollapseResult {
 public:
 	CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):

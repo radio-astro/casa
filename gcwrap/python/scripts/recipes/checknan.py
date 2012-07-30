@@ -41,8 +41,7 @@ def CheckColsForNan(msname='',fix=False,colnames=[],timeinterval=1000):
     Alternate (recommended) way to flag NaNs from data columns :
         tflagdata(vis=ms, mode='clip')    
     """
-    toolhome = casac.homefinder.find_home_by_name('msHome');
-    ms = toolhome.create()
+    ms = casac.ms()
 
     # Open the MS with the intent to modify it.
     ms.open(msname,nomodify=(not fix));

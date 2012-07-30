@@ -221,6 +221,8 @@ coordsys::newcoordsys(const bool direction, const bool spectral,
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
   }
+  if(!newCS)
+	  throw AipsError("Unable to create new coordsys");
   return newCS;
 }
 
@@ -549,7 +551,10 @@ coordsys::copy()
     itsParentImageName = rec.asString("parentName");
   }
 
-  return rstat = new ::casac::coordsys(pCS);
+  rstat = new ::casac::coordsys(pCS);
+  if(!rstat)
+	  throw AipsError("Unable to create new coordsys");
+  return rstat;
 }
 
 bool

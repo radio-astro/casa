@@ -1187,7 +1187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						-0.5*C::pi/180.0/3600.0 * 5E11/refFreqHz, 
 						0.5*C::pi/180.0/3600.0 * 5E11/refFreqHz,        
 						xform,                              
-						127.5, 127.5);  // (256-1)/2.
+						128., 128.);  // 256/2.
 		  Vector<String> units(2); 
 		  //units = "deg";                       
 		  //dirCoords.setWorldAxisUnits(units);                               
@@ -1216,7 +1216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  
 		  TiledShape ts(IPosition(4,256,256,4,1));
 		  PagedImage<Complex> im(ts, coordsys, beamCalcedImagePath);
-		  im.set(Complex(1.0,1.0));
+		  im.set(Complex(1.0,0.0));
 		  // set XY and YX to zero
 		  IPosition windowShape(4,im.shape()(0), im.shape()(1), 1, im.shape()(3));
 		  LatticeStepper stepper(im.shape(), windowShape);
@@ -1234,10 +1234,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Long cachesize=(HostInfo::memoryTotal(True)/8)*1024;
 		  almaPB.setMaximumCacheSize(cachesize);
 		  almaPB.setAntRayPath(antRayPath);
-		  almaPB.applyPB(im, telescope, obstime, antennatype, antennatype, 
+		  almaPB.applyVP(im, telescope, obstime, antennatype, antennatype, 
 				 MVFrequency(refFreqHz), 
 				 rotAngOffset.radian(), // the parallactic angle offset
 				 True); // doSquint
+
 		} // endif exists
 	      } catch (AipsError x) {
 		os << LogIO::SEVERE
@@ -1250,7 +1251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      // construct record
 	      rec.define("name", "IMAGE");
 	      rec.define("isVP", PBMathInterface::IMAGE);
-	      rec.define("isthisvp", False);
+	      rec.define("isthisvp", True);
 	      rec.define("telescope", telescope);
 	      rec.define("dopb", True);
 	      rec.define("compleximage", beamCalcedImagePath);

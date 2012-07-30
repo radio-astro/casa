@@ -81,7 +81,7 @@ public slots:
     void left();
     void right();
     void updateZoomer();
-    //virtual void closeEvent ( QCloseEvent * event ); 
+
 
 signals:
 

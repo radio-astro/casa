@@ -25,7 +25,6 @@
 #include "MomentSettingsWidgetOptical.qo.h"
 
 #include <display/QtPlotter/ProfileTaskMonitor.h>
-#include <QDebug>
 #include <QDir>
 
 namespace casa {

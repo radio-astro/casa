@@ -146,13 +146,15 @@ ms::createmultims(const std::string &outputTableName,
                   const std::vector<std::string> &subtableNames,
                   const bool nomodify,
                   const bool lock,
-		  const bool copysubtables)
+		  const bool copysubtables,
+		  const std::vector<std::string> &omitSubtableNames)
 {
-  *itsLog << LogOrigin(__func__, outputTableName);
+  *itsLog << LogOrigin("ms", "createmultims");
 
   try {
     Block<String> tableNameVector(tableNames.size());
     Block<String> subtableVector(subtableNames.size());
+    Block<String> omitSubtables(omitSubtableNames.size());
 
     /* Copy the input vectors into Block */
     for (uInt idx=0; idx<tableNameVector.nelements(); idx++)
@@ -161,17 +163,8 @@ ms::createmultims(const std::string &outputTableName,
     for (uInt idx=0; idx<subtableVector.nelements(); idx++)
       subtableVector[idx] = subtableNames[idx];
 
-    TableLock tlock(TableLock::AutoNoReadLocking);
-
-    {
-      ConcatTable concatTable(tableNameVector,
-                              subtableVector,
-                              Table::New,
-                              tlock,
-                              TSMOption::Default);
-      concatTable.tableInfo().setSubType("CONCATENATED");
-      concatTable.rename(outputTableName, Table::New);
-    }
+    for (uInt idx=0; idx<omitSubtables.nelements(); idx++)
+      omitSubtables[idx] = omitSubtableNames[idx];
 
     if((tableNameVector.nelements()>1) && copysubtables){
       *itsLog << LogIO::NORMAL << "Copying subtables from " << tableNameVector[0] 
@@ -180,9 +173,24 @@ ms::createmultims(const std::string &outputTableName,
       for(uInt idx=1; idx<tableNameVector.nelements(); idx++){
 	Table otherTab(tableNameVector[idx], Table::Update);
 	TableCopy::copySubTables (otherTab, firstTab, 
-				  False); // noRows==False, i.e. subtables are copied
+				  False, // noRows==False, i.e. subtables are copied
+				  omitSubtables);
       }
     }
+
+    TableLock tlock(TableLock::AutoNoReadLocking);
+
+    {
+      ConcatTable concatTable(tableNameVector,
+                              subtableVector,
+			      "SUBMSS", // move all member tables into subdirectory SUBMSS
+                              Table::New,
+                              tlock,
+                              TSMOption::Default);
+      concatTable.tableInfo().setSubType("CONCATENATED");
+      concatTable.rename(outputTableName, Table::New);
+    }
+
 
   } catch (AipsError ex) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << ex.getMesg()
@@ -493,8 +501,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 Int istart=0;
          Int istep=1;
          Int iwidth=width;
-         //if (spwS==String(""))
-         //    spwS="0";
+         if (spwS==String(""))
+             spwS="*";
 	 Record selrec;
          try {
              selrec=itsMS->msseltoindex(spwS, fieldS);
@@ -509,6 +517,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	 
 	 Matrix<Int> chansel=selrec.asArrayInt("channel");
          //cout << "chansel=" << chansel << endl;
+         //cout << "chansel.nelements()=" << chansel.nelements() << endl;
 	 if(chansel.nelements() !=0){
 	    istep=chansel.row(0)(3);
 	    if(istep < 1)
@@ -552,7 +561,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
          }
 
          MeasurementSet selms(*mssel);
- 
+         //cout << "inchan=" << inchan << " istart=" << istart << " istep=" << istep << endl; 
          if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
                                           inchan, istep, writesyscal,
                                           multisource, combinespw,
@@ -2132,7 +2141,6 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 		dirtolerance=casaQuantity(dirtol);
 	    }
 	    
-	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
 	    mscat.setWeightScale(weightscale);
 	    mscat.concatenate(appendedMS, static_cast<uint>(handling), destmsfile);
@@ -2214,6 +2222,68 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
     Table::relinquishAutoLocks(True);
     return rstat;
 }
+
+bool
+ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const ::casac::variant& freqtol, 
+		    const ::casac::variant& dirtol, const float weightscale)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "virtconcatenate");
+	    
+	    if (!Table::isReadable(msfile)) {
+		*itsLog << "Cannot read the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    MeasurementSet appendedMS(msfile, Table::Update);
+
+	    if (!appendedMS.isWritable()) {
+		*itsLog << "Cannot write to the measurement set called " << msfile
+			<< LogIO::EXCEPTION;
+	    }                   
+
+	    MSConcat mscat(*itsMS);
+	    Quantum<Double> dirtolerance;
+	    Quantum<Double> freqtolerance;
+	    if(freqtol.toString().empty()){
+		freqtolerance=casa::Quantity(1.0,"Hz");
+	    }
+	    else{
+		freqtolerance=casaQuantity(freqtol);
+	    }
+	    if(dirtol.toString().empty()){
+		dirtolerance=casa::Quantity(1.0, "mas");
+	    }
+	    else{
+		dirtolerance=casaQuantity(dirtol);
+	    }
+	    
+	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setWeightScale(weightscale);
+
+	    mscat.virtualconcat(appendedMS, True, casa::String(auxfile));
+
+	    String message = String(msfile) + " virtually concatenated with " + itsMS->tableName();
+	    ostringstream param;
+	    param << "msfile='" << msfile
+		  << "' freqTol='" << casaQuantity(freqtol) 
+		  << "' dirTol='" << casaQuantity(dirtol) << "'";
+	    String paramstr=param.str();
+	    writehistory(std::string(message.data()), std::string(paramstr.data()),
+			 std::string("ms::virtconcatenate()"), msfile, "ms");
+	}
+	rstat = True;
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	Table::relinquishAutoLocks(True);
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks(True);
+    return rstat;
+}
+
 
 bool
 ms::timesort(const std::string& msname)
@@ -2492,10 +2562,10 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
     const String t_combine = downcase(combine);
 
     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
-      *itsLog << LogIO::SEVERE
-	      << "Error splitting " << itsMS->tableName() << " to "
-	      << t_outputms
-	      << LogIO::POST;
+      //      *itsLog << LogIO::WARN
+      //	      << "Splitting " << itsMS->tableName() << " to "
+      //	      << t_outputms << " failed."
+      //	      << LogIO::POST;
       delete splitter;
       return false;
     }
@@ -3190,6 +3260,8 @@ ms::moments(const std::vector<int>& moments,
   }
   Table::relinquishAutoLocks(True);
 
+  if(!rstat)
+     throw AipsError("ms.moments unable to create moments table");
   return rstat;
 }
 

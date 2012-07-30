@@ -4,10 +4,8 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 
-asap_init()
 import asap as sd
 from sdflag import sdflag
 
@@ -19,6 +17,7 @@ class sdflag_test(unittest.TestCase):
     test00   --- test channel flagging/unflagging
     test01   --- test row flagging/unflagging
     test02   --- test clipping flagging/unflagging
+    test03   --- test no data after selection (raises an exception)
 
     ***NOTE*** These tests are for Scantable only. Tests for the other formats
                which ASAP supports, including MS and SDFITS, are to be made later.
@@ -161,6 +160,17 @@ class sdflag_test(unittest.TestCase):
                     break
             self.assertTrue(res)
         del scan
+
+    def test03(self):
+        #test for the default parameters (raises an exception)
+        infile = self.infile
+        iflist = [10] # non-existent IF value
+        maskflag = [0,3]
+        try:
+            result = sdflag(infile=infile, iflist=iflist, maskflag=maskflag)
+        except Exception, e:
+            pos = str(e).find('Selection contains no data. Not applying it.')
+            self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 def suite():

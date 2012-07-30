@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
 from numpy import array
 
-asap_init()
 import asap as sd
 from sdbaseline import sdbaseline
 from sdstat import sdstat
@@ -177,9 +175,10 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
     Basic unit tests for task sdbaseline. No interactive testing.
 
     The list of tests:
-    test00   --- default parameters (raises an error)
     test01   --- test polynominal baseline with maskmode = 'auto'
     test02   --- test polynominal baseline with maskmode = 'list'
+    testwp00   --- test existing file as outfile with overwrite=False (raises an exception)
+    testwp01   --- test no data after selection (raises an exception)
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -208,13 +207,8 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def test00( self ):
-        """Test 0: Default parameters"""
-        result = sdbaseline()
-        self.assertFalse(result)
-
-    def testbl01( self ):
-        """Test 1: maskmode = 'auto'"""
+    def test01( self ):
+        """Test 0: maskmode = 'auto'"""
         tid = "01"
         infile = self.infile
         outfile = self.outroot+tid+".asap"
@@ -239,8 +233,8 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
         self._compareStats(outfile,reference)
         #self._compareStats(outfile,self.strefroot+tid)
 
-    def testbl02( self ):
-        """Test 2: maskmode = 'list' and masklist=[] (all channels)"""
+    def test02( self ):
+        """Test 1: maskmode = 'list' and masklist=[] (all channels)"""
         tid = "02"
         infile = self.infile
         outfile = self.outroot+tid+".asap"
@@ -262,6 +256,36 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
                      'min_abscissa': {'value': 8187.0, 'unit': 'channel'}}
         self._compareStats(outfile,reference)
         #self._compareStats(outfile,self.strefroot+tid)
+
+    def testwp00( self ):
+        """Test wp00: Test existing file as outfile with overwrite=False"""
+        infile = self.infile
+        outfile = "Dummy_Empty.asap"
+        mode = "list"
+        masklist = []
+        os.mkdir(outfile)
+        try:
+            result = sdbaseline(infile=infile, outfile=outfile, overwrite=False, maskmode=mode, masklist=masklist)
+        except Exception, e:
+            pos = str(e).find("Output file 'Dummy_Empty.asap' exists.")
+            self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
+        finally:
+            shutil.rmtree(outfile)
+
+    def testwp01( self ):
+        """Test wp01: Test no data after selection"""
+        tid = "wp01"
+        infile = self.infile
+        outfile = self.outroot+tid+".asap"
+        iflist = [10] # non-existent IF value
+        mode = "list"
+        masklist = []
+        try:
+            result = sdbaseline(infile=infile, outfile=outfile, iflist=iflist, maskmode=mode, masklist=masklist)
+        except Exception, e:
+            pos = str(e).find('Selection contains no data. Not applying it.')
+            self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
+
 
 
 

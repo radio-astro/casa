@@ -35,40 +35,49 @@
 #include <casa/Arrays/VectorSTLIterator.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <algorithm>
 
 namespace casa {
     namespace viewer {
 
-	struct max_ftor {
-	    max_ftor( ) : max(-FLT_MAX) { }
-	    max_ftor( const max_ftor &other ) : max(other.max) { }
-	    operator float( ) const { return max; }
-	    void operator( )( float f ) { if ( f > max ) max = f; }
+	struct strip_chars {
+	    // should generalize to strip 'chars'...
+	    strip_chars( const char */*chars*/ ) { }
+	    strip_chars(const strip_chars &other) : str(other.str) { }
+	    operator std::string( ) const { return str; }
+	    void operator( )( const char &c ) { if ( c != '[' && c != ']' ) str += c; }
 	private:
-	    float max;
-	};
-
-	struct min_ftor {
-	    min_ftor( ) : min(FLT_MAX) { }
-	    min_ftor( const min_ftor &other ) : min(other.min) { }
-	    operator float( ) const { return min; }
-	    void operator( )( float f ) { if ( f < min ) min = f; }
-	private:
-	    float min;
+	    std::string str;
 	};
 
 	ImageProperties::ImageProperties( )  : status_ok(false), has_direction_axis(false),
-					       has_spectral_axis(false), beam_area(0) { }
+					       has_spectral_axis(false) { }
 
 	ImageProperties::ImageProperties( const std::string &path ) { reset(path); }
 
 	const ImageProperties &ImageProperties::operator=( const std::string &path ) { reset(path); return *this; }
 
+	Vector<double> ImageProperties::freqRange( const std::string &units ) const {
+	    if ( units.size( ) == 0 )
+		return freq_range;
+	    Quantum<Vector<double> > range(freq_range,freq_units.c_str( ));
+	    range.convert(units.c_str( ));
+	    return range.getValue( );
+	}
+
+	Vector<double> ImageProperties::veloRange( const std::string &units ) const {
+	    if ( units.size( ) == 0 )
+		return velo_range;
+	    Quantum<Vector<double> > range(velo_range,velo_units.c_str( ));
+	    range.convert(units.c_str( ));
+	    return range.getValue( );
+	}
+
 	void ImageProperties::reset( const std::string &path ) {
 
 	    // clear settings...
 	    status_ok = false;
-	    path_ = "";
+	    path_ = path;
 	    has_direction_axis = false;
 	    has_spectral_axis = false;
 	    direction_type = "";
@@ -77,20 +86,24 @@ namespace casa {
 	    freq_units = "";
 	    velo_range.resize(0);
 	    velo_units = "";
-	    beam_area = 0;
-
+	    ra_range.resize(0);
+	    ra_range_str.resize(0);
+	    dec_range.resize(0);
+	    dec_range_str.resize(0);
+	    beam_vec.resize(0);
+	    beam_string_vec.resize(0);
 	    // check for validity...
-	    if ( path == "" ) return;
+	    if ( path_ == "" ) return;
 	  
-	    if ( ImageOpener::imageType(path) != ImageOpener::AIPSPP ||
-		 imagePixelType(path) != TpFloat )
+	    if ( ImageOpener::imageType(path_) != ImageOpener::AIPSPP ||
+		 imagePixelType(path_) != TpFloat )
 		return;
 
-	    PagedImage<Float> image(path, TableLock::AutoNoReadLocking);
+	    PagedImage<Float> image(path_, TableLock::AutoNoReadLocking);
 	    if ( image.ok( ) == false )
 		return;
 
-	    CoordinateSystem cs = image.coordinates( );
+	    cs_ = image.coordinates( );
 	    ImageAnalysis ia(&image);
 	    shape_ = image.shape( ).asVector( );
 	    if ( shape_.size( ) <= 0 )
@@ -99,20 +112,43 @@ namespace casa {
 	    // initialize...
 	    status_ok = true;
 
-	    if ( cs.hasDirectionCoordinate( ) ) {
+	    if ( cs_.hasDirectionCoordinate( ) ) {
 		has_direction_axis = true;
-		const DirectionCoordinate &direction = cs.directionCoordinate( );
+		const DirectionCoordinate &direction = cs_.directionCoordinate( );
 		direction_type = MDirection::showType(direction.directionType( ));
+		Vector<double> refval = direction.referenceValue( );
+		if ( refval.size( ) == 2 ) {
+		    Vector<int> direction_axes = cs_.directionAxesNumbers( );
+		    Vector<double> pix(direction_axes.size( ));
+		    for ( unsigned int x=0; x < pix.size( ); ++x ) pix[x] = 0;
+		    Vector<double> world (pix.size( ));
+		    direction.toWorld(world,pix);
+
+		    ra_range.resize(2);
+		    dec_range.resize(2);
+		    casa::String units;
+		    ra_range[0] = world[0];
+		    ra_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[0], 0, true, true ));
+		    dec_range[0] = world[1];
+		    dec_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[1], 1, true, true ));
+
+		    for ( unsigned int x=0; x < pix.size( ); ++x ) pix[x] = shape_[direction_axes[x]];
+		    direction.toWorld(world,pix);
+		    ra_range[1] = world[0];
+		    ra_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[0], 0, true, true ));
+		    dec_range[1] = world[1];
+		    dec_range_str.push_back(direction.format( units, casa::Coordinate::DEFAULT, world[1], 1, true, true ));
+		}
 	    }
 
-	    if ( cs.hasSpectralAxis( ) && shape_[cs.spectralAxisNumber( )] > 1 ) {
+	    if ( cs_.hasSpectralAxis( ) && shape_[cs_.spectralAxisNumber( )] > 1 ) {
 		has_spectral_axis = true;
-		SpectralCoordinate spec = cs.spectralCoordinate( );
+		SpectralCoordinate spec = cs_.spectralCoordinate( );
 		Vector<String> spec_unit_vec = spec.worldAxisUnits( );
 		if ( spec_unit_vec(0) == "Hz" ) spec_unit_vec(0) = "GHz";
 		spec.setWorldAxisUnits(spec_unit_vec);
 		freq_range.resize(2);
-		double last_channel = shape_[cs.spectralAxisNumber( )]-1;
+		double last_channel = shape_[cs_.spectralAxisNumber( )]-1;
 		if ( spec.toWorld(freq_range(0),0) == false ||
 		     spec.toWorld(freq_range(1),last_channel) == false ) {
 		    has_spectral_axis = false;
@@ -130,24 +166,51 @@ namespace casa {
 		}
 	    }
 
+	    std::ostringstream buf;
 	    ImageInfo ii = image.imageInfo();
-	    Vector<Quantum<Double> > beam = ii.restoringBeam();
+//<<<<<<< .daves
+	    GaussianBeam beam = ii.restoringBeam();
+	    /*
 	    std::string imageUnits = image.units().getName();
 	    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
 	    Int afterCoord = -1;
 	    Int dC = cs.findCoordinate(Coordinate::DIRECTION, afterCoord);
 	    // use contains() not == so moment maps are dealt with nicely
-	    if ( beam.nelements()==3 && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
+	    if ( ! beam.isNull() && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
 		DirectionCoordinate dCoord = cs.directionCoordinate(dC);
 		Vector<String> units(2);
 		units(0) = units(1) = "rad";
 		dCoord.setWorldAxisUnits(units);
 		Vector<Double> deltas = dCoord.increment();
+=======
 
-		Double major = beam(0).getValue(Unit("rad"));
-		Double minor = beam(1).getValue(Unit("rad"));
-		beam_area = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
+	    beam_vec = ii.restoringBeam();
+	    if ( beam_vec.size( ) == 3 &&
+		 beam_vec[0].isConform("arcsec") &&
+		 beam_vec[1].isConform("arcsec") &&
+		 beam_vec[2].isConform("deg") ) {
+		 */
+	    if (! beam.isNull()) {
+		char buf[512];
+		// sprintf( buf,"%.2f\"", beam_vec[0].getValue("arcsec") );
+		sprintf( buf,"%.2f\"", beam.getMajor("arcsec"));
+		beam_string_vec.push_back(buf);
+		// sprintf( buf,"%.2f\"", beam_vec[1].getValue("arcsec") );
+		sprintf( buf,"%.2f\"", beam.getMinor("arcsec") );
+		beam_string_vec.push_back(buf);
+		//sprintf( buf,"%.2f%c", beam_vec[2].getValue("deg"), 0x00B0 );
+		sprintf( buf,"%.2f%c", beam.getPA("deg", True), 0x00B0 );
+		beam_string_vec.push_back(buf);
 	    }
+	    /*
+>>>>>>> .r20298
+
+<<<<<<< .daves
+		beam_area = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
+	    }
+=======
+>>>>>>> .r20298
+*/
 	}
 
     }

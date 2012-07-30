@@ -1,4 +1,4 @@
-import casac
+from casac import casac
 from tw_utils import *
 import os
 from time import *
@@ -27,7 +27,7 @@ class ImageTest:
         if not findstok[0]:
             myImagename=imageName+".k"
             self.imTool.adddegaxes(stokes=True,outfile=myImagename,overwrite=True)
-            mystokpix=self.imTool.summary()[1]['ndim'] # ct from 0
+            mystokpix=self.imTool.summary()['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
@@ -41,7 +41,7 @@ class ImageTest:
         if not findspec[0]:
             myImagename=imageName+".s"
             self.imTool.adddegaxes(spectral=True,outfile=myImagename,overwrite=True)
-            myspecpix=self.imTool.summary()[1]['ndim'] # ct from 0
+            myspecpix=self.imTool.summary()['ndim'] # ct from 0
             self.imTool.close()
             shutil.rmtree(imageName)
             shutil.move(myImagename,imageName)
@@ -190,8 +190,8 @@ class ImageTest:
     def bmodel(self, XY=None, plane=0): 
         shp=self.imTool.shape()
         result=[]
-        blc=[0,0,plane,0]
-        trc=[shp[0]-1, shp[1]-1, plane, 0]
+        blc=[int(0),int(0),int(plane),int(0)]
+        trc=[int(shp[0]-1), int(shp[1]-1), int(plane), int(0)]
         reg=self.rgTool.box(blc=blc, trc=trc)
         dat=self.imTool.getchunk(blc=blc, trc=trc, dropdeg=True)
         self.show(dat)
@@ -216,12 +216,13 @@ class ImageTest:
             resid = pylab.array([])
         body2=[]
         fit_results = a['results']
+        tostr=lambda a: str(a[0]) if (type(a)==list) else str(a)
         if(fit_results.has_key('component0')):
-            ra = self.qaTool.time(fit_results['component0']['shape']['direction']['m0'])
-            dec = self.qaTool.angle(fit_results['component0']['shape']['direction']['m1'])
-            bmaj= self.qaTool.angle(fit_results['component0']['shape']['majoraxis'], form='dig2')
-            bmin = self.qaTool.angle(fit_results['component0']['shape']['minoraxis'], form='dig2')
-            bpa = self.qaTool.angle(fit_results['component0']['shape']['positionangle'])
+            ra = tostr(self.qaTool.time(fit_results['component0']['shape']['direction']['m0']))
+            dec = tostr(self.qaTool.angle(fit_results['component0']['shape']['direction']['m1']))
+            bmaj= tostr(self.qaTool.angle(fit_results['component0']['shape']['majoraxis'], form='dig2'))
+            bmin = tostr(self.qaTool.angle(fit_results['component0']['shape']['minoraxis'], form='dig2'))
+            bpa = tostr(self.qaTool.angle(fit_results['component0']['shape']['positionangle']))
             flux = str('%4.2f'%fit_results['component0']['flux']['value'][0])+fit_results['component0']['flux']['unit']
             result.append([ra, dec, bmaj, bmin, bpa, flux])
             ss='fit:\testimated center: %s  %s\n'%(ra,dec)+'\tMajAxis : %s  \tMinAxis: %s \tPosAng: %s'%(bmaj, bmin, bpa)+' flux= '+flux
@@ -776,7 +777,7 @@ class ImageTest:
         s='fit at [%d,%d]\n\tFWHM: %f \n\peak: %f \t with errors: %f, %f '%(x0,y0, result[0][2], result[0][0], result[1][2], result[1][0]) 
         print s
         if self.write: self.body2.append('<pre>%s</pre>'%s)
-        data=self.imTool.getchunk(blc=[x0,y0], trc=[x0,y0], dropdeg=True)
+        data=self.imTool.getchunk(blc=[int(x0),int(y0)], trc=[int(x0),int(y0)], dropdeg=True)
         pylab.clf()
         pylab.plot(data,'r-')
         pylab.plot(theFit, 'bo')

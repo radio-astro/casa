@@ -10,10 +10,9 @@ from simple_cluster import *
 import glob
 import multiprocessing
 
-class simplecluster_test(unittest.TestCase):
+class test_simplecluster(unittest.TestCase):
 
     projectname="test_simplecluster"
-    resultfile="test_simplecluster.result"
     clusterfile="test_simplecluster_config.txt"
     monitorFile="monitoring.log"
     cluster=None
@@ -23,9 +22,13 @@ class simplecluster_test(unittest.TestCase):
     cwd=os.getcwd()
     ncpu=multiprocessing.cpu_count()
 
+    def stopCluster(self):
+        # Stop thread services and cluster
+        self.cluster.stop_cluster()
+        # Remove log files, cluster files, and monitoring files
+        self.cleanUp()
+
     def cleanUp(self):
-        if os.path.exists(self.resultfile):
-            os.remove(self.resultfile)
         logfiles=glob.glob("engine-*.log")
         for i in logfiles:
             os.remove(i)
@@ -34,104 +37,97 @@ class simplecluster_test(unittest.TestCase):
         if os.path.exists(self.monitorFile):
             os.remove(self.monitorFile)
 
-    def stopCluster(self):
-        # Stop cluster and thread services
-        self.cluster.stop_monitor()
-        self.cluster.stop_resource()
-        # Need to wait until the threads have actually returned
-        time.sleep(10)
-        # Now we can stop the cluster w/o problems
-        self.cluster.cold_start()
-        # Remove log files, cluster files, and result files
-        self.cleanUp()
-
-    def createClusterFile(self):
-
-        msg=self.host + ', ' + str(self.ncpu) + ', ' + self.cwd
-        f=open(self.clusterfile, 'w')
-        f.write(msg)
-        f.close()
-        self._waitForFile(self.clusterfile, 10)
-
-    def create_input(self,str_text, filename):
-        """Save the string in a text file"""
-    
-        inp = filename
-        cmd = str_text
-    
-        # remove file first
-        if os.path.exists(inp):
-            os.system('rm -f '+ inp)
-        
-        # save to a file    
-        fid = open(inp, 'w')
-        fid.write(cmd)
-        
-        # close file
-        fid.close()
-
-        # wait until file is visible for the filesystem
-        self._waitForFile(filename, 10)
-    
-        return
-
-    def _waitForFile(self, file, seconds):
-        for i in range(0,seconds):
-            if (os.path.isfile(file)):
-                return
-            time.sleep(1)
-
-    def initCluster(self,userMonitorFile=""):
+    def initCluster(self,userMonitorFile="",max_engines=0.,max_memory=0.,memory_per_engine=512.):
         # First of all clean up files from previous sessions
         self.cleanUp()
         # Create cluster object
         if (len(userMonitorFile) > 0):
             self.cluster = simple_cluster(userMonitorFile)
+            self.monitorFile = userMonitorFile
         else:
             self.cluster = simple_cluster()
-        # Create cluster file
-        self.createClusterFile()
+            self.monitorFile = "monitoring.log"
+        # Create cluster configuration file
+        self.createClusterFile(max_engines,max_memory,memory_per_engine)
         # Initialize cluster object
         self.cluster.init_cluster(self.clusterfile, self.projectname)
-        # Wait 10 seconds to stabilize
-        time.sleep(10)
-
-    def tearDown(self):
-        # Remove log files, cluster files, and result files
-        self.stopCluster()
-
-    def setUp_4Ants_partition(self):
-        self.vis = "Four_ants_3C286.partition.ms"
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
+        # Wait unit cluster is producing monitoring info
+        if (len(userMonitorFile) > 0):
+            self.waitForFile(userMonitorFile, 20)
         else:
-            print "Moving data..."
-            os.system('cp -r ' + \
-                         os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/unittest/simplecluster/" + self.vis + ' ' + self.vis)
-            os.system('cp -r ' + \
-                         os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/unittest/simplecluster/" + self.vis.replace('.ms','.data') + ' ' + self.vis.replace('.ms','.data'))
+            self.waitForFile('monitoring.log', 20)
+
+    def createClusterFile(self,max_engines=0.,max_memory=0.,memory_per_engine=512.):
+            
+        msg=self.host + ', ' + str(max_engines) + ', ' + self.cwd + ', ' + str(max_memory) + ', ' + str(memory_per_engine) 
+        f=open(self.clusterfile, 'w')
+        f.write(msg)
+        f.close()
+        self.waitForFile(self.clusterfile, 10)
+
+    def waitForFile(self, file, seconds):
+        for i in range(0,seconds):
+            if (os.path.isfile(file)):
+                return
+            time.sleep(1)
 
     def test1_defaultCluster(self):
         """Test 1: Create a default cluster"""
 
+        # Create cluster file
         self.initCluster()
 
-        # Check parameters vs actual cluster configuration
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]==self.ncpu)
+        self.assertTrue(cluster_list[0][1]<=self.ncpu)
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()
+        
+    def test2_availableResourcesCluster(self):
+        """Test 2: Create a custom cluster to use all the available resources"""
 
-    def test2_monitoringDefault(self):
-        """Test 2: Check default monitoring file exists"""
+        # Create cluster file
+        self.initCluster(max_engines=1.,max_memory=1.,memory_per_engine=1024.)
 
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][1]<=self.ncpu)
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()        
+        
+    def test3_halfCPUCluster(self):
+        """Test 3: Create a custom cluster to use half of available CPU capacity"""
+
+        # Create cluster file
+        self.initCluster(max_engines=0.5,max_memory=1.,memory_per_engine=512.)
+
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][1]<=int(0.5*self.ncpu))
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()    
+        
+    def test3_halfMemoryCluster(self):
+        """Test 3: Create a custom cluster to use half of available CPU capacity"""
+
+        # Create cluster file
+        self.initCluster(max_engines=1.,max_memory=0.5,memory_per_engine=1536.)
+
+        cluster_list = self.cluster.get_hosts()
+        self.assertTrue(cluster_list[0][0]==self.host)
+        self.assertTrue(cluster_list[0][2]==self.cwd)
+
+        self.stopCluster()                
+
+    def test4_monitoringDefault(self):
+        """Test 4: Check default monitoring file exists"""
+        
+        # Create cluster file
         self.initCluster()
-
+            
         fid = open('monitoring.log', 'r')
         line = fid.readline()
         self.assertTrue(line.find('Host')>=0)
@@ -149,9 +145,10 @@ class simplecluster_test(unittest.TestCase):
 
         self.stopCluster()
 
-    def test3_monitoringUser(self):
-        """Test 3: Check custom monitoring file exists"""
-
+    def test5_monitoringUser(self):
+        """Test 5: Check custom monitoring file exists"""
+        
+        # Create cluster file
         self.initCluster('userMonitorFile.log')
 
         fid = open('userMonitorFile.log', 'r')
@@ -171,14 +168,15 @@ class simplecluster_test(unittest.TestCase):
 
         self.stopCluster()
 
-    def test4_monitoringStandAlone(self):
-        """Test 4: Check the dict structure of the stand-alone method """
-
+    def test6_monitoringStandAlone(self):
+        """Test 6: Check the dict structure of the stand-alone method """
+        
+        # Create cluster file
         self.initCluster('userMonitorFile.log')
-
-        time.sleep(10)
+                
         state = self.cluster.show_state()
-        for engine in range(self.ncpu):
+        cluster_list = self.cluster.get_hosts()
+        for engine in range(cluster_list[0][1]):
             self.assertTrue(state[self.host][engine].has_key('Status'))
             self.assertTrue(state[self.host][engine].has_key('Sub-MS'))
             self.assertTrue(state[self.host][engine].has_key('Read'))
@@ -190,11 +188,52 @@ class simplecluster_test(unittest.TestCase):
 
         self.stopCluster()
 
-    def test5_tflagdata_list_return(self):
-        """Test 5: Test support for MMS using tflagdata in unflag+clip mode"""
 
-        self.setUp_4Ants_partition()
+class test_tflagdata_mms(test_simplecluster):
+
+    def setUp(self):
+        # Prepare MMS
+        self.vis = "Four_ants_3C286.partition.ms"
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        # Startup cluster
         self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
+        self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)
+
+    def create_input(self,str_text, filename):
+        """Save the string in a text file"""
+    
+        inp = filename
+        cmd = str_text
+    
+        # remove file first
+        if os.path.exists(inp):
+            os.system('rm -f '+ inp)
+        
+        # save to a file    
+        fid = open(inp, 'w')
+        fid.write(cmd)
+        
+        # close file
+        fid.close()
+
+        # wait until file is visible for the filesystem
+        self.waitForFile(filename, 10)
+    
+        return
+
+    def test1_tflagdata_list_return(self):
+        """Test 1: Test support for MMS using tflagdata in unflag+clip mode"""
 
         # Create list file
         text = "mode='unflag'\n"\
@@ -226,7 +265,133 @@ class simplecluster_test(unittest.TestCase):
         self.assertTrue(summary[14]['spw']['13']['flagged'] == 125074.0)
         self.assertTrue(summary[15]['spw']['14']['flagged'] == 118039.0)
 
+
+class test_setjy_mms(test_simplecluster):
+
+    def setUp(self):
+        self.vis = "ngc5921.partition.ms"
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        # Startup cluster
+        self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
         self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)
+
+    def test1_setjy_scratchless_mode_single_model(self):
+        """Test 1: Set vis model header in one single field """
+
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                model = tblocal.getkeyword('model_0')
+                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
+            elif (fieldId == 1):
+                keywords = tblocal.getkeywords()
+                self.assertFalse(keywords.has_key('model_0'))
+            elif (fieldId == 2):
+                keywords = tblocal.getkeywords()
+                self.assertFalse(keywords.has_key('model_0'))
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+            
+    def test2_setjy_scratch_mode_multiple_model(self):
+        """Test 2: Set MODEL_DATA in multiple fields"""
+
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                model = tblocal.getkeyword('model_0')
+                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
+            elif (fieldId == 1):
+                model = tblocal.getkeyword('model_1')
+                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1445.)
+            elif (fieldId == 2):
+                keywords = tblocal.getkeywords()
+                self.assertFalse(keywords.has_key('model_0'))
+                self.assertFalse(keywords.has_key('model_1'))
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+            
+    def test3_setjy_scratch_mode_single_model(self):
+        """Test 3: Set MODEL_DATA in one single field"""
+
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            print subMS
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1331.0)
+            elif (fieldId == 1):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1.0)
+            elif (fieldId == 2):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1.0)
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+
+    def test4_setjy_scratch_mode_multiple_model(self):
+        """Test 4: Set MODEL_DATA in multiple fields"""
+
+        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True)
+        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            print subMS
+            tblocal = tbtool()
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1331.0)
+            elif (fieldId == 1):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1445.0)
+            elif (fieldId == 2):
+                self.assertEqual(tblocal.getcell('MODEL_DATA',1)[0][0].real,1.0)
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
 
 
 class testJobData(unittest.TestCase):
@@ -418,64 +583,8 @@ class testJobQueueManager(unittest.TestCase):
             counter -= 1
         cluster.remove_record()
 
-class testMonitoring(unittest.TestCase):
-    """
-    This class tests the monitoring functionality
-    """
-
-    def setUp(self):
-       self.setUp_4Ants_partition()
-
-    def setUp_4Ants_partition(self):
-       self.vis = "Four_ants_3C286.partition.ms"
-
-       if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-       else:
-            print "Moving data..."
-            os.system('cp -r ' + \
-                         os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/unittest/simplecluster/" + self.vis + ' ' + self.vis)
-            os.system('cp -r ' + \
-                         os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/unittest/simplecluster/" + self.vis.replace('.ms','.data') + ' ' + self.vis.replace('.ms','.data'))
-
-       self.unflag_table()
-
-    def unflag_table(self):
-       tflagdata(vis=self.vis,mode='unflag')
-
-    def tearDown(self):
-       os.system('rm -rf ' + self.vis)
-       os.system('rm -rf ' + self.vis.replace('.ms','.data'))
-       sc = simple_cluster.getCluster()
-       sc.stop_monitor()
-       sc.stop_resource()
-       sc.cold_start()
-       # Need to wait until the threads have actually returned
-       time.sleep(10)
-    
-    def testMonitoringDefault(self):
-       tflagdata(vis=self.vis,mode='clip')
-       fid = open('monitoring.log', 'r')
-       line = fid.readline()
-       self.assertTrue(line.find('Host')>=0)
-       self.assertTrue(line.find('Engine')>=0)
-       self.assertTrue(line.find('Status')>=0)
-       self.assertTrue(line.find('CPU[%]')>=0)
-       self.assertTrue(line.find('Memory[%]')>=0)
-       self.assertTrue(line.find('Time[s]')>=0)
-       self.assertTrue(line.find('Read[MB]')>=0)
-       self.assertTrue(line.find('Write[MB]')>=0)
-       self.assertTrue(line.find('Read[MB/s]')>=0)
-       self.assertTrue(line.find('Write[MB/s]')>=0)
-       self.assertTrue(line.find('Job')>=0)
-       self.assertTrue(line.find('Sub-MS')>=0)
-
-
 def suite():
-    return [simplecluster_test]
-    return [simplecluster_test, testJobData, testJobQueueManager]
+    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms]
      
 if __name__ == '__main__':
     testSuite = []

@@ -81,8 +81,9 @@ def run_search(
     eu, rrlinclude, rrlonly, verbose, logfile,
     append
 ):
-    mysl = sltool.create()
-    mysl.open(table)
+    mysl = sltool()
+    if (not mysl.open(table)):
+        raise Exception
     try: 
         restool = mysl.search(
             outfile=outfile, freqrange=freqrange,
@@ -97,9 +98,7 @@ def run_search(
         return restool
     except Exception, instance:
         mysl.close()
-        
         raise instance
-#        throw(instance)
 
 def run_slsearch(
     table, outfile, freqrange, species, reconly,
@@ -126,8 +125,8 @@ class slsearch_test(unittest.TestCase):
         eu, rrlinclude, rrlonly, verbose, logfile,
         append, nrows
     ):
-        mysl = sltool.create()
-        mytb = tbtool.create()
+        mysl = sltool()
+        mytb = tbtool()
         for i in [0, 1]:
             if (i==0):
                 mysl = run_search(table, outfile,

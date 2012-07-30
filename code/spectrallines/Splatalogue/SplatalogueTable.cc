@@ -51,6 +51,20 @@ const String SplatalogueTable::EU = "EU";
 const String SplatalogueTable::LINELIST = "LINELIST";
 const String SplatalogueTable::ISSPLAT = "isSplat";
 
+const String SplatalogueTable::RECORD_VALUE = "value";
+const String SplatalogueTable::RECORD_UNIT = "unit";
+const String SplatalogueTable::RECORD_SPECIES = "species";
+const String SplatalogueTable::RECORD_RECOMMENDED = "recommended";
+const String SplatalogueTable::RECORD_CHEMNAME = "chemname";
+const String SplatalogueTable::RECORD_FREQUENCY = "freq";
+const String SplatalogueTable::RECORD_QNS = "qns";
+const String SplatalogueTable::RECORD_INTENSITY = "intensity";
+const String SplatalogueTable::RECORD_SMU2 = "smu2";
+const String SplatalogueTable::RECORD_LOGA = "loga";
+const String SplatalogueTable::RECORD_EL = "el";
+const String SplatalogueTable::RECORD_EU = "eu";
+const String SplatalogueTable::RECORD_LINE_LIST = "linelist";
+
 SplatalogueTable::SplatalogueTable(
 	SetupNewTable& snt, uInt nrow,
 	const String& freqUnit, const String& smu2Unit,
@@ -136,34 +150,34 @@ Record SplatalogueTable::toRecord() const {
 	IPosition idx = IPosition(1, 0);
 	Record rec;
 	Record qFreq;
-	qFreq.define("value", 0.0);
-	qFreq.define("unit", _freqUnit);
+	qFreq.define(RECORD_VALUE, 0.0);
+	qFreq.define(RECORD_UNIT, _freqUnit);
 	Record qSmu2;
-	qSmu2.define("value", 0.0f);
+	qSmu2.define(RECORD_VALUE, 0.0f);
 
-	qSmu2.define("unit", _smu2Unit);
+	qSmu2.define(RECORD_UNIT, _smu2Unit);
 	Record qel = qSmu2;
-	qel.define("unit", _elUnit);
+	qel.define(RECORD_UNIT, _elUnit);
 	Record qeu = qSmu2;
-	qeu.define("unit", _euUnit);
+	qeu.define(RECORD_UNIT, _euUnit);
 	for (uInt i=0; i<species.size(); i++) {
 		idx[0] = i;
 		Record line;
-		line.define("species", species(idx));
-		line.define("recommended", recommended(idx));
-		line.define("chemname", chemName(idx));
-		qFreq.define("value", freq(idx));
-		line.defineRecord("freq", qFreq);
-		line.define("qns", qns(idx));
-		line.define("intensity", intensity(idx));
-		qSmu2.define("value", smu2(idx));
-		line.defineRecord("smu2", qSmu2);
-		line.define("loga", loga(idx));
-		qel.define("value", el(idx));
-		line.defineRecord("el", qel);
-		qeu.define("value", eu(idx));
-		line.defineRecord("eu", qeu);
-		line.define("linelist", linelist(idx));
+		line.define(RECORD_SPECIES, species(idx));
+		line.define(RECORD_RECOMMENDED, recommended(idx));
+		line.define(RECORD_CHEMNAME, chemName(idx));
+		qFreq.define(RECORD_VALUE, freq(idx));
+		line.defineRecord(RECORD_FREQUENCY, qFreq);
+		line.define(RECORD_QNS, qns(idx));
+		line.define(RECORD_INTENSITY, intensity(idx));
+		qSmu2.define(RECORD_VALUE, smu2(idx));
+		line.defineRecord(RECORD_SMU2, qSmu2);
+		line.define(RECORD_LOGA, loga(idx));
+		qel.define(RECORD_VALUE, el(idx));
+		line.defineRecord(RECORD_EL, qel);
+		qeu.define(RECORD_VALUE, eu(idx));
+		line.defineRecord(RECORD_EU, qeu);
+		line.define(RECORD_LINE_LIST, linelist(idx));
 		rec.defineRecord("*" + String::toString(i), line);
 	}
 	return rec;

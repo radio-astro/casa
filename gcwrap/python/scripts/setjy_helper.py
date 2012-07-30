@@ -1,5 +1,5 @@
 # setjy helper functions
-import casac
+from casac import casac
 import os
 import sys
 import shutil
@@ -11,11 +11,10 @@ class ss_setjy_helper:
 	self.im = imtool
 	self.vis = vis
         if not casalog:
-          loghome =  casac.logsink()
-          casalog = loghome.create()
+          casalog = casac.logsink()
         self._casalog = casalog
 
-    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan):
+    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, useephemdir):
 	"""
 	set flux density of a solar system object using Bryan Butler's new
 	python model calculation code.
@@ -25,8 +24,7 @@ class ss_setjy_helper:
 
         #from taskinit import * 
         from taskinit import gentools 
-        qatool = casac.quanta()
-        qa = qatool.create()
+        qa = casac.quanta()
  
 
 	(myms, mytb, mycl, myme) = gentools(['ms','tb','cl','me'])
@@ -55,11 +53,27 @@ class ss_setjy_helper:
 	mytb.open(self.vis+'/FIELD')
 	if len(fieldids)==0:
 	  fieldids = range(mytb.nrows())
+        # frame reference for field position
+        phdir_info=mytb.getcolkeyword("PHASE_DIR","MEASINFO")
+        if phdir_info.has_key('Ref'):
+          fieldref=phdir_info['Ref']
+        elif phdir_info.has_key('TabRefTypes'):
+          colnames=mytb.colnames()
+          for col in colnames:
+            if col=='PhaseDir_Ref':
+                fieldrefind=mytb.getcell(col,fieldids[0])
+                fieldref=phdir_info['TabRefTypes'][fieldrefind]
+        else:
+          fieldref=''
 	#srcnames=[]
 	srcnames={}
+        fieldirs={}
+        ftimes={}
 	for fid in fieldids:
 	  #srcnames.append(mytb.getcell('NAME',int(fid)))
 	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
+          fieldirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
+          ftimes[fid]=(mytb.getcell('TIME',int(fid)))
 	mytb.close() 
 	# need to get a list of time
 	# but for now for test just get a time centroid of the all scans
@@ -96,7 +110,11 @@ class ss_setjy_helper:
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
 
-	  tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
+	  #tc = (trange['time'][0]+trange['time'][1])/2. #in sec. 
+          # use first timestamp to be consistent with the ALMA Control
+          # old setjy (Butler-JPL-Horizons 2010) seems to be using
+          # time in FIELD... but here is first selected time in main table
+          tc = trange['time'][0] #in sec.
 	  if inparams[srcnames[fid]].has_key('mjd'):
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
@@ -139,7 +157,7 @@ class ss_setjy_helper:
 	  inparams[srcnames[fid]]['freqlist']=freqlist
 	  inparams[srcnames[fid]]['framelist']=framelist
 	  inparams[srcnames[fid]]['reffreqs']=reffreqs
-
+          myms.close()
 	# call Bryan's code
 	# errcode: list of list - inner list - each values for range of freqs
 	# flluxes: list of list 
@@ -191,7 +209,14 @@ class ss_setjy_helper:
 	    if reterr == 2: 
 	      continue
 	  
-	    dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
+	    #dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
+            if useephemdir:
+	        dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
+            else:
+                #dirstring = [fieldref, str(fieldirs[fieldids[0]][0][0])+'rad', str(fieldirs[fieldids[0]][1][0])+'rad']
+                dirstring = [fieldref, "%.18frad" % (fieldirs[fieldids[0]][0][0]), "%.18frad" % (fieldirs[fieldids[0]][1][0])]
+
+
 	    # setup componentlists
 	    # need to set per dir
 	    # if scalebychan=F, len(freqs) corresponds to nspw selected
@@ -216,15 +241,14 @@ class ss_setjy_helper:
 		sptype = 'constant'
               self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
                                   (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
-	      #mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirs[i],
 	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirstring,
 			 shape='disk', majoraxis=str(sizes[i][0])+'arcsec', minoraxis=str(sizes[i][1])+'arcsec', 
-			 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
+       # 		 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
+#			 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str((freqlist[j][0]+freqlist[j][1])/2)+'Hz'], 
+		         positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(freqlist[j][0])+'Hz'], 
 			 spectrumtype=sptype, index=index, label=clabel)
-        
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
-		#print "freqlist[j]=",freqlist[j]
 		#print "fluxes[j][0]=",fluxes[j][0]
 	        #print "framelist[j]=",framelist[j]
 		if type(freqlist[j][0])==list and len(freqlist[j][0])>1:
@@ -245,6 +269,10 @@ class ss_setjy_helper:
 	      # finally, put the componentlist as model
 	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)
 	      self.im.ft(complist=clname)
+              #debug: set locally saved 2010-version component list instead
+              #cl2010='mod_setjy_spw0_Titan_230.543GHz55674.1d.cl'
+              #print "Using complist=",cl2010
+	      #self.im.ft(complist=cl2010)
 	      if cleanupcomps:          
 		  shutil.rmtree(clname)
 		 
@@ -265,6 +293,10 @@ class ss_setjy_helper:
 	    comp = clrecs[ky]['component0']
 	    srcn = ky.split('_')[0]
 	    ispw = ky.split('_')[1]
+            casalog.post(" direction set in the componentlist: RA=%s rad, Dec%s rad" %
+                (float('%.5g' % comp['shape']['direction']['m0']['value']),
+                 float('%.5g' % comp['shape']['direction']['m1']['value'])),'INFO1')
+
 	    casalog.post(" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" % 
 		(srcn, ispw, float('%.5g' % comp['flux']['value'][0]), 
 		 float('%.5g' % comp['flux']['value'][1]),

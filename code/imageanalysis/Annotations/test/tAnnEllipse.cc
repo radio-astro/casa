@@ -39,6 +39,9 @@ int main () {
 		IPosition shape(4, 400, 400, 1, 5500);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
+		Vector<Double> refpix = csys.referencePixel();
+		refpix[0] = 200;
+		csys.setReferencePixel(refpix);
 		{
 			log << LogIO::NORMAL
 				<<"Test mixed world and pixel coordinates throws exception"

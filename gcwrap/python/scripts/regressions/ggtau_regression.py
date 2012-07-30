@@ -67,7 +67,7 @@ flagtime=time.time()
 print '--Continuum calibration phase/bandpass (3mm)--'
 #setjy
 default('setjy')
-setjy('ggtau_07feb97.ms',field='3',spw='2',fluxdensity=[1.55,0.,0.,0.])
+setjy('ggtau_07feb97.ms',field='3',spw='2',scalebychan=False,fluxdensity=[1.55,0.,0.,0.])
 
 #preliminary time-dependent phase solutions to improve coherent average for bandpass solution
 default('gaincal')
@@ -113,8 +113,8 @@ calphase3mmtime=time.time()
 
 print '--Set fluxscale (setjy)--'
 default('setjy')
-setjy(vis='ggtau_07feb97.ms',field='0',spw='2',fluxdensity=[5.849,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='1',spw='2',fluxdensity=[2.634,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='0',spw='2',scalebychan=False,fluxdensity=[5.849,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='1',spw='2',scalebychan=False,fluxdensity=[2.634,0.,0.,0.])
 setjy3mmtime=time.time()
 
 ## Amplitude calibration of 3mm LSB:
@@ -170,9 +170,9 @@ image3mmtime=time.time()
 
 print '--Continuum calibration phase/bandpass (1mm)--'
 default('setjy')
-setjy(vis='ggtau_07feb97.ms',field='3',spw='10',fluxdensity=[2.2,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='3',spw='14',fluxdensity=[2.2,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='3',spw='18',fluxdensity=[2.2,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='3',spw='10',scalebychan=False,fluxdensity=[2.2,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='3',spw='14',scalebychan=False,fluxdensity=[2.2,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='3',spw='18',scalebychan=False,fluxdensity=[2.2,0.,0.,0.])
 
    ### CRL618    spwid= 11  [I=2.2, Q=0, U=0, V=0] Jy, (user-specified)
    ### CRL618    spwid= 15  [I=2.2, Q=0, U=0, V=0] Jy, (user-specified)
@@ -233,12 +233,12 @@ calphase1mmtime=time.time()
 ## Record flux values from logger window.  Manually insert
 ## fluxes with imgr.setjy:
 print '--Setjy 1mm --'
-setjy(vis='ggtau_07feb97.ms',field='0',spw='10',fluxdensity=[4.310,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='0',spw='14',fluxdensity=[4.310,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='0',spw='18',fluxdensity=[4.310,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='1',spw='10',fluxdensity=[1.842,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='1',spw='14',fluxdensity=[1.842,0.,0.,0.])
-setjy(vis='ggtau_07feb97.ms',field='1',spw='18',fluxdensity=[1.842,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='0',spw='10',scalebychan=False,fluxdensity=[4.310,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='0',spw='14',scalebychan=False,fluxdensity=[4.310,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='0',spw='18',scalebychan=False,fluxdensity=[4.310,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='1',spw='10',scalebychan=False,fluxdensity=[1.842,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='1',spw='14',scalebychan=False,fluxdensity=[1.842,0.,0.,0.])
+setjy(vis='ggtau_07feb97.ms',field='1',spw='18',scalebychan=False,fluxdensity=[1.842,0.,0.,0.])
 setjy1mmtime=time.time()
 
 

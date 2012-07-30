@@ -286,7 +286,7 @@ void DSWorldRectangle::updateWCoords() {
   pixelParams(4) = Double(angle);
 
   
-  Vector<Quantum<Double> > mamipa(3);
+  GaussianBeam mamipa;
   LogOrigin itsLogO("DisplayShapeInterface", " ");
   LogIO itsLogger(itsLogO);
   
@@ -312,9 +312,9 @@ void DSWorldRectangle::updateWCoords() {
   itsWorldParameters.resize(5);
   itsWorldParameters(0) = x;
   itsWorldParameters(1) = y;
-  itsWorldParameters(2) = mamipa(0);
-  itsWorldParameters(3) = mamipa(1);
-  itsWorldParameters(4) = mamipa(2);
+  itsWorldParameters(2) = mamipa.getMajor();
+  itsWorldParameters(3) = mamipa.getMinor();
+  itsWorldParameters(4) = mamipa.getPA();
 
 }
 

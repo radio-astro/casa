@@ -917,7 +917,7 @@ class imval_test(unittest.TestCase):
     def test_coord_return(self):
         """Test returned coordinates CAS-2651"""
         myimval = imval(imagename=image_file, box="40,40,50,50", chans="5")
-        myia = iatool.create()
+        myia = iatool()
         myia.open(image_file)
         mycsys = myia.coordsys()
         expected = mycsys.toworld([45,45,0,5])['numeric']

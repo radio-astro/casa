@@ -54,7 +54,7 @@
 # This test runs as part of the CASA python unit test suite and can be run from
 # the command line via eg
 # 
-# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_ia_tofits[test1,test2,...]
+# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_ia_tofits[test1,test2,...]
 #
 # </example>
 #
@@ -75,14 +75,14 @@ import unittest
 class ia_tofits_test(unittest.TestCase):
     
     def setUp(self):
-        pass
+        self.myia = iatool()
     
     def tearDown(self):
-        pass
+        self.myia.done()
     
     def test_stretch(self):
         """ ia.tofits(): Test stretch parameter"""
-        yy = iatool()
+        yy = self.myia
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
@@ -105,11 +105,50 @@ class ia_tofits_test(unittest.TestCase):
     def test_CAS3675(self):
         """ test fix for CAS 3675, outfile must be specified """
         name = "my.im"
-        yy = iatool()
+        yy = self.myia
         yy.fromshape(name, [1,1,1,1])
         self.assertRaises(Exception, yy.tofits, overwrite=T)
         yy.done()
         self.assertFalse(exportfits(imagename=name, overwrite=T))
     
+    def test_multibeam(self):
+        """Test exporting and importing an image with multiple beams"""
+        myia = self.myia
+        shape = [10,10,10,4]
+        myia.fromshape("", shape)
+        bmaj = qa.quantity("10arcsec")
+        bmin = qa.quantity("7arcsec")
+        bpa = qa.quantity("45deg")
+        myia.setrestoringbeam(
+            major=bmaj, minor=bmin, pa=bpa,
+            channel=0, polarization=0
+        )
+        cmaj = qa.quantity("12arcsec")
+        cmin = qa.quantity("8arcsec")
+        cpa = qa.quantity("50deg")
+        myia.setrestoringbeam(
+            major=cmaj, minor=cmin, pa=cpa,
+            channel=6, polarization=3
+        )
+        fitsname = "myfits.fits"
+        myia.tofits(outfile=fitsname)
+        myia.done()
+        myia.fromfits("", fitsname)
+        ep = 1e-7
+        for c in range(shape[2]):
+            for p in range(shape[3]):
+                beam = myia.restoringbeam(c, p)
+                majax = qa.convert(beam["major"], "arcsec")["value"]
+                minax = qa.convert(beam["minor"], "arcsec")["value"]
+                pa = qa.convert(beam["positionangle"], "deg")["value"]
+                if c == 6 and p == 3:
+                    self.assertTrue(abs(1 - majax/cmaj["value"]) < ep)
+                    self.assertTrue(abs(1 - minax/cmin["value"]) < ep)
+                    self.assertTrue(abs(1 - pa/cpa["value"]) < ep)
+                else:
+                    self.assertTrue(abs(1 - majax/bmaj["value"]) < ep)
+                    self.assertTrue(abs(1 - minax/bmin["value"]) < ep)
+                    self.assertTrue(abs(1 - pa/bpa["value"]) < ep)
+
 def suite():
     return [ia_tofits_test]

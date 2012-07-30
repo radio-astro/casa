@@ -860,7 +860,7 @@ class pimager():
             ia.open(maskimage)
             maskshape=ia.shape()
             ia.done()
-            if(maskshape != elshape):
+            if(np.any(maskshape != elshape)):
                 newmask=maskimage+'_regrid'
                 self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
                 maskimage=newmask
@@ -1101,7 +1101,7 @@ class pimager():
                 ia.open(maskimage)
                 maskshape=ia.shape()
                 ia.done()
-                if(maskshape != elshape):
+                if(np.any(maskshape != elshape)):
                     newmask=maskimage+'_regrid'
                     self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
                     maskimage=newmask
@@ -1356,7 +1356,7 @@ class pimager():
             ia.open(maskimage)
             maskshape=ia.shape()
             ia.done()
-            if(maskshape != elshape):
+            if(np.any(maskshape != elshape)):
                 newmask=maskimage+'_regrid'
                 self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
                 maskimage=newmask

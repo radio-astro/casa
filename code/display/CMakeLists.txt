@@ -48,13 +48,22 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/QtDrawCanvas.qo.h
   QtPlotter/QtDrawColors.qo.h
   QtPlotter/QtDrawer.qo.h
+  QtPlotter/GaussianEstimateWidget.qo.h
+  QtPlotter/GaussianEstimateDialog.qo.h
   QtPlotter/MomentSettingsWidgetOptical.qo.h
   QtPlotter/MomentSettingsWidgetRadio.qo.h
+  QtPlotter/SpecFitPlotDialog.qo.h
   QtPlotter/SpecFitLogDialog.qo.h
   QtPlotter/SettingsWidget.qo.h
+  QtPlotter/SearchMoleculesDialog.qo.h
+  QtPlotter/ColorSummaryWidget.qo.h
   QtPlotter/SpecFitSettingsFixedTableCell.qo.h
   QtPlotter/SpecFitSettingsWidgetOptical.qo.h
   QtPlotter/SpecFitSettingsWidgetRadio.qo.h
+  QtPlotter/ThresholdingBinPlotDialog.qo.h
+  QtPlotter/LegendPreferences.qo.h
+  QtPlotter/CanvasHolder.qo.h
+  QtPlotter/SelectEstimateDialog.qo.h
   QtViewer/FileBox.qo.h
   QtViewer/MakeMask.qo.h
   QtViewer/MakeRegion.qo.h
@@ -119,13 +128,22 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtDataMgrMsSelect.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
+  QtPlotter/CanvasHolder.ui
+  QtPlotter/GaussianEstimateDialog.ui
+  QtPlotter/GaussianEstimateWidget.ui
   QtPlotter/SpecFitLogDialog.ui
+  QtPlotter/SpecFitPlotDialog.ui
   QtPlotter/MomentSettingsWidgetOptical.ui
   QtPlotter/MomentSettingsWidgetRadio.ui
   QtPlotter/SettingsWidget.ui
+  QtPlotter/SearchMoleculesDialog.ui
+  QtPlotter/ColorSummaryWidget.ui
   QtPlotter/SpecFitSettingsWidgetRadio.ui
   QtPlotter/SpecFitSettingsWidgetOptical.ui
   QtPlotter/SpecFitSettingsFixedTableCell.ui
+  QtPlotter/ThresholdingBinPlotDialog.ui
+  QtPlotter/LegendPreferences.ui
+  QtPlotter/SelectEstimateDialog.ui
   RegionShapes/QtDS9WriteOptions.ui
   RegionShapes/QtEditRegionShape.ui
   RegionShapes/QtNewRegionShape.ui
@@ -354,10 +372,18 @@ casa_add_library( display
   QtPlotter/QtDrawSettings.cc
   QtPlotter/QtDrawer.cc
   QtPlotter/CanvasCurve.cc
+  QtPlotter/CanvasHolder.cc
+  QtPlotter/ColorSummaryWidget.cc
+  QtPlotter/ColorSummaryDelegate.cc
   QtPlotter/Util.cc
+  QtPlotter/MolecularLine.cc
   QtPlotter/ProfileFitMarker.cc
   QtPlotter/WorldCanvasTranslator.cc
   QtPlotter/SpecFitLogDialog.cc
+  QtPlotter/SpecFitPlotDialog.cc
+  QtPlotter/GaussianEstimateWidget.cc
+  QtPlotter/GaussianEstimateDialog.cc
+  QtPlotter/SearchMoleculesDialog.cc
   QtPlotter/MomentSettingsWidgetOptical.cc
   QtPlotter/MomentSettingsWidgetRadio.cc
   QtPlotter/SettingsWidget.cc
@@ -369,6 +395,20 @@ casa_add_library( display
   QtPlotter/SpecFitSettingsFixedTableCell.cc
   QtPlotter/MomentCollapseThreadRadio.cc
   QtPlotter/ProfileTaskMonitor.cc
+  QtPlotter/ThresholdingBinPlotDialog.cc
+  QtPlotter/LegendPreferences.cc
+  QtPlotter/conversion/Converter.cc
+  QtPlotter/conversion/ConverterFrequency.cc
+  QtPlotter/conversion/ConverterFrequencyVelocity.cc
+  QtPlotter/conversion/ConverterFrequencyWavelength.cc
+  QtPlotter/conversion/ConverterVelocity.cc
+  QtPlotter/conversion/ConverterVelocityFrequency.cc
+  QtPlotter/conversion/ConverterVelocityWavelength.cc
+  QtPlotter/conversion/ConverterWavelength.cc
+  QtPlotter/conversion/ConverterWavelengthFrequency.cc
+  QtPlotter/conversion/ConverterWavelengthVelocity.cc
+  QtPlotter/conversion/ConverterChannel.cc
+  QtPlotter/SelectEstimateDialog.cc
   QtViewer/QtOptions.cc
   QtViewer/FileBox.cc
   QtViewer/QtWCBox.cc

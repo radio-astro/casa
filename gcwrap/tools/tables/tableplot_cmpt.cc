@@ -13,7 +13,6 @@
 #include <iostream>
 #include <string.h>
 #include <cmath>
-#include <CCM_Python/PySub.h>
 #include <tableplot_cmpt.h>
 #include <casa/aips.h>
 #include <tools/tables/TablePlot/TablePlot.h>

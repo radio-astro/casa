@@ -86,6 +86,7 @@ gauss_no_pol = "gauss_no_pol.fits"
 jyperbeamkms = "jyperbeamkmpersec.fits";
 masked_image = 'myout.im'
 multiplane_image = "gauss_multiplane.fits"
+multibeam_image = "gauss_multibeam.im"
 two_gauss_multiplane_estimates="estimates_2gauss_multiplane.txt"
 msgs = ''
 
@@ -100,21 +101,18 @@ def near (first, second, epsilon):
 
 def near_abs(first, second, epsilon):
     return abs(first - second) <= epsilon
-
 # Do the got and expected images match?
 # @param got The name of the test image
 # @param expected The name of the expected image
 # @param difference The name of the difference image to write
-def check_image(got, expected, difference):
-    myia = iatool.create()
-    myia.open(got);
-    expr = "\"" + got + "\" - \"" + expected + "\"";
-    myia.imagecalc(difference, expr, True);
+def check_image(got, expected):
+    myia = iatool()
+    myia.open(got)
+    gotpix = myia.getchunk()
+    myia.open(expected)
+    exppix = myia.getchunk()
     myia.done()
-    myia.open(difference);
-    stats = myia.statistics()
-    myia.done()
-    return stats['sumsq'] == 0
+    return (gotpix - exppix == 0).all()
 
 # count the number of lines in the specified file in which the spcified string occurs
 def count_matches(filename, match_string):
@@ -132,7 +130,7 @@ class imfit_test(unittest.TestCase):
             noisy_image, noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image, multiplane_image, two_gauss_multiplane_estimates
+            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
             if not os.path.exists(f):
                 if (os.path.isdir(datapath + f)):
@@ -147,7 +145,7 @@ class imfit_test(unittest.TestCase):
             noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image, multiplane_image, two_gauss_multiplane_estimates
+            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(f)):
                 os.system("rm -rf " + f)
@@ -157,11 +155,9 @@ class imfit_test(unittest.TestCase):
 
     def test_fit_using_full_image(self):
         '''Imfit: Fit using full image'''
-        success = True
         test = "fit_using_full_image: "
-        global msgs
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(noisy_image)
             res = myia.fitcomponents()
             myia.done()
@@ -177,7 +173,11 @@ class imfit_test(unittest.TestCase):
             else:
                 code = run_imfit
                 method += test + "imfit: "
-            res = code()
+            self._check_results(code())
+            
+    def _check_results(self, res):
+            success = True
+            global msgs
             clist = res['results']
             if (not res['converged'][0]):
                 success = False
@@ -228,7 +228,7 @@ class imfit_test(unittest.TestCase):
                 success = False
                 msgs += method + "Position angle test failure, got " + str(got) + " expected " + str(expected) + "\n"
 
-        self.assertTrue(success,msgs)
+            self.assertTrue(success,msgs)
         
     
     def test_fit_using_box(self):
@@ -259,7 +259,7 @@ class imfit_test(unittest.TestCase):
                 region = 'mybox'
     
             def run_fitcomponents():
-                myia = iatool.create()
+                myia = iatool()
                 myia.open(noisy_image)
                 res = myia.fitcomponents(box=box, region=region)
                 myia.close()
@@ -368,7 +368,7 @@ class imfit_test(unittest.TestCase):
     
         box = '0,0,20,20'
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(noisy_image)
             res = myia.fitcomponents(box=box)
             myia.done()
@@ -420,7 +420,7 @@ class imfit_test(unittest.TestCase):
                 pixelmask = "mymask"
     
             def run_fitcomponents():
-                myia = iatool.create()
+                myia = iatool()
                 myia.open(masked_image)
                 myia.maskhandler("set", pixelmask)
                 res = myia.fitcomponents(mask=mask, includepix=includepix, excludepix=excludepix)
@@ -495,7 +495,7 @@ class imfit_test(unittest.TestCase):
         global msgs
         box="100,100,200,200"
         def run_fitcomponents(model, residual):
-            myia = iatool.create()
+            myia = iatool()
             myia.open(noisy_image)
             res = myia.fitcomponents(
                 box=box, residual=residual, model=model
@@ -519,10 +519,10 @@ class imfit_test(unittest.TestCase):
             if (not res['converged'][0]):
                 success = False
                 msgs + test + "fit did not converge unexpectedly"
-            if (not check_image(residual, expected_residual, 'residualDifference.im')):
+            if (not check_image(residual, expected_residual)):
                 success = False
                 msgs += test + "Did not get expected residual image\n"
-            if (not check_image(model, expected_model, 'modelDifference.im')):
+            if (not check_image(model, expected_model)):
                 success = False
                 msgs += test + "Did not get expected model image\n"
     
@@ -536,7 +536,7 @@ class imfit_test(unittest.TestCase):
         global msgs
     
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(convolved_model)
             res = myia.fitcomponents(estimates=estimates_convolved)
             print "** image " + convolved_model
@@ -612,7 +612,7 @@ class imfit_test(unittest.TestCase):
         global msgs
     
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(convolved_model)
             res = myia.fitcomponents()
             myia.done()
@@ -659,7 +659,7 @@ class imfit_test(unittest.TestCase):
             logfile = os.getcwd() + "/imfit.log" + str(i)
             if (i == 0):
                 def run_fitcomponents(append=None):
-                    myia = iatool.create()
+                    myia = iatool()
                     myia.open(two_gaussians_image)
                     if (append == None):
                         res = myia.fitcomponents(estimates=two_gaussians_estimates, logfile=logfile)
@@ -736,7 +736,7 @@ class imfit_test(unittest.TestCase):
             newestimates = "newestimates" + str(i) + ".txt"
             if (i == 0):
                 def run_fitcomponents():
-                    myia = iatool.create()
+                    myia = iatool()
                     myia.open(two_gaussians_image)
                     res = myia.fitcomponents(estimates=two_gaussians_estimates, newestimates=newestimates)
                     return res
@@ -773,7 +773,7 @@ class imfit_test(unittest.TestCase):
         test = 'test_polarization_image: '
         global msgs
         def run_fitcomponents(stokes):
-            myia = iatool.create()
+            myia = iatool()
             myia.open(stokes_image)
             res = myia.fitcomponents(stokes=stokes)
             return res
@@ -808,7 +808,7 @@ class imfit_test(unittest.TestCase):
                 # flux density test
                 if (not near(got, expectedFlux[j], 1e-5)):
                     success = False
-                    msgs += method + " " + stokes + " flux density test failure, got " + str(got) + " expected " + str(expectedFlux[j]) + "\n"
+                    msgs += method + " " + str(stokes) + " flux density test failure, got " + str(got) + " expected " + str(expectedFlux[j]) + "\n"
     
                 # RA test
                 got = clist['component0']['shape']['direction']['m0']['value']
@@ -848,7 +848,7 @@ class imfit_test(unittest.TestCase):
         test = 'test_CAS_2318: '
         global msgs
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(gauss_no_pol)
             res = myia.fitcomponents()
             myia.done()
@@ -872,7 +872,7 @@ class imfit_test(unittest.TestCase):
         global msgs
         success = True
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(jyperbeamkms)
             res = myia.fitcomponents()
             myia.done()
@@ -945,7 +945,7 @@ class imfit_test(unittest.TestCase):
         global msgs
         success = True
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(jyperbeamkms)
             res = myia.fitcomponents()
             myia.done()
@@ -981,10 +981,10 @@ class imfit_test(unittest.TestCase):
         """ Test CAS-2595 feature addition: write component list table"""
         method = "test_CAS_2595"
         test = "test_CAS_2595"
-        mycl = cltool.create()
+        mycl = cltool()
         complist = "mycomplist.tbl"
         def run_fitcomponents(imagename, estimates, overwrite):
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imagename)
             res = myia.fitcomponents(complist=complist, estimates=estimates, overwrite=overwrite)
             myia.done()
@@ -1033,7 +1033,7 @@ class imfit_test(unittest.TestCase):
         model = "modelImage_multi"
         mask = "gauss_multiplane.fits<15";
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imagename)
             res = myia.fitcomponents(
                 chans=chans, mask=mask, complist=complist,
@@ -1049,7 +1049,7 @@ class imfit_test(unittest.TestCase):
                 mask=mask, complist=complist, estimates=estimates,
                 overwrite=True, model=model, residual=resid
             )
-        mycl = cltool.create()
+        mycl = cltool()
         for code in (run_fitcomponents, run_imfit):
             res = code()
             mycl.open(complist)
@@ -1072,11 +1072,11 @@ class imfit_test(unittest.TestCase):
         
         method = "test_zero_level"
         test = "test_zero_level"
-        mycl = cltool.create()
-        myia = iatool.create()
+        mycl = cltool()
+        myia = iatool()
 
         def run_fitcomponents(imagename):
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imagename)
             res = myia.fitcomponents(
                 box="130,89,170,129", dooff=True, offset=0.0
@@ -1155,13 +1155,13 @@ class imfit_test(unittest.TestCase):
         
         method = "test_fix_zero_level"
         test = method
-        mycl = cltool.create()
-        myia = iatool.create()
+        mycl = cltool()
+        myia = iatool()
         offset = -0.102277
         imagename = noisy_image
 
         def run_fitcomponents(imagename):
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imagename)
             res = myia.fitcomponents(
                 box="130,89,170,129", dooff=True,
@@ -1224,7 +1224,7 @@ class imfit_test(unittest.TestCase):
     def test_stretch(self):
         """imfit : test mask stretch"""
         imagename = multiplane_image
-        yy = iatool.create()
+        yy = iatool()
         yy.open(imagename)
         mycsys = yy.coordsys().torecord()
         yy.done()
@@ -1263,7 +1263,7 @@ class imfit_test(unittest.TestCase):
         imagename = multiplane_image
         chans = "1~3"
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imagename)
             res = myia.fitcomponents(
                 chans=chans, mask="", complist="",
@@ -1279,7 +1279,7 @@ class imfit_test(unittest.TestCase):
                 mask="", complist="", estimates="",
                 overwrite=True, model="", residual=""
             )
-        mycl = cltool.create()
+        mycl = cltool()
         epsilon = 1e-5
         for code in (run_fitcomponents, run_imfit):
             res = code()
@@ -1312,7 +1312,7 @@ class imfit_test(unittest.TestCase):
         test = "fit_xx: "
         global msgs
         def run_fitcomponents():
-            myia = iatool.create()
+            myia = iatool()
             myia.open(noisy_image_xx)
             res = myia.fitcomponents()
             myia.done()
@@ -1381,6 +1381,42 @@ class imfit_test(unittest.TestCase):
 
         self.assertTrue(success,msgs)
         
+    def test_multibeam(self):
+        myia = iatool()
+        myia.open(multibeam_image)
+        # just confirm it finishes successfully
+        res = myia.fitcomponents()
+        self.assertTrue(res["converged"].all())
+        
+    def test_strange_units(self):
+        '''Imfit: Test strange units'''
+        myia = iatool()
+        test = "test_strange_units: "
+        myia.open(noisy_image)
+        outname = "bad_units.im"
+        subim = myia.subimage(outname)
+        myia.done()
+        unit = "erg"
+        subim.setbrightnessunit(unit)
+        self.assertTrue(subim.brightnessunit() == unit)
+        subim.done()
+        def run_fitcomponents():
+            myia.open(outname)
+            res = myia.fitcomponents()
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=outname)
+    
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+                method = test + "ia.fitcomponents: "
+            else:
+                code = run_imfit
+                method += test + "imfit: "
+            self._check_results(code())
 
 def suite():
     return [imfit_test]

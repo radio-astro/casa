@@ -31,12 +31,15 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/ComponentType.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/MaskSpecifier.h>
 #include <measures/Measures/Stokes.h>
 #include <lattices/Lattices/TiledShape.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/Containers/SimOrdMap.h>
+
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -55,7 +58,6 @@ class IPosition;
 class LogIO;
 class Unit;
 class AxesSpecifier;
-
 
 //
 // <summary>
@@ -93,15 +95,20 @@ class AxesSpecifier;
 class ImageUtilities
 {
 public:
-// Open disk image (can be any registered image).  Exception
-// if fileName empty or file does not exist or file is not
-// of legal image type.   For aips++ images, the default mask is
-// applied.
-//  <group>
-   static void openImage (PtrHolder<ImageInterface<Float> >& image,
-                          const String& fileName, LogIO& os);
-   static void openImage (ImageInterface<Float>*& image,
-                          const String& fileName, LogIO& os);
+	// Open disk image (can be any registered image).  Exception
+	// if fileName empty or file does not exist or file is not
+	// of legal image type.   For aips++ images, the default mask is
+	// applied.
+	//  <group>
+	static void openImage(
+		std::auto_ptr<ImageInterface<Float> >& image,
+		const String& fileName, LogIO& os
+	);
+
+	static void openImage(
+		ImageInterface<Float>*& image,
+		const String& fileName, LogIO& os
+	);
 //  </group>
 
 // Copy MiscInfo, ImageInfo, brightness unit and logger (history) from in to out
@@ -192,13 +199,12 @@ public:
 //
 // <group>
    static SkyComponent encodeSkyComponent(LogIO& os, Double& facToJy,
-                                          const ImageInfo& ii,
                                           const CoordinateSystem& cSys,
                                           const Unit& brightnessUnit,
                                           ComponentType::Shape type,
                                           const Vector<Double>& parameters,
                                           Stokes::StokesTypes stokes,
-                                          Bool xIsLong);
+                                          Bool xIsLong, const GaussianBeam& beam);
 
     // for some reason, this method was in ImageAnalysis but also belongs here.
     // Obviously hugely confusing to have to methods with the same name and
@@ -218,21 +224,22 @@ public:
         casa::ComponentType::Shape modelType,
         const casa::Vector<casa::Double>& parameters,
         casa::Stokes::StokesTypes stokes,
-        casa::Bool xIsLong, casa::Bool deconvolveIt
+        casa::Bool xIsLong, casa::Bool deconvolveIt,
+        const GaussianBeam& beam
     );
 
     // Deconvolve SkyComponent from beam
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     static casa::SkyComponent deconvolveSkyComponent(
         casa::LogIO& os, const casa::SkyComponent& skyIn,
-        const casa::Vector<casa::Quantum<casa::Double> >& beam,
+        const GaussianBeam& beam,
         const casa::DirectionCoordinate& dirCoord
     );
 
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     // Put beam into +x -> +y frame
-    static casa::Vector<casa::Quantum<casa::Double> >putBeamInXYFrame (
-        const casa::Vector<casa::Quantum<casa::Double> >& beam,
+    static GaussianBeam putBeamInXYFrame (
+        const GaussianBeam& beam,
         const casa::DirectionCoordinate& dirCoord
     );
 
@@ -247,19 +254,21 @@ public:
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     // Deconvolve from beam
     // Returns True if the deconvolved source is a point source, False otherwise.
-    // The returned value of successFit will be True if the deconvolved size could be determined, False otherwise.
     static Bool deconvolveFromBeam(
-        Quantity& majorFit, casa::Quantity& minorFit,
-        Quantity& paFit, Bool& successFit, LogIO& os,
-        const Vector<Quantity>& beam, const Bool verbose=True
+    	Angular2DGaussian& deconvolvedSize,
+    	const Angular2DGaussian& convolvedSize,
+        Bool& successFit, LogIO& os,
+        const GaussianBeam& beam, const Bool verbose=True
     );
 
+    /*
     static Bool deconvolveFromBeam(
         Quantity& majorFit, Quantity& minorFit,
         Quantity& paFit, casa::Bool& successFit, casa::LogIO& os,
-        const Vector<Quantity>& sourceIn, const Vector<Quantity>& beam,
+        const Vector<Quantity>& sourceIn, const GaussianBeam& beam,
         const Bool verbose=True
     );
+    */
 
 //
 // Convert 2d shape from world (world parameters=x, y, major axis, 
@@ -292,7 +301,7 @@ public:
 // On output pa is positive N->E
 // Returns True if major/minor exchanged themselves on conversion to world.
    static Bool pixelWidthsToWorld (LogIO& os,
-                                   Vector<Quantum<Double> >& wParameters,
+                                   GaussianBeam& wParameters,
                                    const Vector<Double>& pParameters,
                                    const CoordinateSystem& cSys,
                                    const IPosition& pixelAxes,
@@ -309,7 +318,10 @@ public:
    		const Array<Bool>& pixelMask = Array<Bool>()
    );
 
-   static Vector<Quantity> makeFakeBeam(LogIO& logIO, const CoordinateSystem& csys, Bool suppressWarnings = False);
+   static GaussianBeam makeFakeBeam(
+		   LogIO& logIO, const CoordinateSystem& csys,
+		   Bool suppressWarnings = False
+   );
 
    static void getUnitAndDoppler(
 	   String& xUnit, String& doppler,
@@ -325,7 +337,7 @@ private:
 // On output pa is positive N->E
 // Returns True if major/minor exchanged themselves on conversion to world.
    static Bool skyPixelWidthsToWorld (LogIO& os,
-                                      Vector<Quantum<Double> >& wParameters,
+                                      GaussianBeam& wParameters,
                                       const CoordinateSystem& cSys,
                                       const Vector<Double>& pParameters,
                                       const IPosition& pixelAxes, Bool doRef);

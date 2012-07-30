@@ -246,7 +246,7 @@ public:
 	// <src>offset</src> must have two elements
 	void setLabelOffset(const vector<Int>& offset);
 
-	vector<Int> getlabelOffset() const;
+	vector<Int> getLabelOffset() const;
 
 	virtual ostream& print(ostream &os) const = 0;
 

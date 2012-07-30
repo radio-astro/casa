@@ -39,6 +39,13 @@ const char *prt(CountedConstPtr<myobj> &obj) {
 }
 
 int main() {
+
+#if defined (USE_BOOST_SHARED_PTR)
+#warning "Using boost::shared_ptr"
+#else
+#warning "Not using boost::shared_ptr"
+#endif
+
   CountedPtr<myobj> var = new myobj("fred");
   CountedPtr<myobj> var2 = var;
   CountedPtr<myobj> var3 = var;

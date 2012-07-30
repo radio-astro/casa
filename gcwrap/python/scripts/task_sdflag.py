@@ -1,12 +1,13 @@
 import os
 from taskinit import *
 
+import sdutil
 import asap as sd
 from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -43,15 +44,26 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 		    s = sorg
 	    del sorg
 
+	    # set restfreq
+	    modified_molid = False
+	    if (specunit == 'km/s'):
+		    if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
+			    mesg = "Restfreq must be given."
+			    raise Exception, mesg
+		    elif (len(str(restfreq)) > 0):
+			    molids = s._getmolidcol_list()
+			    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
+			    modified_molid = True
+
             #check the format of the infile
             if isinstance(infile, str):
-              if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
-                if os.path.exists(filename+'/table.f1'):
-                  format = 'MS2'
-                else:
-                  format = 'ASAP'
-              else:
-                  format = 'SDFITS'
+		    if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
+			    if os.path.exists(filename+'/table.f1'):
+				    format = 'MS2'
+			    else:
+				    format = 'ASAP'
+		    else:
+			    format = 'SDFITS'
 
 	    # Check the formats of infile and outfile are identical when overwrite=True.
 	    # (CAS-3096). If not, print warning message and exit.
@@ -88,13 +100,32 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
-            #Currently only channel based flag is allowed
-            # so make sure the input data is channel 
-            unit_in=s.get_unit()
-            if unit_in!='channel':
-                s.set_unit('channel')
 
-            antennaname = s.get_antennaname()
+            unit_in=s.get_unit()
+	    # set default spectral axis unit
+	    if ( specunit != '' ):
+		    s.set_unit(specunit)
+
+	    # reset frame and doppler if needed
+	    if ( frame != '' ):
+		    s.set_freqframe(frame)
+	    else:
+		    casalog.post( 'Using current frequency frame' )
+	    
+	    if ( doppler != '' ):
+		    if ( doppler == 'radio' ):
+			    ddoppler = 'RADIO'
+		    elif ( doppler == 'optical' ):
+			    ddoppler = 'OPTICAL'
+		    elif ( doppler == 'z' ):
+			    ddoppler = 'Z'
+		    else:
+			    ddoppler = doppler
+			
+		    s.set_doppler(ddoppler)
+	    else:
+		    casalog.post( 'Using current doppler convention' )
+
 
             # Select scan and field
             sel = sd.selector()
@@ -138,11 +169,12 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     sel.set_polarisations(pols)
 
             try:
-                #Apply the selection
-                s.set_selection(sel)
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                return
+		    #Apply the selection
+		    s.set_selection(sel)
+	    except Exception, instance:
+		    casalog.post( str(instance), priority = 'ERROR' )
+		    raise Exception, instance
+
 
             # flag mode
 	    flgmode = flagmode.lower()
@@ -303,7 +335,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     from matplotlib import rc as rcp
                     rcp('lines', linewidth=1)
                     guiflagger = flagplotter(visible=True)
-                    guiflagger._plotter.legend(loc=1)
+                    #guiflagger.set_legend(loc=1,refresh=False)
+                    guiflagger.set_showflagged(showflagged)
                     guiflagger.plot(s)
                     finish=raw_input("Press enter to finish interactive flagging:")
                     guiflagger._plotter.unmap()
@@ -380,6 +413,11 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
             s.set_unit(unit_in) 
             sel.reset()
             s.set_selection(sel)
+
+	    #restore the original moleculeID column
+	    if modified_molid:
+		    s._setmolidcol_list(molids)
+	    
             s.save(spefile,outform,overwrite)
 	    
             if outform!='ASCII':
@@ -389,5 +427,6 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
         except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
+		raise Exception, instance
         finally:
                 casalog.post('')

@@ -34,6 +34,8 @@
 #include <casa/OS/Directory.h>
 #include <casa/OS/EnvVar.h>
 
+#include <lattices/Lattices/LatticeStatistics.h>
+
 #include <casa/namespace.h>
 
 #include <sys/types.h>

@@ -526,9 +526,10 @@ class PlotFlag:
                 #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.deepcopy() ))  #0.91.4
                 #self.toolbar._xypress.append(( x, y, a, i, lim, a.transData.frozen() ))    #>=0.98
                 self.toolbar._xypress.append(( x, y, a, i, lim, self.copy_trans(a.transData)))  #workaround
-		self.panel = event.inaxes._num
-		self.rows = event.inaxes._rows
-		self.cols = event.inaxes._cols
+		one, two, three = event.inaxes.get_geometry()
+		self.panel = three-1
+		self.rows = one
+		self.cols = two
 
         self.toolbar.press(event)
 

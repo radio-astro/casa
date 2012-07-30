@@ -23,10 +23,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
+#include <display/QtPlotter/Util.h>
 
 #include <QDialog>
+#include <QSettings>
 
-namespace casa { 
+namespace casa {
+
+
+const QString QtProfilePrefs::X_AUTO_SCALE = "x Auto Scale";
+const QString QtProfilePrefs::Y_AUTO_SCALE = "y Auto Scale";
+const QString QtProfilePrefs::SHOW_GRID = "Show Grid";
+const QString QtProfilePrefs::OVERLAY = "Overlay";
+const QString QtProfilePrefs::RELATIVE = "Relative";
+const QString QtProfilePrefs::TOOLTIPS = "Tooltips";
+const QString QtProfilePrefs::TOP_AXIS = "Top Axis";
+const QString QtProfilePrefs::STEP_FUNCTION = "Step Function";
+const QString QtProfilePrefs::OPTICAL = "Optical";
+const QString QtProfilePrefs::CHANNEL_LINE = "Channel Line";
 
 QtProfilePrefs::~QtProfilePrefs()
 {
@@ -36,52 +50,130 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 :QDialog(parent)
 {
 	setupUi(this);
-	connect(multiProf, SIGNAL(stateChanged(int)),
-			this, SLOT(adjustBoxes(int)));
-	connect(buttonBox, SIGNAL(accepted()),
-			this, SLOT(accepted()));
-	connect(buttonBox, SIGNAL(rejected()),
-			this, SLOT(close()));
+	initializeConnections();
 }
 
 QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 		int stateGrid, int stateMProf, int stateRel, bool showToolTips,
-		bool showTopAxis, bool displayAsStepFunction, bool opticalFit )
+		bool showTopAxis, bool displayAsStepFunction, bool opticalFit, bool channelLine )
 :QDialog(parent)
 {
 	// paint the GUI
 	setupUi(this);
 
-	// set boxes according to input
-	autoScaleX->setChecked(stateAutoX);
-	autoScaleY->setChecked(stateAutoY);
-	showGrid->setChecked(stateGrid);
-	multiProf->setChecked(stateMProf);
-	toolTipsCheckBox -> setChecked(showToolTips );
-	topAxisCheckBox -> setChecked( showTopAxis );
-	opticalSpecFitCheckBox -> setChecked( opticalFit );
-	stepFunctionCheckBox->setChecked( displayAsStepFunction );
-	if (stateMProf){
-		relative->setChecked(stateRel);
-	}
-	else {
-		relative->setChecked(false);
-		relative->setEnabled(false);
-	}
+	//Only use the default values passed in if the user has not indicated
+	//any preferences.
+	QSettings settings( Util::ORGANIZATION, Util::APPLICATION );
+	xAutoScaleDefault = settings.value( X_AUTO_SCALE, stateAutoX).toBool();
+	autoScaleX->setChecked( xAutoScaleDefault );
 
-	connect(multiProf, SIGNAL(stateChanged(int)),
-			this, SLOT(adjustBoxes(int)));
-	connect(buttonBox, SIGNAL(accepted()),
-			this, SLOT(accepted()));
-	connect(buttonBox, SIGNAL(rejected()),
-			this, SLOT(close()));
+	yAutoScaleDefault = settings.value( Y_AUTO_SCALE, stateAutoY).toBool();
+	autoScaleY->setChecked( yAutoScaleDefault );
+
+	showGridDefault = settings.value( SHOW_GRID, stateGrid ).toBool();
+	showGrid->setChecked( showGridDefault );
+
+	overlayDefault = settings.value( OVERLAY, stateMProf ).toBool();
+	multiProf->setChecked( overlayDefault );
+
+	toolTipsDefault = settings.value( TOOLTIPS, showToolTips ).toBool();
+	toolTipsCheckBox -> setChecked( toolTipsDefault );
+
+	topAxisDefault = settings.value( TOP_AXIS, showTopAxis ).toBool();
+	topAxisCheckBox -> setChecked( topAxisDefault );
+
+	opticalDefault = settings.value( OPTICAL, opticalFit ).toBool();
+	opticalSpecFitCheckBox -> setChecked( opticalDefault );
+
+	stepFunctionDefault = settings.value( STEP_FUNCTION, displayAsStepFunction ).toBool();
+	stepFunctionCheckBox->setChecked( stepFunctionDefault );
+
+	relativeDefault = settings.value( RELATIVE, stateRel ).toBool();
+	relative->setChecked( relativeDefault );
+
+	relative->setEnabled(overlayDefault);
+
+	channelLineDefault = settings.value( CHANNEL_LINE, channelLine ).toBool();
+	channelLineCheckBox->setChecked( channelLineDefault );
+
+	initializeConnections();
 }
 
+void QtProfilePrefs::syncUserPreferences(){
+	//Update the profiler with user preferences.
+	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
+		(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
+		topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
+		opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
+}
+
+void QtProfilePrefs::initializeConnections(){
+	connect(multiProf, SIGNAL(stateChanged(int)), this, SLOT(adjustBoxes(int)));
+	connect(buttonBox, SIGNAL(accepted()), this, SLOT(accepted()));
+	connect(buttonBox, SIGNAL(rejected()), this, SLOT(rejected()));
+}
+
+void QtProfilePrefs::reset(){
+	autoScaleX->setChecked(xAutoScaleDefault);
+	autoScaleY->setChecked( yAutoScaleDefault );
+	showGrid->setChecked( showGridDefault );
+	multiProf->setChecked( overlayDefault );
+	toolTipsCheckBox->setChecked( toolTipsDefault );
+	topAxisCheckBox->setChecked( topAxisDefault );
+	opticalSpecFitCheckBox->setChecked( opticalDefault );
+	stepFunctionCheckBox->setChecked( stepFunctionDefault );
+	relative->setChecked( relativeDefault );
+	relative->setEnabled( overlayDefault );
+	channelLineCheckBox->setChecked( channelLineDefault );
+}
+
+void QtProfilePrefs::persist(){
+
+	QSettings settings( Util::ORGANIZATION, Util::APPLICATION );
+
+	xAutoScaleDefault = autoScaleX->isChecked();
+	settings.setValue( X_AUTO_SCALE, xAutoScaleDefault );
+
+	yAutoScaleDefault = autoScaleY->isChecked();
+	settings.setValue( Y_AUTO_SCALE, yAutoScaleDefault );
+
+	showGridDefault = showGrid->isChecked();
+	settings.setValue( SHOW_GRID, showGridDefault );
+
+	overlayDefault = multiProf->isChecked();
+	settings.setValue( OVERLAY, overlayDefault );
+
+	toolTipsDefault = toolTipsCheckBox->isChecked();
+	settings.setValue( TOOLTIPS, toolTipsDefault );
+
+	topAxisDefault = topAxisCheckBox->isChecked();
+	settings.setValue( TOP_AXIS, topAxisDefault );
+
+	opticalDefault = opticalSpecFitCheckBox->isChecked();
+	settings.setValue( OPTICAL, opticalDefault );
+
+	stepFunctionDefault = stepFunctionCheckBox->isChecked();
+	settings.setValue( STEP_FUNCTION, stepFunctionDefault );
+
+	relativeDefault = relative->isChecked();
+	settings.setValue( RELATIVE, relativeDefault );
+
+	channelLineDefault = channelLineCheckBox->isChecked();
+	settings.setValue( CHANNEL_LINE, channelLineDefault );
+}
+
+
 void QtProfilePrefs::accepted(){
+	persist();
 	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
 			(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 			topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
-			opticalSpecFitCheckBox->checkState() ) ;
+			opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
+	close();
+}
+
+void QtProfilePrefs::rejected(){
+	reset();
 	close();
 }
 

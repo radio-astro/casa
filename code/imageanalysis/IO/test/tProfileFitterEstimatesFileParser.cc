@@ -27,6 +27,8 @@
 
 #include <imageanalysis/IO/ProfileFitterEstimatesFileParser.h>
 
+#include <components/SpectralComponents/GaussianSpectralElement.h>
+
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/File.h>
 #include <casa/OS/EnvVar.h>
@@ -117,17 +119,18 @@ int main() {
             expectedFixed[0] = "";
             expectedFixed[1] = "p";
             for (uInt i=0; i<compList.nelements(); i++) {
-                AlwaysAssert(near(compList[i].getAmpl(), expectedPeak[i]), AipsError);
-                AlwaysAssert(near(compList[i].getCenter(), expectedCenter[i]), AipsError);
-                AlwaysAssert(near(compList[i].getFWHM(), expectedFWHM[i]), AipsError);
-                AlwaysAssert(! compList[i].fixedCenter(), AipsError);
-                AlwaysAssert(! compList[i].fixedFWHM(), AipsError);
+            	GaussianSpectralElement* g = dynamic_cast<GaussianSpectralElement *>(compList[i]);
+                AlwaysAssert(near(g->getAmpl(), expectedPeak[i]), AipsError);
+                AlwaysAssert(near(g->getCenter(), expectedCenter[i]), AipsError);
+                AlwaysAssert(near(g->getFWHM(), expectedFWHM[i]), AipsError);
+                AlwaysAssert(! g->fixedCenter(), AipsError);
+                AlwaysAssert(! g->fixedFWHM(), AipsError);
                 switch (i) {
                 case 0:
-                	AlwaysAssert(! compList[i].fixedAmpl(), AipsError);
+                	AlwaysAssert(! g->fixedAmpl(), AipsError);
                 	break;
                 case 1:
-                    AlwaysAssert(compList[i].fixedAmpl(), AipsError);
+                    AlwaysAssert(g->fixedAmpl(), AipsError);
                     break;
                 default:
                 	throw AipsError("Shouldn't have gotten here");

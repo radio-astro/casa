@@ -17,6 +17,8 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             if os.path.isdir(infile):
                 tb.open(infile)
                 tbkeys=tb.getkeywords()
+                if 'FIELD' not in tbkeys:
+                    raise Exception, 'infile must be in MS format'
                 #ftab=tbkeys['FIELD'].split()[-1]
                 ftab=tbkeys['FIELD'].lstrip('Table: ')
                 #spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
@@ -173,9 +175,9 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # Imaging #
             ###########
             casalog.post("Start imaging...", "INFO")
-            #im.open(infile)
-            #im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
-            im.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
+            im.open(infile)
+            im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
+            #im.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
             if dochannelmap:
                 im.defineimage(mode=mode, nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=nchan, start=startval, step=stepval, restfreq=restfreq, phasecenter=phasecenter, spw=spwid, stokes=stokes, movingsource=ephemsrcname)
             else:
@@ -191,4 +193,5 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             im.close()
             #print '***Error***',instance
             casalog.post( str(instance), priority = 'ERROR' )
+            raise Exception, instance
             return

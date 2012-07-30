@@ -22,10 +22,9 @@ def get_tool(toolname):
     """
     Returns a CASA tool with name toolname, or None on failure.
     """
-    toolhomes = {'tb': 'tableHome'}
     tool = None
-    if toolhomes.has_key(toolname):
-        tool = casac.toolnames()
+    if toolname != 'table':
+        tool = casac.table()
     else:
         print "The factory name for", toolname, "is unknown."
     return tool

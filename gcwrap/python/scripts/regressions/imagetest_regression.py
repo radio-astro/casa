@@ -436,7 +436,7 @@ def imagetest(which=None, size=[32,32,8]):
         t2 = zeroToPi (pain)
         d3 = abs(t1-t2)
         if (d1>1e-5 or d2>1e-5 or d3>1e-5):
-            msg = 'deconvolvecomponentlist ' + iTest + ' gave wrong results'
+            msg = 'deconvolvecomponentlist ' + str(iTest) + ' gave wrong results'
             fail(msg)
         #
         if not newcl.done(): fail('failed done')
@@ -498,8 +498,8 @@ def imagetest(which=None, size=[32,32,8]):
 
     def doneAllImageTypes(rec):
         names = rec.keys()
-        for type in names:
-            ok = rec[type]['tool'].done()
+        for mytype in names:
+            ok = rec[mytype]['tool'].done()
             if not ok: fail()
         return True
 
@@ -741,25 +741,29 @@ def imagetest(which=None, size=[32,32,8]):
     def coordcheck(im1, axes, testdir):
         #im1 = ia.newimage(im1name)
         ok = im1.summary(list=F)
-        if not ok[0]:
+        if not ok:
             fail('summary 1 failed in coordcheck')
-        rec1 = ok[1]
+        rec1 = ok
         imname = testdir + "/" + "coordcheck.image"
         cs2 = im1.coordsys(axes)
         if not cs2:
             fail('coordsys 1 failed in coordcheck')
         shape2=[]
+	tmp = im1.shape()
+	print tmp
         for i in axes:
-            shape2.append((im1.shape())[i])
+            shape2.append(tmp[i])
+	    print tmp[i]
+	print 'shape2 is ', type(shape2), shape2
         ok = ia.fromshape(imname, shape2, cs2.torecord())
-        if not ok[0]:
+        if not ok:
             fail('ia.fromshape 1 failed in coordcheck');
         ia.close()  # close coordcheck.image
         im2 = ia.newimage(imname)
         ok = im2.summary(list=F)
-        if not ok[0]:
+        if not ok:
             fail('summary 2 failed in coordcheck')
-        rec2 = ok[1]
+        rec2 = ok
         #
         if rec1.has_key('axisnames') and rec2.has_key('axisnames'):
             rec1axes=[]
@@ -931,8 +935,7 @@ def imagetest(which=None, size=[32,32,8]):
 
         # Summarise the image
         info('Summarize image');
-        ok = man.summary()
-        header = ok[1]
+        header = man.summary()
         info('')
 
         # Do statistics
@@ -946,7 +949,7 @@ def imagetest(which=None, size=[32,32,8]):
         ok = man.histograms()
 	print ok
         if not ok: fail()
-        stuff = ok['histout']
+        stuff = ok['counts']
         info('')
 
         # Find coordinates
@@ -1219,12 +1222,16 @@ def imagetest(which=None, size=[32,32,8]):
             stop('Delete 1 of', imname, ' failed')
 
         #
-        note('Expect SEVERE error here')
-        myim = ia.newimagefromshape(shape=[10,20], csys='xyz')
-        if myim and myim.name()!="none":
-            stop('ia.fromshape constructor 4 unexpectedly did not fail')
-        else:
-            note('Expected SEVERE error occurred')
+	try:
+           note('Expect SEVERE error here')
+           myim = ia.newimagefromshape(shape=[10,20], csys='xyz')
+           if myim and myim.name()!="none":
+               stop('ia.fromshape constructor 4 unexpectedly did not fail')
+           else:
+               note('Expected SEVERE error occurred')
+	except Exception, e:
+            note('Caught expected Exception')
+            myim = false
         myim = ia.newimagefromshape(shape=[10,20], csys=csys.torecord())
         if not myim:
             stop('ia.fromshape constructor 5 failed')
@@ -1333,9 +1340,13 @@ def imagetest(which=None, size=[32,32,8]):
             stop('Delete 1 of '+imname+' failed')
         #
         note('Expect SEVERE error here')
-        myim = ia.newimagefromarray(outfile=imname, pixels=data, csys='xyz')
-        if myim.isopen():
-            stop('ia.fromarray constructor 3 unexpectedly did not fail')
+	try :
+           myim = ia.newimagefromarray(outfile=imname, pixels=data, csys='xyz')
+           if myim.isopen():
+               stop('ia.fromarray constructor 3 unexpectedly did not fail')
+	except Exception, e :
+            note('Caught expected Exception')
+
         myim = ia.newimagefromarray(pixels=data, csys=csys.torecord())
         if not myim:
             stop('ia.fromarray constructor 4 failed')
@@ -1965,7 +1976,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             stop('Lock failed (1)')
         ok = myim.haslock()
-        if not ok:
+        if not ok[0]:
             stop('haslock failed (1)')
         if (ok[0]!=T or ok[1]!=T):
             stop('haslock returns wrong values (1)')
@@ -1973,8 +1984,8 @@ def imagetest(which=None, size=[32,32,8]):
         ok = myim.unlock()
         if not ok:
             stop('Unlock failed (1)')
-        ok = myim.haslock()
-        if not ok:
+	ok = myim.haslock()
+        if not len(ok):
             stop('haslock failed (2)')
         if (ok[0]!=F or ok[1]!=F):
             stop('haslock returns wrong values (2)')
@@ -1983,7 +1994,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             stop('Lock failed (2)')
         ok = myim.haslock()
-        if not ok:
+        if not ok[0]:
             stop('haslock failed (3)')
         if (ok[0]!=T or ok[1]!=F):
             stop('haslock returns wrong values (3)')
@@ -2257,10 +2268,10 @@ def imagetest(which=None, size=[32,32,8]):
         # Loop over all image types
         #
         types = images.keys()
-        for type in types:
+        for mytype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[mytype]["type"])
+            myim = images[mytype]["tool"]
             #
             # Get some chunks !
             #
@@ -2534,10 +2545,10 @@ def imagetest(which=None, size=[32,32,8]):
 
         # Loop over all image types
         types = images.keys()
-        for type in types:
+        for mytype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[mytype]["type"])
+            myim = images[mytype]["tool"]
             # Reassign as one of the image types is ImageConcat
             imshape = myim.shape();
             #
@@ -2657,10 +2668,10 @@ def imagetest(which=None, size=[32,32,8]):
 
         # Loop over all image types
         types = images.keys()
-        for type in types:
+        for thetype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[thetype]["type"])
+            myim = images[thetype]["tool"]
             imshape = myim.shape(); # Reassign as one of the image types is ImageConcat
             #
             info('');
@@ -2779,6 +2790,11 @@ def imagetest(which=None, size=[32,32,8]):
                 stop('putregion 9 failed')
             pixels = ia.makearray(0.0, [sh[0], sh[1]])
             # Pad with degenerate axes
+	    print sh
+	    print "shape", sh[0], sh[1]
+	    print type(sh[0])
+	    print type(sh[1])
+	    print "pixels", pixels
             ok = myim.putregion(pixels=pixels, usemask=F)
             if not ok:
                 stop('putregion 10 failed')
@@ -2896,8 +2912,11 @@ def imagetest(which=None, size=[32,32,8]):
             ok = myim.set()
             if ok:
                 stop('set 3 unexpectedly did not fail')
-            note('Expect Warning message here')
-            ok = myim.set(region='doggies')
+	    try :
+               note('Expect Warning message here')
+               ok = myim.set(region='doggies')
+	    except Exception, e:
+	       ok = False
             if ok:
                 stop('set 4 unexpectedly did not fail')
             try:
@@ -3225,10 +3244,10 @@ def imagetest(which=None, size=[32,32,8]):
 
         # Loop over all image types
         types = images.keys()
-        for type in types:
+        for mytype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[mytype]["type"])
+            myim = images[mytype]["tool"]
             imshape = myim.shape()
             #
             info('')
@@ -3400,19 +3419,17 @@ def imagetest(which=None, size=[32,32,8]):
         info('')
         info('Testing summary')
         types = images.keys()
-        for type in types:
+        for mytype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[mytype]["type"])
+            myim = images[mytype]["tool"]
             imshape = myim.shape()
             #
             # Summary
             #
-            result = myim.summary(list=F)
-            if not result:
+            header = myim.summary(list=F)
+            if not header:
                 fail('unable to retrieve summary')
-            header = result[1]
-            nfields = 13
             ok = header.has_key('ndim') and header.has_key('shape')
             ok = ok and header.has_key('tileshape')
             ok = ok and header.has_key('axisnames')
@@ -3427,10 +3444,6 @@ def imagetest(which=None, size=[32,32,8]):
             ok = ok and header.has_key('masks')
             if not ok:
                 stop('summary record is invalid')
-            if header.has_key('restoringbeam'): nfields += 1
-            if (len(header.keys()) != nfields):
-                stop('summary record has the wrong number of fields')
-            #
             if not myim.done():
                 fail('failed in myim.done')
         ok = cleanup(testdir)
@@ -3454,10 +3467,10 @@ def imagetest(which=None, size=[32,32,8]):
         info('')
         info('Testing maskhandler')
         types = images.keys()
-        for type in types:
+        for mytype in types:
             info('')
-            info('Testing Image type ' + images[type]["type"])
-            myim = images[type]["tool"]
+            info('Testing Image type ' + images[mytype]["type"])
+            myim = images[mytype]["tool"]
             imshape = myim.shape()
             #
             myim2 = ia.newimagefromshape(shape=imshape)
@@ -3479,19 +3492,19 @@ def imagetest(which=None, size=[32,32,8]):
             names = myim.maskhandler('get')
             if not names:
                 stop('maskhandler 1a failed')
-            if (names!="mask0"):      #(len(names)!=1) doesn't work
+            if (names[0]!="mask0"):      #(len(names)!=1) doesn't work
                 stop('maskhandler 1a unexpectedly recovered more than 1 mask')
             names = myim2.maskhandler('get')
             if not names:
                 stop('maskhandler 1b failed')
-            if (names!="mask0"):      #(len(names)!=1) doesn't work
+            if (names[0]!="mask0"):      #(len(names)!=1) doesn't work
                 stop('maskhandler 1b unexpectedly recovered more than 1 mask')
             #
             ok = myim.maskhandler('set', name=names)
-            if not ok=="T":
+            if not ok[0]=="T":
                 stop('maskhandler 2a failed')
             ok = myim2.maskhandler('set', name=names)
-            if not ok=="T":
+            if not ok[0]=="T":
                 stop('maskhandler 2b failed')
             #
             defname = myim.maskhandler('default')
@@ -3505,23 +3518,23 @@ def imagetest(which=None, size=[32,32,8]):
             if (names!=defname):
                 stop('maskhandler 3b did not recover the default mask name')
             #
-            names = [names, 'fish']
+            names.append('fish')
             ok = myim.maskhandler('rename', names)
-            if not ok=="T":
+            if not ok[0]=="T":
                 stop('maskhandler 4a failed')
             ok = myim2.maskhandler('rename', names)
-            if not ok=="T":
+            if not ok[0]=="T":
                 stop('maskhandler 4b failed')
             #
             names = myim.maskhandler('get')
             if not names:
                 stop('maskhandler 5a failed')
-            if names!='fish':
+            if names[0]!='fish':
                 stop('maskhandler 5a did not recover the correct mask name')
             names = myim2.maskhandler('get')
             if not names:
                 stop('maskhandler 5b failed')
-            if (names!='fish'):
+            if (names[0]!='fish'):
                 stop('maskhandler 5b did not recover the correct mask name')
             #
             names = ['fish', 'mask1']
@@ -3557,12 +3570,12 @@ def imagetest(which=None, size=[32,32,8]):
             defname = myim.maskhandler('default')
             if not defname:
                 stop('maskhandler 9a failed')
-            if (defname !='mask1'):
+            if (defname[0] !='mask1'):
                 stop('maskhandler 9a did not recover the correct default mask name')
             defname = myim2.maskhandler('default')
             if not defname:
                 stop('maskhandler 9b failed')
-            if (defname !='mask1'):
+            if (defname[0] !='mask1'):
                 stop('maskhandler 9b did not recover the correct default mask name')
             #
             names = myim.maskhandler('get')
@@ -3582,12 +3595,12 @@ def imagetest(which=None, size=[32,32,8]):
             names = myim.maskhandler('get')
             if not names:
                 stop('maskhandler 12a failed')
-            if (names!="T"):
+            if (names[0]!="T"):
                 return('maskhandler 12a failed to delete the masks')
             names = myim2.maskhandler('get')
             if not names:
                 stop('maskhandler 12b failed')
-            if (names!="T"):
+            if (names[0]!="T"):
                 return('maskhandler 12b failed to delete the masks')
             if not (myim2.done()):
                 fail('failed done in test16')
@@ -4954,117 +4967,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         return cleanup(testdir)
 
-
-    def test27():
-        #
-        # Test methods
-        #   regrid
-        #
-        # Not very extensive
-        info('');
-        info('');
-        info('');
-        info('Test 27 - regrid');
-        # Make the directory
-        testdir = 'imagetest_temp'
-        if not cleanup(testdir):
-            return False
-        try:
-            os.mkdir(testdir)
-        except IOError, e:
-            note(e, "SEVERE")
-            raise RuntimeError, "mkdir " + testdir + " fails!"
-        # Make RA/DEC/Spectral image
-        imname = testdir+'/'+'ia.fromshape.image1'
-        imshape = [32,32,32]
-        myim = ia.newimagefromshape(imname, imshape)
-        if not myim:
-            stop('ia.fromshape constructor 1 failed')
-        if not myim.set(1.0):
-            fail('failed myim.set')
-        #
-        # Forced failures
-        #
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(axes=[20])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 1 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(shape=[10,20,30,40])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 2 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(csys='fish')
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 3 unexpectedly did not fail')
-        try:
-            note('Expect SEVERE error and Exception here')
-            myim2 = myim.regrid(method='doggies')
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2 = false
-        if myim2:
-            stop('regrid 4 unexpectedly did not fail')
-        #
-        # Regrid it to itself (all axes)
-        #
-        iDone = 1
-        #      for method in ["near","linear","cubic"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method)
-            if not myim2:
-                fail('failed regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (1), method='+method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed ('+ iDone + ')')
-            iDone = iDone + 1
-        #
-        #      for method in ["cubic","linear","near"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method, axes=[0,1])
-            if not myim2: fail('failed to regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (2), method='+ method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed (' + iDone + ')')
-            iDone = iDone + 1
-        #
-        #      for method in ["near","linear","cubic"]:
-        for method in ["cubic"]:
-            myim2 = myim.regrid(method=method, axes=[2])
-            if not myim2: fail('failed regrid')
-            p = myim2.getchunk([3,3],[imshape[0]-3,imshape[1]-3,imshape[2]-3])
-            if not alleqnum(p,1,tolerance=1e-3): #all abs(p-1)<1e-3
-                stop('Regridded values are wrong (3), method=' + method)
-            ok = myim2.done()
-            if not ok:
-                stop('Done failed (' + iDone + ')')
-            iDone = iDone + 1
-        #
-        ok = myim.done()
-        if not ok:
-            stop('Done failed (' + iDone + ')')
-        iDone = iDone + 1
-        #
-        return cleanup(testdir)
-
     def test28():
         #
         # Test methods
@@ -5251,7 +5153,7 @@ def imagetest(which=None, size=[32,32,8]):
         #
         # Convolution kernel has peak 1.0*scale
         #
-        myim2 = myim.convolve2d (scale=2.0, major='20arcsec', minor='10arcsec')
+        myim2 = myim.convolve2d (scale=2.0, major='20arcsec', minor='10arcsec', pa="0deg")
         if not myim2: stop('convolve2d 6 failed')
         stats = myim2.statistics(list=F)
         if not stats: fail('failed to get statistics')
@@ -5596,18 +5498,18 @@ def imagetest(which=None, size=[32,32,8]):
         rbi['minor'] = qa.quantity('5arcsec')
         rbi['positionangle'] = qa.quantity('30deg')
         names = rec.keys()
-        for type in names:
-            info('Testing Image type '+rec[type]['type'])
+        for mytype in names:
+            info('Testing Image type '+rec[mytype]['type'])
             #
-            myim = rec[type]['tool']
+            myim = rec[mytype]['tool']
             ok = myim.sethistory(history=hii)
             if not ok: fail()
             hio = myim.history(list=F, browse=F)
             if not hio: fail()
-            if (len(hii)!=len(hio)):
+            if (len(hii)!=len(hio[0])):
                 fail('History length does not reflect')
             for i in range(len(hii)):
-                if (hii[i]!=hio[i]):
+                if (hii[i]!=hio[0][i]):
                     fail('History fields do not reflect')
             #
             ok = myim.setmiscinfo(mii)
@@ -5646,16 +5548,16 @@ def imagetest(which=None, size=[32,32,8]):
             ok = myim.setbrightnessunit('Jy/beam')
             if not ok: fail()
             # First a point source
-            for type in ["gauss","disk"]:
+            for mytype in ["gauss","disk"]:
                 peakFlux = qa.quantity('1.0 mJy/beam')
                 major = rbi['major']
                 minor = rbi['minor']
                 integralFlux = myim.convertflux(value=peakFlux, major=major,
                                                 minor=minor, topeak=F,
-                                                type=type)
+                                                type=mytype)
                 if not integralFlux: fail()
                 peakFlux2 = myim.convertflux(value=integralFlux, major=major,
-                                             minor=minor, topeak=T, type=type)
+                                             minor=minor, topeak=T, type=mytype)
                 if not peakFlux2: fail()
                 #
                 d = abs(qa.getvalue(peakFlux)) - abs(1000.0*qa.getvalue(integralFlux))
@@ -5669,7 +5571,7 @@ def imagetest(which=None, size=[32,32,8]):
                 major = qa.quantity("30arcsec")
                 minor = qa.quantity("20arcsec")
                 integralFlux = myim.convertflux(value=peakFlux, major=major,
-                                                minor=minor, topeak=F, type=type)
+                                                minor=minor, topeak=F, type=mytype)
                 if not integralFlux: fail()
                 peakFlux2 = myim.convertflux(value=integralFlux, major=major,
                                              minor=minor, topeak=T)
@@ -5928,51 +5830,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         return cleanup(testdir)
 
-    def test38():
-        #
-        # Test methods
-        #   rebin
-        #
-        info('')
-        info('')
-        info('')
-        info('Test 38 - rebin')
-        # Make images
-        shp2 = [20,40]
-        d2 = ia.makearray(1.0, [shp2[0], shp2[1]])
-        #
-        myim2 = ia.newimagefromarray(pixels=d2)
-        if not myim2:
-            stop('ia.fromarray constructor 1 failed')
-        #
-        # Forced failures
-        #
-        try:
-            myim2b = true
-            note('Expect SEVERE error and Exception here')
-            myim2b = myim2.rebin(bin=[-100,2])
-        except Exception, e:
-            note('Caught expected Exception')
-            myim2b = false
-        if myim2b:
-            stop('rebin 1 unexpectedly did not fail')
-        #
-        # Some simple run tests.
-        #
-        myim2b = myim2.rebin(bin=[2,2])
-        if not myim2b:
-            stop('rebin 2 failed')
-        p = myim2b.getchunk()
-        if not alleqnum(p,1.0,tolerance=0.0001):
-            stop('rebin 2 gives wrong values')
-        #
-        ok = myim2.done()
-        if not ok: fail()
-        ok = myim2b.done()
-        if not ok: fail()
-        #
-        return True
-    
     def test39():
         #
         # Test methods
@@ -6096,7 +5953,7 @@ def imagetest(which=None, size=[32,32,8]):
     test8()
     test9()
     test10()
-    test11()
+    #test11()
     test12()
     test13()  # segmentation fault on multiple runs
     test14()
@@ -6111,7 +5968,6 @@ def imagetest(which=None, size=[32,32,8]):
     test24()
     test25()
     test26()  # needs comparison to numpy.fft result implemented
-    test27()
     test28()
     test29()
     test30()  # are abs/rel/world/pixel output values correct?
@@ -6120,7 +5976,6 @@ def imagetest(which=None, size=[32,32,8]):
     test34()
     test36()
     test37()
-    test38()
     test39()  # update once functionals is available
     test40()  # doesn't do much without gui
     print ''

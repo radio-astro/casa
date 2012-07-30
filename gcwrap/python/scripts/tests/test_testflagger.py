@@ -76,7 +76,7 @@ class test_base(unittest.TestCase):
 
     def unflag_table(self):
 
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -94,7 +94,7 @@ class test_tsys(test_base):
 
     def test_manual_field_selection_agent_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -107,14 +107,14 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['field']['3c279']['flagged'] == 9216.0
-        assert summary['report0']['field']['Titan']['flagged'] == 0
-        assert summary['report0']['field']['TW Hya']['flagged'] == 0
-        assert summary['report0']['field']['J1037-295=QSO']['flagged'] == 0
+        self.assertEqual(summary['report0']['field']['3c279']['flagged'], 9216)
+        self.assertEqual(summary['report0']['field']['Titan']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['TW Hya']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['J1037-295=QSO']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -127,14 +127,14 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['antenna']['DV09']['flagged'] == 14336.0
-        assert summary['report0']['antenna']['DV10']['flagged'] == 0.0
+        self.assertEqual(summary['report0']['antenna']['DV09']['flagged'], 14336)
+        self.assertEqual(summary['report0']['antenna']['DV10']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_tsys_CalTable2(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
 
         # Run the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         tflocal.parsemanualparameters(apply=False)
@@ -149,7 +149,7 @@ class test_tsys(test_base):
 
     def test_manual_field_msSelection_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata(field='0')
@@ -169,14 +169,14 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['field']['3c279']['flagged'] == 9216.0
-        assert summary['report0']['field']['Titan']['flagged'] == 0
-        assert summary['report0']['field']['TW Hya']['flagged'] == 0
-        assert summary['report0']['field']['J1037-295=QSO']['flagged'] == 0        
+        self.assertEqual(summary['report0']['field']['3c279']['flagged'], 9216.0)
+        self.assertEqual(summary['report0']['field']['Titan']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['TW Hya']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['J1037-295=QSO']['flagged'], 0)        
 
     def test_manual_antenna_msSelection_layer_for_tsys_CalTable(self):
         """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata(antenna='DV09')
@@ -196,12 +196,12 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['antenna']['DV09']['flagged'] == 14336.0
-        assert summary['report0']['antenna']['DV10']['flagged'] == 0.0
+        self.assertEqual(summary['report0']['antenna']['DV09']['flagged'], 14336)
+        self.assertEqual(summary['report0']['antenna']['DV10']['flagged'], 0)
         
     def test_clip_minmax_fparm_sol1(self):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1'
         tflocal.open(self.vis)
@@ -216,18 +216,18 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 750.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 750.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 750.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_sol1_2(self):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
 
         # Run the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1'
         tflocal.open(self.vis)
@@ -239,7 +239,6 @@ class test_tsys(test_base):
         tflocal.init()
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
-
         self.assertEqual(summary['report0']['total'], 129024)
         self.assertEqual(summary['report0']['flagged'], 750)
         self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750)
@@ -249,7 +248,7 @@ class test_tsys(test_base):
 
     def test_clip_minmax_fparm_sol1_extension(self):
         """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range, and then extend to the other solution """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -265,16 +264,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 1726.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 863.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 863.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024)
+        self.assertEqual(summary['report0']['flagged'], 1726)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 863)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 863)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512)
 
     def test_clip_minmax_fparm_sol2(self):
         """TestFlagger:: Test cliping second calibration solution product of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol2'
         tflocal.open(self.vis)
@@ -289,16 +288,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 442.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 442.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 442.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 442.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_sol1sol2(self):
         """TestFlagger:: Test cliping first and second calibration solution products of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1,Sol2'
         tflocal.open(self.vis)
@@ -313,16 +312,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 1192.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 750.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 442.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 1192.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 442.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_all(self):
         """TestFlagger:: Test cliping all calibration solution products of FPARAM column using a minmax range """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -337,16 +336,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 1192.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 750.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 442.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 1192.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 442.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_zeros_fparm_all(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of FPARAM column"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -361,16 +360,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_nan_and_inf_fparm_all(self):
         """TestFlagger:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -385,16 +384,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_error_case_absall(self):
         """TestFlagger:: Error case test when a complex operator is used with CalTables """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ABS ALL'
         tflocal.open(self.vis)
@@ -409,16 +408,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 1192.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 750.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 442.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 1192.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 442.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_paramerr_all_for_tsys_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for Tsys CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -433,16 +432,16 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_snr_all_for_tsys_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for Tsys CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -457,12 +456,12 @@ class test_tsys(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 129024.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 64512.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 64512.0
+        self.assertEqual(summary['report0']['total'], 129024.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
 
 class test_bpass(test_base):
@@ -473,7 +472,7 @@ class test_bpass(test_base):
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -486,14 +485,14 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['field']['3C286_A']['flagged'] == 499200.0
-        assert summary['report0']['field']['3C286_B']['flagged'] == 0
-        assert summary['report0']['field']['3C286_C']['flagged'] == 0
-        assert summary['report0']['field']['3C286_D']['flagged'] == 0
+        self.assertEqual(summary['report0']['field']['3C286_A']['flagged'], 499200.0)
+        self.assertEqual(summary['report0']['field']['3C286_B']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['3C286_C']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['3C286_D']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -506,12 +505,12 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['antenna']['ea09']['flagged'] == 48000.0
-        assert summary['report0']['antenna']['ea10']['flagged'] == 0.0
+        self.assertEqual(summary['report0']['antenna']['ea09']['flagged'], 48000.0)
+        self.assertEqual(summary['report0']['antenna']['ea10']['flagged'], 0.0)
 
     def test_manual_field_msSelection_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for field """
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata({'field':'3C286_A'})
@@ -531,14 +530,14 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['field']['3C286_A']['flagged'] == 499200.0
-        assert summary['report0']['field']['3C286_B']['flagged'] == 0
-        assert summary['report0']['field']['3C286_C']['flagged'] == 0
-        assert summary['report0']['field']['3C286_D']['flagged'] == 0
+        self.assertEqual(summary['report0']['field']['3C286_A']['flagged'], 499200.0)
+        self.assertEqual(summary['report0']['field']['3C286_B']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['3C286_C']['flagged'], 0)
+        self.assertEqual(summary['report0']['field']['3C286_D']['flagged'], 0)
 
     def test_manual_antenna_msSelection_layer_for_bpass_CalTable(self):
         """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for antenna"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
         tflocal.selectdata({'antenna':'ea09'})
@@ -558,12 +557,12 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['antenna']['ea09']['flagged'] == 48000.0
-        assert summary['report0']['antenna']['ea10']['flagged'] == 0.0
+        self.assertEqual(summary['report0']['antenna']['ea09']['flagged'], 48000.0)
+        self.assertEqual(summary['report0']['antenna']['ea10']['flagged'], 0.0)
         
     def test_clip_zeros_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -578,16 +577,16 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_clip_nan_and_inf_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -602,16 +601,16 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
-        assert summary['report0']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 0.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertEqual(summary['report0']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_clip_minmax_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -626,16 +625,16 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
     
-        assert summary['report0']['total'] == 1248000.0
-        assert summary['report0']['flagged'] == 253315.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 134252.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 119063.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertEqual(summary['report0']['flagged'], 253315.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 134252.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 119063.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_rflag_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test rflag in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -650,16 +649,16 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
-        assert summary['report0']['flagged'] == 184222.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 93880.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 90342.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertEqual(summary['report0']['flagged'], 184222.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 93880.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 90342.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_tfcrop_paramerr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test tfcrop in all calibration solution products of PARAMERR column for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'REAL ALL'
         tflocal.open(self.vis)
@@ -674,16 +673,16 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
-        assert abs(summary['report0']['flagged'] - 63861.0) <= 5
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertTrue(abs(summary['report0']['flagged'] - 63861.0) <= 5)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
         assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 32193.0) <= 5
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
         assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 31668.0) <=5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
         """TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -699,11 +698,11 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
         assert abs(summary['report0']['flagged'] - 72034.0) <= 5
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
         assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 36017.0) <= 5
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
         assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 36017.0) <= 5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable2(self):
@@ -711,7 +710,7 @@ class test_bpass(test_base):
         and then extend to the other solution for bpass CalTable"""
 
         # Same as the previous test but using the specific parsing functions
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -732,7 +731,7 @@ class test_bpass(test_base):
 
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
         """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
         tflocal.open(self.vis)
@@ -747,12 +746,12 @@ class test_bpass(test_base):
         summary = tflocal.run(writeflags=True)
         tflocal.done() 
 
-        assert summary['report0']['total'] == 1248000.0
-        assert summary['report0']['flagged'] == 63570.0
-        assert summary['report0']['correlation']['Sol1']['flagged'] == 25526.0
-        assert summary['report0']['correlation']['Sol1']['total'] == 624000.0
-        assert summary['report0']['correlation']['Sol2']['flagged'] == 38044.0
-        assert summary['report0']['correlation']['Sol2']['total'] == 624000.0
+        self.assertEqual(summary['report0']['total'], 1248000.0)
+        self.assertEqual(summary['report0']['flagged'], 63570.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 25526.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 38044.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
 
 class test_display(test_base):
@@ -761,7 +760,7 @@ class test_display(test_base):
     def test_display_data_single_channel_selection(self):
         """TestFlagger:: Check nominal behaviour for single spw:chan selection """
         self.setUp_4Ants()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -779,7 +778,7 @@ class test_display(test_base):
     def test_display_data_multiple_channel_selection(self):
         """TestFlagger:: Check behaviour for multiple spw:chan selection """
         self.setUp_4Ants()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -797,7 +796,7 @@ class test_display(test_base):
     def test_display_data_different_corrs_per_spw(self):
         """TestFlagger:: Check behaviour when the number of correlation products changes between SPWs """
         self.setUp_CAS_4052()
-        tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+        tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}

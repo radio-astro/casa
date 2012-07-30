@@ -169,7 +169,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     // rgnMgrAct_    = new QAction("Region Manager...", 0);
                     // rgnMgrAct_->setEnabled(False);
 
-    if ( ! use_new_regions ) {
+    if ( ! use_new_regions || true ) {
 	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
 	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
     }
@@ -714,14 +714,15 @@ QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String displayType,
-					    Bool autoRegister, const viewer::DisplayDataOptions &ddo ) {
+					    Bool autoRegister, const viewer::DisplayDataOptions &ddo,
+					    const viewer::ImageProperties &props ) {
 
-  QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo );
+  QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
   
-  return processDD( path, dataType, displayType, autoRegister, qdd );
+  return processDD( path, dataType, displayType, autoRegister, qdd, ddo  );
 }
 QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, String displayType,
-		Bool autoRegister, QtDisplayData* qdd){
+		Bool autoRegister, QtDisplayData* qdd, const viewer::DisplayDataOptions& /*ddo*/){
   if(qdd->isEmpty()) {
     errMsg_ = qdd->errMsg();
     emit createDDFailed(errMsg_, path, dataType, displayType);
@@ -838,7 +839,29 @@ QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
     if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
   return 0;  }
 
-  
+QtDisplayData* QtDisplayPanelGui::dd( ) {
+    // retrieve the "controlling" DD...
+    if ( controlling_dd == 0 ) {
+	QtDisplayData *ctrld = 0;
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
+	    QtDisplayData* pdd = iter.getRight();
+	    if ( pdd != 0 && pdd->dataType() == "image" ) {
+		ImageInterface<float>* img = pdd->imageInterface( );
+		PanelDisplay* ppd = qdp_->panelDisplay( );
+		if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) { ctrld = pdd; }
+	    }
+	}
+
+	controlling_dd = ctrld;
+	emit axisToolUpdate( controlling_dd );
+	if ( controlling_dd != 0 )
+	    connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+		     SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+    }
+
+    return controlling_dd;
+}
   
 List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
   // return a list of DDs that are registered on some panel.
@@ -912,7 +935,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
   Int play  = qdp_->animating();
   Bool modez = qdp_->modeZ();
   
-
+  emit frameChanged( frm );
   frameEdit_->setText(QString::number(frm));
   nFrmsLbl_ ->setText(QString::number(len));
   
@@ -1428,18 +1451,19 @@ void QtDisplayPanelGui::showImageProfile() {
 	        
 		    	profile_ = new QtProfile(img, pdd->name().c_str());
 		    	profile_->setPath(QString(pdd->path().c_str()) );
-		    	connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
-		    	connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-		    	connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-		    			profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-		    	connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
-		    			profile_, SLOT(changeSpectrum(String, String, String )));
-		    	connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
-		    			this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
-		    	connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
-		    			this, SLOT(doSelectChannel(const Vector<float>&,float)));
-		    	 connect( pdd, SIGNAL(pixelsChanged(int,int)), profile_,
-		    			   SLOT(pixelsChanged(int,int)) );
+			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
+			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
+			connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+			connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
+					profile_, SLOT(changeSpectrum(String, String, String )));
+
+			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
+					this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+			connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
+					this, SLOT(doSelectChannel(const Vector<float>&,float)));
+			connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
+			
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
 			    if (pos) {
@@ -1462,9 +1486,9 @@ void QtDisplayPanelGui::showImageProfile() {
 					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 									const QList<double> &, const QList<int> &, const QList<int> &,
 									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs.get( ), SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
+				    connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									       const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
+					     profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									   const QList<int> &, const QList<int> & ) ) );
 				    connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 										       const QList<double> &, const QList<int> &, const QList<int> &,
@@ -1599,6 +1623,11 @@ void QtDisplayPanelGui::showImageProfile() {
 	qrs->generateExistingRegionUpdates( );
     }
 
+    //Let the profiler know about the current frame.
+    if ( profile_ ) {
+	int frameIndex = qdp_->frame();
+	profile_->frameChanged( frameIndex );
+    }
 }
 
 
@@ -1619,7 +1648,7 @@ void QtDisplayPanelGui::refreshImageProfile() {
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	if ( rdds.len() > 0 ) {
 	    showImageProfile( );
-	    profile_->redraw( );
+	    if ( profile_ ) profile_->redraw( );
 	} else {
 	    profile_->hide();
 	    delete profile_;

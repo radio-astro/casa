@@ -123,6 +123,10 @@ average over frequency (channels) and time (integrations).
 	  <description>If practical, keep *completely flagged rows* instead of dropping them.</description>
 	  <value>True</value>
 	</param>
+	<param type="bool" name="keepmms">
+	  <description>If the input is a multi-MS, make the output one, too. (experimental)</description>
+	  <value>False</value>
+	</param>
         <constraints>
 	  <when param="timebin">
             <notequals type="string" value="0s">
@@ -272,6 +276,11 @@ average over frequency (channels) and time (integrations).
                      Then, if keepflags is False, the completely flagged rows
                      will be omitted from the output MS.  Otherwise, they will
                      be included (subject to the selection parameters).
+
+        keepmms -- If true and the input is a multi-MS, make the output one, too.
+	           Otherwise, the output will be a normal MS without partitioning. (experimental)
+                   Default: False
+
 </example> 
 </task>
 </casaxml>

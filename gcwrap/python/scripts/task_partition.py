@@ -5,6 +5,7 @@ import copy
 import math
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
+import partitionhelper as ph
 import simple_cluster
 
 class PartitionHelper(ParallelTaskHelper):
@@ -292,9 +293,10 @@ class PartitionHelper(ParallelTaskHelper):
         '''
         
         if self._arg['createmms']:
+            casalog.post("Finalizing MMS structure")
             outputList = self._jobQueue.getOutputJobs()
-            # We created a data directory and many SubMSs build the reference
-            # MSs
+            # We created a data directory and many SubMSs,
+            # now build the reference MS
             if self._arg['calmsselection'] in ['auto','manual']:
                 # A Cal MS was created in the data directory, see if it was
                 # successful, if so build a reference MS
@@ -309,56 +311,14 @@ class PartitionHelper(ParallelTaskHelper):
                     subMSList.append(job.getCommandArguments()['outputvis'])
 
             if len(subMSList) == 0:
-                print "Error: no subMSs were created."
+                casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
 
-            # Really should double check here before creating.
-            if os.path.exists(self._arg['outputvis']):
-                raise ValueError, "Output MS already exists"
+            ph.makeMMS(self._arg['outputvis'], subMSList)
 
-            ## make a MMS with all sub-MSs contain in a SUBMSS subdirectory
-            thems = self._arg['outputvis']
-            themsname = os.path.basename(thems.rstrip('/'))
-            thecontainingdir = os.path.dirname(thems.rstrip('/'))
             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+            os.rmdir(thesubmscontainingdir)
 
-            os.mkdir(thems)
-            shutil.move(thesubmscontainingdir, thems+'/SUBMSS')
-            
-            thesubmss = []
-            for submsname in subMSList:
-                thesubmsname = os.path.basename(submsname.rstrip('/'))
-                thesubmss.append(themsname+'/SUBMSS/'+thesubmsname)
-
-            ## create the MMS via a temporary directory in order to be able
-            ## to have the members inside the outputvis
-            
-            origpath = os.getcwd()
-            # need to be in the containing directory of outputvis in order
-            # to have the right relative paths in the MMS header
-            if not (thecontainingdir==''):
-                os.chdir(thecontainingdir)
-            tmpmsname = themsname+'_createmms_tmp'
-            shutil.rmtree(tmpmsname, ignore_errors=True)
-            self._msTool.close()
-            try:
-                self._msTool.createmultims(tmpmsname,
-                                           thesubmss,
-                                           [],
-                                           True,  # nomodify
-                                           False, # lock
-                                           False) # copysubtables
-            except:
-                print "Problem in createmultims: ", sys.exc_info()[0]
-                os.chdir('origpath')
-                raise
-            shutil.move(thems+'/SUBMSS', tmpmsname)
-            shutil.rmtree(thems, ignore_errors=True)
-            shutil.move(tmpmsname, thems)
-            os.chdir(origpath)
-            
-        # Probably should check to see if anything failed
-        # This should be done in the base class
         return True
         
 

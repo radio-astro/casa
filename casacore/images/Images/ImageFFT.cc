@@ -241,20 +241,18 @@ void ImageFFT::fft(const ImageInterface<Complex>& in,
 
 void ImageFFT::getComplex(ImageInterface<Complex>& out)  const
 {
-   LogIO os(LogOrigin("ImageFFT", "getComplex()", WHERE));
+   LogIO os(LogOrigin("ImageFFT", __FUNCTION__, WHERE));
    if (!itsDone) {
       os << "You must call function fft first" << LogIO::EXCEPTION;
    }
    if (!out.shape().isEqual(itsTempImagePtr->shape())) {
       os << "Input and output images have inconsistent shapes" << LogIO::EXCEPTION;
    }
-//
    out.copyData(*itsTempImagePtr);
    copyMask(out);
    if (!out.setCoordinateInfo(itsTempImagePtr->coordinates())) {
       os << "Could not replace CoordinateSystem in output real image" << LogIO::EXCEPTION;
    }
-//
    copyMiscellaneous(out);
 }
 
@@ -550,12 +548,16 @@ void ImageFFT::copyMiscellaneous (ImageInterface<Float>& out) const
 
 void ImageFFT::copyMiscellaneous (ImageInterface<Complex>& out) const
 {
+	cout << "out coords " << out.coordinates().worldAxisNames() << endl;
    if (itsInImagePtrFloat!=0) {
+	   cout << itsInImagePtrFloat->coordinates().worldAxisNames() << endl;
       out.setMiscInfo(itsInImagePtrFloat->miscInfo());
       out.setImageInfo(itsInImagePtrFloat->imageInfo());
       out.setUnits(itsInImagePtrFloat->units());
       out.appendLog(itsInImagePtrFloat->logger());
    } else {
+	   cout << itsInImagePtrComplex->coordinates().worldAxisNames() << endl;
+
       out.setMiscInfo(itsInImagePtrComplex->miscInfo());
       out.setImageInfo(itsInImagePtrComplex->imageInfo());
       out.setUnits(itsInImagePtrComplex->units());

@@ -37,8 +37,9 @@
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <casa/System/AipsrcValue.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+const float AxesDisplayData::AXIS_LABEL_DEFAULT_CHAR_SIZE = 1.2f;
 
 AxesDisplayData::AxesDisplayData() :
   PassiveCachingDD() {
@@ -84,7 +85,7 @@ AxesDisplayData::AxesDisplayData() :
 
 
   Float defaultChrSz;
-  AipsrcValue<Float>::find(defaultChrSz,"display.axislabels.charsize", 1.2f);
+  AipsrcValue<Float>::find(defaultChrSz,"display.axislabels.charsize", AXIS_LABEL_DEFAULT_CHAR_SIZE);
   itsParamCharacterSize
     = new DParameterRange<Float>(WCAxisLabeller::LABEL_CHAR_SIZE, "character size",
 				 "", 0.0, 4.0, 0.05,
@@ -97,7 +98,6 @@ AxesDisplayData::AxesDisplayData() :
 				 "", 0.0, 5.0, 0.10,
 				 defaultLnWid, defaultLnWid,
 				 "axis_drawing_and_labels");
-  
 }
 
 AxesDisplayData::~AxesDisplayData() {

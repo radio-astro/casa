@@ -132,6 +132,7 @@ MeasurementSets/MSSpWindowColumns.cc
 MeasurementSets/MSIter.cc
 MeasurementSets/MSFieldGram.cc
 MeasurementSets/MSStateGram.cc
+MeasurementSets/MSTable.cc
 ${BISON_MSAntennaGram_OUTPUTS}
 ${FLEX_MSAntennaGram_OUTPUTS}
 ${BISON_MSArrayGram_OUTPUTS}

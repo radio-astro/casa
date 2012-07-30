@@ -345,15 +345,7 @@ public:
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
 
-  /**
-   * Estimates the length of the long side of the color bar (in pixels) based
-   * on the percentage of the pixel canvas the plot will have.
-   * @param plotPercentage the percentage of the pixel canvas that will be dedicated
-   * 		to the plot (as opposed to associated map color bars.
-   * @return an estimate of the color bar length, attempting to make the length
-   * 		of the color bar the same as the length of the plot square.
-   */
-  //int getColorBarLength( float plotPercentage ) const;
+
 
  public slots:
 
@@ -463,11 +455,11 @@ public:
  signals:
 
   
+
   void animatorChange();
 	//# (Updating entire animator gui when any animator
 	//# change occurs is plenty fast, it turns out...).
 
-    
   
   // signals from registration methods.
   //

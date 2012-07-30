@@ -70,6 +70,11 @@ public:
         // No required parameters.
         SEL_LOCATE,
 
+        // Get metadata of points in the selected regions.  Operates on all 
+        // visible canvases AT THE TIME of the call to doAction().
+        // No required parameters.
+        SEL_INFO,
+
         // Clear the selected regions.   Operates on all visible canvases AT
         // THE TIME of the call to doAction().
         // No required parameters.
@@ -257,6 +262,7 @@ public:
     // Performs the action, using the given PlotMSApp, and returns true for
     // success or false or failure.
     bool doAction(PlotMSApp* plotms);
+    bool doActionWithResponse(PlotMSApp* plotms, Record &retval);
 
     // Returns the result of doAction(), if applicable.  Usually this is used
     // to return the error/reason why the action failed.

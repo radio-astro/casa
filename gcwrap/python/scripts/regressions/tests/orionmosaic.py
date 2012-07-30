@@ -29,4 +29,4 @@ def run(fetch=False):
         raise Exception, 'regstate = False'
 #    import lepath+'/g192_regression.py'
 ###resturn the images that will be templated and compared in future runs
-    return ['orion_tfeather.im','orion_tfeather2.im','orion_tsdmem.image','orion_tjoint3.image']
+    return ['orion_tfeather.im','orion_tfeather2.im','orion_tsdmem.image','orion_tsdms.image','orion_tjoint3.image']

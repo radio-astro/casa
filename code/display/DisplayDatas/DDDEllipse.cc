@@ -559,7 +559,7 @@ void DDDEllipse::updateWorldValues ()
 
 // Convert shape parameters to world 
 
-   static Vector<Quantum<Double> > wParameters(3);
+   static GaussianBeam wParameters;
    static IPosition pixelAxes(2, 0, 1);
    static Vector<Double> pParameters(5);
 //
@@ -568,9 +568,9 @@ void DDDEllipse::updateWorldValues ()
    for (uInt i=0; i<3; i++) pParameters[i+2] = itsPixelShape[i];
    ImageUtilities::pixelWidthsToWorld (itsLogger, wParameters, pParameters, 
                                        itsCoordinateSystem, pixelAxes, itsDoRef);
-   itsWorldParameters(2) = wParameters(0);
-   itsWorldParameters(3) = wParameters(1);
-   itsWorldParameters(4) = wParameters(2);
+   itsWorldParameters(2) = wParameters.getMajor();
+   itsWorldParameters(3) = wParameters.getMinor();
+   itsWorldParameters(4) = wParameters.getPA();
 }
 
 void DDDEllipse::decode(const RecordInterface& description, Bool required)

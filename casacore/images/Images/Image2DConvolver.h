@@ -47,6 +47,7 @@ class IPosition;
 class CoordinateSystem;
 class ImageInfo;
 class Unit;
+class GaussianBeam;
 
 
 // <summary>
@@ -78,7 +79,7 @@ class Unit;
 
 // <motivation>
 // Convolution is a standard image processing requirement.  The
-// class object has no state.  The functions could be static.
+// class object has no state.
 // The convolution is done via FFT.  Thus input pixels which
 // are masked are set to 0 before the convolution.  The mask
 // is transferred to the output image.  No additional scaling
@@ -95,6 +96,24 @@ template <class T> class Image2DConvolver
 {
 public:
 
+	// Convolve.   If the output image needs a mask and doesn't have one,
+	// it will be given one if possible.  The miscInfo, imageInfo,
+	// units and logger will be copied from the input to the output
+	// unless you indicate not to (copyMiscellaneous).
+	static void convolve(
+		LogIO& os, ImageInterface<T>& imageOut,
+		const ImageInterface<T>& imageIn,
+		const VectorKernel::KernelTypes kernelType,
+		const IPosition& pixelAxes,
+		const Vector<Quantity>& parameters,
+		const Bool autoScale, Double scale,
+		const Bool copyMiscellaneous=True
+	);
+
+private:
+
+	// This class contains all static methods. Do not allow it to
+	// be instantiated.
 	// Constructor
 	Image2DConvolver ();
 
@@ -107,61 +126,51 @@ public:
 	// Assignment operator. Uses reference semantics.
 	Image2DConvolver &operator=(const Image2DConvolver<T> &other);
 
-	// Convolve.   If the output image needs a mask and doesn't have one,
-	// it will be given one if possible.  The miscInfo, imageInfo,
-	// units and logger will be copied from the input to the output
-	// unless you indicate not to (copyMiscellaneous).
-	void convolve(
-		LogIO& os,
-		ImageInterface<T>& imageOut,
-		const ImageInterface<T>& imageIn,
-		const VectorKernel::KernelTypes kernelType,
-		const IPosition& pixelAxes,
-		const Vector<Quantity>& parameters,
-		const Bool autoScale, Double scale,
-		const Bool copyMiscellaneous=True
-	);
 
-private:
-
-	void checkKernelParameters(
+	static void _checkKernelParameters(
 		LogIO& os, VectorKernel::KernelTypes kernelType,
 		const Vector<Quantum<Double> >& parameters
-	) const;
+	);
 
-	void _dealWithRestoringBeam (
-		LogIO& os, String& brightnessUnitOut, Vector<Quantity>& beamOut,
+	static void _dealWithRestoringBeam (
+		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
 		Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
-		const ImageInfo& imageInfo, const Unit& brightnessUnit,
+		const GaussianBeam& beamIn, const Unit& brightnessUnit,
 		const Bool autoscale, const Double scale
-	) const;
+	);
 
-   T fillKernel (Matrix<T>& kernelMatrix,
-                 VectorKernel::KernelTypes kernelType,
-                 const IPosition& kernelShape,
-                 const IPosition& axes,
-                 const Vector<Double>& parameters) const;
-//
-   void fillGaussian (T& maxVal, T& volume,
-                      Matrix<T>& pixels, T height, T xCentre,
-                      T yCentre, T majorAxis, T ratio,
-                      T positionAngle) const;
-//
-   T makeKernel(LogIO& os, Array<T>& kernel,
-                   VectorKernel::KernelTypes kernelType,
-                   const Vector<Quantum<Double> >& parameters,
-                   const IPosition& axes,
-                   const ImageInterface<T>& inImage) const;
-//
-   IPosition shapeOfKernel (VectorKernel::KernelTypes kernelType,
-                            const Vector<Double>& parameters,
-                            uInt ndim,
-                            const IPosition& axes) const;
-//
-   uInt sizeOfGaussian (Double width, Double nSigma) const;
+	static T _fillKernel (
+		Matrix<T>& kernelMatrix,
+		VectorKernel::KernelTypes kernelType,
+		const IPosition& kernelShape,
+		const IPosition& axes,
+		const Vector<Double>& parameters
+	);
+
+	static void fillGaussian(
+		T& maxVal, T& volume, Matrix<T>& pixels,
+		T height, T xCentre, T yCentre,
+		T majorAxis, T ratio, T positionAngle
+	);
+
+	static T _makeKernel(
+		LogIO& os, Array<T>& kernel,
+		VectorKernel::KernelTypes kernelType,
+		const Vector<Quantity>& parameters,
+		const IPosition& axes,
+		const ImageInterface<T>& inImage
+	);
+
+	static IPosition shapeOfKernel(
+		const VectorKernel::KernelTypes kernelType,
+		const Vector<Double>& parameters,
+		const uInt ndim, const IPosition& axes
+	);
+
+	static uInt sizeOfGaussian(const Double width, const Double nSigma);
 };
 
 

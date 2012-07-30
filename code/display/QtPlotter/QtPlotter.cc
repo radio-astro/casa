@@ -384,8 +384,6 @@ void QtPlotter::updateZoomer()
     rightButton->setVisible(1);
 }
 
-//void QtPlotter::closeEvent (QCloseEvent* event) {
-   //qDebug() << "closeEvent";
-//}
+
 
 }

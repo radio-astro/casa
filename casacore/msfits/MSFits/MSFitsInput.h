@@ -323,6 +323,7 @@ protected:
 
   // fill Field table 
   void fillFieldTable(BinaryTable& bt);
+  void fillFieldTable(double, double, String);
 
   void fillMSMainTable(BinaryTable& bt);
 

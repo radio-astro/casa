@@ -1377,6 +1377,61 @@ PlotLogMessage* PlotMSCache::locateNearest(Double x, Double y) {
 }
 
 
+Record PlotMSCache::locateInfo(const Vector<PlotRegion>& regions) {
+    Int nFound = 0, n = nPoints();
+    Record result;
+    for(Int i = 0; i < n; ++i) {
+        double thisx, thisy;
+        getXY(i, thisx, thisy);
+        for(uInt j = 0; j < regions.size(); ++j) {
+            if(thisx > regions[j].left() && thisx < regions[j].right() &&
+               thisy > regions[j].bottom() && thisy < regions[j].top()) {
+                ++nFound;
+                if(nFound <= 1000) {
+                	// Collect meta data
+                	Int chan = Int(getChan());
+                	Int scan = Int(getScan());
+                	Int field = Int(getField());
+                	Int ant1 = Int(getAnt1());
+                	Int ant2 = Int(getAnt2());
+                	Double time = getTime();
+                	Int spw = Int(getSpw());
+                	Double freq = getFreq();
+                	String corr = Stokes::name(Stokes::type(Int(getCorr())));
+                	Int offset = (currChunk_ > 0 ? (nPoints_(currChunk_-1)+irel_) : irel_);
+                	// Collate meta data
+                        Record r;
+                        r.define("chan", chan);
+                	r.define("scan", scan);
+                	r.define("field", field);
+                	r.define("time", time);
+                	r.define("ant1", ant1);
+                	r.define("ant2", ant2);
+                	r.define("time", time);
+                	r.define("spw", spw);
+                	r.define("freq", freq);
+                	r.define("corr", corr);
+                	r.define("x", thisx);
+                	r.define("y", thisy);
+                	r.define("offset", offset);
+                	r.define("currchunk", currChunk_);
+                	r.define("irel", irel_);
+                    ostringstream ss;
+                    ss << nFound;
+                    result.defineRecord(String(ss.str()), r);
+                }
+                break;
+            }
+        }
+        if(nFound >= 1000) {
+            nFound = 1000;
+            break;
+        }
+    }
+    return result;
+}
+
+
 PlotLogMessage* PlotMSCache::locateRange(const Vector<PlotRegion>& regions) {    
     Timer locatetimer;
     locatetimer.mark();

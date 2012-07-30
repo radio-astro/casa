@@ -15,6 +15,7 @@
 #include <complex>
 #include <stdcasa/record.h>
 #include <tools/swigconvert_python.h>
+#include <numpy/arrayobject.h>
 
 using casac::record;
 using casac::variant;
@@ -22,7 +23,13 @@ using namespace casac;
 
 %}
 %typemap(in) int {
-   $1 = PyInt_AsLong($input);
+  if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
+     $1 = PyInt_AsLong($input);
+  } else {
+     cerr << "Failed here " << $input->ob_type->tp_name << endl;
+     PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
+     return NULL;
+  }
 }
 
 %typemap(in) float {
@@ -165,6 +172,7 @@ using namespace casac;
       $1 = pyobj2variant($input, true).asRecord();      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -173,6 +181,7 @@ using namespace casac;
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -181,6 +190,7 @@ using namespace casac;
       $1 = new record(pyobj2variant($input, true).asRecord());      
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
    }
 }
 
@@ -196,6 +206,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -205,6 +216,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -214,6 +226,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -223,6 +236,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -232,6 +246,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -242,6 +257,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -274,6 +290,7 @@ using namespace casac;
           $1->push_back(PyFloat_AsDouble($input));
        } else {
           //cerr << "pylist2vector" << endl;
+         shape.push_back(PyList_Size($input));
           casac::pylist2vector($input,  *$1, shape);
        }
    }
@@ -292,6 +309,8 @@ using namespace casac;
    } else {
       if (PyString_Check($input)){
          $1->push_back(0);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
+         return NULL;
       } else if (PyBool_Check($input)){
          $1->push_back(bool(PyInt_AsLong($input)));
       } else if (PyInt_Check($input)){
@@ -301,6 +320,7 @@ using namespace casac;
       } else if (PyFloat_Check($input)){
          $1->push_back(bool(PyInt_AsLong(PyNumber_Int($input))));
       } else {
+         shape.push_back(PyList_Size($input));
          casac::pylist2vector($input,  *$1, shape);
       }
    }
@@ -320,8 +340,9 @@ using namespace casac;
    } else {
       //$1 = &vtmp;
       if (PyString_Check($input)){
-      //$1->push_back(PyInt_AsLong(PyInt_FromString(PyString_AsString($input))));
          $1->push_back(-1);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must not be a string");
+         return NULL;
       } else if (PyInt_Check($input)){
          $1->push_back(int(PyInt_AsLong($input)));
       } else if (PyLong_Check($input)){
@@ -329,7 +350,25 @@ using namespace casac;
       } else if (PyFloat_Check($input)){
          $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
       } else {
+/*
+         shape.push_back(PyList_Size($input));
+         for(int i=0; i<PyList_Size($input); i++){
+             PyObject *item = PyList_GetItem($input, i);
+             if (PyInt_Check(item)){
+                $1->push_back(int(PyInt_AsLong(item)));
+             } else if (PyLong_Check(item)){
+                $1->push_back(PyLong_AsLong(item));
+             } else if (PyFloat_Check(item)){
+                $1->push_back(PyInt_AsLong(PyNumber_Int(item)));
+             }
+             std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
+         }
+*/
          casac::pylist2vector($input,  *$1, shape);
+/*
+         for(int i=0;i<shape[0];i++)
+            std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
+*/
       }
    }
 }
@@ -340,6 +379,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -349,6 +389,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
+         shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -406,6 +447,14 @@ using namespace casac;
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
+}
+
+%typemap(out) std::vector<bool> {
+   $result = casac::map_vector($1);
+}
+
+%typemap(out) std::vector<bool>& {
+   $result = casac::map_vector($1);
 }
 
 %typemap(out) std::vector<int> {
@@ -489,6 +538,25 @@ using namespace casac;
 
 %typemap(argout) double& OUTARGDBL{
    PyObject *o = PyFloat_FromDouble(*$1);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) string& OUTARGSTR{
+   PyObject *o = PyString_FromString($1->c_str());
    if((!$result) || ($result == Py_None)){
       $result = o;
    } else {

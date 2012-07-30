@@ -1376,6 +1376,24 @@ PlotMSFlagging::toRecord()).
   </returns>
 </method>
 
+<method type="function" name="locateInfo">
+  <keyword>locateInfo</keyword>
+
+  <shortdescription>Locates points in a specified region.</shortdescription>
+
+  <description>
+Locates points in a specified region and returns their meta
+information as a record (see PlotMSFlagging::toRecord()).
+  </description>
+
+  <input />
+
+  <example/>
+
+  <returns type="record">
+    <description>Located point meta information, in record form</description>
+  </returns>
+</method>
 
 
 <!--

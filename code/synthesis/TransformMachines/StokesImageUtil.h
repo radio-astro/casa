@@ -83,8 +83,7 @@ public:
   // Fit a Gaussian PSF
   //<group>
   static Bool FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& beam);
-  static Bool FitGaussianPSF(ImageInterface<Float>& psf,
-			     Quantity& bmaj, Quantity& bmin, Quantity& bpa);
+  static Bool FitGaussianPSF(ImageInterface<Float>& psf, GaussianBeam& beam);
   //</group>
   // Locat peak of PSF return pos, peak and first plane that satisfies 
   // peak >0.9
@@ -99,7 +98,7 @@ public:
   static void Convolve(ImageInterface<Float>& image, Float bmaj,
 		       Float bmin, Float bpa, Bool normalizeVolume=False);
   static void Convolve(ImageInterface<Float>& image,
-		       Quantity& bmaj, Quantity& bmin, Quantity& bpa,
+		       GaussianBeam& beam,
 		       Bool normalizeVolume=False);
   //</group>
   

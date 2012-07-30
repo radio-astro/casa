@@ -707,7 +707,7 @@ def simobserve(
             qq = q.match(refdate)
             if not qq:
                 msg("Invalid reference date "+refdate,priority="error")
-                return
+                return False
             else:
                 z = qq.groups()
                 refdate=z[0]
@@ -978,7 +978,7 @@ def simobserve(
                     im.done()
                     ia.open(fileroot+"/"+project+".quick.psf")
                     beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1],beamcs.findcoordinate("stokes")[1]],dropdeg=True)
+                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1][0],beamcs.findcoordinate("stokes")[1][0]],dropdeg=True)
                     nn = beam_array.shape
                     xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]
@@ -1041,7 +1041,7 @@ def simobserve(
             shutil.copytree(msfile,noisymsroot+".ms")
             if sm.name() != '':
                 msg("table persistence error on %s" % sm.name(),priority="error")
-                return
+                return False
 
             # if not predicted this time, get telescopename from ms
             if not predict:
@@ -1135,7 +1135,7 @@ def simobserve(
                 shutil.copytree(msfile,noisymsroot+".ms")
                 if sm.name() != '':
                     msg("table persistence error on %s" % sm.name(),priority="error")
-                    return
+                    return False
 
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
@@ -1156,18 +1156,18 @@ def simobserve(
     except TypeError, e:
         finalize_tools()
         msg("task_simobserve -- TypeError: %s" % e,priority="error")
-        return
+        return False
     except ValueError, e:
         finalize_tools()
         #print "task_simobserve -- OptionError: ", e
         msg("task_simobserve -- OptionError: %s" % e,priority="error")
-        return
+        return False
     except Exception, instance:
         finalize_tools()
         #print '***Error***',instance
         msg("task_simobserve -- Exception: %s" % instance,priority="error")
-        return
-
+        return False
+    return True
 
 ##### Helper functions to plot primary beam
 def plotpb(pb,axes,lims=None,color='k'):

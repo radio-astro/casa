@@ -294,6 +294,17 @@ Record CasacRegionManager::fromBCS(
     return regionRecord;
 }
 
+Record CasacRegionManager::regionFromString(
+	const CoordinateSystem& csys, const String& regionStr,
+	const String& imageName, const IPosition& imShape
+) {
+	CasacRegionManager mgr(csys);
+	Record reg;
+	String diag;
+	mgr._setRegion(reg, diag, regionStr, imShape, imageName);
+	return reg;
+}
+
 void CasacRegionManager::_setRegion(
 		Record& regionRecord, String& diagnostics,
 		const Record* regionPtr
@@ -309,6 +320,11 @@ void CasacRegionManager::_setRegion(
 	const String& regionName, const IPosition& imShape,
 	const String& imageName
 ) {
+	if (regionName.empty() && imageName.empty()) {
+		regionRecord = Record();
+		diagnostics = "No region string";
+		return;
+	}
 	// region name provided
 	const static Regex image("(.*)+:(.*)+");
 	const static Regex regionText(
@@ -318,8 +334,8 @@ void CasacRegionManager::_setRegion(
 	File myFile(regionName);
 	if (myFile.exists()) {
 		if (! myFile.isReadable()) {
-			diagnostics = "File " + regionName + " exists but is not readable.";
-			return;
+			*_getLog() << "File " + regionName + " exists but is not readable."
+				<< LogIO::EXCEPTION;
 		}
 		try {
 			std::auto_ptr<Record> rec(readImageFile(regionName, ""));
@@ -394,10 +410,10 @@ void CasacRegionManager::_setRegion(
 }
 
 ImageRegion CasacRegionManager::_fromBCS(
-		String& diagnostics, uInt& nSelectedChannels, String& stokes,
-		const String& chans,
-		const StokesControl stokesControl, const String& box,
-		const IPosition& imShape
+	String& diagnostics, uInt& nSelectedChannels, String& stokes,
+	const String& chans,
+	const StokesControl stokesControl, const String& box,
+	const IPosition& imShape
 ) const {
 	Int specAxisNumber = _getCsys()->spectralAxisNumber();
 	uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
@@ -448,7 +464,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 		const vector<uInt>& chanEndPts, const vector<uInt>& polEndPts,
 		const IPosition imShape
 ) const {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	*_getLog() << origin;
 	Vector<Double> blc(imShape.nelements(), 0);
 	Vector<Double> trc(imShape.nelements(), 0);

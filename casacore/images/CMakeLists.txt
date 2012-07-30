@@ -42,6 +42,7 @@ Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
 Images/ImageMomentsProgress.cc
 Images/ImageAnalysis.cc
+Images/ImageBeamSet.cc
 Images/FITSImage.cc
 Images/FITSErrorImage.cc
 Images/FITSImgParser.cc
@@ -98,6 +99,7 @@ Images/HDF5Image.tcc
 Images/Image2DConvolver.h
 Images/Image2DConvolver.tcc
 Images/ImageAnalysis.h
+Images/ImageBeamSet.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
 Images/ImageConvolver.h

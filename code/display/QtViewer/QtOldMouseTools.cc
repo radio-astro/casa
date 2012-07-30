@@ -139,7 +139,7 @@ Bool QtOldRTRegion::getMouseRegion(Record& mouseRegion,
 //  cout << "QtOldRTRegion rectangle ready" << endl;
 //}
 
-void QtOldRTRegion::clicked(Int x, Int y) {
+void QtOldRTRegion::clicked(Int /*x*/, Int /*y*/) {
    //this has same implementation as doubleClicked
    //we use single 'clicked' for activation
    return;
@@ -320,7 +320,7 @@ Bool QtOldELRegion::getMouseRegion(Record& mouseRegion,
   return True;  }
 
 
-void QtOldELRegion::clicked(Int x, Int y) {
+void QtOldELRegion::clicked(Int /*x*/, Int /*y*/) {
    //this has same implementation as doubleClicked
    //we use single 'clicked' for activation
    return;
@@ -483,7 +483,7 @@ Bool QtOldPTRegion::getMouseRegion(Record& mouseRegion,
 //  cout << "QtOldPTRegion polygon ready" << endl;
 //}
 
-void QtOldPTRegion::clicked(Int x, Int y) { 
+void QtOldPTRegion::clicked(Int /*x*/, Int /*y*/) { 
   //this has the same implementation as doubleClicked
   //we use sigle 'clicked' for activation
 }

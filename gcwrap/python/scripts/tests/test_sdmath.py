@@ -4,7 +4,6 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import *
 import unittest
 import sha
 import time
@@ -12,7 +11,6 @@ import numpy
 import re
 import string
 
-asap_init()
 from sdmath import sdmath
 import asap as sd
 from asap.scantable import is_scantable
@@ -183,22 +181,40 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
 
     def test000(self):
         """Test 000: Default parameters"""
-        res=sdmath()
-        self.assertFalse(res)        
+        try:
+            res=sdmath()
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('expr is undefined')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test001(self):
         """Test 001: Empty varlist"""
         ex='V0+V1'
         v={}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('name \'V0\' is not defined')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test002(self):
         """Test 002: Lack of some variables in varlist"""
         ex='V0+V1'
         v={'V0': self.rawfile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('name \'V1\' is not defined')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))       
         
     def test003(self):
         """Test 003: Specify existing output file"""
@@ -207,8 +223,14 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=False)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('File %s exists.'%(self.outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))       
         
     def test004(self):
         """Test 004: Bad operation (non-scantable is left side)"""
@@ -216,8 +238,15 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': factor,
            'V1': self.rawfile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('unsupported operand type(s) for +:')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))       
+
 
     def test005(self):
         """Test 005: Bad operation (non-scantable operation)"""
@@ -225,8 +254,14 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         factor=1.0
         v={'V0': factor,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('\'float\' object has no attribute ')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))       
 
     def test006(self):
         """Test 006: non-conform array operation"""
@@ -234,8 +269,14 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         factor=[1.0, 2.0]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Vector size must be 1 or be same as number of channel.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))       
 
     def test007(self):
         """Test 007: non-conform scantable operation"""
@@ -244,19 +285,31 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
         shutil.copytree(self.datapath+'sdmath2.asap', infile2)
         v={'V0': self.rawfile,
            'V1': infile2}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('arrays do not conform')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))                   
 
     def test008(self):
         """Test 008: non-conform ASCII text data"""
         ex='V0+V1'
         datafile=self.prefix+'.dat'
-        factor=[1.0, 2.0]
+        factor=[1.0, 2.0, 3.0]
         self._makedata(datafile,factor)
         v={'V0': self.rawfile,
            'V1': datafile}
-        res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
-        self.assertFalse(res)
+        try:
+            res=sdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('len(value) must be 1 or conform to scan.nrow()')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
 
 ###

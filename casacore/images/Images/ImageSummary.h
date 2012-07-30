@@ -192,8 +192,6 @@ public:
 // Retrieve default mask name.  Empty if none
    String defaultMaskName() const;
 
-// Retrieve restoring beam.  Will be of length zero if does not exist
-   Vector<Quantum<Double> > restoringBeam() const;
 
 // Retrieve image type
    String imageType () const;

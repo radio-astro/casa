@@ -181,8 +181,8 @@ def importgmrt( fitsfile, flagfile, vis ):
         myms.done()
 
         # Now have the observation time range in a numpy array.
-        startObs = qa.time( str( trange[0] )+'s', prec=8, form='ymd' )
-        endObs   = qa.time( str( trange[1] )+'s', prec=8, form='ymd' )
+        startObs = qa.time( str( trange[0] )+'s', prec=8, form='ymd' )[0]
+        endObs   = qa.time( str( trange[1] )+'s', prec=8, form='ymd' )[0]
         
     except Exception, instance:
         casalog.post( 'Unable to find obaservation start/en times', 'SEVERE' )

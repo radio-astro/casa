@@ -351,7 +351,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2010', 
-          spw='0,1,2,3', usescratch=False)
+          spw='0,1,2,3', scalebychan=False, usescratch=False)
 
     timing()
 

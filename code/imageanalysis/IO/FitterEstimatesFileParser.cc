@@ -220,15 +220,25 @@ void FitterEstimatesFileParser::_createComponentList(
 	// code really want to specify peak intensities. So we must convert
 	// here. To do that, we need to know the brightness units of the image.
 
-	Quantity resolutionElementArea;
+	Quantity resArea;
 	ImageMetaData md(image);
 	Quantity intensityToFluxConversion(1.0, "beam");
 
 	// does the image have a restoring beam?
-	if(! md.getBeamArea(resolutionElementArea)) {
+    if (image.imageInfo().hasBeam()) {
+        if (image.imageInfo().hasMultipleBeams()) {
+            *itsLog << LogIO::WARN << "This image has multiple beams. The first will be "
+                << "used to determine flux density estimates." << LogIO::POST;
+        }
+        resArea = Quantity(
+            image.imageInfo().getBeamSet().getBeams().begin()->getArea("sr"),
+            "sr"
+        );
+    }
+    else {
 		// if no restoring beam, let's hope the the brightness units are
 		// in [prefix]Jy/pixel and let's find the pixel size.
-		if(md.getDirectionPixelArea(resolutionElementArea)) {
+		if(md.getDirectionPixelArea(resArea)) {
 			intensityToFluxConversion.setUnit("pixel");
 		}
 		else {
@@ -253,7 +263,7 @@ void FitterEstimatesFileParser::_createComponentList(
 
 		Quantity fluxQuantity = Quantity(peakValues[i], brightnessUnit) * intensityToFluxConversion;
 		fluxQuantity.convert("Jy");
-		fluxQuantity = fluxQuantity*gaussShape.getArea()/resolutionElementArea;
+		fluxQuantity = fluxQuantity*gaussShape.getArea()/resArea;
 		// convert to Jy again to get rid of the superfluous sr/(sr)
 		fluxQuantity.convert("Jy");
 

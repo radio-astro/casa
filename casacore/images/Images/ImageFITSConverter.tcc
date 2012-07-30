@@ -204,16 +204,13 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(ImageInterface<Float>*& pNewIm
 // Try and find the restoring beam in the history cards if
 // its not in the header
    
-    if (imageInfo.restoringBeam().nelements() != 3) {
-      if(imageInfo.getRestoringBeam(logger)){
-	if((imageInfo.restoringBeam()(0).getValue() > 0.0) && 
-	   (imageInfo.restoringBeam()(1).getValue() > 0.0)){
-	  pNewImage->setImageInfo(imageInfo);
-	}
-	else{
-	  imageInfo.removeRestoringBeam();
-	}
-      }
+    if (! imageInfo.hasSingleBeam()) {
+    	if(imageInfo.getRestoringBeam(logger)) {
+    		pNewImage->setImageInfo(imageInfo);
+    	}
+    	else {
+    		imageInfo.removeRestoringBeam();
+    	}
     }
 
 // Cool, now we just need to write it.

@@ -653,7 +653,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
 	    Double beamArea = 0;
 	    ImageInfo ii = image->imageInfo();
-	    Vector<Quantum<Double> > beam = ii.restoringBeam();
+	    GaussianBeam beam = ii.restoringBeam();
 	    CoordinateSystem cSys = image->coordinates();
 	    String imageUnits = image->units().getName();
 	    imageUnits.upcase();
@@ -661,16 +661,16 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	    Int afterCoord = -1;
 	    Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
 	    // use contains() not == so moment maps are dealt with nicely
-	    if (beam.nelements()==3 && dC!=-1 && imageUnits.contains("JY/BEAM")) {
+	    if (! beam.isNull() && dC!=-1 && imageUnits.contains("JY/BEAM")) {
 		DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
 		Vector<String> units(2);
 		units(0) = units(1) = "rad";
 		dCoord.setWorldAxisUnits(units);
 		Vector<Double> deltas = dCoord.increment();
 
-		Double major = beam(0).getValue(Unit("rad"));
-		Double minor = beam(1).getValue(Unit("rad"));
-		beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
+		Double major = beam.getMajor("rad");
+		Double minor = beam.getMinor("rad");
+		beamArea = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
 	    }
 
 	    layerstats->push_back(viewer::RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));
@@ -882,15 +882,19 @@ void MultiRectTool::reset(Bool skipRefresh) {
     }
 
     bool MultiRectTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
-				const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::vector<std::pair<double,double> > &pts,
+				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
+				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width, bool is_annotation ) {
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
 	result->setLabel( label );
+	result->setLabelPosition( label_pos );
+	result->setLabelDelta( label_off );
+	// set line first...
+	result->setLine( line_color, line_style, line_width );
 	result->setFont( font, font_size, font_style, font_color );
-	result->setLine( line_color, line_style );
 	result->setAnnotation(is_annotation);
 	rectangles.push_back( result );
 	refresh( );

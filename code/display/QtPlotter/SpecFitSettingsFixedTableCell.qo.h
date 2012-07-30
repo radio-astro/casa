@@ -36,6 +36,12 @@ public:
     SpecFitSettingsFixedTableCell(QWidget *parent = 0);
     ~SpecFitSettingsFixedTableCell();
     QString getFixedStr() const;
+    void setFixedCenter( bool fixed );
+    void setFixedPeak( bool fixed );
+    void setFixedFwhm( bool fixed );
+    bool isCenterFixed() const;
+    bool isFWHMFixed() const;
+    bool isPeakFixed() const;
     QSize sizeHint() const;
     void clear();
 

@@ -146,7 +146,7 @@ for the beam size both in the plane of the sky and along the $w$ axis.
      <description>Recommended number of facets on one axis</description>
      </param>
 
-     <param type="MDirection" name="phasecenter">
+     <param type="string" name="phasecenter">
      <description>Direction of phase center as a measure</description>
      </param>
 </output>

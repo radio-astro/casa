@@ -139,13 +139,12 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
 };
 
 void StokesImageUtil::Convolve(ImageInterface<Float>& image,
-			       Quantity& bmaj, Quantity& bmin,
-			       Quantity& bpa,
+			       GaussianBeam& beam,
 			       Bool normalizeVolume)
 {
-  Convolve(image, bmaj.get("arcsec").getValue(),
-	   bmin.get("arcsec").getValue(),
-	   bpa.get("deg").getValue(),
+  Convolve(image, beam.getMajor().get("arcsec").getValue(),
+	   beam.getMinor().get("arcsec").getValue(),
+	   beam.getPA().get("deg").getValue(),
 	   normalizeVolume);
 }
 
@@ -376,19 +375,21 @@ void StokesImageUtil::Constrain(ImageInterface<Float>& image) {
   }
 }
 
-Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, 
-				     Quantity& bmaj, Quantity& bmin, Quantity& bpa) 
-{
-  Vector<Float> beam(3);
-  beam=0.0;
-  Bool status=True;
-  if(!FitGaussianPSF(psf, beam)) status=False;
-  bmaj=Quantity(abs(beam(0)),"arcsec");
-  bmin=Quantity(abs(beam(1)),"arcsec");
-  bpa=Quantity(beam(2),"deg");
-  return status;
-}
 
+Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, 
+				     GaussianBeam& beam)
+{
+	Vector<Float> vbeam(3, 0.0);
+  Bool status=True;
+  if(!FitGaussianPSF(psf, vbeam)) status=False;
+  beam = GaussianBeam(
+		  Quantity(abs(vbeam[0]),"arcsec"),
+		  Quantity(abs(vbeam[1]),"arcsec"),
+		  Quantity(vbeam[2],"deg")
+	);
+  return status;
+
+}
 
 
 Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& beam) {
@@ -396,9 +397,6 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
   Vector<Double> deltas;
   deltas=psf.coordinates().increment(); 
   
-
-
-
   Vector<Int> map;
   AlwaysAssert(StokesMap(map, psf.coordinates()), AipsError);
   
@@ -421,13 +419,14 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
     os << LogIO::WARN << "Peak of PSF is " << bamp << LogIO::POST;
 
 
+  static const Float fdiam = 2.5*abs(deltas(0))/C::arcsec;
 try{  
 
 
   if(bamp==0.0) {
-    beam(0)=2.5*abs(deltas(0))/C::arcsec;
-    beam(1)=2.5*abs(deltas(0))/C::arcsec;
-    beam(2)=0.0;
+	  beam[0] = fdiam;
+	  beam[1] = fdiam;
+	  beam[2] = 0.0;
     os << LogIO::WARN << "Could not find peak " << LogIO::POST;
     return False;
   }
@@ -571,11 +570,10 @@ try{
 	LogIO::POST; 
  return False;
 
-
  } catch (AipsError x_error) {
-    beam(0)=2.5*abs(deltas(0))/C::arcsec;
-    beam(1)=2.5*abs(deltas(0))/C::arcsec;
-    beam(2)=0.0;
+	 beam[0] = fdiam;
+	 beam[1] = fdiam;
+	 beam[2] = 0.0;
     os << LogIO::SEVERE << "Caught Exception: "<< x_error.getMesg() <<
       LogIO::POST;
     return False;

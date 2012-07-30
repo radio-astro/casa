@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
+#include <casa/OS/Mutex.h>
 #include <exception>
 
 
@@ -101,6 +102,7 @@ public:
     { return(message.c_str()); }
   const String &getMesg() const
     { return(message); }
+  String getStackTrace () const;
   AipsError::Category getCategory( ) const
     { return(category); }
 
@@ -124,9 +126,11 @@ public:
   //
   ~AipsError() throw();
 
-  String generateStackTrace ();
+  static String generateStackTrace ();
 
   static void getLastInfo (String & message, String & stackTrace);
+  static String getLastMessage ();
+  static String getLastStackTrace ();
   static void clearLastInfo ();
   static String noMessage ();
   static String noStackTrace ();
@@ -137,10 +141,11 @@ protected:
 
   String message;
   Category category;
+  String stackTrace;
 
-  static String lastMessage;
-  static String lastStackTrace;
-
+  static String lastMessage;    // error message from last exception
+  static String lastStackTrace; // stack trace from last exception
+  static Mutex  lastErrorMutex; // protects the lastMessage and lastStackTrace statics
 };
 
 

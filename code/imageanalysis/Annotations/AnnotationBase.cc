@@ -540,6 +540,7 @@ void AnnotationBase::setLabelPosition(const String& position) {
 		);
 	}
 	_labelPos = c;
+	_params[LABELPOS] = _labelPos;
 }
 
 void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
@@ -551,9 +552,10 @@ void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
 		);
 	}
 	_labelOff = offset;
+	_params[LABELOFF] = "[" + String::toString(offset[0]) + ", " + String::toString(offset[1]) + "]";
 }
 
-vector<Int> AnnotationBase::getlabelOffset() const {
+vector<Int> AnnotationBase::getLabelOffset() const {
 	return _labelOff;
 }
 
@@ -645,11 +647,12 @@ ostream& AnnotationBase::print(
 		map<Keyword, String>::const_iterator iter=params.begin();
 		iter!=params.end(); iter++
 	) {
+		Keyword key = iter->first;
 		if (! iter->second.empty()) {
 			if (
 				! hasLabel && (
-					iter->first == LABELCOLOR || iter->first == LABELPOS
-					|| iter->first == LABELOFF
+					key == LABELCOLOR || key == LABELPOS
+					|| key == LABELOFF
 				)
 			) {
 				continue;
@@ -657,10 +660,10 @@ ostream& AnnotationBase::print(
 			if (iter != params.begin()) {
 				os << ", ";
 			}
-			String quote = iter->first == LABEL
+			String quote = key == LABEL
 				|| (
 					iter->second.contains(' ')
-					&& iter->first != RANGE
+					&& (key != RANGE && key != CORR && key != LABELOFF)
 				)
 				? "\"" : "";
 			os << keywordToString((Keyword)iter->first)

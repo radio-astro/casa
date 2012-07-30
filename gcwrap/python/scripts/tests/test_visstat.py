@@ -134,7 +134,8 @@ class visstat_test(unittest.TestCase):
             cols.append(x)
         print cols
         cols.remove('DATA')
-        cols.remove('CORRECTED_DATA')
+	if('CORRECTED_DATA' in cols):
+            cols.remove('CORRECTED_DATA')
         have_model = False
         if('MODEL_DATA' in cols):
             cols.remove('MODEL_DATA')
@@ -147,11 +148,14 @@ class visstat_test(unittest.TestCase):
 
         for col in cols:
             data_cols = ['']
+	    print 'col ',col
+	    print 'cplx ',cplx
             if col in cplx:
                 data_cols = ['data', 'corrected'] # not supported: 'residual'
                 if have_model:
                     data_cols.append('model')
                 
+	    print data_cols
             for dc in data_cols:
                 print "Call with axis =", col, "; datacolumn =", dc
                 if dc != '':

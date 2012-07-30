@@ -25,6 +25,7 @@ scripts/assignmentFilter.py
 scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
+scripts/casapy_engine.py
 scripts/caltab_convert2.py
 scripts/check_exceptionhandling.py
 scripts/check_input_saverestore.py
@@ -39,13 +40,14 @@ scripts/get_user.py
 scripts/importarchive.py
 scripts/listing.py
 scripts/mindpipes.py
-scripts/pCASA.py
 scripts/ngc5921_usecase.py
 scripts/odict.py
 scripts/parallel_go.py
 scripts/parallelSplit.py
 scripts/parameter_check.py
 scripts/parameter_dictionary.py
+scripts/partitionhelper.py
+scripts/pCASA.py
 scripts/plotcomp.py
 scripts/pointcal.py
 scripts/predictcomp_helper.py
@@ -55,6 +57,7 @@ scripts/regression_utility.py
 scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
+scripts/sdutil.py
 scripts/setjy_helper.py
 scripts/simutil.py
 scripts/solar_system_setjy.py
@@ -117,6 +120,7 @@ scripts/task_importvla.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
 scripts/task_imstat.py
+scripts/task_imsubimage.py
 scripts/task_imtrans.py
 scripts/task_imval.py
 scripts/taskinit.py
@@ -179,6 +183,7 @@ scripts/task_uvcontsub3.py
 scripts/task_uvmodelfit.py
 scripts/task_uvsub.py
 scripts/task_viewer.py
+scripts/task_virtualconcat.py
 scripts/task_wvrgcal.py
 scripts/task_msview.py
 scripts/task_imview.py
@@ -191,7 +196,6 @@ scripts/update_spw.py
 scripts/viewertool.py
 scripts/vishead_util.py
 scripts/simple_cluster.py
-scripts/simple_summary.py 
 )
 
 add_subdirectory( scripts/tests )

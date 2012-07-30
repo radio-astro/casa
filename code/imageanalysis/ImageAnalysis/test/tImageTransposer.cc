@@ -85,14 +85,14 @@ void testBeam(
 	const std::auto_ptr<ImageInterface<Float> > &in,
 	ImageInterface<Float>& out
 ) {
-	Vector<Quantity> inBeam = in->imageInfo().restoringBeam();
-	Vector<Quantity> outBeam = out.imageInfo().restoringBeam();
-	AlwaysAssert(inBeam.size() == 3, AipsError);
-	AlwaysAssert(outBeam.size() == 3, AipsError);
-	for (uInt i=0; i<3; i++) {
-		Double out = outBeam[i].getValue(inBeam[i].getUnit());
-		AlwaysAssert(near(out, inBeam[i].getValue()), AipsError);
-	}
+	GaussianBeam inBeam = in->imageInfo().restoringBeam();
+	GaussianBeam outBeam = out.imageInfo().restoringBeam();
+	Double outV = outBeam.getMajor().getValue(inBeam.getMajor().getUnit());
+	AlwaysAssert(near(outV, inBeam.getMajor().getValue()), AipsError);
+	outV = outBeam.getMinor().getValue(inBeam.getMinor().getUnit());
+	AlwaysAssert(near(outV, inBeam.getMinor().getValue()), AipsError);
+	outV = outBeam.getPA().getValue(inBeam.getPA().getUnit());
+	AlwaysAssert(near(outV, inBeam.getPA().getValue()), AipsError);
 }
 
 void testNoReorder(

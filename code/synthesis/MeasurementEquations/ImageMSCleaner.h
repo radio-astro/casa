@@ -185,6 +185,9 @@ class ImageMSCleaner
   // If speedup() is NOT invoked, no effect on threshold
   void speedup(const Float Ndouble);
 
+  //Max residual after last clean
+  Float maxResidual() {return maxResidual_p;};
+
  private:
   //Helper function to setup some param
   Bool setupMatCleaner(const String& alg, const Int niter, const Float gain, 
@@ -203,6 +206,7 @@ class ImageMSCleaner
   Int nMaskPol_p;
   Vector<Float> scales_p;
   Float maskThresh_p;
+  Float maxResidual_p;
 
 };
 

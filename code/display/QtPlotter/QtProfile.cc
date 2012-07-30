@@ -38,7 +38,10 @@
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtPlotter/QtProfilePrefs.qo.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
+#include <display/QtPlotter/ColorSummaryWidget.qo.h>
 #include <display/QtPlotter/Util.h>
+#include <display/QtPlotter/LegendPreferences.qo.h>
+#include <display/QtPlotter/conversion/Converter.h>
 
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
@@ -88,7 +91,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0)/*newCollapseVals(True)*/
+         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
+         current_region_id(0),
+         colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
     setupUi(this);
 
@@ -107,9 +112,23 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(changeErrorType(const QString &)));
 
+    pixelCanvas = this->canvasHolder->getCanvas();
     QPalette pal = pixelCanvas->palette();
     pal.setColor(QPalette::Background, Qt::white);
     pixelCanvas->setPalette(pal);
+
+    initPreferences();
+
+    //Plot colors we will use
+    colorSummaryWidget = new ColorSummaryWidget( this );
+    colorSummaryWidget->setColorCanvas( pixelCanvas );
+
+    //User legend preferences
+    legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
+
+    CoordinateSystem cSys = image->coordinates();
+    SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+    Converter::setSpectralCoordinate( spectralCoordinate );
 
     // read the preferred ctype from casarc
     QString pref_ctype = read( ".freqcoord.type");
@@ -170,7 +189,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionMoveUp, SIGNAL(triggered()), this, SLOT(up()));
     connect(actionMoveDown, SIGNAL(triggered()), this, SLOT(down()));
     connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
-
+    connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
+    connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
     initSpectrumPosition();
 
     //Spectral Line Fitting & Moments/Collapse initialization
@@ -740,18 +760,23 @@ void QtProfile::down()
        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 }
 
+void QtProfile::initPreferences(){
+	profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
+			pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
+			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(), pixelCanvas->isShowChannelLine());
+	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool, bool)),
+				this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool, bool)));
+	profilePrefs->syncUserPreferences();
+}
+
 void QtProfile::preferences()
 {
-	QtProfilePrefs	*profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(), 
-		pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
-		pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool)),
-			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool)));
-	profilePrefs->showNormal();
+	profilePrefs->show();
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
-				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter ){
+				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
+				bool showChannelLine){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
@@ -760,6 +785,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowGrid(showGrid);
 	pixelCanvas->setShowToolTips( showToolTips );
 	pixelCanvas->setShowTopAxis( showTopAxis );
+	pixelCanvas->setShowChannelLine( showChannelLine );
 	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 	topAxisCType -> setEnabled( showTopAxis );
 	
@@ -771,7 +797,8 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		SettingsWidget::setOptical( opticalFitter );
 		specFitSettingsWidget->reset();
 		momentSettingsWidget->reset();
-		pixelCanvas -> setOptical( opticalFitter );
+		pixelCanvas -> setTraditionalColors( opticalFitter );
+		actionColors-> setVisible( !opticalFitter );
 	}
 
 	if (update){
@@ -799,7 +826,7 @@ void QtProfile::changeCoordinate(const QString &text) {
 
 
 void QtProfile::changeFrame(const QString &text) {
-	//cout << "In change frame with input: " << text.toStdString() <<" coordinateType: " << coordinateType.c_str()<< endl;
+	//qDebug() << "In change frame with input: " << text <<" coordinateType: " << coordinateType.c_str();
 	spcRefFrame=String(text.toStdString());
 	//changeCoordinateType(QString(coordinateType.c_str()));
 	changeCoordinateType(QString(ctypeUnit.c_str()));
@@ -834,8 +861,10 @@ void QtProfile::changeCoordinateType(const QString &text ) {
 
 		//cout << "put to rc.viewer: " << text.toStdString() << endl;
 	persist( ".freqcoord.type", text);
-	if(lastPX.nelements() > 0){ // update display with new coord type
+	if(lastPX.nelements() > 0){
+		// update display with new coord type
 		wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+		frameChanged( -1 );
 	}
 
 }
@@ -892,6 +921,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 		updateAxisUnitCombo( pref_ctype, topAxisCType );
 	}
 
+	CoordinateSystem cSys = image->coordinates();
+	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+	Converter::setSpectralCoordinate( spectralCoordinate );
+
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 	setUnitsText( xaxisUnit );
@@ -910,6 +943,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+
 
 
 	xpos = "";
@@ -1333,6 +1367,8 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     	return;
     }
 
+    current_region_id = id_;
+
     copyToLastEvent( c, px, py, wx, wy );
 
     setPlotType( static_cast<int>(wx.size()) );
@@ -1388,12 +1424,19 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 }
 
 
-void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList<double> &world_y,
+void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 			      const QList<int> &pixel_x, const QList<int> &pixel_y ) {
 
     if (!isVisible()) return;
-
     if (!analysis) return;
+    if ( type == viewer::Region::RegionChangeFocus )
+	current_region_id = id_;			// viewer region focus has changed
+    else if ( type == viewer::Region::RegionChangeNewChannel )
+	return;						// viewer moving to new channel
+    else if ( id_ != current_region_id )
+	return;						// some other region
+    
+
     SpectraInfoMap::iterator it = spectra_info_map.find(id_);
     if ( it == spectra_info_map.end( ) ) return;
     QString shape = it->second.shape( );
@@ -2495,5 +2538,22 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::pixelsChanged( int pixX, int pixY ){
 		specFitSettingsWidget->pixelsChanged( pixX, pixY );
+	}
+
+	void QtProfile::curveColorPreferences(){
+		colorSummaryWidget->show();
+	}
+
+	void QtProfile::legendPreferences(){
+		legendPreferencesDialog->show();
+	}
+
+	void QtProfile::frameChanged( int frameNumber ){
+		if ( frameNumber >= 0 ){
+			frameIndex = frameNumber;
+		}
+		if ( 0 <= frameIndex && frameIndex < static_cast<int>(z_xval.size()) ){
+			pixelCanvas->setFrameMarker( z_xval[frameIndex]);
+		}
 	}
 }

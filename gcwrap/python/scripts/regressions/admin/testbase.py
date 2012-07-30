@@ -12,8 +12,8 @@ import re
 #from taskinit import casalog
 
 ia=casac.image()
-
 ms=casac.ms()
+tb=casac.table()
 
 class testbase :
     def __init__(self, workdir=None):
@@ -221,15 +221,16 @@ class testbase :
                 # previous developer said:
                 # Good chance its an image for now till i know whether its a caltable or ms
                 # actually check for ms, if not assume image
-                # a more robust check for !ms than catching an exception 
-                # would be preferable here
-                try:
+                tb.open(theResult[k])
+                tabkwords=tb.keywordnames()
+                tb.done()
+                if('MS_VERSION' in tabkwords):
                     ms.open(theResult[k])
                     self.testList[theResult[k]]=[]
                     self.testList[theResult[k]].append('ms')
                     ms.done()
-                except:
-                    
+                elif('coords' in tabkwords):
+                    ## table is an image                    
                     self.testList[theResult[k]]=[]
                     self.testList[theResult[k]].append('simple')
                     ia.open(theResult[k])

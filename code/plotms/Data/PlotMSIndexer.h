@@ -118,6 +118,8 @@ public:
   inline Bool indexerReady() const { return indexerReady_; };
 
   // Locate datum nearest to specified x,y 
+  Record locateInfo(const Vector<PlotRegion>& regions,
+                    Bool showUnflagged, Bool showFlagged);
   PlotLogMessage* locateRange(const Vector<PlotRegion>& regions,
 			      Bool showUnflagged, Bool showFlagged);
   PlotLogMessage* flagRange(const PlotMSFlagging& flagging,

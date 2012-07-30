@@ -120,6 +120,8 @@ const String PlotMSDBusApp::METHOD_SAVE   = "save";
 const String PlotMSDBusApp::METHOD_ISDRAWING   = "isDrawing";
 const String PlotMSDBusApp::METHOD_ISCLOSED  = "isClosed";
 
+const String PlotMSDBusApp::METHOD_LOCATEINFO = "locateInfo";
+
 
 
 /* 
@@ -637,6 +639,8 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         flag.fromRecord(parameters);
         itsPlotms_.getPlotter()->getFlaggingTab()->setValue(flag);
         
+    } else if(methodName == METHOD_LOCATEINFO) {
+        retValue.defineRecord(0, _locateInfo(parameters));
     } else if(methodName == METHOD_SHOW || methodName == METHOD_HIDE) {
         itsPlotms_.showGUI(methodName == METHOD_SHOW);
         if(itsPlotms_.guiShown() && itsUpdateFlag_) {
@@ -666,6 +670,15 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 }
 
 
+Record PlotMSDBusApp::_locateInfo(const Record&) {
+    String methodName = "_locateInfo";
+    PlotMSAction action(PlotMSAction::SEL_INFO);
+    Record retval;
+    if(!action.doActionWithResponse(&itsPlotms_, retval)) {
+        log("Method " + methodName + ": " + action.doActionResult());
+    }
+    return retval;
+}
 
 
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {

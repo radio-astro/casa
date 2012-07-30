@@ -518,6 +518,12 @@ record* plotms::getFlagExtension() {
     return fromRecord(result);
 }
 
+record* plotms::locateInfo() {
+    Record result;
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, app.dbusName(),
+                              PlotMSDBusApp::METHOD_LOCATEINFO, Record(), result);
+    return fromRecord(result);
+}
 
 void plotms::update() {
   callAsync(PlotMSDBusApp::METHOD_UPDATE);

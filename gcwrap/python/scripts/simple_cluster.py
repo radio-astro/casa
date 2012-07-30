@@ -10,14 +10,12 @@ import commands
 import numpy as np
 from taskinit import *
 import pylab as pl
-#import plot_resource as prs
  
 from tasksinfo import *
 import scipy as sp
-import traceback
-#from casa import *
 
-#im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+# jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+import traceback
 
 
 class simple_cluster:
@@ -31,13 +29,17 @@ class simple_cluster:
         self._rsrc={}
         self._job_title=1
         self._monitor_on=True
+        self._monitor_running=False
         self._monitoringFile=monitoringFile
         self._verbose=verbose
         self._resource_on=True
+        self._resource_running=False
         self._configdone=False
         self._cluster=cluster()
         self._JobQueueManager=None
         self._enginesRWoffsets={}
+        # jagonzal: This is basically the destructor (i.e. for graceful finalization)
+        atexit.register(simple_cluster.stop_cluster,self)
 
     ####################################################################
     # Static method that returns whatever the current definition of a
@@ -96,17 +98,18 @@ class simple_cluster:
             xyzd=str.split(sLine, ',')
             #print xyzd, len(xyzd)
             if len(xyzd)<3:
-                print 'node config should be: "hostname, numengine, workdir"'
+                print 'node config should be at least: "hostname, numengine, workdir"'
                 print '           instead of:', sLine 
                 print 'this entry will be ignored'
                 continue
-            try:
-                a=int(xyzd[1])
-            except:
-                print 'the numofenging should be a integer instead of:', xyzd[1]
-                print 'this entry will be ignored'
-                continue
-            [a, b, c]=[str.strip(xyzd[0]), int(xyzd[1]), str.strip(xyzd[2])]
+            # jagonzal (CAS-4276): (Max) number of engines is not an integer any more
+            # try:
+            #     a=int(xyzd[1])
+            # except:
+            #     print 'the numofenging should be a integer instead of:', xyzd[1]
+            #     print 'this entry will be ignored'
+            #     continue
+            [a, b, c]=[str.strip(xyzd[0]), float(xyzd[1]), str.strip(xyzd[2])]
             if len(a)<1:
                 print 'the hostname can not be empty'
                 print 'this entry will be ignored'
@@ -115,17 +118,178 @@ class simple_cluster:
                 print 'the workdir can not be empty'
                 print 'this entry will be ignored'
                 continue
-            self._hosts.append([a, b, c])
+            
+            ### jagonzal (CAS-4276): New cluster specification file ###
+             
+            # Retrieve available resources to cap number of engines deployed 
+            hostname = str(xyzd[0])
+            (ncores_available,memory_available,cpu_available) = self.check_host_resources(hostname)
+            max_mem = memory_available
+            max_engines = ncores_available
+            
+            # Compute equivalent number of cores iddle
+            ncores_available = int(round(ncores_available*cpu_available/100.0))
+            
+            # Determine maximum number of engines that can be deployed at target node
+            max_engines_user = b
+            if (max_engines_user<=0):
+                max_engines = ncores_available
+            elif (max_engines_user<=1):
+                max_engines = int(round(max_engines_user*ncores_available))
+                if (max_engines < 2):
+                    casalog.post("CPU free capacity available (s%) would not support cluster mode at node %s, starting only 1 engine" 
+                                 % (str(cpu_available),hostname),'WARNING')
+                    max_engines = 1
+            else:
+                max_engines = max_engines_user
+                
+            casalog.post("Will deploy up to %s engines at node %s" % (str(max_engines),hostname))
+            
+            # Determine maximum memory that can be used at target node
+            if len(xyzd)>=4:
+                max_mem_user = float(xyzd[3])
+                if (max_mem_user<=0):
+                    max_mem = memory_available
+                elif (max_mem_user<=1):
+                    max_mem = int(round(max_mem_user*memory_available))
+                else:
+                    max_mem = max_mem_user
+                    
+            casalog.post("Will use up to %sMB of memory at node %s" % (str(max_mem),hostname))
+            
+            # User can provide an estimation of the amount of RAM memory necessary per engine        
+            mem_per_engine = 512
+            if len(xyzd)>=5:
+                mem_per_engine_user = float(xyzd[4])
+                if (mem_per_engine_user>512):
+                    mem_per_engine = mem_per_engine_user
+            
+            # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
+            nengines=int(round(max_mem/mem_per_engine))
+            if (nengines < 2):
+                casalog.post("Free memory available %sMB would not support cluster mode at node %s, starting only 1 engine"
+                             % (str(max_mem),hostname), 'WARNING')
+                nengines=1
+            else:
+                casalog.post("Required memory per engine %sMB allows to deploy up to %s engines at node %s " 
+                             % (str(mem_per_engine),str(nengines),hostname))
+            
+            if (nengines>max_engines): 
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain" 
+                             % (hostname,str(nengines),str(max_engines)))
+                nengines = max_engines
+                
+            
+                        
+            omp_num_nthreads = 1
+            while (nengines*omp_num_nthreads*2 <= max_engines):
+                omp_num_nthreads *= 2
+                
+            if (omp_num_nthreads>1):
+                casalog.post("Enabling openMP to %s threads per engine at node %s" % (str(omp_num_nthreads),hostname))
+                
+            self._hosts.append([a, nengines, c, omp_num_nthreads])
         for i in range(len(self._hosts)):
             self._rsrc[self._hosts[i][0]]=[]
         #print self._hosts
     
         self._configdone=self.validate_hosts()
+
         if not self._configdone:
             print 'failed to config the cluster'
         if self._project=="":
             #print 'project name not set'
             pass
+
+    def check_host_resources(self,hostname):
+        """
+        jagonzal (CAS-4276 - New cluster specification file): Retrieve resources available
+        at target node in order to dynamically deploy the engines to fit the idle capacity
+        """
+        
+        ncores = 0
+        memory = 0.
+        cmd_os = "ssh " + hostname + " 'uname -s'"
+        os = commands.getoutput(cmd_os)
+        if (os == "Linux"):
+            cmd_ncores = "ssh " + hostname + " 'cat /proc/cpuinfo' "           
+            res_ncores = commands.getoutput(cmd_ncores)
+            str_ncores = res_ncores.count("processor")
+            
+            try:
+                ncores = int(str_ncores)
+            except:
+                casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
+                pass
+            
+            cmd_memory = "ssh " + hostname + " 'cat /proc/meminfo | grep MemFree' "
+            str_memory = commands.getoutput(cmd_memory)
+            str_memory = string.replace(str_memory,"MemFree:","")
+            str_memory = string.replace(str_memory,"kB","")
+            str_memory = string.replace(str_memory," ","")
+            
+            try:
+                memory = float(str_memory)/1024.
+            except:
+                casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
+                pass
+            
+            cmd_cpu = "ssh " + hostname + " 'top -b -n 1 | grep Cpu' "
+            str_cpu = commands.getoutput(cmd_cpu)
+            list_cpu = string.split(str_cpu,',')
+            str_cpu = "100"
+            for item in list_cpu:
+                if item.count("%id")>0:
+                    str_cpu = string.replace(item,"%id","")
+                    str_cpu = string.replace(str_cpu," ","")
+            
+            try:
+                cpu = float(str_cpu)
+            except:
+                casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
+            
+        else:
+            cmd_ncores = "ssh " + hostname + " 'sysctl -n hw.ncpu'"
+            res_ncores = commands.getoutput(cmd_ncores)
+            str_ncores = res_ncores
+            
+            try:
+                ncores = int(str_ncores)
+            except:
+                casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
+                pass            
+            
+            cmd_memory = "ssh " + hostname + " 'vm_stat | grep free' "
+            str_memory = commands.getoutput(cmd_memory)
+            str_memory = string.replace(str_memory,"Pages free:","")
+            str_memory = string.replace(str_memory,"kB","")
+
+            try:
+                memory = (float(str_memory)*4096.)/(1024*1024)
+            except:
+                casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
+                pass
+            
+            cmd_cpu = "ssh " + hostname + " 'top -l1 | grep usage' "
+            str_cpu = commands.getoutput(cmd_cpu)
+            list_cpu = string.split(str_cpu,',')
+            str_cpu = "100"
+            for item in list_cpu:
+                if item.count("% idle")>0:
+                    str_cpu = string.replace(item,"% idle","")
+                    str_cpu = string.replace(str_cpu," ","")
+            
+            try:
+                cpu = float(str_cpu)
+            except:
+                casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')            
+        
+        ncores = int(ncores)
+        memory = int(round(memory))
+        casalog.post("Host %s, Number of cores %s, Memory available %sMB, CPU capacity available %s%%" % (hostname,str(ncores),str(memory),str(cpu)))
+        
+        return (ncores,memory,cpu)
+            
     
     def validate_hosts(self):
         '''Validate the cluster specification.
@@ -462,6 +626,8 @@ class simple_cluster:
     ###########################################################################
     ###   cluster management
     ###########################################################################
+    # jagonzal (CAS-4292): This method is deprecated, because I'd like to 
+    # avoid brute-force methods like killall which just hide state errors
     def cold_start(self):
         '''kill all engines on all hosts. Shutdown current cluster.
         
@@ -472,10 +638,11 @@ class simple_cluster:
         '''
         if not self._configdone:
             return
+        # jagonzal (CAS-4292): Stop the cluster via parallel_go before using brute-force killall
+        self.stop_cluster()
         for i in range(len(self._hosts)):
             cmd='ssh '+self._hosts[i][0]+' "killall -9 ipengine"'
             os.system(cmd)
-        self._cluster.stop_cluster()
     
     def stop_nodes(self):
         '''Stop all engines on all hosts of current cluster.
@@ -499,7 +666,13 @@ class simple_cluster:
             return
         for i in range(len(self._hosts)):
             self._cluster.start_engine(self._hosts[i][0], self._hosts[i][1], 
-                                   self._hosts[i][2]+'/'+self._project)
+                                   self._hosts[i][2]+'/'+self._project,self._hosts[i][3])
+            if (self._hosts[i][3]>1):
+                omp_num_threads = self._cluster.execute("print os.environ['OMP_NUM_THREADS']",i)[0]['stdout']
+                if (omp_num_threads.count(str(self._hosts[i][3]))>0):
+                    casalog.post("Open MP enabled at host %s,  OMP_NUM_THREADS=%s" % (self._hosts[i][0],str(self._hosts[i][3])))
+                else:
+                    casalog.post("Problem enabling Open MP at host %s: %s" % (self._hosts[i][0],omp_num_threads),'WARNING')
     
     def get_host(self, id):
         '''Find out the name of the node that hosts this engine.
@@ -632,6 +805,8 @@ class simple_cluster:
                 cpu[7]=(cpu[5]-cpu[6])/float(cpu[5])
                 cpu[10]=(cpu[8]-cpu[9])/float(cpu[8])
             except:
+                # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+                # traceback.print_tb(sys.exc_info()[2])
                 pass
             self._rsrc[self._hosts[i][0]]=cpu 
     
@@ -671,11 +846,13 @@ class simple_cluster:
         will call this function.
 
         '''
+        self._resource_running=True
         if not self._configdone:
             return
         while self._resource_on:
             time.sleep(5)
             self.check_resource()
+        self._resource_running=False
     
     def stop_resource(self): 
         '''Stop monitoring resource usage.
@@ -692,6 +869,9 @@ class simple_cluster:
             return
         self._resource_on=False 
         self._rsrc={}
+        while (self._resource_running):
+            time.sleep(1)
+            
     
     def show_resource(self, long=False):
         '''Display resource usage on all hosts.
@@ -730,299 +910,286 @@ class simple_cluster:
                            )
     
     def show_state(self, verbose_local=False):
-		"""
-		jagonzal 29/05/12 (CAS-4137) - HPC project (CAS-4106)
-		========================================================================
-		Advanced monitoring function that provides CPU,Memory,I/O and job queue
-		stats per node and total per host. 
+        """
+        jagonzal 29/05/12 (CAS-4137) - HPC project (CAS-4106)
+        ========================================================================
+        Advanced monitoring function that provides CPU,Memory,I/O and job queue
+        stats per node and total per host. 
 
-		There are 2 usage modes:
-		- Called from the monitoring thread in regular time intervals 
+        There are 2 usage modes:
+        - Called from the monitoring thread in regular time intervals 
           (i.e. within the check_status method), to only dump the stats 
           into a file or the terminal.
-		- Called from the command line, to return a dictionary in addition 
+        - Called from the command line, to return a dictionary in addition 
           of dumping the stats into a file or into the terminal.
 
         In both cases logging can be controlled in the following way:
- 		- User can provide a file-name when creating the simple_cluster 
+        - User can provide a file-name when creating the simple_cluster 
           object, trough the string parameter "monitoringFile", to specify 
           the location of the monitoring file, otherwise it defaults to 
           'monitoring.log' in the working directory. 
- 		- User can also switch verbose mode when creating the simple_cluster 
+        - User can also switch verbose mode when creating the simple_cluster 
           object, trough the boolean parameter "verbose", to have the monitoring 
           info dumped into the terminal, otherwise it defaults to False and it 
           only dumps into the monitoring file. 
- 		- User can even use the stand alone method show_state specifying 
+        - User can even use the stand alone method show_state specifying 
           verbosity only for that particular call via the "verbose_local" 
           parameter, and the method returns a dictionary with all the stats 
           per node and total per host. 
 
         Examples:
- 		- Stand-Alone usage from terminal to return a dictionary
- 		   from simple_cluster import *
- 		   sc = simple_cluster.getCluster()
-		   stats = sc.show_state(False)
- 		- Stand-Alone usage from terminal to print the stats into the terminal
- 		   from simple_cluster import *
- 		   sc = simple_cluster.getCluster()
-		   sc.show_state(True)
- 		- Service-Mode usage to specify a custom file for dumping the stats
- 		   from simple_cluster import *
- 		   sc = simple_cluster('mycustomfile.log')
- 		   sc.init_cluster('cluster-config.txt','test-rhel')
- 		- Service-Mode usage to specify a custom file for dumping the stats
- 		  and verbose mode to additionally dump the stats into the terminal
- 		   from simple_cluster import *
- 		   sc = simple_cluster('mycustomfile.log',True)
- 		   sc.init_cluster('cluster-config.txt','test-rhel')
-		"""
+        - Stand-Alone usage from terminal to return a dictionary
+          from simple_cluster import *
+          sc = simple_cluster.getCluster()
+          stats = sc.show_state(False)
+        - Stand-Alone usage from terminal to print the stats into the terminal
+          from simple_cluster import *
+          sc = simple_cluster.getCluster()
+          sc.show_state(True)
+        - Service-Mode usage to specify a custom file for dumping the stats
+          from simple_cluster import *
+          sc = simple_cluster('mycustomfile.log')
+          sc.init_cluster('cluster-config.txt','test-rhel')
+        - Service-Mode usage to specify a custom file for dumping the stats
+          and verbose mode to additionally dump the stats into the terminal
+          from simple_cluster import *
+          sc = simple_cluster('mycustomfile.log',True)
+          sc.init_cluster('cluster-config.txt','test-rhel')
+        """
 
-		# Determine verbose mode
-		verbose = self._verbose or verbose_local
+        # Determine verbose mode
+        verbose = self._verbose or verbose_local
 
-		# Open monitoring file
-		fid = open(self._monitoringFile + ".tmp", 'w')
+        # Open monitoring file
+        fid = open(self._monitoringFile + ".tmp", 'w')
 		
-		# Retrieve jobQueue	(here we have the input arguments dictionary, in particular the sub-MS)
-		jobQueue = []
-		if (self._JobQueueManager != None):
-			jobQueue = self._JobQueueManager.getOutputJobs('running')
+        # Retrieve jobQueue	(here we have the input arguments dictionary, in particular the sub-MS)
+        jobQueue = []
+        if (self._JobQueueManager != None):
+            jobQueue = self._JobQueueManager.getOutputJobs('running')
 		
-		# Print header
-		print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"Host","Engine","Status",
-																				"CPU[%]","Memory[%]","Time[s]",
-																				"Read[MB]","Write[MB]",
-																				"Read[MB/s]","Write[MB/s]",
-																				"Job","Sub-MS")
-		if (verbose):
-			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ("Host","Engine","Status",
-																		"CPU[%]","Memory[%]","Time[s]",
-																		"Read[MB]","Write[MB]",
-																		"Read[MB/s]","Write[MB/s]",
-																		"Job","Sub-MS")
+        # Print header
+        print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "Host","Engine","Status","CPU[%]","Memory[%]","Time[s]",
+                                                                             "Read[MB]","Write[MB]","Read[MB/s]","Write[MB/s]","Job","Sub-MS")
+        if (verbose):
+            print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ("Host","Engine","Status","CPU[%]","Memory[%]","Time[s]",
+                                                                        "Read[MB]","Write[MB]","Read[MB/s]","Write[MB/s]","Job","Sub-MS")
 
-		result = {}
-		engines_list = self._cluster.get_engines()
-		for engine in engines_list:
-			# First of all get operating system
-			cms_os = "ssh " + str(engine[1]) + " 'uname -s'"
-			os = commands.getoutput(cms_os)
-			# Get read/write activity
-			read_bytes = 0.0
-			write_bytes = 0.0
-			if (os == "Linux"):
-				# Get read activity
-				cmd_read_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
-				read_bytes=commands.getoutput(cmd_read_bytes)
-				read_bytes = read_bytes.split(":")
-				try:
-					read_bytes = float(read_bytes[1])
-				except:
-					if (verbose):
-						print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-						print "read_bytes: [" +  str(read_bytes) + "]"
-				# Get write activity
-				cmd_write_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
-				write_bytes=commands.getoutput(cmd_write_bytes)
-				write_bytes = write_bytes.split(":")
-				try:
-					write_bytes = float(write_bytes[1])
-				except:
-					if (verbose):
-						print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-						print "write_bytes: [" +  str(write_bytes) + "]"
-			# Get resources usage (cpu, mem, elapsed time since start)
-			cmd_resources = "ssh " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
-			resources=commands.getoutput(cmd_resources)
-			resources = resources.split(" ")
-			for space in range(resources.count('')):
-				resources.remove('')
-			# Convert CPU into number
-			cpu = 0
-			try:
-				cpu = round(float(resources[0]))
-			except:
-				if (verbose):
-					print "Problem converting CPU into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-					print "CPU: [" +  resources[0] + "]"
-			# Convert Memory into number
-			memory = 0
-			try:
-				memory = round(float(resources[1]))
-			except:
-				if (verbose):
-					print "Problem converting memory into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
-					print "Memory: [" +  resources[1] + "]"
-			# Initialize engine RW offsets map
-			if not self._enginesRWoffsets.has_key(engine[0]):
-				self._enginesRWoffsets[engine[0]] = {}
-			# Store engine RW offsets values
-			self._enginesRWoffsets[engine[0]]['read_offset'] = read_bytes
-			self._enginesRWoffsets[engine[0]]['write_offset'] = write_bytes
-			# Initialize host map
-			if not result.has_key(engine[1]):
-				result[engine[1]] = {}
-				result[engine[1]]["CPU"] = 0.0
-				result[engine[1]]["Memory"] = 0.0
-				result[engine[1]]["Read"] = 0.0
-				result[engine[1]]["Write"] = 0.0
-				result[engine[1]]["ReadRate"] = 0.0
-				result[engine[1]]["WriteRate"] = 0.0
-			# Initialize engine map
-			if not result[engine[1]].has_key(engine[0]):
-				result[engine[1]][engine[0]] = {}
-			# Store default engine values
-			result[engine[1]][engine[0]]["CPU"] = cpu
-			result[engine[1]][engine[0]]["Memory"] = memory
-			result[engine[1]][engine[0]]["Read"] = 0
-			result[engine[1]][engine[0]]["Write"] = 0
-			result[engine[1]][engine[0]]["ReadRate"] = 0
-			result[engine[1]][engine[0]]["WriteRate"] = 0
-			result[engine[1]][engine[0]]["Sub-MS"] = ""
-			result[engine[1]][engine[0]]["Status"] = "Idle"
-			result[engine[1]][engine[0]]["Time"] = 0
-			result[engine[1]][engine[0]]["Job"] = ""
-			# Store actual engine values
-			if (len(jobQueue) == len(engines_list)):
-				# Retrieve job input parameters information from jobQueue
-				result[engine[1]][engine[0]]["Sub-MS"] = jobQueue[engine[0]].getCommandArguments()['vis'].split('/').pop()
-				# Retrieve job status information from job structure
-				for job in self._jobs.keys():
-					jobEngine = self._jobs[job]['engine']
-					if (jobEngine == engine[0]):
-						result[engine[1]][engine[0]]["Status"] = self._jobs[job]['status']
-						result[engine[1]][engine[0]]["Time"] = round(self._jobs[job]['time'])
-						result[engine[1]][engine[0]]["Job"] = self._jobs[job]['short'].split('=').pop().replace(' ','')
-						result[engine[1]][engine[0]]["Read"] = float(read_bytes - self._jobs[job]['read_offset'])/(1024*1024)
-						result[engine[1]][engine[0]]["Write"] = float(write_bytes - self._jobs[job]['write_offset'])/(1024*1024)
-						# Compute data rates
-						if (result[engine[1]][engine[0]]["Time"] > 0):
-							result[engine[1]][engine[0]]["ReadRate"] = result[engine[1]][engine[0]]["Read"] / result[engine[1]][engine[0]]["Time"]
-							result[engine[1]][engine[0]]["WriteRate"] = result[engine[1]][engine[0]]["Write"] / result[engine[1]][engine[0]]["Time"]
-			# Accumulate host values
-			result[engine[1]]["CPU"] += result[engine[1]][engine[0]]["CPU"]
-			result[engine[1]]["Memory"] += result[engine[1]][engine[0]]["Memory"]
-			result[engine[1]]["Read"] += result[engine[1]][engine[0]]["Read"]
-			result[engine[1]]["Write"] += result[engine[1]][engine[0]]["Write"]
-			result[engine[1]]["ReadRate"] += result[engine[1]][engine[0]]["ReadRate"]
-			result[engine[1]]["WriteRate"] += result[engine[1]][engine[0]]["WriteRate"]
-			# Print nodes info
-			print >> fid, "%20s%10d%10s%10d%10d%10d%10d%10d%15d%15d%20s%30s" % (	engine[1],
-																					engine[0],
-																					result[engine[1]][engine[0]]["Status"],
-																					result[engine[1]][engine[0]]["CPU"],
-																					result[engine[1]][engine[0]]["Memory"],
-																					result[engine[1]][engine[0]]["Time"],
-																					result[engine[1]][engine[0]]["Read"],
-																					result[engine[1]][engine[0]]["Write"],
-																					result[engine[1]][engine[0]]["ReadRate"],
-																					result[engine[1]][engine[0]]["WriteRate"],
-																					result[engine[1]][engine[0]]["Job"],
-																					result[engine[1]][engine[0]]["Sub-MS"])
-			if (verbose):
-				print "%20s%10d%10s%10d%10d%10d%10d%10d%15d%15d%20s%30s" % (	engine[1],
-																				engine[0],
-																				result[engine[1]][engine[0]]["Status"],
-																				result[engine[1]][engine[0]]["CPU"],
-																				result[engine[1]][engine[0]]["Memory"],
-																				result[engine[1]][engine[0]]["Time"],
-																				result[engine[1]][engine[0]]["Read"],
-																				result[engine[1]][engine[0]]["Write"],
-																				result[engine[1]][engine[0]]["ReadRate"],
-																				result[engine[1]][engine[0]]["WriteRate"],
-																				result[engine[1]][engine[0]]["Job"],
-																				result[engine[1]][engine[0]]["Sub-MS"])
+        result = {}
+        engines_list = self._cluster.get_engines()
+        for engine in engines_list:
+            # First of all get operating system
+            cms_os = "ssh " + str(engine[1]) + " 'uname -s'"
+            os = commands.getoutput(cms_os)
+            # Get read/write activity
+            read_bytes = 0.0
+            write_bytes = 0.0
+            if (os == "Linux"):
+                # Get read activity
+                cmd_read_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
+                read_bytes=commands.getoutput(cmd_read_bytes)
+                read_bytes = read_bytes.split(":")
+                try:
+                    read_bytes = float(read_bytes[1])
+                except:
+                    if (verbose):
+                        print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+                        print "read_bytes: [" +  str(read_bytes) + "]"
+                # Get write activity
+                cmd_write_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
+                write_bytes=commands.getoutput(cmd_write_bytes)
+                write_bytes = write_bytes.split(":")
+                try:
+                    write_bytes = float(write_bytes[1])
+                except:
+                    if (verbose):
+                        print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+                        print "write_bytes: [" +  str(write_bytes) + "]"
+            # Get resources usage (cpu, mem, elapsed time since start)
+            cmd_resources = "ssh " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
+            resources=commands.getoutput(cmd_resources)
+            resources = resources.split(" ")
+            for space in range(resources.count('')):
+                resources.remove('')
+            # Convert CPU into number
+            cpu = 0
+            try:
+                cpu = round(float(resources[0]))
+            except:
+                if (verbose):
+                        print "Problem converting CPU into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+                        print "CPU: [" +  resources[0] + "]"
+            # Convert Memory into number
+            memory = 0
+            try:
+                memory = round(float(resources[1]))
+            except:
+                if (verbose):
+                        print "Problem converting memory into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
+                        print "Memory: [" +  resources[1] + "]"
+            # Initialize engine RW offsets map
+            if not self._enginesRWoffsets.has_key(engine[0]):
+                self._enginesRWoffsets[engine[0]] = {}
+            # Store engine RW offsets values
+            self._enginesRWoffsets[engine[0]]['read_offset'] = read_bytes
+            self._enginesRWoffsets[engine[0]]['write_offset'] = write_bytes
+            # Initialize host map
+            if not result.has_key(engine[1]):
+                result[engine[1]] = {}
+                result[engine[1]]["CPU"] = 0.0
+                result[engine[1]]["Memory"] = 0.0
+                result[engine[1]]["Read"] = 0.0
+                result[engine[1]]["Write"] = 0.0
+                result[engine[1]]["ReadRate"] = 0.0
+                result[engine[1]]["WriteRate"] = 0.0
+            # Initialize engine map
+            if not result[engine[1]].has_key(engine[0]):
+                result[engine[1]][engine[0]] = {}
+            # Store default engine values
+            result[engine[1]][engine[0]]["CPU"] = cpu
+            result[engine[1]][engine[0]]["Memory"] = memory
+            result[engine[1]][engine[0]]["Read"] = 0
+            result[engine[1]][engine[0]]["Write"] = 0
+            result[engine[1]][engine[0]]["ReadRate"] = 0
+            result[engine[1]][engine[0]]["WriteRate"] = 0
+            result[engine[1]][engine[0]]["Sub-MS"] = ""
+            result[engine[1]][engine[0]]["Status"] = "Idle"
+            result[engine[1]][engine[0]]["Time"] = 0
+            result[engine[1]][engine[0]]["Job"] = ""
+            # Store actual engine values
+            if (len(jobQueue) == len(engines_list)):
+                # Retrieve job input parameters information from jobQueue
+                result[engine[1]][engine[0]]["Sub-MS"] = jobQueue[engine[0]].getCommandArguments()['vis'].split('/').pop()
+                # Retrieve job status information from job structure
+                for job in self._jobs.keys():
+                    jobEngine = self._jobs[job]['engine']
+                    if (jobEngine == engine[0]):
+                        result[engine[1]][engine[0]]["Status"] = self._jobs[job]['status']
+                        result[engine[1]][engine[0]]["Time"] = round(self._jobs[job]['time'])
+                        result[engine[1]][engine[0]]["Job"] = self._jobs[job]['short'].split('=').pop().replace(' ','')
+                        result[engine[1]][engine[0]]["Read"] = float(read_bytes - self._jobs[job]['read_offset'])/(1024*1024)
+                        result[engine[1]][engine[0]]["Write"] = float(write_bytes - self._jobs[job]['write_offset'])/(1024*1024)
+                        # Compute data rates
+                        if (result[engine[1]][engine[0]]["Time"] > 0):
+                            result[engine[1]][engine[0]]["ReadRate"] = result[engine[1]][engine[0]]["Read"] / result[engine[1]][engine[0]]["Time"]
+                            result[engine[1]][engine[0]]["WriteRate"] = result[engine[1]][engine[0]]["Write"] / result[engine[1]][engine[0]]["Time"]
+            # Accumulate host values
+            result[engine[1]]["CPU"] += result[engine[1]][engine[0]]["CPU"]
+            result[engine[1]]["Memory"] += result[engine[1]][engine[0]]["Memory"]
+            result[engine[1]]["Read"] += result[engine[1]][engine[0]]["Read"]
+            result[engine[1]]["Write"] += result[engine[1]][engine[0]]["Write"]
+            result[engine[1]]["ReadRate"] += result[engine[1]][engine[0]]["ReadRate"]
+            result[engine[1]]["WriteRate"] += result[engine[1]][engine[0]]["WriteRate"]
+            # Print nodes info
+            print >> fid, "%20s%10d%10s%10d%10d%10d%10d%10d%15d%15d%20s%30s" % ( engine[1],engine[0],
+                                                                                 result[engine[1]][engine[0]]["Status"],
+                                                                                 result[engine[1]][engine[0]]["CPU"],
+                                                                                 result[engine[1]][engine[0]]["Memory"],
+                                                                                 result[engine[1]][engine[0]]["Time"],
+                                                                                 result[engine[1]][engine[0]]["Read"],
+                                                                                 result[engine[1]][engine[0]]["Write"],
+                                                                                 result[engine[1]][engine[0]]["ReadRate"],
+                                                                                 result[engine[1]][engine[0]]["WriteRate"],
+                                                                                 result[engine[1]][engine[0]]["Job"],
+                                                                                 result[engine[1]][engine[0]]["Sub-MS"])
+            if (verbose):
+                print "%20s%10d%10s%10d%10d%10d%10d%10d%15d%15d%20s%30s" % ( engine[1],engine[0],
+                                                                             result[engine[1]][engine[0]]["Status"],
+                                                                             result[engine[1]][engine[0]]["CPU"],
+                                                                             result[engine[1]][engine[0]]["Memory"],
+                                                                             result[engine[1]][engine[0]]["Time"],
+                                                                             result[engine[1]][engine[0]]["Read"],
+                                                                             result[engine[1]][engine[0]]["Write"],
+                                                                             result[engine[1]][engine[0]]["ReadRate"],
+                                                                             result[engine[1]][engine[0]]["WriteRate"],
+                                                                             result[engine[1]][engine[0]]["Job"],
+                                                                             result[engine[1]][engine[0]]["Sub-MS"])
 
-		# Print separation between nodes and hosts info
-		print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"===============",
-																				"===============",
-																				"====================",
-																				"==============================")
-		if (verbose):
-			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"===============",
-																			"===============",
-																			"====================",
-																			"==============================")
+        # Print separation between nodes and hosts info
+        print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "====================",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "===============",
+                                                                             "===============",
+                                                                             "====================",
+                                                                             "==============================")
 
-		# Print hosts info
-		for host in result:
-			print >> fid, "%20s%10s%10s%10d%10d%10s%10d%10d%15d%15d%20s%30s" % (	host,
-																					"Total",
-																					"",
-																					result[host]["CPU"],
-																					result[host]["Memory"],
-																					"",
-																					result[host]["Read"],
-																					result[host]["Write"],
-																					result[host]["ReadRate"],
-																					result[host]["WriteRate"],
-																					"",
-																					"")
-		if (verbose):
-			for host in result:
-				print "%20s%10s%10s%10d%10d%10s%10d%10d%15d%15d%20s%30s" % (	host,
-																				"Total",
-																				"",
-																				result[host]["CPU"],
-																				result[host]["Memory"],
-																				"",
-																				result[host]["Read"],
-																				result[host]["Write"],
-																				result[host]["ReadRate"],
-																				result[host]["WriteRate"],
-																				"",
-																				"")
-	
-		# Print end of report separator
-		print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"==========",
-																				"===============",
-																				"===============",
-																				"====================",
-																				"==============================")
-		if (verbose):
-			print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % (	"====================",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"==========",
-																			"===============",
-																			"===============",
-																			"====================",
-																			"==============================")
+        if (verbose):
+            print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "====================",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "===============",
+                                                                         "===============",
+                                                                         "====================",
+                                                                         "==============================")
 
-		# Close monitoring file
-		fid.close()
+        # Print hosts info
+        for host in result:
+            print >> fid, "%20s%10s%10s%10d%10d%10s%10d%10d%15d%15d%20s%30s" % ( host,"Total","",
+                                                                                 result[host]["CPU"],
+                                                                                 result[host]["Memory"],
+                                                                                 "",
+                                                                                 result[host]["Read"],
+                                                                                 result[host]["Write"],
+                                                                                 result[host]["ReadRate"],
+                                                                                 result[host]["WriteRate"],
+                                                                                 "","")
+        if (verbose):
+            for host in result:
+                print "%20s%10s%10s%10d%10d%10s%10d%10d%15d%15d%20s%30s" % ( host,"Total","",
+                                                                             result[host]["CPU"],
+                                                                             result[host]["Memory"],
+                                                                             "",
+                                                                             result[host]["Read"],
+                                                                             result[host]["Write"],
+                                                                             result[host]["ReadRate"],
+                                                                             result[host]["WriteRate"],
+                                                                             "","")
 
-		# Rename monitoring file
-		ret = commands.getstatusoutput("mv " + self._monitoringFile + ".tmp" + " " + self._monitoringFile)
+        # Print final separator
+        print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "====================",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "==========",
+                                                                             "===============",
+                                                                             "===============",
+                                                                             "====================",
+                                                                             "==============================")
+        if (verbose):
+            print "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "====================",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "==========",
+                                                                         "===============",
+                                                                         "===============",
+                                                                         "====================",
+                                                                         "==============================")
 
-		return result
+        # Close monitoring file
+        fid.close()
+
+        # Rename monitoring file
+        ret = commands.getstatusoutput("mv " + self._monitoringFile + ".tmp" + " " + self._monitoringFile)
+
+        return result
 
 
     def get_return_list(self):
@@ -1075,6 +1242,8 @@ class simple_cluster:
 
         '''
 
+        self._monitor_running = True
+
         if not self._configdone:
             return
         while self._monitor_on:
@@ -1086,6 +1255,8 @@ class simple_cluster:
                     (a, b)=pend[i]
                     curr[a]=b['pending']
             except:
+                # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+                # traceback.print_tb(sys.exc_info()[2])
                 pass
             #print 'curr', curr
             for job in self._jobs.keys():
@@ -1098,9 +1269,10 @@ class simple_cluster:
                         x=1
                         try:
                             x=job.get_result(block=False)
-                        except:
+                        except client.CompositeError, exception:
                             if notify and self._jobs[job]['status']=="scheduled":
-                                print 'engine %d job %s broken' % (eng, sht)
+                                print 'engine %d job %s broken: %s' % (eng, sht, str(exception))
+                                print 'backtrace: %s' % (exception.print_tracebacks())
                             self._jobs[job]['status']="broken"
 
                         if x==None:
@@ -1213,6 +1385,8 @@ class simple_cluster:
                              
                         for j in rmv:
                             self.remove_record(j)
+
+        self._monitor_running = False
                             
     
     def start_monitor(self): 
@@ -1235,7 +1409,9 @@ class simple_cluster:
         '''
         if not self._configdone:
             return
-        self.monitor_on=False 
+        self._monitor_on=False
+        while (self._monitor_running):
+            time.sleep(1)
     
     def show_queue(self):
         '''Display job queue.
@@ -2168,8 +2344,10 @@ class simple_cluster:
             import multiprocessing
             ncpu=multiprocessing.cpu_count()
             (sysname, nodename, release, version, machine)=os.uname()
-            msg=nodename+', '+str(ncpu)+', '+os.getcwd()
-            clusterfile='/tmp/default_cluster'
+            msg=nodename+', '+str(0)+', '+os.getcwd()
+            # jagonzal (CAS-4293): Write default cluster config file in the 
+            # current directory to avoid problems with writing permissions
+            clusterfile='default_cluster'
             f=open(clusterfile, 'w')
             f.write(msg)
             f.close()
@@ -2178,7 +2356,8 @@ class simple_cluster:
         if not self._configdone:
             return
         self.create_project(project)
-        self.stop_nodes()
+        # jagonzal (CAS-4367): Don't use brute-force killall approach to stop cluster
+        # self.stop_nodes()
         self.stop_resource()
         self.start_cluster()
         self.start_monitor()
@@ -2187,7 +2366,18 @@ class simple_cluster:
 
         # Put the cluster object into the global namespace
         sys._getframe(len(inspect.stack())-1).f_globals['procCluster'] = self
-    
+
+    ###########################################################################
+    ###   jagonzal (CAS-4292): Method for gracefull finalization (e.g.: when closing casa)
+    ###########################################################################
+    def stop_cluster(self):
+        """ Destructor method to shut down the cluster gracefully """
+        # Stop cluster and thread services
+        self.stop_monitor()
+        self.stop_resource()
+        # Now we can stop the cluster w/o problems
+        # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
+        self._cluster.stop_cluster()
     
     ###########################################################################
     ###   example to distribute clean task over engines
@@ -2264,6 +2454,8 @@ class simple_cluster:
                 try:
                     nchan=int(ceil(abs(float(spwchan))/nengs))
                 except:
+                    # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+                    # traceback.print_tb(sys.exc_info()[2])
                     pass
         
                 for j in xrange(len(ids)):
@@ -2525,6 +2717,11 @@ class JobQueueManager:
         self.__cluster.remove_record()
         
         engineList = self.__cluster.use_engines()
+
+        # jagonzal (CAS-): When there are 0 engines available an error must have happened
+        if (len(engineList) < 1):
+            casalog.post("There are 0 engines available, check the status of the cluster",'SEVERE')
+            return
 
         casalog.post("Executing %d jobs on %d engines" %
                      (len(self.__inputQueue), len(engineList)))

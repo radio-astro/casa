@@ -801,7 +801,8 @@ public:
     
     // The type of file/export.
     enum Type {
-        JPG, PNG, PS, PDF
+        JPG, PNG, PS, PDF, TEXT,
+        NUM_FMTS
     };
     
     // Whether to have high resolution or not.

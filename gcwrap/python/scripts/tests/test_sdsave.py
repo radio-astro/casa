@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 import sha
 import time
 import numpy
 
-asap_init()
 from sdsave import sdsave
 import asap as sd
 
@@ -137,18 +135,31 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         self.res=sdsave()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdsave(infile=self.infile,timeaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdsave(infile=self.infile,timeaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of time averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdsave(infile=self.infile,polaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdsave(infile=self.infile,polaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of polarization averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 ###
@@ -267,8 +278,15 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
     def test204(self):
         """Test 204: test failure case that unexisting antenna is specified"""
-        self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
-        self.assertFalse(self.res,False)
+        try:
+            self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            # the task failed to import data so that failed to open output file
+            pos=str(e).find('Failed to open file')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test205(self):
         """Test 205: test to read USB spectral window"""
@@ -557,7 +575,7 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
         self.assertTrue(self._compare())
 
     def _pointingKeywordExists(self):
-        _tb=tbtool.create()
+        _tb=tbtool()
         _tb.open(self.outfile0)
         keys=_tb.getkeywords()
         _tb.close()
@@ -566,8 +584,8 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
 
     def _compare(self):
         ret = True
-        _tb1=tbtool.create()
-        _tb2=tbtool.create()
+        _tb1=tbtool()
+        _tb2=tbtool()
         _tb1.open(self.infile)
         #ptab1=_tb1.getkeyword('POINTING').split()[-1]
         ptab1=_tb1.getkeyword('POINTING').lstrip('Table: ')
@@ -589,9 +607,617 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
             print 'Bad column: %s'%(badcols)
             ret = False
         return ret
+
+###
+# Test rest frequency
+###
+class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdsave. Test scantable available restfreq
+
+    The list of tests:
+    test701-704  --- a value (float, int, quantity w/ and w/o a unit)
+    test711-715  --- a list [length=1]
+                     (float, int, quantity w/ and w/o a unit, dict)
+    test721-725  --- a list [length>1]
+                     (float, int, quantity w/ and w/o a unit, dict)
+    test731-733  --- a bad quantity unit (a value, a list)
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    outname = sdsave_unittest_base.taskname+'_test'
+    iflist = [1,2]
+    frf = [45.301e9,44.075e9]
+    irf = [45301000000,44075000000]
+    qurf = ['45301.MHz','44.075GHz']
+    qrf = [str(frf[0]), str(irf[1])]
+    drf = [{'name': "IF1 Rest", 'value': frf[0]}, \
+           {'name': "IF2 Rest", 'value': qurf[1]}]
+    badq = ['45301.km','44.075bad']
+
+    def setUp( self ):
+        # copy input scantables
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+
+    # Helper functions for testing
+    def _check_restfreq( self, outfile, restfreq, iflist ):
+        self._checkfile(outfile)
+        #print "To be checked 0 : ifnos =", iflist, ", restfreqs = ", restfreq
+        if not (type(restfreq) in (list, tuple, numpy.ndarray)):
+            restfreq = [restfreq] * len(iflist)
+        elif len(restfreq) == 1:
+            restfreq = restfreq * len(iflist)
+        #print "To be checked: ifnos =", iflist, ", restfreqs = ", restfreq
+        scan = sd.scantable(outfile, average = False)
+        for i in range(len(restfreq)):
+            ifno = iflist[i]
+            rf = restfreq[i]
+            if type(rf) == dict:
+                rf = rf['value']
+            if qa.isquantity(rf):
+                rfv = qa.convert(rf,'Hz')['value']
+            else:
+                rfv = float(rf)
+            scan.set_selection(ifs=[ifno])
+            molid = scan.getmolnos()
+            self.assertTrue(len(molid)==1,msg="IFNO=%d has multiple MOLECULE_IDs: %s" % (ifno,str(molid)))
+            newrf = scan.get_restfreqs(molid[0])
+            #self.assertTrue(len(newrf)==1,msg="IFNO=%d has multiple rest frequencies: %s" % (ifno,str(newrf)))
+            self.assertEqual(newrf[0], rfv,\
+                             msg="Rest frequency differs(IFNO=%d): %f (expected: %f)" % (ifno, newrf[0], rfv))
+            print "Rest frequency (IFNO=%d): %f (expected: %f)" % (ifno, newrf[0], rfv)
     
+    # Actual tests
+    def test701( self ):
+        """Test 701: restfreq (a float value)"""
+        tid = "701"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.frf[1]
+
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test702( self ):
+        """Test 702: restfreq (an int value)"""
+        tid = "702"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.irf[1]
+
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test703( self ):
+        """Test 703: restfreq (a quantity with unit)"""
+        tid = "703"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qurf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test704( self ):
+        """Test 704: restfreq (a quantity withOUT unit)"""
+        tid = "704"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qrf[1]
+
+        print "Setting restfreq = %s (%s)" % (str(restfreq), str(type(restfreq)))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test711( self ):
+        """Test 711: restfreq (a list of float value [length = 1])"""
+        tid = "711"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.frf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test712( self ):
+        """Test 712: restfreq (a list of int value [length = 1])"""
+        tid = "712"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.irf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test713( self ):
+        """Test 713: restfreq (a list of quantity with unit [length = 1])"""
+        tid = "713"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.qurf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test714( self ):
+        """Test 714: restfreq (a list of quantity withOUT unit [length = 1])"""
+        tid = "714"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.qrf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test715( self ):
+        """Test 715: restfreq (a list of dictionary [length = 1])"""
+        tid = "715"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.drf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test721( self ):
+        """Test 721: restfreq (a list of float value [length > 1])"""
+        tid = "721"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.frf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test722( self ):
+        """Test 722: restfreq (a list of int value [length > 1])"""
+        tid = "722"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.irf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test723( self ):
+        """Test 723: restfreq (a list of quantity with unit [length > 1])"""
+        tid = "723"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qurf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test724( self ):
+        """Test 724: restfreq (a list of quantity withOUT unit [length > 1])"""
+        tid = "724"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.qrf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq, iflist)
+
+    def test725( self ):
+        """Test 725: restfreq (a list of dictionary [length > 1])"""
+        tid = "725"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.drf
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing rest frequencies of output scantable"
+        self._check_restfreq(outfile, restfreq[0], iflist)
+
+    def test731( self ):
+        """Test 731: restfreq (a BAD quantity unit)"""
+        tid = "731"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.badq[0]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('wrong unit of restfreq')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+    def test732( self ):
+        """Test 732: restfreq (a list of BAD quantity unit [length = 1])"""
+        tid = "732"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = [ self.badq[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Input value is not a quantity: ')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+
+    def test733( self ):
+        """Test 733: restfreq (a list of BAD quantity unit [length > 1])"""
+        tid = "733"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        restfreq = self.badq
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        try:
+            result = sdsave(infile=infile,outfile=outfile,\
+                                scanaverage=False,timeaverage=False,polaverage=False,\
+                                iflist=iflist,restfreq=restfreq)
+
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('wrong unit of restfreq')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+
+
+###
+# Test combinations of scantable.storage='disk'/'memory' and insitu=T/F
+###
+class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdsave. Test scantable sotrage and insitu
+    parameters
+
+    The list of tests:
+    testMT  --- storage = 'memory', insitu = True
+    testMF  --- storage = 'memory', insitu = False
+    testDT  --- storage = 'disk', insitu = True
+    testDF  --- storage = 'disk', insitu = False
+
+    Note on handlings of disk storage:
+       Task script restores MOLECULE_ID column.
+
+    Tested items:
+       1. Number of rows in tables and list of IDs of output scantable.
+       2. Units and coordinates of output scantable.
+       3. units and coordinates of input scantables before/after run.
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    outname = sdsave_unittest_base.taskname+'_test'
+    pollist = [1]
+    iflist = [2]
+    restfreq = [44.075e9]
+    # Reference data of output scantable
+    refout = {"nRow": 8, "SCANNOS": [21,23], "POLNOS": pollist,\
+              "IFNOS": iflist, "MOLNOS": [1], "RestFreq": restfreq}
+
+    def setUp( self ):
+        # copy input scantables
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        # back up the original settings
+        self.storage = sd.rcParams['scantable.storage']
+        self.insitu = sd.rcParams['insitu']
+
+        default(sdsave)
+
+    def tearDown( self ):
+        # restore settings
+        sd.rcParams['scantable.storage'] = self.storage
+        sd.rcParams['insitu'] = self.insitu
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+
+    # Helper functions for testing
+    def _get_scantable_params( self, scanname ):
+        self._checkfile(scanname)
+        res = {}
+        testvals = ["scannos", "polnos", "ifnos", "molnos"]
+        scan = sd.scantable(scanname,average=False)
+        res['nRow'] = scan.nrow()
+        for val in testvals:
+            res[val.upper()] =  getattr(scan,"get"+val)()
+        # rest frequencies
+        rflist = []
+        for molno in res["MOLNOS"]:
+            rflist.append(scan.get_restfreqs(molno)[0])
+        res["RestFreq"] = rflist
+        del scan
+        return res
+
+    def _compare_scantable_params( self, test , refval):
+        if type(test) == str:
+            testval = self._get_scantable_params(test)
+        elif type(test) == dict:
+            testval = test
+        else:
+            msg = "Invalid test value (should be either dict or file name)."
+            raise Exception, msg
+        #print "Test data = ", testval
+        #print "Ref data =  ", refval
+        if not type(refval) == dict:
+            raise Exception, "The reference data should be a dictionary"
+        for key, rval in refval.iteritems():
+            if not testval.has_key(key):
+                raise KeyError, "Test data does not have key, '%s'" % key
+            if type(rval) in [list, tuple, numpy.ndarray]:
+                self.assertEqual(len(testval[key]), len(rval), \
+                                 msg = "Number of elements in '%s' differs." % key)
+                for i in range(len(rval)):
+                    rv = rval[i]
+                    if type(rv) == float:
+                        self.assertAlmostEqual(testval[key][i], rv, \
+                                               msg = "%s[%d] differs: %s (expected: %s) "\
+                                               % (key, i, str(testval[key][i]), str(rv)))
+                    else:
+                        self.assertEqual(testval[key][i], rv, \
+                                         msg = "%s[%d] differs: %s (expected: %s) "\
+                                         % (key, i, str(testval[key][i]), str(rv)))
+            else:
+                if type(rval) == float:
+                    self.assertAlmostEqual(testval[key], rval, \
+                                     msg = "%s differs: %s (expected: %s)" \
+                                     % (key, str(testval[key]), rval))
+                else:
+                    self.assertEqual(testval[key], rval, \
+                                     msg = "%s differs: %s (expected: %s)" \
+                                     % (key, str(testval[key]), rval))
+    
+
+    # Actual tests
+    def testMT( self ):
+        """Storage Test MT: sdsave on storage='memory' and insitu=T"""
+        tid = "MT"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testMF( self ):
+        """Storage Test MF: sdsave on storage='memory' and insitu=F"""
+        tid = "MF"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testDT( self ):
+        """Storage Test DT: sdsave on storage='disk' and insitu=T"""
+        tid = "DT"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
+    def testDF( self ):
+        """Storage Test DF: sdsave on storage='disk' and insitu=F"""
+        tid = "DF"
+        infile = self.infile
+        outfile = self.outname+tid
+        iflist = self.iflist
+        pollist = self.pollist
+        restfreq = self.restfreq
+
+        # Backup units and coords of input scantable before run.
+        initval = self._get_scantable_params(infile)
+
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+        result = sdsave(infile=infile,outfile=outfile,\
+                        scanaverage=False,timeaverage=False,polaverage=False,\
+                        iflist=iflist,pollist=pollist,restfreq=restfreq)
+
+        self.assertEqual(result,None)
+        self.assertTrue(os.path.exists(outfile),msg="No output written")
+        print "Testing output scantable"
+        self._compare_scantable_params(outfile,self.refout)
+
+        print "Comparing input scantable before/after run"
+        self._compare_scantable_params(infile,initval)
+
+
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6]
+            sdsave_test6,sdsave_test7,sdsave_storageTest]

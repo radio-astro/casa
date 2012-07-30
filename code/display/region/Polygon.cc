@@ -104,7 +104,7 @@ namespace casa {
 		    _drawing_trc_y_ = _drawing_points_[i].second;
 	    }
 
-	    updateStateInfo( true );
+	    updateStateInfo( true, RegionChangeModified );
 	    setDrawCenter(false);
 	    invalidateCenterInfo();
 	}
@@ -263,7 +263,7 @@ namespace casa {
 	    _drawing_trc_y_ = trc_y;
 
 	    update_drawing_state( );
-	    updateStateInfo( true ); 
+	    updateStateInfo( true, RegionChangeModified ); 
 	}
 
 	int Polygon::moveHandle( int handle, double x, double y ) {
@@ -275,7 +275,7 @@ namespace casa {
 	    else
 		return 0;
 
-	    updateStateInfo( true ); 
+	    updateStateInfo( true, RegionChangeModified ); 
 	    setDrawCenter(false);
 	    invalidateCenterInfo();
 	    return handle;

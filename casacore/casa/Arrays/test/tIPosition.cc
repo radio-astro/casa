@@ -440,7 +440,6 @@ int main()
 	// next() tests
 	IPosition x(5, 20, 9, 31, 5, 2);
 	IPosition exp(5, 0);
-	uInt prod = x.product();
 	IPosition partialProd(4, 0);
 	uInt pprod = 1;
 	for (uInt i=0; i< partialProd.nelements(); i++) {
@@ -465,6 +464,12 @@ int main()
 		pos.next(myShape), count++
 	) {}
 	AlwaysAssert(count = myShape.product(), AipsError);
+
+	// operator()(IPostion) tests
+	IPosition ipos(4,11,12,13,14);
+	AlwaysAssert(ipos(IPosition(4, 0, 2, 1 ,3)) == IPosition(4, 11,13,12,14), AipsError);
+	AlwaysAssert(ipos(IPosition(3, 2, 2, 1)) == IPosition(3, 13, 13, 12), AipsError);
+
 
 }
     cout << "OK\n";

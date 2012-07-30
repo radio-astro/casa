@@ -37,10 +37,14 @@ casac::spectralline* spectralline::splattotable(const vector<string>& filenames,
 		}
 		ListConverter converter(files, tablename);
 		SplatalogueTable *converted = converter.load();
-		return new spectralline(converted);
+                casac:spectralline* rstat =new spectralline(converted);
+                if(!rstat)
+			throw AipsError("Unable to create table"+tablename);
+		return rstat;
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
 		return 0;
 	}
 }
@@ -197,6 +201,7 @@ spectralline* spectralline::search(
 			t = 0;
 		}
 		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
 	}
 	return tool;
 }

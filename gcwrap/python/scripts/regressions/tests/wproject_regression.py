@@ -25,7 +25,7 @@ def run(fetch=False):
         for f in data( ):
             copydata( f, os.getcwd( ) )
     
-    im=gl['imtool'].create()
+    im=gl['casac'].imager()
     me=gl['me']
     time1=time.time()
     im.open('coma.ms')

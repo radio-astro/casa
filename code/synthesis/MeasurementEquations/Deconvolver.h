@@ -36,6 +36,7 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <lattices/Lattices/LatticeCleaner.h>
+#include <components/ComponentModels/GaussianBeam.h>
 
 #include <casa/namespace.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -163,8 +164,7 @@ public:
 
   // Restore
   Bool restore(const String& model,
-	       const String& image,
-	       Quantity& bmaj, Quantity& bmin, Quantity& bpa);
+	       const String& image, GaussianBeam& mbeam);
 
   // Residual
   Bool residual(const String& model, 
@@ -173,21 +173,24 @@ public:
   // Smooth
   Bool smooth(const String& model, 
 	      const String& image,
-	      Quantity& bmaj, Quantity& bmin, Quantity& bpa,
+	      GaussianBeam& mbeam,
 	      Bool normalizeVolume);
 
   // Clean algorithm
+  //maxResidual and iterationsDone are return values
   Bool clean(const String& algorithm,
 	     const Int niter, const Float gain, const Quantity& threshold, 
 	     const Bool displayProgress,
-             const String& model, const String& mask);
+             const String& model, const String& mask, Float& maxResidual, 
+	     Int& iterationsDone );
 
   //Clark Clean but image, psf, mask has to be 4-axes in the canonical casa order.
   //Useful for cleaning dirty images made in CASA
   //if mask is larger than a quarter of the image it will do a full image clean ...unlike the one below
   Bool clarkclean(const Int niter, 
 		  const Float gain, const Quantity& threshold, 
-		  const String& model, const String& maskName, 
+		  const String& model, const String& maskName,
+		  Float& maxresid, Int& iterused,
 		  Float cycleFactor=1.5);
 
   // Clark Clean algorithm
@@ -262,16 +265,14 @@ public:
 		 const Quantity& threshold);
 
   // Fit the psf
-  Bool fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
-	      Quantity& mbpa);
+  Bool fitpsf(const String& psf, GaussianBeam& beam);
 
   // Convolve one image with another
   Bool convolve(const String& convolvedmodel, 
 		const String& model);
 
   // Make a Gaussian -- you might want to use it for convolution, etc
-  Bool makegaussian(const String& gaussianimage, Quantity& mbmaj, Quantity& mbmin,
-	      Quantity& mbpa, Bool normalizeVolume);
+  Bool makegaussian(const String& gaussianimage, GaussianBeam& mbeam, Bool normalizeVolume);
 
   
 
@@ -314,7 +315,8 @@ private:
   Int nx_p, ny_p, npol_p, nchan_p;
   Int chanAxis_p, polAxis_p;
   String mode_p;
-  Quantity bmaj_p, bmin_p, bpa_p;
+  GaussianBeam beam_p;
+//  Quantity bmaj_p, bmin_p, bpa_p;
   Bool beamValid_p;
   String dirtyName_p;
   String psfName_p;

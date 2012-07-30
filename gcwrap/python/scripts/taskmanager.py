@@ -378,7 +378,9 @@ class taskmanager(object):
         self.__mkdir(self.__dir['log root'])
 
         self.__clean_furls( )
-        self.__start_hub( )
+        # jagonzal (CAS-4322): Don't load task manager at the engine level
+        if not os.environ.has_key('CASA_ENGINE'):
+            self.__start_hub( )
 
 
     def __clean_furls(self):

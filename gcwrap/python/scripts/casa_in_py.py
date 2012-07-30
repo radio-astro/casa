@@ -8,7 +8,7 @@ import commands
 from get_user import get_user
 
 try:
-    import casac
+    from casac import casac
 except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
@@ -149,7 +149,7 @@ from listpartition_pg import listpartition_pg as listpartition
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits
 #somebody contaminated setjy.py
-#from setjy_pg import setjy_pg  as setjy
+from setjy_pg import setjy_pg  as setjy
 from clean_pg import clean_pg as clean
 from immath_pg import immath_pg as immath
 from imhead_pg import imhead_pg as imhead

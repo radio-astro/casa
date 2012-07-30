@@ -121,7 +121,7 @@ class imcollapse_test(unittest.TestCase):
             got.open(gotImage)
         else:
             got = gotImage
-        self.assertTrue(got.shape() == expected.shape())
+        self.assertTrue(all(got.shape() == expected.shape()))
         diffData = got.getchunk() - expected.getchunk()
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
@@ -145,12 +145,13 @@ class imcollapse_test(unittest.TestCase):
     def test_exceptions(self):
         """imcollapse: Test various exception cases"""
         
+        bogus = "mybogus.im"
         def testit(
             imagename, function, axes, outfile, region,
             box, chans, stokes, mask, overwrite, wantreturn
         ):
             for i in [0,1]:
-                if (i==0):
+                if (i==0 and len(imagename) > 0 and imagename != bogus):
                     self.assertRaises(
                         Exception, run_collapse, imagename,
                         function, axes, outfile, region, box,
@@ -168,7 +169,7 @@ class imcollapse_test(unittest.TestCase):
         # no image name given
         testit("", "mean", 0, "", "", "", "", "", "", False, True)
         # bad image name given
-        testit("mybogus.im", "mean", 0, "", "", "", "", "", "", False, True)
+        testit(bogus, "mean", 0, "", "", "", "", "", "", False, True)
         # no function given
         testit(good_image, "", 0, "", "", "", "", "", "", False, True)
         # bogus function given
@@ -325,7 +326,7 @@ class imcollapse_test(unittest.TestCase):
         )
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
-        self.assertTrue(mytool2.shape() == expected)
+        self.assertTrue(all(mytool2.shape() == expected))
         
         mytool = run_imcollapse(
             good_image, "mean", 2, "", "", "",
@@ -333,7 +334,7 @@ class imcollapse_test(unittest.TestCase):
         )
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
-        self.assertTrue(mytool2.shape() == expected)
+        self.assertTrue(all(mytool2.shape() == expected))
  
     def test_7(self):
         """imcollapse: verify collapsing along multiple axes works"""
@@ -474,7 +475,36 @@ class imcollapse_test(unittest.TestCase):
         got = mytool.toworld([0,0,0])["numeric"][2]
         mytool.done()
         frac = got/expected - 1
-        self.assertTrue(frac < 1e-6 and frac > -1e-6) 
+        self.assertTrue(frac < 1e-6 and frac > -1e-6)
+        
+    def test_beams(self):
+        """test per plane beams"""
+        myia = iatool.create()
+        myia.fromshape("", [10, 10, 10, 4])
+        myia.setrestoringbeam(
+            major="4arcsec", minor="3arcsec",
+            pa="20deg", channel=1, polarization=1
+        )
+        for i in range (myia.shape()[2]):
+            for j in range(myia.shape()[3]):
+                major = qa.quantity(4 + i + j, "arcsec")
+                minor = qa.quantity(2 + i + 0.5*j, "arcsec")
+                pa = qa.quantity(10*i + j, "deg")
+                myia.setrestoringbeam(
+                    major=major, minor=minor, pa=pa,
+                    channel=i, polarization=j
+                )
+        reg = rg.box(blc=[1,1,1,1], trc=[2,2,2,2])
+        collapsed = myia.collapse(function="mean", axes=2, outfile="", region=reg)
+        beam = collapsed.restoringbeam()
+        self.assertTrue(len(beam) == 3)
+        self.assertTrue(beam["major"] == qa.quantity(6, "arcsec"))
+        self.assertTrue(beam["minor"] == qa.quantity(3.5, "arcsec"))
+        self.assertTrue(beam["positionangle"] == qa.quantity(11, "deg"))
+        myia.done()
+        collapsed.done()
+
+
 
 def suite():
     return [imcollapse_test]

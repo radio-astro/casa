@@ -141,6 +141,7 @@ SetJyGridFT::SetJyGridFT(const SetJyGridFT& other) : GridFT()
   machineName_p=("SetJyGridFT");
   operator=(other);
 }
+
 SetJyGridFT& SetJyGridFT::operator=(const SetJyGridFT& other)
 {
   if(this!=&other) {
@@ -152,6 +153,14 @@ SetJyGridFT& SetJyGridFT::operator=(const SetJyGridFT& other)
     scale_p=other.scale_p;
   }
   return *this;
+}
+
+void SetJyGridFT::setScale(const Vector<Double>& freq, const Vector<Double>& scale){
+  freqscale_p.resize();
+  freqscale_p=freq;
+  scale_p.resize();
+  scale_p=scale;
+
 }
 String SetJyGridFT::name(){
 
@@ -186,13 +195,17 @@ Bool SetJyGridFT::fromRecord(String& error,
   return True;
 }
 void SetJyGridFT::get(VisBuffer& vb, Int row){
-	  gridOk(gridder->cSupport()(0));
-	  // If row is -1 then we pass through all rows
-	  Int startRow, endRow, nRow;
-	  if (row < 0) {
-	    nRow=vb.nRow();
-	    startRow=0;
-	    endRow=nRow-1;
+  //Did somebody really want this version.
+  if(scale_p.nelements()==0)
+    return GridFT::get(vb,row);
+
+  gridOk(gridder->cSupport()(0));
+  // If row is -1 then we pass through all rows
+  Int startRow, endRow, nRow;
+  if (row < 0) {
+    nRow=vb.nRow();
+    startRow=0;
+    endRow=nRow-1;
 	    //unnecessary zeroing
 	    //vb.modelVisCube()=Complex(0.0,0.0);
 	  } else {

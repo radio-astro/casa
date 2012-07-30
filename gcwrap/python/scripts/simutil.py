@@ -179,7 +179,7 @@ class simutil:
             if halt:
                 self.msg("can't interpret '"+str(s)+"' as a direction",priority="error")
             return False
-        if not me.measure(y):
+        if not me.measure(y,y['refer']):
             if halt:
                 self.msg("can't interpret '"+str(s)+"' as a direction",priority="error")
             return False
@@ -281,7 +281,7 @@ class simutil:
             highvalue=im_max
             lowvalue=im_min
         else:
-            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)['histout']
+            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)#['histout']
             ii=0
             lowcounts=imhist['counts'][ii]
             while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
@@ -1022,7 +1022,7 @@ class simutil:
         dec=qa.add(obslat, qa.add(qa.quantity("90deg"),qa.mul(elevation,-1)))
 
         sm.setfield(sourcename="src1", 
-                    sourcedirection="J2000 00:00:00.00 "+qa.angle(dec),
+                    sourcedirection="J2000 00:00:00.00 "+qa.angle(dec)[0],
                     calcode="OBJ", distance='0m')
         reftime = me.epoch('TAI', "2012/01/01/00:00:00")
         if integration==None:
@@ -1072,7 +1072,7 @@ class simutil:
             # very light clean - its an empty image!
             self.image(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
-                       "J2000 00:00:00.00 "+qa.angle(dec),
+                       "J2000 00:00:00.00 "+qa.angle(dec)[0],
                        100,"0.01mJy","natural",[],"I")
 
             ia.open(tmpname+".image")
@@ -1201,10 +1201,10 @@ class simutil:
                         
         reftime_float=time['m0']['value']
         reftime_floor=pl.floor(time['m0']['value'])
-        refdate_str=qa.time(qa.totime(str(reftime_floor)+'d'),form='dmy')
+        refdate_str=qa.time(qa.totime(str(reftime_floor)+'d'),form='dmy')[0]
 
         timeinc='15min'  # for plotting
-        timeinc=qa.convert(qa.time(timeinc),'d')['value']
+        timeinc=qa.convert(qa.time(timeinc)[0],'d')['value']
         ntime=int(1./timeinc)
 
         # check for circumpolar:
@@ -1241,13 +1241,13 @@ class simutil:
             time['m0']['value']+=timeinc
     
 #        self.msg(" ref="+date,origin='ephemeris')
-        self.msg("rise="+qa.time(rise['m0'],form='dmy'),origin='ephemeris')
-        self.msg(" set="+qa.time(settime['m0'],form='dmy'),origin='ephemeris')
+        self.msg("rise="+qa.time(rise['m0'],form='dmy')[0],origin='ephemeris')
+        self.msg(" set="+qa.time(settime['m0'],form='dmy')[0],origin='ephemeris')
     
         pl.plot((pl.array(times)-reftime_floor)*24,el)
 #        peak=(rise['m0']['value']+settime['m0']['value'])/2        
 #        self.msg("peak="+qa.time('%fd' % peak,form='dmy'),origin='ephemeris')
-        self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy'),origin='ephemeris')
+        self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy')[0],origin='ephemeris')
 
         relpeak=peaktime_float-reftime_floor
         pl.plot(pl.array([1,1])*24*relpeak,[0,90])
@@ -1812,7 +1812,7 @@ class simutil:
         lon=-lon
 
         if self.verbose:
-            self.msg(" longitude, latitude = %s %s; conv,kp = %f,%f" % (qa.angle(qa.quantity(lon,"rad"),prec=8),qa.angle(qa.quantity(lat,"rad"),prec=8),conv,kp),origin="utm2long")
+            self.msg(" longitude, latitude = %s %s; conv,kp = %f,%f" % (qa.angle(qa.quantity(lon,"rad"),prec=8)[0],qa.angle(qa.quantity(lat,"rad"),prec=8)[0],conv,kp),origin="utm2long")
         
         return lon,lat
 
@@ -2038,7 +2038,7 @@ class simutil:
         ia.done()
         spc=cs.findcoordinate("spectral")
         if not spc[0]: return (0,0)
-        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")
+        model_width=str(cs.increment(type="spectral")['numeric'][0])+cs.units(type="spectral")[0]
         model_nchan=sh[spc['pixel']]
         return model_nchan,model_width
 
@@ -2055,8 +2055,8 @@ class simutil:
         stk=cs.findcoordinate("stokes")
         if not (dir[0] and spc[0] and stk[0]): return False
         if dir[1].__len__() != 2: return False
-        if type(spc[1]) == type([]): return False
-        if type(stk[1]) == type([]): return False
+        if spc[1].__len__() != 1: return False
+        if stk[1].__len__() != 1: return False
         # they have to be in the correct order too
         if stk[1]!=2: return False
         if spc[1]!=3: return False
@@ -2149,7 +2149,7 @@ class simutil:
         model_cell=""
         # look for direction coordinate, with two pixel axes:
         if in_dir[0]:
-            in_ndir = in_dir[0].__len__() 
+            in_ndir = in_dir[1].__len__() 
             if in_ndir != 2:
                 self.msg("Mal-formed direction coordinates in modelimage. Discarding and using first two pixel axes for RA and Dec.")
                 axmap[0]=0 # direction in first two pixel axes
@@ -2158,9 +2158,9 @@ class simutil:
                 axassigned[1]=0
             else:
                 # we've found direction axes, and may change their increments and direction or not.
-                dirax=in_dir[0]
+                dirax=in_dir[1]
                 axmap[0]=dirax[0]
-                axmap[1]=dirax[1]                    
+                axmap[1]=dirax[1]
                 axassigned[dirax[0]]=0
                 axassigned[dirax[1]]=0
                 if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
@@ -2168,7 +2168,7 @@ class simutil:
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
             dec = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[1]+1)]
-            model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+            model_refdir= in_csys.referencecode(type="direction",list=False)[0]+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
             model_projection=in_csys.projection()['type']
             model_projpars=in_csys.projection()['parameters']
 
@@ -2251,10 +2251,12 @@ class simutil:
         model_width=""
         # look for a spectral axis:
         if in_spc[0]:
-            if type(in_spc[0]) == type(1) :
-                foo=in_spc[0]
-            else:
-                foo=in_spc[1][0]
+            #if type(in_spc[1]) == type(1) :
+            #    # should not come here after SWIG switch over
+            #    foo=in_spc[1]
+            #else:
+            foo=in_spc[1][0]
+            if in_spc[1].__len__() > 1:
                 self.msg("you seem to have two spectral axes",priority="warn")
             model_nchan=arr.shape[foo]
             axmap[3]=foo
@@ -2267,9 +2269,9 @@ class simutil:
             # grids it may trip things up
             # start is center of first channel.  for nch=1, that equals center
             model_center=model_start+0.5*(model_nchan-1)*model_width
-            model_width=str(model_width)+in_csys.units(type="spectral")
-            model_start=str(model_start)+in_csys.units(type="spectral")
-            model_center=str(model_center)+in_csys.units(type="spectral")
+            model_width=str(model_width)+in_csys.units(type="spectral")[0]
+            model_start=str(model_start)+in_csys.units(type="spectral")[0]
+            model_center=str(model_center)+in_csys.units(type="spectral")[0]
             add_spectral_coord=False
             if self.verbose: self.msg("Spectral Coordinate %i parsed" % axmap[3],origin="setup model")                
         else:
@@ -2325,10 +2327,12 @@ class simutil:
             for i in range(out_nstk-1):
                 foo=foo+model_stokes[i+1]
             model_stokes=foo
-            if type(in_stk[1]) == type(1):
-                foo=in_stk[1]
-            else:
-                foo=in_stk[1][0]
+            #if type(in_stk[1]) == type(1):
+            #    # should not come here after SWIG switch over
+            #    foo=in_stk[1]
+            #else:
+            foo=in_stk[1][0]
+            if in_stk[1].__len__() > 1:
                 self.msg("you seem to have two stokes axes",priority="warn")                
             axmap[2]=foo
             axassigned[foo]=2
@@ -2493,6 +2497,7 @@ class simutil:
         model_cell=[qa.abs(model_cell[0]),qa.abs(model_cell[1])]
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
+
 
         return model_refdir,model_cell,model_size,model_nchan,model_center,model_width,model_stokes
 
@@ -2697,19 +2702,26 @@ class simutil:
         if nchan>1:
             if verbose: self.msg("creating moment zero image "+flat,origin="analysis")
             ia.open(image)
-            ia.moments(moments=[-1],outfile=flat,overwrite=True)
+            flat_ia = ia.moments(moments=[-1],outfile=flat,overwrite=True)
             ia.done()
+            flat_ia.close()
+            del flat_ia
         else:
             if verbose: self.msg("removing degenerate image axes in "+flat,origin="analysis")
             # just remove degenerate axes from image
-            ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
+            flat_ia = ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
+            flat_ia.close()
+
             # seems no way to just drop the spectral and keep the stokes. 
             if nstokes<=1:
                 os.rename(flat,flat+".tmp")
                 ia.open(flat+".tmp")
-                ia.adddegaxes(outfile=flat,stokes='I',overwrite=True)
+                flat_ia = ia.adddegaxes(outfile=flat,stokes='I',overwrite=True)
                 ia.done()
+                flat_ia.close()
                 shutil.rmtree(flat+".tmp")
+            del flat_ia
+
         if nstokes>1:
             os.rename(flat,flat+".tmp")
             po.open(flat+".tmp")
@@ -2739,7 +2751,6 @@ class simutil:
     def convimage(self,modelflat,outflat,complist=""):
         # regrid flat input to flat output shape and convolve
         modelregrid = modelflat+".regrid"
-
         # get outflatcoordsys from outflat
         ia.open(outflat)
         outflatcs=ia.coordsys()
@@ -2751,13 +2762,14 @@ class simutil:
         ia.open(modelflat)
         modelflatcs=ia.coordsys()
         modelflatshape=ia.shape()
-        ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
+        tmpxx=ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                   csys=outflatcs.torecord(),shape=outflatshape)
         # im.regrid assumes a surface brightness, or more accurately doesnt
         # pay attention to units at all, so we now have to scale 
         # by the pixel size to have the right values in jy/pixel, 
 
         # get pixel size from model image coordsys
+        tmpxx.done()
         increments=outflatcs.increment(type="direction")['numeric']
         incellx=qa.quantity(abs(increments[0]),outflatcs.units(type="direction")[0])
         incelly=qa.quantity(abs(increments[1]),outflatcs.units(type="direction")[1])
@@ -2808,13 +2820,14 @@ class simutil:
         convolved = modelregrid + '.conv'
         ia.open(modelregrid)
         ia.setbrightnessunit("Jy/pixel")
-        ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
+        tmpcnv=ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                       pa=beam['positionangle'],overwrite=True)
         ia.done()
-        ia.open(convolved)
-        ia.setbrightnessunit("Jy/beam")
-        ia.setrestoringbeam(beam=beam)
-        ia.done()
+        
+        #tmpcnv.open(convolved)
+        tmpcnv.setbrightnessunit("Jy/beam")
+        tmpcnv.setrestoringbeam(beam=beam)
+        tmpcnv.done()
 
 
     def bandname(self, freq):

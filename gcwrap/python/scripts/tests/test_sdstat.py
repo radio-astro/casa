@@ -4,13 +4,12 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 import listing
+import numpy
 from numpy import array
 
-asap_init()
 import asap as sd
 from sdstat import sdstat
 
@@ -22,6 +21,9 @@ class sdstat_unittest_base:
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdstat/'
     taskname = "sdstat"
+    outroot = taskname+'_test'
+    outsuff = ".out"
+    infile = 'OrionS_rawACSmod_calTPave.asap'
 
     ### helper functions for tests ###
     def _checkfile( self, name ):
@@ -29,7 +31,7 @@ class sdstat_unittest_base:
         self.assertTrue(isthere,
                          msg='output file %s was not created because of the task failure'%(name))
 
-    def _convert_masklist( self, chanlist, unit, filename, spw=0 ):
+    def _convert_masklist( self, chanlist, unit, filename, spw=0, restfreq = '' ):
         """
         Convert a masklist from channel unit to a specified unit
             chanlist : masklist in channel unit
@@ -44,8 +46,14 @@ class sdstat_unittest_base:
         self.assertTrue(spw in scan.getifnos(), "IF=%d does not exists in %s." % (spw, filename))
         scan.set_unit(unit)
         scan.set_selection(ifs=[spw])
+        if restfreq != '':
+            molids = scan._getmolidcol_list()
+            scan.set_restfreqs(restfreq)
         chanval = scan._getabcissa(0)
         scan.set_unit(oldunit)
+        if restfreq != '':
+            scan._setmolidcol_list(molids)
+            del molids
         del scan, oldunit
         for schan, echan in chanlist:
             vallist.append([chanval[schan],chanval[echan]])
@@ -74,7 +82,6 @@ class sdstat_unittest_base:
         Convert input to a list
         If input is None, this method simply returns None.
         """
-        import numpy
         listtypes = (list, tuple, numpy.ndarray)
         if input == None:
             return None
@@ -89,9 +96,9 @@ class sdstat_unittest_base:
             fulllist  : an input list
             elems     : a list of element IDs to return
         """
-        self.assertTrue(type(fulllist) in (list,tuple), \
+        self.assertTrue(type(fulllist) in (list,tuple,numpy.ndarray), \
                         "Input array should be either a list or tuple")
-        if elems:
+        if elems is not None:
             elems = self._to_list(elems)
         else:
             # No selection
@@ -113,7 +120,7 @@ class sdstat_unittest_base:
             compstats = self._to_list(compstats)
         else:
             compstats = refstat.keys()
-        
+
         # Task sdstat returns a dictionary of statistic values
         self.assertTrue(isinstance(refstat,dict),
                          msg="The referece statistics are not a dictionary")
@@ -132,8 +139,8 @@ class sdstat_unittest_base:
                     self.assertEqual(refval['unit'],currval['unit'],\
                                      "The units differ in '%s' %s (current run), %s (reference)" % \
                                      (stat, currval['unit'], refval['unit']))
-                    print "Comparing unit of '%s': %s (current run), %s (reference)" % \
-                          (stat,currval['unit'],refval['unit'])
+                    #print "Comparing unit of '%s': %s (current run), %s (reference)" % \
+                    #      (stat,currval['unit'],refval['unit'])
                     refval = refval['value']
                     currval = currval['value']
                 else:
@@ -141,10 +148,10 @@ class sdstat_unittest_base:
                                     (str(currval),str(refval)))
             refval = self._to_list(refval)
             currval = self._to_list(currval)
-            if icomp:
+            if icomp is not None:
                 refval = self._get_elements(refval,icomp)
-            print "Comparing '%s': %s (current run), %s (reference)" % \
-                  (stat,str(currval),str(refval))
+            #print "Comparing '%s': %s (current run), %s (reference)" % \
+            #      (stat,str(currval),str(refval))
             self.assertTrue(len(currval)==len(refval),"Number of elemnets differs.")
             for i in range(len(currval)):
                 self.assertTrue(self._isInAllowedRange(currval[i], refval[i], allowdiff),
@@ -189,12 +196,6 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
     ### TODO:
     ### - need checking for flag application
     ### - comparison with simple spectral
-
-    # Input and output names
-    infile = 'OrionS_rawACSmod_calTPave.asap'
-    outroot = sdstat_unittest_base.taskname+'_test'
-    outsuff = ".out"
-    #strefroot = datapath+'refstats'
 
     #compVstats = ['max','min','mean','sum','rms','median','stddev']
     # Line channels
@@ -457,6 +458,227 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         #self._compareStats(currstat,self.ref_allK)
         #self._compareStats(currstat,self.minmaxchan_all)
 
+class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdstat. Test variations of restfreq parameter.
+
+    The list of tests:
+    testRF01 - testRF02 --- a value (float, quantity w/ unit)
+    testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
+    testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
+    """
+    iflist = [0,2]
+    frf = [45.490e9, 44.075e9]
+    irf = [45490000000, 44075000000]
+    qurf = ['45490.MHz','44.075GHz']
+    qrf = [str(frf[0]), str(irf[1])]
+    drf = [{'name': "IF0 Rest", 'value': frf[0]}, \
+           {'name': "IF2 Rest", 'value': qurf[1]}]
+    badq = ['45490.km','44.075bad']
+    
+    #compVstats = ['max','min','mean','sum','rms','median','stddev']
+
+    # Reference line statistic values (masklist=linechan2, invertmask=False)
+    ref_allK02 = {'rms': [4.1249432563781738, 4.4454779624938965],
+                'min': [-6.5844717025756836, -92.782661437988281],
+                'max': [12.278024673461914, 60.68634033203125],
+                'median': [4.1043367385864258, 4.1507611274719238],
+                'stddev': [0.2636776864528656, 1.5120075941085815],
+                'sum': [33722.40234375, 34246.4453125],
+                'mean': [4.1165041923522949, 4.1804742813110352]}
+
+    minmaxvrf0_all0 = {'max_abscissa': {'value': 168.19211024624954, 'unit': 'km/s'}, 
+                        'min_abscissa': {'value': 168.3127963097034, 'unit': 'km/s'}}
+    minmaxvrf2_all0 = {'max_abscissa': {'value': -9451.0554503663261, 'unit': 'km/s'}, 
+                        'min_abscissa': {'value': -9450.9308897531319, 'unit': 'km/s'}}
+    minmaxvrf2_all2 = {'max_abscissa': {'value': -169.33704197623328, 'unit': 'km/s'}, 
+                        'min_abscissa': {'value': -169.37856218060918, 'unit': 'km/s'}}
+    #minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8186.]), 'unit': 'channel'},
+    #                  'min_abscissa': {'value': array([   18.,  8187.]), 'unit': 'channel'}}    
+    ### Actual test scripts ###
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdstat)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    # Tests
+    def testRF01( self ):
+        """Test RF01: restfreq (a float value)"""
+        tid = "RF01"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = self.frf[1]
+        
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF02( self ):
+        """Test RF02: restfreq (a quantity w/ unit)"""
+        tid = "RF02"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = self.qurf[1]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF11( self ):
+        """Test RF11: restfreq (single element list of int)"""
+        tid = "RF11"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.irf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF12( self ):
+        """Test RF12: restfreq (single element list of quantity w/o unit)"""
+        tid = "RF12"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.qrf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF13( self ):
+        """Test RF13: restfreq (single element list of dictionary)"""
+        tid = "RF13"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.drf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF21( self ):
+        """Test RF21: restfreq (a list of float & int)"""
+        tid = "RF21"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.frf[0], self.irf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF22( self ):
+        """Test RF22: restfreq (a list of quantity w/ and w/o unit)"""
+        tid = "RF22"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.qurf[0], self.qrf[1] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+    def testRF23( self ):
+        """Test RF23: restfreq (a list of dictionary)"""
+        tid = "RF23"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        iflist = self.iflist
+        specunit = 'km/s'
+        restfreq = [ self.drf[1], self.drf[0] ]
+
+        print "Setting restfreq = %s" % (str(restfreq))
+        currstat = sdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+                          specunit=specunit,restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_allK02)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+
+
+
+        
 class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
     """
     Unit tests for task sdstat. Test scantable sotrage and insitu
@@ -471,10 +693,6 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
     Note on handlings of disk storage:
        Task script restores unit and frame information.
     """
-    infile = 'OrionS_rawACSmod_calTPave.asap'
-    outroot = sdstat_unittest_base.taskname+'_storage'
-    outsuff = ".out"
-
     linechan2 = [[2951,3088]]
     # Reference line statistic values (masklist=linechan2, invertmask=False)
     ref_line2 = {'rms': 5.0687642097473145, 'min': 3.9442729949951172,
@@ -483,7 +701,205 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
                  'mean': 5.0367403030395508}
     minmaxchan_line2 = {'max_abscissa': {'value': 3048.0, 'unit': 'channel'}, 
                         'min_abscissa': {'value': 2951.0, 'unit': 'channel'}}
+    minmaxvrf_line2 = {'max_abscissa': {'value': 43.993768228253309, 'unit': 'km/s'}, 
+                        'min_abscissa': {'value': 48.021228055013935, 'unit': 'km/s'}}
     
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        # back up the original settings
+        self.storage = sd.rcParams['scantable.storage']
+        self.insitu = sd.rcParams['insitu']
+
+        default(sdstat)
+
+    def tearDown( self ):
+        # restore settings
+        sd.rcParams['scantable.storage'] = self.storage
+        sd.rcParams['insitu'] = self.insitu
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    def testMT( self ):
+        """Storage Test MT: storage='memory' and insitu=T"""
+        tid="MT"
+        outfile = self.outroot+tid+self.outsuff
+        iflist = [2]
+        #specunit = 'GHz'
+        specunit = 'km/s'
+        restfreq = [44.075e9]
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
+                          iflist=iflist,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                                          restfreq=restfreq[0])
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
+                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+        # print "Statistics out of the current run:\n",currstat
+        
+        sd.rcParams['scantable.storage'] = 'memory'
+        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
+                          iflist=iflist,masklist=self.linechan2)
+
+        # Test input data
+        compstats = self.ref_line2.keys()
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat,compstats=compstats)
+        print "Quantums before run"
+        self._compareStats(initstat,self.minmaxchan_line2)
+        print "Quantums after run"
+        self._compareStats(newinstat,self.minmaxchan_line2)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        self._compareStats(currstat,self.ref_line2)
+        print "Testing OUTPUT Quantums"
+        self._compareStats(currstat,self.minmaxvrf_line2)
+
+    def testMF( self ):
+        """Storage Test MF: storage='memory' and insitu=F"""
+        tid="MF"
+        outfile = self.outroot+tid+self.outsuff
+        iflist = [2]
+        #specunit = 'GHz'
+        specunit = 'km/s'
+        restfreq = [44.075e9]
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
+                          iflist=iflist,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                                          restfreq=restfreq[0])
+        
+        sd.rcParams['scantable.storage'] = 'memory'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
+                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+        # print "Statistics out of the current run:\n",currstat
+        
+        sd.rcParams['scantable.storage'] = 'memory'
+        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
+                          iflist=iflist,masklist=self.linechan2)
+
+        # Test input data
+        compstats = self.ref_line2.keys()
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat,compstats=compstats)
+        print "Quantums before run"
+        self._compareStats(initstat,self.minmaxchan_line2)
+        print "Quantums after run"
+        self._compareStats(newinstat,self.minmaxchan_line2)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        self._compareStats(currstat,self.ref_line2)
+        print "Testing OUTPUT Quantums"
+        self._compareStats(currstat,self.minmaxvrf_line2)
+
+    def testDT( self ):
+        """Storage Test DT: storage='disk' and insitu=T"""
+        tid="DT"
+        outfile = self.outroot+tid+self.outsuff
+        iflist = [2]
+        #specunit = 'GHz'
+        specunit = 'km/s'
+        restfreq = [44.075e9]
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
+                          iflist=iflist,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                                          restfreq=restfreq[0])
+        
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = True
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
+                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+        # print "Statistics out of the current run:\n",currstat
+        
+        sd.rcParams['scantable.storage'] = 'memory'
+        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
+                          iflist=iflist,masklist=self.linechan2)
+
+        # Test input data
+        compstats = self.ref_line2.keys()
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat,compstats=compstats)
+        print "Quantums before run"
+        self._compareStats(initstat,self.minmaxchan_line2)
+        print "Quantums after run"
+        self._compareStats(newinstat,self.minmaxchan_line2)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        self._compareStats(currstat,self.ref_line2)
+        print "Testing OUTPUT Quantums"
+        self._compareStats(currstat,self.minmaxvrf_line2)
+
+    def testDF( self ):
+        """Storage Test DF: storage='disk' and insitu=F"""
+        tid="DF"
+        outfile = self.outroot+tid+self.outsuff
+        iflist = [2]
+        #specunit = 'GHz'
+        specunit = 'km/s'
+        restfreq = [44.075e9]
+
+        sd.rcParams['scantable.storage'] = 'memory'
+        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
+                          iflist=iflist,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                                          restfreq=restfreq[0])
+        
+        sd.rcParams['scantable.storage'] = 'disk'
+        sd.rcParams['insitu'] = False
+        print "Running test with storage='%s' and insitu=%s" % \
+              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
+
+        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
+                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+        # print "Statistics out of the current run:\n",currstat
+        
+        sd.rcParams['scantable.storage'] = 'memory'
+        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
+                          iflist=iflist,masklist=self.linechan2)
+
+        # Test input data
+        compstats = self.ref_line2.keys()
+        print "Comparing INPUT statistics before/after calculations"
+        self._compareStats(newinstat,initstat,compstats=compstats)
+        print "Quantums before run"
+        self._compareStats(initstat,self.minmaxchan_line2)
+        print "Quantums after run"
+        self._compareStats(newinstat,self.minmaxchan_line2)
+        # Test output data
+        print "Testing OUTPUT statistics"
+        self._compareStats(currstat,self.ref_line2)
+        print "Testing OUTPUT Quantums"
+        self._compareStats(currstat,self.minmaxvrf_line2)
+
+class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Test the case when the task throws exception.
+    """
+    # Data path of input/output
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+               '/data/regression/unittest/sdstat/'
+    taskname = "sdstat"
+    outroot = taskname+'_test'
+    outsuff = ".out"
+    infile = 'OrionS_rawACSmod_calTPave.asap'
+
     def setUp( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -495,154 +911,16 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    def testMT( self ):
-        """Storage Test MT: storage='memory' and insitu=T"""
-        tid="MT"
-        outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
-        specunit = 'GHz'
-
-        sd.rcParams['scantable.storage'] = 'memory'
-        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        sd.rcParams['insitu'] = True
-        print "Running test with storage='%s' and insitu=%s" % \
-              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-
-        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
-
-        # Test input data
-        compstats = self.ref_line2.keys()
-        print "Comparing INPUT statistics before/after calculations"
-        self._compareStats(newinstat,initstat,compstats=compstats)
-        print "Quantums before run"
-        self._compareStats(initstat,self.minmaxchan_line2)
-        print "Quantums after run"
-        self._compareStats(newinstat,self.minmaxchan_line2)
-        # Test output data
-        print "Testing OUTPUT statistics"
-        self._compareStats(currstat,self.ref_line2)
-
-    def testMF( self ):
-        """Storage Test MF: storage='memory' and insitu=F"""
-        tid="MF"
-        outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
-        specunit = 'GHz'
-
-        sd.rcParams['scantable.storage'] = 'memory'
-        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        sd.rcParams['insitu'] = False
-        print "Running test with storage='%s' and insitu=%s" % \
-              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-
-        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
-
-        # Test input data
-        compstats = self.ref_line2.keys()
-        print "Comparing INPUT statistics before/after calculations"
-        self._compareStats(newinstat,initstat,compstats=compstats)
-        print "Quantums before run"
-        self._compareStats(initstat,self.minmaxchan_line2)
-        print "Quantums after run"
-        self._compareStats(newinstat,self.minmaxchan_line2)
-        # Test output data
-        print "Testing OUTPUT statistics"
-        self._compareStats(currstat,self.ref_line2)
-
-    def testDT( self ):
-        """Storage Test DT: storage='disk' and insitu=T"""
-        tid="DT"
-        outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
-        specunit = 'GHz'
-
-        sd.rcParams['scantable.storage'] = 'memory'
-        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
-        
-        sd.rcParams['scantable.storage'] = 'disk'
-        sd.rcParams['insitu'] = True
-        print "Running test with storage='%s' and insitu=%s" % \
-              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-
-        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
-
-        # Test input data
-        compstats = self.ref_line2.keys()
-        print "Comparing INPUT statistics before/after calculations"
-        self._compareStats(newinstat,initstat,compstats=compstats)
-        print "Quantums before run"
-        self._compareStats(initstat,self.minmaxchan_line2)
-        print "Quantums after run"
-        self._compareStats(newinstat,self.minmaxchan_line2)
-        # Test output data
-        print "Testing OUTPUT statistics"
-        self._compareStats(currstat,self.ref_line2)
-
-    def testDF( self ):
-        """Storage Test DF: storage='disk' and insitu=F"""
-        tid="DF"
-        outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
-        specunit = 'GHz'
-
-        sd.rcParams['scantable.storage'] = 'memory'
-        initstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
-        
-        sd.rcParams['scantable.storage'] = 'disk'
-        sd.rcParams['insitu'] = False
-        print "Running test with storage='%s' and insitu=%s" % \
-              (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-
-        currstat = sdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-        
-        sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = sdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
-
-        # Test input data
-        compstats = self.ref_line2.keys()
-        print "Comparing INPUT statistics before/after calculations"
-        self._compareStats(newinstat,initstat,compstats=compstats)
-        print "Quantums before run"
-        self._compareStats(initstat,self.minmaxchan_line2)
-        print "Quantums after run"
-        self._compareStats(newinstat,self.minmaxchan_line2)
-        # Test output data
-        print "Testing OUTPUT statistics"
-        self._compareStats(currstat,self.ref_line2)
-
+    def testNoData(self):
+        try:
+            res = sdstat(infile=self.infile,iflist=99)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Selection contains no data. Not applying it.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 def suite():
-    return [sdstat_basicTest, sdstat_storageTest]
+    return [sdstat_basicTest, sdstat_restfreqTest, sdstat_storageTest,
+            sdstat_exceptions]

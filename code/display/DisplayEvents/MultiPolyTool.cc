@@ -442,15 +442,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     bool MultiPolyTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
-				const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::vector<std::pair<double,double> > &pts,
+				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, bool is_annotation ) {
+				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width, bool is_annotation ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 	result->setLabel( label );
+	result->setLabelPosition( label_pos );
+	result->setLabelDelta( label_off );
+	// set line first...
+	result->setLine( line_color, line_style, line_width );
 	result->setFont( font, font_size, font_style, font_color );
-	result->setLine( line_color, line_style );
 	result->setAnnotation(is_annotation);
 	polygons.push_back( result );
 	refresh( );

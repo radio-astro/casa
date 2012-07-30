@@ -168,6 +168,25 @@ namespace casa{
     fillPB(*(ap.aperture),pbImage);
   }
 
+  void ALMACalcIlluminationConvFunc::applyVP(ImageInterface<Complex>& pbImage, 
+					     const String& telescope, const MEpoch& obsTime, 
+					     const String& antType0, const String& antType1,
+					     const MVFrequency& freqQ, Double pa,
+					     Bool doSquint)
+  {
+    CoordinateSystem skyCS(pbImage.coordinates());
+    IPosition skyShape(pbImage.shape());
+
+    TempImage<Complex> uvGrid;
+    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime, otherAntRayPath_p);
+    // antType1 ignored for the moment
+    regridAperture(skyCS, skyShape, uvGrid, telescope, freqQ, pa, doSquint, bandID);
+    pbImage.setCoordinateInfo(skyCS);
+    fillVP(*(ap.aperture),pbImage);
+  }
+
   //
   //--------------------------------------------------------------------------
   //
@@ -480,6 +499,44 @@ namespace casa{
 	      inNdx = ndx; inNdx(2)=s;
 	      cval = inImg.getAt(inNdx);
 	      if (Square) cval = cval*conj(cval);
+	      outImg.putAt(cval*outImg.getAt(ndx),ndx);
+	    }
+      }
+  }
+
+  void ALMACalcIlluminationConvFunc::fillVP(ImageInterface<Complex>& inImg,
+					    ImageInterface<Complex>& outImg,
+					    Bool Square)
+  {
+    IPosition imsize(outImg.shape());
+    IPosition ndx(outImg.shape());
+    IPosition inShape(inImg.shape()),inNdx;
+    Vector<Int> inStokes,outStokes;
+    Int index,s,index1;
+    index = inImg.coordinates().findCoordinate(Coordinate::STOKES);
+    inStokes = inImg.coordinates().stokesCoordinate(index).stokes();
+    index = outImg.coordinates().findCoordinate(Coordinate::STOKES);
+    outStokes = outImg.coordinates().stokesCoordinate(index).stokes();
+    index = outImg.coordinates().findCoordinate(Coordinate::SPECTRAL);
+    index1 = inImg.coordinates().findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate inSpectralCoords = inImg.coordinates().spectralCoordinate(index1);
+    CoordinateSystem outCS = outImg.coordinates();
+    outCS.replaceCoordinate(inSpectralCoords,index);
+    outImg.setCoordinateInfo(outCS);
+
+    ndx(3)=0;
+    for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++) // The poln axes
+      {
+	for(s=0;s<inShape(2);s++) if (inStokes(s) == outStokes(ndx(2))) break;
+	
+	for(ndx(0)=0;ndx(0)<imsize(0);ndx(0)++)
+	  for(ndx(1)=0;ndx(1)<imsize(1);ndx(1)++)
+	    {
+	      Complex cval;
+	      inNdx = ndx; inNdx(2)=s;
+	      cval = inImg.getAt(inNdx);
+	      cval = sqrt(sqrt(real(cval*conj(cval))));
+	      if (Square) cval = cval*cval;
 	      outImg.putAt(cval*outImg.getAt(ndx),ndx);
 	    }
       }

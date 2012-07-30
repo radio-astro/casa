@@ -11,6 +11,7 @@ tFluxStandard
 tFluxStandard2
 tGaussianComponent
 tGaussianShape
+tGaussianBeam
 tPointComponent
 tPointShape
 tSkyCompRep

@@ -113,7 +113,7 @@ namespace casa {
 	    blc_y -= dy;
 	    trc_x += dx;
 	    trc_y += dy;
-	    updateStateInfo( true );
+	    updateStateInfo( true, RegionChangeModified );
 	}
 	    
 
@@ -217,7 +217,7 @@ namespace casa {
 	    }
 
 	    if ( blc_x > trc_x || blc_y > trc_y ) throw internal_error("rectangle inconsistency");
-	    updateStateInfo( true );
+	    updateStateInfo( true, RegionChangeModified );
 	    setDrawCenter(false);
 	    invalidateCenterInfo();
 	    return handle;
@@ -228,7 +228,7 @@ namespace casa {
 		trc_x += dx;
 		blc_y += dy;
 		trc_y += dy;
-		updateStateInfo( true );
+		updateStateInfo( true, RegionChangeModified );
 		setDrawCenter(false);
 		invalidateCenterInfo();
 	}

@@ -920,7 +920,7 @@ void QtViewerPrintGui::printToFile(const QString &filename,bool isEPS)
     }
 }
 
-void QtViewerPrintGui::dpResized(QSize panelSize, QSize canvasSize) {
+void QtViewerPrintGui::dpResized(QSize /*panelSize*/, QSize canvasSize) {
     stringstream ss;
     ss << "Current Canvas Size: " << canvasSize.width() << " x ";
     ss << canvasSize.height() << " pixels.";

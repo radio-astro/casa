@@ -25,7 +25,6 @@
 #include "MomentCollapseThreadRadio.h"
 #include <images/Images/ImageAnalysis.h>
 
-#include <QDebug>
 #include <QFile>
 
 namespace casa {

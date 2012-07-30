@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <node name="/casa/viewer">
   <interface name="edu.nrao.casa.viewer">
-    <method name="start_interact" >
+    <method name="start_interact" timeout="0x7fffffff">
       <arg direction="in" type="v" name="input" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
@@ -47,7 +47,7 @@
       <arg direction="in" type="i" name="panel_or_data" />
       <arg direction="out" type="v" />
     </method>
-    <method name="unload" >
+    <method name="unload" timeout="0x7fffffff">
       <arg direction="in" type="i" name="data" />
       <arg direction="out" type="v" />
     </method>
@@ -71,7 +71,7 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
-    <method name="close">
+    <method name="close" timeout="0x7fffffff">
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
@@ -117,7 +117,7 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
-    <method name="setoptions" >
+    <method name="setoptions" timeout="0x7fffffff">
       <arg direction="in" type="v" name="options" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
@@ -143,7 +143,7 @@
       <arg direction="out" type="as" />
     </method>
 
-    <method name="done">
+    <method name="done" timeout="0x7fffffff">
       <arg direction="out" type="b" />
     </method>
   </interface>

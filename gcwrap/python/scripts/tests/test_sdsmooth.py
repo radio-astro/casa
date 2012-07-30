@@ -4,13 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import * 
 import unittest
 #
 #import listing
 import numpy
 
-asap_init()
 import asap as sd
 from sdsmooth import sdsmooth
 #from sdstat import sdstat
@@ -87,6 +85,7 @@ class sdsmooth_badinputs(sdsmooth_unittest_base,unittest.TestCase):
     # Tests on invalid parameter sets
     def test_default(self):
         """Test Default parameters (raises an errror)"""
+        # argument verification error
         res = sdsmooth()
         self.assertFalse(res)
 
@@ -94,6 +93,7 @@ class sdsmooth_badinputs(sdsmooth_unittest_base,unittest.TestCase):
         """Test bad kernel name"""
         kernel = self.badname
 
+        # argument verification error
         res = sdsmooth(infile=self.inname,outfile=self.outname,
                        kernel=kernel)
         self.assertFalse(res)
@@ -103,9 +103,15 @@ class sdsmooth_badinputs(sdsmooth_unittest_base,unittest.TestCase):
         kernel = 'regrid'
         chanwidth = self.badquant
 
-        res = sdsmooth(infile=self.inname,outfile=self.outname,
-                       kernel=kernel,chanwidth=chanwidth)
-        self.assertFalse(res)
+        try:
+            res = sdsmooth(infile=self.inname,outfile=self.outname,
+                           kernel=kernel,chanwidth=chanwidth)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Invalid quantity chanwidth 5bad')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
 class sdsmooth_basicTest(sdsmooth_unittest_base,unittest.TestCase):

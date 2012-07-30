@@ -26,5 +26,5 @@ def imfit(
         if (myia):
             myia.done()
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        return None
+        raise instance
         

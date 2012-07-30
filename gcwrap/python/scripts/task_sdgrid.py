@@ -162,4 +162,5 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
         except Exception, instance:
             #print '***Error***',instance
             casalog.post( str(instance), priority = 'ERROR' )
+            raise Exception, instance
             return

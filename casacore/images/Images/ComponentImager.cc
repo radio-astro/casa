@@ -193,14 +193,14 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
       fluxUnits.setName(imageUnitName + String(".") + pixel.getName());
     } else if (imageUnitName.contains("beam")) {
       const ImageInfo imageInfo = image.imageInfo();
-      const Vector<Quantum<Double> > beam = imageInfo.restoringBeam();
-      if (beam.nelements() == 0) {
+      const GaussianBeam beam = imageInfo.restoringBeam();
+      if (beam.isNull()) {
 	os << LogIO::WARN 
 	   << "No beam defined even though the image units contain a beam" 
 	   << endl << "Assuming the beam is one pixel" << LogIO::POST;
 	UnitMap::putUser("beam", pixel.getValue());
       } else {
-	const Quantum<Double> beamArea = beam(0) * beam(1) * C::pi/log(16.);
+	const Quantum<Double> beamArea = beam.getArea("sr");
 	UnitMap::putUser("beam", UnitVal(beamArea.getValue(),
 					 beamArea.getFullUnit().getName()));
       }

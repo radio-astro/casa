@@ -916,12 +916,12 @@ def readflagxml(sdmfile, mytbuff):
         start = int(rowstart[0].childNodes[0].nodeValue)
         startmjds = (float(start)*1.0E-9) - mytbuff
         t = qa.quantity(startmjds,'s')
-        starttime = qa.time(t,form="ymd",prec=9)
+        starttime = qa.time(t,form="ymd",prec=9)[0]
         rowend = rownode.getElementsByTagName("endTime")
         end = int(rowend[0].childNodes[0].nodeValue)
         endmjds = (float(end)*1.0E-9) + mytbuff
         t = qa.quantity(endmjds,'s')
-        endtime = qa.time(t,form="ymd",prec=9)
+        endtime = qa.time(t,form="ymd",prec=9)[0]
 	# time and interval for FLAG_CMD use
 	times = 0.5*(startmjds+endmjds)
 	intervs = endmjds-startmjds
@@ -1558,7 +1558,7 @@ def getflagcmds(cmdlist, ms_startmjds, ms_endmjds):
 	    return myflagd
 
     t = qa.quantity(ms_startmjds,'s')
-    ms_startdate = qa.time(t,form=["ymd","no_time"])
+    ms_startdate = qa.time(t,form=["ymd","no_time"])[0]
     t0 = qa.totime(ms_startdate+'/00:00:00.0')
     #t0d = qa.convert(t0,'d')
     t0s = qa.convert(t0,'s')
@@ -2059,10 +2059,10 @@ def getmstimes(vis):
 	    ms_endmjds = timd['time'][1]
 	    t = qa.quantity(ms_startmjds,'s')
 	    t1sd = t['value']
-	    ms_time1 = qa.time(t,form="ymd",prec=9)
+	    ms_time1 = qa.time(t,form="ymd",prec=9)[0]
 	    t = qa.quantity(ms_endmjds,'s')
 	    t2sd = t['value']
-	    ms_time2 = qa.time(t,form="ymd",prec=9)
+	    ms_time2 = qa.time(t,form="ymd",prec=9)[0]
 	    casalog.post('MS spans timerange '+ms_time1+' to '+ms_time2)
     else:
 	    print 'WARNING: Could not open vis as MS to find times'
@@ -2219,9 +2219,9 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
 			    timmax=t2s
     # min,max times
     q1 = qa.quantity(timmin,'s')
-    time1=qa.time(q1,form='ymd',prec=9)
+    time1=qa.time(q1,form='ymd',prec=9)[0]
     q2 = qa.quantity(timmax,'s')
-    time2=qa.time(q2,form='ymd',prec=9)
+    time2=qa.time(q2,form='ymd',prec=9)[0]
     print '  Found flag times from '+time1+' to '+time2
     
     # sort out blank times
@@ -2241,9 +2241,9 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
     if (t2sdata >= t1sdata > 0) and (timmin<t1sdata or timmax>t2sdata):
 	    # min,max data times
 	    q1 = qa.quantity(t1sdata,'s')
-	    tdata1=qa.time(q1,form='ymd',prec=9)
+	    tdata1=qa.time(q1,form='ymd',prec=9)[0]
 	    q2 = qa.quantity(t2sdata,'s')
-	    tdata2=qa.time(q2,form='ymd',prec=9)
+	    tdata2=qa.time(q2,form='ymd',prec=9)[0]
 	    print '  WARNING: Trimming flag times to data limits '+tdata1+' to '+tdata2
 	    
 	    for ipf in range(npf):
@@ -2363,7 +2363,7 @@ def newplotflags(myflags, plotname, t1sdata, t2sdata):
 	    time = myXlim[0] + (myXlim[1]-myXlim[0])*float(itim)/float(nxticks-1)
 	    mytime.append(time)
 	    q1=qa.quantity(time,'s')
-	    time1=qa.time(q1,form='ymd',prec=9)
+	    time1=qa.time(q1,form='ymd',prec=9)[0]
 	    if itim>0:
 		    time1s = time1[11:]
 	    else:

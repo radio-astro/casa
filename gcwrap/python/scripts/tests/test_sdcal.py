@@ -4,7 +4,6 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from asap_init import *
 import unittest
 import sha
 import time
@@ -12,8 +11,12 @@ import numpy
 import re
 import string
 
-asap_init()
-from sdcal import sdcal
+# to rethrow exception 
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
+from sdcal_cli import sdcal_cli as sdcal
+#from sdcal import sdcal
 import asap as sd
 
 #
@@ -198,21 +201,35 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
 
     def test000(self):
         """Test 000: Default parameters"""
+        # argument verification error
         self.res=sdcal()
         self.assertFalse(self.res)
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of time averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
-        self.assertFalse(self.res)        
+        try:
+            self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Please specify weight type of polarization averaging')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test003(self):
         """Test 003: Invalid calibration mode"""
+        # argument verification error
         self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
         self.assertFalse(self.res)
 
@@ -221,9 +238,17 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
         outfile='calpsGBT.cal.asap'
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
-        self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
-        os.system( 'rm -rf %s'%outfile )        
-        self.assertFalse(self.res)
+        try:
+            self.res=sdcal(infile=self.rawfile,outfile=outfile,overwrite=False)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Output file \'%s\' exist.'%(outfile))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        finally:
+            os.system( 'rm -rf %s'%outfile )        
+
 
 
 ###
@@ -812,7 +837,35 @@ class sdcal_test9(sdcal_avetest_base,unittest.TestCase):
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[0])
-        
+        self._checkFrequencies(outname)
+
+    def _checkFrequencies(self,outfile):
+        tb.open(self.rawfile.rstrip('/')+'/FREQUENCIES')
+        rpin=tb.getcol('REFPIX')
+        rvin=tb.getcol('REFVAL')
+        icin=tb.getcol('INCREMENT')
+        tb.close
+        tb.open(outfile.rstrip('/')+'/FREQUENCIES')
+        rpout=tb.getcol('REFPIX')
+        rvout=tb.getcol('REFVAL')
+        icout=tb.getcol('INCREMENT')
+        tb.close
+        ic=[icin[2:4].max(),icin[0:2].max()]
+        ledge=[rvin[2]-ic[0]*(rpin[2]+0.5),
+               rvin[0]-ic[1]*(rpin[0]+0.5)]
+        redge=[rvin[2]+ic[0]*(8191-rpin[2]+0.5),
+               rvin[0]+ic[1]*(8191-rpin[0]+0.5)]
+        eps = 1.0e-15
+        for i in xrange(2):
+            self.assertEqual(ic[i],icout[i],
+                             msg='INCREMENT for FREQ_ID=%s differ'%(i))
+            fmin=rvout[i]-icout[i]*(rpout[i]+0.5)
+            self.assertTrue(abs((fmin-ledge[i])/ledge[i]) < eps,
+                             msg='Left frequency edge for FREQ_ID=%s does not match'%(i))
+            fmax=rvout[i]+icout[i]*(8191-rpout[i]+0.5)
+            self.assertTrue(abs((fmax-redge[i])/redge[i]) < eps,
+                             msg='Right frequency edge for FREQ_ID=%s does not match'%(i))
+
 
 
 def suite():

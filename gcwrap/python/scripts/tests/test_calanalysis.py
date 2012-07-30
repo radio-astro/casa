@@ -9,7 +9,7 @@ import unittest
 
 class calanalysis_tsys1( unittest.TestCase ):
 
-	ca = casac.homefinder.find_home_by_name( 'calanalysisHome' ).create()
+	ca = casac.casac.calanalysis()
 
 	calName = 'uid___A002_X30a93d_X43e.ms.tsys.s3.tbl'
 	msName = 'uid___A002_X30a93d_X43e.ms'

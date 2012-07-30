@@ -83,8 +83,8 @@ class csvclean_test1(unittest.TestCase):
         summary = ia.summary()
         ia.close()
         # values of refval are in radians
-        ra = summary[1]['refval'][0]
-        dec = summary[1]['refval'][1]
+        ra = summary['refval'][0]
+        dec = summary['refval'][1]
         RA = qa.time(qa.quantity(ra,'rad'))
         DEC = qa.time(qa.quantity(dec,'rad'))
         
@@ -94,8 +94,8 @@ class csvclean_test1(unittest.TestCase):
         ms.close()
         if (type(phasecenter) == int):
             fld = 'field_'+str(phasecenter)
-            ra = info['header'][fld]['direction']['m0']['value']
-            dec = info['header'][fld]['direction']['m1']['value']
+            ra = info[fld]['direction']['m0']['value']
+            dec = info[fld]['direction']['m1']['value']
             mRA = qa.time(qa.quantity(ra,'rad'))
             mDEC = qa.time(qa.quantity(dec,'rad'))
 #            if ((RA != mRA) or (DEC != mDEC)):
@@ -104,8 +104,8 @@ class csvclean_test1(unittest.TestCase):
         elif (type(phasecenter) == str):
             for i in range(3):
                 fieldid = 'field_'+str(i)
-                ra = info['header'][fieldid]['direction']['m0']['value']
-                dec = info['header'][fieldid]['direction']['m1']['value']
+                ra = info[fieldid]['direction']['m0']['value']
+                dec = info[fieldid]['direction']['m1']['value']
                 mRA = qa.time(qa.quantity(ra,'rad'))
                 mDEC = qa.time(qa.quantity(dec,'rad'))
                 if ((RA == mRA) and (DEC == mDEC)):

@@ -100,7 +100,7 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-		const ImageInterface<Float>* const image, const String& region,
+		const ImageInterface<Float>* const &image, const String& region,
 		const Record *const regionRec,
 		const String& box="",
 		const String& chanInp="0", const String& stokes="I",
@@ -146,7 +146,7 @@ public:
 
 private:
 	String _regionString, _residual, _model,
-		estimatesString, _newEstimatesFileName, _compListName;
+		estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList estimates, _curResults;
 	Vector<String> _fixed;
@@ -163,6 +163,7 @@ private:
 	uInt _curChan;
 	Double _zeroLevelOffsetEstimate;
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
+	Int _stokesPixNumber, _chanPixNumber;
 
 	const static String _class;
 

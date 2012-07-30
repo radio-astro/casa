@@ -1,4 +1,5 @@
- //# tImageInfo.cc: Miscellaneous information related to an image
+	
+//# tImage2DConvolver.cc: Miscellaneous information related to an image
 //# Copyright (C) 1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -44,32 +45,61 @@
 
 int main() {
 	try {
-		FITSImage in("test_image2dconvolver.fits");
-		TempImage<Float> got(in.shape(), in.coordinates());
-		Image2DConvolver<Float> ic;
-		Vector<Quantity> gauss(3);
-		gauss[0] = Quantity(10, "arcmin");
-		gauss[1] = Quantity(8, "arcmin");
-		gauss[2] = Quantity(80, "deg");
-		LogIO log;
-		ic.convolve(
-			log, got, in, VectorKernel::GAUSSIAN,
-			IPosition(2, 0, 1), gauss, True, -1.0, True
-		);
-		FITSImage exp("test_image2dconvolver_convolved.fits");
-		cout << "*** max " << max(abs(got.get() - exp.get())) << endl;
-		AlwaysAssert(max(abs(got.get() - exp.get())) < 4e-5, AipsError);
-		Vector<Quantity> gotBeam = got.imageInfo().restoringBeam();
-		Vector<Quantity> expBeam = exp.imageInfo().restoringBeam();
-		for (uInt i=0; i<3; i++) {
-			AlwaysAssert(
-				gotBeam[i].getUnit() == expBeam[i].getUnit(),
-				AipsError
+		{
+			FITSImage in("test_image2dconvolver.fits");
+			TempImage<Float> got(in.shape(), in.coordinates());
+			Vector<Quantity> gauss(3);
+			gauss[0] = Quantity(10, "arcmin");
+			gauss[1] = Quantity(8, "arcmin");
+			gauss[2] = Quantity(80, "deg");
+			LogIO log;
+			Image2DConvolver<Float>::convolve(
+				log, got, in, VectorKernel::GAUSSIAN,
+				IPosition(2, 0, 1), gauss, True, -1.0, True
 			);
-			AlwaysAssert(
-				abs(gotBeam[i].getValue() - expBeam[i].getValue()) < 5e-5,
-				AipsError
+			FITSImage exp("test_image2dconvolver_convolved.fits");
+			AlwaysAssert(max(abs(got.get() - exp.get())) < 4e-5, AipsError);
+			GaussianBeam gotBeam = got.imageInfo().restoringBeam();
+			GaussianBeam expBeam = exp.imageInfo().restoringBeam();
+			AlwaysAssert (near(expBeam, gotBeam, 1e-7), AipsError);
+		}
+		{
+			PagedImage<Float> in(
+				"test_image2dconvolver_multibeam.im"
 			);
+			LogIO log;
+			Vector<Quantity> gauss(3);
+			gauss[0] = Quantity(10, "arcmin");
+			gauss[1] = Quantity(8, "arcmin");
+			gauss[2] = Quantity(80, "deg");
+			TempImage<Float> got(in.shape(), in.coordinates());
+			Image2DConvolver<Float>::convolve(
+				log, got, in, VectorKernel::GAUSSIAN,
+				IPosition(2, 0, 1), gauss, True, -1.0, True
+			);
+			IPosition shape = in.shape();
+			IPosition start(in.ndim(), 0);
+			IPosition end = shape - 1;
+			for (uInt i=0; i<shape[2]; i++) {
+				start[2] = i;
+				end[2] = i;
+				Slicer slice(start, end, Slicer::endIsLast);
+				SubImage<Float> expIn(in, slice);
+				TempImage<Float>exp(expIn.shape(), expIn.coordinates());
+				Image2DConvolver<Float>::convolve(
+					log, exp, expIn, VectorKernel::GAUSSIAN,
+					IPosition(2, 0, 1), gauss, True, -1.0, True
+				);
+				GaussianBeam gotBeam = got.imageInfo().restoringBeam(i, -1);
+				GaussianBeam expBeam = exp.imageInfo().restoringBeam();
+				AlwaysAssert(near(expBeam, gotBeam, 1e-7), AipsError);
+				Array<Float> gotData = got.get()(slice);
+				Array<Float> expData = exp.get();
+				AlwaysAssert(
+					max(fabs(gotData - expData)) < 3e-5,
+					AipsError
+				);
+			}
 		}
 	}
 	catch (AipsError x) {

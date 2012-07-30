@@ -55,11 +55,16 @@ void checkImage(
 		const String& gotImage, const String& expectedImage,
 		const String& differenceImage
 	) {
+	cout << "dif im " << differenceImage << endl;
     ImageAnalysis ia;
     ia.open(gotImage);
     String expr = "\"" + gotImage + "\" - \"" + expectedImage + "\"";
+    cout << "*** before " << endl;
     ia.imagecalc(differenceImage, expr, True);
+    cout << "*** after " << endl;
+    cout << "** info " << Table::tableInfo(differenceImage).type();
     ia.open(differenceImage);
+    cout << "after open" << endl;
     Record stats;
     Vector<Int> axes(2);
     axes[0] = 0;
@@ -327,7 +332,6 @@ int main() {
         }
         {
             writeTestString("test writing of residual and mdoel images");
-            cout << "dirname " << dirName << endl;
             String residImage = dirName + "/residualImage";
             String modelImage = dirName + "/modelImage";
             String residDiff = dirName + "/residualImage.diff";
@@ -778,9 +782,11 @@ int main() {
         cerr << "Exception caught: " << x.getMesg() << endl;
         returnValue = 1;
     }
+    /*
 	if(workdir.exists()) {
 		workdir.removeRecursive();
 	}
+	*/
     delete gaussianModel;
     delete noisyImage;
     delete convolvedModel;

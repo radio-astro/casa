@@ -851,7 +851,7 @@ class immath_test2(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: outfile 'expr_test1' was not created."
         else:
-            myia = iatool.create()
+            myia = iatool()
             myia.open(imageList2[0])
             expected = 2*myia.getchunk()
             myia.done()
@@ -908,7 +908,7 @@ class immath_test2(unittest.TestCase):
                        + size + ".\nExpected the resulting image to"\
                        + "be 256x256x1x1 pixels."
             else:
-                myia = iatool.create()
+                myia = iatool()
                 myia.open(imageList2[0])
                 expected = myia.getchunk()[:,:,:,5:5]
                 myia.done()
@@ -958,13 +958,13 @@ class immath_test2(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']\
                         +"\nError: Unable to get shape of image "+outimage
             
-            if ( not size == [256, 256, 1, 46]):
+            if ( not (size == [256, 256, 1, 46]).all()):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                       +"\nError: Size of output plane is incorrect: "+str(size)\
                       +"\n       Excepted a shape of 256x256x1x46"
             else:
-                myia = iatool.create()
+                myia = iatool()
                 myia.open("expr_test2")
                 chunk1 = myia.getchunk()
                 myia.done()
@@ -1007,49 +1007,23 @@ class immath_test2(unittest.TestCase):
         immath( imageList2[3], expr='IM0', stokes='V', outfile='pol_test_V.im' )
     
         imList = ['pol_test_Q.im', 'pol_test_U.im', 'pol_test_V.im']
-        try:
-            # total polarization intensity
-            outfile = 'pol_test1'
-            if(immath( imagename=imList, outfile=outfile, mode='poli' )):
-                ia.open(outfile)
-                if ia.coordsys().stokes() != 'Ptotal':
-                    success = False
-                    errors += "\nIncorrect stokes in polarization intensity image"
-                ia.done()
-            else:
-                success = False
-                errors += "\nimmath returned False when determining polarization intensity image"
-        except:
-            success = False
-            errors += "\nError: Failed to create polarization intensity image."
-        self.assertTrue(success,errors)
-        try:
-            # linear polarization intensity
-            outfile = 'linear_pol_intensity_test'
-            if(immath( imagename=imList[0:2], outfile=outfile, mode='poli' )):
-                ia.open(outfile)
-                if ia.coordsys().stokes() != 'Plinear':
-                    success = False
-                    errors += "\nIncorrect stokes in linear polarization image"
-                ia.done()
-            else:
-                success = False
-                errors += "\nimmath returned False when determining linear polarization image"
-        except:
-            success = False
-            errors
-        self.assertTrue(success,errors)
+        myia = iatool()
+        # total polarization intensity
+        outfile = 'pol_test1'
+        self.assertTrue(immath( imagename=imList, outfile=outfile, mode='poli' ))
+        myia.open(outfile)
+        self.assertTrue(myia.coordsys().stokes()[0] == 'Ptotal')
+        myia.done()
+        
+        # linear polarization intensity
+        outfile = 'linear_pol_intensity_test'
+        self.assertTrue(immath(imagename=imList[0:2], outfile=outfile, mode='poli' ))
+        myia.open(outfile)
+        self.assertTrue(myia.coordsys().stokes()[0] == 'Plinear')
+        myia.done()
+        
         imList = ['pol_test_Q.im', 'pol_test_U.im']
-        try:
-            results = immath( imagename=imList, outfile='pol_test2', mode='pola' )
-        except:
-            success = False
-            errors += "\nError: Failed to create polarization angle image."
-
-        self.assertTrue(success,errors)
-   
-
-               
+        self.assertTrue(immath( imagename=imList, outfile='pol_test2', mode='pola' ))
  
     # verification of fix to CAS-1678
     # https://bugs.aoc.nrao.edu/browse/CAS-1678
@@ -1064,7 +1038,7 @@ class immath_test2(unittest.TestCase):
             'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
         ]
         expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
-        myia = iatool.create()
+        myia = iatool()
         try:
             # full image test
             outfile = 'full_image_sum.im'
@@ -1148,21 +1122,19 @@ class immath_test2(unittest.TestCase):
             
             outfile = 'cas-1452_out_' + f + '.im'
             expr = f + "(\'" + imagename + "\')" 
-            if (immath(imagename=imagename, outfile=outfile,mode='evalexpr', expr=expr)):
-                ia.open(outfile)
-                got = ia.getchunk()
-                ia.close()
-                maxdiff = numpy.abs(got - expected).max()
-                if ( maxdiff > 1e-7):
-                    retValue['success'] = False
-                    retValue['error_msgs'] += "\nimmath calculation incorrect for " + f
-                    
-                #Remove the old imagefile so it won't confuse case-insensitive file systems (osx).
-                os.system('rm -rf ' + outfile)
+            self.assertTrue(
+                immath(
+                    imagename=imagename, outfile=outfile,
+                    mode='evalexpr', expr=expr
+                )
+            )
+            ia.open(outfile)
+            got = ia.getchunk()
+            ia.close()
+            maxdiff = numpy.abs(got - expected).max()
+            self.assertTrue( maxdiff <= 1e-7)
+            os.system('rm -rf ' + outfile)
     
-            else:
-                retValue['success'] = False
-                retValue['error_msgs'] += "\nimmath returned False for " + f + " calculation"
         #except:
         #    retValue['success'] = False
         #    retValue['error_msgs'] += "\nimmath threw exception for " + f + " calculation"
@@ -1180,25 +1152,16 @@ class immath_test2(unittest.TestCase):
             else:
                 imagenames = [cas1830_im, ""]
             for imagename in imagenames:
-                try:
-                    outfile = 'cas1830_out+' + str(i)
-                    if (imagename):
-                        res = immath(imagename=imagename, expr=expr, chans='22', outfile=outfile)
-                    else:
-                        res = immath(expr=expr, chans='22', outfile=outfile)
-                    if(res):
-                        myia = iatool.create()
-                        myia.open(outfile)
-                        if (myia.shape() != expected):
-                            retValue['success'] = False
-                            retValue['error_msgs'] += "\n" + test + ": immath produced image of wrong shape for image " + imagename + " expr " + expr
-                        myia.close()
-                    else:
-                        retValue['success'] = False
-                        retValue['error_msgs'] += "\n" + test + ": immath returned false for image " + imagename + " expr " + expr
-                except Exception, e:
-                    retValue['success'] = False
-                    retValue['error_msgs'] += "\n" + test + ": immath threw exception " + str(e) + " for image " + imagename + " expr " + expr    
+                outfile = 'cas1830_out+' + str(i)
+                if (imagename):
+                    res = immath(imagename=imagename, expr=expr, chans='22', outfile=outfile)
+                else:
+                    res = immath(expr=expr, chans='22', outfile=outfile)
+                self.assertTrue(res)
+                myia = iatool()
+                myia.open(outfile)
+                self.assertTrue((myia.shape() == expected).all())
+                myia.close()
                 i += 1
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
@@ -1218,7 +1181,7 @@ class immath_test3(unittest.TestCase):
         os.system('rm -rf poli*')   
 
     def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
-        immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh)
+        self.assertTrue(immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh))
         self.assertTrue(os.path.exists(outfile))
         ia.open(outfile)
         got = ia.getchunk()
@@ -1246,7 +1209,7 @@ class immath_test3(unittest.TestCase):
 
         # POLA
         mode = 'pola'
-        myia = iatool.create()
+        myia = iatool()
         myia.open(POLA_im)
         expected = myia.getchunk()
         myia.done()
@@ -1300,7 +1263,7 @@ class immath_test3(unittest.TestCase):
         mask_tbl = outfile + os.sep + 'mask0'
         self.assertTrue(os.path.exists(mask_tbl))
         
-        mytb = tbtool.create()
+        mytb = tbtool()
         mytb.open(thresh_mask)
         col = 'PagedArray'
         maskexp = mytb.getcell(col, 0)
@@ -1357,7 +1320,7 @@ class immath_test3(unittest.TestCase):
 
     def test_CAS2943(self):
         """Test the stretch parameter"""
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape("myim.im", [10, 20, 4, 40])
         myia.done()
         myia.fromshape("mask1.im", [10, 20, 4, 40])
@@ -1372,7 +1335,7 @@ class immath_test3(unittest.TestCase):
             expr="1*IM0", mask="mask1.im > 5", stretch=False
         )
         myia.open(outfile)
-        self.assertTrue(myia.shape() == [10, 20, 4, 40])
+        self.assertTrue((myia.shape() == [10, 20, 4, 40]).all())
         myia.done()
         outfile = "out2.im"
         self.assertFalse(
@@ -1387,7 +1350,7 @@ class immath_test3(unittest.TestCase):
             expr="1*IM0", mask="mask2.im > 5", stretch=True
         )
         myia.open(outfile)
-        self.assertTrue(myia.shape() == [10, 20, 4, 40])
+        self.assertTrue((myia.shape() == [10, 20, 4, 40]).all())
         myia.done()
         outfile = "out4.im"
         self.assertFalse(

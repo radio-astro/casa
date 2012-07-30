@@ -131,8 +131,8 @@ class rg_fromtextfile_test(unittest.TestCase):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
         for im in self._fixtures:
             shutil.copy(datapath + im, im)
-        self.ia = iatool.create()
-        self.rg = rgtool.create()
+        self.ia = iatool()
+        self.rg = rgtool()
     
     def tearDown(self):
         for im in self._fixtures:

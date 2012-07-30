@@ -29,7 +29,6 @@
 #include <casa/Logging/LogOrigin.h>
 #include <QWidget>
 #include <QtGlobal>
-#include <QDebug>
 namespace casa {
 
 SpecFitSettingsWidgetOptical::SpecFitSettingsWidgetOptical(QWidget *parent)

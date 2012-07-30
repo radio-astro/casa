@@ -202,45 +202,45 @@ Bool TSLogSink::postLocally (const LogMessage& message)
     {
 	case LogMessage::DEBUGGING:
 		if(send2cerr)
-                   std::cerr << message.toTermString() << std::endl;
+                   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::DEBUG1:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::DEBUG2:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL1:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL2:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL3:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL4:
 		if(send2cerr)
-		   std::cerr << message.toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::NORMAL5:
 		if(send2cerr)
-		   std::cerr << const_cast<LogMessage &>(message).toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::WARN:
-		   std::cerr << const_cast<LogMessage &>(message).toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
 	case LogMessage::SEVERE:
-		   std::cerr << const_cast<LogMessage &>(message).toTermString() << std::endl;
+		   std::cerr << message.toString() << std::endl;
 		break;
         default:
 		break;

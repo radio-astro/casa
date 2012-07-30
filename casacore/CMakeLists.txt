@@ -47,7 +47,11 @@ if (HDF5_ROOT_DIR)
     set (ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
 endif (HDF5_ROOT_DIR)
 
+#################################
+#
 # Find out which modules to build.
+#
+
 if (NOT MODULE)
    set (MODULE all)
 endif (NOT MODULE)
@@ -151,6 +155,7 @@ if(ENABLE_MULTI_THREADING)
     add_definitions(-DUSE_MULTI_THREADING)
 endif(ENABLE_MULTI_THREADING)
 
+
 #
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
@@ -159,7 +164,6 @@ endif(ENABLE_MULTI_THREADING)
 set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
-
 
 # Add the modules to be built.
 foreach (module ${_modules})
@@ -187,3 +191,5 @@ message (STATUS "WCS library? .......... = ${WCSLIB_LIBRARIES}")
 message (STATUS "CFitsio library? ...... = ${CFITSIO_LIBRARIES}")
 message (STATUS "HDF5 library? ......... = ${HDF5_hdf5_LIBRARY}")
 message (STATUS "FFTW3 library? ........ = ${FFTW3_LIBRARIES}")
+message (STATUS "CASA Thread Neutral? .. = ${CASA_THREAD_NEUTRAL}")
+message (STATUS "Boost for CASA? ....... = ${Boost_LIBRARIES}")

@@ -36,7 +36,7 @@ namespace casa {
 	    // The position angle (rot) is the angle between north and the major axis of the
 	    // ellipse, measured to the east (clockwise in standard astronomical coordinates
 	    //  where the longitude increases with decreasing x).
-	    if ( trc_y - blc_y > trc_x - blc_x ) {
+	    if ( wtrc_y - wblc_y > wtrc_x - wblc_x ) {
 		rot = Quantity(0,"deg");
 		minor = Quantity( fabs(wtrc_x - wblc_x), units[0] );
 		major = Quantity( fabs(wtrc_y - wblc_y), units[1] );
