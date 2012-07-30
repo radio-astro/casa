@@ -17,6 +17,20 @@ not full unit tests for the gaincal task.
 datapath = os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/unittest/gaincal/'
 
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/gaincal/'
+    if os.path.isdir(DATADIR):
+        testmms = True
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
+
+print 'Gaincal tests will use data from '+datapath         
+
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -26,17 +40,14 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc5921'
         self.msfile = prefix + '.ms'
-        self.mmsfile = prefix + '.mms'
+        if testmms:
+            self.msfile = prefix + '.mms'
+            
+        self.reffile = datapath + prefix
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
             shutil.copytree(fpath, self.msfile)
-        else:
-            self.fail('Data does not exist -> '+fpath)
-
-        fpath = os.path.join(datapath,self.mmsfile)
-        if os.path.lexists(fpath):
-            shutil.copytree(fpath, self.mmsfile)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -48,17 +59,14 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc4826'
         self.msfile = prefix + '.ms'
-        self.mmsfile = prefix + '_spw.mms'
+        if testmms:
+            self.msfile = prefix + '.mms'
+            
+        self.reffile = datapath + prefix
 
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):
             shutil.copytree(fpath, self.msfile)
-        else:
-            self.fail('Data does not exist -> '+fpath)
-
-        fpath = os.path.join(datapath,self.mmsfile)
-        if os.path.lexists(fpath):
-            shutil.copytree(fpath, self.mmsfile)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -73,40 +81,31 @@ class gaincal1_test(test_base):
     def tearDown(self):
         if os.path.lexists(self.msfile):
             shutil.rmtree(self.msfile)
-
-        if os.path.lexists(self.mmsfile):
-            shutil.rmtree(self.mmsfile)
+        
+        os.system('rm -rf ngc5921*.gcal')
         
     def test1a(self):
-        '''Gaincal 1a: Create cal tables for the MS and MMS'''
+        '''Gaincal 1a: Default values to create a gain table'''
         msgcal = self.msfile + '.gcal'
+        reference = self.reffile + '.ref1a.gcal'
         gaincal(vis=self.msfile, caltable=msgcal)
         self.assertTrue(os.path.exists(msgcal))
         
-        mmsgcal = self.mmsfile + '.gcal'
-        gaincal(vis=self.mmsfile, caltable=mmsgcal)
-        self.assertTrue(os.path.exists(mmsgcal))
-        
-        # Compare the calibration tables
-        self.assertTrue(th.compTables(msgcal, mmsgcal, ['WEIGHT']))
+        # Compare the calibration table with a reference
+        self.assertTrue(th.compTables(msgcal, reference, ['WEIGHT']))
 
-    # Add test with data selection
+
     def test2a(self):
-        '''Gaincal 2a: field selection'''
+        '''Gaincal 2a: Create a gain table using field selection'''
         
         msgcal = self.msfile + '.field0.gcal'
+        reference = self.reffile + '.ref2a.gcal'
         gaincal(vis=self.msfile, caltable=msgcal, field='0', gaintype='G',solint='int',
                 combine='',refant='VA02')
         self.assertTrue(os.path.exists(msgcal))
-        
-        mmsgcal = self.mmsfile + '.field0.gcal'
-        gaincal(vis=self.mmsfile, caltable=mmsgcal, field='0', gaintype='G',solint='int',
-                combine='',refant='VA02')
-        self.assertTrue(os.path.exists(mmsgcal))
-        
+
         # Compare the calibration tables
-        self.assertTrue(th.compTables(msgcal, mmsgcal, ['WEIGHT']))
-        
+        self.assertTrue(th.compTables(msgcal, reference, ['WEIGHT']))        
 
 
 class gaincal2_test(test_base):
@@ -119,37 +118,23 @@ class gaincal2_test(test_base):
         if os.path.lexists(self.msfile):
             shutil.rmtree(self.msfile)
 
-        if os.path.lexists(self.mmsfile):
-            shutil.rmtree(self.mmsfile)
+        os.system('rm -rf ngc4826*.gcal')
         
         
     def test1b(self):
-        '''Gaincal 1b: Create cal tables for the MS and MMS split by spws'''
+        '''Gaincal 1b: Create a gain table for an MS with many spws'''
         msgcal = self.msfile + '.gcal'
+        reference = self.reffile + '.ref1b.gcal'
         gaincal(vis=self.msfile, caltable=msgcal, field='0,1',spw='0', gaintype='G',minsnr=2.0,
                 refant='ANT5',gaincurve=False, opacity=0.0, solint='inf',combine='')
         self.assertTrue(os.path.exists(msgcal))
-        
-        mmsgcal = self.mmsfile + '.gcal'
-        gaincal(vis=self.mmsfile, caltable=mmsgcal, field='0,1',spw='0', gaintype='G',minsnr=2.0,
-                refant='ANT5',gaincurve=False, opacity=0.0, solint='inf',combine='')
-        self.assertTrue(os.path.exists(mmsgcal))
-        
+
         # Compare the calibration tables
-        self.assertTrue(th.compTables(msgcal, mmsgcal, ['WEIGHT']))
-
-class gaincal_cleanup(unittest.TestCase):
-    
-    def tearDown(self):
-        os.system('rm -rf ngc5921.*')
-        os.system('rm -rf ngc4826*')
-
-    def test_cleanup(self):
-        '''Gaincal: Cleanup'''
-        pass
+        self.assertTrue(th.compTables(msgcal, reference, ['WEIGHT']))
+                
 
 def suite():
-    return [gaincal1_test, gaincal2_test, gaincal_cleanup]
+    return [gaincal1_test, gaincal2_test]
 
 
 
