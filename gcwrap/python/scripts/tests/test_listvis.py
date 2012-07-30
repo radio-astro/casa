@@ -64,6 +64,10 @@ class listvis_test1(unittest.TestCase):
             os.unlink(msfile2)
         if os.path.lexists(msfile3):
             os.unlink(msfile3)       
+            
+        os.system('rm -rf ' + out+'*')
+        os.system('rm -rf ' + 'compare*')
+        
 
     def test1(self):
         '''Listvis 1: Data column'''
@@ -72,8 +76,7 @@ class listvis_test1(unittest.TestCase):
         reference = reffile+'1'
         listvis(vis=msfile1,datacolumn='data',listfile=output,
                 field='2',spw='0:4~5',selectdata=True,antenna='8&9')
-#        listvis(vis=msfile1,datacolumn='data',listfile=output,
-#                field='2',spw='0:4~5',selectdata=True,antenna='1&2')
+
         self.assertTrue(lt.runTests(output,reference,'1.000',comp),
                         'New and reference files are different. %s != %s. '
                         'See the diff file'%(output,reference))
@@ -132,18 +135,6 @@ class listvis_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file.'%(output,reference))
         
-class listvis_cleanup(unittest.TestCase):
-
-    def setUp(self):
-        pass
-    
-    def tearDown(self):
-        os.system('rm -rf ' + out+'*')
-        os.system('rm -rf ' + 'compare*')
-        
-    def test1a(self):
-        '''Listvis: Cleanup'''
-        pass
         
 def suite():
-    return [listvis_test1,listvis_cleanup]
+    return [listvis_test1]
