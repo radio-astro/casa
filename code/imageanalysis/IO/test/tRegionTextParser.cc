@@ -31,6 +31,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <imageanalysis/Annotations/AnnSymbol.h>
+#include <imageanalysis/Annotations/AnnCircle.h>
 
 #include <casa/namespace.h>
 
@@ -139,6 +140,28 @@ int main() {
 			AlwaysAssert(lines.size() == 1, AipsError);
 			AlwaysAssert(lines[0].getAnnotationBase()->getLabelOffset() == offset, AipsError);
 			AlwaysAssert(lines[0].getAnnotationBase()->getLabelColorString() == labelcolor, AipsError);
+		}
+		{
+			cout << "Test correlation writing and reading (CAS-4373)" << endl;
+			Quantity x(-60, "arcmin");
+			Quantity y(60, "arcmin");
+			Quantity r(5, "arcmin");
+			Vector<Stokes::StokesTypes> stokes(3);
+			stokes[0] = Stokes::I;
+			stokes[1] = Stokes::Q;
+			stokes[2] = Stokes::U;
+			IPosition shape(4,100,100, 3, 2);
+			AnnCircle circle(x, y, r, csys, shape, stokes);
+			ostringstream oss;
+			oss << circle;
+			cout << circle << endl;
+			RegionTextParser parser4(csys, shape, oss.str());
+			Vector<AsciiAnnotationFileLine> lines = parser4.getLines();
+			AlwaysAssert(lines.size() == 1, AipsError);
+			Vector<Stokes::StokesTypes> got = dynamic_cast<const AnnCircle *>(
+					lines[0].getAnnotationBase()
+				)->getStokes();
+			AlwaysAssert(allEQ(got, stokes), AipsError);
 
 		}
 

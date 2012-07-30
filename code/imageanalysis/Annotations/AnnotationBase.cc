@@ -647,11 +647,12 @@ ostream& AnnotationBase::print(
 		map<Keyword, String>::const_iterator iter=params.begin();
 		iter!=params.end(); iter++
 	) {
+		Keyword key = iter->first;
 		if (! iter->second.empty()) {
 			if (
 				! hasLabel && (
-					iter->first == LABELCOLOR || iter->first == LABELPOS
-					|| iter->first == LABELOFF
+					key == LABELCOLOR || key == LABELPOS
+					|| key == LABELOFF
 				)
 			) {
 				continue;
@@ -659,10 +660,10 @@ ostream& AnnotationBase::print(
 			if (iter != params.begin()) {
 				os << ", ";
 			}
-			String quote = iter->first == LABEL
+			String quote = key == LABEL
 				|| (
 					iter->second.contains(' ')
-					&& (iter->first != RANGE && iter->first != LABELOFF)
+					&& (key != RANGE && key != CORR && key != LABELOFF)
 				)
 				? "\"" : "";
 			os << keywordToString((Keyword)iter->first)
