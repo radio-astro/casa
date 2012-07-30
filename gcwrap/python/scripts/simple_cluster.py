@@ -136,6 +136,10 @@ class simple_cluster:
                 max_engines = ncores_available
             elif (max_engines_user<=1):
                 max_engines = int(round(max_engines_user*ncores_available))
+                if (max_engines < 2):
+                    casalog.post("CPU free capacity available (s%) would not support cluster mode at node %s, starting only 1 engine" 
+                                 % (str(cpu_available),hostname),'WARNING')
+                    max_engines = 1
             else:
                 max_engines = max_engines_user
                 
@@ -162,13 +166,19 @@ class simple_cluster:
             
             # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
             nengines=int(round(max_mem/mem_per_engine))
-            casalog.post("Required memory per engine (%sMB) allows to deploy up to %s engines at node %s " 
-                         % (str(mem_per_engine),str(nengines),hostname))
+            if (nengines < 2):
+                casalog.post("Free memory available %sMB would not support cluster mode at node %s, starting only 1 engine"
+                             % (str(max_mem),hostname), 'WARNING')
+                nengines=1
+            else:
+                casalog.post("Required memory per engine %sMB allows to deploy up to %s engines at node %s " 
+                             % (str(mem_per_engine),str(nengines),hostname))
             
             if (nengines>max_engines): 
-                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain"
-                              % (hostname,str(nengines),str(max_engines)))
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain" 
+                             % (hostname,str(nengines),str(max_engines)))
                 nengines = max_engines
+                
             
                         
             omp_num_nthreads = 1
