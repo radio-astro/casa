@@ -142,7 +142,8 @@ class simple_cluster:
                     max_engines = 1
             else:
                 max_engines = max_engines_user
-                
+
+            max_engines = int(max_engines)                
             casalog.post("Will deploy up to %s engines at node %s" % (str(max_engines),hostname))
             
             # Determine maximum memory that can be used at target node
@@ -173,14 +174,13 @@ class simple_cluster:
             else:
                 casalog.post("Required memory per engine %sMB allows to deploy up to %s engines at node %s " 
                              % (str(mem_per_engine),str(nengines),hostname))
-            
+        
+            nengines = int(nengines)
             if (nengines>max_engines): 
                 casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain" 
                              % (hostname,str(nengines),str(max_engines)))
-                nengines = max_engines
-                
+                nengines = max_engines       
             
-                        
             omp_num_nthreads = 1
             while (nengines*omp_num_nthreads*2 <= max_engines):
                 omp_num_nthreads *= 2
@@ -209,10 +209,10 @@ class simple_cluster:
         
         ncores = 0
         memory = 0.
-        cmd_os = "ssh " + hostname + " 'uname -s'"
+        cmd_os = "ssh -q " + hostname + " 'uname -s'"
         os = commands.getoutput(cmd_os)
         if (os == "Linux"):
-            cmd_ncores = "ssh " + hostname + " 'cat /proc/cpuinfo' "           
+            cmd_ncores = "ssh -q " + hostname + " 'cat /proc/cpuinfo' "           
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores.count("processor")
             
@@ -222,7 +222,7 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass
             
-            cmd_memory = "ssh " + hostname + " 'cat /proc/meminfo | grep MemFree' "
+            cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep MemFree' "
             str_memory = commands.getoutput(cmd_memory)
             str_memory = string.replace(str_memory,"MemFree:","")
             str_memory = string.replace(str_memory,"kB","")
@@ -234,7 +234,7 @@ class simple_cluster:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                 pass
             
-            cmd_cpu = "ssh " + hostname + " 'top -b -n 1 | grep Cpu' "
+            cmd_cpu = "ssh -q " + hostname + " 'top -b -n 1 | grep Cpu' "
             str_cpu = commands.getoutput(cmd_cpu)
             list_cpu = string.split(str_cpu,',')
             str_cpu = "100"
@@ -249,7 +249,7 @@ class simple_cluster:
                 casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
             
         else:
-            cmd_ncores = "ssh " + hostname + " 'sysctl -n hw.ncpu'"
+            cmd_ncores = "ssh -q " + hostname + " 'sysctl -n hw.ncpu'"
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores
             
@@ -259,7 +259,7 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass            
             
-            cmd_memory = "ssh " + hostname + " 'vm_stat | grep free' "
+            cmd_memory = "ssh -q " + hostname + " 'vm_stat | grep free' "
             str_memory = commands.getoutput(cmd_memory)
             str_memory = string.replace(str_memory,"Pages free:","")
             str_memory = string.replace(str_memory,"kB","")
@@ -270,7 +270,7 @@ class simple_cluster:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                 pass
             
-            cmd_cpu = "ssh " + hostname + " 'top -l1 | grep usage' "
+            cmd_cpu = "ssh -q " + hostname + " 'top -l1 | grep usage' "
             str_cpu = commands.getoutput(cmd_cpu)
             list_cpu = string.split(str_cpu,',')
             str_cpu = "100"
@@ -641,7 +641,7 @@ class simple_cluster:
         # jagonzal (CAS-4292): Stop the cluster via parallel_go before using brute-force killall
         self.stop_cluster()
         for i in range(len(self._hosts)):
-            cmd='ssh '+self._hosts[i][0]+' "killall -9 ipengine"'
+            cmd="ssh -q "+self._hosts[i][0]+' "killall -9 ipengine"'
             os.system(cmd)
     
     def stop_nodes(self):
@@ -760,7 +760,7 @@ class simple_cluster:
             return
         for i in range(len(self._hosts)):
             cpu=[0.]*11
-            b=commands.getoutput("ssh "+self._hosts[i][0]+ 
+            b=commands.getoutput("ssh -q "+self._hosts[i][0]+ 
                                  " 'cat /proc/stat | grep cpu\ '")
             lines=b.split('\n')
             for line in lines:
@@ -773,7 +773,7 @@ class simple_cluster:
                 cpu[1]=long(l[1])+long(l[2])+long(l[3])
                 cpu[3]=long(l[5])
     
-            s=commands.getoutput("ssh "+self._hosts[i][0]+ 
+            s=commands.getoutput("ssh -q "+self._hosts[i][0]+ 
                                  " 'cat /proc/meminfo '")
             lines=s.split('\n')
             mt=mf=st=sf=0
@@ -979,14 +979,14 @@ class simple_cluster:
         engines_list = self._cluster.get_engines()
         for engine in engines_list:
             # First of all get operating system
-            cms_os = "ssh " + str(engine[1]) + " 'uname -s'"
+            cms_os = "ssh -q " + str(engine[1]) + " 'uname -s'"
             os = commands.getoutput(cms_os)
             # Get read/write activity
             read_bytes = 0.0
             write_bytes = 0.0
             if (os == "Linux"):
                 # Get read activity
-                cmd_read_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
+                cmd_read_bytes = "ssh -q " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
                 read_bytes=commands.getoutput(cmd_read_bytes)
                 read_bytes = read_bytes.split(":")
                 try:
@@ -996,7 +996,7 @@ class simple_cluster:
                         print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
                         print "read_bytes: [" +  str(read_bytes) + "]"
                 # Get write activity
-                cmd_write_bytes = "ssh " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
+                cmd_write_bytes = "ssh -q " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
                 write_bytes=commands.getoutput(cmd_write_bytes)
                 write_bytes = write_bytes.split(":")
                 try:
@@ -1006,7 +1006,7 @@ class simple_cluster:
                         print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
                         print "write_bytes: [" +  str(write_bytes) + "]"
             # Get resources usage (cpu, mem, elapsed time since start)
-            cmd_resources = "ssh " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
+            cmd_resources = "ssh -q " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
             resources=commands.getoutput(cmd_resources)
             resources = resources.split(" ")
             for space in range(resources.count('')):
