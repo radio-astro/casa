@@ -1,3 +1,4 @@
+#
 # Run this script to create the MMS data needed to run the Python unit tests 
 # of some tasks. This script will try to find the location of the data repository 
 # based on the value of CASAPATH. The MSs will be read from the unittest directory 
@@ -5,7 +6,6 @@
 # under unittest_mms/<taskname>. The MMS directory will be removed if the command 
 # is repeated for the same task.
 # 
-# Comment out the tests that you do not want to re-create MMSs for. 
 
 
 import os
@@ -13,7 +13,7 @@ import sys
 import partitionhelper as ph
 
 def mmstest(mytask):
-    # **** Data for test_listhistory.py
+
     TESTPATH = DATAPATH + 'unittest/'
     INPPATH = TESTPATH + mytask
     MMSPATH = './unittest_mms/'+mytask
@@ -35,14 +35,15 @@ def main():
     # repository. Do not commit when you comment out any task. 
     
     thislist = [
-        #'listhistory',
-        #'listvis',
-        #'listobs',
-        #'gencal',
-        #'vishead',
-        'split'
-        ]
-
+                'listhistory',
+                'listvis',
+                'listobs',
+                'gencal',
+                'vishead',
+                'split',
+                'gaincal',
+                'bandpass'
+                ]
     
     # Loop through task list
     for t in thislist:
