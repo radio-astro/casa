@@ -1198,6 +1198,7 @@ template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
       tmp.resize (a.size(), False, False);
       if (a.contiguousStorage()) {
 	objcopy (tmp.storage(), a.data(), a.size());
+        storage = tmp.storage();
       } else {
       // A non-contiguous array, so do the assignment through an array.
 	Array<T> tmpa(a.shape(), tmp.storage(), SHARE);
