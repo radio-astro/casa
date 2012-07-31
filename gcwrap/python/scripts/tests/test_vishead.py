@@ -24,10 +24,12 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/vishea
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
-    DATADIR = str(os.environ.get('TEST_DATADIR'))
-    if os.path.isdir(DATADIR+'/vishead/'):
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/vishead/'
+    if os.path.isdir(DATADIR):
         testmms = True
-        datapath = DATADIR+'/vishead/'
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
 
 print 'Vishead tests will use data from '+datapath         
 
