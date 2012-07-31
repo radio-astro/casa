@@ -5,7 +5,7 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from tests.test_split import check_eq, SplitChecker
+#from tests.test_split import check_eq, SplitChecker
 import unittest
 
 '''
@@ -18,26 +18,108 @@ Features tested:
   4. It gets the right answer for a known line + 0th order continuum,
      even when fitorder = 4.
 '''
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
+uvcdatadir = 'unittest/uvcontsub/' 
 
-uvcdatadir = 'unittest/uvcontsub/'  # in SplitChecker.datapath/
-
-class UVContChecker(SplitChecker):
+# eliminated dependence on test_split (TT)
+#class UVContChecker(SplitChecker):
+#    """
+#    Base class for uvcontsub3 unit testing.
+#    """
+#    need_to_initialize = True
+#    records = {}
+#
+#    def do_split(self, corrsel):
+#        """
+#        This is only called do_split because it comes from SplitChecker.
+#        run_task (uvcontsub3 in this case) would have been a better name.
+#        """
+#        record = {}
+#        try:
+#            print "\nRunning uvcontsub3"
+#            uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
+#                               fitorder=corrsel, async=False)
+#        except Exception, e:
+#            print "Error running uvcontsub3"
+#            raise e
+#        specms = self.inpms + '.contsub'
+#        tb.open(specms)
+#        record['contsub'] = tb.getcell('DATA', 52)
+#        tb.close()
+#        shutil.rmtree(specms)
+#        self.__class__.records[corrsel] = record
+#        return uvran
+#
+class UVContsub3UnitTestBase(unittest.TestCase):
     """
-    Base class for uvcontsub3 unit testing.
+    uvcontsub3 unittest base class (refactored)
     """
-    need_to_initialize = True
-    records = {}
+    def initialize(self,inpms):
+        """
+        initialize
+        """
+        self.inpms = inpms
+        if not os.path.exists('unittest/uvcontsub3'):
+            os.system('mkdir -p unittest/uvcontsub')
 
-    def do_split(self, corrsel):
+        if not os.path.exists(self.inpms):
+            try:
+                shutil.copytree(datapath + inpms, inpms)
+            except Exception, e:
+                raise Exception, "Missing input MS: " + datapath + inpms
+
+    def cleanup(self):
         """
-        This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub3 in this case) would have been a better name.
+        clean up the test dir
         """
-        record = {}
+        if os.path.exists(self.inpms):
+            shutil.rmtree(self.inpms)
+
+    
+
+    def check_eq(self, val, expval, tol=None):
+        """Checks that val matches expval within tol."""
+        if type(val) == dict:
+            for k in val:
+                check_eq(val[k], expval[k], tol)
+        else:
+            try:
+                if tol and hasattr(val, '__rsub__'):
+                    are_eq = abs(val - expval) < tol
+                else:
+                    are_eq = val == expval
+                if hasattr(are_eq, 'all'):
+                    are_eq = are_eq.all()
+                if not are_eq:
+                    raise ValueError, '!='
+            except ValueError:
+                errmsg = "%r != %r" % (val, expval)
+                if (len(errmsg) > 66): # 66 = 78 - len('ValueError: ')
+                    errmsg = "\n%r\n!=\n%r" % (val, expval)
+                raise ValueError, errmsg
+            except Exception, e:
+                print "Error comparing", val, "to", expval
+                raise e
+
+
+class zeroth(UVContsub3UnitTestBase):
+    """Test zeroth order fit"""
+
+    def setUp(self):
+        self.initialize(uvcdatadir+'known0.ms')
+
+    def tearDown(self):
+        self.cleanup()
+
+    def test_zeroth(self):
+        
+        record={}
+        infitorder = 0
+
         try:
             print "\nRunning uvcontsub3"
             uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=corrsel, async=False)
+                               fitorder=infitorder, async=False)
         except Exception, e:
             print "Error running uvcontsub3"
             raise e
@@ -46,29 +128,45 @@ class UVContChecker(SplitChecker):
         record['contsub'] = tb.getcell('DATA', 52)
         tb.close()
         shutil.rmtree(specms)
-        self.__class__.records[corrsel] = record
-        return uvran
+        self.assertTrue(uvran)
 
-class zeroth(UVContChecker):
-    inpms = uvcdatadir + 'known0.ms' 
-    corrsels = [0]                    # fitorder, not corr selection.
-
-    def test_line_cont(self):
-        """Continuum-subtracted data in line-free region"""
-        check_eq(self.records[0]['contsub'][:,21],   # RR, LL
+        print "Continuum-subtracted data in line-free region"
+        self.check_eq(record['contsub'][:,21],   # RR, LL
                  numpy.array([ 0.+0.j,  0.+0.j]), 0.0001)
-    def test_line_line(self):
-        """Continuum-subtracted data in line region"""
-        check_eq(self.records[0]['contsub'][:,9],   # RR, LL
+        print "Continuum-subtracted data in line region"
+        self.check_eq(record['contsub'][:,9],   # RR, LL
                  numpy.array([87.+26.j, 31.+20.j]), 0.0001)
         
-class fourth(UVContChecker):
-    inpms = uvcdatadir + 'known4.ms'
-    corrsels = [4]                    # fitorder, not corr selection.
+class fourth(UVContsub3UnitTestBase):
+    """Test forth order fit"""
 
-    def test_line(self):
-        """Continuum-subtracted data"""
-        check_eq(self.records[4]['contsub'],   # [[RR], [LL]]
+    def setUp(self):
+        self.initialize(uvcdatadir + 'known4.ms')
+    
+    def tearDown(self):
+        self.cleanup()
+
+    def test_fourth(self):
+        record = {}
+
+        infitorder = 4
+
+        try:
+            print "\nRunning uvcontsub3"
+            uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
+                               fitorder=infitorder, async=False)
+        except Exception, e:
+            print "Error running uvcontsub3"
+            raise e
+        specms = self.inpms + '.contsub'
+        tb.open(specms)
+        record['contsub'] = tb.getcell('DATA', 52)
+        tb.close()
+        shutil.rmtree(specms)
+        self.assertTrue(uvran)
+
+        print "Continuum-subtracted data"
+        self.check_eq(record['contsub'],   # [[RR], [LL]]
                  numpy.array([[0.00000+0.00000j,    0.00000+0.00000j,
                                0.00000+0.00000j,    0.00000+0.00000j,
                                0.00000+0.00000j,    0.00000+0.00000j,
@@ -95,58 +193,62 @@ class fourth(UVContChecker):
                                0.00000+0.00000j,    0.00000+0.00000j]]),
                  0.0001)
 
-class combspw(UVContChecker):
-    inpms = uvcdatadir + 'combspw.ms'
-    corrsels = [0, 1]                    # fitorder, not corr selection.
+class combspw(UVContsub3UnitTestBase):
+    """Test combine spw"""
+    def setUp(self):
+        self.initialize(uvcdatadir + 'combspw.ms')
 
-    def do_split(self, fitord):
-        """
-        This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub3 in this case) would have been a better name.
-        """
+    def tearDown(self):
+        self.cleanup()
+
+    def test_combspw(self):
         record = {}
-        try:
-            print "\nRunning uvcontsub3"
-            uvran = uvcontsub3(self.inpms, fitspw='1~10:5~122,15~22:5~122',
-                               spw='6~14', combine='spw',
-                               fitorder=fitord, async=False)
-        except Exception, e:
-            print "Error running uvcontsub3"
-            raise e
-        specms = self.inpms + '.contsub'
-        tb.open(specms)
-        
-        # Same data, different row number as compared to uvcontsub or the input MS.
-        record['contsub'] = tb.getcell('DATA', 31)[0][73]
-        
-        tb.close()
-        shutil.rmtree(specms)
-        self.__class__.records[fitord] = record
-        return uvran
 
-    def test_comb0(self):
-        """combspw fitorder=0 line estimate"""
-        check_eq(self.records[0]['contsub'], -6.2324+17.9865j, 0.001)
+        for infitorder in fitorders:
+            record[infitorder]={}
+            try:
+                print "\nRunning uvcontsub3"
+                uvran = uvcontsub3(self.inpms, fitspw='1~10:5~122,15~22:5~122',
+                                   spw='6~14', combine='spw',
+                                   fitorder=infitorder, async=False)
+            except Exception, e:
+                print "Error running uvcontsub3"
+                raise e
 
-    def test_comb1(self):
-        """combspw fitorder=1 line estimate"""
-        check_eq(self.records[1]['contsub'], -6.2533+17.6584j, 0.001)
+            specms = self.inpms + '.contsub'
+            tb.open(specms)
+            #record[infitorder]['contsub'] = tb.getcell('DATA', 52)[0][73]
+            # Same data, different row number as compared to uvcontsub or the input MS.
+            record[infitorder]['contsub'] = tb.getcell('DATA', 31)[0][73]
+            tb.close()
+            shutil.rmtree(specms)
+            self.assertTrue(uvran)
+ 
+        print "combspw fitorder=0 line estimate"
+        self.check_eq(record[0]['contsub'], -6.2324+17.9865j, 0.001)
+
+        print "combspw fitorder=1 line estimate"
+        self.check_eq(record[1]['contsub'], -6.2533+17.6584j, 0.001)
         
-class knowncombspw(UVContChecker):
-    inpms = uvcdatadir + 'knowncombspw.ms'
+class knowncombspw(UVContsub3UnitTestBase):
+    """Test combine spw with a know line"""
+
     corrsels = [1]                    # fitorder, not corr selection.
+    def setUp(self):
+        self.initialize(uvcdatadir + 'knowncombspw.ms')
 
-    def do_split(self, fitord):
-        """
-        This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub3 in this case) would have been a better name.
-        """
+    def tearDown(self):
+        self.cleanup()
+
+    def test_knowncombspw(self):
         record = {}
+        infitorder = 1
+
         try:
             print "\nRunning uvcontsub3"
             uvran = uvcontsub3(self.inpms, fitspw='0,1:0~15,3:23~31,4',
                                spw='1~3', combine='spw',
-                               fitorder=fitord, async=False)
+                               fitorder=infitorder, async=False)
         except Exception, e:
             print "Error running uvcontsub3"
             raise e
@@ -161,12 +263,10 @@ class knowncombspw(UVContChecker):
         
         tb.close()
         shutil.rmtree(specms)
-        self.__class__.records[fitord] = record
-        return uvran
+        self.assertTrue(uvran)
 
-    def test_blue(self):
-        """The blueward side"""
-        check_eq(self.records[1]['blue'],
+        print "The blueward side"
+        self.check_eq(record['blue'],
                  numpy.array([ -3.03268433e-04 +1.00890160e-01j,
                                -3.02314758e-04 +9.34381485e-02j,
                                -3.00884247e-04 +8.59861374e-02j,
@@ -200,9 +300,8 @@ class knowncombspw(UVContChecker):
                                 2.47078934e+01 +1.22314072e+01j,
                                 3.39962006e+01 +1.68681087e+01j]), 0.001)
 
-    def test_line(self):
-        """The known line"""
-        check_eq(self.records[1]['line'],
+        print "The known line"
+        self.check_eq(record['line'],
                  numpy.array([   1.53886628 +0.8961916j ,    2.52163553 +1.38012409j,
                                  4.02423143 +2.12396812j,    6.25472546 +3.23176193j,
                                  9.46806622 +4.83097982j,   13.95866108 +7.06882477j,
@@ -221,9 +320,8 @@ class knowncombspw(UVContChecker):
                                 42.87281799+21.33958817j,   31.81188011+15.80166435j]),
                  0.001)
 
-    def test_red(self):
-        """The redward side"""
-        check_eq(self.records[1]['red'],
+        print "The redward side"
+        self.check_eq(record['red'],
                  numpy.array([  1.23712059e+02 +6.19947433e+01j,
                                 1.04113014e+02 +5.21877708e+01j,
                                 8.53355255e+01 +4.27915688e+01j,
