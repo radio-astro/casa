@@ -81,7 +81,7 @@ test_plotuv                     rreid@nrao.edu
 test_po_complexfraclinpol       dmehring@nrao.edu
 test_po_complexlinpol           dmehring@nrao.edu
 test_po_depolratio              dmehring@nrao.edu
-test_po_fourierrotatonmeasure   dmehring@nrao.edu
+test_po_fourierrotationmeasure  dmehring@nrao.edu
 test_po_fraclinpol              dmehring@nrao.edu
 test_po_fractotpol              dmehring@nrao.edu
 test_po_linpolint               dmehring@nrao.edu

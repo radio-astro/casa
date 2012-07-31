@@ -80,7 +80,7 @@ class ia_subimage_test(unittest.TestCase):
         self.myia = iatool()
     
     def tearDown(self):
-        self._myia.done()
+        self.myia.done()
 
     def test_stretch(self):
         """Test the stretch parameter"""
@@ -107,7 +107,7 @@ class ia_subimage_test(unittest.TestCase):
 
     def test_beams(self):
         """ Test per plane beams """
-        myia = self._myia
+        myia = self.myia
 
         # simple copy
         myia.fromshape("", [10, 10, 10, 4])

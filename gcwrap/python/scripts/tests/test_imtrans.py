@@ -76,15 +76,6 @@ import unittest
 good_image = "reorder_in.fits"
 cas_2364im = "CAS-2364.im"
 
-
-def run_reorder(imagename, outfile, order):
-    myia = iatool()
-    myia.open(imagename)
-    print "*** order " + str(order)
-    res = myia.reorder(outfile=outfile, order=order)
-    myia.close()
-    return res
-
 def run_transpose(imagename, outfile, order):
     myia = iatool()
     myia.open(imagename)
@@ -112,7 +103,7 @@ class imtrans_test(unittest.TestCase):
         def testit(imagename, outfile, order):
             for i in [0,1]:
                 if (i==0):
-                    self.assertRaises(Exception, run_reorder, imagename, outfile, order)
+                    self.assertRaises(Exception, run_transpose, imagename, outfile, order)
                 else:
                     self.assertFalse(run_imtrans(imagename, outfile, order))
 
@@ -145,7 +136,7 @@ class imtrans_test(unittest.TestCase):
         myia.close()
         count = 0
         for order in ["012", 12, ['r', 'd', 'f'], ["righ", "declin", "freq"]]:
-            for code in [run_reorder, run_transpose, run_imtrans]:
+            for code in [run_transpose, run_imtrans]:
                 newim = code(imagename, "straight_copy_" + str(count), order)
                 gotdata = newim.getchunk()
                 gotnames = newim.coordsys().names()
@@ -164,7 +155,7 @@ class imtrans_test(unittest.TestCase):
         myia.done()
         count = 0
         for order in ["120", 120, ['d', 'f', 'r'], ["declin", "freq", "righ"]]:
-            for code in [run_reorder, run_transpose, run_imtrans]:
+            for code in [run_transpose, run_imtrans]:
                 for outname in ["transpose_" + str(count), ""]:
                     newim = code(imagename, outname, order)
                     gotdata = newim.getchunk()
@@ -188,7 +179,7 @@ class imtrans_test(unittest.TestCase):
         out1 = "blah.im"
         myia = iatool()
         myia.open(cas_2364im)
-        myia.reorder(out1, order)
+        myia.transpose(out1, order)
         myia.close()
         # to verify fix, just open the image. bug was that exception was thrown when opening output from reorder
         myia.open(out1)

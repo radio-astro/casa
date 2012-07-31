@@ -89,12 +89,11 @@ class imregrid_test(unittest.TestCase):
         myia.maketestimage(outfile = IMAGE)
         default('imregrid')
         
-        imregrid(
+        outim=imregrid(
             imagename = IMAGE,
             template = IMAGE,
             output = out1
         )
-        
         im1 = myia.newimage(IMAGE)
         im2 = myia.newimage(out1)
         
@@ -142,11 +141,10 @@ class imregrid_test(unittest.TestCase):
         # First we need to remove the output file.
         if (  os.path.exists(out1) ):
               shutil.rmtree( out1 )
-        imregrid(
+        outim=imregrid(
             imagename=IMAGE, template=out2,
             output=out1, shape=rec1["shape"]
         )
-        
         s1 = imstat(IMAGE)
         s2 = imstat(out1)
         ia.open(out1)
@@ -175,10 +173,9 @@ class imregrid_test(unittest.TestCase):
         # First we need to remove the output file.
         if (  os.path.exists(out1 ) ):
               shutil.rmtree( out1)
-        imregrid(imagename = IMAGE,
+        outim = imregrid(imagename = IMAGE,
                  template = out3,
                  output = out1)
-        
         s1 = imstat(IMAGE)
         s2 = imstat(out1)
         if s1['maxpos'][0]-13 != s2['maxpos'][0]:
@@ -195,10 +192,9 @@ class imregrid_test(unittest.TestCase):
             shutil.rmtree( out3)
         myia.fromrecord(rec1, out3)
         myia.close()
-        imregrid(imagename = IMAGE,
+        outim = imregrid(imagename = IMAGE,
                  template = out3,
                  output = out4)
-        
         s1 = imstat(IMAGE)
         s2 = imstat(out4)
         print s1
@@ -241,10 +237,11 @@ class imregrid_test(unittest.TestCase):
                 myia.close()
                 if (  os.path.exists(out1 ) ):
                     shutil.rmtree( out1 )
-                imregrid(imagename = IMAGE,
+                outim=imregrid(imagename = IMAGE,
                          template = out5,
                          output = out1)
-                
+        self.assertTrue(len(tb.showcache()) == 0)
+
     def test_asvelocity(self):
         """ Test regrid by velocity """
         image = "byvel.im"
@@ -265,16 +262,20 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue(res)
         ff.done()
         outfile = "junk"
-        myia.regrid(outfile=outfile, csys=csys, asvelocity=True)
+        outim = myia.regrid(outfile=outfile, csys=csys, asvelocity=True)
+        outim.done()
         ff.open(outfile)
         res = (ff.getchunk() == myia.getchunk()).all()
         self.assertTrue(res)
         res = (ff.getchunk(getmask=True) == myia.getchunk(getmask=True)).all()
+        ff.done()
+        myia.done()
         self.assertTrue(res)  
         shutil.rmtree(outfile)
         shutil.rmtree(image)
         shutil.rmtree(expected)      
-        
+        self.assertTrue(len(tb.showcache()) == 0)        
+
     def test_stretch(self):
         """ ia.regrid(): Test stretch parameter"""
         yy = self._myia
@@ -302,8 +303,9 @@ class imregrid_test(unittest.TestCase):
             )
             self.assertTrue(type(zz) == type(yy))
             zz.done()
-
+            
         yy.done()
+        self.assertTrue(len(tb.showcache()) == 0)
         
     def test_axes(self):
         imagename = "test_axes.im"
@@ -322,6 +324,7 @@ class imregrid_test(unittest.TestCase):
         got = myia.coordsys().increment()["numeric"]
         self.assertTrue((got == exp).all())
         myia.done()
+        self.assertTrue(len(tb.showcache()) == 0)
         
     def test_general(self):
         """ imregrid general tests """
@@ -371,7 +374,8 @@ class imregrid_test(unittest.TestCase):
             iDone = iDone + 1
         #
         self.assertTrue(myim.done())
-        
+        self.assertTrue(len(tb.showcache()) == 0)        
+
     def test_multibeam(self):
         """imregrid, test multibeam image"""
         myia = self._myia
@@ -383,16 +387,20 @@ class imregrid_test(unittest.TestCase):
         
         myia.setrestoringbeam(major="4arcsec", minor="2arcsec", pa="0deg", channel=0, polarization=-1)
         regridded = myia.regrid(axes=[0, 1], csys=csys.torecord())
+        regridded.done()
         self.assertRaises(Exception, myia.regrid, axes=[0,1,2], csys=csys.torecord())
-            
+        self.assertTrue(len(tb.showcache()) == 0)
+        
     def test_CAS_4315(self):
         """ test ia.regrid does not leave image open after tool is closed"""
-        ia.fromshape("",[100,100,1,1])
-        ib = ia.regrid(
-            outfile='moulou1', csys=ia.coordsys().torecord(), axes=[0,1],
+        myia = self._myia
+        myia.fromshape("",[100,100,1,1])
+        myib = myia.regrid(
+            outfile='moulou1', csys=myia.coordsys().torecord(), axes=[0,1],
             overwrite=True, shape=[100, 100, 1, 1]
         )
-        ib.done()
+        myia.done()
+        myib.done()
         self.assertTrue(len(tb.showcache()) == 0)
         
             
