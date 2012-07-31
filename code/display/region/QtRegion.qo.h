@@ -133,6 +133,12 @@ namespace casa {
 		// used to synchronize all of the RegionDock's RegionState coordinate configuration...
 		std::map<std::string,int> &coordState( );
 
+		// used to synchronize all region directories per QtDisplayPanelGUI...
+		QString getSaveDir( );
+		void putSaveDir( QString );
+		QString getLoadDir( );
+		void putLoadDir( QString );
+
 		// called for existing regions when spectral profile tool is opened...
 		void emitUpdate( );
 
