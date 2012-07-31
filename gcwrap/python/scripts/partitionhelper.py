@@ -5,6 +5,7 @@ import numpy as np
 import pprint as pp
 import traceback
 import time
+import commands
 from __main__ import *
 from taskinit import *
 from tasks import *
@@ -79,7 +80,7 @@ class convertToMMS():
         casalog.post('List of MSs in input directory')
         pp.pprint(mslist)        
         
-        # Get non-directory entries
+        # Get non-MS directories and other files
         nonmslist = []
         nonmslist = self.getFileslist(files)
 
@@ -105,7 +106,7 @@ class convertToMMS():
         for file in nonmslist:
             bfile = os.path.basename(file)
             lfile = os.path.join(self.mmsdir, bfile)
-            casalog.post('Creating symbolic links to '+bfile)
+            casalog.post('Creating symbolic link to '+bfile)
             os.symlink(file, lfile)
             
             
@@ -117,7 +118,7 @@ class convertToMMS():
            files = os.walk(self.inpdir,followlinks=True).next() 
            
            It will test if a directory is an MS and will only return
-           true MSs, that contain the file table.data. It will skip
+           true MSs, that have Type:Measurement Set in table.info. It will skip
            directories that start with . and those that do not end with
            extension .ms.
            '''
@@ -136,35 +137,82 @@ class convertToMMS():
             
             # Full path for directory
             dir = os.path.join(topdir,d)
-            
-            # Listing of this directory
-            ldir = os.listdir(dir)
-            
-            # Skip MMSs
-            if ldir.__contains__('SUBMSS'):
-                continue
-                
-            # It is not an MS, go to next file
-            if not ldir.__contains__('table.dat'):
-                continue
-            
+                        
             # It is probably an MS
-            mslist.append(dir)
+            if self.isItMS(dir) == 1:                                                
+                mslist.append(dir)
         
         return mslist
+
+    def isItMS(self, dir):
+        '''Check the type of a directory.
+           dir  --> full path of a directory.
+                Returns 1 for an MS, 2 for a cal table and 3 for a MMS.
+                If 0 is returned, it means any other type or an error.'''
+                
+        ret = 0
+        
+        # Listing of this directory
+        ldir = os.listdir(dir)
+        
+        if not ldir.__contains__('table.info'): 
+            return ret
+                
+        cmd1 = 'grep Type '+dir+'/table.info'
+        type = commands.getoutput(cmd1)
+        cmd2 = 'grep SubType '+dir+'/table.info'
+        stype = commands.getoutput(cmd2)
+        
+        # It is a cal table
+        if type.__contains__('Calibration'):
+            ret = 2
+        
+        elif type.__contains__('Measurement'):
+            # It is a Multi-MS
+            if stype.__contains__('CONCATENATED'):
+                # Further check
+                if ldir.__contains__('SUBMSS'):            
+                    ret = 3
+            # It is an MS
+            else:
+                ret = 1
+            
+        return ret
+                        
+
 
     def getFileslist(self, files):
         '''Get a list of non-MS files from a directory.
            files -> a tuple that is returned by the following call:
            files = os.walk(self.inpdir,followlinks=True).next() 
            
-           It will only return files, not directories. It will skip
+           It will return files and directories that are not MSs. It will skip
            files that start with .
            '''
                 
         topdir = files[0]
         fileslist = []
         
+        # Get other directories that are not MSs
+        for d in files[1]:
+            
+            # Skip . entries
+            if d.startswith('.'):
+                continue
+            
+            # Skip MS directories
+            if d.endswith('.ms'):
+                continue
+            
+            # Full path for directory
+            dir = os.path.join(topdir,d)
+            
+            # It is a Calibration
+            if self.isItMS(dir) == 2:
+                fileslist.append(dir)
+
+
+        # Get non-directory files        
         for f in files[2]:
             # Skip . entries
             if f.startswith('.'):
@@ -239,10 +287,14 @@ class convertToMMS():
         print '   inpdir <dir>        directory with input MS.'
         print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
         print '                       the MMS in a directory called mmsdir in the current directory.'
-        print '   createmslink=False  if True it will create a link to the MMS with extension .ms.'
+        print '   createmslink=False  if True it will create a link to the new MMS with extension .ms.'
         print '   cleanup=False       if True it will remove the output directory before starting.\n'
-        print ' NOTE: this script will run using the default values of partition. It will fail if '
-        print ' run on single dish data because the datacolumn needs to be set in partition.\n'
+        
+        print ' NOTE: this script will run using the default values of partition. It will try to '
+        print ' create an MMS for every MS in the input directory. It will skip non-MS directories '
+        print ' such as cal tables. If partition succeeds, the script will create a link to every '
+        print ' other directory or file in the output directory. This script might fail if run on '
+        print ' single dish MS because the datacolumn needs to be set in partition.\n'
         print ' The script will not walk through sub-directories of inpdir. It will also skip '
         print ' files or directories that start with a .'
         print '=========================================================================='
