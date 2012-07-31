@@ -400,13 +400,14 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 ) {
 	ImageRegion *pRegion = 0;
 	ImageRegion *pMask = 0;
-	return createSubImage(
+	SubImage<T> mySubim = createSubImage(
 		pRegion, pMask, inImage, region,
 		mask, os, writableIfPossible, axesSpecifier,
 		extendMask
 	);
 	delete pRegion;
 	delete pMask;
+    return mySubim;
 }
 
 template <class T>
