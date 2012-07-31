@@ -31,7 +31,8 @@ DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
 def main():
     # BEGINNING OF BLOCK THAT WILL CREATE MMS DATA. 
-    # Comment out the tasks that you do not want to create data for.
+    # Comment out the tasks that you do not want to create data for. Do this on your local
+    # repository. Do not commit when you comment out any task. 
     
     thislist = [
         #'listhistory',
