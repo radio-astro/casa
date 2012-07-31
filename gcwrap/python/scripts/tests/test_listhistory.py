@@ -13,10 +13,12 @@ datapath = os.environ.get('CASAPATH').split()[0] +\
 
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
-    testmms = True
-    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/listhistory/'
     if os.path.isdir(DATADIR):
-        datapath = DATADIR+'/listhistory/'
+        testmms = True
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
 
 print 'Listhistory tests will use data from '+datapath         
 
