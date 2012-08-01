@@ -834,6 +834,7 @@ namespace casa {
 	    QFileDialog *dlg = new QFileDialog( 0, "Select a Region File for Output", region_->getSaveDir( ) );
 	    dlg->setModal(true);
 	    dlg->setFileMode(QFileDialog::AnyFile);
+	    dlg->setOption(QFileDialog::DontUseNativeDialog, true);
 
 	    if ( dlg->exec( ) == QDialog::Accepted ) {
 		QStringList selected = dlg->selectedFiles();
@@ -851,6 +852,7 @@ namespace casa {
 	    QFileDialog *dlg = new QFileDialog( 0, "Select a Region File to Load", region_->getLoadDir( ) );
 	    dlg->setModal(true);
 	    dlg->setFileMode(QFileDialog::ExistingFile);
+	    dlg->setOption(QFileDialog::DontUseNativeDialog, true);
 
 	    if ( dlg->exec( ) == QDialog::Accepted ) {
 		QStringList selected = dlg->selectedFiles();
