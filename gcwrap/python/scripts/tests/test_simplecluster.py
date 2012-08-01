@@ -231,7 +231,7 @@ class test_tflagdata_mms(test_simplecluster):
         self.waitForFile(filename, 10)
     
         return
-
+    
     def test1_tflagdata_list_return(self):
         """Test 1: Test support for MMS using tflagdata in unflag+clip mode"""
 
@@ -245,25 +245,25 @@ class test_tflagdata_mms(test_simplecluster):
         tflagdata(vis=self.vis, mode='list', inpfile=filename)
 
         # step 2: Now do summary
-        summary = tflagdata(vis=self.vis, mode='summary')
+        ret_dict = tflagdata(vis=self.vis, mode='summary')
 
         # Print summary (note: the first 16 jobs correspond to the step 1)
-        self.assertTrue(summary[0]['spw']['15']['flagged'] == 96284.0)
-        self.assertTrue(summary[1]['spw']['0']['flagged'] == 129711.0)
-        self.assertTrue(summary[2]['spw']['1']['flagged'] == 128551.0)
-        self.assertTrue(summary[3]['spw']['2']['flagged'] == 125686.0)
-        self.assertTrue(summary[4]['spw']['3']['flagged'] == 122862.0)
-        self.assertTrue(summary[5]['spw']['4']['flagged'] == 109317.0)
-        self.assertTrue(summary[6]['spw']['5']['flagged'] == 24481.0)
-        self.assertTrue(summary[7]['spw']['6']['flagged'] == 0)
-        self.assertTrue(summary[8]['spw']['7']['flagged'] == 0)
-        self.assertTrue(summary[9]['spw']['8']['flagged'] == 0)
-        self.assertTrue(summary[10]['spw']['9']['flagged'] == 27422.0)
-        self.assertTrue(summary[11]['spw']['10']['flagged'] == 124638.0)
-        self.assertTrue(summary[12]['spw']['11']['flagged'] == 137813.0)
-        self.assertTrue(summary[13]['spw']['12']['flagged'] == 131896.0)
-        self.assertTrue(summary[14]['spw']['13']['flagged'] == 125074.0)
-        self.assertTrue(summary[15]['spw']['14']['flagged'] == 118039.0)
+        self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
+        self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
+        self.assertTrue(ret_dict['spw']['1']['flagged'] == 128551.0)
+        self.assertTrue(ret_dict['spw']['2']['flagged'] == 125686.0)
+        self.assertTrue(ret_dict['spw']['3']['flagged'] == 122862.0)
+        self.assertTrue(ret_dict['spw']['4']['flagged'] == 109317.0)
+        self.assertTrue(ret_dict['spw']['5']['flagged'] == 24481.0)
+        self.assertTrue(ret_dict['spw']['6']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['7']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['8']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['9']['flagged'] == 27422.0)
+        self.assertTrue(ret_dict['spw']['10']['flagged'] == 124638.0)
+        self.assertTrue(ret_dict['spw']['11']['flagged'] == 137813.0)
+        self.assertTrue(ret_dict['spw']['12']['flagged'] == 131896.0)
+        self.assertTrue(ret_dict['spw']['13']['flagged'] == 125074.0)
+        self.assertTrue(ret_dict['spw']['14']['flagged'] == 118039.0)
 
 
 class test_setjy_mms(test_simplecluster):
@@ -289,7 +289,8 @@ class test_setjy_mms(test_simplecluster):
     def test1_setjy_scratchless_mode_single_model(self):
         """Test 1: Set vis model header in one single field """
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -316,8 +317,10 @@ class test_setjy_mms(test_simplecluster):
     def test2_setjy_scratch_mode_multiple_model(self):
         """Test 2: Set MODEL_DATA in multiple fields"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
-        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -345,14 +348,14 @@ class test_setjy_mms(test_simplecluster):
     def test3_setjy_scratch_mode_single_model(self):
         """Test 3: Set MODEL_DATA in one single field"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False,usescratch=True)
+        self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
         for subMS in listSubMSs:
-            print subMS
             tblocal = tbtool()
             tblocal.open(subMS)
             fieldId = tblocal.getcell('FIELD_ID',1)
@@ -370,15 +373,16 @@ class test_setjy_mms(test_simplecluster):
     def test4_setjy_scratch_mode_multiple_model(self):
         """Test 4: Set MODEL_DATA in multiple fields"""
 
-        setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True)
-        setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True)
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=True)
+        self.assertTrue(retval, "setjy run failed")
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=True)
+        self.assertTrue(retval, "setjy run failed")
         
         mslocal = mstool()
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
         for subMS in listSubMSs:
-            print subMS
             tblocal = tbtool()
             tblocal.open(subMS)
             fieldId = tblocal.getcell('FIELD_ID',1)

@@ -995,6 +995,7 @@ class simple_cluster:
                     if (verbose):
                         print "Problem converting read_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
                         print "read_bytes: [" +  str(read_bytes) + "]"
+                    read_bytes = 0
                 # Get write activity
                 cmd_write_bytes = "ssh -q " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
                 write_bytes=commands.getoutput(cmd_write_bytes)
@@ -1005,6 +1006,7 @@ class simple_cluster:
                     if (verbose):
                         print "Problem converting write_bytes into float for engine " + str(engine[0]) + " running in host " + str(engine[1])
                         print "write_bytes: [" +  str(write_bytes) + "]"
+                    write_bytes = 0.0
             # Get resources usage (cpu, mem, elapsed time since start)
             cmd_resources = "ssh -q " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
             resources=commands.getoutput(cmd_resources)

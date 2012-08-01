@@ -28,13 +28,16 @@ def setjy(vis=None, field=None, spw=None,
     else:
       myms = mstool()
       myms.open(vis)
-      mses = myms.getreferencedtables()
+      subMS_list = myms.getreferencedtables()
       myms.close()
-      retval = {}
-      for m in mses:
-        retval[m] = setjy_core(m, field, spw, selectdata, timerange, 
-                               scan, observation, modimage, listmodels, scalebychan, 
-                               fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+      retval = True
+      for subMs in subMS_list:
+          retval_i = setjy_core(subMs, field, spw, selectdata, timerange, 
+                                scan, observation, modimage, listmodels, scalebychan, 
+                                fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+          if not retval_i:
+              retval = False
+              casalog.post("setjy failed for sub-MS %s" % (subMs),'WARNING')
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, observation, modimage, listmodels, scalebychan, 
