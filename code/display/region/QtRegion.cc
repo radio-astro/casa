@@ -209,8 +209,9 @@ namespace casa {
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'f',precision),
-					 QString("%1").arg(height,0,'f',precision) );
+					 QString("%1").arg(width,0,'g',precision),
+					 QString("%1").arg(height,0,'g',precision) );
+
 					 // QString("%1").arg(width), 
 					 // QString("%1").arg(height) );
 	    }
