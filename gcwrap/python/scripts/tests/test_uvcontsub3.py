@@ -203,7 +203,7 @@ class combspw(UVContsub3UnitTestBase):
 
     def test_combspw(self):
         record = {}
-
+        fitorders=[0,1]
         for infitorder in fitorders:
             record[infitorder]={}
             try:
