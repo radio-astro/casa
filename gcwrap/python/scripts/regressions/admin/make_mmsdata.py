@@ -10,8 +10,55 @@
 
 import os
 import sys
+import re
+import getopt
+import pprint
+import traceback
 import partitionhelper as ph
 
+# ---------- ADD NEW TASKS HERE ----------------
+# These tasks have been verified to work on MMS. 
+TASKLIST = [
+            'listhistory',
+            'listvis',
+            'listobs',
+            'gencal',
+            'vishead',
+            'split',
+            'gaincal',
+            'bandpass'
+            ]
+
+# Try to get the data repository path from the system
+DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
+
+def usage():
+    print '========================================================================='
+    print '\nmake_mmsdata will create Multi-MS data for CASA tasks.'
+    print 'Usage:\n'
+    print 'casapy [casapy-options] -c make_mmsdata.py [options] <tasks>\n'
+    print 'Options:'
+    print '   no option         print this message and exit.'
+    print '   --all             run the script for all tasks in TASKLIST.'
+    print '   --ignore          do no create MMS for the given <tasks>.'
+    print '   --list            print the list of tasks from TASKLIST and exit.'
+    print 'NOTE: it will look for MS data in the data repository under unittest.\r'
+    print '=========================================================================='
+
+
+def selectList(nolist):
+    '''Return the subtracted list of tasks
+       nolist --> list of tasks to ignore'''
+    
+    newlist = []
+    for t in TASKLIST:
+        if t not in nolist:
+            newlist.append(t)
+            
+    return newlist
+    
+    
+# Function to call partitionhelper.convertToMMS()
 def mmstest(mytask):
 
     TESTPATH = DATAPATH + 'unittest/'
@@ -26,27 +73,21 @@ if not os.environ.has_key('CASAPATH'):
     print 'ERROR: Could not find variable CASAPATH'
     os._exit(2)
     
-DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
-
-def main():
-    # BEGINNING OF BLOCK THAT WILL CREATE MMS DATA. 
-    # Comment out the tasks that you do not want to create data for. Do this on your local
-    # repository. Do not commit when you comment out any task. 
+def main(thislist):
     
-    thislist = [
-                'listhistory',
-                'listvis',
-                'listobs',
-                'gencal',
-                'vishead',
-                'split',
-                'gaincal',
-                'bandpass'
-                ]
+    if thislist == []:
+        print 'Need list of tasks to run.'
+        usage()
+        os._exit(0)
     
+        
     # Loop through task list
     for t in thislist:
+        if t not in TASKLIST:
+            print 'ERROR: task '+t+' is not in TASKLIST. Run this script with -l for the full list.'
+            os._exit(0)
+            
         mmstest(t)
 
     from tasks import partition
@@ -74,8 +115,72 @@ def main():
         tb.putcolkeyword('FLAG_CATEGORY','CATEGORY', ['FLAG_CMD', 'ORIGINAL', 'USER'])
         tb.close()
     
+    
 if __name__ == "__main__":
-    main()
+
+    # Get command line arguments    
+    if "-c" in sys.argv:
+        # It is called with casapy ... -c make_mmsdata.py from the command line,
+        i = sys.argv.index("-c")
+        if len(sys.argv) >= i + 2 and \
+               re.compile("make_mmsdata\.py$").search(sys.argv[i + 1]):
+                    
+            try:
+                # Get only this script options
+                opts,args=getopt.getopt(sys.argv[i+2:], "ail", ["all", "ignore","list"])
+                
+            except getopt.GetoptError, err:
+                # Print help information and exit:
+                print str(err) # will print something like "option -a not recognized"
+                usage()
+                os._exit(2)
+                
+            # List of tests to run
+            tasknames = []
+            
+            ignore = False
+            all = False
+            
+            # Print help and exit
+            if opts == [] and args == []:
+                usage()
+                os._exit(0)
+            
+            elif opts != []:
+                for o, a in opts:
+                    if o in ("-a", "--all"):
+                        all = True
+                        tasknames = TASKLIST
+                        break
+                    
+                    elif o in ("-i", "--ignore"):
+                        # Will ignore the tasks given in args
+                        ignore = True
+                        break
+                    
+                    elif o in ("-l", "--list"):
+                        print 'List of tasks to create MMS for:'
+                        pprint.pprint(TASKLIST)
+                        os._exit(0)          
+                                  
+                    else:
+                        assert False, "unhandled option"
+
+            # Get tasks
+            if args == [] and ignore:
+                print "ERROR: --ignore needs a list of tasks."
+                usage()
+                os._exit(0)
+                
+            if args != [] and not all:
+                tasknames = args
+                if ignore:
+                    tasknames = selectList(args)
+                
+    try:                 
+        main(tasknames)
+    except:
+        traceback.print_exc()
     
     
     
