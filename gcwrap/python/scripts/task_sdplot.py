@@ -37,6 +37,14 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         doCopy = doCopy and isScantable
 
         # A scantable selection
+        if type(scanlist) == str:
+            scanlist = sorg.parse_idx_selection("SCAN",scanlist)
+        if type(iflist) == str:
+            iflist = sorg.parse_idx_selection("IF",iflist)
+        if type(pollist) == str:
+            pollist = sorg.parse_idx_selection("POL",pollist)
+        if type(beamlist) == str:
+            beamlist = sorg.parse_idx_selection("BEAM",beamlist)
         sel = sdutil.get_selector(in_scans=scanlist, in_ifs=iflist,
                                   in_pols=pollist, in_field=field,
                                   in_beams=beamlist)

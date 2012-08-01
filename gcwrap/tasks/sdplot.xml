@@ -71,9 +71,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
-    <param type="intArray" name="scanlist">
-	    <description>list of scans to use (e.g. [1,2,3,4])</description>
-	    <value></value>
+    <param type="any" name="scanlist">
+	    <description>list or string of scans to use (e.g. [1,2,3,4] or "1~4")</description>
+            <any type="variant" limittype="string  intArray"/>
+	    <value type="intArray"></value>
     </param>
 
     <param type="string" name="field">
@@ -81,19 +82,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 
-    <param type="intArray" name="iflist">
-	    <description>list of IF ids to select (e.g. [0,1])</description>
-	    <value></value>
+    <param type="any" name="iflist">
+	    <description>list or string of IF ids to select (e.g. [0,1] or "0~1")</description>
+            <any type="variant" limittype="string  intArray"/>
+	    <value type="intArray"></value>
     </param>
 
-    <param type="intArray" name="pollist">
-            <description>list of polarization ids to select (e.g. [0,1])</description>
-            <value></value>
+    <param type="any" name="pollist">
+            <description>list or string of polarization ids to select (e.g. [0,1])</description>
+            <any type="variant" limittype="string  intArray"/>
+	    <value type="intArray"></value>
     </param>
 
-    <param type="intArray" name="beamlist">
-            <description>list of beam ids to select (e.g. [0,1])</description>
-            <value></value>
+    <param type="any" name="beamlist">
+            <description>list or string of beam ids to select (e.g. [0,1])</description>
+            <any type="variant" limittype="string  intArray"/>
+	    <value type="intArray"></value>
     </param>
 
     <param type="bool" name="scanaverage">
