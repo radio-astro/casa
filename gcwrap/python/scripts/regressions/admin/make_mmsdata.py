@@ -14,6 +14,7 @@ import re
 import getopt
 import pprint
 import traceback
+import shutil
 import partitionhelper as ph
 
 # ---------- ADD NEW TASKS HERE ----------------
