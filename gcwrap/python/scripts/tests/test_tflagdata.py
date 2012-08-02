@@ -221,8 +221,8 @@ class test_rflag(test_base):
         res2 = tflagdata(vis=self.vis, mode='summary')
 
         #print res1['flagged'], res2['flagged']
-        self.assertEqual(res1['flagged'],res2['flagged']);
-        self.assertEqual(res1['flagged'], 39504.0,)
+        self.assertTrue(abs(res1['flagged']-res2['flagged'])<10000)
+        self.assertTrue(abs(res1['flagged']-39504.0)<10000)
 
     def test_rflag4(self):
         '''tflagdata:: Test4 of mode = rflag : correlation selection'''

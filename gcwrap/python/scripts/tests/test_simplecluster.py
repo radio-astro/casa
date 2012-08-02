@@ -239,7 +239,7 @@ class test_tflagdata_mms(test_simplecluster):
         text = "mode='unflag'\n"\
                "mode='clip' clipminmax=[0,0.1]"
         filename = 'list_tflagdata.txt'
-        self.create_input(text, self.projectname + '/' + filename)
+        self.create_input(text, filename)
 
         # step 1: Do unflag+clip
         tflagdata(vis=self.vis, mode='list', inpfile=filename)
