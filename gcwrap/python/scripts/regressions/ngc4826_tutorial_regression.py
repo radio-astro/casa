@@ -1438,7 +1438,7 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # region.)
 clean_offsrc_rms = 0.0481
 clean_offline_rms = 0.04938
-clean_momentzero_rms = 14.2438
+clean_momentzero_rms = 15.75
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
@@ -1456,7 +1456,7 @@ model_pbcor_sum = 66.199394
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
 clean_image_max = 1.4647
-clean_momentone_median = 423.98
+clean_momentone_median = 423.70
 clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 
