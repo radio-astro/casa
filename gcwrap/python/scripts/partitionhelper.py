@@ -436,14 +436,17 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
 
     try:
         mymstool = mstool()
-        mymstool.createmultims(outputvis,
-                               submslist,
-                               [],
-                               True,  # nomodify
-                               False, # lock
-                               copysubtables,
-                               omitsubtables) # when copying the subtables, omit these 
-        mymstool.close()
+        try:
+            mymstool.createmultims(outputvis,
+                                   submslist,
+                                   [],
+                                   True,  # nomodify
+                                   False, # lock
+                                   copysubtables,
+                                   omitsubtables) # when copying the subtables, omit these 
+        finally:
+            mymstool.close()
+            
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)
         os.chdir(outputvis)
