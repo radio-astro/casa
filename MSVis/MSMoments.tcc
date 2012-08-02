@@ -343,8 +343,16 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     convertToVelocity_p = True ;
 
   // Check the user's requests are allowed
-  if ( !checkMethod() )
+  if ( !checkMethod() ) {
+    error_p = "Requested moment not allowed to calculate: " ;
+    String delimiter = "[" ;
+    for ( uInt i = 0 ; i < moments_p.nelements() ; i++ ) {
+      error_p += delimiter + String::toString(moments_p[i]) ;
+      delimiter = "," ;
+    }
+    error_p += "]" ;
     return False ;
+  }
 
   // Check that input and output MS names aren't the same.
   // if there is only one output MS
