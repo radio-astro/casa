@@ -470,7 +470,8 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
 void MosaicFT::reset(){
 
   doneWeightImage_p=False;
-
+  
+  pbConvFunc_p->reset();
 }
 
 void MosaicFT::finalizeToSky()
@@ -1279,7 +1280,7 @@ Bool MosaicFT::toRecord(String&  error,
   
   if(sj_p){
     outRec.define("telescope", sj_p->telescope());
-    cerr <<" Telescope " << sj_p->telescope() << endl;
+    //cerr <<" Telescope " << sj_p->telescope() << endl;
   }
   outRec.define("uvscale", uvScale);
   outRec.define("uvoffset", uvOffset);
@@ -1305,7 +1306,7 @@ Bool MosaicFT::toRecord(String&  error,
   outRec.define("stokes", stokes_p);
   if(!pbConvFunc_p.null()){
     Record subRec;
-    cerr << "Doing pbconvrec " << endl;
+    //cerr << "Doing pbconvrec " << endl;
     pbConvFunc_p->toRecord(subRec);
     outRec.defineRecord("pbconvfunc", subRec);
   }

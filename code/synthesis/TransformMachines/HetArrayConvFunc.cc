@@ -190,6 +190,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void  HetArrayConvFunc::reset(){
+    doneMainConv_p=False;
+    convFunctions_p.resize(0, True);
+    convWeights_p.resize(0, True);
+    convSizes_p.resize(0, True);
+    convSupportBlock_p.resize(0, True);
+    convFunctionMap_p.resize(0);
+
+  }
+
   void HetArrayConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
 					  const Int& convSampling,

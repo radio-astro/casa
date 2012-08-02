@@ -111,6 +111,8 @@ namespace casa{
       //From record 
       //set calcfluxneeded to True if flux scale need to be computed
       virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
+      //give possibility to erase history
+      virtual void reset();
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
