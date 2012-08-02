@@ -39,7 +39,10 @@
         <file>icons/sympointb1.png</file>
         <file>icons/sympointb2.png</file>
         <file>icons/sympointb3.png</file>
-        <file>icons/symarrow.png</file>
+        <file>icons/symdrarrow.png</file>
+        <file>icons/symdlarrow.png</file>
+        <file>icons/symurarrow.png</file>
+        <file>icons/symularrow.png</file>
         <file>icons/symcircle.png</file>
         <file>icons/symcross.png</file>
         <file>icons/symdiamond.png</file>
