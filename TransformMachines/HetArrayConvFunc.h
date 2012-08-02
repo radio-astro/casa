@@ -84,6 +84,7 @@ namespace casa{
     //Serialization
    virtual Bool toRecord(RecordInterface& rec);
    virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxscale=False);
+   virtual void reset();
 
     //----------------------------------------------
 
