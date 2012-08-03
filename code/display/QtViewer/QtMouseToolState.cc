@@ -61,7 +61,7 @@ namespace QtMouseToolNames {
     "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
   const String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
-   "brightcontrastb", "sympointb", "rectregionb", "ellregionb", "polyregionb",
+   "brightcontrastb", "symdotb", "rectregionb", "ellregionb", "polyregionb",
    "polylineb", "rulerb",  "mpcrosshairb", "dontuseb",  "" };
     
   const String helptexts[] = {

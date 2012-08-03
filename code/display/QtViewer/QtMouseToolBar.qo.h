@@ -63,7 +63,7 @@ class QtMouseToolButton: public QToolButton {
   
  protected:
   
-  void mousePressEvent(QMouseEvent*);
+  virtual void mousePressEvent(QMouseEvent*);
   void mouseMoveEvent   (QMouseEvent *) {  }
   void mouseReleaseEvent(QMouseEvent *) {  }
   
@@ -88,9 +88,11 @@ class QtPointToolButton: public QtMouseToolButton {
  
   QtPointToolButton(QWidget* parent = 0);
   ~QtPointToolButton() {  }
+
+ protected:
+  virtual void mousePressEvent(QMouseEvent*);
   
  protected slots:
-
   void show_context_menu( const QPoint & );
 
 };

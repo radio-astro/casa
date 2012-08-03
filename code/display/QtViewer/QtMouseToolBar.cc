@@ -36,12 +36,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 QtMouseToolButton::QtMouseToolButton( QWidget *parent ) : QToolButton(parent) { }
 
 void QtMouseToolButton::mousePressEvent( QMouseEvent *event ) {
-
-    Qt::KeyboardModifiers mod = event->modifiers( );
-    if ( mod & Qt::ControlModifier ||
-	 mod & Qt::AltModifier ||
-	 mod & Qt::MetaModifier ) return;
-
     Int btn = (event->button() == Qt::LeftButton)?   1 :
               (event->button() == Qt::MidButton)?    2 :
               (event->button() == Qt::RightButton)?  3 :   0;
@@ -55,18 +49,24 @@ QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(pare
 	     this, SLOT(show_context_menu(const QPoint &)) );
 }
 
+void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
+    Qt::KeyboardModifiers mod = event->modifiers( );
+    if ( mod & Qt::MetaModifier ) return; // context menu...
+    QtMouseToolButton::mousePressEvent(event);
+}
+
 void QtPointToolButton::show_context_menu( const QPoint &pos ) {
 
     QPoint global_pos = mapToGlobal(pos);
     QMenu *options = new QMenu( );
 
     std::vector<QAction*> actions;
-    actions.push_back(options->addAction(QIcon(":/icons/sympoint.png"),""));
+    actions.push_back(options->addAction(QIcon(":/icons/symdot.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symdrarrow.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symdlarrow.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symurarrow.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symularrow.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symcross.png"),""));
+    actions.push_back(options->addAction(QIcon(":/icons/symplus.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symx.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symcircle.png"),""));
     actions.push_back(options->addAction(QIcon(":/icons/symdiamond.png"),""));
