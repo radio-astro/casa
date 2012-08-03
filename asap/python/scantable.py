@@ -1489,7 +1489,7 @@ class scantable(Scantable):
         """
         if not isinstance(maskstring,str):
             asaplog.post()
-            asaplog.push("Invalid mask expression")
+            asaplog.push("Mask expression should be a string.")
             asaplog.post("ERROR")
         
         valid_ifs = self.getifnos()
@@ -1497,13 +1497,13 @@ class scantable(Scantable):
         seldict = {}
         if maskstring == "":
             maskstring = str(valid_ifs)[1:-1]
-        ## split each selection
+        ## split each selection "IF range[:CHAN range]"
         sellist = maskstring.split(',')
         for currselstr in sellist:
             selset = currselstr.split(':')
             # spw and mask string (may include ~, < or >)
             spwmasklist = self._parse_selection(selset[0], typestr='integer',
-                                                offset=1, minval=min(valid_ifs),
+                                                minval=min(valid_ifs),
                                                 maxval=max(valid_ifs))
             for spwlist in spwmasklist:
                 selspws = []
@@ -1601,6 +1601,57 @@ class scantable(Scantable):
         asaplog.push(msg)
         return seldict
 
+    @asaplog_post_dec
+    def parse_idx_selection(self, mode, selexpr):
+        """
+        Parse CASA type mask selection syntax of SCANNO, IFNO, POLNO,
+        BEAMNO, and row number
+
+        Parameters:
+            mode       : which column to select.
+                         ['scan',|'if'|'pol'|'beam'|'row']
+            selexpr    : A comma separated selection expression.
+                     examples:
+                         ''          = all (returns [])
+                         '<2,4~6,9'  = indices less than 2, 4 to 6 and 9
+                                       (returns [0,1,4,5,6,9])
+        Returns:
+        A List of selected indices
+        """
+        if selexpr == "":
+            return []
+        valid_modes = {'s': 'scan', 'i': 'if', 'p': 'pol',
+                       'b': 'beam', 'r': 'row'}
+        smode =  mode.lower()[0]
+        if not (smode in valid_modes.keys()):
+            msg = "Invalid mode '%s'. Valid modes are %s" %\
+                  (mode, str(valid_modes.values()))
+            asaplog.post()
+            asaplog.push(msg)
+            asaplog.post("ERROR")
+        mode = valid_modes[smode]
+        minidx = None
+        maxidx = None
+        if smode == 'r':
+            minidx = 0
+            maxidx = self.nrow()
+        else:
+            idx = getattr(self,"get"+mode+"nos")()
+            minidx = min(idx)
+            maxidx = max(idx)
+            del idx
+        sellist = selexpr.split(',')
+        idxlist = []
+        for currselstr in sellist:
+            # single range (may include ~, < or >)
+            currlist = self._parse_selection(currselstr, typestr='integer',
+                                             minval=minidx,maxval=maxidx)
+            for thelist in currlist:
+                idxlist += range(thelist[0],thelist[1]+1)
+        msg = "Selected %s: %s" % (mode.upper()+"NO", str(idxlist))
+        asaplog.push(msg)
+        return idxlist
+
     def _parse_selection(self, selstr, typestr='float', offset=0.,
                          minval=None, maxval=None):
         """
@@ -1610,35 +1661,67 @@ class scantable(Scantable):
                         ('integer' or 'float')
             offset :    The offset value to subtract from or add to
                         the boundary value if the selection string
-                        includes '<' or '>'
+                        includes '<' or '>' [Valid only for typestr='float']
             minval, maxval :  The minimum/maximum values to set if the
                               selection string includes '<' or '>'.
                               The list element is filled with None by default.
         Returns:
             A list of min/max pair of selections.
         Example:
-            _parseSelection('<3;5~7;9',typestr='int',offset=1,minval=0)
-            returns [[0,2],[5,7],[9,9]]
+            _parse_selection('<3;5~7;9',typestr='int',minval=0)
+            --> returns [[0,2],[5,7],[9,9]]
+            _parse_selection('<3;5~7;9',typestr='float',offset=0.5,minval=0)
+            --> returns [[0.,2.5],[5.0,7.0],[9.,9.]]
         """
         selgroups = selstr.split(';')
         sellists = []
         if typestr.lower().startswith('int'):
             formatfunc = int
+            offset = 1
         else:
             formatfunc = float
         
         for currsel in  selgroups:
             if currsel.find('~') > 0:
+                # val0 <= x <= val1
                 minsel = formatfunc(currsel.split('~')[0].strip())
                 maxsel = formatfunc(currsel.split('~')[1].strip()) 
-            elif currsel.strip().startswith('<'):
-                minsel = minval
-                maxsel = formatfunc(currsel.split('<')[1].strip()) \
-                         - formatfunc(offset)
-            elif currsel.strip().startswith('>'):
-                minsel = formatfunc(currsel.split('>')[1].strip()) \
+            elif currsel.strip().find('<=') > -1:
+                bound = currsel.split('<=')
+                try: # try "x <= val"
+                    minsel = minval
+                    maxsel = formatfunc(bound[1].strip())
+                except ValueError: # now "val <= x"
+                    minsel = formatfunc(bound[0].strip())
+                    maxsel = maxval
+            elif currsel.strip().find('>=') > -1:
+                bound = currsel.split('>=')
+                try: # try "x >= val"
+                    minsel = formatfunc(bound[1].strip())
+                    maxsel = maxval
+                except ValueError: # now "val >= x"
+                    minsel = minval
+                    maxsel = formatfunc(bound[0].strip())
+            elif currsel.strip().find('<') > -1:
+                bound = currsel.split('<')
+                try: # try "x < val"
+                    minsel = minval
+                    maxsel = formatfunc(bound[1].strip()) \
+                             - formatfunc(offset)
+                except ValueError: # now "val < x"
+                    minsel = formatfunc(bound[0].strip()) \
                          + formatfunc(offset)
-                maxsel = maxval
+                    maxsel = maxval
+            elif currsel.strip().find('>') > -1:
+                bound = currsel.split('>')
+                try: # try "x > val"
+                    minsel = formatfunc(bound[1].strip()) \
+                             + formatfunc(offset)
+                    maxsel = maxval
+                except ValueError: # now "val > x"
+                    minsel = minval
+                    maxsel = formatfunc(bound[0].strip()) \
+                             - formatfunc(offset)
             else:
                 minsel = formatfunc(currsel)
                 maxsel = formatfunc(currsel)

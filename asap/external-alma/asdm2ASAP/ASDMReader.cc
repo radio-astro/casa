@@ -934,6 +934,9 @@ int ASDMReader::getSrcType( unsigned int scan,
   ScanRow *scanrow = asdm_->getScan().getRowByKey( execBlockTag_, (int)scan ) ;
   ScanIntentMod::ScanIntent scanIntent = scanrow->getScanIntent()[0] ;
   SubscanRow *subrow = asdm_->getSubscan().getRowByKey( execBlockTag_, (int)scan, (int)subscan ) ;
+  if ( subrow == 0 ) {
+    return srctype ;
+  }
   SubscanIntentMod::SubscanIntent subIntent = subrow->getSubscanIntent() ;
   SwitchingModeMod::SwitchingMode swmode = SwitchingModeMod::NO_SWITCHING ;
   if ( subrow->isSubscanModeExists() )
@@ -1047,8 +1050,7 @@ unsigned int ASDMReader::getSubscanNo( unsigned int idx )
 
 unsigned int ASDMReader::getSubscanNo() 
 {
-  //logsink_->postLocally( LogMessage("subscan"+String::toString(vmsData_->v_msState[dataIdList_[idx]].subscanNum)+": obsmode="+String::toString(vmsData_->v_msState[dataIdList_[idx]].obsMode),LogOrigin(className_,funcName,WHERE)) ) ;
-  return vmsData_->v_msState[dataIndex_].subscanNum ;
+  return mainRow_[row_]->getSubscanNumber() ;
 }
 
 void ASDMReader::getSourceDirection( vector<double> &dir, string &ref )

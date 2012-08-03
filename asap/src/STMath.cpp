@@ -4677,14 +4677,18 @@ CountedPtr<Scantable> STMath::averageWithinSession( CountedPtr<Scantable> &s,
   while( !iter.pastEnd() ) {
 
     Vector<uInt> rows = iter.getRows( SHARE ) ;
+    uInt len = rows.nelements() ;
+
+    if ( len == 0 ) {
+      iter.next() ;
+      continue ;
+    }
 
     uInt nchan = s->nchan(s->getIF(rows[0])) ;
     Vector<uChar> flag( nchan ) ;
     Vector<Bool> bflag( nchan ) ;
     Vector<Float> spec( nchan ) ;
     Vector<Float> tsys( nchan ) ;
-
-    uInt len = rows.nelements() ;
 
     Vector<Double> timeSep( len-1 ) ; 
     for ( uInt i = 0 ; i < len-1 ; i++ ) {
