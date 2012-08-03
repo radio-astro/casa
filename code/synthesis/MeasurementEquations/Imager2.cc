@@ -71,6 +71,7 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImagePolarimetry.h>
+#include <images/Images/ImageBeamSet.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <synthesis/MSVis/VisSet.h>
@@ -1482,9 +1483,9 @@ String Imager::state()
     os << "General: " << endl;
     os << "  MeasurementSet is " << ms_p->tableName() << endl;
     if(beamValid_p) {
-      os << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
-	 << beam_p.getMinor("arcsec") << " (arcsec) at pa "
-	 << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
+      os << "  Beam fit: " << beam_p(IPosition(2,0,0)).getMajor("arcsec") << " by "
+	 << beam_p(IPosition(2,0,0)).getMinor("arcsec") << " (arcsec) at pa "
+	 << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << endl;
     }
     else {
       os << "  Beam fit is not valid" << endl;
@@ -2047,14 +2048,16 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
   //Use predefined beam for restoring or find one by fitting
   Bool printBeam = false;
   if(!beamValid_p){
-    Vector<Float> beam(3);
+    ImageBeamSet beam;
     beam=sm_p->beam(0);
-    if(beam[0] > 0.0){
-    	beam_p.setMajorMinor(
+    if(beam.nelements() > 0){
+      /*beam_p.setMajorMinor(
     		Quantity(abs(beam(0)), "arcsec"),
     		Quantity(abs(beam(1)), "arcsec")
     	);
       beam_p.setPA(Quantity(beam(2), "deg"));
+      */
+      beam_p=beam;
       beamValid_p=True;
       printBeam = true;
       os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
@@ -2065,9 +2068,9 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
     os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
   }
   if(printBeam)
-    os << LogIO::NORMAL << beam_p.getMajor("arcsec") << " by " // Loglevel INFO
-       << beam_p.getMinor("arcsec") << " (arcsec) at pa "
-       << beam_p.getPA(Unit("deg")) << " (deg) " << LogIO::POST;
+    os << LogIO::NORMAL << beam_p(IPosition(2,0,0)).getMajor("arcsec") << " by " // Loglevel INFO
+       << beam_p(IPosition(2,0,0)).getMinor("arcsec") << " (arcsec) at pa "
+       << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 }
 
 Bool Imager::restoreImages(const Vector<String>& restoredNames)
@@ -2109,7 +2112,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
     }
     
     Bool dorestore=False;
-    if( ! beam_p.isNull())
+    if(  beam_p.nelements() >0 )
       dorestore=True;
     
     if(restoredNames.nelements()>0) {
@@ -2194,7 +2197,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 					    restoredNames(thismodel));
 	      diskrestore.copyData(restored);
 	      ImageInfo ii = modelIm.imageInfo();
-	      ii.setRestoringBeam(beam_p);
+	      ii.setBeams(beam_p);
 	      diskrestore.setImageInfo(ii);
 	      diskrestore.setUnits(Unit("Jy/beam"));
 	      copyMask(diskrestore, restored, "mask0");

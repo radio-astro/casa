@@ -363,7 +363,7 @@ class Imager
 	       const Vector<String>& image, const Vector<String>& residual);
 
   // Setbeam
-  Bool setbeam(const GaussianBeam& beam);
+  Bool setbeam(const ImageBeamSet& beam);
 
   // Residual
   Bool residual(const Vector<String>& model, const String& complist,
@@ -375,7 +375,7 @@ class Imager
   // Smooth
   Bool smooth(const Vector<String>& model, 
 	      const Vector<String>& image, Bool usefit,
-	      GaussianBeam& mbeam,
+	      ImageBeamSet& mbeam,
 	      Bool normalizeVolume);
 
   // Clean algorithm
@@ -516,7 +516,7 @@ class Imager
   static Bool clone(const String& imageName, const String& newImageName);
   
   // Fit the psf
-  Bool fitpsf(const String& psf, GaussianBeam& mbeam);
+  Bool fitpsf(const String& psf, ImageBeamSet& mbeam);
 
   // Correct the visibility data (OBSERVED->CORRECTED)
   Bool correct(const Bool doparallactic, const Quantity& t);
@@ -670,7 +670,7 @@ protected:
   Int  tile_p;
   MPosition mLocation_p;
   Bool doVP_p;
-  GaussianBeam beam_p;
+  ImageBeamSet beam_p;
   Bool beamValid_p;
   Float padding_p;
   Float sdScale_p;

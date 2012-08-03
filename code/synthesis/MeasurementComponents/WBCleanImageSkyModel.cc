@@ -905,7 +905,7 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se)
 	}
       
       //     index = getModelIndex(thismodel,0);
-      beam(thismodel)=0.0;
+      //beam(thismodel)=0.0;
       if(!StokesImageUtil::FitGaussianPSF(PSF(baseindex),beam(thismodel))) 
 	os << "Beam fit failed: using default" << LogIO::POST;
     }
