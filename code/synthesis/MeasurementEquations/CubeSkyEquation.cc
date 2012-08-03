@@ -1173,6 +1173,9 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int nCubeSlice){
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
+    if(nCubeSlice>1){
+      ftm_p[model]->reset();
+    }
      //the different apply...jones user ft_ and ift_
     ft_=&(*ftm_p[model]);
     ift_=&(*iftm_p[model]);

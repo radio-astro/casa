@@ -35,6 +35,7 @@
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <display/DisplayErrors.h>
 #include <casaqt/QtUtilities/QtId.h>
+#include <QDir>
 
 namespace casa {
     namespace viewer {
@@ -136,6 +137,31 @@ namespace casa {
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
 
+	QString QtRegion::getSaveDir( ) {
+	    if ( dock_->saveDir( ).isNull( ) ) {
+		if ( ! dock_->loadDir( ).isNull( ) )
+		    dock_->saveDir( ) = dock_->loadDir( );
+		else
+		    dock_->saveDir( ) = QDir::currentPath();
+	    }
+	    return dock_->saveDir( );
+	}
+	void QtRegion::putSaveDir( QString dir ) {
+	    dock_->saveDir( ) = dir;
+	}
+	QString QtRegion::getLoadDir( ) {
+	    if ( dock_->loadDir( ).isNull( ) ) {
+		if ( ! dock_->saveDir( ).isNull( ) )
+		    dock_->loadDir( ) = dock_->saveDir( );
+		else
+		    dock_->loadDir( ) = QDir::currentPath();
+	    }
+	    return dock_->loadDir( );
+	}
+	void QtRegion::putLoadDir( QString dir ) {
+	    dock_->loadDir( ) = dir;
+	}
+
 	void QtRegion::updateCenterInfo() {
 		std::list<RegionInfo> *rc = generate_dds_centers( );
 		mystate->updateCenters(rc);
@@ -183,8 +209,9 @@ namespace casa {
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'f',precision),
-					 QString("%1").arg(height,0,'f',precision) );
+					 QString("%1").arg(width,0,'g',precision),
+					 QString("%1").arg(height,0,'g',precision) );
+
 					 // QString("%1").arg(width), 
 					 // QString("%1").arg(height) );
 	    }

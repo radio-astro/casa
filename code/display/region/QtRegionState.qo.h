@@ -145,9 +145,6 @@ namespace casa {
 		QString last_line_color;
 		QtRegion *region_;
 
-		QString last_load_directory;
-		QString last_save_directory;
-
 		std::string bounding_index_to_string( int index ) const;
 
 	    private:

@@ -183,6 +183,15 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 
   }
  
+  void SimplePBConvFunc::reset(){
+    doneMainConv_p=False;
+    convFunctions_p.resize(0, True);
+    convWeights_p.resize(0, True);
+    convSizes_p.resize(0, True);
+    convSupportBlock_p.resize(0, True);
+    convFunctionMap_p.clear();
+  }
+
   void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
 					  const Int& convSampling,
@@ -297,7 +306,16 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
       
       IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
-      TempImage<Complex> twoDPB(pbShape, coords);
+      Int memtobeused=-1;
+      Long memtot=HostInfo::memoryFree();
+      //check for 32 bit OS and limit it to 2Gbyte
+      if( sizeof(void*) == 4){
+	if(memtot > 2000000)
+	  memtot=2000000;
+      }
+      if(memtot < 2000000)
+	memtobeused=0;
+      TempImage<Complex> twoDPB(pbShape, coords, memtobeused);
       
       convFunc_p.resize(convSize_p, convSize_p);
       convFunc_p=0.0;
@@ -314,11 +332,11 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       sj_p->apply(twoDPB, twoDPB, vb, 0); 
  
       //*****Test
-      TempImage<Complex> twoDPB2(pbShape, coords);
+      TempImage<Complex> twoDPB2(pbShape, coords, memtobeused);
       //Old way
       
       {
-	TempImage<Float> screen2(pbShape, coords);
+	TempImage<Float> screen2(pbShape, coords, memtobeused);
 	//	Matrix<Float> screenoo(convSize_p, convSize_p);
 	//screenoo.set(1.0);
 	//screen2.putSlice(screenoo,start);
@@ -637,9 +655,12 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       convFunctionMap_p.define(mapid, 0);    
       actualConvIndex_p=0;
       if(calcFluxScale_p){
-	fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+	// 0ne channel only is needed to keep track of pb coverage
+	if(fluxScale_p.shape().nelements()==0){
+	  fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,1), csys_p);
+	  fluxScale_p.set(0.0);
+	}
 	filledFluxScale_p=False;
-	fluxScale_p.set(0.0);
       }
       return False;
     }
@@ -674,12 +695,12 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     if(!calcFluxScale_p)
       throw(AipsError("Programmer error: Cannot get flux scale"));
     if(!filledFluxScale_p){
-      IPosition blc(4,nx_p, ny_p, npol_p, nchan_p);
-      IPosition trc(4, ny_p, ny_p, npol_p, nchan_p);
+      IPosition blc=fluxScale_p.shape();
+      IPosition trc=fluxScale_p.shape();
       blc(0)=0; blc(1)=0; trc(0)=nx_p-1; trc(1)=ny_p-1;
       
-      for (Int j=0; j < npol_p; ++j){
-	for (Int k=0; k < nchan_p ; ++k){
+      for (Int j=0; j < fluxScale_p.shape()(2); ++j){
+	for (Int k=0; k < fluxScale_p.shape()(3) ; ++k){
 	  
 	  blc(2)=j; trc(2)=j;
 	  blc(3)=k; trc(3)=k;
@@ -719,13 +740,15 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     try{
       rec.define("name", "SimplePBConvFunc");
       rec.define("numconv", numConv);
+      //cerr << "num of conv " << numConv << "  " << convFunctionMap_p.ndefined() << "  " <<convFunctions_p.nelements() << endl;
       for (Int k=0; k < numConv; ++k){
 	rec.define("convfunctions"+String::toString(k), *(convFunctions_p[k]));
 	rec.define("convweights"+String::toString(k), *(convWeights_p[k]));
 	rec.define("convsizes"+String::toString(k), *(convSizes_p[k]));
 	rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
-	rec.define("key"+String::toString(k),convFunctionMap_p.getKey(k));
-	rec.define("val"+String::toString(k), convFunctionMap_p.getVal(k));
+	//cerr << "k " << k << " key " << convFunctionMap_p.getKey(k) << " val " << convFunctionMap_p.getVal(k) << endl;
+	rec.define(String("key")+String::toString(k),convFunctionMap_p.getKey(k));
+	rec.define(String("val")+String::toString(k), convFunctionMap_p.getVal(k));
       }
       rec.define("pbclass", Int(pbClass_p));
       rec.define("actualconvindex",  actualConvIndex_p);
@@ -763,8 +786,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	 rec.get("convsizes"+String::toString(k), *(convSizes_p[k]));
 	 String key;
 	 Int val;
-	 rec.get("key"+String::toString(k), key);
-	 rec.get("val"+String::toString(k), val);
+	 rec.get(String("key")+String::toString(k), key);
+	 rec.get(String("val")+String::toString(k), val);
 	 convFunctionMap_p.define(key,val);
        }
        pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
@@ -786,6 +809,12 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       sj_p->applySquare(thispb, thispb, vb, 0);
       LatticeExpr<Float> le(fluxScale_p+thispb);
       fluxScale_p.copyData(le);
+      LatticeExprNode LEN = max(fluxScale_p);
+      Float maxsca=LEN.getFloat();
+      //Tempporary fix when cubesky is chunking...do not add on 
+      //already defined position
+      if(maxsca > 1.98)
+	fluxScale_p.copyData(LatticeExpr<Float>(fluxScale_p-thispb));
       
       if(0) {
 	ostringstream os1;

@@ -94,7 +94,7 @@ namespace casa {
 		    if ( it == coordinate_state.end( ) ) continue;
 		    combo->setCurrentIndex(it->second);
 		}
-	    }	      
+	    }
 
 	    //setLineWidth(0);
 	    setFrameShape(QFrame::NoFrame);
@@ -428,6 +428,7 @@ namespace casa {
 		case Region::SolidLine:
 		    line_style->setCurrentIndex(0);
 		    break;
+		case Region::LSDoubleDashed:
 		case Region::DashLine:
 		    line_style->setCurrentIndex(1);
 		    break;
@@ -704,7 +705,7 @@ namespace casa {
 		y_units->setDisabled(false);
 		dim_units->setDisabled(false);
 	    }
-	    
+
 	    // coordinates tab selected or not...
 	    QString state = states->tabText(categories->currentIndex( ));
 	    if ( state == "coordinates" )
@@ -829,15 +830,39 @@ namespace casa {
 	}
 
 	void QtRegionState::save_browser(bool) {
-	    QString file = QFileDialog::getOpenFileName( this, "Save region file...", last_save_directory, QString("Region files (*") + casa_ext + " *" + ds9_ext + ")" );
-	    if ( ! file.isEmpty() )
-		save_filename->setText(file);
+
+	    QFileDialog *dlg = new QFileDialog( 0, "Select a Region File for Output", region_->getSaveDir( ) );
+	    dlg->setModal(true);
+	    dlg->setFileMode(QFileDialog::AnyFile);
+	    dlg->setOption(QFileDialog::DontUseNativeDialog, true);
+
+	    if ( dlg->exec( ) == QDialog::Accepted ) {
+		QStringList selected = dlg->selectedFiles();
+		if ( selected.count( ) > 0 ) {
+		    save_filename->setText(selected.first( ));
+		}
+		region_->putSaveDir( dlg->directory( ).canonicalPath( ) );
+	    }
+	    delete dlg;
+
 	}
 
 	void QtRegionState::load_browser(bool) {
-	    QString file = QFileDialog::getOpenFileName( this, "Load region file...", last_load_directory, QString("Region files (*") + casa_ext + " *" + ds9_ext + ")" );
-	    if ( ! file.isEmpty() )
-		load_filename->setText(file);
+
+	    QFileDialog *dlg = new QFileDialog( 0, "Select a Region File to Load", region_->getLoadDir( ) );
+	    dlg->setModal(true);
+	    dlg->setFileMode(QFileDialog::ExistingFile);
+	    dlg->setOption(QFileDialog::DontUseNativeDialog, true);
+
+	    if ( dlg->exec( ) == QDialog::Accepted ) {
+		QStringList selected = dlg->selectedFiles();
+		if ( selected.count( ) > 0 ) {
+		    load_filename->setText(selected.first( ));
+		}
+		region_->putLoadDir( dlg->directory( ).canonicalPath( ) );
+	    }
+	    delete dlg;
+
 	}
 
     }
