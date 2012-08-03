@@ -51,7 +51,11 @@ QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(pare
 
 void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
     Qt::KeyboardModifiers mod = event->modifiers( );
-    if ( mod & Qt::MetaModifier ) return; // context menu...
+#if defined(__APPLE__)
+    if ( mod & Qt::MetaModifier ) return; 	// context menu...
+#else
+    if ( mod & Qt::ControlModifier ) return;	// context menu...
+#endif
     QtMouseToolButton::mousePressEvent(event);
 }
 
