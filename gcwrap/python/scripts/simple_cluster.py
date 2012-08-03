@@ -87,7 +87,6 @@ class simple_cluster:
             return
         self._hosts=[]
         self._jobs={}
-        self._rsrc={}
         input=open(cfg,'r')
         s=input.readlines()
         for line in s:
@@ -137,7 +136,7 @@ class simple_cluster:
             elif (max_engines_user<=1):
                 max_engines = int(round(max_engines_user*ncores_available))
                 if (max_engines < 2):
-                    casalog.post("CPU free capacity available (s%) would not support cluster mode at node %s, starting only 1 engine" 
+                    casalog.post("CPU free capacity available s% would not support cluster mode at node %s, starting only 1 engine" 
                                  % (str(cpu_available),hostname),'WARNING')
                     max_engines = 1
             else:
@@ -189,9 +188,6 @@ class simple_cluster:
                 casalog.post("Enabling openMP to %s threads per engine at node %s" % (str(omp_num_nthreads),hostname))
                 
             self._hosts.append([a, nengines, c, omp_num_nthreads])
-        for i in range(len(self._hosts)):
-            self._rsrc[self._hosts[i][0]]=[]
-        #print self._hosts
     
         self._configdone=self.validate_hosts()
 
@@ -626,6 +622,7 @@ class simple_cluster:
     ###########################################################################
     ###   cluster management
     ###########################################################################
+    
     # jagonzal (CAS-4292): This method is deprecated, because I'd like to 
     # avoid brute-force methods like killall which just hide state errors
     def cold_start(self):
@@ -643,6 +640,16 @@ class simple_cluster:
         for i in range(len(self._hosts)):
             cmd="ssh -q "+self._hosts[i][0]+' "killall -9 ipengine"'
             os.system(cmd)
+            
+    #   jagonzal (CAS-4292): Method for gracefull finalization (e.g.: when closing casa)
+    def stop_cluster(self):
+        """ Destructor method to shut down the cluster gracefully """
+        # Stop cluster and thread services
+        self.stop_monitor()
+        self.stop_resource()
+        # Now we can stop the cluster w/o problems
+        # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
+        self._cluster.stop_cluster()            
     
     def stop_nodes(self):
         '''Stop all engines on all hosts of current cluster.
@@ -744,72 +751,7 @@ class simple_cluster:
     
     ###########################################################################
     ###   resource management
-    ###########################################################################
-    def check_resource(self):
-        '''Check the resource usage on all hosts.
-
-        This function checks and calculates current %cpu, %iowait, %mem and 
-        %memswap on all hosts. The results are stored internally and can be
-        viewed by calling show_resource.
-
-        Normally, one does not call this function directly. The init_cluster
-        will call this function.
-
-        '''
-        if not self._configdone:
-            return
-        for i in range(len(self._hosts)):
-            cpu=[0.]*11
-            b=commands.getoutput("ssh -q "+self._hosts[i][0]+ 
-                                 " 'cat /proc/stat | grep cpu\ '")
-            lines=b.split('\n')
-            for line in lines:
-                if not line.startswith('cpu '):
-                    continue
-                l=line.split()
-                cpu[0]=long(l[1])+long(l[2])+long(l[3])+ \
-                       long(l[5])+long(l[6])+long(l[7])+ \
-                       long(l[4])
-                cpu[1]=long(l[1])+long(l[2])+long(l[3])
-                cpu[3]=long(l[5])
-    
-            s=commands.getoutput("ssh -q "+self._hosts[i][0]+ 
-                                 " 'cat /proc/meminfo '")
-            lines=s.split('\n')
-            mt=mf=st=sf=0
-            for line in lines:
-                if line.startswith('MemTotal:'):
-                    mt=long(line.split()[1])
-                if line.startswith('MemFree:'):
-                    mf=long(line.split()[1])
-                if line.startswith('SwapTotal:'):
-                    st=long(line.split()[1])
-                if line.startswith('SwapFree:'):
-                    sf=long(line.split()[1])
-            cpu[5]=mt
-            cpu[6]=mf
-            cpu[8]=st
-            cpu[9]=sf
-    
-            #print self._rsrc
-            old=self._rsrc[self._hosts[i][0]] if self._rsrc.has_key(self._hosts[i][0]) else [] 
-            if old!=None and old!=[]:
-                dlt=float(cpu[0]-old[0])
-                if math.fabs(dlt)<0.00000001:
-                    cpu[2]=0.
-                    cpu[4]=0.
-                else:
-                    cpu[2]=(cpu[1]-old[1])/dlt
-                    cpu[4]=(cpu[3]-old[3])/dlt
-            try:
-                cpu[7]=(cpu[5]-cpu[6])/float(cpu[5])
-                cpu[10]=(cpu[8]-cpu[9])/float(cpu[8])
-            except:
-                # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-                # traceback.print_tb(sys.exc_info()[2])
-                pass
-            self._rsrc[self._hosts[i][0]]=cpu 
-    
+    ###########################################################################   
     def start_resource(self): 
         '''Start monitoring resource usage.
 
@@ -824,13 +766,6 @@ class simple_cluster:
         
         if not self._configdone:
             return
-        #fig=pl.figure(98)
-        #title='casa cluster resource usage'
-    
-        #t=fig.text(0.5, 0.95, title, horizontalalignment='center',
-        #           verticalalignment='center',
-        #           fontproperties=pl.matplotlib.font_manager.FontProperties(size=16))
-        #fig.show() this should be the last and should be the only one, use draw()
         self._resource_on=True 
         self._rsrc={}
         return thread.start_new_thread(self.update_resource, ())
@@ -868,48 +803,22 @@ class simple_cluster:
         if not self._configdone:
             return
         self._resource_on=False 
-        self._rsrc={}
         while (self._resource_running):
             time.sleep(1)
-            
+        self._rsrc={}
     
     def show_resource(self, long=False):
-        '''Display resource usage on all hosts.
-
-        Keyword arguments:
-        long -- whether or not to display detailed resource usage info
-
-        Four critical resource usage indicators (for parallel execution), 
-        namely, %cpu, %iowait, %mem and %memswap on all hosts are continuously
-        checked. This infomation can be used to tune the parallel performance.
-
-        Example:
-        CASA <53>: sl.show_resource
-        host          cpu    iowait mem    swap
-        casa-dev-08   0.13   0.01   0.80   0.00
-        casa-dev-10   0.17   0.01   0.94   0.00
-        casa-dev-07   0.15   0.00   0.88   0.00
-
-        '''
+        """
+        jagonzal (CAS-4372): Old resource monitoring functions were causing crashes in NRAO cluster
+        """
         if not self._configdone:
             return
         if long:
-            return self._rsrc
+            return self.check_resource(False)
         else:
-            if len(self._rsrc.keys())==0:
-                return self._rsrc
-            else:
-                print ' host          cpu    iowait mem    swap'
-                for h in self._rsrc.keys():
-                    print "%12s%7.2f%7.2f%7.2f%7.2f" % (
-                           h,
-                           self._rsrc[h][2], 
-                           self._rsrc[h][4],
-                           self._rsrc[h][7], 
-                           self._rsrc[h][10]
-                           )
+            self.check_resource(True)
     
-    def show_state(self, verbose_local=False):
+    def check_resource(self, verbose_local=False):
         """
         jagonzal 29/05/12 (CAS-4137) - HPC project (CAS-4106)
         ========================================================================
@@ -1191,6 +1100,9 @@ class simple_cluster:
         # Rename monitoring file
         ret = commands.getstatusoutput("mv " + self._monitoringFile + ".tmp" + " " + self._monitoringFile)
 
+        # Update resource member
+        self._rsrc = result
+        
         return result
 
 
@@ -1312,9 +1224,6 @@ class simple_cluster:
                         if notify and self._jobs[job]['status']=="running":
                             print 'engine %d job %s broken' % (eng, sht)
                         self._jobs[job]['status']="broken"
-
-            # jagonzal: Show cluster state after updating job status und time
-            state = self.show_state(False)
 
             gr=set()
             for val in self._jobs.values():
@@ -2368,18 +2277,7 @@ class simple_cluster:
 
         # Put the cluster object into the global namespace
         sys._getframe(len(inspect.stack())-1).f_globals['procCluster'] = self
-
-    ###########################################################################
-    ###   jagonzal (CAS-4292): Method for gracefull finalization (e.g.: when closing casa)
-    ###########################################################################
-    def stop_cluster(self):
-        """ Destructor method to shut down the cluster gracefully """
-        # Stop cluster and thread services
-        self.stop_monitor()
-        self.stop_resource()
-        # Now we can stop the cluster w/o problems
-        # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
-        self._cluster.stop_cluster()
+        
     
     ###########################################################################
     ###   example to distribute clean task over engines

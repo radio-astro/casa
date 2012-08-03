@@ -107,7 +107,8 @@ class ParallelTaskHelper:
                     ret_dict[key] = self.sum_dictionaries(item,{})
             else:
                 if ret_dict.has_key(key):
-                    ret_dict[key] += item
+                    if not isinstance(ret_dict[key],str):
+                        ret_dict[key] += item
                 else:
                     ret_dict[key] = item
         return ret_dict   
