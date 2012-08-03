@@ -85,6 +85,67 @@ def readFile(inputfile):
     
     return cmdlist
 
+# jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
+def addAbsPath(input_file):
+    '''Read in the lines from an input file
+    inputfile -->  file in disk with a list of strings per line
+    
+    Re-writes the file changing relative file names to absolute file names
+    '''        
+
+    output_file = input_file + ".tmp"
+    if (type(input_file) == str) & os.path.exists(input_file):
+        try:
+            input_file_id = open(input_file, 'r')
+        except:
+            raise Exception, 'Error opening file ' + input_file
+        
+        try:
+            output_file_id = open(output_file, 'w')
+        except:
+            output_file_id.close()
+            raise Exception, 'Error opening file ' + output_file
+    else:
+        raise Exception, \
+            'ASCII file not found - please verify the name'
+            
+    #
+    # Parse file
+    try:
+        for line in input_file_id:
+            cmd = line.rstrip()
+            cmd_pars = cmd.split(" ")
+            for par in cmd_pars:
+                if ((par.count("inpfile") > 0) or 
+                    (par.count("outfile") > 0) or 
+                    (par.count("addantenna") > 0) or 
+                    (par.count("timedev") > 0) or 
+                    (par.count("freqdev") > 0)):
+                    par = par.split("=")
+                    file_local = par[1]
+                    if file_local.count("'")>0:
+                        file_local = file_local.split("'")
+                        file_local = file_local[1]
+                    elif file_local.count('"')>0:
+                        file_local = file_local.split('"')
+                        file_local = file_local[1]
+                    else:
+                        continue
+                    file_abs = os.path.abspath(file_local)
+                    cmd = cmd.replace(file_local,file_abs)
+                    
+            output_file_id.write(cmd+"\n")
+
+    except:
+        input_file_id.close()
+        output_file_id.close()
+        raise Exception, 'Error reading lines from file ' \
+            + flagtable
+            
+    input_file_id.close()
+    output_file_id.close()
+    os.rename(output_file, input_file)
+
 def makeDict(cmdlist, myreason='any'):
     '''Make a dictionary compatible with a FLAG_CMD table structure
        and select by reason if any is given

@@ -278,12 +278,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.median_coordinate'
         refval=[]
         try:
-            msmoments(infile=self.rawfile,spw=id,outfile=self.outfile)
+            res=msmoments(infile=self.rawfile,spw=id,moments=moments,outfile=self.outfile)
+            res.close()
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
-            #pos=str(e).find('pixel range that is either all positive or negative')
-            pos=0
+            pos=str(e).find('moment not allowed to calculate')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
         except Exception, e:

@@ -30,6 +30,7 @@ class ParallelTaskHelper:
            * Finds the full path for the input vis.
         '''
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
+        casalog.origin("ParallelTaskHelper")
 
     def generateJobs(self):
         '''
@@ -60,11 +61,56 @@ class ParallelTaskHelper:
         self._jobQueue.addJob(self._executionList)
         self._jobQueue.executeQueue()
 
-    def postExecution(self):
+    def postExecution(self):      
+        ret_list = []
         if (self._cluster != None):
-            return self._cluster.get_return_list()
+            ret_list =  self._cluster.get_return_list()
         else:
             return None
+        
+        # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
+        msTool = mstool();
+        msTool.open(self._arg['vis'])
+        subMS_list = msTool.getreferencedtables()
+        msTool.close()
+        
+        index = 0
+        if isinstance(ret_list[0],bool):
+            retval = True
+            for subMs in subMS_list:
+                if not ret_list[index]:
+                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),'WARNING')
+                    retval = False
+                index += 1
+            return retval
+        elif isinstance(ret_list[0],dict):
+            ret_dict = {}
+            for index in range(len(ret_list)):
+                dict_i = ret_list[index]
+                ret_dict = self.sum_dictionaries(dict_i,ret_dict)
+            return ret_dict           
+        else:
+            ret_map = {}
+            for subMs in subMS_list:
+                ret_map[subMs] = ret_list[index]
+                index += 1
+            return ret_map
+        
+    # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
+    def sum_dictionaries(self,dict_list,ret_dict):
+        for key in dict_list:
+            item = dict_list[key]
+            if isinstance(item,dict):
+                if ret_dict.has_key(key):
+                    ret_dict[key] = self.sum_dictionaries(item,ret_dict[key])
+                else:
+                    ret_dict[key] = self.sum_dictionaries(item,{})
+            else:
+                if ret_dict.has_key(key):
+                    ret_dict[key] += item
+                else:
+                    ret_dict[key] = item
+        return ret_dict   
             
     def go(self):
         self.initialize()

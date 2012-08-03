@@ -479,7 +479,7 @@ class imcollapse_test(unittest.TestCase):
         
     def test_beams(self):
         """test per plane beams"""
-        myia = iatool.create()
+        myia = iatool()
         myia.fromshape("", [10, 10, 10, 4])
         myia.setrestoringbeam(
             major="4arcsec", minor="3arcsec",

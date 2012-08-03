@@ -287,6 +287,8 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
             os.system("cp -r %s %s" % (self.datapath+data, data))
         
         default(simobserve)
+        # Add new line for better reading (these tests always print errors).
+        print ""
 
     def tearDown(self):
         for data in self.indata:
@@ -342,7 +344,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          indirection=indirection)
-        self.assertEqual(res,False)
+        self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
         
@@ -364,7 +366,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          incenter=incenter)
-        self.assertEqual(res,False)
+        self.assertTrue(res)
         # Need to compare MS with one generated with J2000
         
         
@@ -376,7 +378,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          inwidth=inwidth)
-        self.assertEqual(res,False)
+        self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
 
@@ -453,7 +455,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          direction=direction)
-        self.assertEqual(res,False)
+        self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
 
@@ -515,7 +517,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          caldirection=caldirection)
-        self.assertEqual(res,False)
+        self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
 

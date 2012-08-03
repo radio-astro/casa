@@ -107,7 +107,7 @@ def alleqnum(x,num,tolerance=0):
 class ia_rebin_test(unittest.TestCase):
     
     def setUp(self):
-        self._myia = iatool.create()
+        self._myia = iatool()
     
     def tearDown(self):
         self._myia.done()
@@ -153,7 +153,7 @@ class ia_rebin_test(unittest.TestCase):
             myim2b = false
         self.assertFalse(myim2b)
         
-        myim2b = myim2.rebin(bin=[2,2])
+        myim2b = myim2.rebin("",bin=[2,2])
         self.assertTrue(myim2b)
         p = myim2b.getchunk()
         self.assertTrue(alleqnum(p,1.0,tolerance=0.0001))

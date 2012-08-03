@@ -24,10 +24,12 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/gencal
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
-    testmms = True
-    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/gencal/'
     if os.path.isdir(DATADIR):
-        datapath = DATADIR+'/gencal/'
+        testmms = True
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
 
 print 'Gencal tests will use data from '+datapath         
 

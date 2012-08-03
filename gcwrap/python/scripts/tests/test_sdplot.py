@@ -1228,8 +1228,8 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
 
     # Test settings
     saveref = False
-    usegui = True
-    compare = (not usegui)
+    usegui = False
+    compare = False #(not usegui)
     
     def setUp( self ):
         # switch on/off GUI
@@ -1521,7 +1521,144 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile,self.compare)
 
+#####
+# Tests on string data selection
+#####
+class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
+    """
+    Test CASA type data selection in string.
+    
+    The list of tests:
+      testsel01 --- scanlist
+      testsel01 --- iflist
+      testsel01 --- pollist
+      testsel01 --- beamlist
+
+    Note: input data is generated from a single dish regression data,
+    'OrionS_rawACSmod', as follows:
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+            calmode='ps',tau=0.09,outfile='tmp.asap')
+      sdcal(infile='tmp.asap',scanaverage=True,outfile=self.infile)
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_calSave.asap'
+    figroot = sdplot_unittest_base.taskname + '_sel'
+    figsuff = '.png'
+    fig=None
+    baseinfo = {'npanel': 2, 'nstack': 2,
+               'xlabel': 'Channel',
+               'ylabel': 'Brightness Temperature (K)'}
+
+    # common parameter values
+    header = False
+
+    # Test settings
+    saveref = True
+    usegui = False
+    compare = (not usegui)
+    
+    def setUp( self ):
+        # switch on/off GUI
+        sd.rcParams['plotter.gui'] = self.usegui
+        sd.plotter.__init__()
+        # Fresh copy of input data
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        # Generate directory to save figures
+        if not os.path.exists(self.currdir):
+            os.makedirs(self.currdir)
+        # Create a directory to store the figures for future comparison
+        if (not os.path.exists(self.prevdir)) and self.saveref:
+            try: os.makedirs(self.prevdir)
+            except OSError:
+                msg = "Unable to create directory, "+self.prevdir+".\n"
+                msg += "Plot figures will remain in "+self.currdir
+                casalog.post(msg,'WARN')
+        
+        default(sdplot)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        # restore GUI setting
+        sd.rcParams['plotter.gui'] = self.oldgui
+        sd.plotter.__init__()
+
+    # helper functions of tests
+
+    # Actual tests
+    def testsel01( self ):
+        """testsel01: scanlist='23~25'"""
+        tid="01"
+        outfile = self.figroot+tid+self.figsuff
+        scanlist="23~25"
+        panel = 's'
+        result = sdplot(infile=self.infile, scanlist=scanlist,
+                        panel=panel, header=self.header,
+                        outfile=outfile)
+        locinfo = {'npanel': 2, 'title0': 'Scan 23 (OrionS)'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testsel02( self ):
+        """testsel02: iflist='1, 3~12,>= 14'"""
+        tid="02"
+        outfile = self.figroot+tid+self.figsuff
+        iflist='1, 3~12,>= 14'
+        panel = 'i'
+        result = sdplot(infile=self.infile, iflist=iflist,
+                        panel=panel, header=self.header,
+                        outfile=outfile)
+        locinfo = {'npanel': 5, 'title0': 'IF1'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testsel03( self ):
+        """testsel03: pollist='>0'"""
+        tid="03"
+        outfile = self.figroot+tid+self.figsuff
+        pollist='>0'
+        panel = 'p'
+        result = sdplot(infile=self.infile, pollist=pollist,
+                        panel=panel, header=self.header,
+                        outfile=outfile)
+        locinfo = {'npanel': 1, 'nstack': 1, 'title0': 'LL'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+    def testsel04( self ):
+        """testsel04: beamlist='<1'"""
+        tid="04"
+        outfile = self.figroot+tid+self.figsuff
+        beamlist='<1'
+        panel = 'b'
+        result = sdplot(infile=self.infile, beamlist=beamlist,
+                        panel=panel, header=self.header,
+                        outfile=outfile)
+        locinfo = {'npanel': 1, 'title0': 'Beam 0'}
+        refinfo = self._mergeDict(self.baseinfo,locinfo)
+        # Tests
+        self.assertEqual(result,None)
+        currinfo = self._get_plot_info()
+        self._compareDictVal(currinfo, refinfo)
+        self._checkOutFile(outfile,self.compare)
+
+
 
 def suite():
     return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
-            sdplot_errorTest]
+            sdplot_selectTest, sdplot_errorTest]

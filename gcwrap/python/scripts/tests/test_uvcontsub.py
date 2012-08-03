@@ -5,7 +5,7 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
-from tests.test_split import check_eq, SplitChecker
+#from tests.test_split import check_eq, SplitChecker
 import unittest
 
 '''
@@ -18,67 +18,178 @@ Features tested:
   4. It gets the right answer for a known line + 0th order continuum,
      even when fitorder = 4.
 '''
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
+uvcdatadir = 'unittest/uvcontsub/' 
 
-uvcdatadir = 'unittest/uvcontsub/'  # in SplitChecker.datapath/
+#Commented out for refactoring (eliminated test_split dependence)
+#class UVContChecker(SplitChecker):
+#    """
+#    Base class for uvcontsub unit testing.
+#    """
+#    need_to_initialize = True
+#    records = {}
+#
+#    def do_split(self, corrsel):
+#        """
+#        This is only called do_split because it comes from SplitChecker.
+#        run_task (uvcontsub in this case) would have been a better name.
+#        """
+#        record = {}
+#        try:
+#            print "\nRunning uvcontsub"
+#            uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
+#                               fitorder=corrsel, want_cont=True,
+#                               async=False)
+#        except Exception, e:
+#            print "Error running uvcontsub"
+#            raise e
+#        for spec in ('cont', 'contsub'):
+#            specms = self.inpms + '.' + spec
+#            tb.open(specms)
+#            record[spec] = tb.getcell('DATA', 52)
+#            tb.close()
+#            shutil.rmtree(specms)
+#        self.__class__.records[corrsel] = record
+#        return uvran
 
-class UVContChecker(SplitChecker):
+class UVContsubUnitTestBase(unittest.TestCase):
     """
-    Base class for uvcontsub unit testing.
-    """
-    need_to_initialize = True
-    records = {}
+    uvcontsub unittest base class (refactored)
+    """  
+    def initialize(self,inpms):
+        """
+        initialize 
+        """
+        self.inpms = inpms
+        if not os.path.exists('unittest/uvcontsub'):
+            os.system('mkdir -p unittest/uvcontsub')
 
-    def do_split(self, corrsel):
+        if not os.path.exists(self.inpms):
+            try:
+                shutil.copytree(datapath + inpms, inpms)
+            except Exception, e:
+                raise Exception, "Missing input MS: " + datapath + inpms 
+
+
+    def cleanup(self):
         """
-        This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub in this case) would have been a better name.
-        """
+        clean up the test dir
+        """ 
+        if os.path.exists(self.inpms):
+            shutil.rmtree(self.inpms)
+
+
+    def check_eq(self, val, expval, tol=None):
+        """Checks that val matches expval within tol."""
+	if type(val) == dict:
+	    for k in val:
+		check_eq(val[k], expval[k], tol)
+	else:
+	    try:
+		if tol and hasattr(val, '__rsub__'):
+		    are_eq = abs(val - expval) < tol
+		else:
+		    are_eq = val == expval
+		if hasattr(are_eq, 'all'):
+		    are_eq = are_eq.all()
+		if not are_eq:
+		    raise ValueError, '!='
+	    except ValueError:
+		errmsg = "%r != %r" % (val, expval)
+		if (len(errmsg) > 66): # 66 = 78 - len('ValueError: ')
+		    errmsg = "\n%r\n!=\n%r" % (val, expval)
+		raise ValueError, errmsg
+	    except Exception, e:
+		print "Error comparing", val, "to", expval
+		raise e
+
+
+#class zeroth(UVContChecker):
+class zeroth(UVContsubUnitTestBase):
+    """Test zeroth order fit"""
+
+    #inpms = uvcdatadir + 'known0.ms' 
+    #corrsels = [0]                    # fitorder, not corr selection.
+    def setUp(self):
+        self.initialize(uvcdatadir+'known0.ms')
+
+    def tearDown(self):
+        self.cleanup()
+
+    def test_zeroth(self):
+
         record = {}
         try:
             print "\nRunning uvcontsub"
             uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=corrsel, want_cont=True,
+                               fitorder=0, want_cont=True,
                                async=False)
         except Exception, e:
             print "Error running uvcontsub"
             raise e
+
+
         for spec in ('cont', 'contsub'):
             specms = self.inpms + '.' + spec
             tb.open(specms)
             record[spec] = tb.getcell('DATA', 52)
             tb.close()
             shutil.rmtree(specms)
-        self.__class__.records[corrsel] = record
-        return uvran
+        #self.__class__.records[corrsel] = record
+        #return uvran
+        self.assertEqual(uvran,None)
 
-class zeroth(UVContChecker):
-    inpms = uvcdatadir + 'known0.ms' 
-    corrsels = [0]                    # fitorder, not corr selection.
+        print "Continuum estimate in line-free region"
+        self.check_eq(record['cont'][:,3],   # RR, LL
+                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
 
-    def test_cont_cont(self):
-        """Continuum estimate in line-free region"""
-        check_eq(self.records[0]['cont'][:,3],   # RR, LL
+        print "Continuum estimate in line region"
+        self.check_eq(record['cont'][:,13],
                  numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
-    def test_cont_line(self):
-        """Continuum estimate in line region"""
-        check_eq(self.records[0]['cont'][:,13],
-                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
-    def test_line_cont(self):
-        """Continuum-subtracted data in line-free region"""
-        check_eq(self.records[0]['contsub'][:,21],   # RR, LL
+
+        print "Continuum-subtracted data in line-free region"
+        self.check_eq(record['contsub'][:,21],   # RR, LL
                  numpy.array([ 0.+0.j,  0.+0.j]), 0.0001)
-    def test_line_line(self):
-        """Continuum-subtracted data in line region"""
-        check_eq(self.records[0]['contsub'][:,9],   # RR, LL
+
+        print "Continuum-subtracted data in line region"
+        self.check_eq(record['contsub'][:,9],   # RR, LL
                  numpy.array([87.+26.j, 31.+20.j]), 0.0001)
         
-class fourth(UVContChecker):
-    inpms = uvcdatadir + 'known4.ms'
-    corrsels = [4]                    # fitorder, not corr selection.
+#class fourth(UVContChecker):
+class fourth(UVContsubUnitTestBase):
 
-    def test_cont(self):
-        """Continuum estimate"""
-        check_eq(self.records[4]['cont'],   # [[RR], [LL]]
+    def setUp(self):
+        self.initialize(uvcdatadir+'known4.ms')
+
+    def tearDown(self):
+        self.cleanup()
+ 
+    def test_fourth(self):
+ 
+        infitorder=4                    # fitorder
+        record = {}
+        try:
+            print "\nRunning uvcontsub"
+            uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
+                               fitorder=infitorder, want_cont=True,
+                               async=False)
+        except Exception, e:
+            print "Error running uvcontsub"
+            raise e
+
+
+        for spec in ('cont', 'contsub'):
+            specms = self.inpms + '.' + spec
+            tb.open(specms)
+            record[spec] = tb.getcell('DATA', 52)
+            tb.close()
+            shutil.rmtree(specms)
+        #self.__class__.records[corrsel] = record
+        #return uvran
+        self.assertEqual(uvran,None)
+
+        print "Continuum estimate"
+        self.check_eq(record['cont'],   # [[RR], [LL]]
                  numpy.array([[20.00000-10.j,      12.50660-10.00000j,
                                 7.10324-10.00000j,  3.35941-10.j,
                                 0.89944-10.j,      -0.59741-10.j,
@@ -105,9 +216,8 @@ class fourth(UVContChecker):
                               -38.21845+5.j,      -50.00000+5.j]]),
                  0.0001)
 
-    def test_line(self):
-        """Continuum-subtracted data"""
-        check_eq(self.records[4]['contsub'],   # [[RR], [LL]]
+        print "Continuum-subtracted data"
+        self.check_eq(record['contsub'],   # [[RR], [LL]]
                  numpy.array([[0.00000+0.00000j,    0.00000+0.00000j,
                                0.00000+0.00000j,    0.00000+0.00000j,
                                0.00000+0.00000j,    0.00000+0.00000j,
@@ -134,40 +244,45 @@ class fourth(UVContChecker):
                                0.00000+0.00000j,    0.00000+0.00000j]]),
                  0.0001)
 
-class combspw(UVContChecker):
-    inpms = uvcdatadir + 'combspw.ms'
-    corrsels = [0, 1]                    # fitorder, not corr selection.
+#class combspw(UVContChecker):
+class combspw(UVContsubUnitTestBase):
 
-    def do_split(self, corrsel):
-        """
-        This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub in this case) would have been a better name.
-        """
+    def setUp(self):
+        self.initialize(uvcdatadir+'combspw.ms')
+    
+    def tearDown(self):
+        self.cleanup()
+
+
+    def test_combspw(self):
+        fitorders = [0, 1]                    # fitorder, not corr selection.
         record = {}
-        try:
-            print "\nRunning uvcontsub"
-            uvran = uvcontsub(self.inpms, fitspw='1~10:5~122,15~22:5~122',
-                               spw='6~14', combine='spw',
-                               fitorder=corrsel, want_cont=False,
-                               async=False)
-        except Exception, e:
-            print "Error running uvcontsub"
-            raise e
-        specms = self.inpms + '.contsub'
-        tb.open(specms)
-        record['contsub'] = tb.getcell('DATA', 52)[0][73]
-        tb.close()
-        shutil.rmtree(specms)
-        self.__class__.records[corrsel] = record
-        return uvran
+        for infitorder in fitorders:
+            record[infitorder]={}
+	    try:
+		print "\nRunning uvcontsub"
+		uvran = uvcontsub(self.inpms, fitspw='1~10:5~122,15~22:5~122',
+				   spw='6~14', combine='spw',
+				   fitorder=infitorder, want_cont=False,
+				   async=False)
+	    except Exception, e:
+		print "Error running uvcontsub"
+		raise e
 
-    def test_0ran(self):
-        """combspw fitorder=0 line estimate"""
-        check_eq(self.records[0]['contsub'], -6.2324+17.9865j, 0.001)
+	    specms = self.inpms + '.contsub'
+	    tb.open(specms)
+	    record[infitorder]['contsub'] = tb.getcell('DATA', 52)[0][73]
+	    tb.close()
+	    shutil.rmtree(specms)
+	    #self.__class__.records[corrsel] = record
+	    #return uvran
+	    self.assertEqual(uvran,None)
 
-    def test_1ran(self):
-        """combspw fitorder=1 line estimate"""
-        check_eq(self.records[1]['contsub'], -6.2533+17.6584j, 0.001)
+        print "combspw fitorder=0 line estimate"
+        self.check_eq(record[0]['contsub'], -6.2324+17.9865j, 0.001)
+
+        print "combspw fitorder=1 line estimate"
+        self.check_eq(record[1]['contsub'], -6.2533+17.6584j, 0.001)
         
 def suite():
     return [zeroth, fourth, combspw]

@@ -130,7 +130,7 @@ class imsmooth_test(unittest.TestCase):
 
         if(os.path.exists(targetres_im)):
             os.system('rm -rf ' +targetres_im)
-        self.ia = iatool.create()
+        self.ia = iatool()
         self.datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
         os.system('cp -r ' + self.datapath + targetres_im +' ' + targetres_im)
 

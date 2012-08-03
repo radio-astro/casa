@@ -412,9 +412,8 @@ def imhead(
         hd_units['bunit'] = ''
         hd_comments['bunit'] = ''
 
-    if hd_dict.has_key('restoringbeam') and hd_dict['restoringbeam'
-            ].has_key('restoringbeam'):
-        tmp = hd_dict['restoringbeam']['restoringbeam']
+    if hd_dict.has_key('restoringbeam'):
+        tmp = hd_dict['restoringbeam']
         if tmp.has_key('major'):
             tmp2 = tmp['major']
             if tmp2.has_key('value'):

@@ -781,7 +781,8 @@ image* image::convolve2d(
 				stretch
 			), False
 		);
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);

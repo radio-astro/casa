@@ -82,6 +82,23 @@ def tflagdata(vis,
     #    
     # This is a replacement task to flagdata. It takes different parameters and
     # different default values. This task uses a new tool and framework underneath.
+    
+    # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
+    if (inpfile != ""):
+        inpfile = os.path.abspath(inpfile)
+        fh.addAbsPath(inpfile)
+        
+    if (outfile != ""):
+        outfile = os.path.abspath(outfile)        
+        
+    if (isinstance(addantenna,str) and addantenna != ""):
+        addantenna = os.path.abspath(addantenna)
+        
+    if (isinstance(timedev,str) and timedev != ""):
+        timedev = os.path.abspath(timedev)        
+        
+    if (isinstance(freqdev,str) and freqdev != ""):
+        freqdev = os.path.abspath(freqdev)            
 
     if pCASA.is_mms(vis):
         pCASA.execute("tflagdata", locals())

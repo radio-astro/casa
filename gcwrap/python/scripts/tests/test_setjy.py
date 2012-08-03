@@ -524,6 +524,38 @@ class test_ModImage(SetjyUnitTestBase):
             raise e
 
         return record
-            
+    
+class test_inputs(SetjyUnitTestBase):
+    """Test input parameter checking"""
+    def setUp(self):
+        self.setUpMS("unittest/setjy/2528.ms")         # Uranus
+
+    def tearDown(self):
+        self.resetMS()
+
+    def test_vischeck(self):
+        """ Test input vis check"""
+        self.inpms='wrong.ms'
+        if os.path.exists(self.inpms):
+            shutil.rmtree(self.inpms) 
+        sjran=None
+        try:
+            print "\nRunning setjy with a non-existant vis"
+            sjran = setjy(vis=self.inpms,listmodels=False)
+            self.assertNotEqual(sjran,None, 'failed to throw exception') 
+        except Exception, setjyUTerr:
+            msg = setjyUTerr.message
+            self.assertEqual(msg.find("%s does not exist" % self.inpms), -1, 
+                                'wrong type of exception is thrown')
+     
+    def test_listmodels(self):
+        """ Test listmodels mode """
+        self.inpms=''
+        print "\nRunning setjy in listmodels mode ...."
+        sjran = setjy(vis=self.inpms,listmodels=True)
+        self.assertTrue(sjran)
+      
+        
+  
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs]

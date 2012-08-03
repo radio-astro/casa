@@ -1991,7 +1991,7 @@ of the image, and all pixels of other axes.
      <value>true</value>
      </param>
 </input>
-<returns type="bool">Image tool</returns>
+<returns type="bool"/>
 <description>
 
 This function creates a \casa\ \imagefile\ with the specified shape.  All
@@ -2016,6 +2016,8 @@ the shape (Stokes axis must be no longer than 4 pixels and you may find
 the spectral axis coming out before the Stokes axis if say, {\cf
 shape=[64,64,32,4]}).  Extra dimensions are given linear coordinates. 
 If {\stfaf linear=T} then you get a linear Coordinate System. 
+
+The method returns True if successful, False otherwise.
 
 </description>
 <example>
@@ -2951,19 +2953,19 @@ ia.close()
      <param type="any"  name="major">
      <any type="variant"/>
      <description>Major axis, Quantity, string, numeric.  Must be specified.</description>
-     <value>0deg</value>
+     <value type="string">0deg</value>
      </param>
   
      <param type="any"  name="minor">
      <any type="variant"/>
      <description>Minor axis, Quantity, string, numeric.  Must be specified.</description>
-     <value>0deg</value>
+     <value type="string">0deg</value>
      </param>
   
      <param type="any"  name="pa">
      <any type="variant"/>
      <description>Position Angle, Quantity, string, numeric.  Default is 0deg.</description>
-     <value>0deg</value>
+     <value type="string">0deg</value>
      </param>
   
      <param type="double"  name="scale">

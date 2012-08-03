@@ -14,9 +14,8 @@ def setjy(vis=None, field=None, spw=None,
   """Fills the model column for flux density calibrators."""
 
   casalog.origin('setjy')
-
   # Take care of the trivial parallelization
-  if (ParallelTaskHelper.isParallelMS(vis)):
+  if ( not listmodels and ParallelTaskHelper.isParallelMS(vis)):
     # jagonzal: We actually operate in parallel when usescratch=True because only
     # in this case there is a good trade-off between the parallelization overhead
     # and speed up due to the load involved with MODEL_DATA column creation
@@ -29,13 +28,16 @@ def setjy(vis=None, field=None, spw=None,
     else:
       myms = mstool()
       myms.open(vis)
-      mses = myms.getreferencedtables()
+      subMS_list = myms.getreferencedtables()
       myms.close()
-      retval = {}
-      for m in mses:
-        retval[m] = setjy_core(m, field, spw, selectdata, timerange, 
-                               scan, observation, modimage, listmodels, scalebychan, 
-                               fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+      retval = True
+      for subMs in subMS_list:
+          retval_i = setjy_core(subMs, field, spw, selectdata, timerange, 
+                                scan, observation, modimage, listmodels, scalebychan, 
+                                fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+          if not retval_i:
+              retval = False
+              casalog.post("setjy failed for sub-MS %s" % (subMs),'WARNING')
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, observation, modimage, listmodels, scalebychan, 
@@ -53,7 +55,6 @@ def setjy_core(vis=None, field=None, spw=None,
 
   retval = True
   try:
-
     # Here we only list the models available, but don't perform any operation
     if listmodels:
       casalog.post("Listing model candidates (listmodels == True).")
@@ -166,10 +167,6 @@ def setjy_core(vis=None, field=None, spw=None,
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                          timerange=timerange,observation=str(observation), scan=scan, useephemdir=useephemdir)
-        #myim.close()
-        #print "after setSolarObjectJy"
-        #outt=tb.showcache()
-        #print "outt=",outt
       else:
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
