@@ -65,16 +65,17 @@ void QtPointToolButton::show_context_menu( const QPoint &pos ) {
     QMenu *options = new QMenu( );
 
     std::vector<QAction*> actions;
-    actions.push_back(options->addAction(QIcon(":/icons/symdot.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symdrarrow.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symdlarrow.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symurarrow.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symularrow.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symplus.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symx.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symcircle.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symdiamond.png"),""));
-    actions.push_back(options->addAction(QIcon(":/icons/symsquare.png"),""));
+    // can't find a way to get rid of the text area beside the icon...
+    actions.push_back(options->addAction(QIcon(":/icons/symdot.png"), QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symdrarrow.png"),QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symdlarrow.png"),QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symurarrow.png"),QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symularrow.png"),QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symplus.png"), QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symx.png"), QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symcircle.png"), QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symdiamond.png"), QString( )));
+    actions.push_back(options->addAction(QIcon(":/icons/symsquare.png"), QString( )));
 
     /*QAction *selectedItem =*/ options->exec(global_pos);
     delete options;
