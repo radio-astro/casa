@@ -208,7 +208,7 @@ public:
   virtual ImageInterface<Float>& getResidual (Int model=0);
 
   // Return the fitted beam for each model
-  Vector<Float>& beam(Int model=0);
+  ImageBeamSet& beam(Int model=0);
 
   // Set PGPlotter to be used
   void setPGPlotter(PGPlotter& pgp) { pgplotter_p = &pgp; }
@@ -300,7 +300,7 @@ protected:
 
   PtrBlock<Matrix<Float> * > weight_p;
 
-  PtrBlock<Vector<Float> * > beam_p;
+  PtrBlock<ImageBeamSet * > beam_p;
 
   LogSink logSink_p;
   LogSink& logSink() {return logSink_p;};

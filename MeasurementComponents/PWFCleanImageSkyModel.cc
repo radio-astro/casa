@@ -104,15 +104,15 @@ void PWFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se){
       while(!assigned){
 	rank= applicator.nextProcessDone(makepsf, allDone);
 	// Receive PSF and fit to PSF info
-       	applicator.get(beam(psfNo(rank)));
+       	//applicator.get(beam(psfNo(rank)));
 	Array<Float> psfArray;
 	applicator.get(psfArray);
 	PSF(psfNo(rank)).putSlice(psfArray, IPosition(4, 0, 0, 0, 0));	 
 	++gotten;
-	if((*beam_p[psfNo(rank)])(0) == Float(-1.0)){
+	/*if((*beam_p[psfNo(rank)])(0) == Float(-1.0)){
 	  os << "Model " << thismodel << "PSF formation failed "
 	     <<LogIO::POST ;
-	}
+	     }*/
 	// Assign next avail. child processor.
 	assigned = applicator.nextAvailProcess(makepsf, rank);
      
@@ -141,13 +141,13 @@ void PWFCleanImageSkyModel::makeApproxPSFs(SkyEquation& se){
     rank= applicator.nextProcessDone(makepsf,allDone);
  
     while (!allDone) {
-      applicator.get(beam(psfNo(rank)));
+      //applicator.get(beam(psfNo(rank)));
       Array<Float> psfArray;
       applicator.get(psfArray);
       PSF(psfNo(rank)).putSlice(psfArray, IPosition(4, 0, 0, 0, 0));   
-      if((*beam_p[psfNo(rank)])(0)== Float(-1.0)){
+      /*if((*beam_p[psfNo(rank)])(0)== Float(-1.0)){
 	os << "Model "<< psfNo(rank) <<"Beam forming failed "<< LogIO::POST ;
-      }
+	}*/
       rank=applicator.nextProcessDone(makepsf,allDone);
     }
 

@@ -243,7 +243,7 @@ void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
     }
     se.makeApproxPSF(psf_p);
     for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
-      beam(thismodel) = 0.0;
+      //beam(thismodel) = 0.0;
       if(!StokesImageUtil::FitGaussianPSF(PSF(thismodel),
 					  beam(thismodel))) {
 	os << "Beam fit failed: using default" << LogIO::POST;
@@ -251,10 +251,10 @@ void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
       if(nmodels_p > 1)
         os  << LogIO::NORMAL << "Model " << thismodel+1 << ": ";  // Loglevel INFO
       os << LogIO::NORMAL                     // Loglevel INFO
-         << "bmaj: " << abs(beam(thismodel)[0])
-         << "\", bmin: " << abs(beam(thismodel)[1])
-         << "\", bpa: " << beam(thismodel)[2] << " deg"
-         << LogIO::POST;
+	 << "bmaj: " << abs((beam(thismodel)(IPosition(2,0,0))).getMajor("arcsec"))
+	 << "\", bmin: " << abs((beam(thismodel)(IPosition(2,0,0))).getMinor("arcsec"))
+	 << "\", bpa: " << ((beam(thismodel)(IPosition(2,0,0))).getPA(Unit("deg"))) 
+	 << " deg" << LogIO::POST;
     }
   }
   donePSF_p=True;
@@ -591,14 +591,15 @@ Matrix<Float>& ImageSkyModel::weight(Int model)
   return *weight_p[model];
 };
 
-Vector<Float>& ImageSkyModel::beam(Int model) 
+ImageBeamSet& ImageSkyModel::beam(Int model) 
 {
   AlwaysAssert(nmodels_p>0, AipsError);
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
   if(beam_p[model]==0) {
-    beam_p[model] = new Vector<Float>(3);
+    beam_p[model] = new ImageBeamSet();
+
     AlwaysAssert(beam_p[model], AipsError);
-    *beam_p[model] = Float(-1.0);
+    //*beam_p[model] = Float(-1.0);
   }
   return *beam_p[model];
 };
