@@ -57,7 +57,7 @@ namespace casa {
 	    RegionTool *tool = 0;
 	    tool = new QtCrossTool(rsf,pd);
 	    tools.insert(tool_map::value_type(PointTool,tool));
-	    pd->addTool(QtMouseToolNames::POSITION, tool);
+	    pd->addTool(QtMouseToolNames::POINT, tool);
 
 	    tool = new QtPolyTool(rsf,pd);
 	    tools.insert(tool_map::value_type(PolyTool,tool));
@@ -77,7 +77,7 @@ namespace casa {
 	    for ( tool_map::iterator it = tools.begin( );
 		  it != tools.end(); ++it ) {
 		switch ( (*it).first ) {
-		    case PointTool:   pd->removeTool(QtMouseToolNames::POSITION); break;
+		    case PointTool:   pd->removeTool(QtMouseToolNames::POINT); break;
 		    case PolyTool:    pd->removeTool(QtMouseToolNames::POLYGON); break;
 		    case RectTool:    pd->removeTool(QtMouseToolNames::RECTANGLE); break;
 		    case EllipseTool: pd->removeTool(QtMouseToolNames::ELLIPSE); break;

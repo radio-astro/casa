@@ -1467,7 +1467,7 @@ void QtDisplayPanelGui::showImageProfile() {
 			connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 			
 			{
-			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 			    if (pos) {
 
 				connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
@@ -1502,7 +1502,7 @@ void QtDisplayPanelGui::showImageProfile() {
 				}
 
 			    } else {
-				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 				if (pos) {
 				    connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 								   const Vector<Double>, const Vector<Double>, const ProfileType)),

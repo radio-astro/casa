@@ -58,17 +58,12 @@ class QtMouseToolButton: public QToolButton {
 
  public: 
  
-  QtMouseToolButton(QWidget* parent = 0) : QToolButton(parent) {  }
-  ~QtMouseToolButton() {  }
+  QtMouseToolButton(QWidget* parent = 0);
+  virtual ~QtMouseToolButton() {  }
   
  protected:
   
-  void mousePressEvent(QMouseEvent *event) {
-    Int btn = (event->button() == Qt::LeftButton)?   1 :
-              (event->button() == Qt::MidButton)?    2 :
-              (event->button() == Qt::RightButton)?  3 :   0;
-    if(btn!=0) emit mouseToolBtnPress(text().toStdString(), btn);  }
-
+  void mousePressEvent(QMouseEvent*);
   void mouseMoveEvent   (QMouseEvent *) {  }
   void mouseReleaseEvent(QMouseEvent *) {  }
   
@@ -83,6 +78,22 @@ class QtMouseToolButton: public QToolButton {
 
 
 
+class QtPointToolButton: public QtMouseToolButton {
+  
+  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		//# implement/.../*.h files; also, makefile must include
+		//# name of this file in 'mocs' section.
+
+ public: 
+ 
+  QtPointToolButton(QWidget* parent = 0);
+  ~QtPointToolButton() {  }
+  
+ protected slots:
+
+  void show_context_menu( const QPoint & );
+
+};
 
 
 

@@ -55,9 +55,9 @@ namespace QtMouseToolNames {
 
   enum { nTools = 12 };
   
-  extern const String ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-               RECTANGLE, ELLIPSE, POLYGON, POLYLINE, RULERLINE,  MULTICROSSHAIR, ANNOTATIONS,
-	       NONE;
+  extern const String ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
+               POINT, RECTANGLE, ELLIPSE, POLYGON, POLYLINE,
+               RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE;
 
   //# nTools is an invalid tool index (or stands for "none") in these arrays.
   extern const String     tools[nTools+1], longnames[nTools+1],

@@ -37,7 +37,7 @@ namespace QtMouseToolNames {
   const String PAN = "pan";
   const String SHIFTSLOPE = "shiftslope";
   const String BRIGHTCONTRAST = "brightcontrast";
-  const String POSITION =  "position";
+  const String POINT =  "point";
   const String RECTANGLE = "rectangle";
   const String ELLIPSE = "ellipse";
   const String POLYGON = "polygon";
@@ -50,8 +50,9 @@ namespace QtMouseToolNames {
   
   //# the final elements stand for "none" (or "invalid");
   
-  const String tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-    RECTANGLE, ELLIPSE,  POLYGON, POLYLINE, RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
+  const String tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
+			   POINT, RECTANGLE, ELLIPSE,  POLYGON, POLYLINE,
+			   RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
 
   const String longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
