@@ -121,7 +121,7 @@ class ia_deconvolvecomponentlist_test(unittest.TestCase):
             qa.quantity({'unit': 'deg', 'value': 20}),
             qa.quantity({'unit': 'deg', 'value': 41.948943124031587})
         ]
-        tol = 1e-11
+        tol = 1e-10
         for i in [0, 1]:
             res = myia.deconvolvecomponentlist(mycl.torecord(), polarization=i)
             bb.fromrecord(res)
