@@ -80,9 +80,7 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
         return True
         
     except Exception, instance:
-        print '*** Error ***',instance
-        try:
-            _myia.close()
-        except: pass
-        return False
+        _myia.close()
+        raise instance
+        
         
