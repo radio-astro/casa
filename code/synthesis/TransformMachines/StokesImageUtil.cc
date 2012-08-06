@@ -421,17 +421,48 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
   elbeam=ImageBeamSet(IPosition(2, nchan, 1), types);
   IPosition ipos(2,0,0);
   Matrix<GaussianBeam> tempBeam(nchan,1);
-  
+  Vector<Bool> fitted(nchan, False);
+
   for (Int k=0; k < nchan;++k){ 
     blc[freqAx]=k;
     trc[freqAx]=k;
     Slicer slc(blc, trc, Slicer::endIsLast);
     SubImage<Float> subpsf(psf, slc, False);
-    retval=retval && (FitGaussianPSF(subpsf, tempBeam(k,0)));
+    try{
+      fitted(k)=FitGaussianPSF(subpsf, tempBeam(k,0));
+    }
+    catch (AipsError x_error){
+      Int ik=k;
+      fitted(k)=False;
+      while ((ik > 0) && !fitted(k)){
+	if(fitted(ik-1)){
+	  fitted(k)=True;
+	  tempBeam(k,0)=tempBeam(ik-1, 0);
+	}
+	--ik;
+      }
+    } 
     ipos(0)=k;
     //elbeam.setBeam(tempBeam, ipos);
   }
+  if(!anyTrue(fitted)){
+      retval=False;
+      throw(AipsError("No valid fits were found to PSF"));
+  }
+  if(!allTrue(fitted)){
+     for (Int k=0; k < nchan;++k){ 
+       int ik=k;
+       while((ik < (nchan-1)) && !fitted(k)){
+	 if(fitted(ik+1)){
+	   fitted(k)=True;
+	   tempBeam(k,0)=tempBeam(ik+1, 0);
+	 }
+	 ++ik;
+       }
+     }
+  }
   elbeam.setBeams(tempBeam);
+  
   return retval;
 }
 
