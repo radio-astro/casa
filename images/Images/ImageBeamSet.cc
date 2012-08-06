@@ -54,8 +54,16 @@ ImageBeamSet::ImageBeamSet(const GaussianBeam& beam)
 ImageBeamSet::ImageBeamSet(
 	const IPosition& shape, const Vector<AxisType>& axes
 ) : _beams(shape), _axes(axes) {
-	_checkAxisTypeSize(axes);
 	_checkForDups(axes);
+}
+
+ImageBeamSet::ImageBeamSet(
+	const GaussianBeam& beam, const IPosition& shape,
+	const Vector<AxisType>& axes
+) : _beams(shape), _axes(axes) {
+	_checkForDups(axes);
+	_beams.set(beam);
+
 }
 
 ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
@@ -256,6 +264,12 @@ size_t ImageBeamSet::ndim() const {
 
 void ImageBeamSet::set(const GaussianBeam& beam) {
 	_beams.set(beam);
+}
+
+void ImageBeamSet::setBeam(
+	const GaussianBeam& beam, const IPosition& position
+) {
+	_beams(position) = beam;
 }
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
