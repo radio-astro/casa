@@ -20,15 +20,18 @@ import partitionhelper as ph
 # ---------- ADD NEW TASKS HERE ----------------
 # These tasks have been verified to work on MMS. 
 TASKLIST = [
-            'listhistory',
-            'listvis',
-            'listobs',
-            'gencal',
-            'vishead',
-            'split',
+            'bandpass',
             'gaincal',
-            'bandpass'
+            'gencal',
+            'listhistory',
+            'listobs',
+            'listvis',
+            'split',
+            'vishead'
             ]
+
+# NOTE: task 'fixplanets' uses data from task 'listvis'
+
 
 # Try to get the data repository path from the system
 DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
