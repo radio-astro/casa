@@ -8,7 +8,7 @@ export LIBAIRROOT=$1
 if [ $LIBAIRROOT"" == "" ]; then
     echo " Usage:" 
     echo "   cd air_casawvr"
-    echo "   ./update.sh <path to the now libair version."
+    echo "   ./update.sh <path to the new libair version."
     echo " Example:"
     echo "   cd code/air_casawvr"
     echo "   ./update.sh /diska/home/dpetry/temp/wvrgcal/libair-1.1.0"

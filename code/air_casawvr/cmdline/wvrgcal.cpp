@@ -79,7 +79,7 @@ bool checkPars(const boost::program_options::variables_map &vm)
   if (vm.count("segsource") && vm.count("cont"))
   {
     fatalMsg("Multiple retrievals using continuum estimation not yet supported");
-    fatalMsg("Use only one of  --sergfield OR --cont");
+    fatalMsg("Use only one of  --segfield OR --cont");
     return true;
   }
 
@@ -87,6 +87,20 @@ bool checkPars(const boost::program_options::variables_map &vm)
   {
     fatalMsg("Multiple retrievals using continuum estimation not yet supported");
     fatalMsg("You can not use the nsol parameter yet with cont");
+    return true;
+  }
+
+ if (vm.count("sourceflag") && !vm.count("segsource"))
+  {
+    fatalMsg("Can only flag a source using --sourceflag if the --segsource option is also used");
+    fatalMsg("Please either remove the --sourceflag option or also specify the --segsource option");
+    return true;
+  }
+
+ if (vm.count("tie") && !vm.count("segsource"))
+  {
+    fatalMsg("Can only tie sources together if the --segsource option is also used");
+    fatalMsg("Please either remove the --tie option or also specify the --segsource option");
     return true;
   }
 
@@ -132,7 +146,7 @@ void checkMSandPars(const casa::MeasurementSet &ms,
     if (fselect.size() == 0)
     {
       std::cout<<"WARNING: No fields appear to be identified with source "<<srcname <<std::endl
-	       <<"         that you supplied to the statfield option"<<std::endl
+	       <<"         that you supplied to the statsource option"<<std::endl
 	       <<"         Statistics will be corrupted and wvrgcal may fail"<<std::endl
 	       <<std::endl;
     }
@@ -561,7 +575,7 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("disperse",
      "Apply correction for dispersion")
     ("cont",
-     "Estimate the continuum (e.g., due to clouds)")
+     "UNTESTED! Estimate the continuum (e.g., due to clouds)")
     ("wvrflag",
      value< std::vector<std::string> >(),
      "Flag this WVR (labelled with either antenna number or antenna name) as bad, and replace its data with interpolated values ")
