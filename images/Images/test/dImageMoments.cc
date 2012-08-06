@@ -424,10 +424,7 @@ try {
          }
       }
       if (validInputs(AXIS)) {
-         if (!moment.setMomentAxis(momentAxis)) {
-            os << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
-            return 1;
-         }
+         moment.setMomentAxis(momentAxis);
       }
       if (validInputs(METHOD)) {
          if (!moment.setWinFitMethod(winFitMethods)) {
@@ -468,10 +465,7 @@ try {
 
       PtrBlock<MaskedLattice<Float>* > images;
       Bool doTemp = False;
-      if (!moment.createMoments(images, doTemp, out)) {
-         os << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
-         return 1;
-      }
+      moment.createMoments(images, doTemp, out);
       if (doTemp) {
          for (uInt i=0; i<images.nelements(); i++) {
             delete images[i];
