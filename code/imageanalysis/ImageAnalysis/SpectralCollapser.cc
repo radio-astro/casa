@@ -561,16 +561,22 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
    	*_log << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
       return False;
    }
-   if (!moment.setMomentAxis(_specAxis(0))) {
-   	*_log << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
-      return False;
+   try {
+	   moment.setMomentAxis(_specAxis(0));
+   }
+   catch (const AipsError& exc) {
+	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
+	   return False;
    }
 
    PtrBlock<MaskedLattice<Float>* > images;
    //Bool doTemp = False;
-   if (!moment.createMoments(images, False, outname, False)) {
-   	*_log << LogIO::SEVERE << moment.errorMessage() << LogIO::POST;
-   	return False;
+   try {
+	   moment.createMoments(images, False, outname, False);
+   }
+   catch (const AipsError& exc) {
+	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
+	   return False;
    }
 	for (uInt i=0; i<images.nelements(); i++) {
 		cout << "out shape: " << images[i]->shape() << endl;
