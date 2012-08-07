@@ -4790,6 +4790,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                                                             mfreqs[selspw][0],
                                                             mtime, fluxval, point,
                                                             siModel,
+          // jagonzal (CAS-4109): Specify table name to avoid clashing between different CASA engines when running vs a MMS
+                                                            ms_p->tableName() +
                                                             "_setjy_spw" +
                                                             String::toString(selspw) +
                                                             "_");
