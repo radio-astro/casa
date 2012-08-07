@@ -1007,8 +1007,28 @@ class imhead_test(unittest.TestCase):
         self.assertEqual(shape['value'][0],256, 'Value of shape[0] should be 256 and it is %s instead.'
                          %shape['value'][0])
         
+    def test_CAS4355(self):
+        """ verify puthead can take sesigimal values where appropriate (CAS-4355)"""
+        myia = iatool()
+        image = "cas4355.im"
+        myia.fromshape(image, [10,10])
+        ra = "14:33:10.5"
+        key = "crval1"
+        imhead(imagename=image, mode="put", hdkey=key, hdvalue=ra)
+        got = imhead(imagename=image, mode="get", hdkey=key)
+        got = qa.canon(got)
+        exp = qa.canon(qa.toangle(ra))
+        self.assertTrue(qa.getunit(got) == qa.getunit(exp))
+        self.assertTrue(abs(qa.getvalue(got)/qa.getvalue(exp) - 1) < 1e-8)
         
-        
+        dec = "-22.44.55.66"
+        key = "crval2"
+        imhead(imagename=image, mode="put", hdkey=key, hdvalue=dec)
+        got = imhead(imagename=image, mode="get", hdkey=key)
+        got = qa.canon(got)
+        exp = qa.canon(qa.toangle(dec))
+        self.assertTrue(qa.getunit(got) == qa.getunit(exp))
+        self.assertTrue(abs(qa.getvalue(got)/qa.getvalue(exp) - 1) < 1e-8)
         
 def suite():
     return [imhead_test]    
