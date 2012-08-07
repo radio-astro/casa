@@ -60,8 +60,8 @@ namespace QtMouseToolNames {
                RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE;
 
   //# nTools is an invalid tool index (or stands for "none") in these arrays.
-  extern const String     tools[nTools+1], longnames[nTools+1],
-                      iconnames[nTools+1], helptexts[nTools+1];
+  extern const String     tools[nTools+1], longnames[nTools+1], helptexts[nTools+1];
+  extern String           iconnames[nTools+1];
 
   // Return index of named tool within the master list.
   // (i==nTools means 'not a tool').
@@ -76,6 +76,12 @@ namespace QtMouseToolNames {
   inline String longName(String tool) { return longnames[toolIndex(tool)];  }
   inline String iconName(String tool) { return iconnames[toolIndex(tool)];  }
   inline String help(String tool)     { return helptexts[toolIndex(tool)];  }
+
+  enum PointRegionSymbols { SYM_DOT=0, SYM_DOWN_RIGHT_ARROW=1, SYM_DOWN_LEFT_ARROW=2,
+			    SYM_UP_RIGHT_ARROW=3, SYM_UP_LEFT_ARROW=4, SYM_PLUS=5,
+			    SYM_X=6, SYM_CIRCLE=7, SYM_DIAMOND=8, SYM_SQUARE=9,
+			    SYM_POINT_REGION_COUNT=10, SYM_UNKNOWN };
+  QString pointRegionSymbolIcon( PointRegionSymbols, int button=-1 );
 
 };
 
@@ -125,12 +131,15 @@ class QtMouseToolState : public QObject {
     return QtMouseToolNames::toolName(toolIndexOnButton_(mousebtn));  }
   
    
+  bool selectPointRegionSymbolIcon( QtMouseToolNames::PointRegionSymbols );
+
  public slots:
 
   // Request reassignment of a given mouse button to a tool.
   // NB: _This_ is where guis, etc. should request a button change, so that
   // all stay on the same page (not directly to tool or displaypanel, e.g.).
   void chgMouseBtn(String tool, Int mousebtn);
+  void mouseBtnStateChg(String tool, Int state);
   
   // Request signalling of the current mouse button setting for every
   // type of tool.  Call this if you want to assure that everyone's

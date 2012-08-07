@@ -28,6 +28,7 @@
 
 
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -60,7 +61,7 @@ namespace QtMouseToolNames {
     "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
     "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
-  const String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
+  String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
    "brightcontrastb", "symdotb", "rectregionb", "ellregionb", "polyregionb",
    "polylineb", "rulerb",  "mpcrosshairb", "dontuseb",  "" };
     
@@ -109,6 +110,50 @@ namespace QtMouseToolNames {
          
      ""  };
 
+    static std::vector<std::string> point_symbol_icons;
+    static std::vector<std::string> point_symbol_names;
+
+    static void init_point_region_symbol_names( ) {
+	if ( point_symbol_names.size( ) == 0 ) {
+	    // these must be added to the vector in the order
+	    // implied by the PointRegionSymbols enum...
+	    point_symbol_names.push_back("symdot");
+	    point_symbol_names.push_back("symdrarrow");
+	    point_symbol_names.push_back("symdlarrow");
+	    point_symbol_names.push_back("symurarrow");
+	    point_symbol_names.push_back("symularrow");
+	    point_symbol_names.push_back("symplus");
+	    point_symbol_names.push_back("symx");
+	    point_symbol_names.push_back("symcircle");
+	    point_symbol_names.push_back("symdiamond");
+	    point_symbol_names.push_back("symsquare");
+	}
+    }
+
+    static void init_point_region_symbol_icons( ) {
+	if ( point_symbol_icons.size( ) == 0 ) {
+	    init_point_region_symbol_names( );
+	    for ( unsigned int i=0; i < point_symbol_names.size( ); ++i ) {
+		point_symbol_icons.push_back(std::string(":/icons/") + point_symbol_names[i] + "%s.png");
+	    }
+	}
+    }
+
+    QString pointRegionSymbolIcon( PointRegionSymbols sym, int button ){
+	if ( point_symbol_names.size( ) == 0 ) init_point_region_symbol_icons( );
+	if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return QString( );
+	std::string pattern = point_symbol_icons[(int)sym];
+	char buf[pattern.size( )+40];
+	if ( button < 0 || button > 3 )
+	    sprintf( buf, pattern.c_str( ), "" );
+	else {
+	    char num[30];
+	    sprintf( num, "b%d", button );
+	    sprintf( buf, pattern.c_str( ), num );
+	}
+	return QString(buf);
+    }
+
 }  // namespace QtMouseToolNames
 
 
@@ -139,14 +184,33 @@ void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
   
     if(oldti!=nTools) {    
       mousebtns_[oldti] = 0;		// assign old tool to no button.
-      emit mouseBtnChg(toolName(oldti), mousebtns_[oldti]);  }  }
+      emit mouseBtnChg(toolName(oldti), mousebtns_[oldti]);
 					// broadcast that change.
+    }
+  }
   
   if(ti!=nTools) {
     mousebtns_[ti] = mousebtn;	// assign requested tool to requested button.
-    emit mouseBtnChg(tool, mousebtn);  }  }	// broadcast that change.
+    emit mouseBtnChg(tool, mousebtn);	// broadcast that change.
+  }
+}
  
 
+void QtMouseToolState::mouseBtnStateChg(String /*tool*/, Int sym) {
+    using namespace QtMouseToolNames;
+
+    if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return;
+    int ti = -1;
+    for( int i=0; i<nTools; ++i ) {
+	if ( tools[i] == POINT ) { ti = i; break; }
+    }
+    if ( ti < 0 ) return;
+    if ( point_symbol_icons.size() == 0 ) init_point_region_symbol_icons( );
+    iconnames[ti] = point_symbol_names[sym] + "b";
+
+    emit mouseBtnChg(POINT, mousebtns_[ti]);	// force update
+
+}
 
 void QtMouseToolState::emitBtns() {
   // Request signalling of the current mouse button setting for every
@@ -174,6 +238,18 @@ Int QtMouseToolState::toolIndexOnButton_(Int mousebtn) {
 
 
   
+bool QtMouseToolState::selectPointRegionSymbolIcon( QtMouseToolNames::PointRegionSymbols sym ) {
+    using namespace QtMouseToolNames;
+    if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return false;
+    int offset = -1;
+    for( int i=0; i<nTools; ++i ) {
+	if ( tools[i] == POINT ) offset = i;
+    }
+    if ( offset < 0 ) return false;
+    iconnames[offset] = point_symbol_icons[sym];
+    emit mouseBtnChg(tools[offset], mousebtns_[offset]);
+    return true;
+}
   
 
 } //# NAMESPACE CASA - END

@@ -58,8 +58,10 @@ class QtMouseToolButton: public QToolButton {
 
  public: 
  
-  QtMouseToolButton(QWidget* parent = 0);
+  QtMouseToolButton(const std::string &type, QWidget* parent = 0);
   virtual ~QtMouseToolButton() {  }
+
+  virtual std::string getIconStr(Int) const;
   
  protected:
   
@@ -73,6 +75,10 @@ class QtMouseToolButton: public QToolButton {
  signals:
  
   void mouseToolBtnPress(String tool, Int btn);
+  void mouseToolBtnState(String tool, Int state);
+
+ private:
+  std::string tool_;
 
 };
 

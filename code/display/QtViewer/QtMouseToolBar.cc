@@ -33,134 +33,137 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtMouseToolButton::QtMouseToolButton( QWidget *parent ) : QToolButton(parent) { }
+    QtMouseToolButton::QtMouseToolButton( const std::string &type, QWidget *parent ) : QToolButton(parent), tool_(type) { }
 
-void QtMouseToolButton::mousePressEvent( QMouseEvent *event ) {
-    Int btn = (event->button() == Qt::LeftButton)?   1 :
-              (event->button() == Qt::MidButton)?    2 :
-              (event->button() == Qt::RightButton)?  3 :   0;
+    void QtMouseToolButton::mousePressEvent( QMouseEvent *event ) {
+	Int btn = (event->button() == Qt::LeftButton)?   1 :
+	          (event->button() == Qt::MidButton)?    2 :
+	          (event->button() == Qt::RightButton)?  3 :   0;
 
-    if(btn!=0) emit mouseToolBtnPress(text().toStdString(), btn);
-}
+	if(btn!=0) emit mouseToolBtnPress(text().toStdString(), btn);
+    }
 
-QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(parent) {
-    setContextMenuPolicy( Qt::CustomContextMenu );
-    connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
-	     this, SLOT(show_context_menu(const QPoint &)) );
-}
+    std::string QtMouseToolButton::getIconStr(Int button) const {
+	using namespace QtMouseToolNames;
+	char buf[128];
+	sprintf(buf,"%d",button);
+	std::string result = std::string(":/icons/") + std::string(iconName(tool_)) + std::string(buf) + std::string(".png");
+	return result;
+    }
 
-void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
-    Qt::KeyboardModifiers mod = event->modifiers( );
+
+    QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent) {
+	setContextMenuPolicy( Qt::CustomContextMenu );
+	connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
+		 this, SLOT(show_context_menu(const QPoint &)) );
+    }
+
+    void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
+	Qt::KeyboardModifiers mod = event->modifiers( );
 #if defined(__APPLE__)
-    if ( mod & Qt::MetaModifier ) return; 	// context menu...
+	if ( mod & Qt::MetaModifier ) return; 	// context menu...
 #else
-    if ( mod & Qt::ControlModifier ) return;	// context menu...
+	if ( mod & Qt::ControlModifier ) return;	// context menu...
 #endif
-    QtMouseToolButton::mousePressEvent(event);
-}
+	QtMouseToolButton::mousePressEvent(event);
+    }
 
-void QtPointToolButton::show_context_menu( const QPoint &pos ) {
+    void QtPointToolButton::show_context_menu( const QPoint &pos ) {
+	using namespace QtMouseToolNames;
 
-    QPoint global_pos = mapToGlobal(pos);
-    QMenu *options = new QMenu( );
+	QPoint global_pos = mapToGlobal(pos);
+	QMenu *options = new QMenu( );
 
-    std::vector<QAction*> actions;
-    // can't find a way to get rid of the text area beside the icon...
-    actions.push_back(options->addAction(QIcon(":/icons/symdot.png"), QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symdrarrow.png"),QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symdlarrow.png"),QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symurarrow.png"),QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symularrow.png"),QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symplus.png"), QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symx.png"), QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symcircle.png"), QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symdiamond.png"), QString( )));
-    actions.push_back(options->addAction(QIcon(":/icons/symsquare.png"), QString( )));
+	for ( int i = 0; i < SYM_POINT_REGION_COUNT; ++i ) {
+	    QAction *act = options->addAction(QIcon(pointRegionSymbolIcon((PointRegionSymbols)i)), QString( ));
+	    act->setData(QVariant(i));
+	}
 
-    /*QAction *selectedItem =*/ options->exec(global_pos);
-    delete options;
-}
+	QAction *selectedItem = options->exec(global_pos);
+ 	emit mouseToolBtnState(POINT,selectedItem->data( ).toInt( ));
+	delete options;
+    }
 
 
-QtMouseToolBar::QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp, QWidget* parent) :
-	QToolBar("Mouse Toolbar", parent),
-	msbtns_(msbtns) {
+    QtMouseToolBar::QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp, QWidget* parent) : QToolBar("Mouse Toolbar", parent), msbtns_(msbtns) {
 
-  // Use a default set of mouse tools, unless specified by a qdp.
+	// Use a default set of mouse tools, unless specified by a qdp.
 
-  using namespace QtMouseToolNames;
-	// Constants (nTools, names, etc.) used by Qt mouse tools.
-	// Definitions in QtMouseToolState.cc.
+	using namespace QtMouseToolNames;
+		// Constants (nTools, names, etc.) used by Qt mouse tools.
+		// Definitions in QtMouseToolState.cc.
 
-  Vector<String> tools;
-	// (Overrides a def. in namespace above: these are the tool names
-	// for this particular toolbar, not necessarily all tools).
+	Vector<String> tools;
+		// (Overrides a def. in namespace above: these are the tool names
+		// for this particular toolbar, not necessarily all tools).
 
-  if(qdp==0 || qdp->mouseToolNames().nelements()==0) {
-    tools.resize(9);
-    tools[0]=ZOOM;            tools[1]=PAN;       tools[2]=SHIFTSLOPE;
-    tools[3]=BRIGHTCONTRAST;  tools[4]=POINT;  tools[5]=RECTANGLE;
-    tools[6]=ELLIPSE;         tools[7]=POLYGON;   tools[8]=POLYLINE;  }
-  else tools = qdp->mouseToolNames();
+	if(qdp==0 || qdp->mouseToolNames().nelements()==0) {
+	    tools.resize(9);
+	    tools[0]=ZOOM;            tools[1]=PAN;       tools[2]=SHIFTSLOPE;
+	    tools[3]=BRIGHTCONTRAST;  tools[4]=POINT;  tools[5]=RECTANGLE;
+	    tools[6]=ELLIPSE;         tools[7]=POLYGON;   tools[8]=POLYLINE;  }
+	else tools = qdp->mouseToolNames();
 
 
-  // Create tool buttons ('actions') within the toolbar.
+	// Create tool buttons ('actions') within the toolbar.
 
-  for(uInt i=0; i<tools.nelements(); i++) {
+	for(uInt i=0; i<tools.nelements(); i++) {
 
-    String tool = tools[i];
+	    String tool = tools[i];
 
-    QtMouseToolButton* mtb = (tool == POINT ? new QtPointToolButton(this) : new QtMouseToolButton(this));
-    buttons_.insert(std::pair<std::string,QtMouseToolButton*>(tool,mtb));
-    addWidget(mtb);
+	    QtMouseToolButton* mtb = ( tool == POINT ? new QtPointToolButton(this) :
+				       new QtMouseToolButton(tool,this));
+	    buttons_.insert(std::pair<std::string,QtMouseToolButton*>(tool,mtb));
+	    addWidget(mtb);
 
-    mtb->setObjectName(tool.chars());
-    mtb->setText(tool.chars());
-    mtb->setToolTip( ("Click here with the desired mouse button "
-		      "to assign that button to \n\'" + longName(tool) +
-		      "\'\n" + help(tool)) . chars() );
+	    mtb->setObjectName(tool.chars());
+	    mtb->setText(tool.chars());
+	    mtb->setToolTip( ( "Click here with the desired mouse button "
+			       "to assign that button to \n\'" + longName(tool) +
+			       "\'\n" + help(tool)) . chars() );
 
-    // Originally, tool buttons are created as unassigned to mouse buttons.
-    // This will change via calls to chgMouseBtn_(), even in initialization.
+	    // Originally, tool buttons are created as unassigned to mouse buttons.
+	    // This will change via calls to chgMouseBtn_(), even in initialization.
 
-    mtb->setIcon(QIcon( (":/icons/" + iconName(tool) + "0.png").chars() ));
-    mtb->setCheckable(True);
+	    mtb->setIcon(QIcon( (":/icons/" + iconName(tool) + "0.png").chars() ));
+	    mtb->setCheckable(True);
 
-    // Pressing a button will order a button assignment change from the
-    // central registry.
-    connect( mtb,     SIGNAL(mouseToolBtnPress(String, Int)),
-             msbtns_,   SLOT(chgMouseBtn      (String, Int)) );  }
+	    // Pressing a button will order a button assignment change from the
+	    // central registry.
+	    connect( mtb,       SIGNAL(mouseToolBtnPress(String, Int)),
+		     msbtns_,   SLOT(chgMouseBtn        (String, Int)) );
+	    connect( mtb,       SIGNAL(mouseToolBtnState(String, Int)),
+		     msbtns_,   SLOT(mouseBtnStateChg   (String, Int)) );
+	}
 
 
-
-  // Keeps this toolbar up-to-date with central button-state registry.
-  connect( msbtns_, SIGNAL(mouseBtnChg (String, Int)),
+	// Keeps this toolbar up-to-date with central button-state registry.
+	connect( msbtns_, SIGNAL(mouseBtnChg (String, Int)),
                       SLOT(chgMouseBtn_(String, Int)) );
 
-  msbtns_->emitBtns();  }
+	msbtns_->emitBtns();
+    }
 
-QtMouseToolButton *QtMouseToolBar::button( const std::string &name ) {
-    std::map<std::string,QtMouseToolButton*>::iterator it = buttons_.find( name );
-    if ( it != buttons_.end( ) )
-	return it->second;
-    return 0;
-}
-
-
-void QtMouseToolBar::chgMouseBtn_(String tool, Int button) {
-  // Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
-  // tool button's (QAction's) state (icon, whether checked), to reflect
-  // the [new] mouse button assignment of a given mouse tool.
-
-  using namespace QtMouseToolNames;
-
-  QToolButton* mtb = findChild<QToolButton*>(tool.chars());
-  if(mtb==0) return;	// (shouldn't happen).
-  ostringstream os; os << button;
-  mtb->setIcon(QIcon(
-       (":/icons/"+iconName(tool)+String(os)+".png") . chars()  ));
-  mtb->setChecked(button!=0);  }
+    QtMouseToolButton *QtMouseToolBar::button( const std::string &name ) {
+	std::map<std::string,QtMouseToolButton*>::iterator it = buttons_.find( name );
+	if ( it != buttons_.end( ) )
+	    return it->second;
+	return 0;
+    }
 
 
+    void QtMouseToolBar::chgMouseBtn_(String tool, Int button) {
+	// Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
+	// tool button's (QAction's) state (icon, whether checked), to reflect
+	// the [new] mouse button assignment of a given mouse tool.
+
+	using namespace QtMouseToolNames;
+
+	QToolButton* mtb = findChild<QToolButton*>(tool.chars());
+	if(mtb==0) return;	// (shouldn't happen).
+	ostringstream os; os << button;
+	mtb->setIcon(QIcon((":/icons/"+iconName(tool)+String(os)+".png").chars()));
+	mtb->setChecked(button!=0);
+    }
 
 } //# NAMESPACE CASA - END
