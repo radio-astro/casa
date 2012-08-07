@@ -5,8 +5,17 @@ startDir=$(pwd)
 #it's adapted from the mac python script and no doubt will
 #be freely adjusted for linux.
 #
-#Set the location of the 3rd party software we will need
+
 #
+# 
+script_name=`basename $0`
+if [ "casapy" == "$script_name" ]; then
+    echo 'The CASA "casapy" command has been renamed to "casa".'
+    echo 'The "casapy" command will be removed in the near future.'
+fi
+
+#
+#Set the location of the 3rd party software we will need
 OSTYPE=$(uname -s)
 if [ $OSTYPE = "Darwin" ]; then
 	isapple="T"
@@ -43,6 +52,9 @@ if [ "$1" = "--debug" ]; then
 	  _dodebug="T"
 fi
 
+#
+# TODO: check to see if CASAPATH is empty (it is not used outside of developer 
+# environments, so it often is), and set it as needed.
 prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
 #echo $prefix
 
