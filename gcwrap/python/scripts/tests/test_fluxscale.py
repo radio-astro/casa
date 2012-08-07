@@ -32,40 +32,17 @@ if os.environ.has_key('TEST_DATADIR'):
 print 'fluxscale tests will use data from '+datapath         
 
     
-# Not used yet
-def getRefDict():
-    '''Return a reference dictionary'''
-
-    # This dictionary was created from the reference fluxscale table
-    # stored in $CASADATA/regression/unittest_fluxscale. If that
-    # file is recreated, this dictionary should be updated.
-    
-    refdict = {'1': {'fieldName': '1445+09900002_0',
-                     'fluxd': np.array([ 0.1684016]),
-                     'fluxdErr': np.array([ 0.00055571]),
-                     'numSol': np.array([54], dtype='int32')},
-               '2': {'fieldName': 'N5921_2',
-                     'fluxd': np.array([ 0.00604025]),
-                     'fluxdErr': np.array([ 0.00304653]),
-                     'numSol': np.array([54], dtype='int32')},
-                'freq': np.array([  1.41266507e+09]),
-                'spwID': np.array([0], dtype='int32'),
-                'spwName': np.array(['none'], dtype='|S5')}
-        
-    return refdict
-
-
 class fluxscale1_test(unittest.TestCase):
 
     def setUp(self):
         # Input names
-        prefix = 'ngc5921'
-        self.msfile = prefix + '.ms'
+        self.prefix = 'ngc5921'
+        self.msfile = self.prefix + '.ms'
         if testmms:
-            self.msfile = prefix + '.mms'
+            self.msfile = self.prefix + '.mms'
                         
-        self.gtable = prefix + '.ref1a.gcal'
-        self.reffile = prefix + '.def.fcal'
+        self.gtable = self.prefix + '.ref1a.gcal'
+        self.reffile = self.prefix + '.def.fcal'
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
@@ -80,9 +57,9 @@ class fluxscale1_test(unittest.TestCase):
         default('fluxscale')
 
     def tearDown(self):
-        if os.path.lexists(self.msfile):
-            shutil.rmtree(self.msfile)
-        
+        shutil.rmtree(self.msfile, ignore_errors=True)        
+        shutil.rmtree('newtest.ms', ignore_errors=True)        
+        shutil.rmtree('test.ms.fcal', ignore_errors=True)        
         os.system('rm -rf ngc5921*.fcal')
         os.system('rm -rf ngc5921*.gcal')
 
@@ -106,16 +83,23 @@ class fluxscale1_test(unittest.TestCase):
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
         
-        # Check the created dictionary with the reference one
-#        refdict = self.getRefDict()
-#        diff_ret = th.DictDiffer(thisdict, refdict)
-#        
-#        self.assertFalse(diff_ret.changed())        
-#        self.assertFalse(diff_ret.added())
-#        self.assertFalse(diff_ret.removed())
-#        self.assertEqual(diff_ret.unchanged().__len__(), 5)
+        if testmms:
+            # Do another check
+            print 'Check MS and MMS returned dictionaries ...'
+            msfile = os.environ.get('CASAPATH').split()[0] +\
+                            '/data/regression/unittest/fluxscale/ngc5921.ms'
+            newms = 'newtest.ms'
+            shutil.copytree(msfile, newms)
+            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', reference='1331*', 
+                  transfer='1445*')
+            
+            diff_ret = th.DictDiffer(thisdict, msdict)
+            self.assertFalse(diff_ret.changed())        
+            self.assertFalse(diff_ret.added())
+            self.assertFalse(diff_ret.removed())
+            self.assertEqual(diff_ret.unchanged().__len__(), 5)
+            
 
-        
 
 class fluxscale2_test(unittest.TestCase):
 
@@ -143,9 +127,10 @@ class fluxscale2_test(unittest.TestCase):
            
             
     def tearDown(self):
-        if os.path.lexists(self.msfile):
-            shutil.rmtree(self.msfile)
-
+        pass
+        shutil.rmtree(self.msfile, ignore_errors=True)
+#        shutil.rmtree('newtest.ms', ignore_errors=True)        
+#        shutil.rmtree('test.ms.fcal', ignore_errors=True)        
         os.system('rm -rf ngc4826*.gcal')
         os.system('rm -rf ngc4826*.fcal')
         
@@ -168,7 +153,22 @@ class fluxscale2_test(unittest.TestCase):
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
                 
-
+#        if testmms:
+#            # Do another check
+#            print 'Check MS and MMS returned dictionaries ...'
+#            msfile = os.environ.get('CASAPATH').split()[0] +\
+#                            '/data/regression/unittest/fluxscale/ngc4826.ms'
+#            newms = 'newtest.ms'
+#            shutil.copytree(msfile, newms)
+#            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', reference='3C273-F0',
+#                             transfer=['1310+323-F0'],refspwmap=[0,0])
+#            
+#            diff_ret = th.DictDiffer(thisdict, msdict)
+#            self.assertFalse(diff_ret.changed())        
+#            self.assertFalse(diff_ret.added())
+#            self.assertFalse(diff_ret.removed())
+#            self.assertEqual(diff_ret.unchanged().__len__(), 5)
+ 
 def suite():
     return [fluxscale1_test, fluxscale2_test]
 
