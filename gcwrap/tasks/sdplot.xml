@@ -603,8 +603,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         polarization and beam IDs. Selection of field allows pattern
         matching using asterisk, e.g., 'FLS3a*'. Selection of scans,
         IFs, polarizations, and beams, is possible either by a list
-        of IDs or by a CASA type selection syntax using a comma separated
-        numbers with operaters, i.e., '~', '&gt;', '&gt;=', '&lt;', and '&lt;='.
+        of IDs or by a CASA type selection syntax using a string of 
+        comma separated numbers with operaters, i.e., '~', '&gt;', '&gt;=',
+        '&lt;', and '&lt;='.
         For example, the following two selections are equivalent:
         scanlist = [0, 1, 2, 7, 8, 9, 15]
         scanlist = "&lt;3,7~9,15"
