@@ -418,9 +418,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         doppler -- doppler mode
                 options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
                 default: currently set doppler in scantable
-        scanlist -- list of scan numbers to process
+        scanlist -- list or string of scan numbers to process
                 default: [] (use all scans)
-                example: [21,22,23,24]
+                example: [21,22,23,24], or "21~24"
                 this selection is in addition to field, iflist, pollist,
                 and beamlist
         field -- selection string for selecting scans by name
@@ -428,17 +428,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: 'FLS3a*'
                 this selection is in addition to scanlist, iflist, pollist,
                 and beamlist
-        iflist -- list of IF id numbers to select
+        iflist -- list or string of IF id numbers to select
                 default: [] (use all IFs)
                 example: [15]
                 this selection is in addition to scanlist, field, pollist,
                 and beamlist
-        pollist -- list of polarization id numbers to select
+        pollist -- list or string of polarization id numbers to select
                 default: [] (use all polarizations)
                 example: [1]
                 this selection is in addition to scanlist, field, iflist,
                 and beamlist
-        beamlist -- list of beam id numbers to select
+        beamlist -- list or string of beam id numbers to select
                 default: [] (use all beams)
                 example: [1]
                 this selection is in addition to scanlist, field, iflist,
@@ -588,35 +588,50 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         DESCRIPTION:
 
-        Task sdplot displays single-dish spectra or total power data.
+        Task sdplot displays single-dish spectra, total power,
+        or pointing direction of input data.
         It assumes that the spectra have been calibrated.
-        It does allow selection of scans, IFs,polarizations, and
+        It does allow selection of scans, IFs, polarizations, and
         some time and channel averaging/smoothing options also,
         but does not write out this data.
 
-        *** Only apply to 'spectra' plottype ***
+        This task adds an additional toolbar to Matplotlib plotter. 
+        See the cookbook for details of its capability.
+
+        *** Data selection ***
+        This task allows data selection via field name, scan, IF,
+        polarization and beam IDs. Selection of field allows pattern
+        matching using asterisk, e.g., 'FLS3a*'. Selection of scans,
+        IFs, polarizations, and beams, is possible either by a list
+        of IDs or by a CASA type selection syntax using a comma separated
+        numbers with operaters, i.e., '~', '&gt;', '&gt;=', '&lt;', and '&lt;='.
+        For example, the following two selections are equivalent:
+        scanlist = [0, 1, 2, 7, 8, 9, 15]
+        scanlist = "&lt;3,7~9,15"
+
+        *** control of plot lines in 'spectra' and 'grid' plottype ***
         Note that colormap and linestyles cannot be controlled at a time.
         The 'linestyles' is ignored if both of them are specified.
         Some plot options, like changing titles, legends, fonts,
         and the like are not supported in this task.  You should use
         sd.plotter from the ASAP toolkit directly for this.
 
-        This task uses the JPL line catalog as supplied by ASAP.
-        If you wish to use a different catalog, or have it plot
-        the line IDs from top or bottom (rather than alternating),
-        then you will need to explore the sd toolkit also.
+        *** available plottypes ***
+        * plottype = 'spectra' plots single dish spectra. Multiple scans,
+          IFs, polarizations, and beams can be handles through stacking
+          and panelling.
+          This task uses the JPL line catalog as supplied by ASAP.
+          If you wish to use a different catalog, or have it plot
+          the line IDs from top or bottom (rather than alternating),
+          then you will need to explore the sd toolkit also.
+        * plottype = 'grid' plots spectra based on their pointing direction.
+          The spectra are gridded by direction before plotting.
+          Multiple IFs and polarizations are not handled in this mode. Only
+          the first IF and polarizaion is gridded and plotted if data 
+          includes multiple IDs after selections are applied. Hence, over
+          plotting is not available
 
-        Note that multiple scans and IFs can in principle be handled
-        through stacking and paneling, but this is fairly rudimentary
-        at present and you have little control of what happens in
-        individual panels.  We recommend that you use scanlist, field,
-        and iflist to give a single selection for each run.
-
-        This task adds an additional toolbar to Matplotlib plotter. 
-        See the cookbook for details of its capability.
-
-        *** other plottype options ***
-        Currently most of the parameters are ignored in these modes.
+        Currently most of the parameters are ignored in the following modes.
 
         * plottype='totalpower' is used to plot the total power data.
           and only plot option is amplitude versus data row number.
