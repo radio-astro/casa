@@ -9,6 +9,7 @@ import time
 from simple_cluster import *
 import glob
 import multiprocessing
+import testhelper
 
 class test_simplecluster(unittest.TestCase):
 
@@ -193,7 +194,7 @@ class test_tflagdata_mms(test_simplecluster):
 
     def setUp(self):
         # Prepare MMS
-        self.vis = "Four_ants_3C286.partition.ms"
+        self.vis = "Four_ants_3C286.mms"
         if os.path.exists(self.vis):
             print "The MMS is already in the working area, deleting ..."
             os.system('rm -rf ' + self.vis)
@@ -270,7 +271,7 @@ class test_tflagdata_mms(test_simplecluster):
 class test_setjy_mms(test_simplecluster):
 
     def setUp(self):
-        self.vis = "ngc5921.partition.ms"
+        self.vis = "ngc5921.applycal.mms"
         if os.path.exists(self.vis):
             print "The MMS is already in the working area, deleting ..."
             os.system('rm -rf ' + self.vis)
@@ -413,6 +414,85 @@ class test_setjy_mms(test_simplecluster):
                 raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
                 tblocal.close()
             tblocal.close()
+            
+class test_applycal_mms(test_simplecluster):
+
+    def setUp(self):
+        self.vis = "ngc5921.applycal.mms"
+        self.ref = "ngc5921.split.mms"
+        self.aux = ["ngc5921.fluxscale", "ngc5921.bcal"]
+        
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        
+        if os.path.exists(self.ref):
+            print "The ref MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.ref)
+
+        print "Copy ref MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.ref + ' ' + self.ref)       
+        
+        for file in  self.aux:
+            if os.path.exists(file):
+                print "Aux file %s is already in the working area, deleting ..." % file
+                os.system('rm -rf ' + file)
+                
+            print "Copy aux file %s into the working area..." % file
+            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
+            
+        # Startup cluster
+        self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
+        self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)   
+        # Remove ref MMS
+        os.system('rm -rf ' + self.ref) 
+        
+    def test1_applycal_scratchless_mode_single_model(self):
+        """Test 1: Set vis model header one single fields and apply calibration"""
+
+        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        
+        # select the fields for 1445+099 and N5921
+        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+        
+        # Now for completeness apply 1331+305 to itself
+        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
+        
+        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
+        
+        self.assertTrue(compare)
+        
+    def test2_applycal_scratch_mode_single_model(self):
+        """Test 2: Set MODEL_DATA in one single field and apply calibration"""
+
+        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=True)
+        self.assertTrue(retval, "setjy run failed")
+        
+        # select the fields for 1445+099 and N5921
+        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+        
+        # Now for completeness apply 1331+305 to itself
+        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
+        
+        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
+        
+        self.assertTrue(compare)        
 
 
 class testJobData(unittest.TestCase):
@@ -605,7 +685,7 @@ class testJobQueueManager(unittest.TestCase):
         cluster.remove_record()
 
 def suite():
-    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms]
+    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms,test_applycal_mms]
      
 if __name__ == '__main__':
     testSuite = []
