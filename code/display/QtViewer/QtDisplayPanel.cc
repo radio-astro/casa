@@ -281,8 +281,8 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
-  connect( mBtns, SIGNAL(mouseBtnChg(String, Int)),
-                    SLOT(chgMouseBtn_(String, Int)) );
+  connect( mBtns, SIGNAL(mouseBtnChg(std::string, Int)),
+                    SLOT(chgMouseBtn_(std::string, Int)) );
     
   mBtns->emitBtns();  }
 	// (Causes mBtns to communicate current mouse button settings
@@ -290,7 +290,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 
 
 
-void QtDisplayPanel::chgMouseBtn_(String tool, Int button) {
+void QtDisplayPanel::chgMouseBtn_(std::string tool, Int button) {
   // Command to set/change the button currently assigned to a mouse tool.
   // The central place for this information is QtMouseToolState, which
   // invokes this routine.  This sets the active button onto the internal

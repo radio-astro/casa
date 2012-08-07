@@ -32,6 +32,7 @@
 #include <tr1/memory>
 #include <display/region/RegionCreator.h>
 #include <display/Utilities/dtor.h>
+#include <display/Display/MouseToolState.h>
 
 namespace casa {
 
@@ -72,7 +73,9 @@ namespace casa {
 		virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
 		virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
 		virtual std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y ) = 0;
+		virtual std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) = 0;
+
+		virtual QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const = 0;
 
 		// register region for dtor callback, and add to list of created regions...
 		void register_new_region( Region * );
@@ -92,8 +95,8 @@ namespace casa {
 								{ return kernel_->polygon(region_creator,wc,pts); }
 		virtual std::tr1::shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y )
 								{ return kernel_->ellipse(region_creator,wc,blc_x,blc_y,trc_x,trc_y); }
-		virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y )
-								{ return kernel_->point(region_creator,wc,x,y); }
+		virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym )
+								{ return kernel_->point(region_creator,wc,x,y,sym); }
 	  
 		RegionSource( RegionCreator *rc, const shared_kernel_ptr_type &k ) :  kernel_(k), region_creator(rc) { }
 		RegionSource( const RegionSource &other ) : kernel_(other.kernel_), region_creator(other.region_creator) { }
@@ -105,6 +108,7 @@ namespace casa {
 		QtRegionDock *dock( ) { return kernel_->dock( ); }
 		int numFrames( ) const { return kernel_->numFrames( ); }
 
+		QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const { return kernel_->currentPointSymbolType( ); }
 		virtual ~RegionSource( ) { }
 
 	    private:

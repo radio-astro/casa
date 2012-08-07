@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QMenu *options = new QMenu( );
 
 	for ( int i = 0; i < SYM_POINT_REGION_COUNT; ++i ) {
-	    QAction *act = options->addAction(QIcon(pointRegionSymbolIcon((PointRegionSymbols)i)), QString( ));
+	    QAction *act = options->addAction(QIcon(QString::fromStdString(pointRegionSymbolIcon((PointRegionSymbols)i))), QString( ));
 	    act->setData(QVariant(i));
 	}
 
@@ -109,23 +109,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	for(uInt i=0; i<tools.nelements(); i++) {
 
-	    String tool = tools[i];
+	    std::string tool = tools[i];
 
 	    QtMouseToolButton* mtb = ( tool == POINT ? new QtPointToolButton(this) :
 				       new QtMouseToolButton(tool,this));
 	    buttons_.insert(std::pair<std::string,QtMouseToolButton*>(tool,mtb));
 	    addWidget(mtb);
 
-	    mtb->setObjectName(tool.chars());
-	    mtb->setText(tool.chars());
+	    mtb->setObjectName(tool.c_str( ));
+	    mtb->setText(tool.c_str( ));
 	    mtb->setToolTip( ( "Click here with the desired mouse button "
 			       "to assign that button to \n\'" + longName(tool) +
-			       "\'\n" + help(tool)) . chars() );
+			       "\'\n" + help(tool)) . c_str( ) );
 
 	    // Originally, tool buttons are created as unassigned to mouse buttons.
 	    // This will change via calls to chgMouseBtn_(), even in initialization.
 
-	    mtb->setIcon(QIcon( (":/icons/" + iconName(tool) + "0.png").chars() ));
+	    mtb->setIcon(QIcon( (":/icons/" + iconName(tool) + "0.png").c_str( ) ));
 	    mtb->setCheckable(True);
 
 	    // Pressing a button will order a button assignment change from the
@@ -138,8 +138,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	// Keeps this toolbar up-to-date with central button-state registry.
-	connect( msbtns_, SIGNAL(mouseBtnChg (String, Int)),
-                      SLOT(chgMouseBtn_(String, Int)) );
+	connect( msbtns_, SIGNAL(mouseBtnChg (std::string, Int)),
+		          SLOT(chgMouseBtn_(std::string, Int)) );
 
 	msbtns_->emitBtns();
     }
@@ -152,17 +152,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-    void QtMouseToolBar::chgMouseBtn_(String tool, Int button) {
+    void QtMouseToolBar::chgMouseBtn_(std::string tool, Int button) {
 	// Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
 	// tool button's (QAction's) state (icon, whether checked), to reflect
 	// the [new] mouse button assignment of a given mouse tool.
 
 	using namespace QtMouseToolNames;
 
-	QToolButton* mtb = findChild<QToolButton*>(tool.chars());
+	QToolButton* mtb = findChild<QToolButton*>(tool.c_str( ));
 	if(mtb==0) return;	// (shouldn't happen).
 	ostringstream os; os << button;
-	mtb->setIcon(QIcon((":/icons/"+iconName(tool)+String(os)+".png").chars()));
+	mtb->setIcon(QIcon(QString::fromStdString( ":/icons/" + iconName(tool) + os.str( ) + ".png" )));
 	mtb->setChecked(button!=0);
     }
 

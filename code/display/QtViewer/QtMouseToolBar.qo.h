@@ -127,7 +127,7 @@ class QtMouseToolBar: public QToolBar {
   // Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
   // tool button's (QAction's) state (icon, whether checked), to reflect
   // the [new] mouse button assignment for a given mouse tool.
-  virtual void chgMouseBtn_(String tool, Int button);
+  virtual void chgMouseBtn_(std::string tool, Int button);
   
   // Overridden from QToolBar, responding to clicks from any mouse button.
   // Relays that mouse button to central registry for assignment to 

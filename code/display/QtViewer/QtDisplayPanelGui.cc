@@ -700,6 +700,10 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
     if(qdo_!=0) delete qdo_;
 }
 
+int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
+    return v_->mouseBtns( )->getButtonState(tool);
+}
+
 bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
     return false;
 }

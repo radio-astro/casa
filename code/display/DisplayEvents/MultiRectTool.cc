@@ -885,7 +885,8 @@ void MultiRectTool::reset(Bool skipRefresh) {
 				const std::vector<std::pair<double,double> > &pts,
 				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width, bool is_annotation ) {
+				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
+				bool is_annotation, int /*region_specific_state*/ ) {
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );

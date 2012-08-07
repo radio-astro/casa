@@ -37,8 +37,8 @@ namespace casa {
 	// QtPoint::QtPoint( RegionSource *factory, double blc_x, double blc_y, double trc_x, double trc_y ) : 
 	// 			QtRegion("point",factory), Point(blc_x, blc_y, trc_x, trc_y) { }
 
-	QtPoint::QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals ) :
-				QtRegion("point", factory, hold_signals), Point(wc, x, y) {
+	QtPoint::QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, bool hold_signals ) :
+				QtRegion("point", factory, hold_signals), Point(wc, x, y, sym) {
 	    mystate->init( );
 	    mystate->disableAnnotation(true);
 	}

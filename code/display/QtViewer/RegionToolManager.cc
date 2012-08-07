@@ -440,7 +440,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 
 			    }
 			    break;
@@ -489,7 +489,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 
 			    break;
@@ -566,7 +566,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 			    break;
 			case AnnotationBase::POLYGON:
@@ -615,7 +615,7 @@ namespace casa {
 							 ann->getLabelColorString( ), ann->getColorString( ),
 							 ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							   ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 			    break;
 

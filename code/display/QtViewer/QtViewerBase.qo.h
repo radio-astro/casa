@@ -74,6 +74,7 @@ class QtViewerBase : public QObject {
     // Return the common QtMouseToolState that all mouse tool users
   // should share.
   virtual QtMouseToolState* mouseBtns() { return &msbtns_;  }
+  virtual const QtMouseToolState* mouseBtns() const { return &msbtns_;  }
   
   // The list of QtDisplayPanels that are not closed.
   virtual List<QtDisplayPanelGui*> openDPs();

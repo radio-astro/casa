@@ -97,6 +97,7 @@ class QtDisplayPanelGui : public QtPanelBase,
 
   // access to our viewer
   QtViewer *viewer( ) { return v_; }
+  int buttonToolState(const std::string &tool) const;
 
   // access our logger...
   LogIO &logIO( ) { return logger; }
