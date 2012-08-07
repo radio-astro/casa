@@ -111,8 +111,11 @@
 		</param>
 
 		
-
-		<param type="int" name="majorcycles">
+		<param type="double" name="cyclefactor" >
+			<description>Control number of major cycle, threshold of cycle=residualPeak*psfSidelobe*cyclefactor </description>
+			<value>1.5</value>
+		</param>
+		<param type="int" name="majorcycles" subparam="true">
 			<description>Number of major cycles</description>
 			<value>1</value>
 		</param>
@@ -278,6 +281,14 @@
 		      <default param="restfreq"><value type="string"></value></default>
                      </equals>
                  </when>
+
+		 <when param="cyclefactor">
+		   <equals type="double" value="1.5"></equals>
+		   <equals type="double" value="0.0">
+		     <default param="majorcycles"><value type="int">1</value></default>
+		   </equals>
+		 </when>
+		   
                  <when param="ftmachine">
                      <equals value="ft"/>
                      <equals value="wproject">

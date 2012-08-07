@@ -39,6 +39,7 @@ class pimager():
         self.scan=''
         self.observation=''
         self.pbcorr=False
+        self.cyclefactor=1.5
         self.c=cluster
         if self.c == '' :
             # Until we move to the simple cluster
@@ -989,7 +990,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
-              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
               imagetilevol=100000,
@@ -1062,6 +1063,7 @@ class pimager():
         self.uvrange=uvrange
         self.baselines=baselines
         self.scan=scan
+        self.cyclefactor=cyclefactor
         self.observation=observation
         self.numthreads=numthreads
         self.pbcorr=pbcorr
@@ -1231,10 +1233,16 @@ class pimager():
         ia.open(imagename+'.image')
         ia.setrestoringbeam(beam=rb)
         ia.done()
-        imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
-        imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
+        #imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        #imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
         
-        imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        #imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        imagecont.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
+        imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
+        imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
+        if(self.ftmachine=='mosaic'):
+            imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
+            imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
         
@@ -2021,7 +2029,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', cyclefactor='+str(self.cyclefactor)+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));
