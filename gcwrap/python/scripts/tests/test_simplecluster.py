@@ -174,7 +174,7 @@ class test_simplecluster(unittest.TestCase):
         # Create cluster file
         self.initCluster('userMonitorFile.log')
                 
-        state = self.cluster.show_state()
+        state = self.cluster.show_resource(True)
         cluster_list = self.cluster.get_hosts()
         for engine in range(cluster_list[0][1]):
             self.assertTrue(state[self.host][engine].has_key('Status'))
@@ -248,6 +248,7 @@ class test_tflagdata_mms(test_simplecluster):
         ret_dict = tflagdata(vis=self.vis, mode='summary')
 
         # Print summary (note: the first 16 jobs correspond to the step 1)
+        self.assertTrue(ret_dict['name']=='Summary')
         self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
         self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
         self.assertTrue(ret_dict['spw']['1']['flagged'] == 128551.0)
@@ -292,35 +293,10 @@ class test_setjy_mms(test_simplecluster):
         retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
         self.assertTrue(retval, "setjy run failed")
         
-        mslocal = mstool()
-        mslocal.open(self.vis)
-        listSubMSs = mslocal.getreferencedtables()
-        mslocal.close()
-        for subMS in listSubMSs:
-            tblocal = tbtool()
-            tblocal.open(subMS)
-            fieldId = tblocal.getcell('FIELD_ID',1)
-            if (fieldId == 0):
-                model = tblocal.getkeyword('model_0')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
-            elif (fieldId == 1):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-            elif (fieldId == 2):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-            else:
-                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
-                tblocal.close()
-            tblocal.close()
-            
-    def test2_setjy_scratch_mode_multiple_model(self):
-        """Test 2: Set MODEL_DATA in multiple fields"""
-
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
-        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
+        tblocal = tbtool()
+        tblocal.open(self.vis)
+        model_0 = tblocal.getkeyword('model_0')
+        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)      
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -331,15 +307,56 @@ class test_setjy_mms(test_simplecluster):
             tblocal.open(subMS)
             fieldId = tblocal.getcell('FIELD_ID',1)
             if (fieldId == 0):
-                model = tblocal.getkeyword('model_0')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
             elif (fieldId == 1):
-                model = tblocal.getkeyword('model_1')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1445.)
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
             elif (fieldId == 2):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-                self.assertFalse(keywords.has_key('model_1'))
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+            
+    def test2_setjy_scratchless_mode_multiple_model(self):
+        """Test 2: Set vis model header in one multiple fields """
+
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        
+        tblocal = tbtool()
+        tblocal.open(self.vis)
+        model_0 = tblocal.getkeyword('model_0')
+        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+        model_1 = tblocal.getkeyword('model_1')
+        self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+            elif (fieldId == 1):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+            elif (fieldId == 2):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
             else:
                 raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
                 tblocal.close()
