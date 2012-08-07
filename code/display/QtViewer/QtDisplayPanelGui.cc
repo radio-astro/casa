@@ -1486,6 +1486,8 @@ void QtDisplayPanelGui::showImageProfile() {
 				std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 
 				if ( qrs ) {
+					connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
+							qrs.get(), SLOT(adjustPosition(double,double,double,double)));
 				    connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
 										const QList<double> &, const QList<int> &, const QList<int> &,
 										const QString &, const QString &, const QString &, int, int ) ),
@@ -1624,9 +1626,9 @@ void QtDisplayPanelGui::showImageProfile() {
     PanelDisplay* ppd = qdp_->panelDisplay();
     QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
     if (rect) {
-	// this is the *new* region implementation... all events come from region source...
-	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
-	qrs->generateExistingRegionUpdates( );
+    	// this is the *new* region implementation... all events come from region source...
+    	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+    	qrs->generateExistingRegionUpdates( );
     }
 
     //Let the profiler know about the current frame.

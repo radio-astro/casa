@@ -191,7 +191,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
     connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
     connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
-    initSpectrumPosition();
+
 
     //Spectral Line Fitting & Moments/Collapse initialization
     momentSettingsWidget->setTaskSpecLineFitting( false );
@@ -200,8 +200,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     momentSettingsWidget -> setCanvas( pixelCanvas );
     specFitSettingsWidget -> setTaskMonitor( this );
     momentSettingsWidget -> setTaskMonitor( this );
+    positioningWidget -> setTaskMonitor( this );
     specFitSettingsWidget -> setLogger( itsLog );
     momentSettingsWidget -> setLogger( itsLog );
+    positioningWidget->setLogger( itsLog );
     try{
    	 analysis  = new ImageAnalysis(img);
    	 momentSettingsWidget->reset();
@@ -221,362 +223,6 @@ void QtProfile::setUnitsText( String unitStr ){
 	momentSettingsWidget->setUnits( unitLabel );
 }
 
-//----------------------------------------------------------------------------------
-//              Spectrum Positioning
-//----------------------------------------------------------------------------------
-
-void QtProfile::initSpectrumPosition(){
-	std::map<PositionTypeIndex,QString> positionTypeMap;
-	positionTypeMap[POINT]="Point";
-	positionTypeMap[BOX] = "Rectangle";
-	for ( int i = POINT; i < END_POSITION_TYPE; i++ ){
-		positionTypeComboBox -> addItem( positionTypeMap[static_cast<PositionTypeIndex>(i)] );
-	}
-
-	std::map<UnitIndex, QString> unitMap;
-	unitMap[RADIAN]="RA/DEC";
-	unitMap[PIXEL]="Pixel";
-	for ( int i = RADIAN; i < END_UNIT; i++  ){
-		unitComboBox -> addItem( unitMap[static_cast<UnitIndex>(i)] );
-	}
-
-	stackedWidget->setCurrentIndex(POINT_RA_DEC);
-	boxSpecCombo -> setVisible( false );
-	boxSpecLabel -> setVisible( false );
-
-	std::map<BoxSpecificationIndex,QString> boxSpecificationMap;
-	boxSpecificationMap[TL_LENGTH_HEIGHT] = "Top Left Corner, Length, Height";
-	boxSpecificationMap[CENTER_LENGTH_HEIGHT] = "Center, Length, Height";
-	boxSpecificationMap[TL_BR]="Top Left Corner, Bottom Right Corner";
-	boxSpecificationMap[BL_TR]="Bottom Left Corner, Top Right Corner";
-	for ( int i = TL_LENGTH_HEIGHT; i < END_SPEC; i++ ){
-		boxSpecCombo -> addItem( boxSpecificationMap[static_cast<BoxSpecificationIndex>(i)]);
-	}
-
-	connect( positionTypeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(locationSelectionTypeChanged(int)));
-	connect( unitComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(locationUnitsChanged(int)));
-	connect( applyPositionButton, SIGNAL(clicked()), this, SLOT(setPosition()));
-	connect( boxSpecCombo, SIGNAL( currentIndexChanged(int)), this, SLOT(boxSpecChanged(int)));
-
-	//Initialize the box label map
-	QList<QString> labelTlcWidthLengthList;
-	QList<QString> labelCenterWidthLengthList;
-    QList<QString> labelTlcBrcList;
-	QList<QString> labelBlcTrcList;
-	labelTlcWidthLengthList << Util::toHTML("TLC X:") << Util::toHTML("TLC Y:") << Util::toHTML("Length:") << Util::toHTML("Height:");
-	labelCenterWidthLengthList << Util::toHTML("Center X:") << Util::toHTML("Center Y:") << Util::toHTML("Length:") << Util::toHTML("Height:");
-	labelTlcBrcList << Util::toHTML("TLC X:") << Util::toHTML("TLC Y:") << Util::toHTML("BRC X:") << Util::toHTML("BRC Y:");
-	labelBlcTrcList << Util::toHTML("BLC X:") << Util::toHTML("BLC Y:") << Util::toHTML("TRC X:") << Util::toHTML("TRC Y:");
-	QList<QString> labelTlcWidthLengthListW;
-	QList<QString> labelCenterWidthLengthListW;
-	QList<QString> labelTlcBrcListW;
-	QList<QString> labelBlcTrcListW;
-	labelTlcWidthLengthListW << Util::toHTML("TLC RA:") << Util::toHTML("TLC DEC:") << Util::toHTML("Length:") << Util::toHTML("Height:");
-	labelCenterWidthLengthListW << Util::toHTML("Center RA:") << Util::toHTML("Center DEC:") << Util::toHTML("Length:") << Util::toHTML("Height:");
-	labelTlcBrcListW << Util::toHTML("TLC RA:") << Util::toHTML("TLC DEC:") << Util::toHTML("BRC RA:") << Util::toHTML("BRC DEC:");
-	labelBlcTrcListW << Util::toHTML("BLC RA:") << Util::toHTML("BLC DEC:") << Util::toHTML("TRC RA:") << Util::toHTML("TRC DEC:");
-	boxLabelMap[TL_LENGTH_HEIGHT] = labelTlcWidthLengthList;
-	boxLabelMap[CENTER_LENGTH_HEIGHT] = labelCenterWidthLengthList;
-	boxLabelMap[TL_BR] = labelTlcBrcList;
-	boxLabelMap[BL_TR] = labelBlcTrcList;
-	boxLabelMap[TL_LENGTH_HEIGHT_WORLD] = labelTlcWidthLengthListW;
-	boxLabelMap[CENTER_LENGTH_HEIGHT_WORLD] = labelCenterWidthLengthListW;
-	boxLabelMap[TL_BR_WORLD] = labelTlcBrcListW;
-	boxLabelMap[BL_TR_WORLD] = labelBlcTrcListW;
-
-
-	pixelValidator = new QIntValidator( this );
-	pixelValidator -> setBottom( 0 );
-	pointXLineEdit -> setValidator( pixelValidator );
-	pointYLineEdit -> setValidator( pixelValidator );
-	boxPixBLCXLineEdit -> setValidator( pixelValidator );
-	boxPixBLCYLineEdit -> setValidator( pixelValidator );
-	boxPixTRCXLineEdit -> setValidator( pixelValidator );
-	boxPixTRCYLineEdit -> setValidator( pixelValidator );
-
-	secValidator = new QDoubleValidator( 0, 60, 3, this );
-	pointRALineEditSec -> setValidator( secValidator );
-	pointDECLineEditSec -> setValidator( secValidator );
-	blcxLineEditSec -> setValidator( secValidator );
-	blcyLineEditSec -> setValidator( secValidator );
-	trcxLineEditSec -> setValidator( secValidator );
-	trcyLineEditSec -> setValidator( secValidator );
-
-}
-
-void QtProfile::boxSpecChanged( int index ){
-	int pageIndex = stackedWidget -> currentIndex();
-	if ( pageIndex == BOX_PIXEL ){
-		switchBoxLabels( index, pageIndex, pixX1Label, pixY1Label, pixX2Label, pixY2Label );
-	}
-	else if ( pageIndex == BOX_RA_DEC ){
-		switchBoxLabels( index, pageIndex, ra1Label, dec1Label, ra2Label, dec2Label );
-	}
-	else {
-		assert( false );
-	}
-}
-
-void QtProfile::switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
-		QLabel* const x2Label, QLabel* const y2Label ){
-	int lookupIndex = (pageIndex-2) * (END_SPEC / 2 ) + index;
-	QList<QString> labelList = boxLabelMap[static_cast<BoxSpecificationIndex>(lookupIndex)];
-	x1Label -> setText( labelList[0]);
-	y1Label -> setText( labelList[1]);
-	x2Label -> setText( labelList[2]);
-	y2Label -> setText( labelList[3]);
-
-}
-
-void QtProfile::locationSelectionTypeChanged( int index ){
-	//Show/hide the boxSpecCombo & label
-	bool visible = index == BOX ? true : false;
-	boxSpecCombo -> setVisible( visible );
-	boxSpecLabel -> setVisible( visible );
-
-	//Figure out the units
-	int unitIndex = unitComboBox-> currentIndex();
-	pageUpdate( index, unitIndex );
-}
-
-void QtProfile::pageUpdate( int selectionIndex, int unitIndex ){
-	if ( selectionIndex == POINT && unitIndex == PIXEL ) {
-		stackedWidget->setCurrentIndex( POINT_PIXEL );
-	}
-	else if ( selectionIndex == POINT && unitIndex == RADIAN){
-		stackedWidget->setCurrentIndex( POINT_RA_DEC );
-	}
-	else if ( selectionIndex == BOX && unitIndex == PIXEL ){
-		stackedWidget->setCurrentIndex( BOX_PIXEL );
-		boxSpecChanged( boxSpecCombo  -> currentIndex() );
-	}
-	else if ( selectionIndex == BOX && unitIndex == RADIAN ){
-		stackedWidget->setCurrentIndex( BOX_RA_DEC );
-		boxSpecChanged( boxSpecCombo -> currentIndex() );
-	}
-	else {
-		assert( false );
-	}
-}
-
-void QtProfile::locationUnitsChanged( int index ){
-	int locationIndex = positionTypeComboBox->currentIndex();
-	pageUpdate( locationIndex, index );
-}
-
-
-
-void QtProfile::setPosition(){
-	if ( image ){
-		QList<double> worldX;
-		QList<double> worldY;
-		QList<int> pixelX;
-		QList<int> pixelY;
-		bool success = false;
-		int page = stackedWidget->currentIndex();
-		if ( page == POINT_PIXEL ){
-			fillPointPixel( pixelX,pixelY);
-			success = populateWorlds( pixelX, pixelY, worldX, worldY );
-		}
-		else if ( page == POINT_RA_DEC ){
-			fillPointWorld( worldX, worldY);
-			success = populatePixels( pixelX, pixelY, worldX, worldY );
-		}
-		else if ( page == BOX_PIXEL ){
-			success = fillBoxPixel( pixelX, pixelY );
-			if ( success ){
-				success = populateWorlds( pixelX, pixelY, worldX, worldY );
-			}
-		}
-		else if ( page == BOX_RA_DEC ){
-			success = fillBoxWorld( worldX, worldY );
-			if ( success ){
-				success = populatePixels( pixelX, pixelY, worldX, worldY );
-			}
-		}
-
-		if ( success ){
-			newRegion( -1, "rectangle", "position tab", worldX, worldY,
-				pixelX, pixelY, "green", "", "", 12, -1 );
-		}
-		else {
-			 *itsLog << LogIO::WARN << "Could not make a new region." << LogIO::POST;
-		}
-	}
-	else {
-		 //*itsLog << LogIO::WARN << "Image is not loaded" << LogIO::POST;
-	}
-}
-
-void QtProfile::fillPointWorld( QList<double> &worldX, QList<double> &worldY ) const {
-	double centerXRad = spinToRadians( false, pointRASpinBoxHr, pointRASpinBoxMin, pointRALineEditSec );
-	double centerYRad = spinToRadians( true, pointDECSpinBoxDeg, pointDECSpinBoxMin, pointDECLineEditSec );
-
-	//Initialize the vectors we will pass to the algorithm
-	worldX.append( centerXRad );
-	worldY.append( centerYRad );
-}
-
-void QtProfile::fillPointPixel( QList<int> &pixelX, QList<int>&pixelY ) const {
-	int centerXPix = pointXLineEdit -> text().toInt();
-	int centerYPix = pointYLineEdit -> text().toInt();
-
-	pixelX.append( centerXPix );
-	pixelY.append( centerYPix );
-}
-
-bool QtProfile::fillBoxPixel( QList<int> &pixelX, QList<int>&pixelY ) {
-	double firstXPix = boxPixBLCXLineEdit -> text().toInt();
-	double firstYPix = boxPixBLCYLineEdit -> text().toInt();
-	double secondXPix = boxPixTRCXLineEdit -> text().toInt();
-	double secondYPix = boxPixTRCYLineEdit -> text().toInt();
-
-	double blcxPix;
-	double blcyPix;
-	double trcxPix;
-	double trcyPix;
-	bool valid = fillBasedOnBoxSpecification( &firstXPix,&firstYPix, &secondXPix, &secondYPix,
-			&blcxPix, &blcyPix, &trcxPix, &trcyPix );
-
-	if ( valid ){
-		//Initialize the vectors we will pass to the algorithm
-		pixelX.append( static_cast<int>(blcxPix) );
-		pixelX.append( static_cast<int>(trcxPix) );
-		pixelY.append( static_cast<int>(blcyPix) );
-		pixelY.append( static_cast<int>(trcyPix) );
-	}
-	return valid;
-}
-
-bool QtProfile::fillBasedOnBoxSpecification(  const double*  const firstXPix, const double * const firstYPix,
-		const double* const secondXPix, const double* const secondYPix,
-		double* const blcXPix, double* const blcYPix,
-		double* const trcXPix, double* const trcYPix ) {
-	int index = boxSpecCombo -> currentIndex();
-	bool valid = true;
-	if ( index == TL_LENGTH_HEIGHT ){
-		*blcXPix = *firstXPix;
-		*blcYPix = *firstYPix - *secondYPix;
-		*trcXPix = *firstXPix + *secondXPix;
-		*trcYPix = *firstYPix;
-	}
-	else if ( index == CENTER_LENGTH_HEIGHT ){
-		double halfWidth = *secondXPix / 2;
-		double halfLength = *secondYPix / 2;
-		*blcXPix = *firstXPix - halfWidth;
-		*blcYPix = *firstYPix - halfLength;
-		*trcXPix = *firstXPix + halfWidth;
-		*trcYPix = *firstYPix + halfLength;
-	}
-	else if ( index == TL_BR ){
-		*blcXPix = *firstXPix;
-		*blcYPix = *secondYPix;
-		*trcXPix = *secondXPix;
-		*trcYPix = *firstYPix;
-	}
-	else if ( index == BL_TR ){
-		*blcXPix = *firstXPix;
-		*blcYPix = *firstYPix;
-		*trcXPix = *secondXPix;
-		*trcYPix = *secondYPix;
-	}
-	else {
-		assert( false  );
-	}
-	if ( *blcXPix > *trcXPix || *blcYPix > *trcYPix ){
-		QMessageBox::warning(this, tr("Spectral Profile"),
-				"Error in setting the position:\n Please check that the box is specified correctly.",
-					QMessageBox::Close);
-		valid = false;
-	}
-	return valid;
-}
-
-bool QtProfile::fillBoxWorld( QList<double> &worldX, QList<double> & worldY )  {
-
-	double secondXRad = spinToRadians( false, trcxSpinBoxHr, trcxSpinBoxMin, trcxLineEditSec );
-	double firstXRad = spinToRadians( false, blcxSpinBoxHr, blcxSpinBoxMin, blcxLineEditSec );
-	double secondYRad = spinToRadians( true, trcySpinBoxDeg, trcySpinBoxMin, trcyLineEditSec );
-	double firstYRad = spinToRadians( true, blcySpinBoxDeg, blcySpinBoxMin, blcyLineEditSec );
-
-	double trcxRad;
-	double blcxRad;
-	double trcyRad;
-	double blcyRad;
-	bool valid = fillBasedOnBoxSpecification( &firstXRad, &firstYRad, &secondXRad, &secondYRad,
-			&blcxRad, &blcyRad, &trcxRad, &trcyRad );
-
-	if ( valid ){
-		//Initialize the vectors we will pass to the algorithm
-		worldX.append( blcxRad );
-		worldX.append( trcxRad );
-		worldY.append( blcyRad );
-		worldY.append( trcyRad );
-	}
-	return valid;
-}
-
-double QtProfile::spinToRadians( bool dec, QSpinBox *degSpinBox,
-		QSpinBox* minSpinBox, QLineEdit* secSpinBox) const {
-	int deg = degSpinBox -> value();
-	int min = minSpinBox -> value();
-	QString secStr = secSpinBox -> text();
-	float sec = secStr.toFloat( );
-	double radians = 0;
-	if ( dec ){
-		radians = Util::degMinSecToRadians( deg, min, sec );
-	}
-	else {
-		radians = Util::hrMinSecToRadians( deg, min, sec );
-	}
-	return radians;
-}
-
-bool QtProfile::populatePixels( QList<int> &pixelX, QList<int> &pixelY,
-		const QList<double> &worldX, const QList<double> &/*worldY*/ ) const{
-
-	bool success = true;
-	//What is in the pixels is not used to set the position, so we just
-	//fill the pixels with bogus values
-	for ( int i = 0; i < worldX.size(); i++ ){
-		pixelX.append( 0 );
-		pixelY.append( 0 );
-	}
-	return success;
-}
-
-bool QtProfile::populateWorlds(const QList<int> &pixelX, const QList<int> &pixelY,
-			QList<double> &worldX, QList<double> &worldY ) {
-
-	bool success = true;
-	CoordinateSystem cSys = image -> coordinates();
-	int nAxes = cSys.nPixelAxes();
-	for ( int i = 0; i < pixelX.size(); i++ ){
-		Vector<double> sourcePt( nAxes );
-		sourcePt[0] = pixelX[i];
-		sourcePt[1] = pixelY[i];
-		Vector<double> destinationPt;
-		success = cSys.toWorld( destinationPt, sourcePt );
-		if ( success ){
-			worldX.append( destinationPt[0]);
-			worldY.append( destinationPt[1]);
-		}
-		else {
-			String errorMessage = cSys.errorMessage();
-			*itsLog << LogIO::WARN << errorMessage <<LogIO::POST;
-			QString errorMsg = "Please check that the coordinates (";
-			errorMsg.append( QString::number( pixelX[i]) + ", ");
-			errorMsg.append( QString::number( pixelY[i]) + ")");
-			errorMsg.append( " are correct.");
-			QMessageBox::warning(this, tr("Spectral Profile"),
-			                              errorMsg, QMessageBox::Close);
-			break;
-		}
-	}
-	return success;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
 
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
 {
@@ -1402,14 +1048,12 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
     ok = setErrorPlotting( wxv, wyv);
 
     Int ordersOfM = scaleAxis();
-
-
     //remove the "/beam" in case of plotting flux
     if (itsPlotType==QtProfile::PFLUX){
     	Int pos = yUnit.indexOf("/beam", 0, Qt::CaseInsensitive);
         if ( pos > -1 ){
-        		yUnit.remove(pos,5);
-        		setPixelCanvasYUnits( yUnitPrefix, yUnit);
+        	yUnit.remove(pos,5);
+        	setPixelCanvasYUnits( yUnitPrefix, yUnit);
         }
     }
 
@@ -1421,6 +1065,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 
     momentSettingsWidget->setCollapseVals( z_xval );
     specFitSettingsWidget->setCollapseVals( z_xval );
+    positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
 }
 
 
@@ -1481,6 +1126,7 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
     setTitle( shape );
 
     setPositionStatus( pxv,pyv,wxv,wyv );
+    positioningWidget->updateRegion( pxv,pyv,wxv,wyv);
 
     //Get Profile Flux density v/s coordinateType
      bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
@@ -1957,31 +1603,16 @@ void QtProfile::printIt(QPrinter* printer)
 }
 
 QString QtProfile::getRaDec(double x, double y) {
-   QString raDec = "";
+
+   int h, m;
+   double ras;
+   Util::getRa( x, h, m, ras );
+   int d, c;
+   double decs;
    int sign = (y > 0) ? 1 : -1;
-   const double a = 572.95779513082;
-   double rah, ram, decd, decm;
-   double ras = x * 24 * a;
-   double decs = sign * y * 360 * a;
+   Util::getDec( y, d, c, decs );
 
-   if (ras > 86400) ras = 0;
-   if (decs > 1296000) decs = 0;
-
-   int h, m, d, c;
-   rah = ras / 3600;
-   h = (int)floor(rah);
-   ram = (rah - h) * 60;
-   m = (int)floor(ram);
-   ras = (ram - m) * 60;
-   ras = (int)(1000 * ras) / 1000.;
-
-   decd = decs / 3600;
-   d = (int)floor(decd);
-   decm = (decd - d) * 60;
-   c = (int)floor(decm);
-   decs = (decm - c) * 60;
-   decs = (int)(1000 * decs) / 1000.;
-
+   QString raDec = "";
    raDec.append((h < 10) ? "0" : "").append(QString().setNum(h)).append(":")
         .append((m < 10) ? "0" : "").append(QString().setNum(m)).append(":")
         .append((ras < 10) ? "0" : "").append(QString().setNum(ras))
@@ -1989,7 +1620,6 @@ QString QtProfile::getRaDec(double x, double y) {
         .append((d < 10) ? "0" : "").append(QString().setNum(d)).append("d")
         .append((c < 10) ? "0" : "").append(QString().setNum(c)).append("m")
         .append((decs < 10) ? "0" : "").append(QString().setNum(decs));
-
    return raDec;
 }
 
@@ -2094,47 +1724,18 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
 								const Vector<double> &wxv, const Vector<double> &wyv ) {
-		 Double xmean, ymean, minval, maxval;
+		 Double xmean, ymean;
 		if (WORLD_COORDINATES.compare( coordinate )== 0 ) {
-			if (wxv.size()==1){
-				xmean =  wxv[0];
-				ymean =  wyv[0];
-			}
-			else if (wxv.size()==2){
-				xmean =  0.5*(wxv[0]+wxv[1]);
-				ymean =  0.5*(wyv[0]+wyv[1]);
-			}
-			else {
-				minMax(minval, maxval, wxv);
-				xmean =  0.5*(minval + maxval);
-				minMax(minval, maxval, wyv);
-				ymean =  0.5*(minval + maxval);
-			}
 			//xpos, ypos and position only used for display
-			xpos = QString::number(floor(xmean+0.5));
-			ypos = QString::number(floor(ymean+0.5));
-
+			xpos = QString::number( Util::getCenter( wxv, xmean));
+			ypos = QString::number( Util::getCenter( wyv, ymean));
 			position = getRaDec(xmean, ymean);
 		}
 		else {
-			if (pxv.size()==1){
-				xmean = pxv[0];
-				ymean = pyv[0];
-			}
-			else if (pxv.size()==2){
-				xmean = 0.5*(pxv[0]+pxv[1]);
-				ymean = 0.5*(pyv[0]+pyv[1]);
-			}
-			else{
-				minMax(minval, maxval, pxv);
-				xmean =  0.5*(minval + maxval);
-				minMax(minval, maxval, pyv);
-				ymean =  0.5*(minval + maxval);
-			}
 
 			//xpos, ypos and position only used for display
-			xpos = QString::number(floor(xmean+0.5));
-			ypos = QString::number(floor(ymean+0.5));
+			xpos = QString::number(Util::getCenter(pxv,xmean));
+			ypos = QString::number(Util::getCenter(pyv,ymean));
 			position = QString("[%1, %2]").arg(xpos).arg(ypos);
 		}
 		profileStatus->showMessage(position);
@@ -2555,5 +2156,9 @@ QString QtProfile::getRaDec(double x, double y) {
 		if ( 0 <= frameIndex && frameIndex < static_cast<int>(z_xval.size()) ){
 			pixelCanvas->setFrameMarker( z_xval[frameIndex]);
 		}
+	}
+
+	void QtProfile::setPosition( const QList<double>& xValues, const QList<double>& yValues ){
+		emit adjustPosition( xValues[0], yValues[0], xValues[1], yValues[1]);
 	}
 }

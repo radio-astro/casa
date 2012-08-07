@@ -92,8 +92,14 @@ namespace casa {
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
+	    connect( this, SIGNAL( newCorners( double, double, double, double)),
+	    		result, SLOT( adjustCorners( double, double, double, double)));
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
+	}
+
+	void QtRegionSourceKernel::adjustPosition( double blcx, double blcy, double trcx, double trcy ){
+		emit newCorners( blcx, blcy, trcx, trcy );
 	}
 
 	std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {

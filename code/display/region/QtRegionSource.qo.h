@@ -79,6 +79,11 @@ namespace casa {
 					   const QList<double> &world_x, const QList<double> &world_y,
 					   const QList<int> &pixel_x, const QList<int> &pixel_y,
 					   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+		void newCorners( double, double, double, double);
+
+	public slots:
+			//Used to change the position of the source.
+			void adjustPosition( double blcx, double blcy, double trcx, double trcy );
 
 	    protected:
 		friend class QtRegionSource;
@@ -99,10 +104,12 @@ namespace casa {
 
 
 	    protected slots:
-		void loadRegions( bool &handled, const QString &path, const QString &type );
-		void updateRegionState(QtDisplayData*);
+			void loadRegions( bool &handled, const QString &path, const QString &type );
+			void updateRegionState(QtDisplayData*);
 
-	    private: 
+
+
+		private:
 
 		void load_crtf_regions( WorldCanvas *, const QString &path );
 		void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );

@@ -557,7 +557,6 @@ void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionE
 	//String const attributeName( "canvasYAttribute");
 	//worldCanvas -> getAttributeValue( attributeName, offsetY );
 	QPoint loc( ev.pixX(), sizeY - ev.pixY());
-	//qDebug() << "Ofset is " << offsetY;
 	String displayText;
 
 	for(uInt i=0; i<trackingRec.nfields(); i++) {
