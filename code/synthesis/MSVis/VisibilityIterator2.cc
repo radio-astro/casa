@@ -34,7 +34,10 @@
 
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
+
+using namespace std;
 
 #define CheckImplementationPointerR() Assert (readImpl_p != NULL);
 #define CheckImplementationPointerW() Assert (writeImpl_p != NULL);
@@ -212,6 +215,22 @@ FrequencySelection::toString () const
 FrequencySelections::FrequencySelections ()
 {}
 
+FrequencySelections::FrequencySelections (const FrequencySelections & other)
+{
+    for (Selections::const_iterator s = other.selections_p.begin();
+         s != other.selections_p.end(); s++){
+        selections_p.push_back ((* s)->clone());
+    }
+}
+
+FrequencySelections::~FrequencySelections ()
+{
+    for (Selections::const_iterator s = selections_p.begin();
+         s != selections_p.end(); s++){
+        delete (* s);
+    }
+}
+
 void
 FrequencySelections::add (const FrequencySelection & selection)
 {
@@ -226,123 +245,96 @@ FrequencySelections::add (const FrequencySelection & selection)
     selections_p.push_back (selection.clone());
 }
 
+FrequencySelections *
+FrequencySelections::clone () const
+{
+    return new FrequencySelections (* this);
+}
+
+FrequencySelection::FrameOfReference
+FrequencySelections::getFrameOfReference () const
+{
+    ThrowIf (selections_p.empty(), "FrequencySelections collection is empty.");
+
+    return selections_p.front()->getFrameOfReference();
+}
+
+Bool
+FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const
+{
+    SelectedWindows::const_iterator swi =
+        selectedWindows_p.find (make_pair (msIndex, spectralWindowId));
+
+    return swi != selectedWindows_p.end();
+}
+
+
 Int
 FrequencySelections::size () const
 {
     return (Int) selections_p.size();
 }
 
-ROVisibilityIterator2::ROVisibilityIterator2 ()
-: nMS_p (0), readImpl_p (NULL)
-{}
-
-ROVisibilityIterator2::ROVisibilityIterator2 (const MeasurementSet& ms,
-                                            const Block<Int>& sortColumns,
-                                            Double timeInterval,
-                                            const Factory & factory)
+FrequencySelection *
+FrequencySelectionChannels::clone () const
 {
-    construct (NULL, Block<MeasurementSet> (1, ms), sortColumns, True,
-               timeInterval, False, factory);
+    return new FrequencySelectionChannels (* this);
 }
 
-ROVisibilityIterator2::ROVisibilityIterator2 (const MeasurementSet& ms,
-                                            const Block<Int>& sortColumns,
-                                            const Bool addDefaultSortCols,
-                                            Double timeInterval)
+FrequencySelection *
+FrequencySelectionRawFrequency::clone () const
 {
-    construct (NULL, Block<MeasurementSet> (1, ms), sortColumns, addDefaultSortCols,
-               timeInterval, False, Factory ());
+    return new FrequencySelectionRawFrequency (* this);
+}
+
+FrequencySelection *
+FrequencySelectionReferential::clone () const
+{
+    return new FrequencySelectionReferential (* this);
+}
+
+
+ROVisibilityIterator2::ROVisibilityIterator2(const MeasurementSet& ms,
+                                             const Block<Int>& sortColumns,
+                                             const asyncio::PrefetchColumns * prefetchColumns,
+                                             const Bool addDefaultSortCols,
+                                             Double timeInterval)
+{
+    construct (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns,
+               addDefaultSortCols, timeInterval, False);
 }
 
 ROVisibilityIterator2::ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
-                                            const Block<Int>& sortColumns,
-                                            Double timeInterval)
+                                              const Block<Int>& sortColumns,
+                                              const asyncio::PrefetchColumns * prefetchColumns,
+                                              const Bool addDefaultSortCols,
+                                              Double timeInterval)
 {
-    construct (NULL, mss, sortColumns, True, timeInterval, False, Factory ());
-}
-
-ROVisibilityIterator2::ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
-                                            const Block<Int>& sortColumns,
-                                            const Bool addDefaultSortCols,
-                                            Double timeInterval)
-{
-    construct (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, False, Factory());
-}
-
-ROVisibilityIterator2::ROVisibilityIterator2(const asyncio::PrefetchColumns * prefetchColumns,
-                                           const MeasurementSet& ms,
-                                           const Block<Int>& sortColumns,
-                                           const Bool addDefaultSortCols,
-                                           Double timeInterval)
-{
-    construct (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns, addDefaultSortCols,
-               timeInterval, False, Factory ());
+    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols,
+               timeInterval, False);
 }
 
 ROVisibilityIterator2::ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                            const Block<MeasurementSet>& mss,
-                                            const Block<Int>& sortColumns,
-                                            const Bool addDefaultSortCols,
-                                            Double timeInterval)
+                                              const Block<MeasurementSet>& mss,
+                                              const Block<Int>& sortColumns,
+                                              const Bool addDefaultSortCols,
+                                              Double timeInterval,
+                                              Bool writable)
 {
-    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols, timeInterval, False, Factory());
-}
-
-ROVisibilityIterator2::ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                            const Block<MeasurementSet>& mss,
-                                            const Block<Int>& sortColumns,
-                                            const Bool addDefaultSortCols,
-                                            Double timeInterval,
-                                            Bool writable)
-{
-    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols, timeInterval, writable, Factory());
-}
-
-ROVisibilityIterator2::ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                            const ROVisibilityIterator2 & other)
-{
-    // For potentially creating an asynchronous ROVI from a synchronous one
-
-    Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
-
-    if (createAsAsynchronous){
-
-        Bool writable = dynamic_cast <const VisibilityIterator2 *> (& other) != NULL;
-
-        readImpl_p = new ViReadImplAsync2 (* prefetchColumns, * other.readImpl_p, writable);
-    }
-    else{
-        readImpl_p = new VisibilityIteratorReadImpl2 (* other.readImpl_p, this);
-    }
-}
-
-ROVisibilityIterator2::ROVisibilityIterator2 (const ROVisibilityIterator2 & other)
-{
-    if (other.readImpl_p == NULL){
-        readImpl_p = NULL;
-    }
-    else {
-        readImpl_p = other.readImpl_p -> clone(this);
-    }
+    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols,
+               timeInterval, writable);
 }
 
 
-ROVisibilityIterator2::~ROVisibilityIterator2 ()
-{
-    delete readImpl_p;
-}
 
 void
 ROVisibilityIterator2::construct (const asyncio::PrefetchColumns * prefetchColumns,
-                                 const Block<MeasurementSet>& mss,
-                                 const Block<Int>& sortColumns,
-                                 const Bool addDefaultSortCols,
-                                 Double timeInterval,
-                                 Bool writable,
-                                 const Factory & factory)
+                                  const Block<MeasurementSet>& mss,
+                                  const Block<Int>& sortColumns,
+                                  const Bool addDefaultSortCols,
+                                  Double timeInterval,
+                                  Bool writable)
 {
-    readImpl_p = factory (prefetchColumns, mss, sortColumns, addDefaultSortCols, timeInterval);
-
     if (readImpl_p == NULL) {
 
         // Factory didn't create the read implementation so decide whether to create a
@@ -351,12 +343,12 @@ ROVisibilityIterator2::construct (const asyncio::PrefetchColumns * prefetchColum
         Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
 
         if (createAsAsynchronous){
-            readImpl_p = new ViReadImplAsync2 (mss, * prefetchColumns, sortColumns,
-                                              addDefaultSortCols, timeInterval, writable);
+//            readImpl_p = new ViReadImplAsync2 (mss, * prefetchColumns, sortColumns,
+//                                               addDefaultSortCols, timeInterval, writable);
         }
         else{
             readImpl_p = new VisibilityIteratorReadImpl2 (this, mss, sortColumns,
-                                                         addDefaultSortCols, timeInterval);
+                                                          addDefaultSortCols, timeInterval);
         }
     }
 
@@ -367,24 +359,9 @@ ROVisibilityIterator2::construct (const asyncio::PrefetchColumns * prefetchColum
     }
 }
 
-ROVisibilityIterator2 &
-ROVisibilityIterator2::operator= (const ROVisibilityIterator2 &other)
+ROVisibilityIterator2::~ROVisibilityIterator2 ()
 {
-    // Kill off the current read implementation
-
-    if (readImpl_p != NULL){
-        delete readImpl_p;
-        readImpl_p = NULL;
-    }
-
-    // If the other's read implementation is not null then
-    // put a clone of it into this object's read implementation.
-
-    if (other.readImpl_p != NULL){
-
-        readImpl_p = other.readImpl_p->clone (this);
-    }
-    return * this;
+    delete readImpl_p;
 }
 
 ROVisibilityIterator2 &
@@ -445,7 +422,8 @@ ROVisibilityIterator2::antennaMounts () const
     return readImpl_p->antennaMounts ();
 }
 
-const Block<Int>& ROVisibilityIterator2::getSortColumns() const
+const Block<Int>&
+ROVisibilityIterator2::getSortColumns() const
 {
   CheckImplementationPointerR();
   return readImpl_p->getSortColumns();
@@ -488,13 +466,6 @@ ROVisibilityIterator2::attachTable () const
     return readImpl_p->attachTable ();
 }
 
-void
-ROVisibilityIterator2::attachVisBuffer (VisBuffer& vb)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->attachVisBuffer (vb);
-}
-
 Vector<MDirection>
 ROVisibilityIterator2::azel (Double time) const
 {
@@ -530,20 +501,6 @@ ROVisibilityIterator2::channel (Vector<Int>& chan) const
     readImpl_p->channel (chan);
 }
 
-Int
-ROVisibilityIterator2::channelGroupSize () const
-{
-    CheckImplementationPointerR ();
-    return readImpl_p->channelGroupSize ();
-}
-
-Int
-ROVisibilityIterator2::channelIndex () const
-{
-    CheckImplementationPointerR ();
-    return readImpl_p->channelIndex ();
-}
-
 void
 ROVisibilityIterator2::jonesC (Vector<SquareMatrix<Complex,2> >& cjones) const
 {
@@ -564,13 +521,6 @@ ROVisibilityIterator2::dataDescriptionId () const
 {
     CheckImplementationPointerR ();
     return readImpl_p->dataDescriptionId ();
-}
-
-void
-ROVisibilityIterator2::detachVisBuffer (VisBuffer& vb)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->detachVisBuffer (vb);
 }
 
 void
@@ -723,31 +673,6 @@ ROVisibilityIterator2::getBeamOffsets () const
 //{
 //    CheckImplementationPointerR ();
 //    return readImpl_p->getChannelIncrement ();
-//}
-
-void
-ROVisibilityIterator2::getChannelSelection (Block< Vector<Int> >& blockNGroup,
-                                           Block< Vector<Int> >& blockStart,
-                                           Block< Vector<Int> >& blockWidth,
-                                           Block< Vector<Int> >& blockIncr,
-                                           Block< Vector<Int> >& blockSpw)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getChannelSelection (blockNGroup, blockStart, blockWidth, blockIncr, blockSpw);
-}
-
-//Block<Int>
-//ROVisibilityIterator2::getChannelStart () const
-//{
-//    CheckImplementationPointerR ();
-//    return readImpl_p->getChannelStart ();
-//}
-//
-//Block<Int>
-//ROVisibilityIterator2::getChannelWidth () const
-//{
-//    CheckImplementationPointerR ();
-//    return readImpl_p->getChannelWidth ();
 //}
 
 void
@@ -960,13 +885,14 @@ ROVisibilityIterator2::getSpwInFreqRange (Block<Vector<Int> >& spw,
     readImpl_p->getSpwInFreqRange (spw, start, nchan, freqStart, freqEnd, freqStep, freqFrame);
 }
 
-void ROVisibilityIterator2::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe){
+void
+ROVisibilityIterator2::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe){
   CheckImplementationPointerR ();
   readImpl_p->getFreqInSpwRange(freqStart, freqEnd, freqframe);
 }
 
 
-SubChunkPair
+SubChunkPair2
 ROVisibilityIterator2::getSubchunkId () const
 {
     CheckImplementationPointerR ();
@@ -987,7 +913,7 @@ ROVisibilityIterator2::getTopoFreqs (Vector<Double> & lsrFreq, Vector<Double> & 
     readImpl_p->getTopoFreqs (lsrFreq, selFreq);
 }
 
-VisBuffer *
+VisBuffer2 *
 ROVisibilityIterator2::getVisBuffer ()
 {
     CheckImplementationPointerR ();
@@ -1034,9 +960,11 @@ ROVisibilityIterator2::getImagingWeightGenerator () const
 Bool
 ROVisibilityIterator2::isAsynchronous () const
 {
-    Bool isAsync = readImpl_p != NULL && dynamic_cast<const ViReadImplAsync2 *> (readImpl_p) != NULL;
+//    Bool isAsync = readImpl_p != NULL && dynamic_cast<const ViReadImplAsync2 *> (readImpl_p) != NULL;
+//
+//    return isAsync;
 
-    return isAsync;
+    return False; // for now
 }
 
 
@@ -1052,12 +980,12 @@ ROVisibilityIterator2::isAsynchronousIoEnabled()
     return isEnabled;
 }
 
-Bool
-ROVisibilityIterator2::isInSelectedSPW (const Int& spw)
-{
-    CheckImplementationPointerR ();
-    return readImpl_p->isInSelectedSPW (spw);
-}
+//Bool
+//ROVisibilityIterator2::isInSelectedSPW (const Int& spw)
+//{
+//    CheckImplementationPointerR ();
+//    return readImpl_p->isInSelectedSPW (spw);
+//}
 
 Bool
 ROVisibilityIterator2::isWritable () const
@@ -1095,24 +1023,24 @@ ROVisibilityIterator2::msId () const
 }
 
 Int
-ROVisibilityIterator2::nCorr () const
+ROVisibilityIterator2::nPolarizations () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->nCorr ();
+    return readImpl_p->nPolarizations ();
 }
 
 Int
-ROVisibilityIterator2::nRow () const
+ROVisibilityIterator2::nRows () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->nRow ();
+    return readImpl_p->nRows ();
 }
 
 Int
-ROVisibilityIterator2::nRowChunk () const
+ROVisibilityIterator2::nRowsInChunk () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->nRowChunk ();
+    return readImpl_p->nRowsInChunk ();
 }
 
 Int
@@ -1315,48 +1243,6 @@ ROVisibilityIterator2::scan (Vector<Int>& scans) const
     readImpl_p->scan (scans);
 }
 
-ROVisibilityIterator2&
-ROVisibilityIterator2::selectChannel (Int nGroup,
-                                     Int start,
-                                     Int width,
-                                     Int increment,
-                                     Int spectralWindow)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->selectChannel (nGroup, start, width, increment, spectralWindow);
-    readImpl_p->originChunks ();
-
-    return * this;
-}
-
-ROVisibilityIterator2&
-ROVisibilityIterator2::selectChannel (Block< Vector<Int> >& blockNGroup,
-                                     Block< Vector<Int> >& blockStart,
-                                     Block< Vector<Int> >& blockWidth,
-                                     Block< Vector<Int> >& blockIncr,
-                                     Block< Vector<Int> >& blockSpw)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->selectChannel (blockNGroup, blockStart, blockWidth, blockIncr, blockSpw);
-
-    return * this;
-}
-
-ROVisibilityIterator2&
-ROVisibilityIterator2::selectVelocity (Int nChan,
-                                      const MVRadialVelocity& vStart,
-                                      const MVRadialVelocity& vInc,
-                                      MRadialVelocity::Types rvType,
-                                      MDoppler::Types dType,
-                                      Bool precise)
-{
-    CheckImplementationPointerR ();
-
-    readImpl_p->selectVelocity (nChan, vStart, vInc, rvType, dType, precise);
-
-    return * this;
-}
-
 void
 ROVisibilityIterator2::setAsyncEnabled (Bool enable)
 {
@@ -1380,11 +1266,12 @@ ROVisibilityIterator2::setFrequencySelection (const FrequencySelections & select
                      nMS_p, selection.size()));
 
     CheckImplementationPointerR ();
-    readImpl_p->setFrequencySelectin (selection);
+    readImpl_p->setFrequencySelection (selection);
 }
 
 
-Double ROVisibilityIterator2::getInterval() const
+Double
+ROVisibilityIterator2::getInterval() const
 {
     CheckImplementationPointerR ();
     return readImpl_p->getInterval();
@@ -1532,16 +1419,6 @@ ROVisibilityIterator2::uvwMat (Matrix<Double>& uvwmat) const
     readImpl_p->uvwMat (uvwmat);
 }
 
-ROVisibilityIterator2&
-ROVisibilityIterator2::velInterpolation (const String& type)
-{
-    CheckImplementationPointerR ();
-
-    readImpl_p->velInterpolation (type);
-
-    return * this;
-}
-
 void
 ROVisibilityIterator2::visibility (Cube<Complex>& vis,
                                   DataColumn whichOne) const
@@ -1586,127 +1463,31 @@ ROVisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
     readImpl_p->weightSpectrum (wtsp);
 }
 
-
-
-VisibilityIterator2::VisibilityIterator2 ()
-: ROVisibilityIterator2 (),
-  writeImpl_p (NULL)
-{}
-
-VisibilityIterator2::VisibilityIterator2 (MeasurementSet & ms,
-                                        const Block<Int>& sortColumns,
-                                        Double timeInterval)
-: ROVisibilityIterator2 (NULL, Block<MeasurementSet> (1, ms), sortColumns,
-                        True, timeInterval, True)
-
-{
-    construct ();
-}
-
-VisibilityIterator2::VisibilityIterator2 (MeasurementSet & ms,
-                                        const Block<Int>& sortColumns,
-                                        const Bool addDefaultSortCols,
-                                        Double timeInterval)
-: ROVisibilityIterator2 (NULL, Block<MeasurementSet> (1, ms), sortColumns,
-                        addDefaultSortCols, timeInterval, True)
-{
-    construct ();
-}
-
-VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
-                                        const Block<Int>& sortColumns,
-                                        Double timeInterval)
-: ROVisibilityIterator2 (NULL, mss, sortColumns, True, timeInterval, True)
-{
-    construct ();
-}
-
-VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
-                                        const Block<Int>& sortColumns,
-                                        const Bool addDefaultSortCols,
-                                        Double timeInterval)
-: ROVisibilityIterator2 (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, True)
-{
-    construct ();
-}
-
-VisibilityIterator2::VisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                        MeasurementSet & ms,
-                                        const Block<Int>& sortColumns,
-                                        const Bool addDefaultSortCols,
-                                        Double timeInterval)
+VisibilityIterator2::VisibilityIterator2 (const MeasurementSet & ms,
+                                          const Block<Int>& sortColumns,
+                                          const asyncio::PrefetchColumns * prefetchColumns,
+                                          const Bool addDefaultSortCols,
+                                          Double timeInterval)
 : ROVisibilityIterator2 (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns,
-                        addDefaultSortCols, timeInterval, True)
+                         addDefaultSortCols, timeInterval, True)
 {
     construct ();
 }
 
-
-VisibilityIterator2::VisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                        const Block<MeasurementSet>& mss,
-                                        const Block<Int>& sortColumns,
-                                        const Bool addDefaultSortCols,
-                                        Double timeInterval)
+VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
+                                          const Block<Int>& sortColumns,
+                                          const asyncio::PrefetchColumns * prefetchColumns,
+                                          const Bool addDefaultSortCols,
+                                          Double timeInterval)
 : ROVisibilityIterator2 (prefetchColumns, mss, sortColumns,
-                        addDefaultSortCols, timeInterval, True)
+                         addDefaultSortCols, timeInterval, True)
 {
     construct ();
 }
-
-
-VisibilityIterator2::VisibilityIterator2 (const VisibilityIterator2 & other)
-: ROVisibilityIterator2 (other)
-{
-    if (other.writeImpl_p == NULL){
-        writeImpl_p = NULL;
-    }
-    else{
-        writeImpl_p = other.writeImpl_p->clone(this);
-    }
-}
-
-VisibilityIterator2::VisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                                          const VisibilityIterator2 & other)
-: ROVisibilityIterator2 (prefetchColumns, other)
-{
-    Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
-
-    if (createAsAsynchronous){
-        writeImpl_p = new ViWriteImplAsync2 (* prefetchColumns, * other.writeImpl_p, this);
-    }
-    else{
-        writeImpl_p = other.writeImpl_p -> clone(this);
-    }
-}
-
 
 VisibilityIterator2::~VisibilityIterator2 ()
 {
     delete writeImpl_p;
-}
-
-VisibilityIterator2 &
-VisibilityIterator2::operator= (const VisibilityIterator2 & other)
-{
-    // Let the superclass handle its part of the assignment
-
-    ROVisibilityIterator2::operator= (other);
-
-    // Kill off the current write implementation
-
-    if (writeImpl_p != NULL){
-        delete writeImpl_p;
-        writeImpl_p = NULL;
-    }
-
-    // If the other's read implementation is not null then
-    // put a clone of it into this object's read implementation.
-
-    if (other.writeImpl_p != NULL){
-
-        writeImpl_p = other.writeImpl_p->clone (this);
-    }
-    return * this;
 }
 
 VisibilityIterator2 &
@@ -1737,7 +1518,7 @@ void
 VisibilityIterator2::construct ()
 {
     if (isAsynchronous ()){
-        writeImpl_p = new ViWriteImplAsync2 (this);
+/////////        writeImpl_p = new ViWriteImplAsync2 (this);
     }
     else{
         writeImpl_p = new VisibilityIteratorWriteImpl2 (this);
@@ -1842,15 +1623,15 @@ VisibilityIterator2::setWeightSpectrum (const Cube<Float>& wtsp)
     writeImpl_p->setWeightSpectrum (wtsp);
 }
 
-void VisibilityIterator2::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
+void
+VisibilityIterator2::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
   CheckImplementationPointerW ();
   writeImpl_p->putModel(rec, iscomponentlist, incremental);
 
 }
 
-
-
-void VisibilityIterator2::writeBack (VisBuffer * vb)
+void
+VisibilityIterator2::writeBack (VisBuffer2 * vb)
 {
     CheckImplementationPointerW ();
     writeImpl_p->writeBack (vb);

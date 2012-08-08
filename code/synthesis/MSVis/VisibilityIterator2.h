@@ -51,6 +51,7 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+#include <boost/noncopyable.hpp>
 #include <map>
 #include <set>
 #include <vector>
@@ -59,8 +60,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
 
+class RecordInterface;
+
 namespace vi {
-    class VisBufferImpl;
+    class VisBufferImpl2;
 }
 
 namespace asyncio {
@@ -148,7 +151,7 @@ class PrefetchColumns;
 
 } // end namespace asyncio
 
-class VisBuffer;
+class VisBuffer2;
 class VisibilityIteratorReadImpl2;
 class VisibilityIteratorWriteImpl2;
 
@@ -158,7 +161,7 @@ public:
 
     typedef enum { AsSelected, Channels, Topo, Lsrk, N_FramesOfReference} FrameOfReference;
 
-    virtual ~FrequencySelection ();
+    virtual ~FrequencySelection (){}
 
     virtual FrequencySelection * clone () const = 0;
     FrameOfReference getFrameOfReference () const;
@@ -179,14 +182,23 @@ class FrequencySelections {
 public:
 
     FrequencySelections ();
+    FrequencySelections (const FrequencySelections & other);
+    ~FrequencySelections ();
 
     void add (const FrequencySelection & selection);
+    FrequencySelections * clone () const;
     FrequencySelection::FrameOfReference getFrameOfReference () const;
+    Bool isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const;
     Int size () const;
 
 private:
 
-    std::vector<FrequencySelection *> selections_p;
+    typedef std::set<pair<Int, Int> > SelectedWindows;
+
+    SelectedWindows selectedWindows_p;
+
+    typedef std::vector<FrequencySelection *> Selections;
+    Selections selections_p;
 };
 
 class FrequencySelectionChannels : public FrequencySelection {
@@ -196,7 +208,7 @@ public:
     FrequencySelectionChannels ();
 
     void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
-
+    FrequencySelection * clone () const;
 };
 
 class FrequencySelectionRawFrequency : public FrequencySelection {
@@ -205,7 +217,9 @@ public:
 
     FrequencySelectionRawFrequency ();
 
-    void add (Double bottomFrequency, Double topFrequency);
+    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
+    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
+    FrequencySelection * clone () const;
 };
 
 class FrequencySelectionReferential : public FrequencySelection {
@@ -214,31 +228,33 @@ public:
 
     FrequencySelectionReferential (FrameOfReference);
 
-    void add (Double bottomFrequency, Double topFrequency);
+    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
+    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
+    FrequencySelection * clone () const;
 };
 
 
 
-#if 0
-class SubChunkPair : public std::pair<Int, Int>{
+
+class SubChunkPair2 : public std::pair<Int, Int>{
 
 public:
 
     // First component is Chunk and second is subchunk
 
-    SubChunkPair () { resetToOrigin ();}
-    SubChunkPair (Int a , Int b) : pair<Int,Int> (a,b) {}
+    SubChunkPair2 () { resetToOrigin ();}
+    SubChunkPair2 (Int a , Int b) : pair<Int,Int> (a,b) {}
 
-    Bool operator== (const SubChunkPair & other){
+    Bool operator== (const SubChunkPair2 & other){
         return first == other.first && second == other.second;
     }
 
-    Bool operator< (const SubChunkPair & other){
+    Bool operator< (const SubChunkPair2 & other){
         return first < other.first ||
                (first == other.first && second < other.second);
     }
 
-    Bool atOrigin () const { return * this == SubChunkPair ();}
+    Bool atOrigin () const { return * this == SubChunkPair2 ();}
     Int chunk () const { return first;}
     void incrementSubChunk () { second ++;}
     void incrementChunk () { first ++; second = 0; }
@@ -252,15 +268,12 @@ public:
     Int subchunk () const { return second;}
     String toString () const;
 
-    static SubChunkPair noMoreData ();
+    static SubChunkPair2 noMoreData ();
 
 private:
 
 
 };
-#else
-class SubChunkPair;
-#endif
 
 // <summary>
 // ROVisibilityIterator2 iterates through one or more readonly MeasurementSets
@@ -359,12 +372,13 @@ class SubChunkPair;
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-class ROVisibilityIterator2
+class ROVisibilityIterator2 : private boost::noncopyable
 {
     friend class AsyncEnabler;
     friend class VisibilityIteratorReadImpl2;
+    friend class VisibilityIteratorWriteImpl2;
     friend class ViReadImplAsync2;
-    friend class casa::vi::VisBufferImpl;
+    friend class casa::vi::VisBufferImpl2;
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected functions
                                 // VLAT should not access private parts, especially variables
 public:
@@ -404,8 +418,6 @@ public:
       Corrected    // Corrected data
   } DataColumn;
 
-  // Default constructor - useful only to assign another iterator later
-  ROVisibilityIterator2();
   // Construct from an MS and a Block of MS column enums specifying the 
   // iteration order.  If no order is specified, it uses the default sort
   // order of MSIter, which is not necessarily the raw order of ms!
@@ -421,57 +433,22 @@ public:
   // be requested.  At present the channel group iteration will always occur
   // before the interval iteration.
   ROVisibilityIterator2(const MeasurementSet& ms,
-		       const Block<Int>& sortColumns,
-		       Double timeInterval=0,
-		       const Factory & factory = Factory())  DEPRECATED_METHOD ();
-  // Same as above, but with the option of using the raw order of ms
-  // (addDefaultSortCols=false).
-  ROVisibilityIterator2(const MeasurementSet& ms,
-		       const Block<Int>& sortColumns,
-		       const Bool addDefaultSortCols,
-		       Double timeInterval=0)  DEPRECATED_METHOD ();
- 
-  // Same as previous constructors, but with multiple MSs to iterate over.
-  ROVisibilityIterator2(const Block<MeasurementSet>& mss,
-		       const Block<Int>& sortColumns, 
-		       Double timeInterval=0)  DEPRECATED_METHOD ();
-
-  ROVisibilityIterator2(const Block<MeasurementSet>& mss,
-                       const Block<Int>& sortColumns,
-                       const Bool addDefaultSortCols,
-                       Double timeInterval=0) DEPRECATED_METHOD ();
-
-  ROVisibilityIterator2(const asyncio::PrefetchColumns * prefetchColumns,
-                       const MeasurementSet& ms,
-		       const Block<Int>& sortColumns,
-		       const Bool addDefaultSortCols = True,
-		       Double timeInterval = 0) DEPRECATED_METHOD ();
-
-  ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                        const Block<MeasurementSet>& mss,
-                        const Block<Int>& sortColumns,
-                        const Bool addDefaultSortCols = True,
-                        Double timeInterval = 0) DEPRECATED_METHOD ();
-
-  ROVisibilityIterator2(const MeasurementSet& ms,
-		       const Block<Int>& sortColumns,
-                       const asyncio::PrefetchColumns * prefetchColumns = 0,
-                       const Bool addDefaultSortCols = True,
-		       Double timeInterval = 0,
-		       const Factory & factory = Factory());
-
-  ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
                         const Block<Int>& sortColumns,
                         const asyncio::PrefetchColumns * prefetchColumns = 0,
                         const Bool addDefaultSortCols = True,
-                        Double timeInterval = 0,
-                        const Factory & factory = Factory());
+                        Double timeInterval = 0);
+
+  ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
+                         const Block<Int>& sortColumns,
+                         const asyncio::PrefetchColumns * prefetchColumns = 0,
+                         const Bool addDefaultSortCols = True,
+                         Double timeInterval = 0);
 
   // Copy construct. This calls the assigment operator.
-  ROVisibilityIterator2(const ROVisibilityIterator2 & other);
-  ROVisibilityIterator2(const asyncio::PrefetchColumns * prefetchColumns, const ROVisibilityIterator2 & other);
+  //ROVisibilityIterator2(const ROVisibilityIterator2 & other);
+  //ROVisibilityIterator2(const asyncio::PrefetchColumns * prefetchColumns, const ROVisibilityIterator2 & other);
   // Assigment. Any attached VisBuffers are lost in the assign.
-  ROVisibilityIterator2 & operator=(const ROVisibilityIterator2 &other);
+  //ROVisibilityIterator2 & operator=(const ROVisibilityIterator2 &other);
   // Destructor
   virtual ~ROVisibilityIterator2();
   
@@ -527,9 +504,9 @@ public:
   // size determines the actual maximum.
   void setRowBlocking(Int nRows=0);
 
-  SubChunkPair getSubchunkId () const;
+  SubChunkPair2 getSubchunkId () const;
 
-  VisBuffer * getVisBuffer ();
+  VisBuffer2 * getVisBuffer ();
 
   //reference to actual ms in interator 
   const MeasurementSet& ms() const;
@@ -549,7 +526,7 @@ public:
   // original ms row
   virtual void rowIds(Vector<uInt>& rowids) const;
   // Return the numbers of rows in the current chunk
-  Int nRowChunk() const;
+  Int nRowsInChunk() const;
   // Call to use the slurp i/o method for all scalar columns. This
   // will set the BucketCache cache size to the full column length
   // and cause the full column to be cached in memory, if
@@ -583,27 +560,12 @@ public:
   // At present the choice is limited to : nearest and linear, linear
   // is the default.
   // TODO: add cubic, spline and possibly FFT
-  ROVisibilityIterator2& velInterpolation(const String& type);
   // Channel selection - only the selected channels will be returned by the
   // access functions. The default spectralWindow is the current one (or 0)
   // This allows selection of the input channels, producing
   // nGroup groups of width output channels. Default is to return all channels
   // in a single group.
-  ROVisibilityIterator2& selectChannel(Int nGroup=1, Int start=0, Int width=0,
-				      Int increment=1, Int spectralWindow=-1);
-  //Same as above except when multiple ms's are to be accessed
-  ROVisibilityIterator2& selectChannel(Block< Vector<Int> >& blockNGroup,
-				      Block< Vector<Int> >& blockStart,
-				      Block< Vector<Int> >& blockWidth,
-				      Block< Vector<Int> >& blockIncr,
-				      Block< Vector<Int> >& blockSpw);
-  //get the channel selection ...the block over the number of ms's associated
-  // with this iterator
-  void getChannelSelection(Block< Vector<Int> >& blockNGroup,
-			   Block< Vector<Int> >& blockStart,
-			   Block< Vector<Int> >& blockWidth,
-			   Block< Vector<Int> >& blockIncr,
-			   Block< Vector<Int> >& blockSpw);
+
   // Translate slicesv from the form returned by MSSelection::getChanSlices()
   // to matv as used by setChanAveBounds().  widthsv is the channel averaging
   // width for each _selected_ spw.
@@ -650,19 +612,19 @@ public:
 protected:
 
   ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                        const Block<MeasurementSet>& mss,
-                        const Block<Int>& sortColumns,
-                        const Bool addDefaultSortCols,
-                        Double timeInterval,
-                        Bool writable);
+                         const Block<MeasurementSet>& mss,
+                         const Block<Int>& sortColumns,
+                         const Bool addDefaultSortCols,
+                         Double timeInterval,
+                         Bool writable);
+
 
   void construct (const asyncio::PrefetchColumns * prefetchColumns,
                   const Block<MeasurementSet>& mss,
                   const Block<Int>& sortColumns,
                   const Bool addDefaultSortCols,
                   Double timeInterval,
-                  Bool writable,
-                  const Factory & factory);
+                  Bool writable);
 
   VisibilityIteratorReadImpl2 * getReadImpl() const;
 
@@ -700,9 +662,9 @@ protected:
   Int numberDDId();
 
   // Return the number of correlations in the current iteration
-  Int nCorr() const;
+  Int nPolarizations() const;
   // Return the number of rows in the current iteration
-  Int nRow() const;
+  Int nRows () const;
   // Return the number of sub-intervals in the current chunk
   Int nSubInterval() const;
 
@@ -855,18 +817,6 @@ protected:
 //     |                               |
 //     +-------------------------------+
 
-
-  // Attach a VisBuffer object.
-  // Note that while more than one VisBuffer may be attached, only the
-  // last one is actively updated. A Stack is kept internally, so after
-  // a detach, the previous VisBuffer becomes active again.
-  void attachVisBuffer(VisBuffer& vb);
-  // Detach a VisBuffer object.
-  // If the object detached is not the last one attached an exception
-  // is thrown.
-  void detachVisBuffer(VisBuffer& vb);
-
-
   bool existsColumn (VisBufferComponents::EnumType id) const;
   // advance the iteration
   virtual void advance();
@@ -924,7 +874,7 @@ protected:
   // cache extra tiles.
   virtual void setTileCache();
   //Check if spw is in selected SPW for actual ms
-  Bool isInSelectedSPW(const Int& spw);
+  ////Bool isInSelectedSPW(const Int& spw);
   // Updates, if necessary, rowIds_p member for the current chunk
   void update_rowIds() const;
   void setAsyncEnabled (Bool enable);
@@ -1025,46 +975,19 @@ public:
   // Constructors.
   // Note: The VisibilityIterator2 is not initialized correctly by default, you
   // need to call origin() before using it to iterate.
-  VisibilityIterator2();
-  VisibilityIterator2(MeasurementSet & ms, const Block<Int>& sortColumns,
-       Double timeInterval=0) DEPRECATED_METHOD();
-  VisibilityIterator2(MeasurementSet & ms, const Block<Int>& sortColumns,
-		     const Bool addDefaultSortCols,
-		     Double timeInterval=0) DEPRECATED_METHOD();
-  // Same as previous constructor, but with multiple MSs to iterate over.
-  VisibilityIterator2(const Block<MeasurementSet>& mss,
-		       const Block<Int>& sortColumns, 
-		       Double timeInterval=0) DEPRECATED_METHOD();
-  VisibilityIterator2(const Block<MeasurementSet>& mss,
-		     const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
-		       Double timeInterval=0) DEPRECATED_METHOD();
-  VisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                      const Block<MeasurementSet>& mss,
-                      const Block<Int>& sortColumns,
-                      const Bool addDefaultSortCols = True,
-                      Double timeInterval = 0) DEPRECATED_METHOD();
-  VisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
-                      MeasurementSet & mss,
-                      const Block<Int>& sortColumns,
-                      const Bool addDefaultSortCols = True,
-                      Double timeInterval = 0) DEPRECATED_METHOD();
 
   VisibilityIterator2(const MeasurementSet& ms,
-                     const Block<Int>& sortColumns,
-                     const asyncio::PrefetchColumns * prefetchColumns = 0,
-                     const Bool addDefaultSortCols = True,
-                     Double timeInterval = 0,
-                     const Factory & factory = Factory());
-
-  VisibilityIterator2 (const Block<MeasurementSet>& mss,
                       const Block<Int>& sortColumns,
                       const asyncio::PrefetchColumns * prefetchColumns = 0,
                       const Bool addDefaultSortCols = True,
-                      Double timeInterval = 0,
-                      const Factory & factory = Factory());
+                      Double timeInterval = 0);
 
-  VisibilityIterator2(const VisibilityIterator2 & MSI);
-  VisibilityIterator2(const asyncio::PrefetchColumns * prefetchColumns, const VisibilityIterator2 & other);
+  VisibilityIterator2 (const Block<MeasurementSet>& mss,
+                       const Block<Int>& sortColumns,
+                       const asyncio::PrefetchColumns * prefetchColumns = 0,
+                       const Bool addDefaultSortCols = True,
+                       Double timeInterval = 0);
+
   
   virtual ~VisibilityIterator2();
 
@@ -1126,7 +1049,7 @@ public:
   void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
 
 
-  void writeBack (VisBuffer *);
+  void writeBack (VisBuffer2 *);
 
 protected:
 

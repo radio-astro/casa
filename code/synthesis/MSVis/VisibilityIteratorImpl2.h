@@ -23,47 +23,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VisibilityIterator.h,v 19.14 2006/02/28 04:48:58 mvoronko Exp $
+//# $Id: VisibilityIterator2.h,v 19.14 2006/02/28 04:48:58 mvoronko Exp $
 
 #ifndef MSVIS_VISIBILITYITERATORIMPL2_H
 #define MSVIS_VISIBILITYITERATORIMPL2_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Slicer.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Containers/Stack.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/Stokes.h>
-#include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVDoppler.h>
+#include <casa/aips.h>
 #include <measures/Measures/MCDoppler.h>
 #include <measures/Measures/MDoppler.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/Stokes.h>
+#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MeasurementSets/MSIter.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <scimath/Mathematics/RigidVector.h>
+#include <scimath/Mathematics/SquareMatrix.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <casa/BasicSL/String.h>
-#include <scimath/Mathematics/SquareMatrix.h>
-#include <scimath/Mathematics/RigidVector.h>
 
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
-#include <ms/MeasurementSets/MSIter.h>
-
+#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
-class VisBuffer;
+
+class VisBuffer2;
 
 
 
 // <summary>
-// ROVisibilityIterator iterates through one or more readonly MeasurementSets
+// ROVisibilityIterator2 iterates through one or more readonly MeasurementSets
 // </summary>
 
 // <use visibility=export>
@@ -78,11 +79,11 @@ class VisBuffer;
 // </prerequisite>
 //
 // <etymology>
-// The ROVisibilityIterator is a readonly iterator returning visibilities
+// The ROVisibilityIterator2 is a readonly iterator returning visibilities
 // </etymology>
 //
 // <synopsis>
-// ROVisibilityIterator provides iteration with various sort orders
+// ROVisibilityIterator2 provides iteration with various sort orders
 // for one or more MSs. It has member functions to retrieve the fields
 // commonly needed in synthesis calibration and imaging.
 //
@@ -112,7 +113,7 @@ class VisBuffer;
 //   <li> sort out what to do with weights when interpolating
 // </todo>
 
-class VisibilityIteratorReadImpl2 {
+class VisibilityIteratorReadImpl2 : private boost::noncopyable{
 
     friend class AsyncEnabler;
     friend class ViReadImplAsync2;
@@ -147,8 +148,8 @@ public:
 
     //    class AsyncEnabler {
     //    public:
-    //        AsyncEnabler (ROVisibilityIterator &);
-    //        AsyncEnabler (ROVisibilityIterator *);
+    //        AsyncEnabler (ROVisibilityIterator2 &);
+    //        AsyncEnabler (ROVisibilityIterator2 *);
     //        ~AsyncEnabler ();
     //
     //        void release ();
@@ -156,7 +157,7 @@ public:
     //    private:
     //
     //        Bool oldEnabledState_p;
-    //        ROVisibilityIterator * roVisibilityIterator_p;
+    //        ROVisibilityIterator2 * roVisibilityIterator2_p;
     //    };
 
     // Default constructor - useful only to assign another iterator later
@@ -192,24 +193,20 @@ public:
 //                                Double timeInterval = 0);
 
     VisibilityIteratorReadImpl2 (ROVisibilityIterator2 * rovi,
-                                const Block<MeasurementSet> & mss,
-                                const Block<Int> & sortColumns,
-                                const Bool addDefaultSortCols,
-                                Double timeInterval);
+                                 const Block<MeasurementSet> & mss,
+                                 const Block<Int> & sortColumns,
+                                 Bool addDefaultSortCols,
+                                 Double timeInterval,
+                                 Bool createVb = True);
 
     // Copy construct. This calls the assigment operator.
     VisibilityIteratorReadImpl2 (const VisibilityIteratorReadImpl2 & other,
                                 ROVisibilityIterator2 * rovi);
 
-    // Assigment. Any attached VisBuffers are lost in the assign.
-    VisibilityIteratorReadImpl2 & operator= (const VisibilityIteratorReadImpl2 & other);
-
     // Destructor
     virtual ~VisibilityIteratorReadImpl2 ();
 
-    virtual VisibilityIteratorReadImpl2 * clone (ROVisibilityIterator2 * rovi) const;
-
-    // Members
+        // Members
 
     Bool isAsyncEnabled () const;
 
@@ -246,30 +243,25 @@ public:
     // Return False if no more data (in current chunk)
     virtual Bool more () const;
 
-    virtual SubChunkPair getSubchunkId () const;
+    virtual SubChunkPair2 getSubchunkId () const;
 
     virtual const Block<Int>& getSortColumns() const;
 
+    virtual void setFrequencySelection (const FrequencySelections & selection);
+
     // Return False if no more 'Chunks' of data left
-    virtual Bool moreChunks () const {
-        return msIter_p.more ();
-    }
+    virtual Bool moreChunks () const;
 
     // Check if ms has change since last iteration
-    virtual Bool newMS () const {
-        return msIter_p.newMS ();
-    }
+    virtual Bool newMS () const;
 
-    virtual Int msId () const {
-        return msIter_p.msId ();
-    }
+    virtual Int msId () const;
 
-    virtual VisBuffer * getVisBuffer ();
+    virtual VisBuffer2 * getVisBuffer ();
 
     //reference to actual ms in interator
-    virtual const MeasurementSet & ms () const {
-        return msIter_p.ms ();
-    }
+    virtual const MeasurementSet & ms () const;
+
     // Advance to the next Chunk of data
     virtual VisibilityIteratorReadImpl2 & nextChunk ();
 
@@ -345,24 +337,17 @@ public:
     static Double hourangCalculate (Double time, MSDerivedValues & msd, const MEpoch & mEpoch0);
 
     // Return the current FieldId
-    virtual Int fieldId () const {
-        return msIter_p.fieldId ();
-    }
+    virtual Int fieldId () const;
+
 
     // Return the current ArrayId
-    virtual Int arrayId () const {
-        return msIter_p.arrayId ();
-    }
+    virtual Int arrayId () const;
 
     // Return the current Field Name
-    virtual String fieldName () const {
-        return msIter_p.fieldName ();
-    }
+    virtual String fieldName () const;
 
     // Return the current Source Name
-    virtual String sourceName () const {
-        return msIter_p.sourceName ();
-    }
+    virtual String sourceName () const;
 
     // Return flag for each polarization, channel and row
     virtual Cube<Bool> & flag (Cube<Bool> & flags) const;
@@ -399,14 +384,10 @@ public:
     virtual Vector<Double> & lsrFrequency (Vector<Double> & freq) const;
 
     // Return the current phase center as an MDirection
-    virtual const MDirection & phaseCenter () const {
-        return msIter_p.phaseCenter ();
-    }
+    virtual const MDirection & phaseCenter () const;
 
     // Return frame for polarization (returns PolFrame enum)
-    virtual Int polFrame () const {
-        return msIter_p.polFrame ();
-    }
+    virtual Int polFrame () const;
 
     // Return the correlation type (returns Stokes enums)
     virtual Vector<Int> & corrType (Vector<Int> & corrTypes) const;
@@ -418,19 +399,13 @@ public:
     virtual Matrix<Float> & sigmaMat (Matrix<Float> & sigmat) const;
 
     // Return current SpectralWindow
-    virtual Int spectralWindow () const {
-        return msIter_p.spectralWindowId ();
-    }
+    virtual Int spectralWindow () const;
 
     // Return current Polarization Id
-    virtual Int polarizationId () const {
-        return msIter_p.polarizationId ();
-    }
+    virtual Int polarizationId () const;
 
     // Return current DataDescription Id
-    virtual Int dataDescriptionId () const {
-        return msIter_p.dataDescriptionId ();
-    }
+    virtual Int dataDescriptionId () const;
 
     // Return MJD midpoint of interval.
     virtual Vector<Double> & time (Vector<Double> & t) const;
@@ -481,35 +456,21 @@ public:
     const VisImagingWeight & getImagingWeightGenerator () const;
 
     // Return True if FieldId/Source has changed since last iteration
-    virtual Bool newFieldId () const {
-        return (curStartRow_p == 0 && msIter_p.newField ());
-    }
+    virtual Bool newFieldId () const;
 
     // Return True if arrayID has changed since last iteration
-    virtual Bool newArrayId () const {
-        return (curStartRow_p == 0 && msIter_p.newArray ());
-    }
+    virtual Bool newArrayId () const;
 
     // Return True if SpectralWindow has changed since last iteration
-    virtual Bool newSpectralWindow () const {
-        return (curStartRow_p == 0 && msIter_p.newSpectralWindow ());
-    }
+    virtual Bool newSpectralWindow () const;
 
-    // Return the index of the first channel of the current channel group
-    // in the total (selected) spectrum.
-    virtual Int channelIndex () const;
-
-    // Return the width of the current group of channels, i.e.,
-    // the number of channels returned by visibility () and frequency ().
-    virtual Int channelGroupSize () const;
 
     // Return the number of correlations in the current iteration
-    virtual Int nCorr () const {
-        return nPol_p;
-    };
+
+    virtual Int nPolarizations () const;
 
     // Return the number of rows in the current iteration
-    virtual Int nRow () const;
+    virtual Int nRows () const;
 
     // Return the row ids as from the original root table. This is useful
     // to find correspondance between a given row in this iteration to the
@@ -517,9 +478,11 @@ public:
     virtual Vector<uInt> & rowIds (Vector<uInt> & rowids) const;
 
     // Return the numbers of rows in the current chunk
-    virtual Int nRowChunk () const;
+
+    virtual Int nRowsInChunk () const;
 
     // Return the number of sub-intervals in the current chunk
+
     virtual Int nSubInterval () const;
 
     // Call to use the slurp i/o method for all scalar columns. This
@@ -547,42 +510,11 @@ public:
     // By default calculations are done for a single velocity with offsets
     // applied for the others (ok for non-rel velocities with RADIO defn),
     // set precise to True to do a full conversion for each output channel. (NYI)
-    virtual VisibilityIteratorReadImpl2 &
-    selectVelocity (Int nChan,
-                    const MVRadialVelocity & vStart, const MVRadialVelocity & vInc,
-                    MRadialVelocity::Types rvType = MRadialVelocity::LSR,
-                    MDoppler::Types dType = MDoppler::RADIO, Bool precise = False);
 
     // Select the velocity interpolation scheme.
     // At present the choice is limited to : nearest and linear, linear
     // is the default.
     // TODO: add cubic, spline and possibly FFT
-    virtual VisibilityIteratorReadImpl2 & velInterpolation (const String & /*type*/) {return * this; }
-
-    // Channel selection - only the selected channels will be returned by the
-    // access functions. The default spectralWindow is the current one (or 0)
-    // This allows selection of the input channels, producing
-    // nGroup groups of width output channels. Default is to return all channels
-    // in a single group.
-    virtual VisibilityIteratorReadImpl2 & selectChannel (Int nGroup = 1, Int start = 0, Int width = 0,
-                                                        Int increment = 1, Int spectralWindow = -1);
-
-    //Same as above except when multiple ms's are to be accessed
-
-    virtual VisibilityIteratorReadImpl2 & selectChannel (const Block< Vector<Int> > & blockNGroup,
-                                                        const Block< Vector<Int> > & blockStart,
-                                                        const Block< Vector<Int> > & blockWidth,
-                                                        const Block< Vector<Int> > & blockIncr,
-                                                        const Block< Vector<Int> > & blockSpw);
-
-
-    //get the channel selection ...the block over the number of ms's associated
-    // with this iterator
-    virtual void getChannelSelection (Block< Vector<Int> > & blockNGroup,
-                                      Block< Vector<Int> > & blockStart,
-                                      Block< Vector<Int> > & blockWidth,
-                                      Block< Vector<Int> > & blockIncr,
-                                      Block< Vector<Int> > & blockSpw);
 
     // Translate slicesv from the form returned by MSSelection::getChanSlices ()
     // to matv as used by setChanAveBounds ().  widthsv is the channel averaging
@@ -607,21 +539,8 @@ public:
 
     virtual void getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe = MFrequency::LSRK) const;
 
-    // Attach a VisBuffer object.
-    // Note that while more than one VisBuffer may be attached, only the
-    // last one is actively updated. A Stack is kept internally, so after
-    // a detach, the previous VisBuffer becomes active again.
-    virtual void attachVisBuffer (VisBuffer & vb);
-
-    // Detach a VisBuffer object.
-    // If the object detached is not the last one attached an exception
-    // is thrown.
-    virtual void detachVisBuffer (VisBuffer & vb);
-
     // Access the current ROMSColumns object in MSIter
-    virtual const ROMSColumns & msColumns () const {
-        return msIter_p.msColumns ();
-    }
+    virtual const ROMSColumns & msColumns () const;
 
     // get back the selected spectral windows and spectral channels for
     // current ms
@@ -690,6 +609,8 @@ protected:
     virtual void getTopoFreqs ();
     virtual void getTopoFreqs (Vector<Double> & lsrFreq, Vector<Double> & selFreq); // for async i/o
 
+    ROVisibilityIterator2 * getViP () const;
+
     virtual void getLsrInfo (Block<Int> & channelGroupNumber,
                              Block<Int> & channelIncrement,
                              Block<Int> & channelStart,
@@ -701,6 +622,8 @@ protected:
     std::vector<MeasurementSet> getMeasurementSets () const;
 
     const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
+
+    Bool isInASelectedSpectralWindow () const;
 
     // update the DATA slicer
     virtual void updateSlicer ();
@@ -722,6 +645,8 @@ protected:
 //    void getInterpolatedFloatDataFlagWeight () const;
 
     Bool usesTiledDataManager (const String & columnName, const MeasurementSet & ms) const;
+
+    virtual void checkForPendingChanges ();
 
     // get the visibility data (observed, corrected or model);
     // deals with Float and Complex observed data (DATA or FLOAT_DATA)
@@ -752,7 +677,7 @@ protected:
     // cache extra tiles.
     virtual void setTileCache ();
     //Check if spw is in selected SPW for actual ms
-    virtual Bool isInSelectedSPW (const Int & spw);
+    //virtual Bool isInSelectedSPW (const Int & spw);
 
     // Updates, if necessary, rowIds_p member for the current chunk
     virtual void update_rowIds () const;
@@ -883,6 +808,15 @@ protected:
 
     };
 
+    class PendingChanges {
+    public:
+
+        PendingChanges () : frequencySelections_p (0) {}
+        ~PendingChanges () { delete frequencySelections_p; }
+
+        FrequencySelections * frequencySelections_p;
+    };
+
     class Velocity { // for velocity selection and conversion
 
     public:
@@ -920,6 +854,8 @@ protected:
     Int                     curStartRow_p;
     Int                     curTableNumRow_p;
     Bool                    floatDataFound_p;
+    FrequencySelections *   frequencySelections_p;
+    FrequencySelections *   frequencySelectionsPending_p;
     VisImagingWeight        imwgt_p;    // object to calculate imaging weight
     Bool                    initialized_p;
     Bool                    isMultiMS_p;
@@ -935,17 +871,18 @@ protected:
     Int                     nPol_p;
     Int                     nRowBlocking_p;
     Bool                    newChanGroup_p;
-    ROVisibilityIterator *  rovi_p; // [use]
+    PendingChanges          pendingChanges_p;
+    ROVisibilityIterator2 * rovi_p; // [use]
     RefRows                 selRows_p; // currently selected rows from msIter_p.table ()
     Slicer                  slicer_p;
     Block<Int>              sortColumns_p;
     Bool                    stateOk_p;
-    SubChunkPair            subchunk_p;
+    SubChunkPair2           subchunk_p;
     Vector<Bool>            tileCacheIsSet_p;
     Double                  timeInterval_p;
     Vector<Double>          time_p;
     Bool                    useSlicer_p;
-    Stack<VisBuffer *>      vbStack_p;   // Stack of VisBuffer objects
+    VisBuffer2 *            vb_p;
     Velocity                velocity_p;
     Slicer                  weightSlicer_p;
 
@@ -953,7 +890,7 @@ protected:
 };
 
 // <summary>
-// VisibilityIterator iterates through one or more writable MeasurementSets
+// VisibilityIterator2 iterates through one or more writable MeasurementSets
 // </summary>
 
 // <use visibility=export>
@@ -966,11 +903,11 @@ protected:
 // </prerequisite>
 //
 // <etymology>
-// The VisibilityIterator is a read/write iterator returning visibilities
+// The VisibilityIterator2 is a read/write iterator returning visibilities
 // </etymology>
 //
 // <synopsis>
-// VisibilityIterator provides iteration with various sort orders
+// VisibilityIterator2 provides iteration with various sort orders
 // for one or more MSs. It has member functions to retrieve the fields
 // commonly needed in synthesis calibration and imaging. It is
 // derived from the read-only iterator
@@ -1010,14 +947,14 @@ public:
     typedef ROVisibilityIterator2::DataColumn DataColumn;
 
     // Constructors.
-    // Note: The VisibilityIterator is not initialized correctly by default, you
+    // Note: The VisibilityIterator2 is not initialized correctly by default, you
     // need to call origin () before using it to iterate.
 
     VisibilityIteratorWriteImpl2 (VisibilityIterator2 * vi);
 
-    //VisibilityIteratorWriteImpl2 (VisibilityIterator * vi);
+    //VisibilityIteratorWriteImpl2 (VisibilityIterator2 * vi);
 
-    VisibilityIteratorWriteImpl2 (const VisibilityIteratorWriteImpl2 & other);
+    //VisibilityIteratorWriteImpl2 (const VisibilityIteratorWriteImpl2 & other);
 
     // Destructor
 
@@ -1079,29 +1016,29 @@ public:
     // Set/modify the ncorr x nrow SigmaMat.
     virtual void setSigmaMat (const Matrix<Float> & sigmat);
 
-    virtual void writeBack (VisBuffer *);
+    virtual void writeBack (VisBuffer2 *);
 
 protected:
 
     // A BackWriter is a functor that will extract a piece of information out of its VisBuffer
-    // argument and write it out using a "set" method on the supplied VisibilityIterator.
+    // argument and write it out using a "set" method on the supplied VisibilityIterator2.
     class BackWriter {
 
     public:
 
         virtual ~BackWriter () {}
 
-        virtual void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer * vb) = 0;
+        virtual void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer2 * vb) = 0;
 
     };
 
     // A simple BackWriterImpl2 uses a nullary accessor on a VisBuffer.
     template <typename Setter, typename Getter>
-    class BackWriterImpl2 : public BackWriter {
+    class BackWriterImpl : public BackWriter {
     public:
 
-        BackWriterImpl2 (Setter setter, Getter getter) : getter_p (getter), setter_p (setter) {}
-        void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer * vb) {
+        BackWriterImpl (Setter setter, Getter getter) : getter_p (getter), setter_p (setter) {}
+        void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer2 * vb) {
             (vi ->* setter_p) ((vb ->* getter_p) ());
         }
 
@@ -1111,19 +1048,19 @@ protected:
         Setter setter_p;
     };
 
-    // BackWriterImpl22 is slightly more complicated in that it uses a unary accessor.  The argument
-    // to the unary accessor is a member of the ROVisibilityIterator DataColumn enumeration which
+    // BackWriterImpl2 is slightly more complicated in that it uses a unary accessor.  The argument
+    // to the unary accessor is a member of the ROVisibilityIterator2 DataColumn enumeration which
     // specifies which visibilty or visCube type is wanted (e.g., observed, model or corrected).
     template <typename Setter, typename Getter>
-    class BackWriterImpl22 : public BackWriter {
+    class BackWriterImpl2 : public BackWriter {
     public:
 
         typedef VisibilityIteratorReadImpl2::DataColumn DataColumn;
 
-        BackWriterImpl22 (Setter setter, Getter getter, DataColumn dc)
+        BackWriterImpl2 (Setter setter, Getter getter, DataColumn dc)
         : dataColumn_p (dc), getter_p (getter), setter_p (setter)
         {}
-        void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer * vb) {
+        void operator () (VisibilityIteratorWriteImpl2 * vi, VisBuffer2 * vb) {
             (vi ->* setter_p) ((vb ->* getter_p) (), dataColumn_p);
         }
 
@@ -1140,9 +1077,9 @@ protected:
     template <typename Ret>
     static
     BackWriter *
-    makeBackWriter (void (VisibilityIteratorWriteImpl2::* setter) (Ret), Ret (VisBuffer::* getter) () const) {
-        return new BackWriterImpl2 <void (VisibilityIteratorWriteImpl2:: *) (Ret),
-                                   Ret (VisBuffer:: *) () const >
+    makeBackWriter (void (VisibilityIteratorWriteImpl2::* setter) (Ret), Ret (VisBuffer2::* getter) () const) {
+        return new BackWriterImpl <void (VisibilityIteratorWriteImpl2:: *) (Ret),
+                                   Ret (VisBuffer2:: *) () const >
         (setter, getter);
     }
 
@@ -1150,15 +1087,15 @@ protected:
     static
     BackWriter *
     makeBackWriter2 (void (VisibilityIteratorWriteImpl2::* setter) (Ret, VisibilityIteratorReadImpl2::DataColumn),
-                     Ret (VisBuffer::* getter) () const,
+                     Ret (VisBuffer2::* getter) () const,
                      ROVisibilityIterator2::DataColumn dc) {
 
         // Define the Getter and Setter types
 
         typedef void (VisibilityIteratorWriteImpl2::* Setter) (Ret, VisibilityIteratorReadImpl2::DataColumn);
-        typedef Ret (VisBuffer::* Getter) () const;
+        typedef Ret (VisBuffer2::* Getter) () const;
 
-        return new BackWriterImpl22 < Setter, Getter> (setter, getter, dc);
+        return new BackWriterImpl2 < Setter, Getter> (setter, getter, dc);
     }
 
     VisibilityIteratorReadImpl2 * getReadImpl ();

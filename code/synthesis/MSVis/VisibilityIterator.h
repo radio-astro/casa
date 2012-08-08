@@ -280,7 +280,8 @@ private:
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-class ROVisibilityIterator
+
+class ROVisibilityIterator // !!! DEPRECATED !!!
 {
     friend class AsyncEnabler;
     friend class VisibilityIteratorReadImpl;
@@ -856,7 +857,7 @@ protected:
   void swapyz(Cube<T>& out, const Cube<T>& in) const;
 
   VisibilityIteratorReadImpl * readImpl_p;
-};
+} __attribute__ ((deprecated));
 
 
 // <summary>

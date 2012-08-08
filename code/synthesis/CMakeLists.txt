@@ -60,6 +60,7 @@ casa_add_library( synthesis
   fortran/fmosaic.f
   fortran/wprojgrid.f
   MSVis/AsynchronousInterface.cc
+#####  MSVis/AsynchronousInterface2.cc
   MSVis/AsynchronousTools.cc
   MSVis/CalVisBuffer.cc
   MSVis/GroupProcessor.cc
@@ -84,16 +85,20 @@ casa_add_library( synthesis
   MSVis/VisBuffAccumulator.cc
   MSVis/VisBuffer.cc
   MSVis/VisBuffer2.cc
-  MSVis/VisBufferImpl.cc
+  MSVis/VisBufferImpl2.cc
   MSVis/VisBufferAsync.cc
+#####  MSVis/VisBufferAsync2.cc
   MSVis/VisBufferAsyncWrapper.cc
+#####  MSVis/VisBufferAsyncWrapper2.cc
   MSVis/VisBufferUtil.cc
   MSVis/VisBuffGroup.cc
   MSVis/VisBuffGroupAcc.cc
   MSVis/VisibilityIterator.cc
   MSVis/VisibilityIterator2.cc
   MSVis/VisibilityIteratorImpl.cc
+  MSVis/VisibilityIteratorImpl2.cc
   MSVis/VisibilityIteratorImplAsync.cc
+#####  MSVis/VisibilityIteratorImplAsync2.cc
   MSVis/VisibilityProcessing.cc 
   MSVis/VisImagingWeight.cc
   MSVis/VisIterator.cc

@@ -5,15 +5,15 @@
  *      Author: jjacobs
  */
 
-#if ! defined (VisibilityIteratorAsync_H_)
-#define VisibilityIteratorAsync_H_
+#if ! defined (VisibilityIteratorAsync2_H_)
+#define VisibilityIteratorAsync2_H_
 
 #include <set>
 using std::set;
 
-#include <synthesis/MSVis/VisibilityIteratorImpl.h>
 #include <synthesis/MSVis/AsynchronousInterface.h>
-#include "UtilJ.h"
+#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisibilityIteratorImpl2.h>
 
 #define NotImplementedROVIA throw utilj::AipsErrorTrace (String ("Method not legal in ROVIA: ") + __PRETTY_FUNCTION__, __FILE__, __LINE__)
 #define NotPrefetched throw utilj::AipsErrorTrace (String ("Column not prefetched for async I/O: ") + __PRETTY_FUNCTION__, __FILE__, __LINE__)
@@ -55,14 +55,15 @@ public:
                      const Block<Int> & sortColumns,
                      const Bool addDefaultSortCols,
                      Double timeInterval,
-                     Bool writable);
+                     Bool writable)
+    {} // Empty body for the moment.
 
     ViReadImplAsync2 (const PrefetchColumns & prefetchColumns,
                      const VisibilityIteratorReadImpl2 & other,
                      Bool writable);
 
 
-    ~ViReadImplAsync2 ();
+    ~ViReadImplAsync2 () {} // empty body for now
 
     VisibilityIteratorReadImpl2 * clone () const;
 
@@ -74,7 +75,7 @@ public:
                              Block< Vector<Int> >& ,
                              Block< Vector<Int> >& );
     PrefetchColumns getPrefetchColumns () const;
-    VisBuffer * getVisBuffer ();
+    VisBuffer2 * getVisBuffer ();
 
 
 //    Int getDataDescriptionId () const;
@@ -297,7 +298,7 @@ public:
                       const VisibilityIteratorWriteImpl2 & other,
                       VisibilityIterator2 * vi);
 
-    ~ViWriteImplAsync2 ();
+    ~ViWriteImplAsync2 (){} // empty body for now
 
     VisibilityIteratorWriteImpl2 * clone () const;
 
