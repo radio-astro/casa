@@ -33,8 +33,7 @@ namespace casa {
 class ConverterFrequencyWavelength : public ConverterFrequency {
 public:
 	ConverterFrequencyWavelength(const QString& oldUnits,
-			const QString& newUnits, SpectralCoordinate* spectralCoordinate );
-	//virtual float convert( float oldValue ) const;
+			const QString& newUnits);
 	virtual Vector<double> convert( const Vector<double>& oldValues );
 	virtual ~ConverterFrequencyWavelength();
 };

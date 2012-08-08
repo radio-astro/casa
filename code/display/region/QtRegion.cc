@@ -35,6 +35,7 @@
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <display/DisplayErrors.h>
 #include <casaqt/QtUtilities/QtId.h>
+#include <QDir>
 
 namespace casa {
     namespace viewer {
@@ -84,7 +85,7 @@ namespace casa {
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
 
 	    dock_->addRegion(mystate);
-	    signal_region_change( RegionChangeCreate );
+	    signal_region_change( Region::RegionChangeCreate );
 	}
 
 	QtRegion::~QtRegion( ) {
@@ -93,6 +94,8 @@ namespace casa {
 	}
 
 	void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
+	void QtRegion::setLabelPosition( Region::TextPosition pos ) { mystate->setTextPosition( pos ); }
+	void QtRegion::setLabelDelta( const std::vector<int> &delta ) { mystate->setTextDelta( delta ); }
 
 	void QtRegion::setFont( const std::string &font, int font_size, int font_style, const std::string &font_color ) {
 	    if ( font != "" ) mystate->setTextFont(font);
@@ -101,9 +104,10 @@ namespace casa {
 	    if ( font_color != "" ) mystate->setTextColor( font_color );
 	}
 
-	void QtRegion::setLine( const std::string &line_color, Region::LineStyle line_style ) {
+	void QtRegion::setLine( const std::string &line_color, Region::LineStyle line_style, unsigned int line_width ) {
 	    if ( line_color != "" ) mystate->setLineColor( line_color );
 	    mystate->setLineStyle( line_style );
+	    mystate->setLineWidth( line_width );
 	}
 
 	void QtRegion::setAnnotation(bool ann) { mystate->setAnnotation(ann); }
@@ -133,6 +137,31 @@ namespace casa {
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
 
+	QString QtRegion::getSaveDir( ) {
+	    if ( dock_->saveDir( ).isNull( ) ) {
+		if ( ! dock_->loadDir( ).isNull( ) )
+		    dock_->saveDir( ) = dock_->loadDir( );
+		else
+		    dock_->saveDir( ) = QDir::currentPath();
+	    }
+	    return dock_->saveDir( );
+	}
+	void QtRegion::putSaveDir( QString dir ) {
+	    dock_->saveDir( ) = dir;
+	}
+	QString QtRegion::getLoadDir( ) {
+	    if ( dock_->loadDir( ).isNull( ) ) {
+		if ( ! dock_->saveDir( ).isNull( ) )
+		    dock_->loadDir( ) = dock_->saveDir( );
+		else
+		    dock_->loadDir( ) = QDir::currentPath();
+	    }
+	    return dock_->loadDir( );
+	}
+	void QtRegion::putLoadDir( QString dir ) {
+	    dock_->loadDir( ) = dir;
+	}
+
 	void QtRegion::updateCenterInfo() {
 		std::list<RegionInfo> *rc = generate_dds_centers( );
 		mystate->updateCenters(rc);
@@ -146,9 +175,9 @@ namespace casa {
 	}
 
         // indicates that region movement requires that the statistcs be updated...
-	void QtRegion::updateStateInfo( bool region_modified ) {
+      void QtRegion::updateStateInfo( bool region_modified, Region::RegionChanges change ) {
 
-	    signal_region_change( RegionChangeUpdate );
+	    signal_region_change( change );
 
 	    // update statistics, when needed...
 	    if ( statistics_visible == false ) {
@@ -180,8 +209,9 @@ namespace casa {
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'f',precision),
-					 QString("%1").arg(height,0,'f',precision) );
+					 QString("%1").arg(width,0,'g',precision),
+					 QString("%1").arg(height,0,'g',precision) );
+
 					 // QString("%1").arg(width), 
 					 // QString("%1").arg(height) );
 	    }
@@ -196,15 +226,15 @@ namespace casa {
 	void QtRegion::refresh_statistics_event( bool visible ) {
 	    statistics_visible = visible;
 	    if ( hold_signals ) {
-		held_signals[RegionChangeStatsUpdate] = true;
+		held_signals[Region::RegionChangeStatsUpdate] = true;
 		return;
 	    }
-	    updateStateInfo( false );
+	    updateStateInfo( false, Region::RegionChangeFocus );
 	}
 
 	void QtRegion::refresh_position_event( bool visible ) {
 	    position_visible = visible;
-	    updateStateInfo( false );
+	    updateStateInfo( false, Region::RegionChangeUpdate );
 	}
 
 	void QtRegion::translate_x( const QString &x, const QString &x_units, const QString &coordsys ) {
@@ -256,7 +286,7 @@ namespace casa {
 		AnnRegion *reg = dynamic_cast<AnnRegion*>(ann);
 		if ( reg ) reg->setAnnotationOnly((*iter)->isAnnotation( ));
 
-		int number_frames = (*iter)->numFrames( );
+		// int number_frames = (*iter)->numFrames( );
 		ann->setLabel( (*iter)->textValue( ) );
 
 		ann->setColor( (*iter)->lineColor( ) );
@@ -266,6 +296,21 @@ namespace casa {
 		ann->setFont( (*iter)->textFont( ) );
 		ann->setFontSize( (*iter)->textFontSize( ) );
 		int font_style = (*iter)->textFontStyle( );
+
+		switch ( textPosition( ) ) {
+		case Region::BottomText: ann->setLabelPosition("bottom"); break;
+		    case Region::LeftText: ann->setLabelPosition("left"); break;
+		    case Region::RightText: ann->setLabelPosition("right"); break;
+		    default: ann->setLabelPosition("top");
+		}
+		ann->setLabelColor(textColor( ));
+
+		vector<int> delta(2);
+		textPositionDelta( delta[0], delta[1] );
+		if ( delta[0] != 0 || delta[1] != 0 ) {
+		    ann->setLabelOffset(delta);
+		}
+		
 
 		ann->setFontStyle( font_style & Region::ItalicText && font_style & Region::BoldText ? AnnotationBase::ITALIC_BOLD :
 				   font_style & Region::ItalicText ? AnnotationBase::ITALIC :
@@ -293,19 +338,19 @@ namespace casa {
 
 	    fetch_region_details(type, pixel_pts, world_pts);
 
-	    for ( int i=0; i < pixel_pts.size(); ++i ) {
+	    for ( unsigned int i=0; i < pixel_pts.size(); ++i ) {
 		pixelx.push_back(pixel_pts[i].first);
 		pixely.push_back(pixel_pts[i].second);
 	    }
 
-	    for ( int i=0; i < world_pts.size(); ++i ) {
+	    for ( unsigned int i=0; i < world_pts.size(); ++i ) {
 		worldx.push_back(world_pts[i].first);
 		worldy.push_back(world_pts[i].second);
 	    }
 
 	}
 
-	void QtRegion::signal_region_change( RegionChanges change ) {
+	void QtRegion::signal_region_change( Region::RegionChanges change ) {
 
 	    if ( hold_signals > 0 ) {
 		held_signals[change] = true;
@@ -314,8 +359,12 @@ namespace casa {
 
 
 	    switch ( change ) {
-		case RegionChangeUpdate:
-		case RegionChangeCreate:
+		case Region::RegionChangeUpdate:
+		case Region::RegionChangeCreate:
+		case Region::RegionChangeReset:
+		case Region::RegionChangeFocus:
+		case Region::RegionChangeModified:
+		case Region::RegionChangeNewChannel:
 		    {
 			Region::RegionTypes type;
 			QList<int> pixelx, pixely;
@@ -325,16 +374,19 @@ namespace casa {
 
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
-			if ( change == RegionChangeCreate )
+			if ( change == Region::RegionChangeCreate )
 			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
 			else
-			    emit regionUpdate( id_, worldx, worldy, pixelx, pixely );
+			    emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
 		    }
 		    break;
-		case RegionChangeLabel:
+
+		case Region::RegionChangeDelete:
+		case Region::RegionChangeStatsUpdate:
+		case Region::RegionChangeLabel:
 		    // fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
 		    // 	     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
 		    break;
@@ -346,27 +398,27 @@ namespace casa {
 	    if ( --hold_signals > 0 ) return;
 	    hold_signals = 0;
 
-	    if ( held_signals[RegionChangeCreate] ) {
-		signal_region_change(RegionChangeCreate);
+	    if ( held_signals[Region::RegionChangeCreate] ) {
+		signal_region_change(Region::RegionChangeCreate);
 	    } else {
-		if ( held_signals[RegionChangeUpdate] ) {
-		    signal_region_change(RegionChangeUpdate);
+		if ( held_signals[Region::RegionChangeUpdate] ) {
+		    signal_region_change(Region::RegionChangeUpdate);
 		}
-		if ( held_signals[RegionChangeLabel] ) {
-		    signal_region_change(RegionChangeLabel);
+		if ( held_signals[Region::RegionChangeLabel] ) {
+		    signal_region_change(Region::RegionChangeLabel);
 		}
 	    }
 
-	    if ( held_signals[RegionChangeStatsUpdate] )
-		updateStateInfo( false );
+	    if ( held_signals[Region::RegionChangeStatsUpdate] )
+		updateStateInfo( false, Region::RegionChangeCreate );
 
 	    clear_signal_cache( );
 	}
 
 	void QtRegion::clear_signal_cache( ) {
-	    held_signals[RegionChangeCreate] = false;
-	    held_signals[RegionChangeUpdate] = false;
-	    held_signals[RegionChangeLabel] = false;
+	    held_signals[Region::RegionChangeCreate] = false;
+	    held_signals[Region::RegionChangeUpdate] = false;
+	    held_signals[Region::RegionChangeLabel] = false;
 	}
 
     }

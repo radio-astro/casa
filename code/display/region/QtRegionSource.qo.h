@@ -32,6 +32,7 @@
 #include <map>
 #include <QObject>
 #include <display/region/RegionSource.h>
+#include <display/region/QtRegion.qo.h>
 
 class QStackedWidget;
 
@@ -71,13 +72,18 @@ namespace casa {
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
 				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
+		void regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 		void regionUpdateResponse( int, const QString &shape, const QString &name,
 					   const QList<double> &world_x, const QList<double> &world_y,
 					   const QList<int> &pixel_x, const QList<int> &pixel_y,
 					   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+		void newCorners( double, double, double, double);
+
+	public slots:
+			//Used to change the position of the source.
+			void adjustPosition( double blcx, double blcy, double trcx, double trcy );
 
 	    protected:
 		friend class QtRegionSource;
@@ -92,13 +98,18 @@ namespace casa {
 		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
 		// generalized to "std::tr1::shared_ptr<Region>"...
 		std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-		std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y );
+		std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym );
+
+		QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const;
+
 
 	    protected slots:
-		void loadRegions( bool &handled, const QString &path, const QString &type );
-		void updateRegionState(QtDisplayData*);
+			void loadRegions( bool &handled, const QString &path, const QString &type );
+			void updateRegionState(QtDisplayData*);
 
-	    private: 
+
+
+		private:
 
 		void load_crtf_regions( WorldCanvas *, const QString &path );
 		void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );

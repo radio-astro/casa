@@ -32,9 +32,7 @@ namespace casa {
 
 class ConverterFrequencyVelocity : public ConverterFrequency {
 public:
-	ConverterFrequencyVelocity(const QString& oldUnits, const QString& newUnits,
-			SpectralCoordinate* spectralCoordinate );
-	//virtual float convert( float oldValue ) const;
+	ConverterFrequencyVelocity(const QString& oldUnits, const QString& newUnits);
 	virtual Vector<double> convert( const Vector<double>& oldValues );
 	virtual ~ConverterFrequencyVelocity();
 };

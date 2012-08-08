@@ -88,13 +88,15 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     return True;
   }
 
+  Float maxRes=0.0;
+  Int iterused=0;
   
   if(hasMask(0))
-    converged = clean(image(0), residual(0), PSF(0), mask(0), gain(), numberIterations(),  
+    converged = clean(image(0), residual(0), PSF(0), mask(0), maxRes, iterused, gain(), numberIterations(),  
 	  threshold(), cycleFactor_p, True, doPolJoint_p);
   else{
     ImageInterface<Float> *tmpMask=0;
-    converged = clean(image(0), residual(0), PSF(0), *tmpMask, gain(), numberIterations(),  
+    converged = clean(image(0), residual(0), PSF(0), *tmpMask, maxRes, iterused, gain(), numberIterations(),  
 	  threshold(), cycleFactor_p, False, doPolJoint_p);
   }
   modified_p=True;
@@ -103,7 +105,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
 
   Bool ClarkCleanImageSkyModel::clean(ImageInterface<Float>& image, ImageInterface<Float> & residual, 
-				      ImageInterface<Float>& psf, ImageInterface<Float>& mask, Float gain, Int numIter,  
+				      ImageInterface<Float>& psf, ImageInterface<Float>& mask, Float& maxresidual, Int& iterused, Float gain, Int numIter,  
 				      Float thresh, Float cycleFactor, Bool useMask, Bool doPolJoint){
 
     Bool converged=False;
@@ -169,6 +171,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     }
 
 
+    maxresidual=0.0;
+
     for (Int ichan=0; ichan < nchan; ichan++) {
       if(useMask && isCubeMask && ichan >0) {
 	(*maskli)++;
@@ -225,6 +229,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	}
       
 	if((psfmax==0.0) ||(useMask && (mask_sl == 0)) ) {
+	  maxresidual=0.0;
+	  iterused=0;
 	  os << LogIO::NORMAL // Loglevel INFO
 	     << "No data or blank mask for this channel: skipping" << LogIO::POST;
 	} else {
@@ -259,8 +265,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	  } 
 	  LatticeExpr<Float> expr= model_sl + localmodel; 
 	  model_sl.copyData(expr);
-	
-	 
+	  maxresidual=max(maxresidual, cleaner.getMaxResidual());
+	  iterused=cleaner.numberIterations();
 	  converged =  (cleaner.getMaxResidual() < thresh) 
 	    || (cleaner.numberIterations()==0);
 	  //      if (cpp != 0 ) delete cpp; cpp=0;

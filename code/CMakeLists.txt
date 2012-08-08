@@ -27,8 +27,8 @@ include( ui )
 include( target )
 include( CASA )
 
-set( CASA_MAJOR_VERSION 3 )
-set( CASA_MINOR_VERSION 5 )
+set( CASA_MAJOR_VERSION 4 )
+set( CASA_MINOR_VERSION 0 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -682,7 +682,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.160
+           VERSION 1.0.161
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -713,7 +713,7 @@ endif()
 # ALMAWVR
 if( USE_ALMAWVR )
   casa_find( ALMAWVR
-             VERSION 1.1.0
+             VERSION 1.2.0
              PREFIX_HINTS ${ALMWVR_ROOT_DIR}
              LIBS almawvr
            )

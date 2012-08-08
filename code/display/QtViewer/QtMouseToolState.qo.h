@@ -27,60 +27,22 @@
 //# $Id$
 
 
-#ifndef QTMOUSETOOLSTATE_H
-#define QTMOUSETOOLSTATE_H
+#ifndef QTMOUSETOOLSTATE_QO_H_
+#define QTMOUSETOOLSTATE_QO_H_
 
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
+#include <display/Display/MouseToolState.h>
 
 #include <graphics/X11/X_enter.h>
 #  include <QObject>
 #include <graphics/X11/X_exit.h>
-
+#include <map>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 class QtViewerBase;
-
-
-
-// <synopsis>
-// QtMouseToolNames holds static constants for Qt mouse tools (with
-// some access methods for them).  There is an ordered list of 'mouse tool'
-// types, names and reference indices for them, etc.
-// </synopsis>
-
-namespace QtMouseToolNames {
-
-  enum { nTools = 12 };
-  
-  extern const String ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-               RECTANGLE, ELLIPSE, POLYGON, POLYLINE, RULERLINE,  MULTICROSSHAIR, ANNOTATIONS,
-	       NONE;
-
-  //# nTools is an invalid tool index (or stands for "none") in these arrays.
-  extern const String     tools[nTools+1], longnames[nTools+1],
-                      iconnames[nTools+1], helptexts[nTools+1];
-
-  // Return index of named tool within the master list.
-  // (i==nTools means 'not a tool').
-  inline Int toolIndex(String tool) {
-    for(Int i=0;;i++) if (tools[i]==tool || i==nTools) return i;  }
-		//# i==nTools means 'not a tool'.
-
-  inline String toolName(Int toolindex) {
-    if(toolindex<0 || toolindex>=nTools) return NONE;
-    return tools[toolindex];  }
-
-  inline String longName(String tool) { return longnames[toolIndex(tool)];  }
-  inline String iconName(String tool) { return iconnames[toolIndex(tool)];  }
-  inline String help(String tool)     { return helptexts[toolIndex(tool)];  }
-
-};
-
-
-
 
 
 // <synopsis>
@@ -123,14 +85,17 @@ class QtMouseToolState : public QObject {
   // (Returns NONE if passed mousebtn is 0 or no tool is assigned to it).
   String toolOnButton(Int mousebtn) {
     return QtMouseToolNames::toolName(toolIndexOnButton_(mousebtn));  }
+
+  int getButtonState(const std::string &tool) const;
+    
   
-   
  public slots:
 
   // Request reassignment of a given mouse button to a tool.
   // NB: _This_ is where guis, etc. should request a button change, so that
   // all stay on the same page (not directly to tool or displaypanel, e.g.).
   void chgMouseBtn(String tool, Int mousebtn);
+  void mouseBtnStateChg(String tool, Int state);
   
   // Request signalling of the current mouse button setting for every
   // type of tool.  Call this if you want to assure that everyone's
@@ -141,7 +106,7 @@ class QtMouseToolState : public QObject {
  signals:
   
   // Notification of a tool's [new] mouse button.
-  void mouseBtnChg(String tool, Int mousebtn);
+  void mouseBtnChg(std::string tool, Int mousebtn);
 
  
  protected:
@@ -169,6 +134,9 @@ class QtMouseToolState : public QObject {
 	//# Initial values; correspond to QtMouseToolNames::tools[], above.
 	//# mousebtns_[nTools] is an entry for an invalid tool.
 	//# At most one of the above will be 1,2,3; the rest will be 0.
+
+ private:
+  std::map<std::string,int> tool_state;
 
 };
 

@@ -96,7 +96,7 @@ namespace casa {
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
-		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
+		void updateStateInfo( bool region_modified, Region::RegionChanges change ) { QtRegion::updateStateInfo( region_modified, change ); }
 
 		// indicates that the center info is no longer valid
 		void invalidateCenterInfo( ) {QtRegion::invalidateCenterInfo();};
@@ -104,10 +104,12 @@ namespace casa {
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
+		void setLabelPosition( TextPosition pos ) { QtRegion::setLabelPosition(pos); }
+		void setLabelDelta( const std::vector<int> &delta ) { QtRegion::setLabelDelta(delta); }
 		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
 				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
-		void setLine( const std::string &line_color="", Region::LineStyle line_style=SolidLine )
-				{ QtRegion::setLine( line_color, line_style ); }
+		void setLine( const std::string &line_color="", Region::LineStyle line_style=SolidLine, unsigned int line_width=1 )
+				{ QtRegion::setLine( line_color, line_style, line_width ); }
 		void setAnnotation(bool ann) { QtRegion::setAnnotation(ann); }
 
 		// functions added with the introduction of RegionToolManager and the
@@ -123,6 +125,9 @@ namespace casa {
 		void output( ds9writer &out ) const;
 
 		void emitUpdate( ) { QtRegion::emitUpdate( ); }
+
+		public slots:
+			void adjustCorners( double, double, double, double );
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Rectangle::generate_dds_statistics( ); }

@@ -66,7 +66,7 @@ void SearchMoleculesDialog::initializeTable(){
 
 void SearchMoleculesDialog::setRange( float min, float max, QString units ){
 	if ( unitStr != units ){
-		Converter* converter = Converter::getConverter( units, unitStr, &spectralCoordinate );
+		Converter* converter = Converter::getConverter( units, unitStr );
 		min = converter->convert( min );
 		max = converter->convert( max );
 		delete converter;
@@ -75,9 +75,7 @@ void SearchMoleculesDialog::setRange( float min, float max, QString units ){
 	ui.rangeMaxLineEdit->setText( QString::number( max ));
 }
 
-void SearchMoleculesDialog::setSpectralCoordinate( SpectralCoordinate coordinate ){
-	spectralCoordinate = coordinate;
-}
+
 //--------------------------------------------------------------------------------------
 //                        Signal/Slot
 //--------------------------------------------------------------------------------------
@@ -109,7 +107,7 @@ void SearchMoleculesDialog::searchUnitsChanged( const QString& newUnits ){
 		ui.redShiftUnitLabel->setText( newUnits );
 
 		//Readjust the text fields giving the search lookup range & redshift
-		Converter* converter = Converter::getConverter( unitStr, newUnits, &spectralCoordinate );
+		Converter* converter = Converter::getConverter( unitStr, newUnits );
 		convertRangeLineEdit(ui.rangeMinLineEdit, converter);
 		convertRangeLineEdit(ui.rangeMaxLineEdit, converter);
 		convertRangeLineEdit(ui.redShiftLineEdit, converter);
@@ -131,7 +129,7 @@ void SearchMoleculesDialog::initializeSearchRange( QLineEdit* lineEdit, Double& 
 		value = value + redShift;
 		QString redShiftStr = ui.redShiftLineEdit->text();
 		if ( unitStr != SPLATALOGUE_UNITS ){
-			Converter* converter = Converter::getConverter(unitStr, SPLATALOGUE_UNITS, &spectralCoordinate );
+			Converter* converter = Converter::getConverter(unitStr, SPLATALOGUE_UNITS);
 			value = converter->convert( value );
 			delete converter;
 		}

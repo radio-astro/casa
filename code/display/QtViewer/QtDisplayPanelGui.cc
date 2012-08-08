@@ -249,6 +249,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
     animDockWidget_  = new QDockWidget();
 		       animDockWidget_->setObjectName("Animator");
+		       animDockWidget_->setWindowTitle("Animator");
 		       addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
 				      animloc == "left" ? Qt::LeftDockWidgetArea :
 				      animloc == "top" ? Qt::TopDockWidgetArea :
@@ -267,6 +268,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
     trkgDockWidget_  = new QDockWidget();
 		       trkgDockWidget_->setObjectName("Position Tracking");
+		       trkgDockWidget_->setWindowTitle("Position Tracking");
 		       addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
 				      trackloc == "left" ? Qt::LeftDockWidgetArea :
 				      trackloc == "top" ? Qt::TopDockWidgetArea :
@@ -696,6 +698,10 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
     if(qsm_!=0) delete qsm_;
     if(qdm_!=0) delete qdm_;
     if(qdo_!=0) delete qdo_;
+}
+
+int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
+    return v_->mouseBtns( )->getButtonState(tool);
 }
 
 bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
@@ -1465,7 +1471,7 @@ void QtDisplayPanelGui::showImageProfile() {
 			connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 			
 			{
-			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 			    if (pos) {
 
 				connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
@@ -1480,15 +1486,17 @@ void QtDisplayPanelGui::showImageProfile() {
 				std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 
 				if ( qrs ) {
+					connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
+							qrs.get(), SLOT(adjustPosition(double,double,double,double)));
 				    connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
 										const QList<double> &, const QList<int> &, const QList<int> &,
 										const QString &, const QString &, const QString &, int, int ) ),
 					     profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 									const QList<double> &, const QList<int> &, const QList<int> &,
 									const QString &, const QString &, const QString &, int, int ) ) );
-				    connect( qrs.get( ), SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &,
+				    connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									       const QList<int> &, const QList<int> & ) ),
-					     profile_, SLOT( updateRegion( int, const QList<double> &, const QList<double> &,
+					     profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 									   const QList<int> &, const QList<int> & ) ) );
 				    connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 										       const QList<double> &, const QList<int> &, const QList<int> &,
@@ -1500,7 +1508,7 @@ void QtDisplayPanelGui::showImageProfile() {
 				}
 
 			    } else {
-				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 				if (pos) {
 				    connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 								   const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -1618,15 +1626,16 @@ void QtDisplayPanelGui::showImageProfile() {
     PanelDisplay* ppd = qdp_->panelDisplay();
     QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
     if (rect) {
-	// this is the *new* region implementation... all events come from region source...
-	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
-	qrs->generateExistingRegionUpdates( );
+    	// this is the *new* region implementation... all events come from region source...
+    	std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+    	qrs->generateExistingRegionUpdates( );
     }
 
     //Let the profiler know about the current frame.
-    int frameIndex = qdp_->frame();
-    profile_->frameChanged( frameIndex );
-
+    if ( profile_ ) {
+	int frameIndex = qdp_->frame();
+	profile_->frameChanged( frameIndex );
+    }
 }
 
 
@@ -1647,7 +1656,7 @@ void QtDisplayPanelGui::refreshImageProfile() {
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	if ( rdds.len() > 0 ) {
 	    showImageProfile( );
-	    profile_->redraw( );
+	    if ( profile_ ) profile_->redraw( );
 	} else {
 	    profile_->hide();
 	    delete profile_;

@@ -197,7 +197,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		    // regrid new image to match the one provided...
 		    ImageAnalysis ia(im_);
 		    // need an option to delete temporary files on exit...
-		    std::string outpath = viewer::options.temporaryDirectory(Path(path_).baseName());
+		    std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
 		    panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
 		    ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
 		    std::auto_ptr<ImageInterface<Float> > imptr(im_);

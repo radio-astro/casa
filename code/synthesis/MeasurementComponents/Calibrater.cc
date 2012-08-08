@@ -410,7 +410,8 @@ void Calibrater::selectvis(const String& time,
     logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
 	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	      << LogIO::POST;
-    initialize(*ms_p,False);
+    // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty
+    initialize(*ms_p,False,False,False);
     throw(AipsError("Error in data selection specification."));
   } 
   catch (AipsError x) {
@@ -418,7 +419,8 @@ void Calibrater::selectvis(const String& time,
     logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
 	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
 	      << LogIO::POST;
-    initialize(*ms_p,False);
+    // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty.
+    initialize(*ms_p,False,False,False);
     throw(AipsError("Error in Calibrater::selectvis()"));
   } 
 };

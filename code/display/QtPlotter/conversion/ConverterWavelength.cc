@@ -24,24 +24,23 @@
 //#
 
 #include "ConverterWavelength.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <QDebug>
+
 namespace casa {
 
-ConverterWavelength::ConverterWavelength(const QString& oldUnits,
-	const QString& newUnits, SpectralCoordinate* spectralCoordinate) :
-	Converter( oldUnits, newUnits, spectralCoordinate){
+ConverterWavelength::ConverterWavelength(const QString& oldUnits,const QString& newUnits ) :
+	Converter( oldUnits, newUnits ){
 
 }
 
 double ConverterWavelength::toPixel( double value ) {
-	spectralCoordinate->setWavelengthUnit( oldUnits.toStdString() );
+	spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
 	Vector<Double> frequencyVector(1);
 	Vector<Double> wavelengthVector(1);
 	wavelengthVector[0] = value;
-	spectralCoordinate->wavelengthToFrequency(frequencyVector, wavelengthVector );
+	spectralCoordinate.wavelengthToFrequency(frequencyVector, wavelengthVector );
 	Double pixelValue;
-	spectralCoordinate->toPixel( pixelValue, frequencyVector[0]);
+	spectralCoordinate.toPixel( pixelValue, frequencyVector[0]);
 	return pixelValue;
 }
 

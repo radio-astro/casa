@@ -34,15 +34,64 @@
     <file>icons/brightcontrastb1.png</file>
     <file>icons/brightcontrastb2.png</file>
     <file>icons/brightcontrastb3.png</file>
-    <file>icons/crosshairb0.png</file>
-    <file>icons/crosshairb1.png</file>
-    <file>icons/crosshairb2.png</file>
-    <file>icons/crosshairb3.png</file>
+    <!-- BEGIN: symbol shapes for point regions -->
+        <file>icons/symdot.png</file>
+        <file>icons/symdotb0.png</file>
+        <file>icons/symdotb1.png</file>
+        <file>icons/symdotb2.png</file>
+        <file>icons/symdotb3.png</file>
+            <file>icons/symdrarrow.png</file>
+            <file>icons/symdrarrowb0.png</file>
+            <file>icons/symdrarrowb1.png</file>
+            <file>icons/symdrarrowb2.png</file>
+            <file>icons/symdrarrowb3.png</file>
+        <file>icons/symdlarrow.png</file>
+        <file>icons/symdlarrowb0.png</file>
+        <file>icons/symdlarrowb1.png</file>
+        <file>icons/symdlarrowb2.png</file>
+        <file>icons/symdlarrowb3.png</file>
+            <file>icons/symurarrow.png</file>
+            <file>icons/symurarrowb0.png</file>
+            <file>icons/symurarrowb1.png</file>
+            <file>icons/symurarrowb2.png</file>
+            <file>icons/symurarrowb3.png</file>
+        <file>icons/symularrow.png</file>
+        <file>icons/symularrowb0.png</file>
+        <file>icons/symularrowb1.png</file>
+        <file>icons/symularrowb2.png</file>
+        <file>icons/symularrowb3.png</file>
+            <file>icons/symcircle.png</file>
+            <file>icons/symcircleb0.png</file>
+            <file>icons/symcircleb1.png</file>
+            <file>icons/symcircleb2.png</file>
+            <file>icons/symcircleb3.png</file>
+        <file>icons/symplus.png</file>
+        <file>icons/symplusb0.png</file>
+        <file>icons/symplusb1.png</file>
+        <file>icons/symplusb2.png</file>
+        <file>icons/symplusb3.png</file>
+            <file>icons/symdiamond.png</file>
+            <file>icons/symdiamondb0.png</file>
+            <file>icons/symdiamondb1.png</file>
+            <file>icons/symdiamondb2.png</file>
+            <file>icons/symdiamondb3.png</file>
+        <file>icons/symx.png</file>
+        <file>icons/symxb0.png</file>
+        <file>icons/symxb1.png</file>
+        <file>icons/symxb2.png</file>
+        <file>icons/symxb3.png</file>
+            <file>icons/symsquare.png</file>
+            <file>icons/symsquareb0.png</file>
+            <file>icons/symsquareb1.png</file>
+            <file>icons/symsquareb2.png</file>
+            <file>icons/symsquareb3.png</file>
+    <!-- END: symbol shapes for point regions -->
     <file>icons/handb0.png</file>
     <file>icons/handb1.png</file>
     <file>icons/handb2.png</file>
     <file>icons/handb3.png</file>
     <file>icons/home_folder.png</file>
+    <file>icons/magnify.png</file>
     <file>icons/magnifyb0.png</file>
     <file>icons/magnifyb1.png</file>
     <file>icons/magnifyb2.png</file>
@@ -51,14 +100,17 @@
     <file>icons/mpcrosshairb1.png</file>
     <file>icons/mpcrosshairb2.png</file>
     <file>icons/mpcrosshairb3.png</file>
+    <file>icons/polyline.png</file>
     <file>icons/polylineb0.png</file>
     <file>icons/polylineb1.png</file>
     <file>icons/polylineb2.png</file>
     <file>icons/polylineb3.png</file>
+    <file>icons/polyregion.png</file>
     <file>icons/polyregionb0.png</file>
     <file>icons/polyregionb1.png</file>
     <file>icons/polyregionb2.png</file>
     <file>icons/polyregionb3.png</file>
+    <file>icons/rectregion.png</file>
     <file>icons/rectregionb0.png</file>
     <file>icons/rectregionb1.png</file>
     <file>icons/rectregionb2.png</file>
@@ -74,15 +126,7 @@
     <file>icons/rulerb3.png</file>
         <file>icons/arrow.png</file>
         <file>icons/arrowcross.png</file>
-        <file>icons/arrowcrossb0.png</file>
-        <file>icons/arrowcrossb1.png</file>
-        <file>icons/arrowcrossb2.png</file>
-        <file>icons/arrowcrossb3.png</file>
         <file>icons/brightcontrast.png</file>
-        <file>icons/brightcontrastb0.png</file>
-        <file>icons/brightcontrastb1.png</file>
-        <file>icons/brightcontrastb2.png</file>
-        <file>icons/brightcontrastb3.png</file>
         <file>icons/cross.png</file>
         <file>icons/crosshairb0.png</file>
         <file>icons/crosshairb1.png</file>
@@ -108,10 +152,6 @@
         <file>icons/eject.png</file>
         <file>icons/ff.png</file>
         <file>icons/hand.png</file>
-        <file>icons/handb0.png</file>
-        <file>icons/handb1.png</file>
-        <file>icons/handb2.png</file>
-        <file>icons/handb3.png</file>
         <file>icons/hist.png</file>
         <file>icons/hsplit.png</file>
         <file>icons/ibeam.png</file>
@@ -124,11 +164,6 @@
         <file>icons/lock.png</file>
         <file>icons/logo.png</file>
         <file>icons/magic.png</file>
-        <file>icons/magnify.png</file>
-        <file>icons/magnifyb0.png</file>
-        <file>icons/magnifyb1.png</file>
-        <file>icons/magnifyb2.png</file>
-        <file>icons/magnifyb3.png</file>
         <file>icons/markercirc.png</file>
         <file>icons/markercircc.png</file>
         <file>icons/markercircx.png</file>
@@ -143,10 +178,6 @@
         <file>icons/markersqr.png</file>
         <file>icons/markertri.png</file>
         <file>icons/markerx.png</file>
-        <file>icons/mpcrosshairb0.png</file>
-        <file>icons/mpcrosshairb1.png</file>
-        <file>icons/mpcrosshairb2.png</file>
-        <file>icons/mpcrosshairb3.png</file>
         <file>icons/nexttrk.png</file>
         <file>icons/no.png</file>
         <file>icons/noentry.png</file>
@@ -156,23 +187,8 @@
         <file>icons/pointer1.png</file>
         <file>icons/pointer2.png</file>
         <file>icons/pointer3.png</file>
-        <file>icons/polyline.png</file>
-        <file>icons/polylineb0.png</file>
-        <file>icons/polylineb1.png</file>
-        <file>icons/polylineb2.png</file>
-        <file>icons/polylineb3.png</file>
-        <file>icons/polyregion.png</file>
-        <file>icons/polyregionb0.png</file>
-        <file>icons/polyregionb1.png</file>
-        <file>icons/polyregionb2.png</file>
-        <file>icons/polyregionb3.png</file>
         <file>icons/poweroff.png</file>
         <file>icons/prevtrk.png</file>
-        <file>icons/rectregion.png</file>
-        <file>icons/rectregionb0.png</file>
-        <file>icons/rectregionb1.png</file>
-        <file>icons/rectregionb2.png</file>
-        <file>icons/rectregionb3.png</file>
         <file>icons/repeat.png</file>
         <file>icons/rew.png</file>
         <file>icons/rightarrow.png</file>
@@ -187,7 +203,6 @@
         <file>icons/smalldownarrow.png</file>
         <file>icons/spanner.png</file>
         <file>icons/square.png</file>
-        <file>icons/stop.png</file>
         <file>icons/tick.png</file>
         <file>icons/tickColor.png</file>
         <file>icons/uparrow.png</file>

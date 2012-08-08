@@ -212,7 +212,7 @@ void WCCrosshairTool::restore() {
   itsY1 = Int(to(1) + 0.5);
 }
 
-void WCCrosshairTool::draw(const Bool drawHandles) {
+void WCCrosshairTool::draw(const Bool /*drawHandles*/) {
   PixelCanvas *pCanvas = pixelCanvas();
   if (itsOnScreen) {
     pCanvas->copyBackBufferToFrontBuffer();

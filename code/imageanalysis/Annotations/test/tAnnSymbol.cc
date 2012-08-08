@@ -171,6 +171,38 @@ int main () {
 				), AipsError
 			);
 		}
+		{
+			log << LogIO::NORMAL
+				<< "Test label printing (CAS-4354)"
+				<< LogIO::POST;
+			Quantity x(0.05, "deg");
+			Quantity y(0, "deg");
+			Char s = 'o';
+
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			AnnSymbol symbol(
+				x, y, dirTypeString,
+				csys, s
+			);
+			String label = "mylabel";
+			symbol.setLabel(label);
+			AlwaysAssert(symbol.getLabel() == label, AipsError);
+			symbol.setLabelPosition("bottom");
+			symbol.setLabelOffset(vector<Int>(2, 5));
+			cout << symbol << endl;
+			log << LogIO::NORMAL
+				<< "Test label offset parsing (CAS-4358)"
+				<< LogIO::POST;
+			vector<Int> offset(2);
+			offset[0] = -1;
+			offset[1] = 4;
+			symbol.setLabelOffset(offset);
+			AlwaysAssert(symbol.getLabelOffset() == offset, AipsError);
+			cout << symbol << endl;
+
+		}
 	} catch (AipsError x) {
 		log << LogIO::SEVERE
 			<< "Caught exception: " << x.getMesg()

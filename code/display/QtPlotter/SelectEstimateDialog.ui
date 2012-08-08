@@ -32,6 +32,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="selectAllButton">
+       <property name="toolTip">
+        <string>Graph the selected molecular lines on all of the initial Gaussian estimate graph(s).</string>
+       </property>
        <property name="text">
         <string>Select All</string>
        </property>
@@ -39,6 +42,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="clearButton">
+       <property name="toolTip">
+        <string>Deselect all estimates so that selections can be made
+individually as to which estimate graph(s) should display
+the selected molecular lines.</string>
+       </property>
        <property name="text">
         <string>Clear</string>
        </property>
@@ -53,6 +61,10 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QPushButton" name="okButton">
+       <property name="toolTip">
+        <string>Graph the selected molecular lines on the selected
+initial Gaussian estimate graphs.</string>
+       </property>
        <property name="text">
         <string>OK</string>
        </property>
@@ -60,6 +72,10 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Cancel applying the current operation to the
+selected initial Gaussian estimate graphs.</string>
+       </property>
        <property name="text">
         <string>Cancel</string>
        </property>

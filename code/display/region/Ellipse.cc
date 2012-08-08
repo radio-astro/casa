@@ -36,26 +36,28 @@ namespace casa {
 	    // The position angle (rot) is the angle between north and the major axis of the
 	    // ellipse, measured to the east (clockwise in standard astronomical coordinates
 	    //  where the longitude increases with decreasing x).
-	    if ( trc_y - blc_y > trc_x - blc_x ) {
+	    double y_distance = fabs(wtrc_y - wblc_y);
+	    double x_distance = fabs(wtrc_x - wblc_x);
+	    if (  y_distance > x_distance ) {
 		rot = Quantity(0,"deg");
-		minor = Quantity( fabs(wtrc_x - wblc_x), units[0] );
-		major = Quantity( fabs(wtrc_y - wblc_y), units[1] );
+		minor = Quantity( x_distance, units[0] );
+		major = Quantity( y_distance, units[1] );
 	    } else {
 		rot = Quantity(90,"deg");
-		major = Quantity( fabs(wtrc_x - wblc_x), units[0] );
-		minor = Quantity( fabs(wtrc_y - wblc_y), units[1] );
+		major = Quantity( x_distance, units[0] );
+		minor = Quantity( y_distance, units[1] );
 	    }
 
 	    const DisplayData *dd = wc_->displaylist().front();
 
 	    Vector<Stokes::StokesTypes> stokes;
-	    Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
+	    /*Int polaxis =*/ CoordinateUtil::findStokesAxis(stokes, cs);
 
 	    AnnEllipse *ellipse = 0;
 	    try {
 		std::vector<int> axes = dd->displayAxes( );
 		IPosition shape(cs.nPixelAxes( ));
-		for ( int i=0; i < shape.size( ); ++i )
+		for ( unsigned int i=0; i < shape.size( ); ++i )
 		    shape(i) = dd->dataShape( )[axes[i]];
 		ellipse = new AnnEllipse( qx, qy, major, minor, rot, cs, shape, stokes );
 	    } catch ( AipsError &e ) {

@@ -64,6 +64,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/LegendPreferences.qo.h
   QtPlotter/CanvasHolder.qo.h
   QtPlotter/SelectEstimateDialog.qo.h
+  QtPlotter/SpectralPositioningWidget.qo.h
   QtViewer/FileBox.qo.h
   QtViewer/MakeMask.qo.h
   QtViewer/MakeRegion.qo.h
@@ -144,6 +145,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/ThresholdingBinPlotDialog.ui
   QtPlotter/LegendPreferences.ui
   QtPlotter/SelectEstimateDialog.ui
+  QtPlotter/SpectralPositioningWidget.ui
   RegionShapes/QtDS9WriteOptions.ui
   RegionShapes/QtEditRegionShape.ui
   RegionShapes/QtNewRegionShape.ui
@@ -397,6 +399,7 @@ casa_add_library( display
   QtPlotter/ProfileTaskMonitor.cc
   QtPlotter/ThresholdingBinPlotDialog.cc
   QtPlotter/LegendPreferences.cc
+  QtPlotter/SpectralPositioningWidget.cc
   QtPlotter/conversion/Converter.cc
   QtPlotter/conversion/ConverterFrequency.cc
   QtPlotter/conversion/ConverterFrequencyVelocity.cc

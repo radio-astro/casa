@@ -3,7 +3,6 @@
 
 #include <QtGui/QDialog>
 #include <display/QtPlotter/SearchMoleculesDialog.ui.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <casa/Containers/Record.h>
 
@@ -17,7 +16,6 @@ public:
     SearchMoleculesDialog(QWidget *parent = 0);
     QList<int> getLineIndices() const;
     void getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
-    void setSpectralCoordinate( SpectralCoordinate coordinate );
     void setRange( float min, float max, QString units );
     QString getUnit() const;
     ~SearchMoleculesDialog();
@@ -44,7 +42,6 @@ private:
     Ui::SearchMoleculesDialog ui;
     String defaultDatabasePath;
     String databasePath;
-    SpectralCoordinate spectralCoordinate;
     QString unitStr;
     static const QString SPLATALOGUE_UNITS;
     static const double SPLATALOGUE_DEFAULT_MIN;

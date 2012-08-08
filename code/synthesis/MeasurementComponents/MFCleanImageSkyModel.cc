@@ -174,8 +174,9 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	//Get the minimum increment in arcsec
 	Double incr=abs(min(cs.increment()(0), cs.increment()(1)));
 	if(incr > 0.0){
-	  ncent=max(ncent, Int(ceil(beam(model)[0]/incr)));
-	  ncent=max(ncent, Int(ceil(beam(model)[1]/incr)));
+	  GaussianBeam beamModel=beam(model)(IPosition(2,0,0));
+	  ncent=max(ncent, Int(ceil(beamModel.getMajor("arcsec")/incr)));
+	  ncent=max(ncent, Int(ceil(beamModel.getMinor("arcsec")/incr)));
 	}
       }
       psfpatch=3*ncent+1;

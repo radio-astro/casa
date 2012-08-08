@@ -30,7 +30,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
     std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
-	return rfactory->point( wc, x, y );
+	return rfactory->point( wc, x, y, rfactory->currentPointSymbolType( ) );
     }
 
     static std::set<viewer::Region::RegionTypes> multi_point_tool_region_set;

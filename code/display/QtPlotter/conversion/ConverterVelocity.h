@@ -32,8 +32,7 @@ namespace casa {
 
 class ConverterVelocity : public Converter {
 public:
-	ConverterVelocity(const QString& oldUnits,
-		const QString& newUnits, SpectralCoordinate* spectralCoordinate);
+	ConverterVelocity(const QString& oldUnits,const QString& newUnits);
 	virtual double toPixel( double value );
 	static void convertVelocity( Vector<double> &resultValues,
 				QString& sourceUnits, QString& destUnits);

@@ -24,14 +24,13 @@
 //#
 
 #include "ConverterFrequencyVelocity.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <QDebug>
 
 namespace casa {
 
 ConverterFrequencyVelocity::ConverterFrequencyVelocity(const QString& oldUnits,
-		const QString& newUnits, SpectralCoordinate* spectralCoordinate ):
-		ConverterFrequency( oldUnits, newUnits, spectralCoordinate ){
+		const QString& newUnits):
+		ConverterFrequency( oldUnits, newUnits){
 }
 
 
@@ -44,7 +43,7 @@ Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldVal
 	//Find out the frequency units the spectral coordinate is using and
 	//compare them to the frequency units we are using.  Transform the
 	//data if necessary to the units used by the spectral coordinate.
-	Vector<String> spectralUnits = spectralCoordinate->worldAxisUnits();
+	Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
 	String spectralUnit = spectralUnits[0];
 	QString spectralUnitStr( spectralUnit.c_str() );
 	if ( spectralUnitStr != oldUnits ){
@@ -55,7 +54,7 @@ Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldVal
 	bool successfulConversion = false;
 	Vector<double> resultValues( oldValues.size());
 	if ( unitsUnderstood ){
-		successfulConversion = spectralCoordinate->frequencyToVelocity( resultValues, frequencyValues );
+		successfulConversion = spectralCoordinate.frequencyToVelocity( resultValues, frequencyValues );
 	}
 	if ( !successfulConversion ){
 		resultValues = oldValues;

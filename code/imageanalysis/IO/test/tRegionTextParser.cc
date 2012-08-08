@@ -29,6 +29,9 @@
 #include <casa/OS/EnvVar.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <imageanalysis/Annotations/AnnSymbol.h>
+#include <imageanalysis/Annotations/AnnCircle.h>
 
 #include <casa/namespace.h>
 
@@ -104,6 +107,62 @@ int main() {
 		);
 		for (uInt i=0; i<parser3.getLines().size(); i++) {
 			cout << parser3.getLines()[i] << endl;
+		}
+		{
+			cout << "Test label offset parsing (CAS-4358)" << endl;
+			Quantity x(0, "deg");
+			Quantity y(0, "deg");
+			Char s = 'o';
+
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			AnnSymbol symbol(
+				x, y, dirTypeString,
+				csys, s
+			);
+			String label = "mylabel";
+			symbol.setLabel(label);
+			AlwaysAssert(symbol.getLabel() == label, AipsError);
+			symbol.setLabelPosition("bottom");
+			vector<Int> offset(2);
+			offset[0] = -1;
+			offset[1] = 4;
+			symbol.setLabelOffset(offset);
+			AlwaysAssert(symbol.getLabelOffset() == offset, AipsError);
+			String labelcolor = "orange";
+			symbol.setLabelColor(labelcolor);
+			cout << symbol << endl;
+			ostringstream oss;
+			oss << symbol;
+			RegionTextParser parser4(csys, IPosition(4, 200, 200, 4, 1), oss.str());
+			Vector<AsciiAnnotationFileLine> lines = parser4.getLines();
+			AlwaysAssert(lines.size() == 1, AipsError);
+			AlwaysAssert(lines[0].getAnnotationBase()->getLabelOffset() == offset, AipsError);
+			AlwaysAssert(lines[0].getAnnotationBase()->getLabelColorString() == labelcolor, AipsError);
+		}
+		{
+			cout << "Test correlation writing and reading (CAS-4373)" << endl;
+			Quantity x(-60, "arcmin");
+			Quantity y(60, "arcmin");
+			Quantity r(5, "arcmin");
+			Vector<Stokes::StokesTypes> stokes(3);
+			stokes[0] = Stokes::I;
+			stokes[1] = Stokes::Q;
+			stokes[2] = Stokes::U;
+			IPosition shape(4,100,100, 3, 2);
+			AnnCircle circle(x, y, r, csys, shape, stokes);
+			ostringstream oss;
+			oss << circle;
+			cout << circle << endl;
+			RegionTextParser parser4(csys, shape, oss.str());
+			Vector<AsciiAnnotationFileLine> lines = parser4.getLines();
+			AlwaysAssert(lines.size() == 1, AipsError);
+			Vector<Stokes::StokesTypes> got = dynamic_cast<const AnnCircle *>(
+					lines[0].getAnnotationBase()
+				)->getStokes();
+			AlwaysAssert(allEQ(got, stokes), AipsError);
+
 		}
 
 

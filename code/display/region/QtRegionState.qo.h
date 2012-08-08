@@ -41,12 +41,15 @@ namespace casa {
 		void textPositionDelta( int &x, int &y ) const;
 
 		void setTextValue( const std::string &l );
+		void setTextPosition( Region::TextPosition );
+		void setTextDelta( const std::vector<int> & );
 		void setTextFont( const std::string &f );
 		void setTextFontSize( int s );
 		void setTextFontStyle( int s );
-		void setTextColor( const std::string &c );
-		void setLineColor( const std::string &c );
-		void setLineStyle( Region::LineStyle s );
+		void setTextColor( const std::string & );
+		void setLineColor( const std::string & );
+		void setLineStyle( Region::LineStyle );
+		void setLineWidth( unsigned int );
 		void setAnnotation( bool );
 		void disableAnnotation( bool );
 
@@ -141,9 +144,6 @@ namespace casa {
 		static freestat_list *freecenters;
 		QString last_line_color;
 		QtRegion *region_;
-
-		QString last_load_directory;
-		QString last_save_directory;
 
 		std::string bounding_index_to_string( int index ) const;
 

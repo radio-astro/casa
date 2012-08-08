@@ -26,7 +26,7 @@
 #define UTIL_H_
 
 #include <QString>
-
+#include <casa/Arrays/Vector.h>
 class QWidget;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -38,7 +38,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static double degMinSecToRadians( int degrees, int mins, float secs );
 			static double hrMinSecToRadians( int hours, int mins, float secs );
 			static QString toHTML( const QString& baseStr );
-
+			static int getCenter( const Vector<Double>& values, Double& mean );
+			static void getRa(double radians, int& raHour, int& raMin, double& raSec);
+			static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
+			static void minMax( double& min, double& max, const Vector<Double>& values );
 		private:
 			Util();
 			virtual ~Util();
@@ -46,6 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static double toDecimalDegrees( int hrs, int mins, float seconds );
 			static const double PI;
 			static const double TIME_CONV;
+			static const double RAD_DEGREE_CONVERSION;
 
 	};
 }

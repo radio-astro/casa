@@ -48,6 +48,8 @@
 #include <images/Images/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 
+#include <display/region/QtRegion.qo.h>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -144,6 +146,7 @@ public:
 	void persist( const QString& key, const QString& value );
 	QString read( const QString & key ) const;
 	void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
+	void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 
 public slots:
 	void zoomIn();
@@ -198,8 +201,9 @@ public slots:
 			const QList<int> &pixel_x, const QList<int> &pixel_y,
 			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-	void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y );
+	void updateRegion( int, viewer::Region::RegionChanges,
+			   const QList<double> &world_x, const QList<double> &world_y,
+			   const QList<int> &pixel_x, const QList<int> &pixel_y );
 	void pixelsChanged(int, int );
 
 signals:
@@ -207,6 +211,7 @@ signals:
    void coordinateChange(const String&);
    void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
    void channelSelect( const Vector<float> &zvec, float zval );
+   void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 
 private:
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
@@ -219,10 +224,6 @@ private:
    void messageFromProfile(QString &msg);
    void setUnitsText( String unitStr );
 
-   /**
-    * Initializes the spectrum positioning tab.
-    */
-   void initSpectrumPosition();
 
    /**
     * Returns false if first vector value is greater than the last
@@ -249,24 +250,7 @@ private:
    bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
    void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 									const Vector<double> wxv, const Vector<double> wyv );
-   void pageUpdate( int selectionIndex, int unitIndex );
-   bool populatePixels( QList<int> &pixelX, QList<int> &pixelY,
-   			const QList<double> &worldX, const QList<double> &worldY ) const ;
-   bool populateWorlds( const QList<int> &pixelX, const QList<int> &pixelY,
-      			QList<double> &worldX, QList<double> &worldY );
-   void fillPointWorld( QList<double> &worldX, QList<double> &worldY ) const;
-   void fillPointPixel( QList<int> &pixelX, QList<int>&pixelY ) const;
-   bool fillBoxPixel( QList<int> &pixelX, QList<int>&pixelY );
-   bool fillBoxWorld( QList<double> &worldX, QList<double> & worldY );
-   bool fillBasedOnBoxSpecification(  const double*  const firstXPix, const double * const firstYPix,
-   		const double* const secondXPix, const double* const secondYPix,
-   		double* const blcxPix, double* const blcyPix,
-   		double* const trcxPix, double* const trcYPix );
-   double spinToRadians( bool dec, QSpinBox *degSpinBox,
-   		QSpinBox* minSpinBox, QLineEdit* secSpinBox) const;
-   void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
-   		QLabel* const x2Label, QLabel* const y2Label );
-   void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
+
    /**
     *
     */
@@ -279,7 +263,7 @@ private:
    QString getRaDec(double x, double y);
 
    void initPreferences();
-
+   void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 
@@ -343,17 +327,9 @@ private:
 
 
    typedef std::map<int,spectra_info> SpectraInfoMap;
+   int current_region_id;
    SpectraInfoMap spectra_info_map;
 
-   //Used for spectrum positioning
-   enum PositionTypeIndex { POINT, BOX, END_POSITION_TYPE };
-   enum UnitIndex {RADIAN, PIXEL, END_UNIT };
-   QIntValidator* pixelValidator;
-   QDoubleValidator* secValidator;
-   enum StackPages { POINT_PIXEL, POINT_RA_DEC, BOX_PIXEL, BOX_RA_DEC };
-   enum BoxSpecificationIndex { TL_LENGTH_HEIGHT, CENTER_LENGTH_HEIGHT, TL_BR, BL_TR,
-	   TL_LENGTH_HEIGHT_WORLD, CENTER_LENGTH_HEIGHT_WORLD, TL_BR_WORLD, BL_TR_WORLD, END_SPEC };
-   QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
 
    ColorSummaryWidget* colorSummaryWidget;
    LegendPreferences* legendPreferencesDialog;
@@ -363,12 +339,10 @@ private:
 
 
    private slots:
-   	    void setPosition();
-   		void locationSelectionTypeChanged( int index );
-   		void locationUnitsChanged( int index );
-   		void boxSpecChanged( int index );
+
    		void changeTopAxis();
    		void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
+
 
 };
 

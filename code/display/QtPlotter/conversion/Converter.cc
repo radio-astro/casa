@@ -24,7 +24,7 @@
 //#
 
 #include "Converter.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
+
 #include <display/QtPlotter/conversion/ConverterFrequencyVelocity.h>
 #include <display/QtPlotter/conversion/ConverterFrequencyWavelength.h>
 #include <display/QtPlotter/conversion/ConverterVelocityFrequency.h>
@@ -47,47 +47,61 @@ const QList<QString> Converter::WAVELENGTH_UNITS =
 	QList<QString>() << "Angstrom" << "nm" << "10nm" << "100nm" << "um" << "10um" << "100um" << "mm" << "cm";
 const QList<QString> Converter::VELOCITY_UNITS =
 	QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
+const QList<QString> Converter::BEAM_UNITS =
+	QList<QString>() << "pJy/beam" <<"10pJy/beam"<<"100pJy/beam"<<
+		"nJy/beam"<<"10nJy/beam"<<"100nJy/beam"<<
+		"uJy/beam"<<"10uJy/beam"<<"100uJy/beam"<<
+		"mJy/beam"<<"10mJy/beam"<<"100mJy/beam"<<
+		"Jy/beam"<<"10Jy/beam"<<"100Jy/beam"<<
+		"kJy/beam"<<"10kJy/beam"<<"100kJy/beam"<<
+		"MJy/beam"<<"10MJy/beam"<<"100MJybeam"<<
+		"GJy/beam";
+
+SpectralCoordinate Converter::spectralCoordinate;
+void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ){
+	spectralCoordinate = coordinate;
+}
 
 Converter* Converter::getConverter( const QString& oldUnits,
-				const QString& newUnits, SpectralCoordinate* spectralCoordinate ){
+				const QString& newUnits){
 	Converter* converter = NULL;
 	UnitType sourceUnitType = getUnitType( oldUnits );
 	UnitType destUnitType = getUnitType( newUnits );
 	if ( sourceUnitType == FREQUENCY_UNIT ){
 		if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty() ){
-			converter = new ConverterFrequencyWavelength( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterFrequencyWavelength( oldUnits, newUnits);
 		}
 		else if ( destUnitType == VELOCITY_UNIT ){
-			converter = new ConverterFrequencyVelocity( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterFrequencyVelocity( oldUnits, newUnits );
 		}
 		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterFrequency( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterFrequency( oldUnits, newUnits );
 		}
 	}
 	else if ( sourceUnitType == VELOCITY_UNIT ){
 		if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty()){
-			converter = new ConverterVelocityWavelength( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterVelocityWavelength( oldUnits, newUnits);
 		}
 		else if ( destUnitType == VELOCITY_UNIT ){
-			converter = new ConverterVelocity( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterVelocity( oldUnits, newUnits );
 		}
 		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterVelocityFrequency( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterVelocityFrequency( oldUnits, newUnits );
 		}
 	}
 	else if ( sourceUnitType == WAVELENGTH_UNIT ){
 		if ( destUnitType == WAVELENGTH_UNIT ){
-			converter = new ConverterWavelength( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterWavelength( oldUnits, newUnits );
 		}
 		else if ( destUnitType == VELOCITY_UNIT || newUnits.isEmpty() ){
-			converter = new ConverterWavelengthVelocity( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterWavelengthVelocity( oldUnits, newUnits );
 		}
 		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterWavelengthFrequency( oldUnits, newUnits, spectralCoordinate );
+			converter = new ConverterWavelengthFrequency( oldUnits, newUnits );
 		}
 	}
 	else if ( sourceUnitType == CHANNEL_UNIT ){
-		converter = new ConverterChannel( spectralCoordinate );
+		converter = new ConverterChannel( oldUnits, newUnits );
 	}
 	return converter;
 }
@@ -109,9 +123,17 @@ Converter::UnitType Converter::getUnitType( const QString& unit ){
 	return unitType;
 }
 
-Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr,
-		SpectralCoordinate* coordinate ):
-		oldUnits( oldUnitsStr), newUnits( newUnitsStr ), spectralCoordinate( coordinate ){
+double Converter::convertJyBeams( const QString& oldUnits, const QString& newUnits, double value ){
+	int sourceIndex = Converter::BEAM_UNITS.indexOf( oldUnits );
+	int destIndex = Converter::BEAM_UNITS.indexOf( newUnits );
+	Vector<double> resultValues(1);
+	resultValues[0] = value;
+	Converter::convert( resultValues, sourceIndex, destIndex );
+	return resultValues[0];
+}
+
+Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr):
+		oldUnits( oldUnitsStr), newUnits( newUnitsStr ){
 }
 
 QString Converter::getNewUnits() const {
@@ -144,7 +166,7 @@ void Converter::convert( Vector<double> &resultValues, int sourceIndex, int dest
 }
 
 bool Converter::setVelocityUnits( const QString& units ){
-	bool unitsUnderstood = spectralCoordinate->setVelocity( units.toStdString() );
+	bool unitsUnderstood = spectralCoordinate.setVelocity( units.toStdString() );
 	if ( !unitsUnderstood ){
 		qDebug() << "Converter::setVelocityUnits units=" << units << " were not understood ";
 	}
@@ -152,7 +174,7 @@ bool Converter::setVelocityUnits( const QString& units ){
 }
 
 bool Converter::setWavelengthUnits( const QString& units ){
-	bool unitsUnderstood = spectralCoordinate->setWavelengthUnit( units.toStdString() );
+	bool unitsUnderstood = spectralCoordinate.setWavelengthUnit( units.toStdString() );
 	if ( !unitsUnderstood ){
 		qDebug() << "Converter::setFrequencyUnits units=" << units << " were not understood ";
 	}

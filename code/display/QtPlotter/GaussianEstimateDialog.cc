@@ -48,7 +48,7 @@ GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 	for ( int i = 0; i < supportedUnits.size(); i++ ){
 		ui.axisUnitsComboBox->addItem( supportedUnits[i]);
 	}
-	ui.axisUnitsComboBox->setCurrentIndex( 0 );
+	ui.axisUnitsComboBox->setCurrentIndex( 2 );
 	unitStr = ui.axisUnitsComboBox->currentText();
 	connect( ui.axisUnitsComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(unitsChanged(int)));
 
@@ -135,7 +135,7 @@ void GaussianEstimateDialog::setEstimates( QList<SpecFitGaussian>& estimates ){
 	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->setEstimate( estimates[i]);
 		if ( newUnits ){
-			plots[i]->unitsChanged(specUnitStr, currentUnits, &spectralCoordinate);
+			plots[i]->unitsChanged(specUnitStr, currentUnits);
 		}
 
 	}
@@ -151,10 +151,7 @@ void GaussianEstimateDialog::setSpecFitUnits( const QString& specUnits ){
 	this->specUnitStr = specUnits;
 }
 
-void GaussianEstimateDialog::setSpectralCoordinate( SpectralCoordinate coordinate ){
-	this->spectralCoordinate = coordinate;
-	searchDialog.setSpectralCoordinate( coordinate );
-}
+
 
 void GaussianEstimateDialog::setCurveData( const Vector<float>& xValues,
 		const Vector<float>& yValues){
@@ -163,17 +160,17 @@ void GaussianEstimateDialog::setCurveData( const Vector<float>& xValues,
 	translatedXValues = xValues;
 
 	//We got pixels.  Translate to world units first.
-	if ( specUnitStr.length() == 0 ){
+	/*if ( specUnitStr.length() == 0 ){
 		Converter* pixelConverter = new ConverterChannel( &spectralCoordinate );
 		translatedXValues = translateDataUnits( xValues, pixelConverter );
 		specUnitStr = pixelConverter->getNewUnits();
 		delete pixelConverter;
-	}
+	}*/
 
 
 	QString newUnits = ui.axisUnitsComboBox->currentText();
 	if ( newUnits != specUnitStr ){
-		Converter* converter = Converter::getConverter( specUnitStr, newUnits, &spectralCoordinate );
+		Converter* converter = Converter::getConverter( specUnitStr, newUnits );
 		xVals = translateDataUnits(translatedXValues, converter );
 		delete converter;
 	}
@@ -265,7 +262,7 @@ void GaussianEstimateDialog::updateMolecularLines( ){
 		QString molecularName;
 		searchDialog.getLine(lineIndices[i], peak, center, molecularName );
 		if ( searchUnits != unitStr ){
-			Converter* converter = Converter::getConverter( searchUnits, unitStr, &spectralCoordinate );
+			Converter* converter = Converter::getConverter( searchUnits, unitStr );
 			center = converter->convert( center );
 			delete converter;
 		}
@@ -300,17 +297,14 @@ void GaussianEstimateDialog::coordinatedValuesChanged( float fwhmVal ){
 void GaussianEstimateDialog::unitsChanged( int /*index*/ ){
 	QString newUnitStr = ui.axisUnitsComboBox->currentText();
 	if ( unitStr != newUnitStr ){
-		Converter* converter = Converter::getConverter(unitStr, newUnitStr, &spectralCoordinate );
+		Converter* converter = Converter::getConverter(unitStr, newUnitStr);
 		//Reset the curve data
 		this->xVals = this->translateDataUnits( xVals, converter );
 		setCurveData();
 
 		//Reset the gaussian estimates
 		for ( int i = 0; i < plots.size(); i++ ){
-			/*SpecFitGaussian estimate = plots[i]->getEstimate();
-			this->translateEstimateUnits( estimate, converter );
-			plots[i]->setEstimate( estimate );*/
-			plots[i] -> unitsChanged( unitStr, newUnitStr, &spectralCoordinate );
+			plots[i] -> unitsChanged( unitStr, newUnitStr );
 		}
 		delete converter;
 		//Store the units we are now using.

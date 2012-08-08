@@ -24,19 +24,19 @@
 //#
 
 #include "ConverterVelocity.h"
-#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <QDebug>
+
 namespace casa {
 
-ConverterVelocity::ConverterVelocity(const QString& oldUnits,
-	const QString& newUnits, SpectralCoordinate* spectralCoordinate) :
-	Converter( oldUnits, newUnits, spectralCoordinate){
+ConverterVelocity::ConverterVelocity(const QString& oldUnits, const QString& newUnits) :
+	Converter( oldUnits, newUnits){
 
 }
 
 double ConverterVelocity::toPixel( double value ){
 	Double pixelVal;
-	spectralCoordinate->setVelocity( oldUnits.toStdString() );
-	spectralCoordinate->velocityToPixel( pixelVal, value );
+	spectralCoordinate.setVelocity( oldUnits.toStdString() );
+	spectralCoordinate.velocityToPixel( pixelVal, value );
 	return pixelVal;
 }
 

@@ -54,7 +54,8 @@ public:
 	virtual QString read( const QString & key ) const = 0;
 	virtual void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img = NULL)=0;
 
-
+	//Specific to Spectrum Position setting.
+	virtual void setPosition( const QList<double> &world_x, const QList<double> &world_y ) =0;
 
 	virtual ~ProfileTaskMonitor();
 };

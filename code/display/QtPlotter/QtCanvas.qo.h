@@ -320,6 +320,8 @@ private:
 	 */
 	void initGaussianEstimateContextMenu();
 
+	QString getUnits( QtPlotSettings::AxisIndex axisIndex );
+
 	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
 
 	const int MARGIN_LEFT;

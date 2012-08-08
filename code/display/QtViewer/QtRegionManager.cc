@@ -333,8 +333,7 @@ QtRegionManager::QtRegionManager(
     theShapes->setRestriction(newState);
 
   }
-  void QtRegionManager::drawRegion(
-      Record mousereg, WorldCanvasHolder *wch){
+  void QtRegionManager::drawRegion( Record mousereg, WorldCanvasHolder */*wch*/ ){
     //cout << "drawRegion ..." << endl;
  
     if(this->isVisible() && mousereg.isDefined("world")){
@@ -848,7 +847,7 @@ void QtRegionManager::cleanup() {
   deleteButton->setEnabled(false);
 }
 
-void QtRegionManager::newRegion_(String imgFilename) {
+void QtRegionManager::newRegion_(String /*imgFilename*/) {
   //cout << "newRegion..." << endl;
 
   if(this->isVisible()){
@@ -1286,8 +1285,7 @@ void QtRegionManager::showHelpActive() {
 
 }
 
-void QtRegionManager::changeAxis(
-         String xa, String ya, String za) {
+void QtRegionManager::changeAxis( String xa, String ya, String /*za*/ ) {
    //cout << "change axis=" << xa << " " << ya
    //     << " " << za << endl;
    int ccb = 0;
@@ -1363,7 +1361,7 @@ void QtRegionManager::exportRegions() {
    }
 }
 
-void QtRegionManager::rotateBox(int cb) {
+void QtRegionManager::rotateBox(int /*cb*/) {
    //qDebug() << "rotate cb=" << cb ;
    QList<QString> kys = regData.keys();
    for (int k = 0; k < kys.size(); ++k) {

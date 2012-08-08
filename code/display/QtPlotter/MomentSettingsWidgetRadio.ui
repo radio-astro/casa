@@ -36,7 +36,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="channelIntervalCountSpinBox"/>
+         <widget class="QSpinBox" name="channelIntervalCountSpinBox">
+          <property name="toolTip">
+           <string>Specify the number of intervals to collapse.</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -84,6 +88,10 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Specify the range (minimum and maximum) for
+each of the intervals to be collapsed.</string>
         </property>
        </widget>
       </item>
@@ -139,6 +147,9 @@
          <height>200</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Select the moment(s) you would like to calculate.</string>
+       </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::MultiSelection</enum>
        </property>
@@ -171,6 +182,9 @@
           </item>
           <item>
            <widget class="QRadioButton" name="includeRadioButton">
+            <property name="toolTip">
+             <string>Specify a range of pixel values to include.</string>
+            </property>
             <property name="text">
              <string>Include</string>
             </property>
@@ -178,6 +192,9 @@
           </item>
           <item>
            <widget class="QRadioButton" name="excludeRadioButton">
+            <property name="toolTip">
+             <string>Specify a range of pixel values to exclude.</string>
+            </property>
             <property name="text">
              <string>Exclude</string>
             </property>
@@ -185,6 +202,9 @@
           </item>
           <item>
            <widget class="QRadioButton" name="noneRadioButton">
+            <property name="toolTip">
+             <string>Include all pixels.</string>
+            </property>
             <property name="text">
              <string>None (All)</string>
             </property>
@@ -225,6 +245,12 @@
           </item>
           <item>
            <widget class="QCheckBox" name="symmetricIntervalCheckBox">
+            <property name="toolTip">
+             <string>If this box is checked, the thresholding interval will
+assumed to be symmetric with a maximum and minimum
+of the same magnitude.  Only one of the maximum
+and minimum will need to be specified.</string>
+            </property>
             <property name="text">
              <string>Symmetric Interval</string>
             </property>
@@ -341,6 +367,10 @@
           </item>
           <item>
            <widget class="QPushButton" name="graphThresholdButton">
+            <property name="toolTip">
+             <string>Examine a histogram of the pixels to specify
+a thresholding interval graphically.</string>
+            </property>
             <property name="text">
              <string>Specify Graphically...</string>
             </property>
@@ -384,6 +414,10 @@
        </item>
        <item>
         <widget class="QPushButton" name="outputButton">
+         <property name="toolTip">
+          <string>Specify a location for the file(s) containing
+the collapsed image.</string>
+         </property>
          <property name="text">
           <string>Select Root Output File...</string>
          </property>
@@ -391,6 +425,10 @@
        </item>
        <item>
         <widget class="QPushButton" name="collapseButton">
+         <property name="toolTip">
+          <string>Collapse the image using the specified moment(s)
+and criteria.</string>
+         </property>
          <property name="text">
           <string>Collapse</string>
          </property>

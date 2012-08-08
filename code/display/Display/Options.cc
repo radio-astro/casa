@@ -26,7 +26,10 @@
 //# $Id$
 
 #include <display/Display/Options.h>
+#include <casa/OS/Directory.h>
 #include <sys/stat.h>
+#include <iostream>
+#include <dirent.h>
 
 namespace casa {
     namespace viewer {
@@ -53,27 +56,51 @@ namespace casa {
 	// non-const because later it would be nice to have the option of
 	// marking temporaries so that the could be automatically deleted
 	// upon exit...
-	std::string Options::temporaryDirectory( const std::string &base_dir_name, bool /*remove*/ ) {
+	std::string Options::_temporary_path_( const std::string &base_dir_name, bool remove ) {
 	    std::string result;
 	    std::string tmppath = tmp( );
-	    std::string dirname;
-	    unsigned int count = 1;
-	    char buf[4];
 	    struct stat statbuf;
 	    for ( unsigned int count=1; count < 46656; ++count ) {
 		std::string teststr = tmppath + "/" + base_dir_name + "_" + arbitrary(count);
-		if ( returned_paths.find(teststr) != returned_paths.end( ) ) continue;
-		if ( stat(teststr.c_str( ), &statbuf) == -1 ) {
+		if ( returned_paths->find(teststr) != returned_paths->end( ) ) continue;
+		if ( lstat(teststr.c_str( ), &statbuf) == -1 ) {
 		    result = teststr;
 		    break;
 		}
 	    }
 
 	    if ( result != std::string( ) )
-		returned_paths.insert(result);
+		returned_paths->insert(path_map::value_type(result,std::pair<std::string,bool>("unused",remove)));
 
 	    return result;
 	}
 
+	void Options::finalize( ) {
+	    std::string temporary_path = kernel->tmp( );
+	    for ( path_map::iterator it=returned_paths->begin( ); it != returned_paths->end( ); ++it ) {
+		// removal requested?
+		if ( it->second.second ) {
+		    // does it look like one of our temporaries?
+		    if ( it->first.compare(0,temporary_path.size(),temporary_path) == 0 &&
+			 it->first.size( ) != temporary_path.size( ) ) {
+			File tmpfile(it->first);
+			if ( tmpfile.exists( ) && tmpfile.isWritable( ) ) {
+			    if ( tmpfile.isDirectory(false) ) {
+				Directory tmpdir(tmpfile);
+				tmpdir.removeRecursive(false);
+			    } else {
+				// why hassle with decerning symlinks from block special files from regular files, etc.
+				unlink(it->first.c_str( ));
+			    }
+			}
+		    }
+		}
+	    }
+	    delete kernel;
+	    kernel = 0;
+	    delete returned_paths;
+	    returned_paths = 0;
+	}
+	  
     }
 }

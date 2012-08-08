@@ -140,7 +140,7 @@ class AxesDisplayData : public PassiveCachingDD {
   // Get the color of the plot outline.
   virtual String outlineColor() const
     { return itsParamOutlineColor->value(); }
-
+  static const float AXIS_LABEL_DEFAULT_CHAR_SIZE;
  protected:
 
   // (Required) copy constructor.
@@ -182,6 +182,7 @@ class AxesDisplayData : public PassiveCachingDD {
 
   // plot outline color
   DParameterColorChoice *itsParamOutlineColor;
+
 
 };
 

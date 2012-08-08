@@ -84,16 +84,22 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
 
+	    connect( this, SIGNAL( newCorners( double, double, double, double)),
+	    		result, SLOT( adjustCorners( double, double, double, double)));
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
+	}
+
+	void QtRegionSourceKernel::adjustPosition( double blcx, double blcy, double trcx, double trcy ){
+		emit newCorners( blcx, blcy, trcx, trcy );
 	}
 
 	std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) {
@@ -109,8 +115,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
@@ -134,8 +140,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -159,8 +165,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -170,8 +176,8 @@ namespace casa {
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y ) {
-	    QtPoint *result = new QtPoint( this, wc, x, y, true );
+	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) {
+	    QtPoint *result = new QtPoint( this, wc, x, y, sym, true );
 
 	    // save Region to RegionSource mapping for later revocation...
 	    creator_of_region[result] = rc;
@@ -183,8 +189,8 @@ namespace casa {
 						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
-		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 	    connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -192,6 +198,14 @@ namespace casa {
 
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
+	}
+
+	QtMouseToolNames::PointRegionSymbols QtRegionSourceKernel::currentPointSymbolType( ) const {
+	    QtMouseToolNames::PointRegionSymbols result = QtMouseToolNames::SYM_DOT;
+	    int state = panel_->buttonToolState(QtMouseToolNames::POINT);
+	    if ( state >= 0 && state < QtMouseToolNames::SYM_POINT_REGION_COUNT )
+		result = (QtMouseToolNames::PointRegionSymbols) state;
+	    return result;
 	}
 
 	QtRegionDock *QtRegionSourceKernel::dock( ) { return panel_->regionDock( ); }
@@ -240,7 +254,7 @@ namespace casa {
 	    const DisplayData *dd = wc->displaylist().front();
 	    std::vector<int> axes = dd->displayAxes( );
 	    IPosition shape(viewer_cs.nPixelAxes( ));
-	    for ( int i=0; i < shape.size( ); ++i )
+	    for ( unsigned int i=0; i < shape.size( ); ++i )
 		shape(i) = dd->dataShape( )[axes[i]];
 
 	    try {
@@ -253,13 +267,13 @@ namespace casa {
 			const AnnEllipse *ellipse=0;
 			const AnnSymbol *symbol=0;
 			const AnnPolygon *polygon = 0;
-			if ( rectangle=dynamic_cast<const AnnRectBox*>(annotation) ) {
+			if ( (rectangle=dynamic_cast<const AnnRectBox*>(annotation)) ) {
 			    load_crtf_rectangle( wc, cstype, rectangle );
-			} else if ( ellipse = dynamic_cast<const AnnEllipse*>(annotation) ) {
+			} else if ( (ellipse = dynamic_cast<const AnnEllipse*>(annotation)) ) {
 			    load_crtf_ellipse( wc, cstype, ellipse );
-			} else if ( symbol = dynamic_cast<const AnnSymbol*>(annotation) ) {
+			} else if ( (symbol = dynamic_cast<const AnnSymbol*>(annotation)) ) {
 			    load_crtf_point( wc, cstype, symbol );
-			} else if ( polygon = dynamic_cast<const AnnPolygon*>(annotation) ) {
+			} else if ( (polygon = dynamic_cast<const AnnPolygon*>(annotation)) ) {
 			    load_crtf_polygon( wc, cstype, polygon );
 			}
 		    }
@@ -308,9 +322,14 @@ namespace casa {
 	    int font_style = get_font_style(rectangle->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(rectangle->getLineStyle( ));
 
-	    rect_creators.front( )->create( Region::RectRegion, wc, pts, rectangle->getLabel( ), rectangle->getFont( ),
-					    rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
-					    rectangle->getColorString( ), line_style, rectangle->isAnnotationOnly( ) );
+	    String label_position = rectangle->getLabelPosition( );
+	    rect_creators.front( )->create( Region::RectRegion, wc, pts,
+					    rectangle->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					    rectangle->getLabelOffset( ),
+					    rectangle->getFont( ), rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
+					    rectangle->getColorString( ), line_style, rectangle->getLineWidth( ), rectangle->isAnnotationOnly( ), -1 );
 	}
 
 
@@ -339,9 +358,14 @@ namespace casa {
 	    int font_style = get_font_style(ellipse->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(ellipse->getLineStyle( ));
 
-	    ellipse_creators.front( )->create( Region::EllipseRegion, wc, pts, ellipse->getLabel( ), ellipse->getFont( ),
-					    ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
-					    ellipse->getColorString( ), line_style, ellipse->isAnnotationOnly( ) );
+	    String label_position = ellipse->getLabelPosition( );
+	    ellipse_creators.front( )->create( Region::EllipseRegion, wc, pts,
+					       ellipse->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								       label_position == "right" ? Region::RightText :
+								       label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					       ellipse->getLabelOffset( ),
+					       ellipse->getFont( ), ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
+					       ellipse->getColorString( ), line_style, ellipse->getLineWidth( ), ellipse->isAnnotationOnly( ), -1 );
 	}
 
 
@@ -364,9 +388,14 @@ namespace casa {
 	    int font_style = get_font_style(symbol->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(symbol->getLineStyle( ));
 
-	    point_creators.front( )->create( Region::PointRegion, wc, pts, symbol->getLabel( ), symbol->getFont( ),
-					     symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
-					     symbol->getColorString( ), line_style, false );
+	    String label_position = symbol->getLabelPosition( );
+	    point_creators.front( )->create( Region::PointRegion, wc, pts,
+					     symbol->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					     symbol->getLabelOffset( ),
+					     symbol->getFont( ), symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
+					     symbol->getColorString( ), line_style, symbol->getLineWidth( ), false, -1 );
 	}
 
 	void QtRegionSourceKernel::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
@@ -378,7 +407,7 @@ namespace casa {
 	    if ( corners.size() < 3 ) return;
 
 	    std::vector<std::pair<double,double> > pts(corners.size());
-	    for ( int i=0; i < corners.size( ); ++i ) {
+	    for ( unsigned int i=0; i < corners.size( ); ++i ) {
 		MDirection corner = MDirection::Convert(corners[i], cstype)();
 		casa::Vector<double> point = corner.getAngle("rad").getValue( );
 		try { world_to_linear( wc, point[0], point[1], pts[i].first, pts[i].second ); } catch(...) { return; }
@@ -390,15 +419,20 @@ namespace casa {
 	    int font_style = get_font_style(polygon->getFontStyle());
 	    Region::LineStyle line_style = get_line_style(polygon->getLineStyle( ));
 
-	    poly_creators.front( )->create( Region::PolyRegion, wc, pts, polygon->getLabel( ), polygon->getFont( ),
-					    polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
-					    polygon->getColorString( ), line_style, polygon->isAnnotationOnly( ) );
+	    String label_position = polygon->getLabelPosition( );
+	    poly_creators.front( )->create( Region::PolyRegion, wc, pts,
+					    polygon->getLabel( ), ( label_position == "left" ? Region::LeftText :
+								    label_position == "right" ? Region::RightText :
+								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
+					    polygon->getLabelOffset( ),
+					    polygon->getFont( ), polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
+					    polygon->getColorString( ), line_style, polygon->getLineWidth( ), polygon->isAnnotationOnly( ), -1 );
 	}
 
 	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) :
 		RegionSource( rc, shared_kernel_ptr_type(new QtRegionSourceKernel(panel)) ) { }
 
-	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel ) :
+	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui */*panel*/, const shared_kernel_ptr_type &kernel ) :
 		RegionSource( rc, kernel ) { }
 
     }

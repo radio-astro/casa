@@ -84,7 +84,7 @@
    <item>
     <widget class="QCheckBox" name="stepFunctionCheckBox">
      <property name="text">
-      <string>Step Function</string>
+      <string>Histogram</string>
      </property>
     </widget>
    </item>

@@ -37,7 +37,6 @@ class QwtPlotCurve;
 namespace casa {
 
 class MolecularLine;
-class SpectralCoordinate;
 
 class GaussianEstimateWidget : public QWidget
 {
@@ -53,8 +52,7 @@ public:
     void molecularLineChanged( float peak, float center, const QString& label);
     SpecFitGaussian getEstimate();
     void setEstimate( const SpecFitGaussian& estimate );
-    void unitsChanged( const QString& oldUnits, const QString& newUnits,
-    	SpectralCoordinate* spectralCoordinate );
+    void unitsChanged( const QString& oldUnits, const QString& newUnits);
     void setSliderValueFWHM( float value );
     void updateUIBasedOnEstimate();
     void clearMolecularLines();
