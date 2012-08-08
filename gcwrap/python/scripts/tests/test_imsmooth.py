@@ -1263,7 +1263,7 @@ class imsmooth_test(unittest.TestCase):
             expbeam = exp.restoringbeam()
             gotbeam = got.restoringbeam(channel=i)
             for j in ["major", "minor", "positionangle"]:
-                self.assertTrue(_near(gotbeam[j], expbeam[j], 1e-7))
+                self.assertTrue(_near(gotbeam[j], expbeam[j], 2e-7))
             self.assertTrue(abs(got.getchunk(blc=blc, trc=trc) - exp.getchunk()).max() < 3e-5)
             exp.done()
             xx.done()
