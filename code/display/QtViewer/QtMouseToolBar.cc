@@ -68,11 +68,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QtMouseToolButton::mousePressEvent(event);
     }
 
+    class PopupMenu : public QMenu {
+	public:
+	    PopupMenu( ) : QMenu( ) { }
+	protected:
+	    void leaveEvent(QEvent*);
+    };
+
+    void PopupMenu::leaveEvent( QEvent *ev ) {
+	// pop down the menu upon exit...
+	QKeyEvent kev( QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier );
+	event(&kev);
+    }
+
     void QtPointToolButton::show_context_menu( const QPoint &pos ) {
 	using namespace QtMouseToolNames;
 
 	QPoint global_pos = mapToGlobal(pos);
-	QMenu *options = new QMenu( );
+	QMenu *options = new PopupMenu( );
 
 	for ( int i = 0; i < SYM_POINT_REGION_COUNT; ++i ) {
 	    QAction *act = options->addAction(QIcon(QString::fromStdString(pointRegionSymbolIcon((PointRegionSymbols)i))), QString( ));
@@ -80,7 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	QAction *selectedItem = options->exec(global_pos);
- 	emit mouseToolBtnState(POINT,selectedItem->data( ).toInt( ));
+	if ( selectedItem )
+	    emit mouseToolBtnState(POINT,selectedItem->data( ).toInt( ));
 	delete options;
     }
 
