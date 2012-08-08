@@ -457,6 +457,9 @@ class test_applycal_mms(test_simplecluster):
         os.system('rm -rf ' + self.vis)   
         # Remove ref MMS
         os.system('rm -rf ' + self.ref) 
+        # Remove aux files
+        for file in self.aux:
+            os.system('rm -rf ' + file)         
         
     def test1_applycal_scratchless_mode_single_model(self):
         """Test 1: Set vis model header one single fields and apply calibration"""
@@ -493,7 +496,52 @@ class test_applycal_mms(test_simplecluster):
         compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
         
         self.assertTrue(compare)        
+        
+        
+class test_uvcont_mms(test_simplecluster):
 
+    def setUp(self):
+        self.vis = "ngc5921.uvcont.mms"
+        self.ref = ["ngc5921.mms.cont", "ngc5921.mms.contsub"]
+        
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)    
+        
+        for file in  self.ref:
+            if os.path.exists(file):
+                print "Ref file %s is already in the working area, deleting ..." % file
+                os.system('rm -rf ' + file)
+                
+            print "Copy ref file %s into the working area..." % file
+            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
+            
+        # Startup cluster
+        self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
+        self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)   
+        # Remove ref MMS
+        for file in self.ref:
+            os.system('rm -rf ' + file) 
+        
+    def test1_uvcont_single_spw(self):
+        """Test 1: Extract continuum from one single SPW using uvcontsub"""
+
+        uvcontsub(vis=self.vis,field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True) 
+        
+        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY'])
+        self.assertTrue(compare_cont)
+        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY'])
+        self.assertTrue(compare_contsub)             
 
 class testJobData(unittest.TestCase):
     '''
@@ -685,7 +733,7 @@ class testJobQueueManager(unittest.TestCase):
         cluster.remove_record()
 
 def suite():
-    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms,test_applycal_mms]
+    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms,test_applycal_mms,test_uvcont_mms]
      
 if __name__ == '__main__':
     testSuite = []

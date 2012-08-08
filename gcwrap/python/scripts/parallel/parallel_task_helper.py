@@ -22,6 +22,8 @@ class ParallelTaskHelper:
         self.__originalParams = args
         # jagonzal: Add reference to cluster object
         self._cluster = None
+        # jagonzal: To inhibit return values consolidation
+        self._consolidateOutput = True
 
     def initialize(self):
         '''
@@ -75,7 +77,7 @@ class ParallelTaskHelper:
         msTool.close()
         
         index = 0
-        if isinstance(ret_list[0],bool):
+        if isinstance(ret_list[0],bool) and self._consolidateOutput:
             retval = True
             for subMs in subMS_list:
                 if not ret_list[index]:
@@ -83,12 +85,14 @@ class ParallelTaskHelper:
                     retval = False
                 index += 1
             return retval
-        elif isinstance(ret_list[0],dict):
+        elif isinstance(ret_list[0],dict) and self._consolidateOutput:
             ret_dict = {}
             for index in range(len(ret_list)):
                 dict_i = ret_list[index]
                 ret_dict = self.sum_dictionaries(dict_i,ret_dict)
-            return ret_dict           
+            return ret_dict     
+        elif (ret_list[0]==None) and self._consolidateOutput:
+             return None      
         else:
             ret_map = {}
             for subMs in subMS_list:

@@ -10,9 +10,52 @@ from distutils.dir_util import copy_tree
 from taskinit import *
 from update_spw import *
 
+# jagonzal (CAS-4113): Take care of the trivial parallelization
+from parallel.parallel_task_helper import ParallelTaskHelper
+from virtualconcat_cli import  virtualconcat_cli as virtualconcat
+
 mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 
 def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
+    
+    # jagonzal (CAS-4113): Take care of the trivial parallelization
+    if ParallelTaskHelper.isParallelMS(vis):
+        helper = ParallelTaskHelper('uvcontsub', locals())
+        helper._consolidateOutput = False
+        retVar = helper.go()
+        
+        # Gather the list of continuum subtraction-SubMSs 
+        cont_subMS_list = []
+        contsub_subMS_list = []
+        for subMS in retVar:
+            if retVar[subMS]:
+                cont_subMS_list.append(subMS + ".cont")
+                contsub_subMS_list.append(subMS + ".contsub")
+                
+        # Virtual concatenate continuum-SubMSs in one engine because
+        # it is not possible to call a task within another task
+        try:
+            virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list)
+        except Exception, instance:
+            casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
+                         (str(cont_subMS_list),str(instance)),'SEVERE')     
+        try:
+            virtualconcat(concatvis=helper._arg['vis'] + ".contsub",vis=contsub_subMS_list)
+        except Exception, instance:
+            casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
+                         (str(contsub_subMS_list),str(instance)),'SEVERE')     
+                
+        # Remove continuum subtraction-SubMSs
+        for subMS in cont_subMS_list:
+            if (os.system("rm -rf " + subMS ) != 0):
+                casalog.post("Problem removing continuum sub-MS %s into working directory" % (subMS),'SEVERE')
+        for subMS in contsub_subMS_list:
+            if (os.system("rm -rf " + subMS ) != 0):
+                casalog.post("Problem removing continuum sub-MS %s into working directory" % (subMS),'SEVERE')
+        
+        return True
+    
+    # Normal run code
     try:
         casalog.origin('uvcontsub')
 
@@ -85,8 +128,13 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             casalog.post('splitting to ' + csvis + ' with spw="'
                          + tempspw + '"')
             myms.open(vis, nomodify=True)
-            myms.split(csvis, spw=tempspw, field=myfield, whichcol=whichcol)
+            split_result = myms.split(csvis, spw=tempspw, field=myfield, whichcol=whichcol)
             myms.close()
+            # jagonzal (CAS-4113): Take care of the trivial parallelization
+            if not split_result:
+                casalog.post("%s does not have data for spw=%s, field=%s, bailing out!" % (vis,tempspw,field),'SEVERE')
+                shutil.rmtree(csvis)
+                return False
         else:
             # This takes almost 30s/GB.  (lustre, 8/2011)
             casalog.post('Copying ' + vis + ' to ' + csvis + ' with cp.')
@@ -162,6 +210,10 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
 
         #casalog.post("rming \"%s\"" % csvis, 'WARN')
         shutil.rmtree(csvis)
+        
+        # jagonzal (CAS-4113): We have to return a boolean so that we can identify 
+        # the sub-MS that produce a continuum sub-MS to concatenate at the MMS level
+        return True
 
     except Exception, instance:
         casalog.post('Error in uvcontsub: ' + str(instance), 'SEVERE')

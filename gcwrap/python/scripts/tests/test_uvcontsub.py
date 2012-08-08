@@ -137,7 +137,7 @@ class zeroth(UVContsubUnitTestBase):
             shutil.rmtree(specms)
         #self.__class__.records[corrsel] = record
         #return uvran
-        self.assertEqual(uvran,None)
+        self.assertEqual(uvran,True)
 
         print "Continuum estimate in line-free region"
         self.check_eq(record['cont'][:,3],   # RR, LL
@@ -186,7 +186,7 @@ class fourth(UVContsubUnitTestBase):
             shutil.rmtree(specms)
         #self.__class__.records[corrsel] = record
         #return uvran
-        self.assertEqual(uvran,None)
+        self.assertEqual(uvran,True)
 
         print "Continuum estimate"
         self.check_eq(record['cont'],   # [[RR], [LL]]
@@ -276,7 +276,7 @@ class combspw(UVContsubUnitTestBase):
 	    shutil.rmtree(specms)
 	    #self.__class__.records[corrsel] = record
 	    #return uvran
-	    self.assertEqual(uvran,None)
+	    self.assertEqual(uvran,True)
 
         print "combspw fitorder=0 line estimate"
         self.check_eq(record[0]['contsub'], -6.2324+17.9865j, 0.001)
