@@ -7,14 +7,6 @@ startDir=$(pwd)
 #
 
 #
-# 
-script_name=`basename $0`
-if [ "casapy" == "$script_name" ]; then
-    echo 'The CASA "casapy" command has been renamed to "casa".'
-    echo 'The "casapy" command will be removed in the near future.'
-fi
-
-#
 #Set the location of the 3rd party software we will need
 OSTYPE=$(uname -s)
 if [ $OSTYPE = "Darwin" ]; then
@@ -55,8 +47,16 @@ fi
 #
 # TODO: check to see if CASAPATH is empty (it is not used outside of developer 
 # environments, so it often is), and set it as needed.
-prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
-#echo $prefix
+if [ "x" == "x${CASAPATH}" ]; then
+    script_directory=`dirname $0`
+    script_name=`basename $0`
+    # $CASAPATH is empty.
+    echo "CASAPATH was not set in ${script_directory}/${script_name}"
+    exit -1
+else
+    prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+fi
+#echo "DEBUG: prefix=$prefix"
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
 a_host=$(hostname -s)
