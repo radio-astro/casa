@@ -445,6 +445,30 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
     ipos(0)=k;
     //elbeam.setBeam(tempBeam, ipos);
   }
+  Float maxMaj=0.0;
+  Float minMaj=C::flt_max;
+  Int posMax=0;
+  DirectionCoordinate directionCoord=psf.coordinates().directionCoordinate(psf.coordinates().findCoordinate(Coordinate::DIRECTION));
+  String dirunit=directionCoord.worldAxisUnits()(0);
+  for(Int k=0; k < nchan; ++k){
+	  if(fitted(k) && (maxMaj < tempBeam(k,0).getMajor(dirunit))){
+		  maxMaj=tempBeam(k,0).getMajor(dirunit);
+		  posMax=k;
+	  }
+	  if(fitted(k) && (minMaj > tempBeam(k,0).getMajor(dirunit))){
+	  		  minMaj=tempBeam(k,0).getMajor(dirunit);
+	  		  posMax=k;
+	  }
+  }
+  //If the beams are within 0.5 pixel the same resolution then
+  //who cares to have a beam per plane
+  if(abs(minMaj-maxMaj) < 0.5*abs(directionCoord.increment()(0))){
+	  GaussianBeam theBeam=tempBeam(posMax,0);
+	  tempBeam.resize(1,1);
+	  tempBeam(0,0)=theBeam;
+	  fitted.resize(1);
+	  fitted=True;
+  }
   if(!anyTrue(fitted)){
       retval=False;
       throw(AipsError("No valid fits were found to PSF"));
@@ -461,6 +485,7 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
        }
      }
   }
+
   elbeam.setBeams(tempBeam);
   
   return retval;
