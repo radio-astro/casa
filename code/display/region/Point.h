@@ -48,7 +48,7 @@ namespace casa {
 	    public:
 		~Point( );
 		Point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
-					marker(sym), Rectangle( wc, x, y, x, y ) { }
+					Rectangle( wc, x, y, x, y ), marker(sym){ }
 
 		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
 

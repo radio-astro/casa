@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void leaveEvent(QEvent*);
     };
 
-    void PopupMenu::leaveEvent( QEvent *ev ) {
+    void PopupMenu::leaveEvent( QEvent */*ev*/ ) {
 	// pop down the menu upon exit...
 	QKeyEvent kev( QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier );
 	event(&kev);
