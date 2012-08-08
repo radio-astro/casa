@@ -108,6 +108,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
+    <param type="bool" name="plotoff" subparam="true">
+            <description>plot pointing direction for ON and OFF</description>
+            <value>False</value>
+    </param>
+
     <param type="intArray" name="scanlist">
 	    <description>list of scans to use (e.g. [1,2,3,4])</description>
 	    <value></value>
@@ -260,11 +265,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <default param="width"><value type="double">0.5</value></default>
                     <default param="elongated"><value type="bool">False</value></default>
                     <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotoff"><value type="bool">False</value></default>
                 </equals>
                 <equals type="string" value="otfraster">
                     <default param="fraction"><value type="string">10%</value></default>
                     <default param="noff"><value type="int">-1</value></default>
                     <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotoff"><value type="bool">False</value></default>
                 </equals>
             </when>
     </constraints>
