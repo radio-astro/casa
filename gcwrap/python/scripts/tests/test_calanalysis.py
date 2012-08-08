@@ -7,6 +7,8 @@ from taskinit import *
 import casac
 import unittest
 
+import numpy
+
 class calanalysis_tsys1( unittest.TestCase ):
 
 	"""This is a very simple unit test for introspective methods.  A Tsys
@@ -49,15 +51,15 @@ class calanalysis_tsys1( unittest.TestCase ):
 	    '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
 	numSPW = len( spwNumber )
 
-	numChannel = [4L, 128L, 1L, 128L, 1L, 128L, 1L, 128L, 1L, 128L, 1L,
-	    128L, 1L, 128L, 1L, 128L, 1L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L,
-	    4L, 4L, 4L, 4L, 4L]
+	numChannel = numpy.array([4, 128, 1, 128, 1, 128, 1, 128, 1, 128, 1,
+	    128, 1, 128, 1, 128, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+	    4, 4, 4, 4, 4], dtype=numpy.int32)
 
-	time = [4827167647.3920002, 4827167780.5439997,
+	time = numpy.array([4827167647.3920002, 4827167780.5439997,
 	    4827168227.2320004, 4827168353.7600002, 4827168887.7600002,
 	    4827169009.632, 4827169543.6800003, 4827169665.6960001,
 	    4827170204.3520002, 4827170332.4160004, 4827170866.5600004,
-	    4827170989.5360003, 4827171523.776, 4827171647.2799997]
+	    4827170989.5360003, 4827171523.776, 4827171647.2799997])
 	numTime = len( time )
 
 	def setUp( self ):
@@ -108,10 +110,9 @@ class calanalysis_tsys1( unittest.TestCase ):
 		self.assertEqual( self.ca.spw(name=True), self.spwName )
 		self.assertEqual( self.ca.spw(name=False), self.spwNumber )
 
-		self.assertEqual( self.ca.numchannel(), self.numChannel )
-
+		self.assertTrue( numpy.array_equal(self.ca.numchannel(), self.numChannel))
 		self.assertEqual( self.ca.numtime(), self.numTime )
-		self.assertEqual( self.ca.time(name=True), self.time )
+		self.assertTrue( numpy.allclose(self.ca.time(), self.time))
 
 		return None
 
