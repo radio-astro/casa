@@ -9,6 +9,9 @@ import unittest
 
 class calanalysis_tsys1( unittest.TestCase ):
 
+	"""This is a very simple unit test for introspective methods.  A Tsys
+	   calibration table is used."""
+
 	ca = casac.casac.calanalysis()
 
 	calName = 'uid___A002_X30a93d_X43e.ms.tsys.s3.tbl'
@@ -32,8 +35,8 @@ class calanalysis_tsys1( unittest.TestCase ):
 	antenna1Number = antennaNumber
 	numAntenna1 = numAntenna
 
-	antenna2Name = 'NoName'
-	antenna2Number = '-1'
+	antenna2Name = ['NoName']
+	antenna2Number = ['-1']
 	numAntenna2 = 1
 
 	feed = ['1', '2']
