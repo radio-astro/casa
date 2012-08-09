@@ -16,6 +16,6 @@ data from (ATNF) single-dish telescopes.
       packages = [ PKGNAME ],
       scripts = ["bin/asap", "bin/asap_update_data",],
       license = 'GPL',
-      install_requires = ["ipython>=0.11", "matplotlib>=0.99", "numpy>=1.3"],
+      install_requires = ["ipython>=0.10", "matplotlib>=0.99", "numpy>=1.3"],
 #      setup_requires = [ "scons>=1.0" ],
       )

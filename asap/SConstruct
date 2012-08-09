@@ -173,7 +173,7 @@ if not ( env.GetOption('clean') or env.GetOption('help') ):
     for p in [conf.env["casacoreroot"], conf.env.get("extraroot", "")]:
         pth = os.path.join(p, "include", "casacore")        
 	if os.path.exists(pth):
-            libpth = os.path.join(p, LIBDIR)
+            libpath = os.path.join(p, LIBDIR)
             conf.env.AppendUnique(CPPPATH=[pth])
 	    break
     cclibs = ["casa_images", "casa_ms", "casa_components", 
@@ -181,10 +181,10 @@ if not ( env.GetOption('clean') or env.GetOption('help') ):
               "casa_fits", "casa_measures", "casa_scimath",
               "casa_scimath_f", "casa_tables", "casa_casa"]
     if conf.env["casacorestatic"]:
-        libs = [ env.File(os.path.join(libpth, "lib"+lib+".a")) \
+        libs = [ env.File(os.path.join(libpath, "lib"+lib+".a")) \
                  for lib in cclibs ]
     else:
-        conf.env.AppendUnique(LIBPATH=libpth)
+        conf.env.AppendUnique(LIBPATH=libpath)
         if not conf.CheckLibWithHeader("casa_casa", "casa/aips.h",
                                        language='c++', autoadd=0): 
             Exit(1)
@@ -257,6 +257,6 @@ env.AddPostAction(so, taction)
 if env.GetOption("clean"):
     Execute(Delete(".sconf_temp"))
     Execute(Delete("options.cache"))
-
+    Execute(Delete(".sconsign.dblite"))
 if env["makedoc"].lower() != "none":
     env.SConscript("doc/SConscript")

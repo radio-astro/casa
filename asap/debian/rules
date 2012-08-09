@@ -1,17 +1,26 @@
 #!/usr/bin/make -f
 
-DEB_PYTHON_SYSTEM = pysupport
+# Unset the environment variables set by dpkg-buildpackage. (This is
+# necessary because distutils is brittle with compiler/linker flags
+# set. Specifically, packages using f2py will break without this.)
+unexport CPPFLAGS
+unexport CFLAGS
+unexport CXXFLAGS
+unexport FFLAGS
+unexport LDFLAGS
 
-include /usr/share/cdbs/1/rules/buildcore.mk
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
-#include /usr/share/cdbs/1/rules/simple-patchsys.mk
+#exports specified using stdeb Setup-Env-Vars:
+#export DH_OPTIONS=--buildsystem=python_distutils
 
-DEB_PYTHON_INSTALL_ARGS_ALL += --single-version-externally-managed --install-lib usr/share/python-support/asap
+override_dh_auto_install:
+	python setup.py install --root=debian/python-asap --install-layout=deb
 
-binary-post-install/asap::
-#	-rm -rf debian/asap/usr/lib/
+override_dh_auto_clean:
+	python setup.py clean
+	scons -c
 
+override_dh_auto_build:
+	python setup.py build_ext --casacoreroot=/usr
 
-clean::
-	-rm -rf asap.egg-info
+%:
+	dh $@

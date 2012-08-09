@@ -109,6 +109,13 @@ void doZeroOrderInterpolation(casa::Vector<casa::Float>& data,
 			      std::vector<bool>& mask);
 
 /**
+ * RA nomalization: n*2pi rotation if necessary
+ **/
+void rotateRA( const casa::Vector<casa::Double> &in,
+               casa::Vector<casa::Double> &out ) ;
+void rotateRA( casa::Vector<casa::Double> &v ) ;
+
+/**
  * tool to record current time stamp
  **/
 double gettimeofday_sec() ;

@@ -38,6 +38,7 @@ set( PYTHON_MODULES
      ${PYTHONDIR}/scantable.py
      ${PYTHONDIR}/selector.py
      ${PYTHONDIR}/simplelinefinder.py
+     ${PYTHONDIR}/edgemarker.py
      ${PYTHONDIR}/svninfo.txt
      ${PYTHONDIR}/utils.py  )
 

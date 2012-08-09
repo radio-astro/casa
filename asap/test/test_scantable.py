@@ -144,7 +144,7 @@ class TestScantable(object):
         assert_almost_equal(self.st.get_parangle()[0], 2.5921990871)
 
     def test_get_direction(self):
-        assert_equal(self.st.get_direction()[0], '05:35:14.5 -04.52.29.5')
+        assert_equal(self.st.get_direction()[0], 'J2000 05:35:14.5 -04.52.29.5')
 
     def test_get_directionval(self):
         dv = self.st.get_directionval()[0]

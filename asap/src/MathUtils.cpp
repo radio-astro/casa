@@ -291,6 +291,54 @@ void mathutil::doZeroOrderInterpolation(casa::Vector<casa::Float>& data,
 
 }
 
+void mathutil::rotateRA( Vector<Double> &v )
+{
+  uInt len = v.nelements() ;  
+  Vector<Double> work( len ) ;
+
+  for ( uInt i = 0 ; i < len ; i++ ) {
+    work[i] = fmod( v[i], C::_2pi ) ;
+    if ( work[i] < 0.0 ) {
+      work[i] += C::_2pi ;
+    }
+  }
+  //cout << "zero2twopi: out=" << work << endl ; 
+
+  Vector<uInt> quad( len ) ;
+  Vector<uInt> nquad( 4, 0 ) ;
+  for ( uInt i = 0 ; i < len ; i++ ) {
+    uInt q = uInt( work[i] / C::pi_2 ) ;
+    nquad[q]++ ;
+    quad[i] = q ;
+  }
+  //cout << "nquad = " << nquad << endl ;
+
+  Vector<Bool> rot( 4, False ) ;
+  if ( nquad[0] > 0 && nquad[3] > 0 
+       && ( nquad[1] == 0 || nquad[2] == 0 ) ) {
+    //cout << "need rotation" << endl ;
+    rot[3] = True ;
+    rot[2] = (nquad[1]==0 && nquad[2]>0) ;
+  }
+  //cout << "rot=" << rot << endl ;
+
+  for ( uInt i = 0 ; i < len ; i++ ) {
+    if ( rot[quad[i]] ) {
+      v[i] = work[i] - C::_2pi ;
+    }
+    else {
+      v[i] = work[i] ;
+    }
+  }
+}
+
+void mathutil::rotateRA( const Vector<Double> &in,
+                         Vector<Double> &out ) 
+{
+  out = in.copy() ;
+  rotateRA( out ) ;
+}
+
 double mathutil::gettimeofday_sec()
 {
   struct timeval tv ;
