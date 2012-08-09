@@ -191,17 +191,20 @@ if [[ -f casapy.log ]]; then
 	ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
 fi
 
-
-
-
+if [ $installed_from_rpm = "T" ]; then
+        casapy_command="${prefix}/lib/python2.6/casapy.py"
+else
+        casapy_command="${prefix}/python/2.6/casapy.py"
+fi
+echo "DEBUG: casapy_command = $casapy_command"
 
 #exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/2.6/casapy.py $*
 if [ ${_dodebug} = "T" ]; then
    echo
-   echo "Debugger run command is: run -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*"
+   echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"
    echo
    echo
    exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
 else
-   exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*
+   exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
 fi
