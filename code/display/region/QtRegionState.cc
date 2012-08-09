@@ -61,16 +61,18 @@ namespace casa {
 					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
 	    setupUi(this);
 #if defined(__APPLE__)
-	    QFont font( "Lucida Grande", 10 );
+	    QFont font( "Lucida Grande", 11 );
+	    QFont fontp( "Lucida Grande", 11 );
 #else
-	    QFont font( "Sans Serif", 7 );
+	    QFont font( "Sans Serif", 9 );
+	    QFont fontp( "Sans Serif", 8 );
 #endif
 	    region_type->setFont(font);
 	    label->setFont(font);
 	    frame_min->setFont(font);
 	    frame_max->setFont(font);
-	    region_mark->setFont(font);
-	    region_annotation->setFont(font);
+	    region_mark->setFont(fontp);
+	    region_annotation->setFont(fontp);
 	    region_annotation->hide( );
 
 #if 1
