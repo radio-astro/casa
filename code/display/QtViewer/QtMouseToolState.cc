@@ -28,42 +28,44 @@
 
 
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace QtMouseToolNames {
 
-  const String ZOOM = "zoom";
-  const String PAN = "pan";
-  const String SHIFTSLOPE = "shiftslope";
-  const String BRIGHTCONTRAST = "brightcontrast";
-  const String POSITION =  "position";
-  const String RECTANGLE = "rectangle";
-  const String ELLIPSE = "ellipse";
-  const String POLYGON = "polygon";
-  const String POLYLINE = "polyline";
-  const String RULERLINE = "rulerline";
-  const String MULTICROSSHAIR = "multicrosshair";
-  const String ANNOTATIONS = "annotations";
-  const String NONE = "";
+  const std::string ZOOM = "zoom";
+  const std::string PAN = "pan";
+  const std::string SHIFTSLOPE = "shiftslope";
+  const std::string BRIGHTCONTRAST = "brightcontrast";
+  const std::string POINT =  "point";
+  const std::string RECTANGLE = "rectangle";
+  const std::string ELLIPSE = "ellipse";
+  const std::string POLYGON = "polygon";
+  const std::string POLYLINE = "polyline";
+  const std::string RULERLINE = "rulerline";
+  const std::string MULTICROSSHAIR = "multicrosshair";
+  const std::string ANNOTATIONS = "annotations";
+  const std::string NONE = "";
 
   
   //# the final elements stand for "none" (or "invalid");
   
-  const String tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-    RECTANGLE, ELLIPSE,  POLYGON, POLYLINE, RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
+  const std::string tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
+			   POINT, RECTANGLE, ELLIPSE,  POLYGON, POLYLINE,
+			   RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
 
-  const String longnames[] = { "Zooming", "Panning",
+  const std::string longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
     "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
     "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
-  const String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
-   "brightcontrastb", "sympointb", "rectregionb", "ellregionb", "polyregionb",
+  std::string iconnames[] = { "magnifyb", "handb", "arrowcrossb",
+   "brightcontrastb", "symdotb", "rectregionb", "ellregionb", "polyregionb",
    "polylineb", "rulerb",  "mpcrosshairb", "dontuseb",  "" };
     
-  const String helptexts[] = {
+  const std::string helptexts[] = {
     "Use the assigned mouse button to drag out a rectangle."
     "\nUsehandles to resize."
     "\nDouble click inside rectangle-> zoom in"
@@ -108,6 +110,51 @@ namespace QtMouseToolNames {
          
      ""  };
 
+    static std::vector<std::string> point_symbol_icons;
+    static std::vector<std::string> point_symbol_names;
+
+
+    static void init_point_region_symbol_names( ) {
+	if ( point_symbol_names.size( ) == 0 ) {
+	    // these must be added to the vector in the order
+	    // implied by the PointRegionSymbols enum...
+	    point_symbol_names.push_back("symdot");
+	    point_symbol_names.push_back("symdrarrow");
+	    point_symbol_names.push_back("symdlarrow");
+	    point_symbol_names.push_back("symurarrow");
+	    point_symbol_names.push_back("symularrow");
+	    point_symbol_names.push_back("symplus");
+	    point_symbol_names.push_back("symx");
+	    point_symbol_names.push_back("symcircle");
+	    point_symbol_names.push_back("symdiamond");
+	    point_symbol_names.push_back("symsquare");
+	}
+    }
+
+    static void init_point_region_symbol_icons( ) {
+	if ( point_symbol_icons.size( ) == 0 ) {
+	    init_point_region_symbol_names( );
+	    for ( unsigned int i=0; i < point_symbol_names.size( ); ++i ) {
+		point_symbol_icons.push_back(std::string(":/icons/") + point_symbol_names[i] + "%s.png");
+	    }
+	}
+    }
+
+    std::string pointRegionSymbolIcon( PointRegionSymbols sym, int button ){
+	if ( point_symbol_names.size( ) == 0 ) init_point_region_symbol_icons( );
+	if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return std::string( );
+	std::string pattern = point_symbol_icons[(int)sym];
+	char buf[pattern.size( )+40];
+	if ( button < 0 || button > 3 )
+	    sprintf( buf, pattern.c_str( ), "" );
+	else {
+	    char num[30];
+	    sprintf( num, "b%d", button );
+	    sprintf( buf, pattern.c_str( ), num );
+	}
+	return std::string(buf);
+    }
+
 }  // namespace QtMouseToolNames
 
 
@@ -115,6 +162,11 @@ namespace QtMouseToolNames {
 
 Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0,  0 };
 
+
+int QtMouseToolState::getButtonState(const std::string &tool) const {
+    std::map<std::string,int>::const_iterator it = tool_state.find(tool);
+    return it == tool_state.end( ) ? -1 : it->second;
+}
 
 void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
   
@@ -138,14 +190,34 @@ void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
   
     if(oldti!=nTools) {    
       mousebtns_[oldti] = 0;		// assign old tool to no button.
-      emit mouseBtnChg(toolName(oldti), mousebtns_[oldti]);  }  }
+      emit mouseBtnChg(toolName(oldti), mousebtns_[oldti]);
 					// broadcast that change.
+    }
+  }
   
   if(ti!=nTools) {
     mousebtns_[ti] = mousebtn;	// assign requested tool to requested button.
-    emit mouseBtnChg(tool, mousebtn);  }  }	// broadcast that change.
+    emit mouseBtnChg(tool, mousebtn);	// broadcast that change.
+  }
+}
  
 
+void QtMouseToolState::mouseBtnStateChg(String /*tool*/, Int sym) {
+    using namespace QtMouseToolNames;
+
+    if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return;
+    int ti = -1;
+    for( int i=0; i<nTools; ++i ) {
+	if ( tools[i] == POINT ) { ti = i; break; }
+    }
+    if ( ti < 0 ) return;
+    if ( point_symbol_icons.size() == 0 ) init_point_region_symbol_icons( );
+    iconnames[ti] = point_symbol_names[sym] + "b";
+
+    tool_state[POINT] = sym;
+    emit mouseBtnChg(POINT, mousebtns_[ti]);	// force update
+
+}
 
 void QtMouseToolState::emitBtns() {
   // Request signalling of the current mouse button setting for every
@@ -170,9 +242,5 @@ Int QtMouseToolState::toolIndexOnButton_(Int mousebtn) {
   Int ti = 0;   
   while(ti<nTools && mousebtn!=mousebtns_[ti]) ti++;
   return ti;  }
-
-
-  
-  
 
 } //# NAMESPACE CASA - END

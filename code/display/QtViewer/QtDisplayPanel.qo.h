@@ -599,7 +599,7 @@ public:
    
   // Connected to QtMouseToolState::mouseBtnChg() signal: changes
   // button assignment for a mouse tool.
-  virtual void chgMouseBtn_(String tool, Int button);
+  virtual void chgMouseBtn_(std::string tool, Int button);
 
   // Connected to corresp. signals from 'region' mouse tools.  Emits that
   // signal verbatum, but also processes it through the registered DDs,

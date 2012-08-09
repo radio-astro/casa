@@ -54,5 +54,14 @@ namespace casa {
 
 	}
 
+	void QtRectangle::adjustCorners( double blcx, double blcy, double trcx, double trcy ){
+		world_to_linear(wc_, blcx, blcy, blc_x, blc_y );
+		world_to_linear( wc_, trcx, trcy, trc_x, trc_y);
+		//updateStateInfo( true );
+		//setDrawCenter(false);
+		//invalidateCenterInfo();
+		refresh();
+	}
+
     }
 }

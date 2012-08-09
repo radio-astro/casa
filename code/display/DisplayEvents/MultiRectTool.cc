@@ -52,6 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     MultiRectTool::MultiRectTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd, Display::KeySym keysym, const Bool persistent ) :
 	RegionTool(keysym),
+	rfactory(rcs->newSource(this)), 
 	itsRectanglePersistent(persistent),
 	itsrectangleexists(False),
 	itsActive(False),
@@ -59,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsHX(4), itsHY(4),
 	itsLastPressTime(-1.),		// 'long ago..'
 	its2ndLastPressTime(-1.),
-	rfactory(rcs->newSource(this)), pd_(pd) {
+	pd_(pd) {
     }
 
 MultiRectTool::~MultiRectTool() {
@@ -185,7 +186,7 @@ void MultiRectTool::disable() {
 	    creating_region = memory::nullptr;
 	}
 
-	Bool wasActive = itsActive;
+// 	Bool wasActive = itsActive;
 	itsActive = False;
 	if ( rectangles.size( ) == 0 ) {
 	    if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
@@ -569,7 +570,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
 	    Int zPos = -1;
 	    Int hPos = -1;
-	    for (Int k = 0; k < nm.nelements(); k++) {
+	    for (unsigned int k = 0; k < nm.nelements(); k++) {
 		if (nm(k) == zaxis)
 		    zPos = k;
 		if (nm(k) == haxis)
@@ -668,8 +669,8 @@ void MultiRectTool::reset(Bool skipRefresh) {
 		dCoord.setWorldAxisUnits(units);
 		Vector<Double> deltas = dCoord.increment();
 
-		Double major = beam.getMajor("rad");
-		Double minor = beam.getMinor("rad");
+// 		Double major = beam.getMajor("rad");
+// 		Double minor = beam.getMinor("rad");
 		beamArea = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
 	    }
 
@@ -716,7 +717,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 		if( cs->showType(coordno) == String("Direction") ) {
 		    // Check for Right Ascension and Declination
 		    Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
-		    AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
+		    AlwaysAssert( axisincoord>=0 && axisincoord < (Int) axnames.nelements(), AipsError);
 		    if( axnames[axisincoord] == axtype ) {
 			return ax;
 		    }
@@ -860,7 +861,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
+    std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, int ) const {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
@@ -885,10 +886,12 @@ void MultiRectTool::reset(Bool skipRefresh) {
 				const std::vector<std::pair<double,double> > &pts,
 				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width, bool is_annotation ) {
+				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
+				bool is_annotation, int region_specific_state ) {
+
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second, region_specific_state );
 	result->setLabel( label );
 	result->setLabelPosition( label_pos );
 	result->setLabelDelta( label_off );
@@ -921,7 +924,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	double linx, liny;
 	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
-	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny );
+	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, -1 );
 	rectangles.push_back( resizing_region );
 
 	if ( type( ) != POINTTOOL )

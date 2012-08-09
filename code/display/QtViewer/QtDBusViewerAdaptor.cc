@@ -392,7 +392,7 @@ namespace casa {
 	return error(QString("datatype '") + datatype.c_str( ) + "' not yet implemented");
     }
 
-    void QtDBusViewerAdaptor::unload_data( QtDisplayPanelGui *panel, int index, bool erase ) {
+    void QtDBusViewerAdaptor::unload_data( QtDisplayPanelGui */*panel*/, int index, bool erase ) {
 	datamap::iterator iter = managed_datas.find( index );
 	if ( iter == managed_datas.end( ) ) {
 	    fprintf( stderr, "error: internal error (data id not found)" );
@@ -1118,8 +1118,6 @@ namespace casa {
     /////////File Statics///////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
     void launch_ghostview( const char *printer_file ) {
-	pid_t pid;
-	int status;
 	if ( fork( ) == 0 ) {
 	    setpgrp( );
 	    signal( SIGHUP, SIG_IGN );
@@ -1140,8 +1138,6 @@ namespace casa {
     }
 
     void launch_lpr( const char *printer_file, const char *printer  ) {
-	pid_t pid;
-	int status;
 	if ( fork( ) == 0 ) {
 	    setpgrp( );
 	    signal( SIGHUP, SIG_IGN );

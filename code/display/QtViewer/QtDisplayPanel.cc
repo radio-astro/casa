@@ -217,7 +217,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   mouseToolNames_[1] = PAN;
   mouseToolNames_[2] = SHIFTSLOPE;
   mouseToolNames_[3] = BRIGHTCONTRAST;
-  mouseToolNames_[4] = POSITION;
+  mouseToolNames_[4] = POINT;
   mouseToolNames_[5] = RECTANGLE;
   mouseToolNames_[6] = ELLIPSE;
   mouseToolNames_[7] = POLYGON;
@@ -234,7 +234,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   
   zoom_      = new MWCRTZoomer;       pd_->addTool(ZOOM, zoom_);
   panner_    = new MWCPannerTool;     pd_->addTool(PAN, panner_);
-  //crosshair_ = new MWCCrosshairTool;  pd_->addTool(POSITION, crosshair_);
+  //crosshair_ = new MWCCrosshairTool;  pd_->addTool(POINT, crosshair_);
   //ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
   if ( new_region_tools ) {
@@ -242,7 +242,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
       toolmgr = new viewer::RegionToolManager( region_source_factory, pd_ );
 
   } else {
-      ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POSITION, ocrosshair_);
+      ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POINT, ocrosshair_);
       optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
       ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, ortregion_);
       oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(ELLIPSE, oelregion_);
@@ -281,8 +281,8 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
-  connect( mBtns, SIGNAL(mouseBtnChg(String, Int)),
-                    SLOT(chgMouseBtn_(String, Int)) );
+  connect( mBtns, SIGNAL(mouseBtnChg(std::string, Int)),
+                    SLOT(chgMouseBtn_(std::string, Int)) );
     
   mBtns->emitBtns();  }
 	// (Causes mBtns to communicate current mouse button settings
@@ -290,7 +290,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 
 
 
-void QtDisplayPanel::chgMouseBtn_(String tool, Int button) {
+void QtDisplayPanel::chgMouseBtn_(std::string tool, Int button) {
   // Command to set/change the button currently assigned to a mouse tool.
   // The central place for this information is QtMouseToolState, which
   // invokes this routine.  This sets the active button onto the internal
@@ -557,7 +557,6 @@ void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionE
 	//String const attributeName( "canvasYAttribute");
 	//worldCanvas -> getAttributeValue( attributeName, offsetY );
 	QPoint loc( ev.pixX(), sizeY - ev.pixY());
-	//qDebug() << "Ofset is " << offsetY;
 	String displayText;
 
 	for(uInt i=0; i<trackingRec.nfields(); i++) {

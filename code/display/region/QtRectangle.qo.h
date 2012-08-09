@@ -126,6 +126,9 @@ namespace casa {
 
 		void emitUpdate( ) { QtRegion::emitUpdate( ); }
 
+		public slots:
+			void adjustCorners( double, double, double, double );
+
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Rectangle::generate_dds_statistics( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }

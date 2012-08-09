@@ -244,7 +244,7 @@ namespace casa {
 		    pts[1].first  = center[0] + xoffset;
 		    pts[1].second = center[1] + yoffset;
 		    rect_creators.front( )->create( Region::RectRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0),
-						    font, 11, 0, color, color, Region::SolidLine, 1, false );
+						    font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );
 		}
 	    } else {
 		const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( Region::PointRegion );
@@ -252,7 +252,7 @@ namespace casa {
 		pts[0].first  = pts[1].first = center[0];
 		pts[0].second = pts[1].second = center[1];
 		rect_creators.front( )->create( Region::PointRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0),
-						font, 11, 0, color, color, Region::SolidLine, 1, false );
+						font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );
 	    }
 
 	}
@@ -267,7 +267,7 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int size, const ch
 	pts[0].first  = pts[1].first = center[0];										\
 	pts[0].second = pts[1].second = center[1];										\
 	point_creators.front( )->create( Region::PointRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0),		\
-					 font, 11, 0, color, color, Region::SolidLine, 1, false );				\
+					 font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );				\
     }																\
 }
 
@@ -294,7 +294,7 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int size, const ch
 		pts[1].first  = center[0] + xoffset;
 		pts[1].second = center[1] + yoffset;
 		ellipse_creators.front( )->create( Region::EllipseRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0),
-						   font, 11, 0, color, color, Region::SolidLine, 1, false );
+						   font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );
 	    }
 	}
 
@@ -310,7 +310,7 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int size, const ch
 		pts[1].first  = center[0] + radius;
 		pts[1].second = center[1] + radius;
 		ellipse_creators.front( )->create( Region::EllipseRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0),
-						   font, 11, 0, color, color, Region::SolidLine, 1, false );
+						   font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );
 	    }
 
 	}
@@ -333,7 +333,7 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int size, const ch
 		    pts[count++].second = (*it)[1];
 		}
 		poly_creators.front( )->create( Region::PolyRegion, wc_, pts, text, Region::TopText, std::vector<int>(2,0), 
-						font, 11, 0, color, color, Region::SolidLine, 1, false );
+						font, 11, 0, color, color, Region::SolidLine, 1, false, -1 );
 	    }
 	}
 

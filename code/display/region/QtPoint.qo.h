@@ -85,7 +85,7 @@ namespace casa {
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Point::regionCenter( x, y ); }
 
-		QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false );
+		QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, bool hold_signals=false );
 
 		// qt-event -> QtRegion -> QtPoint -> Region::refresh( )
 		void refresh( ) { Point::refresh( ); }

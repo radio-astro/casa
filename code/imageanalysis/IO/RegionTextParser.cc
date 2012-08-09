@@ -337,7 +337,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		);
 	}
 	*_log << LogIO::NORMAL << "Combined " << _regions
-		<< " image regions (regions not for annotation only)" << LogIO::POST;
+		<< " image regions (which excludes any annotation regions)" << LogIO::POST;
 }
 
 void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {

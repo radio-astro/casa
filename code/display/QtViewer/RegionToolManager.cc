@@ -33,6 +33,7 @@
 
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
+#include <imageanalysis/Annotations/AnnSymbol.h>
 #include <display/DisplayDatas/DisplayData.h>
 
 namespace casa {
@@ -57,7 +58,7 @@ namespace casa {
 	    RegionTool *tool = 0;
 	    tool = new QtCrossTool(rsf,pd);
 	    tools.insert(tool_map::value_type(PointTool,tool));
-	    pd->addTool(QtMouseToolNames::POSITION, tool);
+	    pd->addTool(QtMouseToolNames::POINT, tool);
 
 	    tool = new QtPolyTool(rsf,pd);
 	    tools.insert(tool_map::value_type(PolyTool,tool));
@@ -77,7 +78,7 @@ namespace casa {
 	    for ( tool_map::iterator it = tools.begin( );
 		  it != tools.end(); ++it ) {
 		switch ( (*it).first ) {
-		    case PointTool:   pd->removeTool(QtMouseToolNames::POSITION); break;
+		    case PointTool:   pd->removeTool(QtMouseToolNames::POINT); break;
 		    case PolyTool:    pd->removeTool(QtMouseToolNames::POLYGON); break;
 		    case RectTool:    pd->removeTool(QtMouseToolNames::RECTANGLE); break;
 		    case EllipseTool: pd->removeTool(QtMouseToolNames::ELLIPSE); break;
@@ -428,6 +429,11 @@ namespace casa {
 				tool_map::iterator ptit = tools.find(PointTool);
 				if ( ptit == tools.end( ) ) continue;
 				String pos = ann->getLabelPosition( );
+
+				AnnSymbol::Symbol sym = AnnSymbol::POINT;
+				const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
+				if ( sym_obj ) sym = sym_obj->getSymbol( );
+
 				(*ptit).second->create( Region::PointRegion, wc, linear_pts,
 							ann->getLabel( ), ( pos == "left" ? Region::LeftText :
 									    pos == "right" ? Region::RightText : 
@@ -440,7 +446,18 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )),
+							sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
+							sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
+							sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
+							sym == AnnSymbol::TRIANGLE_RIGHT ? QtMouseToolNames::SYM_UP_RIGHT_ARROW :
+							sym == AnnSymbol::PLUS ?           QtMouseToolNames::SYM_PLUS :
+							sym == AnnSymbol::X ?              QtMouseToolNames::SYM_X :
+							sym == AnnSymbol::CIRCLE ?         QtMouseToolNames::SYM_CIRCLE :
+							sym == AnnSymbol::DIAMOND ?        QtMouseToolNames::SYM_DIAMOND :
+							sym == AnnSymbol::THIN_DIAMOND ?   QtMouseToolNames::SYM_DIAMOND :
+							sym == AnnSymbol::SQUARE ?         QtMouseToolNames::SYM_SQUARE :
+							QtMouseToolNames::SYM_DOT );
 
 			    }
 			    break;
@@ -489,7 +506,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 
 			    break;
@@ -566,7 +583,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 			    break;
 			case AnnotationBase::POLYGON:
@@ -615,7 +632,7 @@ namespace casa {
 							 ann->getLabelColorString( ), ann->getColorString( ),
 							 ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							   ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )) );
+							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
 			    }
 			    break;
 

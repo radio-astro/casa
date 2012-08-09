@@ -41,7 +41,8 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
-
+#include <iostream>
+using namespace std;
 namespace casa {
     namespace viewer {
 

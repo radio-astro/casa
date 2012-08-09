@@ -29,8 +29,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
-	return rfactory->point( wc, x, y );
+    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double, int region_specific_state ) const {
+	return rfactory->point( wc, x, y, 
+				region_specific_state >= 0 && region_specific_state < QtMouseToolNames::SYM_POINT_REGION_COUNT ?
+				(QtMouseToolNames::PointRegionSymbols) region_specific_state : rfactory->currentPointSymbolType( ) );
     }
 
     static std::set<viewer::Region::RegionTypes> multi_point_tool_region_set;

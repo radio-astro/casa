@@ -52,6 +52,7 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
+#include <images/Images/ImageBeamSet.h>
 #include <casa/OS/File.h>
 
 #include <casa/Quanta/UnitMap.h>
@@ -137,6 +138,33 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
     fft.flip(li.rwMatrixCursor(), False, False);
   }
 };
+
+void StokesImageUtil::Convolve(ImageInterface<Float>& image, 
+				 ImageBeamSet& beams, Bool normalizeVolume){
+
+  Int nbeams=beams.shape()(0);
+  
+  Int freqAx=CoordinateUtil::findSpectralAxis(image.coordinates());
+  Int nchan=image.shape()(freqAx);
+  if((nchan != nbeams) || (nchan==1)){
+    GaussianBeam elbeam=beams(IPosition(2,0,0));
+    Convolve(image, elbeam, normalizeVolume);     
+  }
+  else{
+    IPosition blc=image.shape();
+    blc=0;
+    IPosition trc=image.shape()-1;
+    for (Int k=0; k < nchan; ++k){
+      blc[freqAx]=k;
+      trc[freqAx]=k;
+      Slicer slc(blc, trc, Slicer::endIsLast);
+      SubImage<Float> subim(image, slc, True);
+      GaussianBeam elbeam=beams(IPosition(2,k,0));
+      Convolve(subim, elbeam, normalizeVolume);
+
+    }
+  }
+}
 
 void StokesImageUtil::Convolve(ImageInterface<Float>& image,
 			       GaussianBeam& beam,
@@ -375,6 +403,93 @@ void StokesImageUtil::Constrain(ImageInterface<Float>& image) {
   }
 }
 
+
+Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& elbeam){
+
+  Bool retval=True;
+  Int freqAx=CoordinateUtil::findSpectralAxis(psf.coordinates());
+  Vector<Stokes::StokesTypes> whichPols;
+  Int polAx=CoordinateUtil::findStokesAxis(whichPols, psf.coordinates());
+  Int nchan=psf.shape()(freqAx);
+  Vector<ImageBeamSet::AxisType> types(2);
+  types[0] = ImageBeamSet::SPECTRAL;
+  types[1] = ImageBeamSet::POLARIZATION;
+  IPosition blc=psf.shape();
+  blc=0;
+  IPosition trc=psf.shape()-1;
+  trc[polAx]=0;
+  elbeam=ImageBeamSet(IPosition(2, nchan, 1), types);
+  IPosition ipos(2,0,0);
+  Matrix<GaussianBeam> tempBeam(nchan,1);
+  Vector<Bool> fitted(nchan, False);
+
+  for (Int k=0; k < nchan;++k){ 
+    blc[freqAx]=k;
+    trc[freqAx]=k;
+    Slicer slc(blc, trc, Slicer::endIsLast);
+    SubImage<Float> subpsf(psf, slc, False);
+    try{
+      fitted(k)=FitGaussianPSF(subpsf, tempBeam(k,0));
+    }
+    catch (AipsError x_error){
+      Int ik=k;
+      fitted(k)=False;
+      while ((ik > 0) && !fitted(k)){
+	if(fitted(ik-1)){
+	  fitted(k)=True;
+	  tempBeam(k,0)=tempBeam(ik-1, 0);
+	}
+	--ik;
+      }
+    } 
+    ipos(0)=k;
+    //elbeam.setBeam(tempBeam, ipos);
+  }
+  Float maxMaj=0.0;
+  Float minMaj=C::flt_max;
+  Int posMax=0;
+  DirectionCoordinate directionCoord=psf.coordinates().directionCoordinate(psf.coordinates().findCoordinate(Coordinate::DIRECTION));
+  String dirunit=directionCoord.worldAxisUnits()(0);
+  for(Int k=0; k < nchan; ++k){
+	  if(fitted(k) && (maxMaj < tempBeam(k,0).getMajor(dirunit))){
+		  maxMaj=tempBeam(k,0).getMajor(dirunit);
+		  posMax=k;
+	  }
+	  if(fitted(k) && (minMaj > tempBeam(k,0).getMajor(dirunit))){
+	  		  minMaj=tempBeam(k,0).getMajor(dirunit);
+	  		  posMax=k;
+	  }
+  }
+  //If the beams are within 0.5 pixel the same resolution then
+  //who cares to have a beam per plane
+  if(abs(minMaj-maxMaj) < 0.5*abs(directionCoord.increment()(0))){
+	  GaussianBeam theBeam=tempBeam(posMax,0);
+	  tempBeam.resize(1,1);
+	  tempBeam(0,0)=theBeam;
+	  fitted.resize(1);
+	  fitted=True;
+  }
+  if(!anyTrue(fitted)){
+      retval=False;
+      throw(AipsError("No valid fits were found to PSF"));
+  }
+  if(!allTrue(fitted)){
+     for (Int k=0; k < nchan;++k){ 
+       int ik=k;
+       while((ik < (nchan-1)) && !fitted(k)){
+	 if(fitted(ik+1)){
+	   fitted(k)=True;
+	   tempBeam(k,0)=tempBeam(ik+1, 0);
+	 }
+	 ++ik;
+       }
+     }
+  }
+
+  elbeam.setBeams(tempBeam);
+  
+  return retval;
+}
 
 Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, 
 				     GaussianBeam& beam)

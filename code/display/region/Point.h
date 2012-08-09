@@ -29,6 +29,7 @@
 #ifndef REGION_POINT_H_
 #define REGION_POINT_H_
 
+#include <display/Display/MouseToolState.h>
 #include <display/region/Rectangle.h>
 #include <casa/BasicSL/String.h>
 #include <list>
@@ -46,8 +47,8 @@ namespace casa {
 	class Point : public Rectangle {
 	    public:
 		~Point( );
-		Point( WorldCanvas *wc, double x, double y ) :
-		    Rectangle( wc, x, y, x, y ) { }
+		Point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
+					Rectangle( wc, x, y, x, y ), marker(sym){ }
 
 		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
 
@@ -75,6 +76,8 @@ namespace casa {
 		void drawRegion( bool );
 
 		std::list<RegionInfo> *generate_dds_centers(bool /*skycomp*/);
+
+		QtMouseToolNames::PointRegionSymbols marker;
 	};
     }
 }

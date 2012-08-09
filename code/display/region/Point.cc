@@ -31,14 +31,24 @@ namespace casa {
 	    Quantity qx( wx, units[0] );
 	    Quantity qy( wy, units[1] );
 
-	    const DisplayData *dd = wc_->displaylist().front();
+// 	    const DisplayData *dd = wc_->displaylist().front();
 
 	    // Vector<Stokes::StokesTypes> stokes;
 	    // Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
 
 	    AnnSymbol *symbol = 0;
 	    try {
-		symbol = new AnnSymbol( qx, qy, cs, AnnSymbol::POINT );
+		symbol = new AnnSymbol( qx, qy, cs,
+					marker == QtMouseToolNames::SYM_DOWN_RIGHT_ARROW ? AnnSymbol::TRIANGLE_DOWN :
+					marker == QtMouseToolNames::SYM_UP_LEFT_ARROW    ? AnnSymbol::TRIANGLE_UP :
+					marker == QtMouseToolNames::SYM_DOWN_LEFT_ARROW  ? AnnSymbol::TRIANGLE_LEFT :
+					marker == QtMouseToolNames::SYM_UP_RIGHT_ARROW   ? AnnSymbol::TRIANGLE_RIGHT :
+					marker == QtMouseToolNames::SYM_PLUS             ? AnnSymbol::PLUS :
+					marker == QtMouseToolNames::SYM_X                ? AnnSymbol::X :
+					marker == QtMouseToolNames::SYM_CIRCLE           ? AnnSymbol::CIRCLE :
+					marker == QtMouseToolNames::SYM_DIAMOND          ? AnnSymbol::DIAMOND :
+					marker == QtMouseToolNames::SYM_SQUARE           ? AnnSymbol::SQUARE :
+					AnnSymbol::POINT );
 	    } catch ( AipsError &e ) {
 		cerr << "Error encountered creating an AnnSymbol:" << endl;
 		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
@@ -63,8 +73,8 @@ namespace casa {
 	    try { linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y ); } catch(...) { return; }
 
 	    pixel_pts.resize(1);
-	    pixel_pts[0].first = pblc_x;
-	    pixel_pts[0].second = pblc_y;
+	    pixel_pts[0].first = (int) pblc_x;
+	    pixel_pts[0].second = (int) pblc_y;
 
 	    world_pts.resize(1);
 	    world_pts[0].first = wblc_x;
@@ -83,7 +93,53 @@ namespace casa {
 	    int x, y;
 	    try { linear_to_screen( wc_, blc_x, blc_y, x, y ); } catch(...) { return; }
 	    // drawing symbols would slot in here...
-	    pc->drawFilledRectangle( x-1, y-1, x+1, y+1 );
+	    switch ( marker ) {
+		case QtMouseToolNames::SYM_DOWN_RIGHT_ARROW:
+		    pc->drawLine( x-5-1, y+1, x-1, y+1 );
+		    pc->drawLine( x-1, y+1, x-1, y+5+1 );
+		    pc->drawLine( x-7-1, y+7+1, x-1, y+1);
+		    break;
+		case QtMouseToolNames::SYM_UP_RIGHT_ARROW:
+		    pc->drawLine( x-5-1, y-1, x-1, y-1 );
+		    pc->drawLine( x-1, y-1, x-1, y-5-1 );
+		    pc->drawLine( x-7-1, y-7-1, x-1, y-1);
+		    break;
+		case QtMouseToolNames::SYM_DOWN_LEFT_ARROW:
+		    pc->drawLine( x+5+1, y+1, x+1, y+1 );
+		    pc->drawLine( x+1, y+1, x+1, y+5+1 );
+		    pc->drawLine( x+7+1, y+7+1, x+1, y+1);
+		    break;
+		case QtMouseToolNames::SYM_UP_LEFT_ARROW:
+		    pc->drawLine( x+5+1, y-1, x+1, y-1 );
+		    pc->drawLine( x+1, y-1, x+1, y-5-1 );
+		    pc->drawLine( x+7+1, y-7-1, x+1, y-1);
+		    break;
+		case QtMouseToolNames::SYM_PLUS:
+		    pc->drawLine( x, y+5, x, y-5 );
+		    pc->drawLine( x+5, y, x-5, y );
+		    break;
+		case QtMouseToolNames::SYM_X:
+		    pc->drawLine( x-5, y+5, x+5, y-5 );
+		    pc->drawLine( x-5, y-5, x+5, y+5 );
+		    break;
+		case QtMouseToolNames::SYM_CIRCLE:
+		    pc->drawEllipse( x, y, 6, 6, 0 );
+		    break;
+		case QtMouseToolNames::SYM_DIAMOND:
+		  { const int minor=4;
+		    const int major=6;
+		    pc->drawLine( x-minor, y, x, y+major );
+		    pc->drawLine( x, y+major, x+minor, y );
+		    pc->drawLine( x+minor, y, x, y-major );
+		    pc->drawLine( x, y-major, x-minor, y ); }
+		    break;
+		case QtMouseToolNames::SYM_SQUARE:
+		    pc->drawRectangle(x-4,y-4,x+4,y+4);
+		    break;
+		case QtMouseToolNames::SYM_DOT:
+		default:
+		    pc->drawFilledRectangle( x-1, y-1, x+1, y+1 );
+	    }
 
 	    if ( selected ) {
 		// draw outline rectangle for resizing the point...
@@ -115,7 +171,7 @@ namespace casa {
 	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
 		result |= PointInside;
 
-	    return PointInfo(xd,yd,result == 0 ? PointOutside : result);
+	    return PointInfo(xd,yd,result == 0 ? (unsigned int) PointOutside : result);
 	}
 
         // returns mouse state (Region::MouseState)

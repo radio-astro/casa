@@ -269,7 +269,7 @@ traceEvent(1,"Entering imager::defaults",25);
   mDataStart_p=MRadialVelocity(Quantity(0.0, "km/s"), MRadialVelocity::LSRK);
   mDataStep_p=MRadialVelocity(Quantity(0.0, "km/s"), MRadialVelocity::LSRK);
   beamValid_p=False;
-  beam_p = GaussianBeam();
+  beam_p = ImageBeamSet();
   images_p.resize(0);
   masks_p.resize(0);
   fluxMasks_p.resize(0);
@@ -3351,14 +3351,15 @@ Bool Imager::approximatepsf(const String& psf)
 
     PagedImage<Float> elpsf(psf);
     elpsf.copyData(sm_p->PSF(0));
-    GaussianBeam mbeam;
+    ImageBeamSet mbeam;
     StokesImageUtil::FitGaussianPSF(elpsf, mbeam);
     LatticeExprNode sumPSF = sum(elpsf);
     Float volume=sumPSF.getFloat();
+    GaussianBeam elbeam=mbeam.getBeam(IPosition(2,0,0));
     os << LogIO::NORMAL << "Approximate PSF  "  << ": size " // Loglevel INFO
-       << mbeam.getMajor("arcsec") << " by "
-       << mbeam.getMinor("arcsec") << " (arcsec) at pa "
-       << mbeam.getPA(Unit("deg")) << " (deg)" << endl
+       << elbeam.getMajor("arcsec") << " by "
+       << elbeam.getMinor("arcsec") << " (arcsec) at pa "
+       << elbeam.getPA(Unit("deg")) << " (deg)" << endl
        << "and volume = " << volume << " pixels " << LogIO::POST;
     
     
@@ -3380,7 +3381,7 @@ Bool Imager::approximatepsf(const String& psf)
 
 Bool Imager::smooth(const Vector<String>& model, 
 		    const Vector<String>& image, Bool usefit, 
-		    GaussianBeam& mbeam,
+		    ImageBeamSet& mbeam,
 		    Bool normalizeVolume)
 {
   if(!valid()) return False;
@@ -3444,7 +3445,8 @@ Bool Imager::smooth(const Vector<String>& model,
 				normalizeVolume);
       
       ImageInfo ii = imageImage.imageInfo();
-      ii.setRestoringBeam(mbeam);
+      //ii.setRestoringBeam(mbeam);
+      ii.setBeams(mbeam);
       imageImage.setImageInfo(ii);
       imageImage.setUnits(Unit("Jy/beam"));
       imageImage.table().unmarkForDelete();
@@ -4140,13 +4142,14 @@ Bool Imager::mem(const String& algorithm,
 
     // Get the PSF fit while we are here
     if(!beamValid_p){
-      Vector<Float> beam(3);
-      beam=sm_p->beam(0);
-      if(beam[0] > 0){
-    	  beam_p.setMajorMinor(
+      ImageBeamSet beam=sm_p->beam(0);
+      if(beam.nelements() > 0){
+	/*beam_p.setMajorMinor(
     			Quantity(abs(beam(0)), "arcsec"), Quantity(abs(beam(1)), "arcsec")
     		);
     	  beam_p.setPA(Quantity(beam(2), "deg"));
+	*/
+	beam_p=beam;
 	beamValid_p=True;
       }
     }
@@ -4787,6 +4790,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                                                             mfreqs[selspw][0],
                                                             mtime, fluxval, point,
                                                             siModel,
+          // jagonzal (CAS-4109): Specify table name to avoid clashing between different CASA engines when running vs a MMS
+                                                            ms_p->tableName() +
                                                             "_setjy_spw" +
                                                             String::toString(selspw) +
                                                             "_");
@@ -5411,7 +5416,7 @@ Bool Imager::make(const String& model)
 }
 
 // Fit the psf. If psf is blank then make the psf first.
-Bool Imager::fitpsf(const String& psf, GaussianBeam& mbeam) {
+Bool Imager::fitpsf(const String& psf, ImageBeamSet& mbeam) {
 
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::fitpsf",23);
@@ -5465,10 +5470,11 @@ Bool Imager::fitpsf(const String& psf, GaussianBeam& mbeam) {
     beam_p = mbeam;
     beamValid_p=True;
     
+    GaussianBeam elbeam=beam_p(IPosition(2,0,0));
     os << LogIO::NORMAL // Loglevel INFO
-       << "  Beam fit: " << beam_p.getMajor("arcsec") << " by "
-       << beam_p.getMinor("arcsec") << " (arcsec) at pa "
-       << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
+       << "  Beam fit: " << elbeam.getMajor("arcsec") << " by "
+       << elbeam.getMinor("arcsec") << " (arcsec) at pa "
+       << elbeam.getPA(Unit("deg")) << " (deg) " << endl;
 
     this->unlock();
     
@@ -5530,12 +5536,12 @@ Bool Imager::settaylorterms(const Int intaylor,const Double inreffreq)
 };
 
 // Set the beam
-Bool Imager::setbeam(const GaussianBeam& mbeam)
+Bool Imager::setbeam(const ImageBeamSet& mbeam)
 {
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "setbeam()", WHERE));
-  beam_p = mbeam;
+  beam_p = ImageBeamSet(mbeam);
   beamValid_p=True;
     
   return True;
