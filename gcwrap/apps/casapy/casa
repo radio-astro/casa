@@ -37,8 +37,8 @@ else
         fi
 fi
 
-echo "DEBUG: isapple = $isapple"
-echo "DEBUG: installed_from_rpm = $installed_from_rpm"
+# echo "DEBUG: isapple = $isapple"
+# echo "DEBUG: installed_from_rpm = $installed_from_rpm"
 
 a_site="socorro"
 
@@ -57,7 +57,7 @@ if [ $installed_from_rpm = "T" ]; then
 else
     prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
 fi
-echo "DEBUG: prefix = $prefix"
+# echo "DEBUG: prefix = $prefix"
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
 a_host=$(hostname -s)
@@ -83,14 +83,19 @@ if [ ! ${DEBUGGER} ]; then
 fi
 
 
-export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
+if [ $installed_from_rpm = "T" ]; then
+        export   __CASAPY_PYTHONDIR=${prefix}/lib/python2.6
+else
+        export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
+fi
 p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
-
+# echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
+# echo "DEBUG: p_path = $p_path"
 
 export PYTHONHOME=${p_root}
 export PYTHONPATH=${p_path}:${PYTHONPATH}
 export CASAPATH="$a_root $a_arch $a_site $a_host"
-echo "DEBUG: CASAPATH = ${CASAPATH}"
+# echo "DEBUG: CASAPATH = ${CASAPATH}"
 export DISPLAY=${DISPLAY=:0.0}
 export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
 export PGPLOT_DIR="${casa3party}/lib"
@@ -196,7 +201,7 @@ if [ $installed_from_rpm = "T" ]; then
 else
         casapy_command="${prefix}/python/2.6/casapy.py"
 fi
-echo "DEBUG: casapy_command = $casapy_command"
+# echo "DEBUG: casapy_command = $casapy_command"
 
 #exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/2.6/casapy.py $*
 if [ ${_dodebug} = "T" ]; then
