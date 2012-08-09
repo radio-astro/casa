@@ -10,6 +10,7 @@ startDir=$(pwd)
 OSTYPE=$(uname -s)
 if [ $OSTYPE = "Darwin" ]; then
 	isapple="T"
+        installed_from_rpm="F"   
         OSVERS=$(uname -r | awk -F. '{print $1}')
         if [ $OSVERS -eq "10" ]; then
 		casa3party="/opt/casa/darwin10-64b"
@@ -29,7 +30,15 @@ else
 	   casa3party="/usr/lib64/casapy"
         fi
         p_root=${casa3party}
+        if [[ "$CASAPATH" =~ /usr/lib* ]]; then
+                installed_from_rpm="T"
+        else
+                installed_from_rpm="F"   
+        fi
 fi
+
+echo "DEBUG: isapple = $isapple"
+echo "DEBUG: installed_from_rpm = $installed_from_rpm"
 
 a_site="socorro"
 
