@@ -29,6 +29,7 @@
 #ifndef REGION_QTPOINT_H_
 #define REGION_QTPOINT_H_
 
+#include <display/Display/MouseToolState.h>
 #include <display/region/QtRegion.qo.h>
 #include <display/region/Point.h>
 
@@ -49,6 +50,7 @@ namespace casa {
 		~QtPoint( );
 
 		const std::string name( ) const { return QtRegion::name( ); }
+		QtMouseToolNames::PointRegionSymbols marker( ) const { return Point::marker_; }
 
 		std::string lineColor( )   const { return QtRegion::lineColor( ); }
 		std::string centerColor( ) const { return QtRegion::centerColor( ); }

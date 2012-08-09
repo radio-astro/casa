@@ -55,7 +55,8 @@ namespace casa {
 	    dock_->addRegion(mystate);
 	}
 
-      QtRegion::QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_ ) :
+      QtRegion::QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_,
+			  QtMouseToolNames::PointRegionSymbols sym ) :
 			source_(factory), dock_(factory->dock()), name_(nme), hold_signals(hold_signals_ ? 1 : 0),
 			z_index_within_range(true), id_(QtId::get_id( )) {
 	    statistics_visible = position_visible = false;
@@ -67,7 +68,7 @@ namespace casa {
 	    if ( dock_ == 0 )
 		throw internal_error( "no dock widget is available" );
 
-	    mystate = new QtRegionState(name_,this);
+	    mystate = new QtRegionState( name_, this, sym );
 
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );

@@ -48,7 +48,7 @@ namespace casa {
 	    public:
 		~Point( );
 		Point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
-					Rectangle( wc, x, y, x, y ), marker(sym){ }
+					Rectangle( wc, x, y, x, y ), marker_(sym){ }
 
 		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
 
@@ -77,7 +77,7 @@ namespace casa {
 
 		std::list<RegionInfo> *generate_dds_centers(bool /*skycomp*/);
 
-		QtMouseToolNames::PointRegionSymbols marker;
+		QtMouseToolNames::PointRegionSymbols marker_;
 	};
     }
 }

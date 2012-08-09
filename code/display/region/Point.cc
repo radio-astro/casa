@@ -39,15 +39,15 @@ namespace casa {
 	    AnnSymbol *symbol = 0;
 	    try {
 		symbol = new AnnSymbol( qx, qy, cs,
-					marker == QtMouseToolNames::SYM_DOWN_RIGHT_ARROW ? AnnSymbol::TRIANGLE_DOWN :
-					marker == QtMouseToolNames::SYM_UP_LEFT_ARROW    ? AnnSymbol::TRIANGLE_UP :
-					marker == QtMouseToolNames::SYM_DOWN_LEFT_ARROW  ? AnnSymbol::TRIANGLE_LEFT :
-					marker == QtMouseToolNames::SYM_UP_RIGHT_ARROW   ? AnnSymbol::TRIANGLE_RIGHT :
-					marker == QtMouseToolNames::SYM_PLUS             ? AnnSymbol::PLUS :
-					marker == QtMouseToolNames::SYM_X                ? AnnSymbol::X :
-					marker == QtMouseToolNames::SYM_CIRCLE           ? AnnSymbol::CIRCLE :
-					marker == QtMouseToolNames::SYM_DIAMOND          ? AnnSymbol::DIAMOND :
-					marker == QtMouseToolNames::SYM_SQUARE           ? AnnSymbol::SQUARE :
+					marker_ == QtMouseToolNames::SYM_DOWN_RIGHT_ARROW ? AnnSymbol::TRIANGLE_DOWN :
+					marker_ == QtMouseToolNames::SYM_UP_LEFT_ARROW    ? AnnSymbol::TRIANGLE_UP :
+					marker_ == QtMouseToolNames::SYM_DOWN_LEFT_ARROW  ? AnnSymbol::TRIANGLE_LEFT :
+					marker_ == QtMouseToolNames::SYM_UP_RIGHT_ARROW   ? AnnSymbol::TRIANGLE_RIGHT :
+					marker_ == QtMouseToolNames::SYM_PLUS             ? AnnSymbol::PLUS :
+					marker_ == QtMouseToolNames::SYM_X                ? AnnSymbol::X :
+					marker_ == QtMouseToolNames::SYM_CIRCLE           ? AnnSymbol::CIRCLE :
+					marker_ == QtMouseToolNames::SYM_DIAMOND          ? AnnSymbol::DIAMOND :
+					marker_ == QtMouseToolNames::SYM_SQUARE           ? AnnSymbol::SQUARE :
 					AnnSymbol::POINT );
 	    } catch ( AipsError &e ) {
 		cerr << "Error encountered creating an AnnSymbol:" << endl;
@@ -93,7 +93,7 @@ namespace casa {
 	    int x, y;
 	    try { linear_to_screen( wc_, blc_x, blc_y, x, y ); } catch(...) { return; }
 	    // drawing symbols would slot in here...
-	    switch ( marker ) {
+	    switch ( marker_ ) {
 		case QtMouseToolNames::SYM_DOWN_RIGHT_ARROW:
 		    pc->drawLine( x-5-1, y+1, x-1, y+1 );
 		    pc->drawLine( x-1, y+1, x-1, y+5+1 );

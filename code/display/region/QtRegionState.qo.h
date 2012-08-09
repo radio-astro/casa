@@ -5,6 +5,7 @@
 #include <display/region/Region.h>
 #include <display/region/QtRegionState.ui.h>
 #include <display/region/QtRegionStats.qo.h>
+#include <display/Display/MouseToolState.h>
 
 namespace casa {
     namespace viewer {
@@ -18,7 +19,9 @@ namespace casa {
 		// which cannot happen until after the ctor of QtRegionState...
 		void init( );
 
-		QtRegionState( const QString &name, QtRegion *region, QWidget *parent=0 );
+		QtRegionState( const QString &name, QtRegion *region,
+			       QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			       QWidget *parent=0 );
 		~QtRegionState( );
 
 		void updateCoord( );

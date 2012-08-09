@@ -57,11 +57,41 @@ namespace casa {
 	    }
 	}
 
-	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QWidget *parent ) :
+	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
 					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
 	    setupUi(this);
+#if defined(__APPLE__)
+	    QFont font( "Lucida Grande", 10 );
+#else
+	    QFont font( "Sans Serif", 7 );
+#endif
+	    region_type->setFont(font);
+	    label->setFont(font);
+	    frame_min->setFont(font);
+	    frame_max->setFont(font);
+	    region_mark->setFont(font);
+	    region_annotation->setFont(font);
+	    region_annotation->hide( );
 
+#if 1
 	    marker_group->hide( );
+#else
+	    if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
+		marker_group->hide( );
+	    else {
+		int current_item = -1;
+		for ( int i=0; i < QtMouseToolNames::SYM_POINT_REGION_COUNT; ++i ) {
+		    marker->addItem(QIcon(QString::fromStdString(QtMouseToolNames::pointRegionSymbolIcon((QtMouseToolNames::PointRegionSymbols)i))),
+				    QString(),QVariant(i));
+		  if ( (int) sym == i ) current_item = i;
+		}
+		if ( current_item < 0 ) {
+		    marker->setDisabled(true);
+		} else {
+		    marker->setCurrentIndex(current_item);
+		}
+	    }
+#endif
 
 	    // use common tab state from dock...
 	    std::pair<int,int> &tab_state = region_->tabState( );
