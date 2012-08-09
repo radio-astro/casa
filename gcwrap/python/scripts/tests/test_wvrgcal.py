@@ -141,7 +141,8 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, smooth=3, segsource=False, toffset=0.)
         if(self.rval):
-            self.rval = th.compTables(self.ref[9], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
+            self.rval = th.compTables(self.ref[9], self.out, ['WEIGHT'], # ignore WEIGHT because it is empty
+                                      0.01) # tolerance 1 % to accomodate differences between Linux and Mac OSX
         self.assertTrue(self.rval)
 
     def test6(self):
