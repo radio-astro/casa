@@ -51,6 +51,7 @@ namespace casa {
 
 		const std::string name( ) const { return QtRegion::name( ); }
 		QtMouseToolNames::PointRegionSymbols marker( ) const { return Point::marker_; }
+		bool setMarker( QtMouseToolNames::PointRegionSymbols sym ) { return Point::setMarker(sym); }
 
 		std::string lineColor( )   const { return QtRegion::lineColor( ); }
 		std::string centerColor( ) const { return QtRegion::centerColor( ); }

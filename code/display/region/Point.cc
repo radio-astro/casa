@@ -153,6 +153,14 @@ namespace casa {
 
 	}
 
+	bool Point::setMarker( QtMouseToolNames::PointRegionSymbols sym ) {
+	    int isym = (int) sym;
+	    if ( isym < 0 || isym > QtMouseToolNames::SYM_POINT_REGION_COUNT )
+		return false;
+	    marker_ = sym;
+	    return true;
+	}
+
 	bool Point::clickWithin( double xd, double yd ) const {
 	    int x, y, ptx, pty;
 	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return false; }

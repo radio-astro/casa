@@ -50,6 +50,8 @@ namespace casa {
 		Point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
 					Rectangle( wc, x, y, x, y ), marker_(sym){ }
 
+		bool setMarker( QtMouseToolNames::PointRegionSymbols sym );
+
 		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
 
 		bool clickWithin( double x, double y ) const;

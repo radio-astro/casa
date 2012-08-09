@@ -74,9 +74,6 @@ namespace casa {
 	    region_mark->setFont(fontp);
 	    region_annotation->setFont(fontp);
 
-#if 1
-	    marker_group->hide( );
-#else
 	    if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
 		marker_group->hide( );
 	    else {
@@ -92,7 +89,7 @@ namespace casa {
 		    marker->setCurrentIndex(current_item);
 		}
 	    }
-#endif
+
 
 	    // use common tab state from dock...
 	    std::pair<int,int> &tab_state = region_->tabState( );
@@ -199,6 +196,9 @@ namespace casa {
 
 	    last_line_color = line_color->currentText( );
 	    connect( line_color, SIGNAL(currentIndexChanged(const QString&)), SLOT(line_color_change(const QString&)) );
+
+	    connect( marker, SIGNAL(currentIndexChanged(int)), SLOT(set_point_region_marker(int)) );
+
 	}
 
 	QtRegionState::~QtRegionState( ) { }
@@ -897,6 +897,18 @@ namespace casa {
 	    delete dlg;
 
 	}
+
+	void QtRegionState::set_point_region_marker( int index ) {
+	    QVariant qv = marker->itemData(index);
+	    if ( qv.type( ) != QVariant::Int ) return;
+	    bool ok;
+	    int sym = qv.toInt(&ok);
+	    if ( ok == false ) return;
+	    if ( sym < 0 || sym > QtMouseToolNames::SYM_POINT_REGION_COUNT ) return;
+	    if ( region_->setMarker( (QtMouseToolNames::PointRegionSymbols) sym ) )
+		emit refreshCanvas( );
+	}
+
 
     }
 }

@@ -138,6 +138,8 @@ namespace casa {
 		void save_browser(bool);
 		void load_browser(bool);
 
+		void set_point_region_marker( int );
+
 	    protected:
 		// keep track of which set of statistics
 		// where selected when refreshing all...
