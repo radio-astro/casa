@@ -52,7 +52,11 @@ if [ "$1" = "--debug" ]; then
 	  _dodebug="T"
 fi
 
-prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+if [ $installed_from_rpm = "T" ]; then
+    prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
+else
+    prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+fi
 echo "DEBUG: prefix = $prefix"
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
