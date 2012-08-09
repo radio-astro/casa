@@ -60,7 +60,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QFrame" name="frame">
+       <widget class="QWidget" name="widget" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -75,96 +75,175 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>454</width>
+          <width>500</width>
           <height>16777215</height>
          </size>
         </property>
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <widget class="QWidget" name="layoutWidget">
+        <widget class="QWidget" name="the_god_damn_frame" native="true">
          <property name="geometry">
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>535</width>
+           <width>500</width>
            <height>32</height>
           </rect>
          </property>
-         <layout class="QHBoxLayout" name="globalStateLayout">
-          <item>
-           <widget class="QLabel" name="region_type">
-            <property name="minimumSize">
-             <size>
-              <width>80</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>80</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>region</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>frames</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="frame_min">
-            <property name="maximum">
-             <number>99</number>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="frame_max"/>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="region_mark">
-            <property name="toolTip">
-             <string>mark for later operations</string>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
-            </property>
-            <property name="text">
-             <string>selected</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="region_annotation">
-            <property name="toolTip">
-             <string>mark this region as an annotation
+         <widget class="QLabel" name="region_type">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>60</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>region</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+         <widget class="QSpinBox" name="frame_min">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>0</y>
+            <width>79</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>79</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="maximum">
+           <number>99</number>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label">
+          <property name="geometry">
+           <rect>
+            <x>55</x>
+            <y>0</y>
+            <width>50</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>frames</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="region_mark">
+          <property name="geometry">
+           <rect>
+            <x>280</x>
+            <y>1</y>
+            <width>70</width>
+            <height>18</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>70</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>mark for later operations</string>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>selected</string>
+          </property>
+         </widget>
+         <widget class="QSpinBox" name="frame_max">
+          <property name="geometry">
+           <rect>
+            <x>195</x>
+            <y>0</y>
+            <width>79</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>79</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="region_annotation">
+          <property name="geometry">
+           <rect>
+            <x>350</x>
+            <y>1</y>
+            <width>80</width>
+            <height>18</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>mark this region as an annotation
 (which does not participate in calculations)</string>
-            </property>
-            <property name="layoutDirection">
-             <enum>Qt::RightToLeft</enum>
-            </property>
-            <property name="text">
-             <string>annotation</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>annotation</string>
+          </property>
+         </widget>
         </widget>
        </widget>
       </item>
