@@ -856,6 +856,38 @@
            </item>
           </widget>
          </widget>
+         <widget class="QGroupBox" name="marker_group">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>50</y>
+            <width>120</width>
+            <height>50</height>
+           </rect>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>marker</string>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+          <widget class="QComboBox" name="marker">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>20</y>
+             <width>115</width>
+             <height>26</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
         </widget>
         <widget class="QWidget" name="textTab">
          <attribute name="title">

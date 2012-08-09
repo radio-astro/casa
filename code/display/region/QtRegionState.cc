@@ -61,6 +61,8 @@ namespace casa {
 					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
 	    setupUi(this);
 
+	    marker_group->hide( );
+
 	    // use common tab state from dock...
 	    std::pair<int,int> &tab_state = region_->tabState( );
 	    if ( tab_state.first < 0 ) {
