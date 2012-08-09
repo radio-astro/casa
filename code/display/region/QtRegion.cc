@@ -137,6 +137,8 @@ namespace casa {
 
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
+	int &QtRegion::colorIndex( ) { return dock_->colorIndex( ); }
+      
 
 	QString QtRegion::getSaveDir( ) {
 	    if ( dock_->saveDir( ).isNull( ) ) {

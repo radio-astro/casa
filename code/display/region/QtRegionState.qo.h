@@ -112,6 +112,7 @@ namespace casa {
 	    protected slots:
 		// updates canvas with any line changes
 		void state_change( int );
+		void color_state_change( int );
 		void state_change( bool );
 		void state_change( const QString & );
 		void states_change( int );

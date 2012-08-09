@@ -74,6 +74,10 @@ namespace casa {
 	    region_mark->setFont(fontp);
 	    region_annotation->setFont(fontp);
 
+	    int current_color_index = region_->colorIndex( );
+	    line_color->setCurrentIndex(current_color_index);
+	    text_color->setCurrentIndex(current_color_index);
+
 	    if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
 		marker_group->hide( );
 	    else {
@@ -152,11 +156,11 @@ namespace casa {
 	    connect( center_y, SIGNAL(editingFinished( )), SLOT(translate_y( )) );
 
 	    // update line characteristics...
-	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
 	    connect( line_style, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
 	    connect( line_width, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 	    connect( text_position, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	    connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
 	    connect( font_name, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
 	    connect( font_size, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 	    connect( x_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
@@ -516,6 +520,10 @@ namespace casa {
 	}
 
 	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
+	void QtRegionState::color_state_change( int index ) {
+	    emit refreshCanvas( );
+	    region_->colorIndex( ) = index;
+	}
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( const QString & ) { emit refreshCanvas( ); }
 
