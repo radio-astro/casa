@@ -5,12 +5,12 @@ startDir=$(pwd)
 #it's adapted from the mac python script and no doubt will
 #be freely adjusted for linux.
 #
-
-#
 #Set the location of the 3rd party software we will need
+#
 OSTYPE=$(uname -s)
 if [ $OSTYPE = "Darwin" ]; then
 	isapple="T"
+        installed_from_rpm="F"   
         OSVERS=$(uname -r | awk -F. '{print $1}')
         if [ $OSVERS -eq "10" ]; then
 		casa3party="/opt/casa/darwin10-64b"
@@ -30,7 +30,15 @@ else
 	   casa3party="/usr/lib64/casapy"
         fi
         p_root=${casa3party}
+        if [[ "$CASAPATH" =~ /usr/lib* ]]; then
+                installed_from_rpm="T"
+        else
+                installed_from_rpm="F"   
+        fi
 fi
+
+# echo "DEBUG: isapple = $isapple"
+# echo "DEBUG: installed_from_rpm = $installed_from_rpm"
 
 a_site="socorro"
 
@@ -44,19 +52,12 @@ if [ "$1" = "--debug" ]; then
 	  _dodebug="T"
 fi
 
-#
-# TODO: check to see if CASAPATH is empty (it is not used outside of developer 
-# environments, so it often is), and set it as needed.
-if [ "x" == "x${CASAPATH}" ]; then
-    script_directory=`dirname $0`
-    script_name=`basename $0`
-    # $CASAPATH is empty.
-    echo "CASAPATH was not set in ${script_directory}/${script_name}"
-    exit -1
+if [ $installed_from_rpm = "T" ]; then
+    prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
 else
     prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
 fi
-#echo "DEBUG: prefix=$prefix"
+# echo "DEBUG: prefix = $prefix"
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
 a_host=$(hostname -s)
@@ -82,14 +83,19 @@ if [ ! ${DEBUGGER} ]; then
 fi
 
 
-export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
+if [ $installed_from_rpm = "T" ]; then
+        export   __CASAPY_PYTHONDIR=${prefix}/lib/python2.6
+else
+        export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
+fi
 p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
-
+# echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
+# echo "DEBUG: p_path = $p_path"
 
 export PYTHONHOME=${p_root}
 export PYTHONPATH=${p_path}:${PYTHONPATH}
 export CASAPATH="$a_root $a_arch $a_site $a_host"
-#echo ${CASAPATH}
+# echo "DEBUG: CASAPATH = ${CASAPATH}"
 export DISPLAY=${DISPLAY=:0.0}
 export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
 export PGPLOT_DIR="${casa3party}/lib"
@@ -190,17 +196,20 @@ if [[ -f casapy.log ]]; then
 	ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
 fi
 
-
-
-
+if [ $installed_from_rpm = "T" ]; then
+        casapy_command="${prefix}/lib/python2.6/casapy.py"
+else
+        casapy_command="${prefix}/python/2.6/casapy.py"
+fi
+# echo "DEBUG: casapy_command = $casapy_command"
 
 #exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/2.6/casapy.py $*
 if [ ${_dodebug} = "T" ]; then
    echo
-   echo "Debugger run command is: run -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*"
+   echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"
    echo
    echo
    exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
 else
-   exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${prefix}/python/2.6/casapy.py $*
+   exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
 fi
