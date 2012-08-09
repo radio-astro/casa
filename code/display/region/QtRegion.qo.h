@@ -66,7 +66,7 @@ namespace casa {
 		const std::string name( ) const { return name_.toStdString( ); }
 		virtual QtMouseToolNames::PointRegionSymbols marker( ) const
 				{ return QtMouseToolNames::SYM_UNKNOWN; }
-		virtual bool setMarker( QtMouseToolNames::PointRegionSymbols sym )
+		virtual bool setMarker( QtMouseToolNames::PointRegionSymbols )
 				{ return false; }
 
 		std::string lineColor( ) const { return mystate->lineColor( ); }
