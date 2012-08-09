@@ -2785,7 +2785,6 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	const Bool removeAxis, const Bool stretchMask
 ) {
 	*_log << LogOrigin(className(), __FUNCTION__);
-
 	// check that we can write to smoothout if specified
 	if (!smoothout.empty() and !overwrite) {
 		NewFile validfile;
@@ -2794,12 +2793,10 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			*_log << errmsg << LogIO::EXCEPTION;
 		}
 	}
-
 	// Note that the user may give the strings (method & kernels)
 	// as either vectors of strings or one string with separators.
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
-
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*_image,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
@@ -2807,17 +2804,13 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	);
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *_log, overwrite, True);
-
 	// Set which moments to output
 	if (!momentMaker.setMoments(whichmoments + 1)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
 	}
-
 	// Set moment axis
 	if (axis >= 0) {
-		if (!momentMaker.setMomentAxis(axis)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
+		momentMaker.setMomentAxis(axis);
 	}
 	if (subImage.imageInfo().hasMultipleBeams()) {
 		const CoordinateSystem& csys = subImage.coordinates();
@@ -2857,12 +2850,10 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
 		}
 	}
-
 	// Set pixel include/exclude range
 	if (!momentMaker.setInExCludeRange(includepix, excludepix)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
 	}
-
 	// Set SNR cutoff
 	if (!momentMaker.setSnr(peaksnr, stddev)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
@@ -2877,7 +2868,6 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		}
 		momentMaker.setVelocityType(velType);
 	}
-
 	// Set output names
 	if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
@@ -2903,24 +2893,20 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// If no file name given for one moment image, make TempImage.
 	// Else PagedImage results
 	Bool doTemp = False;
-	if (out.empty() && whichmoments.nelements() == 1)
+	if (out.empty() && whichmoments.nelements() == 1) {
 		doTemp = True;
-
+	}
 	// Create moments
 	PtrBlock<MaskedLattice<Float>*> images;
-	if (!momentMaker.createMoments(images, doTemp, out, removeAxis)) {
-		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-	}
+	momentMaker.createMoments(images, doTemp, out, removeAxis);
 	momentMaker.closePlotting();
-
 	// Return handle of first image
 	ImageInterface<Float>* pIm =
 			dynamic_cast<ImageInterface<Float>*> (images[0]);
-
 	// Clean up pointer block except for the one pointed by pIm
-	for (uInt i = 1; i < images.nelements(); i++)
+	for (uInt i = 1; i < images.nelements(); i++) {
 		delete images[i];
-	//
+	}
 	return pIm;
 }
 

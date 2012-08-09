@@ -211,39 +211,40 @@ Bool ImageMoments<T>::setNewImage(ImageInterface<T>& image)
 
 
 template <class T>
-Bool ImageMoments<T>::setMomentAxis(const Int& momentAxisU)
-//
-// Assign the desired moment axis.  Zero relative.
-//
-{
-   if (!goodParameterStatus_p) {
-      error_p = "Internal class status is bad";
-      return False;
-   }
-
-   momentAxis_p = momentAxisU;
-   if (momentAxis_p == momentAxisDefault_p) {
-     momentAxis_p = CoordinateUtil::findSpectralAxis(pInImage_p->coordinates());
-     if (momentAxis_p == -1) {
-       error_p = "There is no spectral axis in this image -- specify the axis";
-       goodParameterStatus_p = False;
-       return False;
-     }
-   } else {
-      if (momentAxis_p < 0 || momentAxis_p > Int(pInImage_p->ndim()-1)) {
-         error_p = "Illegal moment axis; out of range";
-         goodParameterStatus_p = False;
-         return False;
-      }
-      if (pInImage_p->shape()(momentAxis_p) <= 0) {
-         error_p = "Illegal moment axis; it has no pixels";
-         goodParameterStatus_p = False;
-         return False;
-      }
-   }
-   worldMomentAxis_p = pInImage_p->coordinates().pixelAxisToWorldAxis(momentAxis_p);
-
-   return True;
+void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
+	if (!goodParameterStatus_p) {
+      throw AipsError("Internal class status is bad");
+	}
+	momentAxis_p = momentAxisU;
+	if (momentAxis_p == momentAxisDefault_p) {
+		momentAxis_p = pInImage_p->coordinates().spectralAxisNumber();
+		if (momentAxis_p == -1) {
+			goodParameterStatus_p = False;
+			throw AipsError(
+				"There is no spectral axis in this image -- specify the axis"
+			);
+		}
+	}
+	else {
+		if (momentAxis_p < 0 || momentAxis_p > Int(pInImage_p->ndim()-1)) {
+			goodParameterStatus_p = False;
+			throw AipsError("Illegal moment axis; out of range");
+		}
+		if (pInImage_p->shape()(momentAxis_p) <= 0) {
+			goodParameterStatus_p = False;
+			throw AipsError("Illegal moment axis; it has no pixels");
+		}
+	}
+	if (
+		momentAxis_p == pInImage_p->coordinates().spectralAxisNumber()
+		&& pInImage_p->imageInfo().hasMultipleBeams()
+	) {
+		goodParameterStatus_p = False;
+		throw AipsError(
+			"This image has per-plane beams and so moments along the spectral axis cannot be determined."
+		);
+	}
+	worldMomentAxis_p = pInImage_p->coordinates().pixelAxisToWorldAxis(momentAxis_p);
 }
 
 
@@ -358,7 +359,7 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
 }
 
 template <class T>
-Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
+void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
                                     Bool doTemp, const String& outName,
                                     Bool removeAxis)
 //
@@ -366,8 +367,7 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 //
 {
    if (!goodParameterStatus_p) {
-      error_p = "Internal status of class is bad.  You have ignored errors";
-      return False;
+      throw AipsError("Internal status of class is bad.  You have ignored errors");
    }
 
 // Find spectral axis 
@@ -376,16 +376,11 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    Int spectralAxis = CoordinateUtil::findSpectralAxis(cSys);
 //
    if (momentAxis_p == momentAxisDefault_p) {
-     if (spectralAxis==-1) {
-       error_p = "There is no spectral axis in this image -- specify the moment axis";
-       return False;
-     }
-     momentAxis_p = spectralAxis;
-//
+	   this->setMomentAxis(spectralAxis);
+
      if (pInImage_p->shape()(momentAxis_p) <= 1) {
-        error_p = "Illegal moment axis; it has only 1 pixel";
-        goodParameterStatus_p = False;
-        return False;
+         goodParameterStatus_p = False;
+        throw AipsError("Illegal moment axis; it has only 1 pixel");
      }
      worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
    }
@@ -400,15 +395,16 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
 // Check the user's requests are allowed
 
-   if (!checkMethod()) return False;
+   if (!checkMethod()) {
+	   throw AipsError(error_p);
+   }
 
 // Check that input and output image names aren't the same.
 // if there is only one output image
 
    if (moments_p.nelements() == 1 && !doTemp) {
       if (!outName.empty() && (outName == pInImage_p->name())) {
-         error_p = "Input image and output image have same name";
-         return False;
+         throw AipsError("Input image and output image have same name");
       }
    } 
 
@@ -439,7 +435,9 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    ImageInterface<T>* pSmoothedImage = 0;
    String smoothName;
    if (doSmooth_p) {
-      if (!smoothImage(pSmoothedImageHolder, smoothName)) return False;
+      if (!smoothImage(pSmoothedImageHolder, smoothName)) {
+    	  throw AipsError(error_p);
+      }
       pSmoothedImage = pSmoothedImageHolder.ptr();
 
 // Find the auto Y plot range.   The smooth & clip and the window
@@ -465,14 +463,12 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          Array<T> data;
 //
          if (!stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True)) {
-            error_p = "Error finding minimum of input image";
-            return False;
+            throw AipsError("Error finding minimum of input image");
          }
          yMin_p = data(IPosition(data.nelements(),0));
 //
          if (!stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True)) {
-            error_p = "Error finding maximum of input image";
-            return False;
+            throw AipsError("Error finding maximum of input image");
          }
          yMax_p = data(IPosition(data.nelements(),0));
       }
@@ -531,8 +527,7 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
             NewFile x;
             String error;
             if (!x.valueOK(outFileName, error)) {
-               os_p << LogIO::NORMAL << error << LogIO::POST;
-               return False;
+               throw AipsError(error);
             }
          }
  //
@@ -579,10 +574,14 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
       if (pSmoothedImage) {
          os_p << LogIO::NORMAL << "Evaluating noise level from smoothed image" << LogIO::POST;
-         if (!whatIsTheNoise (noise, *pSmoothedImage)) return False;
+         if (!whatIsTheNoise (noise, *pSmoothedImage)) {
+        	 throw AipsError(error_p);
+         }
       } else {
          os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
-         if (!whatIsTheNoise (noise, *pInImage_p)) return False;
+         if (!whatIsTheNoise (noise, *pInImage_p)) {
+        	 throw AipsError(error_p);
+         }
       }
       stdDeviation_p = noise;
    }
@@ -656,11 +655,6 @@ Bool ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          dir.removeRecursive();
       }
    }
-
-// Success guarenteed !
-
-   return True;
-
 }
 
 

@@ -136,7 +136,7 @@ void ImageRegrid<T>::regrid(
 		) {
 			LogIO log;
 			log << LogOrigin("ImageRegrid", __FUNCTION__)
-				<< "This image has multiple beams. The spectral axis cannot be rebinned"
+				<< "This image has multiple beams. The spectral axis cannot be regridded"
 				<< LogIO::EXCEPTION;
 		}
 		if (
@@ -146,7 +146,7 @@ void ImageRegrid<T>::regrid(
 		) {
 			LogIO log;
 			log << LogOrigin("ImageRegrid", __FUNCTION__)
-				<< "This image has multiple beams. The polarization axis cannot be rebinned"
+				<< "This image has multiple beams. The polarization axis cannot be regridded"
 				<< LogIO::EXCEPTION;
 		}
 	}

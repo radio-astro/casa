@@ -91,6 +91,13 @@ public:
 	// GaussianBeams initialized to null beams.
 	ImageBeamSet(const IPosition& shape, const Vector<AxisType>& axes);
 
+	//create an ImageBeamSet of the specified shape with all
+	// GaussianBeams initialized to <src>beam</src>.
+	ImageBeamSet(
+		const GaussianBeam& beam, const IPosition& shape,
+		const Vector<AxisType>& axes
+	);
+
 	ImageBeamSet(const ImageBeamSet& other);
 
 	~ImageBeamSet();
@@ -108,7 +115,7 @@ public:
         const IPosition &end
     );
 
-    const Array<GaussianBeam> operator()(
+    const Array<GaussianBeam> operator() (
     	const IPosition &start,
     	const IPosition &end
     ) const;
@@ -117,6 +124,7 @@ public:
 
     Bool operator!= (const ImageBeamSet& other) const;
 
+    // get the axis types associated with the beam array.
 	const Vector<AxisType>& getAxes() const;
 
 	// get the single global beam. If there are multiple beams,
@@ -136,8 +144,7 @@ public:
 	// current beam set and all axes of the current beam set must be
 	// elements.
 	void setBeam(
-		const GaussianBeam& beam, const IPosition& position,
-		const Vector<AxisType>& axes=Vector<AxisType>(0)
+		const GaussianBeam& beam, const IPosition& position
 	);
 
 	// does this beam set contain only a single beam?
@@ -146,27 +153,34 @@ public:
 	// does this beam set contain multiple beams?
 	Bool hasMultiBeam() const;
 
-	// is this beam set empty (ie does it not have any beams)?
-	//Bool isEmpty() const;
-
 	static const String& className();
 
+	// return the size of the beam array.
 	size_t size() const;
 
+	// resize the beam array. If pos has a different dimensionality than
+	// the current beam array, an exception is thrown.
 	void resize(const IPosition& pos);
 
+	// get the beam array
 	const Array<GaussianBeam>& getBeams() const;
 
+	// set the beam array.
 	void setBeams(const Array<GaussianBeam>& beams);
 
+	// get the number of elements in the beam array
 	size_t nelements() const;
 
+	// is the beam array empty?
 	Bool empty() const;
 
+	// get the shape of the beam array
 	IPosition shape() const;
 
+	// get the number of dimensions in the beam array
 	size_t ndim() const;
 
+	// set all beams to the same value
 	void set(const GaussianBeam& beam);
 
 private:

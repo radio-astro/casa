@@ -37,32 +37,54 @@
 
 int main() {
 	try {
-		// empty beam set
-		ImageBeamSet x;
-		AlwaysAssert(x.empty(), AipsError);
-		AlwaysAssert(x.size() == 0, AipsError);
-		AlwaysAssert(x.nelements() == 0, AipsError);
-		AlwaysAssert(x.getAxes().size() == 0, AipsError);
-		GaussianBeam beam(
-			Quantity(4, "arcsec"), Quantity(3, "arcsec"),
-			Quantity(40, "deg")
-		);
-		Vector<ImageBeamSet::AxisType> types(2);
-		types[0] = ImageBeamSet::SPECTRAL;
-		types[1] = ImageBeamSet::POLARIZATION;
-		ImageBeamSet b(IPosition(2, 20, 4), types);
+		{
+			// empty beam set
+			ImageBeamSet x;
+			AlwaysAssert(x.empty(), AipsError);
+			AlwaysAssert(x.size() == 0, AipsError);
+			AlwaysAssert(x.nelements() == 0, AipsError);
+			AlwaysAssert(x.getAxes().size() == 0, AipsError);
+			GaussianBeam beam(
+					Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+					Quantity(40, "deg")
+			);
+			Vector<ImageBeamSet::AxisType> types(2);
+			types[0] = ImageBeamSet::SPECTRAL;
+			types[1] = ImageBeamSet::POLARIZATION;
+			ImageBeamSet b(IPosition(2, 20, 4), types);
 
-		b.set(beam);
-		ImageBeamSet c = b;
-		AlwaysAssert(b == b, AipsError);
-		AlwaysAssert(c == b, AipsError);
-		ImageBeamSet d(b);
-		AlwaysAssert(d == b, AipsError);
-		c = x;
-		x = b;
-		AlwaysAssert(x == b, AipsError);
+			b.set(beam);
+			ImageBeamSet c = b;
+			AlwaysAssert(b == b, AipsError);
+			AlwaysAssert(c == b, AipsError);
+			ImageBeamSet d(b);
+			AlwaysAssert(d == b, AipsError);
+			c = x;
+			x = b;
+			AlwaysAssert(x == b, AipsError);
 
-        ImageBeamSet k(beam);
+			ImageBeamSet k(beam);
+		}
+		{
+			GaussianBeam beam0(Quantity(4, "arcsec"), Quantity(3, "arcsec"), Quantity(20, "deg"));
+			IPosition shape(2, 3, 4);
+			Vector<ImageBeamSet::AxisType> types(2);
+			types[0] = ImageBeamSet::SPECTRAL;
+			types[1] = ImageBeamSet::POLARIZATION;
+			ImageBeamSet x(beam0, shape, types);
+			GaussianBeam beam1(Quantity(5, "arcsec"), Quantity(4, "arcsec"), Quantity(20, "deg"));
+			IPosition pos2(2, 1, 2);
+			x.setBeam(beam1, pos2);
+			for (IPosition pos(2,0,0); pos != shape; pos.next(shape)) {
+				GaussianBeam beam = x.getBeam(pos);
+				if (pos == pos2) {
+					AlwaysAssert(beam == beam1, AipsError);
+				}
+				else {
+					AlwaysAssert(beam == beam0, AipsError);
+				}
+			}
+		}
 	}
 	catch (AipsError x) {
 		cout << x.getMesg() << endl;
