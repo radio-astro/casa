@@ -7182,6 +7182,9 @@ Coordinate System you provide, the coordinate information for axis two
 (not being regridded) must correctly be a copy from the input coordinate
 system (it won't be filled in for you). 
 
+If an image has per-plane beams and one attempts to regrid the spectral axis,
+an exception is thrown.
+
 </description>
 
 <example>

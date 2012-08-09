@@ -1773,7 +1773,7 @@ class cleanhelper:
             #        else:
             #            arr[:,:,k,j]=dat[:,:,0,0]
             #ia.putchunk(arr)
-            ia.calc('__temp_mask[index3 in [0]]+__looloo') 
+            ia.calc(outfile+'[index3 in [0]]+__looloo') 
             ia.calcmask('mask(__looloo)')
             ia.done(verbose=False)
             ia.removefile('__looloo')

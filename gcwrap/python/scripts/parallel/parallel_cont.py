@@ -6,7 +6,7 @@ import numpy as np
 from cleanhelper import *
 from casac import casac
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False, cyclefactor=1.5):
         self.im=casac.imager()
         self.imperms={}
         self.dc=casac.deconvolver()
@@ -33,6 +33,7 @@ class imagecont():
         self.painc=360.0
         self.pblimit=0.1
         self.dopbcorr=False
+        self.cyclefactor=cyclefactor
         self.novaliddata={}
         self.applyoffsets=False
         self.cfcache='cfcache.dir'
@@ -48,14 +49,11 @@ class imagecont():
         self.pbcorr=pbcorr
 
     def setextraoptions(self, im, cyclefactor=1.5, fluxscaleimage='', scaletype='SAULT'):
-        if(self.ft=='mosaic'):
-            im.setmfcontrol(scaletype='SAULT', fluxscale=[fluxscaleimage], 
-                            cyclefactor=cyclefactor)
-        else:
-            im.setmfcontrol(cyclefactor=cyclefactor, scaletype=scaletype)
+        im.setmfcontrol(scaletype=scaletype, fluxscale=[fluxscaleimage], 
+                        cyclefactor=cyclefactor)
         if(self.pbcorr):
             im.setvp(True)
-            im.setmfcontrol(scaletype='NONE', cyclefactor=cyclefactor)
+            im.setmfcontrol(scaletype='NONE', cyclefactor=cyclefactor, fluxscale=[fluxscaleimage])
             
     def setparamcont(self, im, freq, band, singleprec=False):
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
@@ -311,6 +309,7 @@ class imagecont():
         ia.open(imroot+'.model')
         csys=ia.coordsys()
         ia.done()
+        im=casac.imager()
         fstart=csys.toworld([0,0,0,imchan*chanchunk],'n')['numeric'][3]
         fstep=csys.toworld([0,0,0,imchan*chanchunk+1],'n')['numeric'][3]-fstart
         fend=fstep*(chanchunk-1)+fstart
@@ -340,16 +339,23 @@ class imagecont():
        
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True, numthreads=self.numthreads)
         im.setscales(scalemethod='uservector', uservector=scales)
-        self.setextraoptions(im, cyclefactor=0.0)  
+        fluxscaleimage=imname+'.flux' if(self.ft=='mosaic') else ''
         majcycle = majcycle if (niter/majcycle) >0 else 1
+        self.setextraoptions(im, fluxscaleimage=fluxscaleimage, cyclefactor=(0.0 if(majcycle >1) else self.cyclefactor)) 
+        #### non simple ft machine...should use mf
+        if(self.ft != 'ft'):
+            alg='mf'+alg
         try:
             
             for kk in range(majcycle):
                 im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
             im.done()
+            del im
         except Exception as instance:
-                if(string.count(str(instance), 'PSFZero') <1):
-                    raise Exception(instance)
+            im.done()
+            del im
+            if(string.count(str(instance), 'PSFZero') <1):
+                raise Exception(instance)
         if(maskname != ''):
             shutil.rmtree(maskname, True)
         #self.putchanimage(imroot+'.model', imname+'.model', imchan*chanchunk)
@@ -472,6 +478,27 @@ class imagecont():
                 self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, removefile) 
                 
     @staticmethod
+    def concatimages(cubeimage, inim, csys=None, removeinfile=True):
+        if((csys==None) and os.path.exists(cubeimage)):
+            ia.open(cubeimage)
+            csys=ia.coordsys()
+            ia.done()
+        if(type(inim) != list):
+            inim=[inim]
+        if(len(inim)==1):
+            ib=ia.fromimage(ourfile=cubeimage, infile=inim[0], overwrite=True)
+        else:
+            ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
+                              axis=3, relax=True,  overwrite=True)
+        ia.done()
+        if(csys != None):
+            ib.setcoordsys(csys=csys.torecord())
+        ib.done()
+        if(removeinfile):
+            for k in range(len(inim)):
+                ia.removefile(inim[k])
+        
+    @staticmethod
     def putchanimage(cubimage,inim,chans, removeinfile=True):
         """
         put channels image back to a pre-exisiting cubeimage 
@@ -501,6 +528,10 @@ class imagecont():
             if(os.path.exists(inim[k])):
                 ib.open(inim[k])
                 inimshape=ib.shape()
+                #############3
+                imdata=ib.getchunk()
+                immask=ib.getchunk(getmask=True)
+############
                 ib.done()
                 blc=[0,0,0,chan]
                 trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
@@ -508,13 +539,13 @@ class imagecont():
                     return False
 
             ############
-            #rg0=ia.setboxregion(blc=blc,trc=trc)
+                rg0=ia.setboxregion(blc=blc,trc=trc)
             ###########
             
             ########
-            #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+                ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
             ###########
-                ia.insert(infile=inim[k], locate=blc)
+                ###ia.insert(infile=inim[k], locate=blc)
                 if(removeinfile):
                     ia.removefile(inim[k])
             k+=1

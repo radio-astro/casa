@@ -7,8 +7,8 @@ import pylab as pl
 from asap import _to_list
 
 #def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
-def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
-
+def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotoff, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+        
         casalog.origin('sdcal')
 
         ###
@@ -134,7 +134,28 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             sn=list(scanns)
             #print "Number of scans to be processed:", len(sn)
             casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
-            scal = sd.asapmath.calibrate( s, scannos=sn, calmode=calmode, verify=verify )
+
+            # calibration
+            if calmode == 'otf' or calmode=='otfraster':
+                    s2 = _mark( s,
+                                (calmode=='otfraster'),
+                                fraction=fraction,
+                                npts=noff,
+                                width=width,
+                                elongated=elongated,
+                                plot=plotoff )
+                    if markonly:
+                            scal = s2
+                    else:
+                            scal = sd.asapmath.calibrate( s2,
+                                                          scannos=sn,
+                                                          calmode='ps',
+                                                          verify=verify )
+            else:
+                    scal = sd.asapmath.calibrate( s,
+                                                  scannos=sn,
+                                                  calmode=calmode,
+                                                  verify=verify )
 
             # Done with scantable s - clean up to free memory
             del s
@@ -357,3 +378,11 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                 raise Exception, instance
                 return
 
+def _mark( s, israster, *args, **kwargs ):
+        marker = sd.edgemarker( israster=israster )
+        marker.setdata( s )
+        marker.setoption( *args, **kwargs )
+        marker.mark()
+        if kwargs.has_key('plot') and kwargs['plot']:
+                marker.plot()
+        return marker.getresult()

@@ -9,6 +9,7 @@ import time
 from simple_cluster import *
 import glob
 import multiprocessing
+import testhelper
 
 class test_simplecluster(unittest.TestCase):
 
@@ -174,7 +175,7 @@ class test_simplecluster(unittest.TestCase):
         # Create cluster file
         self.initCluster('userMonitorFile.log')
                 
-        state = self.cluster.show_state()
+        state = self.cluster.show_resource(True)
         cluster_list = self.cluster.get_hosts()
         for engine in range(cluster_list[0][1]):
             self.assertTrue(state[self.host][engine].has_key('Status'))
@@ -193,7 +194,7 @@ class test_tflagdata_mms(test_simplecluster):
 
     def setUp(self):
         # Prepare MMS
-        self.vis = "Four_ants_3C286.partition.ms"
+        self.vis = "Four_ants_3C286.mms"
         if os.path.exists(self.vis):
             print "The MMS is already in the working area, deleting ..."
             os.system('rm -rf ' + self.vis)
@@ -248,6 +249,7 @@ class test_tflagdata_mms(test_simplecluster):
         ret_dict = tflagdata(vis=self.vis, mode='summary')
 
         # Print summary (note: the first 16 jobs correspond to the step 1)
+        self.assertTrue(ret_dict['name']=='Summary')
         self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
         self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
         self.assertTrue(ret_dict['spw']['1']['flagged'] == 128551.0)
@@ -269,7 +271,7 @@ class test_tflagdata_mms(test_simplecluster):
 class test_setjy_mms(test_simplecluster):
 
     def setUp(self):
-        self.vis = "ngc5921.partition.ms"
+        self.vis = "ngc5921.applycal.mms"
         if os.path.exists(self.vis):
             print "The MMS is already in the working area, deleting ..."
             os.system('rm -rf ' + self.vis)
@@ -292,35 +294,10 @@ class test_setjy_mms(test_simplecluster):
         retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
         self.assertTrue(retval, "setjy run failed")
         
-        mslocal = mstool()
-        mslocal.open(self.vis)
-        listSubMSs = mslocal.getreferencedtables()
-        mslocal.close()
-        for subMS in listSubMSs:
-            tblocal = tbtool()
-            tblocal.open(subMS)
-            fieldId = tblocal.getcell('FIELD_ID',1)
-            if (fieldId == 0):
-                model = tblocal.getkeyword('model_0')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
-            elif (fieldId == 1):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-            elif (fieldId == 2):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-            else:
-                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
-                tblocal.close()
-            tblocal.close()
-            
-    def test2_setjy_scratch_mode_multiple_model(self):
-        """Test 2: Set MODEL_DATA in multiple fields"""
-
-        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
-        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
+        tblocal = tbtool()
+        tblocal.open(self.vis)
+        model_0 = tblocal.getkeyword('model_0')
+        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)      
         
         mslocal = mstool()
         mslocal.open(self.vis)
@@ -331,15 +308,56 @@ class test_setjy_mms(test_simplecluster):
             tblocal.open(subMS)
             fieldId = tblocal.getcell('FIELD_ID',1)
             if (fieldId == 0):
-                model = tblocal.getkeyword('model_0')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
             elif (fieldId == 1):
-                model = tblocal.getkeyword('model_1')
-                self.assertEqual(model['cl_0']['container']['component0']['flux']['value'][0],1445.)
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
             elif (fieldId == 2):
-                keywords = tblocal.getkeywords()
-                self.assertFalse(keywords.has_key('model_0'))
-                self.assertFalse(keywords.has_key('model_1'))
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+            else:
+                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
+                tblocal.close()
+            tblocal.close()
+            
+    def test2_setjy_scratchless_mode_multiple_model(self):
+        """Test 2: Set vis model header in one multiple fields """
+
+        retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        
+        tblocal = tbtool()
+        tblocal.open(self.vis)
+        model_0 = tblocal.getkeyword('model_0')
+        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+        model_1 = tblocal.getkeyword('model_1')
+        self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+        
+        mslocal = mstool()
+        mslocal.open(self.vis)
+        listSubMSs = mslocal.getreferencedtables()
+        mslocal.close()
+        for subMS in listSubMSs:
+            tblocal.open(subMS)
+            fieldId = tblocal.getcell('FIELD_ID',1)
+            if (fieldId == 0):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+            elif (fieldId == 1):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
+            elif (fieldId == 2):
+                model_0 = tblocal.getkeyword('model_0')
+                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                model_1 = tblocal.getkeyword('model_1')
+                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
             else:
                 raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
                 tblocal.close()
@@ -396,7 +414,134 @@ class test_setjy_mms(test_simplecluster):
                 raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
                 tblocal.close()
             tblocal.close()
+            
+class test_applycal_mms(test_simplecluster):
 
+    def setUp(self):
+        self.vis = "ngc5921.applycal.mms"
+        self.ref = "ngc5921.split.mms"
+        self.aux = ["ngc5921.fluxscale", "ngc5921.bcal"]
+        
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        
+        if os.path.exists(self.ref):
+            print "The ref MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.ref)
+
+        print "Copy ref MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.ref + ' ' + self.ref)       
+        
+        for file in  self.aux:
+            if os.path.exists(file):
+                print "Aux file %s is already in the working area, deleting ..." % file
+                os.system('rm -rf ' + file)
+                
+            print "Copy aux file %s into the working area..." % file
+            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
+            
+        # Startup cluster
+        self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
+        self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)   
+        # Remove ref MMS
+        os.system('rm -rf ' + self.ref) 
+        # Remove aux files
+        for file in self.aux:
+            os.system('rm -rf ' + file)         
+        
+    def test1_applycal_scratchless_mode_single_model(self):
+        """Test 1: Set vis model header one single fields and apply calibration"""
+
+        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=False)
+        self.assertTrue(retval, "setjy run failed")
+        
+        # select the fields for 1445+099 and N5921
+        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+        
+        # Now for completeness apply 1331+305 to itself
+        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
+        
+        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
+        
+        self.assertTrue(compare)
+        
+    def test2_applycal_scratch_mode_single_model(self):
+        """Test 2: Set MODEL_DATA in one single field and apply calibration"""
+
+        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=True)
+        self.assertTrue(retval, "setjy run failed")
+        
+        # select the fields for 1445+099 and N5921
+        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+        
+        # Now for completeness apply 1331+305 to itself
+        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
+                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
+        
+        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
+        
+        self.assertTrue(compare)        
+        
+        
+class test_uvcont_mms(test_simplecluster):
+
+    def setUp(self):
+        self.vis = "ngc5921.uvcont.mms"
+        self.ref = ["ngc5921.mms.cont", "ngc5921.mms.contsub"]
+        
+        if os.path.exists(self.vis):
+            print "The MMS is already in the working area, deleting ..."
+            os.system('rm -rf ' + self.vis)
+
+        print "Copy MMS into the working area..."
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)    
+        
+        for file in  self.ref:
+            if os.path.exists(file):
+                print "Ref file %s is already in the working area, deleting ..." % file
+                os.system('rm -rf ' + file)
+                
+            print "Copy ref file %s into the working area..." % file
+            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
+            
+        # Startup cluster
+        self.initCluster()
+
+    def tearDown(self):
+        # Stop cluster
+        self.stopCluster()
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)   
+        # Remove ref MMS
+        for file in self.ref:
+            os.system('rm -rf ' + file) 
+        
+    def test1_uvcont_single_spw(self):
+        """Test 1: Extract continuum from one single SPW using uvcontsub"""
+
+        uvcontsub(vis=self.vis,field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True) 
+        
+        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY'])
+        self.assertTrue(compare_cont)
+        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY'])
+        self.assertTrue(compare_contsub)             
 
 class testJobData(unittest.TestCase):
     '''
@@ -588,7 +733,7 @@ class testJobQueueManager(unittest.TestCase):
         cluster.remove_record()
 
 def suite():
-    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms]
+    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms,test_applycal_mms,test_uvcont_mms]
      
 if __name__ == '__main__':
     testSuite = []

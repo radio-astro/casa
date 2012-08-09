@@ -89,6 +89,10 @@ description of the template coordinate system. Thus the output pixel
 values will correspond only to the velocity, not the frequency, of the
 output axis.
 
+If an image has per-plane beams and one attempts to regrid the spectral axis,
+an exception is thrown.
+
+
 </example> 
 
 </task>

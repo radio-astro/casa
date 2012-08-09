@@ -908,7 +908,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
         
-
+    """ jagonzal (HPC)
     def test_list3(self):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
@@ -927,6 +927,7 @@ class test_list(test_base):
             os.system('rm -rf myflags.txt')
         flagcmd(vis=self.vis, action='list', savepars=True, outfile='myflags.txt', useapplied=True)
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
+    """
         
     def test_list4(self):
         '''tflagdata: save without running and apply in flagcmd'''

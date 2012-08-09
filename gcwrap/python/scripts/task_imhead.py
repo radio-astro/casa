@@ -1194,7 +1194,6 @@ def imhead(
                     values[index] = float(hdvalue)
                     csys.setreferencepixel(values)
             elif hdkey.startswith('crval'):
-
                 # Because setreferencevalue has issues
                 # with setting the stokes value, if
                 # the stokes axis has changed we use the
@@ -1222,7 +1221,6 @@ def imhead(
                     # the last character of the string is a number.
                     values = csys.referencevalue(format='q')
                     units = csys.units()
-
                     if isinstance(hdvalue, str):
                         hdvalue = hdvalue.strip()
 
@@ -1234,12 +1232,16 @@ def imhead(
                         if tmpVal.isdigit():
                             if index < len(units) and len(units[index]) \
                                 > 0:
-                                hdvalue = hdvalue + units[index]
+                                if (hdvalue.count(":") > 1 or hdvalue.count(".") > 2):
+                                    # hh:mm:ss or dd.mm.ss input format here
+                                    hdvalue = qa.tos(qa.toangle(hdvalue))
+                                else:
+                                    # input is a floating point number
+                                    hdvalue = hdvalue + units[index]
                             else:
                                 hdvalue = hdvalue
                     elif isinstance(hdvalue, int) \
                         or isinstance(hdvalue, float):
-
                         if index < len(units) and len(units[index]) > 0:
                             hdvalue = qa.convert(str(hdvalue)
                                     + units[index], units[index])
@@ -1270,13 +1272,11 @@ def imhead(
                             csys.setstokes(hdvalue)
             elif hdkey.startswith('ctype'):
 
-                # print "INDEX: ", index
                 if index < 0:
                     csys.setnames(hdvalue)
                 else:
                     values = csys.names()
                     values[index] = str(hdvalue)
-                    # print "SETTING COORD NAMES TO: ", values
                     csys.setnames(values)
             elif hdkey.startswith('cunit'):
 

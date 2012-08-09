@@ -718,7 +718,10 @@ class split_test_cst(SplitChecker):
             record['srcids'] = tb.getcol('SOURCE_ID')
             tb.close()
             tb.open(self.outms)
-            record['lastmainobsid'] = tb.getcell('OBSERVATION_ID', tb.nrows() - 1)
+            #record['lastmainobsid'] = tb.getcell('OBSERVATION_ID', tb.nrows() - 1)
+            tcol = tb.getcol('OBSERVATION_ID')
+            tcol.sort()
+            record['lastmainobsid'] = tcol[tb.nrows() - 1]
             tb.close()
             tb.open(self.outms + '/OBSERVATION')
             record['ebs'] = tb.getcol('SCHEDULE')[1]
@@ -786,10 +789,16 @@ class split_test_state(unittest.TestCase):
         tb.close()
         check_eq(om, numpy.array(['OBSERVE_TARGET.UNSPECIFIED']))
         tb.open(self.outms)
+        mytime = tb.getcol('TIME')
+        myrow = 0
+        for i in xrange(len(mytime)):
+            if mytime[i]==4785966752.5:
+                myrow = i
+                break
         rec = {}
         for c in ('ANTENNA1', 'ANTENNA2', 'DATA_DESC_ID', 'DATA',
                   'SCAN_NUMBER', 'STATE_ID', 'TIME'):
-            rec[c] = tb.getcell(c, 0)
+            rec[c] = tb.getcell(c, myrow)
         tb.close()
         # Row 1330 in inpms is the first one with STATE_ID 0.
         check_eq(rec, {'ANTENNA1': 0,

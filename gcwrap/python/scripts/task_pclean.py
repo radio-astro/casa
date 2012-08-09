@@ -7,6 +7,7 @@ from taskinit import *
 import shutil
 import os
 
+
 def pclean(vis=None,
            imagename=None,
            imsize=None,
@@ -19,6 +20,7 @@ def pclean(vis=None,
            ftmachine=None,
            alg=None,
            scales=None,
+           cyclefactor=None,
            majorcycles=None,
            niter=None,
            gain=None,
@@ -118,11 +120,11 @@ def pclean(vis=None,
             except Exception, instance:
                     ##failed must be a string 'J2000 18h00m00 10d00m00'
                 tmppc = phasecenter
-            phasecenter = tmppc
-                
+            phasecenter = tmppc           
     if((clusterdef != '') and os.path.exists(clusterdef)):
-        cl=simple_cluster.simple_cluster() 
-        cl.init_cluster(clusterdef)
+        cl=simple_cluster.simple_cluster()
+        if(cl.get_status()==None):
+            cl.init_cluster(clusterdef)
 ####checking done
     #I'll assume this machine is representative in memory
     arch=os.uname()[0].lower()
@@ -132,8 +134,14 @@ def pclean(vis=None,
     elif(arch=='darwin'):
         totmem=string.atof(commands.getoutput('sysctl hw.memsize').split()[1])
 
-    
-    cluster=simple_cluster.simple_cluster.getCluster()._cluster
+    sc=simple_cluster.simple_cluster.getCluster()
+    ###################
+    sc.stop_cluster()
+    sc.start_cluster()
+    #######have to do this to get rid of a responsiveness problem on the main CLI
+    cluster=sc._cluster
+    #cluster=simple_cluster.simple_cluster.getCluster()._cluster
+    #pdb.set_trace()
     numproc=len(cluster.get_engines())
     numprocperhost=len(cluster.get_engines())/len(cluster.get_nodes()) if (len(cluster.get_nodes()) >0 ) else 1
 
@@ -184,7 +192,7 @@ def pclean(vis=None,
                       phasecenter=phasecenter, 
                       field=field, spw=spw, 
                       ftmachine=ftmachine, alg=alg,
-                      hostnames='', numcpuperhost=-1, 
+                      hostnames='', numcpuperhost=-1, cyclefactor=cyclefactor,
                       majorcycles=majcyc, niter=[0,niter][(k>0) or (not interactive)], gain=gain,
                       threshold=threshold, weight=weighting, robust=robust, scales=scales,
                       mode=cubemode, 

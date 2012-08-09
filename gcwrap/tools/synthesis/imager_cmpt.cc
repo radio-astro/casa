@@ -426,8 +426,11 @@ imager::fitpsf( const std::string& psf, const bool async,
   */
    Bool rstat(False);
    try {
-	   GaussianBeam beam;
-	   rstat = itsImager->fitpsf(psf, beam);
+	   ImageBeamSet elbeam;
+	   rstat = itsImager->fitpsf(psf, elbeam);
+	   IPosition ipos=elbeam.shape();
+	   ipos=0;
+	   GaussianBeam beam=elbeam(ipos);
 	   bpa   = *recordFromQuantity(beam.getPA());
 	   bmaj  = *recordFromQuantity(beam.getMajor());
 	   bmin  = *recordFromQuantity(beam.getMinor());
@@ -1725,7 +1728,7 @@ imager::smooth(const std::vector<std::string>& model, const std::vector<std::str
          casa::Quantity qbpa(casaQuantity(bpa));
          Vector<String> amodel(toVectorString(model));
          Vector<String> aimage(toVectorString(image));
-         GaussianBeam beam(qbmaj, qbmin, qbpa);
+         ImageBeamSet beam(GaussianBeam (qbmaj, qbmin, qbpa));
 
          rstat = itsImager->smooth(amodel, aimage, usefit,
         		 beam, normalize);

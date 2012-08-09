@@ -97,12 +97,12 @@ class test_createmultims(unittest.TestCase):
 
         ldict = listpartition(vis=msname, createdict=True)
 
-        self.assertEqual(sorted(ldict.keys()), ['0', '1', '2', '3'])
+        self.assertEqual(sorted(ldict.keys()), [0, 1, 2, 3])
 
-        self.assertEqual(ldict['0']['MS'].split('/').pop(), 'part1.ms')
-        self.assertEqual(ldict['1']['MS'].split('/').pop(), 'part2.ms')
-        self.assertEqual(ldict['2']['MS'].split('/').pop(), 'part3.ms')
-        self.assertEqual(ldict['3']['MS'].split('/').pop(), 'part4.ms')
+        self.assertEqual(ldict[0]['MS'].split('/').pop(), 'part1.ms')
+        self.assertEqual(ldict[1]['MS'].split('/').pop(), 'part2.ms')
+        self.assertEqual(ldict[2]['MS'].split('/').pop(), 'part3.ms')
+        self.assertEqual(ldict[3]['MS'].split('/').pop(), 'part4.ms')
 
 
 class testcreatemultims_cleanup(unittest.TestCase):           

@@ -5,8 +5,9 @@ startDir=$(pwd)
 #it's adapted from the mac python script and no doubt will
 #be freely adjusted for linux.
 #
-#Set the location of the 3rd party software we will need
+
 #
+#Set the location of the 3rd party software we will need
 OSTYPE=$(uname -s)
 if [ $OSTYPE = "Darwin" ]; then
 	isapple="T"
@@ -43,8 +44,19 @@ if [ "$1" = "--debug" ]; then
 	  _dodebug="T"
 fi
 
-prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
-#echo $prefix
+#
+# TODO: check to see if CASAPATH is empty (it is not used outside of developer 
+# environments, so it often is), and set it as needed.
+if [ "x" == "x${CASAPATH}" ]; then
+    script_directory=`dirname $0`
+    script_name=`basename $0`
+    # $CASAPATH is empty.
+    echo "CASAPATH was not set in ${script_directory}/${script_name}"
+    exit -1
+else
+    prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+fi
+#echo "DEBUG: prefix=$prefix"
 
 a_root=`echo ${CASAPATH} | awk '{print $1}'`
 a_host=$(hostname -s)
