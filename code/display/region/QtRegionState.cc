@@ -73,7 +73,6 @@ namespace casa {
 	    frame_max->setFont(font);
 	    region_mark->setFont(fontp);
 	    region_annotation->setFont(fontp);
-	    region_annotation->hide( );
 
 #if 1
 	    marker_group->hide( );
