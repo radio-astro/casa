@@ -547,8 +547,6 @@ class test_inputs(SetjyUnitTestBase):
             myf['__rethrow_casa_exceptions']=True
             print "\nRunning setjy with a non-existant vis"
             sjran = setjy(vis=self.inpms,listmodels=False)
-        except ValueError:
-            sjran= None
         except Exception, setjyUTerr:
             msg = setjyUTerr.message
             self.assertNotEqual(msg.find("%s does not exist" % self.inpms), -1,
@@ -556,7 +554,7 @@ class test_inputs(SetjyUnitTestBase):
         finally:
             # put back original rethrow setting
             myf['__rethrow_casa_exceptions']=original_rethrow_setting
-
+        self.assertEqual(sjran,None,"Failed to raise exception.") 
      
     def test_listmodels(self):
         """ Test listmodels mode """
