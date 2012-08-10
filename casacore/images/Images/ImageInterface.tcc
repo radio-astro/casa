@@ -403,7 +403,7 @@ template<class T> Bool ImageInterface<T>::setImageInfo(
 		) {
 			if (iter->isNull()) {
 				logSink() << "At least one of the beams in the beam set of "
-					<< name() << "is null and thus invalid" << LogIO::EXCEPTION;
+					<< name() << " is null and thus invalid" << LogIO::EXCEPTION;
 			}
 		}
 		imageInfo_p = cinfo;

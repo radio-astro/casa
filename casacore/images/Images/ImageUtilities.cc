@@ -495,7 +495,7 @@ Bool ImageUtilities::deconvolveFromBeam(
         successFit = True;
         return isPointSource;
     }
-    catch (AipsError x) {
+    catch (const AipsError& x) {
     	successFit = False;
     	if (verbose) {
     		os << LogIO::WARN << "Could not deconvolve beam from source - "

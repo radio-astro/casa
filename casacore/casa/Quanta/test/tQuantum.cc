@@ -249,8 +249,30 @@ try {
     AlwaysAssert(min(B, A) == B, AipsError);
     AlwaysAssert(min(A, B) == B, AipsError);
 
-
+    AlwaysAssert(
+    	nearAbs(
+    		Quantity(4, "km"), Quantity(4000.001, "m"),
+    		Quantity(1, "cm")
+    	), AipsError
+    );
+    AlwaysAssert(
+    	nearAbs(
+    		Quantity(4.00001, "km"), Quantity(4000, "m"),
+    		Quantity(1, "cm")
+        ), AipsError
+    );
+    AlwaysAssert(
+    	! nearAbs(
+    		Quantity(4, "km"), Quantity(4000.001, "m"),
+    		Quantity(0.5, "mm")
+        ), AipsError
+    );
+    AlwaysAssert(
+    	! nearAbs(
+    		Quantity(4.00001, "km"), Quantity(4000, "m"),
+    		Quantity(0.5, "mm")
+    	), AipsError
+    );
     cout << endl << "--------------------------" << endl;
-    
     return 0;
 }
