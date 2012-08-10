@@ -2387,7 +2387,9 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
 
   void QtDisplayPanelGui::showMomentsCollapseImageProfile(){
 	  showImageProfile();
-	  profile_->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE);
+	  if ( profile_ != NULL ){
+		  profile_->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE);
+	  }
   }
 
 }
