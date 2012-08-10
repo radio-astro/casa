@@ -7,7 +7,7 @@ import pylab as pl
 from asap import _to_list
 
 #def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
-def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotoff, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
         
         casalog.origin('sdcal')
 
@@ -143,7 +143,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
                                 npts=noff,
                                 width=width,
                                 elongated=elongated,
-                                plot=plotoff )
+                                plot=plotpointings )
                     if markonly:
                             scal = s2
                     else:
