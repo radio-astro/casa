@@ -248,8 +248,6 @@
           </property>
          </widget>
         </widget>
-        <zorder>the_god_damn_frame</zorder>
-        <zorder>states</zorder>
        </widget>
       </item>
       <item>
@@ -971,7 +969,7 @@
             </rect>
            </property>
           </widget>
-          <widget class="QSpinBox" name="marker_size">
+          <widget class="QSpinBox" name="marker_scale">
            <property name="geometry">
             <rect>
              <x>66</x>
