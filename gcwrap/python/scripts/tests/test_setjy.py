@@ -6,7 +6,6 @@ import numpy
 from tasks import *
 from taskinit import *
 from __main__ import default
-
 """
 Unit tests for task setjy.
 
@@ -538,15 +537,26 @@ class test_inputs(SetjyUnitTestBase):
         self.inpms='wrong.ms'
         if os.path.exists(self.inpms):
             shutil.rmtree(self.inpms) 
+
+
+        # test by temporarily setting __rethrow_casa_exceptions
         sjran=None
         try:
+            myf = sys._getframe(len(inspect.stack()) - 1).f_globals
+            original_rethrow_setting=myf.get('__rethrow_casa_exceptions',False)
+            myf['__rethrow_casa_exceptions']=True
             print "\nRunning setjy with a non-existant vis"
             sjran = setjy(vis=self.inpms,listmodels=False)
-            self.assertNotEqual(sjran,None, 'failed to throw exception') 
+        except ValueError:
+            sjran= None
         except Exception, setjyUTerr:
             msg = setjyUTerr.message
-            self.assertEqual(msg.find("%s does not exist" % self.inpms), -1, 
+            self.assertNotEqual(msg.find("%s does not exist" % self.inpms), -1,
                                 'wrong type of exception is thrown')
+        finally:
+            # put back original rethrow setting
+            myf['__rethrow_casa_exceptions']=original_rethrow_setting
+
      
     def test_listmodels(self):
         """ Test listmodels mode """
