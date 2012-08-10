@@ -431,7 +431,8 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     }
     if ( xcursor.isValid( ) ) {
     	painter.setPen(xcursor);
-    	QLine line( (int) currentCursorPosition.x( ), MARGIN_TOP, (int) currentCursorPosition.x( ), height() - MARGIN_TOP );
+    	QLine line( (int) currentCursorPosition.x( ), MARGIN_TOP,
+    			(int) currentCursorPosition.x( ), height() - MARGIN_BOTTOM );
     	painter.drawLine(line);
     }
     if (xRangeIsShown)

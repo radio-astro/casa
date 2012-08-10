@@ -37,6 +37,7 @@ class ImageAnalysis;
 template <class T> class ImageInterface;
 
 class CollapseResult {
+
 public:
 	CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
 		outputFileName(outputName),
@@ -45,6 +46,7 @@ public:
 	String getOutputFileName() const { return outputFileName; }
 	bool isTemporaryOutput() const { return temporary; }
 	ImageInterface<Float>* getImage() const { return image; }
+
 private:
 	String outputFileName;
 	bool temporary;
@@ -65,6 +67,7 @@ public:
 	void setChannelStr( String str );
 	void setMomentNames( const Vector<QString>& momentNames );
 	void setOutputFileName( QString name );
+	String getErrorMessage() const;
 	std::vector<CollapseResult> getResults() const;
 	void setData(const Vector<Int>& moments, const Int axis, Record& region,
 	    	const String& mask, const Vector<String>& method,
@@ -100,6 +103,8 @@ private:
 	QString outputFileName;
 
 	std::vector<CollapseResult> collapseResults;
+	String errorMsg;
+	bool collapseError;
 };
 
 

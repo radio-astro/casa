@@ -96,14 +96,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
     setupUi(this);
-
-    functionTabs->removeTab(1);
-    functionTabs->removeTab(0);
     initPlotterResource();
 
-    functionTabs->setCurrentIndex( 2 );
-
-    setWindowTitle(QString("Spectral Profile - ").append(name));
     setBackgroundRole(QPalette::Dark);
 
     fillPlotTypes(img);
@@ -2160,5 +2154,19 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::setPosition( const QList<double>& xValues, const QList<double>& yValues ){
 		emit adjustPosition( xValues[0], yValues[0], xValues[1], yValues[1]);
+	}
+
+	void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
+		const QString TITLE_BASE = "Spectral Profile";
+		if ( purpose == MOMENTS_COLLAPSE ){
+			//Hide the function tabs and show only the moments/collapse functionality
+			this->purposeStackedLayout->setCurrentIndex( 1 );
+			setWindowTitle( TITLE_BASE+": Collapse/Moments - "+fileName);
+		}
+		else if ( purpose == SPECTROSCOPY ){
+			//Show the function tabs and hide moments/collapse functionality
+			this->purposeStackedLayout->setCurrentIndex( 0 );
+			setWindowTitle( TITLE_BASE+" - "+fileName);
+		}
 	}
 }

@@ -33,6 +33,7 @@ CanvasHolder::CanvasHolder(QWidget *parent)
       pixelCanvas( this ), legend( NULL )
 {
 	ui.setupUi(this);
+	pixelCanvas.setFocus();
 
 	//White background so the legend will look like a part
 	//of the graph.

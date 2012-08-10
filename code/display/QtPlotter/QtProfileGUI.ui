@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>832</width>
-    <height>764</height>
+    <width>835</width>
+    <height>822</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,18 +19,18 @@
   <property name="minimumSize">
    <size>
     <width>832</width>
-    <height>764</height>
+    <height>600</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Spectral Profiler</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <widget class="CanvasHolder" name="canvasHolder" native="true">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>81</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -326,400 +326,96 @@
      </layout>
     </item>
     <item>
-     <widget class="QTabWidget" name="functionTabs">
+     <widget class="QStackedWidget" name="purposeStackedLayout">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>255</horstretch>
+        <verstretch>241</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
         <width>811</width>
-        <height>211</height>
+        <height>230</height>
        </size>
       </property>
-      <property name="toolTip">
-       <string>Set the position by specifying a point or a rectangular region</string>
-      </property>
-      <property name="tabPosition">
-       <enum>QTabWidget::South</enum>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>255</height>
+       </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
-      <widget class="QWidget" name="twoDReconstr">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <attribute name="title">
-        <string>collapse/moments</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <widget class="QWidget" name="page">
+       <widget class="QTabWidget" name="functionTabs">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>20</y>
+          <width>811</width>
+          <height>221</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>811</width>
+          <height>211</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Set the position by specifying a point or a rectangular region</string>
+        </property>
+        <property name="tabPosition">
+         <enum>QTabWidget::South</enum>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Set Position</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QLabel" name="fromLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="startValue">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>18</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="toLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="endValue">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>20</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="collapseUnits">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>45</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="collapseType">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <item>
-             <property name="text">
-              <string>mean</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>median</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>sum</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="collapseError">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <item>
-             <property name="text">
-              <string>no error</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>rmse</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>propagated</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="collapse">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Collapse along the spectral axis.</string>
-            </property>
-            <property name="text">
-             <string>collapse</string>
-            </property>
-           </widget>
+           <widget class="SpectralPositioningWidget" name="positioningWidget" native="true"/>
           </item>
          </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="lineFit">
-       <attribute name="title">
-        <string>linefit</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Spectral-Line Fitting</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_35">
           <item>
-           <widget class="QLabel" name="fromLabelFit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&lt;font color='black'&gt;from:&lt;/font&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="startValueFit">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>18</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="toLabelFit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&lt;font color='black'&gt;to:&lt;/font&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="endValueFit">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>18</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="fitUnits">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>45</width>
-              <height>24</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="fitGauss">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <item>
-             <property name="text">
-              <string>gauss</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>no gauss</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="fitPolyN">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <item>
-             <property name="text">
-              <string>poly 1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>poly 0</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>no poly</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="clean">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>clean</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="fit">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>21</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Collapse along the spectral axis.</string>
-            </property>
-            <property name="text">
-             <string>fit</string>
-            </property>
-           </widget>
+           <widget class="SettingsWidget" name="specFitSettingsWidget" native="true"/>
           </item>
          </layout>
-        </item>
-       </layout>
+        </widget>
+       </widget>
       </widget>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Set Position</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_24">
-        <item>
-         <widget class="SpectralPositioningWidget" name="positioningWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Spectral-Line Fitting</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_35">
-        <item>
-         <widget class="SettingsWidget" name="specFitSettingsWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_3">
-       <attribute name="title">
-        <string>Collapse/Moments</string>
-       </attribute>
+      <widget class="QWidget" name="page_2">
        <widget class="SettingsWidget" name="momentSettingsWidget" native="true">
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>0</y>
+          <y>20</y>
           <width>791</width>
-          <height>181</height>
+          <height>241</height>
          </rect>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>255</height>
+         </size>
         </property>
        </widget>
       </widget>

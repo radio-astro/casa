@@ -30,20 +30,31 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/MomentCollapseThreadRadio.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
+#include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MeasurementSets/MS1ToMS2Converter.h>
 
 #include <QFileDialog>
 #include <QTime>
+#include <QDebug>
 #include <QTemporaryFile>
 
 namespace casa {
 
 MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
-    : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL ), thresholdingBinDialog( NULL )
+    : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL ),
+      thresholdingBinDialog( NULL ), progressBar( this )
 {
 	ui.setupUi(this);
+
+	//Initialize the progress bar
+	progressBar.setWindowTitle( "Collapse/Moments");
+	progressBar.setLabelText( "Calculating moments...");
+	progressBar.setWindowModality( Qt::WindowModal );
+	progressBar.setCancelButton( 0 );
+	connect( this, SIGNAL( updateProgress(int)), &progressBar, SLOT( setValue( int )));
+	connect( this, SIGNAL( momentsFinished()), &progressBar, SLOT(cancel()));
 
 	momentOptions << "Maximum Value" << "Mean Value" <<"Median Coordinate"
 			<< "Minimum Value" << "Root Mean Square" << "Standard Deviation about the Mean" <<
@@ -64,12 +75,12 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	momentMap[ABS_MEAN_DEV]=7;
 
 	ui.channelTable->setColumnCount( 2 );
-	QStringList tableHeaders =(QStringList()<< "   Min   " << "   Max   ");
+	QStringList tableHeaders =(QStringList()<< "Min" << "Max");
 	ui.channelTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.channelTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.channelTable->setSelectionMode( QAbstractItemView::SingleSelection );
-	ui.channelTable->setColumnWidth(0, 70);
-	ui.channelTable->setColumnWidth(1,70);
+	ui.channelTable->setColumnWidth(0, 125);
+	ui.channelTable->setColumnWidth(1, 125);
 
 	connect( ui.collapseButton, SIGNAL(clicked()), this, SLOT( collapseImage()));
 	connect( ui.channelIntervalCountSpinBox, SIGNAL( valueChanged(int)), this, SLOT(adjustTableRows(int)));
@@ -80,7 +91,9 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	connect( ui.graphThresholdButton, SIGNAL(clicked()), this, SLOT( graphicalThreshold()));
 	connect( ui.symmetricIntervalCheckBox, SIGNAL(stateChanged(int)), this, SLOT(symmetricThresholdChanged(int)));
 	connect( ui.maxThresholdLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(thresholdTextChanged( const QString&)));
+
 	thresholdingChanged();
+	ui.channelIntervalCountSpinBox->setValue( 1 );
 
 	//Make sure the min and max thresholds accept only doubles.
 	const QDoubleValidator* validator = new QDoubleValidator( this );
@@ -102,16 +115,9 @@ String MomentSettingsWidgetRadio::populateChannels(uInt* nSelectedChannels ){
 	int channelIntervalCount = ui.channelIntervalCountSpinBox->value();
 	String channelStr;
 	for ( int i = 0; i < channelIntervalCount; i++ ){
-		QTableWidgetItem* minItem = ui.channelTable->item(i, 0);
 		QString startStr;
-		if ( minItem != NULL ){
-			startStr = minItem->text();
-		}
-		QTableWidgetItem* maxItem  = ui.channelTable->item( i, 1 );
 		QString endStr;
-		if ( maxItem != NULL ){
-			endStr = maxItem->text();
-		}
+		getChannelMinMax( i, startStr, endStr );
 		if ( isValidChannelRangeValue( startStr, "Start" ) && isValidChannelRangeValue( endStr, "End" )){
 			// convert input values to Float
 			float startChanVal=startStr.toFloat();
@@ -183,10 +189,11 @@ bool MomentSettingsWidgetRadio::populateThreshold( Vector<Float>& threshold ){
 	return validThreshold;
 }
 
-Vector<Int> MomentSettingsWidgetRadio::populateMoments(){
+Vector<Int> MomentSettingsWidgetRadio::populateMoments( Vector<QString>& momentNames ){
 	//Set up which moments we want
 	QList<QListWidgetItem*> selectedItems = ui.momentList->selectedItems();
 	int momentCount = selectedItems.length();
+	momentNames.resize( momentCount );
 	Vector<Int> whichMoments(momentCount);
 	if ( momentCount == 0 ){
 		QString msg = "Please select at least one moment.";
@@ -195,6 +202,7 @@ Vector<Int> MomentSettingsWidgetRadio::populateMoments(){
 	else {
 		for( int i = 0; i < momentCount; i++ ){
 			QString selectedText = selectedItems[i]->text();
+			momentNames[i] = selectedText;
 			int index = momentOptions.indexOf( selectedText );
 			if ( index >= 0 ){
 				int momentIndex = static_cast<int>(momentMap[static_cast<SummationIndex>(index)]);
@@ -251,29 +259,32 @@ void MomentSettingsWidgetRadio::collapseImage(){
 		NULL, regionName, channelStr, CasacRegionManager::USE_ALL_STOKES,
 		pixelBox, pos, infile);
 
-	//Calculate the moments
+	//Set up the imageAnalysis
 	if ( imageAnalysis == NULL ){
 		imageAnalysis = new ImageAnalysis( image );
 	}
+	imageAnalysis->setMomentsProgressMonitor( this );
 
+	//Set up the thread that will do the work.
 	delete collapseThread;
 	collapseThread = new MomentCollapseThreadRadio( imageAnalysis );
 	connect( collapseThread, SIGNAL( finished() ), this, SLOT(collapseDone()));
 
 	//Do a collapse image for each of the moments.
-	Vector<Int> moments = populateMoments();
-	Vector<QString> momentNames( moments.size());
-	for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
-		int sIndex = momentMap.key( i );
-		momentNames[i] = momentOptions[sIndex];
-	}
+	Vector<QString> momentNames;
+	Vector<Int> moments = populateMoments( momentNames );
+	collapseThread-> setMomentNames( momentNames );
 	String baseName( taskMonitor->getFileName().toStdString());
 	collapseThread->setData(moments, spectralAxisNumber, region,
 			    	"", method, smoothaxes, smoothtypes, smoothwidths,
 			        includepix, excludepix, peaksnr, stddev,
 			        "RADIO", baseName);
-	collapseThread-> setMomentNames( momentNames );
+	if ( !outputFileName.isEmpty() ){
+		collapseThread->setOutputFileName( outputFileName );
+	}
+
 	collapseThread->setChannelStr( channelStr );
+	progressBar.show();
 	collapseThread->start();
 }
 
@@ -287,20 +298,81 @@ void MomentSettingsWidgetRadio::collapseDone(){
 			ImageInterface<Float>* newImage = results[i].getImage();
 			taskMonitor->imageCollapsed(outName, "image", "raster", True, outputTemporary, newImage );
 		}
+		taskMonitor->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE );
 	}
 	else {
+		emit momentsFinished();
 		QString msg( "Moment calculation failed.");
+		String errorMsg = collapseThread->getErrorMessage();
+		if ( ! errorMsg.empty() ){
+			msg.append( "\n");
+			msg.append( errorMsg.c_str() );
+		}
 		Util::showUserMessage( msg, this );
 	}
 }
 
+void MomentSettingsWidgetRadio::getChannelMinMax( int channelIndex, QString& minStr, QString& maxStr ) const {
+	QTableWidgetItem* minItem = ui.channelTable->item( channelIndex, 0 );
+	if ( minItem != NULL ){
+		minStr = minItem->text();
+	}
+	QTableWidgetItem* maxItem  = ui.channelTable->item( channelIndex, 1 );
+	if ( maxItem != NULL ){
+		maxStr = maxItem->text();
+	}
+}
+
+void MomentSettingsWidgetRadio::convertChannelValue( const QString& channelStr,
+		const QString& channelIdentifier, Converter* converter, int row, int col,
+		bool toPixels ){
+	if ( isValidChannelRangeValue( channelStr, channelIdentifier )){
+		float chanVal = channelStr.toFloat();
+		if ( ! toPixels ){
+			chanVal = converter->convert( chanVal );
+		}
+		else {
+			chanVal = converter->toPixel( chanVal );
+		}
+		setTableValue( row, col, chanVal );
+	}
+}
+
+void MomentSettingsWidgetRadio::convertChannelRanges( const QString& oldUnits, const QString& newUnits ){
+	int channelIntervalCount = ui.channelIntervalCountSpinBox->value();
+	bool toPixels = false;
+	if ( newUnits.isEmpty() ){
+		toPixels = true;
+	}
+	Converter* converter = Converter::getConverter( oldUnits, newUnits );
+	for ( int i = 0; i < channelIntervalCount; i++ ){
+		QString startStr;
+		QString endStr;
+		getChannelMinMax( i, startStr, endStr );
+		convertChannelValue( startStr, "Start", converter, i, 0, toPixels );
+		convertChannelValue( endStr, "End", converter, i, 1, toPixels );
+	}
+	delete converter;
+}
 
 void MomentSettingsWidgetRadio::setUnits( QString unitStr ){
 	int bracketIndex = unitStr.indexOf( "[]");
 	if ( bracketIndex > 0 ){
 		unitStr = "";
 	}
-	ui.channelUnitLabel->setText( unitStr );
+
+	QString prevUnit = ui.channelGroupBox->title();
+	int startIndex = unitStr.indexOf( "[");
+	int endIndex = unitStr.indexOf( "]");
+	if ( startIndex > 0 && endIndex > 0 ){
+		unitStr = unitStr.mid(startIndex, endIndex + 1 - startIndex);
+	}
+	ui.channelGroupBox->setTitle( unitStr );
+	if ( prevUnit != "Channels" && prevUnit != unitStr ){
+		QString oldUnits = Util::stripBrackets( prevUnit );
+		QString newUnits = Util::stripBrackets( unitStr );
+		convertChannelRanges( oldUnits, newUnits );
+	}
 }
 
 void MomentSettingsWidgetRadio::setTableValue(int row, int col, float val ){
@@ -367,7 +439,9 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 
 void MomentSettingsWidgetRadio::adjustTableRows( int count ){
 	ui.channelTable -> setRowCount( count );
-
+	//Select the last row of the table
+	QTableWidgetSelectionRange selectionRange(count-1,0,count-1,1);
+	ui.channelTable->setRangeSelected( selectionRange, true );
 }
 
 void MomentSettingsWidgetRadio::setCollapsedImageFile(){
@@ -425,6 +499,28 @@ void MomentSettingsWidgetRadio::graphicalThreshold(){
 
 	thresholdingBinDialog->show();
 }
+
+
+//*************************************************************************
+//       Methods from the ImageMomentsProgressMonitor interface
+//*************************************************************************
+
+//Note:  because the moments computation is run in a background thread,
+//and progress updates must occur in the GUI thread, communication between
+//the background thread and the progress bar is via signal/slots.
+
+ void MomentSettingsWidgetRadio::setStepCount( int count ){
+	 progressBar.setMinimum( 0 );
+	 progressBar.setMaximum( count );
+ }
+
+ void MomentSettingsWidgetRadio::setStepsCompleted( int count ){
+	 emit updateProgress( count );
+ }
+
+ void MomentSettingsWidgetRadio::done(){
+	 emit momentsFinished();
+ }
 
 MomentSettingsWidgetRadio::~MomentSettingsWidgetRadio(){
 	if ( imageAnalysis != NULL ){

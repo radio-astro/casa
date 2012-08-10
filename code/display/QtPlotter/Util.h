@@ -42,6 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static void getRa(double radians, int& raHour, int& raMin, double& raSec);
 			static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
 			static void minMax( double& min, double& max, const Vector<Double>& values );
+			static QString stripBrackets( QString unitStr );
 		private:
 			Util();
 			virtual ~Util();

@@ -146,5 +146,17 @@ namespace casa {
 
 	}
 
+	QString Util::stripBrackets( QString unitStr ){
+		int startIndex = unitStr.indexOf( "[");
+		int endIndex = unitStr.indexOf( "]");
+		QString noBrackets = unitStr;
+		if ( startIndex >= 0 && endIndex > 0 ){
+			noBrackets = unitStr.mid(startIndex+1, endIndex - startIndex-1);
+		}
+		return noBrackets;
+	}
+
+
+
 
 }

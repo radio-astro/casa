@@ -27,16 +27,27 @@
 
 #include <QtGui/QWidget>
 #include <QMap>
+#include <QProgressDialog>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
+#include <images/Images/ImageMomentsProgressMonitor.h>
 
 namespace casa {
 
 class ImageAnalysis;
 class MomentCollapseThreadRadio;
 class ThresholdingBinPlotDialog;
+class Converter;
 
-class MomentSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator
+//Note: ProfileTaskFacilitator abstracts out some of the common functionality
+//needed for calculating moments and spectral line fitting into a single
+//base class
+
+//Note:  ImageMomentsProgressMonitor is an interface that provides this class
+//with updates concerning the progress of the moment calculation task.
+
+class MomentSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator,
+	public ImageMomentsProgressMonitor
 {
     Q_OBJECT
 
@@ -47,6 +58,15 @@ public:
     void setRange( float min, float max );
     void reset();
     ~MomentSettingsWidgetRadio();
+
+    //Methods from the ImageMomentsProgressMonitor interface
+    void setStepCount( int count );
+    void setStepsCompleted( int count );
+    void done();
+
+signals:
+	void updateProgress(int);
+	void momentsFinished();
 
 private slots:
 	void thresholdingChanged();
@@ -67,11 +87,15 @@ private:
     ThresholdingBinPlotDialog* thresholdingBinDialog;
     QString outputFileName;
     QList<QString> momentOptions;
-
+    QProgressDialog progressBar;
 
     void setTableValue(int row, int col, float val );
+    void getChannelMinMax( int channelIndex, QString& minStr, QString& maxStr ) const;
+    void convertChannelRanges( const QString& oldUnits, const QString& newUnits );
+    void convertChannelValue( const QString& channelStr, const QString& channelIdentifier,
+    		Converter* converter, int row, int col, bool toPixels );
     String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
-    Vector<Int> populateMoments();
+    Vector<Int> populateMoments( Vector<QString>& momentNames );
     Vector<String> populateMethod() const;
     String populateChannels(uInt * nSelectedChannels);
     bool populateThresholds( Vector<Float>& includeThreshold, Vector<Float>& excludeThreshold );

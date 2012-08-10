@@ -24,21 +24,24 @@
 //#
 #include "MomentCollapseThreadRadio.h"
 #include <images/Images/ImageAnalysis.h>
-
+#include <display/Display/Options.h>
 #include <QFile>
-
 namespace casa {
 
 MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis ):
-		analysis( imageAnalysis ){
+		analysis( imageAnalysis ), collapseError(false){
 }
 
 bool MomentCollapseThreadRadio::isSuccess() const{
 	bool success = false;
-	if ( collapseResults.size() > 0 ){
+	if ( collapseResults.size() > 0 && !collapseError ){
 		success = true;
 	}
 	return success;
+}
+
+String MomentCollapseThreadRadio::getErrorMessage() const {
+	return errorMsg;
 }
 
 void MomentCollapseThreadRadio::setData(const Vector<Int>& mments, const Int axis, Record& region,
@@ -103,43 +106,37 @@ bool MomentCollapseThreadRadio::getOutputFileName( String& outName,
 	if ( channelStr != ""){
 		outName = outName + "_"+channelStr;
 	}
-	QString uniqueFileName( outName.c_str() );
-
-	//Add gibberish to ensure the file name is unique.
-	bool fileExists = true;
-	while ( fileExists ){
-		QFile file( uniqueFileName );
-		fileExists = file.exists();
-		if ( fileExists ){
-			uniqueFileName = outName.c_str() + QString::number(qrand() % 10000);
-		}
-		else {
-			outName = uniqueFileName.toStdString();
-		}
+	if ( tmpFile ){
+		outName = viewer::options.temporaryPath( outName );
 	}
 	return tmpFile;
 }
 
 
 void MomentCollapseThreadRadio::run(){
+	try {
+		for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
+			Vector<int> whichMoments(1);
+			whichMoments[0] = moments[i];
 
-	for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
-		Vector<int> whichMoments(1);
-		whichMoments[0] = moments[i];
+			//Output file
+			String outFile;
+			bool outputFileTemporary = getOutputFileName( outFile, i, channelStr );
 
-		//Output file
-		String outFile;
-		bool outputFileTemporary = getOutputFileName( outFile, whichMoments[0], channelStr );
-
-		ImageInterface<Float>* newImage = analysis->moments( moments, axis, region,
+			ImageInterface<Float>* newImage = analysis->moments( moments, axis, region,
 						mask, method,
 						smoothaxes, smoothtypes, smoothwidths,
 						includepix,excludepix,
 						peaksnr, stddev, "RADIO", outFile);
-		if ( newImage != NULL ){
-			CollapseResult result( outFile, outputFileTemporary, newImage );
-			collapseResults.push_back( result );
+			if ( newImage != NULL ){
+				CollapseResult result( outFile, outputFileTemporary, newImage );
+				collapseResults.push_back( result );
+			}
 		}
+	}
+	catch( AipsError& error ){
+		errorMsg = error.getLastMessage();
+		collapseError = true;
 	}
 }
 
