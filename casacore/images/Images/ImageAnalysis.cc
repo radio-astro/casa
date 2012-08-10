@@ -132,7 +132,8 @@ namespace casa { //# name space casa begins
 ImageAnalysis::ImageAnalysis() :
 	_image(0), _statistics(0), _histograms(0),
 			_oldStatsRegionRegion(0), pOldStatsMaskRegion_p(0),
-			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0) {
+			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+			imageMomentsProgressMonitor(0){
 
 	// Register the functions to create a FITSImage or MIRIADImage object.
 	FITSImage::registerOpenFunction();
@@ -146,13 +147,13 @@ ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
 	_image(inImage->cloneII()), _log(new LogIO()), _statistics(0),
 	_histograms(0), _oldStatsRegionRegion(0),
 	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
-	pOldHistMaskRegion_p(0) {}
+	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {}
 
 ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
 _log(new LogIO()), _statistics(0), _histograms(0),
 	_oldStatsRegionRegion(0),
 	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
-	pOldHistMaskRegion_p(0) {
+	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {
 	_image.reset(cloneInputPointer ? inImage->cloneII() : inImage);
 }
 
@@ -2804,6 +2805,9 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	);
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *_log, overwrite, True);
+	if ( imageMomentsProgressMonitor != NULL ){
+		momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
+	}
 	// Set which moments to output
 	if (!momentMaker.setMoments(whichmoments + 1)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
@@ -2908,6 +2912,10 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		delete images[i];
 	}
 	return pIm;
+}
+
+void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
+	imageMomentsProgressMonitor = progressMonitor;
 }
 
 String ImageAnalysis::name(const Bool strippath) {

@@ -28,9 +28,9 @@
 
 
 #include <images/Images/ImageMomentsProgress.h>
+#include <images/Images/ImageMomentsProgressMonitor.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/String.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -45,15 +45,32 @@ void ImageMomentsProgress::initDerived()
     itsMeter = new ProgressMeter(0.0, Double(expectedNsteps()), String("Compute Moments"),
                                  String("Vectors extracted"), String(""), String(""),
                                  True, max(1,Int(expectedNsteps()/20)));
+    maxReported = false;
 }
 
 void ImageMomentsProgress::nstepsDone (uInt nsteps)
 {
     itsMeter->update (nsteps);
+    if ( progressMonitor != NULL ){
+    	if ( !maxReported ){
+    		int max = static_cast<int>(itsMeter->max());
+    		progressMonitor->setStepCount( max );
+    		maxReported = true;
+    	}
+    	progressMonitor->setStepsCompleted( nsteps );
+    }
+}
+
+void ImageMomentsProgress::setProgressMonitor( ImageMomentsProgressMonitor* monitor ){
+	progressMonitor = monitor;
+
 }
 
 void ImageMomentsProgress::done()
 {   
+	if ( progressMonitor != NULL ){
+		progressMonitor->done();
+	}
     delete itsMeter;
     itsMeter = 0;
 }
