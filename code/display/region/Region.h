@@ -205,7 +205,7 @@ namespace casa {
 		void resetDrawingEnv( );
 		void setTextEnv( );
 		void resetTextEnv( );
-		void pushDrawingEnv( LineStyle ls );
+		void pushDrawingEnv( LineStyle ls, int thickness=-1 );
 		void popDrawingEnv( );
 
 		void setDrawCenter(bool draw_center){draw_center_=draw_center;};
@@ -295,7 +295,8 @@ namespace casa {
 		virtual bool within_drawing_area( );
 
 		LineStyle current_ls;
-		std::list<LineStyle> ls_stack;
+		typedef std::pair<LineStyle,int> ls_ele;
+		std::list<ls_ele> ls_stack;
 		WorldCanvas *wc_;
 
 		int last_z_index;
@@ -308,7 +309,7 @@ namespace casa {
 		bool complete;
 
 	    private:
-		void set_line_style( LineStyle linestyle );
+		void set_line_style(const ls_ele&);
 		bool draw_center_;
 
 	};

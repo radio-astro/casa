@@ -168,6 +168,7 @@ namespace casa {
 	    connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change(int)) );
+	    connect( marker_scale, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 
 	    connect( save_file_name_browse, SIGNAL(clicked(bool)), SLOT(save_browser(bool)) );
 	    connect( load_file_name_browse, SIGNAL(clicked(bool)), SLOT(load_browser(bool)) );

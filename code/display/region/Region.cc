@@ -140,23 +140,21 @@ namespace casa {
 	    pc->setLineWidth(1);
 	    pc->setCapStyle(Display::CSRound);
 	    pc->setColor(lineColor());
-	    pc->setLineWidth(lineWidth());
 
 	    Display::LineStyle current_ls = pc->getLineStyle( );
 	    switch ( current_ls ) {
 		case Display::LSSolid:
-		    ls_stack.push_back(SolidLine);
+		    ls_stack.push_back(ls_ele(SolidLine,lineWidth()));
 		    break;
 		case Display::LSDashed:
-		    ls_stack.push_back(DashLine);
+		    ls_stack.push_back(ls_ele(DashLine,lineWidth()));
 		    break;
 		case Display::LSDoubleDashed:
-		    ls_stack.push_back(LSDoubleDashed);
+		    ls_stack.push_back(ls_ele(LSDoubleDashed,lineWidth()));
 		    break;
 	    }
 
-	    LineStyle linestyle = lineStyle( );
-	    set_line_style( linestyle );
+	    set_line_style( ls_ele(lineStyle( ),lineWidth()) );
 
 	    pc->setDrawFunction(Display::DFCopy);
 	}
@@ -191,9 +189,9 @@ namespace casa {
 	void Region::resetTextEnv( ) {
 	}
 
-	void Region::pushDrawingEnv( LineStyle ls ) {
-	    ls_stack.push_back(current_ls);
-	    set_line_style( ls );
+	void Region::pushDrawingEnv( LineStyle ls, int thickness ) {
+	    ls_stack.push_back(ls_ele(current_ls,lineWidth()));
+	    set_line_style(ls_ele(ls, thickness));
 	}
 
 	void Region::popDrawingEnv( ) {
@@ -783,12 +781,12 @@ if (!markCenter()) return;
 	}
 
 
-
-	void Region::set_line_style( LineStyle linestyle ) {
+	void Region::set_line_style( const ls_ele &val ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if ( pc == 0 ) return;
-	    switch ( linestyle ) {
+	    if ( val.second >= 0 ) pc->setLineWidth(val.second);
+	    switch ( val.first ) {
 		case DashLine:
 		    pc->setLineStyle( Display::LSDashed );
 		    current_ls = DashLine;

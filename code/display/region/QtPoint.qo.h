@@ -120,6 +120,8 @@ namespace casa {
 		bool marked( ) const { return QtRegion::marked( ); }
 		bool mark_toggle( ) { return QtRegion::mark_toggle( ); }
 
+		int markerScale( ) const { return QtRegion::markerScale( ); }
+
 		bool markCenter() const { return QtRegion::markCenter( ); }
 
 		bool skyComponent() const { return QtRegion::skyComponent( ); }

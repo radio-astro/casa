@@ -81,6 +81,27 @@ namespace casa {
 	    world_pts[0].second = wblc_y;
 	}
 
+
+	void Point::draw_arrow( PixelCanvas *pc, int x, int y, int xsign, int ysign, int scale_unit, int scale ) {
+	    int off = 5 + (scale * scale_unit);
+	    int off2 = 7 + (scale * (int)((double)scale_unit*(7.0/5.0)));
+	    Vector<int> xv(3),yv(3);
+
+	    int ptx = x+xsign;		// arrow point
+	    int pty = y+ysign;
+	    xv[2] = ptx+xsign*off2;
+	    yv[2] = pty+ysign*off2;
+
+	    xv[0] = ptx+xsign*off;
+	    yv[0] = pty;
+	    xv[1] = ptx;
+	    yv[1] = pty;
+	    pc->drawPolyline(xv,yv);
+	    xv[0] = ptx;
+	    yv[0] = pty+ysign*off;
+	    pc->drawPolyline(xv,yv);
+	}
+
 	void Point::drawRegion( bool selected ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
@@ -92,58 +113,54 @@ namespace casa {
 
 	    int x, y;
 	    try { linear_to_screen( wc_, blc_x, blc_y, x, y ); } catch(...) { return; }
-	    // drawing symbols would slot in here...
+
+	    const int scale_unit=2;
+	    const int scale = markerScale( )-1;
+	    const int inc = scale*scale_unit;
 	    switch ( marker_ ) {
 		case QtMouseToolNames::SYM_DOWN_RIGHT_ARROW:
-		    pc->drawLine( x-5-1, y+1, x-1, y+1 );
-		    pc->drawLine( x-1, y+1, x-1, y+5+1 );
-		    pc->drawLine( x-7-1, y+7+1, x-1, y+1);
+		    draw_arrow( pc, x, y, -1, 1, scale_unit, scale );
 		    break;
 		case QtMouseToolNames::SYM_UP_RIGHT_ARROW:
-		    pc->drawLine( x-5-1, y-1, x-1, y-1 );
-		    pc->drawLine( x-1, y-1, x-1, y-5-1 );
-		    pc->drawLine( x-7-1, y-7-1, x-1, y-1);
+		    draw_arrow( pc, x, y, -1, -1, scale_unit, scale );
 		    break;
 		case QtMouseToolNames::SYM_DOWN_LEFT_ARROW:
-		    pc->drawLine( x+5+1, y+1, x+1, y+1 );
-		    pc->drawLine( x+1, y+1, x+1, y+5+1 );
-		    pc->drawLine( x+7+1, y+7+1, x+1, y+1);
+		    draw_arrow( pc, x, y, 1, 1, scale_unit, scale );
 		    break;
 		case QtMouseToolNames::SYM_UP_LEFT_ARROW:
-		    pc->drawLine( x+5+1, y-1, x+1, y-1 );
-		    pc->drawLine( x+1, y-1, x+1, y-5-1 );
-		    pc->drawLine( x+7+1, y-7-1, x+1, y-1);
+		    draw_arrow( pc, x, y, 1, -1, scale_unit, scale );
 		    break;
 		case QtMouseToolNames::SYM_PLUS:
-		    pc->drawLine( x, y+5, x, y-5 );
-		    pc->drawLine( x+5, y, x-5, y );
+		    pc->drawLine( x, y+5+inc, x, y-5-inc );
+		    pc->drawLine( x+5+inc, y, x-5-inc, y );
 		    break;
 		case QtMouseToolNames::SYM_X:
-		    pc->drawLine( x-5, y+5, x+5, y-5 );
-		    pc->drawLine( x-5, y-5, x+5, y+5 );
+		  { pc->drawLine( x-5-inc, y+5+scale*scale_unit, x+5+scale*scale_unit, y-5-scale*scale_unit );
+		    pc->drawLine( x-5-inc, y-5-inc, x+5+inc, y+5+inc ); }
 		    break;
 		case QtMouseToolNames::SYM_CIRCLE:
-		    pc->drawEllipse( x, y, 6, 6, 0 );
+		    pc->drawEllipse( x, y, 6+inc, 6+inc, 0 );
 		    break;
 		case QtMouseToolNames::SYM_DIAMOND:
 		  { const int minor=4;
 		    const int major=6;
-		    pc->drawLine( x-minor, y, x, y+major );
-		    pc->drawLine( x, y+major, x+minor, y );
-		    pc->drawLine( x+minor, y, x, y-major );
-		    pc->drawLine( x, y-major, x-minor, y ); }
+		    const int mjr = scale * (int)((double)scale_unit*(6.0/4.0));
+		    pc->drawLine( x-minor-inc, y, x, y+major+mjr );
+		    pc->drawLine( x, y+major+mjr, x+minor+inc, y );
+		    pc->drawLine( x+minor+inc, y, x, y-major-mjr );
+		    pc->drawLine( x, y-major-mjr, x-minor-inc, y ); }
 		    break;
 		case QtMouseToolNames::SYM_SQUARE:
-		    pc->drawRectangle(x-4,y-4,x+4,y+4);
+		    pc->drawRectangle(x-4-inc,y-4-inc,x+4+inc,y+4+inc);
 		    break;
 		case QtMouseToolNames::SYM_DOT:
 		default:
-		    pc->drawFilledRectangle( x-1, y-1, x+1, y+1 );
+		    pc->drawFilledRectangle( x-1-inc, y-1-inc, x+1+inc, y+1+inc );
 	    }
 
 	    if ( selected ) {
 		// draw outline rectangle for resizing the point...
-		pushDrawingEnv(DotLine);
+		pushDrawingEnv(DotLine,1);
 		// While a circle would be a better choice, drawing a dotted circle
 		// leaves terrible gaps in the circumference...  currently... <drs>
 		// pc->drawEllipse(x, y, radius, radius, 0.0, True, 1.0, 1.0);

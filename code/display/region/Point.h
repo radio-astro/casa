@@ -38,6 +38,7 @@ namespace casa {
 
     class PanelDisplay;
     class AnnRegion;
+    class PixelCanvas;
 
     namespace viewer {
 
@@ -58,6 +59,9 @@ namespace casa {
 
 		// returns point state (Region::PointLocation)
 		PointInfo checkPoint( double x, double y ) const;
+		// how much to scale the symbol used to mark point regions...
+		// assumed to go from 0 to 9...
+		virtual int markerScale( ) const = 0;
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );
@@ -80,6 +84,11 @@ namespace casa {
 		std::list<RegionInfo> *generate_dds_centers(bool /*skycomp*/);
 
 		QtMouseToolNames::PointRegionSymbols marker_;
+
+	    private:
+		void draw_arrow( PixelCanvas *, int /*x*/, int /*y*/, int /*xsign*/, int /*ysign*/,
+				 int /*scale_unit*/, int /*scale*/ );
+
 	};
     }
 }
