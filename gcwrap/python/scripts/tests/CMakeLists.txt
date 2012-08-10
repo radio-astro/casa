@@ -95,7 +95,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_measures.py
   test_msmoments.py
   test_oldflagcmd.py
-  #test_partition.py
+  test_partition.py
   test_partitionHelper.py
   test_pcasa.py
   test_plotants.py

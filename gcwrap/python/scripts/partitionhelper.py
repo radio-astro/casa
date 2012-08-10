@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import numpy as np
 import pprint as pp
 import traceback
 import time
@@ -300,27 +299,57 @@ class convertToMMS():
         print '=========================================================================='
         return
         
-        
+#
+# -------------- HELPER functions for dealing with an MMS --------------
+#
+#    getMMSScans        'Get the list of scans of an MMS dictionary'
+#    getScanNrows       'Get the number of rows of a scan in a MS. It will add the 
+#                         nrows of all sub-scans.'
+#    getMMSScanNrows    'Get the number of rows of a scan in an MMS dictionary.'
+#    getSpwIds          'Get the Spw IDs of a scan.'
+#    getDiskUsage       'eturn the size in bytes of an MS in disk.'
+#
+# ----------------------------------------------------------------------
+
+def getMMSScans(mmsdict):
+    '''Get the list of scans of an MMS dictionary.
+       mmsdict  --> output dictionary from listpartition(MMS,createdict=true)
+       Return a list of the scans in this MMS. '''
+    
+    tkeys = mmsdict.keys()
+    scanlist = []
+    slist = set(scanlist)
+    for k in tkeys:
+        skeys = mmsdict[k]['scanId'].keys()
+        for k in skeys:
+            slist.add(k)
+    
+    return list(slist)
+    
+
 def getScanNrows(msfile, myscan):
     '''Get the number of rows of a scan in a MS. It will add the nrows of all sub-scans.
        msfile  --> name of the MS
-       myscan  --> scanID
+       myscan  --> scan ID (int)
        return the number of rows in the scan.
        
        To compare with the dictionary returned by listpartition, do the following:
         
         resdict = listpartition(vis='part.mms', createdict=True)
+        mmsscans = getMMSScans(resdict)
+        for scan in mmsscans:
+            
         for k in resdict.keys():
             subms = resdict[k]['MS']
             MS = 'part.mms/SUBMSS/'+subms
             scans = resdict[k]['scanId'].keys()
             for s in scans:
                 nr = resdict[k]['scanId'][s]['nrows']
-                refN = getScanNrows(MS,s)
-                assert nr==refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'%(MS, s, nr, refN)
+                refN = getScanNrows(refMS,s)
+                assert nr==refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'
+                                  %(refMS, s, nr, refN)
 
     '''
-
     msTool=mstool()
 
     msTool.open(msfile)
@@ -328,11 +357,78 @@ def getScanNrows(msfile, myscan):
     msTool.close()
     
     Nrows = 0
+    if not scand.has_key(str(myscan)):
+        return Nrows
+    
     subscans = scand[str(myscan)]
     for ii in subscans.keys():
         Nrows += scand[str(myscan)][ii]['nRow']
     
     return Nrows
+
+
+def getMMSScanNrows(thisdict, myscan):
+    '''Get the number of rows of a scan in an MMS dictionary.
+       thisdict  --> output dictionary from listpartition(MMS,createdict=true)
+       myscan    --> scan ID (int) 
+       Return the number of rows in the given scan. '''
+    
+    tkeys = thisdict.keys()
+    scanrows = 0
+    for k in tkeys:
+        if thisdict[k]['scanId'].has_key(myscan):
+            scanrows += thisdict[k]['scanId'][myscan]['nrows']
+        
+    return scanrows
+
+    
+
+def getSpwIds(msfile, myscan):
+    '''Get the Spw IDs of a scan. 
+       msfile  --> name of the MS
+       myscan  --> scan Id (int)
+       return a numpy array with the Spw IDs. Note that the returned spw IDs are sorted.
+       
+       To compare with the dictionary returned by listpartition, do the following:
+       
+        resdict = listpartition(vis='part.mms', createdict=True)
+        for k in resdict.keys():
+            subms = resdict[k]['MS']
+            MS = 'part.mms/SUBMSS/'+subms
+            scans = resdict[k]['scanId'].keys()
+            for s in scans:
+                spws = resdict[k]['scanId'][s]['spwIds']
+                refspws = getSpwIds(MS,s)
+                
+                # Compare the two arrays
+                compspws = np.in1d(refspws, spws)
+                indices = np.where(compspws==False)
+                if np.size(indices) != 0:
+                    for i in indices:
+                        print "Spw=%s is not in reference array %s"%(spws[indices[i]], refspws)
+                    
+    '''
+    import numpy as np
+    
+    msTool=mstool()
+            
+    msTool.open(msfile)
+    scand = msTool.getscansummary()
+    msTool.close()
+    
+    subscans = scand[str(myscan)]
+    aspws = np.array([],dtype=int)
+    
+    for ii in subscans.keys():
+        sscanid = ii
+        spwids = scand[str(myscan)][sscanid]['SpwIds']
+        aspws = np.append(aspws,spwids)
+    
+    # Sort spws  and remove duplicates
+    aspws.sort()
+    uniquespws = np.unique(aspws)
+    
+    return uniquespws
 
 
 def getDiskUsage(msfile):
@@ -356,52 +452,6 @@ def getDiskUsage(msfile):
     mssize = sizeline.split()
 
     return mssize[0]
-
-def getSpwIds(msfile, myscan):
-    '''Get the Spw IDs of a scan. 
-       msfile  --> name of the MS
-       myscan  --> scanID
-       return a numpy array with the Spw IDs. Note that the returned spw IDs are sorted.
-       
-       To compare with the dictionary returned by listpartition, do the following:
-       
-        resdict = listpartition(vis='part.mms', createdict=True)
-        for k in resdict.keys():
-            subms = resdict[k]['MS']
-            MS = 'part.mms/SUBMSS/'+subms
-            scans = resdict[k]['scanId'].keys()
-            for s in scans:
-                spws = resdict[k]['scanId'][s]['spwIds']
-                refspws = getSpwIds(MS,s)
-                
-                # Compare the two arrays
-                compspws = np.in1d(refspws, spws)
-                indices = np.where(compspws==False)
-                if np.size(indices) != 0:
-                    for i in indices:
-                        print "Spw=%s is not in reference array %s"%(spws[indices[i]], refspws)
-                    
-    '''
-
-    msTool=mstool()
-            
-    msTool.open(msfile)
-    scand = msTool.getscansummary()
-    msTool.close()
-    
-    subscans = scand[str(myscan)]
-    aspws = np.array([],dtype=int)
-    
-    for ii in subscans.keys():
-        sscanid = ii
-        spwids = scand[str(myscan)][sscanid]['SpwIds']
-        aspws = np.append(aspws,spwids)
-    
-    # Sort spws  and remove duplicates
-    aspws.sort()
-    uniquespws = np.unique(aspws)
-    
-    return uniquespws
 
 
 def getSubtables(vis):
