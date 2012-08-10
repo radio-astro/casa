@@ -97,7 +97,14 @@ export PYTHONPATH=${p_path}:${PYTHONPATH}
 export CASAPATH="$a_root $a_arch $a_site $a_host"
 # echo "DEBUG: CASAPATH = ${CASAPATH}"
 export DISPLAY=${DISPLAY=:0.0}
-export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+
+if [ $installed_from_rpm = "T" ]; then
+        export PATH="${a_root}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+else
+        export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+fi
+# echo "DEBUG: PATH = ${PATH}"
+
 export PGPLOT_DIR="${casa3party}/lib"
 export LESS=${LESS="-X"}
 #
