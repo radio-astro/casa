@@ -748,7 +748,8 @@ image* image::convolve2d(
 	const string& outFile, const vector<int>& axes,
 	const string& type, const variant& major, const variant& minor,
 	const variant& pa, const double in_scale, const record& region,
-	const variant& vmask, const bool overwrite, const bool stretch
+	const variant& vmask, const bool overwrite, const bool stretch,
+	const bool targetres
 ) {
 	try {
 		*_log << _ORIGIN;
@@ -778,11 +779,11 @@ image* image::convolve2d(
 			_image->convolve2d(
 				outFile, Axes, type, majorKernel, minorKernel,
 				paKernel, in_scale, *Region, mask, overwrite,
-				stretch
+				stretch, targetres
 			), False
 		);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -966,12 +967,6 @@ record* image::deconvolvefrombeam(
 		Bool retval = ImageUtilities::deconvolveFromBeam(
 			decon, mySource, success, *_log, myBeam
 		);
-		/*
-		Bool retval = _image->deconvolveFromBeam(
-			sourceParam[0], sourceParam[1], sourceParam[2],
-			success, beamParam
-		);
-		*/
 		Record deconval = decon.toRecord();
 		deconval.defineRecord("pa", deconval.asRecord("positionangle"));
 		deconval.removeField("positionangle");
@@ -981,7 +976,7 @@ record* image::deconvolvefrombeam(
 		outrec1.defineRecord("fit", deconval);
 		return fromRecord(outrec1);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

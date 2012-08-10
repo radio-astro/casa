@@ -104,6 +104,7 @@ import casac
 from tasks import *
 from taskinit import *
 import unittest
+import math
 
 targetres_im = "imsmooth_targetres.fits"
 list=['g192_a2.image', 'g192_a2.image-2.rgn']
@@ -116,7 +117,32 @@ def _near(got, expected, tol):
         ),
         tol
     )
-
+    
+def run_imsmooth(
+    imagename, kernel, major, minor, pa, targetres,
+    outfile
+):
+    return imsmooth(
+        imagename=imagename, kernel=kernel,
+        major=major, minor=minor, pa=pa,
+        targetres=targetres, outfile=outfile
+    )
+    
+    
+def run_convolve2d(
+    imagename, kernel, major, minor, pa, targetres,
+    outfile
+):
+    myia = iatool()
+    myia.open(imagename)
+    res = myia.convolve2d(
+        type=kernel,
+        major=major, minor=minor, pa=pa,
+        targetres=targetres, outfile=outfile
+    )
+    myia.done()
+    return res
+    
 class imsmooth_test(unittest.TestCase):
     
     def setUp(self):
@@ -158,6 +184,26 @@ class imsmooth_test(unittest.TestCase):
     #
     # Returns True if successful, and False if it has failed.
     ####################################################################
+    
+    def _compare_beams(self, beam1, beam2):
+        self.assertTrue(_near(beam1["major"], beam2["major"], 2e-5))
+        self.assertTrue(_near(beam1["minor"], beam2["minor"], 2e-5))
+        pa = []
+        for b in [beam1, beam2]:
+            if (b.has_key("positionangle")):
+                pa.append(b["positionangle"])
+            else:
+                pa.append(b["pa"])
+
+        diff = abs(
+            qa.sub(
+                qa.quantity(pa[0]), 
+                qa.quantity(pa[1])
+            )["value"]
+        )
+        self.assertTrue(diff < 1e-5)
+
+    
     def test_input(self):
         '''Imsmooth: Testing INPUT/OUTPUT tests'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
@@ -1113,114 +1159,7 @@ class imsmooth_test(unittest.TestCase):
         print "*** finishing " + str(retValue['success'])
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-    """
-    class imsmooth_test2(unittest.TestCase):    
-    
-        def setUp(self):
-            if(os.path.exists(targetres_im)):
-                os.system('rm -rf ' +targetres_im)
-            self.ia = iatool.create()
-            self.datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/imsmooth/'
-            os.system('cp -r ' + self.datapath + targetres_im +' ' + targetres_im)
-    
-    
-        def tearDown(self):
-            os.system('rm -rf ' +targetres_im)
-            os.system('rm -rf tr!.im')
-    """
-    def test_targetres(self):
-        '''Imsmooth: Targetres tests'''
-        
-        myia = iatool()
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        casalog.post( "Starting imsmooth TARGETRES tests.", 'NORMAL2' )
-        myia.open(targetres_im)
-        input_beam = myia.restoringbeam()
-        myia.done()
-        imajor = qa.tos(input_beam['major'])
-        iminor = qa.tos(input_beam['minor'])
-        ipa = qa.tos(input_beam['positionangle'])
-        try:
-            # convolving gaussian too small
-            omajor = qa.tos(qa.sub(imajor, "1arcsec"))
-            ominor = qa.tos(qa.add(iminor, "1arcsec"))
-            opa = "0deg"
-            outfile = 'tr1.im'
-            results = imsmooth(
-                targetres_im, kernel='gauss', major=omajor,
-                minor=ominor, pa=opa, targetres=True, outfile=outfile
-            )
-            if (results):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 1: imsmooth returned true "\
-                    + "when it should have returned false"
-        except Exception, err:
-            retValue['success'] = False
-            retValue['error_msgs'] += "\nError: Exception occurred for targetres test 1"\
-    
-        try:
-            # convolving gaussian is small and not aligned along the clean beam pa so
-            # bad result still occurs
-            omajor = qa.tos(qa.add(imajor, "1arcsec"))
-            ominor = qa.tos(qa.add(iminor, "1arcsec"))
-            opa = "49deg"
-            outfile = 'tr2.im'
-            print "major " + omajor + " minor " + ominor + " pa " + opa
-            results = imsmooth(
-                targetres_im, kernel='gauss', major=omajor,
-                minor=ominor, pa=opa, targetres=True, outfile=outfile
-            )
-            if (results):
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 2: imsmooth returned true "\
-                    + "when it should have returned false"
-            
-        except Exception, err:
-            retValue['success'] = False
-            retValue['error_msgs'] += "\nError: Exception occurred for targetres test 2"\
-    
-        try:
-            # convolving gaussian is big enough
-            omajor = qa.tos(qa.add(imajor, "2arcsec"))
-            ominor = qa.tos(qa.add(iminor, "2arcsec"))
-            opa = "49deg"
-            outfile = 'tr3.im'
-            print "major " + omajor + " minor " + ominor + " pa " + opa
-            results = imsmooth(
-                targetres_im, kernel='gauss', major=omajor,
-                minor=ominor, pa=opa, targetres=True, outfile=outfile
-            )
-            if (results):
-                myia.open(outfile)
-                mybeam = myia.restoringbeam()
-                myia.done()
-                if (not _near(mybeam['major'], omajor, 1e-5)):
-                    retValue['success'] = False
-                    retValue['error_msgs'] += "\ntargetres test 3: wrong major axis for "\
-                        + "restoring beam, got " + qa.tos(mybeam['major']) + " when it should "\
-                        + "have been " + omajor
-                if (not _near(mybeam['minor'], ominor, 1e-5)):
-                    retValue['success'] = False
-                    retValue['error_msgs'] += "\ntargetres test 3: wrong minor axis for "\
-                        + "restoring beam, got " + qa.tos(mybeam['minor']) + " when it should "\
-                        + "have been " + ominor
-                if (not _near(mybeam['positionangle'], opa, 1e-5)):
-                    retValue['success'] = False
-                    retValue['error_msgs'] += "\ntargetres test 3: wrong position angle for "\
-                        + "restoring beam, got " + qa.tos(mybeam['positionangle']) + " when it should "\
-                        + "have been " + opa
-                     
-            else:
-                retValue['success'] = False
-                retValue['error_msgs'] += "\ntargetres test 3: imsmooth returned false "\
-                    + "when it should have returned true"
-            
-        except Exception, err:
-            retValue['success'] = False
-            retValue['error_msgs'] += "\nError: Exception occurred for targetres test 3"\
-    
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
-    
+
     def test_stretch(self):
         """ imsmooth(): Test stretch parameter"""
         yy = iatool()
@@ -1269,10 +1208,138 @@ class imsmooth_test(unittest.TestCase):
             xx.done()
         got.done()
                             
-            
+    def test_targetres(self):
+        """Test targetres parameter"""
+        myia = self.ia
+        imagename = "tres1.im"
+        myia.fromshape(imagename, [100, 100])
+        csys = myia.coordsys()
+        csys.setunits(["arcsec", "arcsec"])
+        csys.setincrement([1, 1])
+        myia.setcoordsys(csys.torecord())
+        myia.setbrightnessunit("Jy/beam")
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
+        values = myia.getchunk()
+        expected = values.copy()
+        shape = myia.shape()
+        fac = 4 * math.log(2)
+
+        for i in range(shape[0]):
+            x = shape[0]/2 - i
+            for j in range(shape[1]):
+                y = shape[1]/2 - j
+                values[i, j] = math.exp(-(x*x*fac/9 + y*y*fac/36));
+                expected[i, j] = math.exp(-(x*x*fac/25 + y*y*fac/100));
+
+        myia.putchunk(values)
+        myia.done()
+        emaj = qa.quantity("10arcsec")
+        emin = qa.quantity("5arcsec")
+        epa = qa.quantity("0deg")
+        for code in (run_convolve2d, run_imsmooth):
+            for targetres in [False, True]:
+                if not targetres:
+                    major = "8arcsec"
+                    minor = "4arcsec"
+                    pa = "0deg"
+                    outfile = "tres1" + str(code)
+                else:
+                    major = "10arcsec"
+                    minor = "5arcsec"
+                    pa = "0deg"
+                    outfile = "tres2" + str(code)
+                code(
+                     imagename=imagename, kernel="gaussian",
+                     major=major, minor=minor, pa=pa, targetres=targetres,
+                     outfile=outfile
+                )
+                myia.open(outfile)
+                gotbeam = myia.restoringbeam()
+                gotvals = myia.getchunk()
+                myia.done()
+                self._compare_beams(
+                    gotbeam, {"major": emaj, "minor": emin, "pa": epa}
+                )
+                maxdiff = (abs(gotvals-expected)).max()
+                print "max " + str(maxdiff)
+                self.assertTrue(maxdiff < 1e-6)     
+                
+        csys.addcoordinate(spectral=True)
+        myia.fromshape(
+            outfile=imagename, shape=[100, 100, 2],
+            csys=csys.torecord(), overwrite=True
+        )
+        myia.setbrightnessunit("Jy/beam")
+        myia.setrestoringbeam(
+            major="6arcsec", minor="3arcsec", pa="0deg", channel=0
+        )
+        myia.setrestoringbeam(
+            major="4arcsec", minor="2arcsec", pa="0deg", channel=1
+        )
+        values = myia.getchunk()
+        shape = myia.shape()
+        expected = values.copy()
+        for i in range(shape[0]):
+            x = shape[0]/2 - i
+            for j in range(shape[1]):
+                y = shape[1]/2 - j
+                for k in range(shape[2]):
+                    if k == 0:
+                        sx = 9
+                        sy = 36
+                    else:
+                        sx = 4
+                        sy = 16
+                    values[i, j, k] = math.exp(-(x*x*fac/sx + y*y*fac/sy))
+   
+        myia.putchunk(values)
+        outia = iatool()
+        for targetres in [False, True]:
+            ebeam = []
+            if targetres:
+                major = "10arcsec"
+                minor = "5arcsec"
+            else:
+                major = "8arcsec"
+                minor = "4arcsec"
+            pa = "0deg"
         
+            for k in range(shape[2]):
+                reg = rg.box(blc=[0, 0, k], trc=[shape[0]-1, shape[1]-1, k])
+                subim = myia.subimage(outfile="", region=reg, dropdeg=True)
+                convim = subim.convolve2d(
+                    type="gaussian", major=major, minor=minor,
+                    pa=pa, targetres=targetres
+                )
+                subim.done()
+                expected[:, :, k] = convim.getchunk()
+                gotbeam = convim.restoringbeam()
+                
+                if targetres:
+                    self._compare_beams(gotbeam, {"major": major, "minor": minor, "pa": pa})
+
+                ebeam.append(gotbeam)
+                convim.done()
+            for code in [run_convolve2d, run_imsmooth]:
+                if targetres:
+                    outfile = "tres3" + str(code)
+                else:
+                    outfile = "tres4" + str(code)
+                code(
+                     imagename=imagename, kernel="gaussian",
+                     major=major, minor=minor, pa=pa, targetres=targetres,
+                     outfile=outfile
+                )        
+                outia.open(outfile)
+                for k in range(shape[2]):
+                    gotbeam = outia.restoringbeam(channel=k)
+                    self._compare_beams(gotbeam, ebeam[k])
+                    maxdiff = (abs(outia.getchunk()-expected)).max()
+                    self.assertTrue(maxdiff < 1e-6) 
+        myia.done()
+        outia.done()
+          
         
-    
 def suite():
     return [imsmooth_test]    
     

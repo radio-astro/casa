@@ -2927,9 +2927,6 @@ ia.close()
 
 </example>
 </method>
-
- 
- 
    <method type="function" name="convolve2d">
    <shortdescription>Convolve image by a 2D kernel</shortdescription>
    
@@ -2991,6 +2988,11 @@ ia.close()
      
      <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
+        <value>false</value>
+     </param>
+     
+     <param type="bool"  name="targetres">
+        <description>If True and type="gaussian", major, minor, and pa are interpreted as the image resolution that the user wants to achieve.  </description>
         <value>false</value>
      </param>
 
@@ -3079,6 +3081,11 @@ result is associated with that plane in the output image).
 If you do not leave {\stfaf scale} unset, then the convolution kernel
 will be scaled by this value (it has peak unity before application
 of this scale factor).
+
+If targetres=True and type="gaussian" and the input image has a restoring beam,
+this method will interpret the values of major, minor, and pa as the resolution
+of the final image and will calculate the parameters of the Gaussian to use
+in the convolution so that this target resolution is achieved.
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input 
