@@ -116,6 +116,56 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
 
     return rval
 
+
+def compVarColTables(referencetab, testtab, varcol):
+    '''Compare a variable column of two tables.
+       referencetab  --> a reference table
+       testtab       --> a table to verify
+       varcol        --> the name of a variable column (str)
+       Returns True or False.
+    '''
+    
+    retval = True
+    tb2 = casac.table()
+
+    tb.open(referencetab)
+    cnames = tb.colnames()
+
+    tb2.open(testtab)
+    col = varcol
+    if tb.isvarcol(col) and tb2.isvarcol(col):
+        try:
+            rcol = tb.getvarcol('DATA')
+            tcol = tb2.getvarcol('DATA')
+            rk = rcol.keys()
+            tk = tcol.keys()
+            
+            # First check
+            if len(rk) != len(tk):
+                print 'Length of %s differ from %s, %s!=%s'%(referencetab,testtab,len(rk),len(tk))
+                retval = False
+                
+            for k in rk:
+                rdata = rcol[k]
+                tdata = tcol[k]
+                if not (rdata==tdata).all():
+                    print 'ERROR: Column %s of %s and %s do not agree'%(col,referencetab, testtab)
+                    retval = False
+                    break
+        finally:
+            tb.close()
+            tb2.close()
+    
+    else:
+        retval = False
+
+    if retval:
+        print 'Column %s of %s and %s agree'%(col,referencetab, testtab)
+        
+    return retval
+
+    
+        
 class DictDiffer(object):
     """
     Calculate the difference between two dictionaries as:
