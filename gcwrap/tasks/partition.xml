@@ -29,7 +29,7 @@ average over frequency (channels) and time (integrations).
 		<value></value>
 	</param>
 
-	<param type="string" name="outputvis" mustexist="false">
+	<param type="string" name="outputvis">
 		<description>Name of output measurement set</description>
 		<value></value>
 	</param>
