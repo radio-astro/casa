@@ -106,8 +106,9 @@ public:
 		const VectorKernel::KernelTypes kernelType,
 		const IPosition& pixelAxes,
 		const Vector<Quantity>& parameters,
-		const Bool autoScale, Double scale,
-		const Bool copyMiscellaneous=True
+		const Bool autoScale, const Double scale,
+		const Bool copyMiscellaneous=True,
+		const Bool targetres=False
 	);
 
 private:
@@ -139,7 +140,7 @@ private:
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
 		const GaussianBeam& beamIn, const Unit& brightnessUnit,
-		const Bool autoscale, const Double scale
+		const Bool autoscale, const Double scale, const Bool emitMessage
 	);
 
 	static T _fillKernel (
@@ -171,6 +172,11 @@ private:
 	);
 
 	static uInt sizeOfGaussian(const Double width, const Double nSigma);
+
+	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
+		LogIO& os, const Vector<Quantity>& targetBeamParms,
+		const GaussianBeam& inputBeam
+	);
 };
 
 

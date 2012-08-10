@@ -116,6 +116,12 @@ int main() {
 			except = True;
 		}
 		AlwaysAssert(except, AipsError);
+		Vector<Quantity> v(3);
+		v[0] = majAx;
+		v[1] = minAx;
+		v[2] = pa;
+		GaussianBeam beam3(v);
+		AlwaysAssert(beam3 == beam, AipsError);
 
 		{
 			// Easy test 1 - P.A. = 0
@@ -154,7 +160,7 @@ int main() {
 		    cout << "Expected = " << expected << endl;
 		    cout << "isPoint  = " << isPoint << endl << endl;
 		    AlwaysAssert(!isPoint, AipsError);
-			AlwaysAssert(near(expected, model,1e-6), AipsError);
+			AlwaysAssert(near(expected, model,1e-6, Quantity(0.001, "arcsec")), AipsError);
 		}
 		{
 			// Easy test 2 - P.A. aligned
@@ -198,7 +204,7 @@ int main() {
 			cout << "Expected = " << expected << endl;
 			cout << "isPoint  = " << isPoint << endl << endl;
 			AlwaysAssert(!isPoint, AipsError);
-			AlwaysAssert(near(expected, model,1e-6), AipsError);
+			AlwaysAssert(near(expected, model,1e-6, Quantity(1, "mas")), AipsError);
 		}
 		{
 			// Easy test 3 - beam and source the same
@@ -221,7 +227,7 @@ int main() {
 			cout << "Expected = " << beam << endl;
 			cout << "isPoint  = " << isPoint << endl << endl;
 			AlwaysAssert(isPoint, AipsError);
-			AlwaysAssert(near(beam, model,1e-6), AipsError);
+			AlwaysAssert(near(beam, model,1e-6, Quantity(1, "mas")), AipsError);
 		}
 	}
 	catch (AipsError x) {

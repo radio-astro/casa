@@ -85,6 +85,15 @@ public:
 		const Quantity& pa
 	);
 
+	// Construct a beam from a 3-Vector of Quantities representing
+	// the major axis, the minor axis and the position angle (in that order).
+	// If parms[1] > parms[0] (minor axis > major axis),
+	// an exception is thrown. If any units are not angular, an
+	// exception is thrown
+	GaussianBeam(
+		const Vector<Quantity>& parms
+	);
+
 	GaussianBeam(const GaussianBeam& other);
 
 	~GaussianBeam();
@@ -108,9 +117,9 @@ public:
 	Double getMinor(const Unit& u) const;
 
 
-	// returns the position angle's value as it was at constrction,
+	// returns the position angle's value as it was at construction,
 	// unless <src>unwrap</src> is True, in which case the value of the angle
-	// returned will be between -180 and 180 degrees (but with unit the same
+	// returned will be between -90 and 90 degrees (but with unit the same
 	// as it had when this object was constructed).
 	Quantity getPA(const Bool unwrap=True) const;
 
@@ -160,9 +169,11 @@ private:
 
 ostream &operator<<(ostream &os, const GaussianBeam& beam);
 
+LogIO &operator<<(LogIO &os, const GaussianBeam& beam);
+
 Bool near(
 	const GaussianBeam& left, const GaussianBeam& other,
-	const Double tol
+	const Double relWidthTol, const Quantity& absPaTol
 );
 
 }
