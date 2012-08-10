@@ -122,7 +122,7 @@ class PartitionHelper(ParallelTaskHelper):
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
-            mmsCmd['calmsselection'] = 'none'            
+            mmsCmd['calmsselection'] = 'none'  
             mmsCmd['scan']= ParallelTaskHelper.\
                             listToCasaString(partitionedScans[output])
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
@@ -317,6 +317,7 @@ class PartitionHelper(ParallelTaskHelper):
             ph.makeMMS(self._arg['outputvis'], subMSList)
 
             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
+            
             os.rmdir(thesubmscontainingdir)
 
         return True
@@ -462,11 +463,18 @@ def partition(vis,
         raise ValueError, \
               'Visibility data set (%s) not found - please verify the name' % \
               vis
+    
+    # SMC: The outputvis must be given
+    # NOTE: added print statement because the exception msgs are
+    # not being printed at this moment.
+    if not outputvis or outputvis.isspace():
+        print 'Please specify outputvis'
+        raise ValueError, 'Please specify outputvis'
 
-    if isinstance(outputvis, str):
-        outputvis = outputvis.rstrip('/')
-
+    outputvis = outputvis.rstrip('/')
+    
     if outputvis != '' and os.path.exists(outputvis):
+        print 'Output MS %s already exists - will not overwrite.'%outputvis
         raise ValueError, "Output MS %s already exists - will not overwrite."%\
               outputvis
     if isinstance(antenna,list):
