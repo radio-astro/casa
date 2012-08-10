@@ -185,7 +185,7 @@ PrefetchColumns::prefetchColumns (Int firstColumn, ...)
 };  // end namespace asyncio
 
 String
-FrequencySelection::frameName (FrameOfReference referenceFrame)
+FrequencySelection::frameName (Int referenceFrame)
 {
     String names [] =
     { "AsSelected",
@@ -200,7 +200,7 @@ FrequencySelection::frameName (FrameOfReference referenceFrame)
     return names [referenceFrame];
 }
 
-FrequencySelection::FrameOfReference
+Int
 FrequencySelection::getFrameOfReference () const
 {
     return referenceFrame_p;
@@ -236,10 +236,13 @@ FrequencySelections::add (const FrequencySelection & selection)
 {
     if (! selections_p.empty()){
         ThrowIf (getFrameOfReference() != selection.getFrameOfReference(),
-                 utilj::format ("Frequency selection #i has incompatible frame of reference %d (!= %d)",
+                 utilj::format ("Frequency selection #%d has incompatible frame of reference %d:%s "
+                                "(!= %d:%s)",
                                 selections_p.size() + 1,
                                 selection.getFrameOfReference(),
-                                getFrameOfReference()));
+                                FrequencySelection::frameName (selection.getFrameOfReference()).c_str(),
+                                getFrameOfReference(),
+                                FrequencySelection::frameName (getFrameOfReference()).c_str()));
     }
 
     selections_p.push_back (selection.clone());
@@ -251,7 +254,7 @@ FrequencySelections::clone () const
     return new FrequencySelections (* this);
 }
 
-FrequencySelection::FrameOfReference
+Int
 FrequencySelections::getFrameOfReference () const
 {
     ThrowIf (selections_p.empty(), "FrequencySelections collection is empty.");
@@ -795,19 +798,6 @@ ROVisibilityIterator2::getFloatDataColumn (Cube<Float>& data) const
 //    readImpl_p->getInterpolatedVisFlagWeight (whichOne);
 //}
 
-void
-ROVisibilityIterator2::getLsrInfo (Block<Int> & channelGroupNumber,
-                                  Block<Int> & channelIncrement,
-                                  Block<Int> & channelStart,
-                                  Block<Int> & channelWidth,
-                                  MPosition & observatoryPositon,
-                                  MDirection & phaseCenter,
-                                  Bool & velocitySelection) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getLsrInfo (channelGroupNumber, channelIncrement, channelStart, channelWidth, observatoryPositon, phaseCenter, velocitySelection);
-}
-
 MEpoch
 ROVisibilityIterator2::getEpoch () const
 {
@@ -899,19 +889,6 @@ ROVisibilityIterator2::getSubchunkId () const
     return readImpl_p->getSubchunkId ();
 }
 
-void
-ROVisibilityIterator2::getTopoFreqs ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getTopoFreqs ();
-}
-
-void
-ROVisibilityIterator2::getTopoFreqs (Vector<Double> & lsrFreq, Vector<Double> & selFreq)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getTopoFreqs (lsrFreq, selFreq);
-}
 
 VisBuffer2 *
 ROVisibilityIterator2::getVisBuffer ()
@@ -1324,15 +1301,6 @@ ROVisibilityIterator2::sigmaMat (Matrix<Float>& sigmat) const
 {
     CheckImplementationPointerR ();
     readImpl_p->sigmaMat (sigmat);
-}
-
-void
-ROVisibilityIterator2::slicesToMatrices (Vector<Matrix<Int> >& matv,
-                                        const Vector<Vector<Slice> >& slicesv,
-                                        const Vector<Int>& widthsv) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->slicesToMatrices (matv, slicesv, widthsv);
 }
 
 void

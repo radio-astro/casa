@@ -8,20 +8,39 @@
 
 #include <casa/aipstype.h>
 #include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBufferImpl2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/UtilJ.h>
+
 
 namespace casa {
 
-VisBuffer2::VisBuffer2(ROVisibilityIterator2 & iter)
+using namespace vi;
+
+VisBuffer2::VisBuffer2()
+: vb_p (0)
 {
-    Assert (vb_p != 0);
+    vb_p = new VisBufferImpl2 ();
 }
 
+
 VisBuffer2::VisBuffer2(const VisBuffer2 & vb)
+: vb_p (0)
 {
-    Assert (vb_p != 0);
+    Assert (vb.vb_p != 0);
+
+    vb_p = new VisBufferImpl2 (* vb.vb_p);
 }
+
+VisBuffer2::VisBuffer2 (ROVisibilityIterator2 & vi)
+: vb_p (0)
+{
+    // Create the proper underlying implementation
+    // (until async gets added just do a simple one).
+
+    vb_p = new VisBufferImpl2 (vi);
+}
+
 
 VisBuffer2::~VisBuffer2()
 {
@@ -142,18 +161,6 @@ Double
 VisBuffer2::hourang(Double time) const
 {
     return vb_p->hourang (time);
-}
-
-void
-VisBuffer2::freqAveCubes()
-{
-    vb_p->freqAveCubes ();
-}
-
-void
-VisBuffer2::averageChannels (const Matrix<Int>& averagingBounds)
-{
-    vb_p->averageChannels  (averagingBounds);
 }
 
 void

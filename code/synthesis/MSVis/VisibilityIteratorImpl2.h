@@ -379,10 +379,6 @@ public:
     // Return current frequencies (in Hz, acc. to the MS def'n v.2)
     virtual Vector<Double> & frequency (Vector<Double> & freq) const;
 
-    // Return frequencies  (in Hz, acc. to the MS def'n v.2) in selected velocity frame,
-    // returns the same as frequency () if there is no vel selection active.
-    virtual Vector<Double> & lsrFrequency (Vector<Double> & freq) const;
-
     // Return the current phase center as an MDirection
     virtual const MDirection & phaseCenter () const;
 
@@ -547,12 +543,6 @@ public:
 
     virtual void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
 
-    // Convert the frequency from the observe frame to lsr frame.
-    // Returns True in convert if given spw was not observed
-    // in the LSRK frame
-    // if ignoreconv=True then conversion from frame in data 
-    //is ignored by request
-    virtual void lsrFrequency (const Int & spw, Vector<Double> & freq, Bool & convert, const Bool ignoreconv=False);
     //assign a VisImagingWeight object to this iterator
     virtual void useImagingWeight (const VisImagingWeight & imWgt);
     //return number  of Ant
@@ -565,11 +555,6 @@ public:
     virtual Int numberPol ();
     virtual Int numberDDId ();
 
-    ROArrayColumn <Double> & getChannelFrequency () const;
-    Block<Int> getChannelGroupNumber () const;
-    Block<Int> getChannelIncrement () const;
-    Block<Int> getChannelStart () const;
-    Block<Int> getChannelWidth () const;
     Int getDataDescriptionId () const;
     const MeasurementSet & getMeasurementSet () const;;
     Int getMeasurementSetId () const;
@@ -581,19 +566,6 @@ public:
     Vector<Float> getReceptor0Angle ();
     Vector<uInt> getRowIds () const;
 
-    static void lsrFrequency (const Int & spw,
-                              Vector<Double> & freq,
-                              Bool & convert,
-                              const Block<Int> & chanStart,
-                              const Block<Int> & chanWidth,
-                              const Block<Int> & chanInc,
-                              const Block<Int> & numChanGroup,
-                              const ROArrayColumn <Double> & chanFreqs,
-                              const ROScalarColumn<Int> & obsMFreqTypes,
-                              const MEpoch & ep,
-                              const MPosition & obsPos,
-                              const MDirection & dir,
-			      const Bool ignoreconv=False);
 
 protected:
 
@@ -605,19 +577,8 @@ protected:
     virtual void setSelTable ();
     // set the iteration state
     virtual void setState ();
-    // get the TOPO frequencies from the selected velocities and the obs. vel.
-    virtual void getTopoFreqs ();
-    virtual void getTopoFreqs (Vector<Double> & lsrFreq, Vector<Double> & selFreq); // for async i/o
 
     ROVisibilityIterator2 * getViP () const;
-
-    virtual void getLsrInfo (Block<Int> & channelGroupNumber,
-                             Block<Int> & channelIncrement,
-                             Block<Int> & channelStart,
-                             Block<Int> & channelWidth,
-                             MPosition & observatoryPositon,
-                             MDirection & phaseCenter,
-                             Bool & velocitySelection) const;
 
     std::vector<MeasurementSet> getMeasurementSets () const;
 

@@ -150,12 +150,14 @@ class VisibilityIterator2;
 
 class VisBuffer2 {
 
+    friend class VisibilityIterator;
+
 public:
+
+    enum {FrameNotSpecified = -2};
+
     // Create empty VisBuffer2 you can assign to or attach.
     VisBuffer2();
-    // Construct VisBuffer2 for a particular VisibilityIterator
-    // The buffer will remain synchronized with the iterator.
-    VisBuffer2(ROVisibilityIterator2 & iter);
 
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
@@ -250,17 +252,6 @@ public:
     // Hour angle for specified time
     Double hourang(Double time) const;
 
-//    const Vector<Double>& lsrFrequency() const;
-//    void setLsrFrequency (const Vector<Double>&);
-
-
-    //the following method is to convert the observed frequencies
-    // This conversion may not be accurate for some frame
-    // conversion like topo to lsr except if the spw is in the actual buffer
-
-    //if ignoreconv=True..frequency is served as is in the data frame
-    //void lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert, const Bool ignoreconv = False) const;
-
 //    const Matrix<Float>& imagingWeight() const;
 //    void setImagingWeight (const Matrix<Float>&);
 
@@ -293,18 +284,16 @@ public:
     // Frequency average the buffer (visibility() column only)
     //--> Not called: void freqAverage();
 
-    // Frequency average the buffer (visCube and [if present] modelVisCube)
-    void freqAveCubes();
+    // If the frame is not specified, the VI will be queried as to a default reporting frame.
+    // The VI will return either the frame explicitly provided by the user or if that wasn't
+    // provided then the frame used in specifying the selection.
 
-    // Average channel axis according to chanavebounds, for whichever of DATA,
-    // MODEL_DATA, CORRECTED_DATA, FLOAT_DATA, FLAG, and WEIGHT_SPECTRUM are
-    // present.  It will only treat the first 5 as present if they have already
-    // been loaded into the buffer!
-    void averageChannels (const Matrix<Int>& chanavebounds);
-
-    Double getFrequency (Int rowInBuffer, Int channelIndex,
-                         FrequencySelection::FrameOfReference frame = FrequencySelection::AsSelected) const;
+    Double getFrequency (Int rowInBuffer, Int channelIndex, Int frame = FrameNotSpecified) const;
+    const Vector<Double> getFrequencies (Int rowInBuffer,
+                                         Int frame = FrameNotSpecified) const;
     Int getChannelNumber (Int rowInBuffer, Int channelIndex) const;
+    const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
+
 
     // Form Stokes parameters from correlations
     //  (these are preliminary versions)
@@ -455,7 +444,11 @@ public:
 
 protected:
 
+    VisBuffer2 (ROVisibilityIterator2 & vi);
+
     VisBuffer2 * vb_p; // One of the implementation classes
+    const ROVisibilityIterator2 * viC_p;
+    ROVisibilityIterator2 * vi_p;
 
 };
 
