@@ -17,7 +17,7 @@
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
 //# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
+//#        Internet email: aips2-requesemat@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
@@ -64,14 +64,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo asof="1998/01/10">
 // </todo>
- 
+class ImageMomentsProgressMonitor;
 
 class ImageMomentsProgress : public LatticeProgress
 {
 public:
 
 // Constructor makes a null object
-    ImageMomentsProgress() : itsMeter(0) {};
+    ImageMomentsProgress() : itsMeter(0), progressMonitor(0) {};
 
 // Destructor deletes the ProgressMeter pointer
     virtual ~ImageMomentsProgress();
@@ -86,8 +86,14 @@ public:
 // The process has ended so clean things up.
     virtual void done();
 
+    //Set an ImageMomentsProgressMonitor that wants to receive
+    //progress updates
+    void setProgressMonitor( ImageMomentsProgressMonitor* monitor );
+
 private:
     ProgressMeter* itsMeter;
+    ImageMomentsProgressMonitor* progressMonitor;
+    bool maxReported;
 };
 
 

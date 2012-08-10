@@ -60,6 +60,7 @@ Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
 Images/ComponentImager.cc
+Images/ImageMomentsProgressMonitor.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -158,6 +159,7 @@ Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
 Images/WCBox.h
+Images/ImageMomentsProgressMonitor.h
 DESTINATION include/casacore/images/Images
 )
 

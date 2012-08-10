@@ -72,6 +72,7 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/SepImageConvolver.h>
+#include <images/Images/ImageMomentsProgressMonitor.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeApply.h>
 #include <lattices/Lattices/LatticeIterator.h>
@@ -85,6 +86,7 @@
 #include <casa/iomanip.h>
 
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
@@ -93,7 +95,7 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
                                Bool overWriteOutput,
                                Bool showProgressU)
 : MomentsBase<T>( os, overWriteOutput, showProgressU ),
-  pInImage_p(0)
+  pInImage_p(0), progressMonitor(0)
 {
 //
    if (setNewImage(image)) {
@@ -106,14 +108,14 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
 
 template <class T>
 ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: MomentsBase<T>(other), pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0), progressMonitor(0)
 {
    operator=(other);
 }
 
 template <class T>
 ImageMoments<T>::ImageMoments(ImageMoments<T> &other)
-: MomentsBase<T>(other), pInImage_p(0)
+: MomentsBase<T>(other), pInImage_p(0), progressMonitor(0)
 {
    operator=(other);
 }
@@ -140,7 +142,7 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other)
       pInImage_p = other.pInImage_p->cloneII();
  
 // Do the rest
-
+      progressMonitor = other.progressMonitor;
       os_p = other.os_p;
       showProgress_p = other.showProgress_p;
       momentAxis_p = other.momentAxis_p;
@@ -624,7 +626,14 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
    MomentCalcBase<T>* pMomentCalculator = pMomentCalculatorHolder.ptr();
    ImageMomentsProgress* pProgressMeter = 0;
-   if (showProgress_p) pProgressMeter = new ImageMomentsProgress();
+   if (showProgress_p){
+	   pProgressMeter = new ImageMomentsProgress();
+	   if ( progressMonitor != NULL ){
+		   pProgressMeter->setProgressMonitor( progressMonitor );
+	   }
+   }
+
+
    try {
       LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator, momentAxis_p, pProgressMeter);
    } catch (AipsError x) {
@@ -971,6 +980,10 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
 
 }
 
+template <class T>
+void ImageMoments<T>::setProgressMonitor( ImageMomentsProgressMonitor* monitor ){
+	progressMonitor = monitor;
+}
 
 } //# NAMESPACE CASA - END
 
