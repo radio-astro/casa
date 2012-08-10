@@ -3273,7 +3273,7 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
      *itsLog << LogOrigin("ms", "msselect");
       Record *casaRec = toRecord(exprs);
       String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr,
-	polnExpr, uvDistExpr, obsExpr;
+	polnExpr, uvDistExpr, obsExpr, arrayExpr, taQLExpr;
       Int nFields = casaRec->nfields();
       for (Int i=0; i<nFields; i++)
 	{
@@ -3286,6 +3286,8 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 	  if (casaRec->name(i) == "polarization")  {polnExpr       = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "observation")   {obsExpr        = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "array")         {arrayExpr      = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "taql")          {taQLExpr      = casaRec->asString(RecordFieldId(i));}
 	}
       // if (itsSelectedMS) delete itsSelectedMS;
       // itsSelectedMS = new MeasurementSet();
@@ -3297,12 +3299,12 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
       //
       if (onlyparse)
 	itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
-		      ""/*taqlExpr*/,polnExpr,scanExpr,""/*arrayExpr*/,scanIntentExpr,obsExpr);
+		      taQLExpr,polnExpr,scanExpr,arrayExpr,scanIntentExpr,obsExpr);
       else
 	retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
 			    timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
-			    "",/*taQLExpr*/ polnExpr, scanExpr,
-			    "",/*arrayExpr*/ scanIntentExpr, obsExpr, itsMSS);
+			    taQLExpr, polnExpr, scanExpr,
+			    arrayExpr, scanIntentExpr, obsExpr, itsMSS);
       itsSel->setMS(*itsMS);
       return retVal;
     }
