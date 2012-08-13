@@ -104,7 +104,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -129,7 +129,7 @@ typedef void (FeedRow::*FeedAttributeFromText) (const string& s);
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class FeedRow {
@@ -763,6 +763,15 @@ public:
 	 * @return The values of this row as a FeedRowIDL struct.
 	 */
 	asdmIDL::FeedRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a FeedRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the FeedRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::FeedRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

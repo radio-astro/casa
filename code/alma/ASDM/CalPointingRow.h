@@ -154,7 +154,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalPointing.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -176,7 +176,7 @@ typedef void (CalPointingRow::*CalPointingAttributeFromText) (const string& s);
 /**
  * The CalPointingRow class is a row of a CalPointingTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalPointingRow {
@@ -1491,6 +1491,15 @@ public:
 	 * @return The values of this row as a CalPointingRowIDL struct.
 	 */
 	asdmIDL::CalPointingRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalPointingRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalPointingRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalPointingRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

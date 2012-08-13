@@ -168,7 +168,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Source.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -187,7 +187,7 @@ typedef void (SourceRow::*SourceAttributeFromText) (const string& s);
 /**
  * The SourceRow class is a row of a SourceTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SourceRow {
@@ -1523,6 +1523,15 @@ public:
 	 * @return The values of this row as a SourceRowIDL struct.
 	 */
 	asdmIDL::SourceRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SourceRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SourceRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SourceRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

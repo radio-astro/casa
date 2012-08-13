@@ -90,7 +90,7 @@
 //#include <TableStreamReader.h>
 
 /*\file GainTracking.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -115,7 +115,7 @@ typedef void (GainTrackingRow::*GainTrackingAttributeFromText) (const string& s)
 /**
  * The GainTrackingRow class is a row of a GainTrackingTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class GainTrackingRow {
@@ -636,6 +636,15 @@ public:
 	 * @return The values of this row as a GainTrackingRowIDL struct.
 	 */
 	asdmIDL::GainTrackingRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a GainTrackingRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the GainTrackingRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::GainTrackingRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

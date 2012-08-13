@@ -132,7 +132,7 @@
 //#include <TableStreamReader.h>
 
 /*\file ExecBlock.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -157,7 +157,7 @@ typedef void (ExecBlockRow::*ExecBlockAttributeFromText) (const string& s);
 /**
  * The ExecBlockRow class is a row of a ExecBlockTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class ExecBlockRow {
@@ -1342,6 +1342,15 @@ public:
 	 * @return The values of this row as a ExecBlockRowIDL struct.
 	 */
 	asdmIDL::ExecBlockRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a ExecBlockRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the ExecBlockRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::ExecBlockRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

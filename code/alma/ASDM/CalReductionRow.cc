@@ -240,6 +240,159 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalReductionRow::toIDL(asdmIDL::CalReductionRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numApplied = numApplied;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.appliedCalibrations.length(appliedCalibrations.size());
+		for (unsigned int i = 0; i < appliedCalibrations.size(); ++i) {
+			
+				
+			x.appliedCalibrations[i] = CORBA::string_dup(appliedCalibrations.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numParam = numParam;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.paramSet.length(paramSet.size());
+		for (unsigned int i = 0; i < paramSet.size(); ++i) {
+			
+				
+			x.paramSet[i] = CORBA::string_dup(paramSet.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numInvalidConditions = numInvalidConditions;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.invalidConditions.length(invalidConditions.size());
+		for (unsigned int i = 0; i < invalidConditions.size(); ++i) {
+			
+				
+			x.invalidConditions[i] = invalidConditions.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeReduced = timeReduced.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.messages = CORBA::string_dup(messages.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.software = CORBA::string_dup(software.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.softwareVersion = CORBA::string_dup(softwareVersion.c_str());
+				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

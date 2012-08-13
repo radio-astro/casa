@@ -220,6 +220,133 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ReceiverRow::toIDL(asdmIDL::ReceiverRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.receiverId = receiverId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.name = CORBA::string_dup(name.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numLO = numLO;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.frequencyBand = frequencyBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.freqLO.length(freqLO.size());
+		for (unsigned int i = 0; i < freqLO.size(); ++i) {
+			
+			x.freqLO[i] = freqLO.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverSideband = receiverSideband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.sidebandLO.length(sidebandLO.size());
+		for (unsigned int i = 0; i < sidebandLO.size(); ++i) {
+			
+				
+			x.sidebandLO[i] = sidebandLO.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

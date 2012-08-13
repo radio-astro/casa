@@ -590,10 +590,20 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		x->row.length(nrow);
 		vector<CalPositionRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void CalPositionTable::toIDL(asdmIDL::CalPositionTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<CalPositionRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -605,7 +615,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -613,7 +623,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -735,7 +745,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/3/CalPositionTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPositionTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

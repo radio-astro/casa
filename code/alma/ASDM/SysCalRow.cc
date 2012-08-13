@@ -450,6 +450,351 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SysCalRow::toIDL(asdmIDL::SysCalRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numChan = numChan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tcalFlagExists = tcalFlagExists;
+		
+		
+			
+				
+		x.tcalFlag = tcalFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tcalSpectrumExists = tcalSpectrumExists;
+		
+		
+			
+		x.tcalSpectrum.length(tcalSpectrum.size());
+		for (unsigned int i = 0; i < tcalSpectrum.size(); i++) {
+			x.tcalSpectrum[i].length(tcalSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tcalSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tcalSpectrum.at(i).size(); j++)
+					
+				x.tcalSpectrum[i][j]= tcalSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.trxFlagExists = trxFlagExists;
+		
+		
+			
+				
+		x.trxFlag = trxFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.trxSpectrumExists = trxSpectrumExists;
+		
+		
+			
+		x.trxSpectrum.length(trxSpectrum.size());
+		for (unsigned int i = 0; i < trxSpectrum.size(); i++) {
+			x.trxSpectrum[i].length(trxSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < trxSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < trxSpectrum.at(i).size(); j++)
+					
+				x.trxSpectrum[i][j]= trxSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.tskyFlagExists = tskyFlagExists;
+		
+		
+			
+				
+		x.tskyFlag = tskyFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tskySpectrumExists = tskySpectrumExists;
+		
+		
+			
+		x.tskySpectrum.length(tskySpectrum.size());
+		for (unsigned int i = 0; i < tskySpectrum.size(); i++) {
+			x.tskySpectrum[i].length(tskySpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tskySpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tskySpectrum.at(i).size(); j++)
+					
+				x.tskySpectrum[i][j]= tskySpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.tsysFlagExists = tsysFlagExists;
+		
+		
+			
+				
+		x.tsysFlag = tsysFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tsysSpectrumExists = tsysSpectrumExists;
+		
+		
+			
+		x.tsysSpectrum.length(tsysSpectrum.size());
+		for (unsigned int i = 0; i < tsysSpectrum.size(); i++) {
+			x.tsysSpectrum[i].length(tsysSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tsysSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tsysSpectrum.at(i).size(); j++)
+					
+				x.tsysSpectrum[i][j]= tsysSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.tantFlagExists = tantFlagExists;
+		
+		
+			
+				
+		x.tantFlag = tantFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tantSpectrumExists = tantSpectrumExists;
+		
+		
+			
+		x.tantSpectrum.length(tantSpectrum.size());
+		for (unsigned int i = 0; i < tantSpectrum.size(); i++) {
+			x.tantSpectrum[i].length(tantSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tantSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tantSpectrum.at(i).size(); j++)
+					
+						
+				x.tantSpectrum[i][j] = tantSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.tantTsysFlagExists = tantTsysFlagExists;
+		
+		
+			
+				
+		x.tantTsysFlag = tantTsysFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tantTsysSpectrumExists = tantTsysSpectrumExists;
+		
+		
+			
+		x.tantTsysSpectrum.length(tantTsysSpectrum.size());
+		for (unsigned int i = 0; i < tantTsysSpectrum.size(); i++) {
+			x.tantTsysSpectrum[i].length(tantTsysSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tantTsysSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tantTsysSpectrum.at(i).size(); j++)
+					
+						
+				x.tantTsysSpectrum[i][j] = tantTsysSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.phaseDiffFlagExists = phaseDiffFlagExists;
+		
+		
+			
+				
+		x.phaseDiffFlag = phaseDiffFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.phaseDiffSpectrumExists = phaseDiffSpectrumExists;
+		
+		
+			
+		x.phaseDiffSpectrum.length(phaseDiffSpectrum.size());
+		for (unsigned int i = 0; i < phaseDiffSpectrum.size(); i++) {
+			x.phaseDiffSpectrum[i].length(phaseDiffSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phaseDiffSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < phaseDiffSpectrum.at(i).size(); j++)
+					
+						
+				x.phaseDiffSpectrum[i][j] = phaseDiffSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.feedId = feedId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

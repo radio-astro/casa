@@ -368,6 +368,275 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalWVRRow::toIDL(asdmIDL::CalWVRRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.wvrMethod = wvrMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numInputAntennas = numInputAntennas;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.inputAntennaNames.length(inputAntennaNames.size());
+		for (unsigned int i = 0; i < inputAntennaNames.size(); ++i) {
+			
+				
+			x.inputAntennaNames[i] = CORBA::string_dup(inputAntennaNames.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numChan = numChan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.chanFreq.length(chanFreq.size());
+		for (unsigned int i = 0; i < chanFreq.size(); ++i) {
+			
+			x.chanFreq[i] = chanFreq.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.chanWidth.length(chanWidth.size());
+		for (unsigned int i = 0; i < chanWidth.size(); ++i) {
+			
+			x.chanWidth[i] = chanWidth.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.refTemp.length(refTemp.size());
+		for (unsigned int i = 0; i < refTemp.size(); i++) {
+			x.refTemp[i].length(refTemp.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < refTemp.size() ; i++)
+			for (unsigned int j = 0; j < refTemp.at(i).size(); j++)
+					
+				x.refTemp[i][j]= refTemp.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.pathCoeff.length(pathCoeff.size());
+		for (unsigned int i = 0; i < pathCoeff.size(); i++) {
+			x.pathCoeff[i].length(pathCoeff.at(i).size());
+			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++) {
+				x.pathCoeff[i][j].length(pathCoeff.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < pathCoeff.size() ; i++)
+			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++)
+				for (unsigned int k = 0; k < pathCoeff.at(i).at(j).size(); k++)
+					
+						
+					x.pathCoeff[i][j][k] = pathCoeff.at(i).at(j).at(k);
+		 				
+			 									
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polyFreqLimits.length(polyFreqLimits.size());
+		for (unsigned int i = 0; i < polyFreqLimits.size(); ++i) {
+			
+			x.polyFreqLimits[i] = polyFreqLimits.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.wetPath.length(wetPath.size());
+		for (unsigned int i = 0; i < wetPath.size(); ++i) {
+			
+				
+			x.wetPath[i] = wetPath.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.dryPath.length(dryPath.size());
+		for (unsigned int i = 0; i < dryPath.size(); ++i) {
+			
+				
+			x.dryPath[i] = dryPath.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.water = water.toIDLLength();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

@@ -83,7 +83,7 @@ class DopplerRow;
  * Doppler tracking information. This table defines how velocity  information is converted into a frequency offset to compensate in real time  for the Doppler effect. This table may be omitted for ALMA when the  Doppler tracking is not corrected.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Doppler </CAPTION>
@@ -227,6 +227,16 @@ public:
 	 * @return a pointer to a DopplerTableIDL
 	 */
 	asdmIDL::DopplerTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::DopplerTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::DopplerTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

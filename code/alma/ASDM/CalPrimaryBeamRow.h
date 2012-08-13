@@ -124,7 +124,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalPrimaryBeam.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -146,7 +146,7 @@ typedef void (CalPrimaryBeamRow::*CalPrimaryBeamAttributeFromText) (const string
 /**
  * The CalPrimaryBeamRow class is a row of a CalPrimaryBeamTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalPrimaryBeamRow {
@@ -928,6 +928,15 @@ public:
 	 * @return The values of this row as a CalPrimaryBeamRowIDL struct.
 	 */
 	asdmIDL::CalPrimaryBeamRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalPrimaryBeamRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalPrimaryBeamRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalPrimaryBeamRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

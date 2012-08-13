@@ -127,7 +127,7 @@ class CalCurveRow;
  * Result of time-dependent calibration performed on-line by TelCal
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalCurve </CAPTION>
@@ -378,6 +378,16 @@ public:
 	 * @return a pointer to a CalCurveTableIDL
 	 */
 	asdmIDL::CalCurveTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalCurveTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalCurveTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

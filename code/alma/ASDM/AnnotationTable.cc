@@ -475,10 +475,20 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		x->row.length(nrow);
 		vector<AnnotationRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void AnnotationTable::toIDL(asdmIDL::AnnotationTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<AnnotationRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -490,7 +500,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -498,7 +508,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -620,7 +630,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:annttn=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/3/AnnotationTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='AnnotationTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

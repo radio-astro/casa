@@ -99,7 +99,7 @@ class PointingModelRow;
  * The pointing models used to point the antennas.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of PointingModel </CAPTION>
@@ -288,6 +288,16 @@ public:
 	 * @return a pointer to a PointingModelTableIDL
 	 */
 	asdmIDL::PointingModelTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::PointingModelTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::PointingModelTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

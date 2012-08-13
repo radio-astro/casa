@@ -131,6 +131,50 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SquareLawDetectorRow::toIDL(asdmIDL::SquareLawDetectorRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.squareLawDetectorId = squareLawDetectorId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numBand = numBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.bandType = bandType;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

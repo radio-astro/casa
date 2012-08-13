@@ -337,6 +337,238 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void FeedRow::toIDL(asdmIDL::FeedRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.feedId = feedId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.beamOffset.length(beamOffset.size());
+		for (unsigned int i = 0; i < beamOffset.size(); i++) {
+			x.beamOffset[i].length(beamOffset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < beamOffset.size() ; i++)
+			for (unsigned int j = 0; j < beamOffset.at(i).size(); j++)
+					
+						
+				x.beamOffset[i][j] = beamOffset.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focusReference.length(focusReference.size());
+		for (unsigned int i = 0; i < focusReference.size(); i++) {
+			x.focusReference[i].length(focusReference.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < focusReference.size() ; i++)
+			for (unsigned int j = 0; j < focusReference.at(i).size(); j++)
+					
+				x.focusReference[i][j]= focusReference.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polResponse.length(polResponse.size());
+		for (unsigned int i = 0; i < polResponse.size(); i++) {
+			x.polResponse[i].length(polResponse.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < polResponse.size() ; i++)
+			for (unsigned int j = 0; j < polResponse.at(i).size(); j++)
+					
+				x.polResponse[i][j]= polResponse.at(i).at(j).toIDLComplex();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.receptorAngle.length(receptorAngle.size());
+		for (unsigned int i = 0; i < receptorAngle.size(); ++i) {
+			
+			x.receptorAngle[i] = receptorAngle.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.feedNumExists = feedNumExists;
+		
+		
+			
+				
+		x.feedNum = feedNum;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.illumOffsetExists = illumOffsetExists;
+		
+		
+			
+		x.illumOffset.length(illumOffset.size());
+		for (unsigned int i = 0; i < illumOffset.size(); ++i) {
+			
+			x.illumOffset[i] = illumOffset.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.positionExists = positionExists;
+		
+		
+			
+		x.position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x.position[i] = position.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.receiverId.length(receiverId.size());
+		for (unsigned int i = 0; i < receiverId.size(); ++i) {
+			
+				
+			x.receiverId[i] = receiverId.at(i);
+	 			
+	 		
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

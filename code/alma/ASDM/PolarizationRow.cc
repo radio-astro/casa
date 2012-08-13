@@ -158,6 +158,77 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void PolarizationRow::toIDL(asdmIDL::PolarizationRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.polarizationId = polarizationId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCorr = numCorr;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.corrType.length(corrType.size());
+		for (unsigned int i = 0; i < corrType.size(); ++i) {
+			
+				
+			x.corrType[i] = corrType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.corrProduct.length(corrProduct.size());
+		for (unsigned int i = 0; i < corrProduct.size(); i++) {
+			x.corrProduct[i].length(corrProduct.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < corrProduct.size() ; i++)
+			for (unsigned int j = 0; j < corrProduct.at(i).size(); j++)
+					
+						
+				x.corrProduct[i][j] = corrProduct.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

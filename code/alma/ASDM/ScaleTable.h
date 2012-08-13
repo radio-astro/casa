@@ -97,7 +97,7 @@ class ScaleRow;
  * Specifies the time scales and units used in the dataset. 
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Scale </CAPTION>
@@ -246,6 +246,16 @@ public:
 	 * @return a pointer to a ScaleTableIDL
 	 */
 	asdmIDL::ScaleTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::ScaleTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::ScaleTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

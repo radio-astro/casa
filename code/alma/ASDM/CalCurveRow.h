@@ -112,7 +112,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalCurve.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -134,7 +134,7 @@ typedef void (CalCurveRow::*CalCurveAttributeFromText) (const string& s);
 /**
  * The CalCurveRow class is a row of a CalCurveTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalCurveRow {
@@ -862,6 +862,15 @@ public:
 	 * @return The values of this row as a CalCurveRowIDL struct.
 	 */
 	asdmIDL::CalCurveRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalCurveRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalCurveRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalCurveRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

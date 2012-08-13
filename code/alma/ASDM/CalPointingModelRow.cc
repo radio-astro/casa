@@ -372,6 +372,279 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalPointingModelRow::toIDL(asdmIDL::CalPointingModelRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.pointingModelMode = pointingModelMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.polarizationType = polarizationType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCoeff = numCoeff;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffName.length(coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); ++i) {
+			
+				
+			x.coeffName[i] = CORBA::string_dup(coeffName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffVal.length(coeffVal.size());
+		for (unsigned int i = 0; i < coeffVal.size(); ++i) {
+			
+				
+			x.coeffVal[i] = coeffVal.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffError.length(coeffError.size());
+		for (unsigned int i = 0; i < coeffError.size(); ++i) {
+			
+				
+			x.coeffError[i] = coeffError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffFixed.length(coeffFixed.size());
+		for (unsigned int i = 0; i < coeffFixed.size(); ++i) {
+			
+				
+			x.coeffFixed[i] = coeffFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.azimuthRMS = azimuthRMS.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.elevationRms = elevationRms.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.skyRMS = skyRMS.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.reducedChiSquared = reducedChiSquared;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numObsExists = numObsExists;
+		
+		
+			
+				
+		x.numObs = numObs;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.coeffFormulaExists = coeffFormulaExists;
+		
+		
+			
+		x.coeffFormula.length(coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); ++i) {
+			
+				
+			x.coeffFormula[i] = CORBA::string_dup(coeffFormula.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

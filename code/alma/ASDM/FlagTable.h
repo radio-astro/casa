@@ -103,7 +103,7 @@ class FlagRow;
  * This table is used for flagging visibility data and is used in addition to the Binary Data Format flags produced by the correlator software.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Flag </CAPTION>
@@ -304,6 +304,16 @@ public:
 	 * @return a pointer to a FlagTableIDL
 	 */
 	asdmIDL::FlagTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::FlagTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::FlagTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

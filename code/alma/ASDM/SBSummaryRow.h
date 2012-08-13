@@ -122,7 +122,7 @@
 //#include <TableStreamReader.h>
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -138,7 +138,7 @@ typedef void (SBSummaryRow::*SBSummaryAttributeFromText) (const string& s);
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SBSummaryRow {
@@ -829,6 +829,15 @@ public:
 	 * @return The values of this row as a SBSummaryRowIDL struct.
 	 */
 	asdmIDL::SBSummaryRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SBSummaryRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SBSummaryRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SBSummaryRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

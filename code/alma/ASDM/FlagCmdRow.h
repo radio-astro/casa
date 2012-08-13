@@ -78,7 +78,7 @@
 //#include <TableStreamReader.h>
 
 /*\file FlagCmd.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -94,7 +94,7 @@ typedef void (FlagCmdRow::*FlagCmdAttributeFromText) (const string& s);
 /**
  * The FlagCmdRow class is a row of a FlagCmdTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class FlagCmdRow {
@@ -404,6 +404,15 @@ public:
 	 * @return The values of this row as a FlagCmdRowIDL struct.
 	 */
 	asdmIDL::FlagCmdRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a FlagCmdRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the FlagCmdRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::FlagCmdRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

@@ -127,7 +127,7 @@ class CalSeeingRow;
  * The seeing parameters deduced from TelCal calibrations.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalSeeing </CAPTION>
@@ -353,6 +353,16 @@ public:
 	 * @return a pointer to a CalSeeingTableIDL
 	 */
 	asdmIDL::CalSeeingTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalSeeingTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalSeeingTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

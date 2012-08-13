@@ -86,7 +86,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalGain.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -108,7 +108,7 @@ typedef void (CalGainRow::*CalGainAttributeFromText) (const string& s);
 /**
  * The CalGainRow class is a row of a CalGainTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalGainRow {
@@ -584,6 +584,15 @@ public:
 	 * @return The values of this row as a CalGainRowIDL struct.
 	 */
 	asdmIDL::CalGainRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalGainRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalGainRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalGainRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

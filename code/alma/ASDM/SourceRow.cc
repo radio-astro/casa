@@ -606,6 +606,519 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SourceRow::toIDL(asdmIDL::SourceRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.sourceId = sourceId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.code = CORBA::string_dup(code.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.properMotion.length(properMotion.size());
+		for (unsigned int i = 0; i < properMotion.size(); ++i) {
+			
+			x.properMotion[i] = properMotion.at(i).toIDLAngularRate();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.sourceName = CORBA::string_dup(sourceName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x.directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x.directionEquinox = directionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.calibrationGroupExists = calibrationGroupExists;
+		
+		
+			
+				
+		x.calibrationGroup = calibrationGroup;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.catalogExists = catalogExists;
+		
+		
+			
+				
+		x.catalog = CORBA::string_dup(catalog.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.deltaVelExists = deltaVelExists;
+		
+		
+			
+		x.deltaVel = deltaVel.toIDLSpeed();
+			
+		
+	
+
+	
+  		
+		
+		x.positionExists = positionExists;
+		
+		
+			
+		x.position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x.position[i] = position.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numLinesExists = numLinesExists;
+		
+		
+			
+				
+		x.numLines = numLines;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.transitionExists = transitionExists;
+		
+		
+			
+		x.transition.length(transition.size());
+		for (unsigned int i = 0; i < transition.size(); ++i) {
+			
+				
+			x.transition[i] = CORBA::string_dup(transition.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.restFrequencyExists = restFrequencyExists;
+		
+		
+			
+		x.restFrequency.length(restFrequency.size());
+		for (unsigned int i = 0; i < restFrequency.size(); ++i) {
+			
+			x.restFrequency[i] = restFrequency.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sysVelExists = sysVelExists;
+		
+		
+			
+		x.sysVel.length(sysVel.size());
+		for (unsigned int i = 0; i < sysVel.size(); ++i) {
+			
+			x.sysVel[i] = sysVel.at(i).toIDLSpeed();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.rangeVelExists = rangeVelExists;
+		
+		
+			
+		x.rangeVel.length(rangeVel.size());
+		for (unsigned int i = 0; i < rangeVel.size(); ++i) {
+			
+			x.rangeVel[i] = rangeVel.at(i).toIDLSpeed();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sourceModelExists = sourceModelExists;
+		
+		
+			
+				
+		x.sourceModel = sourceModel;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.frequencyRefCodeExists = frequencyRefCodeExists;
+		
+		
+			
+				
+		x.frequencyRefCode = frequencyRefCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numFreqExists = numFreqExists;
+		
+		
+			
+				
+		x.numFreq = numFreq;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numStokesExists = numStokesExists;
+		
+		
+			
+				
+		x.numStokes = numStokes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.frequencyExists = frequencyExists;
+		
+		
+			
+		x.frequency.length(frequency.size());
+		for (unsigned int i = 0; i < frequency.size(); ++i) {
+			
+			x.frequency[i] = frequency.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.frequencyIntervalExists = frequencyIntervalExists;
+		
+		
+			
+		x.frequencyInterval.length(frequencyInterval.size());
+		for (unsigned int i = 0; i < frequencyInterval.size(); ++i) {
+			
+			x.frequencyInterval[i] = frequencyInterval.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.stokesParameterExists = stokesParameterExists;
+		
+		
+			
+		x.stokesParameter.length(stokesParameter.size());
+		for (unsigned int i = 0; i < stokesParameter.size(); ++i) {
+			
+				
+			x.stokesParameter[i] = stokesParameter.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.fluxExists = fluxExists;
+		
+		
+			
+		x.flux.length(flux.size());
+		for (unsigned int i = 0; i < flux.size(); i++) {
+			x.flux[i].length(flux.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < flux.size() ; i++)
+			for (unsigned int j = 0; j < flux.at(i).size(); j++)
+					
+				x.flux[i][j]= flux.at(i).at(j).toIDLFlux();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.fluxErrExists = fluxErrExists;
+		
+		
+			
+		x.fluxErr.length(fluxErr.size());
+		for (unsigned int i = 0; i < fluxErr.size(); i++) {
+			x.fluxErr[i].length(fluxErr.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < fluxErr.size() ; i++)
+			for (unsigned int j = 0; j < fluxErr.at(i).size(); j++)
+					
+				x.fluxErr[i][j]= fluxErr.at(i).at(j).toIDLFlux();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.positionAngleExists = positionAngleExists;
+		
+		
+			
+		x.positionAngle.length(positionAngle.size());
+		for (unsigned int i = 0; i < positionAngle.size(); ++i) {
+			
+			x.positionAngle[i] = positionAngle.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.positionAngleErrExists = positionAngleErrExists;
+		
+		
+			
+		x.positionAngleErr.length(positionAngleErr.size());
+		for (unsigned int i = 0; i < positionAngleErr.size(); ++i) {
+			
+			x.positionAngleErr[i] = positionAngleErr.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sizeExists = sizeExists;
+		
+		
+			
+		x.size.length(size.size());
+		for (unsigned int i = 0; i < size.size(); i++) {
+			x.size[i].length(size.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < size.size() ; i++)
+			for (unsigned int j = 0; j < size.at(i).size(); j++)
+					
+				x.size[i][j]= size.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.sizeErrExists = sizeErrExists;
+		
+		
+			
+		x.sizeErr.length(sizeErr.size());
+		for (unsigned int i = 0; i < sizeErr.size(); i++) {
+			x.sizeErr[i].length(sizeErr.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < sizeErr.size() ; i++)
+			for (unsigned int j = 0; j < sizeErr.at(i).size(); j++)
+					
+				x.sizeErr[i][j]= sizeErr.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.velRefCodeExists = velRefCodeExists;
+		
+		
+			
+				
+		x.velRefCode = velRefCode;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

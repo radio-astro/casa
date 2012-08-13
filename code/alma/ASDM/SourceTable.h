@@ -183,7 +183,7 @@ class SourceRow;
  * Summary of astromomical source information.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Source </CAPTION>
@@ -528,6 +528,16 @@ public:
 	 * @return a pointer to a SourceTableIDL
 	 */
 	asdmIDL::SourceTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SourceTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SourceTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

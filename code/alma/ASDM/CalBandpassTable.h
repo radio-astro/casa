@@ -135,7 +135,7 @@ class CalBandpassRow;
  * Result of passband calibration performed on-line by TelCal.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalBandpass </CAPTION>
@@ -404,6 +404,16 @@ public:
 	 * @return a pointer to a CalBandpassTableIDL
 	 */
 	asdmIDL::CalBandpassTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalBandpassTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalBandpassTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

@@ -139,7 +139,7 @@ class CalDelayRow;
  * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
@@ -413,6 +413,16 @@ public:
 	 * @return a pointer to a CalDelayTableIDL
 	 */
 	asdmIDL::CalDelayTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalDelayTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalDelayTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

@@ -147,6 +147,14 @@ namespace asdm {
 		return x;
 	
 	}
+
+  void DataDescriptionRow::toIDL(asdmIDL::DataDescriptionRowIDL& x) const {
+		
+		// Fill the IDL structure.			
+		x.dataDescriptionId = dataDescriptionId.toIDLTag();
+		x.polOrHoloId = polOrHoloId.toIDLTag();
+		x.spectralWindowId = spectralWindowId.toIDLTag();	
+	}
 #endif
 	
 

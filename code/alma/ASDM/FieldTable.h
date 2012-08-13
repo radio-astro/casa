@@ -111,7 +111,7 @@ class FieldRow;
  * The field position for each source.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Field </CAPTION>
@@ -326,6 +326,16 @@ public:
 	 * @return a pointer to a FieldTableIDL
 	 */
 	asdmIDL::FieldTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::FieldTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::FieldTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

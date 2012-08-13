@@ -297,6 +297,204 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalAmpliRow::toIDL(asdmIDL::CalAmpliRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.apertureEfficiency.length(apertureEfficiency.size());
+		for (unsigned int i = 0; i < apertureEfficiency.size(); ++i) {
+			
+				
+			x.apertureEfficiency[i] = apertureEfficiency.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.apertureEfficiencyError.length(apertureEfficiencyError.size());
+		for (unsigned int i = 0; i < apertureEfficiencyError.size(); ++i) {
+			
+				
+			x.apertureEfficiencyError[i] = apertureEfficiencyError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.correctionValidityExists = correctionValidityExists;
+		
+		
+			
+				
+		x.correctionValidity = correctionValidity;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

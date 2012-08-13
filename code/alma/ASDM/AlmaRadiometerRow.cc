@@ -148,6 +148,61 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void AlmaRadiometerRow::toIDL(asdmIDL::AlmaRadiometerRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.almaRadiometerId = almaRadiometerId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		x.numAntennaExists = numAntennaExists;
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+ 		
+		x.spectralWindowIdExists = spectralWindowIdExists;
+		
+		
+		
+		x.spectralWindowId.length(spectralWindowId.size());
+		for (unsigned int i = 0; i < spectralWindowId.size(); ++i) {
+			
+			x.spectralWindowId[i] = spectralWindowId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 
@@ -808,7 +863,7 @@ void AlmaRadiometerRow::spectralWindowIdFromBin(EndianIStream& eis) {
 	 * will be compared with those of this.
 	 * @return a boolean.
 	 */
-	bool AlmaRadiometerRow::equalByRequiredValue(AlmaRadiometerRow* /*x*/) {
+	bool AlmaRadiometerRow::equalByRequiredValue(AlmaRadiometerRow* x) {
 		
 		return true;
 	}	

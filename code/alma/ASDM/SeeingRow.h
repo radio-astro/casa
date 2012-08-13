@@ -84,7 +84,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Seeing.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -100,7 +100,7 @@ typedef void (SeeingRow::*SeeingAttributeFromText) (const string& s);
 /**
  * The SeeingRow class is a row of a SeeingTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SeeingRow {
@@ -376,6 +376,15 @@ public:
 	 * @return The values of this row as a SeeingRowIDL struct.
 	 */
 	asdmIDL::SeeingRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SeeingRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SeeingRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SeeingRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

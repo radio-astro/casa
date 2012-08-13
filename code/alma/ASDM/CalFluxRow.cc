@@ -437,6 +437,344 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalFluxRow::toIDL(asdmIDL::CalFluxRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.sourceName = CORBA::string_dup(sourceName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numFrequencyRanges = numFrequencyRanges;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numStokes = numStokes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRanges.length(frequencyRanges.size());
+		for (unsigned int i = 0; i < frequencyRanges.size(); i++) {
+			x.frequencyRanges[i].length(frequencyRanges.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < frequencyRanges.size() ; i++)
+			for (unsigned int j = 0; j < frequencyRanges.at(i).size(); j++)
+					
+				x.frequencyRanges[i][j]= frequencyRanges.at(i).at(j).toIDLFrequency();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.fluxMethod = fluxMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.flux.length(flux.size());
+		for (unsigned int i = 0; i < flux.size(); i++) {
+			x.flux[i].length(flux.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < flux.size() ; i++)
+			for (unsigned int j = 0; j < flux.at(i).size(); j++)
+					
+						
+				x.flux[i][j] = flux.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.fluxError.length(fluxError.size());
+		for (unsigned int i = 0; i < fluxError.size(); i++) {
+			x.fluxError[i].length(fluxError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < fluxError.size() ; i++)
+			for (unsigned int j = 0; j < fluxError.at(i).size(); j++)
+					
+						
+				x.fluxError[i][j] = fluxError.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.stokes.length(stokes.size());
+		for (unsigned int i = 0; i < stokes.size(); ++i) {
+			
+				
+			x.stokes[i] = stokes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.directionExists = directionExists;
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x.directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x.directionEquinox = directionEquinox.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x.PAExists = PAExists;
+		
+		
+			
+		x.PA.length(PA.size());
+		for (unsigned int i = 0; i < PA.size(); i++) {
+			x.PA[i].length(PA.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < PA.size() ; i++)
+			for (unsigned int j = 0; j < PA.at(i).size(); j++)
+					
+				x.PA[i][j]= PA.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.PAErrorExists = PAErrorExists;
+		
+		
+			
+		x.PAError.length(PAError.size());
+		for (unsigned int i = 0; i < PAError.size(); i++) {
+			x.PAError[i].length(PAError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < PAError.size() ; i++)
+			for (unsigned int j = 0; j < PAError.at(i).size(); j++)
+					
+				x.PAError[i][j]= PAError.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.sizeExists = sizeExists;
+		
+		
+			
+		x.size.length(size.size());
+		for (unsigned int i = 0; i < size.size(); i++) {
+			x.size[i].length(size.at(i).size());
+			for (unsigned int j = 0; j < size.at(i).size(); j++) {
+				x.size[i][j].length(size.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < size.size() ; i++)
+			for (unsigned int j = 0; j < size.at(i).size(); j++)
+				for (unsigned int k = 0; k < size.at(i).at(j).size(); k++)
+					
+					x.size[i][j][k] = size.at(i).at(j).at(k).toIDLAngle();
+												
+			
+		
+	
+
+	
+  		
+		
+		x.sizeErrorExists = sizeErrorExists;
+		
+		
+			
+		x.sizeError.length(sizeError.size());
+		for (unsigned int i = 0; i < sizeError.size(); i++) {
+			x.sizeError[i].length(sizeError.at(i).size());
+			for (unsigned int j = 0; j < sizeError.at(i).size(); j++) {
+				x.sizeError[i][j].length(sizeError.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < sizeError.size() ; i++)
+			for (unsigned int j = 0; j < sizeError.at(i).size(); j++)
+				for (unsigned int k = 0; k < sizeError.at(i).at(j).size(); k++)
+					
+					x.sizeError[i][j][k] = sizeError.at(i).at(j).at(k).toIDLAngle();
+												
+			
+		
+	
+
+	
+  		
+		
+		x.sourceModelExists = sourceModelExists;
+		
+		
+			
+				
+		x.sourceModel = sourceModel;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

@@ -76,7 +76,7 @@
 //#include <TableStreamReader.h>
 
 /*\file FreqOffset.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -101,7 +101,7 @@ typedef void (FreqOffsetRow::*FreqOffsetAttributeFromText) (const string& s);
 /**
  * The FreqOffsetRow class is a row of a FreqOffsetTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class FreqOffsetRow {
@@ -390,6 +390,15 @@ public:
 	 * @return The values of this row as a FreqOffsetRowIDL struct.
 	 */
 	asdmIDL::FreqOffsetRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a FreqOffsetRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the FreqOffsetRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::FreqOffsetRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

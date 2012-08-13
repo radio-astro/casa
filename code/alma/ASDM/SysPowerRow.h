@@ -78,7 +78,7 @@
 //#include <TableStreamReader.h>
 
 /*\file SysPower.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -103,7 +103,7 @@ typedef void (SysPowerRow::*SysPowerAttributeFromText) (const string& s);
 /**
  * The SysPowerRow class is a row of a SysPowerTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SysPowerRow {
@@ -515,6 +515,15 @@ public:
 	 * @return The values of this row as a SysPowerRowIDL struct.
 	 */
 	asdmIDL::SysPowerRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SysPowerRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SysPowerRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SysPowerRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

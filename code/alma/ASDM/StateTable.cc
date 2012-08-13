@@ -467,10 +467,20 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		x->row.length(nrow);
 		vector<StateRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void StateTable::toIDL(asdmIDL::StateTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<StateRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -482,7 +492,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -490,7 +500,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -612,7 +622,7 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:state=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/3/StateTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='StateTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

@@ -113,7 +113,7 @@ class SwitchCycleRow;
  * Cycle information in switching modes. Describe each step in a switching cycle.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SwitchCycle </CAPTION>
@@ -286,6 +286,16 @@ public:
 	 * @return a pointer to a SwitchCycleTableIDL
 	 */
 	asdmIDL::SwitchCycleTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SwitchCycleTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SwitchCycleTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS
