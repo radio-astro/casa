@@ -49,6 +49,11 @@ namespace casa {
 					marker_ == QtMouseToolNames::SYM_DIAMOND          ? AnnSymbol::DIAMOND :
 					marker_ == QtMouseToolNames::SYM_SQUARE           ? AnnSymbol::SQUARE :
 					AnnSymbol::POINT );
+
+		int scale = markerScale( );
+		if ( scale >= 0 )
+		    symbol->setSymbolSize((unsigned int)scale);
+
 	    } catch ( AipsError &e ) {
 		cerr << "Error encountered creating an AnnSymbol:" << endl;
 		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;

@@ -1,5 +1,5 @@
-//# MultiPointTool.cc: Base class for MultiWorldCanvas event-based point tools
-//# Copyright (C) 2000,2001,2002
+//# VOID.h: base class for dynamically cast void pointer in the viewer
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,33 +25,17 @@
 //#
 //# $Id$
 
-#include <display/DisplayEvents/MultiPointTool.h>
+#ifndef VIEWER_VOID_H_
+#define VIEWER_VOID_H_
+#include <string>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+class VOID {
+    public:
+	VOID( const std::string &str ) : id_(str) { }
+	virtual ~VOID( ) { }
+	virtual std::string id( ) const { return id_; }
+    private:
+	std::string id_;
+};
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double,
-									     VOID *region_specific_state_ptr ) const {
-
-	viewer::PointMarkerState *pms = dynamic_cast<viewer::PointMarkerState*>(region_specific_state_ptr);
-	QtMouseToolNames::PointRegionSymbols sym;
-	int size = 1;
-	if ( pms != 0 ) {
-	    sym = pms->type( );
-	    size = pms->scale( );
-	} else {
-	    sym = rfactory->currentPointSymbolType( );
-	}
-
-	return rfactory->point( wc, x, y, sym, size );
-    }
-
-    static std::set<viewer::Region::RegionTypes> multi_point_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiPointTool::regionsCreated( ) const {
-	if ( multi_point_tool_region_set.size( ) == 0 ) {
-	    multi_point_tool_region_set.insert( viewer::Region::PointRegion );
-	}
-	return multi_point_tool_region_set;
-    }
-
-
-} //# NAMESPACE CASA - END
+#endif

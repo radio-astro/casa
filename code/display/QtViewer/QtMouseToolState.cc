@@ -58,7 +58,7 @@ namespace QtMouseToolNames {
   const std::string longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
-    "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
+    "Point marking", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
     "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
   std::string iconnames[] = { "magnifyb", "handb", "arrowcrossb",

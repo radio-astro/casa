@@ -36,6 +36,9 @@
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>
 #include <display/Utilities/dtor.h>
+#include <display/Display/MouseToolState.h>
+#include <display/Utilities/VOID.h>
+
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -312,6 +315,18 @@ namespace casa {
 		void set_line_style(const ls_ele&);
 		bool draw_center_;
 
+	};
+
+	// used to pass point specific marker information (marker type and scaling)
+	// to generic region creation routines RegionTool::create(...)
+	class PointMarkerState : public VOID {
+	    public:
+		PointMarkerState( QtMouseToolNames::PointRegionSymbols t, int s ) : VOID("viewer.PointMarkerState"), type_(t), scale_(s) { }
+		QtMouseToolNames::PointRegionSymbols type( ) const { return type_; }
+		int scale( ) const { return scale_; }
+	    private:
+		QtMouseToolNames::PointRegionSymbols type_;
+		int scale_;
 	};
     }
 }

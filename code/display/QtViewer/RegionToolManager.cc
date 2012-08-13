@@ -430,9 +430,21 @@ namespace casa {
 				if ( ptit == tools.end( ) ) continue;
 				String pos = ann->getLabelPosition( );
 
-				AnnSymbol::Symbol sym = AnnSymbol::POINT;
 				const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
-				if ( sym_obj ) sym = sym_obj->getSymbol( );
+				if ( sym_obj == 0 ) continue;
+
+				AnnSymbol::Symbol sym = sym = sym_obj->getSymbol( );
+				PointMarkerState pms( sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
+						      sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
+						      sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
+						      sym == AnnSymbol::TRIANGLE_RIGHT ? QtMouseToolNames::SYM_UP_RIGHT_ARROW :
+						      sym == AnnSymbol::PLUS ?           QtMouseToolNames::SYM_PLUS :
+						      sym == AnnSymbol::X ?              QtMouseToolNames::SYM_X :
+						      sym == AnnSymbol::CIRCLE ?         QtMouseToolNames::SYM_CIRCLE :
+						      sym == AnnSymbol::DIAMOND ?        QtMouseToolNames::SYM_DIAMOND :
+						      sym == AnnSymbol::THIN_DIAMOND ?   QtMouseToolNames::SYM_DIAMOND :
+						      sym == AnnSymbol::SQUARE ?         QtMouseToolNames::SYM_SQUARE :
+						      QtMouseToolNames::SYM_DOT, sym_obj->getSymbolSize( ) );
 
 				(*ptit).second->create( Region::PointRegion, wc, linear_pts,
 							ann->getLabel( ), ( pos == "left" ? Region::LeftText :
@@ -446,18 +458,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )),
-							sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
-							sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
-							sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
-							sym == AnnSymbol::TRIANGLE_RIGHT ? QtMouseToolNames::SYM_UP_RIGHT_ARROW :
-							sym == AnnSymbol::PLUS ?           QtMouseToolNames::SYM_PLUS :
-							sym == AnnSymbol::X ?              QtMouseToolNames::SYM_X :
-							sym == AnnSymbol::CIRCLE ?         QtMouseToolNames::SYM_CIRCLE :
-							sym == AnnSymbol::DIAMOND ?        QtMouseToolNames::SYM_DIAMOND :
-							sym == AnnSymbol::THIN_DIAMOND ?   QtMouseToolNames::SYM_DIAMOND :
-							sym == AnnSymbol::SQUARE ?         QtMouseToolNames::SYM_SQUARE :
-							QtMouseToolNames::SYM_DOT );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), &pms );
 
 			    }
 			    break;
@@ -506,7 +507,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
 			    }
 
 			    break;
@@ -583,7 +584,7 @@ namespace casa {
 							ann->getLabelColorString( ), ann->getColorString( ),
 							( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							  ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
+							ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
 			    }
 			    break;
 			case AnnotationBase::POLYGON:
@@ -632,7 +633,7 @@ namespace casa {
 							 ann->getLabelColorString( ), ann->getColorString( ),
 							 ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
 							   ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ),
-							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), -1 );
+							 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
 			    }
 			    break;
 

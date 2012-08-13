@@ -446,7 +446,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
-				bool is_annotation, int /*region_specific_state*/ ) {
+				bool is_annotation, VOID */*region_specific_state*/ ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
 	std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));

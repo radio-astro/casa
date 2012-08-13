@@ -75,6 +75,7 @@ namespace casa {
 		Region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }
 
 		int markerScale( ) const { return mystate->markerScale( ); }
+		void setMarkerScale( int v ) { mystate->setMarkerScale(v); }
 
 		std::string textColor( ) const { return mystate->textColor( ); }
 		std::string textFont( ) const { return mystate->textFont( ); }

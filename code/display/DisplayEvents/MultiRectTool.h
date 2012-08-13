@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 const std::string &/*label*/, viewer::Region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
 			 const std::string &/*font*/, int /*font_size*/, int /*font_style*/, const std::string &/*font_color*/,
 			 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/, unsigned int /*line_width*/,
-			 bool /*annotation*/, int /*region_specific_state*/ );
+			 bool /*annotation*/, VOID */*region_specific_state*/ );
 
 	    RegionToolTypes type( ) const { return RECTTOOL; }
 
@@ -163,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // to be used by them, as well as internally.
 	    virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
-	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, int region_specific_state ) const;
+	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
 
 	    viewer::RegionSource *rfactory;
 

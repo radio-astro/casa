@@ -34,7 +34,9 @@ namespace casa {
 		std::string centerColor( ) const;
 		int lineWidth( ) const { return line_width->value( ); }
 		Region::LineStyle lineStyle( ) const;
+
 		int markerScale( ) const { return marker_scale->value( ); }
+		void setMarkerScale( int v );
 
 		std::string textColor( ) const;
 		std::string textFont( ) const;

@@ -355,6 +355,12 @@ namespace casa {
 	    else return Region::SolidLine;
 	}
 
+	void QtRegionState::setMarkerScale( int v ) {
+	    if ( v <= 0 ) marker_scale->setValue(0);
+	    else if ( v >= 9 ) marker_scale->setValue(9);
+	    else marker_scale->setValue(v);
+	}
+
 	std::string QtRegionState::textColor( ) const {
 	    QString tc = text_color->currentText( );
 	    return tc.toStdString( );

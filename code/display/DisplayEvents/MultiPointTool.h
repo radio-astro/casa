@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	protected:
 
-	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, int region_specific_state ) const;
+	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
 
     };
 
