@@ -246,7 +246,9 @@ def getWidth(adict, par):
                 length = len(mystr)
                 if length > width:
                     width = length
-    
+    if width < 5:
+        width = 5
+        
     return width
 
 
