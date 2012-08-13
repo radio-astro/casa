@@ -73,7 +73,7 @@ from taskinit import *
 
 def imsmooth(
     imagename, kernel, major, minor, pa, targetres, region,
-    box, chans, stokes, mask, outfile, stretch
+    box, chans, stokes, mask, outfile, stretch, overwrite
 ):
     casalog.origin( 'imsmooth' )
     retValue = False
@@ -93,12 +93,7 @@ def imsmooth(
         outfile = 'imsmooth_results.im'
         casalog.post( "The outfile paramter is empty, consequently the" \
                       +" smoothed image will be\nsaved on disk in file, " \
-                      + outfile, 'WARN' )
-    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        casalog.post( 'Output file, '+outfile+\
-                      ' exists. imsmooth can not proceed, please\n'+\
-                      'remove it or change the output file name.', 'SEVERE' )
-        return retValue
+                      + outfile, 'WARN')
     _myia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
@@ -120,12 +115,14 @@ def imsmooth(
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             _myia.open( imagename )
-            _myia.convolve2d(
+            retia = _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile,
-                mask=mask, stretch=stretch, targetres=targetres
+                mask=mask, stretch=stretch, targetres=targetres,
+                overwrite=overwrite
             )
             _myia.done()
+            retia.done()
             retValue = True
 
         elif (kernel.startswith( "box" ) ):
@@ -149,22 +146,22 @@ def imsmooth(
             #retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
             #                           widths=[ minor, major ], \
             #                           region=reg,outfile=outfile )
-            _myia.sepconvolve(
+            retia = _myia.sepconvolve(
                 axes=[0,1], types=['box','box' ],
                 widths=[ minor, major ],
                 region=reg,outfile=outfile,
-                mask=mask, stretch=stretch
+                mask=mask, stretch=stretch,
+                overwrite=overwrite
             )
             _myia.done()
+            retia.done()
             retValue = True
         else:
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
             retValue = False
         
-    except Exception, instance:
-        casalog.post( 'Something has gone wrong with the smoothing. Try, try again, and ye shall suceed', 'SEVERE' )
-        casalog.post( 'Exception thrown is: '+str(instance), 'SEVERE' )
-        return False
-
-    
+    except Exception:
+        _myia.done()
+        retia.done()
+        raise
     return retValue

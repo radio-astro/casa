@@ -120,12 +120,13 @@ def _near(got, expected, tol):
     
 def run_imsmooth(
     imagename, kernel, major, minor, pa, targetres,
-    outfile
+    outfile, overwrite=False
 ):
     return imsmooth(
         imagename=imagename, kernel=kernel,
         major=major, minor=minor, pa=pa,
-        targetres=targetres, outfile=outfile
+        targetres=targetres, outfile=outfile,
+        overwrite=overwrite
     )
     
     
@@ -1176,7 +1177,7 @@ class imsmooth_test(unittest.TestCase):
             imagename=imagename,
             mask=mymask + ">0", stretch=False
         )
-        self.assertTrue(not zz and type(zz) == type(True))
+        self.assertFalse(zz)
 
         zz = imsmooth(
             imagename=imagename,
@@ -1338,7 +1339,29 @@ class imsmooth_test(unittest.TestCase):
                     self.assertTrue(maxdiff < 1e-6) 
         myia.done()
         outia.done()
-          
+    
+    def test_overwrite(self):
+        """ test overwrite parameter """
+        myia = self.ia
+        outfile = "test_overwrite.im"
+        myia.fromshape(outfile, [200, 200])
+        imagename = "input_overwrite"
+        myia.fromshape(imagename, [200, 200])
+        myia.done()
+        self.assertTrue(
+            run_imsmooth(
+                imagename=imagename, kernel="gauss", major="5arcmin",
+                minor="4arcmin", pa="0deg", targetres=False,
+                overwrite=True, outfile=outfile
+            )
+        )
+        self.assertFalse(
+            run_imsmooth(
+                imagename=imagename,
+                kernel="gauss", major="5arcmin", minor="4arcmin",
+                pa="0deg", targetres=False, overwrite=False, outfile=outfile
+            )
+        )  
         
 def suite():
     return [imsmooth_test]    

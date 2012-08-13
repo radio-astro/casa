@@ -101,6 +101,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
         <value>False</value>
     </param>
+    <param type="bool"  name="overwrite">
+        <description>Overwrite (unprompted) pre-existing output file?</description>
+        <value>False</value>
+    </param>
     <constraints>
         <when param="kernel">
             <equals value="gauss">
