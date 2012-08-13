@@ -61,6 +61,7 @@ void TBPlotFormat::setPointStyle(QString str) {
     if(str == "diamond") symbol->setSymbol(PlotSymbol::DIAMOND);
     else if(str == "circle") symbol->setSymbol(PlotSymbol::CIRCLE);
     else if(str == "square") symbol->setSymbol(PlotSymbol::SQUARE);
+    else if(str == "autoscaling") symbol->setSymbol(PlotSymbol::AUTOSCALING);
     else if(str == "none") symbol->setSymbol(PlotSymbol::NOSYMBOL);
 }
 

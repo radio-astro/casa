@@ -261,7 +261,7 @@ PlotSymbolWidget::PlotSymbolWidget(PlotFactoryPtr factory,
     if(!showCustom) outlineCustomFrame->setVisible(false);
     
     if(defaultSymbol.null())
-        itsDefault_ = itsFactory_->symbol(PlotSymbol::CIRCLE);
+        itsDefault_ = itsFactory_->symbol(PlotSymbol::AUTOSCALING);
     else
         itsDefault_ = itsFactory_->symbol(*defaultSymbol);
     
@@ -302,7 +302,7 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
             else if(i == 1) s = PlotSymbol::SQUARE;
             else if(i == 2) s = PlotSymbol::DIAMOND;
             else if(i == 3) s = PlotSymbol::PIXEL;
-            else if(i == 4) s = PlotSymbol::CHARACTER;
+            else if(i == 4) s = PlotSymbol::AUTOSCALING;
         }
         
         PlotSymbolPtr sym = itsFactory_->symbol(s);
@@ -352,7 +352,8 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
     if(s == PlotSymbol::SQUARE)    index = 1;
     else if(s == PlotSymbol::DIAMOND)   index = 2;
     else if(s == PlotSymbol::PIXEL)     index = 3;
-    else if(s == PlotSymbol::CHARACTER) index = 4;
+    //else if(s == PlotSymbol::CHARACTER) index = 4;
+    else if(s == PlotSymbol::AUTOSCALING) index = 4;
     SymbolWidget::style->setCurrentIndex(index);
     charEdit->setEnabled(s == PlotSymbol::CHARACTER);
     if(s == PlotSymbol::CHARACTER)

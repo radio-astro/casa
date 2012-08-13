@@ -346,7 +346,7 @@ void QPSymbol::draw(QPainter* p, const QRect& r) const {
         else                font.setPointSize(QwtSymbol::size().height());
         p->setFont(font);
         p->drawText(r, Qt::AlignCenter | Qt::AlignVCenter, QString(m_char));
-    } else if(m_style == PIXEL) {
+    } else if(m_style == PIXEL || QwtSymbol::size() == QSize(1,1)) {
         p->drawPoint(r.center());
     } else {
         // draw using the normal QwtSymbol::draw() method.

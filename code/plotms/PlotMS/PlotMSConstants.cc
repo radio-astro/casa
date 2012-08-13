@@ -232,7 +232,7 @@ const String PMS::DEFAULT_TITLE_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
 
 PlotSymbolPtr PMS::DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory) {
-    static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::CIRCLE);
+    static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::AUTOSCALING);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
     symbol->setAreaFill("#0000FF");
@@ -252,6 +252,7 @@ map<PlotSymbol::Symbol, int> PMS::SYMBOL_MINIMUM_SIZES() {
     
     m[PlotSymbol::CIRCLE] = 2;
     m[PlotSymbol::DIAMOND] = 3;
+    m[PlotSymbol::AUTOSCALING] = 1;
     
     return m;
 }

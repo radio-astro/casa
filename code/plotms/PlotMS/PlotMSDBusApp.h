@@ -106,6 +106,18 @@ public:
     static const String PARAM_YAUTORANGE;    // bool
     static const String PARAM_YMIN;          // double
     static const String PARAM_YMAX;          // double
+    static const String PARAM_SYMBOL;        // bool
+    static const String PARAM_SYMBOLSHAPE;   // string
+    static const String PARAM_SYMBOLSIZE;    // int
+    static const String PARAM_SYMBOLCOLOR;   // string
+    static const String PARAM_SYMBOLFILL;    // string
+    static const String PARAM_SYMBOLOUTLINE; // bool
+    static const String PARAM_FLAGGEDSYMBOL;        // bool
+    static const String PARAM_FLAGGEDSYMBOLSHAPE;   // string
+    static const String PARAM_FLAGGEDSYMBOLSIZE;    // int
+    static const String PARAM_FLAGGEDSYMBOLCOLOR;   // string
+    static const String PARAM_FLAGGEDSYMBOLFILL;    // string
+    static const String PARAM_FLAGGEDSYMBOLOUTLINE; // bool
     
     
     // </group>

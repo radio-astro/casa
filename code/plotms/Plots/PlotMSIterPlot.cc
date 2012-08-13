@@ -46,6 +46,10 @@ PlotMSPlotParameters PlotMSIterPlot::makeParameters(PlotMSApp* plotms) {
     return p;
 }
 
+const uInt PlotMSIterPlot::pixelThreshold = 1000000;
+const uInt PlotMSIterPlot::mediumThreshold = 10000;
+const uInt PlotMSIterPlot::largeThreshold = 1000;
+
 void PlotMSIterPlot::makeParameters(PlotMSPlotParameters& params,
         PlotMSApp* plotms) {
     PlotMSPlot::makeParameters(params, plotms);
@@ -571,6 +575,40 @@ bool PlotMSIterPlot::updateDisplay() {
         if(h == NULL || a == NULL || d == NULL) return false;
         
         // Set symbols.
+        PlotSymbolPtr symbolUnmasked = d->unflaggedSymbol();
+        if(symbolUnmasked->symbol() == PlotSymbol::AUTOSCALING) {
+            uInt data_size = itsCache2_.indexer(iter_).sizeUnmasked();
+            if(data_size > pixelThreshold) {
+                //symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
+                symbolUnmasked->setSize(1, 1);
+            } else if(data_size > mediumThreshold) {
+                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSize(2, 2);
+            } else if(data_size > largeThreshold) {
+                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSize(4, 4);
+            } else {
+                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSize(6, 6);
+            }
+        }
+        PlotSymbolPtr symbolMasked = d->flaggedSymbol();
+        if(symbolMasked->symbol() == PlotSymbol::AUTOSCALING) {
+            uInt data_size = itsCache2_.indexer(iter_).sizeMasked();
+            if(data_size > pixelThreshold) {
+                symbolMasked->setSymbol(PlotSymbol::PIXEL);
+                symbolMasked->setSize(1, 1);
+            } else if(data_size > mediumThreshold) {
+                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSize(2, 2);
+            } else if(data_size > largeThreshold) {
+                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSize(4, 4);
+            } else {
+                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSize(6, 6);
+            }
+        }
 	/*	
 	cout << "Unflagged symbol=" << d->unflaggedSymbol()->symbol() 
 	     << " size=" << d->unflaggedSymbol()->size().first << " " << d->unflaggedSymbol()->size().second
@@ -584,8 +622,8 @@ bool PlotMSIterPlot::updateDisplay() {
 	     << endl;
 	*/
 
-        itsPlot_->setSymbol(d->unflaggedSymbol());
-        itsPlot_->setMaskedSymbol(d->flaggedSymbol());
+        itsPlot_->setSymbol(symbolUnmasked);
+        itsPlot_->setMaskedSymbol(symbolMasked);
         
         // Colorize, and set data changed if redraw is needed.
 	if(itsCache2_.nIter()>0 && 
