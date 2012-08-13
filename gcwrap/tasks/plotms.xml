@@ -404,9 +404,54 @@ Iteration Parameters
 
 <!--
 ###############################################################################
-Colorization Parameters
+Display Parameters
 ###############################################################################
 -->
+
+    <param type="bool" name="customsymbol" subparam="false">
+        <description>set a custom symbol for unflagged points</description>
+        <value>False</value>
+    </param>
+
+    <param type="string" name="symbolshape" subparam="true">
+        <description>shape of plotted unflagged symbols</description>
+        <value>autoscaling</value>
+        <allowed kind="enum">
+            <value>nosymbol</value>
+            <value>autoscaling</value>
+            <value>circle</value>
+            <value>square</value>
+            <value>diamond</value>
+            <value>pixel</value>
+        </allowed>
+    </param>
+
+    <param type="int" name="symbolsize" subparam="true">
+        <description>size of plotted unflagged symbols</description>
+        <value>2</value>
+    </param>
+
+    <param type="string" name="symbolcolor" subparam="true">
+        <description>color of plotted unflagged symbols</description>
+        <value>0000ff</value>
+    </param>
+
+    <param type="string" name="symbolfill" subparam="true">
+        <description>fill type of plotted unflagged symbols</description>
+        <value>fill</value>
+        <allowed kind="enum">
+            <value>fill</value>
+            <value>mesh1</value>
+            <value>mesh2</value>
+            <value>mesh3</value>
+            <value>nofill</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="symboloutline" subparam="true">
+        <description>selects outlining plotted unflagged points</description>
+        <value>False</value>
+    </param>
 
     <param type="string" name="coloraxis">
         <description>selects which data to use for colorizing</description>
@@ -424,7 +469,50 @@ Colorization Parameters
         </allowed>
     </param>
 
+    <param type="bool" name="customflaggedsymbol" subparam="false">
+        <description>set a custom plot symbol for flagged points</description>
+        <value>False</value>
+    </param>
 
+    <param type="string" name="flaggedshape" subparam="true">
+        <description>shape of plotted flagged symbols</description>
+        <value>nosymbol</value>
+        <allowed kind="enum">
+            <value>nosymbol</value>
+            <value>autoscaling</value>
+            <value>circle</value>
+            <value>square</value>
+            <value>diamond</value>
+            <value>pixel</value>
+        </allowed>
+    </param>
+
+    <param type="int" name="flaggedsize" subparam="true">
+        <description>size of plotted flagged symbols</description>
+        <value>2</value>
+    </param>
+
+    <param type="string" name="flaggedcolor" subparam="true">
+        <description>color of plotted flagged symbols</description>
+        <value>ff0000</value>
+    </param>
+
+    <param type="string" name="flaggedfill" subparam="true">
+        <description>fill type of plotted flagged symbols</description>
+        <value>fill</value>
+        <allowed kind="enum">
+            <value>fill</value>
+            <value>mesh1</value>
+            <value>mesh2</value>
+            <value>mesh3</value>
+            <value>nofill</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="flaggedoutline" subparam="true">
+        <description>selects outlining plotted flagged points</description>
+        <value>False</value>
+    </param>
 
 
 <!--
@@ -887,6 +975,50 @@ Constraints
             <default param="yselfscale"><value>False</value></default>
         </notequals>
     </when>
+
+<!--    <when param="customsymbol">
+        <equals type="bool" value="False" />
+        <equals type="bool" value="True">
+            <default param="symbolshape">
+                <value type="string">autoscaling</value>
+            </default>
+            <default param="symbolsize">
+                <value type="int">2</value>
+            </default>
+            <default param="symbolcolor">
+                <value type="string">0000ff</value>
+            </default>
+            <default param="symbolfill">
+                <value type="string">fill</value>
+            </default>
+            <default param="symboloutline">
+                <value type="bool">False</value>
+            </default>
+        </equals>
+    </when>
+
+    <when param="customflaggedsymbol">
+        <equals type="bool" value="False" />
+        <equals type="bool" value="True">
+            <default param="flaggedsymbolshape">
+                <value type="string">autoscaling</value>
+            </default>
+            <default param="flaggedsymbolsize">
+                <value type="int">2</value>
+            </default>
+            <default param="flaggedsymbolcolor">
+                <value type="string">0000ff</value>
+            </default>
+            <default param="flaggedsymbolfill">
+                <value type="string">fill</value>
+            </default>
+            <default param="flaggedsymboloutline">
+                <value type="bool">False</value>
+            </default>
+        </equals>
+    </when>
+-->
+
     <when param="plotfile">
         <notequals type="string" value="">
             <default param="format"><value type="string"/></default>
