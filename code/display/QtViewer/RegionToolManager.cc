@@ -433,7 +433,7 @@ namespace casa {
 				const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
 				if ( sym_obj == 0 ) continue;
 
-				AnnSymbol::Symbol sym = sym = sym_obj->getSymbol( );
+				AnnSymbol::Symbol sym = sym_obj->getSymbol( );
 				PointMarkerState pms( sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
 						      sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
 						      sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
