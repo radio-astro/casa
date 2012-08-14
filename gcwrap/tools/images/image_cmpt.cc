@@ -749,7 +749,7 @@ image* image::convolve2d(
 	const string& type, const variant& major, const variant& minor,
 	const variant& pa, const double in_scale, const record& region,
 	const variant& vmask, const bool overwrite, const bool stretch,
-	const bool targetres
+	const bool targetres, const record& beam
 ) {
 	try {
 		*_log << _ORIGIN;
@@ -764,9 +764,80 @@ image* image::convolve2d(
 			mask = "";
 		}
 		String kernel(type);
-		casa::Quantity majorKernel = casaQuantityFromVar(major);
-		casa::Quantity minorKernel = casaQuantityFromVar(minor);
-		casa::Quantity paKernel = casaQuantityFromVar(pa);
+		casa::Quantity majorKernel;
+		casa::Quantity minorKernel;
+		casa::Quantity paKernel;
+		*_log << _ORIGIN;
+		if (! beam.empty()) {
+			if (! String(type).startsWith("g") && ! String(type).startsWith("G")) {
+				*_log << "beam can only be given with a gaussian kernel" << LogIO::EXCEPTION;
+			}
+			if (
+				! major.toString(False).empty()
+				|| ! minor.toString(False).empty()
+				|| ! pa.toString(False).empty()
+			) {
+				*_log << "major, minor, and/or pa may not be specified if beam is specified"
+					<< LogIO::EXCEPTION;
+			}
+			if (beam.size() != 3) {
+				*_log << "If given, beam must have exactly three fields"
+					<< LogIO::EXCEPTION;
+			}
+			if (beam.find("major") == beam.end()) {
+				*_log << "Beam must have a 'major' field" << LogIO::EXCEPTION;
+			}
+			if (beam.find("minor") == beam.end()) {
+				*_log << "Beam must have a 'minor' field" << LogIO::EXCEPTION;
+			}
+			if (
+				beam.find("positionangle") == beam.end()
+				&& beam.find("pa") == beam.end()) {
+				*_log << "Beam must have a 'positionangle' or 'pa' field" << LogIO::EXCEPTION;
+			}
+			std::auto_ptr<Record> nbeam(toRecord(beam));
+
+			for (uInt i=0; i<3; i++) {
+				String key = i == 0
+					? "major"
+					: i == 1
+					    ? "minor"
+					    : beam.find("pa") == beam.end()
+					        ? "positionangle"
+					        : "pa";
+				casa::Quantity x;
+				DataType type = nbeam->dataType(nbeam->fieldNumber(key));
+				String err;
+				QuantumHolder z;
+				Bool success;
+				if (type == TpString) {
+					success = z.fromString(err, nbeam->asString(key));
+				}
+				else if (type == TpRecord) {
+					success = z.fromRecord(err, nbeam->asRecord(key));
+				}
+				else {
+					throw AipsError("Unsupported data type for beam");
+				}
+				if (! success) {
+					throw AipsError("Error converting beam to Quantity");
+				}
+				if (key == "major") {
+					majorKernel = z.asQuantity();
+				}
+				else if (key == "minor") {
+					minorKernel = z.asQuantity();
+				}
+				else {
+					paKernel = z.asQuantity();
+				}
+			}
+		}
+		else {
+			majorKernel = casaQuantityFromVar(major);
+			minorKernel = casaQuantityFromVar(minor);
+			paKernel = casaQuantityFromVar(pa);
+		}
 		*_log << _ORIGIN;
 
 		Vector<Int> Axes(axes);
@@ -782,6 +853,7 @@ image* image::convolve2d(
 				stretch, targetres
 			), False
 		);
+
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
@@ -3451,7 +3523,7 @@ image* image::newimagefromfits(
 		if(!rstat)
 			throw AipsError("Unable to create image");
 		return rstat;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3487,26 +3559,6 @@ image::makearray(const double v, const std::vector<int>& shape) {
 
 	return rstat;
 }
-
-/*
-void image::outputvariant(::casac::variant& v) {
-	try {
-		int len = 5;
-		std::vector<int> vi(len);
-		for (uInt i = 0; i < vi.size(); i++) {
-			vi[i] = i;
-		}
-		std::vector<int> vi_shape = *new std::vector<int>(1);
-		vi_shape[0] = len;
-		v = new ::casac::variant(vi, vi_shape);
-	} catch (AipsError x) {
-		*_log << LogOrigin("image", "outputvariant");
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-*/
 
 casac::record*
 image::recordFromQuantity(const casa::Quantity q) {
@@ -3651,7 +3703,9 @@ std::auto_ptr<Record> image::_getRegion(
 		}
 	default:
 		*_log << "Unsupported type for region " << region.type()
-		<< LogIO::EXCEPTION;
+			<< LogIO::EXCEPTION;
+		// unnecessary but eliminates compiler warning
+		return (std::auto_ptr<Record>(0));
 	}
 }
 

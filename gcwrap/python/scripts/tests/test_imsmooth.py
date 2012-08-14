@@ -119,27 +119,39 @@ def _near(got, expected, tol):
     )
     
 def run_imsmooth(
-    imagename, kernel, major, minor, pa, targetres,
-    outfile, overwrite=False
+    imagename, major, minor, pa, targetres,
+    outfile, kernel="gauss", overwrite=False, beam={}
 ):
     return imsmooth(
         imagename=imagename, kernel=kernel,
         major=major, minor=minor, pa=pa,
         targetres=targetres, outfile=outfile,
-        overwrite=overwrite
+        overwrite=overwrite, beam=beam
     )
-    
+def make_gauss2d(shape, xfwhm, yfwhm):
+    fac = 4*math.log(2)
+    values = numpy.empty(shape, dtype=float)
+    for i in range(shape[0]):
+        x = shape[0]/2 - i
+        for j in range(shape[1]):
+            y = shape[1]/2 - j
+            xfac = x*x*fac/(xfwhm*xfwhm)
+            yfac = y*y*fac/(yfwhm*yfwhm)
+            values[i, j] = math.exp(-(xfac + yfac));
+    return values
+
     
 def run_convolve2d(
-    imagename, kernel, major, minor, pa, targetres,
-    outfile
+    imagename, major, minor, pa, targetres,
+    outfile, kernel="gauss", beam={}, overwrite=False
 ):
     myia = iatool()
     myia.open(imagename)
     res = myia.convolve2d(
         type=kernel,
         major=major, minor=minor, pa=pa,
-        targetres=targetres, outfile=outfile
+        targetres=targetres, outfile=outfile,
+        beam=beam, overwrite=overwrite
     )
     myia.done()
     return res
@@ -781,7 +793,6 @@ class imsmooth_test(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: output file 'input_test19' was not created."
     
-        #print "RETURNING", retValue
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
@@ -983,7 +994,6 @@ class imsmooth_test(unittest.TestCase):
             #
             # Note that 
             inputArray = numpy.zeros( (shape[0], shape[1], shape[2], shape[3]), 'float' )
-    
             inputArray[49,71,0,14] = 100     # For rgn file
             inputArray[233,276,0,20] = 100     # For rgn in image
             inputArray[15,15,0,30] = 100     # For rgn in image
@@ -1015,13 +1025,13 @@ class imsmooth_test(unittest.TestCase):
         except Exception, err:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Smoothng failed on region 250,250,275,290."
+                     +"\nError: Smoothng failed on region 250,250,275,290." + str(err)
     
             
         if ( not os.path.exists( 'rgn_test1' ) or results==None ): 
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: Smoothing failed on region 250,250,275,290."
+                       +"\nError: Smoothing failed on region 250,250,275,290. second block"
         else:
             # Now that we know something has been done lets check the results!
             #      1. Check that the sum of the values under the curve is 0
@@ -1157,7 +1167,6 @@ class imsmooth_test(unittest.TestCase):
                     +"\nError: Max position found at "+str(maxpos)\
                     +" expected it to be at 212,220,0,20."            
     
-        print "*** finishing " + str(retValue['success'])
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 
@@ -1220,18 +1229,9 @@ class imsmooth_test(unittest.TestCase):
         myia.setcoordsys(csys.torecord())
         myia.setbrightnessunit("Jy/beam")
         myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
-        values = myia.getchunk()
-        expected = values.copy()
         shape = myia.shape()
-        fac = 4 * math.log(2)
-
-        for i in range(shape[0]):
-            x = shape[0]/2 - i
-            for j in range(shape[1]):
-                y = shape[1]/2 - j
-                values[i, j] = math.exp(-(x*x*fac/9 + y*y*fac/36));
-                expected[i, j] = math.exp(-(x*x*fac/25 + y*y*fac/100));
-
+        values = make_gauss2d(shape, 3.0, 6.0)
+        expected = make_gauss2d(shape, 5.0, 10.0)
         myia.putchunk(values)
         myia.done()
         emaj = qa.quantity("10arcsec")
@@ -1262,7 +1262,6 @@ class imsmooth_test(unittest.TestCase):
                     gotbeam, {"major": emaj, "minor": emin, "pa": epa}
                 )
                 maxdiff = (abs(gotvals-expected)).max()
-                print "max " + str(maxdiff)
                 self.assertTrue(maxdiff < 1e-6)     
                 
         csys.addcoordinate(spectral=True)
@@ -1280,19 +1279,14 @@ class imsmooth_test(unittest.TestCase):
         values = myia.getchunk()
         shape = myia.shape()
         expected = values.copy()
-        for i in range(shape[0]):
-            x = shape[0]/2 - i
-            for j in range(shape[1]):
-                y = shape[1]/2 - j
-                for k in range(shape[2]):
-                    if k == 0:
-                        sx = 9
-                        sy = 36
-                    else:
-                        sx = 4
-                        sy = 16
-                    values[i, j, k] = math.exp(-(x*x*fac/sx + y*y*fac/sy))
-   
+        for k in range(shape[2]):
+            if k == 0:
+                xfwhm = 3
+                yfwhm = 6
+            else:
+                xfwhm = 2
+                yfwhm = 4
+            values[:,:,k] = make_gauss2d([shape[0], shape[1]], xfwhm, yfwhm)
         myia.putchunk(values)
         outia = iatool()
         for targetres in [False, True]:
@@ -1362,6 +1356,42 @@ class imsmooth_test(unittest.TestCase):
                 pa="0deg", targetres=False, overwrite=False, outfile=outfile
             )
         )  
+        
+    def test_beam(self):
+        """Test the beam parameter"""
+        myia = self.ia
+        imagename = "tbeam1.im"
+        myia.fromshape(imagename, [100, 100])
+        csys = myia.coordsys()
+        csys.setunits(["arcsec", "arcsec"])
+        csys.setincrement([1, 1])
+        myia.setcoordsys(csys.torecord())
+        myia.setbrightnessunit("Jy/beam")
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
+        shape = myia.shape()
+        myia.putchunk(make_gauss2d(shape, 3.0, 6.0))
+        expected = make_gauss2d(shape, 5.0, 10.0)
+        for code in (run_convolve2d, run_imsmooth):
+            for beam in [
+                {"major": "8arcsec", "minor": "4arcsec", "pa": "0deg"},
+                {
+                    "major": {"unit": "arcsec", "value": 8},
+                    "minor": {"unit": "arcsec", "value": 4},
+                    "pa": {"unit": "deg", "value": 0},
+                }
+            ]:
+                outfile = str(code)
+                x = code(
+                    imagename=imagename, major="", minor="", pa="",
+                    beam=beam, outfile=outfile, targetres=False,
+                    overwrite=True
+                )
+                if type(x) == type(myia):
+                    x.done()
+                myia.open(outfile)
+                maxdiff = (abs(myia.getchunk()-expected)).max()
+                self.assertTrue(maxdiff < 1e-6) 
+                myia.done()
         
 def suite():
     return [imsmooth_test]    

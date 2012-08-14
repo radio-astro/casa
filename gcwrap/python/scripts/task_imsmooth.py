@@ -73,13 +73,19 @@ from taskinit import *
 
 def imsmooth(
     imagename, kernel, major, minor, pa, targetres, region,
-    box, chans, stokes, mask, outfile, stretch, overwrite
+    box, chans, stokes, mask, outfile, stretch, overwrite, beam
 ):
     casalog.origin( 'imsmooth' )
+    if (type(beam) == str):
+        if len(beam) != 0:
+            err = "beam cannot be a non-empty string"
+            casalog.post(err, "SEVERE")
+            raise Exception(err)
+        beam = {}
     retValue = False
-
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
+
     if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'box' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'SEVERE' )
@@ -102,15 +108,13 @@ def imsmooth(
         stokes, "a", region
     )
     _myia.done()
-
     # If the values given are integers we assume they are given in
     # arcsecs and alter appropriately
     if type( major ) == int:
         major=str(major)+'arcsec'
     if type( minor ) == int:
         minor=str(minor)+'arcsec'                
-
-    try:        
+    try:       
         if ( kernel.startswith( "gaus" ) ):
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
@@ -119,7 +123,7 @@ def imsmooth(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile,
                 mask=mask, stretch=stretch, targetres=targetres,
-                overwrite=overwrite
+                overwrite=overwrite, beam=beam
             )
             _myia.done()
             retia.done()
@@ -160,8 +164,9 @@ def imsmooth(
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
             retValue = False
         
-    except Exception:
+    except Exception, instance:
         _myia.done()
         retia.done()
-        raise
+        casalog.post("Exception: " + str(instance), 'SEVERE')
+        raise instance
     return retValue

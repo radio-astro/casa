@@ -105,12 +105,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Overwrite (unprompted) pre-existing output file?</description>
         <value>False</value>
     </param>
+    <param type="any" name="beam">
+        <any type='variant' limittype='string record'/>
+        <description>Alternate way of describing a Gaussian. If specified, must be a dictionary with keys "major", "minor", and "pa" (or "positionangle")</description>
+        <value type="string"/>
+     </param>
+     
     <constraints>
         <when param="kernel">
             <equals value="gauss">
 		        <default param="major"><value type="string">2.5arcsec</value></default>
 		        <default param="minor"><value type="string">2.0arcsec</value></default>
 		        <default param="pa"><value type="string">0deg</value></default>
+                <default param="beam"><value type="string"></value></default>
+                
                 <!--
                     from a usability point of view I'd say the default value should be True,
                     but it has to be False for backwards compatibility
@@ -121,6 +129,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		        <default param="major"><value type="string">2.5arcsec</value></default>
 		        <default param="minor"><value type="string">2.0arcsec</value></default>
 		        <default param="pa"><value type="string">0deg</value></default>
+                <default param="beam"><value type="string"></value></default>
+                
                 <!--
                     from a usability point of view I'd say the default value should be True,
                     but it has to be False for backwards compatibility
@@ -130,10 +140,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals value="box">
 		        <default param="major"><value type="string">2.0arcsec</value></default>
 		        <default param="minor"><value type="string">2.0arcsec</value></default>
+                
 	        </equals>
             <equals value="boxcar">
 		        <default param="major"><value type="string">2.0arcsec</value></default>
 		        <default param="minor"><value type="string">2.0arcsec</value></default>
+                
 	        </equals>
 	    </when>
         <when param="mask">
@@ -162,6 +174,8 @@ an image.
     major -- Depends on the kernel type, see explanation below.
     minor -- Depends on the kernel type, see explanation below.       
     pa    -- position angle to use for gaussian kernel, unused for boxcar.
+    beam  -- When kernel="gauss", this parameter can be used instead of major,
+             minor, and pa to specify the gaussian parameters. See details below.
     targetres -- Used only for gaussian kernels. If True, major, minor, and
              pa are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
@@ -213,6 +227,13 @@ The major, minor, and pa parameters can be specified in one of three ways
    Numeric -- for example major=10.
               In this case, the units of major and minor are assumed to 
               be in arcsec and units of pa are assumed to be degrees. 
+
+In the case of a Gaussian, the {\stfaf beam} parameter offers an alternate way of
+describing the convolving Gaussian. If used, neither {\stfaf major}, {stfaf minor},
+nor {\stfaf pa} can be specified. The {\stfaf beam} parameter must have exactly three
+fields: "major", "minor", and "pa" (or "positionangle"). This is, not coincidentally,
+the record format for the output of ia.restoringbeam().
+
 
 Note: Using pixel units allows you to convolve axes with different units.
 
