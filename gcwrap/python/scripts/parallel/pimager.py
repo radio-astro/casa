@@ -50,6 +50,35 @@ class pimager():
         #print 'ipythondir', os.environ['IPYTHONDIR']
         shutil.rmtree(os.environ['IPYTHONDIR'], True)
     @staticmethod
+    def maxouterpsf(psfim='', image=''):
+        ia.open(psfim)
+        stat=ia.statistics()
+        csys=ia.coordsys()
+        ia.open(image)
+        beampix=np.fabs(ia.restoringbeam()['major']['value']/qa.convert(csys.increment(type='direction', format='q')['quantity']['*1'], ia.restoringbeam()['major']['unit'])['value'])
+        beampix=int(np.ceil(beampix))
+        blc=copy.deepcopy(stat['maxpos'])
+        trc=copy.deepcopy(stat['maxpos'])
+        blc[0:2]=blc[0:2]-2*beampix
+        trc[0:2]=trc[0:2]+2*beampix
+        blcpeak=copy.deepcopy(blc)
+        trcpeak=copy.deepcopy(trc)
+        blcpeak[2:4]=0
+        trcpeak[2:4]=0
+        print 'blc trc peak', blcpeak, trcpeak
+        blc[0:2]=0
+        trc[0:2]=ia.shape()[0]-1;
+        maxplane=rg.box(blc=blc.tolist(),trc=trc.tolist())
+        ia.open(psfim)
+        ib=ia.subimage(region=maxplane)
+        csys2=ib.coordsys()
+        boxpeak=rg.wbox(blc=["%dpix"%x for x in blcpeak], trc=["%dpix"%x for x in trcpeak], csys=csys2.torecord())
+        outerreg=rg.complement(boxpeak)
+        statout=ib.statistics(region=outerreg)
+        ia.done()
+        ib.done()
+        return np.max(statout['max'], np.fabs(statout['min']))
+    @staticmethod
     def averimages(outimage='outimage', inimages=[]):
         if((type(inimages)==list) and (len (inimages)==0)):
             return False
@@ -460,7 +489,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -481,6 +510,7 @@ class pimager():
         hostnames= list of strings ..empty string mean localhost
         numcpuperhos = integer ...number of processes to launch on each host
         majorcycles= integer number of CS major cycles to do, 
+        cyclefactor= if majorcycles=-1. This determines number of majorcycles
         niter= integer ...total number of clean iteration 
         threshold=quantity ...residual peak at which to stop deconvolving
         alg= string  possibilities are 'clark', 'hogbom', 'msclean'
@@ -502,7 +532,7 @@ class pimager():
         """
 
 
-        niterpercycle=niter/majorcycles
+        niterpercycle=niter/majorcycles if(majorcycles >0) else niter
         if(niterpercycle == 0):
             niterpercycle=niter
             majorcycles=1
@@ -530,6 +560,7 @@ class pimager():
         self.visinmem=visinmem
         self.pbcorr=pbcorr
         self.numthreads=numthreads
+        self.cyclefactor=cyclefactor
 
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
       
@@ -609,7 +640,11 @@ class pimager():
         intmask=0
         donewgt=[False]*numcpu
         ### do one major cycle at the end
-        for maj in range(majorcycles +1):
+        donemaj=False
+        maj=0;
+        maxresid=-1.0
+        while(not donemaj):
+            
             casalog.post('Starting Gridding for major cycle '+str(maj)) 
             for k in range(numcpu):
                 imnam='"%s"'%(imlist[k])
@@ -697,18 +732,37 @@ class pimager():
                         print 'Max min var of weight dens', np.max(sumweight), np.min(sumweight), np.var(sumweight)
                     c.push(wtgrid=sumweight)
                     c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
+            newthresh=threshold
+            if(majorcycles < 0):
+                ia.open(residual)
+                residstat=ia.statistics()
+                maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                psfoutermax=maxouterpsf(psfim=psf, image=restoreds[0])
+                newthresh=psfoutermax*cyclefactor*maxresid
+                oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
+                if(newthresh < oldthresh):
+                    newthresh=oldthresh
+                newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
             ####no need to do this in last major cycle
-            if(maj < majorcycles):
+            needclean=((maj < majorcycles)  or 
+                       (maxresid < qa.quantity(threshold)['value']) 
+                       or (niterpercycle <1))
+            
+            if(needclean):
                 casalog.post('Deconvolving for major cycle '+str(maj))  
                 #incremental clean...get rid of tempmodel
                 shutil.rmtree(tempmodel, True)
-                rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
+                rundecon='retval=a.cleancont(alg="'+str(alg)+'", thr="'+str(newthresh)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
                 print 'Deconvolution command', rundecon
                 out[0]=c.odo(rundecon,0)
                 over=False
                 while(not over):
                     time.sleep(5)
                     over=c.check_job(out[0],False)
+                retval=c.pull('retval', 0)[0]
+                if(majorcycles <0):
+                    niterpercycle=niterpercycle-retval['iterations']
+                maxresid=retval['maxresidual']
                 ###incremental added to total 
                 ia.open(model)
                 ia.calc('"'+model+'" +  "'+tempmodel+'"')
@@ -731,6 +785,11 @@ class pimager():
                 #ia.putchunk(arr)
                     ia.insert(infile=model, locate=[0,0,0,0])
                     ia.done()
+                maj +=1
+                if(majorcycles > -1):
+                    donemaj=(maj >= majorcycles)
+            
+        
         restored=imagename+'.image'
         #ia.open(restored)
         #for k in range(1, len(imlist)) :
