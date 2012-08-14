@@ -90,7 +90,7 @@ class variant {
 	variant(std::vector<std::string> *arg, std::vector<int> &theshape) : typev(STRINGVEC), shape_(theshape)
 			{ val.sv = arg; }
 //
-	variant(record &arg);
+	variant(const record &arg);
 	variant(record *arg);
 
 	~variant( );
