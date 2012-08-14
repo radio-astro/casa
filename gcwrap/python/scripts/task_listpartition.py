@@ -67,8 +67,8 @@ def listpartition(vis=None, createdict=None, listfile=None):
         mslocal.close()
         
         # Create lists for scan and spw dictionaries of each sub-MS
-        scanlist = []
-        spwlist = []
+        msscanlist = []
+        msspwlist = []
 
         # List with sizes in bytes per sub-MS
         sizelist = []
@@ -77,9 +77,9 @@ def listpartition(vis=None, createdict=None, listfile=None):
         for subms in mslist:
             mslocal1.open(subms)
             scans = mslocal1.getscansummary()
-            scanlist.append(scans)
+            msscanlist.append(scans)
             spws = mslocal1.getspectralwindowinfo()
-            spwlist.append(spws)
+            msspwlist.append(spws)
             mslocal1.close()
 
             # Get the data volume in bytes per sub-MS
@@ -97,32 +97,29 @@ def listpartition(vis=None, createdict=None, listfile=None):
             tempdict['size'] = sizelist[ims]
             
             # Get scan dictionary for this sub-MS
-            scandict = scanlist[ims]
+            scandict = msscanlist[ims]
             
             # Get spw dictionary for this sub-MS
             # NOTE: the keys of spwdict.keys() are NOT the spw Ids
-            spwdict = spwlist[ims]
+            spwdict = msspwlist[ims]
             
             # The keys are the scan numbers
-            scans = scandict.keys()
+            scanlist = scandict.keys()
             
             # Get information per scan
             tempdict['scanId'] = {}
-            for ii in scans:
-                scanid = ii
+            for scan in scanlist:
                 newscandict = {}
-
-                sscans = scandict[scanid].keys()
+                subscanlist = scandict[scan].keys()
                 
                 # Get spws and nrows per sub-scan
                 nrows = 0
-                aspws = np.array([],dtype=int)
-                for kk in sscans:
-                    sscanid = kk
-                    nrows += scandict[scanid][sscanid]['nRow']
+                aspws = np.array([],dtype='int32')
+                for subscan in subscanlist:
+                    nrows += scandict[scan][subscan]['nRow']
 
                     # Get the spws for each sub-scan
-                    spwids = scandict[scanid][sscanid]['SpwIds']
+                    spwids = scandict[scan][subscan]['SpwIds']
                     aspws = np.append(aspws,spwids)
 
                 newscandict['nrows'] = nrows
@@ -147,7 +144,7 @@ def listpartition(vis=None, createdict=None, listfile=None):
                             continue
                     
                 newscandict['nchans'] = charray
-                tempdict['scanId'][int(scanid)] = newscandict
+                tempdict['scanId'][int(scan)] = newscandict
                     
                 
             outdict[ims] = tempdict

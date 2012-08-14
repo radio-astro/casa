@@ -303,6 +303,7 @@ class convertToMMS():
 # -------------- HELPER functions for dealing with an MMS --------------
 #
 #    getMMSScans        'Get the list of scans of an MMS dictionary'
+#    getScanList        'Get the list of scans of an MS or MMS'
 #    getScanNrows       'Get the number of rows of a scan in a MS. It will add the 
 #                         nrows of all sub-scans.'
 #    getMMSScanNrows    'Get the number of rows of a scan in an MMS dictionary.'
@@ -311,6 +312,9 @@ class convertToMMS():
 #
 # ----------------------------------------------------------------------
 
+# NOTE
+# There is a bug in ms.getscansummary() that does not give the scans for all 
+# observation Ids, but only for the last one. See CAS-4409
 def getMMSScans(mmsdict):
     '''Get the list of scans of an MMS dictionary.
        mmsdict  --> output dictionary from listpartition(MMS,createdict=true)
@@ -326,33 +330,50 @@ def getMMSScans(mmsdict):
     
     return list(slist)
     
-
-def getScanNrows(msfile, myscan):
+def getScanList(msfile, selection={}):
+    '''Get the list of scans of an MS or MMS. 
+       msfile     --> name of MS or MMS
+       selection  --> dictionary with data selection
+       
+       Return a list of the scans in this MS/MMS. '''
+    
+    msTool=mstool()
+    msTool.open(msfile)
+    if isinstance(selection, dict) and selection != {}:
+        msTool.msselect(items=selection)
+        
+    scand = msTool.getscansummary()
+    msTool.close()
+        
+    scanlist = []
+    scanlist = scand.keys()
+    
+    return scanlist
+    
+    
+def getScanNrows(msfile, myscan, selection={}):
     '''Get the number of rows of a scan in a MS. It will add the nrows of all sub-scans.
-       msfile  --> name of the MS
-       myscan  --> scan ID (int)
-       return the number of rows in the scan.
+       This will not take into account any selection done on the MS.
+       msfile     --> name of the MS or MMS
+       myscan     --> scan ID (int)
+       selection  --> dictionary with data selection
+       
+       Return the number of rows in the scan.
        
        To compare with the dictionary returned by listpartition, do the following:
-        
-        resdict = listpartition(vis='part.mms', createdict=True)
-        mmsscans = getMMSScans(resdict)
-        for scan in mmsscans:
-            
-        for k in resdict.keys():
-            subms = resdict[k]['MS']
-            MS = 'part.mms/SUBMSS/'+subms
-            scans = resdict[k]['scanId'].keys()
-            for s in scans:
-                nr = resdict[k]['scanId'][s]['nrows']
-                refN = getScanNrows(refMS,s)
-                assert nr==refN, '%s, scan=%s, nrows=%s do not match reference nrows=%s'
-                                  %(refMS, s, nr, refN)
-
+       
+        resdict = listpartition('file.mms', createdict=True)
+        slist = ph.getMMSScans(thisdict)
+        for s in slist:
+            mmsN = ph.getMMSScanNrows(thisdict, s)
+            msN = ph.getScanNrows('referenceMS', s)
+            assert (mmsN == msN)
     '''
     msTool=mstool()
-
     msTool.open(msfile)
+    if isinstance(selection, dict) and selection != {}:
+        msTool.msselect(items=selection)
+        
     scand = msTool.getscansummary()
     msTool.close()
     
@@ -383,11 +404,14 @@ def getMMSScanNrows(thisdict, myscan):
 
     
 
-def getSpwIds(msfile, myscan):
-    '''Get the Spw IDs of a scan. 
-       msfile  --> name of the MS
-       myscan  --> scan Id (int)
-       return a numpy array with the Spw IDs. Note that the returned spw IDs are sorted.
+def getSpwIds(msfile, myscan, selection={}):
+    '''Get the Spw IDs of a scan. This will not take into
+       account any selection done on the MS.
+       msfile     --> name of the MS or MMS
+       myscan     --> scan Id (int)
+       selection  --> dictionary with data selection
+       
+       Return a list with the Spw IDs. Note that the returned spw IDs are sorted.
        
        To compare with the dictionary returned by listpartition, do the following:
        
@@ -411,10 +435,17 @@ def getSpwIds(msfile, myscan):
     import numpy as np
     
     msTool=mstool()
-            
     msTool.open(msfile)
+    if isinstance(selection, dict) and selection != {}:
+        msTool.msselect(items=selection)
+        
     scand = msTool.getscansummary()
     msTool.close()
+    
+    spwlist = []
+
+    if not scand.has_key(str(myscan)):
+        return spwlist
     
     subscans = scand[str(myscan)]
     aspws = np.array([],dtype=int)
@@ -428,11 +459,14 @@ def getSpwIds(msfile, myscan):
     aspws.sort()
     uniquespws = np.unique(aspws)
     
-    return uniquespws
+    # Try to return a list
+    spwlist = uniquespws.ravel().tolist()
+#    return uniquespws
+    return spwlist
 
 
 def getDiskUsage(msfile):
-    '''Return the size in bytes of an MS in disk.
+    '''Return the size in bytes of an MS or MMS in disk.
        msfile  --> name of the MS
        This function will return a value given by
        the command du -hs'''
