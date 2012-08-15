@@ -412,11 +412,13 @@ using namespace casac;
 }
 
 %typemap(out) string* {
-   $result = PyString_FromString($1->c_str());
+   if($1)
+     $result = PyString_FromString($1->c_str());
 }
 
 %typemap(out) variant* {
-   $result = variant2pyobj(*$1);
+   if ($1)
+      $result = variant2pyobj(*$1);
 }
 
 %typemap(out) BoolVec {
