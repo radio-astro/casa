@@ -2554,7 +2554,7 @@ Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type,
     imwgt_p.getWeightDensity(weightgrid);
     return True;
   }
-  if((type=="ftweight") && (Int(imagenames.nelements())== sm_p->numberOfModels())){
+  if((type=="ftweight") && (sm_p) && (Int(imagenames.nelements())== sm_p->numberOfModels())){
     for (Int model=0; model < sm_p->numberOfModels(); ++model){
       PagedImage<Float> wgtImage(sm_p->image(model).shape(),
 				   (sm_p->image(model)).coordinates(),
