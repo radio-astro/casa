@@ -33,6 +33,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <display/Display/MouseToolState.h>
+#include <display/Utilities/Lowlevel.h>
 
 #include <graphics/X11/X_enter.h>
 #  include <QObject>
@@ -110,10 +111,11 @@ class QtMouseToolState : public QObject {
 
  
  protected:
+  Casarc &rc;
   
   // Only QtviewerBase is intended to create/destroy
   // a [single] instance of this class.
-  QtMouseToolState()  {  }
+  QtMouseToolState();
   ~QtMouseToolState() {  }
   friend class QtViewerBase;
   
@@ -137,6 +139,8 @@ class QtMouseToolState : public QObject {
 
  private:
   std::map<std::string,int> tool_state;
+  void initButtonState( std::string, int );
+  void initToolState( );
 
 };
 
