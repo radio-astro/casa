@@ -240,17 +240,20 @@ void AnnRegion::_extend() {
 	Vector<Quantity> freqRange;
 	uInt nBoxes = 0;
 	if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
-		Quantity begin = _convertedFreqLimits[0].get("Hz");
-		Quantity end = _convertedFreqLimits[1].get("Hz");
-		if (begin.getValue("Hz") > end.getValue("Hz")) {
-			Quantity tmp;
-			tmp = begin;
-			begin = end;
-			end = tmp;
-		}
+		SpectralCoordinate spcoord = getCsys().spectralCoordinate();
+		String unit = spcoord.worldAxisUnits()[0];
+		Vector<Double> pixrange(2);
+		spcoord.toPixel(pixrange(0), _convertedFreqLimits[0]);
+		spcoord.toPixel(pixrange(1), _convertedFreqLimits[1]);
 		freqRange.resize(2);
-		freqRange[0] = begin;
-		freqRange[1] = end;
+		if (pixrange[1] > pixrange[0]) {
+			freqRange[0] = _convertedFreqLimits[0].get(unit);
+			freqRange[1] = _convertedFreqLimits[1].get(unit);
+		}
+		else {
+			freqRange[0] = _convertedFreqLimits[1].get(unit);
+			freqRange[1] = _convertedFreqLimits[0].get(unit);
+		}
 		spectralAxis = getCsys().spectralAxisNumber();
 		nBoxes = 1;
 	}
@@ -314,7 +317,7 @@ void AnnRegion::_extend() {
 	try {
 		_imageRegion.asWCRegionPtr()->toLCRegion(getCsys(), _imShape);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		throw (ToLCRegionConversionError(x.getMesg()));
 	}
 }
