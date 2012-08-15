@@ -182,6 +182,24 @@ class rg_fromtextfile_test(unittest.TestCase):
         """Verify fix to CAS-3260"""
         self.ia.fromshape("", [250,250])
         self._testit(cas_3260t, cas_3260r)
+        
+    def test_CAS_4415(self):
+        """Verify CAS-4415 (parser did not properly handle frquency decreasing with pixel number)"""
+        shape = [50, 50, 10]
+        self.ia.fromshape("", shape)
+        csys = self.ia.coordsys()
+        increment = csys.increment()["numeric"]
+        increment[2] = -increment[2]
+        csys.setincrement(increment)
+        self.ia.setcoordsys(csys.torecord())
+        zz = rg.fromtext(
+            "circle[[20pix,20pix],6pix],range=[1pix,3pix]",
+            shape, csys.torecord()
+        )
+        self.assertTrue(len(zz.keys()) > 0)
+
+
+        
 
 def suite():
     return [rg_fromtextfile_test]
