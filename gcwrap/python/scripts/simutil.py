@@ -835,6 +835,7 @@ class simutil:
         # taper efficiency.    
         #eta_t = 0.86 # these are ALMA values
         eta_t = 0.8 # 20100914 OT value
+        eta_t = 0.961 # 201208 OT value
 
         # Ruze phase efficiency.    
         if epsilon==None: epsilon = eps[iobs] # microns RMS
@@ -856,36 +857,44 @@ class simutil:
         if telescope=='ALMA' or telescope=='ACA':
             # ALMA-40.00.00.00-001-A-SPE.pdf
             # http://www.eso.org/sci/facilities/alma/system/frontend/
-            f0=[ 35, 75,110,145,185,230,345,409,675,867]
-            # B9,10 are DSB
-#            t0=[ 17, 30, 37, 51, 65, 83,147,196,175*pl.sqrt(2),230*pl.sqrt(2)]
-            # cycle 0 al's email 4/28/11
-            t0=[ 17, 30, 45, 51, 65, 55, 75, 196, 110*2, 230*2]
+
+            # limits instead of centers, go to higher band in gaps
+            f0=[31.3,45,84,116,163,211,275,373,500,720]
+            # cycle 1 OT values 7/12
+            t0=[ 17, 30, 45, 51, 65, 55, 75, 196, 100, 230]
 
             flim=[31.3,950]
             if self.verbose: self.msg("using ALMA/ACA Rx specs",origin="noisetemp")
         else:
             if telescope=='EVLA':
                 # 201009114 from rick perley:
-                f0=[1.5,3,6,10,15,23,33,45]
+                # f0=[1.5,3,6,10,15,23,33,45]
                 t0=[10.,15,12,15,10,12,15,28]
+                # limits
+                f0=[1,2,4,8,12,18,26.5,40,50]
+
                 flim=[0.8,50]
                 if self.verbose: self.msg("using EVLA Rx specs",origin="noisetemp")
             else:
                 if telescope=='VLA':
                     # http://www.vla.nrao.edu/genpub/overview/
-                    # exclude P band for now
                     # f0=[0.0735,0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
                     # t0=[5000,  165,  56,  44,   34,  110, 110, 110]
-                    f0=[0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
+                    # exclude P band for now
+                    # f0=[0.32, 1.5, 4.75, 8.4, 14.9, 23, 45 ]
+                    # limits
+                    # http://www.vla.nrao.edu/genpub/overview/
+                    f0=[0.30,0.34,1.73,5,8.8,15.4,24,50]
                     t0=[165,  56,  44,   34,  110, 110, 110]
                     flim=[0.305,50]
                     if self.verbose: self.msg("using old VLA Rx specs",origin="noisetemp")                    
                 else:
                     if telescope=='SMA':
-                        f0=[212.,310.,383.,660.]
+                        # f0=[212.,310.,383.,660.]
+                        # limits
+                        f0=[180,250,320,420,720]
                         t0=[67,  116, 134, 500]
-                        flim=[180.,700]
+                        flim=[180.,720]
                     else:
                         self.msg("I don't know about the "+telescope+" receivers, using 200K",priority="warn",origin="noisetemp")
                         f0=[10,900]
@@ -893,15 +902,13 @@ class simutil:
                         flim=[0,5000]
 
 
-        obsfreq=freq_ghz.get("value")
-        z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
-        t_rx=t0[z[0]]
-#        t_rx = pl.interp([obsfreq],f0,t0)[0]
-#        if obsfreq>f0[-1] or obsfreq<f0[0]:
-#            t_rx = pl.polyval(pl.polyfit(f0,t0,2),obsfreq)
-        # too jumpy
-        # sp=spline(f0,t0)
-        # t_rx = sp(obsfreq)[0]
+        obsfreq=freq_ghz.get("value")        
+        # z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
+        # t_rx=t0[z[0]]
+        z=0
+        while(f0[z]<obsfreq and z<len(t0)):
+            z+=1
+        t_rx=t0[z-1]
         
         if obsfreq<flim[0]:
             self.msg("observing freqency is lower than expected for "+telescope,priority="warn",origin="noise")
@@ -923,7 +930,8 @@ class simutil:
                    telescope=None, diam=None, nant=None,
                    antennalist=None,
                    doimnoise=None,
-                   integration=None,debug=None):
+                   integration=None,debug=None,
+                   method="tsys-atm",tau0=None,t_sky=None):
         
         import glob
         tmpname="tmp"+str(os.getpid())
@@ -942,6 +950,7 @@ class simutil:
         msfile=tmpname+".ms"
         sm.open(msfile)
 
+        rxtype=0 # 2SB
         if antennalist==None:
             if telescope==None:
                 self.msg("Telescope name has not been set.",priority="error")
@@ -1055,10 +1064,26 @@ class simutil:
         # eta_q = 0.88
         # eta_a = 0.95*0.8*eta_s
 
-        sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                    antefficiency=eta_a,trx=t_rx,
-                    tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
-                    mode="tsys-atm",table=tmpname)
+        if telescope=='ALMA' and (qa.convert(freq,"GHz")['value'])>600.:
+            rxtype=1 # DSB
+        
+        if method=="tsys-atm":
+            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                        antefficiency=eta_a,trx=t_rx,
+                        tground=t_ground,tcmb=t_cmb,pwv=str(pwv)+"mm",
+                        mode="tsys-atm",table=tmpname,rxtype=rxtype)
+        else:
+            if method=="tsys-manual":
+                if not t_sky:
+                    t_sky=200.
+                    self.msg("Warning: Sky brightness temp not set, using 200K",origin="noise",priority="warn")
+                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                            antefficiency=eta_a,trx=t_rx,tatmos=t_sky,
+                            tground=t_ground,tcmb=t_cmb,tau=tau0,
+                            mode="tsys-manual",table=tmpname,rxtype=rxtype)
+            else:
+                self.msg("Unknown calculation method "+method,priority="error")
+                return False
         
         if doimnoise:
             sm.corrupt()
@@ -1070,7 +1095,7 @@ class simutil:
             cellsize=qa.quantity(6.e3/250./qa.convert(model_start,"GHz")["value"],"arcsec")  # need better cell determination - 250m?!
             cellsize=[cellsize,cellsize]
             # very light clean - its an empty image!
-            self.image(tmpname+".ms",tmpname,
+            self.imclean(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec)[0],
                        100,"0.01mJy","natural",[],"I")
@@ -1087,7 +1112,7 @@ class simutil:
                 
         if os.path.exists(tmpname+".T.cal"):
             tb.open(tmpname+".T.cal")
-            gain=tb.getcol("GAIN")
+            gain=tb.getcol("CPARAM")
             # RI TODO average instead of first?
             tb.done()
             # gain is per ANT so square for per baseline;  
@@ -2508,7 +2533,7 @@ class simutil:
     ##################################################################
     # image/clean subtask
 
-    def image(self,mstoimage,image,
+    def imclean(self,mstoimage,imagename,
               cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
               outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
         from clean import clean
@@ -2544,20 +2569,32 @@ class simutil:
             imagermode="mosaic"
             ftmachine="mosaic" 
 
-        
+        # in 3.4 clean doesn't accept just any imsize
+        from cleanhelper import *
+        optsize=[0,0]
+        optsize[0]=cleanhelper.getOptimumSize(imsize[0])
+        nksize=len(imsize)
+        if nksize==1: # imsize can be a single element or array
+            optsize[1]=optsize[0]
+        else:
+            optsize[1]=cleanhelper.getOptimumSize(imsize[1])
+        if((optsize[0] != imsize[0]) or (nksize!=1 and optsize[1] != imsize[1])):
+            self.msg(str(imsize)+' is not an acceptable imagesize, will use '+str(optsize)+" instead",priority="warn")
+            imsize=optsize
+                
         # print clean inputs no matter what, so user can use them.
         # and write a clean.last file
-        cleanlast=open(image+".clean.last","write")
+        cleanlast=open(imagename+".clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
         self.msg("clean inputs:")        
         if type(mstoimage)==type([]):
-            cleanstr="clean(vis="+str(mstoimage)+",imagename='"+image+"'"
+            cleanstr="clean(vis="+str(mstoimage)+",imagename='"+imagename+"'"
             cleanlast.write('vis                 = '+str(mstoimage)+'\n')
         else:
-            cleanstr="clean(vis='"+str(mstoimage)+"',imagename='"+image+"'"
+            cleanstr="clean(vis='"+str(mstoimage)+"',imagename='"+imagename+"'"
             cleanlast.write('vis                 = "'+str(mstoimage)+'"\n')
-        cleanlast.write('imagename           = "'+image+'"\n')
+        cleanlast.write('imagename           = "'+imagename+'"\n')
         cleanlast.write('outlierfile         = ""\n')
         cleanlast.write('field               = "'+sourcefieldlist+'"\n')
         cleanlast.write('spw                 = ""\n')
@@ -2669,7 +2706,7 @@ class simutil:
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=mstoimage, imagename=image, mode=chanmode, 
+        clean(vis=mstoimage, imagename=imagename, mode=chanmode, 
               niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,

@@ -1215,7 +1215,7 @@ def simdata(
                             ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
-                            ",pground='560mbar',altitude='5000m',waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)");
+                            ",pground='560mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
                         msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
@@ -1292,7 +1292,7 @@ def simdata(
                             ",trx="+str(t_rx)+",tground="+str(t_ground)+
                             ",tcmb="+str(t_cmb)+",senscoeff="+str(tpcoeff)+
                             ",mode='tsys-atm'"+
-                            ",pground='560mbar',altitude='5000m',waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)");
+                            ",pground='560mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
                         msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                     sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                                 antefficiency=eta_a,trx=t_rx,
@@ -1560,7 +1560,7 @@ def simdata(
                 msg("Found modelimage, %s." % modelimage)
 
             # use imcenter instead of model_refdir
-            util.image(mstoimage,imagename,
+            util.imclean(mstoimage,imagename,
                        cleanmode,cell,imsize,imcenter,
                        niter,threshold,weighting,
                        outertaper,stokes,sourcefieldlist=sourcefieldlist,

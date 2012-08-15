@@ -479,7 +479,12 @@ def simobserve(
 #            # casapy crashes for negative totaltime
 #            msg("Negative integration time is not allowed",priority="error")
 #            return False
+        # test for weird units
+        util.isquantity(integration)
         if qa.quantity(integration)['unit'] != '':
+            if not qa.compare(integration,"1s"):
+                msg("integration time "+integration+" does not appear to represent a time interval (sec,min,h)",priority="error")
+                return False
             intsec = qa.convert(qa.quantity(integration),"s")['value']
         else:
             if len(integration)>0:
@@ -722,7 +727,11 @@ def simobserve(
             refdate=refdate+"/00:00:00"
             usehourangle=True
 
+
+            intsec = qa.convert(qa.quantity(integration),"s")['value']
+
             # totaltime as an integer for # times through the mosaic:
+            util.isquantity(totaltime)
             if qa.quantity(totaltime)['value'] < 0.:
                 # casapy crashes for negative totaltime
                 msg("Negative totaltime is not allowed.",priority="error")
@@ -735,6 +744,9 @@ def simobserve(
                 totalsec = float(totaltime) * totalsec
                 msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
             else:
+                if not qa.compare(totaltime,"1s"):
+                    msg("total time "+totaltime+" does not appear to represent a time interval (sec,min,h)",priority="error")
+                    return False
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
 
             if os.path.exists(msfile) and not overwrite: #redundant check?
@@ -1097,7 +1109,7 @@ def simobserve(
                     if not uvmode: message += ",senscoeff="+str(scoeff)
                     message += ",mode='tsys-atm'"+\
                                ",pground='560mbar',altitude='5000m'"+\
-                               ",waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)"
+                               ",waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)"
                     msg(message);
                     msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,

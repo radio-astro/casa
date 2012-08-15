@@ -346,6 +346,11 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
     Seed=simpar.asInt("seed");
   }
   
+  Int rxType(0); // 0=2SB, 1=DSB
+  if (simpar.isDefined("rxType")) {    
+    rxType=simpar.asInt("rxType");
+  }
+  
   Float Beta(1.1); // exponent for generalized 1/f noise
   if (simpar.isDefined("beta")) {    
     Beta=simpar.asFloat("beta");
@@ -363,7 +368,7 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
        String simMode=simpar.asString("mode");
     
     if (simMode == "test")
-      tcorruptor_p->initialize();
+      tcorruptor_p->initialize(rxType);
     else if (simMode == "individual" or simMode == "screen") {
 
       Float Scale(1.); // RELATIVE scale of fluctuations (to mean_pwv)
@@ -403,12 +408,12 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       corruptor_p->setEvenSlots(fBM_interval);
 
       if (simpar.asString("mode") == "individual") 
-	tcorruptor_p->initialize(Seed,Beta,Scale);
+	tcorruptor_p->initialize(Seed,Beta,Scale,rxType);
       else if (simpar.asString("mode") == "screen") {
 	const ROMSAntennaColumns& antcols(vi.msColumns().antenna());
 	if (simpar.isDefined("windspeed")) {
 	  tcorruptor_p->windspeed()=simpar.asFloat("windspeed");
-	  tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
+	  tcorruptor_p->initialize(Seed,Beta,Scale,rxType,antcols);
 	} else
 	  throw(AipsError("Unknown wind speed for T:Corruptor"));        
       }
@@ -417,7 +422,7 @@ void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       // NEW 20100818 change from Mf to Tf
       // M corruptor initialization didn't matter M or Mf here - it checks mode in 
       // the Atmoscorruptor init.
-      tcorruptor_p->initialize(vi,simpar,VisCal::T); 
+      tcorruptor_p->initialize(vi,simpar,VisCal::T,rxType); 
       extraTag()="NoiseScale"; // collapseForSim catches this
     
     } else 
@@ -2049,9 +2054,14 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
   // call generic parent to set corr,spw,etc info
   SolvableVisCal::createCorruptor(vi,simpar,nSim);
 
+  Int rxType(0); // 0=2SB, 1=DSB
+  if (simpar.isDefined("rxType")) {    
+    rxType=simpar.asInt("rxType");
+  }
+ 
   // this is the M type corruptor - maybe we should make the corruptor 
   // take the VC as an argument
-  atmcorruptor_p->initialize(vi,simpar,VisCal::M); 
+  atmcorruptor_p->initialize(vi,simpar,VisCal::M,rxType); 
 }
 
 

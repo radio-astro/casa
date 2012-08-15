@@ -423,7 +423,7 @@ void CTPatchedInterp::setSpwMap(Vector<Int>& spwmap) {
     }
   }
 
-  cout << "CTPatchedInterp::setSpwMap: Realized spwMap_ = " << spwMap_ << endl;
+  //cout << "CTPatchedInterp::setSpwMap: Realized spwMap_ = " << spwMap_ << endl;
 
 }
 

@@ -330,7 +330,7 @@ it'll do them for the same amount of time -->
       <when param="obsmode">
 	<equals type="string" value="int">
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
-	  <default param="refdate"><value type="string">2012/05/21</value></default>
+	  <default param="refdate"><value type="string">2014/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
@@ -340,7 +340,7 @@ it'll do them for the same amount of time -->
 	  <!-- <default param="antennalist"><value type="string">aca.tp.cfg</value></default> -->
 	  <default param="sdantlist"><value type="string">aca.tp.cfg</value></default>
 	  <default param="sdant"><value type="int">0</value></default>
-	  <default param="refdate"><value type="string">2012/05/21</value></default>
+	  <default param="refdate"><value type="string">2014/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	</equals>
@@ -449,7 +449,7 @@ mosaic simulation task:
          compwidth, the desired bandwidth - 
          there is not currently a way to specify the spectrum of a component, 
          so simulations from a componentlist only will be continuum (1 chan)
-    refdate -- date of simulated observation eg: '2012/05/21'
+    refdate -- date of simulated observation eg: '2014/05/21'
     hourangle -- hour angle of observation e.g. '-3h'
     totaltime --- total time of observation e.g '7200s' or if an number without
          units, interpreted as the number of times to repeat the map

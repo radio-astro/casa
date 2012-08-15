@@ -268,13 +268,13 @@ class AtmosCorruptor : public CalCorruptor {
    inline Matrix<Float>& screen() { return *screen_p; };
    inline Float screen(const Int i, const Int j) { 
      return screen_p->operator()(i,j); };
-   virtual void initialize();
+   virtual void initialize(const Int rxType);
    // use ATM but no time dependence - e.g. for B[Tsys]
-   void initialize(const VisIter& vi, const Record& simpar, VisCal::Type type);
+   void initialize(const VisIter& vi, const Record& simpar, VisCal::Type type, const Int rxType);
    Vector<Double> antDiams;
 
-   void initialize(const Int Seed, const Float Beta, const Float scale);
-   void initialize(const Int Seed, const Float Beta, const Float scale,
+   void initialize(const Int Seed, const Float Beta, const Float scale, const Int rxType);
+   void initialize(const Int Seed, const Float Beta, const Float scale, const Int rxType, 
 		   const ROMSAntennaColumns& antcols);
    // phase corruption gain for a T
    Complex cphase(const Int islot);
@@ -293,6 +293,7 @@ class AtmosCorruptor : public CalCorruptor {
    inline Float& tatmos() { return tatmos_; };
    inline Float& trx() { return trx_; };
    inline Float& tcmb() { return tcmb_; };
+   inline Int& rxType() { return rxtype_; };  // 0=2SB, 1=DSB
    // gets slow to calculate 1/exp(hv/kt)-1 all the time so 
    inline Double& Rtground() { return Rtground_; };
    inline Double& Rtatmos() { return Rtatmos_; };
@@ -302,6 +303,9 @@ class AtmosCorruptor : public CalCorruptor {
 
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
    
+   inline Vector<uInt>& ATMnChan() { return ATMnChan_; };
+   inline Vector<uInt>& ATMchanMap(uInt ispw) { return ATMchanMap_[ispw]; };
+  
    virtual void setFocusChan(Int chan) {
      curr_chan_[currSpw()]=chan;
      // WARN:  this assumes constant channel width - more detailed 
@@ -321,6 +325,7 @@ class AtmosCorruptor : public CalCorruptor {
  protected:
 
  private:   
+   Int rxtype_;
    Float mean_pwv_,windspeed_,pixsize_,tauscale_,
      tground_,spilleff_,trx_,tatmos_,tcmb_;
    Double Rtatmos_,Rtcmb_,Rtground_;//,Rtrx_
@@ -330,6 +335,9 @@ class AtmosCorruptor : public CalCorruptor {
    atm::RefractiveIndexProfile *itsRIP;
    atm::SkyStatus *itsSkyStatus;
    atm::SpectralGrid *itsSpecGrid;
+
+   Vector<uInt> ATMnChan_;
+   Vector<Vector<uInt> > ATMchanMap_;
 
    PtrBlock<Vector<Float>*> pwv_p;
    Vector<Float> antx_,anty_;  // antenna positions in units of screen resl

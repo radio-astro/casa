@@ -261,7 +261,8 @@ public:
 		const Float tground,
 		const Float tcmb,
 		const Bool OTF,
-		const Float senscoeff);
+		const Float senscoeff,
+		const Int rxtype);
 
   // apply errors to the data in our MS
   //  Bool corrupt();
