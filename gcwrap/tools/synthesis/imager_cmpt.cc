@@ -870,6 +870,9 @@ imager::plotvis(const std::string& type, const int increment)
 	 else if(String(type)==String("ftweight")){
 	   Vector <String> wgtim(toVectorString(wgtimages));
 	   itsImager->getWeightGrid(blockOGrid, String(type), wgtim);
+	   std::vector<double> d_weight(0);
+	   std::vector<int> s_shape(0);
+	   rstat = new ::casac::variant(d_weight, s_shape);
 	 }
 
       } catch  (AipsError x) {
@@ -1682,7 +1685,6 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
    Bool rstat(False);
    try {
      casa::String pcolToUse(pointingcolumntouse);
-     cerr << "SCALE " << scale << endl;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
    } catch  (AipsError x) {
      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
