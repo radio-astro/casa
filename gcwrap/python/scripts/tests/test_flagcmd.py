@@ -573,7 +573,38 @@ class test_rflag(test_base):
 
         self.assertEqual(res6['flagged'], 42728.0)
 
+class test_actions(test_base):
+    
+    def setUp(self):
+        self.setUp_data4rflag()
+        
+    def tearDown(self):
+        os.remove('fourplot.png')
+        
+    def test_plot(self):
+        '''flagcmd: Test action=plot'''
+        
+        # Note: the following seg faults on active ... because
+        # tb.getcol() on an empty column has a problem. Uncomment when
+        # the problem is fixed
+        outplot = 'fourplot.png'
+#        flagcmd(vis=self.vis, inpmode='table', useapplied=True, action='plot',
+#                plotfile=outplot)
+#        
+#        self.assertTrue(os.path.exists(outplot),'Plot file was not created')
+        
+        flagcmd(vis=self.vis, inpmode='cmd', 
+            command=["intent='CAL*POINT*' field=''","scan='5'"], 
+            action='list', savepars=True)
+        flagcmd(vis=self.vis, inpmode='table', useapplied=True, action='plot',
+                plotfile=outplot)
+        
+        self.assertTrue(os.path.exists(outplot),'Plot file was not created')
 
+        
+        
+        
+        
 #################################################
         
 # Dummy class which cleans up created files
@@ -583,6 +614,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.ms*')
         os.system('rm -rf flagdatatest-alma.ms*')
         os.system('rm -rf ngc5921.ms*')
+        os.system('rm -rf Four_ants.ms*')
 
 
     def test1(self):
@@ -598,6 +630,7 @@ def suite():
             test_XML,
             test_shadow,
             test_rflag,
+            test_actions,
             cleanup]
         
         

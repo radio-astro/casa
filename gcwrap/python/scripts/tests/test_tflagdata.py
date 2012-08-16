@@ -724,12 +724,7 @@ class test_selections(test_base):
         '''tflagdata: array selection'''
         tflagdata(vis=self.vis, array='0', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
-        
-    def test_ntime1(self):
-        '''tflagdata: ntime = 0'''
-        ret = tflagdata(vis=self.vis, ntime = 0, savepars=False)
-        self.assertNotEqual(type(ret), dict, 'Return type of task should be None')
-        
+                
     def test_action(self):
         '''tflagdata: action = calculate'''
         tflagdata(vis=self.vis, antenna='2,3,4', action='calculate')
@@ -809,7 +804,6 @@ class test_selections2(test_base):
         
         # non-existing ID
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
-        tflagdata(vis=self.vis, observation='10', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 0)
 
     def test_observation2(self):
@@ -908,7 +902,6 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
         
-    """ jagonzal (HPC)
     def test_list3(self):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
@@ -927,7 +920,7 @@ class test_list(test_base):
             os.system('rm -rf myflags.txt')
         flagcmd(vis=self.vis, action='list', savepars=True, outfile='myflags.txt', useapplied=True)
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
-    """
+    
         
     def test_list4(self):
         '''tflagdata: save without running and apply in flagcmd'''

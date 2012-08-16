@@ -7,7 +7,7 @@ import shutil
 import string
 import time
 import ast
-from taskinit import casalog,qa
+from taskinit import casalog,qa,ms
 
 '''
 A set of helper functions for the tasks tflagdata and flagcmd.
@@ -584,7 +584,8 @@ def readXML(sdmfile, mytbuff):
 
 
 
-def getUnion(mslocal, vis, cmddict):
+#def getUnion(mslocal, vis, cmddict):
+def getUnion(vis, cmddict):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
        vis --> MS
        cmddict --> dictionary of parameters and values (par=val) such as the one
@@ -713,7 +714,7 @@ def getUnion(mslocal, vis, cmddict):
 
     # Compress the selection list to reduce MSSelection parsing time.
     # 'field','spw','antenna' strings in dicpars will be modified in-place.
-    compressSelectionList(mslocal,vis,dicpars);
+    compressSelectionList(vis,dicpars);
 
     # Real number of input lines
     # Get the number of occurrences of each parameter
@@ -855,7 +856,8 @@ def getNumPar(cmddict):
     return npars
 
 
-def compressSelectionList(mslocal=None, vis='',dicpars={}):
+#def compressSelectionList(mslocal=None, vis='',dicpars={}):
+def compressSelectionList(vis='',dicpars={}):
     """
     - Find a loose union of data-selection parameters, to reduce the MSSelection parsing load.
     - This compressed selection list is only meant to be used with tf.selectdata(), because
@@ -866,8 +868,14 @@ def compressSelectionList(mslocal=None, vis='',dicpars={}):
       and spw expressions can slow MSSelection down.   
     """
     from numpy import unique;
-    indices = mslocal.msseltoindex(vis=vis,field=dicpars['field'], spw=dicpars['spw'],baseline=dicpars['antenna']);
-
+    
+#    mslocal = casac.ms()
+    ms.open(vis, nomodify=False)
+    try:
+        indices = ms.msseltoindex(vis=vis,field=dicpars['field'], spw=dicpars['spw'],baseline=dicpars['antenna']);
+    finally:
+        ms.close()
+        
     c_field = str(list(unique(indices['field']))).strip('[]');
     c_spw = str(list(unique(indices['spw']))).strip('[]');
     c_antenna = str(list( unique( list(indices['antenna1']) + list(indices['antenna2']) ) ) ).strip('[]');
