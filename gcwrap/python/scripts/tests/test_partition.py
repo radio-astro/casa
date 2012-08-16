@@ -194,8 +194,70 @@ class partition_test1(test_base):
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
 #    def addCleanup(self, function, *args, **kwargs):
+    
+class partition_test2(test_base):
+    
+    def setUp(self):
+        self.setUp_fourants()
+
+    def tearDown(self):
+        shutil.rmtree(self.msfile, ignore_errors=True)        
+        shutil.rmtree(self.mmsfile, ignore_errors=True)        
+        
+    def test_all_columns(self):
+        '''Partition: datacolumn=all'''
+        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+        
+        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.mmsfile, createdict=True)
+        
+         # Compare nrows of all scans in selection
+        slist = ph.getMMSScans(thisdict)
+        self.assertEqual(slist.__len__(), 2)
+        for s in slist:
+            mmsN = ph.getMMSScanNrows(thisdict, s)
+            msN = ph.getScanNrows(self.msfile, s)
+            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
+                             %(s, mmsN, msN))
+
+        # Compare spw IDs
+        for s in slist:
+            mms_spw = ph.getSpwIds(self.mmsfile, s)
+            ms_spw = ph.getSpwIds(self.msfile, s)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
+
+    def test_scan_spw(self):
+        '''Partition: separationaxis=scan with spw selection'''
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
+                  spw='1~4,10,11')
+        
+        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.mmsfile, createdict=True)
+
+        # Dictionary with selection to compare with original MS
+        mysel = {'spw':'1~4,10,11'}
+        
+         # Compare nrows of all scans in selection
+        slist = ph.getMMSScans(thisdict)
+        for s in slist:
+            mmsN = ph.getMMSScanNrows(thisdict, s)
+            msN = ph.getScanNrows(self.msfile, s, selection=mysel)
+            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
+                             %(s, mmsN, msN))
+
+        # Compare spw IDs
+        for s in slist:
+            mms_spw = ph.getSpwIds(self.mmsfile, s)
+            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
         
     
 def suite():
-    return [partition_test1]
+    return [partition_test1, partition_test2]
 
