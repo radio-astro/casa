@@ -53,6 +53,8 @@ def pclean(vis=None,
     #Python script    
 
 ####checking section
+    if( (mode=='channel') or (mode=='frequency') or (mode=='velocity')):
+        mode='cube'
     if (mode=='cube') and (nchan <2) :
         raise ValueError, 'Not going to handle cube with 1 channel; use continuum'
   
@@ -172,7 +174,7 @@ def pclean(vis=None,
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
-        estmem=14.0*float(imsize[0]*imsize[1])*4
+        estmem=18.0*float(imsize[0]*imsize[1])*4
         chanchunk=int(memperproc/estmem)
         while((chanchunk*numproc) > nchan):
             chanchunk=chanchunk-1

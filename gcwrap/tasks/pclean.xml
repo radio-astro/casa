@@ -167,6 +167,9 @@
 	              <allowed kind="enum">
 		      <value>continuum</value>
 		      <value>cube</value>
+		      <value>channel</value>
+		      <value>frequency</value>
+		      <value>velocity</value>
 		      <!--value>frequency</value>
 		      <value>velocity</value>
 		      <value>mfs</value-->
@@ -276,8 +279,26 @@
 		    <equals type="string" value="continuum"></equals>
 		    <equals type="string" value="cube">
 		      <default param="start"><value type="int">0</value></default>
-		      <default param="nchan"><value>1</value></default>
+		      <default param="nchan"><value>2</value></default>
 		      <default param="width"><value type="int">1</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="channel">
+		      <default param="start"><value type="int">0</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="int">1</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="frequency">
+		      <default param="start"><value type="string">0GHz</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="string">1Hz</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="velocity">
+		      <default param="start"><value type="string">0km/s</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="string">1m/s</value></default>
 		      <default param="restfreq"><value type="string"></value></default>
                      </equals>
                  </when>

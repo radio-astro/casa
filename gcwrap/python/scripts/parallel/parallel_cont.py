@@ -264,12 +264,14 @@ class imagecont():
             sca=scales if (alg=='msclean') else [0]
             dc.setscales(scalemethod='uservector', uservector=sca)
             alg='fullmsclean'
+        retval={}
         if(alg=='clark'):
-            dc.fullclarkclean(niter=niter, gain=self.gain, threshold=thr, model=model, mask=mask)
+            retval=dc.fullclarkclean(niter=niter, gain=self.gain, threshold=thr, model=model, mask=mask)
         else:
-            dc.clean(algorithm=alg, gain=self.gain, niter=niter, threshold=thr, model=model, mask=mask)
+            retval=dc.clean(algorithm=alg, gain=self.gain, niter=niter, threshold=thr, model=model, mask=mask)
         dc.done()
         del dc
+        return retval
 
     def imagechan(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0], fstart='1GHz', width='10MHz', chanchunk=1):
         origname=msname

@@ -694,7 +694,7 @@ class pimager():
                 fluxims[k]=imlist[k]+'.flux'
                 weightims[k]=imlist[k]+'.wgt'
             self.weightedaverimages(residual, residuals, weightims)
-            if(maskimage == ''):
+            if((maskimage == '') or (maskimage==[])):
                 maskimage='lala.mask'
             if (interactive and (intmask==0)):
                 if(maj==0):
@@ -733,21 +733,21 @@ class pimager():
                     c.push(wtgrid=sumweight)
                     c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
             newthresh=threshold
-            if(majorcycles < 0):
+            if(majorcycles <= 1):
                 ia.open(residual)
                 residstat=ia.statistics()
                 maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
-                psfoutermax=maxouterpsf(psfim=psf, image=restoreds[0])
+                psfoutermax=self.maxouterpsf(psfim=psf, image=restoreds[0])
                 newthresh=psfoutermax*cyclefactor*maxresid
                 oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
                 if(newthresh < oldthresh):
                     newthresh=oldthresh
                 newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
             ####no need to do this in last major cycle
-            needclean=((maj < majorcycles)  or 
-                       (maxresid < qa.quantity(threshold)['value']) 
-                       or (niterpercycle <1))
-            
+            needclean=((maj < majorcycles if (majorcycles >1) else True)  and 
+                       (maxresid > qa.convert(qa.quantity(threshold),'Jy')['value']) 
+                       and (niterpercycle > 1))
+            donemaj = not needclean
             if(needclean):
                 casalog.post('Deconvolving for major cycle '+str(maj))  
                 #incremental clean...get rid of tempmodel
@@ -760,7 +760,7 @@ class pimager():
                     time.sleep(5)
                     over=c.check_job(out[0],False)
                 retval=c.pull('retval', 0)[0]
-                if(majorcycles <0):
+                if(majorcycles <=1):
                     niterpercycle=niterpercycle-retval['iterations']
                 maxresid=retval['maxresidual']
                 ###incremental added to total 
@@ -786,8 +786,8 @@ class pimager():
                     ia.insert(infile=model, locate=[0,0,0,0])
                     ia.done()
                 maj +=1
-                if(majorcycles > -1):
-                    donemaj=(maj >= majorcycles)
+                #if(majorcycles > 1):
+                #   donemaj=(maj >= majorcycles)
             
         
         restored=imagename+'.image'
@@ -1177,8 +1177,9 @@ class pimager():
         imobservatory=csys.telescope()
         shutil.rmtree(imagename+'.image', True)
         shutil.rmtree(imagename+'.residual', True)
-        shutil.copytree(model, imagename+'.image')
-        shutil.copytree(model, imagename+'.residual')
+        ## don't need to copy anymore with concat
+        #shutil.copytree(model, imagename+'.image')
+        #shutil.copytree(model, imagename+'.residual')
 
         out=range(numcpu)  
         self.c.pgc('from  parallel.parallel_cont import *')
@@ -1286,21 +1287,26 @@ class pimager():
         print 'Time to image is ', (timebegrem-time1)/60.0, 'mins'
         chans=(np.array(range(nchanchunk))*chanchunk).tolist()
         imnams=[imagename]*nchanchunk
-        ia.open(imnams[0]+'0.image')
-        rb=ia.restoringbeam()
-        ia.done()
-        ia.open(imagename+'.image')
-        ia.setrestoringbeam(beam=rb)
-        ia.done()
+#        ia.open(imnams[0]+'0.image')
+#        rb=ia.restoringbeam()
+#        ia.done()
+#        ia.open(imagename+'.image')
+#        ia.setrestoringbeam(beam=rb)
+#        ia.done()
         #imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         #imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
         
         #imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        #self.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
         imagecont.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
         imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
         imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
         if(self.ftmachine=='mosaic'):
+            #self.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
             imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
+            #self.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
             imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
@@ -1311,6 +1317,38 @@ class pimager():
         #self.c.stop_cluster()
 
 ##############################
+    def concatimages(self, outputimage='', imagelist='', csys=None, removeinfile=True):
+        ncpu=self.numcpu
+        if(type(imagelist) != list):
+            imagelist=[imagelist]
+        imagelist=np.array(imagelist)
+        if(len(imagelist)==1):
+            ib=ia.fromimage(ourfile=outputimage, infile=imagelist[0], overwrite=True)
+        else:
+            nim=len(imagelist)
+            self.c.pgc('from  parallel.parallel_cont import *')
+            if((nim/ncpu) > 1):
+                intermimages=['intermimages_'+str(k) for k in range(ncpu)]
+                subpart=np.array([nim/ncpu for k in range(ncpu)])
+                subpart[range(nim%ncpu)] +=1
+                infiles=[[]]*ncpu
+                out=range(ncpu)
+                #infiles[0]=imagelist(range(subpart[0]))
+                for k in  range(ncpu):
+                    infiles[k]=imagelist[range(np.sum(subpart[0:k]), np.sum(subpart[0:(k+1)]))].tolist() 
+                    commcon='imagecont.concatimages(cubeimage="'+intermimages[k]+'", inim='+str(infiles[k])+', removeinfile='+str(removeinfile)+')'
+                    print 'concat command', commcon
+                    out[k]=self.c.odo(commcon,k)
+                over=False
+                while(not over):
+                    time.sleep(1)
+                    overone=True
+                    for k in range(ncpu):
+                        overone=(overone and ((type(out[k])==int) or (self.c.check_job(out[k],False))))
+                    over=overone
+            else:
+                intermimages=[imagelist[k] for k in range(len(imagelist))]
+            imagecont.concatimages(outputimage , intermimages, csys, removeinfile)
 #################
     def pcube_expt(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
