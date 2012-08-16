@@ -126,6 +126,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 			<value>K</value>
 			<value>KCROSS</value>
 			<value>XY+QU</value>
+			<value>XYf+QU</value>
 		</allowed>
 	</param>
 

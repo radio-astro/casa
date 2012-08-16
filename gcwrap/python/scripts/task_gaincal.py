@@ -109,7 +109,7 @@ def gaincal(vis=None,caltable=None,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
-		elif (gaintype=='K' or gaintype=='KCROSS' or gaintype=='XY+QU'):
+		elif (gaintype=='K' or gaintype=='KCROSS' or gaintype=='XY+QU' or gaintype=='XYf+QU'):
 			mycb.setsolve(type=gaintype,t=solint,combine=combine,preavg=preavg,refant=refant,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
