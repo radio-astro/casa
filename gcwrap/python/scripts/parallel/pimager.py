@@ -4,6 +4,7 @@ from cleanhelper import *
 from parallel.parallel_cont import imagecont
 from simple_cluster import simple_cluster
 from odict import *
+from casac import casac
 import numpy as np
 import random
 import string
@@ -682,17 +683,20 @@ class pimager():
             residual=imagename+'.residual'
             psf=imagename+'.psf'
             fluxim=imagename+'.flux'
+            coverim=imagename+'.flux.pbcoverage'
             psfs=range(len(imlist))
             residuals=range(len(imlist))
             restoreds=range(len(imlist))
             weightims=range(len(imlist))
             fluxims=range(len(imlist))
+            coverims=range(len(imlist))
             for k in range (len(imlist)):
                 psfs[k]=imlist[k]+'.psf'
                 residuals[k]=imlist[k]+'.residual'
                 restoreds[k]=imlist[k]+'.image'
                 fluxims[k]=imlist[k]+'.flux'
                 weightims[k]=imlist[k]+'.wgt'
+                coverims[k]=imlist[k]+'.flux.pbcoverage'
             self.weightedaverimages(residual, residuals, weightims)
             if((maskimage == '') or (maskimage==[])):
                 maskimage='lala.mask'
@@ -724,6 +728,12 @@ class pimager():
                 self.weightedaverimages(psf, psfs, weightims)
                 if(self.ftmachine=='mosaic'):
                     self.averimages(fluxim, fluxims)
+                    self.averimages(coverim, coverims)
+                    ##OR the mask and the fluximage into the mask
+                    elim=casac.image()
+                    elim.open(maskimage)
+                    elim.calc('iif(mask("'+fluxim+'"), "'+maskimage+'", 0)')
+                    elim.done()
                 if((self.weight=='uniform') or (self.weight=='briggs')):
                     c.pgc('wtgrid=a.getweightgrid(msname="'+msname+'")')
                     sumweight=c.pull('wtgrid', 0)[0]
@@ -745,7 +755,7 @@ class pimager():
                 newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
             ####no need to do this in last major cycle
             needclean=((maj < majorcycles if (majorcycles >1) else True)  and 
-                       (maxresid > qa.convert(qa.quantity(threshold),'Jy')['value']) 
+                       ((maxresid > qa.convert(qa.quantity(threshold),'Jy')['value']) if(majorcycles <2) else True) 
                        and (niterpercycle > 1))
             donemaj = not needclean
             if(needclean):
