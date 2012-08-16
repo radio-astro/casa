@@ -427,6 +427,30 @@ using namespace casac;
    }
 }
 
+%typemap(out) Quantity& {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyObject *v = casac::map_vector($1.value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
+}
+
+%typemap(out) Quantity {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyObject *v = casac::map_vector($1.value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
+}
+
+%typemap(out) Quantity* {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyObject *v = casac::map_vector($1->value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
+}
+
 %typemap(out) BoolVec {
    $result = ::map_array($1.value, $1.shape);
 }
