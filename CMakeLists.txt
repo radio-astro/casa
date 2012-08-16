@@ -204,6 +204,7 @@ casa_add_library( synthesis
  MeasurementComponents/CleanImageSkyModel.cc
  MeasurementComponents/ConvFuncDiskCache.cc
  MeasurementComponents/CSCleanImageSkyModel.cc
+ MeasurementComponents/DJones.cc
  MeasurementComponents/EVLAConvFunc.cc
  MeasurementComponents/EVLAAperture.cc
  MeasurementComponents/EJones.cc
