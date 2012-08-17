@@ -382,8 +382,12 @@ try {
 
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks(True);
+       //*itsLog << LogIO::SEVERE << "Exception Reported: " 
+       //        << x.getMesg() << LogIO::POST;
+       //try {
+       //    Table::relinquishAutoLocks(True);
+       //}
+       //catch (...) {}
        RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
