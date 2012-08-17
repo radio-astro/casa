@@ -28,7 +28,8 @@ TASKLIST = [
             'listobs',
             'listvis',
             'split',
-            'vishead'
+            'vishead',
+            'wvrgcal'
             ]
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'
@@ -69,6 +70,7 @@ def mmstest(mytask):
     TESTPATH = DATAPATH + 'unittest/'
     INPPATH = TESTPATH + mytask
     MMSPATH = './unittest_mms/'+mytask
+
     print '--------- Will create MMS data for test_'+mytask
     ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, createmslink=True, cleanup=True)
 
@@ -119,7 +121,25 @@ def main(thislist):
         tb.open(SPLITMMSPATH+'hasfc.mms/SUBMSS/hasfc.0000.ms/', nomodify=False)
         tb.putcolkeyword('FLAG_CATEGORY','CATEGORY', ['FLAG_CMD', 'ORIGINAL', 'USER'])
         tb.close()
-    
+
+
+    if 'wvrgcal' in thislist:
+        WVRGCALMMSPATH = './unittest_mms/wvrgcal/'
+        WVRCALPATH = DATAPATH+'unittest/wvrgcal/input/'
+        origwd = os.getcwd()
+        os.chdir(WVRGCALMMSPATH)
+        shutil.rmtree('input', ignore_errors=True)
+        os.mkdir('input')
+        os.chdir('input')
+        mydirs = os.listdir(WVRCALPATH)
+        for d in mydirs:
+            print d
+            if d.split('.')[1]=='ms':
+                partition(vis=WVRCALPATH+d, outputvis=d, datacolumn='all')
+            else:
+                os.symlink(WVRCALPATH+d, d)
+        os.chdir(origwd)
+        
     
 if __name__ == "__main__":
 
