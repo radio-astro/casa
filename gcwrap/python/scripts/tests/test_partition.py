@@ -1,10 +1,10 @@
 import os
 import shutil
+import time
 import unittest
 import testhelper as th
 import partitionhelper as ph
 from tasks import partition, listpartition
-from taskinit import *
 from __main__ import default
 
 
@@ -67,6 +67,7 @@ class partition_test1(test_base):
     def test_nomms(self):
         '''Partition: Create a normal MS with createmms=False'''
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=False)
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -80,6 +81,7 @@ class partition_test1(test_base):
     def test_default(self):
         '''Partition: create an MMS with default values'''
         partition(vis=self.msfile, outputvis=self.mmsfile)
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -88,6 +90,7 @@ class partition_test1(test_base):
         
         # Compare nrows of all scans
         slist = ph.getMMSScans(thisdict)
+        
         for s in slist:
             mmsN = ph.getMMSScanNrows(thisdict, s)
             msN = ph.getScanNrows(self.msfile, s)
@@ -113,6 +116,7 @@ class partition_test1(test_base):
     def test_scan_selection(self):
         '''Partition: create an MMS using scan selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -141,6 +145,7 @@ class partition_test1(test_base):
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
         #       IDs, therefore I need to selection by obs id in partition
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -169,6 +174,7 @@ class partition_test1(test_base):
     def test_spw_selection(self):
         '''Partition: create an MMS separated by spws with spw=2,4 selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -203,17 +209,18 @@ class partition_test2(test_base):
     def tearDown(self):
         shutil.rmtree(self.msfile, ignore_errors=True)        
         shutil.rmtree(self.mmsfile, ignore_errors=True)        
-        
-    def test_all_columns(self):
-        '''Partition: datacolumn=all'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+
+    def test_sepaxis(self):
+        '''Partition: separationaxis=none'''        
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='default')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
         # Take the dictionary and compare with original MS
         thisdict = listpartition(vis=self.mmsfile, createdict=True)
         
-         # Compare nrows of all scans in selection
+        # Compare nrows of all scans in selection
         slist = ph.getMMSScans(thisdict)
         self.assertEqual(slist.__len__(), 2)
         for s in slist:
@@ -229,10 +236,38 @@ class partition_test2(test_base):
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
+        
+#    def test_all_columns(self):
+#        '''Partition: datacolumn=all'''
+#        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+#        time.sleep(10)
+#        
+#        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+#        
+#        # Take the dictionary and compare with original MS
+#        thisdict = listpartition(vis=self.mmsfile, createdict=True)
+#        
+#        # Compare nrows of all scans in selection
+#        slist = ph.getMMSScans(thisdict)
+#        self.assertEqual(slist.__len__(), 2)
+#        for s in slist:
+#            mmsN = ph.getMMSScanNrows(thisdict, s)
+#            msN = ph.getScanNrows(self.msfile, s)
+#            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
+#                             %(s, mmsN, msN))
+#
+#        # Compare spw IDs
+#        for s in slist:
+#            mms_spw = ph.getSpwIds(self.mmsfile, s)
+#            ms_spw = ph.getSpwIds(self.msfile, s)
+#            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+#                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
+
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
                   spw='1~4,10,11')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -242,7 +277,7 @@ class partition_test2(test_base):
         # Dictionary with selection to compare with original MS
         mysel = {'spw':'1~4,10,11'}
         
-         # Compare nrows of all scans in selection
+        # Compare nrows of all scans in selection
         slist = ph.getMMSScans(thisdict)
         for s in slist:
             mmsN = ph.getMMSScanNrows(thisdict, s)
@@ -256,8 +291,59 @@ class partition_test2(test_base):
             ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
+ 
         
-    
+    def test_numsubms(self):
+        '''Partition: small numsubms value'''
+        # There are 16 spws; we want only 6 sub-MSs.
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
+                  numsubms=6)
+        time.sleep(10)
+        
+        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.mmsfile, createdict=True)
+        
+        # Check the number of sub-MSs
+        mmslist = []
+        klist = thisdict.keys()
+        for kk in klist:
+            mmslist.append(thisdict[kk]['MS'])
+        
+        nsubms = mmslist.__len__()
+        self.assertEqual(nsubms, 6, 'There should be only 6 sub-MSs')
+        
+        # Check that spw list is the same in MS and MMS
+        spwlist = ph.getMMSSpwIds(thisdict)        
+
+        # Reference list of scans in MS
+        slist = ph.getScanList(self.msfile)
+        setlist = set([])
+        for s in slist:
+            ms_spw = ph.getSpwIds(self.msfile, s)
+            for a in ms_spw:
+                setlist.add(a)
+
+        self.assertEqual(list(setlist), spwlist)
+         
 def suite():
     return [partition_test1, partition_test2]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

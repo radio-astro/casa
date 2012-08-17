@@ -345,7 +345,6 @@ def getScanList(msfile, selection={}):
     scand = msTool.getscansummary()
     msTool.close()
         
-    scanlist = []
     scanlist = scand.keys()
     
     return scanlist
@@ -401,36 +400,16 @@ def getMMSScanNrows(thisdict, myscan):
             scanrows += thisdict[k]['scanId'][myscan]['nrows']
         
     return scanrows
-
-    
+   
 
 def getSpwIds(msfile, myscan, selection={}):
-    '''Get the Spw IDs of a scan. This will not take into
-       account any selection done on the MS.
+    '''Get the Spw IDs of a scan. 
        msfile     --> name of the MS or MMS
        myscan     --> scan Id (int)
        selection  --> dictionary with data selection
        
        Return a list with the Spw IDs. Note that the returned spw IDs are sorted.
-       
-       To compare with the dictionary returned by listpartition, do the following:
-       
-        resdict = listpartition(vis='part.mms', createdict=True)
-        for k in resdict.keys():
-            subms = resdict[k]['MS']
-            MS = 'part.mms/SUBMSS/'+subms
-            scans = resdict[k]['scanId'].keys()
-            for s in scans:
-                spws = resdict[k]['scanId'][s]['spwIds']
-                refspws = getSpwIds(MS,s)
-                
-                # Compare the two arrays
-                compspws = np.in1d(refspws, spws)
-                indices = np.where(compspws==False)
-                if np.size(indices) != 0:
-                    for i in indices:
-                        print "Spw=%s is not in reference array %s"%(spws[indices[i]], refspws)
-                    
+                           
     '''
     import numpy as np
     
@@ -461,7 +440,32 @@ def getSpwIds(msfile, myscan, selection={}):
     
     # Try to return a list
     spwlist = uniquespws.ravel().tolist()
-#    return uniquespws
+    return spwlist
+
+
+def getMMSSpwIds(thisdict):
+    '''Get the list of spws from an MMS dictionary.
+       thisdict  --> output dictionary from listpartition(MMS,createdict=true)
+       Return a list of the spw Ids in the dictionary. '''
+
+    import numpy as np
+    
+    tkeys = thisdict.keys()
+
+    aspws = np.array([],dtype='int32')
+    for k in tkeys:
+        scanlist = thisdict[k]['scanId'].keys()
+        for s in scanlist:
+            spwids = thisdict[k]['scanId'][s]['spwIds']
+            aspws = np.append(aspws, spwids)
+
+    # Sort spws  and remove duplicates
+    aspws.sort()
+    uniquespws = np.unique(aspws)
+    
+    # Try to return a list
+    spwlist = uniquespws.ravel().tolist()
+        
     return spwlist
 
 
