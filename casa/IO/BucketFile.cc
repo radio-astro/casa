@@ -184,10 +184,13 @@ uInt BucketFile::read (void* buffer, uInt length) const
 
 uInt BucketFile::write (const void* buffer, uInt length)
 {
-    if (::traceWRITE (fd_p, (Char *)buffer, length)  !=  Int(length)) {
-	throw (AipsError ("BucketFile: write error on file " + name_p +
-	                  ": " + strerror(errno)));
+    try {
+        if (::traceWRITE (fd_p, (Char *)buffer, length)  !=  Int(length)) {
+            throw (AipsError ("BucketFile: write error on file " + name_p +
+                   ": " + strerror(errno)));
+        }
     }
+    catch (...) {throw;}
     return length;
 }
 
