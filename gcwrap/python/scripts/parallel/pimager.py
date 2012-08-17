@@ -492,7 +492,7 @@ class pimager():
               hostnames='',  
               numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
-              numthreads=1,
+              numthreads=1, savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''):
 
@@ -524,6 +524,8 @@ class pimager():
         visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
         interactive boolean ...get a viewer to draw mask on
         maskimage  a prior mask image to limit clean search
+        numthreads  number of threads to use in each engine
+        savemodel   when True the model is saved in the MS header for selfcal
         painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
         cfcache = The disk cache directory for convolution functions
         pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
@@ -817,6 +819,11 @@ class pimager():
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
             shutil.rmtree(imlist[k]+'.wgt', True)
+        if(savemodel):
+            myim=casac.imager()
+            myim.selectvis(vis=msname, spw=spw, field=field)
+            myim.ft(model)
+            myim.done()
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         casalog.post('Time to image is '+str((time2-time1)/60.0)+ ' mins')
         #c.stop_cluster()
@@ -1063,7 +1070,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -1096,6 +1103,8 @@ class pimager():
         chanchunk = number of channel to process at a go per process...careful not to 
        go above total memory available
        visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+       numthreads number of threads to use per engine while gridding
+       savemodel if True save the model in the ms header for self calibration
         painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
         cfcache = The disk cache directory for convolution functions
         pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
@@ -1320,7 +1329,11 @@ class pimager():
             imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
-        
+        if(savemodel):
+            myim=casac.imager()
+            myim.selectvis(vis=msname, spw=spw, field=field)
+            myim.ft(model)
+            myim.done()
 
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
