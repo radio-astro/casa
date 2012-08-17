@@ -90,7 +90,9 @@ AipsIO::AipsIO (TypeIO* file)
 
 AipsIO::~AipsIO()
 {
-    close();
+    try {
+       close();
+    } catch (...) {}
 }
 
 
