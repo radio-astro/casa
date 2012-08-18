@@ -180,39 +180,25 @@ def pclean(vis=None,
             chanchunk=chanchunk-1
         if(chanchunk <1):
             chanchunk=1
-        majcyc=majorcycles
-        interloop=1
-        if(interactive):
-            interloop=majorcycles
-            majcyc=1
-            niter=niter/interloop
-        for k in range([1,interloop+1][interactive]) :
-            if(interactive and (mask=='')):
-                mask=imagename+'.mask'
-            pim.pcube(msname=vis, imagename=imagename, 
-                      imsize=imsize, pixsize=[cellx, celly], 
-                      phasecenter=phasecenter, 
-                      field=field, spw=spw, 
-                      ftmachine=ftmachine, alg=alg,
-                      hostnames='', numcpuperhost=-1, cyclefactor=cyclefactor,
-                      majorcycles=majcyc, niter=[0,niter][(k>0) or (not interactive)], gain=gain,
-                      threshold=threshold, weight=weighting, robust=robust, scales=scales,
-                      mode=cubemode, 
-                      wprojplanes=wprojplanes,facets=facets, 
-                      start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
-                      imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
-                      uvtaper=uvtaper, outertaper=outertaper,
-                      timerange=timerange,
-                      uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                      contclean=[(not overwrite), True][interactive and k>0], visinmem=False, numthreads=1, pbcorr=pbcorr)
-            if(interactive and (k < interloop)) :
-                myim,=gentools(['im'])
-                retval=myim.drawmask(imagename+'.residual', mask)
-                myim.done()
-                ###make sure the damn images are not kept locked
-                del myim
-                if(retval==2):
-                    break;
+        if(interactive and (mask=='')):
+            mask=imagename+'.mask'
+        pim.pcube_driver(msname=vis, imagename=imagename, 
+                  imsize=imsize, pixsize=[cellx, celly], 
+                  phasecenter=phasecenter, 
+                  field=field, spw=spw, 
+                  ftmachine=ftmachine, alg=alg,
+                  hostnames='', numcpuperhost=-1, cyclefactor=cyclefactor,
+                  majorcycles=majorcycles, niter=niter, gain=gain,
+                  threshold=threshold, weight=weighting, robust=robust, scales=scales,
+                  mode=cubemode, 
+                  wprojplanes=wprojplanes,facets=facets, 
+                  start=start, nchan=nchan, step=width, restfreq=restfreq,stokes=stokes, 
+                  imagetilevol=1000000, chanchunk=chanchunk, maskimage=mask,  
+                  uvtaper=uvtaper, outertaper=outertaper,
+                  timerange=timerange,
+                  uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
+                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr)
+            
 #parallel_clean=pclean
     
 

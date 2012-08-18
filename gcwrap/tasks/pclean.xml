@@ -482,6 +482,9 @@
                example:
                  mode='cube'; Use with nchan, start, step to specify
                         output image cube.
+               NOTE: mode='velocity' or 'channel' or 'frequency'
+               is aliased to mode='cube' for backward comaptibility to 
+               people to feel comfy
   &gt;&gt;&gt; mode='cube' expandable parame
 ters
            nchan -- Total number of channels in the output image.

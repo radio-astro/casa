@@ -1062,6 +1062,110 @@ class pimager():
         #self.c.stop_cluster()
 
 #################
+    def pcube_driver(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
+              pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+              field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
+              hostnames='', 
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
+              mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
+              imagetilevol=100000,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
+              painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+              epjtablename='', interactive=False):
+        """
+        Drive pcube when interactive is on and depending on cyclefactor or not
+        """
+        if(interactive==False):
+            self.pcube(msname=msname, imagename=imagename, imsize=imsize, 
+              pixsize=pixsize, phasecenter=phasecenter, 
+              field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, 
+              hostnames=hostnames, 
+              numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
+              mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+              robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+              painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+            return
+        ###interactive is true
+        ###lets get the 0th iteration niter=0
+        self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+              field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+              numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=0, gain=gain, threshold=threshold, alg=alg, scales=scales,
+              mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+              robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+              painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+        if(maskimage==''):
+            maskimage=imagename+'.mask'
+        residual=imagename+'.residual'
+        ###now deal with interactive and    
+        if(cyclefactor > 0.00000001):
+            ####after this conclean has to be true
+            psf=imagename+'.psf'
+            newthresh=threshold
+            psfoutermax=self.maxouterpsf(psfim=psf, image=restoreds[0])
+            oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
+            ###have to get the niter back from pcube
+            myim,=gentools(['im'])
+            retval=myim.drawmask(imagename+'.residual', mask)
+            myim.done()
+            ###for now if oldthresh is 0 that is niter is determines end we will do one interactive loop
+            notdone=True
+            while(notdone):
+                myim=casac.imager()
+                retval=myim.drawmask(residual, maskimage)
+                myim.done()
+                if(retval==2):
+                    return
+                if(oldthresh < 0.0000001):
+                    threshold="0Jy"
+                    ####Temporary till we extract niter
+                    notdone=False
+                else:
+                    threshold=newthresh
+                ia.open(residual)
+                residstat=ia.statistics()
+                ia.done()
+                maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                newthresh=psfoutermax*cyclefactor*maxresid
+                if(newthresh < oldthresh):
+                    newthresh=oldthresh
+                    notdone=False
+                newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
+                self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+                           field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+                           numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+                           robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+                           painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+                ####Here we should extract the remainder iterations
+                niter=niter ### really !
+        else: 
+            #using majorcycles
+            npercycle=niter/majorcycles
+            for k in range(majorcycles):
+                myim=casac.imager()
+                retval=myim.drawmask(residual, maskimage)
+                myim.done()
+                if(retval==2):
+                    return
+                self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+                           field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+                           numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=0, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+                           robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+                           painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+            
+            
+                
+############################################
     def pcube(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
