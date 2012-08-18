@@ -197,7 +197,7 @@ def pclean(vis=None,
                   uvtaper=uvtaper, outertaper=outertaper,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr)
+                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr, interactive=interactive)
             
 #parallel_clean=pclean
     
