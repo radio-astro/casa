@@ -1889,7 +1889,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 
     cout << " Fractional Poln: "
 	 << "Q = " << QU_(0,thisSpw) << ", "
-	 << "U = " << QU_(0,thisSpw) << "; "
+	 << "U = " << QU_(1,thisSpw) << "; "
 	 << "P = " << sqrt(soln(0)*soln(0)+soln(1)*soln(1)) << ", "
 	 << "X = " << atan2(soln(1),soln(0))*90.0/C::pi << "deg."
 	 << endl;
