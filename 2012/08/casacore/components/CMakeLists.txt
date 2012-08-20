@@ -1,0 +1,108 @@
+#
+# CASA Components
+#
+
+add_library (casa_components
+SpectralComponents/CompiledSpectralElement.cc
+SpectralComponents/GaussianSpectralElement.cc
+SpectralComponents/LorentzianSpectralElement.cc
+SpectralComponents/GaussianMultipletSpectralElement.cc
+SpectralComponents/PCFSpectralElement.cc
+SpectralComponents/PolynomialSpectralElement.cc
+SpectralComponents/SpectralFit.cc
+SpectralComponents/SpectralEstimate.cc
+SpectralComponents/SpectralList.cc
+SpectralComponents/SpectralElement.cc
+SpectralComponents/SpectralElement2.cc
+SpectralComponents/SpectralElementFactory.cc
+ComponentModels/GaussianShape.cc
+ComponentModels/GaussianBeam.cc
+ComponentModels/TwoSidedShape.cc
+ComponentModels/SpectralModel.cc
+ComponentModels/SpectralIndex.cc
+ComponentModels/ComponentType.cc
+ComponentModels/PointShape.cc
+ComponentModels/SkyCompRep.cc
+ComponentModels/DiskShape.cc
+ComponentModels/SkyComponent.cc
+ComponentModels/ComponentShape.cc
+ComponentModels/FluxStandard.cc
+ComponentModels/FluxCalcLogFreqPolynomial.cc
+ComponentModels/FluxCalcQS.cc
+ComponentModels/FluxStdsQS.cc
+ComponentModels/FluxCalc_SS_JPL_Butler.cc
+ComponentModels/SkyCompBase.cc
+ComponentModels/ComponentList.cc
+ComponentModels/ConstantSpectrum.cc
+ComponentModels/TabularSpectrum.cc
+ComponentModels/ComponentType2.cc
+)
+
+target_link_libraries (casa_components casa_coordinates)
+
+install (
+TARGETS casa_components
+RUNTIME DESTINATION bin
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+)
+
+install (FILES
+ComponentModels/ConstantSpectrum.h
+ComponentModels/TabularSpectrum.h
+ComponentModels/ComponentList.h
+ComponentModels/ComponentShape.h
+ComponentModels/SkyComponent.h
+ComponentModels/GaussianShape.h
+ComponentModels/GaussianBeam.h
+ComponentModels/PointShape.h
+ComponentModels/DiskShape.h
+ComponentModels/ComponentType.h
+ComponentModels/SpectralIndex.h
+ComponentModels/SkyCompRep.h
+ComponentModels/SkyCompBase.h
+ComponentModels/TwoSidedShape.h
+ComponentModels/SpectralModel.h
+ComponentModels/FluxStandard.h
+ComponentModels/FluxCalcLogFreqPolynomial.h
+ComponentModels/FluxCalcLogFreqPolynomial.tcc
+ComponentModels/FluxCalcQS.h
+ComponentModels/FluxCalc_SS_JPL_Butler.h
+ComponentModels/FluxStdsQS.h
+ComponentModels/Flux.h
+ComponentModels/Flux.tcc
+DESTINATION include/casacore/components/ComponentModels
+)
+
+install (FILES
+SpectralComponents/CompiledSpectralElement.h
+SpectralComponents/GaussianSpectralElement.h
+SpectralComponents/GaussianMultipletSpectralElement.h
+SpectralComponents/LorentzianSpectralElement.h
+SpectralComponents/PCFSpectralElement.h
+SpectralComponents/ProfileFit1D.h
+SpectralComponents/ProfileFit1D.tcc
+SpectralComponents/PolynomialSpectralElement.h
+SpectralComponents/SpectralEstimate.h
+SpectralComponents/Spectral2Estimate.tcc
+SpectralComponents/SpectralElement.h
+SpectralComponents/SpectralElementFactory.h
+SpectralComponents/SpectralFit.h
+SpectralComponents/SpectralFit2.tcc
+SpectralComponents/SpectralList.h
+SpectralComponents/SpectralList2.tcc
+DESTINATION include/casacore/components/SpectralComponents
+)
+
+install (FILES
+ComponentModels.h
+SpectralComponents.h
+DESTINATION include/casacore/components
+)
+
+if (BUILD_TESTING)
+    add_subdirectory (ComponentModels/test)
+    add_subdirectory (SpectralComponents/test)
+endif (BUILD_TESTING)
+

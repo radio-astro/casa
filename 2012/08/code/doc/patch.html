@@ -1,0 +1,181 @@
+
+<html>
+<head>
+<title>Patch AIPS++</title>
+
+<SCRIPT LANGUAGE = "JavaScript1.2" src="javascripts/menu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2" src="javascripts/aipsmenu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2">
+<!--
+ // Function need to place directory relative to docs tree.
+ aMenu = new aipsMenu(".", "#00009C");
+ function onLoad() {
+    if (document.layers) {
+        aMenu.loadMenus();
+    }
+ }
+//-->
+</SCRIPT>
+
+</head>
+
+<body background="gif/watermark.gif" bgcolor="#ffffff" text="#000000" link="#cc0f0f" vlink="#00009c">
+
+<table bgcolor="#00009C" cellpadding=4 cellspacing=0 border=0 width=600 height=25>
+<tr><td>
+<a href="gettingstarted.html" onMouseOver="aMenu.showAipsMenu('gsMenu');">
+<font size=2 face=helvetica  color="#ffffff">
+<b>Getting Started</b></font></a></td>
+<td>
+<a href="user/documentation.html" onMouseOver="aMenu.showAipsMenu('userMenu');">
+<font size=2 face=helvetica color="#ffffff">
+<b>Documentation</b></font></a></td>
+<td>
+<a href="glish/glish.html" onMouseOver="aMenu.showAipsMenu('glishMenu');">
+<font size=2 face=helvetica color="#ffffff">
+<b>Glish</b></font></a></td>
+<td>
+<a href="learnmore.html" onMouseOver="aMenu.showAipsMenu('learnMenu');">
+<font size=2 face=helvetica color="#ffffff">
+<b>Learn More</b></font></a></td>
+<td>
+<a href="programmer/programmer.html" onMouseOver="aMenu.showAipsMenu('progMenu');">
+<font size=2 face=helvetica color="#ffffff">
+<b>Programming</b></font></a></td>
+<td>
+<a href="contactus/contactus.html" onMouseOver="aMenu.showAipsMenu('commMenu');">
+<font size=2 face=helvetica color="#ffffff"><b>
+Contact Us</b></font></a>
+</td></tr></table>
+<table border=0 width=600>
+<tr><td><img src="gif/aipslogo.gif" border=0></td>
+<td> <font size=2 face=helvetica color="#cc0f0f"> <b>VERSIONID</b></font></td>
+<td valign=middle>
+<a href="newsletters/index.html"><img src="gif/tri2.gif" border=0><font size=2 face=helvetica color="#cc0f0f"> <b>News</b></font></a><P>
+<a href="faq/faq.html"><img src="gif/tri2.gif" border=0><font size=2 face=helvetica color="#cc0f0f"> <b>FAQ</b></font></a><P>
+<a href="search/search.html"><img src="gif/tri2.gif" border=0><font size=2 face=helvetica color="#cc0f0f"> <b>Search</b></font></a><P>
+<a href="aips++.html"><img src="gif/tri2.gif" border=0><font size=2 face=helvetica color="#cc0f0f"> <b>Home</b></font></a><P>
+
+</td></tr></table>
+<hr>
+<p>
+<table>
+<tr><td valign=middle>
+<table cellpadding=12 cellspacing=12 border=0 height=200  width=200>
+<tr><td bgcolor="#00009c">
+<a href="contactus/personnel.html"><font face=helvetica color="#ffffff" size=2>
+<b>AIPS++ Group</b></font></a><P>
+<a href="project/consortium.html"><font face=helvetica color="#ffffff" size=2>
+<b>AIPS++ Consortium</b></font></a><P>
+<a href="reference/install.html"><font face=helvetica color="#ffffff" size=2>
+<b>Obtaining AIPS++</b></font></a><P>
+<a href="tour/"><font face=helvetica color="#ffffff" size=2>
+<b>Tour AIPS++</b></font></a><P>
+<a href="contactus/mirror.html"><font face=helvetica color="#ffffff" size=2>
+<b>AIPS++ Mirror Sites</b></font></a><P>
+<a href="../../released/docs/aips++.html"><font face=helvetica color="#ffffff" size=2>
+<b>Current Release (v1.7) Documentation</b></font></a><P>
+</td></tr></table>
+</td><td valign=middle>
+<p>
+
+<font face=helvetica>
+	Please download an updated <a href="ftp://aips2.nrao.edu/pub/patches/os.g" type="application/octet-stream">os.g</a>.  This
+	os.g is a drop in replacement for the one found in libexec.  Step-by-step instructions:
+	<ol>
+		<li>Logon as the user who installed aips++
+		<li>chmod u+w $AIPSROOT/linux/libexec/os.g
+		<li>cp os.g $AIPSROOT/linux/libexec
+	</ol>
+	where $AIPSROOT is the directory in which you installed AIPS++ (i.e. /usr/local/aips++).
+	If you installed the solaris version please replace linux with sun4sol.
+<P><B>Notice to Users</B>
+<P>
+        We have identified a bug in the system which in rare circumstances
+can cause a loss of data. You have been contacted as a user of the package.
+<P>
+        This problem was discovered through the use of the Save button of
+the PGPlot GUI interface. The PGPlotter Save button is intended to store the
+sequence of PGPlot commands in an AIPS++ table, which is a directory on disk.
+Its first action is to direct the operating system interface to remove, if it
+exists, the display list with the name specified in the entry field.
+If the filename isn't specified (default value is <unset>), it generates a
+name (e.g., pgplotter.24-Jan-2003:1.plot); if a bad filename is provided, it
+will provide an error message. However, if the entry field is explicitly
+cleared and left empty, the filename generated for deletion is the current
+directory, which will be removed if the user has permission to do so. This
+is a rare and unanticipated combination of user interaction with the interface
+and a specific deficiency in the code.
+<P>
+        The operating system interface has been patched to explicitly prevent
+this behavior within AIPS++; there is no native problem within PGPLOT. The
+current stable has been updated; builds subsequent to 18.456 include this 
+patch. We have added an alert to our home page.
+<P>
+If you are running AIPS++ ouside of the site installations, please apply the
+patch detailed above.
+</font>
+
+</td></tr></table>
+<tr>
+<hr noshade>
+<table cellpadding=4 cellspacing=2 border=0 width="100%">
+
+<td align=center>
+<a href="http://www.astron.nl">
+	<img src="gif/astronslogo.gif" alt="ASTRON" border=0></a>
+</td>
+
+<td align=center><a href="http://www.atnf.csiro.au">
+<img src="gif/atnf.gif" border=0 alt="ATNF"></a>
+</td>
+
+<td align=center><a href="http://bima.astro.umd.edu/bima/home.html">
+<img src="gif/bima.gif" border=0 alt="BIMA"></a>
+</td>
+
+<td align=center><a href="http://www.jb.man.ac.uk">
+<img src="gif/jbstill.gif" border=0, alt="JBO/MERLIN"></a>
+</td>
+
+<td align=center><a href="http://www.nrao.edu">
+<img src="gif/nrao54.gif" alt="NRAO" border=0></a>
+</td>
+</tr>
+<!--
+<tr>
+<td align=center><a href="http://www.atnf.csiro.au">
+<font face=helvetica color="#0000ff"><center><b>ATNF</b></center></a></td>
+
+<td align=center><a href="http://bima.astro.umd.edu/bima/home.html">
+<font face=helvetica color="#0000ff"><center><b>BIMA</b></center></a></td>
+
+<td align=center><a href="http://www.jb.man.ac.uk">
+<font face=helvetica color="#0000ff"><center><b>JBO</a>/<a href="http://www.
+jb.man.ac.uk/merlin"><font face=helvetica color="#0000ff">MERLIN</b></a></ce
+nter></td>
+
+<td align=center>
+<a href="http://www.astron.nl">
+	<font face=helvetica color="#0000ff"><center><b>ASTRON</b></center></a></td>
+
+<td align=center><a href="http://www.nrao.edu">
+<font face=helvetica color="#0000ff"><center><b>NRAO</b></center></a></t
+</tr>
+-->
+</table>
+<hr noshade>
+<i>
+Please send any comments or questions about <font
+	    face=helvetica>AIPS++</font>
+to <a href="mailto:aips2-requests@nrao.edu">aips2-requests@nrao.edu</a><p>
+
+
+Copyright &#169; 1995-2000,2001,2002,2003 Associated Universities Inc.,
+Washington, D.C.</i>
+</body>
+</html>
+
+
+
+

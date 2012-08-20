@@ -1,0 +1,50 @@
+Requirements
+============
+
+* scons >= 1.1
+* rpfits >= 2.19
+* cfitso >= 2
+* python >= 2.5
+* boost >= 1.40
+* casacore >= 1.5
+* wcslib >= 4.13
+
+Installation
+============
+
+ASAP is based on c++ and python. It uses python's standard packaging tool
+to build and install::
+
+   python setup.py install
+
+If the dependencies are in custom locations there are two ways to build
+ASAP:
+
+ * edit the file 'setup.cfg' then run 'python setup.py install'
+ * give command-line parameters; run 'python setup.py build_ext' with the
+   options and then 'python setup.py install' 
+   (see python setup.py build_ext --help for the available options)
+
+Note: The installation must be done as 'root' or using 'sudo'
+
+Obtaining the data directory
+============================
+
+ASAP needs some meta-data which updates periodically.
+The data repository can be obtained separately after installing ASAP.
+Run as root (sudo)::
+
+    asap_update_data
+
+This will install the data repository into the correct location.
+
+Creating a binary distribution
+==============================
+
+You can make a binary distribution for you platform by running::
+
+    python setup.py bdist_egg
+
+This will create an 'egg' archive in the subdirectory 'dist'.
+Send this to asap@atnf.csiro.au so other people can share it.
+
