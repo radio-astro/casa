@@ -237,31 +237,31 @@ class partition_test2(test_base):
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
         
-#    def test_all_columns(self):
-#        '''Partition: datacolumn=all'''
-#        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
-#        time.sleep(10)
-#        
-#        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
-#        
-#        # Take the dictionary and compare with original MS
-#        thisdict = listpartition(vis=self.mmsfile, createdict=True)
-#        
-#        # Compare nrows of all scans in selection
-#        slist = ph.getMMSScans(thisdict)
-#        self.assertEqual(slist.__len__(), 2)
-#        for s in slist:
-#            mmsN = ph.getMMSScanNrows(thisdict, s)
-#            msN = ph.getScanNrows(self.msfile, s)
-#            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
-#                             %(s, mmsN, msN))
-#
-#        # Compare spw IDs
-#        for s in slist:
-#            mms_spw = ph.getSpwIds(self.mmsfile, s)
-#            ms_spw = ph.getSpwIds(self.msfile, s)
-#            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-#                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
+    def test_all_columns(self):
+        '''Partition: datacolumn=all'''
+        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+        time.sleep(10)
+        
+        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        
+        # Take the dictionary and compare with original MS
+        thisdict = listpartition(vis=self.mmsfile, createdict=True)
+        
+        # Compare nrows of all scans in selection
+        slist = ph.getMMSScans(thisdict)
+        self.assertEqual(slist.__len__(), 2)
+        for s in slist:
+            mmsN = ph.getMMSScanNrows(thisdict, s)
+            msN = ph.getScanNrows(self.msfile, s)
+            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
+                             %(s, mmsN, msN))
+
+        # Compare spw IDs
+        for s in slist:
+            mms_spw = ph.getSpwIds(self.mmsfile, s)
+            ms_spw = ph.getSpwIds(self.msfile, s)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
