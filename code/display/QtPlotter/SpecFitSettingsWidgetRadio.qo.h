@@ -84,10 +84,13 @@ private:
 	void setCanvas( QtCanvas* canvas );
 	void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
 	String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
-	void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const;
 	void clearEstimates();
 	void clear();
 	void resolveOutputLogFile( );
+	/**
+				 * Decides if the units represent velocity, wavelength, or frequency.
+				 */
+				void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
 	void processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
 	void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 	bool processFitResultGaussian( const SpectralElement* solution,

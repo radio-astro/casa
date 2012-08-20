@@ -231,6 +231,7 @@ QString GaussianEstimateDialog::getUnits() const {
 
 void GaussianEstimateDialog::searchMolecules(){
 	if ( ! searchDialog.isVisible() ){
+		searchDialog.updateReferenceFrame();
 		searchDialog.show();
 	}
 }

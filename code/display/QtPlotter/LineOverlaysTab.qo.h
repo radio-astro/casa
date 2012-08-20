@@ -22,43 +22,45 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef LINEOVERLAYSTAB_QO_H
+#define LINEOVERLAYSTAB_QO_H
 
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
+#include <QtGui/QWidget>
+#include <display/QtPlotter/LineOverlaysTab.ui.h>
+#include <display/QtPlotter/LineOverlaysSearchResultsDialog.qo.h>
+#include <display/QtPlotter/SearchRedshiftDialog.qo.h>
+#include <casa/BasicSL/String.h>
 
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
 
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
+class QtCanvas;
+class SearchMoleculesWidget;
+
+class LineOverlaysTab : public QWidget
+{
+    Q_OBJECT
+
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+    LineOverlaysTab(QWidget *parent = 0);
+    void setRange( float min, float max, String units );
+    void setInitialReferenceFrame( QString referenceStr );
+    void setCanvas( QtCanvas* canvas );
+    ~LineOverlaysTab();
+
+private slots:
+	void graphSelectedLines();
+	void graphSelectedSpecies();
+	void searchCompleted();
+	void eraseLines();
+	void findRedshift( double center, double peak );
 
 private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
-
-	void init();
+    Ui::LineOverlaysTabClass ui;
+    SearchMoleculesWidget* searchWidget;
+    QtCanvas* pixelCanvas;
+    LineOverlaysSearchResultsDialog searchResults;
+    SearchRedshiftDialog searchRedshiftDialog;
 };
-
-} /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
+}
+#endif // LINEOVERLAYSTAB_QO_H

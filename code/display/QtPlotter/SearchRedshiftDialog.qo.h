@@ -22,43 +22,50 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef SEARCHREDSHIFTDIALOG_QO_H
+#define SEARCHREDSHIFTDIALOG_QO_H
 
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
+#include <QtGui/QDialog>
+#include <QProgressDialog>
+#include <casa/BasicSL/String.h>
+#include <display/QtPlotter/SearchRedshiftDialog.ui.h>
+#include <measures/Measures/MRadialVelocity.h>
+#include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MDoppler.h>
 
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
+class SearchThread;
+
+class SearchRedshiftDialog : public QDialog
+{
+    Q_OBJECT
+
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+    SearchRedshiftDialog(QWidget *parent = 0);
+    void setCenter( double centerVal );
+    void setUnits( QString unitStr );
+    void setDatabasePath( String path );
+    void setLocalSearch( bool local );
+    void setFrequencyType( MRadialVelocity::Types mType );
+    void setDopplerType( MDoppler::Types type );
+    ~SearchRedshiftDialog();
+
+public slots:
+	void show();
+	void findRedshift();
+	void searchFinished();
 
 private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
-
-	void init();
+    void setResultsVisible( bool visible );
+    double getTargetFrequency() const;
+    Ui::SearchRedshiftDialogClass ui;
+    String databasePath;
+    bool localSearch;
+    SearchThread* searchThread;
+    QProgressDialog progressBar;
+    MFrequency::Types frequencyType;
+    MDoppler::Types dopplerType;
 };
-
-} /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
+}
+#endif // SEARCHREDSHIFTDIALOG_QO_H

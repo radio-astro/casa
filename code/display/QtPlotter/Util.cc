@@ -156,6 +156,16 @@ namespace casa {
 		return noBrackets;
 	}
 
+	QString Util::stripFont( QString unitStr ){
+		int openingBracketEnd = unitStr.indexOf( ">");
+		int endBracketStart = unitStr.indexOf( "<", openingBracketEnd);
+		QString strippedUnits = unitStr;
+		if ( openingBracketEnd > 0 && endBracketStart > 0 ){
+			strippedUnits = unitStr.mid(openingBracketEnd + 1, endBracketStart - openingBracketEnd -1 );
+		}
+		return strippedUnits;
+	}
+
 
 
 

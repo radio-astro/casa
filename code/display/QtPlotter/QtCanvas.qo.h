@@ -40,6 +40,7 @@
 #include <display/QtPlotter/CanvasCurve.h>
 #include <display/QtPlotter/WorldCanvasTranslator.h>
 #include <display/QtPlotter/ProfileFitMarker.h>
+#include <display/QtPlotter/MolecularLine.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -91,12 +92,14 @@ public:
 	int getLineCount();
 	void curveLabelsChanged();
 	void clearCurve();
+	void clearMolecularLines( bool refresh = true );
 	void setDataRange();
 	void setImageMode(bool);
 	QPixmap* graph();
 	void drawBackBuffer(QPainter *);
 	//Draws a vertical line indicating the current frame.
 	void drawFrameMarker( QPainter* );
+	QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 
 	//Plotting curves
 	void plotPolyLines(QString);
@@ -107,6 +110,7 @@ public:
 					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
+	void addMolecularLine(MolecularLine* molecularLine );
 
 	template<class T> void plotPolyLine(const Matrix<T> &verts);
 
@@ -181,17 +185,23 @@ public:
 	void setLegendPosition( int position );
 	int getLegendPosition() const;
 
+	enum TaskMode {UNKNOWN_MODE, SPECTRAL_LINE_MODE, LINE_OVERLAY_MODE, MODE_COUNT };
+
+
 public slots:
    void zoomIn();
    void zoomOut();
    void zoomNeutral();
    void gaussianCenterPeakSelected();
    void gaussianFWHMSelected();
+   void findRedshift();
+   void changeTaskMode( int mode );
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
 	void channelSelect(float xvalue);
 	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
+	void findRedshiftAt( double center, double peak );
 	void curvesChanged();
 
 protected:
@@ -319,10 +329,9 @@ private:
 	 * the user can use to specify Gaussian estimates.
 	 */
 	void initGaussianEstimateContextMenu();
-
-	QString getUnits( QtPlotSettings::AxisIndex axisIndex );
-
+	void initLineOverlayContextMenu();
 	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
+	bool storeClickPosition( QMouseEvent* event );
 
 	const int MARGIN_LEFT;
 	const int MARGIN_BOTTOM;
@@ -339,6 +348,7 @@ private:
 	std::map<int, CanvasCurve> curveMap;
 	std::vector<QtPlotSettings> zoomStack;
 	std::map<int, CurveData> markerStack;
+	QList<MolecularLine*> molecularLineStack;
 	std::pair<double,double> topAxisRange;
 
 	int curZoom;
@@ -373,6 +383,8 @@ private:
 	bool displayStepFunction;
 	QString toolTipXUnit;
 	QString toolTipYUnit;
+
+	QMenu lineOverlayContextMenu;
 
 	//Profile Fitting Gaussian Estimation
 	QMenu gaussianContextMenu;
@@ -417,6 +429,9 @@ private:
 	//The x location for the vertical line representing the
 	//current frame position.
 	float framePositionX;
+
+	//Indicates the current work focus of the profiler
+	TaskMode taskMode;
 
 };
 

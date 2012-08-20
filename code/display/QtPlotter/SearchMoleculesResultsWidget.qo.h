@@ -22,40 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef SEARCHMOLECULES_QO_H
-#define SEARCHMOLECULES_QO_H
+#ifndef SEARCHMOLECULESRESULTSWIDGET_QO_H
+#define SEARCHMOLECULESRESULTSWIDGET_QO_H
 
-#include <QtGui/QDialog>
-#include <display/QtPlotter/SearchMoleculesDialog.ui.h>
-#include <casa/aips.h>
+#include <QtGui/QWidget>
+#include <casa/Containers/Record.h>
+#include <display/QtPlotter/SearchMoleculesResultsWidget.ui.h>
+#include <display/QtPlotter/SearchMoleculesResultDisplayer.h>
 namespace casa {
 
-class SearchMoleculesWidget;
-class SearchMoleculesResultsWidget;
-
-class SearchMoleculesDialog : public QDialog
+class SearchMoleculesResultsWidget : public QWidget, public SearchMoleculesResultDisplayer
 {
     Q_OBJECT
 
 public:
-    SearchMoleculesDialog(QWidget *parent = 0);
+    SearchMoleculesResultsWidget(QWidget *parent = 0);
+    ~SearchMoleculesResultsWidget();
     QList<int> getLineIndices() const;
-    bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
-    void setRange( float min, float max, QString units );
-    void searchFinished();
-    void updateReferenceFrame();
-    QString getUnit() const;
-    ~SearchMoleculesDialog();
-
-signals:
-	void moleculesSelected();
-
+    bool getLine(int lineIndex, Float& peak, Float& center,
+       		QString& molecularName ) const;
+    void getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const;
+    int getLineCount() const;
+    int getSelectedLineCount() const;
+    void displaySearchResults( const Record& results );
 
 private:
-	SearchMoleculesWidget* searchWidget;
-	SearchMoleculesResultsWidget* searchResultsWidget;
-    Ui::SearchMoleculesDialog ui;
+
+    void initializeTable();
+    void setTableValue( int row, int col, const QString& val );
+    void setTableValueHTML( int row, int col, const QString& val );
+    void setTableValue( int row, int col, double val );
+    Ui::SearchMoleculesResultsWidgetClass ui;
+    enum ResultColumns{ COL_SPECIES, COL_CHEMICAL, COL_FREQUENCY,
+        	COL_QN, COL_INTENSITY, COLUMN_COUNT};
 
 };
+
 }
-#endif // SEARCHMOLECULES_QO_H
+
+#endif // SEARCHMOLECULESRESULTSWIDGET_H

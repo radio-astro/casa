@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -21,44 +21,25 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//#
-
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
-
+#include "SearcherFactory.h"
+#include "spectrallines/Splatalogue/Searcher.h"
+#include "spectrallines/Splatalogue/SearcherLocal.h"
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
-public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+Searcher* SearcherFactory::getSearcher( bool /*local*/ ){
+	SearcherLocal* localSearcher = new SearcherLocal();
+	return localSearcher;
+}
 
-private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
 
-	void init();
-};
+
+SearcherFactory::SearcherFactory(){
+	// TODO Auto-generated constructor stub
+
+}
+
+SearcherFactory::~SearcherFactory() {
+	// TODO Auto-generated destructor stub
+}
 
 } /* namespace casa */
-#endif /* MOLECULARLINE_H_ */

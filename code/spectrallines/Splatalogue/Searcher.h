@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -21,44 +21,37 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//#
+#ifndef SEARCHER_H_
+#define SEARCHER_H_
 
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
+#include <casa/BasicSL/String.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
+//Interface needed to support molecular line searching and identification.
+
+class Searcher {
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+	Searcher();
+	virtual void setChemicalNames( const Vector<String>& chemNames ) = 0;
+	virtual void setSpeciesNames( const Vector<String>& speciesNames ) = 0;
+	virtual void setDatabasePath( const String& databasePath ) = 0;
+	virtual void setResultFile( const String& fileName ) = 0;
+	virtual void setSearchRangeFrequency( double minValue, double maxValue ) = 0;
+	virtual Record doSearch(String& errorMsg) = 0;
 
-private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
-
-	void init();
+	virtual void setAstroFilterTop20() = 0;
+	virtual void setAstroFilterPlanetaryAtmosphere() = 0;
+	virtual void setAstroFilterHotCores() = 0;
+	virtual void setAstroFilterDarkClouds() = 0;
+	virtual void setAstroFilterDiffuseClouds( ) = 0;
+	virtual void setAstroFilterComets() = 0;
+	virtual void setAstroFilterAgbPpnPn() = 0;
+	virtual void setAstroFilterExtragalactic() = 0;
+	virtual ~Searcher();
 };
 
 } /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
+#endif /* SEARCHER_H_ */

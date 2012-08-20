@@ -346,20 +346,20 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page">
        <widget class="QTabWidget" name="functionTabs">
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>20</y>
+          <y>0</y>
           <width>811</width>
-          <height>221</height>
+          <height>241</height>
          </rect>
         </property>
         <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -398,6 +398,33 @@
            <widget class="SettingsWidget" name="specFitSettingsWidget" native="true"/>
           </item>
          </layout>
+        </widget>
+        <widget class="QWidget" name="tab_3">
+         <attribute name="title">
+          <string>Line Overlays</string>
+         </attribute>
+         <widget class="LineOverlaysTab" name="lineOverlaysHolder" native="true">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>791</width>
+            <height>201</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>791</width>
+            <height>180</height>
+           </size>
+          </property>
+         </widget>
         </widget>
        </widget>
       </widget>
@@ -626,6 +653,11 @@
    <class>SpectralPositioningWidget</class>
    <extends>QWidget</extends>
    <header>display/QtPlotter/SpectralPositioningWidget.qo.h</header>
+  </customwidget>
+  <customwidget>
+   <class>LineOverlaysTab</class>
+   <extends>QWidget</extends>
+   <header>display/QtPlotter/LineOverlaysTab.qo.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

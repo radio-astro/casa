@@ -42,7 +42,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static void getRa(double radians, int& raHour, int& raMin, double& raSec);
 			static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
 			static void minMax( double& min, double& max, const Vector<Double>& values );
+
+			/**
+			 * Designed to take an input string of the format '[km/s]' and return 'km/s'.
+			 */
 			static QString stripBrackets( QString unitStr );
+
+			/**
+			 * Designed to take an input string of the format <font color='black'>km/s</font>'
+			 * and return 'km/s'.
+			 */
+			static QString stripFont( QString unitStr );
 		private:
 			Util();
 			virtual ~Util();

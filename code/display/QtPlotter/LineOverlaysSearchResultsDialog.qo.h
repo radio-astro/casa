@@ -1,3 +1,4 @@
+
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,42 +24,44 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
+#ifndef LINEOVERLAYSSEARCHRESULTSDIALOG_QO_H
+#define LINEOVERLAYSSEARCHRESULTSDIALOG_QO_H
+#include <QtGui/QDialog>
+#include <display/QtPlotter/LineOverlaysSearchResultsDialog.ui.h>
+#include <display/QtPlotter/SearchMoleculesResultDisplayer.h>
+#include <casa/Containers/Record.h>
 #include <casa/aips.h>
-
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
+class SearchMoleculesResultsWidget;
+
+class LineOverlaysSearchResultsDialog : public QDialog, public SearchMoleculesResultDisplayer
+{
+    Q_OBJECT
+
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+    LineOverlaysSearchResultsDialog(QWidget *parent = 0);
+    QList<int> getLineIndices() const;
+    bool getLine(int lineIndex, Float& peak, Float& center,
+           		QString& molecularName ) const;
+    void getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const;
+    void displaySearchResults( const Record& results );
+    int getLineCount() const;
+    ~LineOverlaysSearchResultsDialog();
+
+signals:
+	void graphSelectedLines();
+	void graphSelectedSpecies();
+
+private slots:
+	void drawSelectedLines();
+	void drawSelectedSpecies();
 
 private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
-
-	void init();
+    Ui::LineOverlaysSearchResultsDialogClass ui;
+    SearchMoleculesResultsWidget* searchResultsWidget;
+    const static QString NO_LINES_SELECTED;
 };
 
-} /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
+}
+#endif // LINEOVERLAYSSEARCHRESULTSDIALOG_QO_H

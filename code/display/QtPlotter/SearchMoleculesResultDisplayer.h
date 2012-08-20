@@ -23,42 +23,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
-
+#ifndef SEARCHMOLECULESRESULTDISPLAYER_H_
+#define SEARCHMOLECULESRESULTDISPLAYER_H_
+#include <casa/Containers/Record.h>
 namespace casa {
+/**
+ * Interface provides decoupling between classes that initialize a search
+ * such as SearchMoleculesWidget and classes that display the results of
+ * a search such as SearchMoleculesResultsWidget.
+ */
 
-class MolecularLine : public QwtPlotMarker {
+class SearchMoleculesResultDisplayer {
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
-
-private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
-
-	void init();
+	SearchMoleculesResultDisplayer();
+	virtual void displaySearchResults( const Record& results ) = 0;
+	virtual ~SearchMoleculesResultDisplayer();
 };
 
 } /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
+#endif /* SEARCHMOLECULESRESULTDISPLAYER_H_ */

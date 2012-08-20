@@ -37,13 +37,16 @@
 #include <tables/Tables/TableParse.h>
 #include <fcntl.h>
 
+#include <iostream>
+using namespace std;
+
 namespace casa {
 
 SearchEngine::SearchEngine(
 	const SplatalogueTable* const table, const Bool list,
 	const String& logfile, const Bool append
 ) : _log(new LogIO), _table(table), _logfile(logfile),
-	_list(list), _append(append) {
+	_list(list), _append(append){
 	if (!logfile.empty()) {
         ImageInputProcessor::OutputStruct logfile;
         logfile.label = "logfile";
@@ -87,9 +90,11 @@ SplatalogueTable* SearchEngine::search(
 		}
 		query << "))";
 	}
+
 	if (recommendedOnly) {
 		query << " AND (" << SplatalogueTable::RECOMMENDED << ")";
 	}
+
 	if (chemNames.size() > 0) {
 		query << " AND (" << SplatalogueTable::CHEMICAL_NAME << " IN (";
 		for (uInt i=0; i<chemNames.size(); i++) {

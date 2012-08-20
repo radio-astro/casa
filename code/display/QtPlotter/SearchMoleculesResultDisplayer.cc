@@ -22,43 +22,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#ifndef MOLECULARLINE_H_
-#define MOLECULARLINE_H_
-
-#include <QString>
-#include <qwt_plot_marker.h>
-#include <casa/aips.h>
+#include "SearchMoleculesResultDisplayer.h"
 
 namespace casa {
 
-class MolecularLine : public QwtPlotMarker {
-public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	virtual ~MolecularLine();
+SearchMoleculesResultDisplayer::SearchMoleculesResultDisplayer() {
+	// TODO Auto-generated constructor stub
 
-private:
-	float center;
-	float peak;
-	QString label;
-	QColor lineColor;
+}
 
-	void init();
-};
+SearchMoleculesResultDisplayer::~SearchMoleculesResultDisplayer() {
+	// TODO Auto-generated destructor stub
+}
 
 } /* namespace casa */
-#endif /* MOLECULARLINE_H_ */
