@@ -370,10 +370,17 @@ void SolvableVisCal::setApply(const Record& apply) {
   */
 
   String fieldstr;
+  String fieldtype("");
   if (apply.isDefined("fieldstr")) {
     fieldstr=apply.asString("fieldstr");
     //    cout << "SVC::setApply: fieldstr=" << fieldstr  << endl;
+    if (fieldstr=="nearest") {
+      fieldtype="nearest";
+      fieldstr="";
+    }
   }
+  //cout << "SVC::setApply: fieldstr=" << fieldstr  << endl;
+  //cout << "SVC::setApply: fieldtype=" << fieldtype  << endl;
 
   if (apply.isDefined("spwmap")) 
     spwMap().assign(apply.asArrayInt("spwmap"));
@@ -398,9 +405,9 @@ void SolvableVisCal::setApply(const Record& apply) {
   loadMemCalTable(calTableName(),fieldstr);
 
   // Make the interpolation engine
-  // TBD: freq-axis interpolation (force linear, for now)
-  // TBD: pass in spwmap
-  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,nSpw(),spwMap());
+  MeasurementSet ms(msName());
+  ROMSColumns mscol(ms);
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,mscol,spwMap());
 
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need
@@ -930,7 +937,9 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     if (ci_)
       delete ci_;
 
-    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear",nSpw(),spwMap());
+    MeasurementSet ms(msName());
+    ROMSColumns mscol(ms);
+    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear","",mscol,spwMap());
 
   }
 

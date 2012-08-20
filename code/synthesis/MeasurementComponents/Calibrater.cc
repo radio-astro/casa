@@ -546,7 +546,7 @@ Bool Calibrater::setapply(const String& type,
   applyparDesc.addField ("table", TpString);
   applyparDesc.addField ("interp", TpString);
   applyparDesc.addField ("spw", TpArrayInt);
-  applyparDesc.addField ("field", TpArrayInt);
+  //  applyparDesc.addField ("field", TpArrayInt);
   applyparDesc.addField ("fieldstr", TpString);
   applyparDesc.addField ("calwt",TpBool);
   applyparDesc.addField ("spwmap",TpArrayInt);
@@ -558,7 +558,7 @@ Bool Calibrater::setapply(const String& type,
   applypar.define ("table", table);
   applypar.define ("interp", interp);
   applypar.define ("spw",getSpwIdx(spw));
-  applypar.define ("field",getFieldIdx(field));
+  //  applypar.define ("field",getFieldIdx(field));
   applypar.define ("fieldstr",field);
   applypar.define ("calwt",calwt);
   applypar.define ("spwmap",spwmap);
@@ -2639,6 +2639,8 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TSYS",*vs_p);
     else if (utype.contains("EVLAGAIN"))
       cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
+//    else if (utype.contains("OPAC"))
+//      cal_ = createSolvableVisCal("TOPAC",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 
