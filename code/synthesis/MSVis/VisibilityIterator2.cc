@@ -206,11 +206,6 @@ FrequencySelection::getFrameOfReference () const
     return referenceFrame_p;
 }
 
-String
-FrequencySelection::toString () const
-{
-    return utilj::format ("frame='%s'", frameName (referenceFrame_p).c_str());
-}
 
 FrequencySelections::FrequencySelections ()
 {}
@@ -284,11 +279,22 @@ FrequencySelectionChannels::clone () const
     return new FrequencySelectionChannels (* this);
 }
 
+String
+FrequencySelectionChannels::toString () const
+{
+    String s = utilj::format ("frame='%s' {", frameName (referenceFrame_p).c_str());
+
+    for (
+
+}
+
 FrequencySelection *
 FrequencySelectionRawFrequency::clone () const
 {
     return new FrequencySelectionRawFrequency (* this);
 }
+
+
 
 FrequencySelection *
 FrequencySelectionReferential::clone () const
@@ -1508,87 +1514,87 @@ VisibilityIterator2::isWritable () const
 }
 
 void
-VisibilityIterator2::setFlag (const Matrix<Bool>& flag)
+VisibilityIterator2::writeFlag (const Matrix<Bool>& flag)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setFlag (flag);
+    writeImpl_p->writeFlag (flag);
 }
 
 void
-VisibilityIterator2::setFlag (const Cube<Bool>& flag)
+VisibilityIterator2::writeFlag (const Cube<Bool>& flag)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setFlag (flag);
+    writeImpl_p->writeFlag (flag);
 }
 void
-VisibilityIterator2::setFlagCategory(const Array<Bool>& flagCategory)
+VisibilityIterator2::writeFlagCategory(const Array<Bool>& flagCategory)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setFlagCategory (flagCategory);
-}
-
-void
-VisibilityIterator2::setFlagRow (const Vector<Bool>& rowflags)
-{
-    CheckImplementationPointerW ();
-    writeImpl_p->setFlagRow (rowflags);
+    writeImpl_p->writeFlagCategory (flagCategory);
 }
 
 void
-VisibilityIterator2::setSigma (const Vector<Float>& sig)
+VisibilityIterator2::writeFlagRow (const Vector<Bool>& rowflags)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setSigma (sig);
+    writeImpl_p->writeFlagRow (rowflags);
 }
 
 void
-VisibilityIterator2::setSigmaMat (const Matrix<Float>& sigmat)
+VisibilityIterator2::writeSigma (const Vector<Float>& sig)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setSigmaMat (sigmat);
+    writeImpl_p->writeSigma (sig);
 }
 
 void
-VisibilityIterator2::setVis (const Matrix<CStokesVector>& vis, DataColumn whichOne)
+VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setVis (vis, whichOne);
+    writeImpl_p->writeSigmaMat (sigmat);
 }
 
 void
-VisibilityIterator2::setVis (const Cube<Complex>& vis, DataColumn whichOne)
+VisibilityIterator2::writeVis (const Matrix<CStokesVector>& vis, DataColumn whichOne)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setVis (vis, whichOne);
+    writeImpl_p->writeVis (vis, whichOne);
 }
 
 void
-VisibilityIterator2::setVisAndFlag (const Cube<Complex>& vis, const Cube<Bool>& flag,
+VisibilityIterator2::writeVis (const Cube<Complex>& vis, DataColumn whichOne)
+{
+    CheckImplementationPointerW ();
+    writeImpl_p->writeVis (vis, whichOne);
+}
+
+void
+VisibilityIterator2::writeVisAndFlag (const Cube<Complex>& vis, const Cube<Bool>& flag,
                                    DataColumn whichOne)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setVisAndFlag (vis, flag, whichOne);
+    writeImpl_p->writeVisAndFlag (vis, flag, whichOne);
 }
 
 void
-VisibilityIterator2::setWeight (const Vector<Float>& wt)
+VisibilityIterator2::writeWeight (const Vector<Float>& wt)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setWeight (wt);
+    writeImpl_p->writeWeight (wt);
 }
 
 void
-VisibilityIterator2::setWeightMat (const Matrix<Float>& wtmat)
+VisibilityIterator2::writeWeightMat (const Matrix<Float>& wtmat)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setWeightMat (wtmat);
+    writeImpl_p->writeWeightMat (wtmat);
 }
 
 void
-VisibilityIterator2::setWeightSpectrum (const Cube<Float>& wtsp)
+VisibilityIterator2::writeWeightSpectrum (const Cube<Float>& wtsp)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->setWeightSpectrum (wtsp);
+    writeImpl_p->writeWeightSpectrum (wtsp);
 }
 
 void

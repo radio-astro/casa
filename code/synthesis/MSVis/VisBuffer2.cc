@@ -12,33 +12,21 @@
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/UtilJ.h>
 
-
 namespace casa {
 
 using namespace vi;
 
-VisBuffer2::VisBuffer2()
+VisBuffer2::VisBuffer2(Type type)
 : vb_p (0)
 {
-    vb_p = new VisBufferImpl2 ();
+    construct (0, type);
 }
 
-
-VisBuffer2::VisBuffer2(const VisBuffer2 & vb)
+VisBuffer2::VisBuffer2 (ROVisibilityIterator2 * vi, Type type)
 : vb_p (0)
 {
-    Assert (vb.vb_p != 0);
 
-    vb_p = new VisBufferImpl2 (* vb.vb_p);
-}
-
-VisBuffer2::VisBuffer2 (ROVisibilityIterator2 & vi)
-: vb_p (0)
-{
-    // Create the proper underlying implementation
-    // (until async gets added just do a simple one).
-
-    vb_p = new VisBufferImpl2 (vi);
+    construct (vi, type);
 }
 
 
@@ -47,24 +35,29 @@ VisBuffer2::~VisBuffer2()
     delete vb_p;
 }
 
-VisBuffer2 &
-VisBuffer2::operator=(const VisBuffer2 & other)
-{
-    * vb_p = * other.vb_p;
-
-    return * this;
-}
-
 void
-VisBuffer2::assign(const VisBuffer2 & vb, Bool copy)
+VisBuffer2::construct (ROVisibilityIterator2 * vi, Type type)
 {
-    vb_p->assign (vb, copy);
-}
+    // Create the proper underlying implementation
+    // (until async gets added just do a simple one).
 
-VisBuffer2 *
-VisBuffer2::clone () const
-{
-    return vb_p->clone  ();
+    switch (type){
+
+    case Plain:
+
+        vb_p = new VisBufferImpl2 (vi);
+        break;
+
+    case Asynchronous:
+        Assert (False);
+        break;
+
+    default:
+
+        ThrowIf (True, utilj::format ("Unknown VisBuffer type id (%d)", type));
+        break;
+
+    }
 }
 
 const ROVisibilityIterator2 *
@@ -139,22 +132,10 @@ VisBuffer2::azel0(Double time) const
     return vb_p->azel0 (time);
 }
 
-void
-VisBuffer2::azel0Vec(Double time, Vector<Double>& azelVec) const
-{
-    vb_p->azel0Vec (time, azelVec);
-}
-
 Vector<MDirection>
 VisBuffer2::azel(Double time) const
 {
     return vb_p->azel (time);
-}
-
-void
-VisBuffer2::azelMat(Double time, Matrix<Double>& azelMat) const
-{
-    vb_p->azelMat (time, azelMat);
 }
 
 Double
@@ -188,15 +169,9 @@ VisBuffer2::resetWeightsUsingSigma ()
 }
 
 void
-VisBuffer2::updateCoordInfo(const VisBuffer2 * vb, const Bool dirDependent)
+VisBuffer2::copyCoordinateInfo(const VisBuffer2 & other, Bool includeDirections)
 {
-    vb_p->updateCoordInfo (vb, dirDependent);
-}
-
-void
-VisBuffer2::copyCoordInfo(const VisBuffer2 & other, Bool force)
-{
-    vb_p->copyCoordInfo (other, force);
+    vb_p->copyCoordinateInfo (other.vb_p, includeDirections);
 }
 
 Bool
@@ -260,15 +235,9 @@ VisBuffer2::antenna2 () const
 }
 
 Int
-VisBuffer2::arrayId () const
+VisBuffer2::arrayId (Int row) const
 {
     return vb_p->arrayId();
-}
-
-const Vector<Int> &
-VisBuffer2::channel () const
-{
-    return vb_p->channel();
 }
 
 const Vector<SquareMatrix<Complex, 2> > &
@@ -277,38 +246,14 @@ VisBuffer2::cjones () const
     return vb_p->cjones();
 }
 
-const Cube<Complex> &
-VisBuffer2::correctedVisCube () const
-{
-    return vb_p->correctedVisCube();
-}
-
-void
-VisBuffer2::setCorrectedVisCube (const Cube<Complex> & correctedVisCube)
-{
-    vb_p->setCorrectedVisCube(correctedVisCube);
-}
-
-const Matrix<CStokesVector> &
-VisBuffer2::correctedVisibility () const
-{
-    return vb_p->correctedVisibility();
-}
-
-void
-VisBuffer2::setCorrectedVisibility (const Matrix<CStokesVector> & correctedVisibility)
-{
-    vb_p->setCorrectedVisibility(correctedVisibility);
-}
-
 const Vector<Int> &
-VisBuffer2::corrType () const
+VisBuffer2::correlationType (Int row) const
 {
     return vb_p->corrType();
 }
 
 Int
-VisBuffer2::dataDescriptionId () const
+VisBuffer2::dataDescriptionId (Int row) const
 {
     return vb_p->dataDescriptionId();
 }
@@ -356,7 +301,7 @@ VisBuffer2::feed2_pa () const
 }
 
 Int
-VisBuffer2::fieldId () const
+VisBuffer2::fieldId (Int row) const
 {
     return vb_p->fieldId();
 }
@@ -409,23 +354,6 @@ VisBuffer2::setFlagRow (const Vector<Bool>& flagRow)
     vb_p->setFlagRow(flagRow);
 }
 
-const Cube<Float> &
-VisBuffer2::floatDataCube () const
-{
-    return vb_p->floatDataCube();
-}
-
-void
-VisBuffer2::setFloatDataCube (const Cube<Float> & floatDataCube)
-{
-    vb_p->setFloatDataCube(floatDataCube);
-}
-
-const Vector<Double> &
-VisBuffer2::frequency () const
-{
-    return vb_p->frequency();
-}
 
 const Matrix<Float> &
 VisBuffer2::imagingWeight () const
@@ -433,56 +361,15 @@ VisBuffer2::imagingWeight () const
     return vb_p->imagingWeight();
 }
 
-const Cube<Complex> &
-VisBuffer2::modelVisCube () const
-{
-    return vb_p->modelVisCube();
-}
-
-void
-VisBuffer2::setModelVisCube(const Complex & c)
-{
-    vb_p->setModelVisCube(c);
-}
-
-void
-VisBuffer2::setModelVisCube(const Cube<Complex>& vis)
-{
-    vb_p->setModelVisCube(vis);
-}
-
-void
-VisBuffer2::setModelVisCube(const Vector<Float>& stokes)
-{
-    vb_p->setModelVisCube(stokes);
-}
-
-const Matrix<CStokesVector> &
-VisBuffer2::modelVisibility () const
-{
-    return vb_p->modelVisibility();
-}
-
-void
-VisBuffer2::setModelVisibility (Matrix<CStokesVector> & modelVisibility)
-{
-    vb_p->setModelVisibility(modelVisibility);
-}
 
 Int
-VisBuffer2::nChannel () const
-{
-    return vb_p->nChannel();
-}
-
-Int
-VisBuffer2::nCorr () const
+VisBuffer2::nCorrelations (Int row) const
 {
     return vb_p->nCorr();
 }
 
 Int
-VisBuffer2::nRow () const
+VisBuffer2::nRows () const
 {
     return vb_p->nRow();
 }
@@ -494,13 +381,13 @@ VisBuffer2::observationId () const
 }
 
 const MDirection&
-VisBuffer2::phaseCenter () const
+VisBuffer2::phaseCenter (Int row) const
 {
     return vb_p->phaseCenter();
 }
 
 Int
-VisBuffer2::polFrame () const
+VisBuffer2::polarizationFrame (Int row) const
 {
     return vb_p->polFrame();
 }
@@ -536,7 +423,7 @@ VisBuffer2::sigmaMat () const
 }
 
 Int
-VisBuffer2::spectralWindow () const
+VisBuffer2::spectralWindow (Int row) const
 {
     return vb_p->spectralWindow();
 }
@@ -577,6 +464,7 @@ VisBuffer2::uvwMat () const
     return vb_p->uvwMat();
 }
 
+
 const Cube<Complex> &
 VisBuffer2::visCube () const
 {
@@ -596,15 +484,88 @@ VisBuffer2::setVisCube (const Cube<Complex> & visCube)
 }
 
 const Matrix<CStokesVector> &
-VisBuffer2::visibility () const
+VisBuffer2::vis() const
 {
     return vb_p->visibility();
 }
 
 void
-VisBuffer2::setVisibility (Matrix<CStokesVector> & stokesVector)
+VisBuffer2::setVis (Matrix<CStokesVector> & stokesVector)
 {
     vb_p->setVisibility(stokesVector);
+}
+
+const Cube<Float> &
+VisBuffer2::visCubeFloat () const
+{
+    return vb_p->floatDataCube();
+}
+
+void
+VisBuffer2::setVisCubeFloat (const Cube<Float> & floatDataCube)
+{
+    vb_p->setFloatDataCube(floatDataCube);
+}
+
+
+const Cube<Complex> &
+VisBuffer2::visCubeCorrected () const
+{
+    return vb_p->correctedVisCube();
+}
+
+void
+VisBuffer2::setVisCubeCorrected (const Cube<Complex> & correctedVisCube)
+{
+    vb_p->setCorrectedVisCube(correctedVisCube);
+}
+
+const Matrix<CStokesVector> &
+VisBuffer2::visCorrected () const
+{
+    return vb_p->correctedVisibility();
+}
+
+void
+VisBuffer2::setVisCorrected (const Matrix<CStokesVector> & correctedVisibility)
+{
+    vb_p->setCorrectedVisibility(correctedVisibility);
+}
+
+const Cube<Complex> &
+VisBuffer2::visCubeModel () const
+{
+    return vb_p->modelVisCube();
+}
+
+void
+VisBuffer2::setVisCubeModel(const Complex & c)
+{
+    vb_p->setModelVisCube(c);
+}
+
+void
+VisBuffer2::setVisCubeModel(const Cube<Complex>& vis)
+{
+    vb_p->setModelVisCube(vis);
+}
+
+void
+VisBuffer2::setVisCubeModel(const Vector<Float>& stokes)
+{
+    vb_p->setModelVisCube(stokes);
+}
+
+const Matrix<CStokesVector> &
+VisBuffer2::visModel () const
+{
+    return vb_p->modelVisibility();
+}
+
+void
+VisBuffer2::setVisModel (Matrix<CStokesVector> & modelVisibility)
+{
+    vb_p->setModelVisibility(modelVisibility);
 }
 
 const Vector<Float> &

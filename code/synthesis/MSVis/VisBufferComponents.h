@@ -1,6 +1,8 @@
 #if ! defined (MSVIS_VisBufferComponents_H)
 #define MSVIS_VisBufferComponents_H
 
+#include <set>
+
 namespace casa {
 
 // <summary>
@@ -91,6 +93,9 @@ public:
 
 
 };
+
+class VisBufferComponentSet : public std::set<VisBufferComponents::EnumType>
+{};
 
 }
 #endif // ! defined (MSVIS_VisBufferComponents_H)

@@ -929,53 +929,53 @@ public:
         return True;
     }
 
-    // Set/modify the flags in the data.
+    // Write/modify the flags in the data.
     // This will flag all channels in the original data that contributed to
     // the output channel in the case of channel averaging.
     // All polarizations have the same flag value.
-    virtual void setFlag (const Matrix<Bool> & flag);
+    virtual void writeFlag (const Matrix<Bool> & flag);
 
-    // Set/modify the flags in the data.
-    // This sets the flags as found in the MS, Cube (npol,nchan,nrow),
+    // Write/modify the flags in the data.
+    // This writes the flags as found in the MS, Cube (npol,nchan,nrow),
     // where nrow is the number of rows in the current iteration (given by
     // nRow ()).
-    virtual void setFlag (const Cube<Bool> & flag);
+    virtual void writeFlag (const Cube<Bool> & flag);
 
-    // Set/modify the flag row column; dimension Vector (nrow)
-    virtual void setFlagRow (const Vector<Bool> & rowflags);
+    // Write/modify the flag row column; dimension Vector (nrow)
+    virtual void writeFlagRow (const Vector<Bool> & rowflags);
 
-    void setFlagCategory(const Array<Bool>& fc);
+    void writeFlagCategory(const Array<Bool>& fc);
 
-    // Set/modify the visibilities.
+    // Write/modify the visibilities.
     // This is possibly only for a 'reference' MS which has a new DATA column.
     // The first axis of the matrix should equal the selected number of channels
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    virtual void setVis (const Matrix<CStokesVector> & vis, DataColumn whichOne);
+    virtual void writeVis (const Matrix<CStokesVector> & vis, DataColumn whichOne);
 
-    // Set/modify the visibilities
-    // This sets the data as found in the MS, Cube (npol,nchan,nrow).
-    virtual void setVis (const Cube<Complex> & vis, DataColumn whichOne);
+    // Write/modify the visibilities
+    // This writes the data as found in the MS, Cube (npol,nchan,nrow).
+    virtual void writeVis (const Cube<Complex> & vis, DataColumn whichOne);
 
-    // Set the visibility and flags, and interpolate from velocities if needed
-    virtual void setVisAndFlag (const Cube<Complex> & vis, const Cube<Bool> & flag,
+    // Write the visibility and flags, and interpolate from velocities if needed
+    virtual void writeVisAndFlag (const Cube<Complex> & vis, const Cube<Bool> & flag,
                         DataColumn whichOne);
 
-    // Set/modify the weights
-    virtual void setWeight (const Vector<Float> & wt);
+    // Write/modify the weights
+    virtual void writeWeight (const Vector<Float> & wt);
 
-    // Set/modify the weightMat
-    virtual void setWeightMat (const Matrix<Float> & wtmat);
+    // Write/modify the weightMat
+    virtual void writeWeightMat (const Matrix<Float> & wtmat);
 
-    // Set/modify the weightSpectrum
-    virtual void setWeightSpectrum (const Cube<Float> & wtsp);
+    // Write/modify the weightSpectrum
+    virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
 
-    // Set/modify the Sigma
-    virtual void setSigma (const Vector<Float> & sig);
+    // Write/modify the Sigma
+    virtual void writeSigma (const Vector<Float> & sig);
 
-    // Set/modify the ncorr x nrow SigmaMat.
-    virtual void setSigmaMat (const Matrix<Float> & sigmat);
+    // Write/modify the ncorr x nrow SigmaMat.
+    virtual void writeSigmaMat (const Matrix<Float> & sigmat);
 
     virtual void writeBack (VisBuffer2 *);
 

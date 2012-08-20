@@ -37,6 +37,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisBufferBase2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -113,14 +115,325 @@ private:
 
 #endif // commenting out
 
+class VisBufferImpl2;
 
-class VbCacheItemBase;
-class VisBufferCache;
-class VisBufferState;
+//////////////////////////////////////////////////////////
+//
+// Auxiliary Classes are contained in the "vb" namespace.
+//
+// These include VbCacheItemBase, VbCacheItem, VisBufferCache
+// and VisBufferState.
 
-using vi::VbCacheItemBase;
-using vi::VisBufferCache;
-using vi::VisBufferState;
+class VbCacheItemBase {
+
+    // Provides a common base class for all of the cached value classes.
+    // This is required because the actualy value classes use a template
+    // to capture the underlying value type.
+
+    friend class VisBufferImpl2;
+
+public:
+
+    VbCacheItemBase () : vb_p (0) {}
+
+    virtual ~VbCacheItemBase () {}
+
+    virtual void clear () = 0;
+    virtual void fill () const = 0;
+    virtual Bool isPresent () const = 0;
+
+protected:
+
+    virtual void copy (const VbCacheItemBase * other, Bool markAsCached = False) = 0;
+
+    VisBufferImpl2 * getVb () const
+    {
+        return vb_p;
+    }
+
+    virtual void initialize (VisBufferImpl2 * vb);
+
+    virtual void setAsPresent () = 0;
+
+private:
+
+    VisBufferImpl2 * vb_p; // [use]
+
+};
+
+typedef std::vector<VbCacheItemBase *> CacheRegistry;
+
+template <typename T>
+class VbCacheItem : public VbCacheItemBase {
+
+    friend class VisBufferImpl2;
+
+public:
+
+    typedef T DataType;
+    typedef void (VisBufferImpl2::* Filler) (T &) const;
+
+    VbCacheItem ()
+    : isPresent_p (False)
+    {}
+
+    virtual void
+    clear ()
+    {
+        item_p = T ();
+        isPresent_p = False;
+    }
+
+    virtual void
+    fill () const
+    {
+        const VisBufferImpl2 * vb = getVb();
+
+        ThrowIf (vb == 0, "Attempt to fill VisBuffer not attached to VisibilityIterator");
+
+        (vb ->* filler_p) (item_p);
+    }
+
+    const T &
+    get () const
+    {
+        if (! isPresent_p){
+            fill ();
+            isPresent_p = True;
+        }
+
+        return item_p;
+    }
+
+    T &
+    getRef ()
+    {
+        if (! isPresent_p){
+            fill ();
+            isPresent_p = True;
+        }
+
+        return item_p;
+    }
+
+
+    void
+    initialize (VisBufferImpl2 * vb, Filler filler)
+    {
+        VbCacheItemBase::initialize (vb);
+        filler_p = filler;
+    }
+
+    Bool
+    isPresent () const
+    {
+        return isPresent_p;
+    }
+
+    virtual void
+    set (const T & newItem)
+    {
+        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+
+        item_p = newItem;
+        isPresent_p = True;
+    }
+
+    template <typename U>
+    void
+    set (const U & newItem)
+    {
+        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+
+        item_p = newItem;
+        isPresent_p = True;
+    }
+
+
+protected:
+
+    virtual void
+    copy (const VbCacheItemBase * otherRaw, Bool markAsCached)
+    {
+        // Convert generic pointer to one pointint to this
+        // cache item type.
+
+        const VbCacheItem * other = dynamic_cast <const VbCacheItem *> (otherRaw);
+        Assert (other != 0);
+
+        // Capture the cached status of the other item
+
+        isPresent_p = other->isPresent_p;
+
+        // If the other item was cached then copy it over
+        // otherwise clear out this item.
+
+        if (isPresent_p){
+            item_p = other->item_p;
+        }
+        else {
+            item_p = T ();
+
+            if (markAsCached){
+                isPresent_p = True;
+            }
+        }
+    }
+
+    void
+    setAsPresent ()
+    {
+        isPresent_p = True;
+    }
+
+private:
+
+    Filler       filler_p;
+    mutable Bool isPresent_p;
+    mutable T    item_p;
+};
+
+
+
+
+class VisBufferCache {
+
+    // Holds the cached values for a VisBuffer object.
+
+public:
+
+    VisBufferCache (VisBufferImpl2 * vb);
+
+    // The values that are potentially cached.
+
+    VbCacheItem <Vector<Int> > antenna1_p;
+    VbCacheItem <Vector<Int> > antenna2_p;
+    VbCacheItem <Int> arrayId_p;
+    VbCacheItem <Vector<SquareMatrix<Complex, 2> > > cjones_p;
+    VbCacheItem <Cube<Complex> > correctedVisCube_p;
+    VbCacheItem <Matrix<CStokesVector> > correctedVisibility_p;
+    VbCacheItem <Vector<Int> > corrType_p;
+    VbCacheItem <Int> dataDescriptionId_p;
+    VbCacheItem <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
+    VbCacheItem <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
+    VbCacheItem <Vector<Double> > exposure_p;
+    VbCacheItem <Vector<Int> > feed1_p;
+    VbCacheItem <Vector<Float> > feed1Pa_p;
+    VbCacheItem <Vector<Int> > feed2_p;
+    VbCacheItem <Vector<Float> > feed2Pa_p;
+    VbCacheItem <Int> fieldId_p;
+    VbCacheItem <Matrix<Bool> > flag_p;
+    VbCacheItem <Array<Bool> > flagCategory_p;
+    VbCacheItem <Cube<Bool> > flagCube_p;
+    VbCacheItem <Vector<Bool> > flagRow_p;
+    VbCacheItem <Cube<Float> > floatDataCube_p;
+    VbCacheItem <Vector<Double> > frequency_p;
+    VbCacheItem <Matrix<Float> > imagingWeight_p;
+    //VbCacheItem <Vector<Double> > lsrFrequency_p;
+    VbCacheItem <Cube<Complex> > modelVisCube_p;
+    VbCacheItem <Matrix<CStokesVector> > modelVisibility_p;
+    VbCacheItem <Int> nChannel_p;
+    VbCacheItem <Int> nCorr_p;
+    //    VbCacheItem <Int> nCat_p;
+    VbCacheItem <Int> nRow_p;
+    VbCacheItem <Vector<Int> > observationId_p;
+    VbCacheItem <MDirection> phaseCenter_p;
+    VbCacheItem <Int> polFrame_p;
+    VbCacheItem <Vector<Int> > processorId_p;
+    VbCacheItem <Vector<uInt> > rowIds_p;
+    VbCacheItem <Vector<Int> > scan_p;
+    VbCacheItem <Vector<Float> > sigma_p;
+    VbCacheItem <Matrix<Float> > sigmaMat_p;
+    VbCacheItem <Int> spectralWindow_p;
+    VbCacheItem <Vector<Int> > stateId_p;
+    VbCacheItem <Vector<Double> > time_p;
+    VbCacheItem <Vector<Double> > timeCentroid_p;
+    VbCacheItem <Vector<Double> > timeInterval_p;
+    VbCacheItem <Vector<RigidVector<Double, 3> > > uvw_p;
+    VbCacheItem <Matrix<Double> > uvwMat_p;
+    VbCacheItem <Cube<Complex> > visCube_p;
+    VbCacheItem <Matrix<CStokesVector> > visibility_p;
+    VbCacheItem <Vector<Float> > weight_p;
+    VbCacheItem <Matrix<Float> > weightMat_p;
+    VbCacheItem <Cube<Float> > weightSpectrum_p;
+
+    template <typename T, typename U>
+    static void
+    sortCorrelationItem (vi::VbCacheItem<T> & dataItem, IPosition & blc, IPosition & trc,
+                         IPosition & mat, U & tmp, Bool sort)
+    {
+
+        T & data = dataItem.getRef ();
+        U p1, p2, p3;
+
+        if (dataItem.isPresent() && data.nelements() > 0) {
+
+          blc(0) = trc(0) = 1;
+          p1.reference(data (blc, trc).reform(mat));
+
+          blc(0) = trc(0) = 2;
+          p2.reference(data (blc, trc).reform(mat));
+
+          blc(0) = trc(0) = 3;
+          p3.reference(data (blc, trc).reform(mat));
+
+          if (sort){ // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
+
+              tmp = p1;
+              p1 = p2;
+              p2 = p3;
+              p3 = tmp;
+          }
+          else {      // Unsort correlations: (PP,PQ,QP,QQ) -> (PP,QQ,PQ,QP)
+
+              tmp = p3;
+              p3 = p2;
+              p2 = p1;
+              p1 = tmp;
+          }
+        }
+    }
+
+};
+
+class VisBufferState {
+
+public:
+
+    VisBufferState ()
+    : areCorrelationsSorted_p (False),
+      dirtyComponents_p (),
+      isAttached_p (False),
+      isNewMs_p (False),
+      isNewArrayId_p (False),
+      isNewFieldId_p (False),
+      isNewSpectralWindow_p (False),
+      isWritable_p (False),
+      pointingTableLastRow_p (-1),
+      vi_p (0),
+      viC_p (0),
+      visModelData_p ()
+    {}
+
+    Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
+    VbDirtyComponents dirtyComponents_p;
+    Bool isAttached_p;
+    Bool isNewMs_p;
+    Bool isNewArrayId_p;
+    Bool isNewFieldId_p;
+    Bool isNewSpectralWindow_p;
+    Bool isWritable_p;
+    mutable Int pointingTableLastRow_p;
+    Int msId_p;
+    String msName_p;
+    Bool newMs_p;
+    ROVisibilityIterator2 * vi_p; // [use]
+    const ROVisibilityIterator2 * viC_p; // [use]
+    mutable VisModelData visModelData_p;
+
+    CacheRegistry cacheRegistry_p;
+};
+
 
 //<summary>VisBufferImpls encapsulate one chunk of visibility data for processing.</summary>
 //
@@ -171,6 +484,7 @@ class VisBufferImpl2 : public VisBufferBase2 {
     friend class VbCacheItemBase;
     friend class VisBufferCache;
     friend class VisBufferState;
+    friend class casa::VisBuffer2;
     friend class VisBufferImpl2Async; // for async i/o
     friend class VisBufferImpl2AsyncWrapper; // for async i/o
     friend class ViReadImpl;
@@ -186,21 +500,12 @@ public:
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
 
-    VisBufferImpl2(const VisBufferImpl2 & vb);
+    VisBufferImpl2(ROVisibilityIterator2 * iter);
 
     // Destructor (detaches from VisIter)
 
     virtual ~VisBufferImpl2();
 
-    // Assignment, loses synchronization with iterator: only use buffer for
-    // current iteration (or reattach)
-
-    virtual VisBufferImpl2 & operator=(const VisBufferImpl2 & vb);
-
-    // Assignment, optionally without copying the data across; with copy=True
-    // this is identical to normal assignment operator
-
-    virtual void assign(const VisBufferImpl2 & vb, Bool copy = True);
     virtual void associateWithVisibilityIterator2 (const ROVisibilityIterator2 & vi);
 
     virtual VisBufferImpl2 * clone () const;
@@ -261,8 +566,7 @@ public:
     // antenna from pointing table is avoided
     //Add more as needed.
 
-    virtual void updateCoordInfo(const VisBufferImpl2 * vb = NULL, const Bool dirDependent = True);
-    void copyCoordInfo(const VisBufferImpl2 & other, Bool force = False);
+    virtual void copyCoordinateInfo (const VisBufferBase2 * vb, const  Bool dirDependent);
 
     virtual Bool isNewArrayId () const;
     virtual Bool isNewFieldId () const;
@@ -271,6 +575,10 @@ public:
     virtual Bool isWritable () const;
     virtual Int msId() const;
     virtual String msName (Bool stripPath = False) const;
+
+    virtual Bool areCorrelationsSorted() const;
+    virtual VisModelData getVisModelData() const;
+
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -281,10 +589,9 @@ public:
     //  item.  Where the item is allowed to be modified, one or more set
     //  methods are provided.
 
-    virtual Vector<Int> antenna1 () const;
+    virtual const Vector<Int> & antenna1 () const;
     virtual const Vector<Int> & antenna2 () const;
     virtual Int arrayId () const;
-    virtual const Vector<Int> & channel () const;
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Cube<Complex> & correctedVisCube () const;
     virtual void setCorrectedVisCube (const Cube<Complex> &);
@@ -348,14 +655,13 @@ public:
     virtual const Cube<Float> & weightSpectrum () const;
     virtual void setWeightSpectrum (const Cube<Float>&);
 
+
 protected:
 
-    VisBufferImpl2(ROVisibilityIterator2 & iter);
 
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
 
-    virtual void attachToVisibilityIterator2 (ROVisibilityIterator2 & iter);
     virtual void cacheCopy (const VisBufferImpl2 & other, Bool markAsCached);
     virtual void cacheClear (Bool markAsCached = False);
 
@@ -417,7 +723,6 @@ private:
     virtual void fillAntenna1 (Vector<Int>& value) const;
     virtual void fillAntenna2 (Vector<Int>& value) const;
     virtual void fillArrayId (Int& value) const;
-    virtual void fillChannel (Vector<Int>& value) const;
     virtual void fillCorrType (Vector<Int>& value) const;
     virtual void fillCubeCorrected (Cube <Complex> & value) const;
     virtual void fillCubeModel (Cube <Complex> & value) const;

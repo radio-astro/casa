@@ -50,6 +50,7 @@ class VbDirtyComponents;
 template <typename T, Int n> class SquareMatrix;
 template <typename T, Int n> class RigidVector;
 class ROVisibilityIterator2;
+class VisBufferBase2;
 class VisibilityIterator2;
 
 namespace vi {
@@ -116,7 +117,6 @@ private:
 };
 
 #endif // commenting out
-
 
 class VbCacheItemBase;
 class VisBufferCache;
@@ -195,15 +195,6 @@ public:
 
     virtual ~VisBufferBase2();
 
-    // Assignment, loses synchronization with iterator: only use buffer for
-    // current iteration (or reattach)
-
-    virtual VisBufferBase2 & operator=(const VisBufferBase2 & vb) = 0;
-
-    // Assignment, optionally without copying the data across; with copy=True
-    // this is identical to normal assignment operator
-
-    virtual void assign(const VisBufferBase2 & vb, Bool copy = True) = 0;
     virtual void associateWithVisibilityIterator2 (const ROVisibilityIterator2 & vi) = 0;
 
     virtual VisBufferBase2 * clone () const = 0;
@@ -260,20 +251,8 @@ public:
 
     // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
 
-    //--> Called by routine in FixVis but that routine is not called:
-    // virtual void phaseCenterShift(const Vector<Double>& phase);
-    // Rotate visibility phase for phase center offsets (arcsecs)
-    //--> Not called: virtual void phaseCenterShift(Double dx, Double dy);
 
-    // Update coordinate info - useful for copied VisBufferBase2s that need
-    // to retain some state for later reference.
-    // Presently this fills antenna, array, field and spectralWindow ids, time,
-    // frequency and number of rows.
-    // if dirDependent is set to False the expensive direction dependent calculation of parallactic or direction of
-    // antenna from pointing table is avoided
-    //Add more as needed.
-    virtual void updateCoordInfo(const VisBufferBase2 * vb = NULL, const Bool dirDependent = True) = 0;
-    virtual void copyCoordInfo(const VisBufferBase2 & other, Bool force = False) = 0;
+    virtual void copyCoordinateInfo(const VisBufferBase2 * other, Bool includeDirectionCoordinates) = 0;
 
     virtual Bool isNewArrayId () const = 0;
     virtual Bool isNewFieldId () const = 0;
@@ -292,10 +271,9 @@ public:
     //  item.  Where the item is allowed to be modified, one or more set
     //  methods are provided.
 
-    virtual Vector<Int> antenna1 () const = 0;
+    virtual const Vector<Int> & antenna1 () const = 0;
     virtual const Vector<Int> & antenna2 () const = 0;
     virtual Int arrayId () const = 0;
-    virtual const Vector<Int> & channel () const = 0;
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const = 0;
     virtual const Cube<Complex> & correctedVisCube () const = 0;
     virtual void setCorrectedVisCube (const Cube<Complex> &) = 0;

@@ -108,7 +108,7 @@ VisibilityIteratorReadImpl2::VisibilityIteratorReadImpl2 (ROVisibilityIterator2 
     rovi_p = rovi;
 
     if (createVb){
-        vb_p = new VisBuffer2 (* rovi);
+        vb_p = new VisBuffer2 (rovi, VisBuffer2::Plain);
     }
 }
 
@@ -604,7 +604,6 @@ VisibilityIteratorReadImpl2::advance ()
     if (more_p) {
         subchunk_p.incrementSubChunk();
         setSelTable ();
-        getTopoFreqs ();
 
         // invalidate any attached VisBuffer
 
@@ -2358,21 +2357,6 @@ VisibilityIteratorReadImpl2::allSelectedSpectralWindows (Vector<Int> & spws, Vec
     }
 }
 
-Vector<Double> &
-VisibilityIteratorReadImpl2::lsrFrequency (Vector<Double> & freq) const
-{
-    if (velocity_p.velSelection_p) {
-        freq.resize (velocity_p.nVelChan_p);
-        freq = velocity_p.lsrFreq_p;
-    } else {
-        // if there is no vel selection, we just return the observing freqs
-        frequency (freq);
-    }
-    return freq;
-}
-
-
-
 VisBuffer2 *
 VisibilityIteratorReadImpl2::getVisBuffer ()
 {
@@ -2677,7 +2661,7 @@ VisibilityIteratorWriteImpl2::getReadImpl ()
 }
 
 void
-VisibilityIteratorWriteImpl2::setFlag (const Matrix<Bool> & flag)
+VisibilityIteratorWriteImpl2::writeFlag (const Matrix<Bool> & flag)
 {
     // use same value for all polarizations
 
@@ -2690,7 +2674,7 @@ VisibilityIteratorWriteImpl2::setFlag (const Matrix<Bool> & flag)
     Bool * p = readImpl->cache_p.flagCube_p.getStorage (deleteIt);
     const Bool * pflag = flag.getStorage (deleteIt);
     if (Int (flag.nrow ()) != readImpl->channelGroupSize_p) {
-        throw (AipsError ("VisIter::setFlag (flag) - inconsistent number of channels"));
+        throw (AipsError ("VisIter::writeFlag (flag) - inconsistent number of channels"));
     }
 
     for (uInt row = 0; row < readImpl->curNumRow_p; row++) {
@@ -2710,7 +2694,7 @@ VisibilityIteratorWriteImpl2::setFlag (const Matrix<Bool> & flag)
 }
 
 void
-VisibilityIteratorWriteImpl2::setFlag (const Cube<Bool> & flags)
+VisibilityIteratorWriteImpl2::writeFlag (const Cube<Bool> & flags)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
@@ -2722,7 +2706,7 @@ VisibilityIteratorWriteImpl2::setFlag (const Cube<Bool> & flags)
 }
 
 void
-VisibilityIteratorWriteImpl2::setFlagCategory(const Array<Bool>& flagCategory)
+VisibilityIteratorWriteImpl2::writeFlagCategory(const Array<Bool>& flagCategory)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
@@ -2736,14 +2720,14 @@ VisibilityIteratorWriteImpl2::setFlagCategory(const Array<Bool>& flagCategory)
 
 
 void
-VisibilityIteratorWriteImpl2::setFlagRow (const Vector<Bool> & rowflags)
+VisibilityIteratorWriteImpl2::writeFlagRow (const Vector<Bool> & rowflags)
 {
     putCol (columns_p.flagRow_p, rowflags);
 }
 
 void
-VisibilityIteratorWriteImpl2::setVis (const Matrix<CStokesVector> & vis,
-        DataColumn whichOne)
+VisibilityIteratorWriteImpl2::writeVis (const Matrix<CStokesVector> & vis,
+                                      DataColumn whichOne)
 {
     // two problems: 1. channel selection -> we can only write to reference
     // MS with 'processed' channels
@@ -2752,13 +2736,13 @@ VisibilityIteratorWriteImpl2::setVis (const Matrix<CStokesVector> & vis,
     // originally.
 
     //  if (!preselected_p) {
-    //    throw (AipsError ("VisIter::setVis (vis) - cannot change original data"));
+    //    throw (AipsError ("VisIter::writeVis (vis) - cannot change original data"));
     //  }
 
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
     if (Int (vis.nrow ()) != readImpl->channelGroupSize_p) {
-        throw (AipsError ("VisIter::setVis (vis) - inconsistent number of channels"));
+        throw (AipsError ("VisIter::writeVis (vis) - inconsistent number of channels"));
     }
     // we need to reform the vis matrix to a cube before we can use
     // putColumn to a Matrix column
@@ -2793,7 +2777,7 @@ VisibilityIteratorWriteImpl2::setVis (const Matrix<CStokesVector> & vis,
 }
 
 void
-VisibilityIteratorWriteImpl2::setVisAndFlag (const Cube<Complex> & vis,
+VisibilityIteratorWriteImpl2::writeVisAndFlag (const Cube<Complex> & vis,
                                             const Cube<Bool> & flag,
                                             DataColumn whichOne)
 {
@@ -2813,7 +2797,7 @@ VisibilityIteratorWriteImpl2::setVisAndFlag (const Cube<Complex> & vis,
 }
 
 void
-VisibilityIteratorWriteImpl2::setVis (const Cube<Complex> & vis, DataColumn whichOne)
+VisibilityIteratorWriteImpl2::writeVis (const Cube<Complex> & vis, DataColumn whichOne)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
@@ -2825,7 +2809,7 @@ VisibilityIteratorWriteImpl2::setVis (const Cube<Complex> & vis, DataColumn whic
 }
 
 void
-VisibilityIteratorWriteImpl2::setWeight (const Vector<Float> & weight)
+VisibilityIteratorWriteImpl2::writeWeight (const Vector<Float> & weight)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
@@ -2840,13 +2824,13 @@ VisibilityIteratorWriteImpl2::setWeight (const Vector<Float> & weight)
 }
 
 void
-VisibilityIteratorWriteImpl2::setWeightMat (const Matrix<Float> & weightMat)
+VisibilityIteratorWriteImpl2::writeWeightMat (const Matrix<Float> & weightMat)
 {
     putCol (columns_p.weight_p, weightMat);
 }
 
 void
-VisibilityIteratorWriteImpl2::setWeightSpectrum (const Cube<Float> & weightSpectrum)
+VisibilityIteratorWriteImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl ();
 
@@ -2856,7 +2840,7 @@ VisibilityIteratorWriteImpl2::setWeightSpectrum (const Cube<Float> & weightSpect
 }
 
 void
-VisibilityIteratorWriteImpl2::setSigma (const Vector<Float> & sigma)
+VisibilityIteratorWriteImpl2::writeSigma (const Vector<Float> & sigma)
 {
     VisibilityIteratorReadImpl2 * readImpl = getReadImpl();
 
@@ -2870,7 +2854,7 @@ VisibilityIteratorWriteImpl2::setSigma (const Vector<Float> & sigma)
 }
 
 void
-VisibilityIteratorWriteImpl2::setSigmaMat (const Matrix<Float> & sigMat)
+VisibilityIteratorWriteImpl2::writeSigmaMat (const Matrix<Float> & sigMat)
 {
     putCol (columns_p.sigma_p, sigMat);
 }
@@ -3070,43 +3054,43 @@ void
 VisibilityIteratorWriteImpl2::initializeBackWriters ()
 {
     backWriters_p [VisBufferComponents::Flag] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setFlag, & VisBuffer2::flag);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlag, & VisBuffer2::flag);
     backWriters_p [VisBufferComponents::FlagCube] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setFlag, & VisBuffer2::flagCube);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlag, & VisBuffer2::flagCube);
     backWriters_p [VisBufferComponents::FlagRow] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setFlagRow, & VisBuffer2::flagRow);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlagRow, & VisBuffer2::flagRow);
     backWriters_p [VisBufferComponents::FlagCategory] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setFlagCategory, & VisBuffer2::flagCategory);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
     backWriters_p [VisBufferComponents::Sigma] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setSigma, & VisBuffer2::sigma);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeSigma, & VisBuffer2::sigma);
     backWriters_p [VisBufferComponents::SigmaMat] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setSigmaMat, & VisBuffer2::sigmaMat);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [VisBufferComponents::Weight] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setWeight, & VisBuffer2::weight);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeight, & VisBuffer2::weight);
     backWriters_p [VisBufferComponents::WeightMat] =
-        makeBackWriter (& VisibilityIteratorWriteImpl2::setWeightMat, & VisBuffer2::weightMat);
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeightMat, & VisBuffer2::weightMat);
 
     // Now do the visibilities.  These are slightly different since the setter requires an
     // enum value.
 
     backWriters_p [VisBufferComponents::Observed] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::visibility,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::vis,
                          ROVisibilityIterator2::Observed);
     backWriters_p [VisBufferComponents::Corrected] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::correctedVisibility,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCorrected,
                          ROVisibilityIterator2::Corrected);
     backWriters_p [VisBufferComponents::Model] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::modelVisibility,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visModel,
                          ROVisibilityIterator2::Model);
 
     backWriters_p [VisBufferComponents::ObservedCube] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::visCube,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCube,
                          ROVisibilityIterator2::Observed);
     backWriters_p [VisBufferComponents::CorrectedCube] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::correctedVisCube,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCubeCorrected,
                          ROVisibilityIterator2::Corrected);
     backWriters_p [VisBufferComponents::ModelCube] =
-        makeBackWriter2 (& VisibilityIteratorWriteImpl2::setVis, & VisBuffer2::modelVisCube,
+        makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCubeModel,
                          ROVisibilityIterator2::Model);
 
 }

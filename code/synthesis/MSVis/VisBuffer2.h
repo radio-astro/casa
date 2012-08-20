@@ -38,6 +38,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MSVis/VisBufferComponents.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
+#include <boost/noncopyable.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -101,9 +102,14 @@ private:
 
 #endif // commenting out
 
+class PrefetchColumns;
 class VbDirtyComponents;
 class ROVisibilityIterator2;
 class VisibilityIterator2;
+
+namespace vi {
+    class VisBufferBase2;
+};
 
 //<summary>VisBuffer2s encapsulate one chunk of visibility data for processing.</summary>
 //
@@ -112,9 +118,7 @@ class VisibilityIterator2;
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="VisSet">VisSet</linkto>
 //   <li> <linkto class="VisibilityIterator">VisibilityIterator</linkto>
-//   <li> <linkto class="VisBuffer2AutoPtr">VisBuffer2AutoPtr</linkto>
 //   <li> <linkto class="VbDirtyComponents">VbDirtyComponents</linkto>
 // </prerequisite>
 //
@@ -123,99 +127,105 @@ class VisibilityIterator2;
 // </etymology>
 //
 //<synopsis>
-// This class contains 'one iteration' of the
-// <linkto class="VisibilityIterator">VisibilityIterator</linkto>
-// It is a modifiable
-// buffer of values to which calibration and averaging can be applied.
-// This allows processing of the data in larger blocks, avoiding some
-// overheads for processing per visibility point or spectrum.
+// The VisBuffer is designed to contain a small amount of visibility-related
+// data.  The VisBuffer can be used in two somewhat distinct ways.  The first
+// is as an integral (or attached) part of the VisibilityIterator and the second
+// is as a free or unattached object.
 //
-// See <linkto module="MeasurementEquations">MeasurementEquations</linkto>
-// for more details on how the VisBuffer2 is to be used.
+// Attached VisBuffer -- Each VisibilityIterator has a exactly one VisBuffer
+// attached to it.  This VisBuffer is created and destroyed by the
+// VisibilityIterator.  The role of an attached VB is to contain the data
+// currently "pointed to" by the VI.  Because of this tight coupling between
+// an attached VI and its VB the operations that can be applied to a VisBuffer
+// are somewhat restricted in order to maintain the relationship between the
+// MeasurementSet's data and the data i the VisBuffer (failure to do so allows
+// obscure bugs to be created).  As such the functions for averaging in either
+// the time or frequency axes is not permitted on an attached VB.
 //
-// When the user intends to allow asynchronous I/O they will need to use
-// the VisBuffer2Async and VisBuffer2AsyncWrapper classes; these are
-// publicly derived from VisBuffer2.  Normally, the user should not
-// explicitly use these classes but should use the helper class
-// VisBuffer2AutoPtr which will ensure that the appropriate class is
-// used.
+// Free VisBuffer -- A free VisBuffer is used to contain data that might not
+// correspond to the data in the MeasurementSet.  The meaning of the data in
+// a free VisBuffer will depend on the user.  Some obvious examples might be:
+// a VisBuffer used to resample or average frequencies together; creation of
+// "virtual" spectral windows which might reconnect frequencies that were
+// split into separate spectral windows becasue of hardware limitation; and
+// performing a time average of visibility data.  Because the free VB is not
+// tightly coupled to a VI, it is the responsibility of the user to assign
+// meaningful values to some of the fields in the VB.  For example, the user
+// averaging across time will need to decide what values ought to be reported
+// for the VisBuffer's timestamp, pointing angle, etc.
+//
 //</synopsis>
-
+//
 //<todo>
-// <li> reconcile vis/visCube usage: visCube, flagCube and weightMatrix
-// are currently only correct when this VisBuffer2 got them from a
-// VisIter, operations like -=, freqAverage() are only done for
-// visibility() and flag().
 //</todo>
 
-class VisBuffer2 {
+class VisBuffer2 : private boost::noncopyable {
 
     friend class VisibilityIterator;
+    friend class VisibilityIteratorReadImpl2;
 
 public:
 
     enum {FrameNotSpecified = -2};
+    typedef enum {Plain, Asynchronous} Type;
 
-    // Create empty VisBuffer2 you can assign to or attach.
-    VisBuffer2();
+    // Create empty VisBuffer2 you can assign to.
 
-    // Copy construct, looses synchronization with iterator: only use buffer for
-    // current iteration (or reattach).
-    VisBuffer2(const VisBuffer2 & vb);
+    VisBuffer2 (Type type);
+
+    VisBuffer2(const VisBuffer2 & vb, Type type = Plain);
 
     // Destructor (detaches from VisIter)
+
     ~VisBuffer2();
 
-    // Assignment, loses synchronization with iterator: only use buffer for
-    // current iteration (or reattach)
+    //---------------------------------------------------------------------
+    //
+    // Copying methods
+    //
+    // These methods allow copying portions of the data between two
+    // VisBuffers.  Because of the complicated semantics of a VisBuffer the
+    // assignment and copy-construction methods are not used as they are likely
+    // to confuse VisBuffer users.
 
-    VisBuffer2 & operator=(const VisBuffer2 & vb);
 
-    // Assignment, optionally without copying the data across; with copy=True
-    // this is identical to normal assignment operator
+    // Copies all of the components (or just the one in the cache) from
+    // the specified VisBuffer into this one.
 
-    void assign(const VisBuffer2 & vb, Bool copy = True);
+    void copy (const VisBuffer2 & other, Bool copyCachedDataOnly = True);
 
-    VisBuffer2 * clone () const;
+    // Copies the specified components (or just the one in the cache) from
+    // the specified VisBuffer into this one.
+
+    void copyComponents (const VisBuffer2 & other,
+                         const VisBufferComponentSet & components,
+                         Bool copyCachedDataOnly = False);
+
+    // Copies the coordinate components from the specified VisBuffer into this one.
+    // Depending on includeDirections the directio related ones are copied or not.
+
+    void copyCoordinateInfo(const VisBuffer2 & other, Bool includeDirections);
+
+    // For attached VBs this returns the VI the VB is attached to.  For free
+    // VBs this method returns False.
 
     const ROVisibilityIterator2 * getVi () const;
 
-    void invalidate();
-
-    // subtraction: return the difference of the visibilities, flags of
-    // this and other are or-ed. An exception is thrown if the number of
-    // rows or channels differs, but no further checks are done.
-    //-->Not called: VisBuffer2 & operator-=(const VisBuffer2 & vb);
-
-    // Invalidate the cache
-
-    // <group>
-    // Access functions
+    //---------------------------------------------------------------------
     //
-    //     return nCatOK_p ? nCat_p : fillnCat();
-    // void setNCat (const Int &))) {
-    // }
-    // Int nCat() const {
-    //     return This->nCat();
-    // }
+    //    Dirty component methods
+    //
+    //    The dirtyComponent methods support the data-flow approach to using
+    //    VisBuffers (the Visibility Processing Framework).  In this approach
+    //    a VisBuffer is passed to successive processing nodes (e.g., applycal,
+    //    flagging, etc.) which operate  on it and pass it on to the next node
+    //    in the algorithm. The dirtyComponents mechanism allows a processing
+    //    node to mark portions of the VisBuffer as modified.  If the VisBuffer
+    //    reaches an write-to-disk node then the modified portions of the
+    //    VisBuffer will be written out.  The user can also explicitly direct
+    //    that the changes be written out using the writeChangesBack method.
 
-    ///Because of it being publicly exposed ...using nRow, nChannel, nCorr etc to
-    /// determine the size of the buffer can be totally WRONG
-    ///They MAY NOT  represent the shape
-    /// of a buffer filled in this iteration.
-    // Decide what is the right value (depending on where the vb is coming from)
-    // for you for the size of the buffer. i.e (nCorr(), nChannel(), nRow()) or vb.visCube().shape()
-    // The latter comes from the VisIter state ...the former be careful...
-    /// For example VisBuffAccumulator changes these in an unconnected fashion;
-    //without updating fillnrow
-    /// datacube shape  etc etc.
-    /// You are warned nrow_p etc are public variables effectively (despite being
-    ///declared private) so it can be changed
-    /// anywhere the code uses a vb, intentionally or accidentally.
-
-    ////--> shouldn't be settable: void setNRow (const Int &);
-
-    /////--> provided by VI: Int nRowChunk() const;
+    void writeChangesBack ();
 
     void dirtyComponentsAdd (const VbDirtyComponents & additionalDirtyComponents);
     void dirtyComponentsAdd (VisBufferComponents::EnumType component);
@@ -224,139 +234,72 @@ public:
     void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
     void dirtyComponentsSet (VisBufferComponents::EnumType component);
 
-    //--> This needs to be removed: Bool fetch(const asyncio::PrefetchColumns *pfc);
+    // This method returns the imaging weights associated with the VisBuffer.
+    // If an imaging weight generator has not been supplied to the associated
+    // VisibilityIterator then this method will throw an exception.
 
-    // feed1_pa() and feed2_pa() return an array of parallactic angles
-    // (each corresponds to the first receptor of the feed) one for each
-    // row in the current buffer. In contrast, feed_pa() calculates
-    // the angles for each antenna. These methods are implemented for
-    // VisBuffer2 only to benefit from caching of the feed and antenna IDs.
+    const Matrix<Float> & imagingWeight() const;
 
-    // Note that feed_pa is a function instead of a cached value
-    Vector<Float> feed_pa(Double time) const;
-
-    // direction1() and direction2() return arrays of directions where
-    // the first and the second antenna/feed are pointed to. One value for
-    // each row in the current buffer.
-
-
-    // NOMINAL parallactic angle (feed p.a. offset NOT included)
-    Float parang0(Double time) const;
-    Vector<Float> parang(Double time) const;
-
-    MDirection azel0(Double time) const; // function rather than cached value
-    void azel0Vec(Double time, Vector<Double>& azelVec) const;
-    Vector<MDirection> azel(Double time) const;
-    void azelMat(Double time, Matrix<Double>& azelMat) const;
-
-    // Hour angle for specified time
-    Double hourang(Double time) const;
-
-//    const Matrix<Float>& imagingWeight() const;
-//    void setImagingWeight (const Matrix<Float>&);
-
-    //</group>
-
-    //<group>
-    // Utility functions to provide coordinate or column ranges of the
-    // data in the VisBuffer2. Flagging is applied before computing the ranges.
+    //---------------------------------------------------------------------------
     //
-    // Generic accessor to column ranges of integer type, as specified by
-    // enumerations defined in class MSCalEnums. Throws an exception
-    // if the enum is not for a recognized integer column.
-    //--> Low utility?: Vector<Int> vecIntRange(const MSCalEnums::colDef & calEnum) const;
+    // Frequency reporting methods.
+    //
+    // These methods provide information about the frequencies returned in the
+    // visibility cubes.  The information can returned as the channel numbers
+    // (numbered as in the underlying MS data) or in a frame-based frequency.
+    // This information reported need not be in the same frame of reference
+    // used to select the data.  If the frame of reference is specified in the
+    // call, then that is the frame that is used to calculate the frequencies.
+    // If it is not specified, then the VisibilityIterator will be queried for
+    // the reportingFrame; if the user has specified a reporting frame to the
+    // VI then that frame will be used; otherwise the frame used to select
+    // the frequencies will be used.  If the user provides no frequency selection
+    // to the VI then the selection frame will TOPO.
+    //
+    // Both the channelNumber and frequency reporting methods come in two versions:
+    // one returns a single frequency for the specified frequency index and row
+    // while the other provides all of the frequencies for the specified row.
+    // The frequency index is the zero-based index along the frequency axis of
+    // a visibility cube.
 
-    // Antenna id. range (includes both ANTENNA1 and ANTENNA2 columns)
-    //--> Low utility?: Vector<Int> antIdRange() const;
-
-    // Time range
-
-    //--> Low utility?: Bool timeRange(MEpoch & rTime, MVEpoch & rTimeEP, MVEpoch & rInterval) const;
-
-    // Return the row Ids from the original ms. If the ms used is a subset of
-    // another ms then rowIds() return the row ids of the original ms.
-
-    //--> Belongs in VI: void setRowIds (const Vector<uInt>&);
-    //--> Belongs in VI: const Vector<uInt>& rowIds() const;
-
-    //</group>
-
-    // Frequency average the buffer (visibility() column only)
-    //--> Not called: void freqAverage();
-
-    // If the frame is not specified, the VI will be queried as to a default reporting frame.
-    // The VI will return either the frame explicitly provided by the user or if that wasn't
-    // provided then the frame used in specifying the selection.
-
-    Double getFrequency (Int rowInBuffer, Int channelIndex, Int frame = FrameNotSpecified) const;
+    Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     const Vector<Double> getFrequencies (Int rowInBuffer,
                                          Int frame = FrameNotSpecified) const;
-    Int getChannelNumber (Int rowInBuffer, Int channelIndex) const;
+    Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
     const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
-
-
-    // Form Stokes parameters from correlations
-    //  (these are preliminary versions)
-    //--> Not called: void formStokes();
-    //--> Not called: void formStokesWeightandFlag();
-    //--> Not called: void formStokes(Cube<Complex>& vis);
-    //--> Not called: void formStokes(Cube<Float>& fcube);    // Will throw up if asked to do all 4.
 
     // Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
+
     void sortCorr ();
     void unSortCorr();
 
-    // Normalize the visCube by the modelVisCube
-    //   (and optionally also divide visCube_p by its normalized amp)
+    // Normalize the visCube by the modelVisCube.
+
     void normalize(Bool phaseOnly = False);
 
-    // Fill weightMat according to sigma column
+    // Set the weight cube using the sigma cube.  Each weight will be
+    // the reciprocal of the square of the corresponding element in the model
+    // VisCube multiplied by the number of channels in the spectral window.
+    // If an element in sigma is zero then the corresponding weight element
+    // will also be set to zero.
+
     void resetWeightsUsingSigma ();//void resetWeightMat();
 
-    // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
-
-    //--> Called by routine in FixVis but that routine is not called:
-    // void phaseCenterShift(const Vector<Double>& phase);
-    // Rotate visibility phase for phase center offsets (arcsecs)
-    //--> Not called: void phaseCenterShift(Double dx, Double dy);
-
-    // Update coordinate info - useful for copied VisBuffer2s that need
-    // to retain some state for later reference.
-    // Presently this fills antenna, array, field and spectralWindow ids, time,
-    // frequency and number of rows.
-    // if dirDependent is set to False the expensive direction dependent calculation of parallactic or direction of
-    // antenna from pointing table is avoided
-    //Add more as needed.
-    void updateCoordInfo(const VisBuffer2 * vb = NULL, const Bool dirDependent = True);
-    void copyCoordInfo(const VisBuffer2 & other, Bool force = False);
-
-    //--> Not called: void setCorrectedVisCube(const Cube<Complex>& vis);
-    // Like the above, but for FLOAT_DATA, keeping it as real floats.
-
-    //--> Not called: void setFloatDataCube(const Cube<Float>& fcube);
-    // Reference external model visibilities
-    //--> Not called: void refModelVis(const Matrix<CStokesVector>& mvis);
-
-    // Remove scratch cols data from vb
-    //--> Not called: void removeScratchCols();
-
-    // Access the current ROMSColumns object via VisIter
-    //--> Access using VI: const ROMSColumns & msColumns() const;
-
-    //--> Access via VI:  Int numberAnt () const;
-
-
-
-    // Get all selected spectral windows not just the one in the actual buffer
-    //--> Get from VI: void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan);
-
-    //--> Get from VI: void getChannelSelection(Block< Vector<Int> >& blockNGroup,
-    //				   Block< Vector<Int> >& blockStart,
-    //			   Block< Vector<Int> >& blockWidth,
-    //				   Block< Vector<Int> >& blockIncr,
-    //				   Block< Vector<Int> >& blockSpw) const;;
-    //--> Get from VI: void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan) const;
+    //----------------------------------------------------------------------
+    //
+    //  Subhchunk information methods
+    //
+    //  These methods provide information related to the current subchunk.
+    //  The isNewXXX methods return True if the XXX property of the subchunk
+    //  differs from the previous subchunk.
+    //
+    //  The methods msId and msName provide information about the MS
+    //  related to the current subchunk.  The msID is the zero-based index
+    //  of the MS in the sequence of MSs being iterated over.
+    //
+    //  The isWritable method is True when the attached iterator is writable
+    //  and False otherwise.
 
     Bool isNewArrayId () const;
     Bool isNewFieldId () const;
@@ -374,82 +317,176 @@ public:
     //  VisBuffer.  The straight accessors provide read-only access to the
     //  item.  Where the item is allowed to be modified, one or more set
     //  methods are provided.
+    //
+    //  The dimensionality of the major object in in accessor/setter is
+    //  shown in a trailing comment using the following abbreviations:
+    //
+    //  nA :== number of antennas
+    //  nF :== number of frequencies (or channels)
+    //  nC :== number of correlations
+    //  nR :== number of table rows contained in the buffer
+    //
+    //  ** Caution **
+    //
+    //  Some of the methods below have in their argument lists a parameter of the
+    //  form "Int row = -1".  These will return the requested value assuming the
+    //  value requested is constant for all of the rows in the VisBuffer.  Otherwise
+    //  it will throw an exception.
 
-    const Vector<Int> & antenna1 () const;
-    const Vector<Int> & antenna2 () const;
-    Int arrayId () const;
-    const Vector<Int> & channel () const;
-    const Vector<SquareMatrix<Complex, 2> > & cjones () const;
-    const Cube<Complex> & correctedVisCube () const;
-    void setCorrectedVisCube (const Cube<Complex> &);
-    const Matrix<CStokesVector> & correctedVisibility () const;
-    void setCorrectedVisibility (const Matrix<CStokesVector> &);
-    const Vector<Int> & corrType () const;
-    Int dataDescriptionId () const;
-    const Vector<MDirection> & direction1 () const;
-    const Vector<MDirection> & direction2 () const;
-    const Vector<Double> & exposure () const;
-    const Vector<Int> & feed1 () const;
-    const Vector<Float> & feed1_pa () const;
-    const Vector<Int> & feed2 () const;
-    const Vector<Float> & feed2_pa () const;
-    Int fieldId () const;
-    const Matrix<Bool> & flag () const;
-    void setFlag (const Matrix<Bool>&);
-    const Array<Bool> & flagCategory () const;
-    void setFlagCategory (const Array<Bool>&);
-    const Cube<Bool> & flagCube () const;
-    void setFlagCube (const Cube<Bool>&);
-    const Vector<Bool> & flagRow () const;
-    void setFlagRow (const Vector<Bool>&);
-    const Cube<Float> & floatDataCube () const;
-    void setFloatDataCube (const Cube<Float> &);
-    const Vector<Double> & frequency () const;
-    const Matrix<Float> & imagingWeight () const;
-    const Cube<Complex> & modelVisCube () const;
-    void setModelVisCube(const Complex & c);
-    void setModelVisCube(const Cube<Complex>& vis);
-    void setModelVisCube(const Vector<Float>& stokes);
-    const Matrix<CStokesVector> & modelVisibility () const;
-    void setModelVisibility (Matrix<CStokesVector> &);
-    Int nChannel () const;
-    Int nCorr () const;
-    Int nRow () const;
-    const Vector<Int> & observationId () const;
-    const MDirection& phaseCenter () const;
-    Int polFrame () const;
-    const Vector<Int> & processorId () const;
-    const Vector<uInt> & rowIds () const;
-    const Vector<Int> & scan () const;
-    const Vector<Float> & sigma () const;
-    const Matrix<Float> & sigmaMat () const;
-    Int spectralWindow () const;
-    const Vector<Int> & stateId () const;
-    const Vector<Double> & time () const;
-    const Vector<Double> & timeCentroid () const;
-    const Vector<Double> & timeInterval () const;
-    const Vector<RigidVector<Double, 3> > & uvw () const;
-    const Matrix<Double> & uvwMat () const;
-    const Cube<Complex> & visCube () const;
+
+    //--------------------------------------------------------
+    //
+    // Accessors for data contained in the main MeasurementSet main table
+    // The actual visibility data are at the end.
+
+    const Vector<Int> & antenna1 () const; // [nR]
+    const Vector<Int> & antenna2 () const; // [nR]
+    Int arrayId (Int row = -1) const;
+    Int dataDescriptionId (Int row = -1) const;
+    const Vector<MDirection> & direction1 () const; // [nR]
+    const Vector<MDirection> & direction2 () const; // [nR]
+    const Vector<Double> & exposure () const; // [nR]
+    const Vector<Int> & feed1 () const; // [nR]
+    const Vector<Int> & feed2 () const; // [nR]
+    Int fieldId (Int row = -1) const;
+    const Matrix<Bool> & flag () const; // [nF,nR]
+    void setFlag (const Matrix<Bool>&); // [nF,nR]
+    const Array<Bool> & flagCategory () const; // [nC,nF,nCategories,nR]
+    void setFlagCategory (const Array<Bool>&); // [nC,nF,nCategories,nR]
+    const Cube<Bool> & flagCube () const; // [nC,nF,nR]
+    void setFlagCube (const Cube<Bool>&); // [nC,nF,nR]
+    const Vector<Bool> & flagRow () const; // [nR]
+    void setFlagRow (const Vector<Bool>&); // [nR]
+    const Vector<Int> & observationId () const; // [nR]
+    const Vector<Int> & processorId () const; // [nR]
+    const Vector<Int> & scan () const; // [nR]
+    const Vector<Float> & sigma () const; // [nR]
+    const Matrix<Float> & sigmaMat () const; // [nC,nR]
+    const Vector<Int> & stateId () const; // [nR]
+    const Vector<Double> & time () const; // [nR]
+    const Vector<Double> & timeCentroid () const; // [nR]
+    const Vector<Double> & timeInterval () const; // [nR]
+    const Vector<RigidVector<Double, 3> > & uvw () const; // [nR]
+    const Matrix<Double> & uvwMat () const; // [nR,3]
+    const Vector<Float> & weight () const; // [nR]
+    void setWeight (const Vector<Float>&); // [nR]
+    const Matrix<Float> & weightMat () const; // [nC,nR]
+    void setWeightMat (const Matrix<Float>&); // [nC,nR]
+    const Cube<Float> & weightSpectrum () const; // [nC,nF,nR]
+    void setWeightSpectrum (const Cube<Float>&); // [nC,nF,nR]
+
+    // --------------------------------------------------------------
+    // Visibility data accessors in order of observed, corrected,
+    // float, & model
+
+    const Cube<Complex> & visCube () const; // [nC,nF,nR]
     void setVisCube(const Complex & c);
-    void setVisCube (const Cube<Complex> &);
-    const Matrix<CStokesVector> & visibility () const;
-    void setVisibility (Matrix<CStokesVector> &);
-    const Vector<Float> & weight () const;
-    void setWeight (const Vector<Float>&);
-    const Matrix<Float> & weightMat () const;
-    void setWeightMat (const Matrix<Float>&);
-    const Cube<Float> & weightSpectrum () const;
-    void setWeightSpectrum (const Cube<Float>&);
+    void setVisCube (const Cube<Complex> &); // [nC,nF,nR]
+    const Matrix<CStokesVector> & vis () const; // [nF,nR]
+    void setVis (Matrix<CStokesVector> &); // [nF,nR]
+
+    const Cube<Complex> & visCubeCorrected () const; // [nC,nF,nR]
+    void setVisCubeCorrected (const Cube<Complex> &); // [nC,nF,nR]
+    const Matrix<CStokesVector> & visCorrected () const; // [nF,nR]
+    void setVisCorrected (const Matrix<CStokesVector> &); // [nF,nR]
+
+    const Cube<Float> & visCubeFloat () const; // [nC,nF,nR]
+    void setVisCubeFloat (const Cube<Float> &); // [nC,nF,nR]
+
+    const Cube<Complex> & visCubeModel () const; // [nC,nF,nR]
+    void setVisCubeModel(const Complex & c);
+    void setVisCubeModel(const Cube<Complex>& vis); // [nC,nF,nR]
+    void setVisCubeModel(const Vector<Float>& stokes); // [1..4]
+    const Matrix<CStokesVector> & visModel () const; // [nF,nR]
+    void setVisModel (Matrix<CStokesVector> &); // [nF,nR]
+
+    //--------------------------------------------------------
+    //
+    // Accessors for data derived from the MS main table data
+
+    // Returns the pointing angle for the array as a whole at the
+    // specified time.
+
+    MDirection azel0 (Double time) const;
+
+    // Returns the pointing angle for each antenna in the array
+    // at the specified time.
+
+    Vector<MDirection> azel(Double time) const; // [nA]
+
+    // Returns the Jones C matrix for each antenna.
+
+    const Vector<SquareMatrix<Complex, 2> > & cjones () const; // [nA]
+
+    // Returns the correlation type of each correlation in the
+    // VisCube.
+
+    const Vector<Int> & correlationType (Int row = -1) const; // [nC]
+
+    // Calcuates the parallactic angle for the first receptor of
+    // each antenna at the specified time.
+
+    Vector<Float> feed_pa(Double time) const; // [nR]
+
+    // Calculates the parallactic angle for feed 0 of the
+    // row's Antenna1.
+
+    const Vector<Float> & feed1_pa () const; // [nR]
+
+    // Calculates the parallactic angle for feed 0 of the
+    // row's Antenna2.
+
+    const Vector<Float> & feed2_pa () const; // [nR]
+
+    // Returns the hour angle of the array at the specified time.
+
+    Double hourang(Double time) const;
+
+    // Returns the number of correlations along the visCube
+    // correlation axis.
+
+    Int nCorrelations (Int row = -1) const;
+
+    // Returns the number of rows in this VisBuffer
+
+    Int nRows () const;
+
+    // Calculates the parallactic angle of the array as a whole
+    // at the specified time.
+
+    Float parang0(Double time) const;
+
+    // Calculates the parallactic angle of each antenna in the
+    // array at the specified time.
+
+    Vector<Float> parang(Double time) const; // [nA]
+
+    // Returns the phase center of the array for the specified
+    // row.
+
+    const MDirection& phaseCenter (Int row = -1) const;
+
+    // Returns the polarization frame for the specified row.
+
+    Int polarizationFrame (Int row = -1) const;
+
+    // The returned Vector serves as a map between the rows in
+    // the VisBuffer and the row IDs in the underlying MS main
+    // table:  mainTableID [i] = rowIds () [ i];
+
+    const Vector<uInt> & rowIds () const; // [nR]
+
+    // Returns the spectral window ID for the specified row.
+
+    Int spectralWindow (Int row = -1) const;
 
 protected:
 
-    VisBuffer2 (ROVisibilityIterator2 & vi);
+    VisBuffer2 (ROVisibilityIterator2 * vi, Type type);
+    void construct (ROVisibilityIterator2 * vi, Type type);
+    void invalidate();
 
-    VisBuffer2 * vb_p; // One of the implementation classes
-    const ROVisibilityIterator2 * viC_p;
-    ROVisibilityIterator2 * vi_p;
-
+    vi::VisBufferBase2 * vb_p; // One of the implementation classes
 };
 
 } //# NAMESPACE CASA - END
