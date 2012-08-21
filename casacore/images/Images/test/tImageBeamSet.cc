@@ -31,13 +31,12 @@
 
 #include <casa/iostream.h>
 
-
-
 #include <casa/namespace.h>
 
 int main() {
 	try {
 		{
+			cout << "*** Test constructors" << endl;
 			// empty beam set
 			ImageBeamSet x;
 			AlwaysAssert(x.empty(), AipsError);
@@ -52,7 +51,6 @@ int main() {
 			types[0] = ImageBeamSet::SPECTRAL;
 			types[1] = ImageBeamSet::POLARIZATION;
 			ImageBeamSet b(IPosition(2, 20, 4), types);
-
 			b.set(beam);
 			ImageBeamSet c = b;
 			AlwaysAssert(b == b, AipsError);
@@ -62,10 +60,10 @@ int main() {
 			c = x;
 			x = b;
 			AlwaysAssert(x == b, AipsError);
-
 			ImageBeamSet k(beam);
 		}
 		{
+			cout << "*** test setBeam()" << endl;
 			GaussianBeam beam0(Quantity(4, "arcsec"), Quantity(3, "arcsec"), Quantity(20, "deg"));
 			IPosition shape(2, 3, 4);
 			Vector<ImageBeamSet::AxisType> types(2);
@@ -84,9 +82,40 @@ int main() {
 					AlwaysAssert(beam == beam0, AipsError);
 				}
 			}
+			{
+				cout << "*** test getting max and min area beams" << endl;
+				GaussianBeam init(
+					Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+					Quantity(0, "deg")
+				);
+				IPosition shape(2, 3, 4);
+				Vector<ImageBeamSet::AxisType> types(2);
+				types[0] = ImageBeamSet::SPECTRAL;
+				types[1] = ImageBeamSet::POLARIZATION;
+				ImageBeamSet x(init, shape, types);
+				AlwaysAssert(x.getMaxAreaBeam() == init, AipsError);
+				AlwaysAssert(x.getMinAreaBeam() == init, AipsError);
+
+				GaussianBeam maxBeam(
+					Quantity(10, "arcsec"), Quantity(8, "arcsec"),
+					Quantity(0, "deg")
+				);
+				GaussianBeam minBeam(
+					Quantity(1, "arcsec"), Quantity(1, "arcsec"),
+					Quantity(0, "deg")
+				);
+				IPosition maxBeamPos(2, 2, 1);
+				IPosition minBeamPos(2, 2, 3);
+				x.setBeam(maxBeam, maxBeamPos);
+				x.setBeam(minBeam, minBeamPos);
+				AlwaysAssert(x.getMaxAreaBeam() == maxBeam, AipsError);
+				AlwaysAssert(x.getMinAreaBeam() == minBeam, AipsError);
+				AlwaysAssert(x.getMaxAreaBeamPosition() == maxBeamPos, AipsError);
+				AlwaysAssert(x.getMinAreaBeamPosition() == minBeamPos, AipsError);
+			}
 		}
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		cout << x.getMesg() << endl;
 		cout << "FAIL" << endl;
 		return 1;
