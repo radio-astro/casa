@@ -221,6 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Int> baselinelist=thisSelection.getBaselineList();
     Vector<Int> ddIDList=thisSelection.getDDIDList();
     Vector<Int> stateIDList=thisSelection.getStateObsModeList();
+    Vector<Int> observationIDList=thisSelection.getObservationList();
     OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
     OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
 
@@ -233,6 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     retval.define("channel", chanlist);
     retval.define("dd",ddIDList);
     retval.define("stateid",stateIDList);
+    retval.define("observationid",observationIDList);
 
     return retval;
   }

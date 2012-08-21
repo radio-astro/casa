@@ -132,7 +132,8 @@ namespace casa { //# name space casa begins
 ImageAnalysis::ImageAnalysis() :
 	_image(0), _statistics(0), _histograms(0),
 			_oldStatsRegionRegion(0), pOldStatsMaskRegion_p(0),
-			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0) {
+			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+			imageMomentsProgressMonitor(0){
 
 	// Register the functions to create a FITSImage or MIRIADImage object.
 	FITSImage::registerOpenFunction();
@@ -146,13 +147,13 @@ ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
 	_image(inImage->cloneII()), _log(new LogIO()), _statistics(0),
 	_histograms(0), _oldStatsRegionRegion(0),
 	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
-	pOldHistMaskRegion_p(0) {}
+	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {}
 
 ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
 _log(new LogIO()), _statistics(0), _histograms(0),
 	_oldStatsRegionRegion(0),
 	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
-	pOldHistMaskRegion_p(0) {
+	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {
 	_image.reset(cloneInputPointer ? inImage->cloneII() : inImage);
 }
 
@@ -1267,18 +1268,17 @@ Quantity ImageAnalysis::convertflux(
 
 ImageInterface<Float>* ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
-	const String& type, const Quantity& majorKernel,
+	const String& kernel, const Quantity& majorKernel,
 	const Quantity& minorKernel,
 	const Quantity& paKernel, Double scale,
 	Record& Region, const String& mask, const Bool overwrite,
-	const Bool stretch
+	const Bool stretch, const Bool targetres
 ) {
 	*_log << LogOrigin(className(), __FUNCTION__);
     if (majorKernel < minorKernel) {
     	*_log << "Major axis is less than minor axis"
     		<< LogIO::EXCEPTION;
     }
-	String kernel(type);
 	Bool autoScale;
 	if (scale > 0) {
 		autoScale = False;
@@ -1301,13 +1301,11 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	);
 
 	// Convert inputs
-	Vector<Int> axes2(axes);
-	if (axes2.nelements() != 2) {
+	if (axes.nelements() != 2) {
 		*_log << "You must give two axes to convolve" << LogIO::EXCEPTION;
 	}
-	IPosition axes3(axes2);
 	VectorKernel::KernelTypes kernelType = VectorKernel::toKernelType(kernel);
-	Vector<Quantum<Double> > parameters(3);
+	Vector<Quantity> parameters(3);
 	parameters(0) = majorKernel;
 	parameters(1) = minorKernel;
 	parameters(2) = paKernel;
@@ -1331,13 +1329,13 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	std::auto_ptr<ImageInterface<Float> > pImOut(imOut.ptr()->cloneII());
 	try {
 		Image2DConvolver<Float>::convolve(
-			*_log, *pImOut, subImage, kernelType, axes3,
-			parameters, autoScale, scale, True
+			*_log, *pImOut, subImage, kernelType, IPosition(axes),
+			parameters, autoScale, scale, True, targetres
 		);
 	}
-	catch ( AipsError &e ) {
+	catch (const AipsError &e ) {
 		pImOut->unlock() ;
-		throw e ;
+		throw e;
 	}
 	// Return image
 	return pImOut.release();
@@ -2804,6 +2802,9 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	);
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *_log, overwrite, True);
+	if ( imageMomentsProgressMonitor != NULL ){
+		momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
+	}
 	// Set which moments to output
 	if (!momentMaker.setMoments(whichmoments + 1)) {
 		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
@@ -2908,6 +2909,10 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		delete images[i];
 	}
 	return pIm;
+}
+
+void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
+	imageMomentsProgressMonitor = progressMonitor;
 }
 
 String ImageAnalysis::name(const Bool strippath) {

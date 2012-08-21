@@ -54,6 +54,7 @@ template <class T> class PtrHolder;
 class IPosition;
 class String;
 class Unit;
+class ImageMomentsProgressMonitor;
 //template <class T> class MomentsBase;
 
 // <summary>
@@ -337,6 +338,10 @@ public:
 // Get shape 
    IPosition getShape() { return pInImage_p->shape() ; } ;
 
+   //Set an ImageMomentsProgressMonitor interested in getting updates on the
+   //progress of the collapse process.
+   void setProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
+
 private:
 
    ImageInterface<T>* pInImage_p;
@@ -350,6 +355,8 @@ private:
 // device is set, the user can interact with this process.
    Bool whatIsTheNoise (T& noise,
                         ImageInterface<T>& image);
+
+   ImageMomentsProgressMonitor* progressMonitor;
 
 protected:
   using MomentsBase<T>::os_p;

@@ -43,6 +43,18 @@ GaussianBeam::GaussianBeam(
 	setPA(pa);
 }
 
+GaussianBeam::GaussianBeam(
+	const Vector<Quantity>& parms
+) {
+	if (parms.size() != 3) {
+		throw AipsError(
+			"GaussianBeam(const Vector<Quantity>& parms): parms must have exactly three elements"
+		);
+	}
+	setMajorMinor(parms[0], parms[1]);
+	setPA(parms[2]);
+}
+
 GaussianBeam::GaussianBeam(const GaussianBeam& other) :
 	_major(other._major), _minor(other._minor),
 	_pa(other._pa) {}
@@ -92,13 +104,13 @@ Quantity GaussianBeam::getPA(const Bool unwrap) const {
 	if (
 		unwrap
 		&& (
-			_pa.getValue("deg") > 180
-			|| _pa.getValue("deg") < -180
+			_pa.getValue("deg") > 90
+			|| _pa.getValue("deg") <= -90
 		)
 	) {
-		Quantity pa((fmod(_pa.getValue("deg"), 360)), "deg");
-		if (pa.getValue() > 180) {
-			pa -= 360;
+		Quantity pa((fmod(_pa.getValue("deg"), 180)), "deg");
+		if (pa.getValue() > 90) {
+			pa -= 180;
 			pa.convert(_pa.getUnit());
 			return pa;
 		}
@@ -241,6 +253,13 @@ ostream &operator<<(ostream &os, const GaussianBeam& beam) {
 	return os;
 }
 
+LogIO &operator<<(LogIO &os, const GaussianBeam& beam) {
+	ostringstream oss;
+	oss << beam;
+	os << oss.str();
+	return os;
+}
+
 Bool GaussianBeam::deconvolve(
 	Angular2DGaussian& deconvolvedSize,
 	const Angular2DGaussian& convolvedSize
@@ -316,11 +335,16 @@ void GaussianBeam::convert(
 
 Bool near(
 	const GaussianBeam& left, const GaussianBeam& other,
-	const Double tol
+	const Double relWidthTol, const Quantity& absPATol
 ) {
-	return casa::near(left.getMajor(), other.getMajor(), tol)
-		&& casa::near(left.getMinor(), other.getMinor(), tol)
-		&& casa::near(left.getPA(), other.getPA(), tol);
+	if (! absPATol.isConform("rad")) {
+		throw AipsError(
+			"GaussianBeam::near(): absPATol does not have angular units"
+		);
+	}
+	return casa::near(left.getMajor(), other.getMajor(), relWidthTol)
+		&& casa::near(left.getMinor(), other.getMinor(), relWidthTol)
+		&& casa::nearAbs(left.getPA(True), other.getPA(True), absPATol);
 }
 
 

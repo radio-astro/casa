@@ -61,6 +61,7 @@ template<class T> class Quantum;
 template<class T> class SubLattice;
 template<class T> class SubImage;
 template<class T> class Vector;
+class ImageMomentsProgressMonitor;
 
 // <summary>
 // Image analysis and handling tool
@@ -172,7 +173,8 @@ class ImageAnalysis
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
             Double scale, Record& region, const String& mask,
-            const Bool overwrite = False, const Bool stretch=False
+            const Bool overwrite = False, const Bool stretch=False,
+            const Bool targetres = False
     );
 
     CoordinateSystem coordsys(const Vector<int>& axes);
@@ -307,6 +309,8 @@ class ImageAnalysis
         const Bool overwrite=False, const Bool drop=True,
         const Bool stretchMask=False
     );
+
+    void setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
 
     String name(const Bool strippath = False);
 
@@ -605,7 +609,7 @@ class ImageAnalysis
     casa::ImageRegion* pOldHistRegionRegion_p;
     casa::ImageRegion* pOldHistMaskRegion_p;
     casa::Bool oldStatsStorageForce_p, oldHistStorageForce_p;
-
+    ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
    
     // Center refpix apart from STokes

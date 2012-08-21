@@ -95,6 +95,7 @@
 #include <ms/MeasurementSets/MSSummary.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
+#include <casa/OS/Directory.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -326,6 +327,26 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
         Int estMem = priGroup_p.gcount() * max(1, nIF_p) / 1024 * nPixel_p(
                 getIndex(coordType_p, "STOKES")) * nPixel_p(getIndex(
                 coordType_p, "FREQ")) * 8 * 2;
+        
+        Int ns = max(1, nIF_p);
+        Int nc = nPixel_p( getIndex(coordType_p, "STOKES"));
+        Int nf = nPixel_p( getIndex(coordType_p, "FREQ"));
+        //cout << "priGroup_p.gcount()=" << priGroup_p.gcount()
+        //     << " ns=" << ns << " nc=" << nc << " nf=" << nf << endl;
+        long estStor = priGroup_p.gcount() * ns / 1024 * 
+             (7 * 8 + 11 * 4 + (2 * nc + 3 * nc * nf) * 4 + nc * nf + 1);
+        float needS = estStor / 1024. ;
+        //cout << "=========msFile_p=" << msFile_p 
+        //     << " estStor=" << estStor << endl;
+        Directory curD(msFile_p);
+        float freeS = curD.freeSpaceInMB();
+ 
+        itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+               << ((needS > freeS) ? LogIO::WARN : LogIO::DEBUG1) 
+               << "Estimate of Needed Storage Space in MB: " 
+               << 0.9 * needS << "~" << 1.6 * needS 
+               << "\n                      Free Space in MB: " << freeS 
+               << LogIO::POST;
 
         // In reality it can be twice that number
         // We can remove the estMem limit of 1 Gbyte, below,
@@ -335,10 +356,24 @@ void MSFitsInput::readRandomGroupUVFits(Int obsType) {
         // fill the main table
         if ((estMem < totMem) && (estMem < 1000000)) {
             //fill column wise and keep columns in memory
-            fillMSMainTableColWise(nField, nSpW);
+            try {
+                fillMSMainTableColWise(nField, nSpW);
+            }
+            catch(AipsError ex) {
+                itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                   << ex.getMesg() 
+                   << LogIO::EXCEPTION;
+            }
         } else {
             //else fill row wise
-            fillMSMainTable(nField, nSpW);
+            try {
+                fillMSMainTable(nField, nSpW);
+            }
+            catch(AipsError ex) {
+                itsLog << LogOrigin("MSFitsInput", "readRandomGroupUVFits")
+                   << ex.getMesg() 
+                   << LogIO::EXCEPTION;
+            }
         }
         // now handle the BinaryTable extensions for the subtables
         Bool haveAn = False, haveField = False, haveSpW = False;
@@ -521,8 +556,15 @@ void MSFitsInput::readPrimaryTableUVFits(Int obsType) {
                     fillPolarizationTable();
                     fillSpectralWindowTable(*fqTab);
 
-                    fillMSMainTable(*bt);
-                    fillPointingTable();
+                    try {
+                        fillMSMainTable(*bt);
+                    }
+                    catch(AipsError ex) {
+                        itsLog << LogOrigin("MSFitsInput", "readPrimaryTableUVFits")
+                               << ex.getMesg() 
+                               << LogIO::EXCEPTION;
+                    }
+                    //fillPointingTable();
                     fillSourceTable();
                     fillFeedTable();
 
@@ -552,13 +594,27 @@ void MSFitsInput::readFitsFile(Int obsType) {
            << "hdutype=" << infile_p->hdutype()
            << LogIO::POST;
     if (infile_p->hdutype() == FITS::PrimaryGroupHDU) {
-        readRandomGroupUVFits(obsType);
+        try {
+            readRandomGroupUVFits(obsType);
+        }
+        catch(AipsError ex) {
+           itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+                  << "" //<< ex.getMesg() 
+                  << LogIO::EXCEPTION;
+        }
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
         //itsLog << LogOrigin("MSFitsInput", "readFitsFile")
         //   << LogIO::SEVERE
         //  << "Primary Table uvfits not yet handled!"
         //   << LogIO::EXCEPTION;
-        readPrimaryTableUVFits(obsType);
+        try {
+            readPrimaryTableUVFits(obsType);
+        }
+        catch(AipsError ex) {
+           itsLog << LogOrigin("MSFitsInput", "readFitsFile")
+                  << ex.getMesg() 
+                  << LogIO::EXCEPTION;
+        }
     } 
     else {
         itsLog << LogOrigin("MSFitsInput", "readFitsFile")
@@ -1345,8 +1401,7 @@ void MSFitsInput::fillMSMainTableColWise(Int& nField, Int& nSpW) {
                 lastFillFieldId = fieldId;
             }
         }
-    }
-
+    } 
     // If determining interval on-the-fly, fill interval/exposure columns
     //  now:
     if (discernIntExp) {
@@ -1392,6 +1447,7 @@ void MSFitsInput::fillMSMainTable(Int& nField, Int& nSpW) {
 
     Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     Int nChan = nPixel_p(getIndex(coordType_p, "FREQ"));
+
 
     Matrix<Complex> vis(nCorr, nChan);
     Vector<Float> sigma(nCorr);
@@ -2844,8 +2900,6 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
     kwl.first();
 
     // get the uv table column names
-    //Int nParams = 0; // (kw = kwl("PCOUNT")) ? kw->asInt() : 0;
-    //Int nGroups = 1; // (kw = kwl("GCOUNT")) ? kw->asInt() : 1;
     Int nFields = (kw = kwl("TFIELDS")) ? kw->asInt() : -1;
     if (nFields == -1) {
         itsLog << LogOrigin("MSFitsInput", "fillMSMainTable")
@@ -2873,6 +2927,23 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
 
     Int nCorr = nPixel_p(getIndex(coordType_p, "STOKES"));
     Int nChan = nPixel_p(getIndex(coordType_p, "FREQ"));
+    Int ns = max(1, nIF_p);
+    Int nrows = bt.nrows();
+
+    long estStor = nrows * ns / 1024 * 
+        (7 * 8 + 11 * 4 + (2 * nCorr + 3 * nCorr * nChan) * 4 + 
+         nCorr * nChan + 1);
+    float needS = estStor / 1024.;
+    //cout << " --------msFile_p=" << msFile_p << endl;
+    Directory curD(msFile_p);
+    float freeS = curD.freeSpaceInMB();
+ 
+    itsLog << LogOrigin("MSFitsInput", "MSFitsInput")
+           << ((needS > freeS) ? LogIO::WARN : LogIO::DEBUG1) 
+           << "Estimate of Needed Storage Space in MB: " 
+           << 0.9 * needS << "~" << 1.6 * needS 
+           << "\n                       Free Space in MB: " << freeS 
+           << LogIO::POST;
 
     Matrix<Complex> vis(nCorr, nChan);
     Vector<Float> sigma(nCorr);
@@ -2907,7 +2978,6 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
 
     //receptorAngle_p.resize(1);
     //nAnt_p = 0;
-    Int nrows = bt.nrows();
 
     itsLog << LogIO::NORMAL << "Fill MS Main Table of " << nrows
             << " rows uvfits visibility data " << LogIO::POST;
