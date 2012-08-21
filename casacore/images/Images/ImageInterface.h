@@ -157,7 +157,7 @@ public:
   // Copy constructor (copy semantics).
   ImageInterface (const ImageInterface& other);
 
-  ~ImageInterface();
+  virtual ~ImageInterface();
 
   // Make a copy of the derived object (reference semantics).
   // <group>
