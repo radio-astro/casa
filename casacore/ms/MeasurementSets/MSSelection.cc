@@ -417,6 +417,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   TableExprNode MSSelection::toTableExprNode(MSSelectableTable* msLike)
   {
+    // Convert the MS selection to a TableExprNode object, 
+    // representing a TaQL selection in C++.
+    // Input:
+    //    msLike           const MSSelectableTable&  MeasurementSet or CalTable 
+    //                                               to bind TaQL
+    // Output:
+    //    toTableExprNode  TableExprNode             Table expression node
+    //
+    // Interpret all expressions and produce a consolidated TEN.  
+    //
     if (fullTEN_p.isNull()==False) return fullTEN_p;
 
     const MeasurementSet *ms=getMS(msLike);
@@ -500,7 +510,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      case OBSERVATION_EXPR:
 		{
-		  //		  MSObservation obsSubTable(msLike->observation());
 		  observationIDs_p.resize(0);
 		  if(observationExpr_p != "")
 		    node = msObservationGramParseCommand(ms, msLike->observation(),
@@ -618,161 +627,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Interpret all expressions in the MS selection
     //
+    // This method now is purely for backwards compatibility reasons.
+    // Its usage is discouraged.
+    //
+    // The original code using old-styled interface to the various
+    // parsers is available as comments in r19937 in the SVN repos.
+    //
     if (fullTEN_p.isNull()==False) return fullTEN_p;
     
     MSInterface msLike(*ms);
     return toTableExprNode(&msLike);
 
-    // resetMS(*ms);
-    // TableExprNode condition;
-
-    // if (mssErrHandler_p == NULL) mssErrHandler_p = new MSSelectionErrorHandler();
-    // setErrorHandler(ANTENNA_EXPR, mssErrHandler_p);
-    // try
-    //   {
-    // 	for(uInt i=0; i<exprOrder_p.nelements(); i++)
-    // 	  {
-    // 	    TableExprNode node;
-    // 	    switch(exprOrder_p[i])
-    // 	      {
-    // 	      case ANTENNA_EXPR:
-    // 		{
-    // 		  antenna1IDs_p.resize(0);
-    // 		  antenna2IDs_p.resize(0);
-    // 		  baselineIDs_p.resize(0,2);
-    // 		  if(antennaExpr_p != "") {
-    // 		    node = msAntennaGramParseCommand(ms, antennaExpr_p, 
-    // 						     antenna1IDs_p, 
-    // 						     antenna2IDs_p,
-    // 						     baselineIDs_p);
-    // 		  }
-    // 		  break;
-    // 		}
-    // 	      case FIELD_EXPR:
-    // 		{
-    // 		  fieldIDs_p.resize(0);
-    // 		  TableExprNode condition = (ms->col(MS::columnName(MS::FIELD_ID)));
-    // 		  if(fieldExpr_p != "")
-    // 		    node = msFieldGramParseCommand(ms->field(), condition, fieldExpr_p,fieldIDs_p);
-    // 		  break;
-    // 		}
-    // 	      case SPW_EXPR:
-    // 		{
-    // 		  spwIDs_p.resize(0);
-    // 		  if (spwExpr_p != "" &&
-    // 		      msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
-    // 		    node = *(msSpwGramParseNode());
-    // 		  break;
-    // 		}
-    // 	      case SCAN_EXPR:
-    // 		{
-    // 		  scanIDs_p.resize(0);
-    // 		  if(scanExpr_p != "")
-    // 		    node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
-    // 		  //		node = *(msScanGramParseNode());
-    // 		  break;
-    // 		}
-    // 	      case OBSERVATION_EXPR:
-    // 		{
-    // 		  observationIDs_p.resize(0);
-    // 		  if(observationExpr_p != "")
-    // 		    node = msObservationGramParseCommand(ms, observationExpr_p, 
-    // 							 observationIDs_p, maxObs_p);
-    // 		  break;
-    // 		}
-    // 	      case ARRAY_EXPR:
-    // 		{
-    // 		  arrayIDs_p.resize(0);
-    // 		  if(arrayExpr_p != "")
-    // 		    node = msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p);
-    // 		  break;
-    // 		}
-    // 		/*
-    // 		  case TIME_EXPR:
-    // 		  if(timeExpr_p != "" &&
-    // 		  msTimeGramParseCommand(ms, timeExpr_p) == 0)
-    // 		  node = *(msTimeGramParseNode());
-    // 		  break;
-    // 		*/
-    // 	      case UVDIST_EXPR:
-    // 		{
-    // 		  selectedUVRange_p.resize(2,0);
-    // 		  selectedUVUnits_p.resize(0);
-    // 		  if(uvDistExpr_p != "" &&
-    // 		     msUvDistGramParseCommand(ms, uvDistExpr_p, 
-    // 					      selectedUVRange_p, 
-    // 					      selectedUVUnits_p) == 0)
-    // 		    node = *(msUvDistGramParseNode());
-    // 		  break;
-    // 		}
-    // 	      case TAQL_EXPR:
-    // 		{
-    // 		  if(taqlExpr_p != "")
-    // 		    {
-    // 		      //	      taql = tableCommand(taqlExpr_p).node();
-    // 		      node = RecordGram::parse(*ms,taqlExpr_p);
-    // 		    }
-    // 		  break;
-    // 		}
-    // 	      case POLN_EXPR:
-    // 		{
-    // 		  if (polnExpr_p != "")
-    // 		    {
-    // 		      msPolnGramParseCommand(ms, 
-    // 					     polnExpr_p,
-    // 					     node,
-    // 					     ddIDs_p,
-    // 					     selectedPolMap_p,
-    // 					     selectedSetupMap_p);
-    // 		    }
-    // 		  break;
-    // 		}
-    // 	      case STATE_EXPR:
-    // 		{
-    // 		  stateObsModeIDs_p.resize(0);
-    // 		  if(stateExpr_p != "" &&
-    // 		     msStateGramParseCommand(ms, stateExpr_p,stateObsModeIDs_p) == 0)
-    // 		    node = *(msStateGramParseNode());
-    // 		  break;
-    // 		}
-    // 	      case NO_EXPR:break;
-    // 	      default:  break;
-    // 	      } // Switch
-	    
-    // 	    condition = condition && node;
-    // 	  }//For
-    // 	//
-    // 	// Now parse the time expression.  Internally use the condition
-    // 	// generated so far to find the first logical row to use to get
-    // 	// value of the wild-card fields in the time expression. 
-    // 	//
-    // 	const TableExprNode *timeNode = 0x0;
-    // 	selectedTimesList_p.resize(2,0);
-    // 	if(timeExpr_p != "" &&
-    // 	   msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
-    // 	  timeNode = msTimeGramParseNode();
-    // 	//
-    // 	// Add the time-expression TEN to the condition
-    // 	//
-    // 	if(timeNode && !timeNode->isNull()) {
-    // 	  if(condition.isNull()) {
-    // 	    condition = *timeNode;
-    // 	  } else {
-    // 	    condition = condition && *timeNode;
-    // 	  }
-    // 	}
-	
-    // 	fullTEN_p = condition;
-    //   }
-    // catch(AipsError& x)
-    //   {
-    // 	deleteNodes();
-    // 	throw(x);
-    //   }	
-
-    // runErrorHandler();
-    // deleteNodes();
-    // return condition;
   }
   
   //----------------------------------------------------------------------------
