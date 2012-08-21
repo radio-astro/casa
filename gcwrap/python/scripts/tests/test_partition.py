@@ -212,7 +212,7 @@ class partition_test2(test_base):
 
     def test_sepaxis(self):
         '''Partition: separationaxis=none'''        
-        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='default')
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='both')
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')

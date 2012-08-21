@@ -65,7 +65,7 @@ class PartitionHelper(ParallelTaskHelper):
             self._createCalMSCommand()
 
         if self._arg['outputvis'] != '':
-            casalog.post("Analyzing MS for Partioning")
+            casalog.post("Analyzing MS for partitioning")
             self._createPrimarySplitCommand()
 
     def _createCalMSCommand(self):
@@ -95,7 +95,7 @@ class PartitionHelper(ParallelTaskHelper):
                 self._createScanSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'spw':
                 self._createSPWSeparationCommands()
-            elif self._arg['separationaxis'].lower() == 'default':
+            elif self._arg['separationaxis'].lower() == 'both':
                 self._createDefaultSeparationCommands()
         else:
             # Single mms case
@@ -377,24 +377,25 @@ def partition(vis,
            createmms,
            separationaxis,
            numsubms,
+           datacolumn,
            calmsselection,
            calmsname,
            calfield,
            calscan,
            calintent,
-           datacolumn,
            field,
            spw,
            antenna,
            timebin,
+           combine,
            timerange,
            scan,
            scanintent,
            array,
            uvrange,
-           observation,
-           combine):
-    """Create a visibility subset from an existing visibility set:
+           observation
+           ):
+    """Create a multi visibility set from an existing visibility set:
 
     Keyword arguments:
     vis -- Name of input visibility file (MS)
@@ -403,21 +404,28 @@ def partition(vis,
                   default: none; example: outputvis='ngc5921_src.ms'
     createmms -- Boolean flag if we're creating Multi MS
                   default: True
-    separationaxis -- what axis do we intend to split on.
+        separationaxis -- what axis do we intend to split on.
                    default = 'scan'
-                   Options: 'scan'
-    createcalms -- Boolean flag if we plan to create a separate Calibration ms
-                   default = True
-    calmsname -- Name of output calibration visibility file (MS)
-                  default: none; example: outputvis='ngc5921_CAL.ms'
-    calselection -- Method by which the calibration scans will be identified.
-                  default: auto
+                   Options: 'scan','spw','both'
+        numsubms -- Number of sub-MSs to create.
+                    default: 64
     datacolumn -- Which data column to split out
                   default='corrected'; example: datacolumn='data'
                   Options: 'data', 'corrected', 'model', 'all',
                   'float_data', 'lag_data', 'float_data,data', and
                   'lag_data,data'.
                   note: 'all' = whichever of the above that are present.
+    calmsselection -- Method by which to create a separate Calibration ms
+                   default = 'none'
+                   options: 'none','auto','manual'
+        calmsname -- Name of output calibration visibility file (MS)
+                  default: none; example: outputvis='ngc5921_CAL.ms'
+        calfield -- Field selection for calibration MS.
+                  default: ''
+        calscans -- Scan selection for calibration MS.
+                  default: ''
+        calintent -- Scan intent selection for calibration MS.
+                  default: ''
     field -- Field name
               default: field = '' means  use all sources
               field = 1 # will get field_id=1 (if you give it an
@@ -434,6 +442,9 @@ def partition(vis,
     timebin -- Interval width for time averaging.
                default: '0s' or '-1s' (no averaging)
                example: timebin='30s'
+        combine -- Data descriptors that time averaging can ignore:
+                  scan, and/or state
+                  Default '' (none)
     timerange -- Time range
                  default='' means all times.  examples:
                  timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
@@ -451,9 +462,6 @@ def partition(vis,
                default '' (all).
     observation -- observation ID(s) to select.
                    default '' (all).
-    combine -- Data descriptors that time averaging can ignore:
-                  scan, and/or state
-                  Default '' (none)
     """
     #retval = True
     casalog.origin('partition')
