@@ -73,6 +73,8 @@ namespace casa {
 class GaussianBeam {
 public:
 
+	static const GaussianBeam NULL_BEAM;
+
 	// create a beam with all quantities zero (a null beam).
 	GaussianBeam();
 
@@ -116,7 +118,6 @@ public:
 	// returns the value portion of the minor axis in the specified units
 	Double getMinor(const Unit& u) const;
 
-
 	// returns the position angle's value as it was at construction,
 	// unless <src>unwrap</src> is True, in which case the value of the angle
 	// returned will be between -90 and 90 degrees (but with unit the same
@@ -136,7 +137,6 @@ public:
 	// returns GassianBeam.
 	static const String& className();
 
-
 	Record toRecord() const;
 
 	void setMajorMinor(const Quantity& majAx, const Quantity& minAx);
@@ -145,6 +145,11 @@ public:
 
 	static GaussianBeam fromRecord(const Record& rec);
 
+	// convert this object to a three-Vector of (major FWHM, minor FWHM, and pa).
+	// If <src>unwrap</src> is True, the returned pa will fall between -90 and +90
+	// degrees.
+	Vector<Quantity> toVector(const Bool unwrap=True) const;
+
 	// convert stored Quantities to the specified units
 	void convert(
 		const String& majUnit, const String& minUnit,
@@ -152,7 +157,7 @@ public:
 	);
 
 	// Deconvolve the parameters of a source Gaussian from a this GaussianBeam
-	// to give a model Gaussian.  The return is True if the model appears
+	// to give the deconvolved Gaussian source.  The return is True if the model appears
 	// to be a point source and the output model will be set to
 	// the parameters of the beam.
 	Bool deconvolve(
