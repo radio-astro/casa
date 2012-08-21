@@ -1787,8 +1787,8 @@ Date/Time:                         RR:                      RL:                 
 	 <description>
 	   Record with fields contain the selection experessions. Keys
 	   recognized in the record are: "spw", "time", "field",
-	   "baseline", "scan", "scanintent", "polarization", "observation", and
-	   "uvdist".
+	   "baseline", "scan", "scanintent", "polarization",
+	   "observation", "array", "uvdist" and "taql".
 	 </description>
 	 <value></value>
        </param>	

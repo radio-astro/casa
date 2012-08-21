@@ -235,26 +235,11 @@ class UnitTest:
     def searchscript(self, testname, scriptdir):
         """Search for the script"""
         print "Searching for script %s in %s" %(testname,scriptdir)                  
-#        scriptdir=self.scriptdir
-        TestName=string.lower(testname)
-#        print 'testname='+testname
+#        TestName=string.lower(testname)
+        TestName = testname
 
-#        # search for DIR/tests/<name>.py
-#        if os.path.isdir(scriptdir+'/tests/'):
-#            allScripts=os.listdir(scriptdir+'/tests/')
-#        else:
-#            allScripts=[]
-##        print "allScripts = ", allScripts
         theScript=''
         numOfScript=0
-#        for scr in allScripts :
-##            print 'scr='+scr
-#            #if(string.find(scr,testname)>=0):
-#            if(scr == TestName+'.py'):
-##                print scr, testname
-#                #if (self.ispythonscript(scr)):
-#                theScript = 'tests/'+scr
-#                numOfScript +=1
 
         # search for DIR/<name>.py
         if os.path.isdir(scriptdir):

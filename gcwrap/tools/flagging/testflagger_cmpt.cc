@@ -22,6 +22,7 @@
 #include <casa/sstream.h>
 #include <unistd.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
+#include <tables/Tables/Table.h>
 
 
 using namespace std;
@@ -50,9 +51,12 @@ testflagger::~testflagger()
 		done();
 
 	} catch (AipsError x) {
+	    Table::relinquishAutoLocks(True);
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
+    Table::relinquishAutoLocks(True);
+
 }
 
 bool

@@ -155,6 +155,10 @@ def simanalyze(
             if type(imsize) == type([]):
                 if len(imsize) > 0:
                     imsize0 = imsize[0]
+                    if len(imsize) > 1:
+                        imsize1 = imsize[1]
+                    else:
+                        imsize1 = imsize0
                 else:
                     imsize0 = -1
             else:
@@ -163,7 +167,7 @@ def simanalyze(
                 imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                           int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
             else:
-                imsize=[imsize0,imsize0]
+                imsize=[imsize0,imsize1]
 
 
 
@@ -388,7 +392,7 @@ def simanalyze(
             # in simdata we use imdirection instead of model_refdir
             if not util.isdirection(imdirection,halt=False):
                 imdirection=model_refdir
-            util.image(mstoimage,imagename,
+            util.imclean(mstoimage,imagename,
                        cleanmode,cell,imsize,imdirection,
                        niter,threshold,weighting,
                        outertaper,stokes, #sourcefieldlist=sourcefieldlist,

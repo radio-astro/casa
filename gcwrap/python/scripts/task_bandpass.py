@@ -8,7 +8,8 @@ def bandpass(vis=None,caltable=None,
              observation=None,msselect=None,
 	     solint=None,combine=None,refant=None,minblperant=None,
 	     minsnr=None,solnorm=None,
-	     bandtype=None,append=None,fillgaps=None,
+	     bandtype=None,smodel=None,
+	     append=None,fillgaps=None,
 	     degamp=None,degphase=None,visnorm=None,
 	     maskcenter=None,maskedge=None,
 	     gaintable=None,gainfield=None,interp=None,spwmap=None,
@@ -38,6 +39,11 @@ def bandpass(vis=None,caltable=None,
 				     observation='', baseline='',uvrange='',chanmode='none',
 				     msselect='');
 
+
+		# set the model, if specified
+		if (len(smodel)>0):
+			cb.setptmodel(smodel);
+		
 
 		#Apply other calibrations
 		# First do the existing cal tables...

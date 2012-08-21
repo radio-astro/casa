@@ -20,6 +20,8 @@ myname = 'test_virtualconcat'
 # name of the resulting MS
 msname = 'concatenated.ms'
 
+testmms=False
+
 def checktable(thename, theexpectation, multims=False):
     global msname, myname
     if multims:        
@@ -71,13 +73,21 @@ class test_virtualconcat(unittest.TestCase):
         res = None
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
+        # Pick up alternative data directory to run tests on MMSs
+        testmms = False
+        if os.environ.has_key('TEST_DATADIR'):   
+            testmms = True
+            DATADIR = str(os.environ.get('TEST_DATADIR'))
+            if os.path.isdir(DATADIR):
+                datapath = DATADIR+'/concat/input/'
+
         cpath = os.path.abspath(os.curdir)
         filespresent = sorted(glob.glob("*.ms"))
         os.chdir(datapath)
         for mymsname in sorted(glob.glob("*.ms")):
             if not mymsname in filespresent:
                 print "Copying ", mymsname
-                shutil.copytree(mymsname, cpath+'/'+mymsname)
+                shutil.copytree(mymsname, cpath+'/'+mymsname, True)
         os.chdir(cpath)
 
         default(concat)
@@ -104,7 +114,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test1.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test1.ms',ignore_errors=True)
-            shutil.copytree(msname,'test1.ms')
+            shutil.copytree(msname,'test1.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -151,7 +161,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test2.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test2.ms',ignore_errors=True)
-            shutil.copytree(msname,'test2.ms')
+            shutil.copytree(msname,'test2.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -227,7 +237,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test3.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test3.ms',ignore_errors=True)
-            shutil.copytree(msname,'test3.ms')
+            shutil.copytree(msname,'test3.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -276,7 +286,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test4.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test4.ms',ignore_errors=True)
-            shutil.copytree(msname,'test4.ms')
+            shutil.copytree(msname,'test4.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
         
@@ -362,7 +372,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test5.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test5.ms',ignore_errors=True)
-            shutil.copytree(msname,'test5.ms')
+            shutil.copytree(msname,'test5.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True        
     
@@ -402,7 +412,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test6.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test6.ms',ignore_errors=True)
-            shutil.copytree(msname,'test6.ms')
+            shutil.copytree(msname,'test6.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True        
     
@@ -443,7 +453,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test7.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test7.ms',ignore_errors=True)
-            shutil.copytree(msname,'test7.ms')
+            shutil.copytree(msname,'test7.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True        
     
@@ -487,7 +497,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test8.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test8.ms',ignore_errors=True)
-            shutil.copytree(msname,'test8.ms')
+            shutil.copytree(msname,'test8.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True        
     
@@ -518,7 +528,7 @@ class test_virtualconcat(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part2-mod2-wscratch.ms',ignore_errors=True)
-        shutil.copytree('part2-mod2.ms', 'part2-mod2-wscratch.ms')
+        shutil.copytree('part2-mod2.ms', 'part2-mod2-wscratch.ms', True)
         print 'creating scratch columns in part2-mod2-wscratch.ms'
         cb.open('part2-mod2-wscratch.ms') # calibrator-open creates scratch columns
         cb.close()
@@ -538,7 +548,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test9.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test9.ms',ignore_errors=True)
-            shutil.copytree(msname,'test9.ms')
+            shutil.copytree(msname,'test9.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -571,7 +581,7 @@ class test_virtualconcat(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part1-wscratch.ms',ignore_errors=True)
-        shutil.copytree('part1.ms', 'part1-wscratch.ms')
+        shutil.copytree('part1.ms', 'part1-wscratch.ms', True)
         print 'creating scratch columns in part1-wscratch.ms'
         cb.open('part1-wscratch.ms') # calibrator-open creates scratch columns
         cb.close()
@@ -591,7 +601,7 @@ class test_virtualconcat(unittest.TestCase):
             ms.close()
             if 'test10.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test10.ms',ignore_errors=True)
-            shutil.copytree(msname,'test10.ms')
+            shutil.copytree(msname,'test10.ms', True)
             print myname, ": OK. Checking tables in detail ..."
             retValue['success']=True
 
@@ -622,27 +632,31 @@ class test_virtualconcat(unittest.TestCase):
     def test11(self):
         '''Virtualconcat 11: comparison to concat'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        shutil.rmtree('allparts.ms', ignore_errors=True)
-        shutil.rmtree('allparts.mms', ignore_errors=True)
-        os.system('rm -f ms.txt mms.txt')
-        
-        thebeginning = time.time()
-        concat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'], concatvis='allparts.ms')
-        theend = time.time()
-        print "duration using concat (s) = ", theend-thebeginning
 
-        thebeginning = time.time()
-        virtualconcat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'], concatvis='allparts.mms')
-        theend = time.time()
-        print "duration using virtualconcat (s) =", theend-thebeginning
+        if testmms:
+            print "Skipping this test as concat will not work with an MMS."
+        else:
+            shutil.rmtree('allparts.ms', ignore_errors=True)
+            shutil.rmtree('allparts.mms', ignore_errors=True)
+            os.system('rm -f ms.txt mms.txt')
         
-        listobs(vis='allparts.ms', listfile='ms.txt')
-        shutil.rmtree('allparts.ms')
-        shutil.move('allparts.mms', 'allparts.ms') # to get same file name
-        listobs(vis='allparts.ms', listfile='mms.txt')
-        os.system('diff ms.txt mms.txt > diff.txt')
-        os.system('cat diff.txt')
-        retValue['success'] = (os.path.getsize('diff.txt') == 0)
+            thebeginning = time.time()
+            concat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'], concatvis='allparts.ms')
+            theend = time.time()
+            print "duration using concat (s) = ", theend-thebeginning
+
+            thebeginning = time.time()
+            virtualconcat(vis=['part1.ms','part2.ms','part3.ms','part4.ms'], concatvis='allparts.mms')
+            theend = time.time()
+            print "duration using virtualconcat (s) =", theend-thebeginning
+        
+            listobs(vis='allparts.ms', listfile='ms.txt')
+            shutil.rmtree('allparts.ms')
+            shutil.move('allparts.mms', 'allparts.ms') # to get same file name
+            listobs(vis='allparts.ms', listfile='mms.txt')
+            os.system('diff ms.txt mms.txt > diff.txt')
+            os.system('cat diff.txt')
+            retValue['success'] = (os.path.getsize('diff.txt') == 0)
 
 
 

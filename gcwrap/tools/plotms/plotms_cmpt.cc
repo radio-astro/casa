@@ -334,6 +334,44 @@ void plotms::setColorAxis(const string&  coloraxis, const bool updateImmediately
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 }
 
+void plotms::setSymbol(const string& symbolshape, const int symbolsize,
+                       const string& symbolcolor, const string& symbolfill,
+                       const bool symboloutline, const bool updateImmediately,
+                       const int plotIndex)
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_SYMBOL, true);
+    params.define(PlotMSDBusApp::PARAM_SYMBOLSHAPE, symbolshape);
+    params.define(PlotMSDBusApp::PARAM_SYMBOLSIZE, symbolsize);
+    params.define(PlotMSDBusApp::PARAM_SYMBOLCOLOR, symbolcolor);
+    params.define(PlotMSDBusApp::PARAM_SYMBOLFILL, symbolfill);
+    params.define(PlotMSDBusApp::PARAM_SYMBOLOUTLINE, symboloutline);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
+        PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}
+
+void plotms::setFlaggedSymbol(
+    const string& flaggedsymbolshape, const int flaggedsymbolsize,
+    const string& flaggedsymbolcolor, const string& flaggedsymbolfill,
+    const bool flaggedsymboloutline, const bool updateImmediately,
+    const int plotIndex)
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOL, true);
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLSHAPE, flaggedsymbolshape);
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLSIZE, flaggedsymbolsize);
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLCOLOR, flaggedsymbolcolor);
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLFILL, flaggedsymbolfill);
+    params.define(PlotMSDBusApp::PARAM_FLAGGEDSYMBOLOUTLINE, flaggedsymboloutline);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
+        PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
+}        
 
 string plotms::getColorAxis(const int plotIndex) 
 {

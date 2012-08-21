@@ -73,13 +73,19 @@ from taskinit import *
 
 def imsmooth(
     imagename, kernel, major, minor, pa, targetres, region,
-    box, chans, stokes, mask, outfile, stretch
+    box, chans, stokes, mask, outfile, stretch, overwrite, beam
 ):
     casalog.origin( 'imsmooth' )
+    if (type(beam) == str):
+        if len(beam) != 0:
+            err = "beam cannot be a non-empty string"
+            casalog.post(err, "SEVERE")
+            raise Exception(err)
+        beam = {}
     retValue = False
-
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
+
     if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'box' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'SEVERE' )
@@ -93,12 +99,7 @@ def imsmooth(
         outfile = 'imsmooth_results.im'
         casalog.post( "The outfile paramter is empty, consequently the" \
                       +" smoothed image will be\nsaved on disk in file, " \
-                      + outfile, 'WARN' )
-    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        casalog.post( 'Output file, '+outfile+\
-                      ' exists. imsmooth can not proceed, please\n'+\
-                      'remove it or change the output file name.', 'SEVERE' )
-        return retValue
+                      + outfile, 'WARN')
     _myia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
@@ -107,33 +108,25 @@ def imsmooth(
         stokes, "a", region
     )
     _myia.done()
-
     # If the values given are integers we assume they are given in
     # arcsecs and alter appropriately
     if type( major ) == int:
         major=str(major)+'arcsec'
     if type( minor ) == int:
         minor=str(minor)+'arcsec'                
-
-    try:        
+    try:       
         if ( kernel.startswith( "gaus" ) ):
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             _myia.open( imagename )
-            if (targetres):
-                [major, minor, pa, dsuccess] = _get_parms_for_targetres(_myia, major, minor, pa)
-                if not dsuccess:
-                    _myia.done()
-                    return False
-               
-            casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
-                          +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
-            _myia.convolve2d(
+            retia = _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile,
-                mask=mask, stretch=stretch
+                mask=mask, stretch=stretch, targetres=targetres,
+                overwrite=overwrite, beam=beam
             )
             _myia.done()
+            retia.done()
             retValue = True
 
         elif (kernel.startswith( "box" ) ):
@@ -157,76 +150,23 @@ def imsmooth(
             #retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
             #                           widths=[ minor, major ], \
             #                           region=reg,outfile=outfile )
-            _myia.sepconvolve(
+            retia = _myia.sepconvolve(
                 axes=[0,1], types=['box','box' ],
                 widths=[ minor, major ],
                 region=reg,outfile=outfile,
-                mask=mask, stretch=stretch
+                mask=mask, stretch=stretch,
+                overwrite=overwrite
             )
             _myia.done()
+            retia.done()
             retValue = True
         else:
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
             retValue = False
         
     except Exception, instance:
-        casalog.post( 'Something has gone wrong with the smoothing. Try, try again, and ye shall suceed', 'SEVERE' )
-        casalog.post( 'Exception thrown is: '+str(instance), 'SEVERE' )
-        return False
-
-    
+        _myia.done()
+        retia.done()
+        casalog.post("Exception: " + str(instance), 'SEVERE')
+        raise instance
     return retValue
-
-def _get_parms_for_targetres(myia, major, minor, pa):
-    beam = myia.restoringbeam()
-    if (not beam):
-        casalog.post(
-            "targetres is True but input image does not have a restoring beam so I "
-                + "cannot calculate what gaussian parameters to use to convolve "
-                + "this image to reach the desired resolution. You can set the "
-                + "beam parameters via the ia.setrestoringbeam() method.",
-            "SEVERE"
-        )
-        return False
-              
-    bmaj = qa.tos(beam['major'])
-    bmin = qa.tos(beam['minor'])
-    bpa = qa.tos(beam['positionangle'])
-    dres = myia.deconvolvefrombeam(
-        beam=[bmaj, bmin, bpa], source=[major, minor, pa]
-    )
-    if not dres['fit']['success']:
-        casalog.post(
-            "targetres is True but the convolution parameters you have chosen are too "
-                + "small for this image's beam. The convolution parameters must be at "
-                + "least a bit larger than the current beam parameters. "
-                + "The current beam parameters are " + str(myia.restoringbeam()),
-                'SEVERE'
-        )
-        return [0,0,0,False]
-    major = qa.tos(dres['fit']['major'])
-    minor = qa.tos(dres['fit']['minor'])
-    pa = qa.tos(dres['fit']['pa'])
-    if (dres['return']):
-        # point source so this is likely not going to be a good fit
-        casalog.post(
-            "targetres is True but the convolution parameters you have chosen are too "
-                + "small for this image's beam. The convolution parameters must be at "
-                + "least a bit larger than the current beam parameters or in this case "
-                + "you may instead be able to set the position angle so it is more nearly "
-                + "equal to that of the position angle of the clean beam of the input "
-                + "image. The current beam parameters are " + str(myia.restoringbeam()),
-                'SEVERE'
-        )
-        return [0,0,0,False]
-        
-        
-    casalog.post(
-        "Using convolution parameters of major=" + major
-            + ", minor=" + minor + ", pa="
-            + pa + " to achieve desired resolution",
-        'INFO'
-    )
-    return [major, minor, pa, True]
-
- 

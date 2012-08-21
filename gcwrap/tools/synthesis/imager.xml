@@ -543,6 +543,8 @@ clean components.  If the parameter 'masktemplate' is not empty this
 means that the user want to use an apriori image to make the mask the
 first time (e.g a previously cleaned image)
 
+This function returns a record containing convergence, iterations used and threshold reached. 
+
 
 </description>
 <input>
@@ -643,7 +645,7 @@ the mask the first time</description>
      </param>
 </input>
 
-<returns type="bool"/>
+<returns type="record"/>
 <example>
 
 im.clean(model='3C273XC1.clean.model',

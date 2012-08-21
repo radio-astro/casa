@@ -2927,9 +2927,6 @@ ia.close()
 
 </example>
 </method>
-
- 
- 
    <method type="function" name="convolve2d">
    <shortdescription>Convolve image by a 2D kernel</shortdescription>
    
@@ -2993,6 +2990,15 @@ ia.close()
         <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
         <value>false</value>
      </param>
+     
+     <param type="bool"  name="targetres">
+        <description>If True and type="gaussian", major, minor, and pa are interpreted as the image resolution that the user wants to achieve.  </description>
+        <value>false</value>
+     </param>
+     <param type="record" name="beam">
+        <description>Alternate way of describing a Gaussian. Must have fields "major", "minor", and "pa" (or "positionangle")</description>
+        <value/>
+     </param>
 
 </input>
 <returns type="image"/>
@@ -3054,6 +3060,12 @@ position angle is measured  from +x to +y in the
 absolute pixel coordinate frame  (x is the first axis that you
 specify with argument {\stfaf axes}). 
 
+In the case of a Gaussian, the {\stfaf beam} parameter offers an alternate way of
+describing the convolving Gaussian. If used, neither {\stfaf major}, {stfaf minor},
+nor {\stfaf pa} can be specified. The {\stfaf beam} parameter must have exactly three
+fields: "major", "minor", and "pa" (or "positionangle"). This is, not coincidentally,
+the record format for the output of ia.restoringbeam().
+
 The scaling of the output image is determined by the argument {\stfaf scale}.
 If you leave it unset, then autoscaling will be invoked.  
 
@@ -3079,6 +3091,11 @@ result is associated with that plane in the output image).
 If you do not leave {\stfaf scale} unset, then the convolution kernel
 will be scaled by this value (it has peak unity before application
 of this scale factor).
+
+If targetres=True and type="gaussian" and the input image has a restoring beam,
+this method will interpret the values of major, minor, and pa as the resolution
+of the final image and will calculate the parameters of the Gaussian to use
+in the convolution so that this target resolution is achieved.
 
 Masked pixels will be assigned the value 0.0 before convolution. 
 The output mask is the combination (logical OR) of the default input 

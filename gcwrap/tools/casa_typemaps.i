@@ -176,6 +176,99 @@ using namespace casac;
    }
 }
 
+%typemap(in) Quantity {
+   if(PyDict_Check($input)){
+      PyObject *theUnits = PyDict_GetItemString($input, "unit");
+      PyObject *theVal = PyDict_GetItemString($input, "value");
+      if( theUnits && theVal){
+         std::vector<int> shape;
+         std::vector<double> myVals;
+         if(casac::pyarray_check(theVal)){
+            casac::numpy2vector(theVal, myVals, shape);
+         } else {
+             if (PyString_Check(theVal)){
+                myVals.push_back(-1);
+             } else if (PyInt_Check(theVal)){
+                myVals.push_back(double(PyInt_AsLong(theVal)));
+             } else if (PyLong_Check(theVal)){
+                myVals.push_back(PyLong_AsDouble(theVal));
+             } else if (PyFloat_Check(theVal)){
+                myVals.push_back(PyFloat_AsDouble(theVal));
+             } else {
+               shape.push_back(PyList_Size(theVal));
+                casac::pylist2vector(theVal,  myVals, shape);
+             }
+         }
+         $1 = Quantity(myVals, PyString_AsString(theUnits));
+      }
+   } else {
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary Dictionary");
+      return NULL;
+   }
+}
+
+%typemap(in) Quantity *{
+   if(PyDict_Check($input)){
+      PyObject *theUnits = PyDict_GetItemString($input, "unit");
+      PyObject *theVal = PyDict_GetItemString($input, "value");
+      if( theUnits && theVal){
+         std::vector<int> shape;
+         std::vector<double> myVals;
+         if(casac::pyarray_check(theVal)){
+            casac::numpy2vector(theVal, myVals, shape);
+         } else {
+             if (PyString_Check(theVal)){
+                myVals.push_back(-1);
+             } else if (PyInt_Check(theVal)){
+                myVals.push_back(double(PyInt_AsLong(theVal)));
+             } else if (PyLong_Check(theVal)){
+                myVals.push_back(PyLong_AsDouble(theVal));
+             } else if (PyFloat_Check(theVal)){
+                myVals.push_back(PyFloat_AsDouble(theVal));
+             } else {
+               shape.push_back(PyList_Size(theVal));
+                casac::pylist2vector(theVal,  myVals, shape);
+             }
+         }
+         $1 = new Quantity(myVals,PyString_AsString(theUnits));
+      }
+   } else {
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
+   }
+}
+
+%typemap(in) Quantity &{
+   if(PyDict_Check($input)){
+      PyObject *theUnits = PyDict_GetItemString($input, "unit");
+      PyObject *theVal = PyDict_GetItemString($input, "value");
+      if( theUnits && theVal){
+         std::vector<int> shape;
+         std::vector<double> myVals;
+         if(casac::pyarray_check(theVal)){
+            casac::numpy2vector(theVal, myVals, shape);
+         } else {
+             if (PyString_Check(theVal)){
+                myVals.push_back(-1);
+             } else if (PyInt_Check(theVal)){
+                myVals.push_back(double(PyInt_AsLong(theVal)));
+             } else if (PyLong_Check(theVal)){
+                myVals.push_back(PyLong_AsDouble(theVal));
+             } else if (PyFloat_Check(theVal)){
+                myVals.push_back(PyFloat_AsDouble(theVal));
+             } else {
+               shape.push_back(PyList_Size(theVal));
+                casac::pylist2vector(theVal,  myVals, shape);
+             }
+         }
+         $1 = new Quantity(myVals, PyString_AsString(theUnits));
+      }
+   } else {
+      PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
+      return NULL;
+   }
+}
+
 %typemap(in) record *{
    if(PyDict_Check($input)){
       $1 = new record(pyobj2variant($input, true).asRecord());      
@@ -412,11 +505,43 @@ using namespace casac;
 }
 
 %typemap(out) string* {
-   $result = PyString_FromString($1->c_str());
+   if($1)
+     $result = PyString_FromString($1->c_str());
+   else
+     $result = Py_None;
 }
 
 %typemap(out) variant* {
-   $result = variant2pyobj(*$1);
+   if ($1)
+      $result = variant2pyobj(*$1);
+   else{
+     variant temp_v;
+     $result = variant2pyobj(temp_v);
+   }
+}
+
+%typemap(out) Quantity& {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyObject *v = casac::map_vector($1.value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
+}
+
+%typemap(out) Quantity {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyObject *v = casac::map_vector($1.value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
+}
+
+%typemap(out) Quantity* {
+   $result = PyDict_New();
+   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyObject *v = casac::map_vector($1->value);
+   PyDict_SetItem($result, PyString_FromString("value"), v);
+   Py_DECREF(v);
 }
 
 %typemap(out) BoolVec {

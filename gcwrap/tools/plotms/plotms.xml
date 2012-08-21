@@ -1245,7 +1245,91 @@ called.
   <returns />
 </method>
 
+<!-- void plotms::setSymbol(const string&, int, const string&, const string&, bool) -->
+<method type="function" name="setSymbol">
+  <keyword>setSymbol</keyword>
+  <shortdescription>Sets the unflagged plot symbol</shortdescription>
+  <description>
+Sets the unflagged plot symbol properties: shape, size, color, fill, 
+and outline.
+  </description>
+  <input>
+    <param type="string" name="shape">
+      <description>symbol shape (autoscaling, circle, square, diamond, pixel, nosymbol)</description>
+      <value>autoscaling</value>
+    </param>
+    <param type="int" name="size">
+      <description>size of the symbol in pts</description>
+      <value>2</value>
+    </param>
+    <param type="string" name="color">
+      <description>color of the symbol, in hex (ex. "0000ff")</description>
+	  <value>0000ff</value>
+    </param>
+    <param type="string" name="fill">
+      <description>point fill type (fill, mesh1, mesh2, mesh3, no fill)</description>
+      <value>fill</value>
+    </param>
+    <param type="bool" name="outline">
+      <description>sets outline on plotted points</description>
+      <value>False</value>
+    </param>
 
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns />
+</method>
+
+<!-- void plotms::setFlaggedSymbol(const string&, int, const string&, const string&, bool) -->
+<method type="function" name="setFlaggedSymbol">
+  <keyword>setFlaggedSymbol</keyword>
+  <shortdescription>Sets the flagged plot symbol</shortdescription>
+  <description>
+Sets the flagged plot symbol properties: shape, size, color, fill, 
+and outline.
+  </description>
+  <input>
+    <param type="string" name="shape">
+      <description>flagged symbol shape (autoscaling, circle, square, diamond, pixel, nosymbol)</description>
+      <value>nosymbol</value>
+    </param>
+    <param type="int" name="size">
+      <description>size of the flaggedsymbol in pts</description>
+      <value>2</value>
+    </param>
+    <param type="string" name="color">
+      <description>color of the flagged symbol, in hex (ex. "ff0000")</description>
+      <value>ff0000</value>
+    </param>
+    <param type="string" name="fill">
+      <description>flagged point fill type (fill, mesh1, mesh2, mesh3, no fill)</description>
+      <value>fill</value>
+    </param>
+    <param type="bool" name="outline">
+      <description>sets outline on plotted flagged points</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    <param type="int" name="plotIndex">
+      <description>the index of the plot to apply this change</description>
+      <value>0</value>
+    </param>
+  </input>
+  <example />
+  <returns />
+</method>
 
 <!-- string plotms::getColorAxis(const int plotIndex) -->
 <method type="function" name="getColorAxis">

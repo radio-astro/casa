@@ -1525,7 +1525,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="double" name="tatmos">
-     <description>Temperature of atmosphere [K]</description>
+     <description>(Physical, not Brightness) Temperature of atmosphere [K]</description>
      <value>230.0</value>
      <choice>230.0</choice>
      </param>
@@ -1609,14 +1609,14 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="double" name="tau">
-     <description>Atmospheric Opacity (if tsys-manual)</description>
+     <description>Zenith Atmospheric Opacity (if tsys-manual)</description>
      <value>0.1</value>
      </param>
 
 
 
      <param type="double" name="antefficiency">
-     <description>antenna efficiency</description>
+     <description>Antenna efficiency</description>
      <value>0.8</value>
      </param>
 
@@ -1655,6 +1655,10 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <value>0.</value>
      </param>
 
+     <param type="int" name="rxtype">
+       <description>Receiver type; 0=2SB, 1=DSB e.g. ALMA B9</description>
+       <value>0</value>
+     </param>
 
 </input>
 <returns type='bool'>Bool</returns>

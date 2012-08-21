@@ -119,6 +119,11 @@ is recommended in most applications.
 		</allowed>
 	</param>
 
+        <param type="doubleArray" name="smodel">
+               <description>Point source Stokes parameters for source model.</description>
+               <value></value>
+        </param>
+
 	<param type="bool" name="append">
 		<description>Append solutions to the (existing) table</description>
 		<value>False</value>
@@ -395,7 +400,8 @@ is recommended in most applications.
                          gaintable=['ngc5921.ampcal','ngc5921.phcal']
       gainfield -- Select a subset of calibrators from gaintable(s)
                default:'' ==&gt; all sources in table;
-               same syntax as field
+               'nearest' ==&gt; nearest (on sky) available field in table
+               otherwise, same syntax as field
                example: gainfield='0~3'
                         gainfield=['0~3','4~6']
       interp -- Interpolation type (in time[,freq]) to use for each gaintable.

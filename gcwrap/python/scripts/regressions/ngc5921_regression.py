@@ -461,7 +461,7 @@ caltable = gtable
 # Note this will automatically be applied to all sources
 # not just the one used to determine the bandpass
 gaintable = btable
-gainfield = ''
+gainfield = '0'
 
 # Use nearest (there is only one bandpass entry)
 interp = 'nearest'
@@ -616,9 +616,9 @@ vis = msfile
 # Start with the fluxscale/gain and bandpass tables
 gaintable = [ftable,btable]
 
-# pick the 1445+099 out of the gain table for transfer
-# use all of the bandpass table
-gainfield = ['1','*']
+# use nearest (on sky) for gain transfer
+# use explicit selection on the bandpass table (all of it, in this case)
+gainfield = ['nearest','0']
 
 # interpolation using linear for gain, nearest for bandpass
 interp = ['linear','nearest']
@@ -634,17 +634,8 @@ selectdata = False
 gaincurve = False
 opacity = 0.0
 
-# select the fields for 1445+099 and N5921
-field = '1,2'
-
-applycal()
-
-# Now for completeness apply 1331+305 to itself
-
-field = '0'
-gainfield = ['0','*']
-
-# The CORRECTED_DATA column now contains the calibrated visibilities
+# select all fields
+field = ''
 
 applycal()
 

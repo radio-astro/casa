@@ -42,11 +42,6 @@ def flagcmd(
     mslocal = casac.ms()
     mslocal2 = casac.ms()
 
-    # MS HISTORY
-#    mslocal.open(vis, nomodify=False)
-#    mslocal.writehistory(message='taskname = flagcmd',
-#                         origin='flagcmd')
-    mslocal.open(vis, nomodify=False)
 
     try:
         # Use a default ntime to open the MS. The user-set ntime will be
@@ -256,14 +251,14 @@ def flagcmd(
             # Antenna, correlation and timerange should be handled by the agent
             unionpars = {}
             if cmdlist.__len__() > 1:
-                unionpars = fh.getUnion(mslocal, vis, myflagcmd)
+                unionpars = fh.getUnion(vis, myflagcmd)
                 if len(unionpars.keys()) > 0:
                     casalog.post('Pre-selecting a subset of the MS: ')
                     casalog.post('%s' % unionpars)
                 else:
                     casalog.post('Iterating through the entire MS')
 
-                mslocal.close()
+#                mslocal.close()
             elif cmdlist.__len__() == 1:
 
             # Get all the selection parameters, but set correlation to ''
@@ -1639,8 +1634,10 @@ def newplotflags(
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-    #qatool = casac.quanta()
-    qa = casac.qa = qatool = casac.quanta()
+        
+    # After the swig converstion, it seems that the following
+    # line is not needed anymore
+#    qa = casac.qa = qatool = casac.quanta()
 
     try:
         import pylab as pl

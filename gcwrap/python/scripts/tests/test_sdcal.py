@@ -173,7 +173,46 @@ class sdcal_avetest_base(sdcal_unittest_base):
             self.assertEqual( retval, True,
                               msg='averaged result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, sp0
+
+###
+# Base class for edgemarker testing
+###
+class sdcal_edgemarker_base(sdcal_unittest_base):
+    """
+    Base class for edgemarker testing
+    """
+    def _readref( self, name ):
+        f = open( name, 'r' )
+        lines = f.readlines()
+        f.close()
+
+        ret = []
+        nline = len(lines)
+        for line in lines:
+            s = line.split()
+            ret.append( [float(s[0]),float(s[1])] )
+        return numpy.array(ret).transpose()
+    
+    def _checkmarker( self, name, refdata ):
+        # refdata shape is (2,noff)
+        noff = refdata.shape[1]
+        tb.open(name)
+        tsel = tb.query('SRCTYPE==1')
+        nrow = tsel.nrows()
+        self.assertTrue( nrow > 0,
+                         msg='data doesn\'t have OFF spectra' )
+        dir = tsel.getcol('DIRECTION')
+        tsel.close()
+        tb.close()
         
+        self.assertEqual( 2*noff, dir.shape[1], # refdata store only POLNO==0
+                          msg='number of OFF differ: %s (should be %s)'%(dir.shape[1],2*noff) )
+
+        for irow in xrange(2*noff):
+            idx = int(irow) / 2
+            diff = self._diff( dir[:,irow], refdata[:,idx] )
+            self.assertEqual( numpy.all(diff<0.01), True,
+                              msg='direction for OFF differ (irow=%s): [%s,%s] (should be [%s,%s])'%(irow,dir[0,irow],dir[1,irow],refdata[0,idx],refdata[1,idx]) )
 
 ###
 # Test on bad parameter settings
@@ -866,11 +905,115 @@ class sdcal_test9(sdcal_avetest_base,unittest.TestCase):
             self.assertTrue(abs((fmax-redge[i])/redge[i]) < eps,
                              msg='Right frequency edge for FREQ_ID=%s does not match'%(i))
 
+###
+# Test edgemarker
+###
+class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
+    """
+    Test edgemarker function that is available for calmode='otf'. 
 
+    Here, data will not be calibrated and only edge marking process
+    will be executed. 
+    """
+    # Input and output names
+    rawfile='lissajous.asap'
+    prefix=sdcal_unittest_base.taskname+'TestEdgeMarkerGeneric'
+    reffiles = [ 'marker.otf.default.ref',
+                 'marker.otf.custom.ref' ]
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testEdgeMarkerGeneric0(self):
+        """
+        Test default setting for edgemarker
+        """
+        outname = self.prefix+'.asap'
+        self.res = sdcal(infile=self.rawfile,calmode='otf',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        refdir = self._readref( self.reffiles[0] )
+        self._checkfile( outname ) 
+        self._checkmarker( outname, refdir )
+
+    def testEdgeMarkerGeneric1(self):
+        """
+        Test customized edge marking
+        """
+        outname = self.prefix+'.asap'
+        self.res = sdcal(infile=self.rawfile,calmode='otf',fraction='3%',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        refdir = self._readref( self.reffiles[1] )
+        self._checkfile( outname ) 
+        self._checkmarker( outname, refdir )
+
+
+class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
+    """
+    Test edgemarker function that is available for calmode='otfraster'. 
+
+    Here, data will not be calibrated and only edge marking process
+    will be executed. 
+    """
+    # Input and output names
+    rawfile='raster.asap'
+    prefix=sdcal_unittest_base.taskname+'TestEdgeMarkerRaster'
+    reffiles=[ 'marker.raster.default.ref',
+               'marker.raster.custom.ref' ]
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        for reffile in self.reffiles:
+            if (not os.path.exists(reffile)):
+                shutil.copyfile(self.datapath+reffile, reffile)
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        for reffile in self.reffiles:
+            if (os.path.exists(reffile)):
+                os.remove(reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testEdgeMarkerRaster0(self):
+        """
+        Test default setting for edgemarker
+        """
+        outname = self.prefix+'.asap'
+        self.res = sdcal(infile=self.rawfile,calmode='otfraster',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        refdir = self._readref( self.reffiles[0] )
+        self._checkfile( outname ) 
+        self._checkmarker( outname, refdir )
+
+    def testEdgeMarkerRaster1(self):
+        """
+        Test default setting for edgemarker
+        """
+        outname = self.prefix+'.asap'
+        self.res = sdcal(infile=self.rawfile,calmode='otfraster',noff=1,markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        refdir = self._readref( self.reffiles[1] )
+        self._checkfile( outname ) 
+        self._checkmarker( outname, refdir )
 
 def suite():
     return [sdcal_test0, sdcal_test1,
             sdcal_test2, sdcal_test3,
             sdcal_test4, sdcal_test5,
             sdcal_test6, sdcal_test7,
-            sdcal_test8, sdcal_test9]
+            sdcal_test8, sdcal_test9,
+            sdcal_test_edgemarker_generic,
+            sdcal_test_edgemarker_raster]

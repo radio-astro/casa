@@ -233,7 +233,7 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode,
   return rstat;
 }
 
-bool imager::clean(const std::string& algorithm, const int niter, const double gain,
+  casac::record* imager::clean(const std::string& algorithm, const int niter, const double gain,
                    const ::casac::variant& threshold, const bool displayprogress,
                    const std::vector<std::string>& model,
                    const std::vector<bool>& keepfixed, const std::string& complist,
@@ -244,7 +244,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
                    const bool interactive, const int npercycle,
                    const std::string& masktemplate, const bool async)
 {
-  Bool rstat(False);
+  casac::record* rstat(0);
    if(hasValidMS_p)
      {
        try 
@@ -255,12 +255,14 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	   Vector<String> aimage(toVectorString(image));
 	   Vector<String> aresidual(toVectorString(residual));
 	   Vector<String> apsf(toVectorString(psfnames));
-	   rstat = itsImager->iClean(String(algorithm), niter, gain,
+	   Record retval;
+	   retval = itsImager->iClean(String(algorithm), niter, gain,
 				     casaQuantity(threshold), Bool(displayprogress),
 				     amodel, fixed, String(complist),
 				     amask, aimage, aresidual, apsf,
 				     Bool(interactive), npercycle,
 				     String(masktemplate));
+	   rstat = fromRecord(retval);
 	 } 
        catch  (AipsError x) 
 	 {
@@ -870,6 +872,9 @@ imager::plotvis(const std::string& type, const int increment)
 	 else if(String(type)==String("ftweight")){
 	   Vector <String> wgtim(toVectorString(wgtimages));
 	   itsImager->getWeightGrid(blockOGrid, String(type), wgtim);
+	   std::vector<double> d_weight(0);
+	   std::vector<int> s_shape(0);
+	   rstat = new ::casac::variant(d_weight, s_shape);
 	 }
 
       } catch  (AipsError x) {
@@ -1682,7 +1687,6 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
    Bool rstat(False);
    try {
      casa::String pcolToUse(pointingcolumntouse);
-     cerr << "SCALE " << scale << endl;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
    } catch  (AipsError x) {
      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

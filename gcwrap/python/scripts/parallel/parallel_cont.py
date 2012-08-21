@@ -264,12 +264,14 @@ class imagecont():
             sca=scales if (alg=='msclean') else [0]
             dc.setscales(scalemethod='uservector', uservector=sca)
             alg='fullmsclean'
+        retval={}
         if(alg=='clark'):
-            dc.fullclarkclean(niter=niter, gain=self.gain, threshold=thr, model=model, mask=mask)
+            retval=dc.fullclarkclean(niter=niter, gain=self.gain, threshold=thr, model=model, mask=mask)
         else:
-            dc.clean(algorithm=alg, gain=self.gain, niter=niter, threshold=thr, model=model, mask=mask)
+            retval=dc.clean(algorithm=alg, gain=self.gain, niter=niter, threshold=thr, model=model, mask=mask)
         dc.done()
         del dc
+        return retval
 
     def imagechan(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0], fstart='1GHz', width='10MHz', chanchunk=1):
         origname=msname
@@ -348,7 +350,7 @@ class imagecont():
         try:
             
             for kk in range(majcycle):
-                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
+                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
             im.done()
             del im
         except Exception as instance:
@@ -485,12 +487,30 @@ class imagecont():
             ia.done()
         if(type(inim) != list):
             inim=[inim]
+        ###Temporary bypass of  CAS-4423
+        elbeamo={}
+        for elim in inim:
+            ia.open(elim)
+            beam=ia.restoringbeam()
+            #if( (len(beam) > 0) and (not beam.has_key('beams'))):
+            #    ia.setrestoringbeam(remove=True)
+            #   nchan=ia.shape()[3]
+            #    for k in range(nchan):
+            #        ia.setrestoringbeam(major=beam['major'], minor=beam['minor'], pa=beam['positionangle'], channel=k, polarization=0)
+            ia.setrestoringbeam(remove=True)
+            elbeamo=beam if(not beam.has_key('beams')) else  beam['beams']['*0']['*0']
+            ia.done()
+        ####                
         if(len(inim)==1):
             ib=ia.fromimage(ourfile=cubeimage, infile=inim[0], overwrite=True)
         else:
             ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
                               axis=3, relax=True,  overwrite=True)
         ia.done()
+        ##### CAS-4423 temp
+        if(len(elbeamo) >0):
+            ib.setrestoringbeam(beam=elbeamo)
+        #####
         if(csys != None):
             ib.setcoordsys(csys=csys.torecord())
         ib.done()
@@ -668,11 +688,17 @@ class imagecont():
     @staticmethod
     def findchanselLSRK(msname='', field='*', spw='*', numpartition=1, beginfreq=0.0, endfreq=1e12, chanwidth=0.0):
         im,ms=gentools(['im', 'ms'])
+        if(field==''):
+            field='*'
         fieldid=0
+        fieldids=[]
         if(type(field)==str):
-            fieldid=ms.msseltoindex(vis=msname, field=field)['field'][0]
+            fieldids=ms.msseltoindex(vis=msname, field=field)['field']
         elif(type(field)==int):
-            fieldid=field
+            fieldids=[field]
+        elif(type(field)==list):
+            fieldids=field
+            
         #im.selectvis(vis=msname, field=field, spw=spw)
         partwidth=(endfreq-beginfreq)/float(numpartition)
         spwsel=[]
@@ -680,7 +706,15 @@ class imagecont():
         startsel=[]
         for k in range(numpartition):
             time0=time.time()
-            a=im.advisechansel(freqstart=(beginfreq+float(k)*partwidth), freqend=(beginfreq+float(k+1)*partwidth), freqstep=chanwidth, freqframe='LSRK', msname=msname, fieldid=fieldid)
+            a={}
+            a['ms_0']={}
+            a['ms_0']['spw']=np.array([])
+            fid=0
+            while((a['ms_0']['spw'].tolist()==[]) and (fid < len(fieldids))):
+                a=im.advisechansel(freqstart=(beginfreq+float(k)*partwidth), freqend=(beginfreq+float(k+1)*partwidth), freqstep=chanwidth, freqframe='LSRK', msname=msname, fieldid=fieldids[fid])
+                fid+=1
+                  
+                  
             if(a['ms_0']['spw'].tolist() != []):
                 spwsel.append(a['ms_0']['spw'].tolist())
                 nchansel.append(a['ms_0']['nchan'].tolist())

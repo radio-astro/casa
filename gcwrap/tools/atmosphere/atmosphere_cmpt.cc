@@ -959,7 +959,7 @@ atmosphere::getWetOpacity(int nc, int spwId)
       wetOpacity.units = "neper";
       //wetOpacity.value[0] = pRefractiveIndexProfile->getWetOpacity(spwId,chan).get(wetOpacity.units);
       wetOpacity.value[0] = pSkyStatus->getWetOpacity(spwId,chan).get(wetOpacity.units);
-      cout << "rip: " << wetOpacity.value[0] << " " << wetOpacity.units << " " << chan << endl;
+      //      cout << "rip: " << wetOpacity.value[0] << " " << wetOpacity.units << " " << chan << endl;
     } else {
       *itsLog << LogIO::WARN
 	      << "Please set spectral window(s) with initSpectralWindow first."

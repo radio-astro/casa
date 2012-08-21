@@ -116,10 +116,6 @@ def tflagdata(vis,
     mslocal = casac.ms()
 
 
-    # MS HISTORY
-    mslocal.open(vis, nomodify=False)
-
-
     try: 
         # Verify the ntime value
         newtime = 0.0
@@ -448,7 +444,7 @@ def tflagdata(vis,
             
             unionpars = {}
             if vrows.__len__() > 1:
-               unionpars = fh.getUnion(mslocal, vis, flagcmd)
+               unionpars = fh.getUnion(vis, flagcmd)
                
                if( len( unionpars.keys() ) > 0 ):
                     casalog.post('Pre-selecting a subset of the MS : ');
@@ -457,7 +453,7 @@ def tflagdata(vis,
                else:
                     casalog.post('Iterating through the entire MS');
                     
-               mslocal.close()
+#               mslocal.close()
                     
             # Get all the selection parameters, but set correlation to ''
             elif vrows.__len__() == 1:

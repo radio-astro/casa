@@ -4,6 +4,7 @@ from cleanhelper import *
 from parallel.parallel_cont import imagecont
 from simple_cluster import simple_cluster
 from odict import *
+from casac import casac
 import numpy as np
 import random
 import string
@@ -49,6 +50,35 @@ class pimager():
     def __del__(self):
         #print 'ipythondir', os.environ['IPYTHONDIR']
         shutil.rmtree(os.environ['IPYTHONDIR'], True)
+    @staticmethod
+    def maxouterpsf(psfim='', image=''):
+        ia.open(psfim)
+        stat=ia.statistics()
+        csys=ia.coordsys()
+        ia.open(image)
+        beampix=np.fabs(ia.restoringbeam()['major']['value']/qa.convert(csys.increment(type='direction', format='q')['quantity']['*1'], ia.restoringbeam()['major']['unit'])['value'])
+        beampix=int(np.ceil(beampix))
+        blc=copy.deepcopy(stat['maxpos'])
+        trc=copy.deepcopy(stat['maxpos'])
+        blc[0:2]=blc[0:2]-2*beampix
+        trc[0:2]=trc[0:2]+2*beampix
+        blcpeak=copy.deepcopy(blc)
+        trcpeak=copy.deepcopy(trc)
+        blcpeak[2:4]=0
+        trcpeak[2:4]=0
+        print 'blc trc peak', blcpeak, trcpeak
+        blc[0:2]=0
+        trc[0:2]=ia.shape()[0]-1;
+        maxplane=rg.box(blc=blc.tolist(),trc=trc.tolist())
+        ia.open(psfim)
+        ib=ia.subimage(region=maxplane)
+        csys2=ib.coordsys()
+        boxpeak=rg.wbox(blc=["%dpix"%x for x in blcpeak], trc=["%dpix"%x for x in trcpeak], csys=csys2.torecord())
+        outerreg=rg.complement(boxpeak)
+        statout=ib.statistics(region=outerreg)
+        ia.done()
+        ib.done()
+        return np.max(statout['max'], np.fabs(statout['min']))
     @staticmethod
     def averimages(outimage='outimage', inimages=[]):
         if((type(inimages)==list) and (len (inimages)==0)):
@@ -460,9 +490,9 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
-              numthreads=1,
+              numthreads=1, savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''):
 
@@ -481,6 +511,7 @@ class pimager():
         hostnames= list of strings ..empty string mean localhost
         numcpuperhos = integer ...number of processes to launch on each host
         majorcycles= integer number of CS major cycles to do, 
+        cyclefactor= if majorcycles=-1. This determines number of majorcycles
         niter= integer ...total number of clean iteration 
         threshold=quantity ...residual peak at which to stop deconvolving
         alg= string  possibilities are 'clark', 'hogbom', 'msclean'
@@ -493,6 +524,8 @@ class pimager():
         visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
         interactive boolean ...get a viewer to draw mask on
         maskimage  a prior mask image to limit clean search
+        numthreads  number of threads to use in each engine
+        savemodel   when True the model is saved in the MS header for selfcal
         painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
         cfcache = The disk cache directory for convolution functions
         pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
@@ -502,7 +535,7 @@ class pimager():
         """
 
 
-        niterpercycle=niter/majorcycles
+        niterpercycle=niter/majorcycles if(majorcycles >0) else niter
         if(niterpercycle == 0):
             niterpercycle=niter
             majorcycles=1
@@ -530,6 +563,7 @@ class pimager():
         self.visinmem=visinmem
         self.pbcorr=pbcorr
         self.numthreads=numthreads
+        self.cyclefactor=cyclefactor
 
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
       
@@ -609,7 +643,11 @@ class pimager():
         intmask=0
         donewgt=[False]*numcpu
         ### do one major cycle at the end
-        for maj in range(majorcycles +1):
+        donemaj=False
+        maj=0;
+        maxresid=-1.0
+        while(not donemaj):
+            
             casalog.post('Starting Gridding for major cycle '+str(maj)) 
             for k in range(numcpu):
                 imnam='"%s"'%(imlist[k])
@@ -647,19 +685,22 @@ class pimager():
             residual=imagename+'.residual'
             psf=imagename+'.psf'
             fluxim=imagename+'.flux'
+            coverim=imagename+'.flux.pbcoverage'
             psfs=range(len(imlist))
             residuals=range(len(imlist))
             restoreds=range(len(imlist))
             weightims=range(len(imlist))
             fluxims=range(len(imlist))
+            coverims=range(len(imlist))
             for k in range (len(imlist)):
                 psfs[k]=imlist[k]+'.psf'
                 residuals[k]=imlist[k]+'.residual'
                 restoreds[k]=imlist[k]+'.image'
                 fluxims[k]=imlist[k]+'.flux'
                 weightims[k]=imlist[k]+'.wgt'
+                coverims[k]=imlist[k]+'.flux.pbcoverage'
             self.weightedaverimages(residual, residuals, weightims)
-            if(maskimage == ''):
+            if((maskimage == '') or (maskimage==[])):
                 maskimage='lala.mask'
             if (interactive and (intmask==0)):
                 if(maj==0):
@@ -689,6 +730,12 @@ class pimager():
                 self.weightedaverimages(psf, psfs, weightims)
                 if(self.ftmachine=='mosaic'):
                     self.averimages(fluxim, fluxims)
+                    self.averimages(coverim, coverims)
+                    ##OR the mask and the fluximage into the mask
+                    elim=casac.image()
+                    elim.open(maskimage)
+                    elim.calc('iif(mask("'+fluxim+'"), "'+maskimage+'", 0)')
+                    elim.done()
                 if((self.weight=='uniform') or (self.weight=='briggs')):
                     c.pgc('wtgrid=a.getweightgrid(msname="'+msname+'")')
                     sumweight=c.pull('wtgrid', 0)[0]
@@ -697,18 +744,37 @@ class pimager():
                         print 'Max min var of weight dens', np.max(sumweight), np.min(sumweight), np.var(sumweight)
                     c.push(wtgrid=sumweight)
                     c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
+            newthresh=threshold
+            if(majorcycles <= 1):
+                ia.open(residual)
+                residstat=ia.statistics()
+                maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                psfoutermax=self.maxouterpsf(psfim=psf, image=restoreds[0])
+                newthresh=psfoutermax*cyclefactor*maxresid
+                oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
+                if(newthresh < oldthresh):
+                    newthresh=oldthresh
+                newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
             ####no need to do this in last major cycle
-            if(maj < majorcycles):
+            needclean=((maj < majorcycles if (majorcycles >1) else True)  and 
+                       ((maxresid > qa.convert(qa.quantity(threshold),'Jy')['value']) if(majorcycles <2) else True) 
+                       and (niterpercycle > 1))
+            donemaj = not needclean
+            if(needclean):
                 casalog.post('Deconvolving for major cycle '+str(maj))  
                 #incremental clean...get rid of tempmodel
                 shutil.rmtree(tempmodel, True)
-                rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
+                rundecon='retval=a.cleancont(alg="'+str(alg)+'", thr="'+str(newthresh)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
                 print 'Deconvolution command', rundecon
                 out[0]=c.odo(rundecon,0)
                 over=False
                 while(not over):
                     time.sleep(5)
                     over=c.check_job(out[0],False)
+                retval=c.pull('retval', 0)[0]
+                if(majorcycles <=1):
+                    niterpercycle=niterpercycle-retval['iterations']
+                maxresid=retval['maxresidual']
                 ###incremental added to total 
                 ia.open(model)
                 ia.calc('"'+model+'" +  "'+tempmodel+'"')
@@ -731,6 +797,11 @@ class pimager():
                 #ia.putchunk(arr)
                     ia.insert(infile=model, locate=[0,0,0,0])
                     ia.done()
+                maj +=1
+                #if(majorcycles > 1):
+                #   donemaj=(maj >= majorcycles)
+            
+        
         restored=imagename+'.image'
         #ia.open(restored)
         #for k in range(1, len(imlist)) :
@@ -748,6 +819,11 @@ class pimager():
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
             shutil.rmtree(imlist[k]+'.wgt', True)
+        if(savemodel):
+            myim=casac.imager()
+            myim.selectvis(vis=msname, spw=spw, field=field)
+            myim.ft(model)
+            myim.done()
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         casalog.post('Time to image is '+str((time2-time1)/60.0)+ ' mins')
         #c.stop_cluster()
@@ -986,6 +1062,110 @@ class pimager():
         #self.c.stop_cluster()
 
 #################
+    def pcube_driver(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
+              pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+              field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
+              hostnames='', 
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
+              mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
+              imagetilevol=100000,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
+              painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+              epjtablename='', interactive=False):
+        """
+        Drive pcube when interactive is on and depending on cyclefactor or not
+        """
+        if(interactive==False):
+            self.pcube(msname=msname, imagename=imagename, imsize=imsize, 
+              pixsize=pixsize, phasecenter=phasecenter, 
+              field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, 
+              hostnames=hostnames, 
+              numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
+              mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+              robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+              painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+            return
+        ###interactive is true
+        ###lets get the 0th iteration niter=0, majorcycles=1, maskimage=''
+        self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+              field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+              numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=cyclefactor, niter=0, gain=gain, threshold=threshold, alg=alg, scales=scales,
+              mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+              robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage='', numthreads=numthreads,  savemodel=savemodel,
+              painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+        if(maskimage==''):
+            maskimage=imagename+'.mask'
+        residual=imagename+'.residual'
+        ###now deal with interactive and    
+        if(cyclefactor > 0.00000001):
+            ####after this conclean has to be true
+            psf=imagename+'.psf'
+            newthresh=threshold
+            psfoutermax=self.maxouterpsf(psfim=psf, image=imagename+'.image')
+            oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
+            ###have to get the niter back from pcube
+            myim,=gentools(['im'])
+            retval=myim.drawmask(imagename+'.residual', maskimage)
+            myim.done()
+            ###for now if oldthresh is 0 that is niter is determines end we will do one interactive loop
+            notdone=True
+            while(notdone):
+                myim=casac.imager()
+                retval=myim.drawmask(residual, maskimage)
+                myim.done()
+                if(retval==2):
+                    return
+                if(oldthresh < 0.0000001):
+                    threshold="0Jy"
+                    ####Temporary till we extract niter
+                    notdone=False
+                else:
+                    threshold=newthresh
+                ia.open(residual)
+                residstat=ia.statistics()
+                ia.done()
+                maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                newthresh=psfoutermax*cyclefactor*maxresid
+                if(newthresh < oldthresh):
+                    newthresh=oldthresh
+                    notdone=False
+                newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
+                self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+                           field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+                           numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+                           robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+                           painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+                ####Here we should extract the remainder iterations
+                niter=niter ### really !
+        else: 
+            #using majorcycles
+            npercycle=niter/majorcycles
+            for k in range(majorcycles):
+                myim=casac.imager()
+                retval=myim.drawmask(residual, maskimage)
+                myim.done()
+                if(retval==2):
+                    return
+                self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
+                           field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
+                           numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=0, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
+                           robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+                           painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+            
+            
+                
+############################################
     def pcube(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
@@ -994,7 +1174,7 @@ class pimager():
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
               imagetilevol=100000,
-              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
               epjtablename=''): 
 
@@ -1027,6 +1207,8 @@ class pimager():
         chanchunk = number of channel to process at a go per process...careful not to 
        go above total memory available
        visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+       numthreads number of threads to use per engine while gridding
+       savemodel if True save the model in the ms header for self calibration
         painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
         cfcache = The disk cache directory for convolution functions
         pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
@@ -1118,8 +1300,9 @@ class pimager():
         imobservatory=csys.telescope()
         shutil.rmtree(imagename+'.image', True)
         shutil.rmtree(imagename+'.residual', True)
-        shutil.copytree(model, imagename+'.image')
-        shutil.copytree(model, imagename+'.residual')
+        ## don't need to copy anymore with concat
+        #shutil.copytree(model, imagename+'.image')
+        #shutil.copytree(model, imagename+'.residual')
 
         out=range(numcpu)  
         self.c.pgc('from  parallel.parallel_cont import *')
@@ -1227,31 +1410,74 @@ class pimager():
         print 'Time to image is ', (timebegrem-time1)/60.0, 'mins'
         chans=(np.array(range(nchanchunk))*chanchunk).tolist()
         imnams=[imagename]*nchanchunk
-        ia.open(imnams[0]+'0.image')
-        rb=ia.restoringbeam()
-        ia.done()
-        ia.open(imagename+'.image')
-        ia.setrestoringbeam(beam=rb)
-        ia.done()
+#        ia.open(imnams[0]+'0.image')
+#        rb=ia.restoringbeam()
+#        ia.done()
+#        ia.open(imagename+'.image')
+#        ia.setrestoringbeam(beam=rb)
+#        ia.done()
         #imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         #imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
         
         #imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        #self.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
         imagecont.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
         imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
         imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
+        imagecont.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
         if(self.ftmachine=='mosaic'):
+            #self.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
             imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
+            #self.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
             imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
-        
+        if(savemodel):
+            myim=casac.imager()
+            myim.selectvis(vis=msname, spw=spw, field=field)
+            myim.ft(model)
+            myim.done()
 
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
         #self.c.stop_cluster()
 
 ##############################
+    def concatimages(self, outputimage='', imagelist='', csys=None, removeinfile=True):
+        ncpu=self.numcpu
+        if(type(imagelist) != list):
+            imagelist=[imagelist]
+        imagelist=np.array(imagelist)
+        if(len(imagelist)==1):
+            ib=ia.fromimage(ourfile=outputimage, infile=imagelist[0], overwrite=True)
+        else:
+            nim=len(imagelist)
+            self.c.pgc('from  parallel.parallel_cont import *')
+            if((nim/ncpu) > 1):
+                intermimages=['intermimages_'+str(k) for k in range(ncpu)]
+                subpart=np.array([nim/ncpu for k in range(ncpu)])
+                subpart[range(nim%ncpu)] +=1
+                infiles=[[]]*ncpu
+                out=range(ncpu)
+                #infiles[0]=imagelist(range(subpart[0]))
+                for k in  range(ncpu):
+                    infiles[k]=imagelist[range(np.sum(subpart[0:k]), np.sum(subpart[0:(k+1)]))].tolist() 
+                    commcon='imagecont.concatimages(cubeimage="'+intermimages[k]+'", inim='+str(infiles[k])+', removeinfile='+str(removeinfile)+')'
+                    print 'concat command', commcon
+                    out[k]=self.c.odo(commcon,k)
+                over=False
+                while(not over):
+                    time.sleep(1)
+                    overone=True
+                    for k in range(ncpu):
+                        overone=(overone and ((type(out[k])==int) or (self.c.check_job(out[k],False))))
+                    over=overone
+            else:
+                intermimages=[imagelist[k] for k in range(len(imagelist))]
+            imagecont.concatimages(outputimage , intermimages, csys, removeinfile)
 #################
     def pcube_expt(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 

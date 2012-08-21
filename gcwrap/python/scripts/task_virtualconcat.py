@@ -4,6 +4,7 @@ import stat
 import time
 from taskinit import *
 import partitionhelper as ph
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 	"""
@@ -65,6 +66,47 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 				elif factor!=1.:
 					doweightscale=True
 
+		# if there are MMSs among the input, make their constituents the new input
+		mmslist = []
+		ismaster = []
+		for elvis in vis:
+			ismaster.append(True) # may be revised later
+			if(ParallelTaskHelper.isParallelMS(elvis)):
+				mmslist.append(elvis)
+		if len(mmslist)>0:
+			casalog.post('*** The following input measurement sets are multi-MSs', 'INFO')
+			for mname in mmslist:
+				casalog.post('***   '+mname, 'INFO')
+			oldvis = vis
+			oldvisweightscale = visweightscale
+			vis = []
+			visweightscale = []
+			ismaster = []
+			i = 0
+			for elvis in oldvis:
+				if elvis in mmslist: # append the subMSs individually
+					m.open(elvis)
+					mses = m.getreferencedtables()
+					mses.sort()
+					m.close()
+					mastername = os.path.basename(os.path.dirname(os.path.realpath(m+'/ANTENNA')))
+					for mname in mses:
+						#print 'subms: ', mname
+						vis.append(mname)
+						if doweightscale:
+							visweightscale.append(oldvisweightscale[i])
+						if os.path.basename(mname) == mastername:
+							ismaster.append(True)
+						else:
+							ismaster.append(False)
+				else:
+					vis.append(elvis)
+					if doweightscale:
+						visweightscale.append(oldvisweightscale[i])
+					ismaster.append(True)
+				i += 1
+
+
 		if((type(concatvis)!=str) or (len(concatvis.split()) < 1)):
 			raise Exception, 'parameter concatvis is invalid'
 
@@ -79,12 +121,12 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 			os.mkdir(tempdir)
 			for elvis in originalvis:
 				shutil.move(elvis,tempdir) # keep timestamps and permissions
-				shutil.copytree(tempdir+'/'+elvis, elvis)
+				shutil.copytree(tempdir+'/'+elvis, elvis, True) # symlinks=True
 
 		if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 			theconcatvis = vis[0]
 			if(len(vis)==1):
-				shutil.copytree(vis[0], concatvis)
+				shutil.copytree(vis[0], concatvis, True)
 			vis.remove(vis[0])
 
 		# Determine if scratch columns should be considered at all
@@ -192,16 +234,22 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 			i = 0
 			for i in xrange(len(mmsmembers)):
 				ptable = mmsmembers[i]+'/POINTING'
-				if os.path.exists(ptable):
+				if ismaster[i] and os.path.exists(ptable):
 					shutil.move(ptable, ptable+str(i))
 					ptablemembers.append(ptable+str(i))
 			#end for
 			t.createmultitable(masterptable, ptablemembers, 'SUBTBS')
 		# endif
 
+		print "mmsmembers: ", mmsmembers
+
 	 	ph.makeMMS(concatvis, mmsmembers,
  			   True, # copy subtables from first to all other members 
  			   ['POINTING']) # excluding POINTING which will be linked
+
+		# remove the remaining "hulls" of the emptied input MMSs (if there are any)
+		for elvis in mmslist:
+			shutil.rmtree(elvis)
 		
 		if keepcopy:
 			for elvis in originalvis:

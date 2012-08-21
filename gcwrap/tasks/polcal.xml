@@ -123,6 +123,8 @@ calibrations can be applied on the fly.
                         <value>Dfgen+X</value>
                         <value>Dgen+QU</value>
                         <value>Dfgen+QU</value>
+                        <value>Dlls</value>
+                        <value>Dflls</value>
 			<value>X</value>
 			<value>Xf</value>
 			<value>Xj</value>
@@ -378,7 +380,8 @@ calibrations can be applied on the fly.
                          gaintable=['ngc5921.ampcal','ngc5921.phcal']
       gainfield -- Select a subset of calibrators from gaintable(s)
                default:'' ==&gt; all sources in table;
-               same syntax as field
+               'nearest' ==&gt; nearest (on sky) available field in table
+               otherwise, same syntax as field
                example: gainfield='0~3'
                         gainfield=['0~3','4~6'] means use field 0 through 3
                           from first gain file, field 4 through 6 for second.
