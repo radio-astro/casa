@@ -99,6 +99,9 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     converged = clean(image(0), residual(0), PSF(0), *tmpMask, maxRes, iterused, gain(), numberIterations(),  
 	  threshold(), cycleFactor_p, False, doPolJoint_p);
   }
+  
+  setThreshold(maxRes);
+  setNumberIterations(iterused);
   modified_p=True;
   return(converged);
 };
@@ -286,7 +289,6 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
        << LatticeExprNode(sum(image)).getFloat()
        << " Jy <- The sum of the clean components"
        << LogIO::POST;
- 
     return converged;
 
 

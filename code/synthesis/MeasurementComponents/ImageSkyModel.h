@@ -250,6 +250,7 @@ public:
   static TempImage<M>* getTempImage(const TiledShape& imgShp,
                                     const CoordinateSystem& imgCoords,
                                     const uInt nMouthsToFeed=1);
+  
 
 protected:
 

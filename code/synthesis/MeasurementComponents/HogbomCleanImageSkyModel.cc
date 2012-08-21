@@ -280,6 +280,9 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   Array<Float> newStep;
   Array<Float> newPsf;
   //------------------
+
+  Float maxRes=0.0;
+  Int iterUsed=0;
   Int chan=0;
   for (imageStepli.reset(),imageli.reset(),psfli.reset();
        !imageStepli.atEnd();
@@ -351,8 +354,9 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       } else {
 	domaskI = 0;
       }
-      Int starting_iteration = 0;   // unutilized
-      Int ending_iteration;         // unutilized
+      
+      Int starting_iteration = 0;  
+      Int ending_iteration=0;         
       //# The const of lpsf and mask has to be cast away for the
       //# fortran function hclean.
       Float cycleSpeedup = -1; // ie, ignore it
@@ -365,7 +369,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
 	     (void*) &HogbomCleanImageSkyModelmsgput,
 	     (void*) &HogbomCleanImageSkyModelstopnow);
 
-
+      iterUsed=max(iterUsed, ending_iteration);
       if(nx==newNx){
 	imageli.rwCursor().putStorage (limage_data, delete_iti);
 	imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
@@ -384,6 +388,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
       Float residualmax, residualmin;
       minMax(residualmin, residualmax, imageStepli.cursor());
       residualmax=max(residualmax, abs(residualmin));
+      maxRes=max(maxRes, residualmax);
+      
       converged = (residualmax < threshold());
     }
     if (lmask != 0 && isCubeMask)  {
@@ -394,6 +400,8 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
    os << LatticeExprNode(sum(image(0))).getFloat() 
 	       << " Jy is the sum of clean components " << LogIO::POST;
   modified_p=True;
+  setThreshold(maxRes);
+  setNumberIterations(iterUsed);
   if (maskli != 0) {
     delete maskli;
     maskli = 0;

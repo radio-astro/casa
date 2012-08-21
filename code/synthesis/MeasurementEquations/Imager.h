@@ -379,7 +379,7 @@ class Imager
 	      Bool normalizeVolume);
 
   // Clean algorithm
-  Bool clean(const String& algorithm,
+  Record clean(const String& algorithm,
 	     const Int niter, 
 	     const Float gain, 
 	     const Quantity& threshold, 
@@ -392,7 +392,7 @@ class Imager
 	     const Vector<String>& psf=Vector<String>(0),
              const Bool firstrun=true);
 
-  Bool iClean(const String& algorithm, 
+  Record iClean(const String& algorithm, 
 	      const Int niter, 
 	      const Double gain,
 	      //const String& threshold, 

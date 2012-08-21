@@ -3464,7 +3464,7 @@ Bool Imager::smooth(const Vector<String>& model,
 }
 
 // Clean algorithm
-Bool Imager::clean(const String& algorithm,
+Record Imager::clean(const String& algorithm,
 		   const Int niter, 
 		   const Float gain,
 		   const Quantity& threshold, 
@@ -3480,8 +3480,12 @@ Bool Imager::clean(const String& algorithm,
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::clean",22);
 #endif
-  Bool converged=True; 
-
+  Record retval;
+  Bool converged=True;
+  retval.define("converged", False);
+  retval.define("iterations", Int(0));
+  retval.define("maxresidual", Float(0.0));
+  
 
 
   //ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
@@ -3493,7 +3497,7 @@ Bool Imager::clean(const String& algorithm,
       traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-      return False;
+      return retval;
     }
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "clean()"),logSink_p);
@@ -3507,7 +3511,7 @@ Bool Imager::clean(const String& algorithm,
 	traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-	return False;
+	return retval;
       }
     
     Int nmodels=model.nelements();
@@ -3525,7 +3529,7 @@ Bool Imager::clean(const String& algorithm,
 	  traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-	  return False;
+	  return retval;
 	}
       }
     }
@@ -3617,7 +3621,7 @@ Bool Imager::clean(const String& algorithm,
 	    traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-	    return False;
+	    return retval;
 	  }
       }
     }
@@ -3653,7 +3657,7 @@ Bool Imager::clean(const String& algorithm,
 	if (!scaleInfoValid_p) {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
-	  return False;
+	  return retval;
 	}
 	if (scaleMethod_p=="uservector") {	
 	  sm_p = new MSCleanImageSkyModel(userScaleSizes_p, stoplargenegatives_p, 
@@ -3698,7 +3702,7 @@ Bool Imager::clean(const String& algorithm,
 	if (!scaleInfoValid_p) {
 	  this->unlock();
 	  os << LogIO::SEVERE << "Scales not yet set" << LogIO::POST;
-	  return False;
+	  return retval;
 	}
 	if (scaleMethod_p=="uservector") {
 	  sm_p = new MFMSCleanImageSkyModel(userScaleSizes_p, 
@@ -3745,7 +3749,7 @@ Bool Imager::clean(const String& algorithm,
 	  os << LogIO::SEVERE
              << "Multi-scale Multi-frequency Clean currently works only with ft and wproject (and wbawp,nift)"
              << LogIO::POST;
-	  return False;
+	  return retval;
 	}
 
 	if (!scaleInfoValid_p) {
@@ -3777,7 +3781,7 @@ Bool Imager::clean(const String& algorithm,
 	traceEvent(1,"Exiting Imager::clean",21);
 #endif
 	
-	return False;
+	return retval;
       }
    
       AlwaysAssert(sm_p, AipsError);
@@ -3791,7 +3795,7 @@ Bool Imager::clean(const String& algorithm,
           traceEvent(1,"Exiting Imager::clean",21);
 #endif
 	
-          return False;
+          return retval;
         }
       os << LogIO::NORMAL3 << "Created Sky Equation" << LogIO::POST;
     }
@@ -3841,6 +3845,7 @@ Bool Imager::clean(const String& algorithm,
       converged=False;
       os << LogIO::NORMAL << "Threshhold not reached yet." << LogIO::POST; // Loglevel PROGRESS
     }
+    
 
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Deconvolution",21);
@@ -3856,7 +3861,10 @@ Bool Imager::clean(const String& algorithm,
     for (uInt k=0 ; k < residuals_p.nelements(); ++k){
       (residuals_p[k])->copyData(sm_p->getResidual(k));
     }
-    
+   
+    retval.define("maxresidual", (sm_p->threshold()));
+    retval.define("iterations", (sm_p->numberIterations()));
+    retval.define("converged", converged);
     savePSF(psfnames);
     redoSkyModel_p=False;
     writeFluxScales(fluxscale_p);
@@ -3930,7 +3938,7 @@ Bool Imager::clean(const String& algorithm,
     traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-    return converged;
+    return retval;
   }
   catch (PSFZero&  x)
     {
@@ -3938,7 +3946,7 @@ Bool Imager::clean(const String& algorithm,
       savePSF(psfnames);
       this->unlock();
       throw(AipsError(String("PSFZero  ")+ x.getMesg() + String(" : Please check that the required data exists and is not flagged.")));
-      return True;
+      return retval;
     }  
   catch (exception &x) { 
     this->unlock();
@@ -3948,7 +3956,7 @@ Bool Imager::clean(const String& algorithm,
     traceEvent(1,"Exiting Imager::clean",21);
 #endif
 
-    return False;
+    return retval;
   } 
 
   catch(...){
@@ -3963,7 +3971,7 @@ Bool Imager::clean(const String& algorithm,
 #endif  
 
   os << LogIO::NORMAL << "Exiting Imager::clean" << LogIO::POST; // Loglevel PROGRESS
-  return converged;
+  return retval;
 }
 
 // Mem algorithm
@@ -6677,7 +6685,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
     return result;
 }
 
-  Bool Imager::iClean(const String& algorithm, const Int niter, const Double gain, 
+  Record Imager::iClean(const String& algorithm, const Int niter, const Double gain, 
 		      const Quantity& threshold,
 		      const Bool displayprogress,
 		      const Vector<String>& model,
@@ -6689,7 +6697,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		      const Bool interactive, const Int npercycle,
 		      const String& masktemplate)
   {
-    Bool rstat(False);
+    Record rstat;
       
     logSink_p.clearLocally();
     LogIO os(LogOrigin("imager", "iClean()"), logSink_p);
@@ -6744,7 +6752,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	  }
 	  else {
 	    // do a zero component clean to get started
-	    clean(String(algorithm), 0, gain, 
+	    rstat=clean(String(algorithm), 0, gain, 
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
@@ -6793,7 +6801,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 			    amask,  
 			    aimage, aresidual, elpsf, k == 0);
 	      //if clean converged... equivalent to stop
-	      if(rstat){
+	      if(rstat.asBool("converged")){
 		continter=2;
 		fixed.set(True);
 	      }

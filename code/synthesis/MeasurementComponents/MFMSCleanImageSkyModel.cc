@@ -438,6 +438,8 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
        << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
+    setThreshold(finalabsmax);
+    setNumberIterations(maxIterations);
     converged=(finalabsmax < 1.05 * threshold());
       os << LogIO::NORMAL    // Loglevel INFO
          << "Final maximum residual = " << finalabsmax << LogIO::POST;

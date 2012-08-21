@@ -66,16 +66,13 @@ namespace casa {
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define hclean hclean_
-#define maximg maximg_
 #endif
 extern "C" {
   void hclean(Float*, Float*, Float*, int*, Float*, int*, int*, int*,
               int*, int*, int*, int*, int*, int*, int*, Float*, Float*,
               Float*, void *, void *);
 };
-extern "C" {
-  void maximg(Float*, int*, Float*, int*, int*, int*, Float*, Float*);
-};
+
 
 // This is defined in HogbomCleanImageSkyModel.cc
 void HogbomCleanImageSkyModelstopnow (Int *yes);
@@ -728,7 +725,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     restoreOverlappingModels();
     Float finalabsmax=maxField(resmax, resmin);
-    
+    setThreshold(finalabsmax);
+    setNumberIterations(maxIterations);
     os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
     converged=(finalabsmax < 1.05 * threshold());
     os << LogIO::NORMAL; // Loglevel INFO
@@ -920,132 +918,6 @@ void MFCleanImageSkyModel::mergeOverlappingMasks(){
   }
 }
 
-// Find maximum residual
-Float MFCleanImageSkyModel::maxField(Vector<Float>& imagemax,
-				     Vector<Float>& imagemin) {
-
-  LogIO os(LogOrigin("ImageSkyModel","maxField"));
-  
-  Float absmax=0.0;
-  imagemax=-1e20;
-  imagemin=1e20;
-
-  // Find maximum of ggS for scaling in maximg
-  Float maxggS=0.0;
-  for (Int model=0;model<numberOfModels();model++) {
-    LatticeExprNode LEN = max(LatticeExpr<Float>(ggS(model)));
-    Float thisMax = LEN.getFloat();
-    if(thisMax>maxggS) maxggS=thisMax;
-  }
-
-  // Loop over all models
-  for (Int model=0;model<numberOfModels();model++) {
-
-    // Remember that the residual image can be either as specified
-    // or created specially.
-    ImageInterface<Float>* imagePtr=0;
-    if(residual_p[model]) {
-      imagePtr=residual_p[model];
-    }
-    else {
-      imagePtr=(ImageInterface<Float> *)residualImage_p[model];
-    }
-    AlwaysAssert(imagePtr, AipsError);
-    AlwaysAssert(imagePtr->shape().nelements()==4, AipsError);
-    Int nx=imagePtr->shape()(0);
-    Int ny=imagePtr->shape()(1);
-    Int npol=imagePtr->shape()(2);
-    Int nchan=imagePtr->shape()(3);
-
-    //    AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
-    
-    // Loop over all channels
-    IPosition oneSlab(4, nx, ny, npol, 1);
-    LatticeStepper ls(imagePtr->shape(), oneSlab, IPosition(4, 0, 1, 2, 3));
-    IPosition onePlane(4, nx, ny, 1, 1);
-    LatticeStepper fsls(ggS(model).shape(), oneSlab,
-			IPosition(4,0,1,2,3));
-    RO_LatticeIterator<Float> ggSli(ggS(model),fsls);
-    LatticeIterator<Float> imageli(*imagePtr, ls);
-    
-    // If we are using a mask then reset the region to be
-    // cleaned
-    Array<Float> maskArray;
-    RO_LatticeIterator<Float> maskIter;
-    Bool cubeMask=False;
-    
-    Int domask=0;
-    if(hasMask(model)) {
-      Int mx=mask(model).shape()(0);
-      Int my=mask(model).shape()(1);
-      Int mpol=mask(model).shape()(2);
-      Int nMaskChan=0;
-      if(mask(model).shape().nelements()==4){
-	nMaskChan=mask(model).shape()(3);
-      }
-      if( (nchan >1) && nMaskChan==nchan)
-	cubeMask=True;
-      if((mx != nx) || (my != ny) || (mpol != npol)){
-	throw(AipsError("Mask image shape is not the same as dirty image"));
-      }
-      LatticeStepper mls(mask(model).shape(), oneSlab,
-			 IPosition(4, 0, 1, 2, 3));
-      
-      RO_LatticeIterator<Float> maskli(mask(model), mls);
-      maskli.reset();
-      maskIter=maskli;
-      if (maskli.cursor().shape().nelements() > 1) {
-	domask=1;
-	maskArray=maskli.cursor();
-      }
-    }
-    
-    Int chan=0;
-    Float imax, imin;
-    imax=-1E20; imagemax(model)=imax;
-    imin=+1E20; imagemin(model)=imin;
-
-    for (imageli.reset(),ggSli.reset();!imageli.atEnd();imageli++,ggSli++,chan++) {
-      Float fmax, fmin;
-      Bool delete_its;
-      Bool delete_its2;
-      // Renormalize by the weights
-      if(cubeMask){
-	if(maskIter.cursor().shape().nelements() > 1){
-	  domask=1;
-	  maskArray=maskIter.cursor();
-	}
-	maskIter++;
-	
-      }
-      
-      Cube<Float> weight(sqrt(ggSli.cursor().nonDegenerate(3)/maxggS));
-      Cube<Float>resid(imageli.cursor().nonDegenerate(3));
-      for (Int pol=0;pol<npol;pol++) {
-	for (Int iy=0;iy<ny;iy++) {
-	  for (Int ix=0;ix<nx;ix++) {
-	    resid(ix,iy,pol)*=weight(ix,iy,pol);
-	  }
-	}
-      }
-      const Float* limage_data=resid.getStorage(delete_its);
-      const Float* lmask_data=maskArray.getStorage(delete_its2);
-      maximg((Float*)limage_data, &domask, (Float*)lmask_data,
-	     &nx, &ny, &npol, &fmin, &fmax);
-
-      
-      resid.freeStorage(limage_data, delete_its);
-      maskArray.freeStorage(lmask_data, delete_its2);
-      if(fmax<0.99*imax) fmax=0.0;
-      if(fmin>0.99*imin) fmin=0.0;
-      if(abs(fmax)>absmax) absmax=abs(fmax);
-      if(abs(fmin)>absmax) absmax=abs(fmin);
-      if(fmin<imagemin(model)) imagemin(model)=fmin;
-      if(fmax>imagemax(model)) imagemax(model)=fmax;
-    }
-  }
-  return absmax;
-};
     
 
 Float MFCleanImageSkyModel::maxOuter(Lattice<Float> & lat, const uInt nCenter ) 

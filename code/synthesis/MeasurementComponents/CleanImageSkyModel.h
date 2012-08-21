@@ -128,6 +128,10 @@ public:
   virtual void setJointStokesClean(Bool joint=True);
 
 
+   // Return the maximum absolute value from residual images per field
+  virtual Float maxField(Vector<Float>& imagemax, Vector<Float>& imagemin);
+
+
 protected:
 
   PtrBlock<ImageInterface<Float> * > mask_p;
