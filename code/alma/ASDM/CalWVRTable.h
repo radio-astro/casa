@@ -129,7 +129,7 @@ class CalWVRRow;
  * Result of the water vapour radiometric  calibration performed by TelCal. 
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalWVR </CAPTION>
@@ -373,6 +373,16 @@ public:
 	 * @return a pointer to a CalWVRTableIDL
 	 */
 	asdmIDL::CalWVRTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalWVRTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalWVRTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

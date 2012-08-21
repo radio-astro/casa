@@ -1,12 +1,37 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #ifndef SEARCHMOLECULES_QO_H
 #define SEARCHMOLECULES_QO_H
 
 #include <QtGui/QDialog>
 #include <display/QtPlotter/SearchMoleculesDialog.ui.h>
-#include <display/QtPlotter/conversion/Converter.h>
-#include <casa/Containers/Record.h>
-
+#include <casa/aips.h>
 namespace casa {
+
+class SearchMoleculesWidget;
+class SearchMoleculesResultsWidget;
 
 class SearchMoleculesDialog : public QDialog
 {
@@ -15,37 +40,22 @@ class SearchMoleculesDialog : public QDialog
 public:
     SearchMoleculesDialog(QWidget *parent = 0);
     QList<int> getLineIndices() const;
-    void getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
+    bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
     void setRange( float min, float max, QString units );
+    void searchFinished();
+    void updateReferenceFrame();
     QString getUnit() const;
     ~SearchMoleculesDialog();
 
 signals:
 	void moleculesSelected();
 
-private slots:
-    void openCatalog();
-    void search();
-    void searchUnitsChanged( const QString& searchUnits );
 
 private:
-    void displaySearchResults( const Record& results );
-    void initializeTable();
-    void setTableValue( int row, int col, const QString& val );
-    void setTableValueHTML( int row, int col, const QString& val );
-    void setTableValue( int row, int col, double val );
-    void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-    void initializeSearchRange( QLineEdit* lineEdit, Double& value, double redshift );
-    double getRedShiftAdjustment() const;
-    enum ResultColumns{ COL_SPECIES, COL_CHEMICAL, COL_FREQUENCY,
-    	COL_QN, COL_INTENSITY, COL_EL, COLUMN_COUNT};
+	SearchMoleculesWidget* searchWidget;
+	SearchMoleculesResultsWidget* searchResultsWidget;
     Ui::SearchMoleculesDialog ui;
-    String defaultDatabasePath;
-    String databasePath;
-    QString unitStr;
-    static const QString SPLATALOGUE_UNITS;
-    static const double SPLATALOGUE_DEFAULT_MIN;
-    static const double SPLATALOGUE_DEFAULT_MAX;
+
 };
 }
 #endif // SEARCHMOLECULES_QO_H

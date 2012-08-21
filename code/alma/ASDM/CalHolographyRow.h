@@ -144,7 +144,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalHolography.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -166,7 +166,7 @@ typedef void (CalHolographyRow::*CalHolographyAttributeFromText) (const string& 
 /**
  * The CalHolographyRow class is a row of a CalHolographyTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalHolographyRow {
@@ -1242,6 +1242,15 @@ public:
 	 * @return The values of this row as a CalHolographyRowIDL struct.
 	 */
 	asdmIDL::CalHolographyRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalHolographyRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalHolographyRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalHolographyRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

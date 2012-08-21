@@ -156,6 +156,69 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void DopplerRow::toIDL(asdmIDL::DopplerRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.dopplerId = dopplerId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.transitionIndex = transitionIndex;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.velDef = velDef;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.sourceId = sourceId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

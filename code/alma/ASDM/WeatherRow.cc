@@ -317,6 +317,230 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void WeatherRow::toIDL(asdmIDL::WeatherRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		x.pressureExists = pressureExists;
+		
+		
+			
+		x.pressure = pressure.toIDLPressure();
+			
+		
+	
+
+	
+  		
+		
+		x.relHumidityExists = relHumidityExists;
+		
+		
+			
+		x.relHumidity = relHumidity.toIDLHumidity();
+			
+		
+	
+
+	
+  		
+		
+		x.temperatureExists = temperatureExists;
+		
+		
+			
+		x.temperature = temperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		x.windDirectionExists = windDirectionExists;
+		
+		
+			
+		x.windDirection = windDirection.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x.windSpeedExists = windSpeedExists;
+		
+		
+			
+		x.windSpeed = windSpeed.toIDLSpeed();
+			
+		
+	
+
+	
+  		
+		
+		x.windMaxExists = windMaxExists;
+		
+		
+			
+		x.windMax = windMax.toIDLSpeed();
+			
+		
+	
+
+	
+  		
+		
+		x.dewPointExists = dewPointExists;
+		
+		
+			
+		x.dewPoint = dewPoint.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		x.numLayerExists = numLayerExists;
+		
+		
+			
+				
+		x.numLayer = numLayer;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.layerHeightExists = layerHeightExists;
+		
+		
+			
+		x.layerHeight.length(layerHeight.size());
+		for (unsigned int i = 0; i < layerHeight.size(); ++i) {
+			
+			x.layerHeight[i] = layerHeight.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.temperatureProfileExists = temperatureProfileExists;
+		
+		
+			
+		x.temperatureProfile.length(temperatureProfile.size());
+		for (unsigned int i = 0; i < temperatureProfile.size(); ++i) {
+			
+			x.temperatureProfile[i] = temperatureProfile.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.cloudMonitorExists = cloudMonitorExists;
+		
+		
+			
+		x.cloudMonitor = cloudMonitor.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		x.numWVRExists = numWVRExists;
+		
+		
+			
+				
+		x.numWVR = numWVR;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.wvrTempExists = wvrTempExists;
+		
+		
+			
+		x.wvrTemp.length(wvrTemp.size());
+		for (unsigned int i = 0; i < wvrTemp.size(); ++i) {
+			
+			x.wvrTemp[i] = wvrTemp.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.waterExists = waterExists;
+		
+		
+			
+				
+		x.water = water;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.stationId = stationId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

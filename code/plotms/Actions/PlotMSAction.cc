@@ -36,6 +36,8 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
+#include <iomanip>
+
 namespace casa {
 
 //////////////////////////////
@@ -665,7 +667,12 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                     Int irel = r.subRecord(field_str).asInt("irel");
                     csv_file << x << ", " << y << ", " << chan << ", " 
                              << scan << ", " << field << ", " << ant1 << ", "
-                             << ant2 << ", " << time << ", " << freq << ", "
+                             << ant2 << ", ";
+                    int precision = csv_file.precision();
+                    csv_file << std::setprecision(3) << std::fixed << time;
+                    csv_file.unsetf(ios_base::fixed);
+                    csv_file.precision(precision);
+                    csv_file << ", " << freq << ", "
                              << spw << ", " << corr << ", " << offset << ", "
                              << currchunk << ", " << irel << endl;
                 }
@@ -832,7 +839,7 @@ bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
                 // Get selected regions on that canvas.
                 vector<PlotRegion> regions = canv[j]->standardMouseTools()
                     ->selectTool()->getSelectedRects();
-                if(regions.size() == 0) continue;
+                //if(regions.size() == 0) continue;
 	            
                 // Actually do locate/flag/unflag...
                 try {

@@ -409,6 +409,316 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalDelayRow::toIDL(asdmIDL::CalDelayRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.refAntennaName = CORBA::string_dup(refAntennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.delayError.length(delayError.size());
+		for (unsigned int i = 0; i < delayError.size(); ++i) {
+			
+				
+			x.delayError[i] = delayError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.delayOffset.length(delayOffset.size());
+		for (unsigned int i = 0; i < delayOffset.size(); ++i) {
+			
+				
+			x.delayOffset[i] = delayOffset.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); ++i) {
+			
+				
+			x.reducedChiSquared[i] = reducedChiSquared.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.appliedDelay.length(appliedDelay.size());
+		for (unsigned int i = 0; i < appliedDelay.size(); ++i) {
+			
+				
+			x.appliedDelay[i] = appliedDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.crossDelayOffsetExists = crossDelayOffsetExists;
+		
+		
+			
+				
+		x.crossDelayOffset = crossDelayOffset;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.crossDelayOffsetErrorExists = crossDelayOffsetErrorExists;
+		
+		
+			
+				
+		x.crossDelayOffsetError = crossDelayOffsetError;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numSidebandExists = numSidebandExists;
+		
+		
+			
+				
+		x.numSideband = numSideband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.refFreqExists = refFreqExists;
+		
+		
+			
+		x.refFreq.length(refFreq.size());
+		for (unsigned int i = 0; i < refFreq.size(); ++i) {
+			
+			x.refFreq[i] = refFreq.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.refFreqPhaseExists = refFreqPhaseExists;
+		
+		
+			
+		x.refFreqPhase.length(refFreqPhase.size());
+		for (unsigned int i = 0; i < refFreqPhase.size(); ++i) {
+			
+			x.refFreqPhase[i] = refFreqPhase.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sidebandsExists = sidebandsExists;
+		
+		
+			
+		x.sidebands.length(sidebands.size());
+		for (unsigned int i = 0; i < sidebands.size(); ++i) {
+			
+				
+			x.sidebands[i] = sidebands.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

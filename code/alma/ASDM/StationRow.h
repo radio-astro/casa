@@ -84,7 +84,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Station.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -100,7 +100,7 @@ typedef void (StationRow::*StationAttributeFromText) (const string& s);
 /**
  * The StationRow class is a row of a StationTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class StationRow {
@@ -335,6 +335,15 @@ public:
 	 * @return The values of this row as a StationRowIDL struct.
 	 */
 	asdmIDL::StationRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a StationRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the StationRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::StationRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

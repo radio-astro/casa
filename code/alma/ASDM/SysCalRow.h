@@ -106,7 +106,7 @@
 //#include <TableStreamReader.h>
 
 /*\file SysCal.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -131,7 +131,7 @@ typedef void (SysCalRow::*SysCalAttributeFromText) (const string& s);
 /**
  * The SysCalRow class is a row of a SysCalTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SysCalRow {
@@ -1028,6 +1028,15 @@ public:
 	 * @return The values of this row as a SysCalRowIDL struct.
 	 */
 	asdmIDL::SysCalRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SysCalRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SysCalRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SysCalRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

@@ -382,6 +382,289 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalPrimaryBeamRow::toIDL(asdmIDL::CalPrimaryBeamRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numSubband = numSubband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); i++) {
+			x.frequencyRange[i].length(frequencyRange.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < frequencyRange.size() ; i++)
+			for (unsigned int j = 0; j < frequencyRange.at(i).size(); j++)
+					
+				x.frequencyRange[i][j]= frequencyRange.at(i).at(j).toIDLFrequency();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.mainBeamEfficiency.length(mainBeamEfficiency.size());
+		for (unsigned int i = 0; i < mainBeamEfficiency.size(); ++i) {
+			
+				
+			x.mainBeamEfficiency[i] = mainBeamEfficiency.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.beamDescriptionUID = beamDescriptionUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.relativeAmplitudeRms = relativeAmplitudeRms;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.minValidDirection.length(minValidDirection.size());
+		for (unsigned int i = 0; i < minValidDirection.size(); ++i) {
+			
+			x.minValidDirection[i] = minValidDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.maxValidDirection.length(maxValidDirection.size());
+		for (unsigned int i = 0; i < maxValidDirection.size(); ++i) {
+			
+			x.maxValidDirection[i] = maxValidDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.descriptionType = descriptionType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.imageChannelNumber.length(imageChannelNumber.size());
+		for (unsigned int i = 0; i < imageChannelNumber.size(); ++i) {
+			
+				
+			x.imageChannelNumber[i] = imageChannelNumber.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.imageNominalFrequency.length(imageNominalFrequency.size());
+		for (unsigned int i = 0; i < imageNominalFrequency.size(); ++i) {
+			
+			x.imageNominalFrequency[i] = imageNominalFrequency.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

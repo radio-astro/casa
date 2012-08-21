@@ -286,6 +286,187 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void FlagRow::toIDL(asdmIDL::FlagRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.flagId = flagId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startTime = startTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endTime = endTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.reason = CORBA::string_dup(reason.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numPolarizationTypeExists = numPolarizationTypeExists;
+		
+		
+			
+				
+		x.numPolarizationType = numPolarizationType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numSpectralWindowExists = numSpectralWindowExists;
+		
+		
+			
+				
+		x.numSpectralWindow = numSpectralWindow;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numPairedAntennaExists = numPairedAntennaExists;
+		
+		
+			
+				
+		x.numPairedAntenna = numPairedAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.polarizationTypeExists = polarizationTypeExists;
+		
+		
+			
+		x.polarizationType.length(polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); ++i) {
+			
+				
+			x.polarizationType[i] = polarizationType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+		
+		x.antennaId.length(antennaId.size());
+		for (unsigned int i = 0; i < antennaId.size(); ++i) {
+			
+			x.antennaId[i] = antennaId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.pairedAntennaIdExists = pairedAntennaIdExists;
+		
+		
+		
+		x.pairedAntennaId.length(pairedAntennaId.size());
+		for (unsigned int i = 0; i < pairedAntennaId.size(); ++i) {
+			
+			x.pairedAntennaId[i] = pairedAntennaId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.spectralWindowIdExists = spectralWindowIdExists;
+		
+		
+		
+		x.spectralWindowId.length(spectralWindowId.size());
+		for (unsigned int i = 0; i < spectralWindowId.size(); ++i) {
+			
+			x.spectralWindowId[i] = spectralWindowId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

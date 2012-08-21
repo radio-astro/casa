@@ -96,7 +96,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Field.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -121,7 +121,7 @@ typedef void (FieldRow::*FieldAttributeFromText) (const string& s);
 /**
  * The FieldRow class is a row of a FieldTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class FieldRow {
@@ -762,6 +762,15 @@ public:
 	 * @return The values of this row as a FieldRowIDL struct.
 	 */
 	asdmIDL::FieldRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a FieldRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the FieldRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::FieldRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

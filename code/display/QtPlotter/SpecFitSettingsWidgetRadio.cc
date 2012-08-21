@@ -826,19 +826,7 @@ void SpecFitSettingsWidgetRadio::resolveOutputLogFile( ){
 	}
 }
 
-void SpecFitSettingsWidgetRadio::getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const {
-	int msIndex = unitStr.find( "m/s");
-	int mIndex = unitStr.find( "m");
-	int angIndex = unitStr.find( "Ang");
-	velocity = false;
-	wavelength = false;
-	if ( msIndex >= 0 ){
-		velocity = true;
-	}
-	else if ( mIndex >= 0 || angIndex >= 0 ){
-		wavelength = true;
-	}
-}
+
 
 void SpecFitSettingsWidgetRadio::cancelFit(){
 	fitCancelled = true;
@@ -1056,7 +1044,19 @@ void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
 	delete converter;
 }
 
-
+void SpecFitSettingsWidgetRadio::getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const {
+		int msIndex = unitStr.find( "m/s");
+		int mIndex = unitStr.find( "m");
+		int angIndex = unitStr.find( "Ang");
+		velocity = false;
+		wavelength = false;
+		if ( msIndex >= 0 ){
+			velocity = true;
+		}
+		else if ( mIndex >= 0 || angIndex >= 0 ){
+			wavelength = true;
+		}
+	}
 SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()
 {
 	reset();

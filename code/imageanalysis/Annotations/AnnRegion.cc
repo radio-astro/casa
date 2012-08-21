@@ -87,10 +87,18 @@ void AnnRegion::_setFrequencyLimits(
 	const Quantity& restfreq
 ) {
 	String preamble(_class + ": " + String(__FUNCTION__) + ": ");
+    if (beginFreq.getValue() == 0 && endFreq.getValue() == 0) {
+        return;
+    }
 	if (! getCsys().hasSpectralAxis()) {
 		return;
 	}
-	if (! beginFreq.getUnit().empty() > 0 && endFreq.getUnit().empty()) {
+    if ( beginFreq.getUnit().empty() && endFreq.getUnit().empty()) {
+        throw AipsError(
+            preamble + "Neither frequency specified has units. Both must"
+        );
+    }
+	if (! beginFreq.getUnit().empty() && endFreq.getUnit().empty()) {
 		throw AipsError(
 			preamble + "beginning frequency specified but ending frequency not. "
 			+ "Both must specified or both must be unspecified."
@@ -239,18 +247,22 @@ void AnnRegion::_extend() {
 	Int spectralAxis = -1;
 	Vector<Quantity> freqRange;
 	uInt nBoxes = 0;
-	if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
-		Quantity begin = _convertedFreqLimits[0].get("Hz");
-		Quantity end = _convertedFreqLimits[1].get("Hz");
-		if (begin.getValue("Hz") > end.getValue("Hz")) {
-			Quantity tmp;
-			tmp = begin;
-			begin = end;
-			end = tmp;
+    cout << "converted freq limits " << _convertedFreqLimits << endl;
+    if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
+		SpectralCoordinate spcoord = getCsys().spectralCoordinate();
+		String unit = spcoord.worldAxisUnits()[0];
+		Vector<Double> pixrange(2);
+		spcoord.toPixel(pixrange(0), _convertedFreqLimits[0]);
+		spcoord.toPixel(pixrange(1), _convertedFreqLimits[1]);
+        freqRange.resize(2);
+		if (pixrange[1] > pixrange[0]) {
+			freqRange[0] = _convertedFreqLimits[0].get(unit);
+			freqRange[1] = _convertedFreqLimits[1].get(unit);
 		}
-		freqRange.resize(2);
-		freqRange[0] = begin;
-		freqRange[1] = end;
+		else {
+			freqRange[0] = _convertedFreqLimits[1].get(unit);
+			freqRange[1] = _convertedFreqLimits[0].get(unit);
+		}
 		spectralAxis = getCsys().spectralAxisNumber();
 		nBoxes = 1;
 	}
@@ -314,7 +326,7 @@ void AnnRegion::_extend() {
 	try {
 		_imageRegion.asWCRegionPtr()->toLCRegion(getCsys(), _imShape);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		throw (ToLCRegionConversionError(x.getMesg()));
 	}
 }
@@ -342,10 +354,10 @@ WCBox AnnRegion::_makeExtensionBox(
 }
 
 void AnnRegion::_checkAndConvertFrequencies() {
-	MFrequency::Types cFrameType = getCsys().spectralCoordinate().frequencySystem(False);
+    MFrequency::Types cFrameType = getCsys().spectralCoordinate().frequencySystem(False);
 	MDoppler::Types cDopplerType = getCsys().spectralCoordinate().velocityDoppler();
 	_convertedFreqLimits.resize(2);
-	for (Int i=0; i<2; i++) {
+    for (Int i=0; i<2; i++) {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
 		if (qFreq.getUnit() == "pix") {
 			Int spectralAxisNumber = getCsys().spectralAxisNumber();
@@ -380,7 +392,6 @@ void AnnRegion::_checkAndConvertFrequencies() {
 				Quantity(world[spectralAxisNumber], unit),
 				_freqRefFrame
 			);
-			return;
 		}
 		else if (qFreq.isConform("m/s")) {
 			MFrequency::Ref freqRef(_freqRefFrame);

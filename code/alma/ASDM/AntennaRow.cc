@@ -236,6 +236,143 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void AntennaRow::toIDL(asdmIDL::AntennaRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.name = CORBA::string_dup(name.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaType = antennaType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.dishDiameter = dishDiameter.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x.position[i] = position.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); ++i) {
+			
+			x.offset[i] = offset.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+ 		
+		x.assocAntennaIdExists = assocAntennaIdExists;
+		
+		
+	 	
+			
+		x.assocAntennaId = assocAntennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.stationId = stationId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

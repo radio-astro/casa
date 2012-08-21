@@ -461,6 +461,362 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ExecBlockRow::toIDL(asdmIDL::ExecBlockRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startTime = startTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endTime = endTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.execBlockNum = execBlockNum;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.execBlockUID = execBlockUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.projectUID = projectUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.configName = CORBA::string_dup(configName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.telescopeName = CORBA::string_dup(telescopeName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.observerName = CORBA::string_dup(observerName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numObservingLog = numObservingLog;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.observingLog.length(observingLog.size());
+		for (unsigned int i = 0; i < observingLog.size(); ++i) {
+			
+				
+			x.observingLog[i] = CORBA::string_dup(observingLog.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.sessionReference = sessionReference.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baseRangeMin = baseRangeMin.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baseRangeMax = baseRangeMax.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baseRmsMinor = baseRmsMinor.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baseRmsMajor = baseRmsMajor.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.basePa = basePa.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.aborted = aborted;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.releaseDateExists = releaseDateExists;
+		
+		
+			
+		x.releaseDate = releaseDate.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.schedulerModeExists = schedulerModeExists;
+		
+		
+			
+				
+		x.schedulerMode = CORBA::string_dup(schedulerMode.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.siteAltitudeExists = siteAltitudeExists;
+		
+		
+			
+		x.siteAltitude = siteAltitude.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		x.siteLongitudeExists = siteLongitudeExists;
+		
+		
+			
+		x.siteLongitude = siteLongitude.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x.siteLatitudeExists = siteLatitudeExists;
+		
+		
+			
+		x.siteLatitude = siteLatitude.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x.observingScriptExists = observingScriptExists;
+		
+		
+			
+				
+		x.observingScript = CORBA::string_dup(observingScript.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.observingScriptUIDExists = observingScriptUIDExists;
+		
+		
+			
+		x.observingScriptUID = observingScriptUID.toIDLEntityRef();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+		
+		x.antennaId.length(antennaId.size());
+		for (unsigned int i = 0; i < antennaId.size(); ++i) {
+			
+			x.antennaId[i] = antennaId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.sBSummaryId = sBSummaryId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.scaleIdExists = scaleIdExists;
+		
+		
+	 	
+			
+		x.scaleId = scaleId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

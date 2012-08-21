@@ -58,7 +58,7 @@ namespace QtMouseToolNames {
   const std::string longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
-    "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
+    "Point marking", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
     "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
   std::string iconnames[] = { "magnifyb", "handb", "arrowcrossb",
@@ -112,22 +112,32 @@ namespace QtMouseToolNames {
 
     static std::vector<std::string> point_symbol_icons;
     static std::vector<std::string> point_symbol_names;
+    static std::vector<std::string> point_symbol_rc;
+
+    static void init_point_region_symbol_rc( ) {
+	if ( point_symbol_rc.size( ) == 0 ) {
+	    // these must be added to the vector in the order
+	    // implied by the PointRegionSymbols enum...
+	    point_symbol_rc.push_back("dot");
+	    point_symbol_rc.push_back("drarrow");
+	    point_symbol_rc.push_back("dlarrow");
+	    point_symbol_rc.push_back("urarrow");
+	    point_symbol_rc.push_back("ularrow");
+	    point_symbol_rc.push_back("plus");
+	    point_symbol_rc.push_back("x");
+	    point_symbol_rc.push_back("circle");
+	    point_symbol_rc.push_back("diamond");
+	    point_symbol_rc.push_back("square");
+	}
+    }
 
 
     static void init_point_region_symbol_names( ) {
 	if ( point_symbol_names.size( ) == 0 ) {
-	    // these must be added to the vector in the order
-	    // implied by the PointRegionSymbols enum...
-	    point_symbol_names.push_back("symdot");
-	    point_symbol_names.push_back("symdrarrow");
-	    point_symbol_names.push_back("symdlarrow");
-	    point_symbol_names.push_back("symurarrow");
-	    point_symbol_names.push_back("symularrow");
-	    point_symbol_names.push_back("symplus");
-	    point_symbol_names.push_back("symx");
-	    point_symbol_names.push_back("symcircle");
-	    point_symbol_names.push_back("symdiamond");
-	    point_symbol_names.push_back("symsquare");
+	    init_point_region_symbol_rc( );
+	    for ( unsigned int i=0; i < point_symbol_rc.size( ); ++i ) {
+		point_symbol_names.push_back("sym" + point_symbol_rc[i]);
+	    }
 	}
     }
 
@@ -141,7 +151,7 @@ namespace QtMouseToolNames {
     }
 
     std::string pointRegionSymbolIcon( PointRegionSymbols sym, int button ){
-	if ( point_symbol_names.size( ) == 0 ) init_point_region_symbol_icons( );
+	if ( point_symbol_icons.size( ) == 0 ) init_point_region_symbol_icons( );
 	if ( sym < 0 || sym >= SYM_POINT_REGION_COUNT ) return std::string( );
 	std::string pattern = point_symbol_icons[(int)sym];
 	char buf[pattern.size( )+40];
@@ -155,6 +165,12 @@ namespace QtMouseToolNames {
 	return std::string(buf);
     }
 
+
+    std::string pointRegionSymbolRc( PointRegionSymbols sym ){
+	if ( point_symbol_rc.size( ) == 0 ) init_point_region_symbol_rc( );
+	return point_symbol_rc[sym];
+    }
+
 }  // namespace QtMouseToolNames
 
 
@@ -162,6 +178,9 @@ namespace QtMouseToolNames {
 
 Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0,  0 };
 
+QtMouseToolState::QtMouseToolState( ) : rc(viewer::getrc( )) {
+    initToolState( );
+}
 
 int QtMouseToolState::getButtonState(const std::string &tool) const {
     std::map<std::string,int>::const_iterator it = tool_state.find(tool);
@@ -198,9 +217,59 @@ void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
   if(ti!=nTools) {
     mousebtns_[ti] = mousebtn;	// assign requested tool to requested button.
     emit mouseBtnChg(tool, mousebtn);	// broadcast that change.
+    if ( mousebtn != 0 ) {
+	char buf[40];
+	sprintf( buf, "viewer.mouse.button.%s", (mousebtn == 1 ? "one" : mousebtn == 2 ? "two" : "three") );
+	rc.put( buf, toolName(ti) );
+    }
   }
 }
  
+void QtMouseToolState::initButtonState( std::string numstr, int num ) {
+    using namespace QtMouseToolNames;
+    std::string val = rc.get("viewer.mouse.button." + numstr);
+    if ( val != "" ) {
+	Int ti = toolIndex(val);
+	if ( ti != nTools ) {
+	    for ( int i=0; i < nTools; ++i )
+		if ( mousebtns_[i] == num ) {
+		    mousebtns_[i] = 0;
+		    break;
+		}
+	    mousebtns_[ti] = num;
+	}
+    }
+}
+
+void QtMouseToolState::initToolState( ) {
+    using namespace QtMouseToolNames;
+    std::string val = rc.get( "viewer.mouse.state.point" );
+    init_point_region_symbol_rc( );
+
+    if ( val == "" ) {
+	rc.put("viewer.mouse.state.point",point_symbol_rc[SYM_DOT]);
+	return;
+    }
+
+    int ti = -1;
+    for( int i=0; i<nTools; ++i ) {
+	if ( tools[i] == POINT ) { ti = i; break; }
+    }
+    if ( ti < 0 ) return;
+
+    for ( unsigned int i=0; i < point_symbol_rc.size( ); ++i ) {
+	if ( val == point_symbol_rc[i] ) {
+	    if ( point_symbol_names.size() == 0 ) init_point_region_symbol_names( );
+	    iconnames[ti] = point_symbol_names[i] + "b";
+	    tool_state[POINT] = i;
+	    break;
+	}
+    }
+
+    initButtonState("one",1);
+    initButtonState("two",2);
+    initButtonState("three",3);
+}
 
 void QtMouseToolState::mouseBtnStateChg(String /*tool*/, Int sym) {
     using namespace QtMouseToolNames;

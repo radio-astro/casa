@@ -146,5 +146,27 @@ namespace casa {
 
 	}
 
+	QString Util::stripBrackets( QString unitStr ){
+		int startIndex = unitStr.indexOf( "[");
+		int endIndex = unitStr.indexOf( "]");
+		QString noBrackets = unitStr;
+		if ( startIndex >= 0 && endIndex > 0 ){
+			noBrackets = unitStr.mid(startIndex+1, endIndex - startIndex-1);
+		}
+		return noBrackets;
+	}
+
+	QString Util::stripFont( QString unitStr ){
+		int openingBracketEnd = unitStr.indexOf( ">");
+		int endBracketStart = unitStr.indexOf( "<", openingBracketEnd);
+		QString strippedUnits = unitStr;
+		if ( openingBracketEnd > 0 && endBracketStart > 0 ){
+			strippedUnits = unitStr.mid(openingBracketEnd + 1, endBracketStart - openingBracketEnd -1 );
+		}
+		return strippedUnits;
+	}
+
+
+
 
 }

@@ -685,6 +685,592 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalAtmosphereRow::toIDL(asdmIDL::CalAtmosphereRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numFreq = numFreq;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numLoad = numLoad;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.forwardEffSpectrum.length(forwardEffSpectrum.size());
+		for (unsigned int i = 0; i < forwardEffSpectrum.size(); i++) {
+			x.forwardEffSpectrum[i].length(forwardEffSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < forwardEffSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < forwardEffSpectrum.at(i).size(); j++)
+					
+						
+				x.forwardEffSpectrum[i][j] = forwardEffSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.groundPressure = groundPressure.toIDLPressure();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.groundRelHumidity = groundRelHumidity.toIDLHumidity();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencySpectrum.length(frequencySpectrum.size());
+		for (unsigned int i = 0; i < frequencySpectrum.size(); ++i) {
+			
+			x.frequencySpectrum[i] = frequencySpectrum.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.groundTemperature = groundTemperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.powerSkySpectrum.length(powerSkySpectrum.size());
+		for (unsigned int i = 0; i < powerSkySpectrum.size(); i++) {
+			x.powerSkySpectrum[i].length(powerSkySpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < powerSkySpectrum.size() ; i++)
+			for (unsigned int j = 0; j < powerSkySpectrum.at(i).size(); j++)
+					
+						
+				x.powerSkySpectrum[i][j] = powerSkySpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.powerLoadSpectrum.length(powerLoadSpectrum.size());
+		for (unsigned int i = 0; i < powerLoadSpectrum.size(); i++) {
+			x.powerLoadSpectrum[i].length(powerLoadSpectrum.at(i).size());
+			for (unsigned int j = 0; j < powerLoadSpectrum.at(i).size(); j++) {
+				x.powerLoadSpectrum[i][j].length(powerLoadSpectrum.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < powerLoadSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < powerLoadSpectrum.at(i).size(); j++)
+				for (unsigned int k = 0; k < powerLoadSpectrum.at(i).at(j).size(); k++)
+					
+						
+					x.powerLoadSpectrum[i][j][k] = powerLoadSpectrum.at(i).at(j).at(k);
+		 				
+			 									
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.syscalType = syscalType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tAtmSpectrum.length(tAtmSpectrum.size());
+		for (unsigned int i = 0; i < tAtmSpectrum.size(); i++) {
+			x.tAtmSpectrum[i].length(tAtmSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tAtmSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tAtmSpectrum.at(i).size(); j++)
+					
+				x.tAtmSpectrum[i][j]= tAtmSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tRecSpectrum.length(tRecSpectrum.size());
+		for (unsigned int i = 0; i < tRecSpectrum.size(); i++) {
+			x.tRecSpectrum[i].length(tRecSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tRecSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tRecSpectrum.at(i).size(); j++)
+					
+				x.tRecSpectrum[i][j]= tRecSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tSysSpectrum.length(tSysSpectrum.size());
+		for (unsigned int i = 0; i < tSysSpectrum.size(); i++) {
+			x.tSysSpectrum[i].length(tSysSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tSysSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tSysSpectrum.at(i).size(); j++)
+					
+				x.tSysSpectrum[i][j]= tSysSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tauSpectrum.length(tauSpectrum.size());
+		for (unsigned int i = 0; i < tauSpectrum.size(); i++) {
+			x.tauSpectrum[i].length(tauSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < tauSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tauSpectrum.at(i).size(); j++)
+					
+						
+				x.tauSpectrum[i][j] = tauSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tAtm.length(tAtm.size());
+		for (unsigned int i = 0; i < tAtm.size(); ++i) {
+			
+			x.tAtm[i] = tAtm.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tRec.length(tRec.size());
+		for (unsigned int i = 0; i < tRec.size(); ++i) {
+			
+			x.tRec[i] = tRec.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tSys.length(tSys.size());
+		for (unsigned int i = 0; i < tSys.size(); ++i) {
+			
+			x.tSys[i] = tSys.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.tau.length(tau.size());
+		for (unsigned int i = 0; i < tau.size(); ++i) {
+			
+				
+			x.tau[i] = tau.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.water.length(water.size());
+		for (unsigned int i = 0; i < water.size(); ++i) {
+			
+			x.water[i] = water.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.waterError.length(waterError.size());
+		for (unsigned int i = 0; i < waterError.size(); ++i) {
+			
+			x.waterError[i] = waterError.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.alphaSpectrumExists = alphaSpectrumExists;
+		
+		
+			
+		x.alphaSpectrum.length(alphaSpectrum.size());
+		for (unsigned int i = 0; i < alphaSpectrum.size(); i++) {
+			x.alphaSpectrum[i].length(alphaSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < alphaSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < alphaSpectrum.at(i).size(); j++)
+					
+						
+				x.alphaSpectrum[i][j] = alphaSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.forwardEfficiencyExists = forwardEfficiencyExists;
+		
+		
+			
+		x.forwardEfficiency.length(forwardEfficiency.size());
+		for (unsigned int i = 0; i < forwardEfficiency.size(); ++i) {
+			
+				
+			x.forwardEfficiency[i] = forwardEfficiency.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.forwardEfficiencyErrorExists = forwardEfficiencyErrorExists;
+		
+		
+			
+		x.forwardEfficiencyError.length(forwardEfficiencyError.size());
+		for (unsigned int i = 0; i < forwardEfficiencyError.size(); ++i) {
+			
+				
+			x.forwardEfficiencyError[i] = forwardEfficiencyError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sbGainExists = sbGainExists;
+		
+		
+			
+		x.sbGain.length(sbGain.size());
+		for (unsigned int i = 0; i < sbGain.size(); ++i) {
+			
+				
+			x.sbGain[i] = sbGain.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sbGainErrorExists = sbGainErrorExists;
+		
+		
+			
+		x.sbGainError.length(sbGainError.size());
+		for (unsigned int i = 0; i < sbGainError.size(); ++i) {
+			
+				
+			x.sbGainError[i] = sbGainError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sbGainSpectrumExists = sbGainSpectrumExists;
+		
+		
+			
+		x.sbGainSpectrum.length(sbGainSpectrum.size());
+		for (unsigned int i = 0; i < sbGainSpectrum.size(); i++) {
+			x.sbGainSpectrum[i].length(sbGainSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < sbGainSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < sbGainSpectrum.at(i).size(); j++)
+					
+						
+				x.sbGainSpectrum[i][j] = sbGainSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

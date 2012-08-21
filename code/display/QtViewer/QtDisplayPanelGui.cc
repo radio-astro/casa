@@ -170,9 +170,10 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                     // rgnMgrAct_->setEnabled(False);
 
     if ( ! use_new_regions || true ) {
-	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
-	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+    	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
+    	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
     }
+    momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
   
     vwMenu_       = menuBar()->addMenu("&View");
 			// (populated after creation of toolbars/dockwidgets).
@@ -195,6 +196,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		    mainToolBar_->addAction(dpRstrAct_);
 		    mainToolBar_->addSeparator();
 		    mainToolBar_->addAction(profileAct_);
+		    mainToolBar_->addAction(momentsCollapseAct_);
 //		    mainToolBar_->addAction(rgnMgrAct_);
 		    mainToolBar_->addSeparator();
 		    mainToolBar_->addAction(printAct_);
@@ -514,6 +516,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpSaveAct_ ->setIcon(QIcon(":/icons/Save_Panel.png"));
     dpRstrAct_ ->setIcon(QIcon(":/icons/Restore_Panel.png"));
     profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
+    momentsCollapseAct_->setIcon(QIcon(":/icons/profileMomentCollapse.png"));
     // rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
     printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
     unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));
@@ -531,6 +534,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpOptsAct_ ->setToolTip("Panel Display Options");
     dpSaveAct_ ->setToolTip("Save Display Panel State to File");
     profileAct_->setToolTip("Open the Spectrum Profiler");
+    profileAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
     dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
     // rgnMgrAct_ ->setToolTip("Save/Control Regions");
     if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
@@ -572,6 +576,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
     connect(dpQuitAct_,  SIGNAL(triggered()),  SLOT(quit()));
     connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
+    connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
     // connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
     connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
     connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
@@ -1054,6 +1059,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
                if ( annotAct_ ) annotAct_->setEnabled(True);
                profileAct_->setEnabled(True);
+               momentsCollapseAct_->setEnabled(True);
                if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
                setUseRegion(False);
                break;
@@ -1072,6 +1078,7 @@ void QtDisplayPanelGui::hideImageMenus() {
                if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
                if ( annotAct_ ) annotAct_->setEnabled(False);
                profileAct_->setEnabled(False);
+               momentsCollapseAct_->setEnabled( False );
                if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
                setUseRegion(False);
                //cout << "hide image menus" << endl;
@@ -1619,9 +1626,10 @@ void QtDisplayPanelGui::showImageProfile() {
     }
 
     if (profile_) {
-	connect( this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
-		 profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
-	emit overlay(overlap);
+    	connect( this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
+    			profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
+    	emit overlay(overlap);
+    	profile_->setPurpose( ProfileTaskMonitor::SPECTROSCOPY );
     }
     PanelDisplay* ppd = qdp_->panelDisplay();
     QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
@@ -2375,6 +2383,13 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
 
   void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {
 	emit axisToolUpdate( controlling_dd );
+  }
+
+  void QtDisplayPanelGui::showMomentsCollapseImageProfile(){
+	  showImageProfile();
+	  if ( profile_ != NULL ){
+		  profile_->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE);
+	  }
   }
 
 }

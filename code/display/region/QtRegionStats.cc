@@ -84,7 +84,7 @@ namespace casa {
 #if defined(__APPLE__)
 	    QFont stat_field_font( "Lucida Grande", 10 );
 #else
-	    QFont stat_field_font( "Sans Serif", 7 );
+	    QFont stat_field_font( "Sans Serif", 10 );
 #endif
 	    while ( fiter != fields.end( ) && siter != (*stats.list()).end( ) ) {
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );

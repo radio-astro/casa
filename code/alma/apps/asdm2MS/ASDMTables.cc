@@ -8101,6 +8101,8 @@ ASDM_POINTING::ASDM_POINTING() {
   tableDesc_.addColumn(ScalarColumnDesc<double>("sourceOffsetEquinox", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("sampledTimeInterval", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("atmosphericCorrection", "blabla"));
   		  		
 }
 
@@ -8141,6 +8143,8 @@ const TableDesc& ASDM_POINTING::tableDesc() const {
 		
 			
 using namespace DirectionReferenceCodeMod;
+			
+		
 			
 		
 			
@@ -8188,6 +8192,8 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
     ScalarColumn<double> sourceOffsetEquinox(*table_p_, "sourceOffsetEquinox");             
   		
     ArrayColumn<double> sampledTimeInterval(*table_p_, "sampledTimeInterval");             
+  		
+    ArrayColumn<double> atmosphericCorrection(*table_p_, "atmosphericCorrection");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -8265,6 +8271,11 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
 	
 	if (rows.at(i)->isSampledTimeIntervalExists())
 		sampledTimeInterval.put(rowIndex, ati2CASA2D<double>(rows.at(i)->getSampledTimeInterval()));
+	
+
+	
+	if (rows.at(i)->isAtmosphericCorrectionExists())
+		atmosphericCorrection.put(rowIndex, ext2CASA2D<Angle,double>(rows.at(i)->getAtmosphericCorrection()));
 	
 
 		rowIndex++;		
@@ -11187,6 +11198,8 @@ ASDM_WVMCAL::ASDM_WVMCAL() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("polyFreqLimits", "blabla"));
   		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numInputAntenna", "blabla"));
+  		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numChan", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
@@ -11194,6 +11207,8 @@ ASDM_WVMCAL::ASDM_WVMCAL() {
   tableDesc_.addColumn(ArrayColumnDesc<float>("pathCoeff", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("refTemp", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("inputAntennaId", "blabla"));
   		
   		  		
 }
@@ -11225,6 +11240,8 @@ using namespace WVRMethodMod;
 		
 			
 		
+			
+		
 	
 void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	vector<WVMCalRow*> rows = asdm.getWVMCal().get();
@@ -11242,6 +11259,8 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
   		
     ArrayColumn<double> polyFreqLimits(*table_p_, "polyFreqLimits");             
   		
+    ScalarColumn<int> numInputAntenna(*table_p_, "numInputAntenna");             
+  		
     ScalarColumn<int> numChan(*table_p_, "numChan");             
   		
     ScalarColumn<int> numPoly(*table_p_, "numPoly");             
@@ -11249,6 +11268,8 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
     ArrayColumn<float> pathCoeff(*table_p_, "pathCoeff");             
   		
     ArrayColumn<double> refTemp(*table_p_, "refTemp");             
+  		
+    ArrayColumn<String> inputAntennaId(*table_p_, "inputAntennaId");             
   		
   		  	
 
@@ -11276,6 +11297,10 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	
 
 	
+	numInputAntenna.put(rowIndex, rows.at(i)->getNumInputAntenna());
+	
+
+	
 	numChan.put(rowIndex, rows.at(i)->getNumChan());
 	
 
@@ -11284,11 +11309,15 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	
 
 	
-	pathCoeff.put(rowIndex, basic2CASA2D<float,float>(rows.at(i)->getPathCoeff()));
+	pathCoeff.put(rowIndex, basic2CASA3D<float,float>(rows.at(i)->getPathCoeff()));
 	
 
 	
-	refTemp.put(rowIndex, ext2CASA1D<Temperature,double>(rows.at(i)->getRefTemp()));
+	refTemp.put(rowIndex, ext2CASA2D<Temperature,double>(rows.at(i)->getRefTemp()));
+	
+
+	
+	inputAntennaId.put(rowIndex, _2CASAString1D<Tag,String>(rows.at(i)->getInputAntennaId()));
 	
 
 		

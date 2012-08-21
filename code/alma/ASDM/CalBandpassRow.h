@@ -120,7 +120,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalBandpass.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -142,7 +142,7 @@ typedef void (CalBandpassRow::*CalBandpassAttributeFromText) (const string& s);
 /**
  * The CalBandpassRow class is a row of a CalBandpassTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalBandpassRow {
@@ -938,6 +938,15 @@ public:
 	 * @return The values of this row as a CalBandpassRowIDL struct.
 	 */
 	asdmIDL::CalBandpassRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalBandpassRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalBandpassRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalBandpassRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

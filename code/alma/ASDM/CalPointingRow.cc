@@ -618,6 +618,525 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalPointingRow::toIDL(asdmIDL::CalPointingRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.ambientTemperature = ambientTemperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.pointingModelMode = pointingModelMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.pointingMethod = pointingMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.collOffsetRelative.length(collOffsetRelative.size());
+		for (unsigned int i = 0; i < collOffsetRelative.size(); i++) {
+			x.collOffsetRelative[i].length(collOffsetRelative.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < collOffsetRelative.size() ; i++)
+			for (unsigned int j = 0; j < collOffsetRelative.at(i).size(); j++)
+					
+				x.collOffsetRelative[i][j]= collOffsetRelative.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.collOffsetAbsolute.length(collOffsetAbsolute.size());
+		for (unsigned int i = 0; i < collOffsetAbsolute.size(); i++) {
+			x.collOffsetAbsolute[i].length(collOffsetAbsolute.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < collOffsetAbsolute.size() ; i++)
+			for (unsigned int j = 0; j < collOffsetAbsolute.at(i).size(); j++)
+					
+				x.collOffsetAbsolute[i][j]= collOffsetAbsolute.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.collError.length(collError.size());
+		for (unsigned int i = 0; i < collError.size(); i++) {
+			x.collError[i].length(collError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < collError.size() ; i++)
+			for (unsigned int j = 0; j < collError.at(i).size(); j++)
+					
+				x.collError[i][j]= collError.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.collOffsetTied.length(collOffsetTied.size());
+		for (unsigned int i = 0; i < collOffsetTied.size(); i++) {
+			x.collOffsetTied[i].length(collOffsetTied.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < collOffsetTied.size() ; i++)
+			for (unsigned int j = 0; j < collOffsetTied.at(i).size(); j++)
+					
+						
+				x.collOffsetTied[i][j] = collOffsetTied.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); ++i) {
+			
+				
+			x.reducedChiSquared[i] = reducedChiSquared.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.averagedPolarizationsExists = averagedPolarizationsExists;
+		
+		
+			
+				
+		x.averagedPolarizations = averagedPolarizations;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.beamPAExists = beamPAExists;
+		
+		
+			
+		x.beamPA.length(beamPA.size());
+		for (unsigned int i = 0; i < beamPA.size(); ++i) {
+			
+			x.beamPA[i] = beamPA.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.beamPAErrorExists = beamPAErrorExists;
+		
+		
+			
+		x.beamPAError.length(beamPAError.size());
+		for (unsigned int i = 0; i < beamPAError.size(); ++i) {
+			
+			x.beamPAError[i] = beamPAError.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.beamPAWasFixedExists = beamPAWasFixedExists;
+		
+		
+			
+				
+		x.beamPAWasFixed = beamPAWasFixed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.beamWidthExists = beamWidthExists;
+		
+		
+			
+		x.beamWidth.length(beamWidth.size());
+		for (unsigned int i = 0; i < beamWidth.size(); i++) {
+			x.beamWidth[i].length(beamWidth.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < beamWidth.size() ; i++)
+			for (unsigned int j = 0; j < beamWidth.at(i).size(); j++)
+					
+				x.beamWidth[i][j]= beamWidth.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.beamWidthErrorExists = beamWidthErrorExists;
+		
+		
+			
+		x.beamWidthError.length(beamWidthError.size());
+		for (unsigned int i = 0; i < beamWidthError.size(); i++) {
+			x.beamWidthError[i].length(beamWidthError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < beamWidthError.size() ; i++)
+			for (unsigned int j = 0; j < beamWidthError.at(i).size(); j++)
+					
+				x.beamWidthError[i][j]= beamWidthError.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.beamWidthWasFixedExists = beamWidthWasFixedExists;
+		
+		
+			
+		x.beamWidthWasFixed.length(beamWidthWasFixed.size());
+		for (unsigned int i = 0; i < beamWidthWasFixed.size(); ++i) {
+			
+				
+			x.beamWidthWasFixed[i] = beamWidthWasFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityExists = offIntensityExists;
+		
+		
+			
+		x.offIntensity.length(offIntensity.size());
+		for (unsigned int i = 0; i < offIntensity.size(); ++i) {
+			
+			x.offIntensity[i] = offIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityErrorExists = offIntensityErrorExists;
+		
+		
+			
+		x.offIntensityError.length(offIntensityError.size());
+		for (unsigned int i = 0; i < offIntensityError.size(); ++i) {
+			
+			x.offIntensityError[i] = offIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityWasFixedExists = offIntensityWasFixedExists;
+		
+		
+			
+				
+		x.offIntensityWasFixed = offIntensityWasFixed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityExists = peakIntensityExists;
+		
+		
+			
+		x.peakIntensity.length(peakIntensity.size());
+		for (unsigned int i = 0; i < peakIntensity.size(); ++i) {
+			
+			x.peakIntensity[i] = peakIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityErrorExists = peakIntensityErrorExists;
+		
+		
+			
+		x.peakIntensityError.length(peakIntensityError.size());
+		for (unsigned int i = 0; i < peakIntensityError.size(); ++i) {
+			
+			x.peakIntensityError[i] = peakIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityWasFixedExists = peakIntensityWasFixedExists;
+		
+		
+			
+				
+		x.peakIntensityWasFixed = peakIntensityWasFixed;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

@@ -113,7 +113,7 @@ class ConfigDescriptionRow;
  * Defines the hardware configuration used to  obtain the science data.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of ConfigDescription </CAPTION>
@@ -356,6 +356,16 @@ public:
 	 * @return a pointer to a ConfigDescriptionTableIDL
 	 */
 	asdmIDL::ConfigDescriptionTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::ConfigDescriptionTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::ConfigDescriptionTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

@@ -120,7 +120,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalPosition.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -142,7 +142,7 @@ typedef void (CalPositionRow::*CalPositionAttributeFromText) (const string& s);
 /**
  * The CalPositionRow class is a row of a CalPositionTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalPositionRow {
@@ -972,6 +972,15 @@ public:
 	 * @return The values of this row as a CalPositionRowIDL struct.
 	 */
 	asdmIDL::CalPositionRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalPositionRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalPositionRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalPositionRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

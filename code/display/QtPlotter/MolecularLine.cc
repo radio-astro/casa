@@ -32,8 +32,19 @@
 
 namespace casa {
 
-MolecularLine::MolecularLine() : QwtPlotMarker(),
-		lineColor("#00957B"){
+MolecularLine::MolecularLine() : QwtPlotMarker(){
+	init();
+}
+
+MolecularLine::MolecularLine( float center, float peak, QString name ): QwtPlotMarker() {
+	init();
+	this -> center = center;
+	this -> peak = peak;
+	this -> label = name;
+}
+
+void MolecularLine::init() {
+	lineColor = "#00957B";
 	setLineStyle( QwtPlotMarker::HLine);
 }
 
@@ -67,6 +78,21 @@ QString MolecularLine::getLabel() const {
 	return label;
 }
 
+void MolecularLine::getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const{
+	if ( center < xmin ){
+		xmin = center;
+	}
+	else if ( center > xmax ){
+		xmax = center;
+	}
+	if ( peak < ymin ){
+		ymin = peak;
+	}
+	else if ( peak > ymax ){
+		ymax = peak;
+	}
+}
+
 void MolecularLine::draw (QPainter * painter, const QwtScaleMap & xMap,
 	const QwtScaleMap & yMap, const QRect & canvasRect ) const {
 
@@ -74,6 +100,11 @@ void MolecularLine::draw (QPainter * painter, const QwtScaleMap & xMap,
 	int centerPixel = static_cast<int>(xMap.transform( center ));
 	int peakPixel = static_cast<int>(yMap.transform( peak ));
 	int zeroPixel = static_cast<int>(yMap.transform( 0 ));
+	draw( painter, centerPixel, peakPixel, zeroPixel, canvasRect.width(), canvasRect.height() );
+}
+
+void MolecularLine::draw (QPainter * painter, int centerPixel,
+	int peakPixel, int zeroPixel, int canvasWidth, int canvasHeight ) const {
 	painter->save();
 	QPen pen( lineColor );
 	pen.setWidth(2);
@@ -93,11 +124,23 @@ void MolecularLine::draw (QPainter * painter, const QwtScaleMap & xMap,
 	QTextDocument document;
 	QString coloredFormula = "<font color='"+ lineColor.name()+"'>"+label+"</font>";
 	document.setHtml( coloredFormula );
-	document.drawContents(painter, QRect(0, 0, canvasRect.height(), canvasRect.width()));
+	document.drawContents(painter, QRect(0, 0, canvasHeight, canvasWidth ));
 	painter->restore();
 }
 
-
+bool MolecularLine::equalTo( const MolecularLine* const other ) const {
+	bool equalLines = false;
+	if ( other != NULL ){
+		if ( label == other->getLabel() ){
+			if ( peak == other->getPeak() ){
+				if ( center == other->getCenter() ){
+					equalLines = true;
+				}
+			}
+		}
+	}
+	return equalLines;
+}
 
 MolecularLine::~MolecularLine() {
 }

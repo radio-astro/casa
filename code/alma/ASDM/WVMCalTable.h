@@ -75,6 +75,8 @@
 
 	
 
+	
+
 
 
 #include <ConversionException.h>
@@ -107,7 +109,7 @@ class WVMCalRow;
  * Coefficients to use water vapour monitor information to correct for  pathlength variations. This contains the coefficients actually used, while  CalWVR contains the coefficients derived from TelCal calibration.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of WVMCal </CAPTION>
@@ -161,6 +163,13 @@ class WVMCalRow;
  * </TR>
 	
  * <TR>
+ * <TD> numInputAntenna </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;The number of antennas used for the calculations. </TD>
+ * </TR>
+	
+ * <TR>
  * <TD> numChan </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
@@ -176,16 +185,23 @@ class WVMCalRow;
 	
  * <TR>
  * <TD> pathCoeff </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numChan, numPoly </TD> 
- * <TD> &nbsp;the pathlengths coefficients (one value per chan per coefficient). </TD>
+ * <TD> vector<vector<vector<float > > > </TD>
+ * <TD>  numInputAntenna, numChan, numPoly </TD> 
+ * <TD> &nbsp;the pathlengths coefficients (one value per antenna per chan per coefficient). </TD>
  * </TR>
 	
  * <TR>
  * <TD> refTemp </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>  numChan </TD> 
- * <TD> &nbsp;the reference temperatures (one value per channel). </TD>
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numInputAntenna, numChan </TD> 
+ * <TD> &nbsp;the reference temperatures (one value par antenna per channel). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> inputAntennaId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numInputAntenna </TD> 
+ * <TD> &nbsp;Refers to row(s) in the Antenna table describing the antenna(s) used for the calculations. It is a 1D array expected to have numInputAntenna elements. </TD>
  * </TR>
 	
 
@@ -288,6 +304,16 @@ public:
 	 * @return a pointer to a WVMCalTableIDL
 	 */
 	asdmIDL::WVMCalTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::WVMCalTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::WVMCalTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS
@@ -325,6 +351,8 @@ public:
 	
  	 * @param polyFreqLimits
 	
+ 	 * @param numInputAntenna
+	
  	 * @param numChan
 	
  	 * @param numPoly
@@ -333,8 +361,10 @@ public:
 	
  	 * @param refTemp
 	
+ 	 * @param inputAntennaId
+	
      */
-	WVMCalRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp);
+	WVMCalRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numInputAntenna, int numChan, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<vector<Temperature > > refTemp, vector<Tag>  inputAntennaId);
 	
 
 
@@ -450,6 +480,8 @@ public:
  	 		
  	 * @param polyFreqLimits
  	 		
+ 	 * @param numInputAntenna
+ 	 		
  	 * @param numChan
  	 		
  	 * @param numPoly
@@ -457,9 +489,11 @@ public:
  	 * @param pathCoeff
  	 		
  	 * @param refTemp
+ 	 		
+ 	 * @param inputAntennaId
  	 		 
  	 */
-	WVMCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp); 
+	WVMCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numInputAntenna, int numChan, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<vector<Temperature > > refTemp, vector<Tag>  inputAntennaId); 
 
 
 	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);

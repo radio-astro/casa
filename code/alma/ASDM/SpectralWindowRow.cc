@@ -552,6 +552,453 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SpectralWindowRow::toIDL(asdmIDL::SpectralWindowRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.netSideband = netSideband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numChan = numChan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.refFreq = refFreq.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.sidebandProcessingMode = sidebandProcessingMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.totBandwidth = totBandwidth.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.windowFunction = windowFunction;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.chanFreqStartExists = chanFreqStartExists;
+		
+		
+			
+		x.chanFreqStart = chanFreqStart.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x.chanFreqStepExists = chanFreqStepExists;
+		
+		
+			
+		x.chanFreqStep = chanFreqStep.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x.chanFreqArrayExists = chanFreqArrayExists;
+		
+		
+			
+		x.chanFreqArray.length(chanFreqArray.size());
+		for (unsigned int i = 0; i < chanFreqArray.size(); ++i) {
+			
+			x.chanFreqArray[i] = chanFreqArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.chanWidthExists = chanWidthExists;
+		
+		
+			
+		x.chanWidth = chanWidth.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x.chanWidthArrayExists = chanWidthArrayExists;
+		
+		
+			
+		x.chanWidthArray.length(chanWidthArray.size());
+		for (unsigned int i = 0; i < chanWidthArray.size(); ++i) {
+			
+			x.chanWidthArray[i] = chanWidthArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.correlationBitExists = correlationBitExists;
+		
+		
+			
+				
+		x.correlationBit = correlationBit;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.effectiveBwExists = effectiveBwExists;
+		
+		
+			
+		x.effectiveBw = effectiveBw.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x.effectiveBwArrayExists = effectiveBwArrayExists;
+		
+		
+			
+		x.effectiveBwArray.length(effectiveBwArray.size());
+		for (unsigned int i = 0; i < effectiveBwArray.size(); ++i) {
+			
+			x.effectiveBwArray[i] = effectiveBwArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.freqGroupExists = freqGroupExists;
+		
+		
+			
+				
+		x.freqGroup = freqGroup;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.freqGroupNameExists = freqGroupNameExists;
+		
+		
+			
+				
+		x.freqGroupName = CORBA::string_dup(freqGroupName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.lineArrayExists = lineArrayExists;
+		
+		
+			
+		x.lineArray.length(lineArray.size());
+		for (unsigned int i = 0; i < lineArray.size(); ++i) {
+			
+				
+			x.lineArray[i] = lineArray.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.measFreqRefExists = measFreqRefExists;
+		
+		
+			
+				
+		x.measFreqRef = measFreqRef;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.nameExists = nameExists;
+		
+		
+			
+				
+		x.name = CORBA::string_dup(name.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.oversamplingExists = oversamplingExists;
+		
+		
+			
+				
+		x.oversampling = oversampling;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.quantizationExists = quantizationExists;
+		
+		
+			
+				
+		x.quantization = quantization;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.refChanExists = refChanExists;
+		
+		
+			
+				
+		x.refChan = refChan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.resolutionExists = resolutionExists;
+		
+		
+			
+		x.resolution = resolution.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x.resolutionArrayExists = resolutionArrayExists;
+		
+		
+			
+		x.resolutionArray.length(resolutionArray.size());
+		for (unsigned int i = 0; i < resolutionArray.size(); ++i) {
+			
+			x.resolutionArray[i] = resolutionArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numAssocValuesExists = numAssocValuesExists;
+		
+		
+			
+				
+		x.numAssocValues = numAssocValues;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.assocNatureExists = assocNatureExists;
+		
+		
+			
+		x.assocNature.length(assocNature.size());
+		for (unsigned int i = 0; i < assocNature.size(); ++i) {
+			
+				
+			x.assocNature[i] = assocNature.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+ 		
+		x.assocSpectralWindowIdExists = assocSpectralWindowIdExists;
+		
+		
+		
+		x.assocSpectralWindowId.length(assocSpectralWindowId.size());
+		for (unsigned int i = 0; i < assocSpectralWindowId.size(); ++i) {
+			
+			x.assocSpectralWindowId[i] = assocSpectralWindowId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.dopplerIdExists = dopplerIdExists;
+		
+		
+	 	
+			
+				
+		x.dopplerId = dopplerId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.imageSpectralWindowIdExists = imageSpectralWindowIdExists;
+		
+		
+	 	
+			
+		x.imageSpectralWindowId = imageSpectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

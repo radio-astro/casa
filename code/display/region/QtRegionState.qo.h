@@ -5,6 +5,7 @@
 #include <display/region/Region.h>
 #include <display/region/QtRegionState.ui.h>
 #include <display/region/QtRegionStats.qo.h>
+#include <display/Display/MouseToolState.h>
 
 namespace casa {
     namespace viewer {
@@ -18,7 +19,9 @@ namespace casa {
 		// which cannot happen until after the ctor of QtRegionState...
 		void init( );
 
-		QtRegionState( const QString &name, QtRegion *region, QWidget *parent=0 );
+		QtRegionState( const QString &name, QtRegion *region,
+			       QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			       QWidget *parent=0 );
 		~QtRegionState( );
 
 		void updateCoord( );
@@ -31,6 +34,9 @@ namespace casa {
 		std::string centerColor( ) const;
 		int lineWidth( ) const { return line_width->value( ); }
 		Region::LineStyle lineStyle( ) const;
+
+		int markerScale( ) const { return marker_scale->value( ); }
+		void setMarkerScale( int v );
 
 		std::string textColor( ) const;
 		std::string textFont( ) const;
@@ -109,6 +115,7 @@ namespace casa {
 	    protected slots:
 		// updates canvas with any line changes
 		void state_change( int );
+		void color_state_change( int );
 		void state_change( bool );
 		void state_change( const QString & );
 		void states_change( int );
@@ -134,6 +141,8 @@ namespace casa {
 
 		void save_browser(bool);
 		void load_browser(bool);
+
+		void set_point_region_marker( int );
 
 	    protected:
 		// keep track of which set of statistics

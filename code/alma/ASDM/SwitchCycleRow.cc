@@ -212,6 +212,131 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SwitchCycleRow::toIDL(asdmIDL::SwitchCycleRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.switchCycleId = switchCycleId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numStep = numStep;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.weightArray.length(weightArray.size());
+		for (unsigned int i = 0; i < weightArray.size(); ++i) {
+			
+				
+			x.weightArray[i] = weightArray.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.dirOffsetArray.length(dirOffsetArray.size());
+		for (unsigned int i = 0; i < dirOffsetArray.size(); i++) {
+			x.dirOffsetArray[i].length(dirOffsetArray.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < dirOffsetArray.size() ; i++)
+			for (unsigned int j = 0; j < dirOffsetArray.at(i).size(); j++)
+					
+				x.dirOffsetArray[i][j]= dirOffsetArray.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.freqOffsetArray.length(freqOffsetArray.size());
+		for (unsigned int i = 0; i < freqOffsetArray.size(); ++i) {
+			
+			x.freqOffsetArray[i] = freqOffsetArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.stepDurationArray.length(stepDurationArray.size());
+		for (unsigned int i = 0; i < stepDurationArray.size(); ++i) {
+			
+			x.stepDurationArray[i] = stepDurationArray.at(i).toIDLInterval();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x.directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x.directionEquinox = directionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

@@ -153,7 +153,7 @@ class SpectralWindowRow;
  * Spectral window description. The convention in ALMA is to describe the  frequency axis in the topocentric reference frame. If this is not  the case (for instance if active Doppler tracking is implemented) then  \texttt{measFreqRef} should be set accordingly.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SpectralWindow </CAPTION>
@@ -487,6 +487,16 @@ public:
 	 * @return a pointer to a SpectralWindowTableIDL
 	 */
 	asdmIDL::SpectralWindowTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SpectralWindowTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SpectralWindowTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

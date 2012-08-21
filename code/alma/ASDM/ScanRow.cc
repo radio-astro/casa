@@ -329,6 +329,242 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ScanRow::toIDL(asdmIDL::ScanRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startTime = startTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endTime = endTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numIntent = numIntent;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numSubscan = numSubscan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.scanIntent.length(scanIntent.size());
+		for (unsigned int i = 0; i < scanIntent.size(); ++i) {
+			
+				
+			x.scanIntent[i] = scanIntent.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.calDataType.length(calDataType.size());
+		for (unsigned int i = 0; i < calDataType.size(); ++i) {
+			
+				
+			x.calDataType[i] = calDataType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.calibrationOnLine.length(calibrationOnLine.size());
+		for (unsigned int i = 0; i < calibrationOnLine.size(); ++i) {
+			
+				
+			x.calibrationOnLine[i] = calibrationOnLine.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.calibrationFunctionExists = calibrationFunctionExists;
+		
+		
+			
+		x.calibrationFunction.length(calibrationFunction.size());
+		for (unsigned int i = 0; i < calibrationFunction.size(); ++i) {
+			
+				
+			x.calibrationFunction[i] = calibrationFunction.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.calibrationSetExists = calibrationSetExists;
+		
+		
+			
+		x.calibrationSet.length(calibrationSet.size());
+		for (unsigned int i = 0; i < calibrationSet.size(); ++i) {
+			
+				
+			x.calibrationSet[i] = calibrationSet.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.calPatternExists = calPatternExists;
+		
+		
+			
+		x.calPattern.length(calPattern.size());
+		for (unsigned int i = 0; i < calPattern.size(); ++i) {
+			
+				
+			x.calPattern[i] = calPattern.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numFieldExists = numFieldExists;
+		
+		
+			
+				
+		x.numField = numField;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.fieldNameExists = fieldNameExists;
+		
+		
+			
+		x.fieldName.length(fieldName.size());
+		for (unsigned int i = 0; i < fieldName.size(); ++i) {
+			
+				
+			x.fieldName[i] = CORBA::string_dup(fieldName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sourceNameExists = sourceNameExists;
+		
+		
+			
+				
+		x.sourceName = CORBA::string_dup(sourceName.c_str());
+				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

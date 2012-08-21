@@ -68,7 +68,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Doppler.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -87,7 +87,7 @@ typedef void (DopplerRow::*DopplerAttributeFromText) (const string& s);
 /**
  * The DopplerRow class is a row of a DopplerTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class DopplerRow {
@@ -298,6 +298,15 @@ public:
 	 * @return The values of this row as a DopplerRowIDL struct.
 	 */
 	asdmIDL::DopplerRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a DopplerRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the DopplerRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::DopplerRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

@@ -861,7 +861,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, int ) const {
+    std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
@@ -887,7 +887,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
-				bool is_annotation, int region_specific_state ) {
+				bool is_annotation, VOID *region_specific_state ) {
 
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
@@ -924,7 +924,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	double linx, liny;
 	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
-	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, -1 );
+	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
 	rectangles.push_back( resizing_region );
 
 	if ( type( ) != POINTTOOL )

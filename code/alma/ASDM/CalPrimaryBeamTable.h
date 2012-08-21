@@ -139,7 +139,7 @@ class CalPrimaryBeamRow;
  * Result of Primary Beam Map measurement.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPrimaryBeam </CAPTION>
@@ -399,6 +399,16 @@ public:
 	 * @return a pointer to a CalPrimaryBeamTableIDL
 	 */
 	asdmIDL::CalPrimaryBeamTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalPrimaryBeamTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalPrimaryBeamTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

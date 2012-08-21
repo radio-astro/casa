@@ -568,6 +568,475 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalFocusRow::toIDL(asdmIDL::CalFocusRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.ambientTemperature = ambientTemperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.focusMethod = focusMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.pointingDirection.length(pointingDirection.size());
+		for (unsigned int i = 0; i < pointingDirection.size(); ++i) {
+			
+			x.pointingDirection[i] = pointingDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.wereFixed.length(wereFixed.size());
+		for (unsigned int i = 0; i < wereFixed.size(); ++i) {
+			
+				
+			x.wereFixed[i] = wereFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); i++) {
+			x.offset[i].length(offset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offset.size() ; i++)
+			for (unsigned int j = 0; j < offset.at(i).size(); j++)
+					
+				x.offset[i][j]= offset.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.offsetError.length(offsetError.size());
+		for (unsigned int i = 0; i < offsetError.size(); i++) {
+			x.offsetError[i].length(offsetError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offsetError.size() ; i++)
+			for (unsigned int j = 0; j < offsetError.at(i).size(); j++)
+					
+				x.offsetError[i][j]= offsetError.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.offsetWasTied.length(offsetWasTied.size());
+		for (unsigned int i = 0; i < offsetWasTied.size(); i++) {
+			x.offsetWasTied[i].length(offsetWasTied.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offsetWasTied.size() ; i++)
+			for (unsigned int j = 0; j < offsetWasTied.at(i).size(); j++)
+					
+						
+				x.offsetWasTied[i][j] = offsetWasTied.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); i++) {
+			x.reducedChiSquared[i].length(reducedChiSquared.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < reducedChiSquared.size() ; i++)
+			for (unsigned int j = 0; j < reducedChiSquared.at(i).size(); j++)
+					
+						
+				x.reducedChiSquared[i][j] = reducedChiSquared.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); i++) {
+			x.position[i].length(position.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < position.size() ; i++)
+			for (unsigned int j = 0; j < position.at(i).size(); j++)
+					
+				x.position[i][j]= position.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.polarizationsAveragedExists = polarizationsAveragedExists;
+		
+		
+			
+				
+		x.polarizationsAveraged = polarizationsAveraged;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.focusCurveWidthExists = focusCurveWidthExists;
+		
+		
+			
+		x.focusCurveWidth.length(focusCurveWidth.size());
+		for (unsigned int i = 0; i < focusCurveWidth.size(); i++) {
+			x.focusCurveWidth[i].length(focusCurveWidth.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < focusCurveWidth.size() ; i++)
+			for (unsigned int j = 0; j < focusCurveWidth.at(i).size(); j++)
+					
+				x.focusCurveWidth[i][j]= focusCurveWidth.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.focusCurveWidthErrorExists = focusCurveWidthErrorExists;
+		
+		
+			
+		x.focusCurveWidthError.length(focusCurveWidthError.size());
+		for (unsigned int i = 0; i < focusCurveWidthError.size(); i++) {
+			x.focusCurveWidthError[i].length(focusCurveWidthError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < focusCurveWidthError.size() ; i++)
+			for (unsigned int j = 0; j < focusCurveWidthError.at(i).size(); j++)
+					
+				x.focusCurveWidthError[i][j]= focusCurveWidthError.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.focusCurveWasFixedExists = focusCurveWasFixedExists;
+		
+		
+			
+		x.focusCurveWasFixed.length(focusCurveWasFixed.size());
+		for (unsigned int i = 0; i < focusCurveWasFixed.size(); ++i) {
+			
+				
+			x.focusCurveWasFixed[i] = focusCurveWasFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityExists = offIntensityExists;
+		
+		
+			
+		x.offIntensity.length(offIntensity.size());
+		for (unsigned int i = 0; i < offIntensity.size(); ++i) {
+			
+			x.offIntensity[i] = offIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityErrorExists = offIntensityErrorExists;
+		
+		
+			
+		x.offIntensityError.length(offIntensityError.size());
+		for (unsigned int i = 0; i < offIntensityError.size(); ++i) {
+			
+			x.offIntensityError[i] = offIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.offIntensityWasFixedExists = offIntensityWasFixedExists;
+		
+		
+			
+				
+		x.offIntensityWasFixed = offIntensityWasFixed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityExists = peakIntensityExists;
+		
+		
+			
+		x.peakIntensity.length(peakIntensity.size());
+		for (unsigned int i = 0; i < peakIntensity.size(); ++i) {
+			
+			x.peakIntensity[i] = peakIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityErrorExists = peakIntensityErrorExists;
+		
+		
+			
+		x.peakIntensityError.length(peakIntensityError.size());
+		for (unsigned int i = 0; i < peakIntensityError.size(); ++i) {
+			
+			x.peakIntensityError[i] = peakIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.peakIntensityWasFixedExists = peakIntensityWasFixedExists;
+		
+		
+			
+				
+		x.peakIntensityWasFixed = peakIntensityWasFixed;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

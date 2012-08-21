@@ -109,7 +109,7 @@ class SubscanRow;
  * Subscan-based information.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Subscan </CAPTION>
@@ -307,6 +307,16 @@ public:
 	 * @return a pointer to a SubscanTableIDL
 	 */
 	asdmIDL::SubscanTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SubscanTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SubscanTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

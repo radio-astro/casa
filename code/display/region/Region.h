@@ -36,6 +36,9 @@
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>
 #include <display/Utilities/dtor.h>
+#include <display/Display/MouseToolState.h>
+#include <display/Utilities/VOID.h>
+
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -205,7 +208,7 @@ namespace casa {
 		void resetDrawingEnv( );
 		void setTextEnv( );
 		void resetTextEnv( );
-		void pushDrawingEnv( LineStyle ls );
+		void pushDrawingEnv( LineStyle ls, int thickness=-1 );
 		void popDrawingEnv( );
 
 		void setDrawCenter(bool draw_center){draw_center_=draw_center;};
@@ -239,6 +242,7 @@ namespace casa {
 
 		virtual bool clickWithin( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
 		virtual int clickHandle( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
+		// return value indicates if any data was flagged...
 		virtual bool doubleClick( double /*x*/, double /*y*/ );
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
@@ -295,7 +299,8 @@ namespace casa {
 		virtual bool within_drawing_area( );
 
 		LineStyle current_ls;
-		std::list<LineStyle> ls_stack;
+		typedef std::pair<LineStyle,int> ls_ele;
+		std::list<ls_ele> ls_stack;
 		WorldCanvas *wc_;
 
 		int last_z_index;
@@ -308,9 +313,21 @@ namespace casa {
 		bool complete;
 
 	    private:
-		void set_line_style( LineStyle linestyle );
+		void set_line_style(const ls_ele&);
 		bool draw_center_;
 
+	};
+
+	// used to pass point specific marker information (marker type and scaling)
+	// to generic region creation routines RegionTool::create(...)
+	class PointMarkerState : public VOID {
+	    public:
+		PointMarkerState( QtMouseToolNames::PointRegionSymbols t, int s ) : VOID("viewer.PointMarkerState"), type_(t), scale_(s) { }
+		QtMouseToolNames::PointRegionSymbols type( ) const { return type_; }
+		int scale( ) const { return scale_; }
+	    private:
+		QtMouseToolNames::PointRegionSymbols type_;
+		int scale_;
 	};
     }
 }

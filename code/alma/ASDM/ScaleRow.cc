@@ -155,6 +155,74 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ScaleRow::toIDL(asdmIDL::ScaleRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.scaleId = scaleId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.timeScale = timeScale;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.crossDataScale = crossDataScale;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.autoDataScale = autoDataScale;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.weightType = weightType;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

@@ -158,6 +158,77 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void StationRow::toIDL(asdmIDL::StationRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.stationId = stationId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.name = CORBA::string_dup(name.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x.position[i] = position.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.type = type;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.timeExists = timeExists;
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

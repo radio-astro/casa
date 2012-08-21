@@ -588,6 +588,489 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void DelayModelRow::toIDL(asdmIDL::DelayModelRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseDelay.length(phaseDelay.size());
+		for (unsigned int i = 0; i < phaseDelay.size(); ++i) {
+			
+				
+			x.phaseDelay[i] = phaseDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseDelayRate.length(phaseDelayRate.size());
+		for (unsigned int i = 0; i < phaseDelayRate.size(); ++i) {
+			
+				
+			x.phaseDelayRate[i] = phaseDelayRate.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.groupDelay.length(groupDelay.size());
+		for (unsigned int i = 0; i < groupDelay.size(); ++i) {
+			
+				
+			x.groupDelay[i] = groupDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.groupDelayRate.length(groupDelayRate.size());
+		for (unsigned int i = 0; i < groupDelayRate.size(); ++i) {
+			
+				
+			x.groupDelayRate[i] = groupDelayRate.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.timeOriginExists = timeOriginExists;
+		
+		
+			
+		x.timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.atmosphericGroupDelayExists = atmosphericGroupDelayExists;
+		
+		
+			
+				
+		x.atmosphericGroupDelay = atmosphericGroupDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.atmosphericGroupDelayRateExists = atmosphericGroupDelayRateExists;
+		
+		
+			
+				
+		x.atmosphericGroupDelayRate = atmosphericGroupDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.geometricDelayExists = geometricDelayExists;
+		
+		
+			
+				
+		x.geometricDelay = geometricDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.geometricDelayRateExists = geometricDelayRateExists;
+		
+		
+			
+				
+		x.geometricDelayRate = geometricDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numLOExists = numLOExists;
+		
+		
+			
+				
+		x.numLO = numLO;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.LOOffsetExists = LOOffsetExists;
+		
+		
+			
+		x.LOOffset.length(LOOffset.size());
+		for (unsigned int i = 0; i < LOOffset.size(); ++i) {
+			
+			x.LOOffset[i] = LOOffset.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.LOOffsetRateExists = LOOffsetRateExists;
+		
+		
+			
+		x.LOOffsetRate.length(LOOffsetRate.size());
+		for (unsigned int i = 0; i < LOOffsetRate.size(); ++i) {
+			
+			x.LOOffsetRate[i] = LOOffsetRate.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.dispersiveDelayExists = dispersiveDelayExists;
+		
+		
+			
+				
+		x.dispersiveDelay = dispersiveDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.dispersiveDelayRateExists = dispersiveDelayRateExists;
+		
+		
+			
+				
+		x.dispersiveDelayRate = dispersiveDelayRate;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.atmosphericDryDelayExists = atmosphericDryDelayExists;
+		
+		
+			
+				
+		x.atmosphericDryDelay = atmosphericDryDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.atmosphericWetDelayExists = atmosphericWetDelayExists;
+		
+		
+			
+				
+		x.atmosphericWetDelay = atmosphericWetDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.padDelayExists = padDelayExists;
+		
+		
+			
+				
+		x.padDelay = padDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.antennaDelayExists = antennaDelayExists;
+		
+		
+			
+				
+		x.antennaDelay = antennaDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numReceptorExists = numReceptorExists;
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.polarizationTypeExists = polarizationTypeExists;
+		
+		
+			
+		x.polarizationType.length(polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); ++i) {
+			
+				
+			x.polarizationType[i] = polarizationType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.electronicDelayExists = electronicDelayExists;
+		
+		
+			
+		x.electronicDelay.length(electronicDelay.size());
+		for (unsigned int i = 0; i < electronicDelay.size(); ++i) {
+			
+				
+			x.electronicDelay[i] = electronicDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.electronicDelayRateExists = electronicDelayRateExists;
+		
+		
+			
+		x.electronicDelayRate.length(electronicDelayRate.size());
+		for (unsigned int i = 0; i < electronicDelayRate.size(); ++i) {
+			
+				
+			x.electronicDelayRate[i] = electronicDelayRate.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.receiverDelayExists = receiverDelayExists;
+		
+		
+			
+		x.receiverDelay.length(receiverDelay.size());
+		for (unsigned int i = 0; i < receiverDelay.size(); ++i) {
+			
+				
+			x.receiverDelay[i] = receiverDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.IFDelayExists = IFDelayExists;
+		
+		
+			
+		x.IFDelay.length(IFDelay.size());
+		for (unsigned int i = 0; i < IFDelay.size(); ++i) {
+			
+				
+			x.IFDelay[i] = IFDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.LODelayExists = LODelayExists;
+		
+		
+			
+		x.LODelay.length(LODelay.size());
+		for (unsigned int i = 0; i < LODelay.size(); ++i) {
+			
+				
+			x.LODelay[i] = LODelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.crossPolarizationDelayExists = crossPolarizationDelayExists;
+		
+		
+			
+				
+		x.crossPolarizationDelay = crossPolarizationDelay;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.fieldId = fieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

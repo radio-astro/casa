@@ -48,14 +48,14 @@ namespace casa {
 const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";
 
 QtCanvas::~QtCanvas()
-{}
+{ this->clearCurve(); }
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
            MARGIN_LEFT(80), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(25), FRACZOOM(20),
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
-          gaussianContextMenu( this ), frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
+          lineOverlayContextMenu(this), gaussianContextMenu( this ), frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
 
 
@@ -75,8 +75,10 @@ QtCanvas::QtCanvas(QWidget *parent)
     autoScaleY = 2;
     plotError  = 2;
     showGrid   = 2;
+    taskMode = UNKNOWN_MODE;
 
     initGaussianEstimateContextMenu();
+    initLineOverlayContextMenu();
 }
 
 
@@ -89,6 +91,14 @@ void QtCanvas::initGaussianEstimateContextMenu(){
 	fwhmAction->setStatusTip("Specify the fwhm");
 	connect( fwhmAction, SIGNAL(triggered()), this, SLOT(gaussianFWHMSelected()));
 	gaussianContextMenu.addAction( fwhmAction );
+}
+
+void QtCanvas::initLineOverlayContextMenu(){
+	QAction* findRedshiftAction = new QAction("Find redshift...", this );
+	findRedshiftAction->setStatusTip( "Specify a line and get the redshift back.");
+	connect( findRedshiftAction, SIGNAL(triggered()), this, SLOT(findRedshift()));
+	lineOverlayContextMenu.addAction( findRedshiftAction );
+
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
@@ -229,6 +239,10 @@ void QtCanvas::setDataRange()
 		++it;
 	}
 
+	for ( int i = 0; i < molecularLineStack.size(); i++ ){
+		molecularLineStack[i]->getMinMax( xmin, xmax, ymin, ymax );
+	}
+
 	QtPlotSettings settings;
 	adjustExtremes( &xmin, &xmax );
 	adjustExtremes( &ymin, &ymax );
@@ -273,10 +287,22 @@ QString QtCanvas::getUnits( QtPlotSettings::AxisIndex axisIndex ){
 void QtCanvas::clearCurve(){
     curveMap.clear();
     profileFitMarkers.clear();
+    clearMolecularLines( false );
     curveCount = 0;
     curveCountPrimary = 0;
     curveCountSecondary = 0;
     emit curvesChanged();
+}
+
+void QtCanvas::clearMolecularLines( bool refresh ){
+	 while( !molecularLineStack.isEmpty()){
+	    MolecularLine* line = molecularLineStack.takeFirst();
+	    delete line;
+	 }
+	 if ( refresh ){
+		setDataRange();
+		refreshPixmap();
+	 }
 }
 
 void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescending ){
@@ -431,7 +457,8 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     }
     if ( xcursor.isValid( ) ) {
     	painter.setPen(xcursor);
-    	QLine line( (int) currentCursorPosition.x( ), MARGIN_TOP, (int) currentCursorPosition.x( ), height() - MARGIN_TOP );
+    	QLine line( (int) currentCursorPosition.x( ), MARGIN_TOP,
+    			(int) currentCursorPosition.x( ), height() - MARGIN_BOTTOM );
     	painter.drawLine(line);
     }
     if (xRangeIsShown)
@@ -455,6 +482,17 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     //Paint the markers
     for ( int i = 0; i < profileFitMarkers.length(); i++ ){
     	profileFitMarkers[i].drawMarker( painter );
+    }
+
+    //Paint any molecular lines
+    for ( int i = 0; i < static_cast<int>(molecularLineStack.size()); i++ ){
+    	double centerVal = molecularLineStack[i]->getCenter();
+    	double peakVal = molecularLineStack[i]->getPeak();
+    	int centerPixel = this->getPixelX( centerVal );
+    	int peakPixel = this->getPixelY( peakVal );
+    	int zeroPixel = this->getPixelY( 0 );
+    	molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
+    			zeroPixel, width(), height() );
     }
 
 	if (hasFocus())
@@ -538,31 +576,46 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 			}
 		}
 		else {
-			if ( xRangeIsShown ){
-				//The user is specifying the (Center,Peak) or the FWHM
-				//of a Gaussian estimate. The point must be in the selected
-				//range to be valid.
-				int xPos = event->pos().x();
-				int yPos = event->pos().y();
-				if ( xRangeRect.contains( xPos, yPos ) ){
-					gaussianEstimateX = getDataX( xPos );
-					gaussianEstimateY = getDataY( yPos );
-					//Show a context menu to determine if the user is specifying
-					//the (Center,Peak) or FWHM.
-					gaussianContextMenu.exec( event->globalPos());
+			if ( taskMode == SPECTRAL_LINE_MODE ){
+				if ( xRangeIsShown ){
+					//The user is specifying the (Center,Peak) or the FWHM
+					//of a Gaussian estimate. The point must be in the selected
+					//range to be valid.
+					bool valid = storeClickPosition( event );
+					if ( valid ){
+						//Show a context menu to determine if the user is specifying
+						//the (Center,Peak) or FWHM.
+						gaussianContextMenu.exec( event->globalPos());
+					}
+					else {
+						QString msg( "Initial Gaussian estimates must be within\n the specified spectral-line fitting range.");
+						Util::showUserMessage( msg, this );
+					}
 				}
 				else {
-					QString msg( "Initial Gaussian estimates must be within\n the specified spectral-line fitting range.");
+					QString msg( "Please specify a Spectral-Line Fitting range \nby shift-clicking the left mouse button\n and dragging it before you specify\n initial Gaussian estimates.");
 					Util::showUserMessage( msg, this );
 				}
 			}
-			else {
-				QString msg( "Please specify a Spectral-Line Fitting range \nby shift-clicking the left mouse button\n and dragging it before you specify\n initial Gaussian estimates.");
-				Util::showUserMessage( msg, this );
+			else if ( taskMode == LINE_OVERLAY_MODE ){
+				storeClickPosition( event );
+				lineOverlayContextMenu.exec( event->globalPos());
 			}
 
 		}
 	}
+}
+
+bool QtCanvas::storeClickPosition( QMouseEvent* event ){
+	bool validPosition  = false;
+	int xPos = event->pos().x();
+	int yPos = event->pos().y();
+	gaussianEstimateX = getDataX( xPos );
+	gaussianEstimateY = getDataY( yPos );
+	if ( xRangeRect.contains( xPos, yPos ) ){
+		validPosition = true;
+	}
+	return validPosition;
 }
 
 
@@ -784,6 +837,12 @@ void QtCanvas::gaussianCenterPeakSelected(){
 
 void QtCanvas::gaussianFWHMSelected(){
 	emit specFitEstimateSpecified( gaussianEstimateX, gaussianEstimateY, false );
+}
+
+
+
+void QtCanvas::findRedshift(){
+	emit findRedshiftAt( gaussianEstimateX, gaussianEstimateY );
 }
 
 void QtCanvas::updateRubberBandRegion(){
@@ -1602,6 +1661,29 @@ void QtCanvas::setFrameMarker( float framePosX ){
 	framePositionX = framePosX;
 	if ( oldFramePosX != framePositionX ){
 		refreshPixmap();
+	}
+}
+
+void QtCanvas::addMolecularLine( MolecularLine* line ){
+	bool newLine = true;
+	for ( int i = 0; i < molecularLineStack.size(); i++ ){
+		if ( molecularLineStack[i]->equalTo( line )){
+			newLine = false;
+			break;
+		}
+	}
+	if ( newLine ){
+		molecularLineStack.append( line );
+		setDataRange();
+	}
+}
+
+void QtCanvas::changeTaskMode( int mode ){
+	if ( 0 <= mode && mode < MODE_COUNT ){
+		taskMode = static_cast<TaskMode>(mode);
+	}
+	else {
+		taskMode = UNKNOWN_MODE;
 	}
 }
 }

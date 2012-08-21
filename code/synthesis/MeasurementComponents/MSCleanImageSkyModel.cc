@@ -161,6 +161,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   
+  Int iterUsed=0;
+  Float maxRes=0.0;
   Int converged=0;
   // Loop over all channels and polarizations
   for (Int chan=0; chan<nchan; chan++) {
@@ -269,11 +271,18 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  TempLattice<Float> restl( subDirty.shape() );
 	  eqn.residual(restl, lm);
 	  subDirty.copyData(restl);
+	  iterUsed=max(iterUsed, cleaner.iteration());
 	}
      }// end of polarization loop
     }// end of if (valid psf)
   }// end of channel loop
-  modified_p=True;
+  Vector<Float> minres;
+  Vector <Float> maxres;
+  maxRes=maxField(maxres, minres);
+  setThreshold(maxRes);
+
+ modified_p=True;
+  
 
   return(converged);
 };

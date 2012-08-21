@@ -179,6 +179,98 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void FlagCmdRow::toIDL(asdmIDL::FlagCmdRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.type = CORBA::string_dup(type.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.reason = CORBA::string_dup(reason.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.level = level;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.severity = severity;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.applied = applied;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.command = CORBA::string_dup(command.c_str());
+				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

@@ -107,6 +107,26 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ObservationRow::toIDL(asdmIDL::ObservationRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.observationId = observationId.toIDLTag();
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

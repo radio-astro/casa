@@ -117,7 +117,8 @@ public:
   // Return if the indexer is ready (setUpPlot has been run)
   inline Bool indexerReady() const { return indexerReady_; };
 
-  // Locate datum nearest to specified x,y 
+  // Locate datum nearest to specified x,y
+  Record getPointMetaData(Int i);
   Record locateInfo(const Vector<PlotRegion>& regions,
                     Bool showUnflagged, Bool showFlagged);
   PlotLogMessage* locateRange(const Vector<PlotRegion>& regions,

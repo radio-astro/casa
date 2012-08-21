@@ -327,6 +327,228 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void FieldRow::toIDL(asdmIDL::FieldRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.fieldId = fieldId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.fieldName = CORBA::string_dup(fieldName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.delayDir.length(delayDir.size());
+		for (unsigned int i = 0; i < delayDir.size(); i++) {
+			x.delayDir[i].length(delayDir.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < delayDir.size() ; i++)
+			for (unsigned int j = 0; j < delayDir.at(i).size(); j++)
+					
+				x.delayDir[i][j]= delayDir.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseDir.length(phaseDir.size());
+		for (unsigned int i = 0; i < phaseDir.size(); i++) {
+			x.phaseDir[i].length(phaseDir.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phaseDir.size() ; i++)
+			for (unsigned int j = 0; j < phaseDir.at(i).size(); j++)
+					
+				x.phaseDir[i][j]= phaseDir.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.referenceDir.length(referenceDir.size());
+		for (unsigned int i = 0; i < referenceDir.size(); i++) {
+			x.referenceDir[i].length(referenceDir.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < referenceDir.size() ; i++)
+			for (unsigned int j = 0; j < referenceDir.at(i).size(); j++)
+					
+				x.referenceDir[i][j]= referenceDir.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.timeExists = timeExists;
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.codeExists = codeExists;
+		
+		
+			
+				
+		x.code = CORBA::string_dup(code.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x.directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x.directionEquinox = directionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.assocNatureExists = assocNatureExists;
+		
+		
+			
+				
+		x.assocNature = CORBA::string_dup(assocNature.c_str());
+				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+ 		
+		x.assocFieldIdExists = assocFieldIdExists;
+		
+		
+	 	
+			
+		x.assocFieldId = assocFieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.ephemerisIdExists = ephemerisIdExists;
+		
+		
+	 	
+			
+		x.ephemerisId = ephemerisId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.sourceIdExists = sourceIdExists;
+		
+		
+	 	
+			
+				
+		x.sourceId = sourceId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

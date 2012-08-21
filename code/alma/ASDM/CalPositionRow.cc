@@ -376,6 +376,283 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalPositionRow::toIDL(asdmIDL::CalPositionRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.antennaPosition.length(antennaPosition.size());
+		for (unsigned int i = 0; i < antennaPosition.size(); ++i) {
+			
+			x.antennaPosition[i] = antennaPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.stationName = CORBA::string_dup(stationName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.stationPosition.length(stationPosition.size());
+		for (unsigned int i = 0; i < stationPosition.size(); ++i) {
+			
+			x.stationPosition[i] = stationPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.positionMethod = positionMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.refAntennaNames.length(refAntennaNames.size());
+		for (unsigned int i = 0; i < refAntennaNames.size(); ++i) {
+			
+				
+			x.refAntennaNames[i] = CORBA::string_dup(refAntennaNames.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.axesOffset = axesOffset.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.axesOffsetErr = axesOffsetErr.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.axesOffsetFixed = axesOffsetFixed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.positionOffset.length(positionOffset.size());
+		for (unsigned int i = 0; i < positionOffset.size(); ++i) {
+			
+			x.positionOffset[i] = positionOffset.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.positionErr.length(positionErr.size());
+		for (unsigned int i = 0; i < positionErr.size(); ++i) {
+			
+			x.positionErr[i] = positionErr.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.reducedChiSquared = reducedChiSquared;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.delayRmsExists = delayRmsExists;
+		
+		
+			
+				
+		x.delayRms = delayRms;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.phaseRmsExists = phaseRmsExists;
+		
+		
+			
+		x.phaseRms = phaseRms.toIDLAngle();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

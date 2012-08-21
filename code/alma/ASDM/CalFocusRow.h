@@ -146,7 +146,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -168,7 +168,7 @@ typedef void (CalFocusRow::*CalFocusAttributeFromText) (const string& s);
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalFocusRow {
@@ -1326,6 +1326,15 @@ public:
 	 * @return The values of this row as a CalFocusRowIDL struct.
 	 */
 	asdmIDL::CalFocusRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalFocusRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalFocusRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalFocusRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

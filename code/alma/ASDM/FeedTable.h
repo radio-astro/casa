@@ -119,7 +119,7 @@ class FeedRow;
  * Contains characteristics of the feeds.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Feed </CAPTION>
@@ -340,6 +340,16 @@ public:
 	 * @return a pointer to a FeedTableIDL
 	 */
 	asdmIDL::FeedTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::FeedTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::FeedTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

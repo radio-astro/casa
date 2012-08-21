@@ -513,10 +513,20 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		x->row.length(nrow);
 		vector<CalDataRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void CalDataTable::toIDL(asdmIDL::CalDataTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<CalDataRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -528,7 +538,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -536,7 +546,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -658,7 +668,7 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cldata=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/3/CalDataTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalDataTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

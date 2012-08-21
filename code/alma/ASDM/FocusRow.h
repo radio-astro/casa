@@ -88,7 +88,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Focus.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -110,7 +110,7 @@ typedef void (FocusRow::*FocusAttributeFromText) (const string& s);
 /**
  * The FocusRow class is a row of a FocusTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class FocusRow {
@@ -500,6 +500,15 @@ public:
 	 * @return The values of this row as a FocusRowIDL struct.
 	 */
 	asdmIDL::FocusRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a FocusRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the FocusRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::FocusRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

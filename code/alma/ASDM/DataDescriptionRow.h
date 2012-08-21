@@ -278,6 +278,15 @@ public:
 	 * @return The values of this row as a DataDescriptionRowIDL struct.
 	 */
 	asdmIDL::DataDescriptionRowIDL *toIDL() const;
+
+	/**
+	 * Define the content of a DataDescriptionRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the DataDescriptionRowIDL struct to be set.
+	 *
+	 */
+	void toIDL(asdmIDL::DataDescriptionRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

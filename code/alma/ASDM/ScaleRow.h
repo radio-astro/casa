@@ -82,7 +82,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Scale.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -98,7 +98,7 @@ typedef void (ScaleRow::*ScaleAttributeFromText) (const string& s);
 /**
  * The ScaleRow class is a row of a ScaleTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class ScaleRow {
@@ -326,6 +326,15 @@ public:
 	 * @return The values of this row as a ScaleRowIDL struct.
 	 */
 	asdmIDL::ScaleRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a ScaleRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the ScaleRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::ScaleRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

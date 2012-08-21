@@ -135,7 +135,7 @@ class CalPositionRow;
  * Result of antenna positions calibration performed by TelCal.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPosition </CAPTION>
@@ -405,6 +405,16 @@ public:
 	 * @return a pointer to a CalPositionTableIDL
 	 */
 	asdmIDL::CalPositionTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalPositionTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalPositionTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

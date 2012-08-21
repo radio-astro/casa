@@ -62,6 +62,7 @@ namespace casa {
 		std::map<std::string,int> &coordState( ) { return current_coord_state; }
 		QString &saveDir( ) { return current_save_dir; }
 		QString &loadDir( ) { return current_load_dir; }
+		int &colorIndex( ) { return current_color_index; }
 
 		void dismiss( );
 
@@ -94,6 +95,7 @@ namespace casa {
 		QtDisplayData *current_dd;
 		std::pair<int,int> current_tab_state;
 		std::map<std::string,int> current_coord_state;
+		int current_color_index;
 		QString current_save_dir;
 		QString current_load_dir;
 		bool dismissed;

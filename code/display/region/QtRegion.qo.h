@@ -29,6 +29,7 @@
 #ifndef REGION_QTREGION_H_
 #define REGION_QTREGION_H_
 
+#include <display/Display/MouseToolState.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/region/Region.h>
 #include <casa/BasicSL/String.h>
@@ -58,15 +59,23 @@ namespace casa {
 		// create a deginerate region just to gain access to the load regions dialog...
 		QtRegion( QtRegionSourceKernel *factory );
 
-		QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_=false );
+		QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_=false,
+			  QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 		virtual ~QtRegion( );
 
 		const std::string name( ) const { return name_.toStdString( ); }
+		virtual QtMouseToolNames::PointRegionSymbols marker( ) const
+				{ return QtMouseToolNames::SYM_UNKNOWN; }
+		virtual bool setMarker( QtMouseToolNames::PointRegionSymbols )
+				{ return false; }
 
 		std::string lineColor( ) const { return mystate->lineColor( ); }
 		std::string centerColor( ) const { return mystate->centerColor( ); }
 		int lineWidth( ) const { return mystate->lineWidth( ); }
 		Region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }
+
+		int markerScale( ) const { return mystate->markerScale( ); }
+		void setMarkerScale( int v ) { mystate->setMarkerScale(v); }
 
 		std::string textColor( ) const { return mystate->textColor( ); }
 		std::string textFont( ) const { return mystate->textFont( ); }
@@ -132,6 +141,8 @@ namespace casa {
 		std::pair<int,int> &tabState( );
 		// used to synchronize all of the RegionDock's RegionState coordinate configuration...
 		std::map<std::string,int> &coordState( );
+		// used to synchronize the default color for all of the RegionDock's RegionState objects...
+		int &colorIndex( );
 
 		// used to synchronize all region directories per QtDisplayPanelGUI...
 		QString getSaveDir( );

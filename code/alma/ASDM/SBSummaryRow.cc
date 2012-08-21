@@ -325,6 +325,244 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SBSummaryRow::toIDL(asdmIDL::SBSummaryRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.sBSummaryId = sBSummaryId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.sbSummaryUID = sbSummaryUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.projectUID = projectUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.obsUnitSetUID = obsUnitSetUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.frequency = frequency;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.frequencyBand = frequencyBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.sbType = sbType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.sbDuration = sbDuration.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numObservingMode = numObservingMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.observingMode.length(observingMode.size());
+		for (unsigned int i = 0; i < observingMode.size(); ++i) {
+			
+				
+			x.observingMode[i] = CORBA::string_dup(observingMode.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numberRepeats = numberRepeats;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numScienceGoal = numScienceGoal;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.scienceGoal.length(scienceGoal.size());
+		for (unsigned int i = 0; i < scienceGoal.size(); ++i) {
+			
+				
+			x.scienceGoal[i] = CORBA::string_dup(scienceGoal.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numWeatherConstraint = numWeatherConstraint;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.weatherConstraint.length(weatherConstraint.size());
+		for (unsigned int i = 0; i < weatherConstraint.size(); ++i) {
+			
+				
+			x.weatherConstraint[i] = CORBA::string_dup(weatherConstraint.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.centerDirectionExists = centerDirectionExists;
+		
+		
+			
+		x.centerDirection.length(centerDirection.size());
+		for (unsigned int i = 0; i < centerDirection.size(); ++i) {
+			
+			x.centerDirection[i] = centerDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.centerDirectionCodeExists = centerDirectionCodeExists;
+		
+		
+			
+				
+		x.centerDirectionCode = centerDirectionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.centerDirectionEquinoxExists = centerDirectionEquinoxExists;
+		
+		
+			
+		x.centerDirectionEquinox = centerDirectionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

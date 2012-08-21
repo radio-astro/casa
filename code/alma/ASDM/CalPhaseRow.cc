@@ -440,6 +440,347 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalPhaseRow::toIDL(asdmIDL::CalPhaseRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numBaseline = numBaseline;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.ampli.length(ampli.size());
+		for (unsigned int i = 0; i < ampli.size(); i++) {
+			x.ampli[i].length(ampli.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < ampli.size() ; i++)
+			for (unsigned int j = 0; j < ampli.at(i).size(); j++)
+					
+						
+				x.ampli[i][j] = ampli.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.antennaNames.length(antennaNames.size());
+		for (unsigned int i = 0; i < antennaNames.size(); i++) {
+			x.antennaNames[i].length(antennaNames.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < antennaNames.size() ; i++)
+			for (unsigned int j = 0; j < antennaNames.at(i).size(); j++)
+					
+						
+				x.antennaNames[i][j] = CORBA::string_dup(antennaNames.at(i).at(j).c_str());
+						
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baselineLengths.length(baselineLengths.size());
+		for (unsigned int i = 0; i < baselineLengths.size(); ++i) {
+			
+			x.baselineLengths[i] = baselineLengths.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.decorrelationFactor.length(decorrelationFactor.size());
+		for (unsigned int i = 0; i < decorrelationFactor.size(); i++) {
+			x.decorrelationFactor[i].length(decorrelationFactor.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < decorrelationFactor.size() ; i++)
+			for (unsigned int j = 0; j < decorrelationFactor.at(i).size(); j++)
+					
+						
+				x.decorrelationFactor[i][j] = decorrelationFactor.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.integrationTime = integrationTime.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phase.length(phase.size());
+		for (unsigned int i = 0; i < phase.size(); i++) {
+			x.phase[i].length(phase.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phase.size() ; i++)
+			for (unsigned int j = 0; j < phase.at(i).size(); j++)
+					
+						
+				x.phase[i][j] = phase.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseRMS.length(phaseRMS.size());
+		for (unsigned int i = 0; i < phaseRMS.size(); i++) {
+			x.phaseRMS[i].length(phaseRMS.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phaseRMS.size() ; i++)
+			for (unsigned int j = 0; j < phaseRMS.at(i).size(); j++)
+					
+						
+				x.phaseRMS[i][j] = phaseRMS.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.statPhaseRMS.length(statPhaseRMS.size());
+		for (unsigned int i = 0; i < statPhaseRMS.size(); i++) {
+			x.statPhaseRMS[i].length(statPhaseRMS.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < statPhaseRMS.size() ; i++)
+			for (unsigned int j = 0; j < statPhaseRMS.at(i).size(); j++)
+					
+						
+				x.statPhaseRMS[i][j] = statPhaseRMS.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.correctionValidityExists = correctionValidityExists;
+		
+		
+			
+		x.correctionValidity.length(correctionValidity.size());
+		for (unsigned int i = 0; i < correctionValidity.size(); ++i) {
+			
+				
+			x.correctionValidity[i] = correctionValidity.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

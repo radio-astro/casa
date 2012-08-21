@@ -90,7 +90,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalDevice.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -115,7 +115,7 @@ typedef void (CalDeviceRow::*CalDeviceAttributeFromText) (const string& s);
 /**
  * The CalDeviceRow class is a row of a CalDeviceTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalDeviceRow {
@@ -643,6 +643,15 @@ public:
 	 * @return The values of this row as a CalDeviceRowIDL struct.
 	 */
 	asdmIDL::CalDeviceRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalDeviceRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalDeviceRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalDeviceRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

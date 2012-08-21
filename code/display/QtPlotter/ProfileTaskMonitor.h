@@ -36,6 +36,11 @@ template <class T> class ImageInterface;
 class ProfileTaskMonitor {
 public:
 	ProfileTaskMonitor();
+
+	enum PURPOSE {
+		SPECTROSCOPY,
+		MOMENTS_COLLAPSE
+	};
 	virtual QString getFileName() const = 0;
 	virtual QString getImagePath() const =0;
 	virtual Vector<Float> getXValues() const = 0;
@@ -53,9 +58,11 @@ public:
 	virtual void persist( const QString& key, const QString& value ) = 0;
 	virtual QString read( const QString & key ) const = 0;
 	virtual void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img = NULL)=0;
+	virtual void setPurpose( ProfileTaskMonitor::PURPOSE purpose ) = 0;
 
 	//Specific to Spectrum Position setting.
 	virtual void setPosition( const QList<double> &world_x, const QList<double> &world_y ) =0;
+
 
 	virtual ~ProfileTaskMonitor();
 };

@@ -119,7 +119,7 @@ class CalAmpliRow;
  * Amplitude Calibration Result from Telescope Calibration. This calibration checks that observing amplitude calibrators provide reasonable results: From the antenna-based fringe amplitudes rough aperture efficiencies are determined.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAmpli </CAPTION>
@@ -344,6 +344,16 @@ public:
 	 * @return a pointer to a CalAmpliTableIDL
 	 */
 	asdmIDL::CalAmpliTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalAmpliTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalAmpliTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

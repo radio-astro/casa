@@ -179,7 +179,7 @@ class CalAtmosphereRow;
  * Results of atmosphere calibration by TelCal. This calibration determines the system temperatures corrected for atmospheric absorption. Ionospheric effects are not dealt with in the Table.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAtmosphere </CAPTION>
@@ -556,6 +556,16 @@ public:
 	 * @return a pointer to a CalAtmosphereTableIDL
 	 */
 	asdmIDL::CalAtmosphereTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalAtmosphereTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalAtmosphereTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

@@ -71,6 +71,7 @@ namespace casa {
 				  SYM_X=6, SYM_CIRCLE=7, SYM_DIAMOND=8, SYM_SQUARE=9,
 				  SYM_POINT_REGION_COUNT=10, SYM_UNKNOWN };
 	std::string pointRegionSymbolIcon( PointRegionSymbols, int button=-1 );
+	std::string pointRegionSymbolRc(PointRegionSymbols);
 
     };
 };

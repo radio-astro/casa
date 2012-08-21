@@ -241,6 +241,148 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalGainRow::toIDL(asdmIDL::CalGainRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.gain = gain;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.gainValid = gainValid;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.fit = fit;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.fitWeight = fitWeight;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.totalGainValid = totalGainValid;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.totalFit = totalFit;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.totalFitWeight = totalFitWeight;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 
