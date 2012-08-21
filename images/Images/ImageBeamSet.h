@@ -28,6 +28,8 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/GaussianBeam.h>
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeStatistics.h>
 
 namespace casa {
 
@@ -183,17 +185,55 @@ public:
 	// set all beams to the same value
 	void set(const GaussianBeam& beam);
 
+	// get the beam in the set which has the smallest area
+	GaussianBeam getMinAreaBeam() const;
+
+	// get the beam in the set which has the largest area
+	GaussianBeam getMaxAreaBeam() const;
+
+	// get the position of the beam with the maximum area
+	IPosition getMaxAreaBeamPosition() const;
+
+	// get the position of the beam with the minimum area
+	IPosition getMinAreaBeamPosition() const;
+
 private:
+	static const String _DEFAULT_AREA_UNIT;
+
 	Array<GaussianBeam> _beams;
 	Vector<AxisType> _axes;
+	Array<Double> _areas;
+	String _areaUnit;
+	GaussianBeam _minBeam, _maxBeam;
+	IPosition _minBeamPos, _maxBeamPos;
+	/*
+	std::auto_ptr<LatticeStatistics<Double> > _areaStats;
+	Bool _recalculateStats;
+	*/
+
+	GaussianBeam _smallest, _largest, _median;
 
 	IPosition _truePosition(
-		const IPosition& position, const Vector<AxisType>& axes
+		const IPosition& position,
+		const Vector<AxisType>& axes
 	) const;
 
 	static void _checkForDups(const Vector<AxisType>& axes);
 
-	void _checkAxisTypeSize(const Vector<AxisType>& axes) const;
+	void _checkAxisTypeSize(
+		const Vector<AxisType>& axes
+	) const;
+/*
+	void _doAreaStats();
+
+	void _getMinMaxAreaBeams(
+		GaussianBeam& min, GaussianBeam& max,
+		IPosition& minPos, IPosition& maxPos
+	);
+*/
+	static Array<Double> _getAreas(
+		String& areaUnit, const Array<GaussianBeam>& beams
+	);
 
 };
 
