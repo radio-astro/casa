@@ -297,11 +297,11 @@ public:
   float getRms(const std::vector<bool>& mask, int whichrow)
   { return table_->getRms(mask, whichrow); }
 
-  std::string formatBaselineParams(const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false)
-  { return table_->formatBaselineParams(params, fixed, rms, -1, masklist, whichrow, verbose); }
+  std::string formatBaselineParams(const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false, bool csvformat=false)
+  { return table_->formatBaselineParams(params, fixed, rms, -1, masklist, whichrow, verbose, csvformat); }
 
-  std::string formatPiecewiseBaselineParams(const std::vector<int>& ranges, const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false)
-  { return table_->formatPiecewiseBaselineParams(ranges, params, fixed, rms, -1, masklist, whichrow, verbose); }
+  std::string formatPiecewiseBaselineParams(const std::vector<int>& ranges, const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false, bool csvformat=false)
+  { return table_->formatPiecewiseBaselineParams(ranges, params, fixed, rms, -1, masklist, whichrow, verbose, csvformat); }
 
   bool getFlagtraFast(int whichrow=0) const
   { return table_->getFlagtraFast(casa::uInt(whichrow)); }
