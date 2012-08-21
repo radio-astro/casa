@@ -70,8 +70,10 @@ class TableExprNode;
 // <group name=MSObservationGramFunctions>
 
 // Declare the bison parser (is implemented by bison command).
-  TableExprNode msObservationGramParseCommand (const MeasurementSet *ms, const String& command, 
-					Vector<Int>& idList, Int maxScans=1000);
+  TableExprNode msObservationGramParseCommand (const MeasurementSet *ms, 
+					       const MSObservation& obsSubTable,
+					       const String& command, 
+					       Vector<Int>& idList, Int maxScans=1000);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.

@@ -59,20 +59,21 @@ static Int                   posMSObservationGram = 0;
 
 //# Parse the command.
 //# Do a yyrestart(yyin) first to make the flex scanner reentrant.
-  TableExprNode msObservationGramParseCommand (const MeasurementSet* ms, const String& command, 
-					Vector<Int>& selectedIDs, Int maxObsIDs) 
+  TableExprNode msObservationGramParseCommand (const MeasurementSet* ms, const MSObservation& obsSubTable,
+					       const String& command, 
+					       Vector<Int>& selectedIDs, Int maxObsIDs) 
 {
   try
     {
       MSObservationGramrestart (MSObservationGramin);
       yy_start = 1;
-      strpMSObservationGram = command.chars();     // get pointer to command string
-      posMSObservationGram  = 0;                   // initialize string position
-      MSObservationParse parser(ms);               // setup measurement set
+      strpMSObservationGram = command.chars();       // get pointer to command string
+      posMSObservationGram  = 0;                     // initialize string position
+      MSObservationParse parser(ms,obsSubTable);     // setup measurement set
       MSObservationParse::thisMSObsParser = &parser; // The global pointer to the parser
       parser.reset();
       parser.setMaxObs(maxObsIDs);
-      MSObservationGramparse();                // parse command string
+      MSObservationGramparse();                      // parse command string
 
       selectedIDs=parser.selectedIDs();
       return parser.node();
