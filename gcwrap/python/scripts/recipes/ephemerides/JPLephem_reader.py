@@ -578,7 +578,10 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
     if not tablepath:
         tablepath = construct_tablepath(fmdict, prefix)
         print "Writing to", tablepath
-        
+       
+    # safe gaurd from zapping current directory by dict_to_table()
+    if tablepath=='.' or tablepath=='./' or tablepath.isspace():
+        raise Exception, "Invalid tablepath: "+tablepath
     retval = True
     try:
         outdict = fmdict.copy() # Yes, I want a shallow copy.
@@ -615,6 +618,7 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
         info = {'readme': 'Derived by JPLephem_reader.py from a JPL-Horizons ephemeris (http://ssd.jpl.nasa.gov/horizons.cgi#top)',
                 'subType': 'Comet', 'type': 'IERS'}
 
+        print "tablepath=",tablepath
         retval = dict_to_table(outdict, tablepath, kws, collist, info)
     except Exception, e:
         print 'Error', e, 'trying to export an ephemeris dict to', tablepath
