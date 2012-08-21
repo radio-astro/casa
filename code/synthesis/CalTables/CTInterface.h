@@ -54,6 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual const MSDataDescription& dataDescription();
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum);
+    virtual const MSObservation& observation();
 
     virtual const MeasurementSet* asMS() 
     {

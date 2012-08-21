@@ -500,9 +500,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      case OBSERVATION_EXPR:
 		{
+		  //		  MSObservation obsSubTable(msLike->observation());
 		  observationIDs_p.resize(0);
 		  if(observationExpr_p != "")
-		    node = msObservationGramParseCommand(ms, observationExpr_p, 
+		    node = msObservationGramParseCommand(ms, msLike->observation(),
+							 observationExpr_p, 
 							 observationIDs_p, maxObs_p);
 		  break;
 		}
@@ -1193,7 +1195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqList_l.resize(chanList_l.shape());
     
     const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
-     if (msSpwSubTable.nrow() <= max(chanList_l.column(0)))
+    if (msSpwSubTable.nrow() <= (uInt)max(chanList_l.column(0)))
 	throw(MSSelectionError(String("MSS::getChanFreqList:: Internal error:  Selected list of SPW IDs > "
 				      "no. of rows in the SPECTRAL_WINDOW sub-table.")));
     Int spwID;

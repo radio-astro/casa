@@ -28,6 +28,7 @@
 #include <ms/MeasurementSets/MSObservationParse.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 #include <limits>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -50,29 +51,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> theIDs;
     if (id1 < 0) 
       {
-	parsedIDList_p.push_back(id0);theIDs.resize(1);theIDs[0]=id0;
-	// Also accumulate IDs in the global ID list which contains IDs
-	// generated from all expressions (INT, INT DASH INT, and bounds
-	// expressions (>ID, <ID, etc.)).
-	//	appendToIDList(theIDs);
+  	parsedIDList_p.push_back(id0);theIDs.resize(1);theIDs[0]=id0;
+  	// Also accumulate IDs in the global ID list which contains IDs
+  	// generated from all expressions (INT, INT DASH INT, and bounds
+  	// expressions (>ID, <ID, etc.)).
+  	//	appendToIDList(theIDs);
       }
     else
       {
-	// Enumerated list of IDs can be treated as a [ID0, ID1]
-	// (range inclusive of the bounds).
-	//	cerr << "Selecting enumerated range: " << id0 << " " << id1 << endl;
-	selectRangeGEAndLE(id0,id1);
+  	// Enumerated list of IDs can be treated as a [ID0, ID1]
+  	// (range inclusive of the bounds).
+  	//	cerr << "Selecting enumerated range: " << id0 << " " << id1 << endl;
+  	selectRangeGEAndLE(id0,id1);
       }
     return parsedIDList_p;
   }
 
   //# Constructor with given ms name.
-  MSObservationParse::MSObservationParse (const MeasurementSet* ms)
+  MSObservationParse::MSObservationParse (const MeasurementSet* ms, const MSObservation& obsSubTable)
     : MSParse(ms, "Observation"), colName(MS::columnName(MS::OBSERVATION_ID)),
       maxObs_p(1000)
   {
     idList.resize(0);
     parsedIDList_p.resize(0);
+    Int nrows = obsSubTable.nrow();
+    obsIDList_p.resize(nrows);
+    indgen(obsIDList_p);
   }
   
   void MSObservationParse::appendToIDList(const Vector<Int>& v)
@@ -187,6 +191,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return &node_p;
   }
   
+  Vector<Int> MSObservationParse::selectedIDs() 
+  {
+    return set_intersection(obsIDList_p,idList);
+  }
+
   const TableExprNode MSObservationParse::node()
   {
     return node_p;
