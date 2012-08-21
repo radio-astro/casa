@@ -350,7 +350,7 @@ class imagecont():
         try:
             
             for kk in range(majcycle):
-                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
+                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
             im.done()
             del im
         except Exception as instance:

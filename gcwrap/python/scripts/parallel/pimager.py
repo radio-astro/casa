@@ -1089,14 +1089,14 @@ class pimager():
               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
             return
         ###interactive is true
-        ###lets get the 0th iteration niter=0
+        ###lets get the 0th iteration niter=0, majorcycles=1, maskimage=''
         self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
               field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
-              numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=0, gain=gain, threshold=threshold, alg=alg, scales=scales,
+              numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=cyclefactor, niter=0, gain=gain, threshold=threshold, alg=alg, scales=scales,
               mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
               robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
                   observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
-              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
+              contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage='', numthreads=numthreads,  savemodel=savemodel,
               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
         if(maskimage==''):
             maskimage=imagename+'.mask'
@@ -1106,11 +1106,11 @@ class pimager():
             ####after this conclean has to be true
             psf=imagename+'.psf'
             newthresh=threshold
-            psfoutermax=self.maxouterpsf(psfim=psf, image=restoreds[0])
+            psfoutermax=self.maxouterpsf(psfim=psf, image=imagename+'.image')
             oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
             ###have to get the niter back from pcube
             myim,=gentools(['im'])
-            retval=myim.drawmask(imagename+'.residual', mask)
+            retval=myim.drawmask(imagename+'.residual', maskimage)
             myim.done()
             ###for now if oldthresh is 0 that is niter is determines end we will do one interactive loop
             notdone=True
@@ -1426,6 +1426,8 @@ class pimager():
         imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
         #self.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
         imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
+        #self.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
+        imagecont.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
         if(self.ftmachine=='mosaic'):
             #self.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
             imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
