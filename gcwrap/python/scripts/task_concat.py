@@ -3,7 +3,7 @@ import shutil
 import stat
 import time
 from taskinit import *
-import partitionhelper as ph
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale,createmms):
 	"""concatenate visibility datasets
@@ -106,6 +106,24 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 		#dto. for concavis
 		theconcatvis = concatvis
 
+		# warn if there are MMSs
+		mmslist = []
+		for elvis in vis : 			###Oh no Elvis does not exist Mr Bill
+			if(ParallelTaskHelper.isParallelMS(elvis)):
+				mmslist.append(elvis)
+		if len(mmslist)>0:
+			if (vis[0] == mmslist[0]):
+				casalog.post('*** The first input MS is a multi-MS to which no row can be added. Cannot proceed.', 'WARN')
+				casalog.post('*** Please use virtualconcat or convert the first input MS to a normal MS using split.', 'WARN')
+				raise Exception, 'Cannot append to a multi-MS. Please use virtualconcat.'
+
+			casalog.post('*** The following input measurement sets are multi-MSs', 'INFO')
+			for mname in mmslist:
+				casalog.post('***   '+mname, 'INFO')
+			casalog.post('*** Use virtualconcat to produce a single multi-MS from several multi-MSs.', 'INFO')
+
+
+
 		doweightscale = False
 		if(len(visweightscale)>0):
 			if (len(visweightscale) != len(vis)):
@@ -167,6 +185,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
                 else:
                         raise Exception, 'Visibility data set '+theconcatvis+' not found - please verify the name'
 
+
 		for elvis in vis : 			###Oh no Elvis does not exist Mr Bill
 			if(not os.path.exists(elvis)):
 				raise Exception, 'Visibility data set '+elvis+' not found - please verify the name'
@@ -227,17 +246,20 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 					casalog.post('Will scale weights for this MS by factor '+str(wscale) , 'INFO')
 
 			if(considerscrcols and needscrcols[i]):
-				# create scratch cols			
-				casalog.post('creating scratch columns for '+elvis+' (original MS unchanged)', 'INFO')
-				tempname = elvis+'_with_scrcols'
-				shutil.rmtree(tempname, ignore_errors=True)
-				shutil.copytree(elvis, tempname)
-				cb.open(tempname) # calibrator-open creates scratch columns
-				cb.close()
-				# concatenate copy instead of original file
-				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
-					      destmsfile=destms)
-				shutil.rmtree(tempname, ignore_errors=True)
+				if(ParallelTaskHelper.isParallelMS(elvis)):
+					raise Exception, 'Cannot create scratch columns in a multi-MS. Use virtualconcat.'
+				else:
+					# create scratch cols			
+					casalog.post('creating scratch columns for '+elvis+' (original MS unchanged)', 'INFO')
+					tempname = elvis+'_with_scrcols'
+					shutil.rmtree(tempname, ignore_errors=True)
+					shutil.copytree(elvis, tempname)
+					cb.open(tempname) # calibrator-open creates scratch columns
+					cb.close()
+					# concatenate copy instead of original file
+					m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
+						      destmsfile=destms)
+					shutil.rmtree(tempname, ignore_errors=True)
 			else:
 				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
 					      destmsfile=destms)

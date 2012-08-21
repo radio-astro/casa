@@ -70,6 +70,15 @@ class test_concat(unittest.TestCase):
         res = None
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
+        # Pick up alternative data directory to run tests on MMSs
+        testmms = False
+        if os.environ.has_key('TEST_DATADIR'):   
+            testmms = True
+            DATADIR = str(os.environ.get('TEST_DATADIR'))
+            if os.path.isdir(DATADIR):
+                datapath = DATADIR+'/concat/input/'
+
+        
         cpath = os.path.abspath(os.curdir)
         filespresent = sorted(glob.glob("*.ms"))
         os.chdir(datapath)

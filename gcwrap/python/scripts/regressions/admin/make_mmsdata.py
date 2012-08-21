@@ -26,14 +26,17 @@ TASKLIST = [
             'gencal',
             'listhistory',
             'listobs',
-            'listvis',
+            'listvis', # shared with fixplanets
             'split',
             'vishead',
-            'wvrgcal'
+            'wvrgcal',
+            'concat' # shared with virtualconcat
             ]
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'
 
+# NOTE: task 'concat' does not work with multi-MSs because one cannot add rows
+#       but the test data is needed for testing virtualconcat
 
 # Try to get the data repository path from the system
 DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
@@ -125,19 +128,36 @@ def main(thislist):
 
     if 'wvrgcal' in thislist:
         WVRGCALMMSPATH = './unittest_mms/wvrgcal/'
-        WVRCALPATH = DATAPATH+'unittest/wvrgcal/input/'
+        WVRGCALPATH = DATAPATH+'unittest/wvrgcal/input/'
         origwd = os.getcwd()
         os.chdir(WVRGCALMMSPATH)
         shutil.rmtree('input', ignore_errors=True)
         os.mkdir('input')
         os.chdir('input')
-        mydirs = os.listdir(WVRCALPATH)
+        mydirs = os.listdir(WVRGCALPATH)
         for d in mydirs:
             print d
-            if d.split('.')[1]=='ms':
-                partition(vis=WVRCALPATH+d, outputvis=d, datacolumn='all')
+            if  os.path.splitext(d)[1]=='.ms':
+                partition(vis=WVRGCALPATH+d, outputvis=d, datacolumn='all', numsubms=5)
             else:
-                os.symlink(WVRCALPATH+d, d)
+                os.symlink(WVRGCALPATH+d, d)
+        os.chdir(origwd)
+
+    if ('concat' in thislist):
+        CONCATMMSPATH = './unittest_mms/concat/'
+        CONCATPATH = DATAPATH+'unittest/concat/input/'
+        origwd = os.getcwd()
+        os.chdir(CONCATMMSPATH)
+        shutil.rmtree('input', ignore_errors=True)
+        os.mkdir('input')
+        os.chdir('input')
+        mydirs = os.listdir(CONCATPATH)
+        for d in mydirs:
+            print d
+            if os.path.splitext(d)[1]=='.ms':
+                partition(vis=CONCATPATH+d, outputvis=d, datacolumn='all', numsubms=6)
+            else:
+                os.symlink(CONCATPATH+d, d)
         os.chdir(origwd)
         
     
