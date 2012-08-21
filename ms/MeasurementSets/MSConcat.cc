@@ -307,9 +307,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     if(!copyPointingB(otherMS.pointing(), newAntIndices)){
       log << LogIO::WARN << "Could not reindex Pointing subtable " << LogIO::POST ;
     }
-    else{
-      log << LogIO::NORMAL << "Reindexed Pointing subtable " << LogIO::POST ;
-    }    
   }
   
   /////////////////////////////////////////////////////
