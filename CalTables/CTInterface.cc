@@ -94,6 +94,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       return MS::columnName(nameEnum);
   }
+  //
+  //----------------------------------------------------------------------------
+  // CalTables have no OBSERVATION sub-table.  So throw a tantrum if
+  // it is asked for.
+  //
+  const MSObservation& CTInterface::observation()
+  {
+    throw(AipsError("Internal error: OBSERVATION sub-table for CalTables requested"));
+  };
   //----------------------------------------------------------------------------
 } //# NAMESPACE CASA - END
 
