@@ -75,7 +75,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="calmode">
-	    <description>SD calibration mode (ps,nod,fs,fsotf,none)</description>
+	    <description>SD calibration mode (ps,nod,otf,otfraster,fs,fsotf,none)</description>
 	    <value>none</value>
 	    <allowed kind="enum">
 	    <value>ps</value>
@@ -83,8 +83,41 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>fs</value>
 	    <value>fsotf</value>
 	    <value>quotient</value>
+            <value>otf</value>
+            <value>otfraster</value>
 	    <value>none</value>
     </allowed>
+    </param>
+
+    <param type="any" name="fraction" subparam="true">
+	    <description>fraction of the OFF data to mark</description>
+            <any type="variant" limittype="string double"/>
+            <value type="string">10%</value>
+    </param>
+
+    <param type="int" name="noff" subparam="true">
+	    <description>number of the OFF data to mark</description>
+            <value>-1</value>
+    </param>
+
+    <param type="double" name="width" subparam="true">
+	    <description>width of the pixel for edge detection</description>
+            <value>0.5</value>
+    </param>
+
+    <param type="bool" name="elongated" subparam="true">
+	    <description>whether observed area is elongated in one direction or not</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="markonly" subparam="true">
+	    <description>do calibration (False) or just mark OFF (True)</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="plotpointings" subparam="true">
+            <description>plot pointing direction for ON and OFF</description>
+            <value>False</value>
     </param>
 
     <param type="intArray" name="scanlist">
@@ -421,6 +454,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="minnrow"><value>1000</value></default>
 	        </equals>
 	    </when>
+            <when param="calmode">
+                <equals type="string" value="none"/>
+                <equals type="string" value="ps"/>
+                <equals type="string" value="nod"/>
+                <equals type="string" value="fs"/>
+                <equals type="string" value="fsotf"/>
+                <equals type="string" value="quotient"/>
+                <equals type="string" value="otf">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="width"><value type="double">0.5</value></default>
+                    <default param="elongated"><value type="bool">False</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+                <equals type="string" value="otfraster">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="noff"><value type="int">-1</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+            </when>
     </constraints>
 
     </input>
@@ -488,6 +542,34 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: choose mode 'none' if you have
                          already calibrated and want to
                          try baselines or averaging
+            &gt;&gt;&gt; calmode expandable parameter
+                 fraction -- Edge marking parameter for 'otf' and 'otfraster'.
+                             specify a number of OFF scans as a fraction of 
+                             total number of data points. 
+                         default: '10%'
+                         options: '20%' in string style or float value less 
+                                  than 1.0 (e.g. 0.15).
+                                  'auto' is available only for 'otfraster'. 
+                 noff -- Edge marking parameter for 'otfraster'.
+                         It is used to specify a number of OFF scans near 
+                         edge directly. Value of noff comes before setting 
+                         by fraction.
+                         default: -1 (use fraction)
+                         options: any positive integer
+                 width -- Edge marking parameter for 'otf'.
+                          Pixel width with respect to a median spatial 
+                          separation between neighboring two data in time.
+                          Default will be fine in most cases.
+                         default: 0.5
+                         options: float value
+                 elongated -- Edge marking parameter for 'otf'.
+                              Set True only if observed area is elongeted 
+                              in one direction.
+                         default: False
+                 markonly -- Set True if you want to save data just after 
+                             edge marking (i.e. uncalibrated data) to see 
+                             how OFF scans are defined.
+                         default: False
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]
