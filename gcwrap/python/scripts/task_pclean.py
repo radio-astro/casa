@@ -170,7 +170,7 @@ def pclean(vis=None,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                   visinmem=False, maskimage=mask, interactive=interactive, 
-                  numthreads=1, pbcorr=pbcorr)
+                  numthreads=1, pbcorr=pbcorr, savemodel=True)
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
@@ -197,7 +197,7 @@ def pclean(vis=None,
                   uvtaper=uvtaper, outertaper=outertaper,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr, interactive=interactive)
+                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr, interactive=interactive, savemodel=True)
             
 #parallel_clean=pclean
     
