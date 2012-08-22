@@ -58,7 +58,7 @@ don't return anything.
 
 The member function definitions are:
 
-ca.open( '$<$caltable name$>$' ) - This member function opens the calibration
+ca.open( '&lt;caltable name&gt;' ) - This member function opens the calibration
 table.  If successful True is returned, otherwise False is returned.
 
 ca.close() - This member function closes the calibration table.  If a table was
@@ -189,7 +189,7 @@ field = A comma-delimited string or a python list of strings containing the
 fields.  E.g., field = '0,1'.  The default is '' (all fields).
 
 antenna = A comma- and semi-colon- delimited string containing the antenna 1s
-and antenna 2s.  E.g, antenna = '3,4,5\&*'.  The default is '' (all antenna 1s
+and antenna 2s.  E.g, antenna = '3,4,5&amp;*'.  The default is '' (all antenna 1s
 and antenna 2s).
 
 timerange = A python list of floats of length two containing the start and stop
