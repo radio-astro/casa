@@ -29,7 +29,7 @@ Get and fit data from a calibration table (CASA 3.4 and later).
 The calibration analysis (ca) tool is a standardized interface to the new format
 (CASA 3.4 and later) calibration tables.  It is designed to handle all types of
 tables, e.g., gain, bandpass, Tsys, etc.  The ca tool takes advantages of newly
-implemented features in the CASA C++ code tree, iteration and parameter
+implemented features in the CASA C++ code tree, e.g., iteration and parameter
 selection, which means that calibration tables can be accessed in a manner very
 similar to measurement sets.
 
@@ -37,7 +37,7 @@ The ca tool was originally designed to facilitate getting and/or processing data
 from an entire calibration table in an organized fashion so that the information
 could be written to other files.  Additional features, e.g. introspective member
 functions, were added so that scripters and general users can easily employ the
-ca tool without using iteration.
+ca tool without using iteration (get one piece of data at a time).
 
 Like the imaging tool (im), image analysis tool (ia), calibration tool (cb),
 etc., a native calibration analysis tool (ca) is created when CASA starts up.
@@ -45,6 +45,7 @@ Other instances of the calibration analysis tool can be created, if required,
 using the command:
 
 \begin{center}
+from casac import casac
 caLoc = casac.calanalysis()
 \end{center}
 
@@ -57,7 +58,7 @@ don't return anything.
 
 The member function definitions are:
 
-ca.open( '&lt;caltable name&gt;' ) - This member function opens the calibration
+ca.open( '$<$caltable name$>$' ) - This member function opens the calibration
 table.  If successful True is returned, otherwise False is returned.
 
 ca.close() - This member function closes the calibration table.  If a table was
@@ -77,20 +78,16 @@ The member function definitions are:
 ca.antenna( name=True ) - This member function returns the antenna numbers or
 names as a python list of strings.
 
-ca.antenna1( name=True ) - This member function returns the antenna 1 numbers or
-names as a python list of strings.
-
-ca.antenna2( name=True ) - This member function returns the antenna 2 numbers or
-names as a python list of strings.
-
 ca.calname() - This member function returns the new format calibration table
 name as a python string.
 
 ca.feed() - This member function returns the feed names as a python list of
 strings ('X', 'Y' for linear; 'R', 'L' for circular; 'S' for "scalar", when the
-calibration solutions are performed simultaneously for both polarizations).
+calibration solutions are performed simultaneously for both polarizations).  If
+the basis is unknown, then the basis functions are '1' and '2'.  This kludge was
+added to handle incomplete calibration tables.
 
-ca.field( name=True ) - This member function returns the field numbers of names
+ca.field( name=True ) - This member function returns the field numbers or names
 as a python list of strings.
 
 ca.freq() - This member function returns the frequencies in the table as a
@@ -101,12 +98,6 @@ ca.msname() - This member function returns the parent measurement set name as a
 python string.
 
 ca.numantenna() - This member function returns the number of antennas as a
-python integer.
-
-ca.numantenna1() - This member function returns the number of antenna 1s as a
-python integer.
-
-ca.numantenna2() - This member function returns the number of antenna 2s as a
 python integer.
 
 ca.numchannel() - This member function returns the number of channels for each
@@ -128,7 +119,8 @@ ca.partype() - This member function returns the parameter column type ('Float'
 or 'Complex').
 
 ca.polbasis() - This member function returns the polarization basis ('L' for
-linear or 'C' for circular).
+linear or 'C' for circular).  If the basis is unknown, 'U' is returned.  This
+kludge was added to handle incomplete calibration tables.
 
 ca.spw( name=True ) - This member function returns the spectral window numbers
 or names as a python list of strings.
@@ -168,10 +160,10 @@ and 2, and spectral window with channel.  For more information, consult the
 selection documentation.  Their argument lists are:
 
 ca.get( field='', antenna='', timerange=[], spw='', feed='', axis='TIME',
-        ap='AMPLITUDE', norm=False, unwrap=False, jumpmax=0.0 )
+        ap='AMPLITUDE', norm=True, unwrap=True, jumpmax=0.0 )
 
 ca.fit( field='', antenna='', timerange=[], spw='', feed='', axis='TIME',
-        ap='AMPLITUDE', norm=False, unwrap=False, jumpmax=0.0, order='AVERAGE',
+        ap='AMPLITUDE', norm=True, unwrap=True, jumpmax=0.0, order='AVERAGE',
         type='LSQ', weight=False )
 
 '*' is equivalent to ''.  Both numbers and names can be used for field, antenna,
@@ -197,8 +189,8 @@ field = A comma-delimited string or a python list of strings containing the
 fields.  E.g., field = '0,1'.  The default is '' (all fields).
 
 antenna = A comma- and semi-colon- delimited string containing the antenna 1s
-and antenna 2s.  E.g, antenna = '3,4,5\&amp;*'.  The default is '' (all antenna
-1s and antenna 2s).
+and antenna 2s.  E.g, antenna = '3,4,5\&*'.  The default is '' (all antenna 1s
+and antenna 2s).
 
 timerange = A python list of floats of length two containing the start and stop
 times in MJD seconds.  Date strings will be implemented in a future release
@@ -223,11 +215,11 @@ ap = A python string containing the amplitude/phase selection ('AMPLITUDE' or
 the parameters in the calibration table are real.
 
 norm = A python boolean which determines whether amplitudes are normalized for
-each iteration.  E.g., norm = False.  The default is False.  It is ignored if
+each iteration.  E.g., norm = False.  The default is True.  It is ignored if
 the parameters in the calibration table are real or ap = 'PHASE'.
 
 unwrap = A python boolean which determines whether phases are unwrapped for each
-iteration.  E.g., unwrap = False.  The default is False.  It is ignored if the
+iteration.  E.g., unwrap = False.  The default is True.  It is ignored if the
 parameters in the calibration table are real or ap = 'AMPLITUDE'.
 
 jumpmax = A python float which determines the maximum phase jump near +/- PI
