@@ -828,3 +828,26 @@ using namespace casac;
       Py_DECREF(o3);
    }
 }
+
+%typemap(argout) Quantity& OUTARGQUANTITY{
+   PyObject *o = PyDict_New();
+   PyDict_SetItem(o, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyObject *v = casac::map_vector($1->value);
+   PyDict_SetItem(o, PyString_FromString("value"), v);
+   Py_DECREF(v);
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}

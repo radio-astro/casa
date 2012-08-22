@@ -59,8 +59,16 @@
 </xsl:text>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='doublearray'">
-			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;double&gt;  &amp;OUTARGVEC {std::vector&lt;double&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+			      <xsl:choose>
+			      <xsl:when test="@units">
+			         <xsl:text disable-output-escaping="yes">%apply Quantity  &amp;OUTARGQUANTITY {Quantity &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
+		              </xsl:when>
+			      <xsl:otherwise>
+			         <xsl:text disable-output-escaping="yes">%apply std::vector&lt;double&gt;  &amp;OUTARGVEC {std::vector&lt;double&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+			      </xsl:otherwise>
+		      </xsl:choose>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='stringarray'">
 			      <xsl:text disable-output-escaping="yes">%apply std::vector&lt;string&gt;  &amp;OUTARGVEC {std::vector&lt;string&gt; &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
@@ -71,8 +79,16 @@
 </xsl:text>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='double'">
-			      <xsl:text disable-output-escaping="yes">%apply double  &amp;OUTARGDBL {double &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+		      <xsl:choose>
+			      <xsl:when test="@units">
+			         <xsl:text disable-output-escaping="yes">%apply Quantity  &amp;OUTARGQUANTITY {Quantity &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
 </xsl:text>
+		              </xsl:when>
+			      <xsl:otherwise>
+			         <xsl:text disable-output-escaping="yes">%apply double  &amp;OUTARGDBL {double &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
+</xsl:text>
+			      </xsl:otherwise>
+		      </xsl:choose>
 		      </xsl:when>
 		      <xsl:when test="lower-case(@xsi:type)='string'">
 			      <xsl:text disable-output-escaping="yes">%apply string  &amp;OUTARGSTR {string &amp;</xsl:text><xsl:value-of select="@name"/><xsl:text>}
