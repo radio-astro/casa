@@ -218,17 +218,19 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass
             
-            cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep MemFree' "
-            str_memory = commands.getoutput(cmd_memory)
-            str_memory = string.replace(str_memory,"MemFree:","")
-            str_memory = string.replace(str_memory,"kB","")
-            str_memory = string.replace(str_memory," ","")
+            memory=0.0
+            for memtype in ['MemFree', 'Buffers', 'Cached']:
+                cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep "+memtype+"'"
+                str_memory = commands.getoutput(cmd_memory)
+                str_memory = string.replace(str_memory,memtype+':','')
+                str_memory = string.replace(str_memory,"kB","")
+                str_memory = string.replace(str_memory," ","")
             
-            try:
-                memory = float(str_memory)/1024.
-            except:
-                casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
-                pass
+                try:
+                    memory += float(str_memory)/1024.
+                except:
+                    casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
+                    break
             
             cmd_cpu = "ssh -q " + hostname + " 'top -b -n 1 | grep Cpu' "
             str_cpu = commands.getoutput(cmd_cpu)
