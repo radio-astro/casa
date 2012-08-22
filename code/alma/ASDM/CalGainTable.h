@@ -101,7 +101,7 @@ class CalGainRow;
  * This Table is a placeholder to be used to wrap up casa gain tables produced  in the Science Pipeline and Offline so that they can be archived in the  ALMA Calibration Data Base.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalGain </CAPTION>
@@ -294,6 +294,16 @@ public:
 	 * @return a pointer to a CalGainTableIDL
 	 */
 	asdmIDL::CalGainTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::CalGainTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::CalGainTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

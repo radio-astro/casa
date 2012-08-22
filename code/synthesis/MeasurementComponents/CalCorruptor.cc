@@ -57,6 +57,7 @@ Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){
     return amp();
  
  } else {	
+    //Int iipar=ipar;    
     // Every CalCorruptor needs to have its own checks - maybe put D here?
     throw(AipsError("This Corruptor doesn't yet support simulation of this VisCal type"));
   }
@@ -313,8 +314,6 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	return Complex( antDiams(currAnt()) /factor 
 			/sqrt(tsys(airmass)) );
 
-	//RI TODO  sqrt(Tsys)
-
       } else {
 	throw(AipsError("AtmCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
       }
@@ -375,7 +374,10 @@ void AtmosCorruptor::initAtm() {
   double PstepFact = 1.2; // Pressure step ratio between two consecutive layers
   unsigned int atmType = 1;//atm::tropical;
   
-  os << "Initializing ATM with Tground="<<T.get("K")<<"K, Pground="<<P.get("mbar")<<"mb, "<<H.get()<<"% humidity, altitude "<<Alt.get("m")<<"m and water scale height "<<WVL.get("m")<<"m"<<LogIO::POST;
+  os << "Initializing ATM" << LogIO::POST;
+  os << "altitude="<<Alt.get("m")<<"m, Pground="<<P.get("mbar")<<"mb, " <<
+    "Tground="<<T.get("K")<<"K, humidity= "<<H.get("%")<<"%, " <<
+    "water scale height="<<WVL.get("m")<<"m"<<LogIO::POST;
 
   itsatm = new atm::AtmProfile(Alt, P, T, TLR, 
 			       H, WVL, Pstep, PstepFact, 
@@ -384,25 +386,100 @@ void AtmosCorruptor::initAtm() {
   if (nSpw()<=0)
     throw(AipsError("AtmCorruptor::initAtm called before spw setup."));
 
-  // first SpW:
-  double fRes(fWidth()[0]/fnChan()[0]);
+  ATMnChan().resize(nSpw());
+  ATMchanMap_.resize(nSpw());
+  //  cout<<"nspw="<<nSpw()<<endl;
+
+  // make more channels than one because ATM doesn't get the right answer
+  // but then need chanMap[focusChan() from VisCal] = atm channel
+  // fnChan() is vector, # chans in the MS/VisCal as a fn of spw:
+  // ATMnChan() is vector, # chans in ATM as a fn of spw:
+  int nChan=fnChan()[0];  
+  if (nChan==1) {
+    ATMnChan()[0]=fWidth()[0]/100.e6;
+    if (ATMnChan()[0]>1e4) {
+     ATMnChan()[0]=1e4;
+    }
+    if (ATMnChan()[0]<10) {
+      ATMnChan()[0]=10;
+    }
+    //    cout<<"ATMnChan0="<<ATMnChan()[0]<<endl;
+    // for the continuum case we want the single element chanMap to point to
+    // the middle channel
+    ATMchanMap(0).resize(1);
+    ATMchanMap(0)[0] = Int(floor(ATMnChan()[0]/2));
+    //    cout<<"ATMnChanmap0="<<ATMchanMap(0)[0]<<endl;
+
+  } else {
+    ATMnChan()[0]=nChan; //if MS is cube, just use those chans in ATM for now - could subsample in the future with this machinery
+    // ATMchanMap(spw) is a vector, Nelements= fnChan()[spw] - here spw=0
+    // and nChan is set above
+    ATMchanMap(0).resize(nChan);
+    for (uInt ichan=1;ichan<nChan;ichan++) {
+      ATMchanMap(0)[ichan]=ichan;
+    }
+  }
+  
+  // focus chan is middle of MS grid - if continuum, fChan=0
+  int fChan=Int(floor(fnChan()[0]/2));
+  setFocusChan(fChan);
+
+  // first ATMSpW:
+  double ATMfRes(fWidth()[0]/ATMnChan()[0]);
+
+  os << "Spectral window " << fRefFreq()[0]/1e9 << "(ch " << ATMchanMap(0)[focusChan()] << "/"<<ATMnChan()[0] << ")" << LogIO::POST;
+
+  // !!! refChan is 1-based !!!
   //  unsigned int SpectralGrid::add(unsigned int numChan, unsigned int refChan, Frequency refFreq, Frequency chanSep)
-  // refChan is 1-indexed!!!!!!!  WTF- channel index is otherwise 0-based
-  itsSpecGrid = new atm::SpectralGrid(fnChan()[0],1, 
+  itsSpecGrid = new atm::SpectralGrid(ATMnChan()[0],
+				      ATMchanMap(0)[focusChan()]+1, 
 				      atm::Frequency(fRefFreq()[0],"Hz"),
-				      atm::Frequency(fRes,"Hz"));
-  // any more?
+				      atm::Frequency(ATMfRes,"Hz"));
+
+  // any more spw?  TODO: multiple spw hasn't been well tested.
   for (uInt ispw=1;ispw<nSpw();ispw++) {
-    fRes = fWidth()[ispw]/fnChan()[ispw];
-    // CHANINDEX
-    itsSpecGrid->add(fnChan()[ispw],1,
+    ATMfRes = fWidth()[ispw]/ATMnChan()[ispw];
+
+    nChan=fnChan()[ispw];
+    if (nChan==1) {
+      ATMnChan()[ispw]=fWidth()[ispw]/100.e6;
+      if (ATMnChan()[ispw]>1e4) {
+	ATMnChan()[ispw]=1e4;
+      }
+      if (ATMnChan()[ispw]<10) {
+	ATMnChan()[ispw]=10;
+      }
+      // for the continuum case we want the single element chanMap to point to
+      // the middle channel
+      ATMchanMap(ispw).resize(1);
+      ATMchanMap(ispw)[0] = Int(floor(fnChan()[ispw]/2));
+      
+    } else {
+      ATMnChan()[ispw]=nChan; //if MS is cube, just use those chans in ATM for now - could subsample in the future with this machinery
+      // ATMchanMap(spw) is a vector, Nelements= fnChan()[spw] - here spw=0
+      // and nChan is set above
+      ATMchanMap(ispw).resize(nChan);
+      for (uInt ichan=1;ichan<nChan;ichan++) {
+	ATMchanMap(ispw)[ichan]=ichan;
+      }
+    }
+  
+    setFocusChan(Int(floor(ATMnChan()[ispw]/2)));
+    ATMfRes=fWidth()[ispw]/ATMnChan()[ispw];
+
+    os << "Spectral window " << fRefFreq()[ispw]/1e9 << "(ch " << ATMchanMap(ispw)[focusChan()] << "/"<<ATMnChan()[ispw] << ")" << LogIO::POST;
+    
+    itsSpecGrid->add(ATMnChan()[ispw],
+		     ATMchanMap(ispw)[focusChan()]+1,
 		     atm::Frequency(fRefFreq()[ispw],"Hz"),
-		     atm::Frequency(fRes,"Hz"));
+		     atm::Frequency(ATMfRes,"Hz"));
   }
 
+  if (itsRIP != 0) delete itsRIP;
   itsRIP = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
   
   // used for Tebb(spw,chan)
+  if (itsSkyStatus != 0) delete itsSkyStatus;
   itsSkyStatus = new atm::SkyStatus(*itsRIP);
 
 
@@ -415,51 +492,72 @@ void AtmosCorruptor::initAtm() {
   //   case the returned value corresponds to the zenith water vapor column of the AtmProfile object.*/
   //  Angle getDispersiveH2OPhaseDelay()
  
-  os << "DispersiveWetPathLength = " 
-     << itsRIP->getDispersiveH2OPathLength().get("micron") 
-     << " microns at " 
-     << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
-     << itsRIP->getDryOpacity(currSpw(),focusChan()).get() 
+//  os << "DispersiveWetPathLength = " 
+//     << itsRIP->getDispersiveH2OPathLength().get("micron") 
+//     << " microns at " 
+//     << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
+//     << itsRIP->getDryOpacity(currSpw(),focusChan()).get() 
 //     << ", DispersiveH2ODelay (RefIPfl) = " 
 //     << itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg" 
 //     << "DispersiveH2ODelay (SkyStat) = " 
 //     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg" 
-     << LogIO::POST;
+//     << LogIO::POST;
 
   itsSkyStatus->setUserWH2O(atm::Length(mean_pwv(),"mm"));  // set WH2O
 
-  os << "after setting WH20 to " << itsSkyStatus->getUserWH2O().get("mm")
-     << ", DispersiveH2ODelay (RefIPfl) = " 
-    //<< itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg, " 
-     << itsRIP->getDispersiveH2OPhaseDelay(itsRIP->getGroundWH2O(),currSpw(),focusChan()).get("deg") << " deg, " 
-     << "DispersiveH2ODelay (SkyStat) = " 
-     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << "deg = " 
-     << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("rad") << "rad" 
-     << LogIO::POST;
+  os << "After setting WH2O to " << itsSkyStatus->getUserWH2O().get("mm") << LogIO::POST;
+
+//   os << "after setting WH20 to " << itsSkyStatus->getUserWH2O().get("mm")
+//      << ", DispersiveH2ODelay (RefIPfl) = " 
+//     //<< itsRIP->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << " deg, " 
+//      << itsRIP->getDispersiveH2OPhaseDelay(itsRIP->getGroundWH2O(),currSpw(),focusChan()).get("deg") << " deg, " 
+//      << "DispersiveH2ODelay (SkyStat) = " 
+//      << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("deg") << "deg = " 
+//      << itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),focusChan()).get("rad") << "rad" 
+//      << LogIO::POST;
+
+  // set focuschan back to spw0 value
+  fChan=Int(floor(fnChan()[0]/2));
+  setFocusChan(fChan);
+  
+  os << "Dry and Wet Opacity from RefractiveIndexProfile = " << 
+    itsRIP->getDryOpacity(0,ATMchanMap(0)[fChan]).get("nepers") 
+     << ", " << 
+    itsRIP->getWetOpacity(atm::Length(mean_pwv(),"mm"),0,
+			  ATMchanMap(0)[fChan]).get("nepers") <<
+    " at " << fRefFreq()[0]/1e9 << " GHz (ch" << fChan  <<")" << LogIO::POST;
+  
+  os << "Dry and Wet Opacity from SkyStatus              = " << 
+    itsSkyStatus->getDryOpacity(0,ATMchanMap(0)[fChan]).get("nepers") << ", " <<
+    itsSkyStatus->getWetOpacity(0,ATMchanMap(0)[fChan]).get("nepers") << LogIO::POST;
 
   
 
-  // CHANINDEX
+  // go ahead and get Tebb from ends of ATM spw
   atm::Temperature t0 = 
     itsSkyStatus->getTebbSky(0,0,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
   atm::Temperature t1 = 
-    itsSkyStatus->getTebbSky(0,fnChan()[0]-1,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
+    itsSkyStatus->getTebbSky(0,ATMnChan()[0]-1,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
+  atm::Temperature tm = 
+    itsSkyStatus->getTebbSky(0,ATMchanMap(0)[fChan],atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
   // CHANINDEX
   atm::Frequency f0=itsSpecGrid->getChanFreq(0,0);
-  atm::Frequency f1=itsSpecGrid->getChanFreq(0,fnChan()[0]-1);
+  atm::Frequency f1=itsSpecGrid->getChanFreq(0,ATMnChan()[0]-1);
+  atm::Frequency fm=itsSpecGrid->getChanFreq(0,ATMchanMap(0)[fChan]);
 
-  os << "  Tebb @ ends of spw 0, for spill="<<spilleff()
+  os << "Sky plus ground and CMB Brightness Temp across Spw 0, for spill="<<spilleff()
      << " Tground="<<tground()
      << " pwv="<<mean_pwv()
      << LogIO::POST;
-  os << " Tebb["<<f0.get("GHz")<<","<<f1.get("GHz")<<"]=["<<t0.get("K")<<","<<t1.get("K")<<"]" << LogIO::POST;
+  os << " Zenith Tebb[" 
+     << f0.get("GHz") << "," << fm.get("GHz") << "," << f1.get("GHz") << "]=[" 
+     << t0.get("K")   << "," << tm.get("K")   << "," << t1.get("K") << "]" << LogIO::POST;
 
 }
 
 
 
-
-void AtmosCorruptor::initialize() {
+void AtmosCorruptor::initialize(const Int rxtype) {
   // for testing only
 
   mode()="test";
@@ -472,6 +570,7 @@ void AtmosCorruptor::initialize() {
   tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
   tcmb() = simpar().asFloat("tcmb");
   trx() = simpar().asFloat("trx");
+  rxType() = rxtype;
   // RI todo AtmCor:init() test is mean_pwv() ever set?
   if (freqDepPar()) initAtm();
   pwv_p.resize(nAnt(),False,True);
@@ -486,11 +585,11 @@ void AtmosCorruptor::initialize() {
 }
 
 
-// this one is for the M - maybe we should just make one Corruptor and 
+// this one is for the M /T 
 // pass the VisCal::Type to it - the concept of the corruptor taking a VC
 // instead of being a member of it.
 
-void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal::Type type) {
+void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal::Type type, const Int rxtype) {
 
   LogIO os(LogOrigin("AtmCorr", "init(vi,par,type)", WHERE));
 
@@ -511,15 +610,21 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
   } else {
     antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
     
-    mean_pwv() = simpar.asFloat("mean_pwv");
-    spilleff() = simpar.asFloat("spillefficiency");
-    tground() = simpar.asFloat("tground");
-    tatmos() = simpar.asFloat("tatmos");  // only used in manual mode
-    tcmb() = simpar.asFloat("tcmb");
-    trx() = simpar.asFloat("trx");
-    senscoeff() = simpar.asFloat("senscoeff");
+    if (simpar.isDefined("mean_pwv")) mean_pwv() = simpar.asFloat("mean_pwv");
+    if (simpar.isDefined("spillefficiency")) spilleff() = simpar.asFloat("spillefficiency");
+    if (simpar.isDefined("tground")) tground() = simpar.asFloat("tground");
+    if (simpar.isDefined("tatmos")) tatmos() = simpar.asFloat("tatmos");  // only used in manual mode
+    if (simpar.isDefined("tcmb")) tcmb() = simpar.asFloat("tcmb");
+    if (simpar.isDefined("trx")) trx() = simpar.asFloat("trx");
+    rxType() = rxtype;
+    if (simpar.isDefined("senscoeff")) senscoeff() = simpar.asFloat("senscoeff");
+
     // use ATM but no time fluctuation of atm - e.g. Tf [Tsys scaling, also Mf]
     if (freqDepPar()) initAtm();
+    // even if not freqdeppar, we need to set this so that tsys and focusFreq work
+    currSpw()=0;
+    setFocusChan(Int(floor(nChan()/2)));    
+
 
     if (mode()=="tsys-manual") {
       // user is specifying Tatmos and tau.
@@ -528,7 +633,11 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
       // the atmosphere to recover T_ebb
       tauscale()=simpar.asFloat("tau0");
       // find tau in center of band for current ATM parameters
-      if (freqDepPar()) tauscale()/=opac(nChan()/2);
+      os << "manual tau set to " << tauscale();
+
+      if (freqDepPar()) {
+	tauscale()/=opac(focusChan());
+	os << "Using frequency scaling from ATM, but not absolute tau - not self-consistent" << endl; }
       // if freqDepPar() then opac will be called in simPar and multiplied by tauscale
 
       // there is no check that Tatmos is consistent with the ATM model.
@@ -548,7 +657,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
     setFocusChan(Int(floor(nChan()/2)));
     
     os << LogIO::NORMAL 
-       << "Tsys at center of first Spectral Window = " << tsys(1.0)
+       << "Zenith Tsys at center of first Spectral Window = " << tsys(1.0)
        << " tground=" << tground() << " spillover=" << spilleff()
        << LogIO::POST;
     if (tsys(1.0)>1e6 or tsys(1.0)<=0) {
@@ -558,7 +667,8 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
       //      throw(AipsError("error in ATM setup - Tsys poorly defined - check inputs"));
     }
     if (freqDepPar())
-      os << " pwv="<< mean_pwv() << " tau=" << opac(focusChan()) << LogIO::POST;
+      // note - atm init was done assuming refchan= nchan/2
+      os << " pwv="<< mean_pwv() << " tau=" << opac(focusChan()) << "(ch" << focusChan() << ")" << LogIO::POST;
     else
       os << " tauscale=" << tauscale() << LogIO::POST;
    
@@ -580,52 +690,54 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
 Float AtmosCorruptor::tsys(const Float& airmass) {
   double tau=0.;
   /* plank=6.6262e-34,boltz=1.3806E-23 */
-  double hn_k = 0.04799274551*1e-9*focusFreq(); 
+  double hn_k = 4.80145e-11*focusFreq();  /* OT value - less accurate */
   double R=0.;
+  double g=rxType();
 
   if (freqDepPar()) {  // for AtmosCorruptor, freqDep means use ATM
     // reference Tsys to top of atmosphere
+    // opac does its own map to ATMchan 
     tau = opac(focusChan()) * airmass;
     
     if (mode()=="tsys-atm") {
       // most general accessor:
       atm::Temperature tatmosatm = 
-	itsSkyStatus->getTebbSky(currSpw(),focusChan(),
+	itsSkyStatus->getTebbSky(currSpw(),ATMchanMap(currSpw())[focusChan()],
 				 atm::Length(mean_pwv(),"mm"),airmass,
 				 spilleff(),tground());
       // 1/e(hn/kt)-1 recalculated for us by every setFocusChan
 
       // cmb is already in ATM Tebb (but not in manual one below)
       // and Trx don't need the plank correction
-      // does Tebb need the plank?  doesn't matter..
+      // does Tebb need the plank?  2012/06/27 yes its a real temp
       R = exp(tau) * ( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + trx()/hn_k );
       //R = exp(tau) * ( tatmosatm.get("K")/hn_k + trx()/hn_k );
 
     } else {
       tau = tau*tauscale();
       // manual: tauscale = tau0/opac(band center)
-      R = Rtcmb() +
+      R = spilleff() * Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
 	  (1.-spilleff()) * Rtground() + trx()/hn_k );
 	  //	  Rtrx() );
     }
   } else {
-    // not freqDep
+    // not freqDep - best for manual - just specify tau and no freq dependence.
     if (mode()=="tsys-atm") 
-      throw(AipsError("non-freqDep AtmCorr::tsys called in unsopported ATM mode"));
+      throw(AipsError("non-freqDep AtmCorr::tsys called in unsupported ATM mode"));
     else {
       tau=tauscale()*airmass; // no reference to ATM here - it's not initialized!
-      R = Rtcmb() +
+      R = spilleff() * Rtcmb() +
 	exp(tau) *
-	( spilleff() * (1.-exp(-tau)) / Rtatmos() + 
-	  (1.-spilleff()) / Rtground() + trx()/hn_k);
+	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
+	  (1.-spilleff()) * Rtground() + trx()/hn_k);
 	  // Rtrx() );
     }
   }
   //  return hn_k/log(1.+1./R);
   // we want to return a noise temp, i.e. with the plank correction
-  return hn_k*R;
+  return hn_k*R*(1+g);
 }
 
 
@@ -635,9 +747,9 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 // the different cphase calls that multiply wetopacity by fluctuation in pwv
 Float AtmosCorruptor::opac(const Int ichan) {
   // CHANINDEX
-  Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
+  Float opac = itsRIP->getDryOpacity(currSpw(),ATMchanMap(currSpw())[ichan]).get() + 
     //mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
-    itsRIP->getWetOpacity(atm::Length(mean_pwv(),"mm"),currSpw(),ichan).get();
+    itsRIP->getWetOpacity(atm::Length(mean_pwv(),"mm"),currSpw(),ATMchanMap(currSpw())[ichan]).get();
   return opac;
 }
 
@@ -646,7 +758,7 @@ Float AtmosCorruptor::opac(const Int ichan) {
 
 
 
-void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
+void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const Int rxtype) {
   // individual delays for each antenna
 
   mean_pwv() = simpar().asFloat("mean_pwv");
@@ -655,6 +767,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
   tcmb() = simpar().asFloat("tcmb");
   trx() = simpar().asFloat("trx");
+  rxType() = rxtype;
   initAtm();
 
   mode()="1d";
@@ -699,7 +812,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
 
 
   
-  void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const ROMSAntennaColumns& antcols) {
+  void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const Int rxtype, const ROMSAntennaColumns& antcols) {
   // 2d delay screen
   LogIO os(LogOrigin("AtmCorr", "init(Seed,Beta,Scale,AntCols)", WHERE));
   mean_pwv() = simpar().asFloat("mean_pwv");
@@ -708,6 +821,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
   tcmb() = simpar().asFloat("tcmb");
   trx() = simpar().asFloat("trx");
+  rxType() = rxtype;
   initAtm();
 
   mode()="2d";
@@ -837,7 +951,7 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
     //    delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") 
     //      * deltapwv / 57.2958; // convert from deg to rad
     // Skystatus delay scales with userWH0 which was set in initialize to mean_pwv
-    delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
+    delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ATMchanMap(currSpw())[ichan]).get("rad") * deltapwv;
     //cout << "delay=" << delay << " " << Complex(cos(delay),sin(delay))<<endl;
 
     return Complex(cos(delay),sin(delay));
@@ -868,7 +982,7 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
       //      delay = itsRIP->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad")
       //	* deltapwv / 57.2958; // convert from deg to rad
       // the acessor from RIP doesn't scale with WH20, but skystatus' accessor does
-      delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ichan).get("rad") * deltapwv;
+      delay = itsSkyStatus->getDispersiveH2OPhaseDelay(currSpw(),ATMchanMap(currSpw())[ichan]).get("rad") * deltapwv;
     } else
       throw(AipsError("AtmCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));

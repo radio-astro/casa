@@ -33,6 +33,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <display/Utilities/Lowlevel.h>
 #include <map>
 #include <string>
 
@@ -96,6 +97,7 @@ class QtPointToolButton: public QtMouseToolButton {
   ~QtPointToolButton() {  }
 
  protected:
+  Casarc &rc;
   virtual void mousePressEvent(QMouseEvent*);
   
  protected slots:

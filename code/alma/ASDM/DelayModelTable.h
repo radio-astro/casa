@@ -149,7 +149,7 @@ class DelayModelRow;
  * Contains the delay model components. For ALMA this includes all TMCDB delay model components.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of DelayModel </CAPTION>
@@ -487,6 +487,16 @@ public:
 	 * @return a pointer to a DelayModelTableIDL
 	 */
 	asdmIDL::DelayModelTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::DelayModelTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::DelayModelTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

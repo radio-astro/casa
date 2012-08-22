@@ -341,6 +341,254 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void AnnotationRow::toIDL(asdmIDL::AnnotationRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.annotationId = annotationId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.issue = CORBA::string_dup(issue.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.details = CORBA::string_dup(details.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numAntennaExists = numAntennaExists;
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.basebandNameExists = basebandNameExists;
+		
+		
+			
+		x.basebandName.length(basebandName.size());
+		for (unsigned int i = 0; i < basebandName.size(); ++i) {
+			
+				
+			x.basebandName[i] = basebandName.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numBasebandExists = numBasebandExists;
+		
+		
+			
+				
+		x.numBaseband = numBaseband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.intervalExists = intervalExists;
+		
+		
+			
+		x.interval = interval.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		x.dValueExists = dValueExists;
+		
+		
+			
+				
+		x.dValue = dValue;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.vdValueExists = vdValueExists;
+		
+		
+			
+		x.vdValue.length(vdValue.size());
+		for (unsigned int i = 0; i < vdValue.size(); ++i) {
+			
+				
+			x.vdValue[i] = vdValue.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.vvdValuesExists = vvdValuesExists;
+		
+		
+			
+		x.vvdValues.length(vvdValues.size());
+		for (unsigned int i = 0; i < vvdValues.size(); i++) {
+			x.vvdValues[i].length(vvdValues.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < vvdValues.size() ; i++)
+			for (unsigned int j = 0; j < vvdValues.at(i).size(); j++)
+					
+						
+				x.vvdValues[i][j] = vvdValues.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.llValueExists = llValueExists;
+		
+		
+			
+				
+		x.llValue = llValue;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.vllValueExists = vllValueExists;
+		
+		
+			
+		x.vllValue.length(vllValue.size());
+		for (unsigned int i = 0; i < vllValue.size(); ++i) {
+			
+				
+			x.vllValue[i] = vllValue.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.vvllValueExists = vvllValueExists;
+		
+		
+			
+		x.vvllValue.length(vvllValue.size());
+		for (unsigned int i = 0; i < vvllValue.size(); i++) {
+			x.vvllValue[i].length(vvllValue.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < vvllValue.size() ; i++)
+			for (unsigned int j = 0; j < vvllValue.at(i).size(); j++)
+					
+						
+				x.vvllValue[i][j] = vvllValue.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+ 		
+		x.antennaIdExists = antennaIdExists;
+		
+		
+		
+		x.antennaId.length(antennaId.size());
+		for (unsigned int i = 0; i < antennaId.size(); ++i) {
+			
+			x.antennaId[i] = antennaId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

@@ -212,6 +212,125 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void HistoryRow::toIDL(asdmIDL::HistoryRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.message = CORBA::string_dup(message.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.priority = CORBA::string_dup(priority.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.origin = CORBA::string_dup(origin.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.objectId = CORBA::string_dup(objectId.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.application = CORBA::string_dup(application.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.cliCommand = CORBA::string_dup(cliCommand.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.appParms = CORBA::string_dup(appParms.c_str());
+				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

@@ -1058,7 +1058,8 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float tground=270.0, 
 			 const Float tcmb=2.73, 
 			 const Bool OTF=True,
-			 const Float senscoeff=0.0
+			 const Float senscoeff=0.0,
+			 const Int rxtype=0
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
@@ -1089,6 +1090,7 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
     simparDesc.addField ("senscoeff"      ,TpFloat);
+    simparDesc.addField ("rxType"         ,TpInt);
 
     // user-override of ATM calculated tau
     simparDesc.addField ("tatmos"	  ,TpFloat);
@@ -1167,6 +1169,16 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
+      if (rxtype>=0) {
+	simpar.define ("rxType", rxtype);
+	if (rxtype>0) {
+	  os<<"User has requested Double Sideband Receiver"<<LogIO::POST;
+	}
+      } else {
+	simpar.define ("rxType", 0);
+	os<<"User has not set Rx type, using 2SB"<<LogIO::POST;
+      }
+
       if ( senscoeff > 0.0 ) {
 	simpar.define ("senscoeff", Float(senscoeff) );
 	os << "adding noise with the sensitivity constant of " << senscoeff << LogIO::POST;
@@ -1227,8 +1239,8 @@ Bool Simulator::setnoise(const String& mode,
 	if (waterheight.getValue("m")>100.)
 	  simpar.define ("waterheight", waterheight.getValue("km"));
 	else {
-	  simpar.define ("waterheight", Double(0.2));
-	  os<<"User has not set water scale height, using 200m"<<LogIO::POST;
+	  simpar.define ("waterheight", Double(2.0));
+	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 	}
 	// as a function of frequency  (freqDepPar=True)
 	//simpar.define ("type", "TF");
@@ -1242,7 +1254,7 @@ Bool Simulator::setnoise(const String& mode,
       
       simpar.define("onthefly",saveOnthefly);
 
-      // create the M
+      // create the T
       if (!create_corrupt(simpar)) 
 	throw(AipsError("could not create T in Simulator::setnoise"));        
       //throw(AipsError("could not create M in Simulator::setnoise"));        
@@ -1410,7 +1422,7 @@ Bool Simulator::settrop(const String& mode,
 //      if (waterheight.getValue("m")>100.)
 //	simpar.define ("waterheight", waterheight.getValue("km"));
 //      else {
-	simpar.define ("waterheight", Double(0.2));  // km
+	simpar.define ("waterheight", Double(2.0));  // km
 //	os<<"User has not set water scale height, using 2km"<<LogIO::POST;
 //      }
 	simpar.define ("spillefficiency", Float(.85));

@@ -141,6 +141,60 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ProcessorRow::toIDL(asdmIDL::ProcessorRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.processorId = processorId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.modeId = modeId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.processorType = processorType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.processorSubType = processorSubType;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

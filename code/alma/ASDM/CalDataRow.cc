@@ -292,6 +292,211 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalDataRow::toIDL(asdmIDL::CalDataRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startTimeObserved = startTimeObserved.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endTimeObserved = endTimeObserved.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.execBlockUID = execBlockUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.calDataType = calDataType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.calType = calType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numScan = numScan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.scanSet.length(scanSet.size());
+		for (unsigned int i = 0; i < scanSet.size(); ++i) {
+			
+				
+			x.scanSet[i] = scanSet.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.assocCalDataIdExists = assocCalDataIdExists;
+		
+		
+			
+		x.assocCalDataId = assocCalDataId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		x.assocCalNatureExists = assocCalNatureExists;
+		
+		
+			
+				
+		x.assocCalNature = assocCalNature;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.fieldNameExists = fieldNameExists;
+		
+		
+			
+		x.fieldName.length(fieldName.size());
+		for (unsigned int i = 0; i < fieldName.size(); ++i) {
+			
+				
+			x.fieldName[i] = CORBA::string_dup(fieldName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sourceNameExists = sourceNameExists;
+		
+		
+			
+		x.sourceName.length(sourceName.size());
+		for (unsigned int i = 0; i < sourceName.size(); ++i) {
+			
+				
+			x.sourceName[i] = CORBA::string_dup(sourceName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.sourceCodeExists = sourceCodeExists;
+		
+		
+			
+		x.sourceCode.length(sourceCode.size());
+		for (unsigned int i = 0; i < sourceCode.size(); ++i) {
+			
+				
+			x.sourceCode[i] = CORBA::string_dup(sourceCode.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.scanIntentExists = scanIntentExists;
+		
+		
+			
+		x.scanIntent.length(scanIntent.size());
+		for (unsigned int i = 0; i < scanIntent.size(); ++i) {
+			
+				
+			x.scanIntent[i] = scanIntent.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

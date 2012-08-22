@@ -27,6 +27,7 @@
 
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
+#include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/GSpline.h>
 #include <synthesis/MeasurementComponents/BPoly.h>
 #include <synthesis/MeasurementComponents/EJones.h>
@@ -106,6 +107,14 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
 	   uptype=="DF JONES") 
     return new DflinJones(vs);
 
+  else if (uptype.before('+')=="DLLS" || 
+	   uptype=="DLLS JONES")
+    return new DllsJones(vs);
+
+  else if (uptype.before('+')=="DFLLS" || 
+	   uptype=="DFLLS JONES")
+    return new DfllsJones(vs);
+
   else if (uptype.before('+')=="DGEN" ||
 	   uptype.before('+')=="DGENERAL" || 
 	   uptype=="DGEN JONES") 
@@ -155,6 +164,10 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="GLINXPH" || uptype=="GLINXPH JONES" ||
 	   uptype=="XY+QU")
     return new GlinXphJones(vs);
+
+  else if (uptype=="GLINXPHF" || uptype=="GLINXPHF JONES" ||
+	   uptype=="XYF+QU")
+    return new GlinXphfJones(vs);
 
   else if (uptype=="KMBD" || uptype=="KMBD JONES")
     return new KMBDJones(vs);

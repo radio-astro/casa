@@ -117,7 +117,7 @@ class AnnotationRow;
  * The Annotation Table is intended to offer space for unexpected data to be  added in the software development process at short notice, without  redefining the data model.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Annotation </CAPTION>
@@ -339,6 +339,16 @@ public:
 	 * @return a pointer to a AnnotationTableIDL
 	 */
 	asdmIDL::AnnotationTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::AnnotationTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::AnnotationTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

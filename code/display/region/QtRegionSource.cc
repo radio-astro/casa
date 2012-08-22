@@ -176,8 +176,10 @@ namespace casa {
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::point( RegionCreator *rc, WorldCanvas *wc, double x, double y,
+								     QtMouseToolNames::PointRegionSymbols sym, int size ) {
 	    QtPoint *result = new QtPoint( this, wc, x, y, sym, true );
+	    result->setMarkerScale(size);
 
 	    // save Region to RegionSource mapping for later revocation...
 	    creator_of_region[result] = rc;
@@ -329,7 +331,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					    rectangle->getLabelOffset( ),
 					    rectangle->getFont( ), rectangle->getFontSize( ), font_style, rectangle->getLabelColorString( ),
-					    rectangle->getColorString( ), line_style, rectangle->getLineWidth( ), rectangle->isAnnotationOnly( ), -1 );
+					    rectangle->getColorString( ), line_style, rectangle->getLineWidth( ), rectangle->isAnnotationOnly( ), 0 );
 	}
 
 
@@ -365,7 +367,7 @@ namespace casa {
 								       label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					       ellipse->getLabelOffset( ),
 					       ellipse->getFont( ), ellipse->getFontSize( ), font_style, ellipse->getLabelColorString( ),
-					       ellipse->getColorString( ), line_style, ellipse->getLineWidth( ), ellipse->isAnnotationOnly( ), -1 );
+					       ellipse->getColorString( ), line_style, ellipse->getLineWidth( ), ellipse->isAnnotationOnly( ), 0 );
 	}
 
 
@@ -395,7 +397,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					     symbol->getLabelOffset( ),
 					     symbol->getFont( ), symbol->getFontSize( ), font_style, symbol->getLabelColorString( ),
-					     symbol->getColorString( ), line_style, symbol->getLineWidth( ), false, -1 );
+					     symbol->getColorString( ), line_style, symbol->getLineWidth( ), false, 0 );
 	}
 
 	void QtRegionSourceKernel::load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon ) {
@@ -426,7 +428,7 @@ namespace casa {
 								    label_position == "bottom" ? Region::BottomText : Region::TopText ),
 					    polygon->getLabelOffset( ),
 					    polygon->getFont( ), polygon->getFontSize( ), font_style, polygon->getLabelColorString( ),
-					    polygon->getColorString( ), line_style, polygon->getLineWidth( ), polygon->isAnnotationOnly( ), -1 );
+					    polygon->getColorString( ), line_style, polygon->getLineWidth( ), polygon->isAnnotationOnly( ), 0 );
 	}
 
 	QtRegionSource::QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) :

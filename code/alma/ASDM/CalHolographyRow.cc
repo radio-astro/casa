@@ -470,6 +470,377 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalHolographyRow::toIDL(asdmIDL::CalHolographyRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.ambientTemperature = ambientTemperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focusPosition.length(focusPosition.size());
+		for (unsigned int i = 0; i < focusPosition.size(); ++i) {
+			
+			x.focusPosition[i] = focusPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.illuminationTaper = illuminationTaper;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPanelModes = numPanelModes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.beamMapUID = beamMapUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.rawRMS = rawRMS.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.weightedRMS = weightedRMS.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.surfaceMapUID = surfaceMapUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x.direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numScrewExists = numScrewExists;
+		
+		
+			
+				
+		x.numScrew = numScrew;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.screwNameExists = screwNameExists;
+		
+		
+			
+		x.screwName.length(screwName.size());
+		for (unsigned int i = 0; i < screwName.size(); ++i) {
+			
+				
+			x.screwName[i] = CORBA::string_dup(screwName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.screwMotionExists = screwMotionExists;
+		
+		
+			
+		x.screwMotion.length(screwMotion.size());
+		for (unsigned int i = 0; i < screwMotion.size(); ++i) {
+			
+			x.screwMotion[i] = screwMotion.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.screwMotionErrorExists = screwMotionErrorExists;
+		
+		
+			
+		x.screwMotionError.length(screwMotionError.size());
+		for (unsigned int i = 0; i < screwMotionError.size(); ++i) {
+			
+			x.screwMotionError[i] = screwMotionError.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.gravCorrectionExists = gravCorrectionExists;
+		
+		
+			
+				
+		x.gravCorrection = gravCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.gravOptRangeExists = gravOptRangeExists;
+		
+		
+			
+		x.gravOptRange.length(gravOptRange.size());
+		for (unsigned int i = 0; i < gravOptRange.size(); ++i) {
+			
+			x.gravOptRange[i] = gravOptRange.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.tempCorrectionExists = tempCorrectionExists;
+		
+		
+			
+				
+		x.tempCorrection = tempCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.tempOptRangeExists = tempOptRangeExists;
+		
+		
+			
+		x.tempOptRange.length(tempOptRange.size());
+		for (unsigned int i = 0; i < tempOptRange.size(); ++i) {
+			
+			x.tempOptRange[i] = tempOptRange.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

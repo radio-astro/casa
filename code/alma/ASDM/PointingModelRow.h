@@ -84,7 +84,7 @@
 //#include <TableStreamReader.h>
 
 /*\file PointingModel.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -106,7 +106,7 @@ typedef void (PointingModelRow::*PointingModelAttributeFromText) (const string& 
 /**
  * The PointingModelRow class is a row of a PointingModelTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class PointingModelRow {
@@ -543,6 +543,15 @@ public:
 	 * @return The values of this row as a PointingModelRowIDL struct.
 	 */
 	asdmIDL::PointingModelRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a PointingModelRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the PointingModelRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::PointingModelRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

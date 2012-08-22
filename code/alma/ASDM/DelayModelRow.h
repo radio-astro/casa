@@ -134,7 +134,7 @@
 //#include <TableStreamReader.h>
 
 /*\file DelayModel.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -159,7 +159,7 @@ typedef void (DelayModelRow::*DelayModelAttributeFromText) (const string& s);
 /**
  * The DelayModelRow class is a row of a DelayModelTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class DelayModelRow {
@@ -1484,6 +1484,15 @@ public:
 	 * @return The values of this row as a DelayModelRowIDL struct.
 	 */
 	asdmIDL::DelayModelRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a DelayModelRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the DelayModelRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::DelayModelRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

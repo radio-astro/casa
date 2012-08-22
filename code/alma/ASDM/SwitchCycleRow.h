@@ -98,7 +98,7 @@
 //#include <TableStreamReader.h>
 
 /*\file SwitchCycle.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -114,7 +114,7 @@ typedef void (SwitchCycleRow::*SwitchCycleAttributeFromText) (const string& s);
 /**
  * The SwitchCycleRow class is a row of a SwitchCycleTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class SwitchCycleRow {
@@ -458,6 +458,15 @@ public:
 	 * @return The values of this row as a SwitchCycleRowIDL struct.
 	 */
 	asdmIDL::SwitchCycleRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a SwitchCycleRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the SwitchCycleRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::SwitchCycleRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

@@ -107,6 +107,26 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void EphemerisRow::toIDL(asdmIDL::EphemerisRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.ephemerisId = ephemerisId.toIDLTag();
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

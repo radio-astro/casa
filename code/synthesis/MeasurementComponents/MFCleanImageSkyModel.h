@@ -106,8 +106,6 @@ Matrix<Float>* makeMaskMatrix(const Int& nx,
 			      Int& yend); 
 
 protected:
-  // Return the maximum absolute value per field
-  Float maxField(Vector<Float>& imagemax, Vector<Float>& imagemin);
   // Return maximum abs outer sidelobe, more than nCenter pixels from the center
   Float maxOuter(Lattice<Float> & lat, const uInt nCenter );
   // Pointer to the progress display object

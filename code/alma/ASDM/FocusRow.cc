@@ -225,6 +225,132 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void FocusRow::toIDL(asdmIDL::FocusRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.focusTracking = focusTracking;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focusOffset.length(focusOffset.size());
+		for (unsigned int i = 0; i < focusOffset.size(); ++i) {
+			
+			x.focusOffset[i] = focusOffset.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focusRotationOffset.length(focusRotationOffset.size());
+		for (unsigned int i = 0; i < focusRotationOffset.size(); ++i) {
+			
+			x.focusRotationOffset[i] = focusRotationOffset.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.measuredFocusPositionExists = measuredFocusPositionExists;
+		
+		
+			
+		x.measuredFocusPosition.length(measuredFocusPosition.size());
+		for (unsigned int i = 0; i < measuredFocusPosition.size(); ++i) {
+			
+			x.measuredFocusPosition[i] = measuredFocusPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.measuredFocusRotationExists = measuredFocusRotationExists;
+		
+		
+			
+		x.measuredFocusRotation.length(measuredFocusRotation.size());
+		for (unsigned int i = 0; i < measuredFocusRotation.size(); ++i) {
+			
+			x.measuredFocusRotation[i] = measuredFocusRotation.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.focusModelId = focusModelId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

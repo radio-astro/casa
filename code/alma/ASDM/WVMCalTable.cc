@@ -86,6 +86,8 @@ namespace asdm {
 		
 			, "polyFreqLimits"
 		
+			, "numInputAntenna"
+		
 			, "numChan"
 		
 			, "numPoly"
@@ -93,6 +95,8 @@ namespace asdm {
 			, "pathCoeff"
 		
 			, "refTemp"
+		
+			, "inputAntennaId"
 				
 				
 	};
@@ -107,7 +111,7 @@ namespace asdm {
 	//	
 	static string attributesNamesInBinOfWVMCal_a[] = {
     
-    	 "antennaId" , "spectralWindowId" , "timeInterval" , "wvrMethod" , "polyFreqLimits" , "numChan" , "numPoly" , "pathCoeff" , "refTemp" 
+    	 "antennaId" , "spectralWindowId" , "timeInterval" , "wvrMethod" , "polyFreqLimits" , "numInputAntenna" , "numChan" , "numPoly" , "pathCoeff" , "refTemp" , "inputAntennaId" 
     	,
     	
     
@@ -254,6 +258,8 @@ namespace asdm {
 	
  	 * @param polyFreqLimits 
 	
+ 	 * @param numInputAntenna 
+	
  	 * @param numChan 
 	
  	 * @param numPoly 
@@ -262,8 +268,10 @@ namespace asdm {
 	
  	 * @param refTemp 
 	
+ 	 * @param inputAntennaId 
+	
      */
-	WVMCalRow* WVMCalTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp){
+	WVMCalRow* WVMCalTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numInputAntenna, int numChan, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<vector<Temperature > > refTemp, vector<Tag>  inputAntennaId){
 		WVMCalRow *row = new WVMCalRow(*this);
 			
 		row->setAntennaId(antennaId);
@@ -276,6 +284,8 @@ namespace asdm {
 			
 		row->setPolyFreqLimits(polyFreqLimits);
 			
+		row->setNumInputAntenna(numInputAntenna);
+			
 		row->setNumChan(numChan);
 			
 		row->setNumPoly(numPoly);
@@ -283,6 +293,8 @@ namespace asdm {
 		row->setPathCoeff(pathCoeff);
 			
 		row->setRefTemp(refTemp);
+			
+		row->setInputAntennaId(inputAntennaId);
 	
 		return row;		
 	}	
@@ -526,10 +538,20 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		x->row.length(nrow);
 		vector<WVMCalRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void WVMCalTable::toIDL(asdmIDL::WVMCalTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<WVMCalRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -541,7 +563,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -549,7 +571,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -671,7 +693,7 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<WVMCalTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:wvmcl=\"http://Alma/XASDM/WVMCalTable\" xsi:schemaLocation=\"http://Alma/XASDM/WVMCalTable http://almaobservatory.org/XML/XASDM/3/WVMCalTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='WVMCalTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -682,10 +704,12 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		oss << "<timeInterval/>\n"; 
 		oss << "<wvrMethod/>\n"; 
 		oss << "<polyFreqLimits/>\n"; 
+		oss << "<numInputAntenna/>\n"; 
 		oss << "<numChan/>\n"; 
 		oss << "<numPoly/>\n"; 
 		oss << "<pathCoeff/>\n"; 
 		oss << "<refTemp/>\n"; 
+		oss << "<inputAntennaId/>\n"; 
 
 		oss << "</Attributes>\n";		
 		oss << "</WVMCalTable>\n";
@@ -812,6 +836,8 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
     	 
     attributesSeq.push_back("polyFreqLimits") ; 
     	 
+    attributesSeq.push_back("numInputAntenna") ; 
+    	 
     attributesSeq.push_back("numChan") ; 
     	 
     attributesSeq.push_back("numPoly") ; 
@@ -819,6 +845,8 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
     attributesSeq.push_back("pathCoeff") ; 
     	 
     attributesSeq.push_back("refTemp") ; 
+    	 
+    attributesSeq.push_back("inputAntennaId") ; 
     	
     	
      

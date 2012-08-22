@@ -55,7 +55,12 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/SpecFitPlotDialog.qo.h
   QtPlotter/SpecFitLogDialog.qo.h
   QtPlotter/SettingsWidget.qo.h
+  QtPlotter/SearchMoleculesWidget.qo.h
+  QtPlotter/SearchMoleculesResultsWidget.qo.h
   QtPlotter/SearchMoleculesDialog.qo.h
+  QtPlotter/SearchRedshiftDialog.qo.h
+  QtPlotter/LineOverlaysTab.qo.h
+  QtPlotter/LineOverlaysSearchResultsDialog.qo.h
   QtPlotter/ColorSummaryWidget.qo.h
   QtPlotter/SpecFitSettingsFixedTableCell.qo.h
   QtPlotter/SpecFitSettingsWidgetOptical.qo.h
@@ -137,6 +142,11 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/MomentSettingsWidgetOptical.ui
   QtPlotter/MomentSettingsWidgetRadio.ui
   QtPlotter/SettingsWidget.ui
+  QtPlotter/SearchMoleculesWidget.ui
+  QtPlotter/SearchMoleculesResultsWidget.ui
+  QtPlotter/SearchRedshiftDialog.ui
+  QtPlotter/LineOverlaysTab.ui
+  QtPlotter/LineOverlaysSearchResultsDialog.ui
   QtPlotter/SearchMoleculesDialog.ui
   QtPlotter/ColorSummaryWidget.ui
   QtPlotter/SpecFitSettingsWidgetRadio.ui
@@ -385,7 +395,13 @@ casa_add_library( display
   QtPlotter/SpecFitPlotDialog.cc
   QtPlotter/GaussianEstimateWidget.cc
   QtPlotter/GaussianEstimateDialog.cc
+  QtPlotter/SearchMoleculesWidget.cc
+  QtPlotter/SearchMoleculesResultsWidget.cc
+  QtPlotter/SearchMoleculesResultDisplayer.cc
+  QtPlotter/LineOverlaysTab.cc
+  QtPlotter/LineOverlaysSearchResultsDialog.cc
   QtPlotter/SearchMoleculesDialog.cc
+  QtPlotter/SearchRedshiftDialog.cc
   QtPlotter/MomentSettingsWidgetOptical.cc
   QtPlotter/MomentSettingsWidgetRadio.cc
   QtPlotter/SettingsWidget.cc
@@ -399,7 +415,7 @@ casa_add_library( display
   QtPlotter/ProfileTaskMonitor.cc
   QtPlotter/ThresholdingBinPlotDialog.cc
   QtPlotter/LegendPreferences.cc
-  QtPlotter/SpectralPositioningWidget.cc
+  QtPlotter/SpectralPositioningWidget.cc 
   QtPlotter/conversion/Converter.cc
   QtPlotter/conversion/ConverterFrequency.cc
   QtPlotter/conversion/ConverterFrequencyVelocity.cc

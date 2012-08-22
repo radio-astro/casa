@@ -159,6 +159,11 @@
               <string>character</string>
              </property>
             </item>
+            <item>
+             <property name="text" >
+              <string>autoscaling</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item>

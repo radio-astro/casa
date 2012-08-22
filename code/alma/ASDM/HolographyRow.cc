@@ -156,6 +156,75 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void HolographyRow::toIDL(asdmIDL::HolographyRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.holographyId = holographyId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.distance = distance.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focus = focus.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCorr = numCorr;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.type.length(type.size());
+		for (unsigned int i = 0; i < type.size(); ++i) {
+			
+				
+			x.type[i] = type.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

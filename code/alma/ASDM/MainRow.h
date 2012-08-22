@@ -98,7 +98,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Main.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,7 +126,7 @@ typedef void (MainRow::*MainAttributeFromText) (const string& s);
 /**
  * The MainRow class is a row of a MainTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class MainRow {
@@ -738,6 +738,15 @@ public:
 	 * @return The values of this row as a MainRowIDL struct.
 	 */
 	asdmIDL::MainRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a MainRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the MainRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::MainRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

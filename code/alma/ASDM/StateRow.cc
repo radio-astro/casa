@@ -169,6 +169,88 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void StateRow::toIDL(asdmIDL::StateRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.stateId = stateId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.calDeviceName = calDeviceName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.sig = sig;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.ref = ref;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.onSky = onSky;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.weightExists = weightExists;
+		
+		
+			
+				
+		x.weight = weight;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

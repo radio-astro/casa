@@ -95,7 +95,7 @@ class HolographyRow;
  * Used for Single-Dish holography with a fixed transmitter.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Holography </CAPTION>
@@ -244,6 +244,16 @@ public:
 	 * @return a pointer to a HolographyTableIDL
 	 */
 	asdmIDL::HolographyTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::HolographyTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::HolographyTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

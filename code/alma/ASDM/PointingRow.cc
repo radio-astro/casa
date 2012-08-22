@@ -388,6 +388,295 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void PointingRow::toIDL(asdmIDL::PointingRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numSample = numSample;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.encoder.length(encoder.size());
+		for (unsigned int i = 0; i < encoder.size(); i++) {
+			x.encoder[i].length(encoder.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < encoder.size() ; i++)
+			for (unsigned int j = 0; j < encoder.at(i).size(); j++)
+					
+				x.encoder[i][j]= encoder.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.pointingTracking = pointingTracking;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.usePolynomials = usePolynomials;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numTerm = numTerm;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.pointingDirection.length(pointingDirection.size());
+		for (unsigned int i = 0; i < pointingDirection.size(); i++) {
+			x.pointingDirection[i].length(pointingDirection.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < pointingDirection.size() ; i++)
+			for (unsigned int j = 0; j < pointingDirection.at(i).size(); j++)
+					
+				x.pointingDirection[i][j]= pointingDirection.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.target.length(target.size());
+		for (unsigned int i = 0; i < target.size(); i++) {
+			x.target[i].length(target.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < target.size() ; i++)
+			for (unsigned int j = 0; j < target.at(i).size(); j++)
+					
+				x.target[i][j]= target.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); i++) {
+			x.offset[i].length(offset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offset.size() ; i++)
+			for (unsigned int j = 0; j < offset.at(i).size(); j++)
+					
+				x.offset[i][j]= offset.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.overTheTopExists = overTheTopExists;
+		
+		
+			
+				
+		x.overTheTop = overTheTop;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.sourceOffsetExists = sourceOffsetExists;
+		
+		
+			
+		x.sourceOffset.length(sourceOffset.size());
+		for (unsigned int i = 0; i < sourceOffset.size(); i++) {
+			x.sourceOffset[i].length(sourceOffset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < sourceOffset.size() ; i++)
+			for (unsigned int j = 0; j < sourceOffset.at(i).size(); j++)
+					
+				x.sourceOffset[i][j]= sourceOffset.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x.sourceOffsetReferenceCodeExists = sourceOffsetReferenceCodeExists;
+		
+		
+			
+				
+		x.sourceOffsetReferenceCode = sourceOffsetReferenceCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.sourceOffsetEquinoxExists = sourceOffsetEquinoxExists;
+		
+		
+			
+		x.sourceOffsetEquinox = sourceOffsetEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x.sampledTimeIntervalExists = sampledTimeIntervalExists;
+		
+		
+			
+		x.sampledTimeInterval.length(sampledTimeInterval.size());
+		for (unsigned int i = 0; i < sampledTimeInterval.size(); ++i) {
+			
+			x.sampledTimeInterval[i] = sampledTimeInterval.at(i).toIDLArrayTimeInterval();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.atmosphericCorrectionExists = atmosphericCorrectionExists;
+		
+		
+			
+		x.atmosphericCorrection.length(atmosphericCorrection.size());
+		for (unsigned int i = 0; i < atmosphericCorrection.size(); i++) {
+			x.atmosphericCorrection[i].length(atmosphericCorrection.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < atmosphericCorrection.size() ; i++)
+			for (unsigned int j = 0; j < atmosphericCorrection.at(i).size(); j++)
+					
+				x.atmosphericCorrection[i][j]= atmosphericCorrection.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.pointingModelId = pointingModelId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

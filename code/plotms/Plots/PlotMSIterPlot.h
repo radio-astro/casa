@@ -192,7 +192,9 @@ private:
 	private:
 	void cacheLoaded_ (bool wasCanceled);
 	
-
+    static const uInt pixelThreshold;
+    static const uInt mediumThreshold;
+    static const uInt largeThreshold;
 };
 
 }

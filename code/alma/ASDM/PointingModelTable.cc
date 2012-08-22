@@ -576,10 +576,20 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		x->row.length(nrow);
 		vector<PointingModelRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void PointingModelTable::toIDL(asdmIDL::PointingModelTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<PointingModelRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -591,7 +601,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -599,7 +609,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -721,7 +731,7 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<PointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:pointm=\"http://Alma/XASDM/PointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingModelTable http://almaobservatory.org/XML/XASDM/3/PointingModelTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='PointingModelTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

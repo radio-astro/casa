@@ -396,6 +396,279 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void ConfigDescriptionRow::toIDL(asdmIDL::ConfigDescriptionRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numDataDescription = numDataDescription;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numFeed = numFeed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.correlationMode = correlationMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.configDescriptionId = configDescriptionId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAtmPhaseCorrection = numAtmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.atmPhaseCorrection.length(atmPhaseCorrection.size());
+		for (unsigned int i = 0; i < atmPhaseCorrection.size(); ++i) {
+			
+				
+			x.atmPhaseCorrection[i] = atmPhaseCorrection.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.processorType = processorType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.phasedArrayListExists = phasedArrayListExists;
+		
+		
+			
+		x.phasedArrayList.length(phasedArrayList.size());
+		for (unsigned int i = 0; i < phasedArrayList.size(); ++i) {
+			
+				
+			x.phasedArrayList[i] = phasedArrayList.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.spectralType = spectralType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numAssocValuesExists = numAssocValuesExists;
+		
+		
+			
+				
+		x.numAssocValues = numAssocValues;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.assocNatureExists = assocNatureExists;
+		
+		
+			
+		x.assocNature.length(assocNature.size());
+		for (unsigned int i = 0; i < assocNature.size(); ++i) {
+			
+				
+			x.assocNature[i] = assocNature.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+		
+		x.antennaId.length(antennaId.size());
+		for (unsigned int i = 0; i < antennaId.size(); ++i) {
+			
+			x.antennaId[i] = antennaId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+ 		
+		x.assocConfigDescriptionIdExists = assocConfigDescriptionIdExists;
+		
+		
+		
+		x.assocConfigDescriptionId.length(assocConfigDescriptionId.size());
+		for (unsigned int i = 0; i < assocConfigDescriptionId.size(); ++i) {
+			
+			x.assocConfigDescriptionId[i] = assocConfigDescriptionId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.dataDescriptionId.length(dataDescriptionId.size());
+		for (unsigned int i = 0; i < dataDescriptionId.size(); ++i) {
+			
+			x.dataDescriptionId[i] = dataDescriptionId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.feedId.length(feedId.size());
+		for (unsigned int i = 0; i < feedId.size(); ++i) {
+			
+				
+			x.feedId[i] = feedId.at(i);
+	 			
+	 		
+	 	}
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.processorId = processorId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.switchCycleId.length(switchCycleId.size());
+		for (unsigned int i = 0; i < switchCycleId.size(); ++i) {
+			
+			x.switchCycleId[i] = switchCycleId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

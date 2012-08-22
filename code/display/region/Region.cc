@@ -55,6 +55,20 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 namespace casa {
     namespace viewer {
 
+	struct strip_white_space {
+	    strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
+	    strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
+								  buf(new char[size])
+								  { strcpy(buf,other.buf); }
+	    ~strip_white_space( ) { delete [] buf; }
+	    void operator( )( char c ) { if ( ! isspace(c) ) buf[off++] = c; };
+	    operator std::string( ) { buf[off+1] = '\0'; return std::string(buf); }
+	    operator String( ) { buf[off+1] = '\0'; return String(buf); }
+	    size_t size;
+	    size_t off;
+	    char *buf;
+	};
+
 	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false), draw_center_(false){
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
@@ -140,23 +154,21 @@ namespace casa {
 	    pc->setLineWidth(1);
 	    pc->setCapStyle(Display::CSRound);
 	    pc->setColor(lineColor());
-	    pc->setLineWidth(lineWidth());
 
 	    Display::LineStyle current_ls = pc->getLineStyle( );
 	    switch ( current_ls ) {
 		case Display::LSSolid:
-		    ls_stack.push_back(SolidLine);
+		    ls_stack.push_back(ls_ele(SolidLine,lineWidth()));
 		    break;
 		case Display::LSDashed:
-		    ls_stack.push_back(DashLine);
+		    ls_stack.push_back(ls_ele(DashLine,lineWidth()));
 		    break;
 		case Display::LSDoubleDashed:
-		    ls_stack.push_back(LSDoubleDashed);
+		    ls_stack.push_back(ls_ele(LSDoubleDashed,lineWidth()));
 		    break;
 	    }
 
-	    LineStyle linestyle = lineStyle( );
-	    set_line_style( linestyle );
+	    set_line_style( ls_ele(lineStyle( ),lineWidth()) );
 
 	    pc->setDrawFunction(Display::DFCopy);
 	}
@@ -191,9 +203,9 @@ namespace casa {
 	void Region::resetTextEnv( ) {
 	}
 
-	void Region::pushDrawingEnv( LineStyle ls ) {
-	    ls_stack.push_back(current_ls);
-	    set_line_style( ls );
+	void Region::pushDrawingEnv( LineStyle ls, int thickness ) {
+	    ls_stack.push_back(ls_ele(current_ls,lineWidth()));
+	    set_line_style(ls_ele(ls, thickness));
 	}
 
 	void Region::popDrawingEnv( ) {
@@ -283,7 +295,6 @@ namespace casa {
 
 
 	    Display::TextAlign alignment = Display::AlignCenter;
-	    int midx, midy;
 
 	    const int offset = 5;
 	    switch ( tp ) {
@@ -365,7 +376,7 @@ if (!markCenter()) return;
 		    if ( w > width ) width = w;
 		}
 		char format[10];
-		sprintf( format, "%%%us ", (width > 0 && width < 30 ? width : 15) );
+		sprintf( format, "%%%lus ", (width > 0 && width < 30 ? width : 15) );
 		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ) {
 		    RegionInfo::stats_t::iterator row = stats_iter;
 		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
@@ -383,6 +394,7 @@ if (!markCenter()) return;
 		}
 	    }
 	    delete info;
+	    return false;
 	}
 
 	static std::string as_string( double v ) {
@@ -606,7 +618,7 @@ if (!markCenter()) return;
 		Quantity xq;
 		if ( x_units == "sexagesimal" ) {
 		    // read in to convert HMS/DMS...
-		    MVAngle::read(xq,x);
+		    MVAngle::read(xq,std::for_each(x.begin(),x.end(),strip_white_space(x.size())));
 		} else if ( x_units == "degrees" ) {
 		    xq = Quantity( atof(x.c_str( )), "deg" );
 		} else if ( x_units == "radians" ) {
@@ -618,7 +630,7 @@ if (!markCenter()) return;
 
 		MDirection::Types cccs = current_casa_coordsys( );
 		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
-		const CoordinateSystem &cs = wc_->coordinateSystem( );
+// 		const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 		Vector<Double> worldv(2);
 		Vector<Double> linearv(2);
@@ -685,7 +697,7 @@ if (!markCenter()) return;
 		Quantity yq;
 		if ( y_units == "sexagesimal" ) {
 		    // read in to convert HMS/DMS...
-		    MVAngle::read(yq,y);
+		    MVAngle::read( yq, std::for_each(y.begin(),y.end(),strip_white_space(y.size())) );
 		} else if ( y_units == "degrees" ) {
 		    yq = Quantity( atof(y.c_str( )), "deg" );
 		} else if ( y_units == "radians" ) {
@@ -783,12 +795,12 @@ if (!markCenter()) return;
 	}
 
 
-
-	void Region::set_line_style( LineStyle linestyle ) {
+	void Region::set_line_style( const ls_ele &val ) {
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if ( pc == 0 ) return;
-	    switch ( linestyle ) {
+	    if ( val.second >= 0 ) pc->setLineWidth(val.second);
+	    switch ( val.first ) {
 		case DashLine:
 		    pc->setLineStyle( Display::LSDashed );
 		    current_ls = DashLine;
@@ -1019,7 +1031,7 @@ if (!markCenter()) return;
 
 	    linear_to_world( wc_, base, base, base+lx, base+ly, blcx, blcy, trcx, trcy );
 	    MDirection::Types cccs = get_coordinate_type( wc_->coordinateSystem( ) );
-	    Region::Coord crcs = casa_to_viewer(cccs);
+// 	    Region::Coord crcs = casa_to_viewer(cccs);
 	    if ( coordsys == cccs && units == "rad" ) {
 		wx = fabs(trcx-blcx);
 		wy = fabs(trcy-blcy);

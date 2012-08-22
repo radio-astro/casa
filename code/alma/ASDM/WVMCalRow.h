@@ -82,6 +82,8 @@
 
 	
 
+	
+
 
 
 #include <ConversionException.h>
@@ -92,7 +94,7 @@
 //#include <TableStreamReader.h>
 
 /*\file WVMCal.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -105,6 +107,9 @@ class SpectralWindowRow;
 
 // class asdm::AntennaRow;
 class AntennaRow;
+
+// class asdm::AntennaRow;
+class AntennaRow;
 	
 
 class WVMCalRow;
@@ -114,7 +119,7 @@ typedef void (WVMCalRow::*WVMCalAttributeFromText) (const string& s);
 /**
  * The WVMCalRow class is a row of a WVMCalTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class WVMCalRow {
@@ -234,6 +239,36 @@ public:
 
 
 	
+	// ===> Attribute numInputAntenna
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numInputAntenna.
+ 	 * @return numInputAntenna as int
+ 	 */
+ 	int getNumInputAntenna() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numInputAntenna with the specified int.
+ 	 * @param numInputAntenna The int value to which numInputAntenna is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumInputAntenna (int numInputAntenna);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute numChan
 	
 	
@@ -302,21 +337,21 @@ public:
 	
  	/**
  	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<vector<float > >
+ 	 * @return pathCoeff as vector<vector<vector<float > > >
  	 */
- 	vector<vector<float > > getPathCoeff() const;
+ 	vector<vector<vector<float > > > getPathCoeff() const;
 	
  
  	
  	
  	/**
- 	 * Set pathCoeff with the specified vector<vector<float > >.
- 	 * @param pathCoeff The vector<vector<float > > value to which pathCoeff is to be set.
+ 	 * Set pathCoeff with the specified vector<vector<vector<float > > >.
+ 	 * @param pathCoeff The vector<vector<vector<float > > > value to which pathCoeff is to be set.
  	 
  		
  			
  	 */
- 	void setPathCoeff (vector<vector<float > > pathCoeff);
+ 	void setPathCoeff (vector<vector<vector<float > > > pathCoeff);
   		
 	
 	
@@ -332,21 +367,21 @@ public:
 	
  	/**
  	 * Get refTemp.
- 	 * @return refTemp as vector<Temperature >
+ 	 * @return refTemp as vector<vector<Temperature > >
  	 */
- 	vector<Temperature > getRefTemp() const;
+ 	vector<vector<Temperature > > getRefTemp() const;
 	
  
  	
  	
  	/**
- 	 * Set refTemp with the specified vector<Temperature >.
- 	 * @param refTemp The vector<Temperature > value to which refTemp is to be set.
+ 	 * Set refTemp with the specified vector<vector<Temperature > >.
+ 	 * @param refTemp The vector<vector<Temperature > > value to which refTemp is to be set.
  	 
  		
  			
  	 */
- 	void setRefTemp (vector<Temperature > refTemp);
+ 	void setRefTemp (vector<vector<Temperature > > refTemp);
   		
 	
 	
@@ -383,6 +418,36 @@ public:
  	 		
  	 */
  	void setAntennaId (Tag antennaId);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute inputAntennaId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get inputAntennaId.
+ 	 * @return inputAntennaId as vector<Tag> 
+ 	 */
+ 	vector<Tag>  getInputAntennaId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set inputAntennaId with the specified vector<Tag> .
+ 	 * @param inputAntennaId The vector<Tag>  value to which inputAntennaId is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setInputAntennaId (vector<Tag>  inputAntennaId);
   		
 	
 	
@@ -456,6 +521,59 @@ public:
 	
 
 	
+ 		
+ 	/**
+ 	 * Set inputAntennaId[i] with the specified Tag.
+ 	 * @param i The index in inputAntennaId where to set the Tag value.
+ 	 * @param inputAntennaId The Tag value to which inputAntennaId[i] is to be set. 
+	 		
+ 	 * @throws IndexOutOfBoundsException
+  	 */
+  	void setInputAntennaId (int i, Tag inputAntennaId); 
+ 			
+	
+
+	
+		 
+/**
+ * Append a Tag to inputAntennaId.
+ * @param id the Tag to be appended to inputAntennaId
+ */
+ void addInputAntennaId(Tag id); 
+
+/**
+ * Append a vector of Tag to inputAntennaId.
+ * @param id an array of Tag to be appended to inputAntennaId
+ */
+ void addInputAntennaId(const vector<Tag> & id); 
+ 
+
+ /**
+  * Returns the Tag stored in inputAntennaId at position i.
+  * @param i the position in inputAntennaId where the Tag is retrieved.
+  * @return the Tag stored at position i in inputAntennaId.
+  */
+ const Tag getInputAntennaId(int i);
+ 
+ /**
+  * Returns the AntennaRow linked to this row via the tag stored in inputAntennaId
+  * at position i.
+  * @param i the position in inputAntennaId.
+  * @return a pointer on a AntennaRow whose key (a Tag) is equal to the Tag stored at position
+  * i in the inputAntennaId. 
+  */
+ AntennaRow* getAntennaUsingInputAntennaId(int i); 
+ 
+ /**
+  * Returns the vector of AntennaRow* linked to this row via the Tags stored in inputAntennaId
+  * @return an array of pointers on AntennaRow.
+  */
+ vector<AntennaRow *> getAntennasUsingInputAntennaId(); 
+  
+
+	
+
+	
 	
 	
 	/**
@@ -472,6 +590,8 @@ public:
 	    
 	 * @param polyFreqLimits
 	    
+	 * @param numInputAntenna
+	    
 	 * @param numChan
 	    
 	 * @param numPoly
@@ -480,8 +600,10 @@ public:
 	    
 	 * @param refTemp
 	    
+	 * @param inputAntennaId
+	    
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numInputAntenna, int numChan, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<vector<Temperature > > refTemp, vector<Tag>  inputAntennaId);
 	
 	
 
@@ -494,6 +616,8 @@ public:
 	    
 	 * @param polyFreqLimits
 	    
+	 * @param numInputAntenna
+	    
 	 * @param numChan
 	    
 	 * @param numPoly
@@ -502,8 +626,10 @@ public:
 	    
 	 * @param refTemp
 	    
+	 * @param inputAntennaId
+	    
 	 */ 
-	bool compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<float > > pathCoeff, vector<Temperature > refTemp); 
+	bool compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numInputAntenna, int numChan, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<vector<Temperature > > refTemp, vector<Tag>  inputAntennaId); 
 		 
 	
 	/**
@@ -522,6 +648,15 @@ public:
 	 * @return The values of this row as a WVMCalRowIDL struct.
 	 */
 	asdmIDL::WVMCalRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a WVMCalRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the WVMCalRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::WVMCalRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -558,10 +693,12 @@ void spectralWindowIdFromBin( EndianIStream& eis);
 void timeIntervalFromBin( EndianIStream& eis);
 void wvrMethodFromBin( EndianIStream& eis);
 void polyFreqLimitsFromBin( EndianIStream& eis);
+void numInputAntennaFromBin( EndianIStream& eis);
 void numChanFromBin( EndianIStream& eis);
 void numPolyFromBin( EndianIStream& eis);
 void pathCoeffFromBin( EndianIStream& eis);
 void refTempFromBin( EndianIStream& eis);
+void inputAntennaIdFromBin( EndianIStream& eis);
 
 	
 
@@ -664,6 +801,17 @@ private:
  	
 
 	
+	// ===> Attribute numInputAntenna
+	
+	
+
+	int numInputAntenna;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute numChan
 	
 	
@@ -690,7 +838,7 @@ private:
 	
 	
 
-	vector<vector<float > > pathCoeff;
+	vector<vector<vector<float > > > pathCoeff;
 
 	
 	
@@ -701,7 +849,7 @@ private:
 	
 	
 
-	vector<Temperature > refTemp;
+	vector<vector<Temperature > > refTemp;
 
 	
 	
@@ -717,6 +865,17 @@ private:
 	
 
 	Tag antennaId;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute inputAntennaId
+	
+	
+
+	vector<Tag>  inputAntennaId;
 
 	
 	
@@ -752,6 +911,12 @@ private:
 	
 
 	
+		
+
+
+	
+
+	
 /*
 	////////////////////////////////////////////////////////////
 	// binary-deserialization material from an EndianIStream  //
@@ -762,10 +927,12 @@ void spectralWindowIdFromBin( EndianIStream& eis);
 void timeIntervalFromBin( EndianIStream& eis);
 void wvrMethodFromBin( EndianIStream& eis);
 void polyFreqLimitsFromBin( EndianIStream& eis);
+void numInputAntennaFromBin( EndianIStream& eis);
 void numChanFromBin( EndianIStream& eis);
 void numPolyFromBin( EndianIStream& eis);
 void pathCoeffFromBin( EndianIStream& eis);
 void refTempFromBin( EndianIStream& eis);
+void inputAntennaIdFromBin( EndianIStream& eis);
 
 	
 */
@@ -790,6 +957,9 @@ void wvrMethodFromText (const string & s);
 void polyFreqLimitsFromText (const string & s);
 	
 	
+void numInputAntennaFromText (const string & s);
+	
+	
 void numChanFromText (const string & s);
 	
 	
@@ -800,6 +970,9 @@ void pathCoeffFromText (const string & s);
 	
 	
 void refTempFromText (const string & s);
+	
+	
+void inputAntennaIdFromText (const string & s);
 	
 
 		

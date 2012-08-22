@@ -96,6 +96,19 @@ const String PlotMSDBusApp::PARAM_YAUTORANGE = "yautorange";
 const String PlotMSDBusApp::PARAM_YMIN = "ymin";
 const String PlotMSDBusApp::PARAM_YMAX = "ymax";
 
+const String PlotMSDBusApp::PARAM_SYMBOL = "symbol";
+const String PlotMSDBusApp::PARAM_SYMBOLSHAPE = "symbolshape";
+const String PlotMSDBusApp::PARAM_SYMBOLSIZE = "symbolsize";
+const String PlotMSDBusApp::PARAM_SYMBOLCOLOR = "symbolcolor";
+const String PlotMSDBusApp::PARAM_SYMBOLFILL = "symbolfill";
+const String PlotMSDBusApp::PARAM_SYMBOLOUTLINE = "symboloutline";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOL = "flaggedsymbol";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOLSHAPE = "flaggedsymbolshape";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOLSIZE = "flaggedsymbolsize";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOLCOLOR = "flaggedsymbolcolor";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOLFILL = "flaggedsymbolfill";
+const String PlotMSDBusApp::PARAM_FLAGGEDSYMBOLOUTLINE = "flaggedsymboloutline";
+
 
 const String PlotMSDBusApp::METHOD_GETLOGPARAMS = "getLogParams";
 const String PlotMSDBusApp::METHOD_SETLOGPARAMS = "setLogParams";
@@ -534,8 +547,95 @@ void PlotMSDBusApp::dbusRunXmlMethod(
               ppaxes->setYRange(!wantauto, minmax);
         }
 
+        if(parameters.isDefined(PARAM_SYMBOL) &&
+           parameters.dataType(PARAM_SYMBOL) == TpBool &&
+           parameters.asBool(PARAM_SYMBOL)) {
+            String shape = parameters.asString(PARAM_SYMBOLSHAPE);
+            Int size = parameters.asInt(PARAM_SYMBOLSIZE);
+            String color = parameters.asString(PARAM_SYMBOLCOLOR);
+            String fill = parameters.asString(PARAM_SYMBOLFILL);
+            bool outline = parameters.asBool(PARAM_SYMBOLOUTLINE);
+            PlotFactoryPtr pf = itsPlotms_.getPlotter()->getFactory();
+            PlotSymbolPtr ps = pf->symbol(PlotSymbol::NOSYMBOL);
+            // Point shape
+            if(shape == "pixel") {
+                ps->setSymbol(PlotSymbol::PIXEL);
+            } else if(shape == "autoscaling") {
+                ps->setSymbol(PlotSymbol::AUTOSCALING);
+            } else if(shape == "circle") {
+                ps->setSymbol(PlotSymbol::CIRCLE);
+            } else if(shape == "square") {
+                ps->setSymbol(PlotSymbol::SQUARE);
+            } else if(shape == "diamond") {
+                ps->setSymbol(PlotSymbol::DIAMOND);
+            }
+            // Point size
+            ps->setSize(size, size);
+            // Point color
+            ps->setColor(color);
+            // Point fill pattern
+            PlotAreaFillPtr paf = pf->areaFill(color, PlotAreaFill::NOFILL);
+            if(fill == "fill") {
+                paf->setPattern(PlotAreaFill::FILL);
+            } else if(fill == "mesh1") {
+                paf->setPattern(PlotAreaFill::MESH1);
+            } else if(fill == "mesh2") {
+                paf->setPattern(PlotAreaFill::MESH2);
+            } else if(fill == "mesh3") {
+                paf->setPattern(PlotAreaFill::MESH3);
+            }
+            ps->setAreaFill(paf);
+            // Point outline
+            if(outline) {
+                ps->setLine("black");
+            }
+            ppdisp->setUnflaggedSymbol(ps);
+        }
 
-        
+        if(parameters.isDefined(PARAM_FLAGGEDSYMBOL) &&
+           parameters.dataType(PARAM_FLAGGEDSYMBOL) == TpBool &&
+           parameters.asBool(PARAM_FLAGGEDSYMBOL)) {
+            String shape = parameters.asString(PARAM_FLAGGEDSYMBOLSHAPE);
+            Int size = parameters.asInt(PARAM_FLAGGEDSYMBOLSIZE);
+            String color = parameters.asString(PARAM_FLAGGEDSYMBOLCOLOR);
+            String fill = parameters.asString(PARAM_FLAGGEDSYMBOLFILL);
+            bool outline = parameters.asBool(PARAM_FLAGGEDSYMBOLOUTLINE);
+            PlotFactoryPtr pf = itsPlotms_.getPlotter()->getFactory();
+            PlotSymbolPtr ps = pf->symbol(PlotSymbol::NOSYMBOL);
+            // Point shape
+            if(shape == "pixel") {
+                ps->setSymbol(PlotSymbol::PIXEL);
+            } else if(shape == "autoscaling") {
+                ps->setSymbol(PlotSymbol::AUTOSCALING);
+            } else if(shape == "circle") {
+                ps->setSymbol(PlotSymbol::CIRCLE);
+            } else if(shape == "square") {
+                ps->setSymbol(PlotSymbol::SQUARE);
+            } else if(shape == "diamond") {
+                ps->setSymbol(PlotSymbol::DIAMOND);
+            }
+            // Point size
+            ps->setSize(size, size);
+            // Point color
+            ps->setColor(color);
+            // Point fill pattern
+            PlotAreaFillPtr paf = pf->areaFill(color, PlotAreaFill::NOFILL);
+            if(fill == "fill") {
+                paf->setPattern(PlotAreaFill::FILL);
+            } else if(fill == "mesh1") {
+                paf->setPattern(PlotAreaFill::MESH1);
+            } else if(fill == "mesh2") {
+                paf->setPattern(PlotAreaFill::MESH2);
+            } else if(fill == "mesh3") {
+                paf->setPattern(PlotAreaFill::MESH3);
+            }
+            ps->setAreaFill(paf);
+            // Point outline
+            if(outline) {
+                ps->setLine("black");
+            }
+            ppdisp->setFlaggedSymbol(ps);
+        }
         
         if(parameters.isDefined(PARAM_COLORIZE) &&
            parameters.dataType(PARAM_COLORIZE) == TpBool)   {

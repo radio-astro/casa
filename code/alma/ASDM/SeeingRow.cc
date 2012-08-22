@@ -173,6 +173,92 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SeeingRow::toIDL(asdmIDL::SeeingRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numBaseLength = numBaseLength;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baseLength.length(baseLength.size());
+		for (unsigned int i = 0; i < baseLength.size(); ++i) {
+			
+			x.baseLength[i] = baseLength.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseRms.length(phaseRms.size());
+		for (unsigned int i = 0; i < phaseRms.size(); ++i) {
+			
+			x.phaseRms[i] = phaseRms.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.seeing = seeing;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.exponent = exponent;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

@@ -115,7 +115,7 @@ class TotalPowerRow;
  * Total power data monitoring.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of TotalPower </CAPTION>
@@ -348,6 +348,16 @@ public:
 	 * @return a pointer to a TotalPowerTableIDL
 	 */
 	asdmIDL::TotalPowerTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::TotalPowerTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::TotalPowerTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

@@ -36,6 +36,7 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <casa/aips.h>
 
 //#include <casa/BasicSL/Constants.h>
@@ -60,7 +61,8 @@ public:
 		  Int nPar,
 		  const String& timetype,
 		  const String& freqtype,
-		  Int nMSSpw,
+		  const String& fieldtype,
+		  const ROMSColumns& mscol,
 		  Vector<Int> spwmap=Vector<Int>());
 
   // Destructor
@@ -72,14 +74,13 @@ public:
   Bool interpolate(Int fld, Int spw, Double time, const Vector<Double>& freq);
 
   // Access to the result
-  //  Currently, we only have one field, internally, so that is what is returned
-  Array<Float>& resultF(Int fld, Int spw) { fld=0; return result_(spw,fld); };
-  Array<Complex> resultC(Int fld, Int spw) { fld=0; return RIorAPArray(result_(spw,fld)).c(); };
-  Array<Bool>& rflag(Int fld, Int spw) { fld=0; return resFlag_(spw,fld); };
+  Array<Float>& resultF(Int fld, Int spw) { return result_(spw,fld); };
+  Array<Complex> resultC(Int fld, Int spw) { return RIorAPArray(result_(spw,fld)).c(); };
+  Array<Bool>& rflag(Int fld, Int spw) { return resFlag_(spw,fld); };
 
   // Temporary public function for testing
-  Array<Float>& tresultF(Int fld, Int spw) { fld=0; return timeResult_(spw,fld); };
-  Array<Bool>& tresultFlag(Int fld, Int spw) { fld=0; return timeResFlag_(spw,fld); };
+  Array<Float>& tresultF(Int fld, Int spw) { return timeResult_(spw,fld); };
+  Array<Bool>& tresultFlag(Int fld, Int spw) { return timeResFlag_(spw,fld); };
 
 
   // spwOK info for users
@@ -99,13 +100,14 @@ private:
   
   // Setup methods
   void sliceTable();
-  void initialize();
+  void makeInterpolators();
 
   // Methods to set up 1:1 patch-panel maps
   //  Private for now as not yet ready to control from outside
   // Field
   // default: all 0 (no field-dep yet)
-  void setDefFldMap() {fldMap_.resize(nFldOut_); fldMap_.set(0);};
+  void setDefFldMap() {fldMap_.resize(nMSFld_); fldMap_.set(0);};
+  void setFldMap(const ROMSFieldColumns& fcol);  // via nearest on-sky
   //void setFldMap(Vector<Int>& field);        // via ordered index list
   //void setFldMap(Vector<String>& field);     // via name matching
   //void setFldMap(uInt to, uInt from);        // via single to/from 
@@ -119,7 +121,7 @@ private:
 
   // Antenna
   // default: indgen (index identity) 
-  void setDefAntMap() {antMap_.resize(nAntOut_); indgen(antMap_);};
+  void setDefAntMap() {antMap_.resize(nMSAnt_); indgen(antMap_);};
   //void setAntMap(Vector<Int>& ant);          // via ordered index list
   //void setAntMap(Vector<String>& ant);       // via name/station matching
   //void setAntMap(uInt to, uInt from);        // via single to/from
@@ -161,13 +163,20 @@ private:
   Vector<Int> nChanIn_;
   Vector<Vector<Double> > freqIn_;
 
+
   // Field, Spw, Ant _output_ (MS) sizes (eventually from MS)
   //   calibration required for up to this many
-  Int nFldOut_, nMSSpw_, nAntOut_, nElemOut_;
+  Int nMSFld_, nMSSpw_, nMSAnt_, nMSElem_;
+
+  // Are we slicing caltable by field?
+  Bool byField_;
+
+  // Alternate field indices
+  Vector<Int> altFld_;
 
   // Field, Spw, Ant _input_ (CalTable) sizes
   //  patch panels should not violate these (point to larger indices)
-  Int nFldIn_, nCTSpw_, nAntIn_, nElemIn_;
+  Int nCTFld_, nCTSpw_, nCTAnt_, nCTElem_;
 
   // OK flag
   Vector<Bool> spwInOK_;
@@ -180,25 +189,26 @@ private:
   Vector<Bool> conjTab_;
 
   // Current state of interpolation
-  Matrix<Double> currTime_;   // [nSpwOut,nFldOut_=1]
+  Matrix<Double> currTime_;   // [nSpwOut,nMSFld_=1]
   // Vector<Int> currField_;  // [nMSSpw_]  ---> Is this ever needed?
 
   // Internal result Arrays
-  Matrix<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
 
   // Current interpolation result Arrays
   //  These will reference time or freq result, depending on context,
   //  and may be referenced by external code
-  Matrix<Cube<Float> > result_;        // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  resFlag_;    // [nMSSpw_,nFldOut_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Float> > result_;        // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
+  Matrix<Cube<Bool> >  resFlag_;    // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
 
   // The CalTable slices
-  Matrix<NewCalTable> ctSlices_;  // [nAntIn,nSpwIn]
+  Cube<NewCalTable> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_]
 
   // The pre-patched Time interpolation engines
   //   These are populated by the available caltables slices
-  Cube<CTTimeInterp1*> tI_;  // [nAntIn_,nCTSpw_,nFldIn_=1]
+  Cube<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_]
+  Cube<Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_]
 
 };
 

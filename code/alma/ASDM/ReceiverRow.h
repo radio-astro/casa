@@ -94,7 +94,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Receiver.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -113,7 +113,7 @@ typedef void (ReceiverRow::*ReceiverAttributeFromText) (const string& s);
 /**
  * The ReceiverRow class is a row of a ReceiverTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class ReceiverRow {
@@ -492,6 +492,15 @@ public:
 	 * @return The values of this row as a ReceiverRowIDL struct.
 	 */
 	asdmIDL::ReceiverRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a ReceiverRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the ReceiverRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::ReceiverRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

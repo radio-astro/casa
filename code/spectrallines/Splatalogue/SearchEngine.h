@@ -107,7 +107,6 @@ private:
 	const SplatalogueTable *_table;
 	String _logfile;
 	const Bool _list, _append;
-
 	SearchEngine();
 
 	String _getBetweenClause(

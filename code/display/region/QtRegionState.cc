@@ -57,9 +57,43 @@ namespace casa {
 	    }
 	}
 
-	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QWidget *parent ) :
+	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
 					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
 	    setupUi(this);
+#if defined(__APPLE__)
+	    QFont font( "Lucida Grande", 11 );
+	    QFont fontp( "Lucida Grande", 11 );
+#else
+	    QFont font( "Sans Serif", 9 );
+	    QFont fontp( "Sans Serif", 8 );
+#endif
+	    region_type->setFont(font);
+	    label->setFont(font);
+	    frame_min->setFont(font);
+	    frame_max->setFont(font);
+	    region_mark->setFont(fontp);
+	    region_annotation->setFont(fontp);
+
+	    int current_color_index = region_->colorIndex( );
+	    line_color->setCurrentIndex(current_color_index);
+	    text_color->setCurrentIndex(current_color_index);
+
+	    if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
+		marker_group->hide( );
+	    else {
+		int current_item = -1;
+		for ( int i=0; i < QtMouseToolNames::SYM_POINT_REGION_COUNT; ++i ) {
+		    marker->addItem(QIcon(QString::fromStdString(QtMouseToolNames::pointRegionSymbolIcon((QtMouseToolNames::PointRegionSymbols)i))),
+				    QString(),QVariant(i));
+		  if ( (int) sym == i ) current_item = i;
+		}
+		if ( current_item < 0 ) {
+		    marker->setDisabled(true);
+		} else {
+		    marker->setCurrentIndex(current_item);
+		}
+	    }
+
 
 	    // use common tab state from dock...
 	    std::pair<int,int> &tab_state = region_->tabState( );
@@ -122,11 +156,11 @@ namespace casa {
 	    connect( center_y, SIGNAL(editingFinished( )), SLOT(translate_y( )) );
 
 	    // update line characteristics...
-	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
 	    connect( line_style, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
 	    connect( line_width, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 	    connect( text_position, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	    connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
 	    connect( font_name, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
 	    connect( font_size, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 	    connect( x_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
@@ -134,6 +168,7 @@ namespace casa {
 	    connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change(int)) );
+	    connect( marker_scale, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 
 	    connect( save_file_name_browse, SIGNAL(clicked(bool)), SLOT(save_browser(bool)) );
 	    connect( load_file_name_browse, SIGNAL(clicked(bool)), SLOT(load_browser(bool)) );
@@ -166,6 +201,9 @@ namespace casa {
 
 	    last_line_color = line_color->currentText( );
 	    connect( line_color, SIGNAL(currentIndexChanged(const QString&)), SLOT(line_color_change(const QString&)) );
+
+	    connect( marker, SIGNAL(currentIndexChanged(int)), SLOT(set_point_region_marker(int)) );
+
 	}
 
 	QtRegionState::~QtRegionState( ) { }
@@ -315,6 +353,12 @@ namespace casa {
 	    if ( ls == "dashed" ) return Region::DashLine;
 	    else if ( ls == "dotted" ) return Region::DotLine;
 	    else return Region::SolidLine;
+	}
+
+	void QtRegionState::setMarkerScale( int v ) {
+	    if ( v <= 0 ) marker_scale->setValue(0);
+	    else if ( v >= 9 ) marker_scale->setValue(9);
+	    else marker_scale->setValue(v);
 	}
 
 	std::string QtRegionState::textColor( ) const {
@@ -483,6 +527,10 @@ namespace casa {
 	}
 
 	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
+	void QtRegionState::color_state_change( int index ) {
+	    emit refreshCanvas( );
+	    region_->colorIndex( ) = index;
+	}
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( const QString & ) { emit refreshCanvas( ); }
 
@@ -864,6 +912,18 @@ namespace casa {
 	    delete dlg;
 
 	}
+
+	void QtRegionState::set_point_region_marker( int index ) {
+	    QVariant qv = marker->itemData(index);
+	    if ( qv.type( ) != QVariant::Int ) return;
+	    bool ok;
+	    int sym = qv.toInt(&ok);
+	    if ( ok == false ) return;
+	    if ( sym < 0 || sym > QtMouseToolNames::SYM_POINT_REGION_COUNT ) return;
+	    if ( region_->setMarker( (QtMouseToolNames::PointRegionSymbols) sym ) )
+		emit refreshCanvas( );
+	}
+
 
     }
 }

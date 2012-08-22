@@ -441,10 +441,20 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		x->row.length(nrow);
 		vector<SquareLawDetectorRow*> v = get();
 		for (unsigned int i = 0; i < nrow; ++i) {
-			x->row[i] = *(v[i]->toIDL());
+			//x->row[i] = *(v[i]->toIDL());
+			v[i]->toIDL(x->row[i]);
 		}
 		return x;
 	}
+	
+	void SquareLawDetectorTable::toIDL(asdmIDL::SquareLawDetectorTableIDL& x) const {
+		unsigned int nrow = size();
+		x.row.length(nrow);
+		vector<SquareLawDetectorRow*> v = get();
+		for (unsigned int i = 0; i < nrow; ++i) {
+			v[i]->toIDL(x.row[i]);
+		}
+	}	
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -456,7 +466,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 			// checkAndAdd(tmp);
 			add(tmp);
 		}
-	}
+	}	
 #endif
 
 	
@@ -464,7 +474,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/3/SquareLawDetectorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n");
+		buf.append("<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/3/SquareLawDetectorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -586,7 +596,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/3/SquareLawDetectorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\">\n";
+		oss << "<SquareLawDetectorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:sqrlwd=\"http://Alma/XASDM/SquareLawDetectorTable\" xsi:schemaLocation=\"http://Alma/XASDM/SquareLawDetectorTable http://almaobservatory.org/XML/XASDM/3/SquareLawDetectorTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='SquareLawDetectorTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

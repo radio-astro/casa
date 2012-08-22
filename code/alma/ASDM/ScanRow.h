@@ -106,7 +106,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -125,7 +125,7 @@ typedef void (ScanRow::*ScanAttributeFromText) (const string& s);
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class ScanRow {
@@ -764,6 +764,15 @@ public:
 	 * @return The values of this row as a ScanRowIDL struct.
 	 */
 	asdmIDL::ScanRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a ScanRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the ScanRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::ScanRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

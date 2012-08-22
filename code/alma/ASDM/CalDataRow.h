@@ -108,7 +108,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalData.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -124,7 +124,7 @@ typedef void (CalDataRow::*CalDataAttributeFromText) (const string& s);
 /**
  * The CalDataRow class is a row of a CalDataTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalDataRow {
@@ -700,6 +700,15 @@ public:
 	 * @return The values of this row as a CalDataRowIDL struct.
 	 */
 	asdmIDL::CalDataRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalDataRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalDataRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalDataRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

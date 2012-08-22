@@ -353,6 +353,260 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalFocusModelRow::toIDL(asdmIDL::CalFocusModelRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.polarizationType = polarizationType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.antennaMake = antennaMake;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCoeff = numCoeff;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numSourceObs = numSourceObs;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffName.length(coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); ++i) {
+			
+				
+			x.coeffName[i] = CORBA::string_dup(coeffName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffFormula.length(coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); ++i) {
+			
+				
+			x.coeffFormula[i] = CORBA::string_dup(coeffFormula.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffValue.length(coeffValue.size());
+		for (unsigned int i = 0; i < coeffValue.size(); ++i) {
+			
+				
+			x.coeffValue[i] = coeffValue.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffError.length(coeffError.size());
+		for (unsigned int i = 0; i < coeffError.size(); ++i) {
+			
+				
+			x.coeffError[i] = coeffError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffFixed.length(coeffFixed.size());
+		for (unsigned int i = 0; i < coeffFixed.size(); ++i) {
+			
+				
+			x.coeffFixed[i] = coeffFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.focusModel = CORBA::string_dup(focusModel.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.focusRMS.length(focusRMS.size());
+		for (unsigned int i = 0; i < focusRMS.size(); ++i) {
+			
+			x.focusRMS[i] = focusRMS.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.reducedChiSquared = reducedChiSquared;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

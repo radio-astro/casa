@@ -28,12 +28,14 @@
 
 #include <QString>
 #include <qwt_plot_marker.h>
+#include <casa/aips.h>
 
 namespace casa {
 
 class MolecularLine : public QwtPlotMarker {
 public:
 	MolecularLine();
+	MolecularLine( float center, float peak, QString name );
 	virtual int rtti() const;
 	void setCenter( float center );
 	float getCenter( ) const;
@@ -43,6 +45,10 @@ public:
 	QString getLabel() const;
 	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
 		const QwtScaleMap & yMap, const QRect & canvasRect) const;
+	void draw (QPainter * painter, int centerPixel,
+		int peakPixel, int zeroPixel, int width, int height ) const;
+	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
+	bool equalTo( const MolecularLine* const other ) const;
 	virtual ~MolecularLine();
 
 private:
@@ -50,6 +56,8 @@ private:
 	float peak;
 	QString label;
 	QColor lineColor;
+
+	void init();
 };
 
 } /* namespace casa */

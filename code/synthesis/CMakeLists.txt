@@ -66,7 +66,6 @@ casa_add_library( synthesis
   MSVis/GroupProcessor.cc
   MSVis/GroupWorker.cc
   MSVis/MSAnalysis.cc
-  MSVis/MsAverager.cc
   MSVis/MSCalEnums.cc
   MSVis/MSContinuumSubtractor.cc
   MSVis/MSUVWGenerator.cc
@@ -85,6 +84,7 @@ casa_add_library( synthesis
   MSVis/VisBuffAccumulator.cc
   MSVis/VisBuffer.cc
   MSVis/VisBuffer2.cc
+  MSVis/VisBufferComponents2.cc
   MSVis/VisBufferImpl2.cc
   MSVis/VisBufferAsync.cc
 #####  MSVis/VisBufferAsync2.cc
@@ -212,6 +212,7 @@ casa_add_library( synthesis
  MeasurementComponents/CleanImageSkyModel.cc
  MeasurementComponents/ConvFuncDiskCache.cc
  MeasurementComponents/CSCleanImageSkyModel.cc
+ MeasurementComponents/DJones.cc
  MeasurementComponents/EVLAConvFunc.cc
  MeasurementComponents/EVLAAperture.cc
  MeasurementComponents/EJones.cc
@@ -435,6 +436,7 @@ install (FILES
 	MSVis/VisBufferAsync.h
 	MSVis/VisBufferAsyncWrapper.h
 	MSVis/VisBufferComponents.h
+	MSVis/VisBufferComponents2.h
 	MSVis/VisBufferUtil.h
 	MSVis/VisChunkAverager.h
 	MSVis/VisImagingWeight.h

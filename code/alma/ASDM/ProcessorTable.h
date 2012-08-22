@@ -91,7 +91,7 @@ class ProcessorRow;
  * Processor characteristics. This table holds summary information for the  back-end processing devices used to generate the basic science  data.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Processor </CAPTION>
@@ -233,6 +233,16 @@ public:
 	 * @return a pointer to a ProcessorTableIDL
 	 */
 	asdmIDL::ProcessorTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::ProcessorTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::ProcessorTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

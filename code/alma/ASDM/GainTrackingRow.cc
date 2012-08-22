@@ -278,6 +278,179 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void GainTrackingRow::toIDL(asdmIDL::GainTrackingRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.attenuator.length(attenuator.size());
+		for (unsigned int i = 0; i < attenuator.size(); ++i) {
+			
+				
+			x.attenuator[i] = attenuator.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationType.length(polarizationType.size());
+		for (unsigned int i = 0; i < polarizationType.size(); ++i) {
+			
+				
+			x.polarizationType[i] = polarizationType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.samplingLevelExists = samplingLevelExists;
+		
+		
+			
+				
+		x.samplingLevel = samplingLevel;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numAttFreqExists = numAttFreqExists;
+		
+		
+			
+				
+		x.numAttFreq = numAttFreq;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.attFreqExists = attFreqExists;
+		
+		
+			
+		x.attFreq.length(attFreq.size());
+		for (unsigned int i = 0; i < attFreq.size(); ++i) {
+			
+				
+			x.attFreq[i] = attFreq.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.attSpectrumExists = attSpectrumExists;
+		
+		
+			
+		x.attSpectrum.length(attSpectrum.size());
+		for (unsigned int i = 0; i < attSpectrum.size(); ++i) {
+			
+			x.attSpectrum[i] = attSpectrum.at(i).toIDLComplex();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.feedId = feedId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

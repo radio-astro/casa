@@ -252,6 +252,159 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void PointingModelRow::toIDL(asdmIDL::PointingModelRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.pointingModelId = pointingModelId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCoeff = numCoeff;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffName.length(coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); ++i) {
+			
+				
+			x.coeffName[i] = CORBA::string_dup(coeffName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.coeffVal.length(coeffVal.size());
+		for (unsigned int i = 0; i < coeffVal.size(); ++i) {
+			
+				
+			x.coeffVal[i] = coeffVal.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.polarizationType = polarizationType;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.assocNature = CORBA::string_dup(assocNature.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.coeffFormulaExists = coeffFormulaExists;
+		
+		
+			
+		x.coeffFormula.length(coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); ++i) {
+			
+				
+			x.coeffFormula[i] = CORBA::string_dup(coeffFormula.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.assocPointingModelId = assocPointingModelId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

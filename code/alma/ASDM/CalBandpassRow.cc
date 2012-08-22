@@ -394,6 +394,301 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalBandpassRow::toIDL(asdmIDL::CalBandpassRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.basebandName = basebandName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.sideband = sideband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.typeCurve = typeCurve;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.antennaNames.length(antennaNames.size());
+		for (unsigned int i = 0; i < antennaNames.size(); ++i) {
+			
+				
+			x.antennaNames[i] = CORBA::string_dup(antennaNames.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.refAntennaName = CORBA::string_dup(refAntennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.freqLimits.length(freqLimits.size());
+		for (unsigned int i = 0; i < freqLimits.size(); ++i) {
+			
+			x.freqLimits[i] = freqLimits.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x.polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.curve.length(curve.size());
+		for (unsigned int i = 0; i < curve.size(); i++) {
+			x.curve[i].length(curve.at(i).size());
+			for (unsigned int j = 0; j < curve.at(i).size(); j++) {
+				x.curve[i][j].length(curve.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < curve.size() ; i++)
+			for (unsigned int j = 0; j < curve.at(i).size(); j++)
+				for (unsigned int k = 0; k < curve.at(i).at(j).size(); k++)
+					
+						
+					x.curve[i][j][k] = curve.at(i).at(j).at(k);
+		 				
+			 									
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); ++i) {
+			
+				
+			x.reducedChiSquared[i] = reducedChiSquared.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numBaselineExists = numBaselineExists;
+		
+		
+			
+				
+		x.numBaseline = numBaseline;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.rmsExists = rmsExists;
+		
+		
+			
+		x.rms.length(rms.size());
+		for (unsigned int i = 0; i < rms.size(); i++) {
+			x.rms[i].length(rms.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < rms.size() ; i++)
+			for (unsigned int j = 0; j < rms.at(i).size(); j++)
+					
+						
+				x.rms[i][j] = rms.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

@@ -906,6 +906,43 @@ void PlotMSIndexer::setCollapser(CollapseMethPtr& collmethod,PMS::Axis axis) {
 }
   */
 
+Record PlotMSIndexer::getPointMetaData(Int i) {
+    Double thisx, thisy;
+    xAndYAt(i, thisx, thisy);
+    // Collect meta data
+    Int ichan = getIndex0100(currChunk_, irel_);
+    Int chan = Int(plotmscache_->getChan(currChunk_,ichan));
+    Int scan = Int(plotmscache_->getScan(currChunk_,0));
+    Int field = Int(plotmscache_->getField(currChunk_,0));
+    Int ant1 = Int(plotmscache_->getAnt1(currChunk_,
+                                         getIndex0010(currChunk_,irel_)));
+    Int ant2 = Int(plotmscache_->getAnt2(currChunk_,
+                                         getIndex0010(currChunk_,irel_)));
+    Double time = plotmscache_->getTime(currChunk_, 0);
+    Int spw = Int(plotmscache_->getSpw(currChunk_, 0));
+    Double freq = plotmscache_->getFreq(currChunk_, ichan);
+    String corr = Stokes::name(Stokes::type(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)))));
+    Int offset = (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_);
+    // Collate meta data
+    Record r;
+    r.define("chan", chan);
+    r.define("scan", scan);
+    r.define("field", field);
+    r.define("time", time);
+    r.define("ant1", ant1);
+    r.define("ant2", ant2);
+    r.define("time", time);
+    r.define("spw", spw);
+    r.define("freq", freq);
+    r.define("corr", corr);
+    r.define("x", thisx);
+    r.define("y", thisy);
+    r.define("offset", offset);
+    r.define("currchunk", currChunk_);
+    r.define("irel", irel_);
+    return r;
+}
+
 Record PlotMSIndexer::locateInfo(const Vector<PlotRegion>& regions,
                                  Bool showUnflagged, Bool showFlagged) {
     int nFound = 0, n = size();
@@ -915,62 +952,37 @@ Record PlotMSIndexer::locateInfo(const Vector<PlotRegion>& regions,
     result.define("xaxis", PMS::axis(currentX_));
     result.define("yaxis", PMS::axis(currentY_));
     for(Int i = 0; i < n; ++i) {
-        Double thisx, thisy;
         m = maskedAt(i);
+        // Skip point if it is not displayed
         if((!m && !showUnflagged) || (m && !showFlagged)) {
             continue;
         }
-        xAndYAt(i, thisx, thisy);
         for(uInt j = 0; j < regions.size(); ++j) {
+            Double thisx, thisy;
+            xAndYAt(i, thisx, thisy);
+            // If a point falls inside a bounding region...
             if(thisx > regions[j].left() && thisx < regions[j].right() &&
                thisy > regions[j].bottom() && thisy < regions[j].top()) {
-                // Collect meta data
-                Int ichan = getIndex0100(currChunk_, irel_);
-                Int chan = Int(plotmscache_->getChan(currChunk_,ichan));
-                Int scan = Int(plotmscache_->getScan(currChunk_,0));
-                Int field = Int(plotmscache_->getField(currChunk_,0));
-                Int ant1 = Int(plotmscache_->getAnt1(currChunk_,
-                                                     getIndex0010(currChunk_,irel_)));
-                Int ant2 = Int(plotmscache_->getAnt2(currChunk_,
-                                                     getIndex0010(currChunk_,irel_)));
-                //String time = MVTime(plotmscache_->getTime(currChunk_, 0)/C::day).string(MVTime::YMD,7);
-                Double time = plotmscache_->getTime(currChunk_, 0);
-                Int spw = Int(plotmscache_->getSpw(currChunk_, 0));
-                Double freq = plotmscache_->getFreq(currChunk_, ichan);
-                String corr = Stokes::name(Stokes::type(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)))));
-                Int offset = (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_);
-                // Collate meta data
-                Record r;
-                r.define("chan", chan);
-                r.define("scan", scan);
-                r.define("field", field);
-                r.define("time", time);
-                r.define("ant1", ant1);
-                r.define("ant2", ant2);
-                r.define("time", time);
-                r.define("spw", spw);
-                r.define("freq", freq);
-                r.define("corr", corr);
-                r.define("x", thisx);
-                r.define("y", thisy);
-                r.define("offset", offset);
-                r.define("currchunk", currChunk_);
-                r.define("irel", irel_);
                 // Stuff it in the result Record
                 ostringstream ss;
                 ss << nFound;
-                result.defineRecord(String(ss.str()), r);
-                // Increment point count(s)
+                result.defineRecord(String(ss.str()), getPointMetaData(i));
+                // Increment point counts
                 ++nFound;
                 if(m) { ++nFoundMasked; }
                 else  { ++nFoundUnmasked; }
                 break;
             }
         }
-        //if(nFound >= 1000) {
-        //    nFound = 1000;
-        //    break;
-        //}
+        // If there are no selections, grab all points that are displayed
+        if((regions.size() == 0) && ((m && showFlagged) || (!m && showUnflagged))) {
+            ostringstream ss;
+            ss << nFound;
+            result.defineRecord(String(ss.str()), getPointMetaData(i));
+            ++nFound;
+            if(m) { ++nFoundMasked; }
+            else  { ++nFoundUnmasked; }
+        }
     }
     return result;
 }

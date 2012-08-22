@@ -280,6 +280,175 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void MainRow::toIDL(asdmIDL::MainRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.timeSampling = timeSampling;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.interval = interval.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numIntegration = numIntegration;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.subscanNumber = subscanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.dataSize = dataSize;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.dataUID = dataUID.toIDLEntityRef();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.configDescriptionId = configDescriptionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.fieldId = fieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.stateId.length(stateId.size());
+		for (unsigned int i = 0; i < stateId.size(); ++i) {
+			
+			x.stateId[i] = stateId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

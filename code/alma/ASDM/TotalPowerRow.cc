@@ -372,6 +372,267 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void TotalPowerRow::toIDL(asdmIDL::TotalPowerRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.subscanNumber = subscanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.integrationNumber = integrationNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.uvw.length(uvw.size());
+		for (unsigned int i = 0; i < uvw.size(); i++) {
+			x.uvw[i].length(uvw.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < uvw.size() ; i++)
+			for (unsigned int j = 0; j < uvw.at(i).size(); j++)
+					
+				x.uvw[i][j]= uvw.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.exposure.length(exposure.size());
+		for (unsigned int i = 0; i < exposure.size(); i++) {
+			x.exposure[i].length(exposure.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < exposure.size() ; i++)
+			for (unsigned int j = 0; j < exposure.at(i).size(); j++)
+					
+				x.exposure[i][j]= exposure.at(i).at(j).toIDLInterval();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeCentroid.length(timeCentroid.size());
+		for (unsigned int i = 0; i < timeCentroid.size(); i++) {
+			x.timeCentroid[i].length(timeCentroid.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < timeCentroid.size() ; i++)
+			for (unsigned int j = 0; j < timeCentroid.at(i).size(); j++)
+					
+				x.timeCentroid[i][j]= timeCentroid.at(i).at(j).toIDLArrayTime();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.floatData.length(floatData.size());
+		for (unsigned int i = 0; i < floatData.size(); i++) {
+			x.floatData[i].length(floatData.at(i).size());
+			for (unsigned int j = 0; j < floatData.at(i).size(); j++) {
+				x.floatData[i][j].length(floatData.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < floatData.size() ; i++)
+			for (unsigned int j = 0; j < floatData.at(i).size(); j++)
+				for (unsigned int k = 0; k < floatData.at(i).at(j).size(); k++)
+					
+						
+					x.floatData[i][j][k] = floatData.at(i).at(j).at(k);
+		 				
+			 									
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.flagAnt.length(flagAnt.size());
+		for (unsigned int i = 0; i < flagAnt.size(); ++i) {
+			
+				
+			x.flagAnt[i] = flagAnt.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.flagPol.length(flagPol.size());
+		for (unsigned int i = 0; i < flagPol.size(); i++) {
+			x.flagPol[i].length(flagPol.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < flagPol.size() ; i++)
+			for (unsigned int j = 0; j < flagPol.at(i).size(); j++)
+					
+						
+				x.flagPol[i][j] = flagPol.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.interval = interval.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		x.subintegrationNumberExists = subintegrationNumberExists;
+		
+		
+			
+				
+		x.subintegrationNumber = subintegrationNumber;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.configDescriptionId = configDescriptionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.fieldId = fieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x.stateId.length(stateId.size());
+		for (unsigned int i = 0; i < stateId.size(); ++i) {
+			
+			x.stateId[i] = stateId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

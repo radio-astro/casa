@@ -121,7 +121,7 @@ class SysCalRow;
  * System calibration. Gives information on the conversion  of data to temperature scale. This table is reduced to follow  the contents of the Measurement Set SysCal table. Use only spectral  values (use a single channel spectral window for single numbers).   \texttt{numChan} can be found in the SpectralWindow Table.  The contents of this table are used to scale the data in the filler.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SysCal </CAPTION>
@@ -384,6 +384,16 @@ public:
 	 * @return a pointer to a SysCalTableIDL
 	 */
 	asdmIDL::SysCalTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SysCalTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SysCalTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

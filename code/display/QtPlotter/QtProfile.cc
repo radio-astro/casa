@@ -96,14 +96,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
     setupUi(this);
-
-    functionTabs->removeTab(1);
-    functionTabs->removeTab(0);
     initPlotterResource();
 
-    functionTabs->setCurrentIndex( 2 );
-
-    setWindowTitle(QString("Spectral Profile - ").append(name));
     setBackgroundRole(QPalette::Dark);
 
     fillPlotTypes(img);
@@ -116,6 +110,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     QPalette pal = pixelCanvas->palette();
     pal.setColor(QPalette::Background, Qt::white);
     pixelCanvas->setPalette(pal);
+    connect( functionTabs, SIGNAL(currentChanged(int)), pixelCanvas, SLOT(changeTaskMode(int)));
 
     initPreferences();
 
@@ -198,6 +193,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     specFitSettingsWidget->setTaskSpecLineFitting( true );
     specFitSettingsWidget -> setCanvas( pixelCanvas );
     momentSettingsWidget -> setCanvas( pixelCanvas );
+    lineOverlaysHolder->setCanvas( pixelCanvas );
+    lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
     specFitSettingsWidget -> setTaskMonitor( this );
     momentSettingsWidget -> setTaskMonitor( this );
     positioningWidget -> setTaskMonitor( this );
@@ -585,6 +582,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	spcRefFrame = String(MFrequency::showType(freqtype));
 	Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
 	spcRef->setCurrentIndex(frameindex);
+	lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
@@ -956,6 +954,7 @@ void QtProfile::emitChannelSelect( float xval ) {
 void QtProfile::setCollapseRange(float xmin, float xmax){
 	momentSettingsWidget->setRange( xmin, xmax );
 	specFitSettingsWidget->setRange( xmin, xmax );
+	lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 }
 
 void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
@@ -2160,5 +2159,23 @@ QString QtProfile::getRaDec(double x, double y) {
 
 	void QtProfile::setPosition( const QList<double>& xValues, const QList<double>& yValues ){
 		emit adjustPosition( xValues[0], yValues[0], xValues[1], yValues[1]);
+	}
+
+	void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
+		const QString TITLE_BASE = "Spectral Profile";
+		if ( purpose == MOMENTS_COLLAPSE ){
+			//Hide the function tabs and show only the moments/collapse functionality
+			this->purposeStackedLayout->setCurrentIndex( 1 );
+			setWindowTitle( TITLE_BASE+": Collapse/Moments - "+fileName);
+			pixelCanvas->changeTaskMode( 0 );
+		}
+		else if ( purpose == SPECTROSCOPY ){
+			//Show the function tabs and hide moments/collapse functionality
+			this->purposeStackedLayout->setCurrentIndex( 0 );
+			setWindowTitle( TITLE_BASE+" - "+fileName);
+			int tabIndex = functionTabs->currentIndex();
+			pixelCanvas->changeTaskMode( tabIndex );
+		}
+
 	}
 }

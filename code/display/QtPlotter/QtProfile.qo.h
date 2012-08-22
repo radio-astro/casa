@@ -116,6 +116,8 @@ public:
 		PPROPAG
 	};
 
+
+
 	QtProfile(ImageInterface<Float>* img, const char *name = 0,
 			QWidget *parent = 0, std::string rcstr="prf");
 
@@ -126,6 +128,10 @@ public:
 	void setPath( QString filePath ){
 		imagePath = filePath;
 	}
+
+	//Allows the profiler to come up specialized to do spectroscopy
+	//or another task.
+	void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
 
 	//These methods are from the ProfileTaskMoniter interface.
 	//Their purpose is to provide the class doing the spectral

@@ -294,6 +294,201 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalSeeingRow::toIDL(asdmIDL::CalSeeingRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x.frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.integrationTime = integrationTime.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numBaseLengths = numBaseLengths;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.baselineLengths.length(baselineLengths.size());
+		for (unsigned int i = 0; i < baselineLengths.size(); ++i) {
+			
+			x.baselineLengths[i] = baselineLengths.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.phaseRMS.length(phaseRMS.size());
+		for (unsigned int i = 0; i < phaseRMS.size(); ++i) {
+			
+			x.phaseRMS[i] = phaseRMS.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.seeing = seeing.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.seeingError = seeingError.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x.exponentExists = exponentExists;
+		
+		
+			
+				
+		x.exponent = exponent;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.outerScaleExists = outerScaleExists;
+		
+		
+			
+		x.outerScale = outerScale.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		x.outerScaleRMSExists = outerScaleRMSExists;
+		
+		
+			
+		x.outerScaleRMS = outerScaleRMS.toIDLAngle();
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.calDataId = calDataId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.calReductionId = calReductionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+	}
 #endif
 	
 

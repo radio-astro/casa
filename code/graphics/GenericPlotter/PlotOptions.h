@@ -447,7 +447,8 @@ public:
         CHARACTER,               // for char symbols
         CIRCLE, SQUARE, DIAMOND, // standard shapes
         PIXEL,                   // draw a single pixel
-        NOSYMBOL                 // don't show symbols
+        NOSYMBOL,                // don't show symbols
+        AUTOSCALING              // autoscaling symbol
     };
     
     

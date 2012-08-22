@@ -237,6 +237,138 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SysPowerRow::toIDL(asdmIDL::SysPowerRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.switchedPowerDifferenceExists = switchedPowerDifferenceExists;
+		
+		
+			
+		x.switchedPowerDifference.length(switchedPowerDifference.size());
+		for (unsigned int i = 0; i < switchedPowerDifference.size(); ++i) {
+			
+				
+			x.switchedPowerDifference[i] = switchedPowerDifference.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.switchedPowerSumExists = switchedPowerSumExists;
+		
+		
+			
+		x.switchedPowerSum.length(switchedPowerSum.size());
+		for (unsigned int i = 0; i < switchedPowerSum.size(); ++i) {
+			
+				
+			x.switchedPowerSum[i] = switchedPowerSum.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.requantizerGainExists = requantizerGainExists;
+		
+		
+			
+		x.requantizerGain.length(requantizerGain.size());
+		for (unsigned int i = 0; i < requantizerGain.size(); ++i) {
+			
+				
+			x.requantizerGain[i] = requantizerGain.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.feedId = feedId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

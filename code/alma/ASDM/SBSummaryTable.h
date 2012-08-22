@@ -137,7 +137,7 @@ class SBSummaryRow;
  * Characteristics of the Scheduling Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
  * <BR>
  
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SBSummary </CAPTION>
@@ -380,6 +380,16 @@ public:
 	 * @return a pointer to a SBSummaryTableIDL
 	 */
 	asdmIDL::SBSummaryTableIDL *toIDL() ;
+	
+	/**
+	 * Fills the CORBA data structure passed in parameter
+	 * with the content of this table.
+	 *
+	 * @param x a reference to the asdmIDL::SBSummaryTableIDL to be populated
+	 * with the content of this.
+	 */
+	 void toIDL(asdmIDL::SBSummaryTableIDL& x) const;
+	 
 #endif
 
 #ifndef WITHOUT_ACS

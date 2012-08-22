@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-    QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent) {
+    QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent), rc(viewer::getrc( )) {
 	setContextMenuPolicy( Qt::CustomContextMenu );
 	connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
 		 this, SLOT(show_context_menu(const QPoint &)) );
@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void leaveEvent(QEvent*);
     };
 
-    void PopupMenu::leaveEvent( QEvent *ev ) {
+    void PopupMenu::leaveEvent( QEvent */*ev*/ ) {
 	// pop down the menu upon exit...
 	QKeyEvent kev( QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier );
 	event(&kev);
@@ -93,8 +93,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	QAction *selectedItem = options->exec(global_pos);
-	if ( selectedItem )
-	    emit mouseToolBtnState(POINT,selectedItem->data( ).toInt( ));
+	if ( selectedItem ) {
+	    int item = selectedItem->data( ).toInt( );
+	    if ( item >= 0 && item < SYM_POINT_REGION_COUNT ) {
+		emit mouseToolBtnState(POINT,item);
+		rc.put("viewer.mouse.state.point",pointRegionSymbolRc((PointRegionSymbols)item));
+	    }
+	}
 	delete options;
     }
 

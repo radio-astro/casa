@@ -235,6 +235,154 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CorrelatorModeRow::toIDL(asdmIDL::CorrelatorModeRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.correlatorModeId = correlatorModeId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numBaseband = numBaseband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.basebandNames.length(basebandNames.size());
+		for (unsigned int i = 0; i < basebandNames.size(); ++i) {
+			
+				
+			x.basebandNames[i] = basebandNames.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.basebandConfig.length(basebandConfig.size());
+		for (unsigned int i = 0; i < basebandConfig.size(); ++i) {
+			
+				
+			x.basebandConfig[i] = basebandConfig.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.accumMode = accumMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.binMode = binMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numAxes = numAxes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.axesOrderArray.length(axesOrderArray.size());
+		for (unsigned int i = 0; i < axesOrderArray.size(); ++i) {
+			
+				
+			x.axesOrderArray[i] = axesOrderArray.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.filterMode.length(filterMode.size());
+		for (unsigned int i = 0; i < filterMode.size(); ++i) {
+			
+				
+			x.filterMode[i] = filterMode.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.correlatorName = correlatorName;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+	}
 #endif
 	
 

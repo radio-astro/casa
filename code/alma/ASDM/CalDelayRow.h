@@ -124,7 +124,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalDelay.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -146,7 +146,7 @@ typedef void (CalDelayRow::*CalDelayAttributeFromText) (const string& s);
 /**
  * The CalDelayRow class is a row of a CalDelayTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalDelayRow {
@@ -1004,6 +1004,15 @@ public:
 	 * @return The values of this row as a CalDelayRowIDL struct.
 	 */
 	asdmIDL::CalDelayRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a CalDelayRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the CalDelayRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::CalDelayRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

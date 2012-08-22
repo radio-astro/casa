@@ -80,7 +80,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Holography.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -96,7 +96,7 @@ typedef void (HolographyRow::*HolographyAttributeFromText) (const string& s);
 /**
  * The HolographyRow class is a row of a HolographyTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class HolographyRow {
@@ -324,6 +324,15 @@ public:
 	 * @return The values of this row as a HolographyRowIDL struct.
 	 */
 	asdmIDL::HolographyRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a HolographyRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the HolographyRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::HolographyRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

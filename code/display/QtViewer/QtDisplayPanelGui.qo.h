@@ -265,6 +265,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   // for both get and put...
   std::string getrc( const std::string &key );
   void putrc( const std::string &key, const std::string &val );
+  void showMomentsCollapseImageProfile();
+
 
  signals:
 
@@ -460,7 +462,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_, 
-          *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
+          *profileAct_, *momentsCollapseAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;

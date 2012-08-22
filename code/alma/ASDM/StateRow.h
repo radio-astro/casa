@@ -78,7 +78,7 @@
 //#include <TableStreamReader.h>
 
 /*\file State.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -94,7 +94,7 @@ typedef void (StateRow::*StateAttributeFromText) (const string& s);
 /**
  * The StateRow class is a row of a StateTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class StateRow {
@@ -363,6 +363,15 @@ public:
 	 * @return The values of this row as a StateRowIDL struct.
 	 */
 	asdmIDL::StateRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a StateRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the StateRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::StateRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS

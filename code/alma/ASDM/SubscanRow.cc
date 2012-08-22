@@ -243,6 +243,156 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void SubscanRow::toIDL(asdmIDL::SubscanRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+				
+		x.scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.subscanNumber = subscanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.startTime = startTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.endTime = endTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.fieldName = CORBA::string_dup(fieldName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.subscanIntent = subscanIntent;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.subscanModeExists = subscanModeExists;
+		
+		
+			
+				
+		x.subscanMode = subscanMode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numIntegration = numIntegration;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.numSubintegration.length(numSubintegration.size());
+		for (unsigned int i = 0; i < numSubintegration.size(); ++i) {
+			
+				
+			x.numSubintegration[i] = numSubintegration.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.correlatorCalibrationExists = correlatorCalibrationExists;
+		
+		
+			
+				
+		x.correlatorCalibration = correlatorCalibration;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+	}
 #endif
 	
 

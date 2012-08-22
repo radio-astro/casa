@@ -98,7 +98,7 @@ namespace casa {
 		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
 		// generalized to "std::tr1::shared_ptr<Region>"...
 		std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-		std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym );
+		std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size );
 
 		QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const;
 

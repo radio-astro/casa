@@ -545,6 +545,7 @@ public:
     static QwtSymbol::Style symbol(PlotSymbol::Symbol s) {
         switch(s) {
         // supported
+        case PlotSymbol::AUTOSCALING:
         case PlotSymbol::CIRCLE: return QwtSymbol::Ellipse;
         case PlotSymbol::SQUARE: return QwtSymbol::Rect;
         case PlotSymbol::DIAMOND: return QwtSymbol::Diamond;

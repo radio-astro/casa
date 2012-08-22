@@ -295,6 +295,196 @@ namespace asdm {
 		return x;
 	
 	}
+	
+	void CalDeviceRow::toIDL(asdmIDL::CalDeviceRowIDL& x) const {
+		// Set the x's fields.
+	
+		
+	
+  		
+		
+		
+			
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numCalload = numCalload;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.calLoadNames.length(calLoadNames.size());
+		for (unsigned int i = 0; i < calLoadNames.size(); ++i) {
+			
+				
+			x.calLoadNames[i] = calLoadNames.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.numReceptorExists = numReceptorExists;
+		
+		
+			
+				
+		x.numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.calEffExists = calEffExists;
+		
+		
+			
+		x.calEff.length(calEff.size());
+		for (unsigned int i = 0; i < calEff.size(); i++) {
+			x.calEff[i].length(calEff.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < calEff.size() ; i++)
+			for (unsigned int j = 0; j < calEff.at(i).size(); j++)
+					
+						
+				x.calEff[i][j] = calEff.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.noiseCalExists = noiseCalExists;
+		
+		
+			
+		x.noiseCal.length(noiseCal.size());
+		for (unsigned int i = 0; i < noiseCal.size(); ++i) {
+			
+				
+			x.noiseCal[i] = noiseCal.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x.coupledNoiseCalExists = coupledNoiseCalExists;
+		
+		
+			
+		x.coupledNoiseCal.length(coupledNoiseCal.size());
+		for (unsigned int i = 0; i < coupledNoiseCal.size(); i++) {
+			x.coupledNoiseCal[i].length(coupledNoiseCal.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < coupledNoiseCal.size() ; i++)
+			for (unsigned int j = 0; j < coupledNoiseCal.at(i).size(); j++)
+					
+						
+				x.coupledNoiseCal[i][j] = coupledNoiseCal.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x.temperatureLoadExists = temperatureLoadExists;
+		
+		
+			
+		x.temperatureLoad.length(temperatureLoad.size());
+		for (unsigned int i = 0; i < temperatureLoad.size(); ++i) {
+			
+			x.temperatureLoad[i] = temperatureLoad.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x.antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+				
+		x.feedId = feedId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x.spectralWindowId = spectralWindowId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
+	
+
+	
+
+	
+	}
 #endif
 	
 

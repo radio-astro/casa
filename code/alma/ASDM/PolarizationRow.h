@@ -76,7 +76,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Polarization.h
-    \brief Generated from model's revision "1.62", branch "HEAD"
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -92,7 +92,7 @@ typedef void (PolarizationRow::*PolarizationAttributeFromText) (const string& s)
 /**
  * The PolarizationRow class is a row of a PolarizationTable.
  * 
- * Generated from model's revision "1.62", branch "HEAD"
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class PolarizationRow {
@@ -286,6 +286,15 @@ public:
 	 * @return The values of this row as a PolarizationRowIDL struct.
 	 */
 	asdmIDL::PolarizationRowIDL *toIDL() const;
+	
+	/**
+	 * Define the content of a PolarizationRowIDL struct from the values
+	 * found in this row.
+	 *
+	 * @param x a reference to the PolarizationRowIDL struct to be set.
+	 *
+	 */
+	 void toIDL(asdmIDL::PolarizationRowIDL& x) const;
 #endif
 	
 #ifndef WITHOUT_ACS
