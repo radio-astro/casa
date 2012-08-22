@@ -189,8 +189,8 @@ field = A comma-delimited string or a python list of strings containing the
 fields.  E.g., field = '0,1'.  The default is '' (all fields).
 
 antenna = A comma- and semi-colon- delimited string containing the antenna 1s
-and antenna 2s.  E.g, antenna = '3,4,5&amp;*'.  The default is '' (all antenna 1s
-and antenna 2s).
+and antenna 2s.  E.g, antenna = '3,4,5'.  The default is '' (all antenna 1s and
+antenna 2s).
 
 timerange = A python list of floats of length two containing the start and stop
 times in MJD seconds.  Date strings will be implemented in a future release
