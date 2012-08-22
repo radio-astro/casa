@@ -443,7 +443,6 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
       }
     } 
     ipos(0)=k;
-    //elbeam.setBeam(tempBeam, ipos);
   }
   Float maxMaj=0.0;
   Float minMaj=C::flt_max;
@@ -485,7 +484,7 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
        }
      }
   }
-
+  elbeam=ImageBeamSet(tempBeam.shape(), types);
   elbeam.setBeams(tempBeam);
   
   return retval;
