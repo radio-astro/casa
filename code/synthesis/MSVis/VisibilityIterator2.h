@@ -47,7 +47,7 @@
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MSVis/UtilJ.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -56,6 +56,9 @@
 #include <map>
 #include <set>
 #include <vector>
+
+using casa::vi::VisBufferComponent2;
+using casa::vi::VisBufferComponents2;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -70,89 +73,6 @@ namespace vi {
 namespace asyncio {
 
 class VLAT;
-
-///////////////////////////////////////////////////////////////////////
-//
-// PrefetchColumns class
-//
-// <summary>
-// The PrefetchColumns class is used to specify a set of columns that
-// can be prefetched when the (RO)VisibilityIterator2 is using asynchronous
-// I/O.
-// </summary>
-//
-// <synopsis>
-// When creating an ROVisibilityIterator2 or VisibilityIterator2 that can
-// potentially operate using asynchronous I/O it is necessary to specify
-// which columns of the main table are to be prefetched by the lookahead
-// thread.  This class provides the way to specify those columns.  The
-// class is an STL set object of enum values defined in VisBufferComponents.h.
-// These roughly correspond to the different components that can be access
-// via a VisBuffer.
-//
-// </synopsis>
-//
-// <example>
-// This is a simple example showing the construction of a PrefetchColumns
-// and its use in a VisibilityIterator2 constructor.  For more complex cases
-// (e.g., where the columns to be prefetched depend on other factors) the
-// class provides some additional utility methods.
-//
-// Usually the file that creates the VI will include VisBuffer which will
-// then include VisBufferComponents.h; if not then the user will also need
-// to add "#include <synthesis/MSVis/VisBufferComponents.h>" to their file.
-//
-// <code>
-//    asyncio::PrefetchColumns prefetchColumns =
-//            PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
-//                                              VisBufferComponents::Ant2,
-//                                              VisBufferComponents::ArrayId,
-//                                              VisBufferComponents::Direction1,
-//                                              VisBufferComponents::Direction2,
-//                                              VisBufferComponents::Feed1,
-//                                              VisBufferComponents::Feed1_pa,
-//                                              VisBufferComponents::Feed2,
-//                                              VisBufferComponents::Feed2_pa,
-//                                              VisBufferComponents::FieldId,
-//                                              VisBufferComponents::FlagCube,
-//                                              VisBufferComponents::Flag,
-//                                              VisBufferComponents::FlagRow,
-//                                              VisBufferComponents::Freq,
-//                                              VisBufferComponents::NChannel,
-//                                              VisBufferComponents::NCorr,
-//                                              VisBufferComponents::NRow,
-//                                              VisBufferComponents::ObservedCube,
-//                                              VisBufferComponents::PhaseCenter,
-//                                              VisBufferComponents::PolFrame,
-//                                              VisBufferComponents::SpW,
-//                                              VisBufferComponents::Time,
-//                                              VisBufferComponents::Uvw,
-//                                              VisBufferComponents::UvwMat,
-//                                              VisBufferComponents::Weight,
-//                                              -1);
-//
-//     wvi_p = new VisibilityIterator2 (& prefetchColumns, * wvi_p);
-//
-//
-// </code>
-//
-// </example
-
-#if 0
-class PrefetchColumns : public std::set<VisBufferComponents::EnumType>{
-
-public:
-
-    PrefetchColumns operator+ (const PrefetchColumns & other);
-
-    static String columnName (Int id);
-    static PrefetchColumns prefetchColumnsAll ();
-    static PrefetchColumns prefetchAllColumnsExcept (Int firstColumn, ...);
-    static PrefetchColumns prefetchColumns (Int firstColumn, ...);
-};
-#else
-class PrefetchColumns;
-#endif
 
 } // end namespace asyncio
 
@@ -262,12 +182,33 @@ public:
     void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
     void add (const MSSelection & msSelection);
     FrequencySelection * clone () const;
+    String toString () const;
 
 //**********************************************************************
 // Internal methods below this line
 //**********************************************************************
 
 private:
+
+    class Element {
+    public:
+
+        Element (Int spectralWindow = -1, Int firstChannel = -1, Int nChannels = -1, Int increment = 1)
+        : firstChannel_p (firstChannel),
+          increment_p (increment),
+          nChannels_p (nChannels),
+          spectralWindow_p (spectralWindow)
+        {}
+
+        Int firstChannel_p;
+        Int increment_p;
+        Int nChannels_p;
+        Int spectralWindow_p;
+    };
+
+    typedef vector<Element> Elements;
+
+    Elements elements_p;
 
 };
 
@@ -291,6 +232,30 @@ public:
     void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
     void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
     FrequencySelection * clone () const;
+    String toString () const;
+
+private:
+
+    class Element {
+    public:
+
+        Element (Int spectralWindow = -1, Double bottomFrequency = 0,
+                 Double topFrequency = 0, Double increment = 0)
+        : bottomFrequency_p (bottomFrequency),
+          increment_p (increment),
+          spectralWindow_p (spectralWindow),
+          topFrequency_p (topFrequency)
+          {}
+
+        Double bottomFrequency_p;
+        Double increment_p;
+        Int spectralWindow_p;
+        Double topFrequency_p;
+    };
+
+    typedef vector<Element> Elements;
+
+    Elements elements_p;
 };
 
 
@@ -468,7 +433,7 @@ public:
       virtual ~Factory () {}
 
       virtual VisibilityIteratorReadImpl2 *
-      operator() (const asyncio::PrefetchColumns * /*prefetchColumns*/,
+      operator() (const VisBufferComponents2 * /*prefetchColumns*/,
                   const Block<MeasurementSet>& /*mss*/,
                   const Block<Int>& /*sortColumns*/,
                   const Bool /*addDefaultSortCols*/,
@@ -510,13 +475,13 @@ public:
 
   ROVisibilityIterator2(const MeasurementSet& ms,
                         const Block<Int>& sortColumns,
-                        const asyncio::PrefetchColumns * prefetchColumns = 0,
+                        const VisBufferComponents2 * prefetchColumns = 0,
                         const Bool addDefaultSortCols = True,
                         Double timeInterval = 0);
 
   ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
                          const Block<Int>& sortColumns,
-                         const asyncio::PrefetchColumns * prefetchColumns = 0,
+                         const VisBufferComponents2 * prefetchColumns = 0,
                          const Bool addDefaultSortCols = True,
                          Double timeInterval = 0);
 
@@ -705,7 +670,7 @@ public:
 protected:
 
 
-  ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
+  ROVisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
                          const Block<MeasurementSet>& mss,
                          const Block<Int>& sortColumns,
                          const Bool addDefaultSortCols,
@@ -713,7 +678,7 @@ protected:
                          Bool writable);
 
 
-  void construct (const asyncio::PrefetchColumns * prefetchColumns,
+  void construct (const VisBufferComponents2 * prefetchColumns,
                   const Block<MeasurementSet>& mss,
                   const Block<Int>& sortColumns,
                   const Bool addDefaultSortCols,
@@ -750,7 +715,7 @@ protected:
 
   // Returns True is this is a new MS from the last subchunk.
 
-  Bool newMS() const;
+  Bool isNewMS() const;
 
   // Returns the zero-based index of the current MS in the collection
   // of MSs used to create the VI.
@@ -1045,7 +1010,7 @@ protected:
                          Double& freqEnd,
                          MFrequency::Types freqframe = MFrequency::LSRK);
 
-  bool existsColumn (VisBufferComponents::EnumType id) const;
+  bool existsColumn (VisBufferComponent2 id) const;
 
   // advance the iteration
 
@@ -1215,13 +1180,13 @@ public:
 
   VisibilityIterator2(const MeasurementSet& ms,
                       const Block<Int>& sortColumns,
-                      const asyncio::PrefetchColumns * prefetchColumns = 0,
+                      const VisBufferComponents2 * prefetchColumns = 0,
                       const Bool addDefaultSortCols = True,
                       Double timeInterval = 0);
 
   VisibilityIterator2 (const Block<MeasurementSet>& mss,
                        const Block<Int>& sortColumns,
-                       const asyncio::PrefetchColumns * prefetchColumns = 0,
+                       const VisBufferComponents2 * prefetchColumns = 0,
                        const Bool addDefaultSortCols = True,
                        Double timeInterval = 0);
 
@@ -1311,7 +1276,7 @@ public:
   // VisBuffer is used to mark which portions of the VisBuffer actually need
   // to be written back out.
 
-  void writeBack (VisBuffer2 *);
+  void writeBackChanges (VisBuffer2 *);
 
 //**********************************************************************
 // Internal methods below this line

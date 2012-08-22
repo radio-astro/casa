@@ -45,7 +45,7 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -238,7 +238,7 @@ public:
     // size determines the actual maximum.
     virtual void setRowBlocking (Int nRows = 0);
 
-    virtual Bool existsColumn (VisBufferComponents::EnumType id) const;
+    virtual Bool existsColumn (VisBufferComponent2 id) const;
 
     // Return False if no more data (in current chunk)
     virtual Bool more () const;
@@ -253,7 +253,11 @@ public:
     virtual Bool moreChunks () const;
 
     // Check if ms has change since last iteration
-    virtual Bool newMS () const;
+
+    virtual Bool isNewArrayId () const;
+    virtual Bool isNewFieldId () const;
+    virtual Bool isNewMs () const;
+    virtual Bool isNewSpectralWindow () const;
 
     virtual Int msId () const;
 
@@ -977,7 +981,7 @@ public:
     // Write/modify the ncorr x nrow SigmaMat.
     virtual void writeSigmaMat (const Matrix<Float> & sigmat);
 
-    virtual void writeBack (VisBuffer2 *);
+    virtual void writeBackChanges (VisBuffer2 *);
 
 protected:
 
@@ -1120,7 +1124,7 @@ private:
 
     };
 
-    std::map <VisBufferComponents::EnumType, BackWriter *> backWriters_p;
+    std::map <VisBufferComponent2, BackWriter *> backWriters_p;
     Columns columns_p;
     VisibilityIterator2 * vi_p; // [use]
 };

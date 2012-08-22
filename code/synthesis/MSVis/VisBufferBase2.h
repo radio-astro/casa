@@ -46,8 +46,8 @@ namespace asyncio {
 
 class CStokesVector;
 class MDirection;
-class VbDirtyComponents;
 template <typename T, Int n> class SquareMatrix;
+class SubChunkPair2;
 template <typename T, Int n> class RigidVector;
 class ROVisibilityIterator2;
 class VisBufferBase2;
@@ -203,12 +203,12 @@ public:
 
     virtual void invalidate() = 0;
 
-    virtual void dirtyComponentsAdd (const VbDirtyComponents & additionalDirtyComponents) = 0;
-    virtual void dirtyComponentsAdd (VisBufferComponents::EnumType component) = 0;
+    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
+    virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
     virtual void dirtyComponentsClear () = 0;
-    virtual VbDirtyComponents dirtyComponentsGet () const = 0;
-    virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents) = 0;
-    virtual void dirtyComponentsSet (VisBufferComponents::EnumType component) = 0;
+    virtual VisBufferComponents2 dirtyComponentsGet () const = 0;
+    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
+    virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
@@ -342,7 +342,8 @@ protected:
     VisBufferBase2(ROVisibilityIterator2 & iter);
 
     virtual void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
-                                   Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow) = 0;
+                                   Bool isNewArrayId, Bool isNewFieldId,
+                                   Bool isNewSpectralWindow, const SubChunkPair2 & subchunk) = 0;
 
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem) = 0;

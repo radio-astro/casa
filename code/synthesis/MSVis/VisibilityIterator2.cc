@@ -23,7 +23,7 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisibilityIteratorImpl2.h>
@@ -44,160 +44,23 @@ using namespace std;
 
 namespace casa {
 
-namespace asyncio {
-
-#if 0
-PrefetchColumns
-PrefetchColumns::prefetchColumnsAll ()
-{
-    // Create the set of all columns
-
-    PrefetchColumns pc;
-
-    for (int i = 0; i < VisBufferComponents::N_VisBufferComponents; ++ i){
-        pc.insert ((VisBufferComponents::EnumType) i);
-    }
-
-    return pc;
-}
-
-PrefetchColumns
-PrefetchColumns::prefetchAllColumnsExcept (Int firstColumn, ...)
-{
-    // Build a set of Prefetch columns named except.
-    // The last arg must be either negative or
-    // greater than or equal to N_PrefetchColumnIds
-
-    va_list vaList;
-
-    va_start (vaList, firstColumn);
-
-    int id = firstColumn;
-    PrefetchColumns except;
-
-    while (id >= 0 && id < VisBufferComponents::N_VisBufferComponents){
-        except.insert ((VisBufferComponents::EnumType)id);
-        id = va_arg (vaList, int);
-    }
-
-    va_end (vaList);
-
-    // Get the set of all columns and then subtract off the
-    // caller specified columns.  Return the result
-
-    PrefetchColumns allColumns = prefetchColumnsAll();
-    PrefetchColumns result;
-
-    set_difference (allColumns.begin(), allColumns.end(),
-                    except.begin(), except.end(),
-                    inserter (result, result.begin()));
-
-    return result;
-
-}
-
-String
-PrefetchColumns::columnName (Int id)
-{
-    assert (id >= 0 && id < VisBufferComponents::N_VisBufferComponents);
-
-    // This method is called only occasionally for debuggin so at this time a
-    // brute-force implmentation is acceptable.
-
-    map<Int,String> names;
-
-    names [VisBufferComponents::Ant1] = "Ant1";
-    names [VisBufferComponents::Ant2] = "Ant2";
-    names [VisBufferComponents::ArrayId] = "ArrayId";
-    names [VisBufferComponents::Channel] = "Channel";
-    names [VisBufferComponents::Cjones] = "Cjones";
-    names [VisBufferComponents::CorrType] = "CorrType";
-    names [VisBufferComponents::Corrected] = "Corrected";
-    names [VisBufferComponents::CorrectedCube] = "CorrectedCube";
-    names [VisBufferComponents::Direction1] = "Direction1";
-    names [VisBufferComponents::Direction2] = "Direction2";
-    names [VisBufferComponents::Exposure] = "Exposure";
-    names [VisBufferComponents::Feed1] = "Feed1";
-    names [VisBufferComponents::Feed1_pa] = "Feed1_pa";
-    names [VisBufferComponents::Feed2] = "Feed2";
-    names [VisBufferComponents::Feed2_pa] = "Feed2_pa";
-    names [VisBufferComponents::FieldId] = "FieldId";
-    names [VisBufferComponents::Flag] = "Flag";
-    names [VisBufferComponents::FlagCategory] = "FlagCategory";
-    names [VisBufferComponents::FlagCube] = "FlagCube";
-    names [VisBufferComponents::FlagRow] = "FlagRow";
-    names [VisBufferComponents::Freq] = "Freq";
-    names [VisBufferComponents::ImagingWeight] = "ImagingWeight";
-    names [VisBufferComponents::Model] = "Model";
-    names [VisBufferComponents::ModelCube] = "ModelCube";
-    names [VisBufferComponents::NChannel] = "NChannel";
-    names [VisBufferComponents::NCorr] = "NCorr";
-    names [VisBufferComponents::NRow] = "NRow";
-    names [VisBufferComponents::ObservationId] = "ObservationId";
-    names [VisBufferComponents::Observed] = "Observed";
-    names [VisBufferComponents::ObservedCube] = "ObservedCube";
-    names [VisBufferComponents::PhaseCenter] = "PhaseCenter";
-    names [VisBufferComponents::PolFrame] = "PolFrame";
-    names [VisBufferComponents::ProcessorId] = "ProcessorId";
-    names [VisBufferComponents::Scan] = "Scan";
-    names [VisBufferComponents::Sigma] = "Sigma";
-    names [VisBufferComponents::SigmaMat] = "SigmaMat";
-    names [VisBufferComponents::SpW] = "SpW";
-    names [VisBufferComponents::StateId] = "StateId";
-    names [VisBufferComponents::Time] = "Time";
-    names [VisBufferComponents::TimeCentroid] = "TimeCentroid";
-    names [VisBufferComponents::TimeInterval] = "TimeInterval";
-    names [VisBufferComponents::Weight] = "Weight";
-    names [VisBufferComponents::WeightMat] = "WeightMat";
-    names [VisBufferComponents::WeightSpectrum] = "WeightSpectrum";
-    names [VisBufferComponents::Uvw] = "Uvw";
-    names [VisBufferComponents::UvwMat] = "UvwMat";
-
-    return names [id];
-}
-
-
-PrefetchColumns
-PrefetchColumns::prefetchColumns (Int firstColumn, ...)
-{
-    // Returns a set of Prefetch columns.  The last arg must be either negative or
-    // greater than or equal to N_PrefetchColumnIds
-
-    va_list vaList;
-
-    va_start (vaList, firstColumn);
-
-    Int id = firstColumn;
-    PrefetchColumns pc;
-
-    while (id >= 0 && id < VisBufferComponents::N_VisBufferComponents){
-        pc.insert ((VisBufferComponents::EnumType) id);
-        id = va_arg (vaList, Int);
-    }
-
-    va_end (vaList);
-
-    return pc;
-}
-
-#endif
-
-};  // end namespace asyncio
-
 String
 FrequencySelection::frameName (Int referenceFrame)
 {
-    String names [] =
-    { "AsSelected",
-      "Channels",
-      "Topo",
-      "Lsrk"
-    };
+    String result;
 
-    ThrowIf (referenceFrame < 0 || referenceFrame >= N_FramesOfReference,
-             utilj::format ("Unknown frame of reference id: %d", referenceFrame));
+    if (referenceFrame >= 0 && referenceFrame < MFrequency::N_Types){
 
-    return names [referenceFrame];
+        result = MFrequency::showType (referenceFrame);
+    }
+    else if (referenceFrame == ByChannel){
+    }
+    else{
+
+        ThrowIf (True, utilj::format ("Unknown frame of reference: id=%d", referenceFrame));
+    }
+
+    return result;
 }
 
 Int
@@ -274,38 +137,64 @@ FrequencySelections::size () const
 }
 
 FrequencySelection *
-FrequencySelectionChannels::clone () const
+FrequencySelectionUsingChannels::clone () const
 {
-    return new FrequencySelectionChannels (* this);
+    return new FrequencySelectionUsingChannels (* this);
 }
 
 String
-FrequencySelectionChannels::toString () const
+FrequencySelectionUsingChannels::toString () const
 {
-    String s = utilj::format ("frame='%s' {", frameName (referenceFrame_p).c_str());
+    String s = utilj::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
 
-    for (
+    for (Elements::const_iterator e = elements_p.begin();
+         e != elements_p.end();
+         e ++){
 
+        s += utilj::format ("(spw=%d, 1st=%d, n=%d, inc=%d)",
+                            e->spectralWindow_p,
+                            e->firstChannel_p,
+                            e->nChannels_p,
+                            e->increment_p);
+    }
+    s += "}}";
+
+    return s;
 }
 
 FrequencySelection *
-FrequencySelectionRawFrequency::clone () const
+FrequencySelectionUsingFrame::clone () const
 {
-    return new FrequencySelectionRawFrequency (* this);
+    return new FrequencySelectionUsingFrame (* this);
+}
+
+String
+FrequencySelectionUsingFrame::toString () const
+{
+    String s = utilj::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
+
+    for (Elements::const_iterator e = elements_p.begin();
+         e != elements_p.end();
+         e ++){
+
+        s += utilj::format ("(spw=%d, 1st=%g, n=%g, inc=%g)",
+                            e->spectralWindow_p,
+                            e->bottomFrequency_p,
+                            e->topFrequency_p,
+                            e->increment_p);
+    }
+
+    s += "}}";
+
+    return s;
 }
 
 
-
-FrequencySelection *
-FrequencySelectionReferential::clone () const
-{
-    return new FrequencySelectionReferential (* this);
-}
 
 
 ROVisibilityIterator2::ROVisibilityIterator2(const MeasurementSet& ms,
                                              const Block<Int>& sortColumns,
-                                             const asyncio::PrefetchColumns * prefetchColumns,
+                                             const VisBufferComponents2 * prefetchColumns,
                                              const Bool addDefaultSortCols,
                                              Double timeInterval)
 {
@@ -315,7 +204,7 @@ ROVisibilityIterator2::ROVisibilityIterator2(const MeasurementSet& ms,
 
 ROVisibilityIterator2::ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
                                               const Block<Int>& sortColumns,
-                                              const asyncio::PrefetchColumns * prefetchColumns,
+                                              const VisBufferComponents2 * prefetchColumns,
                                               const Bool addDefaultSortCols,
                                               Double timeInterval)
 {
@@ -323,7 +212,7 @@ ROVisibilityIterator2::ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
                timeInterval, False);
 }
 
-ROVisibilityIterator2::ROVisibilityIterator2 (const asyncio::PrefetchColumns * prefetchColumns,
+ROVisibilityIterator2::ROVisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
                                               const Block<MeasurementSet>& mss,
                                               const Block<Int>& sortColumns,
                                               const Bool addDefaultSortCols,
@@ -337,7 +226,7 @@ ROVisibilityIterator2::ROVisibilityIterator2 (const asyncio::PrefetchColumns * p
 
 
 void
-ROVisibilityIterator2::construct (const asyncio::PrefetchColumns * prefetchColumns,
+ROVisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
                                   const Block<MeasurementSet>& mss,
                                   const Block<Int>& sortColumns,
                                   const Bool addDefaultSortCols,
@@ -403,12 +292,12 @@ ROVisibilityIterator2::allBeamOffsetsZero () const
     return readImpl_p->allBeamOffsetsZero ();
 }
 
-void
-ROVisibilityIterator2::allSelectedSpectralWindows (Vector<Int>& spws, Vector<Int>& nvischan)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->allSelectedSpectralWindows (spws, nvischan);
-}
+//void
+//ROVisibilityIterator2::allSelectedSpectralWindows (Vector<Int>& spws, Vector<Int>& nvischan)
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->allSelectedSpectralWindows (spws, nvischan);
+//}
 
 void
 ROVisibilityIterator2::antenna1 (Vector<Int>& ant1) const
@@ -504,13 +393,6 @@ ROVisibilityIterator2::azel0Calculate (Double time, MSDerivedValues & msd,
 }
 
 void
-ROVisibilityIterator2::channel (Vector<Int>& chan) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->channel (chan);
-}
-
-void
 ROVisibilityIterator2::jonesC (Vector<SquareMatrix<Complex,2> >& cjones) const
 {
     CheckImplementationPointerR ();
@@ -540,7 +422,7 @@ ROVisibilityIterator2::doChannelSelection ()
 }
 
 Bool
-ROVisibilityIterator2::existsColumn (VisBufferComponents::EnumType id) const
+ROVisibilityIterator2::existsColumn (VisBufferComponent2 id) const
 {
     CheckImplementationPointerR ();
 
@@ -1048,10 +930,10 @@ ROVisibilityIterator2::newFieldId () const
 }
 
 Bool
-ROVisibilityIterator2::newMS () const
+ROVisibilityIterator2::isNewMS () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->newMS ();
+    return readImpl_p->isNewMs ();
 }
 
 Bool
@@ -1439,7 +1321,7 @@ ROVisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
 
 VisibilityIterator2::VisibilityIterator2 (const MeasurementSet & ms,
                                           const Block<Int>& sortColumns,
-                                          const asyncio::PrefetchColumns * prefetchColumns,
+                                          const VisBufferComponents2 * prefetchColumns,
                                           const Bool addDefaultSortCols,
                                           Double timeInterval)
 : ROVisibilityIterator2 (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns,
@@ -1450,7 +1332,7 @@ VisibilityIterator2::VisibilityIterator2 (const MeasurementSet & ms,
 
 VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
                                           const Block<Int>& sortColumns,
-                                          const asyncio::PrefetchColumns * prefetchColumns,
+                                          const VisBufferComponents2 * prefetchColumns,
                                           const Bool addDefaultSortCols,
                                           Double timeInterval)
 : ROVisibilityIterator2 (prefetchColumns, mss, sortColumns,
@@ -1605,10 +1487,10 @@ VisibilityIterator2::putModel(const RecordInterface& rec, Bool iscomponentlist, 
 }
 
 void
-VisibilityIterator2::writeBack (VisBuffer2 * vb)
+VisibilityIterator2::writeBackChanges (VisBuffer2 * vb)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->writeBack (vb);
+    writeImpl_p->writeBackChanges (vb);
 }
 
 } // end namespace casa

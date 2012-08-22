@@ -37,6 +37,7 @@
 #include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisibilityIteratorImpl2.h>
 #include <synthesis/TransformMachines/VisModelData.h>
@@ -52,6 +53,7 @@
 #include <memory>
 
 using std::make_pair;
+using namespace casa::vi;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -108,7 +110,7 @@ VisibilityIteratorReadImpl2::VisibilityIteratorReadImpl2 (ROVisibilityIterator2 
     rovi_p = rovi;
 
     if (createVb){
-        vb_p = new VisBuffer2 (rovi, VisBuffer2::Plain);
+        vb_p = VisBuffer2::factory (rovi, VisBuffer2::Plain);
     }
 }
 
@@ -283,6 +285,30 @@ VisibilityIteratorReadImpl2::getBeamOffsets () const
 }
 
 Bool
+VisibilityIteratorReadImpl2::isNewArrayId () const
+{
+    return msIter_p.newArray();
+}
+
+Bool
+VisibilityIteratorReadImpl2::isNewFieldId () const
+{
+    return msIter_p.newField ();
+}
+
+Bool
+VisibilityIteratorReadImpl2::isNewMs () const
+{
+    return msIter_p.newMS ();
+}
+
+Bool
+VisibilityIteratorReadImpl2::isNewSpectralWindow () const
+{
+    return msIter_p.newSpectralWindow ();
+}
+
+Bool
 VisibilityIteratorReadImpl2::allBeamOffsetsZero () const
 {
     return msIter_p.allBeamOffsetsZero ();
@@ -328,12 +354,6 @@ Bool
 VisibilityIteratorReadImpl2::moreChunks () const
 {
     return msIter_p.more ();
-}
-
-Bool
-VisibilityIteratorReadImpl2::newMS () const
-{
-    return msIter_p.newMS ();
 }
 
 Int
@@ -452,25 +472,25 @@ VisibilityIteratorReadImpl2::nPolarizations () const
 };
 
 Bool
-VisibilityIteratorReadImpl2::existsColumn (VisBufferComponents::EnumType id) const
+VisibilityIteratorReadImpl2::existsColumn (VisBufferComponent2 id) const
 {
     Bool result;
     switch (id){
 
-    case VisBufferComponents::Corrected:
-    case VisBufferComponents::CorrectedCube:
+    case Corrected:
+    case CorrectedCube:
 
         result = ! columns_p.corrVis_p.isNull();
         break;
 
-    case VisBufferComponents::Model:
-    case VisBufferComponents::ModelCube:
+    case Model:
+    case ModelCube:
 
         result = ! columns_p.modelVis_p.isNull();
         break;
 
-    case VisBufferComponents::Observed:
-    case VisBufferComponents::ObservedCube:
+    case Observed:
+    case ObservedCube:
 
         result = ! (columns_p.vis_p.isNull() && columns_p.floatVis_p.isNull());
         break;
@@ -478,7 +498,7 @@ VisibilityIteratorReadImpl2::existsColumn (VisBufferComponents::EnumType id) con
     // RR: I can't tell if the other columns should checked for here or not.
     //     It's not true that all the other columns are required.
     //     existsFlagCategory uses caching anyway.
-    // case VisBufferComponents::FlagCategory:
+    // case FlagCategory:
     //   result = False;
     //   if(!columns_p.flagCategory().isNull() &&
     //      columns_p.flagCategory().isDefined(0)){
@@ -607,6 +627,9 @@ VisibilityIteratorReadImpl2::advance ()
 
         // invalidate any attached VisBuffer
 
+        String msName = ms().tableName ();
+        vb_p->setIterationInfo (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
+                                isNewSpectralWindow (), subchunk_p);
         vb_p->invalidate();
     }
 }
@@ -3026,15 +3049,15 @@ VisibilityIteratorWriteImpl2::putModel(const RecordInterface& rec, Bool iscompon
 
 
 void
-VisibilityIteratorWriteImpl2::writeBack (VisBuffer2 * vb)
+VisibilityIteratorWriteImpl2::writeBackChanges (VisBuffer2 * vb)
 {
     if (backWriters_p.empty ()) {
         initializeBackWriters ();
     }
 
-    VbDirtyComponents dirtyComponents = vb->dirtyComponentsGet ();
+    VisBufferComponents2 dirtyComponents = vb->dirtyComponentsGet ();
 
-    for (VbDirtyComponents::const_iterator dirtyComponent = dirtyComponents.begin ();
+    for (VisBufferComponents2::const_iterator dirtyComponent = dirtyComponents.begin ();
          dirtyComponent != dirtyComponents.end ();
          dirtyComponent ++) {
 
@@ -3053,43 +3076,43 @@ VisibilityIteratorWriteImpl2::writeBack (VisBuffer2 * vb)
 void
 VisibilityIteratorWriteImpl2::initializeBackWriters ()
 {
-    backWriters_p [VisBufferComponents::Flag] =
+    backWriters_p [Flag] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlag, & VisBuffer2::flag);
-    backWriters_p [VisBufferComponents::FlagCube] =
+    backWriters_p [FlagCube] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlag, & VisBuffer2::flagCube);
-    backWriters_p [VisBufferComponents::FlagRow] =
+    backWriters_p [FlagRow] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlagRow, & VisBuffer2::flagRow);
-    backWriters_p [VisBufferComponents::FlagCategory] =
+    backWriters_p [FlagCategory] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
-    backWriters_p [VisBufferComponents::Sigma] =
+    backWriters_p [Sigma] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeSigma, & VisBuffer2::sigma);
-    backWriters_p [VisBufferComponents::SigmaMat] =
+    backWriters_p [SigmaMat] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
-    backWriters_p [VisBufferComponents::Weight] =
+    backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeight, & VisBuffer2::weight);
-    backWriters_p [VisBufferComponents::WeightMat] =
+    backWriters_p [WeightMat] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeightMat, & VisBuffer2::weightMat);
 
     // Now do the visibilities.  These are slightly different since the setter requires an
     // enum value.
 
-    backWriters_p [VisBufferComponents::Observed] =
+    backWriters_p [Observed] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::vis,
                          ROVisibilityIterator2::Observed);
-    backWriters_p [VisBufferComponents::Corrected] =
+    backWriters_p [Corrected] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCorrected,
                          ROVisibilityIterator2::Corrected);
-    backWriters_p [VisBufferComponents::Model] =
+    backWriters_p [Model] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visModel,
                          ROVisibilityIterator2::Model);
 
-    backWriters_p [VisBufferComponents::ObservedCube] =
+    backWriters_p [ObservedCube] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCube,
                          ROVisibilityIterator2::Observed);
-    backWriters_p [VisBufferComponents::CorrectedCube] =
+    backWriters_p [CorrectedCube] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCubeCorrected,
                          ROVisibilityIterator2::Corrected);
-    backWriters_p [VisBufferComponents::ModelCube] =
+    backWriters_p [ModelCube] =
         makeBackWriter2 (& VisibilityIteratorWriteImpl2::writeVis, & VisBuffer2::visCubeModel,
                          ROVisibilityIterator2::Model);
 

@@ -36,9 +36,13 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
-#include <synthesis/MSVis/VisBufferComponents.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisBufferBase2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/TransformMachines/VisModelData.h>
+
+using casa::vi::VisBufferComponent2;
+using casa::vi::VisBufferComponents2;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -46,74 +50,12 @@ namespace asyncio {
     class VLAT;
 } // end namespace asyncio
 
-class VbDirtyComponents;
 class ROVisibilityIterator2;
 class VisibilityIterator2;
 
 namespace vi {
 
 //#forward
-
-
-// <summary>
-// VbDirtyComponents allows marking portions of a VisBufferImpl as
-// modified (aka dirty).  This feature is needed for the Visibility
-// Processing Framework (VPF) which allows a sequence of data processing
-// nodes to work as a bucket brigade operating sequentially on a
-// VisBufferImpl.  A downstream output node needs to know what data,
-// if any, needs to be written out.
-//
-// <prerequisite>
-//   #<li><linkto class="VisBufferImpl">VisBufferImpl</linkto>
-// </prerequisite>
-//
-// </summary>
-//
-// <synopsis>
-//
-// </synopsis>
-// <example>
-//
-// <code>
-//
-// </code>
-// </example>
-//
-
-#if 0 // Can't avoid the definition in VisBuffer for now
-
-class VbDirtyComponents {
-
-public:
-
-    typedef std::set<VisBufferComponents::EnumType> Set;
-    typedef Set::const_iterator const_iterator;
-
-    VbDirtyComponents operator+ (const VbDirtyComponents & other) const;
-
-    const_iterator begin () const;
-    Bool contains (VisBufferComponents::EnumType component) const;
-    const_iterator end () const;
-
-    static VbDirtyComponents all ();
-    static VbDirtyComponents exceptThese (VisBufferComponents::EnumType component, ...);
-    static VbDirtyComponents none ();
-    static VbDirtyComponents singleton (VisBufferComponents::EnumType component);
-    static VbDirtyComponents these (VisBufferComponents::EnumType component, ...);
-
-protected:
-
-private:
-
-    Set set_p;
-
-    static const VbDirtyComponents all_p;
-
-    static VbDirtyComponents initializeAll ();
-
-};
-
-#endif // commenting out
 
 class VisBufferImpl2;
 
@@ -327,14 +269,11 @@ public:
     VbCacheItem <Cube<Bool> > flagCube_p;
     VbCacheItem <Vector<Bool> > flagRow_p;
     VbCacheItem <Cube<Float> > floatDataCube_p;
-    VbCacheItem <Vector<Double> > frequency_p;
     VbCacheItem <Matrix<Float> > imagingWeight_p;
-    //VbCacheItem <Vector<Double> > lsrFrequency_p;
     VbCacheItem <Cube<Complex> > modelVisCube_p;
     VbCacheItem <Matrix<CStokesVector> > modelVisibility_p;
     VbCacheItem <Int> nChannel_p;
     VbCacheItem <Int> nCorr_p;
-    //    VbCacheItem <Int> nCat_p;
     VbCacheItem <Int> nRow_p;
     VbCacheItem <Vector<Int> > observationId_p;
     VbCacheItem <MDirection> phaseCenter_p;
@@ -400,6 +339,37 @@ class VisBufferState {
 
 public:
 
+    template<typename T>
+    class FrequencyCache {
+    public:
+
+        Int frame_p;
+        Double time_p;
+        Vector<T> values_p;
+
+        void
+        flush ()
+        {
+            time_p = -1;
+        }
+
+        void
+        updateCacheIfNeeded(Double time, Int frame = VisBuffer2::FrameNotSpecified)
+        {
+            if (time == time_p && frame == frame_p){
+                return;
+            }
+
+            time_p = time;
+            frame_p = frame;
+
+            assert (false);
+
+#warning "VisBufferState::FrequencyCache::updateCacheIfNeeded needs implementation"
+
+        }
+    };
+
     VisBufferState ()
     : areCorrelationsSorted_p (False),
       dirtyComponents_p (),
@@ -416,7 +386,9 @@ public:
     {}
 
     Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
-    VbDirtyComponents dirtyComponents_p;
+    FrequencyCache<Int> channelNumbers_p;
+    vi::VisBufferComponents2 dirtyComponents_p;
+    FrequencyCache<Double> frequencies_p;
     Bool isAttached_p;
     Bool isNewMs_p;
     Bool isNewArrayId_p;
@@ -427,6 +399,7 @@ public:
     Int msId_p;
     String msName_p;
     Bool newMs_p;
+    SubChunkPair2 subchunk_p;
     ROVisibilityIterator2 * vi_p; // [use]
     const ROVisibilityIterator2 * viC_p; // [use]
     mutable VisModelData visModelData_p;
@@ -478,7 +451,7 @@ public:
 // visibility() and flag().
 //</todo>
 
-class VisBufferImpl2 : public VisBufferBase2 {
+class VisBufferImpl2 : public VisBuffer2 {
 
     friend class casa::asyncio::VLAT; // for async i/o
     friend class VbCacheItemBase;
@@ -508,18 +481,38 @@ public:
 
     virtual void associateWithVisibilityIterator2 (const ROVisibilityIterator2 & vi);
 
-    virtual VisBufferImpl2 * clone () const;
+    // Copies all of the components (or just the one in the cache) from
+    // the specified VisBuffer into this one.
+
+    virtual void copy (const VisBuffer2 & other, Bool copyCachedDataOnly = True);
+
+    // Copies the specified components (or just the one in the cache) from
+    // the specified VisBuffer into this one.
+
+    virtual void copyComponents (const VisBuffer2 & other,
+				 const VisBufferComponents2 & components,
+				 Bool copyCachedDataOnly = False);
+
+    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent);
+
+    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
+    virtual const Vector<Double> getFrequencies (Int rowInBuffer,
+                                                 Int frame = FrameNotSpecified) const;
+    virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
+    virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
 
     virtual const ROVisibilityIterator2 * getVi () const;
 
     virtual void invalidate();
 
-    virtual void dirtyComponentsAdd (const VbDirtyComponents & additionalDirtyComponents);
-    virtual void dirtyComponentsAdd (VisBufferComponents::EnumType component);
+    virtual void writeChangesBack ();
+
+    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
+    virtual void dirtyComponentsAdd (VisBufferComponent2 component);
     virtual void dirtyComponentsClear ();
-    virtual VbDirtyComponents dirtyComponentsGet () const;
-    virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
-    virtual void dirtyComponentsSet (VisBufferComponents::EnumType component);
+    virtual VisBufferComponents2 dirtyComponentsGet () const;
+    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
+    virtual void dirtyComponentsSet (VisBufferComponent2 component);
 
     //--> This needs to be removed: virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
 
@@ -537,9 +530,7 @@ public:
     virtual Vector<Float> parang(Double time) const;
 
     virtual MDirection azel0(Double time) const; // function rather than cached value
-    virtual void azel0Vec(Double time, Vector<Double>& azelVec) const;
     virtual Vector<MDirection> azel(Double time) const;
-    virtual void azelMat(Double time, Matrix<Double>& azelMat) const;
 
     // Hour angle for specified time
     virtual Double hourang(Double time) const;
@@ -551,7 +542,8 @@ public:
 
     // Normalize the visCube by the modelVisCube
     //   (and optionally also divide visCube_p by its normalized amp)
-    virtual void normalize(const Bool & phaseOnly = False);
+
+    virtual void normalize(Bool phaseOnly);
 
     // Fill weightMat according to sigma column
     virtual void resetWeightsUsingSigma ();//virtual void resetWeightMat();
@@ -566,8 +558,6 @@ public:
     // antenna from pointing table is avoided
     //Add more as needed.
 
-    virtual void copyCoordinateInfo (const VisBufferBase2 * vb, const  Bool dirDependent);
-
     virtual Bool isNewArrayId () const;
     virtual Bool isNewFieldId () const;
     virtual Bool isNewMs() const;
@@ -575,6 +565,7 @@ public:
     virtual Bool isWritable () const;
     virtual Int msId() const;
     virtual String msName (Bool stripPath = False) const;
+    virtual SubChunkPair2 getSubchunk () const;
 
     virtual Bool areCorrelationsSorted() const;
     virtual VisModelData getVisModelData() const;
@@ -591,14 +582,10 @@ public:
 
     virtual const Vector<Int> & antenna1 () const;
     virtual const Vector<Int> & antenna2 () const;
-    virtual Int arrayId () const;
+    virtual Int arrayId (Int row = -1) const;
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
-    virtual const Cube<Complex> & correctedVisCube () const;
-    virtual void setCorrectedVisCube (const Cube<Complex> &);
-    virtual const Matrix<CStokesVector> & correctedVisibility () const;
-    virtual void setCorrectedVisibility (const Matrix<CStokesVector> &);
-    virtual const Vector<Int> & corrType () const;
-    virtual Int dataDescriptionId () const;
+    virtual const Vector<Int> & correlationTypes (Int row = -1) const;
+    virtual Int dataDescriptionId (Int row = -1) const;
     virtual const Vector<MDirection> & direction1 () const;
     virtual const Vector<MDirection> & direction2 () const;
     virtual const Vector<Double> & exposure () const;
@@ -606,7 +593,7 @@ public:
     virtual const Vector<Float> & feed1_pa () const;
     virtual const Vector<Int> & feed2 () const;
     virtual const Vector<Float> & feed2_pa () const;
-    virtual Int fieldId () const;
+    virtual Int fieldId (Int row = -1) const;
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
@@ -615,39 +602,41 @@ public:
     virtual void setFlagCube (const Cube<Bool>&);
     virtual const Vector<Bool> & flagRow () const;
     virtual void setFlagRow (const Vector<Bool>&);
-    virtual const Cube<Float> & floatDataCube () const;
-    virtual void setFloatDataCube (const Cube<Float> &);
-    virtual const Vector<Double> & frequency () const;
     virtual const Matrix<Float> & imagingWeight () const;
-    virtual const Cube<Complex> & modelVisCube () const;
-    virtual void setModelVisCube(const Complex & c);
-    virtual void setModelVisCube(const Cube<Complex>& vis);
-    virtual void setModelVisCube(const Vector<Float>& stokes);
-    virtual const Matrix<CStokesVector> & modelVisibility () const;
-    virtual void setModelVisibility (Matrix<CStokesVector> &);
-    virtual Int nChannel () const;
-    virtual Int nCorr () const;
-    virtual Int nRow () const;
+    virtual Int nChannels () const;
+    virtual Int nCorrelations (Int row = -1) const;
+    virtual Int nRows () const;
     virtual const Vector<Int> & observationId () const;
-    virtual const MDirection& phaseCenter () const;
-    virtual Int polFrame () const;
+    virtual const MDirection& phaseCenter (Int row = -1) const;
+    virtual Int polarizationFrame (Int row = -1) const;
     virtual const Vector<Int> & processorId () const;
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
     virtual const Vector<Float> & sigma () const;
     virtual const Matrix<Float> & sigmaMat () const;
-    virtual Int spectralWindow () const;
-    virtual const Vector<Int> & stateId () const;
+    virtual Int spectralWindow (Int row = -1) const;
+    virtual const Vector<Int> & stateId (Int row = -1) const;
     virtual const Vector<Double> & time () const;
     virtual const Vector<Double> & timeCentroid () const;
     virtual const Vector<Double> & timeInterval () const;
-    virtual const Vector<RigidVector<Double, 3> > & uvw () const;
-    virtual const Matrix<Double> & uvwMat () const;
+    virtual const Matrix<Double> & uvw () const;
+    virtual const Cube<Complex> & visCubeCorrected () const;
+    virtual void setVisCubeCorrected (const Cube<Complex> &);
+    virtual const Matrix<CStokesVector> & visCorrected () const;
+    virtual void setVisCorrected (const Matrix<CStokesVector> &);
+    virtual const Cube<Float> & visCubeFloat () const;
+    virtual void setVisCubeFloat (const Cube<Float> &);
+    virtual const Cube<Complex> & visCubeModel () const;
+    virtual void setVisCubeModel (const Complex & c);
+    virtual void setVisCubeModel (const Cube<Complex>& vis);
+    virtual void setVisCubeModel(const Vector<Float>& stokes);
+    virtual const Matrix<CStokesVector> & visModel () const;
+    virtual void setVisModel (Matrix<CStokesVector> &);
     virtual const Cube<Complex> & visCube () const;
     virtual void setVisCube(const Complex & c);
     virtual void setVisCube (const Cube<Complex> &);
-    virtual const Matrix<CStokesVector> & visibility () const;
-    virtual void setVisibility (Matrix<CStokesVector> &);
+    virtual const Matrix<CStokesVector> & vis () const;
+    virtual void setVis (Matrix<CStokesVector> &);
     virtual const Vector<Float> & weight () const;
     virtual void setWeight (const Vector<Float>&);
     virtual const Matrix<Float> & weightMat () const;
@@ -693,7 +682,8 @@ protected:
     virtual ROVisibilityIterator2 * getViP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
     void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
-                           Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow);
+                           Bool isNewArrayId, Bool isNewFieldId,
+                           Bool isNewSpectralWindow, const SubChunkPair2 & subchunk);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
 
     template <typename Coord>
@@ -748,7 +738,6 @@ private:
     virtual void fillFlagCube (Cube<Bool>& value) const;
     virtual void fillFlagRow (Vector<Bool>& value) const;
     virtual void fillFloatData (Cube<Float>& value) const;
-    virtual void fillFrequency (Vector<Double>& value) const;
     virtual void fillImagingWeight (Matrix<Float> & value) const;
     virtual void fillJonesC (Vector<SquareMatrix<Complex, 2> >& value) const;
     virtual void fillNChannel (Int& value) const;
