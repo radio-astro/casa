@@ -201,6 +201,14 @@ using namespace casac;
          }
          $1 = Quantity(myVals, PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary Dictionary");
       return NULL;
@@ -232,6 +240,14 @@ using namespace casac;
          }
          $1 = new Quantity(myVals,PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = new Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
@@ -263,6 +279,15 @@ using namespace casac;
          }
          $1 = new Quantity(myVals, PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::vector<double> myVals;
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = new Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
