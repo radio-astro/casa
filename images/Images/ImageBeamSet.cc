@@ -325,17 +325,13 @@ const Array<GaussianBeam>& ImageBeamSet::getBeams() const {
 }
 
 void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
-	if (beams.ndim() != _axes.size()) {
+    if (beams.ndim() != _axes.size()) {
 		throw AipsError(
 			"Beam array dimensionality is not equal to number of axes."
 		);
 	}
 	_beams.assign(beams);
-	_areas = _getAreas(_areaUnit, _beams);
-	/*
-	_areas.assign(ArrayLattice<Double>());
-	_recalculateStats = True;
-	*/
+	_areas.assign(_getAreas(_areaUnit, _beams));
 }
 
 size_t ImageBeamSet::nelements() const {
