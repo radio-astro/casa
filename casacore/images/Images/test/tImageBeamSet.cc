@@ -114,6 +114,41 @@ int main() {
 				AlwaysAssert(x.getMinAreaBeamPosition() == minBeamPos, AipsError);
 			}
 		}
+        {
+            cout << "*** test setBeam()" << endl;
+            GaussianBeam beam0(Quantity(4, "arcsec"), Quantity(3, "arcsec"), Quantity(20, "deg"));
+            IPosition shape(2, 3, 4); 
+            Vector<ImageBeamSet::AxisType> types(2);
+            types[0] = ImageBeamSet::SPECTRAL;
+            types[1] = ImageBeamSet::POLARIZATION;
+            ImageBeamSet x(beam0, shape, types);
+            GaussianBeam beam1(Quantity(5, "arcsec"), Quantity(4, "arcsec"), Quantity(20, "deg"));
+            IPosition pos2(2, 1, 2); 
+            x.setBeam(beam1, pos2);
+            for (IPosition pos(2,0,0); pos != shape; pos.next(shape)) {
+                GaussianBeam beam = x.getBeam(pos);
+                if (pos == pos2) {
+                    AlwaysAssert(beam == beam1, AipsError);
+                }
+                else {
+                    AlwaysAssert(beam == beam0, AipsError);
+                }
+            }
+            {
+                cout << "*** test setBeams()" << endl;
+                GaussianBeam init(
+                    Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+                    Quantity(0, "deg")
+                );
+                IPosition shape(1, 3); 
+                Vector<ImageBeamSet::AxisType> types(1);
+                types[0] = ImageBeamSet::SPECTRAL;
+                ImageBeamSet x(init, shape, types);
+                Array<GaussianBeam> beams(IPosition(1, 5));
+                x.setBeams(beams);
+            }
+        }
+
 	}
 	catch (const AipsError& x) {
 		cout << x.getMesg() << endl;
