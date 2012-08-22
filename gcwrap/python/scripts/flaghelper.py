@@ -1637,7 +1637,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
     return savelist
 
 
-def backupFlags(tflocal, prename):
+def backupFlags(msfile, prename):
     '''
          Create names like this:
          flags.flagcmd_1,
@@ -1647,27 +1647,32 @@ def backupFlags(tflocal, prename):
         integer giving a name, which does not already exist'''
         
     prefix = prename
-    existing = tflocal.getflagversionlist(printflags=False)
-
-    # remove comments from strings
-    existing = [x[0:x.find(' : ')] for x in existing]
-    i = 1
-    while True:
-        versionname = prefix + '_' + str(i)
-
-        if not versionname in existing:
-            break
-        else:
-            i = i + 1
-
-    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
-
-    casalog.post('Saving current flags to ' + versionname
-                 + ' before applying new flags')
-
-    tflocal.saveflagversion(versionname=versionname,
-                            comment='Flags autosave on ' + time_string, merge='replace')
+    tftool = casac.testflagger()
+    tftool.open(msfile)
+    try:
+        existing = tftool.getflagversionlist(printflags=False)
     
+        # remove comments from strings
+        existing = [x[0:x.find(' : ')] for x in existing]
+        i = 1
+        while True:
+            versionname = prefix + '_' + str(i)
+    
+            if not versionname in existing:
+                break
+            else:
+                i = i + 1
+    
+        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+    
+        casalog.post('Saving current flags to ' + versionname
+                     + ' before applying new flags')
+    
+        tftool.saveflagversion(versionname=versionname,
+                                comment='Flags autosave on ' + time_string, merge='replace')
+    finally:
+        tftool.done()
+        
     return
 
 

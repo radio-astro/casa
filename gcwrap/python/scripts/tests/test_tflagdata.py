@@ -340,8 +340,17 @@ class test_flagmanager(test_base):
         self.assertEqual(len(tflocal.getflagversionlist()), 4)
         tflocal.done()
         
-        self.assertTrue(os.path.exists('flagdatatest.ms.flagversions/flags.'+newname),
+        self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
                         'Flagversion file does not exist: flags.'+newname)
+        
+        # Specific for MMS
+        if testmms:
+            areg = self.vis+'/SUBMSS/*flagversions*'
+            import glob
+            print 'Check for .flagversions in the wrong place.'
+            self.assertEqual(glob.glob(areg), [], 'There should not be any .flagversions in the'
+                                                ' SUBMSS directory')
+            
 
     def test2m(self):
         """flagmanager test2m: Create, then restore autoflag"""

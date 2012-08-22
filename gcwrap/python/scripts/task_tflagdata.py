@@ -98,9 +98,19 @@ def tflagdata(vis,
         timedev = os.path.abspath(timedev)        
         
     if (isinstance(freqdev,str) and freqdev != ""):
-        freqdev = os.path.abspath(freqdev)            
+        freqdev = os.path.abspath(freqdev)        
+        
+    # SMC: moved the flagbackup to before initializing the cluster.
+    # Note that with this change, a flag backup will be created even if
+    # an error happens that prevents the flagger tool from running.    
+    if (mode != 'summary' and flagbackup):
+        casalog.post('Backup original flags before applying new flags')
+        fh.backupFlags(vis, 'tflagdata')    
 
     if pCASA.is_mms(vis):
+        # Set flagbackup to False because only the controller
+        # should create a backup
+        flagbackup = False
         pCASA.execute("tflagdata", locals())
         return
 
@@ -108,13 +118,17 @@ def tflagdata(vis,
 
     # Take care of the trivial parallelization
     if ParallelTaskHelper.isParallelMS(vis):
+        # Set flagbackup to False because only the controller
+        # should create a backup
+        flagbackup = False
         # To be safe convert file names to absolute paths.
         helper = ParallelTaskHelper('tflagdata', locals())
         retVar = helper.go()
         return retVar
+    
+    # Create local tools
     tflocal = casac.testflagger()
     mslocal = casac.ms()
-
 
     try: 
         # Verify the ntime value
@@ -498,10 +512,12 @@ def tflagdata(vis,
         casalog.post('Initializing the agents')
         tflocal.init()
 
+        # HPC work: moved the flagbackup to before the cluster
+        # initialization.
         # Backup the existing flags before applying new ones
-        if flagbackup and writeflags:
-            casalog.post('Backup original flags before applying new flags')
-            fh.backupFlags(tflocal, 'tflagdata')
+#        if flagbackup and writeflags:
+#            casalog.post('Backup original flags before applying new flags')
+#            fh.backupFlags(tflocal, 'tflagdata')
         
         # Run the tool
         casalog.post('Running the testflagger tool')
@@ -596,66 +612,6 @@ def tflagdata(vis,
         
     return
 
-
-
-def backupFlags(tflocal, mode):
-    ''' Backup the flags before applying new ones'''
-    
-    # Create names like this:
-    # before_manual_1,
-    # before_manual_2,
-    # before_manual_3,
-    # etc
-    #
-    # Generally  before_<mode>_<i>, where i is the smallest
-    # integer giving a name, which does not already exist
-    
-    # Get the existing flags from the FLAG_VERSION_LIST file
-    # in the MS directory
-    existing = tflocal.getflagversionlist(printflags=False)
-
-    # Remove the comments from strings
-    existing = [x[0:x.find(' : ')] for x in existing]
-
-    i = 1
-    while True:
-        versionname = mode +"_" + str(i)
-#        versionname = mode + str(i)
-
-        if not versionname in existing:
-            break
-        else:
-            i = i + 1
-
-    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
-
-    if debug:
-        casalog.post("Saving current flags to " + versionname + " before applying new flags")
-
-                      
-#    tflocal.saveflagversion(versionname=versionname,
-#                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
-#                           merge='replace')
-    tflocal.saveflagversion(versionname=versionname,
-                           comment='backup flags before applying\"on ' + time_string,
-                           merge='replace')
-
-    # Save flagcmd to flagbackup
-    # Need to consider flagmanager when writing this
-    
-    # We already have the flagbackup in disk, now append the FLAG_CMD
-    # sub-table to it
-#    mstable = msfile + '/FLAG_CMD'
-#    try:
-#        tb.open(mstable, nomodify=False)
-#    except:
-#        raise Exception, 'Error opening FLAG_CMD table ' + mstable
-    
-#    tb.copy(newtablename=versionname + '/FLAG_CMD')
-#    tb.done()
-    
-
-    return
 
 
 def delspace(word, replace):
