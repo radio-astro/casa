@@ -13,6 +13,7 @@ import os
 import shutil
 import pdb
 import copy
+import glob
 class pimager():
     def __init__(self, cluster=''):
         self.msinfo=odict()
@@ -1118,9 +1119,9 @@ class pimager():
             notdone=True
             while(notdone):
                 myim=casac.imager()
-                retval=myim.drawmask(residual, maskimage)
+                retintval=myim.drawmask(residual, maskimage)
                 myim.done()
-                if(retval==2):
+                if(retintval==2):
                     notdone=False
                     break
                 
@@ -1131,8 +1132,13 @@ class pimager():
                 newthresh=psfoutermax*cyclefactor*maxresid
                 if(newthresh < oldthresh):
                     newthresh=oldthresh
+                
+                if(retintval==1):
+                    ###The user has decided to be done with interactive
+                    notdone=False
+                    newthresh=oldthresh
                 newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
-                threshold=newthresh
+                threshold=newthresh                
                 retval=self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
                            field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
                            numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
@@ -1267,6 +1273,9 @@ class pimager():
         model=imagename+'.model' 
         if(not contclean or (not os.path.exists(model))):
             shutil.rmtree(model, True)
+            failedmods=glob.glob(imagename+'*.model')
+            for someim in failedmods:
+                shutil.rmtree(someim, True)
             shutil.rmtree(imagename+'.image', True)
             ##create the cube
             im.selectvis(vis=msname, spw=spw, field=field, writeaccess=False)
