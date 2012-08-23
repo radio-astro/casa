@@ -445,9 +445,37 @@ int main() {
     		  }
     	  }
     	  AlwaysAssert(newsp.restFrequency() == restfreq1, AipsError);
+    }
+    {
+    	cout << "*** single beams concat test with stokes, CAS-4423" << endl;
+    	CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+    	TempImage<Float> i0(TiledShape(IPosition(4, 10, 10, 1, 8)), csys);
+    	ImageInfo ii = i0.imageInfo();
+    	ii.setAllBeams(
+    		8, 1, GaussianBeam(
+    			Quantity(4, "arcsec"), Quantity(3, "arcsec"), Quantity(0, "deg")
+    		)
+    	);
+    	i0.setImageInfo(ii);
+
+    	Vector<Double> refVal = csys.referenceValue();
+    	refVal[3] += 1e9;
+    	csys.setReferenceValue(refVal);
+    	TempImage<Float> i1(TiledShape(IPosition(4, 10, 10, 1, 27)), csys);
+    	ii = i1.imageInfo();
+    	ii.setAllBeams(
+    		27, 1, GaussianBeam(
+    			Quantity(8, "arcsec"), Quantity(6, "arcsec"), Quantity(0, "deg")
+    		)
+  	    );
+    	i1.setImageInfo(ii);
+    	ImageConcat<Float> concat(3, False);
+    	concat.setImage(i0, True);
+    	concat.setImage(i1, True);
 
 
-      }
+
+    }
   } catch(AipsError x) {
     cerr << x.getMesg() << endl;
     return 1;
