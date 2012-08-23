@@ -38,22 +38,14 @@ ImageBeamSet::ImageBeamSet()
 	  _areas(Array<Double>()), _areaUnit(_DEFAULT_AREA_UNIT),
 	  _minBeam(GaussianBeam::NULL_BEAM),
 	  _maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(IPosition(0)),
-	  _maxBeamPos(IPosition(0))
-	  {
-	//Array<Double> x;
-	//_areas = ArrayLattice<Double>(x, True);
+	  _maxBeamPos(IPosition(0)) {
 }
-/*
- * //_areaStats(std::auto_ptr<LatticeStatistics<Double> >(0)),
-	  //_recalculateStats(True)
- */
 
 ImageBeamSet::ImageBeamSet(
 	const Array<GaussianBeam>& beams,
 	const Vector<AxisType>& axes
 ) : _beams(beams), _axes(axes),
-	_areas(_getAreas(_areaUnit, beams))
-{
+	_areas(_getAreas(_areaUnit, beams)) {
 	_checkAxisTypeSize(axes);
 	_checkForDups(axes);
 	Double minArea, maxArea;
@@ -62,14 +54,6 @@ ImageBeamSet::ImageBeamSet(
 	_maxBeam = _beams(_maxBeamPos);
 }
 
-/*
-//: _beams(beams), _axes(axes)
-//	_areas(_getAreas(_areaUnit, beams))
-	_//areas(ArrayLattice<Double>(_beams.shape())),
-	//_areaStats(std::auto_ptr<LatticeStatistics<Double> >(0)),
-	//_recalculateStats(True)
-*/
-
 ImageBeamSet::ImageBeamSet(const GaussianBeam& beam)
  : _beams(IPosition(1, 1), beam),
    _axes(Vector<AxisType>(0)),
@@ -77,12 +61,6 @@ ImageBeamSet::ImageBeamSet(const GaussianBeam& beam)
    _areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
    _maxBeam(beam), _minBeamPos(1, 0), _maxBeamPos(1, 0) {
 }
-/*
-_areaUnit(_DEFAULT_AREA_UNIT),
-   _areaStats(std::auto_ptr<LatticeStatistics<Double> >(0)),
-   _recalculateStats(True) {
-   */
-
 
 ImageBeamSet::ImageBeamSet(
 	const IPosition& shape, const Vector<AxisType>& axes
@@ -94,11 +72,6 @@ ImageBeamSet::ImageBeamSet(
 	_checkForDups(axes);
 }
 
-/*
-_areaStats(std::auto_ptr<LatticeStatistics<Double> >(0)),
-	_recalculateStats(True)
-*/
-
 ImageBeamSet::ImageBeamSet(
 	const GaussianBeam& beam, const IPosition& shape,
 	const Vector<AxisType>& axes
@@ -106,16 +79,9 @@ ImageBeamSet::ImageBeamSet(
 	_areas(shape, beam.getArea(_DEFAULT_AREA_UNIT)),
 	_areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
 	_maxBeam(beam), _minBeamPos(shape.size(), 0),
-	_maxBeamPos(shape.size(), 0)
-
-	{
+	_maxBeamPos(shape.size(), 0) {
 	_checkForDups(axes);
 }
-
-/*
- * _areaStats(std::auto_ptr<LatticeStatistics<Double> >(0)),
-	_recalculateStats(True)
- */
 
 ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
   : _beams(other._beams), _axes(other._axes),
@@ -123,15 +89,6 @@ ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
     _minBeam(other._minBeam), _maxBeam(other._maxBeam),
     _minBeamPos(other._minBeamPos),
     _maxBeamPos(other._maxBeamPos) {}
-
-/*
- * _areaStats(
-	      other._areaStats.get() == 0
-	      	  ? 0
-	      	  : new LatticeStatistics<Double>(*other._areaStats)
-	  ),
-	  _recalculateStats(other._recalculateStats)
- */
 
 ImageBeamSet::~ImageBeamSet() {}
 
@@ -149,24 +106,16 @@ ImageBeamSet& ImageBeamSet::operator=(
 		_minBeamPos = other._minBeamPos;
 		_maxBeamPos.resize(other._maxBeamPos.size());
 		_maxBeamPos = other._maxBeamPos;
-		/*
-		_areaStats.reset(
-			other._areaStats.get() == 0
-				? 0
-				: new LatticeStatistics<Double>(
-					*other._areaStats
-			)
-		),
-		_recalculateStats = other._recalculateStats;
-		*/
 	}
 	return *this;
 }
 
+/*
 GaussianBeam& ImageBeamSet::operator()(const IPosition& pos) {
-	// _recalculateStats = True;
+	_doAreas = True;
 	return _beams(pos);
 }
+*/
 
 const GaussianBeam& ImageBeamSet::operator()(
 	const IPosition& pos
@@ -178,19 +127,22 @@ Array<GaussianBeam> ImageBeamSet::operator[](uInt i) const {
 	return _beams[i];
 }
 
+/*
 Array<GaussianBeam> ImageBeamSet::operator()(
 	const IPosition &start,
 	const IPosition &end
 ) {
-	//_recalculateStats = True;
+	_doAreas = True;
 	return _beams(start, end);
 }
+*/
 
-const Array<GaussianBeam> ImageBeamSet::operator()(
+const Array<GaussianBeam>& ImageBeamSet::operator()(
 	const IPosition &start,
 	const IPosition &end
 ) const {
-	return _beams(start, end);
+	const Array<GaussianBeam>& beams = _beams(start, end);
+	return beams;
 }
 
 Bool ImageBeamSet::operator== (const ImageBeamSet& other) const {
@@ -334,6 +286,14 @@ void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
 	_areas.assign(_getAreas(_areaUnit, _beams));
 }
 
+void ImageBeamSet::setBeams(
+	const IPosition& begin, const IPosition& end,
+	const Array<GaussianBeam>& beams
+) {
+	_beams(begin, end) = beams;
+	_areas.assign(_getAreas(_areaUnit, _beams));
+}
+
 size_t ImageBeamSet::nelements() const {
 	return _beams.nelements();
 }
@@ -356,14 +316,6 @@ void ImageBeamSet::set(const GaussianBeam& beam) {
 	_maxBeam = beam;
 	_minBeamPos = IPosition(_beams.ndim(), 0);
 	_maxBeamPos = IPosition(_beams.ndim(), 0);
-
-	/*
-	Array<Double> x(
-		_beams.shape(), beam.getArea(_DEFAULT_AREA_UNIT)
-	);
-	_areas = ArrayLattice<Double>(x, True);
-	_recalculateStats = True;
-	*/
 }
 
 void ImageBeamSet::setBeam(
@@ -379,52 +331,22 @@ void ImageBeamSet::setBeam(
 		_maxBeam = beam;
 		_maxBeamPos = position;
 	}
-	/*
-	if (_areas.size() > 0) {
-		_areas.putAt(beam.getArea(_areaUnit), position);
-	}
-	_recalculateStats = True;
-	*/
 }
 
 GaussianBeam ImageBeamSet::getMaxAreaBeam() const {
 	return _maxBeam;
-	/*
-	GaussianBeam min, max;
-	IPosition x, y;
-	_getMinMaxAreaBeams(min, max, x, y);
-	return max;
-	*/
 }
 
 GaussianBeam ImageBeamSet::getMinAreaBeam() const {
 	return _minBeam;
-	/*
-	IPosition x, y;
-	GaussianBeam min, max;
-	_getMinMaxAreaBeams(min, max, x, y);
-	return min;
-	*/
 }
 
 IPosition ImageBeamSet::getMaxAreaBeamPosition() const {
 	return _maxBeamPos;
-	/*
-	GaussianBeam min, max;
-	IPosition x, y;
-	_getMinMaxAreaBeams(min, max, x, y);
-	return y;
-	*/
 }
 
 IPosition ImageBeamSet::getMinAreaBeamPosition() const {
 	return _minBeamPos;
-	/*
-	GaussianBeam min, max;
-	IPosition x, y;
-	_getMinMaxAreaBeams(min, max, x, y);
-	return x;
-	*/
 }
 
 void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
@@ -436,53 +358,11 @@ void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
 	}
 }
 
-/*
-void ImageBeamSet::_doAreaStats() {
-	_areaUnit = _beams.begin()->getMajor().getUnit();
-	_areaUnit = Quantity(Quantity(1, _areaUnit)*Quantity(1,_areaUnit)).getUnit();
-	IPosition shape = _beams.shape();
-	if (_areas.shape() != _beams.shape()) {
-		_areas.assign(ArrayLattice<Double>(_beams.shape()));
-	}
-	for (
-		IPosition pos(_beams.ndim(), 0);
-		pos !=shape; pos.next(shape)
-	) {
-		_areas.putAt(_beams(pos).getArea(_areaUnit), pos);
-	}
-	LogIO x;
-	_areaStats.reset(
-		new LatticeStatistics<Double>(SubLattice<Double>(_areas), x)
-	);
-}
-*/
-/*
-void ImageBeamSet::_getMinMaxAreaBeams(
-	GaussianBeam& min, GaussianBeam& max,
-	IPosition& minPos, IPosition& maxPos
-) {
-	AlwaysAssert(_beams.size() > 0, AipsError);
-	if (_beams.size() == 1) {
-		max = *_beams.begin();
-		min = max;
-		return;
-	}
-	if (_recalculateStats || _areas.size() == 0) {
-		_doAreaStats();
-	}
-	if (! _areaStats->getMinMaxPos(minPos, maxPos)) {
-		throw AipsError(
-			"Could not determine positions of beams with minimum/maximum area"
-		);
-	}
-	max = _beams(maxPos);
-	min = _beams(minPos);
-}
-*/
-
 Array<Double> ImageBeamSet::_getAreas(
 	String& areaUnit, const Array<GaussianBeam>& beams
 ) {
+	areaUnit = beams.begin()->getMajor().getUnit();
+	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
 	Array<Double> areas(beams.shape());
 	Array<Double>::iterator iareas = areas.begin();
 	areaUnit = beams.begin()->getMajor().getUnit();
@@ -495,7 +375,6 @@ Array<Double> ImageBeamSet::_getAreas(
 	}
 	return areas;
 }
-
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
 	os << beamSet.getBeams();

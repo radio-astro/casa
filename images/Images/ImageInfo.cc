@@ -744,7 +744,7 @@ void ImageInfo::setBeam(
 	Int s = stokes;
 	_validateChannelStokes(c, s);
 	IPosition plane = _beamPosition(c, s);
-	_beams(plane) = beam;
+	_beams.setBeam(beam, plane);
 }
 
 Bool ImageInfo::hasMultipleBeams() const {

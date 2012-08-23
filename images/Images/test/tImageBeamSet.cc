@@ -112,6 +112,44 @@ int main() {
 				AlwaysAssert(x.getMinAreaBeam() == minBeam, AipsError);
 				AlwaysAssert(x.getMaxAreaBeamPosition() == maxBeamPos, AipsError);
 				AlwaysAssert(x.getMinAreaBeamPosition() == minBeamPos, AipsError);
+
+				init = GaussianBeam(
+					Quantity(6, "arcsec"), Quantity(6, "arcsec"),
+					Quantity(0, "deg")
+				);
+				shape.resize(1);
+				shape = IPosition(1, 3);
+				types.resize(1);
+				types[0] = ImageBeamSet::SPECTRAL;
+				x = ImageBeamSet(init, shape, types);
+				GaussianBeam beam8 = GaussianBeam(
+					Quantity(8, "arcsec"), Quantity(8, "arcsec"),
+					Quantity(0, "deg")
+				);
+				x.setBeam(beam8, IPosition(1,1));
+				GaussianBeam beam10 = GaussianBeam(
+					Quantity(10, "arcsec"), Quantity(10, "arcsec"),
+					Quantity(0, "deg")
+				);
+				x.setBeam(beam10, IPosition(1,2));
+				AlwaysAssert(x.getMaxAreaBeam() == beam10, AipsError);
+				AlwaysAssert(
+					x.getMaxAreaBeamPosition() == IPosition(1, 2),
+					AipsError
+				);
+			}
+			{
+				cout << "*** test setBeams()" << endl;
+				GaussianBeam init(
+					Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+					Quantity(0, "deg")
+				);
+				IPosition shape(1, 3);
+				Vector<ImageBeamSet::AxisType> types(1);
+				types[0] = ImageBeamSet::SPECTRAL;
+				ImageBeamSet x(init, shape, types);
+				Array<GaussianBeam> beams(IPosition(1, 5));
+				x.setBeams(beams);
 			}
 		}
         {

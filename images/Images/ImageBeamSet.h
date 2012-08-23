@@ -106,18 +106,20 @@ public:
 
 	ImageBeamSet& operator=(const ImageBeamSet& other);
 
-	GaussianBeam &operator()(const IPosition &);
+	//GaussianBeam &operator()(const IPosition &);
 
 	const GaussianBeam &operator()(const IPosition &) const;
 
     Array<GaussianBeam> operator[] (uInt i) const;
 
+    /*
     Array<GaussianBeam> operator()(
     	const IPosition &start,
         const IPosition &end
     );
+    */
 
-    const Array<GaussianBeam> operator() (
+    const Array<GaussianBeam>& operator() (
     	const IPosition &start,
     	const IPosition &end
     ) const;
@@ -147,6 +149,12 @@ public:
 	// elements.
 	void setBeam(
 		const GaussianBeam& beam, const IPosition& position
+	);
+
+	// set the beams from the specified beginning to specified ending positions.
+	void setBeams(
+		const IPosition& begin, const IPosition& end,
+		const Array<GaussianBeam>& beams
 	);
 
 	// does this beam set contain only a single beam?
@@ -206,12 +214,8 @@ private:
 	String _areaUnit;
 	GaussianBeam _minBeam, _maxBeam;
 	IPosition _minBeamPos, _maxBeamPos;
-	/*
-	std::auto_ptr<LatticeStatistics<Double> > _areaStats;
-	Bool _recalculateStats;
-	*/
-
 	GaussianBeam _smallest, _largest, _median;
+	//Bool _doAreas;
 
 	IPosition _truePosition(
 		const IPosition& position,
@@ -223,18 +227,10 @@ private:
 	void _checkAxisTypeSize(
 		const Vector<AxisType>& axes
 	) const;
-/*
-	void _doAreaStats();
 
-	void _getMinMaxAreaBeams(
-		GaussianBeam& min, GaussianBeam& max,
-		IPosition& minPos, IPosition& maxPos
-	);
-*/
 	static Array<Double> _getAreas(
 		String& areaUnit, const Array<GaussianBeam>& beams
 	);
-
 };
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet);
