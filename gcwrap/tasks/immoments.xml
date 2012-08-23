@@ -185,6 +185,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         that have a value greater than 0.5 will be positive in the mask..
         immoments( &quot;clean.image&quot;, axis=&quot;spec&quot;, mask=&quot;calibrated.im>0.5&quot;, outfile=&quot;mom_withmask.im&quot; )
 
+If an image has multiple (per-channel beams) and the moment axis is equal to the
+spectral axis, each channel will be convolved with a beam that is equal to the beam
+having the largest area in the beamset prior to moment determination.
+
+
 </example>
 
 </task>

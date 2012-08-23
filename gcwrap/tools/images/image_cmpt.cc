@@ -2222,19 +2222,19 @@ image::maxfit(const ::casac::record& region, const bool doPoint,
 
 ::casac::image *
 image::moments(
-		const std::vector<int>& moments, const int axis,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const std::vector<std::string>& in_method,
-		const std::vector<int>& smoothaxes,
-		const ::casac::variant& smoothtypes,
-		const std::vector<double>& smoothwidths,
-		const std::vector<double>& d_includepix,
-		const std::vector<double>& d_excludepix, const double peaksnr,
-		const double stddev, const std::string& velocityType,
-		const std::string& out, const std::string& smoothout,
-		const std::string& pgdevice, const int nx, const int ny,
-		const bool yind, const bool overwrite, const bool removeAxis,
-		const bool stretch, const bool /* async */
+	const std::vector<int>& moments, const int axis,
+	const ::casac::record& region, const ::casac::variant& vmask,
+	const std::vector<std::string>& in_method,
+	const std::vector<int>& smoothaxes,
+	const ::casac::variant& smoothtypes,
+	const std::vector<double>& smoothwidths,
+	const std::vector<double>& d_includepix,
+	const std::vector<double>& d_excludepix, const double peaksnr,
+	const double stddev, const std::string& velocityType,
+	const std::string& out, const std::string& smoothout,
+	const std::string& pgdevice, const int nx, const int ny,
+	const bool yind, const bool overwrite, const bool removeAxis,
+	const bool stretch, const bool /* async */
 ) {
 	try {
 		*_log << LogOrigin("image", __FUNCTION__);
@@ -2886,7 +2886,7 @@ bool image::setrestoringbeam(
 	const int channel, const int polarization
 ) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << _ORIGIN;
 		if (detached()) {
 			return false;
 		}
@@ -2896,7 +2896,7 @@ bool image::setrestoringbeam(
 			casaQuantityFromVar(pa), *rec, deleteIt,
 			log, channel, polarization
 		);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
