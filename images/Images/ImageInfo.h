@@ -307,6 +307,8 @@ private:
 
     void _setRestoringBeam(const Record& inRecord);
 
+    inline static String _className() {static const String c = "ImageInfo"; return c; }
+
 };
 
 // <summary> Global functions </summary>
