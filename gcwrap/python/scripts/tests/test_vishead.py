@@ -21,6 +21,7 @@ Unit tests for task vishead. It tests the following modes:
 '''
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/vishead/'
+
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
@@ -31,7 +32,7 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Vishead tests will use data from '+datapath         
+print 'vishead tests will use data from '+datapath         
 
 input_file = 'n4826_16apr98.ms'  # 128 channels
 if testmms:

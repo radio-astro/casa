@@ -28,12 +28,16 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Gaincal tests will use data from '+datapath         
+print 'gaincal tests will use data from '+datapath         
 
 
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
+    
+    def cleanUp(self):
+        shutil.rmtree(self.msfile, ignore_errors=True)
+        os.system('rm -rf '+self.msfile+'.gcal')
     
     def setUp_ngc5921(self):
         
@@ -44,6 +48,7 @@ class test_base(unittest.TestCase):
             self.msfile = prefix + '.mms'
             
         self.reffile = datapath + prefix
+        self.cleanUp()
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
@@ -63,6 +68,7 @@ class test_base(unittest.TestCase):
             self.msfile = prefix + '.mms'
             
         self.reffile = datapath + prefix
+        self.cleanUp()
 
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):
@@ -131,8 +137,8 @@ class gaincal2_test(test_base):
 
         # Compare the calibration tables
         self.assertTrue(th.compTables(msgcal, reference, ['WEIGHT']))
-                
-
+                    
+   
 def suite():
     return [gaincal1_test, gaincal2_test]
 

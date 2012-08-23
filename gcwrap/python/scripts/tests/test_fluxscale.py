@@ -43,14 +43,15 @@ class fluxscale1_test(unittest.TestCase):
                         
         self.gtable = self.prefix + '.ref1a.gcal'
         self.reffile = self.prefix + '.def.fcal'
+        self.tearDown()
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
-            shutil.copytree(fpath, self.msfile)
+            shutil.copytree(fpath, self.msfile, symlinks=True)
             fpath = os.path.join(datapath,self.gtable)
-            shutil.copytree(fpath, self.gtable)
+            shutil.copytree(fpath, self.gtable, symlinks=True)
             fpath = os.path.join(datapath,self.reffile)
-            shutil.copytree(fpath, self.reffile)
+            shutil.copytree(fpath, self.reffile, symlinks=True)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -89,9 +90,9 @@ class fluxscale1_test(unittest.TestCase):
             msfile = os.environ.get('CASAPATH').split()[0] +\
                             '/data/regression/unittest/fluxscale/ngc5921.ms'
             newms = 'newtest.ms'
-            shutil.copytree(msfile, newms)
-            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', reference='1331*', 
-                  transfer='1445*')
+            shutil.copytree(msfile, newms, symlinks=True)
+            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', 
+                               reference='1331*',transfer='1445*')
             
             diff_ret = th.DictDiffer(thisdict, msdict)
             self.assertFalse(diff_ret.changed())        
@@ -115,11 +116,11 @@ class fluxscale2_test(unittest.TestCase):
 
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):
-            shutil.copytree(fpath, self.msfile)
+            shutil.copytree(fpath, self.msfile, symlinks=True)
             fpath = os.path.join(datapath,self.gtable)
-            shutil.copytree(fpath, self.gtable)
+            shutil.copytree(fpath, self.gtable, symlinks=True)
             fpath = os.path.join(datapath,self.reffile)
-            shutil.copytree(fpath, self.reffile)
+            shutil.copytree(fpath, self.reffile, symlinks=True)
         else:
             self.fail('Data does not exist -> '+fpath)
 

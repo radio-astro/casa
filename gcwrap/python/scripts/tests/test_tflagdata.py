@@ -48,7 +48,7 @@ if os.environ.has_key('TEST_DATADIR'):
         testmms = True
         datapath = DATADIR
 
-print 'Tflagdata tests will use data from '+datapath         
+print 'tflagdata tests will use data from '+datapath         
 
 # Base class which defines setUp functions
 # for importing different data sets
@@ -531,18 +531,21 @@ class test_statistics_queries(test_base):
         '''tflagdata: Clipping scan selection, CAS-2212, CAS-3496'''
         # By default correlation='ABS_ALL'
         tflagdata(vis=self.vis, mode='clip', scan="2", clipminmax = [0.2, 0.3], savepars=False) 
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2854278, 85404)
+        s = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(s['flagged'], 85404)
+        self.assertEqual(s['total'], 2854278)
+        
         s = tflagdata(vis=self.vis, mode='summary')['scan']
         
         # Make sure no other scan is clipped
-        assert s['1']['flagged'] == 0
-        assert s['3']['flagged'] == 0
-        assert s['4']['flagged'] == 0
-        assert s['5']['flagged'] == 0
-        assert s['6']['flagged'] == 0
-        assert s['7']['flagged'] == 0
-        assert s['2']['flagged'] == 85404
-  
+        self.assertEqual(s['1']['flagged'], 0)
+        self.assertEqual(s['3']['flagged'], 0)
+        self.assertEqual(s['4']['flagged'], 0)
+        self.assertEqual(s['5']['flagged'], 0)
+        self.assertEqual(s['6']['flagged'], 0)
+        self.assertEqual(s['7']['flagged'], 0)
+        self.assertEqual(s['2']['flagged'], 85404)
+          
     def test021(self):
         '''tflagdata: Test of flagging statistics and queries'''
         
@@ -804,16 +807,22 @@ class test_selections2(test_base):
         '''tflagdata: observation ID selections'''
         # string
         tflagdata(vis=self.vis, observation='1', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 28500)
+        self.assertEqual(res['total'], 2882778)
 
         # integer
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         tflagdata(vis=self.vis, observation=1, savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 28500)
+        self.assertEqual(res['total'], 2882778)
         
         # non-existing ID
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 0)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['total'], 2882778)
 
     def test_observation2(self):
         '''tflagdata: observation ID selections in list mode'''
@@ -1053,20 +1062,19 @@ class test_clip(test_base):
         tflagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
-    	
-        
+    
 
 # Cleanup class 
 class cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.ms*')
-        os.system('rm -rf flagdatatest.ms*')
-        os.system('rm -rf missing-baseline.ms')
-        os.system('rm -rf multiobs.ms*')
-        os.system('rm -rf flagdatatest-alma.ms*')
-        os.system('rm -rf Four_ants_3C286.ms*')
-        os.system('rm -rf shadowtest_part.ms*')
+        os.system('rm -rf ngc5921.*ms*')
+        os.system('rm -rf flagdatatest.*ms*')
+        os.system('rm -rf missing-baseline.*ms*')
+        os.system('rm -rf multiobs.*ms*')
+        os.system('rm -rf flagdatatest-alma.*ms*')
+        os.system('rm -rf Four_ants_3C286.*ms*')
+        os.system('rm -rf shadowtest_part.*ms*')
         os.system('rm -rf list*txt')
 
     def test1(self):
