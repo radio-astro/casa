@@ -60,8 +60,16 @@ IPosition MSTileLayout::tileShape(const IPosition& dataShape,
       else{
 	chanSize=100;
       }
+      Int elIOBlkSize=ioBlockSize;
+      while(((ioBlockSize/corrSize/chanSize) > 10*nIfr*nInt) && chanSize < dataShape(1)){
+	chanSize+=2;
+      } 
+      if((ioBlockSize/corrSize/chanSize) > 10*nIfr*nInt){
+	//we are still having too many blocks in one tile
+	elIOBlkSize=10*nIfr*nInt*corrSize*chanSize;
+      }
       chanSize=(chanSize >=   dataShape(1)) ? dataShape(1) : chanSize; 
-      rowSize= max(1,ioBlockSize/corrSize/chanSize);
+      rowSize= max(1,elIOBlkSize/corrSize/chanSize);
       
     }
     else{
@@ -82,12 +90,13 @@ IPosition MSTileLayout::tileShape(const IPosition& dataShape,
 					 Int observationType, 
 					 const String& array)
 {
-  Int nIfr=100;
+  Int nIfr=200;
   if (array=="ATCA") nIfr=15;
   if (array=="VLA") nIfr=351;
   if (array=="WSRT") nIfr=91;
   if (array=="BIMA") nIfr=36;
   if (array=="DRAO") nIfr=21;
+  if (array=="SMA") nIfr=28;
   return tileShape(dataShape,observationType,nIfr);
 }
 
