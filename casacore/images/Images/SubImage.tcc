@@ -342,7 +342,7 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 			ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
 			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
 		}
-		catch (AipsError x) {
+		catch (const AipsError& x) {
 			LogIO *myos = os;
 			std::auto_ptr<LogIO> localLogMgr(0);
 			if (! myos) {
@@ -716,7 +716,7 @@ ImageBeamSet SubImage<T>::_beamsForSubImage(
 			for (uInt j=0; j<nPolSub; j++) {
 				subPos[1] = j;
 				origPos[1] = j + polBegin;
-				beams(subPos) = origBeams(origPos);
+				beams.setBeam(origBeams(origPos), subPos);
 			}
 		}
 	}

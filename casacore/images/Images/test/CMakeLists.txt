@@ -79,6 +79,7 @@ tImageFFT
 tImageFit1D
 tImageInfo
 tImageMetaData
+tImageMoments
 tImagePolarimetry
 tImageRegrid
 tImageSourceFinder

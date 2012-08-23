@@ -63,6 +63,7 @@
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMomentsProgress.h>
+#include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/MomentCalculator.h>
@@ -85,8 +86,6 @@
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 
-
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
@@ -95,7 +94,7 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
                                Bool overWriteOutput,
                                Bool showProgressU)
 : MomentsBase<T>( os, overWriteOutput, showProgressU ),
-  pInImage_p(0), progressMonitor(0)
+  _image(0), progressMonitor(0)
 {
 //
    if (setNewImage(image)) {
@@ -108,24 +107,21 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
 
 template <class T>
 ImageMoments<T>::ImageMoments(const ImageMoments<T> &other)
-: MomentsBase<T>(other), pInImage_p(0), progressMonitor(0)
+: MomentsBase<T>(other), _image(0), progressMonitor(0)
 {
    operator=(other);
 }
 
 template <class T>
 ImageMoments<T>::ImageMoments(ImageMoments<T> &other)
-: MomentsBase<T>(other), pInImage_p(0), progressMonitor(0)
+: MomentsBase<T>(other), _image(0), progressMonitor(0)
 {
    operator=(other);
 }
 
 
 template <class T> 
-ImageMoments<T>::~ImageMoments ()
-{
-   delete pInImage_p;
-}
+ImageMoments<T>::~ImageMoments () {}
 
 
 template <class T>
@@ -138,8 +134,7 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other)
       
 // Deal with image pointer
  
-      if (pInImage_p!=0) delete pInImage_p;
-      pInImage_p = other.pInImage_p->cloneII();
+      _image.reset(other._image->cloneII());
  
 // Do the rest
       progressMonitor = other.progressMonitor;
@@ -205,8 +200,7 @@ Bool ImageMoments<T>::setNewImage(ImageInterface<T>& image)
 
 // Make a clone of the image   
     
-   if (pInImage_p!=0) delete pInImage_p;
-   pInImage_p = image.cloneII();
+   _image.reset(image.cloneII());
 //
    return True;
 }
@@ -219,7 +213,7 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 	}
 	momentAxis_p = momentAxisU;
 	if (momentAxis_p == momentAxisDefault_p) {
-		momentAxis_p = pInImage_p->coordinates().spectralAxisNumber();
+		momentAxis_p = _image->coordinates().spectralAxisNumber();
 		if (momentAxis_p == -1) {
 			goodParameterStatus_p = False;
 			throw AipsError(
@@ -228,25 +222,42 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		}
 	}
 	else {
-		if (momentAxis_p < 0 || momentAxis_p > Int(pInImage_p->ndim()-1)) {
+		if (momentAxis_p < 0 || momentAxis_p > Int(_image->ndim()-1)) {
 			goodParameterStatus_p = False;
 			throw AipsError("Illegal moment axis; out of range");
 		}
-		if (pInImage_p->shape()(momentAxis_p) <= 0) {
+		if (_image->shape()(momentAxis_p) <= 0) {
 			goodParameterStatus_p = False;
 			throw AipsError("Illegal moment axis; it has no pixels");
 		}
 	}
 	if (
-		momentAxis_p == pInImage_p->coordinates().spectralAxisNumber()
-		&& pInImage_p->imageInfo().hasMultipleBeams()
+		momentAxis_p == _image->coordinates().spectralAxisNumber()
+		&& _image->imageInfo().hasMultipleBeams()
 	) {
-		goodParameterStatus_p = False;
-		throw AipsError(
-			"This image has per-plane beams and so moments along the spectral axis cannot be determined."
+		GaussianBeam maxBeam = _image->imageInfo().getBeamSet().getMaxAreaBeam();
+		cout << "*** beams " << _image->imageInfo().getBeamSet() << endl;
+		cout << "*** max beam " << maxBeam << endl;
+		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
+			<< "plane will be convolved to the largest beam size " << maxBeam
+			<< " prior to calculating moments" << LogIO::POST;
+		std::auto_ptr<TempImage<T> > imageCopy(
+			new TempImage<Float>(
+				TiledShape(_image->shape()), _image->coordinates()
+			)
 		);
+		imageCopy->set(0);
+		Image2DConvolver<T>::convolve(
+			os_p, *imageCopy, *_image, VectorKernel::GAUSSIAN,
+			_image->coordinates().directionAxesNumbers(),
+			maxBeam.toVector(), True, -1.0, True, True
+		);
+		// replace the input image pointer with the convolved image pointer
+		// and proceed using the convolved image as if it were the input
+		// image
+		_image.reset(imageCopy.release());
 	}
-	worldMomentAxis_p = pInImage_p->coordinates().pixelAxisToWorldAxis(momentAxis_p);
+	worldMomentAxis_p = _image->coordinates().pixelAxisToWorldAxis(momentAxis_p);
 }
 
 
@@ -271,7 +282,7 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
    if (smoothAxesU.nelements() > 0) {
       smoothAxes_p = smoothAxesU;
       for (i=0; i<Int(smoothAxes_p.nelements()); i++) {
-         if (smoothAxes_p(i) < 0 || smoothAxes_p(i) > Int(pInImage_p->ndim()-1)) {
+         if (smoothAxes_p(i) < 0 || smoothAxes_p(i) > Int(_image->ndim()-1)) {
             error_p = "Illegal smoothing axis given";
             goodParameterStatus_p = False;
             return False;
@@ -368,19 +379,20 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 // This function does all the work
 //
 {
+	os_p << LogOrigin("ImageMoments", __FUNCTION__);
    if (!goodParameterStatus_p) {
       throw AipsError("Internal status of class is bad.  You have ignored errors");
    }
 
 // Find spectral axis 
 
-   const CoordinateSystem& cSys = pInImage_p->coordinates();
+   const CoordinateSystem& cSys = _image->coordinates();
    Int spectralAxis = CoordinateUtil::findSpectralAxis(cSys);
 //
    if (momentAxis_p == momentAxisDefault_p) {
 	   this->setMomentAxis(spectralAxis);
 
-     if (pInImage_p->shape()(momentAxis_p) <= 1) {
+     if (_image->shape()(momentAxis_p) <= 1) {
          goodParameterStatus_p = False;
         throw AipsError("Illegal moment axis; it has only 1 pixel");
      }
@@ -405,7 +417,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 // if there is only one output image
 
    if (moments_p.nelements() == 1 && !doTemp) {
-      if (!outName.empty() && (outName == pInImage_p->name())) {
+      if (!outName.empty() && (outName == _image->name())) {
          throw AipsError("Input image and output image have same name");
       }
    } 
@@ -461,7 +473,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
    if (fixedYLimits_p && doPlot) {
       if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
-         ImageStatistics<T> stats(*pInImage_p, False);
+         ImageStatistics<T> stats(*_image, False);
          Array<T> data;
 //
          if (!stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True)) {
@@ -481,7 +493,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    
    IPosition outImageShape;
    CoordinateSystem cSysOut = this->makeOutputCoordinates (outImageShape, cSys, 
-                                                     pInImage_p->shape(),
+                                                     _image->shape(),
                                                      momentAxis_p, removeAxis);
 
 // Resize the vector of pointers for output images 
@@ -494,7 +506,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    String suffix;
    Bool goodUnits;
    Bool giveMessage = True;
-   Unit imageUnits = pInImage_p->units();
+   Unit imageUnits = _image->units();
 //   
    for (uInt i=0; i<moments_p.nelements(); i++) {
 
@@ -509,7 +521,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 //
       ImageInterface<Float>* imgp = 0;
       if (!doTemp) {
-         const String in = pInImage_p->name(False);   
+         const String in = _image->name(False);
          String outFileName;
          if (moments_p.nelements() == 1) {
             if (outName.empty()) {
@@ -544,9 +556,9 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          for (uInt j=0; j<i; j++) delete outPt[j];
          os_p << "Failed to create output file" << LogIO::EXCEPTION;        
       }
-      imgp->setMiscInfo(pInImage_p->miscInfo());
-      imgp->setImageInfo(pInImage_p->imageInfo());
-      imgp->appendLog(pInImage_p->logger());
+      imgp->setMiscInfo(_image->miscInfo());
+      imgp->setImageInfo(_image->imageInfo());
+      imgp->appendLog(_image->logger());
       imgp->makeMask ("mask0", True, True);
 
 // Set output image units if possible
@@ -581,7 +593,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          }
       } else {
          os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
-         if (!whatIsTheNoise (noise, *pInImage_p)) {
+         if (!whatIsTheNoise (noise, *_image)) {
         	 throw AipsError(error_p);
          }
       }
@@ -635,7 +647,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
 
    try {
-      LatticeApply<T>::lineMultiApply(outPt, *pInImage_p, *pMomentCalculator, momentAxis_p, pProgressMeter);
+      LatticeApply<T>::lineMultiApply(outPt, *_image, *pMomentCalculator, momentAxis_p, pProgressMeter);
    } catch (AipsError x) {
 
 // Try and clean up so if we are called by DO, images dont get stuck open in cache
@@ -689,7 +701,7 @@ Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage
 // Check axes
 
    Int axMax = max(smoothAxes_p) + 1;
-   if (axMax > Int(pInImage_p->ndim())) {
+   if (axMax > Int(_image->ndim())) {
       error_p = "You have specified an illegal smoothing axis";
       return False;
    }
@@ -702,7 +714,7 @@ Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage
 //
 // We overwrite this image if it exists.
 //
-      File inputImageName(pInImage_p->name());
+      File inputImageName(_image->name());
       const String path = inputImageName.path().dirName() + "/";
       Path fileName = File::newUniqueName(path, String("ImageMoments_Smooth_"));
       smoothName = fileName.absoluteName();
@@ -714,12 +726,12 @@ Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage
       smoothName = smoothOut_p;
    }
 
-   pSmoothedImage.set(new PagedImage<T>(pInImage_p->shape(), 
-                      pInImage_p->coordinates(), smoothName),
+   pSmoothedImage.set(new PagedImage<T>(_image->shape(),
+                      _image->coordinates(), smoothName),
                       False, False);
 //  
    ImageInterface<T>* pSmIm = pSmoothedImage.ptr();
-   pSmIm->setMiscInfo(pInImage_p->miscInfo());
+   pSmIm->setMiscInfo(_image->miscInfo());
    if (!smoothOut_p.empty()) {
       os_p << LogIO::NORMAL << "Created " << smoothName << LogIO::POST;
    }
@@ -728,7 +740,7 @@ Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage
 
    Bool autoScale = True;
    Bool useImageShapeExactly = False;
-   SepImageConvolver<T> sic(*pInImage_p, os_p, True);
+   SepImageConvolver<T> sic(*_image, os_p, True);
    for (uInt i=0; i<smoothAxes_p.nelements(); i++) {
       VectorKernel::KernelTypes type = VectorKernel::KernelTypes(kernelTypes_p(i));
       sic.setKernel(uInt(smoothAxes_p(i)), type, kernelWidths_p(i), 

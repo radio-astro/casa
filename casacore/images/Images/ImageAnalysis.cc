@@ -2796,8 +2796,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, _log.get(), False, AxesSpecifier(), stretchMask
 	);
 	// Create ImageMoments object

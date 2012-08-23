@@ -210,13 +210,8 @@ template <class T> void Image2DConvolver<T>::convolve(
 
 			}
 			GaussianBeam inputBeam = imageInfo.restoringBeam(channel, polarization);
+			Bool doConvolve = True;
 			if (targetres) {
-				kernelParms = _getConvolvingBeamForTargetResolution(
-					os, parameters, inputBeam
-				);
-				kernelVolume = _makeKernel(
-					os, kernel, kernelType, kernelParms, pixelAxes, imageIn
-				);
 				os << LogIO::NORMAL;
 				if (channel >= 0) {
 					os << "Channel " << channel;
@@ -227,24 +222,48 @@ template <class T> void Image2DConvolver<T>::convolve(
 				if (polarization >= 0) {
 					os << "Polarization " << polarization;
 				}
-				os << ": Convolving image which has a beam of " << inputBeam
-					<< " with a Gaussian of "
-					<< GaussianBeam(kernelParms) << " to reach a target resolution of "
-					<< GaussianBeam(parameters) << LogIO::POST;
+				os << " ";
+				if (near(inputBeam, GaussianBeam(parameters), 1e-5, Quantity(1e-2, "arcsec"))) {
+					doConvolve = False;
+					os << " Input beam is already near target resolution so this "
+						<< "plane will not be convolved" << LogIO::POST;
+				}
+				else {
+					kernelParms = _getConvolvingBeamForTargetResolution(
+						os, parameters, inputBeam
+					);
+					kernelVolume = _makeKernel(
+						os, kernel, kernelType, kernelParms, pixelAxes, imageIn
+					);
+
+					os << ": Convolving image which has a beam of " << inputBeam
+						<< " with a Gaussian of "
+						<< GaussianBeam(kernelParms) << " to reach a target resolution of "
+						<< GaussianBeam(parameters) << LogIO::POST;
+				}
 			}
-			_dealWithRestoringBeam(
-				os, brightnessUnitOut, beamOut, kernel, kernelVolume,
-				kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
-				brightnessUnit, autoScale, scale, i == 0
-			);
 			TempImage<Float> subImageOut(
 				subImage.shape(), subImage.coordinates()
 			);
-			ImageConvolver<T> aic;
-			aic.convolve(
-				os, subImageOut, subImage, kernel,
-				ImageConvolver<T>::NONE, 1.0, copyMiscellaneous
-			);
+			if (doConvolve) {
+				_dealWithRestoringBeam(
+					os, brightnessUnitOut, beamOut, kernel, kernelVolume,
+					kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
+					brightnessUnit, autoScale, scale, i == 0
+				);
+				ImageConvolver<T> aic;
+				aic.convolve(
+					os, subImageOut, subImage, kernel,
+					ImageConvolver<T>::NONE, 1.0, copyMiscellaneous
+				);
+			}
+			else {
+				brightnessUnitOut = imageIn.units().getName();
+				beamOut = inputBeam;
+				subImageOut.put(subImage.get());
+			}
+
+
 			{
 				Bool doMask = imageOut.isMasked() && imageOut.hasPixelMask();
 				Lattice<Bool>* pMaskOut = 0;

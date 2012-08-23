@@ -437,7 +437,10 @@ template<class T> void ImageConcat<T>::_appendBeams(
 		infoThis.removeRestoringBeam();
 		infoThis.setAllBeams(nChanThis, nStokesThis, GaussianBeam());
 		ImageBeamSet beamSet = infoThis.getBeamSet();
-		beamSet(IPosition(beamSet.ndim(), 0), beamsHold.shape()-1) = beamsHold;
+		beamSet.setBeams(
+			IPosition(beamSet.ndim(), 0),
+			beamsHold.shape()-1, beamsHold
+		);
 		infoThis.setBeams(beamSet);
 	}
 	if (infoThat.hasSingleBeam()) {
