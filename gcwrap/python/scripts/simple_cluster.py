@@ -247,7 +247,7 @@ class simple_cluster:
                 casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
             
         else:
-            cmd_ncores = "ssh -q " + hostname + " 'sysctl -n hw.ncpu'"
+            cmd_ncores = "ssh -q " + hostname + " '/usr/sbin/sysctl -n hw.ncpu'"
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores
             
