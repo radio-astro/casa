@@ -172,7 +172,7 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 	}
       }
       if(doOmit){
-	break; // do not copy this subtable if it is in the omit vector
+	continue; // do not copy this subtable if it is in the omit vector
       }
       // Lock the subtable in case not locked yet.
       // Note it will keep the lock if already locked.
