@@ -116,7 +116,7 @@
 
 <xsl:template match="aps:output">
 <xsl:element name="output">
-<xsl:call-template name="doparam"/>
+	<xsl:call-template name="doparam"><xsl:with-param name="prefix">_</xsl:with-param></xsl:call-template>
 </xsl:element>
 <xsl:text>
 </xsl:text>
@@ -124,7 +124,7 @@
 
 <xsl:template match="aps:inout">
 <xsl:element name="inout">
-<xsl:call-template name="doparam"/>
+<xsl:call-template name="doparam"><xsl:with-param name="prefix"></xsl:with-param></xsl:call-template>
 </xsl:element>
 <xsl:text>
 </xsl:text>
@@ -132,7 +132,7 @@
 
 <xsl:template match="aps:input">
 <xsl:element name="input">
-<xsl:call-template name="doparam" />
+<xsl:call-template name="doparam"><xsl:with-param name="prefix"></xsl:with-param></xsl:call-template>
 </xsl:element>
 <xsl:text>
 </xsl:text>
@@ -166,6 +166,7 @@
 </xsl:template>
 
 <xsl:template name="doparam">  
+	<xsl:param name="prefix"/>
 <xsl:for-each select="aps:param">
 <xsl:element name="param">
 <xsl:choose>
@@ -179,7 +180,7 @@
 <xsl:attribute name="xsi:type"><xsl:value-of select="@type"/></xsl:attribute>
 </xsl:otherwise>
 </xsl:choose>
-<xsl:attribute name="name"> <xsl:value-of select="@name"/></xsl:attribute>
+<xsl:attribute name="name"> <xsl:value-of select="$prefix"/><xsl:value-of select="@name"/></xsl:attribute>
 <xsl:if test="@units"> <xsl:attribute name="units"><xsl:value-of select="@units"/></xsl:attribute></xsl:if>
 <xsl:if test="@direction"><xsl:attribute name="direction"> <xsl:value-of select="@direction"/></xsl:attribute></xsl:if>
 <xsl:text>
