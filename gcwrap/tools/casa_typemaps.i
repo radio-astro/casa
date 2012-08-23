@@ -547,7 +547,7 @@ using namespace casac;
 
 %typemap(out) Quantity& {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1.units.c_str()));
    PyObject *v = casac::map_vector($1.value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -555,7 +555,7 @@ using namespace casac;
 
 %typemap(out) Quantity {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1.units.c_str()));
    PyObject *v = casac::map_vector($1.value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -563,7 +563,7 @@ using namespace casac;
 
 %typemap(out) Quantity* {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1->units.c_str()));
    PyObject *v = casac::map_vector($1->value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -831,7 +831,7 @@ using namespace casac;
 
 %typemap(argout) Quantity& OUTARGQUANTITY{
    PyObject *o = PyDict_New();
-   PyDict_SetItem(o, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyDict_SetItem(o, PyString_FromString("unit"), PyString_FromString($1->units.c_str()));
    PyObject *v = casac::map_vector($1->value);
    PyDict_SetItem(o, PyString_FromString("value"), v);
    Py_DECREF(v);
