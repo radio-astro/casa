@@ -135,7 +135,7 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
             if blfunc != 'none':
               tmpoutfile = sdbaselineout
               #sdbaseline.defaults()
-              sdbaseline(tmpinfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifybl, verbosebl, showprogress, minnrow, tmpoutfile, outform, True, plotlevel)
+              sdbaseline(infile=tmpinfile, antenna=antenna, masklist=masklist, maskmode=maskmode, thresh=thresh, avg_limit=avg_limit, edge=edge, blfunc=blfunc, order=order, npiece=npiece, applyfft=applyfft, fftmethod=fftmethod, fftthresh=fftthresh, addwn=addwn, rejwn=rejwn, clipthresh=clipthresh, clipniter=clipniter, verify=verifybl, verbose=verbosebl, showprogress=showprogress, minnrow=minnrow, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
               #print "No baseline subtraction was applied..."
               #print ""
