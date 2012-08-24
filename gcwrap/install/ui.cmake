@@ -98,6 +98,9 @@ macro( casa_add_tasks module _target )
   endforeach()
 
   set( _tasksref ${CASA_DOC_DIR}/helpfiles/tasksref.htex )
+  add_custom_target ( task_latex DEPENDS ${casa_out_latex} )
+  add_custom_target ( task_pdf DEPENDS ${casa_out_pdf} )
+  add_custom_target ( task_html DEPENDS ${casa_out_html} )
   add_custom_target(    
    doc_tasksref
    COMMAND mkdir -p ${CASA_DOC_DIR}/helpfiles
@@ -272,6 +275,9 @@ macro( casa_add_tools out_swig out_sources out_py )
     endif() 
 
   endforeach()
+  add_custom_target ( doc_latex DEPENDS ${casa_out_latex} )
+  add_custom_target ( doc_pdf DEPENDS ${casa_out_pdf} )
+  add_custom_target ( doc_html DEPENDS ${casa_out_html} )
 
   set(_initpy ${CMAKE_CURRENT_BINARY_DIR}/__init__.py)
   set(_casacpy ${CMAKE_CURRENT_BINARY_DIR}/casac.py)
@@ -315,7 +321,7 @@ macro( casa_add_doc xml prefix type )
       COMMAND mkdir -p ${prefix}/helpfiles
       COMMAND ${SAXON} ${xml} ${_xsl} > ${_base}.htex_tmp1
       COMMAND sed -e "s/<?xml version.*//" ${_base}.htex_tmp1 > ${_base}.htex_tmp2
-      COMMAND awk -f ${CMAKE_SOURCE_DIR}/install/docutils/xml2latex.awk ${_base}.htex_tmp2 >  ${_htex}
+      COMMAND awk -f ${casaroot}/code/install/docutils/xml2latex.awk ${_base}.htex_tmp2 >  ${_htex}
       DEPENDS ${xml} ${_xsl}
       VERBATIM
       )
@@ -326,22 +332,23 @@ macro( casa_add_doc xml prefix type )
     add_custom_command(
       OUTPUT ${_latex}
       COMMAND mkdir -p ${prefix}/htmlfiles
-      COMMAND cat ${CMAKE_SOURCE_DIR}/install/docutils/tmpheader4tex > ${_latex}
+      COMMAND cat ${casaroot}/code/install/docutils/tmpheader4tex > ${_latex}
       COMMAND cat ${_htex} >> ${_latex}
-      COMMAND cat ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex >> ${_latex}
-      DEPENDS ${CMAKE_SOURCE_DIR}/install/docutils/tmpheader4tex
+      COMMAND cat ${casaroot}/code/install/docutils/tmptail4tex >> ${_latex}
+      DEPENDS ${casaroot}/code/install/docutils/tmpheader4tex
       ${_htex}                
-      ${CMAKE_SOURCE_DIR}/install/docutils/tmptail4tex
+      ${casaroot}/code/install/docutils/tmptail4tex
       VERBATIM
       )
 
     if (${type} STREQUAL tool)
-      add_custom_target( ${_base}_tool_latex DEPENDS ${_latex} )
+      add_custom_target( ${_base}_tool_latex DEPENDS ${_latex} ${_htex} )
     else()
-      add_custom_target( ${_base}_task_latex DEPENDS ${_latex} )
+      add_custom_target( ${_base}_task_latex DEPENDS ${_latex} ${_htex} )
     endif()
     
     set( casa_out_latex ${casa_out_latex} ${_latex} )
+
 
     # Create HTML
     if( LATEX2HTML_CONVERTER )

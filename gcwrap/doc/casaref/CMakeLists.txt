@@ -56,7 +56,7 @@ set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
 
       add_custom_target( casaref_html DEPENDS ${_html} )
 
-      add_dependencies( casaref_html doc_latex )
+      add_dependencies( casaref_html doc_latex)
 
     else()
       add_custom_target( casaref_html COMMAND echo "LaTeX to HTML converter was not found." )
@@ -76,7 +76,7 @@ set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
         VERBATIM )
 
 	add_custom_target( casaref_pdf DEPENDS ${_pdf} ) 
-        add_dependencies( casaref_pdf doc_latex )
+        add_dependencies( casaref_pdf doc_latex)
    else()
       add_custom_target( casaref_pdf COMMAND echo "LaTeX to PDF converter was not found." )
 
