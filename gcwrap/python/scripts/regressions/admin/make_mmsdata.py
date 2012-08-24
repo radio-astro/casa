@@ -36,8 +36,8 @@ TASKLIST = [
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'
 
-# NOTE: task 'concat' does not work with multi-MSs because one cannot add rows
-#       but the test data is needed for testing virtualconcat
+# NOTE: task 'concat' only works with MMSs if the first input MS is a normal MS;
+#       the test data is also needed for testing virtualconcat
 
 # Try to get the data repository path from the system
 DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
