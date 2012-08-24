@@ -29,7 +29,7 @@ if( APPLE )
 else()
    set( TEXROOT /usr/share ) 
 endif()
-set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/casaref/:${CMAKE_SOURCE_DIR}/doc/casaref/CasaRef.dir/:${TEXROOT}/texmf/tex/{latex,generic,}//:${TEXROOT}/texmf/web2c//:${TEXROOT}/texmf/tex4ht//:${TEXROOT}/texmf/tex/:$ENV{TEXINPUTS} )
+set( _inputs .:${prefix}/helpfiles/:${casaroot}/code/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/casaref/:${CMAKE_SOURCE_DIR}/doc/casaref/CasaRef.dir/:${TEXROOT}/texmf/tex/{latex,generic,}//:${TEXROOT}/texmf/web2c//:${TEXROOT}/texmf/tex4ht//:${TEXROOT}/texmf/tex/:$ENV{TEXINPUTS} )
 set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
 
 
