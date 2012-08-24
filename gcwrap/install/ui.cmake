@@ -351,9 +351,9 @@ macro( casa_add_doc xml prefix type )
       add_custom_command(
         OUTPUT ${_html}
         COMMAND mkdir -p ${prefix}/htmlfiles
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
-        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+        COMMAND cd ${prefix}/htmlfiles && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         DEPENDS ${_latex}
         VERBATIM )
 
@@ -372,9 +372,9 @@ macro( casa_add_doc xml prefix type )
       add_custom_command(
         OUTPUT ${_pdf}
         COMMAND mkdir -p ${prefix}/pdf_files
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
-        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${CMAKE_SOURCE_DIR}/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
+        COMMAND cd ${prefix}/pdf_files && TEXINPUTS=.:${casaroot}/code/doc/texinputs.dir//:$ENV{TEXINPUTS} ${PDFLATEX_COMPILER} ${_latex}
         DEPENDS ${_latex}
         VERBATIM )
 
