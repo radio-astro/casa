@@ -70,6 +70,7 @@ def checktable(thename, theexpectation, multims=False):
 class test_virtualconcat(unittest.TestCase):
     
     def setUp(self):
+        global testmms
         res = None
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
@@ -90,7 +91,7 @@ class test_virtualconcat(unittest.TestCase):
                 shutil.copytree(mymsname, cpath+'/'+mymsname, True)
         os.chdir(cpath)
 
-        default(concat)
+        default(virtualconcat)
         
     def tearDown(self):
         shutil.rmtree(msname,ignore_errors=True)
@@ -631,6 +632,7 @@ class test_virtualconcat(unittest.TestCase):
 
     def test11(self):
         '''Virtualconcat 11: comparison to concat'''
+        global testmms
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         if testmms:

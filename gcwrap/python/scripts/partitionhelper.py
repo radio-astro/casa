@@ -549,13 +549,12 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
             thesubms = os.path.basename(submslist[i].rstrip('/'))
             os.chdir('../'+thesubms)
             for s in omitsubtables:
-                shutil.rmtree(s, ignore_errors=True)
+                os.system('rm -rf '+s) # shutil does not work in the general case
                 os.symlink('../'+mastersubms+'/'+s, s)
-
 
     except:
         os.chdir(origpath)
-        raise ValueError, "Problem in MMS creation: "+sys.exc_info()[0] 
+        raise ValueError, "Problem in MMS creation: "+str(sys.exc_info()) 
 
     os.chdir(origpath)
 

@@ -89,7 +89,7 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 					mses = m.getreferencedtables()
 					mses.sort()
 					m.close()
-					mastername = os.path.basename(os.path.dirname(os.path.realpath(m+'/ANTENNA')))
+					mastername = os.path.basename(os.path.dirname(os.path.realpath(elvis+'/ANTENNA')))
 					for mname in mses:
 						#print 'subms: ', mname
 						vis.append(mname)
@@ -231,17 +231,17 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 		masterptable = mmsmembers[0]+'/POINTING'
 		ptablemembers = []
 		if os.path.exists(masterptable):
+			casalog.post('Concatenating the POINTING tables ...', 'INFO')
 			i = 0
 			for i in xrange(len(mmsmembers)):
 				ptable = mmsmembers[i]+'/POINTING'
 				if ismaster[i] and os.path.exists(ptable):
+					casalog.post('   '+ptable, 'INFO')
 					shutil.move(ptable, ptable+str(i))
 					ptablemembers.append(ptable+str(i))
 			#end for
 			t.createmultitable(masterptable, ptablemembers, 'SUBTBS')
 		# endif
-
-		print "mmsmembers: ", mmsmembers
 
 	 	ph.makeMMS(concatvis, mmsmembers,
  			   True, # copy subtables from first to all other members 
@@ -255,7 +255,6 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 			for elvis in originalvis:
 				shutil.move(tempdir+'/'+elvis, elvis)
 			os.rmdir(tempdir)
-
 
 	except Exception, instance:
 		print '*** Error ***',instance
