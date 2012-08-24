@@ -27,6 +27,7 @@ TASKLIST = [
             'listhistory',
             'listobs',
             'listvis', # shared with fixplanets
+            'plotms',
             'split',
             'vishead',
             'wvrgcal',
