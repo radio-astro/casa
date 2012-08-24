@@ -27,6 +27,9 @@ from dict_to_table import dict_to_table
 # Sample lines:
 #  Date__(UT)__HR:MN     R.A.___(ICRF/J2000.0)___DEC Ob-lon Ob-lat Sl-lon Sl-lat   NP.ang   NP.dist               r        rdot            delta      deldot    S-T-O   L_s
 #  2010-May-01 00:00     09 01 43.1966 +19 04 28.673 286.52  18.22 246.99  25.34 358.6230      3.44  1.661167637023  -0.5303431 1.28664311447968  15.7195833  37.3033   84.50
+# 
+# some mod to label names and comments so that they corresponds to
+# JPL-Horizons naming comvension
 cols = {
     'MJD': {'header': r'Date__\(UT\)__HR:MN',
             'comment': 'date',
@@ -37,25 +40,36 @@ cols = {
     'DEC': {'header': r'\)_+DEC.',
             'comment': 'Declination',
             'pat':    r'(?P<DEC>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
+    'NP_ang': {'header': r'NP\.ang',
+               'comment': 'North-Pole pos. angle',
+               'pat': r'(?P<NP_ang>[0-9.]+)',
+               'unit': 'deg'},
+    'NP_dist': {'header': r'NP\.dist',
+                'comment': 'North-Pole ang. distance',
+               'pat': r'(?P<NP_dist>[0-9.]+)',
+                'unit': 'arcsec'},
     'illu': {'header': r'Illu%',
-             'comment': 'Illumination',
+             #'comment': 'Illumination',
+             'comment': 'Illuminated fraction',
              'pat':    r'(?P<illu>[0-9.]+)',
              'unit': r'%'},
-    'DiskLong': {'header': r'Ob-lon',
+    #'DiskLong': {'header': r'Ob-lon',
+    'Obs_Long': {'header': r'Ob-lon',
                'comment': 'Sub-observer longitude',
-               'pat':    r'(?P<DiskLong>[0-9.]+|n\.a\.)',
+               'pat':    r'(?P<Obs_Long>[0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    'DiskLat': {'header': r'Ob-lat',
-               'comment': 'Sub-observer longitude',
-               'pat':    r'(?P<DiskLat>[-+0-9.]+|n\.a\.)',
+    #'DiskLat': {'header': r'Ob-lat',
+    'Obs_Lat': {'header': r'Ob-lat',
+               'comment': 'Sub-observer latitude',
+               'pat':    r'(?P<Obs_Lat>[-+0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    'sl_lon': {'header': r'Sl-lon',
+    'Sl_lon': {'header': r'Sl-lon',
                'comment': 'Sub-Solar longitude',
-               'pat':    r'(?P<sl_lon>[0-9.]+|n\.a\.)',
+               'pat':    r'(?P<Sl_lon>[0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    'sl_lat': {'header': r'Sl-lat',
+    'Sl_lat': {'header': r'Sl-lat',
                'comment': 'Sub-Solar longitude',
-               'pat':    r'(?P<sl_lat>[-+0-9.]+|n\.a\.)',
+               'pat':    r'(?P<Sl_lat>[-+0-9.]+|n\.a\.)',
                'unit': 'deg'},
 
     # These are J2000 whether or not ra and dec are apparent directions.
@@ -71,14 +85,18 @@ cols = {
           'unit':    'AU',
           'pat':     r'(?P<r>[0-9.]+)'},
     'rdot': {'header': 'rdot',
-             'pat': r'[-+0-9.]+',
-             'unwanted': True},
+             #'comment': 'heliocentric velocity',
+             'comment': 'heliocentric distance rate',
+             'unit': 'km/s',
+             'pat': r'(?P<rdot>[-+0-9.]+)'},
+    #         'unwanted': True},
     'Rho': {'header': 'delta',
             'comment': 'geocentric distance',
             'unit':    'AU',
             'pat':     r'(?P<Rho>[0-9.]+)'},
     'RadVel': {'header': 'deldot',
-               'comment': 'Radial velocity relative to the observer',
+               #'comment': 'Radial velocity relative to the observer',
+               'comment': 'geocentric distance rate',
                'pat': r'(?P<RadVel>[-+0-9.]+)',
                'unit': 'km/s'},
     'phang': {'header':  'S-T-O',
@@ -192,6 +210,12 @@ def readJPLephem(fmfile):
             # See what columns are present, and finish setting up datapat and
             # retdict.
             havecols = []
+            # extract coordinate ref info
+
+            m=re.match(r'(^\s*)(\S+)(\s+)('+cols['RA']['header']+')', line)
+            coordref=m.group(4).split('(')[-1]
+            cols['RA']['comment']+='('+coordref+')'
+            cols['DEC']['comment']+='('+coordref+')'
             # Chomp trailing whitespace.
             myline = re.sub(r'\s*$', '', line)
             titleline = myline
@@ -583,6 +607,8 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
     if tablepath=='.' or tablepath=='./' or tablepath.isspace():
         raise Exception, "Invalid tablepath: "+tablepath
     retval = True
+    # keepcolorder=T preserves column ordering in collist below
+    keepcolorder=False
     try:
         outdict = fmdict.copy() # Yes, I want a shallow copy.
         kws = fmdict.keys()
@@ -594,9 +620,11 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
         collist.sort()
         # but put these ones first, in the listed order (ignore the reverse and
         # the pops) if they are present.
-        put_these_first = ['MJD', 'RA', 'DEC', 'Rho', 'RadVel', 'NP_RA', 'NP_DEC',
-                           'DiskLong', 'DiskLat', 'sl_lon', 'sl_lat', 'r',
-                           'ang_sep', 'obs_code']
+        #put_these_first = ['MJD', 'RA', 'DEC', 'Rho', 'RadVel', 'NP_RA', 'NP_DEC',
+        #                   'DiskLong', 'DiskLat', 'sl_lon', 'sl_lat', 'r',
+        #                   'ang_sep', 'obs_code']
+        put_these_first = ['MJD', 'RA', 'DEC', 'Rho', 'RadVel', 'NP_ang', 'NP_dist',
+                           'Obs_Long', 'Obs_Lat', 'Sl_lon', 'Sl_lat', 'r','rdot']
         # Like l.sort(), reverse() acts on its instance instead of returning a value.
         put_these_first.reverse()
         for c in put_these_first:
@@ -618,8 +646,7 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
         info = {'readme': 'Derived by JPLephem_reader.py from a JPL-Horizons ephemeris (http://ssd.jpl.nasa.gov/horizons.cgi#top)',
                 'subType': 'Comet', 'type': 'IERS'}
 
-        print "tablepath=",tablepath
-        retval = dict_to_table(outdict, tablepath, kws, collist, info)
+        retval = dict_to_table(outdict, tablepath, kws, collist, info, keepcolorder)
     except Exception, e:
         print 'Error', e, 'trying to export an ephemeris dict to', tablepath
         retval = False

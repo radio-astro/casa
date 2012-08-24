@@ -282,9 +282,26 @@ def request_from_JPL(objnam, enddate,
     if obsloc and obsloc.lower() != 'geocentric':
         print "Topocentric coordinates are not yet supported by this script."
         print "Defaulting to geocentric."
+        # to set site coordinates,
+        # CENTER=coord@500
+        # COORD_TYPE='GEODETIC'
+        # SITE_COORD='E.lon,lat,height' (in deg and km)
+        # e.g for ALMA
+        # SITE_COORD='-67.7549290,-23.022886,5.05680'
+        
+    # 500@399: 399=earth 500=body center (==g@399==geo)
     center = '500@399'
 
-    quantities = [2, 10, 12, 19, 20, 24]
+    # quantities = [2, 10, 12, 19, 20, 24]
+    # Original default set of quantities: apparent RA/DEC, Illum. frac, ang. separation between
+    # non-lunar target and the center of primary body, helio range and range rate, observer
+    # range and range rate, S-T-O
+    # Bryan's request
+    #  [1,14,15,17,19,20,24]
+    # extra: 10
+    # need : 17
+    # new default quantities
+    quantities = [2, 12, 17, 19, 20, 24]
     if not use_apparent:
         quantities[0] = 1
     if get_axis_orientation:
@@ -294,6 +311,7 @@ def request_from_JPL(objnam, enddate,
         quantities.append(15)
     if not get_sep:
         quantities.remove(12)
+    print "Retrieved quantity code list=",quantities
 
     # It seems that STEP_SIZE must be an integer, but the unit can be changed
     # to hours or minutes.
@@ -323,12 +341,12 @@ def request_from_JPL(objnam, enddate,
                               "START_TIME= '%s'" % startdate,
                               "STOP_TIME= '%s'" % enddate,
                               "STEP_SIZE= '%s'" % date_incr,
-                              "CAL_FORMAT= 'CAL'",
+                              "CAL_FORMAT= 'CAL'",  #date format(CAL,JD,or BOTH)
                               "TIME_DIGITS= 'MINUTES'",
                               "ANG_FORMAT= 'DEG'",
                               "OUT_UNITS= 'KM-S'",
                               "RANGE_UNITS= 'AU'",
-                              "APPARENT= 'AIRLESS'",
+                              "APPARENT= 'AIRLESS'", # for apparent position
                               "SOLAR_ELONG= '0,180'",
                               "SUPPRESS_RANGE_RATE= 'NO'",
                               "SKIP_DAYLT= 'NO'",

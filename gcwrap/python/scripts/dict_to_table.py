@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from taskinit import tbtool, me
 
-def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
+def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None, keepcolorder=False):
     """
     Converts a dictionary to a CASA table, and attempts to
     save it to tablepath.  Returns whether or not it was successful.
@@ -84,7 +84,6 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
     for d in dkeys:
         used_as_col = False
         colcand = get_bare_col(indict[d])
-        
         # Treat it as a column if it has the right number of rows.
         if type(colcand) in (list, numpy.ndarray):
             if nrows == 0:
@@ -141,13 +140,51 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
 
             svndir = tempfile.mkdtemp(dir=workingdir)
             shutil.move(tablepath + '/.svn', svndir)
+        print "Removing %s directory" % tablepath
         shutil.rmtree(tablepath)
 
     # Create and fill the table.
     retval = True
     try:
         mytb = tbtool()
-        mytb.create(tablepath, tabdesc)
+        tmpfname='_tmp_fake.dat'
+        if keepcolorder:
+            # try to keep order of cols 
+            # Ugly, but since tb.create() cannot accept odered dictionary
+            # for tabledesc, I cannot find any other way to keep column order.
+            # * comment for each column will not be filled
+            f = open(tmpfname,'w')
+            zarr=numpy.zeros(len(cols))
+            szarr=str(zarr.tolist())
+            szarr=szarr.replace('[','')
+            szarr=szarr.replace(']','')
+            szarr=szarr.replace(',','')
+            scollist=''
+            sdtypes='' 
+            for c in cols:
+                scollist+=c+' '   
+                vt=tabdesc[c]['valueType']
+                if vt=='string':
+                   sdtypes+='A '    
+                elif vt=='integer':
+                   sdtypes+='I '
+                elif vt=='double':
+                   sdtypes+='D '
+                elif vt=='float':
+                   sdtypes+='R '
+            f.write(scollist+'\n')
+            f.write(sdtypes+'\n')
+            f.write(szarr)
+            f.close()
+            mytb.fromascii(tablepath,tmpfname,sep=' ')     
+            # close and re-open since tb.fromascii(nomodify=False) has not
+            # implemented yet
+            mytb.close() 
+            os.remove(tmpfname) 
+            mytb.open(tablepath, nomodify=False)
+            mytb.removerows(0)
+        else: 
+            mytb.create(tablepath, tabdesc)
         if type(info) == dict:
             mytb.putinfo(info)
         mytb.addrows(nrows)     # Must be done before putting the columns.
