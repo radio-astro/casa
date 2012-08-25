@@ -149,20 +149,30 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     myPWV2 = -1.71 + 1.3647*myTauZ1
     myPWV = (1-seasonal_weight)*myPWV1 + seasonal_weight*myPWV2
  
-    tmp = casac.Quantity(270.0,'K')
-    pre = casac.Quantity(790.0,'mbar')
-    alt = casac.Quantity(2125,'m')
-    h0 = casac.Quantity(2.0,'km')
-    wvl = casac.Quantity(-5.6, 'K/km')
-    mxA = casac.Quantity(48,'km')
-    dpr = casac.Quantity(10.0,'mbar')
+#     tmp = casac.Quantity(270.0,'K')
+#     pre = casac.Quantity(790.0,'mbar')
+#     alt = casac.Quantity(2125,'m')
+#     h0 = casac.Quantity(2.0,'km')
+#     wvl = casac.Quantity(-5.6, 'K/km')
+#     mxA = casac.Quantity(48,'km')
+#     dpr = casac.Quantity(10.0,'mbar')
+    tmp = qa.quantity(270.0,'K')
+    pre = qa.quantity(790.0,'mbar')
+    alt = qa.quantity(2125,'m')
+    h0 = qa.quantity(2.0,'km')
+    wvl = qa.quantity(-5.6, 'K/km')
+    mxA = qa.quantity(48,'km')
+    dpr = qa.quantity(10.0,'mbar')
     dpm = 1.2
     att = 1
     nb = 1
 
-    fC=casac.Quantity(25.0,'GHz')
-    fW=casac.Quantity(50.,'GHz')
-    fR=casac.Quantity(0.25,'GHz')
+#     fC=casac.Quantity(25.0,'GHz')
+#     fW=casac.Quantity(50.,'GHz')
+#     fR=casac.Quantity(0.25,'GHz')
+    fC=qa.quantity(25.0,'GHz')
+    fW=qa.quantity(50.,'GHz')
+    fR=qa.quantity(0.25,'GHz')
 
     at=casac.atmosphere()
     hum=20.0
@@ -171,7 +181,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
 
     at.initSpectralWindow(nb,fC,fW,fR)
     sg=at.getSpectralWindow()
-    mysg = sg.value
+    mysg = sg['value']
 
     nstep = 20
     pwv = []  
@@ -181,15 +191,15 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
         hum = 20.0*(i+1)
         myatm = at.initAtmProfile(alt,tmp,pre,mxA,hum,wvl,dpr,dpm,h0,att)
         w=at.getGroundWH2O()
-        pwv.append(w.value)
+        pwv.append(w['value'][0])
         at.initSpectralWindow(nb,fC,fW,fR)
         at.setUserWH2O(w)
         sg=at.getSpectralWindow()
-        mysg = sg.value
+        mysg = sg['value']
         sdry=at.getDryOpacitySpec()
         swet=at.getWetOpacitySpec()
         sd=sdry[1]
-        sw=swet[1].value
+        sw=swet[1]['value']
         stot = pl.array(sd)+pl.array(sw)
         opac[:,i]=stot
 
