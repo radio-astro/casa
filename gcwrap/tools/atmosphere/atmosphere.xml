@@ -27,11 +27,11 @@ This is used to construct an {\tt atmosphere} tool.
 </input>
 <returns type="atmosphere"/>
 <example>
-A default atmosphere tool is not created automatically during casapy
-startup.  Manual tool construction is done this way:
+A default atmosphere tool is created automatically during casapy
+startup and defined as 'at'. 
+Manual tool construction is done this way:
 
-attool = casac.homefinder.find_home_by_name('atmosphereHome')
-at = attool.create()
+at = casac.atmosphere()
 
 </example>
 </method>
@@ -64,8 +64,8 @@ used by the ATM library.
 <example>
 
 at.listAtmosphereTypes()
-#['1 - TROPICAL', '2 - MIDLATSUMMER', '3 - MIDLATWINTER', 
-# '4 - SUBARTSUMMER', '5 - SUBARTWINTER']
+# ['1 - TROPICAL', '2 - MIDLATSUMMER', '3 - MIDLATWINTER', 
+#  '4 - SUBARTSUMMER', '5 - SUBARTWINTER']
 
 </example>
    </method>
@@ -170,14 +170,14 @@ can be calculated by simply integrating the H2O profile.
 <returns type="string">String displaying input values.</returns>
 <example>
 
-tmp = qa.quantity(270.0,'K')
-pre = qa.quantity(560.0,'mbar')
+tmp = qa.quantity(270.0, 'K')
+pre = qa.quantity(560.0, 'mbar')
 hum = 20.0
-alt = qa.quantity(5000,'m')
-h0  = qa.quantity(2.0,'km')
-wvl = qa.quantity(-5.6,'K/km')
-mxA = qa.quantity(48,'km')
-dpr = qa.quantity(10.0,'mbar')
+alt = qa.quantity(5000, 'm')
+h0  = qa.quantity(2.0, 'km')
+wvl = qa.quantity(-5.6, 'K/km')
+mxA = qa.quantity(48, 'km')
+dpr = qa.quantity(10.0, 'mbar')
 dpm = 1.2
 att = 1
 myatm = at.initAtmProfile(alt, tmp, pre, mxA, hum, wvl, dpr, dpm, h0, att)
@@ -249,7 +249,7 @@ atmospheric parameters.change.
 <returns type="string">String of current values.</returns>
 <example>
 
-new_tmp = qa.quantity(275.0,'K')
+new_tmp = qa.quantity(275.0, 'K')
 print at.updateAtmProfile(alt, new_tmp, pre, hum, wvl, h0)
 # UPDATED BASIC ATMOSPHERIC PARAMETERS TO GENERATE REFERENCE ATMOSPHERIC PROFILE
 #  
@@ -334,6 +334,20 @@ print "Atmospheric type:   ", p[10]
 print "Ground temperature: ", p[2]['value'][0], p[2]['unit']
 # Ground temperature:  288.16 K
 print p[0]           # a "pretty" listing of all the parameters
+# CURRENT ATMOSPHERIC PARAMETERS OF REFERENCE ATMOSPHERIC PROFILE
+#  
+# Ground temperature T:         275 K
+# Ground pressure P:            560 mbar
+# Relative humidity rh:         20 %
+# Scale height h0:              2 km
+# Pressure step dp:             10 mbar
+# Altitude alti:                5000 m
+# Attitude top atm profile      48 km
+# Pressure step factor          1.2 
+# Tropospheric lapse rate       -5.6 K/km
+# Atmospheric type:             TROPICAL
+#
+# Atmospheric profile has 20 layers.
 
 </example>
    </method>
@@ -349,7 +363,7 @@ for i in range(at.getNumLayers()):
         # Print atmospheric profile returned by at.getProfile():
         # Layer thickness (idx=1), Temperature (idx=2),
         # Number density of water vapor(idx=4), and Pressure (idx=5)
-        print p[1]['value'][i],p[2]['value'][i],p[4]['value'][i],p[5]['value'][i]
+        print p[1]['value'][i], p[2]['value'][i], p[4]['value'][i], p[5]['value'][i]
 
 </example>
    </method>
@@ -438,14 +452,15 @@ Get the atmospheric profile.
 
 p = at.getProfile()
 # returns a tuple of
-# 0 - string listing of layer values, and arrays of layer 1 - thickness,
+# 0 - string listing of layer values, and arrays of layer, 1 - thickness,
 # 2 - temperature, 3 - watermassdensity, 4 - water (number density),
-# 5 - pressure, 6 - O3 (number density) 7 - CO, 8 - N2O
+# 5 - pressure, 6 - O3 (number density), 7 - CO, 8 - N2O
 for i in range(at.getNumLayers()):
         # Print atmospheric profile returned by at.getProfile():
         # Layer thickness (idx=1), Temperature (idx=2),
         # Number density of water vapor(idx=4), and Pressure (idx=5)
-        print p[1]['value'][i],p[2]['value'][i],p[4]['value'][i],p[5]['value'][i]
+        print p[1]['value'][i], p[2]['value'][i], p[4]['value'][i],\
+              p[5]['value'][i]
 
 print p[0]    # "pretty" listing of all layer parameters
 
@@ -499,17 +514,17 @@ using the above atmospheric parameters.
 
 <example>
 
-nb=1
-fC=qa.quantity(88.,'GHz')
-fW=qa.quantity(.5,'GHz')
-fR=qa.quantity(.5,'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
+nb = 1
+fC = qa.quantity(88., 'GHz')
+fW = qa.quantity(0.5, 'GHz')
+fR = qa.quantity(0.5, 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
 
-nb=2
-fC=qa.quantity([88.,90.],'GHz')
-fW=qa.quantity([.5,.5],'GHz')
-fR=qa.quantity([.125,.125],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
+nb = 2
+fC = qa.quantity([88., 90.], 'GHz')
+fW = qa.quantity([0.5, 0.5], 'GHz')
+fR = qa.quantity([0.125, 0.125], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
 
 </example>
 
@@ -555,10 +570,10 @@ having no sideband.
 
 <example>
 
-fC2 = qa.quantity(350.0,'GHz')
-fW2 = qa.quantity(0.008,'GHz')
-fR2 = qa.quantity(0.002,'GHz')
-nc = at.addSpectralWindow(fC2,fW2,fR2)
+fC2 = qa.quantity(350.0, 'GHz')
+fW2 = qa.quantity(0.008, 'GHz')
+fR2 = qa.quantity(0.002, 'GHz')
+nc = at.addSpectralWindow(fC2, fW2, fR2)
 print "New spectral window has ", nc, " channels"
 
 </example>
@@ -723,7 +738,7 @@ print at.getSpectralWindow()['value'],at.getSpectralWindow()['unit']
 
 sg = at.getSpectralWindow()
 for i in range(len(sg['value'])):
-    print sg['value'][i], sg['unit']
+        print sg['value'][i], sg['unit']
 
     
     </example>
@@ -749,29 +764,29 @@ for i in range(len(sg['value'])):
    <returns type="double">Channel number.</returns>
    <example>
    
-In [2]: at.getRefFreq()['value'][0], at.getRefFreq()['unit']
-Out[2]: (90.0, 'GHz')
+# List current spectral window setting of SPW0
+at.getRefFreq()['value'][0], at.getRefFreq()['unit']
+# (90.0, 'GHz')
+print at.getChanSep()['value'][0], at.getChanSep()['unit']
+# 10.0 MHz
+at.getRefChan()
+# 32
 
-In [3]: print at.getChanSep()['value'][0], at.getChanSep()['unit']
-10.0 MHz
+# Get grid positions
+at.getChanNum(qa.quantity(90., 'GHz'))
+# 0.0
 
-In [4]: at.getRefChan()
-Out[4]: 32
+at.getChanNum(qa.quantity(90., 'GHz'), 0)
+# 0.0
 
-In [5]: at.getChanNum(qa.quantity(90.,'GHz'))
-Out[5]: 0.0
+at.getChanNum(qa.quantity(90.08, 'GHz'), 0)
+# 8.0
 
-In [6]: at.getChanNum(qa.quantity(90.,'GHz'),0)
-Out[6]: 0.0
+at.getChanNum(qa.quantity(89.985, 'GHz'), 0)
+# -1.5
 
-In [7]: at.getChanNum(qa.quantity(90.08,'GHz'),0)
-Out[7]: 8.0
-
-In [8]: at.getChanNum(qa.quantity(89.985,'GHz'),0)
-Out[8]: -1.5
-
-In [9]: at.getChanNum(qa.quantity(89.98,'GHz'),0)
-Out[9]: -2.0
+at.getChanNum(qa.quantity(89.98,'GHz'), 0)
+# -2.0
 
     
     </example>
@@ -817,7 +832,8 @@ Get lowest frequency channel for the specified spectral window.
    <returns type="Quantity">Lowest frequency.</returns>
    <example>
    
-print "Frequency range: from ", at.getMinFreq()['value'][0], " to ", at.getMaxFreq()['value'][0], at.getMinFreq()['unit']
+print "Frequency range: from ", at.getMinFreq()['value'][0], " to ",\
+      at.getMaxFreq()['value'][0], at.getMinFreq()['unit']
 
     
     </example>
@@ -841,7 +857,8 @@ Get highest frequency channel for the specified spectral window.
    <returns type="Quantity">Highest frequency.</returns>
    <example>
    
-print "Frequency range: from ", at.getMinFreq()['value'][0], " to ", at.getMaxFreq()['value'][0], at.getMaxFreq()['unit']
+print "Frequency range: from ", at.getMinFreq()['value'][0], " to ",\
+      at.getMaxFreq()['value'][0], at.getMaxFreq()['unit']
     
     </example>
     </method>
@@ -872,11 +889,12 @@ Get the integrated Dry Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dry Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDryOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dry Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getDryOpacity()
 
 
 </example>
@@ -907,11 +925,12 @@ Get the integrated Dry Continuum Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dry Cont Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDryContOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dry Cont Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getDryContOpacity()
 
 
 </example>
@@ -942,11 +961,12 @@ Get the integrated O2 Lines Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total O2 Lines Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getO2LinesOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total O2 Lines Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getO2LinesOpacity()
 
 
 </example>
@@ -977,11 +997,12 @@ Get the integrated O3 Lines Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total O3 Lines Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getO3LinesOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total O3 Lines Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getO3LinesOpacity()
 
 
 </example>
@@ -1012,11 +1033,12 @@ Get the integrated CO Lines Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total CO Lines Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getCOLinesOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total CO Lines Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getCOLinesOpacity()
 
 
 </example>
@@ -1047,11 +1069,12 @@ Get the integrated N2O Lines Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total N2O Lines Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getN2OLinesOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total N2O Lines Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getN2OLinesOpacity()
 
 
 </example>
@@ -1087,8 +1110,9 @@ Get the integrated Wet Opacity for one channel in a band.
 
 for i in range(at.getNumSpectralWindows()):
         for j in range(at.getNumChan(i)):
-                print "Frequency: ", at.getChanFreq(j,i)['value'][0], at.getChanFreq(j,i)['unit']
-                print "Wet opacity:", at.getWetOpacity(j,i)['value'][0], at.getWetOpacity(j,i)['unit'], " for ", at.getUserWH2O()['value'][0], at.getUserWH2O()['unit'], " H2O"
+                print "Frequency: ", at.getChanFreq(j, i)['value'][0], at.getChanFreq(j, i)['unit']
+                print "Wet opacity:", at.getWetOpacity(j, i)['value'][0], at.getWetOpacity(j, i)['unit'],\
+                      " for ", at.getUserWH2O()['value'][0], at.getUserWH2O()['unit'], " H2O"
 
 
 </example>
@@ -1120,11 +1144,12 @@ Get the integrated H2O Lines Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total H2O Lines Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getH2OLinesOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total H2O Lines Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getH2OLinesOpacity()
 
 
 </example>
@@ -1155,11 +1180,12 @@ Get the integrated H2O Continuum Opacity for one channel in a band.
 <example>
 
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-fR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total H2O Cont Opacity at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getH2OContOpacity()
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+fR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total H2O Cont Opacity at ", fC['value'][0], fC['unit'],\
+      " for 1.0 air mass: ", at.getH2OContOpacity()
 
 
 </example>
@@ -1195,14 +1221,12 @@ Get the integrated Dry optical depth along the atmospheric path on each channel 
 
 <example>
 
-In [2]: s=at.getDryOpacitySpec()
-In [3]: s
-Out[3]:
-(8, 
- array([0.12113794420465548, 0.11890122206854335,
-        0.11713584932434795, 0.11572780449702716,
-        0.11459567027114714, 0.11368004975916192,
-        0.11293678422232195,0.11233248854020933]))
+at.getDryOpacitySpec()
+# (8, 
+#  array([0.12113794420465548, 0.11890122206854335,
+#         0.11713584932434795, 0.11572780449702716,
+#         0.11459567027114714, 0.11368004975916192,
+#         0.11293678422232195,0.11233248854020933]))
 
 </example>
 
@@ -1238,25 +1262,25 @@ Get the integrated optical Wet depth along the atmospheric path on each channel 
 
 <example>
 
-In [16]: sw=at.getWetOpacitySpec()
+sw=at.getWetOpacitySpec()
 # returns a tuple of
 # 0 - The number of channels and
 # 1 - an quantity array of wet opacity for each channel in band
-In [17]: sw[1]['value']
-Out[17]:
-array([1.7225454913767393, 1.7204246078103735,
-       1.7188614166349163, 1.7179243635081174,
-       1.7177278069990962, 1.7184525049248152,
-       1.7204244157129918, 1.7242351137518073])
+sw[1]['value']
+# array([1.7225454913767393, 1.7204246078103735,
+#        1.7188614166349163, 1.7179243635081174,
+#        1.7177278069990962, 1.7184525049248152,
+#        1.7204244157129918, 1.7242351137518073])
 
-In [18]: sw[0]
-Out[18]: 8
+sw[0]
+# 8
 
 Another example:
 for s in range(at.getNumSpectralWindows()):
         print "band", s
         for i in range(at.getNumChan(0)):
-                print " - dryOpacity ", at.getDryOpacitySpec(spwid=s)[1][i], " wet Opacity/mm ", at.getWetOpacitySpec(spwid=s)[1]['value'][i]
+                print " - dryOpacity ", at.getDryOpacitySpec(spwid=s)[1][i], " wet Opacity/mm ",\
+                      at.getWetOpacitySpec(spwid=s)[1]['value'][i]
 
 
 </example>
@@ -1294,8 +1318,10 @@ for spwid in range(numSpw):
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
         for n in range(numCh):
                 freq = at.getChanFreq(n, spwid)
-                print "Total Dispersive Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ", (at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0]),
-" degrees per mm of water vapor (", ((100*at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersivePhaseDelay(n,spwid)['value'][0]/w['value'][0]), "% of the Non-dispersive one )"
+                print "Total Dispersive Phase Delay at ",freq['value'][0], freq['unit'], " for 1.0 air mass: ",\
+                      (at.getDispersivePhaseDelay(n, spwid)['value'][0])/(w['value'][0])," degrees per mm of water vapor (", \
+                      ((100*at.getDispersivePhaseDelay(n, spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersivePhaseDelay(n,spwid)['value'][0]/w['value'][0]),\
+                      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1334,8 +1360,10 @@ for spwid in range(numSpw):
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
         for n in range(numCh):
                 freq = at.getChanFreq(n, spwid)
-                print "Total Dispersive Wet Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ", (at.getDispersiveWetPhaseDelay(n,spwid)['value'][0])/(w['value'][0]),
-" degrees per mm of water vapor (", ((100*at.getDispersiveWetPhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveWetPhaseDelay(n,spwid)['value'][0]/w['value'][0]), "% of the Non-dispersive one )"
+                print "Total Dispersive Wet Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ",\
+                      (at.getDispersiveWetPhaseDelay(n, spwid)['value'][0])/(w['value'][0]), " degrees per mm of water vapor (",\
+                      ((100*at.getDispersiveWetPhaseDelay(n, spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveWetPhaseDelay(n,spwid)['value'][0]/w['value'][0]),\
+                      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1374,8 +1402,10 @@ for spwid in range(numSpw):
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
         for n in range(numCh):
                 freq = at.getChanFreq(n, spwid)
-                print "Total Dispersive Wet Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ", (at.getDispersiveWetPhaseDelay(n,spwid)['value'][0])/(w['value'][0]),
-" degrees per mm of water vapor (", ((100*at.getDispersiveWetPhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveWetPhaseDelay(n,spwid)['value'][0]/w['value'][0]), "% of the Non-dispersive one )"
+                print "Total Dispersive Wet Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ",\
+                      (at.getDispersiveWetPhaseDelay(n, spwid)['value'][0])/(w['value'][0]), " degrees per mm of water vapor (",\
+                      ((100*at.getDispersiveWetPhaseDelay(n, spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveWetPhaseDelay(n,spwid)['value'][0]/w['value'][0]),\
+                      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1413,8 +1443,10 @@ for spwid in range(numSpw):
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
         for n in range(numCh):
                 freq = at.getChanFreq(n, spwid)
-                print "Total Dispersive Dry Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ", (at.getDispersiveDryPhaseDelay(n,spwid)['value'][0])/(w['value'][0]),
-" degrees per mm of water vapor (", ((100*at.getDispersiveDryPhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveDryPhaseDelay(n,spwid)['value'][0]/w['value'][0]), "% of the Non-dispersive one )"
+                print "Total Dispersive Dry Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ",\
+                      (at.getDispersiveDryPhaseDelay(n,spwid)['value'][0])/(w['value'][0])," degrees per mm of water vapor (",\
+                      ((100*at.getDispersiveDryPhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersiveDryPhaseDelay(n,spwid)['value'][0]/w['value'][0]),\
+                      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1452,8 +1484,10 @@ for spwid in range(numSpw):
         print "Spectral window ", spwid, " has ", numCh, " frequency channels"
         for n in range(numCh):
                 freq = at.getChanFreq(n, spwid)
-                print "Total Dispersive Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ", (at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0]),
-" degrees per mm of water vapor (", ((100*at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersivePhaseDelay(n,spwid)['value'][0]/w['value'][0]), "% of the Non-dispersive one )"
+                print "Total Dispersive Phase Delay at ", freq['value'][0], freq['unit'], " for 1.0 air mass: ",\
+                      (at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0])," degrees per mm of water vapor (",\
+                      ((100*at.getDispersivePhaseDelay(n,spwid)['value'][0])/(w['value'][0]))/(at.getNonDispersivePhaseDelay(n,spwid)['value'][0]/w['value'][0]),\
+                      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1487,12 +1521,14 @@ for channel nc in spectral window spwid.
 
 w = at.getUserWH2O()
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-nfR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDispersivePathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
-print "(",100*(at.getDispersivePathLength()['value'][0] /  w['value'][0])/(at.getNonDispersivePathLength()['value'][0] / w['value'][0]), "% of the Non-dispersive one )"
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+nfR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ",\
+      at.getDispersivePathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
+print "(",100*(at.getDispersivePathLength()['value'][0] /  w['value'][0])/(at.getNonDispersivePathLength()['value'][0] / w['value'][0]),\
+      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1525,12 +1561,14 @@ for channel nc in spectral window spwid.
 
 w = at.getGroundWH2O()
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-nfR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDispersiveWetPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
-print "(",100*(at.getDispersiveWetPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveWetPathLength()['value'][0] / w['value'][0]), "% of the Non-dispersive one )"
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+nfR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ",\
+      at.getDispersiveWetPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
+print "(",100*(at.getDispersiveWetPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveWetPathLength()['value'][0] / w['value'][0]),\
+      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1563,12 +1601,14 @@ for channel nc in spectral window spwid.
 
 w = at.getGroundWH2O()
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-nfR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDispersiveWetPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
-print "(",100*(at.getDispersiveWetPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveWetPathLength()['value'][0] / w['value'][0]), "% of the Non-dispersive one )"
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+nfR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ",\
+      at.getDispersiveWetPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
+print "(",100*(at.getDispersiveWetPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveWetPathLength()['value'][0] / w['value'][0]),\
+      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1601,12 +1641,14 @@ for channel nc in spectral window spwid.
 
 w = at.getGroundWH2O()
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-nfR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDispersiveDryPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
-print "(",100*(at.getDispersiveDryPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveDryPathLength()['value'][0] / w['value'][0]), "% of the Non-dispersive one )"
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+nfR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ",\
+      at.getDispersiveDryPathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
+print "(",100*(at.getDispersiveDryPathLength()['value'][0] /  w['value'][0])/(at.getNonDispersiveDryPathLength()['value'][0] / w['value'][0]),\
+      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1763,12 +1805,14 @@ part) for the current conditions, for channel nc in spectral window spwid.
 
 w = at.getUserWH2O()
 nb = 1
-fC = qa.quantity([850.0],'GHz')
-fW = qa.quantity([0.5],'GHz')
-nfR = qa.quantity([0.5],'GHz')
-at.initSpectralWindow(nb,fC,fW,fR)
-print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ", at.getDispersivePathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
-print "(",100*(at.getDispersivePathLength()['value'][0] /  w['value'][0])/(at.getNonDispersivePathLength()['value'][0] / w['value'][0]), "% of the Non-dispersive one )"
+fC = qa.quantity([850.0], 'GHz')
+fW = qa.quantity([0.5], 'GHz')
+nfR = qa.quantity([0.5], 'GHz')
+at.initSpectralWindow(nb, fC, fW, fR)
+print "Total Dispersive Delay at ", fC['value'][0], fC['unit'], " for 1.0 air mass: ",\
+      at.getDispersivePathLength()['value'][0] /  w['value'][0], " meters per mm of water vapor"
+print "(",100*(at.getDispersivePathLength()['value'][0] /  w['value'][0])/(at.getNonDispersivePathLength()['value'][0] / w['value'][0]),\
+      "% of the Non-dispersive one )"
 
 
 </example>
@@ -1813,7 +1857,7 @@ spectral window spwid and channel nf.
 
 <example>
 
-ac = at.getAbsH2OLines(0,0,0)
+ac = at.getAbsH2OLines(0, 0, 0)
 print "H2O lines absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -1858,7 +1902,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsH2OCont(0,0,0)
+ac = at.getAbsH2OCont(0, 0, 0)
 print "H2OCont absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -1904,7 +1948,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsO2Lines(0,0,0)
+ac = at.getAbsO2Lines(0, 0, 0)
 print "O2 lines absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -1950,7 +1994,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsDryCont(0,0,0)
+ac = at.getAbsDryCont(0, 0, 0)
 print "Dry Continuum absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -1996,7 +2040,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsO3Lines(0,0,0)
+ac = at.getAbsO3Lines(0, 0, 0)
 print "O3 lines absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -2042,7 +2086,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsCOLines(0,0,0)
+ac = at.getAbsCOLines(0, 0, 0)
 print "CO lines absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -2088,7 +2132,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsN2OLines(0,0,0)
+ac = at.getAbsN2OLines(0, 0, 0)
 print "N2O lines absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -2134,7 +2178,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsTotalDry(0,0,0)
+ac = at.getAbsTotalDry(0, 0, 0)
 print "Total dry absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -2180,7 +2224,7 @@ spectral window spwid and frequency channel nf
 
 <example>
 
-ac = at.getAbsTotalWet(0,0,0)
+ac = at.getAbsTotalWet(0, 0, 0)
 print "Total wet absorption coefficient for layer 0, channel 0 is ", ac['value'][0], ac['unit']
 
 </example>
@@ -2310,8 +2354,8 @@ Get the sky background temperature
 <returns type="Quantity">sky background temperature</returns>
 <example>
 
-t=at.getSkyBackgroundTemperature()
-print t['value'][0],t['unit']
+t = at.getSkyBackgroundTemperature()
+print t['value'][0], t['unit']
 # 2.73 K
 
 </example>
@@ -2341,7 +2385,7 @@ window spwid, for the current conditions and a perfect sky coupling.
 
 <example>
 
-wh2o=qa.quantity(0.4,'mm')
+wh2o = qa.quantity(0.4,'mm')
 print "(INPUT CHANGE) water vapor column:", wh2o['value'], wh2o['unit']
 print "(NEW OUTPUT) T_EBB =", at.getAverageTebbSky(0,wh2o)['value'][0], at.getAverageTebbSky(0,wh2o)['unit']
 
@@ -2379,7 +2423,7 @@ perfect Sky Coupling to the sky.
 <example>
 
 for s in range(at.getNumSpectralWindows()):
-        for i in range(n):
+        for i in range(at.getNumChan(s)):
                 print "Band", s, " channel ", i, "TebbSky = ", at.getTebbSky(i,s)['value'][0], at.getTebbSky()['unit']
 
 
@@ -2418,23 +2462,22 @@ perfect Sky Coupling to the sky.
 <returns type="int">The number of channels.</returns>
 
 <example>
-In [16]: sw=at.getWetOpacitySpec()
+sw=at.getWetOpacitySpec()
 # returns a tuple of
 # 0 - The number of channels, and
 # 1 - the Equivalent Blackbody Temperatures in a band
-In [17]: sw[1]['value'][0]
-Out[17]:
-[34.687910103670511,
- 35.496193465331679,
- 36.460355664151791,
- 37.419146813713745,
- 37.9452005127634,
- 38.722631196093729,
- 39.593561594172662,
- 40.528694048924017]
+sw[1]['value']
+# [34.687910103670511,
+#  35.496193465331679,
+#  36.460355664151791,
+#  37.419146813713745,
+#  37.9452005127634,
+#  38.722631196093729,
+#  39.593561594172662,
+#  40.528694048924017]
 
-In [18]: sw[0]
-Out[18]: 8
+sw[0]
+# 8
 
 Another example:
 for s in range(at.getNumSpectralWindows()):
