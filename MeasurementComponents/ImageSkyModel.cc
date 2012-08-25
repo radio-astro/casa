@@ -365,11 +365,13 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
     TempImage<Complex>* cimagePtr = 
       new TempImage<Complex> (TiledShape(cimageShape, 
 					 image_p[model]->niceCursorShape()),
-			      cimageCoord,
-			      memoryMB);
+			      cimageCoord,0);
+    cimagePtr->setMaximumCacheSize(cimagePtr->shape().product()/10);
+    //cimagePtr->setMaximumCacheSize(cacheSize());
     AlwaysAssert(cimagePtr, AipsError);
     cimage_p[model] = cimagePtr;
     cimage_p[model]->setMiscInfo(image_p[model]->miscInfo());
+    cimagePtr->clearCache();
   }
   return *cimage_p[model];
 };
@@ -413,7 +415,7 @@ ImageInterface<Complex>& ImageSkyModel::XFR(Int model, Int numXFR)
 					  sub.shape()(2),
 					  sub.shape()(3)),
 				sub.coordinates(),
-				memoryMB);
+			        0);
       //      cout << "ISM::XFR() shape = " << cxfrPtr->shape() << endl;
 
     } else {
@@ -425,9 +427,12 @@ ImageInterface<Complex>& ImageSkyModel::XFR(Int model, Int numXFR)
 					  cImage(model).shape()(2),
 					  cImage(model).shape()(3)),
 				cImage(model).coordinates(),
-				memoryMB);
+				0);
     }
     AlwaysAssert(cxfrPtr, AipsError);
+    cxfrPtr->setMaximumCacheSize(cxfrPtr->shape().product()/10);
+    //cxfrPtr->setMaximumCacheSize(cacheSize());
+    cxfrPtr->clearCache();
     cxfr_p[model*maxNumXFR_p+numXFR] = cxfrPtr;
   }
   AlwaysAssert(cxfr_p[model*maxNumXFR_p+numXFR], AipsError);
@@ -447,8 +452,11 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
     TempImage<Float>* psfPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), image_p[model]->niceCursorShape()),
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
     AlwaysAssert(psfPtr, AipsError);
+    psfPtr->setMaximumCacheSize(psfPtr->shape().product()/10);
+    //psfPtr->setMaximumCacheSize(cacheSize());
+    psfPtr->clearCache();
     psf_p[model] = psfPtr;
   }
   return *psf_p[model];
@@ -469,8 +477,12 @@ ImageInterface<Float>& ImageSkyModel::residual(Int model) {
       Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
       TempImage<Float>* tempImagePtr =
 	new TempImage<Float> (TiledShape(image_p[model]->shape(), image_p[model]->niceCursorShape()),
-			       image_p[model]->coordinates(), memoryMB);
+			       image_p[model]->coordinates(), 0);
       AlwaysAssert(tempImagePtr, AipsError);
+      
+      tempImagePtr->setMaximumCacheSize(tempImagePtr->shape().product()/10);
+      //tempImagePtr->setMaximumCacheSize(cacheSize());
+      tempImagePtr->clearCache();
       residualImage_p[model] = tempImagePtr;
     }
     return *residualImage_p[model];
@@ -489,7 +501,10 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
     TempImage<Float>* gSPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
 				       image_p[model]->niceCursorShape()),
-			     image_p[model]->coordinates(), memoryMB);
+			     image_p[model]->coordinates(), 0);
+    gSPtr->setMaximumCacheSize(gSPtr->shape().product()/10);
+    //gSPtr->setMaximumCacheSize(cacheSize());
+    gSPtr->clearCache();
     AlwaysAssert(gSPtr, AipsError);
     gS_p[model] = gSPtr;
   }
@@ -508,8 +523,11 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
 				       image_p[model]->niceCursorShape()),
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
     AlwaysAssert(ggSPtr, AipsError);
+    ggSPtr->setMaximumCacheSize(ggSPtr->shape().product()/10);
+    //ggSPtr->setMaximumCacheSize(cacheSize());
+    ggSPtr->clearCache();
     ggS_p[model] = ggSPtr;
   }
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
@@ -528,8 +546,11 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
 				       image_p[model]->niceCursorShape()),
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
     AlwaysAssert(fluxScalePtr, AipsError);
+    fluxScalePtr->setMaximumCacheSize(fluxScalePtr->shape().product()/10);
+    //fluxScalePtr->setMaximumCacheSize(cacheSize());
+    fluxScalePtr->clearCache();
     fluxScale_p[model] = fluxScalePtr;
     // Set default value to avoid a nasty side effect elsewhere
     fluxScale_p[model]->set(1.0);
@@ -552,8 +573,11 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
       new TempImage<Float> (TiledShape(image_p[model]->shape(),
 				       image_p[model]->niceCursorShape()),
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
     AlwaysAssert(workPtr, AipsError);
+    workPtr->setMaximumCacheSize(workPtr->shape().product()/10);
+    //workPtr->setMaximumCacheSize(cacheSize());
+    workPtr->clearCache();
     work_p[model] = workPtr;
   }
   return *work_p[model];
@@ -572,8 +596,11 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
       new TempImage<Float> (TiledShape(image_p[model]->shape(),
 				       image_p[model]->niceCursorShape()),
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
     AlwaysAssert(deltaimagePtr, AipsError);
+    deltaimagePtr->setMaximumCacheSize(deltaimagePtr->shape().product()/10);
+    //deltaimagePtr->setMaximumCacheSize(cacheSize());
+    deltaimagePtr->clearCache();
     deltaimage_p[model] = deltaimagePtr;
   }
   return *deltaimage_p[model];
@@ -657,6 +684,10 @@ ComponentList& ImageSkyModel::componentList()
   return *componentList_p;
 }
 
+Long ImageSkyModel::cacheSize(){
+  return Long((HostInfo::memoryFree()/(sizeof(Float)*16)*1024));
+
+}
 
 
 } //# NAMESPACE CASA - END
