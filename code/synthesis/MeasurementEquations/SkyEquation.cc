@@ -1421,7 +1421,8 @@ void SkyEquation::scaleImage(Int model)
 
     LatticeExpr<Float> latticeExpr( iif(sm_->fluxScale(model) <= (0.0), 0.0, (sm_->image(model))/(sm_->fluxScale(model))) );
     sm_->image(model).copyData(latticeExpr);
-    
+    sm_->fluxScale(model).clearCache();
+    sm_->image(model).clearCache();
   }
 };
 
@@ -1432,7 +1433,8 @@ void SkyEquation::unScaleImage(Int model)
 
     LatticeExpr<Float> latticeExpr( sm_->image(model) * (sm_->fluxScale(model)) );
     sm_->image(model).copyData(latticeExpr);
-        
+    sm_->fluxScale(model).clearCache();
+    sm_->image(model).clearCache();
   }
 };
 
@@ -1460,6 +1462,8 @@ void SkyEquation::scaleDeltaImage(Int model)
     sm_->deltaImage(model).copyData( (LatticeExpr<Float>)
 				     (iif(sm_->fluxScale(model) <= (0.0), 0.0,
 					  ((sm_->deltaImage(model))/(sm_->fluxScale(model))) )) );
+    sm_->fluxScale(model).clearCache();
+    sm_->deltaImage(model).clearCache();
   }
   
 };
@@ -1477,6 +1481,8 @@ void SkyEquation::unScaleDeltaImage(Int model)
   if ( (sm_->doFluxScale(model))){
     LatticeExpr<Float> latticeExpr( sm_->deltaImage(model) * (sm_->fluxScale(model)) );
     sm_->deltaImage(model).copyData(latticeExpr);
+    sm_->fluxScale(model).clearCache();
+    sm_->deltaImage(model).clearCache();
   } 
 };
 
@@ -1625,6 +1631,8 @@ void SkyEquation::fixImageScale()
       }
       */
       ///
+      sm_->ggS(model).clearCache();
+      sm_->fluxScale(model).clearCache();
     }
 
   }

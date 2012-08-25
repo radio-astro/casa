@@ -305,6 +305,8 @@ protected:
 
   LogSink logSink_p;
   LogSink& logSink() {return logSink_p;};
+  
+  Long cacheSize();
 
   PGPlotter *pgplotter_p;
   Bool displayProgress_p;
