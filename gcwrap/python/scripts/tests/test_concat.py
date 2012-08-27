@@ -887,7 +887,6 @@ class test_concat(unittest.TestCase):
             if not result:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
                 
         self.assertTrue(retValue['success'])
 

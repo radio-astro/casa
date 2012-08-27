@@ -78,6 +78,7 @@ class test_virtualconcat(unittest.TestCase):
         testmms = False
         if os.environ.has_key('TEST_DATADIR'):   
             testmms = True
+            print "Testing on MMSs ...\n"
             DATADIR = str(os.environ.get('TEST_DATADIR'))
             if os.path.isdir(DATADIR):
                 datapath = DATADIR+'/concat/input/'
@@ -479,11 +480,11 @@ class test_virtualconcat(unittest.TestCase):
         self.assertTrue(retValue['success'])
 
     def test8(self):
-        '''Virtualconcat 8: two MSs with different antenna tables'''
+        '''Virtualconcat 8: two MSs with different antenna tables, copypointing=False'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         
         self.res = virtualconcat(vis = ['sim7.ms','sim8.ms'],
-                          concatvis = msname)
+                          concatvis = msname, copypointing=False)
         self.assertEqual(self.res,None)
 
         print myname, ": Now checking output ..."
@@ -514,11 +515,20 @@ class test_virtualconcat(unittest.TestCase):
                     print "Found incorrectly ordered baseline label in row ", i, ": ", ant1, " ", ant2
                     result = False
                     break
+                
+            if result:
+                print myname, ": OK. Checking pointing table ..."
+
+            tb.open('test8.ms/POINTING')
+            pointingrows = tb.nrows()
+            tb.close()
+            if pointingrows>0:
+                print "Pointing table should be empty!"
+                result = False
 
             if not result:
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+                retValue['error_msgs']=retValue['error_msgs']+'Check of tables main and/or pointing failed'
                 
         self.assertTrue(retValue['success'])
 
@@ -660,6 +670,44 @@ class test_virtualconcat(unittest.TestCase):
             os.system('cat diff.txt')
             retValue['success'] = (os.path.getsize('diff.txt') == 0)
 
+        self.assertTrue(retValue['success'])
+
+    def test12(self):
+        '''Virtualconcat 12: two MSs with different antenna tables, copypointing=True (default)'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = virtualconcat(vis = ['sim7.ms','sim8.ms'],
+                          concatvis = msname, copypointing=True)
+        self.assertEqual(self.res,None)
+
+        print myname, ": Now checking output ..."
+        try:
+            ms.open(msname)
+        except:
+            ms.close()
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test12.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test12.ms',ignore_errors=True)
+            shutil.copytree(msname,'test12.ms', True)
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True        
+
+            result = True
+            tb.open('test12.ms/POINTING')
+            pointingrows = tb.nrows()
+            tb.close()
+            if pointingrows==0:
+                result = False
+
+            if not result:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of pointing table failed'
+                
+        self.assertTrue(retValue['success'])
 
 
 class virtualconcat_cleanup(unittest.TestCase):           
