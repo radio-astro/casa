@@ -126,7 +126,7 @@ class simple_cluster:
             max_mem = memory_available
             max_engines = ncores_available
             
-            # Compute equivalent number of cores iddle
+            # Compute equivalent number of cores idle
             ncores_available = int(round(ncores_available*cpu_available/100.0))
             
             # Determine maximum number of engines that can be deployed at target node
@@ -176,7 +176,7 @@ class simple_cluster:
         
             nengines = int(nengines)
             if (nengines>max_engines): 
-                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constrain" 
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constraint" 
                              % (hostname,str(nengines),str(max_engines)))
                 nengines = max_engines       
             
@@ -205,6 +205,7 @@ class simple_cluster:
         
         ncores = 0
         memory = 0.
+        cached_memory = 0.
         cmd_os = "ssh -q " + hostname + " 'uname -s'"
         os = commands.getoutput(cmd_os)
         if (os == "Linux"):
@@ -219,8 +220,11 @@ class simple_cluster:
                 pass
             
             memory=0.0
-            for memtype in ['MemFree', 'Buffers', 'Cached']:
-                cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep "+memtype+"'"
+            for memtype in ['MemFree',
+                            'Buffers',
+                            'Cached' # "Cached" has a the problem that there cas also be "SwapCached"
+                            ]:
+                cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep -v SwapCached | grep "+memtype+"'"
                 str_memory = commands.getoutput(cmd_memory)
                 str_memory = string.replace(str_memory,memtype+':','')
                 str_memory = string.replace(str_memory,"kB","")
@@ -246,7 +250,7 @@ class simple_cluster:
             except:
                 casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
             
-        else:
+        else: # Mac OSX
             cmd_ncores = "ssh -q " + hostname + " '/usr/sbin/sysctl -n hw.ncpu'"
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores
