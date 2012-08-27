@@ -53,6 +53,10 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 	    <value></value>
 	    <any type="variant"/>
     </param>
+    <param type="bool" name="throwexecpt">
+	    <description>Throw an exception if the verification fails</description>
+	    <value>false</value>
+    </param>
 
   </input>
 

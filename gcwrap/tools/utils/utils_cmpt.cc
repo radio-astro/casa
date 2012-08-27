@@ -43,7 +43,7 @@ utils::~utils()
 }
 
 bool
-utils::verify(const ::casac::record& input, const ::casac::variant& xmldescriptor)
+utils::verify(const ::casac::record& input, const ::casac::variant& xmldescriptor, bool throwexcept)
 {
 
    bool rstat(true);
@@ -64,15 +64,19 @@ utils::verify(const ::casac::record& input, const ::casac::variant& xmldescripto
    }
    if(rstat){
 	   rstat = stdBaseInterface::verify(const_cast<record &>(input), *constraints, *itsLog);
+           if(constraints)
+	      delete constraints;
 	   if(rstat){
 		   *itsLog << LogOrigin("utils", "verify") << LogIO::NORMAL3 << "verified." << LogIO::POST;
 	   }else{
+                if(throwexcept){
+                   throw(AipsError("Parameter verification failed"));
+                } else {
 		   *itsLog <<  LogIO::POST;
 		   *itsLog << LogOrigin("utils", "verify") << LogIO::WARN << "Some arguments failed to verify!" << LogIO::POST;
+		}
 	   }
    }
-   if(constraints)
-	   delete constraints;
    //std::cerr << "return from verify is " << rstat << std::endl;
    return rstat;
 }
