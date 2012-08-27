@@ -181,10 +181,14 @@ NROReader* getNROReader( const String name,
 
 //----------------------------------------------------------------------
 // constructor
-NROReader::NROReader( string name ) {
+NROReader::NROReader( string name ) 
+  : dataset_( NULL ),
+    srcdir_( 0 ),
+    msrcdir_( 0 )
+{
   // initialization
   filename_ = name ;
-  dataset_ = NULL ;
+  coord_ = -1 ;
 }
 
 // destructor
@@ -295,120 +299,106 @@ vector<Bool> NROReader::getBeams()
 // Get SRCDIRECTION in RADEC(J2000)
 Vector<Double> NROReader::getSourceDirection()
 {
-  LogIO os( LogOrigin( "NROReader", "getSourceDirection()", WHERE ) ) ;
+  if ( msrcdir_.nelements() == 2 )
+    return msrcdir_ ;
 
-  Vector<Double> v ;
-  Double srcra = Double( dataset_->getRA0() ) ;
-  Double srcdec = Double( dataset_->getDEC0() ) ;
+  srcdir_.resize( 2 ) ;
+  srcdir_[0] = Double( dataset_->getRA0() ) ;
+  srcdir_[1] = Double( dataset_->getDEC0() ) ;
   char epoch[5] ; 
   strncpy( epoch, (dataset_->getEPOCH()).c_str(), 5 ) ;
   if ( strncmp( epoch, "B1950", 5 ) == 0 ) {
     // convert to J2000 value
     MDirection result = 
-      MDirection::Convert( MDirection( Quantity( srcra, "rad" ),
-				       Quantity( srcdec, "rad" ),
+      MDirection::Convert( MDirection( Quantity( srcdir_[0], "rad" ),
+				       Quantity( srcdir_[1], "rad" ),
 				       MDirection::Ref( MDirection::B1950 ) ),
 			   MDirection::Ref( MDirection::J2000 ) ) () ;
-    v = result.getAngle().getValue() ;
-    Double srcra2 = v( 0 ) ;
-    if ( srcra2 < 0.0 && srcra >= 0.0 )
-      v( 0 ) = 2.0 * M_PI + srcra2 ;
+    msrcdir_ = result.getAngle().getValue() ;
+    if ( msrcdir_[0] < 0.0 && srcdir_[0] >= 0.0 )
+      msrcdir_[0] = 2.0 * M_PI + msrcdir_[0] ;
     //cout << "NROReader::getSourceDirection()  SRCDIRECTION convert from (" 
     //<< srcra << "," << srcdec << ") B1950 to (" 
     //<< v( 0 ) << ","<< v( 1 ) << ") J2000" << endl ;
+    //LogIO os( LogOrigin( "NROReader", "getSourceDirection()", WHERE ) ) ;
     //os << LogIO::NORMAL << "SRCDIRECTION convert from (" 
     //   << srcra << "," << srcdec << ") B1950 to (" 
     //   << v( 0 ) << ","<< v( 1 ) << ") J2000" << LogIO::POST ;
   }
   else if ( strncmp( epoch, "J2000", 5 ) == 0 ) {
-    v.resize( 2 ) ;
-    v( 0 ) = srcra ;
-    v( 1 ) = srcdec ;
+    msrcdir_.reference( srcdir_ ) ;
   }
-    
-  return v ;
+   
+  return msrcdir_ ;
 }
 
 // Get DIRECTION in RADEC(J2000)
 Vector<Double> NROReader::getDirection( int i )
 {
-  LogIO os( LogOrigin( "NROReader", "getDirection()", WHERE ) ) ;
-
-  Vector<Double> v ;
+  Vector<Double> v( 2 ) ;
   NRODataRecord *record = dataset_->getRecord( i ) ;
   char epoch[5] ;
   strncpy( epoch, (dataset_->getEPOCH()).c_str(), 5 ) ;
   int icoord = dataset_->getSCNCD() ;
-  Double dirx = Double( record->SCX ) ;
-  Double diry = Double( record->SCY ) ;
-  if ( icoord == 1 ) {
-    // convert from LB to RADEC
-    MDirection result = 
-      MDirection::Convert( MDirection( Quantity( dirx, "rad" ), 
-				       Quantity( diry, "rad" ),
-				       MDirection::Ref( MDirection::GALACTIC ) ),
-			   MDirection::Ref( MDirection::J2000 ) ) () ;
-    v = result.getAngle().getValue() ;
-    Double dirx2 = v( 0 ) ;
-    if ( dirx2 < 0.0 && dirx >= 0.0 ) 
-      v( 0 ) = 2.0 * M_PI + dirx2 ;
-    //cout << "NROReader::getDirection()  DIRECTION convert from (" 
-    //<< dirx << "," << diry << ") LB to (" 
-    //<< v( 0 ) << ","<< v( 1 ) << ") RADEC" << endl ;
-    //os << LogIO::NORMAL << "DIRECTION convert from (" 
-    //   << dirx << "," << diry << ") LB to (" 
-    //   << v( 0 ) << ","<< v( 1 ) << ") RADEC" << LogIO::POST ;
+  double scantime = dataset_->getScanTime( i ) ;
+  initConvert( icoord, scantime, epoch ) ;
+  v[0]= Double( record->SCX ) ;
+  v[1] = Double( record->SCY ) ;
+  if ( converter_.null() )
+    // no conversion 
+    return v ;
+  else {
+    Vector<Double> v2 = (*converter_)( v ).getAngle().getValue() ; 
+    if ( v2[0] < 0.0 && v[0] >= 0.0 ) 
+      v2[0] = 2.0 * M_PI + v2[0] ;
+    return v2 ;
   }
-  else if ( icoord == 2 ) {
-    // convert from AZEL to RADEC
-    vector<double> antpos = getAntennaPosition() ;
-    Vector<Quantity> qantpos( 3 ) ;
-    for ( int ip = 0 ; ip < 3 ; ip++ )
-      qantpos[ip] = Quantity( antpos[ip], "m" ) ;
-    Double scantime = Double( dataset_->getScanTime( i ) ) ;
-    MEpoch me( Quantity( scantime, "d" ), MEpoch::UTC ) ;
-    MPosition mp( MVPosition( qantpos ), MPosition::ITRF ) ;
-    MeasFrame mf( me, mp ) ;
-    MDirection result = 
-      MDirection::Convert( MDirection( Quantity( dirx, "rad" ), 
-				       Quantity( diry, "rad" ),
-				       MDirection::Ref( MDirection::AZEL ) ),
-			   MDirection::Ref( MDirection::J2000, mf ) ) () ;
-    v = result.getAngle().getValue() ;
-    //cout << "NROReader::getDirection()  DIRECTION convert from (" 
-    //<< dirx << "," << diry << ") AZEL to (" 
-    //<< v( 0 ) << ","<< v( 1 ) << ") RADEC" << endl ;
-    //os << LogIO::NORMAL << "DIRECTION convert from (" 
-    //   << dirx << "," << diry << ") AZEL to (" 
-    //   << v( 0 ) << ","<< v( 1 ) << ") RADEC" << LogIO::POST ;
-  }
-  else if ( icoord == 0 ) {
-    if ( strncmp( epoch, "B1950", 5 ) == 0 ) {
-      // convert to J2000 value 
-      MDirection result = 
-	MDirection::Convert( MDirection( Quantity( dirx, "rad" ),
-					 Quantity( diry, "rad" ),
-					 MDirection::Ref( MDirection::B1950 ) ),
-			     MDirection::Ref( MDirection::J2000 ) ) () ;
-      v = result.getAngle().getValue() ;
-      Double dirx2 = v( 0 ) ;
-      if ( dirx2 < 0.0 && dirx >= 0.0 )
-	v( 0 ) = 2.0 * M_PI + dirx2 ;
-      //cout << "STFiller::readNRO()  DIRECTION convert from (" 
-      //<< dirx << "," << diry << ") B1950 to (" 
-      //<< v( 0 ) << ","<< v( 1 ) << ") J2000" << endl ;
-      //os << LogIO::NORMAL << "DIRECTION convert from (" 
-      //   << dirx << "," << diry << ") B1950 to (" 
-      //   << v( 0 ) << ","<< v( 1 ) << ") J2000" << LogIO::POST ;
+}
+
+void NROReader::initConvert( int icoord, double t, char *epoch )
+{
+  if ( icoord == 0 && strncmp( epoch, "J2000", 5 ) == 0 )
+    // no conversion 
+    return ;
+
+  if ( converter_.null() || icoord != coord_ ) {
+    LogIO os( LogOrigin( "NROReader", "initConvert()", WHERE ) ) ;
+    coord_ = icoord ;
+    if ( coord_ == 0 ) {
+      // RADEC (B1950) -> RADEC (J2000)
+      os << "Creating converter from RADEC (B1950) to RADEC (J2000)" << LogIO::POST ;
+      converter_ = new MDirection::Convert( MDirection::B1950,
+                                            MDirection::J2000 ) ;
     }
-    else if ( strncmp( epoch, "J2000", 5 ) == 0 ) {
-      v.resize( 2 ) ;
-      v( 0 ) = dirx ;
-      v( 1 ) = diry ;
+    else if ( coord_ == 1 ) {
+      // LB -> RADEC (J2000)
+      os << "Creating converter from GALACTIC to RADEC (J2000)" << LogIO::POST ;
+      converter_ = new MDirection::Convert( MDirection::GALACTIC,
+                                            MDirection::J2000 ) ;
+    }
+    else {
+      // coord_ == 2
+      // AZEL -> RADEC (J2000)
+      os << "Creating converter from AZEL to RADEC (J2000)" << LogIO::POST ;
+      if ( mf_.null() ) {
+        mf_ = new MeasFrame() ;
+        vector<double> antpos = getAntennaPosition() ;
+        Vector<Quantity> qantpos( 3 ) ;
+        for ( int ip = 0 ; ip < 3 ; ip++ )
+          qantpos[ip] = Quantity( antpos[ip], "m" ) ;
+        MPosition mp( MVPosition( qantpos ), MPosition::ITRF ) ;
+        mf_->set( mp ) ;
+      }
+      converter_ = new MDirection::Convert( MDirection::AZEL,
+                                            MDirection::Ref(MDirection::J2000,
+                                                            *mf_ ) ) ;
     }
   }
 
-  return v ;
+  if ( coord_ == 2 ) {
+    MEpoch me( Quantity( t, "d" ), MEpoch::UTC ) ;
+    mf_->set( me ) ;
+  }
 }
 
 int NROReader::getHeaderInfo( Int &nchan,
@@ -619,16 +609,22 @@ int NROReader::getScanInfo( int irow,
   vector<double> spec = dataset_->getSpectrum( irow ) ;
   spectra.resize( spec.size() ) ;
   int index = 0 ;
-  for ( Vector<Float>::iterator itr = spectra.begin() ; itr != spectra.end() ; itr++ ) {
-    *itr = spec[index++] ;
+  Bool b ;
+  Float *fp = spectra.getStorage( b ) ;
+  Float *wp = fp ;
+  for ( vector<double>::iterator i = spec.begin() ;
+        i != spec.end() ; i++ ) {
+    *wp = *i ;
+    wp++ ;
   }
+  spectra.putStorage( fp, b ) ;
   //cout << "spec.size() = " << spec.size() << endl ;
   
   // flagtra
   bool setValue = !( flagtra.nelements() == spectra.nelements() ) ; 
-  flagtra.resize( spectra.nelements() ) ;
   if ( setValue ) {
     //cout << "flagtra resized. reset values..." << endl ;
+    flagtra.resize( spectra.nelements() ) ;
     flagtra.set( 0 ) ;
   }
   //cout << "flag.size() = " << flag.size() << endl ;

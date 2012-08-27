@@ -2502,16 +2502,15 @@ CountedPtr< Scantable > STMath::smooth( const CountedPtr< Scantable >& in,
     Table tab = iter.table();
     ArrayColumn<Float> specCol(tab, "SPECTRA");
     ArrayColumn<uChar> flagCol(tab, "FLAGTRA");
-    Vector<Float> tmpspec; specCol.get(0, tmpspec);
-    uInt nchan = tmpspec.nelements();
+    Vector<Float> spec = specCol( 0 );
+    uInt nchan = spec.nelements();
     Vector<Float> kvec = VectorKernel::make(type, width, nchan, True, False);
     Convolver<Float> conv(kvec, IPosition(1,nchan));
-    Vector<Float> spec;
     Vector<uChar> flag;
+    Vector<Bool> mask(nchan);
     for ( uInt i=0; i<tab.nrow(); ++i) {
       specCol.get(i, spec);
       flagCol.get(i, flag);
-      Vector<Bool> mask(flag.nelements());
       convertArray(mask, flag);
       Vector<Float> specout;
       mathutil::replaceMaskByZero(specout, mask);

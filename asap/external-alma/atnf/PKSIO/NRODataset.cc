@@ -57,8 +57,6 @@ using namespace std ;
 // constructor 
 NRODataset::NRODataset( string name ) 
 {
-  LogIO os( LogOrigin( "NRODataset", "NRODataset()", WHERE ) ) ;
-
   // memory allocation
   initialize() ;
 
@@ -242,12 +240,11 @@ void NRODataset::releaseRecord()
 // Get specified scan
 NRODataRecord *NRODataset::getRecord( int i )
 {
-  LogIO os( LogOrigin( "NRODataset", "getRecord()", WHERE ) ) ;
-
   // DEBUG
   //cout << "NRODataset::getRecord()  Start " << i << endl ;
   //
   if ( i < 0 || i >= rowNum_ ) {
+    LogIO os( LogOrigin( "NRODataset", "getRecord()", WHERE ) ) ;
     //cerr << "NRODataset::getRecord()  data index out of range." << endl ;
     os << LogIO::SEVERE << "data index " << i << " out of range. return NULL." << LogIO::POST ;
     return NULL ;
@@ -266,6 +263,7 @@ NRODataRecord *NRODataset::getRecord( int i )
     dataid_ = i ;
   }
   else {
+    LogIO os( LogOrigin( "NRODataset", "getRecord()", WHERE ) ) ;
     //cerr << "NRODataset::getRecord()  error while reading data " << i << endl ;
     os << LogIO::SEVERE << "error while reading data " << i << ". return NULL." << LogIO::POST ;
     dataid_ = -1 ;
@@ -277,8 +275,6 @@ NRODataRecord *NRODataset::getRecord( int i )
 
 int NRODataset::fillRecord( int i ) 
 {
-  LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
-
   int status = 0 ;
 
   status = open() ;
@@ -294,11 +290,13 @@ int NRODataset::fillRecord( int i )
   fseek( fp_, offset, SEEK_SET ) ;
   if ( (int)fread( record_, 1, SCAN_HEADER_SIZE, fp_ ) != SCAN_HEADER_SIZE ) {
     //cerr << "Failed to read scan header: " << i << endl ;
+    LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
     os << LogIO::SEVERE << "Failed to read scan header for " << i << "th row." << LogIO::POST ;
     return -1 ;
   }
   if ( (int)fread( record_->LDATA, 1, dataLen_, fp_ ) != dataLen_ ) {
     //cerr << "Failed to read spectral data: " << i << endl ;
+    LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
     os << LogIO::SEVERE << "Failed to read spectral data for " << i << "th row." << LogIO::POST ;
     return -1 ;
   }
@@ -353,14 +351,12 @@ vector< vector<double> > NRODataset::getSpectrum()
 
 vector<double> NRODataset::getSpectrum( int i )
 {
-  LogIO os( LogOrigin( "NRODataset", "getSpectrum", WHERE ) ) ;
-  
   // DEBUG
   //cout << "NRODataset::getSpectrum() start process (" << i << ")" << endl ;
   //
   // size of spectrum is not chmax_ but dataset_->getNCH() after binding
   const int nchan = NUMCH ;
-  vector<double> bspec( nchan, 0.0 ) ;  // spectrum "after" binding
+  vector<double> spec( chmax_ ) ;  // spectrum "before" binding
   // DEBUG
   //cout << "NRODataset::getSpectrum()  nchan = " << nchan << " chmax_ = " << chmax_ << endl ;
   //
@@ -378,7 +374,14 @@ vector<double> NRODataset::getSpectrum( int i )
   //
   if ( ( scale == 0.0 ) && ( offset == 0.0 ) ) {
     //cerr << "NRODataset::getSpectrum()  zero spectrum (" << i << ")" << endl ;
-    return bspec ;
+    LogIO os( LogOrigin("NRODataset","getSpectrum",WHERE) ) ;
+    os << LogIO::WARN << "zero spectrum for row " << i << LogIO::POST ;
+    if ( spec.size() != nchan )
+      spec.resize( nchan ) ;
+    for ( vector<double>::iterator i = spec.begin() ;
+          i != spec.end() ; i++ )
+      *i = 0.0 ;
+    return spec ;
   }
   unsigned char *cdata = (unsigned char *)record->LDATA ;
   vector<double> mscale = MLTSCF ;
@@ -386,8 +389,8 @@ vector<double> NRODataset::getSpectrum( int i )
   int cbind = CHBIND ;
   int chmin = CHMIN ;
 
-  // char -> int
-  vector<int> ispec( chmax_, 0 ) ;
+  // char -> int -> double
+  vector<double>::iterator iter = spec.begin() ;
 
   static const int shift_right[] = {
     4, 0
@@ -400,62 +403,66 @@ vector<double> NRODataset::getSpectrum( int i )
   };
   int j = 0 ;
   for ( int i = 0 ; i < chmax_ ; i++ ) {
+    // char -> int
     int ivalue = 0 ;
     if ( bit == 12 ) {  // 12 bit qunatization
-      const int idx = j + start_pos[i & 1];
+      const int ialt = i & 1 ;
+      const int idx = j + start_pos[ialt];
       const unsigned tmp = unsigned(cdata[idx]) << 8 | cdata[idx + 1];
-      ivalue = int((tmp >> shift_right[i & 1]) & 0xFFF);
-      j += incr[i & 1];
+      ivalue = int((tmp >> shift_right[ialt]) & 0xFFF);
+      j += incr[ialt];
     }
 
-    ispec[i] = ivalue ;
-    if ( ( ispec[i] < 0 ) || ( ispec[i] > 4096 ) ) {
+    if ( ( ivalue < 0 ) || ( ivalue > 4096 ) ) {
       //cerr << "NRODataset::getSpectrum()  ispec[" << i << "] is out of range" << endl ;
-      os << LogIO::SEVERE << "ispec[" << i << "] is out of range" << LogIO::EXCEPTION ;
-      return bspec ;
+      LogIO os( LogOrigin( "NRODataset", "getSpectrum", WHERE ) ) ;
+      os << LogIO::SEVERE << "ivalue for row " << i << " is out of range" << LogIO::EXCEPTION ;
+      if ( spec.size() != nchan )
+        spec.resize( nchan ) ;
+      for ( vector<double>::iterator i = spec.begin() ;
+            i != spec.end() ; i++ )
+        *i = 0.0 ;
+      return spec ;
     }
     // DEBUG
     //cout << "NRODataset::getSpectrum()  ispec[" << i << "] = " << ispec[i] << endl ;
     //
-  }
 
-  double *const spec = new double[ chmax_ ] ;  // spectrum "before" binding
-  // int -> double 
-  for ( int i = 0 ; i < chmax_ ; i++ ) {
-    spec[i] = (double)( ispec[i] * scale + offset ) * dscale ; 
+    // int -> double
+    *iter = (double)( ivalue * scale + offset ) * dscale ; 
     // DEBUG
-    //cout << "NRODataset::getSpectrum()  spec[" << i << "] = " << spec[i] << endl ;
+    //cout << "NRODataset::getSpectrum()  spec[" << i << "] = " << *iter << endl ;
     //
+    iter++ ;
   }
 
-  // channel binding
+  // channel binding if necessary
   if ( cbind != 1 ) {
-    int k = chmin ;
-    double sum0 = 0 ;
-    double sum1 = 0 ;
+    iter = spec.begin() ;
+    advance( iter, chmin ) ;
+    vector<double>::iterator iter2 = spec.begin() ;
     for ( int i = 0 ; i < nchan ; i++ ) {
-      for ( int j = k ; j < k + cbind ; j++ ) {
-        sum0 += spec[k] ;
-        sum1++ ;
+      double sum0 = 0 ;
+      double sum1 = 0 ;
+      for ( int j = 0 ; j < cbind ; j++ ) {
+        sum0 += *iter ;
+        sum1 += 1.0 ;
+        iter++ ;
       }
-      bspec[i] = sum0 / sum1 ;
-      k += cbind ;
+      *iter2 = sum0 / sum1 ;
+      iter2++ ;
       // DEBUG
       //cout << "NRODataset::getSpectrum()  bspec[" << i << "] = " << bspec[i] << endl ;
       //
     }
+    spec.resize( nchan ) ;
   }
-  else {
-    for ( int i = 0 ; i < nchan ; i++ ) 
-      bspec[i] = spec[i] ;
-  }
-  delete[] spec;
 
   // DEBUG
   //cout << "NRODataset::getSpectrum() end process" << endl ;
   //
 
-  return bspec ;
+  return spec ;
 }
 
 int NRODataset::getIndex( int irow )

@@ -949,7 +949,7 @@ private:
   void addPointing( Double &tSec, Double &interval, Matrix<Double> &dir ) 
   {
     uInt nrow = potab.nrow() ;
-    potab.addRow( 1, True ) ;
+    potab.addRow() ;
 
     *poNumPolyRF = dir.ncolumn() - 1 ;
     *poTimeRF = tSec ;
@@ -994,12 +994,16 @@ private:
   Int addDataDescription( Int pid, Int sid ) 
   {
     Int idx = -1 ;
-    uInt nEntry = ddEntry.nrow() ;
-    Vector<Int> key( 2 ) ;
-    key[0] = pid ;
-    key[1] = sid ;
+    uInt nItem = 2 ;
+    uInt len = ddEntry.nelements() ;
+    uInt nEntry = len / nItem ;
+    const Int *dd_p = ddEntry.storage() ;
     for ( uInt i = 0 ; i < nEntry ; i++ ) {
-      if ( allEQ( ddEntry.row(i), key ) ) {
+      Int pol = *dd_p ;
+      dd_p++ ;
+      Int spw = *dd_p ;
+      dd_p++ ;
+      if ( pid == pol && sid == spw ) {
         idx = i ;
         break ;
       }
@@ -1015,8 +1019,9 @@ private:
       tr.put( nrow ) ;
       idx = nrow ;
 
-      ddEntry.resize( nEntry+1, 2, True ) ;
-      ddEntry.row(nEntry) = key ;
+      ddEntry.resize( len+nItem ) ;
+      ddEntry[len] = pid ;
+      ddEntry[len+1] = sid ;
     }
 
     return idx ;
@@ -1049,6 +1054,9 @@ private:
         nrow++ ;
       }
       processedFreqId[fid] = True ;
+    }
+    else {
+      return ;
     }
 
     Double rp = refpix[fid] ;
@@ -1084,16 +1092,21 @@ private:
   void addFeed( Int fid, Int sid )
   {
     Int idx = -1 ;
-    uInt nEntry = feedEntry.nrow() ;
-    Vector<Int> key( 2 ) ;
-    key[0] = fid ;
-    key[1] = sid ;
+    uInt nItem = 2 ;
+    uInt len = feedEntry.nelements() ;
+    uInt nEntry = len / nItem ;
+    const Int *fe_p = feedEntry.storage() ;
     for ( uInt i = 0 ; i < nEntry ; i++ ) {
-      if ( allEQ( feedEntry.row(i), key ) ) {
+      Int feed = *fe_p ;
+      fe_p++ ;
+      Int spw = *fe_p ;
+      fe_p++ ;
+      if ( fid == feed && sid == spw ) {
         idx = i ;
         break ;
       }
     }
+
 
     if ( idx == -1 ) {
       uInt nrow = feedtab.nrow() ;
@@ -1130,8 +1143,9 @@ private:
       defineField( "POL_RESPONSE", r, polResponse ) ;
       tr.put( nrow ) ;
 
-      feedEntry.resize( nEntry+1, 2, True ) ;
-      feedEntry.row( nEntry ) = key ;
+      feedEntry.resize( len+nItem ) ;
+      feedEntry[len] = fid ;
+      feedEntry[len+1] = sid ;
     }
   }
   void initPolarization() 
@@ -1444,8 +1458,8 @@ private:
     poTargetRF ;
 
   Vector<String> stateEntry;
-  Matrix<Int> ddEntry;
-  Matrix<Int> feedEntry;
+  Block<Int> ddEntry;
+  Block<Int> feedEntry;
   vector< Vector<Int> > polEntry;
   map<uInt,Bool> processedFreqId;
   map<uInt,Double> refpix;
@@ -2051,6 +2065,8 @@ bool MSWriter::write(const string& filename, const Record& rec)
 
   //double endSec = mathutil::gettimeofday_sec() ;
   //os_ << "end MSWriter::write() endSec=" << endSec << " (" << endSec-startSec << "sec)" << LogIO::POST ;
+
+  os_ << "Exported data as MS" << LogIO::POST ;
 
   return True ;
 }

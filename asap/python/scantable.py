@@ -2629,8 +2629,9 @@ class scantable(Scantable):
             workscan._sinusoid_baseline(mask, applyfft, fftmethod.lower(), 
                                         str(fftthresh).lower(), 
                                         workscan._parse_wn(addwn), 
-                                        workscan._parse_wn(rejwn), clipthresh,
-                                        clipniter, getresidual, 
+                                        workscan._parse_wn(rejwn),
+                                        clipthresh, clipniter,
+                                        getresidual, 
                                         pack_progress_params(showprogress, 
                                                              minnrow),
                                         outlog, scsvformat+blfile)

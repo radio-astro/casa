@@ -47,6 +47,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Utilities/CountedPtr.h>
 
 //#include <fitsio.h>
 
@@ -205,12 +206,22 @@ class NROReader
 
   // Get DIRECTION in RADEC(J2000)
   virtual Vector<Double> getDirection( int i ) ;
+  virtual void initConvert( int icoord, double t, char *epoch ) ;
 
   // filename 
   string filename_ ;
 
   // dataset
   NRODataset *dataset_ ;
+
+  // source direction
+  Vector<Double> srcdir_ ;
+  Vector<Double> msrcdir_ ;
+
+  // for direction conversion
+  CountedPtr<MDirection::Convert> converter_ ;
+  CountedPtr<MeasFrame> mf_ ;
+  int coord_ ;
 
   // Logger
   //LogIO os ;
