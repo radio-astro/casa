@@ -73,8 +73,10 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     rval = True
     try:
 
-        if (keepmms and ParallelTaskHelper.isParallelMS(vis) \
-            and (timebin=='0s' or timebin=='-1s')): 
+        if (keepmms and ParallelTaskHelper.isParallelMS(vis)): 
+            if (timebin!='0s' and timebin!='-1s'): 
+                casalog.post('Averaging over time and keeping the MMS structure may lead to time averaging results\n'
+                             +'different from those obtained with keepmms=False.', 'WARN')
                             
             myms = mstool()
             myms.open(vis)
@@ -172,9 +174,6 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
 
         else: # do not output an MMS
-            if (keepmms and ParallelTaskHelper.isParallelMS(vis) \
-                and timebin!='0s' and timebin!='-1s'): 
-                casalog.post('Cannot keep MMS when averaging over time. You will need to repartition.', 'WARN')
 
             rval = split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
                               timebin, timerange, scan, intent, array, uvrange,
