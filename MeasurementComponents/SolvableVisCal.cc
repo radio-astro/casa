@@ -5044,21 +5044,34 @@ void SolvableVisJones::applyRefAnt() {
 
   //  cout << "refantchoices = " << refantchoices << endl;
 
-  Int nPol(nPar());  // TBD:or 1, if data was single pol
+  Vector<Int> nPol(nSpw(),nPar());  // TBD:or 1, if data was single pol
 
-  if (nPol==2) {
-    // Verify that 2nd poln has unflagged solutions
+  if (nPar()==2) {
+    // Verify that 2nd poln has unflagged solutions, PER SPW
     ROCTMainColumns ctmc(*ct_);
-    Cube<Bool> fl=ctmc.flag().getColumn();
-    IPosition blc(3,0,0,0), trc(fl.shape());
-    trc-=1; trc(0)=blc(0)=1;
 
-    //    cout << "nfalse(fl(1,:,:)) = " << nfalse(fl(blc,trc)) << endl;
+    Block<String> cols(1);
+    cols[0]="SPECTRAL_WINDOW_ID";
+    CTIter ctiter(*ct_,cols);
+    Cube<Bool> fl;
 
-    // If there are no unflagged solutions in 2nd pol, 
-    //   avoid it in refant calculations
-    if (nfalse(fl(blc,trc))==0)
-      nPol=1;
+    while (!ctiter.pastEnd()) {
+
+      Int ispw=ctiter.thisSpw();
+      fl.assign(ctiter.flag());
+
+      IPosition blc(3,0,0,0), trc(fl.shape());
+      trc-=1; trc(0)=blc(0)=1;
+      
+      //      cout << "ispw = " << ispw << " nfalse(fl(1,:,:)) = " << nfalse(fl(blc,trc)) << endl;
+      
+      // If there are no unflagged solutions in 2nd pol, 
+      //   avoid it in refant calculations
+      if (nfalse(fl(blc,trc))==0)
+	nPol(ispw)=1;
+
+      ctiter.next();      
+    }
   }
   //  cout << "nPol = " << nPol << endl;
 
@@ -5120,7 +5133,7 @@ void SolvableVisJones::applyRefAnt() {
 	blcA(2)=trcA(2)=irefA;
 	blcB(2)=trcB(2)=irefB;
 	found=True;  // maybe
-	for (Int ipol=0;ipol<nPol;++ipol) {
+	for (Int ipol=0;ipol<nPol(ispw);++ipol) {
 	  blcA(0)=trcA(0)=blcB(0)=trcB(0)=ipol;
 	  found &= (nfalse(flA(blcA,trcA))>0);  // previous interval
 	  found &= (nfalse(flB(blcB,trcB))>0);  // current interval
