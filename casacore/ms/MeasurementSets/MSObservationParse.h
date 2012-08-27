@@ -91,7 +91,7 @@ public:
   MSObservationParse ();
   
   // Associate the ms and the shorthand.
-  MSObservationParse (const MeasurementSet* ms);
+  MSObservationParse (const MeasurementSet* ms, const MSObservation& obsSubtable);
   //  ~MSObservationParse() {if (node_p) delete node_p;node_p=0x0;};
   const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
   const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
@@ -106,8 +106,9 @@ public:
     // Get table expression node object.
   const TableExprNode node();
 
-  Vector<Int> selectedIDs() {return idList;};
-  void reset(){idList.resize(0);parsedIDList_p.resize(0);};
+  Vector<Int> selectedIDs();
+
+  void reset(){idList.resize(0);};
   void cleanup() {};
 
   void setMaxObs(const Int& n) {maxObs_p=n;};
@@ -116,8 +117,8 @@ public:
 
 private:
   TableExprNode node_p;
-  Vector<Int> idList;
-  std::vector<Int> parsedIDList_p;
+  Vector<Int> idList,obsIDList_p;
+  std::vector<Int>  parsedIDList_p;
   const String colName;
   void appendToIDList(const Vector<Int>& v);
   Int maxObs_p;

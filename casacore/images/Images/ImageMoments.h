@@ -332,11 +332,11 @@ public:
    Bool setNewImage (ImageInterface<T>& image);
 
 // Get CoordinateSystem
-   CoordinateSystem coordinates() {return pInImage_p->coordinates();};
+   CoordinateSystem coordinates() {return _image->coordinates();};
 
 
 // Get shape 
-   IPosition getShape() { return pInImage_p->shape() ; } ;
+   IPosition getShape() { return _image->shape() ; } ;
 
    //Set an ImageMomentsProgressMonitor interested in getting updates on the
    //progress of the collapse process.
@@ -344,7 +344,7 @@ public:
 
 private:
 
-   ImageInterface<T>* pInImage_p;
+   std::auto_ptr<ImageInterface<T> > _image;
 
 // Smooth an image   
    Bool smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage,

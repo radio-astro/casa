@@ -24,50 +24,71 @@
 //#
 
 #include <images/Images/ImageBeamSet.h>
+#include <casa/Arrays/ArrayMath.h>
+
+// debug only
+#include <casa/Arrays/ArrayIO.h>
 
 namespace casa {
 
+const String ImageBeamSet::_DEFAULT_AREA_UNIT = "arcsec2";
+
 ImageBeamSet::ImageBeamSet()
-	: _beams(Array<GaussianBeam>()), _axes(Vector<AxisType>(0)) {}
+	: _beams(Array<GaussianBeam>()), _axes(Vector<AxisType>(0)),
+	  _areas(Array<Double>()), _areaUnit(_DEFAULT_AREA_UNIT),
+	  _minBeam(GaussianBeam::NULL_BEAM),
+	  _maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(IPosition(0)),
+	  _maxBeamPos(IPosition(0)) {
+}
 
 ImageBeamSet::ImageBeamSet(
 	const Array<GaussianBeam>& beams,
 	const Vector<AxisType>& axes
-) : _beams(beams), _axes(axes) {
+) : _beams(beams), _axes(axes),
+	_areas(_getAreas(_areaUnit, beams)) {
 	_checkAxisTypeSize(axes);
 	_checkForDups(axes);
-}
-
-void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
-	if (_beams.ndim() != axes.size()) {
-		ostringstream oss;
-		oss << className() << "::" << __FUNCTION__
-			<< ": Inconsistent beams Array dimensionality and axes Vector size";
-		throw AipsError(oss.str());
-	}
+	Double minArea, maxArea;
+	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
+	_minBeam = _beams(_minBeamPos);
+	_maxBeam = _beams(_maxBeamPos);
 }
 
 ImageBeamSet::ImageBeamSet(const GaussianBeam& beam)
- : _beams(IPosition(1,1), beam),
-   _axes(Vector<AxisType>(0)) {}
+ : _beams(IPosition(1, 1), beam),
+   _axes(Vector<AxisType>(0)),
+   _areas(IPosition(1, 1), beam.getArea(_DEFAULT_AREA_UNIT)),
+   _areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
+   _maxBeam(beam), _minBeamPos(1, 0), _maxBeamPos(1, 0) {
+}
 
 ImageBeamSet::ImageBeamSet(
 	const IPosition& shape, const Vector<AxisType>& axes
-) : _beams(shape), _axes(axes) {
+) : _beams(shape), _axes(axes), _areas(shape, 0.0),
+	_areaUnit(_DEFAULT_AREA_UNIT),
+	_minBeam(GaussianBeam::NULL_BEAM),
+	_maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(shape.size(), 0),
+	_maxBeamPos(shape.size(), 0) {
 	_checkForDups(axes);
 }
 
 ImageBeamSet::ImageBeamSet(
 	const GaussianBeam& beam, const IPosition& shape,
 	const Vector<AxisType>& axes
-) : _beams(shape), _axes(axes) {
+) : _beams(shape, beam), _axes(axes),
+	_areas(shape, beam.getArea(_DEFAULT_AREA_UNIT)),
+	_areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
+	_maxBeam(beam), _minBeamPos(shape.size(), 0),
+	_maxBeamPos(shape.size(), 0) {
 	_checkForDups(axes);
-	_beams.set(beam);
-
 }
 
 ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
-	: _beams(other._beams), _axes(other._axes) {}
+  : _beams(other._beams), _axes(other._axes),
+    _areas(other._areas), _areaUnit(other._areaUnit),
+    _minBeam(other._minBeam), _maxBeam(other._maxBeam),
+    _minBeamPos(other._minBeamPos),
+    _maxBeamPos(other._maxBeamPos) {}
 
 ImageBeamSet::~ImageBeamSet() {}
 
@@ -77,13 +98,24 @@ ImageBeamSet& ImageBeamSet::operator=(
 	if (this != &other) {
 		_beams.assign(other._beams);
 		_axes.assign(other._axes);
+		_areas.assign(other._areas);
+		_areaUnit = other._areaUnit;
+		_minBeam = other._minBeam;
+		_maxBeam = other._maxBeam;
+		_minBeamPos.resize(other._minBeamPos.size());
+		_minBeamPos = other._minBeamPos;
+		_maxBeamPos.resize(other._maxBeamPos.size());
+		_maxBeamPos = other._maxBeamPos;
 	}
 	return *this;
 }
 
+/*
 GaussianBeam& ImageBeamSet::operator()(const IPosition& pos) {
+	_doAreas = True;
 	return _beams(pos);
 }
+*/
 
 const GaussianBeam& ImageBeamSet::operator()(
 	const IPosition& pos
@@ -91,22 +123,26 @@ const GaussianBeam& ImageBeamSet::operator()(
 	return _beams(pos);
 }
 
-Array<GaussianBeam> ImageBeamSet::operator[] (uInt i) const {
+Array<GaussianBeam> ImageBeamSet::operator[](uInt i) const {
 	return _beams[i];
 }
 
+/*
 Array<GaussianBeam> ImageBeamSet::operator()(
 	const IPosition &start,
 	const IPosition &end
 ) {
+	_doAreas = True;
 	return _beams(start, end);
 }
+*/
 
-const Array<GaussianBeam> ImageBeamSet::operator()(
+const Array<GaussianBeam>& ImageBeamSet::operator()(
 	const IPosition &start,
 	const IPosition &end
 ) const {
-	return _beams(start, end);
+	const Array<GaussianBeam>& beams = _beams(start, end);
+	return beams;
 }
 
 Bool ImageBeamSet::operator== (const ImageBeamSet& other) const {
@@ -226,7 +262,10 @@ void ImageBeamSet::resize(const IPosition& pos) {
 	if (pos.nelements() != _beams.ndim()) {
 		throw AipsError("An ImageBeamSet object cannot be resized to a different dimensionality.");
 	}
+	// _recalculateStats = True;
 	_beams.resize(pos);
+	_areas = _getAreas(_areaUnit, _beams);
+
 }
 
 size_t ImageBeamSet::size() const {
@@ -238,12 +277,21 @@ const Array<GaussianBeam>& ImageBeamSet::getBeams() const {
 }
 
 void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
-	if (beams.ndim() != _axes.size()) {
+    if (beams.ndim() != _axes.size()) {
 		throw AipsError(
 			"Beam array dimensionality is not equal to number of axes."
 		);
 	}
 	_beams.assign(beams);
+	_areas.assign(_getAreas(_areaUnit, _beams));
+}
+
+void ImageBeamSet::setBeams(
+	const IPosition& begin, const IPosition& end,
+	const Array<GaussianBeam>& beams
+) {
+	_beams(begin, end) = beams;
+	_areas.assign(_getAreas(_areaUnit, _beams));
 }
 
 size_t ImageBeamSet::nelements() const {
@@ -264,18 +312,75 @@ size_t ImageBeamSet::ndim() const {
 
 void ImageBeamSet::set(const GaussianBeam& beam) {
 	_beams.set(beam);
+	_minBeam = beam;
+	_maxBeam = beam;
+	_minBeamPos = IPosition(_beams.ndim(), 0);
+	_maxBeamPos = IPosition(_beams.ndim(), 0);
 }
 
 void ImageBeamSet::setBeam(
 	const GaussianBeam& beam, const IPosition& position
 ) {
 	_beams(position) = beam;
+	Double area = beam.getArea(_areaUnit);
+	if (area < _areas(_maxBeamPos)) {
+		_minBeam = beam;
+		_minBeamPos = position;
+	}
+	if (area > _areas(_maxBeamPos)) {
+		_maxBeam = beam;
+		_maxBeamPos = position;
+	}
+}
+
+GaussianBeam ImageBeamSet::getMaxAreaBeam() const {
+	return _maxBeam;
+}
+
+GaussianBeam ImageBeamSet::getMinAreaBeam() const {
+	return _minBeam;
+}
+
+IPosition ImageBeamSet::getMaxAreaBeamPosition() const {
+	return _maxBeamPos;
+}
+
+IPosition ImageBeamSet::getMinAreaBeamPosition() const {
+	return _minBeamPos;
+}
+
+void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
+	if (_beams.ndim() != axes.size()) {
+		ostringstream oss;
+		oss << className() << "::" << __FUNCTION__
+			<< ": Inconsistent beams Array dimensionality and axes Vector size";
+		throw AipsError(oss.str());
+	}
+}
+
+Array<Double> ImageBeamSet::_getAreas(
+	String& areaUnit, const Array<GaussianBeam>& beams
+) {
+	areaUnit = beams.begin()->getMajor().getUnit();
+	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
+	Array<Double> areas(beams.shape());
+	Array<Double>::iterator iareas = areas.begin();
+	areaUnit = beams.begin()->getMajor().getUnit();
+	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
+	for (
+		Array<GaussianBeam>::const_iterator ibeams=beams.begin();
+		ibeams!=beams.end(); ibeams++, iareas++
+	) {
+		*iareas = ibeams->getArea(areaUnit);
+	}
+	return areas;
 }
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
 	os << beamSet.getBeams();
 	return os;
 }
+
 
 
 }

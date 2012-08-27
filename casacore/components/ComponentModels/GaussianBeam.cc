@@ -31,6 +31,9 @@
 
 namespace casa {
 
+const GaussianBeam GaussianBeam::NULL_BEAM = GaussianBeam();
+
+
 GaussianBeam::GaussianBeam() : _major(Quantity(0, "arcsec")),
 	_minor(Quantity(0, "arcsec")), _pa(Quantity(0, "deg")) {
 }
@@ -325,6 +328,15 @@ Bool GaussianBeam::deconvolve(
 	return False;
 }
 
+Vector<Quantity> GaussianBeam::toVector(const Bool unwrap) const {
+	Vector<Quantity> beam(3);
+	beam[0] = _major;
+	beam[1] = _minor;
+	beam[2] = unwrap ? getPA(True) : _pa;
+	return beam;
+}
+
+
 void GaussianBeam::convert(
 	const String& majUnit, const String& minUnit, const String& paUnit
 ) {
@@ -346,7 +358,5 @@ Bool near(
 		&& casa::near(left.getMinor(), other.getMinor(), relWidthTol)
 		&& casa::nearAbs(left.getPA(True), other.getPA(True), absPATol);
 }
-
-
 
 }

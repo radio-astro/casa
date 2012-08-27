@@ -744,7 +744,7 @@ void ImageInfo::setBeam(
 	Int s = stokes;
 	_validateChannelStokes(c, s);
 	IPosition plane = _beamPosition(c, s);
-	_beams(plane) = beam;
+	_beams.setBeam(beam, plane);
 }
 
 Bool ImageInfo::hasMultipleBeams() const {
@@ -801,7 +801,10 @@ void ImageInfo::_validateChannelStokes(
 		}
 		if (stokes >= (Int)nStokes) {
 			throw AipsError(
-				"Specified stokes exceeds number of stokes in per plane beams array"
+				_className() + "::" + __FUNCTION__
+				+ ": Specified stokes (" + String::toString(stokes)
+			    + ") exceeds number of stokes (" + String::toString(nStokes)
+			    + ") in per plane beams array"
 			);
 		}
 	}

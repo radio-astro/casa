@@ -59,6 +59,8 @@ int main() {
 		AlwaysAssert(beam2 == beam, AipsError);
 		AlwaysAssert(beam2 != null, AipsError);
 
+
+
 		Bool except = False;
 		try {
 			// bogus units
@@ -122,6 +124,10 @@ int main() {
 		v[2] = pa;
 		GaussianBeam beam3(v);
 		AlwaysAssert(beam3 == beam, AipsError);
+
+		v = beam.toVector();
+		GaussianBeam beam4(v);
+		AlwaysAssert(beam4 == beam3, AipsError);
 
 		{
 			// Easy test 1 - P.A. = 0

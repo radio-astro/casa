@@ -437,7 +437,10 @@ template<class T> void ImageConcat<T>::_appendBeams(
 		infoThis.removeRestoringBeam();
 		infoThis.setAllBeams(nChanThis, nStokesThis, GaussianBeam());
 		ImageBeamSet beamSet = infoThis.getBeamSet();
-		beamSet(IPosition(beamSet.ndim(), 0), beamsHold.shape()-1) = beamsHold;
+		beamSet.setBeams(
+			IPosition(beamSet.ndim(), 0),
+			beamsHold.shape()-1, beamsHold
+		);
 		infoThis.setBeams(beamSet);
 	}
 	if (infoThat.hasSingleBeam()) {
@@ -459,19 +462,22 @@ template<class T> void ImageConcat<T>::_appendBeams(
 		pos < beamsThat.shape();
 		pos.next(beamsThat.shape())
 	) {
+		Bool last = pos == beamsThat.shape() - 1;
 		infoThis.setBeam(chan, stokes, beamsThat(pos));
 		if (chan >= 0) {
 			chan++;
-			if (chan == (Int)nChanThat) {
+			if (! last && chan == (Int)nChanThis) {
 				chan = 0;
 				if (stokes >= 0) {
 					stokes++;
 				}
 			}
 		}
-		else if (stokes >= 0) {
+		else if (! last && stokes >= 0) {
 			stokes++;
 		}
+		AlwaysAssert(stokes < (Int)nStokesThis, AipsError);
+
 	}
 	this->setImageInfo(infoThis);
 }

@@ -28,6 +28,8 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/GaussianBeam.h>
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeStatistics.h>
 
 namespace casa {
 
@@ -104,18 +106,20 @@ public:
 
 	ImageBeamSet& operator=(const ImageBeamSet& other);
 
-	GaussianBeam &operator()(const IPosition &);
+	//GaussianBeam &operator()(const IPosition &);
 
 	const GaussianBeam &operator()(const IPosition &) const;
 
     Array<GaussianBeam> operator[] (uInt i) const;
 
+    /*
     Array<GaussianBeam> operator()(
     	const IPosition &start,
         const IPosition &end
     );
+    */
 
-    const Array<GaussianBeam> operator() (
+    const Array<GaussianBeam>& operator() (
     	const IPosition &start,
     	const IPosition &end
     ) const;
@@ -145,6 +149,12 @@ public:
 	// elements.
 	void setBeam(
 		const GaussianBeam& beam, const IPosition& position
+	);
+
+	// set the beams from the specified beginning to specified ending positions.
+	void setBeams(
+		const IPosition& begin, const IPosition& end,
+		const Array<GaussianBeam>& beams
 	);
 
 	// does this beam set contain only a single beam?
@@ -183,18 +193,44 @@ public:
 	// set all beams to the same value
 	void set(const GaussianBeam& beam);
 
+	// get the beam in the set which has the smallest area
+	GaussianBeam getMinAreaBeam() const;
+
+	// get the beam in the set which has the largest area
+	GaussianBeam getMaxAreaBeam() const;
+
+	// get the position of the beam with the maximum area
+	IPosition getMaxAreaBeamPosition() const;
+
+	// get the position of the beam with the minimum area
+	IPosition getMinAreaBeamPosition() const;
+
 private:
+	static const String _DEFAULT_AREA_UNIT;
+
 	Array<GaussianBeam> _beams;
 	Vector<AxisType> _axes;
+	Array<Double> _areas;
+	String _areaUnit;
+	GaussianBeam _minBeam, _maxBeam;
+	IPosition _minBeamPos, _maxBeamPos;
+	GaussianBeam _smallest, _largest, _median;
+	//Bool _doAreas;
 
 	IPosition _truePosition(
-		const IPosition& position, const Vector<AxisType>& axes
+		const IPosition& position,
+		const Vector<AxisType>& axes
 	) const;
 
 	static void _checkForDups(const Vector<AxisType>& axes);
 
-	void _checkAxisTypeSize(const Vector<AxisType>& axes) const;
+	void _checkAxisTypeSize(
+		const Vector<AxisType>& axes
+	) const;
 
+	static Array<Double> _getAreas(
+		String& areaUnit, const Array<GaussianBeam>& beams
+	);
 };
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet);
