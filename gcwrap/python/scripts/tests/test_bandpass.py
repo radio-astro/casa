@@ -27,11 +27,15 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Bandpass tests will use data from '+datapath         
+print 'bandpass tests will use data from '+datapath         
 
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
+
+    def cleanUp(self):
+        shutil.rmtree(self.msfile, ignore_errors=True)
+        os.system('rm -rf '+self.msfile+'.bcal')
     
     def setUp_ngc5921(self):
         
@@ -42,6 +46,7 @@ class test_base(unittest.TestCase):
             self.msfile = prefix + '.mms'
 
         self.reffile = datapath + prefix
+        self.cleanUp()
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
@@ -61,7 +66,8 @@ class test_base(unittest.TestCase):
             self.msfile = prefix + '.mms'
 
         self.reffile = datapath + prefix
-
+        self.cleanUp()
+        
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):
             shutil.copytree(fpath, self.msfile)
@@ -98,8 +104,7 @@ class bandpass2_test(test_base):
 
     def setUp(self):
         self.setUp_ngc4826()
-           
-            
+                       
     def tearDown(self):
         if os.path.lexists(self.msfile):
             shutil.rmtree(self.msfile)

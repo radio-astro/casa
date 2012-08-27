@@ -829,7 +829,7 @@ quanta::isquantity(const ::casac::variant& v)
       ::casac::variant localvar(v);
       Record * ptrRec = toRecord(localvar.asRecord());
       if(qh.fromRecord(error, *ptrRec)){
-	retval=qh.isQuantity();
+	retval=(qh.isQuantity() || qh.isQuantumArrayDouble());
       }
       delete ptrRec;
     }

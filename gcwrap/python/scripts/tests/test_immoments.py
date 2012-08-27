@@ -92,6 +92,7 @@ import os
 import shutil
 import numpy
 import casac
+import math
 from tasks import *
 from taskinit import *
 import unittest
@@ -183,6 +184,19 @@ list2=['n1333_both.image','n1333_both.src.tmom0.all','n1333_both.image.rgn',
 #list=['n1333_both.image', 'n1333_both.src.tmom0.blu', 'n1333_both.src.tmom0.red', 
 #       'n1333_both.src.tmom0.all', 'n1333_both.src.tmom1.all', 'n1333_both.image.rgn', 
 #       'immoment_image', 'first_moment.im']
+
+def make_gauss2d(shape, xfwhm, yfwhm):
+    fac = 4*math.log(2)
+    values = numpy.empty(shape, dtype=float)
+    for i in range(shape[0]):
+        x = shape[0]/2 - i
+        for j in range(shape[1]):
+            y = shape[1]/2 - j
+            xfac = x*x*fac/(xfwhm*xfwhm)
+            yfac = y*y*fac/(yfwhm*yfwhm)
+            values[i, j] = math.exp(-(xfac + yfac));
+    return values
+
 ####################################################################
 # Incorrect inputs to parameters.  The parameters are:
 #    imagename
@@ -1174,6 +1188,84 @@ class immoment_test2(unittest.TestCase):
                 myia.done()
                 if os.path.exists(outfile):
                     shutil.rmtree(outfile)
+        
+    def test_CAS_4400(self):
+        """Verify feature addtion to preconvolve with largest beam when multiple varying beams."""
+        myia = iatool()
+        shape = [100, 100, 1, 3]
+        myia.fromshape("", shape)
+        myia = myia.subimage("exp", dropdeg=True)
+        aa = make_gauss2d([shape[0], shape[1]], 10, 10)
+        for i in range(shape[3]):
+            myia.putchunk(pixels=aa, blc=[0, 0, i])
+        myia.setbrightnessunit("Jy/pixel")
+        moments = [0, 1, 2, 3]
+        ret = myia.moments(moments=moments, axis=2)
+        ret.done()
+        myia.done()
+        myia.fromshape("", shape)
+        myia = myia.subimage("got", dropdeg=True)
+        myia.setbrightnessunit("Jy/beam")
+        for i in range(shape[3]):
+            fwhm = 6 + 2*i
+            aa = make_gauss2d([shape[0], shape[1]], fwhm, fwhm)
+            myia.putchunk(pixels=aa, blc=[0, 0, i])
+            f = str(fwhm) + "arcmin"
+            myia.setrestoringbeam(major=f, minor=f, pa="0deg", channel=i)
+        ret = myia.moments(moments=moments, axis=2)
+        ret.done()
+        myia.done()
+        got = iatool()
+        exp = iatool()
+        mask = iatool()
+        mask.open("exp")
+        mask = mask.subimage(
+            "mymask", region=rg.box(blc=[0, 0, 0], trc=[99, 99,0]),
+            dropdeg=True
+        )
+        cc = mask.getchunk()
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                if cc[i,j] < 0.01:
+                    cc[i,j] = 0
+                else:
+                    cc[i,j] = 1
+        for im in [
+            "integrated", "median", "weighted_coord" ,
+            "weighted_dispersion_coord"
+        ]:
+            got.open("Temporary_Image." + im)
+            exp.open("exp." + im)
+            shape = got.shape()
+            gotpix = got.getchunk() * cc
+            print "min got " + str(gotpix.min())
+            exppix = exp.getchunk() * cc
+            print "min exp " + str(exppix.min())
+            got.done()
+            exp.done()
+            if (im == "weighted_dispersion_coord"):
+                epsilon = 3e-3
+            else:
+                epsilon = 1e-5
+            
+            if (im == "weighted_coord"):                
+                mymax = abs((gotpix+1e-6)/(exppix+1e-6) - 1).max()
+                print "max " + str(mymax)
+                self.assertTrue(mymax < epsilon)
+            else:
+                mymax = abs(gotpix - exppix).max()
+                print "max " + str(mymax)
+                self.assertTrue(mymax < epsilon)
+            
+
+            
+            
+            
+
+        
+        
+        
+        
             
 def suite():
     return [immoment_test1,immoment_test2]        

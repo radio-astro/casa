@@ -323,71 +323,48 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
 bool
 ms::reset()
 {
-  try 
-    {
-      *itsLog << LogOrigin("ms", "reset");
-      // Set itsMS to the original MS, and re-make the various objects
-      // that hold the pointer to working MS
-      *itsMS = MeasurementSet(*itsOriginalMS);
-      if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
-      if(itsFlag) {delete itsFlag;} itsFlag = new MSFlagger();
-      if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();itsMSS->resetMS(*itsMS);
-      itsSel->setMS(*itsMS);
-      itsFlag->setMSSelector(*itsSel);
-    }
-  catch (AipsError x) 
-    {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      Table::relinquishAutoLocks(True);
-      RETHROW(x);
-    }
+  try {
+    *itsLog << LogOrigin("ms", "reset");
+    // Set itsMS to the original MS, and re-make the various objects
+    // that hold the pointer to working MS
+    *itsMS = MeasurementSet(*itsOriginalMS);
+    if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
+    if(itsFlag) {delete itsFlag;} itsFlag = new MSFlagger();
+    if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();
+                                    itsMSS->resetMS(*itsMS);
+    itsSel->setMS(*itsMS);
+    itsFlag->setMSSelector(*itsSel);
+  }
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " 
+            << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
   return True;
 }
 
 bool
-ms::fromfits(const std::string& msfile, const std::string &fitsfile, const bool nomodify, const bool lock, 
+ms::fromfits(const std::string& msfile, const std::string &fitsfile, 
+             const bool nomodify, const bool lock, 
              const int obstype, const std::string &,//host,
 	     bool, //forcenewserver,
 	     const std::string& antnamescheme)
 {
-try {
-   // bool rstat(False);
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-   /*
-   Table::relinquishAutoLocks(True);
-   if(!fork()){
-      try {
-      */
-	*itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
-       String namescheme(antnamescheme);
-       namescheme.downcase();
-       MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
-       msfitsin.readFitsFile(obstype);
-      *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
-       /*
-      } catch (AipsError x) {
-         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      } catch (...) {
-         *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-      }
-      exit(rstat);
-   }
-   int dummy;
-   wait(&dummy);
-   if(dummy)
-      rstat=true;
-      */
+  try {
+    *itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
+    String namescheme(antnamescheme);
+    namescheme.downcase();
+    MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
+    msfitsin.readFitsFile(obstype);
+    *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile 
+            << " to disk" << LogIO::POST;
 
 
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
        //*itsLog << LogIO::SEVERE << "Exception Reported: " 
        //        << x.getMesg() << LogIO::POST;
-       //try {
-       //    Table::relinquishAutoLocks(True);
-       //}
-       //catch (...) {}
        RETHROW(x);
   }
   Table::relinquishAutoLocks(True);

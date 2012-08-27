@@ -303,7 +303,7 @@ def importevla(
 
                 # Backup the flags
                 if flagbackup:
-                    fh.backupFlags(tflocal, 'importevla')
+                    fh.backupFlags(viso, 'importevla')
 
                 # Run the tool
                 stats = tflocal.run(True, True)

@@ -296,10 +296,11 @@ macro( casa_add_pymodule name )
   add_library( ${name} MODULE ${_sources} )
   add_dependencies( inst ${name} )
   add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
-  add_dependencies( xmlcasa_fast ${name}_fast )
+  add_dependencies( tools_fast ${name}_fast )
+  add_dependencies( tasks_fast ${name}_fast )
 
   set_target_properties( ${name} PROPERTIES PREFIX "" )
-  target_link_libraries( ${name} libxmlcasa ${xmlcasa_LINK_TO} )
+  target_link_libraries( ${name} libtools ${tools_LINK_TO} )
   install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
 
 endmacro()

@@ -277,7 +277,8 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 		m.writehistory(message='visweightscale = "'+str(visweightscale)+'"',origin='concat')
 
 		m.close()
-
+		
+		return True
 
 	except Exception, instance:
 		print '*** Error ***',instance

@@ -282,7 +282,7 @@ def flagcmd(
 
             # Backup the flags before running
             if flagbackup:
-                fh.backupFlags(tflocal, 'flagcmd')
+                fh.backupFlags(vis, 'flagcmd')
 
             # Run the tool
             stats = tflocal.run(True, preserve_order)

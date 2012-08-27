@@ -30,7 +30,7 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Listvis tests will use data from '+datapath         
+print 'listvis tests will use data from '+datapath         
 
 # Reference files
 reffile = datapath+'reflistvis'

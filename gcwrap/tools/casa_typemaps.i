@@ -201,6 +201,14 @@ using namespace casac;
          }
          $1 = Quantity(myVals, PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary Dictionary");
       return NULL;
@@ -232,6 +240,14 @@ using namespace casac;
          }
          $1 = new Quantity(myVals,PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = new Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
@@ -263,6 +279,15 @@ using namespace casac;
          }
          $1 = new Quantity(myVals, PyString_AsString(theUnits));
       }
+   } else if (PyString_Check($input)) {
+        std::vector<double> myVals;
+        std::string inpstring(PyString_AsString($input));
+        double val;
+        std::string units;
+        istringstream iss(inpstring);
+        iss >> val >> units;
+        myVals.push_back(val);
+        $1 = new Quantity(myVals,units.c_str());
    } else {
       PyErr_SetString(PyExc_TypeError,"$1_name is not a dictionary");
       return NULL;
@@ -522,7 +547,7 @@ using namespace casac;
 
 %typemap(out) Quantity& {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1.units.c_str()));
    PyObject *v = casac::map_vector($1.value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -530,7 +555,7 @@ using namespace casac;
 
 %typemap(out) Quantity {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1.units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1.units.c_str()));
    PyObject *v = casac::map_vector($1.value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -538,7 +563,7 @@ using namespace casac;
 
 %typemap(out) Quantity* {
    $result = PyDict_New();
-   PyDict_SetItem($result, PyString_FromString("units"), PyString_FromString($1->units.c_str()));
+   PyDict_SetItem($result, PyString_FromString("unit"), PyString_FromString($1->units.c_str()));
    PyObject *v = casac::map_vector($1->value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
@@ -787,6 +812,29 @@ using namespace casac;
       PyDict_SetItem(o, PyString_FromString(key.c_str()), v);
       Py_DECREF(v);
    }
+   if((!$result) || ($result == Py_None)){
+      $result = o;
+   } else {
+      PyObject *o2 = $result;
+      if (!PyTuple_Check($result)) {
+         $result = PyTuple_New(1);
+         PyTuple_SetItem($result,0,o2);
+      }
+      PyObject *o3 = PyTuple_New(1);
+      PyTuple_SetItem(o3,0,o);
+      o2 = $result;
+      $result = PySequence_Concat(o2,o3);
+      Py_DECREF(o2);
+      Py_DECREF(o3);
+   }
+}
+
+%typemap(argout) Quantity& OUTARGQUANTITY{
+   PyObject *o = PyDict_New();
+   PyDict_SetItem(o, PyString_FromString("unit"), PyString_FromString($1->units.c_str()));
+   PyObject *v = casac::map_vector($1->value);
+   PyDict_SetItem(o, PyString_FromString("value"), v);
+   Py_DECREF(v);
    if((!$result) || ($result == Py_None)){
       $result = o;
    } else {

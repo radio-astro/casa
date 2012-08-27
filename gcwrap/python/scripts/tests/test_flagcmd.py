@@ -42,7 +42,9 @@ def create_input(str_text,fname=''):
     # return the name of the file
     return inp
     
-    
+# Path for data
+datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -53,10 +55,8 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
         else:
-            print "Importing data..."
-            importuvfits(os.environ.get('CASAPATH').split()[0] + \
-                         '/data/regression/ngc5921/ngc5921.fits', \
-                         self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
@@ -68,9 +68,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
@@ -83,9 +81,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
@@ -99,9 +95,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
@@ -114,9 +108,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
@@ -129,9 +121,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
-                      os.environ.get('CASAPATH').split()[0] +
-                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(tflagdata)

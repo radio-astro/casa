@@ -6,7 +6,7 @@ from taskinit import *
 import partitionhelper as ph
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
+def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copypointing):
 	"""
 	Concatenate visibility data sets creating a multi-MS.
 	
@@ -35,6 +35,9 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 	        default: [] (don't modify weights, equivalent to setting scale to 1 for each MS)
         keepcopy -- If true, a copy of the input MSs is kept in their original place.
                 default: false
+	copypointing --  If true, the POINTING table information will be present in the output.
+                If false, the result is an empty POINTING table.
+                default: True
 
 	"""
 
@@ -89,7 +92,7 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 					mses = m.getreferencedtables()
 					mses.sort()
 					m.close()
-					mastername = os.path.basename(os.path.dirname(os.path.realpath(m+'/ANTENNA')))
+					mastername = os.path.basename(os.path.dirname(os.path.realpath(elvis+'/ANTENNA')))
 					for mname in mses:
 						#print 'subms: ', mname
 						vis.append(mname)
@@ -123,6 +126,28 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 				shutil.move(elvis,tempdir) # keep timestamps and permissions
 				shutil.copytree(tempdir+'/'+elvis, elvis, True) # symlinks=True
 
+		if not copypointing: # delete the rows of all pointing tables
+			casalog.post('*** copypointing==False: resulting MMS will have empty POINTING table.', 'INFO')
+			tmptabname = 'TMPPOINTING'+str(time.time())
+			tmptabname2 = 'TMPPOINTING2'+str(time.time())
+			shutil.rmtree(tmptabname, ignore_errors=True)
+			shutil.rmtree(tmptabname2, ignore_errors=True)
+			shutil.move(vis[0]+'/POINTING', tmptabname)
+			t.open(tmptabname)
+			if(t.nrows()>0): 
+				t.copy(newtablename=tmptabname2, deep=False, valuecopy=True, norows=True)
+				t.close()
+				shutil.rmtree(tmptabname, ignore_errors=True)
+			else: # the POINTING table is already empty
+				t.close()
+				casalog.post('***    Input POINTING table was already empty.', 'INFO')
+				shutil.move(tmptabname, tmptabname2)
+				
+			for i in range(len(vis)): # replace the POINTING tables by the empty one
+				os.system('rm -rf '+vis[i]+'/POINTING')
+				shutil.copytree(tmptabname2, vis[i]+'/POINTING')
+			shutil.rmtree(tmptabname2, ignore_errors=True)
+					
 		if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 			theconcatvis = vis[0]
 			if(len(vis)==1):
@@ -230,18 +255,18 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 		# concatenate the POINTING tables
 		masterptable = mmsmembers[0]+'/POINTING'
 		ptablemembers = []
-		if os.path.exists(masterptable):
+		if os.path.exists(masterptable) and copypointing:
+			casalog.post('Concatenating the POINTING tables ...', 'INFO')
 			i = 0
 			for i in xrange(len(mmsmembers)):
 				ptable = mmsmembers[i]+'/POINTING'
 				if ismaster[i] and os.path.exists(ptable):
+					casalog.post('   '+ptable, 'INFO')
 					shutil.move(ptable, ptable+str(i))
 					ptablemembers.append(ptable+str(i))
 			#end for
 			t.createmultitable(masterptable, ptablemembers, 'SUBTBS')
 		# endif
-
-		print "mmsmembers: ", mmsmembers
 
 	 	ph.makeMMS(concatvis, mmsmembers,
  			   True, # copy subtables from first to all other members 
@@ -255,7 +280,6 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy):
 			for elvis in originalvis:
 				shutil.move(tempdir+'/'+elvis, elvis)
 			os.rmdir(tempdir)
-
 
 	except Exception, instance:
 		print '*** Error ***',instance

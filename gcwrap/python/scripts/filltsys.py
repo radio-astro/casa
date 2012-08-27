@@ -20,8 +20,27 @@
 #*******************************************************************************
 from scipy.interpolate import interp1d
 from taskinit import tbtool
-_tb = tbtool.create()
 import numpy
+import string
+
+# to get casaversion
+def __casaversion():
+    import inspect
+    import sys
+    myf = sys._getframe(len(inspect.stack())-1).f_globals
+    casa = myf['casa']
+    vstr = casa['build']['version']
+    vint = int(vstr.replace('.',''))
+    return vint
+casaversion = __casaversion()
+
+def createtb():
+    if casaversion < 400:
+        return tbtool.create()
+    else:
+        return tbtool()
+
+_tb = createtb()
 
 scaling={'GHz':1.0e-9,
          'MHz':1.0e-6,
@@ -36,7 +55,7 @@ scaling={'GHz':1.0e-9,
 # Tsys is processed along the following three steps:
 #   1. average within scan
 #   2. if possible, linearly interpolate in time.
-#   3. interpolate in frequency with specified mode
+#   3. interpolate in frequency with specified mode if necessary
 #
 def fillTsys( filename, specif, tsysif=None, mode='linear',extrap=False ):
     """
@@ -59,12 +78,20 @@ def fillTsys( filename, specif, tsysif=None, mode='linear',extrap=False ):
                      any integer specifying an order of
                      spline interpolation
     """
-    filler = TsysFiller( filename=filename, specif=specif, tsysif=tsysif, extrap=extrap )
-    polnos = filler.getPolarizations()
-    for pol in polnos:
-        filler.setPolarization( pol )
-        filler.fillScanAveragedTsys( mode=mode )
-    del filler
+    if tsysif is None or specif != tsysif:
+        filler = TsysFiller( filename=filename, specif=specif, tsysif=tsysif, extrap=extrap )
+        polnos = filler.getPolarizations()
+        for pol in polnos:
+            filler.setPolarization( pol )
+            filler.fillScanAveragedTsys( mode=mode )
+        del filler
+    else:
+        filler = SimpleTsysFiller( filename=filename, ifno=specif )
+        polnos = filler.getPolarizations()
+        for pol in polnos:
+            filler.setPolarization( pol )
+            filler.fillScanAveragedTsys()
+        del filler
 
 #
 # Utility functions
@@ -123,6 +150,200 @@ def interpolateInTime( t1, y1, t2, y2, t ):
         return y
 
 #
+# base class for TsysFiller
+#
+class TsysFillerBase( object ):
+    def __init__( self, filename ):
+        self.filename = filename.rstrip('/')
+        self.polno = None
+        self.beamno = None
+        self.table = createtb()
+        self.table.open( self.filename, nomodify=False )
+
+    def __del__( self ):
+        if self.table is not None:
+            self.table.close()
+
+    def _select( self, ifno, polno=None, beamno=None, scanno=None, srctype=None, exclude=False):
+        """
+        Select data by IFNO, POLNO, BEAMNO, and SCANNO
+
+        ifno -- IFNO
+        polno -- POLNO
+        beamno -- BEAMNO
+        scanno -- SCANNO
+        srctype -- SRCTYPE
+        exclude -- if True, srctype is list of excluded SRCTYPE
+        """
+        taql = 'IFNO==%s'%(ifno)
+        if polno is not None:
+            taql += ' && POLNO==%s'%(polno)
+        if beamno is not None:
+            taql += ' && BEAMNO==%s'%(beamno)
+        if scanno is not None:
+            taql += ' && SCANNO==%s'%(scanno)
+        if srctype is not None:
+            try:
+                st = list(srctype)
+            except:
+                st = [srctype]
+            if exclude:
+                logi = 'NOT IN'
+            else:
+                logi = 'IN'
+            taql += ' && SRCTYPE %s %s'%(logi,st)
+        return self.table.query( taql )
+
+    def setPolarization( self, polno ):
+        """
+        Set POLNO to be processed
+
+        polno -- POLNO
+        """
+        self.polno = polno
+
+    def setBeam( self, beamno ):
+        """
+        Set BEAMNO to be processed
+        Since default BEAMNO is 0, this method is usually
+        not necessary.
+
+        beamno -- BEAMNO
+        """
+        self.beamno = beamno
+        
+    def getScanAveragedTsys( self, ifno, scannos ):
+        """
+        Get Tsys averaged within scan
+
+        ifno -- IFNO
+        scannos -- list of SCANNO
+        """
+        ret = []
+        for scan in scannos:
+            tbsel = self._select( ifno=ifno, polno=self.polno, beamno=self.beamno, scanno=scan, srctype=[10,11], exclude=False )
+            tsys = tbsel.getcol('TSYS')
+            tbsel.close()
+            if tsys.size > 0:
+                ret.append( tsys.mean( axis=1 ) )
+            else:
+                ret.append( None )
+        return ret
+
+    def getScanAveragedTsysTime( self, ifno, scannos ):
+        """
+        Get scan time (mid-point of the scan)
+
+        ifno -- IFNO
+        scanno -- SCANNO
+        """
+        ret = []
+        for scan in scannos:
+            tbsel = self._select( ifno=ifno, polno=self.polno, beamno=self.beamno, scanno=scan, srctype=[10,11], exclude=False )
+            t = tbsel.getcol('TIME')
+            tbsel.close()
+            if t.size > 0:
+                ret.append( t.mean() )
+            else:
+                ret.append( None )
+        return ret
+
+
+#
+# class SimpleTsysFiller
+#
+# Working class to fill TSYS columns for spectral data and
+# its channel averaged data. It assumes that IFNO for target
+# and for ATM cal are the same so that no interpolation in
+# frequency is needed.
+#
+class SimpleTsysFiller( TsysFillerBase ):
+    """
+    Simply Fill Tsys
+    """
+    def __init__( self, filename, ifno ):
+        """
+        Constructor
+
+        filename -- data in scantable format
+        ifno -- IFNO to be processed
+        """
+        super(SimpleTsysFiller,self).__init__( filename )
+        self.ifno = ifno
+        print 'IFNO to be processed: %s'%(self.ifno)
+
+    def getPolarizations( self ):
+        """
+        Get list of POLNO's
+        """
+        tsel = self._select( ifno=self.ifno, srctype=[10,11], exclude=True )
+        pols = numpy.unique( tsel.getcol('POLNO') )
+        tsel.close()
+        return pols
+
+    def fillScanAveragedTsys( self ):
+        """
+        Fill Tsys
+
+        Tsys is averaged over scan first. Then, Tsys is
+        interpolated in time. Finally, averaged and
+        interpolated Tsys is used to fill TSYS field for
+        spectral data.
+        """
+        print 'POLNO=%s,BEAMNO=%s'%(self.polno,(self.beamno if self.beamno is not None else 'all'))
+        srctype = [10,11]
+        stab = self._select( ifno=self.ifno, polno=self.polno, beamno=self.beamno, srctype=srctype, exclude=True )
+        ttab = self._select( ifno=self.ifno, polno=self.polno, beamno=self.beamno, srctype=srctype, exclude=False )
+        # assume IFNO for channel averaged data is
+        # (IFNO for sp data)+1 
+        tptab = self._select( ifno=self.ifno+1, polno=self.polno, beamno=self.beamno, srctype=srctype, exclude=True )
+
+        # get scan numbers for calibration scan (Tsys)
+        calscans = numpy.unique( ttab.getcol('SCANNO') )
+        calscans.sort()
+        nscan = len(calscans)
+        print 'nscan = ', nscan
+
+        # get scan averaged Tsys and time
+        atsys = self.getScanAveragedTsys( self.ifno, calscans )
+        caltime = self.getScanAveragedTsysTime( self.ifno, calscans )
+
+        # warning
+        if len(caltime) == 1:
+            print 'WARN: There is only one ATM cal session. No temporal interpolation will be done.'
+
+        # process all rows
+        nrow = stab.nrows()
+        cleat = 0
+        for irow in xrange(nrow):
+            #print 'process row %s'%(irow)
+            t = stab.getcell( 'TIME', irow )
+            if t < caltime[0]:
+                #print 'No Tsys available before this scan, use first Tsys'
+                tsys = atsys[0]
+            elif t > caltime[nscan-1]:
+                #print 'No Tsys available after this scan, use last Tsys'
+                tsys = atsys[nscan-1]
+            else:
+                idx = self._search( caltime, t, cleat )
+                cleat = max( 0, idx-1 )
+                if caltime[idx] == t:
+                    tsys = atsys[idx]
+                else:
+                    t0 = caltime[idx-1]
+                    t1 = caltime[idx]
+                    tsys0 = atsys[idx-1]
+                    tsys1 = atsys[idx]
+                    tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
+            stab.putcell( 'TSYS', irow, tsys )
+            if tptab.nrows() > 0:
+                tptab.putcell( 'TSYS', irow, numpy.median(tsys) )
+        stab.close()
+        ttab.close()
+        tptab.close()
+        
+
+#
 # class TsysFiller
 #
 # Working class to fill TSYS columns for spectral data and
@@ -135,7 +356,7 @@ def interpolateInTime( t1, y1, t2, y2, t ):
 #        filler.setPolarization( pol )
 #        filler.fillScanAveragedTsys( mode=mode )
 # 
-class TsysFiller:
+class TsysFiller( TsysFillerBase ):
     """
     Fill Tsys
     """
@@ -147,16 +368,10 @@ class TsysFiller:
         specif -- IFNO for spectral data
         tsysif -- IFNO for calibration scans (Tsys)
         """
-        self.table = None
-        self.stab = None
-        self.ttab = None
+        super(TsysFiller,self).__init__( filename )
         self.polno = None
         self.beamno = 0
-        self.filename = filename.rstrip('/')
-        self.table = tbtool.create()
-        self.table.open(self.filename,nomodify=False)
         self.specif = specif
-        self.stab = self._select( self.specif )
         self.abcsp = self._constructAbcissa( self.specif )
         self.extend = extrap
         if tsysif is None:
@@ -165,7 +380,6 @@ class TsysFiller:
             self._setupTsysConfig()
         else:
             self.tsysif = tsysif
-            self.ttab = self._select( self.tsysif )
             self.abctsys = self._constructAbcissa( self.tsysif )
             if not self.extend and not self.__checkCoverage( self.abctsys, self.abcsp ):
                 raise Exception( "Invalid specification of SPW for Tsys: it must cover SPW for target" )
@@ -173,22 +387,10 @@ class TsysFiller:
             self.extend = self.__checkChannels( self.abctsys, self.abcsp )
         print 'spectral IFNO %s: corresponding Tsys IFNO is %s'%(self.specif,self.tsysif) 
 
-    def __del__( self ):
-        """
-        Destructor
-        """
-        if self.stab is not None:
-            self.stab.close()
-        if self.ttab is not None:
-            self.ttab.close()
-        if self.table is not None:
-            self.table.close()
-
     def _setupTsysConfig( self ):
         """
         Set up configuration for Tsys
            - determine IFNO for Tsys
-           - set self.ttab
            - set self.abctsys
         """
         ftab=self.table.getkeyword('FREQUENCIES').split()[-1]
@@ -208,7 +410,6 @@ class TsysFiller:
                 if self.__checkCoverage( abc, self.abcsp ):
                     self.tsysif = i
                     self.abctsys = abc
-                    self.ttab = self._select( i )
                     break
 
     def __checkCoverage( self, a, b ):
@@ -244,61 +445,6 @@ class TsysFiller:
         else:
             return (ledge,redge)
     
-    def _select( self, ifno, polno=None, beamno=0, scanno=None ):
-        """
-        Select data by IFNO, POLNO, BEAMNO, and SCANNO
-
-        ifno -- IFNO
-        polno -- POLNO
-        beamno -- BEAMNO
-        scanno -- SCANNO
-        """
-        keys=['IFNO']
-        vals=[ifno]
-        if polno is not None:
-            keys.append('POLNO')
-            vals.append(polno)
-        if beamno is not None:
-            keys.append('BEAMNO')
-            vals.append(beamno)
-        if scanno is not None:
-            keys.append('SCANNO')
-            vals.append(scanno)
-        return self.__select( keys, vals )
-
-    def __select( self, keys, vals, logic='&&' ):
-        """
-        Select data by selection criteria specified by (keys,vals) pair.
-        Query string is constructed as,
-
-           '<keys[0]>==<vals[0]><logic><keys[1]>==<vals[1]><logic>...'
-           
-        keys -- list of column names
-        vals -- list of column values
-
-        Example:
-           keys=['IFNO','POLNO']
-           vals=[0,0]
-           logic='&&'
-           __select( keys, vals, logic )
-
-           it creates the following query string,
-
-           'IFNO==0&&POLNO==0'
-        """
-        qstr = ''
-        for i in xrange(len(keys)):
-            if i == len(keys)-1:
-                qstr += '%s==%s'%(keys[i],vals[i])
-            else:
-                qstr += '%s==%s%s'%(keys[i],vals[i],logic)
-        #print 'qstr=',qstr
-        tab = self.table.query( qstr, sortlist='TIME' )
-        if tab.nrows() == 0:
-            tab.close()
-            tab = None
-        return tab
-        
     def _constructAbcissa( self, ifno ):
         """
         Construct abcissa array from REFPIX, REFVAL, INCREMENT
@@ -322,37 +468,10 @@ class TsysFiller:
         """
         Get list of POLNO's
         """
-        return numpy.unique( self.stab.getcol('POLNO') )
-
-    def setPolarization( self, polno ):
-        """
-        Set POLNO to be processed
-
-        polno -- POLNO
-        """
-        self.polno = polno
-        self.stab = self._select( ifno=self.specif,
-                                  polno=self.polno,
-                                  beamno=self.beamno )
-        self.ttab = self._select( ifno=self.tsysif,
-                                  polno=self.polno,
-                                  beamno=self.beamno )
-
-    def setBeam( self, beamno ):
-        """
-        Set BEAMNO to be processed
-        Since default BEAMNO is 0, this method is usually
-        not necessary.
-
-        beamno -- BEAMNO
-        """
-        self.beamno = beamno
-        self.stab = self._select( ifno=self.specif,
-                                  polno=self.polno,
-                                  beamno=self.beamno )
-        self.ttab = self._select( ifno=self.tsysif,
-                                  polno=self.polno,
-                                  beamno=self.beamno )
+        tsel = self._select( ifno=self.specif, srctype=[10,11], exclude=True )
+        pols = numpy.unique( tsel.getcol('POLNO') )
+        tsel.close()
+        return pols
 
     def getSpecAbcissa( self, unit='GHz' ):
         """
@@ -382,184 +501,6 @@ class TsysFiller:
         else:
             return abc * scaling[unit]
 
-    def getSpectrum( self, irow ):
-        """
-        Get spectral data
-
-        irow -- row index
-        """
-        return self.stab.getcell('SPECTRA',irow)
-
-    def getTsys( self, irow ):
-        """
-        Get Tsys
-
-        irow -- row index
-        """
-        return self.ttab.getcell('TSYS',irow)
-
-    def getSpecTime( self, irow ):
-        """
-        Get time for spectral data
-
-        irow -- row index
-        """
-        return self.stab.getcell('TIME',irow)
-
-    def getTsysTime( self, irow ):
-        """
-        Get time for calibration data (Tsys)
-
-        irow -- row index
-        """
-        return self.ttab.getcell('TIME',irow)
-
-    def searchTsysRows( self, irow, startrow=0 ):
-        """
-        Search Tsys rows by using TIME value in spectral data
-
-        irow -- row index for spectral data
-
-        Returns:
-           list of two row indexes for Tsys data, [row0,row1]
-           row0 is the nearest row in previous calibration
-           row1 is the nearest row in subsequent calibration
-
-        Note:
-           row0 can be used to start position of next search
-           if both spectral and Tsys data are sorted by TIME
-        """
-        tsp = self.stab.getcell( 'TIME', irow )
-        ret = [-1,-1]
-        drow = 1000
-        row0 = 0
-        row1 = 0
-        nrow = self.ttab.nrows()
-
-        tmp = self.ttab.getcell( 'TIME', startrow )
-        if ( tmp > tsp ):
-            print 'reset search'
-            cleat = 0
-        elif ( tmp == tsp ):
-            ret[0] = startrow
-            ret[1] = startrow
-            return ret
-        else:
-            cleat = startrow
-        
-        while ( row1 < nrow ):
-            row0 = row1
-            row1 += drow 
-            if row1 < startrow:
-                print 'skip %s-%s'%(row0,row1)
-                continue
-            idx = max( 0, cleat-row0 )
-            #print 'self.ttab.getcol( \'TIME\', %s, %s )'%(row0,drow)
-            tcol = self.ttab.getcol( 'TIME', row0, drow )
-            n = len( tcol )
-            row1 = row0 + n
-            print 'row0 = %s, row1 = %s'%(row0,row1)
-            idx = self._search( tcol, tsp, idx )
-            if idx == n:
-                continue
-            else:
-                if tcol[idx] == tsp:
-                    ret[0] = idx+row0
-                    ret[1] = ret[0]
-                elif idx == 0 and row0 == 0:
-                    ret[1] = 0
-                else:
-                    ret[0] = idx+row0-1
-                    ret[1] = idx+row0
-                print 'idx found: tcol[%s] = %s, tsp = %s'%(idx,tcol[idx],tsp)
-                break
-        if ret[0] == -1 and ret[1] == -1:
-            ret[1] = int(nrow-1)
-            
-        return ret
-
-    def searchTsys( self ):
-        """
-        """
-        ret = []
-        nrow = self.stab.nrows()
-        cleat = 0
-        for irow in xrange(nrow):
-            rows = self.searchTsysRows( irow, cleat )
-            cleat = max( rows[0], 0 )
-            ret.append( rows )
-        return ret 
-
-    def fillTsys( self, mode='linear' ):
-        """
-        Fill Tsys
-
-        mode -- interpolation mode for Tsys in frequency axis
-        """
-        nrow = self.stab.nrows()
-        cleat = 0
-        # assume IFNO for channel averaged data is
-        # (IFNO for sp data)+1 
-        tptab = self._select( self.specif+1, self.polno, self.beamno )
-        
-        for irow in xrange(nrow):
-            rows = self.searchTsysRows( irow, cleat )
-            cleat = max( rows[0], 0 )
-            if rows[0] == -1:
-                tsys = self.getTsys( rows[1] )
-            elif rows[1] == -1:
-                tsys = self.getTsys( rows[0] )
-            elif rows[0] == rows[1]:
-                tsys = self.getTsys( rows[0] )
-            else:
-                t0 = self.getTsysTime( rows[0] )
-                t1 = self.getTsysTime( rows[1] )
-                tsys0 = self.getTsys( rows[0] )
-                tsys1 = self.getTsys( rows[1] )
-                t = self.getSpecTime( irow )
-                tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
-            if len(tsys) == len(self.abctsys):
-                newtsys = interpolateInFrequency( self.abctsys,
-                                                  tsys,
-                                                  self.abcsp,
-                                                  mode )
-            else:
-                # Tsys seems to be channel-averaged
-                newtsys = tsys
-            self.stab.putcell( 'TSYS', irow, newtsys )
-            tptab.putcell( 'TSYS', irow, newtsys.mean() )
-
-        tptab.close()
-        del tptab
-
-    def getScanAveragedTsys( self, scanno ):
-        """
-        Get Tsys averaged within scan
-
-        scanno -- SCANNO
-        """
-        tbsel = self._select( self.tsysif, self.polno, self.beamno, scanno )
-        if tbsel is None:
-            return None
-        else:
-            tsys = tbsel.getcol('TSYS')
-            tbsel.close()
-            return tsys.mean(axis=1)
-
-    def getScanAveragedTsysTime( self, scanno ):
-        """
-        Get scan time (mid-point of the scan)
-
-        scanno -- SCANNO
-        """
-        tbsel = self._select( self.tsysif, self.polno, self.beamno, scanno )
-        if tbsel is None:
-            return None
-        else:
-            t = tbsel.getcol('TIME')
-            tbsel.close()
-            return t.mean()
-
     def fillScanAveragedTsys( self, mode='linear' ):
         """
         Fill Tsys
@@ -568,23 +509,27 @@ class TsysFiller:
         interpolated in time and frequency. Finally,
         averaged and interpolated Tsys is used to fill
         TSYS field for spectral data.
-        """        
+        """
+        print 'POLNO=%s,BEAMNO=%s'%(self.polno,(self.beamno if self.beamno is not None else 'all'))
+        stab = self._select( ifno=self.specif, polno=self.polno, beamno=self.beamno, srctype=[10,11], exclude=True )
+        ttab = self._select( ifno=self.tsysif, polno=self.polno, beamno=self.beamno, srctype=[10,11], exclude=False )
         # assume IFNO for channel averaged data is
-        # (IFNO for sp data)+1 
-        tptab = self._select( self.specif+1, self.polno, self.beamno )
+        # (IFNO for sp data)+1
+        tptab = self._select( ifno=self.specif+1, polno=self.polno, beamno=self.beamno, srctype=[10,11], exclude=True )
 
         # get scan numbers for calibration scan (Tsys)
-        calscans = numpy.unique( self.ttab.getcol('SCANNO') )
+        calscans = numpy.unique( ttab.getcol('SCANNO') )
         calscans.sort()
         nscan = len(calscans)
         print 'nscan = ', nscan
 
         # get scan averaged Tsys and time
-        atsys = []
-        caltime = []
-        for scan in calscans:
-            atsys.append( self.getScanAveragedTsys( scan ) )
-            caltime.append( self.getScanAveragedTsysTime( scan ) )
+        atsys = self.getScanAveragedTsys( self.tsysif, calscans )
+        caltime = self.getScanAveragedTsysTime( self.tsysif, calscans )
+
+        # warning
+        if len(caltime) == 1:
+            print 'WARN: There is only one ATM cal session. No temporal interpolation will be done.'
 
         # extend tsys if necessary
         if self.extend:
@@ -593,16 +538,16 @@ class TsysFiller:
             abctsys = self.abctsys
 
         # process all rows
-        nrow = self.stab.nrows()
+        nrow = stab.nrows()
         cleat = 0
         for irow in xrange(nrow):
-            print 'process row %s'%(irow)
-            t = self.getSpecTime( irow )
+            #print 'process row %s'%(irow)
+            t = stab.getcell( 'TIME', irow )
             if t < caltime[0]:
-                print 'No Tsys available before this scan, use first Tsys'
+                #print 'No Tsys available before this scan, use first Tsys'
                 tsys = atsys[0]
             elif t > caltime[nscan-1]:
-                print 'No Tsys available after this scan, use last Tsys'
+                #print 'No Tsys available after this scan, use last Tsys'
                 tsys = atsys[nscan-1]
             else:
                 idx = self._search( caltime, t, cleat )
@@ -622,10 +567,15 @@ class TsysFiller:
                                                   mode )
             else:
                 newtsys = tsys
-            self.stab.putcell( 'TSYS', irow, newtsys )
-            tptab.putcell( 'TSYS', irow, newtsys.mean() )
+            stab.putcell( 'TSYS', irow, newtsys )
+            #tptab.putcell( 'TSYS', irow, newtsys.mean() )
+            tptab.putcell( 'TSYS', irow, numpy.median(newtsys) )
 
+        stab.close()
+        ttab.close()
         tptab.close()
+        del stab
+        del ttab
         del tptab
 
     def __extend( self, a, aref, b ):
@@ -699,3 +649,4 @@ class TsysFiller:
             print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
 
         return idx
+

@@ -31,7 +31,7 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Gencal tests will use data from '+datapath         
+print 'gencal tests will use data from '+datapath         
 
 
 class gencal_antpostest(unittest.TestCase):
@@ -43,20 +43,19 @@ class gencal_antpostest(unittest.TestCase):
 
     def setUp(self):
         if (os.path.exists(self.msfile)):
-            #os.system('rm -rf ' + self.msfile)
             shutil.rmtree(self.msfile)
 
-        #datapath='/export/home/tengu/alma/casatest/gencal_antoffset/testdata/'
-        shutil.copytree(datapath+self.msfile, self.msfile)
+        shutil.copytree(datapath+self.msfile, self.msfile, symlinks=True)
 
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             shutil.rmtree(self.msfile)
+            
         shutil.rmtree(self.caltable,ignore_errors=True)
 
     def test_antpos_manual(self):
         """
-        test manual antenna position correction 
+        gencal: test manual antenna position correction 
         """
         gencal(vis=self.msfile,
                caltable=self.caltable, 
@@ -71,7 +70,7 @@ class gencal_antpostest(unittest.TestCase):
 
     def test_antpos_auto(self):
         """
-        test automated antenna position correction
+        gencal: test automated antenna position correction
         """
         # check if the URL is reachable
         import urllib2

@@ -236,42 +236,42 @@ All data selection parameters follow the ms-selection syntax.
      </param>
 
      <param type="string" name="field">
-     <description>\tField indices or source names : example : '2,3C48' </description>
+     <description>Field indices or source names : example : '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names : example : '1,2' </description>
+     <description>Spectral Window Indices or names : example : '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names : example : 'VLAA' </description>
+     <description>Array Indices or names : example : 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name : example : '1,2' (not supported yet) </description>
+     <description>Feed index or name : example : '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number : example : '1,2,3' </description>
+     <description>Scan number : example : '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number : example : '2-3,4-5,132 ????' </description>
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit : example : '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit : example : '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -281,7 +281,7 @@ All data selection parameters follow the ms-selection syntax.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent : example : '*CAL*, *BAND*' </description>
+     <description>Scan intent : example : '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -505,42 +505,42 @@ for the manual mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -550,7 +550,7 @@ for the manual mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -560,12 +560,12 @@ for the manual mode.
      </param>
 
      <param type="bool" name="autocorr">
-     <description>\tParameter to flag only auto-correlations. Default: </description>
+     <description>Parameter to flag only auto-correlations. Default: </description>
      <value>false</value>
      </param>
      
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag the data. Default: </description>
+     <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
 
@@ -590,42 +590,42 @@ for the clip mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -635,7 +635,7 @@ for the clip mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -645,13 +645,13 @@ for the clip mode.
      </param>
     
      <param type="string" name="datacolumn">
-     <description>\tData column to use for clipping. Example: 'DATA'. Default:
+     <description>Data column to use for clipping. Example: 'DATA'. Default:
      </description>
      <value>DATA</value>
      </param>
 
      <param type="doubleArray" name="clipminmax">
-     <description>\tRange to use for clipping. Example: [100.0,200.0] 
+     <description>Range to use for clipping. Example: [100.0,200.0] 
      </description>
      <value type="vector"></value>
      </param>
@@ -663,19 +663,19 @@ for the clip mode.
      </param>
     
      <param type="bool" name="channelavg">
-     <description>\tAverage data over channels before clipping? [True/False]. Default:
+     <description>Average data over channels before clipping? [True/False]. Default:
      </description>
      <value>false</value>
      </param>
 
           <param type="bool" name="clipzeros">
-     <description>\tClip zero-value data. [True/False]. Default:
+     <description>Clip zero-value data. [True/False]. Default:
      </description>
      <value>false</value>
      </param>
      
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag data. Default: </description>
+     <description>Parameter to flag or unflag data. Default: </description>
      <value>true</value>
      </param>
 
@@ -704,42 +704,42 @@ for the quack mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -749,7 +749,7 @@ for the quack mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -759,7 +759,7 @@ for the quack mode.
      </param>
 
      <param type="string" name="quackmode">
-     <description>\tQuack mode. Default: </description>
+     <description>Quack mode. Default: </description>
      <value>beg</value>
      </param>
 
@@ -774,7 +774,7 @@ for the quack mode.
      </param>
 
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag the data. Default: </description>
+     <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
 
@@ -799,42 +799,42 @@ for the elevation mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -844,7 +844,7 @@ for the elevation mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -866,7 +866,7 @@ for the elevation mode.
      </param>
 
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag the data. Default: </description>
+     <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
 
@@ -892,42 +892,42 @@ for the time and frequency mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -937,7 +937,7 @@ for the time and frequency mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -947,7 +947,7 @@ for the time and frequency mode.
      </param>
 
             <param type="double" name="ntime">
-                <description>\tTime-range to use for each chunk (in seconds or minutes)</description>
+                <description>Time-range to use for each chunk (in seconds or minutes)</description>
                 <value>0.0</value>
             </param>
             <param type="bool" name="combinescans">
@@ -956,7 +956,7 @@ for the time and frequency mode.
             </param>
     
            <param type="string" name="datacolumn">
-                <description>\tData column to use for clipping. Example: 'DATA'. Default:
+                <description>Data column to use for clipping. Example: 'DATA'. Default:
                 </description>
                 <value>DATA</value>
             </param>
@@ -969,11 +969,11 @@ for the time and frequency mode.
                 <value>3.0</value>
             </param>
             <param type="string" name="timefit">
-                <description>\tFitting function for the time direction (poly/line). Default: </description>
+                <description>Fitting function for the time direction (poly/line). Default: </description>
                 <value>line</value>
             </param>
             <param type="string" name="freqfit">
-                <description>\tFitting function for the frequency direction (poly/line). Default: </description>
+                <description>Fitting function for the frequency direction (poly/line). Default: </description>
                 <value>poly</value>
             </param>
             <param type="int" name="maxnpieces">
@@ -989,12 +989,12 @@ for the time and frequency mode.
                 <value>none</value>
             </param>
             <param type="int" name="halfwin">
-                <description>\tHalf-width of sliding window to use with \'usewindowstats\' (1,2,3). Default: </description>
+                <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3). Default: </description>
                 <value>1</value>
             </param>
 
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag the data. Default: </description>
+     <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
 
@@ -1024,42 +1024,42 @@ for the extend mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -1069,7 +1069,7 @@ for the extend mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -1079,7 +1079,7 @@ for the extend mode.
      </param>
 
     <param type="double" name="ntime">
-        <description>\tTime-range to use for each chunk (in seconds or minutes). Default: </description>
+        <description>Time-range to use for each chunk (in seconds or minutes). Default: </description>
         <value>0.0</value>
     </param>
     <param type="bool" name="combinescans">
@@ -1092,11 +1092,11 @@ for the extend mode.
     </param>
 
    <param type="double" name="growtime">
-        <description>\tFlag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100). Default: </description>
+        <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100). Default: </description>
         <value>50.0</value>
     </param>
     <param type="double" name="growfreq">
-        <description>\tFlag all selected channels if more than X% of the frequency range is flagged(0-100). Default: </description>
+        <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100). Default: </description>
         <value>50.0</value>
     </param>
     <param type="bool" name="growaround">
@@ -1113,7 +1113,7 @@ for the extend mode.
     </param>
 
      <param type="bool" name="apply">
-     <description>\tParameter to flag or unflag the data. Default: </description>
+     <description>Parameter to flag or unflag the data. Default: </description>
      <value>true</value>
      </param>
 
@@ -1139,42 +1139,42 @@ for the summary mode.
 
 <!-- Selection parameters : start -->
      <param type="string" name="field">
-     <description>\tField indices or source names. Example: '2,3C48' </description>
+     <description>Field indices or source names. Example: '2,3C48' </description>
      <value></value>
      </param>
      
      <param type="string" name="spw">
-     <description>\tSpectral Window Indices or names. Example: '1,2' </description>
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
      <value></value>
      </param>
     
      <param type="string" name="array">
-     <description>\tArray Indices or names. Example: 'VLAA' </description>
+     <description>Array Indices or names. Example: 'VLAA' </description>
      <value></value>
      </param>
     
      <param type="string" name="feed">
-     <description>\tFeed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
      <param type="string" name="scan">
-     <description>\tScan number. Example: '1,2,3' </description>
+     <description>Scan number. Example: '1,2,3' </description>
      <value></value>
      </param>   
 
      <param type="string" name="antenna">
-     <description>\tBaseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
      <value></value>
      </param>
     
      <param type="string" name="uvrange">
-     <description>\tUV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
      <value></value>
      </param>
     
      <param type="string" name="time">
-     <description>\tTime range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>
 
@@ -1184,7 +1184,7 @@ for the summary mode.
      </param>
 
      <param type="string" name="intent">
-     <description>\tScan intent. Example: '*CAL*, *BAND*' </description>
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
      <value></value>
      </param>
      
@@ -1194,17 +1194,17 @@ for the summary mode.
      </param>
 
      <param type="bool" name="spwchan">
-     <description>\tList the number of flags per spw and per channel. Default: </description>
+     <description>List the number of flags per spw and per channel. Default: </description>
      <value>false</value>
      </param>
 
      <param type="bool" name="spwcorr">
-     <description>\tList the number of flags per spw and per correlation. Default: </description>
+     <description>List the number of flags per spw and per correlation. Default: </description>
      <value>false</value>
      </param>
 
      <param type="bool" name="basecnt">
-     <description>\tList the number of flags per baseline. Default: </description>
+     <description>List the number of flags per baseline. Default: </description>
      <value>false</value>
      </param>
      

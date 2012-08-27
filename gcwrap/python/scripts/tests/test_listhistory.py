@@ -20,7 +20,7 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Listhistory tests will use data from '+datapath         
+print 'listhistory tests will use data from '+datapath         
 
 class listhistory_test(unittest.TestCase):
 

@@ -29,7 +29,7 @@ if os.environ.has_key('TEST_DATADIR'):
     else:
         print 'WARN: directory '+DATADIR+' does not exist'
 
-print 'Listobs tests will use data from '+datapath         
+print 'listobs tests will use data from '+datapath         
 
 # Reference files
 reffile = datapath+'reflistobs'
@@ -43,10 +43,10 @@ class listobs_test1(unittest.TestCase):
     def setUp(self):
         self.res = None
         if (not os.path.exists(msfile1)):            
-            shutil.copytree(datapath+msfile1, msfile1)
+            shutil.copytree(datapath+msfile1, msfile1, symlinks=True)
 
         if (not os.path.exists(msfile2)):            
-            shutil.copytree(datapath+msfile2, msfile2)
+            shutil.copytree(datapath+msfile2, msfile2, symlinks=True)
         
         default(listobs)
         

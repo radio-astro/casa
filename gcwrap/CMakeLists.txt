@@ -333,7 +333,7 @@ find_package( Doxygen )
 
 if( DOXYGEN_FOUND )
   add_custom_target( doc_doxy
-    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/install/docutils/doxygen.cfg 
+    COMMAND ${DOXYGEN_EXECUTABLE} ${casaroot}/install/docutils/doxygen.cfg 
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 else()
@@ -1048,37 +1048,37 @@ foreach( _d ${MYDEFINES} )
 endforeach()
 
 
-file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
-  "# This file exists only for ASAP\n"
-  PYTHONVER=${PYTHONV}\n
-  CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
-  COPTFLAGS = \"${_dd}\"\n
-  LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
-  COREINCD = ${CASACORE_casa/aips.h}\n
-  CORELIB = ${_cc}\n
-  WCSLIBLIB = ${WCSLIB_wcs}\n
-  WCSLIBLIBD = .\n
-  PYTHONROOT = ${pyroot}\n
-  PYTHONLIBD = ${pythonlibd}\n
-  PYTHONINCD = ${_ii}\n
-  PYTHONLIB = ${PYTHON_LIBRARIES}\n
-  BOOSTROOT = ${BOOST_ROOT}\n
-  RPFITSLIBD = ${rpfitslibd}\n
-  CFITSIOLIBD = ${cfitsiolibd}\n
-  CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
-  eval_vars :\n
-  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
-)
-
+#file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
+#"# This file exists only for ASAP\n"
+#PYTHONVER=${PYTHONV}\n
+#CXXFLAGS = \"${CMAKE_CXX_FLAGS}\"\n
+#COPTFLAGS = \"${_dd}\"\n
+#LD_FLAGS = \"${CMAKE_SHARED_LINKER_FLAGS}\"\n
+#COREINCD = ${CASACORE_casa/aips.h}\n
+#CORELIB = ${_cc}\n
+#WCSLIBLIB = ${WCSLIB_wcs}\n
+#WCSLIBLIBD = .\n
+#PYTHONROOT = ${pyroot}\n
+#PYTHONLIBD = ${pythonlibd}\n
+#PYTHONINCD = ${_ii}\n
+#PYTHONLIB = ${PYTHON_LIBRARIES}\n
+#BOOSTROOT = ${BOOST_ROOT}\n
+#RPFITSLIBD = ${rpfitslibd}\n
+#CFITSIOLIBD = ${cfitsiolibd}\n
+#CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
+#eval_vars :\n
+#\t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
+#"
+#)
+#
+add_subdirectory(doc/taskref)
+add_subdirectory(doc/casaref)
 add_subdirectory(tasks)
 add_subdirectory(python)
-add_subdirectory( doc/taskref )
-add_subdirectory( doc/casaref )
 
 # All documentation
 add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
 #add_custom_target( doc )
-
 
 install( PROGRAMS
          install/buildmytasks

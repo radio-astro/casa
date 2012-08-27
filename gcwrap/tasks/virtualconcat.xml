@@ -41,6 +41,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value>False</value>
   </param>
 
+  <param type="bool" name="copypointing">
+    <description>If true, keep the POINTING table information in the output MMS. If false, don\'t.</description>
+    <value>True</value>
+  </param>
+
 </input>
 <example>
 
@@ -119,6 +124,10 @@ visweightscale -- The weights of the individual MSs will be scaled in the concat
 
 keepcopy -- If true, a copy of the input MSs is kept in their original place.
         default: false
+
+copypointing -- If true, the POINTING table information will be present in the output.
+                If false, the result is an empty POINTING table.
+         default: true
 
 </example> 
 

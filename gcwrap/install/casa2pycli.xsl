@@ -175,10 +175,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
-        if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
-	    return False
-
 	try :
+          #if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
+	    #return False
+
+          casac.casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;], True)
           scriptstr=['']
           saveinputs = self.__globals__['saveinputs']
           saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__,scriptstr=scriptstr)
@@ -211,6 +212,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
              raise
           else :
              #print '**** Error **** ',instance
+	     tname = </xsl:text>'<xsl:value-of select="$taskname"/>'<xsl:text disable-output-escaping="yes">
+             casalog.post('An error occurred running task '+tname+'.', 'ERROR')
              pass
 </xsl:text>
 <xsl:for-each select="aps:output">

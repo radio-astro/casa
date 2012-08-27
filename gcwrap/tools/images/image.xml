@@ -6405,6 +6405,11 @@ Note that this function has no ``virtual'' output file capability. All
 output files are written to disk.   The output mask for these images is
 good (T) unless the moment method fails to generate a value (e.g.  the
 total input pixel mask was all bad for the profile) in which case it will be bad (F).
+
+If an image has multiple (per-channel beams) and the moment axis is equal to the
+spectral axis, each channel will be convolved with a beam that is equal to the beam
+having the largest area in the beamset prior to moment determination.
+
 </description>
 
 <example> 

@@ -305,15 +305,19 @@ class imagecont():
   #                  chan=imchan)
         ###need to clean up here the channel image...will do after testing phase
 
-    def imagechan_selfselect(self, msname='spw00_4chan351rowTile.ms', spwids=[0], field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0],  chanchunk=1):
+    def imagechan_selfselect(self, msname='spw00_4chan351rowTile.ms', spwids=[0], field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0],  chanchunk=1, startchan=0):
         ###need generate fstart, width from 1 channel width, start, numchan and spw 
         origname=msname
+        retval={}
+        retval['maxresidual']=0.0
+        retval['iterations']=0
+        retval['converged']=False
         ia.open(imroot+'.model')
         csys=ia.coordsys()
         ia.done()
-        im=casac.imager()
-        fstart=csys.toworld([0,0,0,imchan*chanchunk],'n')['numeric'][3]
-        fstep=csys.toworld([0,0,0,imchan*chanchunk+1],'n')['numeric'][3]-fstart
+        im=casac.imager()  
+        fstart=csys.toworld([0,0,0,startchan],'n')['numeric'][3]
+        fstep=csys.toworld([0,0,0,startchan+1],'n')['numeric'][3]-fstart
         fend=fstep*(chanchunk-1)+fstart
         print 'fstat bef findchansel ', fstart
         spw, start, nchan=self.findchanselLSRK(msname=msname, spw=spwids, 
@@ -322,12 +326,12 @@ class imagecont():
                                                       beginfreq=fstart, endfreq=fend, chanwidth=fstep)
         print 'spw, start, nchan', spw, start, nchan
         if((len(spw[0])==0) or (len(nchan[0])==0) or (len(start[0]) ==0) ):
-            return
+            return retval
         imname=imroot+str(imchan)
         maskname=''
         if(mask != ''):
             maskname=imname+'.mask'
-            if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
+            if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk, startchan=startchan)):
                 maskname=''
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
         im.selectvis(vis=msname, field=field, spw=spw[0], nchan=nchan[0], start=start[0], step=1, datainmemory=self.visInMem, time=self.timerange, uvrange=self.uvrange, baseline=self.baselines, scan=self.scan, observation=self.observation, writeaccess=False)
@@ -350,7 +354,7 @@ class imagecont():
         try:
             
             for kk in range(majcycle):
-                im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
+                retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
             im.done()
             del im
         except Exception as instance:
@@ -360,6 +364,7 @@ class imagecont():
                 raise Exception(instance)
         if(maskname != ''):
             shutil.rmtree(maskname, True)
+        return retval
         #self.putchanimage(imroot+'.model', imname+'.model', imchan*chanchunk)
         #self.putchanimage(imroot+'.residual', imname+'.residual', imchan*chanchunk)
         #self.putchanimage(imroot+'.image', imname+'.image', imchan*chanchunk)
@@ -667,7 +672,9 @@ class imagecont():
         
         return True
     @staticmethod
-    def makemask(inmask='', outmask='' , imchan=0, chanchunk=1):
+    def makemask(inmask='', outmask='' , imchan=0, chanchunk=1, startchan=-1):
+        if(startchan < 0):
+            startchan=imchan*chanchunk
         if(not os.path.exists(inmask)):
             return False
         ia,rg=gentools(['ia', 'rg'])
@@ -678,8 +685,8 @@ class imagecont():
             shutil.copytree(inmask, outmask)
             ia.done()
             return True
-        if(shp[3] > ((imchan+1)*chanchunk-1)):
-            mybox=rg.box(blc=[0, 0, 0, imchan*chanchunk], trc=[shp[0]-1, shp[1]-1, shp[2]-1, imchan*chanchunk+chanchunk-1])
+        if(shp[3] > (startchan+chanchunk-1)):
+            mybox=rg.box(blc=[0, 0, 0, startchan], trc=[shp[0]-1, shp[1]-1, shp[2]-1, startchan+chanchunk-1])
             ia.subimage(outfile=outmask, region=mybox, overwrite=True)
             ia.done()
             return True
