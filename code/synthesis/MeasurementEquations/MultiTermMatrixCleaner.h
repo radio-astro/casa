@@ -122,6 +122,9 @@ private:
   Float prev_max_p;
   Float min_max_p;
 
+  IPosition psfsupport_p;
+  IPosition psfpeak_p;
+
   Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
   Vector<Float> scaleBias_p; // Vector of scale biases !!
   Vector<Float> totalScaleFlux_p; // Vector of total scale fluxes.

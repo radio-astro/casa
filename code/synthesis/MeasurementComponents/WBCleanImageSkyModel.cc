@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: WBCleanImageSkyModel.cc 13615 2010-12-20 14:04:00 UrvashiRV$
-
+//# v2.6 : Added psf-patch support to reduce memory footprint.
 
 #include <casa/Arrays/ArrayMath.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
@@ -137,6 +137,7 @@ void WBCleanImageSkyModel::initVars()
 WBCleanImageSkyModel::~WBCleanImageSkyModel()
 {
   lc_p.resize(0);
+  ///cout << "WBCleanImageSkyModel destructor " << endl;
 };
 
 /*************************************
@@ -144,7 +145,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	os << "MSMFS algorithm (v2.5) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
+	os << "MSMFS algorithm (v2.6) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -206,6 +207,9 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	}
 
 	/* Initialize the MultiTermMatrixCleaners */
+
+	/// TEST
+	
 	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
 	if(lc_p.nelements()==0)
 	{
@@ -227,6 +231,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
                   return False;
 		}
 	}
+	
+
 
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
@@ -251,6 +257,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    }
 
 	    /* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
+	    // TEST
+	    
 	    for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 	    {
 	      for (Int order=0;order<2*ntaylor_p-1;order++)
@@ -264,7 +272,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	        lc_p[thismodel].setpsf( order , tempMat ); 
 	      }
 	    }
-	  
+	    
 	    /* Resize the work arrays to normal size - for residual comps, etc. */
 	    nmodels_p = original_nmodels;
 	    resizeWorkArrays(nmodels_p);
@@ -272,7 +280,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	    donePSF_p=True;
 	}
-	
+
 	/* Return if niter=0 */
 	/* Check if this is an interactive-clean run, or if niter=0 */
 	if(adbg) cout << "NumberIterations - before any cycles: " << numberIterations() << endl;

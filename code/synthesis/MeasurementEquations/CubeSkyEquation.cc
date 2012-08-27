@@ -562,6 +562,13 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
     }
 
+    //Don't need these for now
+    for(Int model=0; model < nmodels; ++model){
+      
+	sm_->work(model).clearCache();
+	sm_->cImage(model).clearCache();
+    }
+
     //lets return original selection back to iterator
 
 
@@ -571,66 +578,70 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     sm_->finalizeGradients();
     fixImageScale();
     for(Int model=0; model < nmodels; ++model){
-        {
-            //Normalize the gS image
-            Int nXX=sm_->ggS(model).shape()(0);
-            Int nYY=sm_->ggS(model).shape()(1);
-            Int npola= sm_->ggS(model).shape()(2);
-            Int nchana= sm_->ggS(model).shape()(3);
-            IPosition blc(4,nXX, nYY, npola, nchana);
-            IPosition trc(4, nXX, nYY, npola, nchana);
-            blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
-            //max weights per plane
-            for (Int j=0; j < npola; ++j){
-                for (Int k=0; k < nchana ; ++k){
-
-                    blc(2)=j; trc(2)=j;
-                    blc(3)=k; trc(3)=k;
-                    Slicer sl(blc, trc, Slicer::endIsLast);
-                    SubImage<Float> gSSub(sm_->gS(model), sl, False);
-                    SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
-                    SubImage<Float> psfSub(*(psfs[model]), sl, True);
-                    Float planeMax;
-                    LatticeExprNode LEN = max( ggSSub );
-                    planeMax =  LEN.getFloat();
-                    if(planeMax !=0){
-                        psfSub.copyData( (LatticeExpr<Float>)
-                                         (iif(ggSSub > (0.0),
-                                              (gSSub/planeMax),0.0)));
-                    }
-                    else{
-                        psfSub.set(0.0);
-                    }
-                }
-            }
-            //
-        }
+      {
+	//Normalize the gS image
+	Int nXX=sm_->ggS(model).shape()(0);
+	Int nYY=sm_->ggS(model).shape()(1);
+	Int npola= sm_->ggS(model).shape()(2);
+	Int nchana= sm_->ggS(model).shape()(3);
+	IPosition blc(4,nXX, nYY, npola, nchana);
+	IPosition trc(4, nXX, nYY, npola, nchana);
+	blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
+	//max weights per plane
+	for (Int j=0; j < npola; ++j){
+	  for (Int k=0; k < nchana ; ++k){
+	    
+	    blc(2)=j; trc(2)=j;
+	    blc(3)=k; trc(3)=k;
+	    Slicer sl(blc, trc, Slicer::endIsLast);
+	    SubImage<Float> gSSub(sm_->gS(model), sl, False);
+	    SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
+	    SubImage<Float> psfSub(*(psfs[model]), sl, True);
+	    Float planeMax;
+	    LatticeExprNode LEN = max( ggSSub );
+	    planeMax =  LEN.getFloat();
+	    if(planeMax !=0){
+	      psfSub.copyData( (LatticeExpr<Float>)
+			       (iif(ggSSub > (0.0),
+				    (gSSub/planeMax),0.0)));
+	    }
+	    else{
+	      psfSub.set(0.0);
+	    }
+	  }
+	}
+	//
+      }
 
         /*
     if(0){
       PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
 	LatticeExpr<Float> le(*psfs[model]);
 	thisScreen.copyData(le);
-      } 
-         */
-        LatticeExprNode maxPSF=max(*psfs[model]);
-        Float maxpsf=maxPSF.getFloat();
+	} 
+	*/
+      LatticeExprNode maxPSF=max(*psfs[model]);
+      Float maxpsf=maxPSF.getFloat();
         if(abs(maxpsf-1.0) > 1e-3) {
-            os << "Maximum of approximate PSF for field " << model << " = "
-                    << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
+	  os << "Maximum of approximate PSF for field " << model << " = "
+	     << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
         }
         if(maxpsf > 0.0 ){
-            LatticeExpr<Float> len((*psfs[model])/maxpsf);
-            psfs[model]->copyData(len);
+	  LatticeExpr<Float> len((*psfs[model])/maxpsf);
+	  psfs[model]->copyData(len);
         }
         else{
-            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-                os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
-            }
-            else{
-                throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
-            }
+	  if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+	    os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
+	  }
+	  else{
+	    throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
+	  }
         }
+	
+	sm_->PSF(model).clearCache();
+	sm_->gS(model).clearCache();
+	sm_->ggS(model).clearCache();
     }
 
     isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
@@ -848,6 +859,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     for (Int model=0;model<sm_->numberOfModels();model++) {
         //unScaleImage(model, incremental);
+      sm_->cImage(model).clearCache();
+      sm_->gS(model).clearCache();
+      sm_->ggS(model).clearCache();
+      sm_->work(model).clearCache();
+      
         ft_=&(*ftm_p[model]);
         unScaleImage(model);
 
@@ -1215,7 +1231,8 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   if(typeOfSlice==0){    
     
     Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(20.0*(sm_->numberOfModels()));
-    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
+    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), 0);
+    slice->setMaximumCacheSize(sliceIm->shape().product());
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
     //slice->setCoordinateInfo(sm_->image(model).coordinates());
@@ -1537,10 +1554,10 @@ void CubeSkyEquation::fixImageScale()
 
 	  */
 	  //}	
-      }
+    }
     
       //because for usual ft machines a applySJoneInv is done on the gS
-      //in the finalizeput stage...need to understand if its necessary
+      //in the finalizepu tstage...need to understand if its necessary
       /*need to understand that square business
       if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
 	sm_->gS(model).copyData( (LatticeExpr<Float>) 
@@ -1550,8 +1567,10 @@ void CubeSkyEquation::fixImageScale()
       }
       */
       ///
+    sm_->fluxScale(model).clearCache();
+    sm_->ggS(model).clearCache();
     }
-
+    
   }
 }
 

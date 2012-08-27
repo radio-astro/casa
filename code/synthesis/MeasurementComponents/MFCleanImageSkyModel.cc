@@ -614,7 +614,6 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  maxIterations=(iterations[model](chan*npolcube+ipol)>maxIterations) ?
 		    iterations[model](chan*npolcube+ipol) : maxIterations;
 		  modified_p=True;
-		  
 		} else {  // clark is the default for now
 		  
 		  // Now make a convolution equation for this
@@ -689,6 +688,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	     << model 
 	     << " (Total flux : " << LatticeExprNode(sum(image(model))).getFloat() << "Jy)"
 	     << LogIO::POST;
+
 	}
 
       }
@@ -712,21 +712,27 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   if (progress_p) delete progress_p;
   
   for(model=0; model < nmodels; ++model){
+    image(model).clearCache();
+    PSF(model).clearCache();
+    ggS(model).clearCache();
+    residual(model).clearCache();
+    deltaImage(model).clearCache();
     for(Int chan=0; chan < nchan; ++chan){
       if(lmaskCube[chan*nmodels+model] !=0) 
 	delete lmaskCube[chan*nmodels+model];
     }
   }
   
+  
+  setNumberIterations(maxIterations);
   if(modified_p || lastCycleWriteModel) {
     os << LogIO::NORMAL2 // Loglevel PROGRESS
        << "Finalizing residual images for all fields" << LogIO::POST;
     blankOverlappingModels();
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     restoreOverlappingModels();
-    Float finalabsmax=maxField(resmax, resmin);
+    Float finalabsmax=maxField(resmax, resmin); 
     setThreshold(finalabsmax);
-    setNumberIterations(maxIterations);
     os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
     converged=(finalabsmax < 1.05 * threshold());
     os << LogIO::NORMAL; // Loglevel INFO

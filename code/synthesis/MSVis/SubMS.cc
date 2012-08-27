@@ -721,13 +721,13 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
 
       // the following calls MSTileLayout...  disabled for now because it
       // forces tiles to be the full spw bandwidth in width (gmoellen, 2010/11/07)
-  /*
+  
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),
                              colNamesTok, tileShape[0]);
       }
-  */
+      /* 
       else{
 	// Derive tile shape based on input dataset's tiles, borrowed
 	//  from VisSet's scr col tile shape derivation
@@ -795,7 +795,8 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
 				 colNamesTok, dataTileShape);
 
         }
-	else
+      */
+      else{
 	  //Sweep all other cases of bad tileshape to a default one.
 	  //  (this probably never happens)
 	  outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],

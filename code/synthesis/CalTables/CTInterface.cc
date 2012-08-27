@@ -86,14 +86,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //
   //----------------------------------------------------------------------------
+  // For CalTables, MS::DATA_DESC_ID maps to
+  // CTEnums::SPECTRAL_WINDOW_ID.  So do only that translation.
   //
   String CTInterface::columnName(MSMainEnums::PredefinedColumns nameEnum) 
   {
-    if (nameEnum == MS::DATA_DESC_ID) 
+    if (nameEnum == MS::DATA_DESC_ID)
       return CTEnums::fieldName(CTEnums::SPECTRAL_WINDOW_ID);
     else
       return MS::columnName(nameEnum);
   }
+  //
+  //----------------------------------------------------------------------------
+  // CalTables have no OBSERVATION sub-table.  So throw a tantrum if
+  // it is asked for.
+  //
+  const MSObservation& CTInterface::observation()
+  {
+    throw(AipsError("Internal error: OBSERVATION sub-table for CalTables requested"));
+  };
   //----------------------------------------------------------------------------
 } //# NAMESPACE CASA - END
 

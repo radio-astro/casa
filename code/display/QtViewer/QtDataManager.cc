@@ -474,17 +474,11 @@ void QtDataManager::changeItemSelection(){
         contourButton_->show();
         vectorButton_->show();
         markerButton_->show();
-	if ( treeWidget_->currentItem()->text(1) == "Image" )
+	if ( dataType_.value(uiDataType_[treeWidget_->currentItem()->text(1)]) == "image" )
 		info_box->show();
 	if ( ! name.isNull( ) ) {
 	    std::string path = (dir_.path() + "/" + name).toStdString( );
-	    if( imagePixelType(path) == TpFloat ) {
-		fill_image_info( path );
-	    }
-// 	    else if(imagePixelType(path)==TpComplex) {
-// 		PagedImage<Complex> image(path, TableLock::AutoNoReadLocking);
-// 	    }
-
+	    fill_image_info( path );
 	}
         break;      
      case MEASUREMENT_SET :
