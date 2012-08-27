@@ -1863,7 +1863,7 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
     Record strlengths, units;
     desc.addField("ID. NO.", TpInt);
     desc.addField("SOURCE", TpString);
-    strlengths.define("SOURCE", 16);
+    strlengths.define("SOURCE", 20);
     desc.addField("QUAL", TpInt);
     desc.addField("CALCODE", TpString);
     strlengths.define("CALCODE", 4);
