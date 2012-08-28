@@ -673,8 +673,9 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
       os << " tauscale=" << tauscale() << LogIO::POST;
    
     // conversion to Jy when divided by D1D2 for an M, 
-    // extra sqrt(2) or application to real & imag
-//     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+    // extra sqrt(2) for application to real & imag is applied as
+    // senscoeff()=1/sqrt(2) for interferometer, and 1 for single dish
+    //    amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
     amp() = 8 * 1.38062e-16 * 1e23 * 1e-4 /
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
