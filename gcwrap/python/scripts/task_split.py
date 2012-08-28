@@ -82,6 +82,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             myms.open(vis)
             mses = myms.getreferencedtables()
             myms.close() 
+            mses.sort()
 
             retval = {}
             nfail = 0
@@ -117,13 +118,14 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         tmpp.close()
                         
                 outvis = tempout+'/'+os.path.basename(m)
+                print 'Running split_core on ', m
                 retval[m] = split_core(m, outvis, datacolumn, field, spw, width, antenna,
                                        timebin, timerange, scan, intent, array, uvrange,
                                        correlation, observation, combine, keepflags)
                 if replaced:
                     # restore link
-                    os.rmtree(theptab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mses[0])+'/POINTING', theptab)
+                    shutil.rmtree(theptab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
                     # (link in target will be created my makeMMS)
 
                 if not retval[m]:
