@@ -304,9 +304,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // POINTING
   if(!antIndexTrivial){
-    if(!copyPointingB(otherMS.pointing(), newAntIndices)){
-      log << LogIO::WARN << "Could not reindex Pointing subtable " << LogIO::POST ;
-    }
+    copyPointingB(otherMS.pointing(), newAntIndices);
   }
   
   /////////////////////////////////////////////////////
@@ -1543,17 +1541,17 @@ Bool MSConcat::copyPointingB(MSPointing& otherPoint,const
 
     return False;
   }
-  else if(!itsPointingNull && otherPointingNull){
-    os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
-       << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
+//   else if(!itsPointingNull && otherPointingNull){
+//     os << LogIO::NORMAL << "MS to be appended does not have a valid pointing table, "
+//        << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
              
-    Vector<uInt> delrows(itsMS.pointing().nrow());
-    indgen(delrows);
-    itsMS.pointing().removeRow(delrows); 
+//     Vector<uInt> delrows(itsMS.pointing().nrow());
+//     indgen(delrows);
+//     itsMS.pointing().removeRow(delrows); 
 
-    return False;
+//     return False;
 
-  }
+//   }
      
   Int rowToBeAdded=otherPoint.nrow();
   //reassigning antennas to the new indices of the ANTENNA table
