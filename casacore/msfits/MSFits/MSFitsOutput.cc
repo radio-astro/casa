@@ -219,8 +219,8 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     }
 
     // Write the SOURCE table.
-    //  if (ok && !ms.source().isNull()) {
-    if (ok) {
+    //  if (ok && !ms.source().isNull()) 
+    if (ok && asMultiSource) {
         os << LogIO::NORMAL << "Writing AIPS SU table" << LogIO::POST;
         ok = writeSU(fitsOutput, ms, fieldidMap, nrfield, spwidMap, nrspw);
         if (!ok) {
