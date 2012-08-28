@@ -167,7 +167,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                     for i in xrange(1,len(successfulmses)):
                         myms.virtconcatenate(successfulmses[i], auxfile, '1Hz', '10mas')
                     myms.close()
-                    shutil.rmtree(auxfile, ignore_errors=True)
+                    os.remove(auxfile)
                     ph.makeMMS(outputvis, successfulmses, True, ['POINTING']) 
 
 
