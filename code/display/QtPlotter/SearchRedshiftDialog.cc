@@ -54,6 +54,9 @@ SearchRedshiftDialog::SearchRedshiftDialog(QWidget *parent)
 	QDoubleValidator* validator = new QDoubleValidator( this );
 	ui.centerLineEdit->setValidator( validator );
 
+	ui.velocityLineEdit->setEnabled( false );
+	ui.redshiftLineEdit->setEnabled( false );
+
 	connect( ui.findRedshiftButton, SIGNAL(clicked()), this, SLOT(findRedshift()));
 	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(close()));
 }
@@ -61,6 +64,9 @@ SearchRedshiftDialog::SearchRedshiftDialog(QWidget *parent)
 void SearchRedshiftDialog::setResultsVisible( bool visible ){
 	ui.redshiftLabel->setVisible( visible );
 	ui.redshiftLineEdit->setVisible( visible );
+	ui.velocityLineEdit->setVisible( visible );
+	ui.velocityLabel->setVisible( visible );
+	ui.velocityUnitLabel->setVisible( visible );
 	ui.line->setVisible( visible );
 }
 
@@ -80,6 +86,13 @@ void SearchRedshiftDialog::setLocalSearch( bool local ){
 	localSearch = local;
 }
 
+void SearchRedshiftDialog::setIdentifiedLines( const QList<QString>& lineNames ){
+	ui.speciesCombo->clear();
+	for ( int i = 0; i < lineNames.size(); i++ ){
+		ui.speciesCombo->addItem( lineNames[i] );
+	}
+}
+
 void SearchRedshiftDialog::show(){
 	setResultsVisible( false );
 	QDialog::show();
@@ -89,21 +102,22 @@ void SearchRedshiftDialog::setDopplerType( MDoppler::Types type ){
 	dopplerType = type;
 }
 
-void SearchRedshiftDialog::setFrequencyType( MRadialVelocity::Types mType ){
-	if ( mType == MRadialVelocity::LSRK ){
+void SearchRedshiftDialog::setFrequencyType( MRadialVelocity::Types type ){
+	radialVelocityType = type;
+	if ( type == MRadialVelocity::LSRK ){
 		frequencyType = MFrequency::LSRK;
 	}
-	else if ( mType == MRadialVelocity::LSRD ){
+	else if ( type == MRadialVelocity::LSRD ){
 		frequencyType = MFrequency::LSRD;
 	}
-	else if ( mType == MRadialVelocity::BARY ){
+	else if ( type == MRadialVelocity::BARY ){
 		frequencyType = MFrequency::BARY;
 	}
-	else if ( mType == MRadialVelocity::TOPO ){
+	else if ( type == MRadialVelocity::TOPO ){
 		frequencyType = MFrequency::TOPO;
 	}
 	else {
-		qDebug() << "Unrecognized radial velocity type: "<<mType;
+		qDebug() << "Unrecognized radial velocity type: "<<type;
 		assert( false );
 	}
 }
@@ -131,7 +145,7 @@ void SearchRedshiftDialog::findRedshift(){
 	searcher->setChemicalNames( chemNames );
 
 	//Get the search parameters
-	QString speciesName = ui.speciesLineEdit->text();
+	QString speciesName = ui.speciesCombo->currentText();
 	if ( speciesName.length() > 0 ){
 		Vector<String> speciesList( 1 );
 		speciesList[0] = speciesName.toStdString();
@@ -144,7 +158,6 @@ void SearchRedshiftDialog::findRedshift(){
 		//Range for the search should be everything.
 		Double minValue = 0;
 		Double maxValue = numeric_limits<double>::max();
-		qDebug() << "Setting search upper bound to "<<maxValue;
 		searcher->setSearchRangeFrequency( minValue, maxValue );
 
 		//Start the background thread that will do the search
@@ -204,21 +217,16 @@ void SearchRedshiftDialog::searchFinished(){
 				restFrequency = freqValue;
 			}
 			//See if this one is closer that our current best
-			else {
-				double bestDiff = qAbs( targetFrequency - restFrequency );
-				double thisDiff = qAbs( targetFrequency - freqValue );
-				if ( thisDiff < bestDiff ){
-					restFrequency = freqValue;
-				}
+			else if ( freqValue < restFrequency ){
+				restFrequency = freqValue;
 			}
 		}
-		else if ( freqValue)
 
 		//Keep the GUI responsive while we are setting up the table
 		QCoreApplication::processEvents();
 	}
 
-	//Calculate the redshift
+	//Calculate the redshift and velocity
 	progressBar.hide();
 	if ( restFrequency != -1 ){
 		String splatalogueUnitStr( SearchMoleculesWidget::SPLATALOGUE_UNITS.toStdString());
@@ -230,8 +238,26 @@ void SearchRedshiftDialog::searchFinished(){
 		MDoppler velDoppler = freq.toDoppler( restFreq );
 		MDoppler doppler = MDoppler::Convert( velDoppler, dopplerType)();
 
+		//Redshift
 		double redshiftVal = doppler.getValue();
-		ui.redshiftLineEdit->setText( QString::number( -1 * redshiftVal ));
+		ui.redshiftLineEdit->setText( QString::number( redshiftVal ));
+
+		//Velocity
+		QString unitStr = Util::stripFont( ui.velocityUnitLabel->text());
+		MVDoppler mvDoppler( redshiftVal );
+		MDoppler veldoppler2( mvDoppler, dopplerType );
+		MRadialVelocity mVelocity = MRadialVelocity::fromDoppler(veldoppler2, radialVelocityType);
+		String unitString = unitStr.toStdString();
+		Quantity velQuantity = mVelocity.get( unitString );
+		double velocity = velQuantity.getValue();
+		if ( !isnan(velocity) ){
+			ui.velocityLineEdit->setText( QString::number( velocity ));
+		}
+		else {
+			ui.velocityLineEdit->setText("");
+			QString msg( "Could not accurately determine velocity.");
+			Util::showUserMessage( msg, this );
+		}
 		setResultsVisible( true );
 	}
 	else {
@@ -240,6 +266,8 @@ void SearchRedshiftDialog::searchFinished(){
 		setResultsVisible( false );
 	}
 }
+
+
 
 
 SearchRedshiftDialog::~SearchRedshiftDialog()

@@ -48,6 +48,7 @@ void SearchMoleculesResultsWidget::initializeTable(){
 	ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.searchResultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.searchResultsTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn );
+	ui.searchResultsTable->setSortingEnabled( true );
 }
 
 

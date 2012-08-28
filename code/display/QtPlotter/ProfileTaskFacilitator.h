@@ -58,6 +58,10 @@ public:
 
 	virtual void setCanvas( QtCanvas* pixelCanvas );
 	virtual void setTaskMonitor( ProfileTaskMonitor* monitor );
+	virtual void setCurveName( const QString& curveName );
+	virtual void addCurveName( const QString& curveName );
+	virtual void setDisplayYUnits( const QString& units );
+	virtual void setImageYUnits( const QString& units );
 	virtual void setLogger( LogIO* log );
 	virtual void plotMainCurve();
 
@@ -70,7 +74,7 @@ public:
 	virtual QString getYUnit() const;
 	virtual QString getYUnitPrefix() const;
 	virtual String getXAxisUnit() const;
-	virtual const ImageInterface<Float>* getImage() const;
+	virtual const ImageInterface<Float>* getImage( const QString& name="") const;
 	virtual const String getPixelBox() const;
 
 	bool isOptical();

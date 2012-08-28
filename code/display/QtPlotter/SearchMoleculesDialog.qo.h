@@ -42,6 +42,7 @@ public:
     QList<int> getLineIndices() const;
     bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
     void setRange( float min, float max, QString units );
+    double getRedShiftedValue( bool reverseRedshift, float value ) const;
     void searchFinished();
     void updateReferenceFrame();
     QString getUnit() const;

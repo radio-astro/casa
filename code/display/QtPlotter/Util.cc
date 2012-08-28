@@ -29,6 +29,7 @@
 #include <QMessageBox>
 #include <QWidget>
 
+
 namespace casa {
 
 	const QString Util::ORGANIZATION = "NRAO/CASA";
@@ -166,6 +167,18 @@ namespace casa {
 		return strippedUnits;
 	}
 
+	QString Util::toDegreeString( int hrs, int mins, double secs ){
+		return QString::number(hrs) + ":"+QString::number(mins)+":"+QString::number(secs);
+	}
+
+	void Util::appendSign( double rad, QString& degreeString ){
+		if ( rad < 0 ){
+			degreeString = "-"+degreeString;
+		}
+		else {
+			degreeString = "+"+degreeString;
+		}
+	}
 
 
 

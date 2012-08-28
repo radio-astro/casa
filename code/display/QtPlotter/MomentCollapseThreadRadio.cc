@@ -25,7 +25,10 @@
 #include "MomentCollapseThreadRadio.h"
 #include <images/Images/ImageAnalysis.h>
 #include <display/Display/Options.h>
+#include <synthesis/MSVis/UtilJ.h>
+//using namespace casa::utilj;
 #include <QFile>
+#include <QDebug>
 namespace casa {
 
 MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis ):
@@ -115,6 +118,7 @@ bool MomentCollapseThreadRadio::getOutputFileName( String& outName,
 
 void MomentCollapseThreadRadio::run(){
 	try {
+		//casa::utilj::ThreadTimes t1;
 		for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
 			Vector<int> whichMoments(1);
 			whichMoments[0] = moments[i];
@@ -123,16 +127,20 @@ void MomentCollapseThreadRadio::run(){
 			String outFile;
 			bool outputFileTemporary = getOutputFileName( outFile, i, channelStr );
 
-			ImageInterface<Float>* newImage = analysis->moments( moments, axis, region,
+
+			ImageInterface<Float>* newImage = analysis->moments( whichMoments, axis, region,
 						mask, method,
 						smoothaxes, smoothtypes, smoothwidths,
 						includepix,excludepix,
-						peaksnr, stddev, "RADIO", outFile);
+						peaksnr, stddev, "RADIO", outFile, "", "");
 			if ( newImage != NULL ){
 				CollapseResult result( outFile, outputFileTemporary, newImage );
 				collapseResults.push_back( result );
 			}
 		}
+		//casa::utilj::ThreadTimes t2;
+		//casa::utilj::DeltaThreadTimes dt = t2 - t1;
+		//qDebug() << "Elapsed time moment="<<moments[0]<< " elapsed="<<dt.elapsed()<<" cpu="<<dt.cpu();
 	}
 	catch( AipsError& error ){
 		errorMsg = error.getLastMessage();
@@ -141,7 +149,6 @@ void MomentCollapseThreadRadio::run(){
 }
 
 MomentCollapseThreadRadio::~MomentCollapseThreadRadio() {
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace casa */

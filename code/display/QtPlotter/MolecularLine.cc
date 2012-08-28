@@ -32,6 +32,11 @@
 
 namespace casa {
 
+QColor MolecularLine::lineColor = "#00957B";
+void MolecularLine::setMolecularLineColor( QColor color ){
+	lineColor = color;
+}
+
 MolecularLine::MolecularLine() : QwtPlotMarker(){
 	init();
 }
@@ -44,7 +49,6 @@ MolecularLine::MolecularLine( float center, float peak, QString name ): QwtPlotM
 }
 
 void MolecularLine::init() {
-	lineColor = "#00957B";
 	setLineStyle( QwtPlotMarker::HLine);
 }
 

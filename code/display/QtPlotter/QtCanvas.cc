@@ -52,10 +52,12 @@ QtCanvas::~QtCanvas()
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
-           MARGIN_LEFT(80), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(25), FRACZOOM(20),
+           MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(25), FRACZOOM(20),
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
-          lineOverlayContextMenu(this), gaussianContextMenu( this ), frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
+          lineOverlayContextMenu(this), gaussianContextMenu( this ),
+          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 ),
+          refreshCanvas( true )
 {    
 
 
@@ -213,13 +215,45 @@ QColor QtCanvas::getCurveColor( int id ){
 	return curveMap[id].getColor();
 }
 
+void QtCanvas::stripCurveTitleNumbers( QString& curveName ) const {
+	int bracketIndex = curveName.indexOf( "<");
+	if ( bracketIndex > 0 ){
+		curveName = curveName.mid( 0, bracketIndex );
+		curveName = curveName.trimmed();
+	}
+}
+
+
+bool QtCanvas::duplicateCurve( QString& targetLabel ) {
+	bool duplicateCurve = false;
+	//Duplicate curves will have a number in brackets after their name such as <3>
+	stripCurveTitleNumbers( targetLabel );
+	for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
+		QString curveLabel = curveMap[i].getLegend();
+		stripCurveTitleNumbers( curveLabel );
+		if ( targetLabel == curveLabel ){
+			duplicateCurve = true;
+			break;
+		}
+	}
+	return duplicateCurve;
+}
+
 void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
                                     const QString& lbl, ColorCategory level ){
-	QColor curveColor = getDiscreteColor( level, id );
-	CanvasCurve curve( data, error, lbl, curveColor, level );
-	curveMap[id]     = curve;
-    refreshPixmap();
-    emit curvesChanged();
+	QString curveLabel = lbl;
+	bool dupeCurve = duplicateCurve( curveLabel );
+	if ( !dupeCurve ){
+		QColor curveColor = getDiscreteColor( level, id );
+		CanvasCurve curve( data, error, curveLabel, curveColor, level );
+		//Make sure the curve is in the same units as the canvas is using.
+		if ( yUnitDisplay != yUnitImage ){
+			curve.scaleYValues( yUnitImage, yUnitDisplay );
+		}
+		curveMap[id]     = curve;
+		refreshPixmap();
+		emit curvesChanged();
+	}
 }
 
 void QtCanvas::setDataRange()
@@ -233,19 +267,14 @@ void QtCanvas::setDataRange()
 	Double ymax = -ymin;
 	std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
 	while (it != curveMap.end()){
-		//int id = (*it).first;
 		const CanvasCurve & canvasCurve = (*it).second;
 		canvasCurve.getMinMax(xmin, xmax, ymin, ymax, plotError );
 		++it;
 	}
 
-	for ( int i = 0; i < molecularLineStack.size(); i++ ){
-		molecularLineStack[i]->getMinMax( xmin, xmax, ymin, ymax );
-	}
-
 	QtPlotSettings settings;
 	adjustExtremes( &xmin, &xmax );
-	adjustExtremes( &ymin, &ymax );
+	//adjustExtremes( &ymin, &ymax );
 
 	//Store the results in the plot settings
 	if (autoScaleX) {
@@ -375,7 +404,7 @@ QString QtCanvas::findCoords( double x, double y ) const {
 	std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
 	while (it != curveMap.end()){
 		const CanvasCurve & canvasCurve = (*it).second;
-		QString toolTipStr = canvasCurve.getToolTip( x, y , X_ERROR, Y_ERROR, toolTipXUnit, toolTipYUnit );
+		QString toolTipStr = canvasCurve.getToolTip( x, y , X_ERROR, Y_ERROR, toolTipXUnit, yUnitDisplay );
 		if ( !toolTipStr.isEmpty() ){
 			coordStr = toolTipStr;
 			break;
@@ -487,16 +516,18 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     //Paint any molecular lines
     for ( int i = 0; i < static_cast<int>(molecularLineStack.size()); i++ ){
     	double centerVal = molecularLineStack[i]->getCenter();
-    	double peakVal = molecularLineStack[i]->getPeak();
     	int centerPixel = this->getPixelX( centerVal );
-    	int peakPixel = this->getPixelY( peakVal );
+    	//Use the maximum y value rather than the peak (which needs
+    	//more information in order to be calculated correctly)
+    	QtPlotSettings plotSettings = zoomStack[curZoom];
+    	double maxYVal = plotSettings.getMaxY();
+    	int peakPixel = this->getPixelY( maxYVal );
     	int zeroPixel = this->getPixelY( 0 );
     	molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
     			zeroPixel, width(), height() );
     }
 
-	if (hasFocus())
-	{
+	if (hasFocus()){
 		QStyleOptionFocusRect option;
 		option.init(this);
 		option.backgroundColor = palette().color(QPalette::Background);
@@ -864,24 +895,27 @@ void QtCanvas::setShowTopAxis( bool showAxis ){
 
 void QtCanvas::refreshPixmap()
 {
-	pixmap = QPixmap(size());
-	pixmap.fill(this, 0, 0);
-	QPainter painter(&pixmap);
+	if ( refreshCanvas ){
+		pixmap = QPixmap(size());
+		pixmap.fill(this, 0, 0);
+		QPainter painter(&pixmap);
 
-	drawLabels(&painter);
-	if (!imageMode){
-		drawGrid(&painter);
-		drawCurves(&painter);
-		drawFrameMarker(&painter);
+		drawLabels(&painter);
+
+		if (!imageMode){
+			drawGrid(&painter);
+			drawCurves(&painter);
+			drawFrameMarker(&painter);
+		}
+		else {
+			drawTicks( &painter );
+			drawBackBuffer(&painter);
+		}
+		if (welcome.text !=""){
+			drawWelcome(&painter);
+		}
+		update();
 	}
-	else {
-		drawBackBuffer(&painter);
-		drawTicks(&painter);
-	}
-	if (welcome.text !=""){
-		drawWelcome(&painter);
-	}
-	update();
 }
 
 void QtCanvas::drawFrameMarker( QPainter* painter ){
@@ -922,14 +956,22 @@ QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::A
 	return tickLabel;
 }
 
-void QtCanvas::drawGrid(QPainter *painter)
-	{
+int QtCanvas::getLastAxis() const {
+	int lastAxis = QtPlotSettings::END_AXIS_INDEX;
+	if ( ! showTopAxis || curveMap.size() > 1 ){
+		lastAxis = QtPlotSettings::xTop;
+	}
+	return lastAxis;
+}
+
+void QtCanvas::drawGrid(QPainter *painter){
 	QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
     QtPlotSettings settings = zoomStack[curZoom];
     QPen quiteDark(QPalette::Dark);
     QPen light(QPalette::Highlight);
 
-   for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
+    int endIndex = getLastAxis();
+   for ( int j = 0; j < endIndex; j++ ){
         QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(j);
         int xTickCount = settings.getNumTicksX( );
         for (int i = 0; i <= xTickCount; ++i) {
@@ -968,8 +1010,7 @@ void QtCanvas::drawGrid(QPainter *painter)
         int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
         double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
 
-        if (abs(label) < 0.00000005) label = 0.f;                                 
-        //painter->setPen(quiteDark);
+        //if (abs(label) < 0.00000005) label = 0.f;
         if (showGrid) {
            painter->setPen(quiteDark);
       	  painter->drawLine(rect.left(), y, rect.right(), y);
@@ -978,8 +1019,6 @@ void QtCanvas::drawGrid(QPainter *painter)
         painter->drawLine(rect.left() - 5, y, rect.left(), y);
         painter->drawText(rect.left() - 2*MARGIN_LEFT/3, y - 10,
         			MARGIN_LEFT/2, 20,
-        //painter->drawText(rect.left() - MARGIN, y - 10,
-          //                MARGIN - 5, 20,
                           Qt::AlignRight | Qt::AlignVCenter,
                           QString::number(label));
     }
@@ -991,7 +1030,8 @@ void QtCanvas::drawTicks(QPainter *painter)
 	QtPlotSettings settings = zoomStack[curZoom];
 	QPen quiteDark(QPalette::Dark);
 	QPen light(QPalette::Highlight);
-	for ( int j = 0; j < QtPlotSettings::END_AXIS_INDEX; j++ ){
+	int endIndex = getLastAxis();
+	for ( int j = 0; j < endIndex; j++ ){
 		int startY = MARGIN_TOP;
 		if ( j == QtPlotSettings::xTop ){
 			startY = height() - MARGIN_TOP;
@@ -1011,7 +1051,7 @@ void QtCanvas::drawTicks(QPainter *painter)
 							  tickLabel );
 		}
 	}
-	//QRect rect(MARGIN, MARGIN, getRectWidth(), getRectHeight());
+
 	QRect rect( MARGIN_LEFT, MARGIN_TOP, getRectWidth(), getRectHeight());
 	int tickCountY = settings.getNumTicksY();
     for (int j = 0; j <= tickCountY; ++j){
@@ -1043,11 +1083,7 @@ void QtCanvas::drawLabels(QPainter *painter)
     painter->drawText( MARGIN_LEFT, 15, getRectWidth(), MARGIN_TOP / 2,
                           Qt::AlignHCenter | Qt::AlignTop, title.text);
 
-
-    int endIndex = QtPlotSettings::END_AXIS_INDEX;
-    if ( !showTopAxis ){
-    	endIndex = QtPlotSettings::xTop;
-    }
+    int endIndex = getLastAxis();
     for ( int i = 0; i < endIndex; i++ ){
     	QtPlotSettings::AxisIndex axisIndex = static_cast<QtPlotSettings::AxisIndex>(i);
     	painter->setPen(xLabel[axisIndex].color);
@@ -1067,14 +1103,7 @@ void QtCanvas::drawLabels(QPainter *painter)
     QRect fontBoundingRect = QFontMetrics(font).boundingRect(yLabel.text);
     font.setPixelSize(50);
     painter->rotate(-90);
-    //painter->translate(- height() / 2, MARGIN / 6);
-    //painter->translate( -height()/2, MARGIN_LEFT / 6 );
-    //painter->fillPath(text, yLabel.color);
-    //painter->translate(height() / 2, - MARGIN / 6);
-    //painter->translate( height() / 2, -MARGIN_LEFT / 6);
-    //new code start
     painter->drawText(-height(), 0, height(), MARGIN_LEFT/2, Qt::AlignHCenter|Qt::AlignTop, yLabel.text);
-    //new code end
     painter->rotate(90);
     
     painter->setPen(pen);                   
@@ -1347,15 +1376,6 @@ void QtCanvas::drawCurves(QPainter *painter)
 void QtCanvas::addPolyLine(const Vector<Float> &x,
                            const Vector<Float> &y, 
                            const QString& lb, ColorCategory colorCategory){
-
-	//Make sure we don't already have a curve with the same name;
-	if ( !traditionalColors ){
-		for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
-			if ( curveMap[i].getLegend() == lb ){
-				return;
-			}
-		}
-	}
 	Int xl, yl;
     x.shape(xl);
     y.shape(yl);
@@ -1561,8 +1581,8 @@ QPixmap* QtCanvas::graph()
 }
 
 void QtCanvas::adjustExtremes( double* const min, double* const max ) const {
-	const float BOUND = 0.0001f;
-	const float ADJUSTMENT = 0.00001f;
+	const float BOUND = 0.00000001f;
+	const float ADJUSTMENT = 0.000000001f;
 	if ( fabs(*max - *min) < BOUND ){
 		*max = *max + ADJUSTMENT;
 		*min = *min - ADJUSTMENT;
@@ -1674,7 +1694,7 @@ void QtCanvas::addMolecularLine( MolecularLine* line ){
 	}
 	if ( newLine ){
 		molecularLineStack.append( line );
-		setDataRange();
+		refreshPixmap();
 	}
 }
 
@@ -1686,4 +1706,67 @@ void QtCanvas::changeTaskMode( int mode ){
 		taskMode = UNKNOWN_MODE;
 	}
 }
+
+QList<QString> QtCanvas::getMolecularLineNames() const {
+	QList<QString> nameList;
+	for ( int i = 0; i < molecularLineStack.size(); i++ ){
+		QString name = molecularLineStack[i]->getLabel();
+		nameList.append( name );
+	}
+	return nameList;
 }
+
+void QtCanvas::setImageYUnits( const QString& imageUnits ) {
+	QString oldUnits = this->yUnitImage;
+	yUnitImage = imageUnits;
+	if ( yUnitDisplay.length() == 0 ){
+		setDisplayYUnits( yUnitImage );
+	}
+	else if ( oldUnits != yUnitImage ){
+		//The curves are all in the old image units and would not
+		//be valid.
+		clearCurve();
+	}
+}
+
+void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
+	QString oldDisplayUnits = this->yUnitDisplay;
+	yUnitDisplay = displayUnits;
+	setYLabel( "("+yUnitDisplay+")");
+	if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ){
+		//Tell all the curves to convert their yUnits
+		for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ){
+			curveMap[i].scaleYValues( oldDisplayUnits, yUnitDisplay );
+		}
+		//We won't bother to scale the curve markers.
+		profileFitMarkers.clear();
+		setDataRange();
+	}
+}
+
+void QtCanvas::regionUpdatesStarting(){
+	refreshCanvas = false;
+}
+
+void QtCanvas::regionUpdatesEnding(){
+	refreshCanvas = true;
+	refreshPixmap();
+}
+
+QString QtCanvas::getDisplayYUnits(){
+	return this->yUnitDisplay;
+}
+
+CanvasCurve QtCanvas::getCurve( const QString& curveName ){
+	CanvasCurve target;
+	target.setLegend( "Not Found");
+	for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ){
+		if ( curveName == curveMap[i].getLegend() ){
+			target = curveMap[i];
+			break;
+		}
+	}
+	return target;
+}
+}
+

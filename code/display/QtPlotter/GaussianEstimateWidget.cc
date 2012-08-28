@@ -33,9 +33,16 @@
 #include <qwt_plot_grid.h>
 
 namespace casa {
+
+QColor GaussianEstimateWidget::fitCurveColor = "#CA5F00";
+void GaussianEstimateWidget::setEstimateColor( QColor estimateColor ){
+	fitCurveColor = estimateColor;
+}
+
+
 GaussianEstimateWidget::GaussianEstimateWidget(QWidget *parent)
     : QWidget(parent),  curve( NULL ), fitCurve( NULL ),
-      gaussianEstimate( 0, 0, 0, 0 ), fitCurveColor("#CA5F00"){
+      gaussianEstimate( 0, 0, 0, 0 ){
 
 	ui.setupUi(this);
 
@@ -121,11 +128,10 @@ void GaussianEstimateWidget::updateFit(){
 
 	if ( fitCurve == NULL ){
 		fitCurve = new QwtPlotCurve();
-		QPen fitCurvePen( fitCurveColor );
-		fitCurve -> setPen( fitCurvePen );
 		fitCurve -> attach( plot );
 	}
-
+	QPen fitCurvePen( fitCurveColor );
+	fitCurve -> setPen( fitCurvePen );
 	fitCurve->setData( copiedXVals, yVals );
 	plot->replot();
 }
@@ -175,13 +181,15 @@ void GaussianEstimateWidget::setCurveColor( QColor color ){
 }
 
 
+void GaussianEstimateWidget::setDisplayYUnits( const QString& units ){
+	plot->setAxisTitle( QwtPlot::yLeft, units );
+}
+
 //---------------------------------------------------------------------
 //                         Estimates
 //---------------------------------------------------------------------
 
-/*void GaussianEstimateWidget::resetEstimate(){
-	setEstimate( gaussianEstimate );
-}*/
+
 
 void GaussianEstimateWidget::setEstimate( const SpecFitGaussian& estimate ){
 	gaussianEstimate = estimate;

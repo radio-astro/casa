@@ -137,6 +137,15 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
     pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 
+    QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak");
+    for ( int i = 0; i < yUnitsList.size(); i++ ){
+    	yAxisCombo->addItem( yUnitsList[i] );
+    }
+    yAxisCombo->setCurrentIndex( 0 );
+    setDisplayYUnits( yAxisCombo->currentText() );
+    connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
+
+
 
     // get reference frame info for freq axis label
     MFrequency::Types freqtype = determineRefFrame(img);
@@ -186,7 +195,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
     connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
     connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
-
 
     //Spectral Line Fitting & Moments/Collapse initialization
     momentSettingsWidget->setTaskSpecLineFitting( false );
@@ -430,7 +438,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowTopAxis( showTopAxis );
 	pixelCanvas->setShowChannelLine( showChannelLine );
 	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
-	topAxisCType -> setEnabled( showTopAxis );
+	adjustTopAxisSettings();
 	
 	stateMProf=inMProf;
 	stateRel  = inRel;
@@ -440,7 +448,6 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 		SettingsWidget::setOptical( opticalFitter );
 		specFitSettingsWidget->reset();
 		momentSettingsWidget->reset();
-		pixelCanvas -> setTraditionalColors( opticalFitter );
 		actionColors-> setVisible( !opticalFitter );
 	}
 
@@ -527,7 +534,6 @@ void QtProfile::closeEvent (QCloseEvent *) {
 void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 {
 	image = img;
-
 	try {
 		if (analysis)
 			delete analysis;
@@ -587,8 +593,6 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
-
-
 
 	xpos = "";
 	ypos = "";
@@ -668,8 +672,6 @@ void QtProfile::wcChanged( const String c,
 	    return;
 	}
 
-
-
     ok = setErrorPlotting( wxv, wyv );
     if ( !ok ){
     	return;
@@ -688,14 +690,13 @@ void QtProfile::wcChanged( const String c,
     }
 
     // plot the graph
-   plotMainCurve();
+    plotMainCurve();
 
     addImageAnalysisGraph( wxv,wyv, ordersOfM );
     storeCoordinates( pxv, pyv, wxv, wyv );
 
     momentSettingsWidget->setCollapseVals( z_xval );
     specFitSettingsWidget->setCollapseVals( z_xval );
-
 }
 
 
@@ -911,7 +912,7 @@ bool QtProfile::isAxisAscending(const Vector<Float>& axisValues ) const {
 }
 
 void QtProfile::changeTopAxis(){
-	if ( lastWX.size() > 0 ){
+	if ( lastWX.size() > 0 && pixelCanvas->getShowTopAxis() ){
 		Vector<Float> xValues (lastWX.size());
 		Vector<Float> yValues (lastWY.size());
 		QString text = topAxisCType ->currentText();
@@ -945,6 +946,8 @@ void QtProfile::plotMainCurve(){
 	pixelCanvas -> clearCurve();
 	changeTopAxis();
 	pixelCanvas -> plotPolyLine(z_xval, z_yval, z_eval, fileName);
+	specFitSettingsWidget->setCurveName( fileName );
+	topAxisCType->setEnabled( pixelCanvas->getShowTopAxis() );
 }
 
 void QtProfile::emitChannelSelect( float xval ) {
@@ -966,7 +969,7 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 		//QHashIterator<QString, ImageAnalysis*> ih(*over);
 		//while (ih.hasNext()) {
 		//	ih.next();
-		//	//cout << ih.key() << ": " << ih.value() << endl;
+		//	cout << ih.key() << ": " << ih.value() << endl;
 		//	delete ih.value();
 		//	qDebug() << "the frame: " << (QString)ih.key();
 		//}
@@ -978,7 +981,7 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 	QHashIterator<QString, ImageInterface<float>*> i(hash);
 	while (i.hasNext()) {
 		i.next();
-		//qDebug() << i.key() << ": " << i.value();
+		//qDebug() << "overplot key="<<i.key() << ": " << i.value();
 		QString ky = i.key();
 		ImageAnalysis* ana = new ImageAnalysis(i.value());
 		(*over)[ky] = ana;
@@ -1949,9 +1952,11 @@ QString QtProfile::getRaDec(double x, double y) {
 	}
 
 	void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
-		pixelCanvas->setYLabel("("+yUnitPrefix+yUnit+")", 12 );
-		pixelCanvas -> setToolTipYUnit( yUnitPrefix + yUnit );
+		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
+		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 	}
+
+
 
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
 		bool ok = true;
@@ -2060,15 +2065,35 @@ QString QtProfile::getRaDec(double x, double y) {
 					 }
 					 xRel.resize(count, True);
 					 yRel.resize(count, True);
-					 pixelCanvas->addPolyLine(xRel, yRel, ky);
+					 addCanvasMainCurve( xRel, yRel, ky );
 				 }
 				 else {
-					 pixelCanvas->addPolyLine(xval, yval, ky);
+					 addCanvasMainCurve( xval, yval, ky );
 				 }
 			 }
 			}
 
 		}
+	}
+
+	void QtProfile::adjustTopAxisSettings(){
+		int mainCurveCount = pixelCanvas->getLineCount();
+		if ( mainCurveCount > 1 ){
+			this->topAxisCType->setEnabled( false );
+		}
+		else if ( pixelCanvas->getShowTopAxis() ){
+			topAxisCType->setEnabled( true );
+		}
+		else {
+			topAxisCType-> setEnabled( false );
+		}
+	}
+
+	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
+			const QString& label ){
+		specFitSettingsWidget->addCurveName( label );
+		pixelCanvas->addPolyLine(xVals, yVals, label );
+		adjustTopAxisSettings();
 	}
 
 	void QtProfile::storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
@@ -2114,7 +2139,20 @@ QString QtProfile::getRaDec(double x, double y) {
 		return imagePath;
 	}
 
-	const ImageInterface<Float>* QtProfile::getImage() const{
+	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const{
+		//First look for a specific image with the name
+		if ( imageName.length() > 0 && over ){
+			QHashIterator<QString, ImageAnalysis*> i( *over );
+			while (i.hasNext()) {
+				i.next();
+				QString ky = i.key();
+				if ( ky == imageName ){
+					ImageAnalysis* analysis = i.value();
+					const ImageInterface<Float>* imageInterface = analysis->getImage();
+					return imageInterface;
+				}
+			}
+		}
 		return image;
 	}
 
@@ -2177,5 +2215,18 @@ QString QtProfile::getRaDec(double x, double y) {
 			pixelCanvas->changeTaskMode( tabIndex );
 		}
 
+	}
+
+	void QtProfile::setDisplayYUnits( const QString& unitStr ){
+		pixelCanvas->setDisplayYUnits( unitStr );
+		this->specFitSettingsWidget->setDisplayYUnits( unitStr );
+	}
+
+	void QtProfile::regionUpdatesStarting(){
+		pixelCanvas->regionUpdatesStarting();
+	}
+
+	void QtProfile::regionUpdatesEnding() {
+		pixelCanvas->regionUpdatesEnding();
 	}
 }

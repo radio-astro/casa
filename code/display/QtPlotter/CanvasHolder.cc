@@ -25,6 +25,7 @@
 #include "CanvasHolder.qo.h"
 
 #include <QFormLayout>
+#include <QDebug>
 
 namespace casa {
 CanvasHolder::CanvasHolder(QWidget *parent)
@@ -199,5 +200,6 @@ void CanvasHolder::setColorBarVisibility( bool visible ){
 CanvasHolder::~CanvasHolder()
 {
 	delete legend;
+	legend = NULL;
 }
 }

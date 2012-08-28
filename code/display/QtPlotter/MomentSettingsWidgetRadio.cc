@@ -56,23 +56,41 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	connect( this, SIGNAL( updateProgress(int)), &progressBar, SLOT( setValue( int )));
 	connect( this, SIGNAL( momentsFinished()), &progressBar, SLOT(cancel()));
 
-	momentOptions << "Maximum Value" << "Mean Value" <<"Median Coordinate"
-			<< "Minimum Value" << "Root Mean Square" << "Standard Deviation about the Mean" <<
-			"Integrated Value" << "Absolute Mean Deviatian";
+	momentOptions << "(-1) Mean Value, Mean Intensity" <<
+			"(0) Integrated Value, Sum" <<
+			"(1) Weighted Mean, Velocity Field"<<
+			"(2) Intensity-Weighted Dispersion of Spectral Coordinate, Velocity Dispersion" <<
+			"(3) Median Value, Median Intensity" <<
+			"(4) Spectral Coordinate of Median, Median Velocity Field" <<
+			"(5) Standard Deviation About Mean, Noise, Intensity Scatter" <<
+			"(6) Root Mean Square Intensity"<<
+			"(7) Absolute Mean Deviation" <<
+			"(8) Maximum Intensity, MaximumValue" <<
+			"(9) Spectral Coordinate of Maximum, Velocity of Maximum"<<
+			"(10) Minimum Intensity, MinimumValue" <<
+			"(11) Spectral Coordinate of Minimum, Velocity of Minimum";
 	for ( int i = 0; i < static_cast<int>(END_INDEX); i++ ){
 		QListWidgetItem* listItem = new QListWidgetItem( momentOptions[i], ui.momentList);
 		if ( i == static_cast<int>(INTEGRATED) ){
 			ui.momentList->setCurrentItem( listItem );
 		}
 	}
-	momentMap[MAX]=8;
-	momentMap[MEAN]=-1;
-	momentMap[MEDIAN]=4;
-	momentMap[MIN]=10;
-	momentMap[RMS]=6;
-	momentMap[STDDEV]=5;
-	momentMap[INTEGRATED]= 0;
-	momentMap[ABS_MEAN_DEV]=7;
+
+	//Right now, there is not a clear need for the moment map, but if some
+	//moments are no longer used in the display, it will be needed.
+	momentMap[MEAN] = -1;
+	momentMap[INTEGRATED] = 0;
+	momentMap[WEIGHTED_MEAN] = 1;
+	momentMap[DISPERSION] = 2;
+	momentMap[MEDIAN] = 3;
+	momentMap[MEDIAN_VELOCITY] = 4;
+	momentMap[STDDEV] = 5;
+	momentMap[RMS] = 6;
+	momentMap[ABS_MEAN_DEV] = 7;
+	momentMap[MAX] = 8;
+	momentMap[MAX_VELOCITY] = 9;
+	momentMap[MIN] = 10;
+	momentMap[MIN_VELOCITY] = 11;
 
 	ui.channelTable->setColumnCount( 2 );
 	QStringList tableHeaders =(QStringList()<< "Min" << "Max");
@@ -99,10 +117,6 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	const QDoubleValidator* validator = new QDoubleValidator( this );
 	ui.minThresholdLineEdit->setValidator( validator );
 	ui.maxThresholdLineEdit->setValidator( validator );
-
-	//For random number generation.
-	QTime time = QTime::currentTime();
-	qsrand( (uint) time.msec());
 }
 
 String MomentSettingsWidgetRadio::makeChannelInterval( float startChannelIndex,
@@ -165,20 +179,28 @@ bool MomentSettingsWidgetRadio::populateThreshold( Vector<Float>& threshold ){
 	//Neither threshold should be blank
 	QString minThresholdStr = ui.minThresholdLineEdit->text();
 	QString maxThresholdStr = ui.maxThresholdLineEdit->text();
-	if ( minThresholdStr.isEmpty() || maxThresholdStr.isEmpty() ){
+	const int ALL_THRESHOLD = -1;
+	double minThreshold = ALL_THRESHOLD;
+	double maxThreshold = ALL_THRESHOLD;
+	if ( ! minThresholdStr.isEmpty() ){
+		minThreshold = minThresholdStr.toDouble();
+	}
+	if ( ! maxThresholdStr.isEmpty() ){
+		maxThreshold = maxThresholdStr.toDouble();
+	}
+
+	//Minimum should be less than the maximum
+	if ( minThreshold > maxThreshold ){
 		validThreshold = false;
-		QString msg = "Please specify thresholding limit(s).";
+		QString msg = "Minimum threshold should be less than the maximum threshold.";
 		Util::showUserMessage( msg, this );
 	}
 	else {
-		double minThreshold = minThresholdStr.toDouble();
-		double maxThreshold = maxThresholdStr.toDouble();
 
-		//Minimum should be less than the maximum
-		if ( minThreshold > maxThreshold ){
-			validThreshold = false;
-			QString msg = "Minimum threshold should be less than the maximum threshold.";
-			Util::showUserMessage( msg, this );
+		//Initialize the vector.
+		if ( minThreshold == ALL_THRESHOLD && maxThreshold == ALL_THRESHOLD ){
+			threshold.resize( 1 );
+			threshold[0] = ALL_THRESHOLD;
 		}
 		else {
 			threshold.resize( 2 );
@@ -273,6 +295,7 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	//Do a collapse image for each of the moments.
 	Vector<QString> momentNames;
 	Vector<Int> moments = populateMoments( momentNames );
+	momentCount = moments.size();
 	collapseThread-> setMomentNames( momentNames );
 	String baseName( taskMonitor->getFileName().toStdString());
 	collapseThread->setData(moments, spectralAxisNumber, region,
@@ -284,6 +307,8 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	}
 
 	collapseThread->setChannelStr( channelStr );
+	previousCount = 0;
+    cycleCount = 0;
 	progressBar.show();
 	collapseThread->start();
 }
@@ -512,10 +537,17 @@ void MomentSettingsWidgetRadio::graphicalThreshold(){
  void MomentSettingsWidgetRadio::setStepCount( int count ){
 	 progressBar.setMinimum( 0 );
 	 progressBar.setMaximum( count );
+	 baseIncrement = count / momentCount;
  }
 
  void MomentSettingsWidgetRadio::setStepsCompleted( int count ){
-	 emit updateProgress( count );
+	 //Cycling over again with a new moment.
+	 if ( count < previousCount ){
+		 cycleCount++;
+	 }
+	 int taskCount = cycleCount * baseIncrement + count / momentCount;
+	 previousCount = count;
+	 emit updateProgress( taskCount );
  }
 
  void MomentSettingsWidgetRadio::done(){

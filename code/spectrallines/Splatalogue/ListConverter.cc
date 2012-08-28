@@ -148,7 +148,6 @@ void ListConverter::_parseLists() {
 			String eL = parts[8];
 			String eU = parts[9];
 			String lineList = parts[10];
-
 			if (lineCount == 0) {
 				// header line look for units
 				Vector<String> freqHeaderParts = stringToVector(frequency, ' ');

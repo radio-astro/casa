@@ -43,12 +43,14 @@ class GaussianEstimateWidget : public QWidget
     Q_OBJECT
 
 public:
+    static void setEstimateColor( QColor estimateColor );
     GaussianEstimateWidget(QWidget *parent = 0);
     void setCurveData(const Vector<float>& xValues, const Vector<float>& yValues);
     void setCurveColor( QColor color );
     void setTitle( const QString& titleStr );
     void setRangeX( Float xValue, Float yValue );
     void setRangeY( Float xValue, Float yValue );
+    void setDisplayYUnits( const QString& units );
     void molecularLineChanged( float peak, float center, const QString& label);
     SpecFitGaussian getEstimate();
     void setEstimate( const SpecFitGaussian& estimate );
@@ -108,7 +110,7 @@ private:
     Float minY;
     Float maxY;
     QColor curveColor;
-    QColor fitCurveColor;
+    static QColor fitCurveColor;
     QMap<QString,MolecularLine*> molecularLineMap;
 };
 }

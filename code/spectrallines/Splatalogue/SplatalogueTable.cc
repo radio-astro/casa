@@ -147,6 +147,7 @@ Record SplatalogueTable::toRecord() const {
 	Array<Float> el = col(EL).getColumnFloat();
 	Array<Float> eu = col(EU).getColumnFloat();
 	Array<String> linelist = col(LINELIST).getColumnString();
+
 	IPosition idx = IPosition(1, 0);
 	Record rec;
 	Record qFreq;

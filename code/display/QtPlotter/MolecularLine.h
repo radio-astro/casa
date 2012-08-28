@@ -34,6 +34,7 @@ namespace casa {
 
 class MolecularLine : public QwtPlotMarker {
 public:
+	static void setMolecularLineColor( QColor lineColor );
 	MolecularLine();
 	MolecularLine( float center, float peak, QString name );
 	virtual int rtti() const;
@@ -52,10 +53,11 @@ public:
 	virtual ~MolecularLine();
 
 private:
+	static QColor lineColor;
 	float center;
 	float peak;
 	QString label;
-	QColor lineColor;
+
 
 	void init();
 };

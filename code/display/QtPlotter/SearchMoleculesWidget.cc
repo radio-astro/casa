@@ -212,6 +212,7 @@ void SearchMoleculesWidget::dopplerShiftChanged(){
 	ui.dopplerUnitsComboBox->setVisible( unitsVelocity );
 	ui.referenceFrameLabel->setVisible( unitsVelocity );
 	ui.referenceFrameCombo->setVisible( unitsVelocity );
+
 	if ( unitsVelocity != dopplerInVelocity ){
 		//We need to convert a value in doppler text field to the new units.
 		//Make sure there is a value to convert:
@@ -224,6 +225,7 @@ void SearchMoleculesWidget::dopplerShiftChanged(){
 			MRadialVelocity::Types referenceType = radialVelocityTypeMap.value( referenceStr );
 			QString dopplerTypeStr = ui.dopplerTypeCombo->currentText();
 			MDoppler::Types dopplerType = dopplerTypeMap.value( dopplerTypeStr );
+			Bool valid = true;
 			if ( unitsVelocity ){
 				//From doppler to velocity
 				MVDoppler mvDoppler( val );
@@ -237,8 +239,16 @@ void SearchMoleculesWidget::dopplerShiftChanged(){
 				MDoppler doppler = MDoppler::Convert ( MRadialVelocity( Quantity(val, unitString),
 							                 referenceType).toDoppler(),dopplerType)();
 				val = doppler.getValue ();
+				if ( isnan( val )){
+					valid = false;
+				}
 			}
-			ui.dopplerLineEdit->setText( QString::number( val ));
+			if ( valid ){
+				ui.dopplerLineEdit->setText( QString::number( val ));
+			}
+			else {
+				ui.dopplerLineEdit->setText( "" );
+			}
 		}
 		dopplerInVelocity = unitsVelocity;
 	}
@@ -265,11 +275,10 @@ void SearchMoleculesWidget::dopplerVelocityUnitsChanged(){
 //                 Performing the search and displaying the results
 //-----------------------------------------------------------------------------------
 
-void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& value, MDoppler redShift ){
+void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& value/*, MDoppler redShift*/ ){
 	QString valueStr = lineEdit->text();
 	if ( !valueStr.isEmpty() ){
 		value = valueStr.toDouble();
-
 		//Convert the range value to Splatalogue Units
 		if ( unitStr != SPLATALOGUE_UNITS ){
 			Converter* converter = Converter::getConverter(unitStr, SPLATALOGUE_UNITS);
@@ -278,15 +287,20 @@ void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& 
 		}
 
 		//Factor in the specified redshift.
-		Vector<Double> inputValues(1);
-		inputValues[0] = value;
-		Unit splatalogueUnit( SPLATALOGUE_UNITS.toStdString());
-		Quantum< Vector<Double> > quantum( inputValues, splatalogueUnit );
-		Quantum< Vector<Double> > outputQuantum = redShift.shiftFrequency(inputValues);
-		Vector<Double> outputValues = outputQuantum.getValue();
-		value = outputValues[0];
+		value = getRedShiftedValue( true, value );
 	}
+}
 
+double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift, double value ) const{
+	Vector<Double> inputValues(1);
+	inputValues[0] = value;
+	Unit splatalogueUnit( SPLATALOGUE_UNITS.toStdString());
+	Quantum< Vector<Double> > quantum( inputValues, splatalogueUnit );
+	MDoppler doppler = getRedShiftAdjustment( reverseRedshift );
+	Quantum< Vector<Double> > outputQuantum = doppler.shiftFrequency(inputValues);
+	Vector<Double> outputValues = outputQuantum.getValue();
+	double result = outputValues[0];
+	return result;
 }
 
 void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ){
@@ -354,9 +368,9 @@ void SearchMoleculesWidget::search(){
 	//Set the range for the search
 	Double minValue = SPLATALOGUE_DEFAULT_MIN;
 	Double maxValue = SPLATALOGUE_DEFAULT_MAX;
-	MDoppler redShift = getRedShiftAdjustment();
-	initializeSearchRange( ui.rangeMinLineEdit, minValue, redShift );
-	initializeSearchRange( ui.rangeMaxLineEdit, maxValue, redShift );
+	//MDoppler redShift = getRedShiftAdjustment();
+	initializeSearchRange( ui.rangeMinLineEdit, minValue/*, redShift*/ );
+	initializeSearchRange( ui.rangeMaxLineEdit, maxValue/*, redShift*/ );
 	if ( minValue > maxValue ){
 		double tmp = minValue;
 		minValue = maxValue;
@@ -397,7 +411,7 @@ void SearchMoleculesWidget::searchFinished(){
 }
 
 
-MDoppler SearchMoleculesWidget::getRedShiftAdjustment() const{
+MDoppler SearchMoleculesWidget::getRedShiftAdjustment( bool reverseDirection ) const{
 	QString redShiftStr = ui.dopplerLineEdit->text();
 	MDoppler::Types dopplerType = getDopplerType();
 	MVDoppler defaultValue( 0 );
@@ -406,7 +420,10 @@ MDoppler SearchMoleculesWidget::getRedShiftAdjustment() const{
 		double redShift = redShiftStr.toDouble();
 		if ( ui.redshiftRadio->isChecked() ){
 			//Set the value of the doppler
-			MVDoppler mvDoppler( redShift * -1);
+			if ( reverseDirection ){
+				redShift = redShift * -1;
+			}
+			MVDoppler mvDoppler( redShift);
 			doppler.set(mvDoppler);
 		}
 		else {
@@ -419,7 +436,10 @@ MDoppler SearchMoleculesWidget::getRedShiftAdjustment() const{
 			//Reverse the sign
 			MVDoppler mvValue = baseDoppler.getValue();
 			double redshiftVal = mvValue.getValue();
-			MVDoppler reverseMvValue( redshiftVal * -1 );
+			if ( reverseDirection ){
+				redshiftVal = redshiftVal * -1;
+			}
+			MVDoppler reverseMvValue( redshiftVal );
 			doppler.set( reverseMvValue );
 		}
 	}

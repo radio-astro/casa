@@ -89,6 +89,7 @@ public:
 	void setCurveName(int id, const QString& name );
 	void curveColorsChanged();
 	QColor getCurveColor( int id );
+	CanvasCurve getCurve( const QString& curveName );
 	int getLineCount();
 	void curveLabelsChanged();
 	void clearCurve();
@@ -101,6 +102,7 @@ public:
 	void drawFrameMarker( QPainter* );
 	QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
 
+
 	//Plotting curves
 	void plotPolyLines(QString);
 	template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
@@ -111,6 +113,7 @@ public:
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 	void addMolecularLine(MolecularLine* molecularLine );
+	QList<QString> getMolecularLineNames() const;
 
 	template<class T> void plotPolyLine(const Matrix<T> &verts);
 
@@ -130,8 +133,6 @@ public:
 
 	void setXLabel(const QString &text, int fontSize = 10,
 			const QString &font = FONT_NAME, QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
-	void setYLabel(const QString &text, int fontSize = 10,
-			const QString &font = FONT_NAME);
 	void setWelcome(const QString &text, int fontSize = 14,
 			const QString &font = FONT_NAME);
 	void setAutoScaleX(int a) {autoScaleX = a;}
@@ -153,7 +154,6 @@ public:
 
 	//Sets the coordinates for the x and y points that are displayed
 	//as tooltips.
-	void setToolTipYUnit( const QString& yUnit ){ toolTipYUnit = yUnit; }
 	void setToolTipXUnit( const QString& xUnit ){ toolTipXUnit = xUnit; }
 
 	//Stores the location of a (center,peak) point that represents an initial
@@ -185,8 +185,23 @@ public:
 	void setLegendPosition( int position );
 	int getLegendPosition() const;
 
+	//Set the yaxis units the image is using ( units the data we are getting is in).
+	void setImageYUnits( const QString& imageUnits );
+
+
 	enum TaskMode {UNKNOWN_MODE, SPECTRAL_LINE_MODE, LINE_OVERLAY_MODE, MODE_COUNT };
 
+	//Put in to solve the measles problem - the canvas cycling through
+	//lots of refreshes when multiple regions are defined and new data
+	//is loaded.
+	void regionUpdatesStarting();
+	void regionUpdatesEnding();
+
+
+	//Units we will be displaying the y-axis in which may be different
+	//from the intrinsic image units.
+	QString getDisplayYUnits();
+	void setDisplayYUnits( const QString& displayUnits );
 
 public slots:
    void zoomIn();
@@ -196,6 +211,7 @@ public slots:
    void gaussianFWHMSelected();
    void findRedshift();
    void changeTaskMode( int mode );
+
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
@@ -332,7 +348,10 @@ private:
 	void initLineOverlayContextMenu();
 	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
 	bool storeClickPosition( QMouseEvent* event );
-
+	int getLastAxis() const;
+	void stripCurveTitleNumbers( QString& curveName ) const;
+	bool duplicateCurve( QString& targetLabel );
+	void setYLabel(const QString &text, int fontSize = 10, const QString &font = FONT_NAME);
 	const int MARGIN_LEFT;
 	const int MARGIN_BOTTOM;
 	const int MARGIN_TOP;
@@ -376,13 +395,13 @@ private:
 	int xRectStart;
 	int xRectEnd;
 
-
 	bool showTopAxis;
 	bool showToolTips;
 	bool showFrameMarker;
 	bool displayStepFunction;
 	QString toolTipXUnit;
-	QString toolTipYUnit;
+	QString yUnitImage;
+	QString yUnitDisplay;
 
 	QMenu lineOverlayContextMenu;
 
@@ -432,6 +451,9 @@ private:
 
 	//Indicates the current work focus of the profiler
 	TaskMode taskMode;
+
+	//Stop canvas refreshes if lots of updates are coming in at once.
+	bool refreshCanvas;
 
 };
 

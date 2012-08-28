@@ -147,7 +147,7 @@ public:
 	String getXAxisUnit() const;
 	QString getFileName() const;
 	QString getImagePath() const;
-	const ImageInterface<Float>* getImage() const;
+	const ImageInterface<Float>* getImage( const QString& imageName="") const;
 	const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 	void persist( const QString& key, const QString& value );
 	QString read( const QString & key ) const;
@@ -256,10 +256,9 @@ private:
    bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
    void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 									const Vector<double> wxv, const Vector<double> wyv );
-
-   /**
-    *
-    */
+   void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
+   			const QString& label );
+   void adjustTopAxisSettings();
    void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 
    Int scaleAxis();
@@ -345,10 +344,11 @@ private:
 
 
    private slots:
-
+   	   void regionUpdatesStarting();
+   	   void regionUpdatesEnding();
    		void changeTopAxis();
    		void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
-
+   		void setDisplayYUnits( const QString& unitStr );
 
 };
 

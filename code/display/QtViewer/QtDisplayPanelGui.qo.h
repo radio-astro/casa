@@ -266,7 +266,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   std::string getrc( const std::string &key );
   void putrc( const std::string &key, const std::string &val );
   void showMomentsCollapseImageProfile();
-
+  void showSpecFitImageProfile();
 
  signals:
 

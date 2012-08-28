@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>835</width>
+    <width>885</width>
     <height>822</height>
    </rect>
   </property>
@@ -50,40 +50,16 @@
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_26">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
-       <widget class="QComboBox" name="spcRef">
-        <property name="toolTip">
-         <string>Select the spectral reference system.</string>
-        </property>
-        <item>
-         <property name="text">
-          <string>LSRK</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>LSRD</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>BARY</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>TOPO</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_25">
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>&lt;font color='black'&gt;Bottom Axis:&lt;/fong&gt;</string>
+           <string>&lt;font color='black'&gt;Bottom:&lt;/fong&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -177,11 +153,11 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>&lt;font color='black'&gt;Top Axis:&lt;/font&gt;</string>
+           <string>&lt;font color='black'&gt;Top:&lt;/font&gt;</string>
           </property>
          </widget>
         </item>
@@ -275,6 +251,47 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="leftLabel">
+          <property name="text">
+           <string>&lt;font color='black'&gt;Left:&lt;/font&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="yAxisCombo"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QComboBox" name="spcRef">
+        <property name="toolTip">
+         <string>Select the spectral reference system.</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>LSRK</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>LSRD</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>BARY</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>TOPO</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
        <widget class="QComboBox" name="plotMode">
         <property name="toolTip">
          <string>Choose the combine type.</string>
@@ -354,7 +371,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>811</width>
+          <width>861</width>
           <height>241</height>
          </rect>
         </property>
@@ -377,7 +394,7 @@
          <enum>QTabWidget::South</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -408,7 +425,7 @@
            <rect>
             <x>10</x>
             <y>10</y>
-            <width>791</width>
+            <width>841</width>
             <height>201</height>
            </rect>
           </property>

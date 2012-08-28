@@ -120,11 +120,13 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 {
 	ui.setupUi(this);
 
+
 	progressDialog.setModal( true );
 	connect( &progressDialog, SIGNAL(canceled()), this, SLOT(cancelFit()));
 
 	//Until we get the code written
-	ui.loadButton->setEnabled( false );
+	ui.loadButton->setVisible( false );
+	ui.plotButton->setVisible( false );
 
 	//Text fields
 	QValidator *validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10,this);
@@ -153,6 +155,7 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	connect( ui.advancedGaussianEstimatesButton, SIGNAL(clicked()), this, SLOT(specifyGaussianEstimates()));
 	connect( &gaussEstimateDialog, SIGNAL( accepted()), this, SLOT(gaussianEstimatesChanged()));
 	//connect( &gaussEstimateDialog, SIGNAL( gaussEstimateUnitsChanged(QString)), this, SLOT( gaussEstimateUnitsChanged(QString)));
+
 	ui.viewButton->setEnabled( false );
 	ui.plotButton->setEnabled( false );
 	ui.advancedGaussianEstimatesButton->setEnabled( false );
@@ -422,6 +425,15 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 						double centerValPix = toPixels( centerVal );
 						double fwhmValPtPix = toPixels( centerVal - fwhmVal );
 						double fwhmValPix = fabs(centerValPix - fwhmValPtPix);
+
+						//Peak values must be in the same units as the image.
+						Unit imageUnit = this->getImage()->units();
+						const String newUnits = imageUnit.getName();
+						QString newUnitStr( newUnits.c_str() );
+						QString fitCurveName = ui.curveComboBox->currentText();
+						CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
+						peakVal = curve.convertValue( peakVal, displayYUnits, newUnitStr );
+
 						GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 						estimate->fixByString( fixedStr.toStdString());
 						spectralList.add( *estimate );
@@ -463,7 +475,8 @@ double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
 void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ){
 
 	reset();
-	const ImageInterface<float>* image = getImage();
+	QString fitCurveName = ui.curveComboBox->currentText();
+	const ImageInterface<float>* image = getImage( fitCurveName );
 	const String pixelBox = getPixelBox();
 
 	Bool validSpectralList;
@@ -474,7 +487,8 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 
 	int startChannelIndex = -1;
 	int endChannelIndex = -1;
-	Vector<Float> z_xval = getXValues();
+	CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
+	Vector<Float> z_xval = curve.getXValues();
 	findChannelRange( startVal, endVal, z_xval, startChannelIndex, endChannelIndex );
 	if ( startChannelIndex >= 0 && endChannelIndex >= 0 ){
 
@@ -668,13 +682,13 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	for ( int k = 0; k < curveList.size(); k++ ){
 
 		QList<SpecFit*> curves = curveList[k];
-		if ( !curves[0]->isSpecFitFor(pixelX, pixelY)){
+		/*if ( !curves[0]->isSpecFitFor(pixelX, pixelY)){
 			continue;
 		}
 		else {
 			//Clear off the previous fit, if there was one.
 			clean();
-		}
+		}*/
 
 		Vector<Float> xValues = curves[0]->getXValues();
 		for ( int i = 0; i < curves.size(); i++ ){
@@ -707,6 +721,7 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 	uint fitIndex = 0;
 	for ( Array<ImageFit1D<Float> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ){
 		ImageFit1D<Float> image1DFitter = *iter;
+
 		SpectralList solutions = image1DFitter.getList();
 
 		//Find the center of the fit in pixels.
@@ -724,6 +739,7 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 		//Get the solutions for each fit
 		for ( int j = 0; j < static_cast<int>(solutions.nelements()); j++  ){
 			SpectralElement::Types fitType = solutions[j]->getType();
+
 			bool successfulFit = false;
 			if ( fitType == SpectralElement::GAUSSIAN ){
 				successfulFit = processFitResultGaussian( solutions[j], j, curves );
@@ -742,7 +758,8 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 					curves[successCount]->evaluate( xValues );
 				}
 
-				QString curveName = taskMonitor->getFileName() +curves[successCount]->getSuffix();
+				QString fitCurveName = ui.curveComboBox->currentText();
+				QString curveName = /*taskMonitor->getFileName()*/fitCurveName +curves[successCount]->getSuffix();
 				curves[successCount]->setCurveName( curveName );
 				curves[successCount]->setFitCenter( centerX, centerY );
 				successCount++;
@@ -781,21 +798,33 @@ bool SpecFitSettingsWidgetRadio::processFitResultPolynomial( const SpectralEleme
 bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement* solution,
 		int index, QList<SpecFit*>& curves){
 
+	//Get the center, peak, and fwhm from the estimate.  Make sure they are
+	//valid values.
 	const PCFSpectralElement *pcf = dynamic_cast<const PCFSpectralElement*>(solution);
-
-	//Get the peak, center, and fwhm from the estimate
-	float peakVal = static_cast<float>(pcf->getAmpl());
-	QString newUnits = getYUnitPrefix()+getYUnit();
-	peakVal = Converter::convertJyBeams( "Jy/beam", newUnits, peakVal );
 	Double centerValPix = pcf->getCenter();
 	double fwhmValPix = pcf->getFWHM();
+	float peakVal = static_cast<float>(pcf->getAmpl());
 	if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
 			isinf( fwhmValPix) || isinf( centerValPix) || isinf( peakVal)){
 		return false;
 	}
 
-	//Center and fwhm needs to be converted from
-	//pixels to the current units we are using.
+	//The peak value will be in whatever units the
+	//fit image is using.  We need to convert it to the image units that the canvas
+	//knows about (which may not be the same thing if we are fitting a different
+	//image than the canvas is using for the main display.
+	const Unit imageUnit = this->getImage()->units();
+	String imageUnits = imageUnit.getName();
+	QString imageUnitsStr( imageUnits.c_str());
+	if ( imageUnitsStr != imageYUnits ){
+		QString fitCurveName = ui.curveComboBox->currentText();
+		CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
+		double convertedPeakVal = fitCurve.convertValue( peakVal, imageUnitsStr, imageYUnits );
+		peakVal = convertedPeakVal;
+	}
+
+	//Convert the center and fwhm from pixels to whatever units the canvas is
+	//using.
 	String xAxisUnit = getXAxisUnit();
 	ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage());
 	CoordinateSystem cSys = img->coordinates();
@@ -820,7 +849,8 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 
 void SpecFitSettingsWidgetRadio::resolveOutputLogFile( ){
 	if (outputLogPath.isEmpty()){
-		QString baseName = taskMonitor->getFileName();
+		//QString baseName = taskMonitor->getFileName();
+		QString baseName = ui.curveComboBox->currentText();
 		std::string filePath = viewer::options.temporaryPath( baseName.toStdString()+"LOG" );
 		outputLogPath = filePath.c_str();
 	}
@@ -976,9 +1006,14 @@ void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
 	String axisUnitStr = getXAxisUnit();
 	QString unitStr( axisUnitStr.c_str());
 	gaussEstimateDialog.setSpecFitUnits( unitStr );
+	gaussEstimateDialog.setDisplayYUnits( displayYUnits );
 
-	//Provide the dialog with the data and the main curve color
-	gaussEstimateDialog.setCurveData( getXValues(), taskMonitor->getYValues());
+	//Get the yvalues from the curve so they are already in the
+	//correct units.
+	CanvasCurve curve = pixelCanvas->getCurve( ui.curveComboBox->currentText());
+	Vector<float> yValues = curve.getYValues();
+
+	gaussEstimateDialog.setCurveData( getXValues(), yValues );
 	gaussEstimateDialog.setCurveColor( pixelCanvas->getCurveColor(0));
 
 	//If there are any estimates specified, tell the dialog about them.
@@ -1011,6 +1046,12 @@ void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
 	QString dialogUnits = gaussEstimateDialog.getUnits();
 	QString xAxisUnit(this->getXAxisUnit().c_str());
 	Converter* converter = Converter::getConverter( dialogUnits, xAxisUnit );
+
+	//If our display y-values don't match those of the gaussian estimate dialog,
+	//we need to convert.
+	QString estimateDisplayYUnits = gaussEstimateDialog.getDisplayYUnits();
+	QString fitCurveName = ui.curveComboBox->currentText();
+	CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
 	for ( int i = 0; i < count; i++ ){
 		SpecFitGaussian estimate = gaussEstimateDialog.getEstimate( i );
 		float peakVal = estimate.getPeak();
@@ -1026,6 +1067,12 @@ void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
 			fwhmPt = converter->toPixel( fwhmPt );
 		}
 		fwhmVal = qAbs(centerVal - fwhmPt);
+
+		//If our display y-values don't match those of the gaussian estimate dialog,
+		//we need to convert.
+		if ( displayYUnits != estimateDisplayYUnits ){
+			peakVal = curve.convertValue( peakVal, estimateDisplayYUnits, displayYUnits );
+		}
 
 		setEstimateValue( i, PEAK, peakVal );
 		setEstimateValue( i, CENTER, centerVal );
@@ -1057,6 +1104,40 @@ void SpecFitSettingsWidgetRadio::getConversion( const String& unitStr, Bool& vel
 			wavelength = true;
 		}
 	}
+
+void SpecFitSettingsWidgetRadio::setDisplayYUnits( const QString& units ){
+	//If the display units change, we need to convert any initial Gaussian peak
+	//values to the new units.
+	if ( units != displayYUnits && displayYUnits.length() > 0 ){
+		int estimateCount = ui.estimateTable->rowCount();
+		QString fitCurveName = ui.curveComboBox->currentText();
+		CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
+		for ( int i = 0; i < estimateCount; i++ ){
+			QTableWidgetItem* peakItem = ui.estimateTable->item(i, PEAK );
+			if ( peakItem != NULL ){
+				QString peakStr = peakItem->text();
+				float peakVal = peakStr.toFloat();
+				peakVal = curve.convertValue( peakVal, displayYUnits, units );
+				setEstimateValue( i, PEAK, peakVal );
+			}
+		}
+	}
+	displayYUnits = units;
+}
+
+void SpecFitSettingsWidgetRadio::setImageYUnits( const QString& units ){
+	imageYUnits = units;
+}
+
+void SpecFitSettingsWidgetRadio::setCurveName( const QString& curveName ){
+	ui.curveComboBox->clear();
+	ui.curveComboBox->addItem( curveName );
+}
+
+void SpecFitSettingsWidgetRadio::addCurveName( const QString& curveName ){
+	ui.curveComboBox->addItem( curveName );
+}
+
 SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()
 {
 	reset();

@@ -83,6 +83,10 @@ bool SearchMoleculesDialog::getLine(int lineIndex, Float& peak, Float& center,
 	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName );
 }
 
+double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value ) const {
+	return searchWidget->getRedShiftedValue( reverseRedshift, value );
+}
+
 
 
 

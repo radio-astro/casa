@@ -92,13 +92,7 @@ void LineOverlaysTab::graphSelectedSpecies(){
 					QList<float> centers;
 					searchResults.getLines( peaks, centers, molecularName );
 					for ( int j = 0; j < centers.size(); j++ ){
-						if ( converter != NULL ){
-							centers[j] = converter->convert( centers[j] );
-						}
-						if ( pixelCanvas != NULL ){
-							MolecularLine* line = new MolecularLine( centers[j], peaks[j], molecularName );
-							pixelCanvas->addMolecularLine( line );
-						}
+						addLineToPixelCanvas(centers[j], peaks[j], molecularName, converter);
 					}
 					usedSpecies.append( molecularName );
 				}
@@ -110,6 +104,24 @@ void LineOverlaysTab::graphSelectedSpecies(){
 	}
 	delete converter;
 }
+
+void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString molecularName, Converter* converter){
+
+	//First we have to make the frequency value redshifted.
+	double shiftedCenter = searchWidget->getRedShiftedValue( false, center );
+
+	//Now Convert it to the same units the pixel canvas is using.
+	if ( converter != NULL ){
+		shiftedCenter = converter->convert( shiftedCenter );
+	}
+
+	//Add the line to the pixel canvas.
+	if ( pixelCanvas != NULL ){
+		MolecularLine* line = new MolecularLine( shiftedCenter, peak, molecularName );
+		pixelCanvas->addMolecularLine( line );
+	}
+}
+
 
 void LineOverlaysTab::graphSelectedLines(){
 	QList<int> lineIndices = searchResults.getLineIndices();
@@ -131,13 +143,7 @@ void LineOverlaysTab::graphSelectedLines(){
 			QString molecularName;
 			bool lineExists = searchResults.getLine(lineIndices[i], peak, center, molecularName );
 			if ( lineExists ){
-				if ( converter != NULL ){
-					center = converter->convert( center );
-				}
-				if ( pixelCanvas != NULL ){
-					MolecularLine* line = new MolecularLine( center, peak, molecularName );
-					pixelCanvas->addMolecularLine( line );
-				}
+				addLineToPixelCanvas(center, peak, molecularName, converter);
 			}
 			else {
 				qDebug() << "Could not retrieve line i="<< i<<" lineIndex="<<lineIndices[i];
@@ -158,7 +164,7 @@ void LineOverlaysTab::eraseLines(){
 
 
 
-void LineOverlaysTab::findRedshift( double center, double peak ){
+void LineOverlaysTab::findRedshift( double center, double /*peak*/ ){
 	QString unitStr = pixelCanvas->getUnits();
 	searchRedshiftDialog.setUnits( unitStr );
 	searchRedshiftDialog.setCenter( center );
@@ -166,7 +172,7 @@ void LineOverlaysTab::findRedshift( double center, double peak ){
 	searchRedshiftDialog.setDatabasePath( searchWidget->getDatabasePath());
 	searchRedshiftDialog.setDopplerType( searchWidget->getDopplerType());
 	searchRedshiftDialog.setFrequencyType( searchWidget->getReferenceFrame());
-
+	searchRedshiftDialog.setIdentifiedLines( pixelCanvas->getMolecularLineNames());
 	searchRedshiftDialog.show();
 }
 
