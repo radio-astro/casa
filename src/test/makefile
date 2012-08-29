@@ -4,6 +4,8 @@ CASACORE_LIBD := /home/warp/casa/dschieb/casa/active/linux/lib
 
 INCD := ../include/graphpad
 
+all: test_image test_colormap
+
 test_image: test_image.cc $(INCD)/Colormap.h $(INCD)/Functional.h $(INCD)/couplers/CasaColormapGen.h $(INCD)/couplers/CasaImageGen.h
 	echo $@
 	echo $<
