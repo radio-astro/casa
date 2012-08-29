@@ -197,8 +197,18 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="bool" name="verbose">
-            <description>output fitting results to logger and a file as well</description>
+            <description>output fitting results to logger</description>
             <value>True</value>
+    </param>
+
+    <param type="bool" name="bloutput">
+            <description>output fitting results to a text file</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="blformat">
+            <description>format of the text file specified with bloutput</description>
+            <value></value>
     </param>
 
     <param type="bool" name="showprogress">
@@ -479,13 +489,20 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                 WARNING: Currently this just asks whether you accept
                          the displayed fit and if not, continues
                          without doing any baseline fit.
-        verbose -- output fitting results to logger and a file as well
+        verbose -- output fitting results to logger
                 default: True
                 example: If False, the fitting results including coefficients, 
-                         residual rms, etc., are not output to either the CASA 
-                         logger or a text file (&lt;outfile&gt;_blparam.txt), while 
-                         the processing speed gets faster by a factor of about 20 
-                         percent
+                         residual rms, etc., are not output to the CASA logger, 
+                         while the processing speed gets faster
+        bloutput -- output fitting results to a text file
+                default: True
+                example: If False, the fitting results including coefficients, 
+                         residual rms, etc., are not output to a text file 
+                         (&lt;outfile&gt;_blparam.txt), while the processing 
+                         speed gets faster
+        blformat -- format of the logger output and text file specified with bloutput
+                options: '', 'csv'
+                default: '' (same as in the past, easy to read but huge)
         showprogress -- show progress status for large data
                 default: True
         minnrow -- minimum number of input spectra to show progress status

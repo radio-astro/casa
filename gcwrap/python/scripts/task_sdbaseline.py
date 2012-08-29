@@ -9,7 +9,7 @@ from asap.scantable import is_scantable
 import math
 import pylab as pl
 
-def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
@@ -191,46 +191,50 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
 			return
 
-		if verbose:
+		if bloutput:
 			blfile = project + "_blparam.txt"
-			blf = open(blfile, "w")
-			
-			# Header data for saving parameters of baseline fit
-			header =  "Source Table: "+infile+"\n"
-			header += " Output File: "+project+"\n"
-			header += "   Flux Unit: "+s.get_fluxunit()+"\n"
-			header += "    Abscissa: "+s.get_unit()+"\n"
-			header += "    Function: "+blfunc+"\n"
-			if blfunc == 'poly':
-				header += "   Fit order: %d\n"%(order)
-			elif blfunc == 'cspline':
-				header += "      nPiece: %d\n"%(npiece)
-				header += "  clipThresh: %f\n"%(clipthresh)
-				header += "   clipNIter: %d\n"%(clipniter)
-			elif blfunc == 'sinusoid':
-				header += "    applyFFT: "+str(applyfft)+"\n"
-				header += "   fftMethod: "+fftmethod+"\n"
-				header += "   fftThresh: "+str(fftthresh)+"\n"
-				header += "    addWaveN: "+str(addwn)+"\n"
-				header += "    rejWaveN: "+str(rejwn)+"\n"
-				header += "  clipThresh: %f\n"%(clipthresh)
-				header += "   clipNIter: %d\n"%(clipniter)
-			header += "   Mask mode: "+maskmode+"\n"
-			if maskmode == 'auto':
-				header += "   Threshold: %f\n"%(thresh)
-				header += "   avg_limit: %d\n"%(avg_limit)
-				header += "        Edge: "+str(edge)+"\n"
-			elif maskmode == 'list':
-				header += "   Fit Range: "+str(masklist)+"\n"
-		
-			separator = "#"*60 + "\n"
-			
-			blf.write(separator)
-			blf.write(header)
-			blf.write(separator)
-			blf.close()
+
+			if (blformat.lower() != "csv"):
+				blf = open(blfile, "w")
+				
+				# Header data for saving parameters of baseline fit
+				header =  "Source Table: "+infile+"\n"
+				header += " Output File: "+project+"\n"
+				header += "   Flux Unit: "+s.get_fluxunit()+"\n"
+				header += "    Abscissa: "+s.get_unit()+"\n"
+				header += "    Function: "+blfunc+"\n"
+				if blfunc == 'poly':
+					header += "   Fit order: %d\n"%(order)
+				elif blfunc == 'cspline':
+					header += "      nPiece: %d\n"%(npiece)
+					header += "  clipThresh: %f\n"%(clipthresh)
+					header += "   clipNIter: %d\n"%(clipniter)
+				elif blfunc == 'sinusoid':
+					header += "    applyFFT: "+str(applyfft)+"\n"
+					header += "   fftMethod: "+fftmethod+"\n"
+					header += "   fftThresh: "+str(fftthresh)+"\n"
+					header += "    addWaveN: "+str(addwn)+"\n"
+					header += "    rejWaveN: "+str(rejwn)+"\n"
+					header += "  clipThresh: %f\n"%(clipthresh)
+					header += "   clipNIter: %d\n"%(clipniter)
+				header += "   Mask mode: "+maskmode+"\n"
+				if maskmode == 'auto':
+					header += "   Threshold: %f\n"%(thresh)
+					header += "   avg_limit: %d\n"%(avg_limit)
+					header += "        Edge: "+str(edge)+"\n"
+				elif maskmode == 'list':
+					header += "   Fit Range: "+str(masklist)+"\n"
+				
+				separator = "#"*60 + "\n"
+				
+				blf.write(separator)
+				blf.write(header)
+				blf.write(separator)
+				blf.close()
 		else:
 			blfile = ""
+
+		csvformat = (blformat.lower() == "csv")
 		
 		nrow = s.nrow()
 
@@ -281,18 +285,18 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 				
 			if (maskmode == 'auto'):
 				if (blfunc == 'poly'):
-					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'cspline'):
-					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'sinusoid'):
-					s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 			else:
 				if (blfunc == 'poly'):
-					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'cspline'):
-					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'sinusoid'):
-					s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,insitu=True)
+					s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				
 			# the above 14 lines will eventually shrink into the following 2 commands:
 			#
