@@ -60,11 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
 	Qt::KeyboardModifiers mod = event->modifiers( );
-#if defined(__APPLE__)
-	if ( mod & Qt::MetaModifier ) return; 	// context menu...
-#else
 	if ( mod & Qt::ControlModifier ) return;	// context menu...
-#endif
 	QtMouseToolButton::mousePressEvent(event);
     }
 
