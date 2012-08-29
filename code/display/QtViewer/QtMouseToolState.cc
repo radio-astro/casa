@@ -215,18 +215,28 @@ void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
   }
   
   if(ti!=nTools) {
+	bool saved[3] = { false, false, false };
 	mousebtns_[ti] = mousebtn;	// assign requested tool to requested button.
 	emit mouseBtnChg(tool, mousebtn);	// broadcast that change.
 	if ( mousebtn != 0 ) {
 	    char buf[40];
 	    sprintf( buf, "viewer.mouse.button.%s", (mousebtn == 1 ? "one" : mousebtn == 2 ? "two" : "three") );
+	    saved[mousebtn] = true;
 	    rc.put( buf, toolName(ti) );
 	    for ( int i=0; i < nTools; ++i ) {
 		if ( i != ti && mousebtns_[i] != 0 ) {
 		    sprintf( buf, "viewer.mouse.button.%s", (mousebtns_[i] == 1 ? "one" : mousebtns_[i] == 2 ? "two" : "three") );
+		    saved[mousebtns_[i]] = true;
 		    rc.put( buf, toolName(i) );
 		}
 	    }
+	    for ( int i=0; i < 3; ++i ) {
+		if ( saved[i] == false ) {
+		    sprintf( buf, "viewer.mouse.button.%s", (i == 1 ? "one" : i == 2 ? "two" : "three") );
+		    rc.put( buf, "unbound" );
+		}
+	    }
+		  
 	}
   }
 }
