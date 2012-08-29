@@ -44,6 +44,7 @@ CanvasHolder::CanvasHolder(QWidget *parent)
 	setPalette( holderPalette );
 	setBackgroundRole( QPalette::Base );
 
+
 	changeLegendDisplay();
 	connect( &pixelCanvas, SIGNAL(curvesChanged()), this, SLOT( changeLegendDisplay()));
 }

@@ -35,7 +35,6 @@ const QString CanvasCurve::JY_BEAM = "Jy/beam";
 
 CanvasCurve::CanvasCurve(){
 }
-
 CanvasCurve::CanvasCurve( CurveData cData, ErrorData eData,
 			QString legendTitle, QColor cColor, int curveLevel ){
 	curveData = cData;

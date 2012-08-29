@@ -12,7 +12,8 @@
 namespace casa {
 
 SpectralPositioningWidget::SpectralPositioningWidget(QWidget *parent)
-    : QWidget( parent ), profileTaskMonitor( NULL ), logger( NULL ){
+    : QWidget( parent ), profileTaskMonitor( NULL ), logger( NULL ),
+      pixelXValues(2), pixelYValues(2), worldXValues(2), worldYValues(2){
 	ui.setupUi(this);
 
 	initSpectrumPosition();
