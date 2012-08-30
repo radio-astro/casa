@@ -119,9 +119,14 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         
                 outvis = tempout+'/'+os.path.basename(m)
                 print 'Running split_core on ', m
-                retval[m] = split_core(m, outvis, datacolumn, field, spw, width, antenna,
-                                       timebin, timerange, scan, intent, array, uvrange,
-                                       correlation, observation, combine, keepflags)
+                try:
+                    retval[m] = split_core(m, outvis, datacolumn, field, spw, width, antenna,
+                                           timebin, timerange, scan, intent, array, uvrange,
+                                           correlation, observation, combine, keepflags)
+                except Exception, instance:
+                    casalog.post("*** Error while processing SubMS "+m+": %s" % (instance), 'SEVERE')
+                    raise
+       
                 if replaced:
                     # restore link
                     shutil.rmtree(theptab, ignore_errors=True)
