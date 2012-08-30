@@ -4896,12 +4896,10 @@ ImageInterface<Float>* ImageAnalysis::subimage(
 }
 
 Record ImageAnalysis::summary(
-	const String& doppler,
-	const Bool list, const Bool pixelorder
+	const String& doppler, const Bool list,
+	const Bool pixelorder, const Bool verbose
 ) {
-
 	*_log << LogOrigin(className(), __FUNCTION__);
-
 	Vector<String> messages;
 	Record retval;
 	ImageSummary<Float> s(*_image);
@@ -4913,7 +4911,7 @@ Record ImageAnalysis::summary(
 	}
 
 	if (list) {
-		messages = s.list(*_log, velType, False);
+		messages = s.list(*_log, velType, False, verbose);
 	}
 	else {
 		// Write messages to local sink only so we can fish them out again

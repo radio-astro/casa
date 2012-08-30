@@ -457,10 +457,11 @@ template<class T> void ImageConcat<T>::_appendBeams(
 	Int stokes = axis == csysThis.polarizationAxisNumber()
 		? nStokesThis - nStokesThat
 		: nStokesThat > 0 ? 0 : -1;
+	IPosition axisPath = IPosition::makeAxisPath(beamsThat.ndim());
 	for (
 		IPosition pos(IPosition(beamsThat.ndim(), 0));
 		pos < beamsThat.shape();
-		pos.next(beamsThat.shape())
+		pos.next(beamsThat.shape(), axisPath, False)
 	) {
 		Bool last = pos == beamsThat.shape() - 1;
 		infoThis.setBeam(chan, stokes, beamsThat(pos));
