@@ -22,7 +22,7 @@
 
 step_title = { 0 : 'Data import and partitioning',
 	       1 : 'Generate antenna position cal tables',
-	       2 : 'Generate tsys cal tables (if possible) or use canned ones',
+	       2 : 'Generate tsys cal tables',
 	       3 : 'Correct the Titan position',
 	       4 : 'Apriori flagging',
 	       5 : 'Generate WVR cal tables',
@@ -116,8 +116,6 @@ def timing():
 # default ASDM dataset name
 myasdm_dataset_name = "uid___A002_X2a5c2f_X54"
 myasdm_dataset2_name = "uid___A002_X2a5c2f_X220"
-mytsystable = 'cal-tsys_X54.fdm'
-mytsystable2 = 'cal-tsys_X220.fdm'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
@@ -178,18 +176,12 @@ mystep = 2
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-
-    if(casadef.casa_version>='3.4.0'):
-
-        for name in basename:
-            os.system('rm -rf cal-tsys_'+name+'.fdm')
-            gencal(
-                vis=name+'.ms',
-                caltype='tsys', 
-                caltable='cal-tsys_'+name+'.fdm')
-    else:
-        print "Generation of Tsys tables omitted to avoid usage of analysisUtils"
-        print "We use canned tsys tables instead."
+    for name in basename:
+        os.system('rm -rf cal-tsys_'+name+'.fdm')
+        gencal(
+            vis=name+'.ms',
+            caltype='tsys', 
+            caltable='cal-tsys_'+name+'.fdm')
 
     if(makeplots):
         for spw in ['9','11','13','15']:
@@ -304,6 +296,8 @@ if(mystep in thesteps):
                      spwmap=[[],tsysspwmap,[],[]],
                      gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
                      flagbackup=F)
+
+            tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
     timing()
 
@@ -605,6 +599,7 @@ if(mystep in thesteps):
 	        gainfield=['*Band*','*Band*','*Band*'],
 		calwt=F,
 		flagbackup=T)
+        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the secondary phase cal
 	applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
@@ -613,6 +608,7 @@ if(mystep in thesteps):
        	 	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
+        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the primary phase cal
 	applycal(vis=name+'-line-vs.ms',field='1224*',
@@ -621,6 +617,7 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
+        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to Titan
         applycal(vis=name+'-line-vs.ms',field='Titan',
@@ -629,6 +626,7 @@ if(mystep in thesteps):
                  gainfield=['*Band*','Titan','Titan'],
                  calwt=F,
                  flagbackup=T)
+        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to M100
 	applycal(vis=name+'-line-vs.ms',field='M100',
@@ -637,6 +635,7 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
+        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 
 # For X146 the calibrated fluxes for the secondary phase cal are different for the different pols. What
