@@ -385,6 +385,7 @@ public:
 
     // </group>
 
+    /*
     // increment this object in-situ such that the lowest index changes
     // most rapidly given a constraining <src>shape</src> which must have the
     // same number of elements as this object. The current values of all this
@@ -396,7 +397,25 @@ public:
     // for (IPosition pos(shape.size(), 0); pos<shape; pos.next(shape)) {...}
     // If this object is equal to shape, a call to next() will result in an
     // exception being thrown.
-    void next(const IPosition& shape);
+    void next(const IPosition& shape, const Bool doChecks=True);
+*/
+    // increment this object in-situ such that the zeroth axis index specified
+    // in <src>axisPath</scr> changes
+    // most rapidly given a constraining <src>shape</src>, followed by the next
+    // most rapidly changing axis index being the first specified in <src>axisPath</src> etc.
+    // Both <src>shape</src> and <src>axisPath</src> must have the
+    // same number of elements as this object. The current values of all this
+    // object's elements must be less than the corresponding values of
+    // <src>shape</src>'s elements or an error is thrown if doChecks is True (if not, unpredictable
+    // behavior will occur). If this object
+    // is equal to <src>shape</src>-1, this object will be modified to equal
+    // <src>shape</src> after the call to next(). This allows for use in for
+    // loops, eg
+    // for (IPosition pos(shape.size(), 0); pos<shape; pos.next(shape)) {...}
+    // If this object is equal to shape, a call to next() will result in an
+    // exception being thrown.
+    void next(const IPosition& shape, const IPosition& axisPath, const Bool doChecks=True);
+
 
 private:
     // Allocate a buffer with length size_p.

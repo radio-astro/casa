@@ -28,8 +28,8 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/GaussianBeam.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <measures/Measures/Stokes.h>
+#include <map>
 
 namespace casa {
 
@@ -106,18 +106,9 @@ public:
 
 	ImageBeamSet& operator=(const ImageBeamSet& other);
 
-	//GaussianBeam &operator()(const IPosition &);
-
 	const GaussianBeam &operator()(const IPosition &) const;
 
     Array<GaussianBeam> operator[] (uInt i) const;
-
-    /*
-    Array<GaussianBeam> operator()(
-    	const IPosition &start,
-        const IPosition &end
-    );
-    */
 
     const Array<GaussianBeam>& operator() (
     	const IPosition &start,
@@ -205,7 +196,27 @@ public:
 	// get the position of the beam with the minimum area
 	IPosition getMinAreaBeamPosition() const;
 
+	// get maximal area beam and its position in the _beams array for
+	// the given polarization.
+	GaussianBeam getMaxAreaBeamForPol(
+		IPosition& pos, const uInt polarization
+	) const;
+
+	// get minimal area beam and its position in the _beams array for
+	// the given polarization.
+	GaussianBeam getMinAreaBeamForPol(
+		IPosition& pos, const uInt polarization
+	) const;
+
+	// get median area beam and its position in the _beams array for
+	// the given polarization.
+	GaussianBeam getMedianAreaBeamForPol(
+		IPosition& pos, const uInt polarization
+	) const;
+
 private:
+
+	typedef std::map<AxisType, uInt> AxesMap;
 	static const String _DEFAULT_AREA_UNIT;
 
 	Array<GaussianBeam> _beams;
@@ -214,8 +225,9 @@ private:
 	String _areaUnit;
 	GaussianBeam _minBeam, _maxBeam;
 	IPosition _minBeamPos, _maxBeamPos;
-	GaussianBeam _smallest, _largest, _median;
-	//Bool _doAreas;
+	vector<IPosition> _maxStokesMap, _minStokesMap,
+		_medianStokesMap;
+	AxesMap _axesMap;
 
 	IPosition _truePosition(
 		const IPosition& position,
@@ -228,9 +240,28 @@ private:
 		const Vector<AxisType>& axes
 	) const;
 
+	void _makeStokesMaps(
+		const Bool beamsAreIdentical,
+		const Int affectedStokes=-1
+	);
+
+	uInt _nStokes() const;
+
+	uInt _nChannels() const;
+
+	static std::map<AxisType, uInt> _setAxesMap(
+		const Vector<AxisType>& axisTypes
+	);
+
 	static Array<Double> _getAreas(
 		String& areaUnit, const Array<GaussianBeam>& beams
 	);
+
+	GaussianBeam _getBeamForPol(
+		IPosition& pos, const vector<IPosition>& map,
+		const uInt polarization
+	) const;
+
 };
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet);

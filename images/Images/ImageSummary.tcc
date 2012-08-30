@@ -357,9 +357,10 @@ String ImageSummary<T>::imageType  () const
 }
 
 template <class T> 
-Vector<String> ImageSummary<T>::list (LogIO& os, const MDoppler::Types velocityType,
-                                      Bool postLocally)
-{
+Vector<String> ImageSummary<T>::list (
+	LogIO& os, const MDoppler::Types velocityType,
+	Bool postLocally, const Bool verbose
+) {
    LogSinkInterface& lsi = os.localSink();
    uInt n = lsi.nelements();
    Int iStart  =  0;
@@ -405,47 +406,7 @@ Vector<String> ImageSummary<T>::list (LogIO& os, const MDoppler::Types velocityT
 			   << ", " << minAx << ", " << pa << endl;
 	   }
 	   else {
-		   const Array<GaussianBeam>& beams = imageInfo_p.getBeamSet().getBeams();
-
-		   Unit u("deg");
-		   for (
-				   Array<GaussianBeam>::const_iterator iter = beams.begin();
-				   iter != beams.end(); iter++
-		   ) {
-			   if (
-				iter->getMajor("deg") < 1.0
-				|| iter->getMinor("deg") < 1.0
-			   ) {
-				   u = Unit("arcsec");
-				   break;
-			   }
-		   }
-		   String beamHeader = "Restoring Beams (";
-		   if (imageInfo_p.nChannels() > 0) {
-			   beamHeader += "Channel#, ";
-		   }
-		   if (imageInfo_p.nStokes() > 0) {
-			   beamHeader += "Polarization#, ";
-		   }
-		   beamHeader += "Major, Minor, PA)";
-		   os.output() << beamHeader << endl;
-		   for (
-				   IPosition pos(beams.ndim(), 0);
-				   pos < beams.shape(); pos.next(beams.shape())
-		   ) {
-			   os.output() << pos[0] << ", ";
-			   if (pos.size() == 2) {
-				   os.output() << pos[1] << ", ";
-			   }
-			   Quantity majAx = beams(pos).getMajor();
-			   majAx.convert(u);
-			   Quantity minAx = beams(pos).getMinor();
-			   minAx.convert(u);
-			   Quantity pa = beams(pos).getPA(True);
-			   pa.convert("deg");
-			   os.output() << majAx
-					   << ", " << minAx << ", " << pa << endl;
-		   }
+		   _listMultiBeam(os, verbose);
 	   }
    }
 
@@ -462,6 +423,208 @@ Vector<String> ImageSummary<T>::list (LogIO& os, const MDoppler::Types velocityT
    return messages;
 }
 
+template <class T>
+void ImageSummary<T>::_listMultiBeam(
+	LogIO& os, const Bool verbose
+) const {
+	const Array<GaussianBeam>& beams = imageInfo_p.getBeamSet().getBeams();
+	Unit u("deg");
+	for (
+		Array<GaussianBeam>::const_iterator iter = beams.begin();
+		iter != beams.end(); iter++
+	) {
+		if (
+			iter->getMajor("deg") < 1/3600
+			|| iter->getMinor("deg") < 1/3600
+		) {
+			u = Unit("mas");
+			break;
+		}
+		if (
+			iter->getMajor("deg") < 1.0
+			|| iter->getMinor("deg") < 1.0
+		) {
+			u = Unit("arcsec");
+		}
+	}
+	Bool hasSpectral = imageInfo_p.nChannels();
+	Bool hasStokes = imageInfo_p.nStokes();
+	os.output() << "Restoring Beams " << endl;
+	const SpectralCoordinate *spCoord = 0;
+	IPosition beamsShape = beams.shape();
+	uInt chanWidth = 0;
+	uInt freqWidth = 0;
+	uInt freqPrec = 0;
+	uInt velPrec = 0;
+	uInt velWidth = 0;
+	uInt polWidth = 3;
+	uInt typeWidth = 6;
+	Bool myverbose = verbose || ! hasSpectral || (hasSpectral && beams.shape()[0] <= 3);
+	const StokesCoordinate *polCoord = hasStokes
+		? &cSys_p.stokesCoordinate()
+		: 0;
+	if (hasSpectral) {
+		spCoord = &cSys_p.spectralCoordinate();
+		chanWidth = max(4, Int(log10(beamsShape[0])) + 1);
+		// yes these really should be separated because width applies only to the first.
+		ostringstream x;
+		Double freq;
+		spCoord->toWorld(freq, 0);
+		if (spCoord->pixelValues().size() > 0) {
+			freqPrec = 6;
+			velPrec = 3;
+		}
+		else {
+			Double inc = spCoord->increment()[0];
+			freqPrec = Int(abs(log10(inc/freq))) + 1;
+			Double vel0, vel1;
+			spCoord->pixelToVelocity(vel0, 0);
+			spCoord->pixelToVelocity(vel1, 1);
+			if (abs(vel0-vel1) > 10) {
+				velPrec = 0;
+			}
+			else {
+				velPrec = Int(abs(log10(abs(vel0-vel1)))) + 2;
+			}
+		}
+		x << scientific << setprecision(freqPrec) << freq;
+		freqWidth = x.str().length();
+		velWidth = velPrec + 5;
+		if (myverbose) {
+			os.output() << setw(chanWidth) << "Chan" << " ";
+			os.output() << setw(freqWidth)
+				<< "Freq" << " ";
+			os.output() << setw(velWidth)
+				<< "Vel";
+		}
+		else {
+			if (hasStokes) {
+				os.output() << setw(polWidth) << "Pol" << " ";
+			}
+			os.output() << setw(typeWidth) << "Type" << " ";
+			os.output() << setw(chanWidth) << "Chan" << " ";
+			os.output() << setw(freqWidth)
+				<< "Freq" << " ";
+			os.output() << setw(velWidth)
+				<< "Vel" << endl;
+
+		}
+	}
+	if (myverbose) {
+		if (hasStokes) {
+			os.output() << " ";
+			os.output() << setw(polWidth) << "Pol";
+		}
+		os.output() << endl;
+		Int stokesPos = hasStokes
+				? hasSpectral
+						? 1 : 0
+								: -1;
+		IPosition axisPath = hasSpectral && hasStokes
+				? IPosition(2, 1, 0)
+						: IPosition(1, 0);
+		for (
+			IPosition pos(beams.ndim(), 0); pos < beamsShape;
+			pos.next(beamsShape, axisPath, False)
+		) {
+			if (hasSpectral) {
+				_chanInfoToStream(
+					os.output(), spCoord, pos[0], chanWidth,
+					freqPrec, velWidth, velPrec
+				);
+			}
+			if (hasStokes) {
+				Stokes::StokesTypes stokes;
+				polCoord->toWorld(stokes, pos[stokesPos]);
+				os.output() << setw(polWidth) << Stokes::name(stokes)
+				<< " ";
+			}
+			_beamToStream(os.output(), beams(pos), u);
+			os.output() << endl;
+		}
+	}
+	else {
+		const ImageBeamSet beamSet =  imageInfo_p.getBeamSet();
+		uInt mymax = hasStokes ? imageInfo_p.nStokes() : 1;
+		for (uInt i=0; i<mymax; i++) {
+			String stokesString;
+			if (hasStokes) {
+				Stokes::StokesTypes stokes;
+				polCoord->toWorld(stokes, i);
+				stokesString = Stokes::name(stokes);
+			}
+			for (uInt j=0; j<3; j++) {
+				String aggType;
+				GaussianBeam beam;
+				IPosition pos;
+				switch (j) {
+					case 0: {
+						aggType = "Max";
+						beam = beamSet.getMaxAreaBeamForPol(pos, i);
+						break;
+					}
+					case 1: {
+						aggType = "Min";
+						beam = beamSet.getMinAreaBeamForPol(pos, i);
+						break;
+					}
+					case 2: {
+						aggType = "Median";
+						beam = beamSet.getMedianAreaBeamForPol(pos, i);
+						break;
+					}
+					default: {
+						throw AipsError("Unhandled aggregate type");
+					}
+				}
+				if (hasStokes) {
+					os.output() << setw(polWidth) << stokesString
+						<< " ";
+				}
+				os.output() << setw(typeWidth) << aggType << " ";
+				_chanInfoToStream(
+					os.output(), spCoord, pos[0], chanWidth, freqPrec,
+					velWidth, velPrec
+				);
+				_beamToStream(os.output(), beam, u);
+				os.output( )<< endl;
+			}
+		}
+	}
+}
+
+template <class T>
+void ImageSummary<T>::_chanInfoToStream(
+	ostream& os, const SpectralCoordinate *const &spCoord,
+	const uInt chan, const uInt chanWidth, const uInt freqPrec,
+	const uInt velWidth, const uInt velPrec
+) const {
+	os << std::fixed << std::setw(chanWidth)
+		<< chan << " ";
+	Double freq;
+	spCoord->toWorld(freq, chan);
+	os << scientific << setprecision(freqPrec)
+		<< freq << " ";
+	Double vel;
+	spCoord->pixelToVelocity(vel, chan);
+	os << setw(velWidth) << fixed
+		<< setprecision(velPrec) << vel << " ";
+}
+
+template <class T>
+void ImageSummary<T>::_beamToStream(
+	ostream& os, const GaussianBeam& beam,
+	const Unit& unit
+) const {
+	Quantity majAx = beam.getMajor();
+	majAx.convert(unit);
+	Quantity minAx = beam.getMinor();
+	minAx.convert(unit);
+	Quantity pa = beam.getPA(True);
+	pa.convert("deg");
+	os << fixed << setprecision(2) << setw(7) <<  majAx
+		<< " x " << setw(7) << minAx << " pa=" << setw(6) << pa;
+}
 
 template <class T> 
 Bool ImageSummary<T>::setNewImage (const ImageInterface<T>& image)

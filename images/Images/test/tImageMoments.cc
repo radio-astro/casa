@@ -141,7 +141,11 @@ int main () {
 		gotMom.createMoments(gotImages, False, "got", False);
 		for (uInt i=0; i<gotImages.size(); i++) {
 			IPosition mshape = gotImages[i]->shape();
-			for (IPosition pos(mshape.size(), 0); pos != mshape; pos.next(mshape)) {
+			IPosition axisPath = IPosition::makeAxisPath(mshape.size());
+			for (IPosition pos(
+				mshape.size(), 0); pos != mshape;
+				pos.next(mshape, axisPath)
+			) {
 				if (expImage.getAt(pos) < 0.01) {
 					gotImages[i]->putAt(-100, pos);
 					images[i]->putAt(-100, pos);

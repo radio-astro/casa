@@ -291,32 +291,6 @@ public:
     Bool removePixelAxis(uInt axis, Double replacement);
     // </group>
 
-/*
-    // You can recover the replacement values with these functions.
-    // Use the same axis number as in the <src>removePixelAxis</src> and 
-    // <src>removeWorldAxis</src> calls.
-    //
-    // False is returned (an error in <src>errorMessage()</src> will be set)
-    // if the axis is illegal, else returns True.
-    // <group>
-    Bool worldReplacementValue (Double& replacement, uInt axis) const;
-    Bool pixelReplacementValue (Double& replacement, uInt axis) const;
-    // </group>
-
-    // You can set the replacement values with these functions.  You 
-    // can only do this after you have removed an axis or False will
-    // be returned (and an error in <src>errorMessage()</src>) will be set.
-    // Use the same axis number as in the <src>removePixelAxis</src> and 
-    // <src>removeWorldAxis</src> calls.
-    //
-    // False is returned (an error in <src>errorMessage()</src> will be set)
-    // if the axis is illegal, else returns True.
-    // <group>
-    Bool setWorldReplacementValue (uInt axis, Double replacement);
-    Bool setPixelReplacementValue(uInt axis, Double replacement);
-    // </group>
-*/
-
     // Return a CoordinateSystem appropriate for a shift of origin
     // (the shift is subtracted from the reference pixel)
     // and change of increment (the increments are multipled
@@ -381,6 +355,7 @@ public:
 
     const SpectralCoordinate &spectralCoordinate(uInt which) const;
     const SpectralCoordinate &spectralCoordinate() const;
+    const StokesCoordinate  &stokesCoordinate() const;
 
     const StokesCoordinate  &stokesCoordinate(uInt which) const;
     const QualityCoordinate &qualityCoordinate(uInt which) const;

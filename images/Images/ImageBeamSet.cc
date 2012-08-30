@@ -22,9 +22,9 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#include <images/Images/ImageBeamSet.h>
 #include <casa/Arrays/ArrayMath.h>
+// #include <casa/Utilities/GenSort.h>
+#include <images/Images/ImageBeamSet.h>
 
 // debug only
 #include <casa/Arrays/ArrayIO.h>
@@ -38,28 +38,37 @@ ImageBeamSet::ImageBeamSet()
 	  _areas(Array<Double>()), _areaUnit(_DEFAULT_AREA_UNIT),
 	  _minBeam(GaussianBeam::NULL_BEAM),
 	  _maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(IPosition(0)),
-	  _maxBeamPos(IPosition(0)) {
+	  _maxBeamPos(IPosition(0)), _maxStokesMap(0), _minStokesMap(0),
+	  _medianStokesMap(0), _axesMap() {
 }
 
 ImageBeamSet::ImageBeamSet(
 	const Array<GaussianBeam>& beams,
 	const Vector<AxisType>& axes
 ) : _beams(beams), _axes(axes),
-	_areas(_getAreas(_areaUnit, beams)) {
-	_checkAxisTypeSize(axes);
+	_areas(_getAreas(_areaUnit, beams)),
+	_maxStokesMap(0), _minStokesMap(0),
+	_medianStokesMap(0), _axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
+	_checkAxisTypeSize(axes);
 	Double minArea, maxArea;
 	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
 	_minBeam = _beams(_minBeamPos);
 	_maxBeam = _beams(_maxBeamPos);
+	_makeStokesMaps(False);
 }
 
 ImageBeamSet::ImageBeamSet(const GaussianBeam& beam)
  : _beams(IPosition(1, 1), beam),
-   _axes(Vector<AxisType>(0)),
-   _areas(IPosition(1, 1), beam.getArea(_DEFAULT_AREA_UNIT)),
+   _axes(0),
+   _areas(
+	    IPosition(1, 1),
+	    beam.getArea(_DEFAULT_AREA_UNIT)
+	),
    _areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
-   _maxBeam(beam), _minBeamPos(1, 0), _maxBeamPos(1, 0) {
+   _maxBeam(beam), _minBeamPos(1, 0), _maxBeamPos(1, 0),
+   _maxStokesMap(0), _minStokesMap(0),
+   _medianStokesMap(0), _axesMap() {
 }
 
 ImageBeamSet::ImageBeamSet(
@@ -68,8 +77,11 @@ ImageBeamSet::ImageBeamSet(
 	_areaUnit(_DEFAULT_AREA_UNIT),
 	_minBeam(GaussianBeam::NULL_BEAM),
 	_maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(shape.size(), 0),
-	_maxBeamPos(shape.size(), 0) {
+	_maxBeamPos(shape.size(), 0),
+	_axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
+	_checkAxisTypeSize(axes);
+	_makeStokesMaps(True);
 }
 
 ImageBeamSet::ImageBeamSet(
@@ -79,8 +91,12 @@ ImageBeamSet::ImageBeamSet(
 	_areas(shape, beam.getArea(_DEFAULT_AREA_UNIT)),
 	_areaUnit(_DEFAULT_AREA_UNIT), _minBeam(beam),
 	_maxBeam(beam), _minBeamPos(shape.size(), 0),
-	_maxBeamPos(shape.size(), 0) {
+	_maxBeamPos(shape.size(), 0), _maxStokesMap(0),
+	_minStokesMap(0),
+	_medianStokesMap(0), _axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
+	_checkAxisTypeSize(axes);
+	_makeStokesMaps(True);
 }
 
 ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
@@ -88,7 +104,11 @@ ImageBeamSet::ImageBeamSet(const ImageBeamSet& other)
     _areas(other._areas), _areaUnit(other._areaUnit),
     _minBeam(other._minBeam), _maxBeam(other._maxBeam),
     _minBeamPos(other._minBeamPos),
-    _maxBeamPos(other._maxBeamPos) {}
+    _maxBeamPos(other._maxBeamPos),
+    _maxStokesMap(other._maxStokesMap),
+    _minStokesMap(other._minStokesMap),
+    _medianStokesMap(other._medianStokesMap),
+    _axesMap(other._axesMap) {}
 
 ImageBeamSet::~ImageBeamSet() {}
 
@@ -106,16 +126,13 @@ ImageBeamSet& ImageBeamSet::operator=(
 		_minBeamPos = other._minBeamPos;
 		_maxBeamPos.resize(other._maxBeamPos.size());
 		_maxBeamPos = other._maxBeamPos;
+		_maxStokesMap = other._maxStokesMap;
+		_minStokesMap = other._minStokesMap;
+		_medianStokesMap = other._medianStokesMap;
+		_axesMap = other._axesMap;
 	}
 	return *this;
 }
-
-/*
-GaussianBeam& ImageBeamSet::operator()(const IPosition& pos) {
-	_doAreas = True;
-	return _beams(pos);
-}
-*/
 
 const GaussianBeam& ImageBeamSet::operator()(
 	const IPosition& pos
@@ -126,16 +143,6 @@ const GaussianBeam& ImageBeamSet::operator()(
 Array<GaussianBeam> ImageBeamSet::operator[](uInt i) const {
 	return _beams[i];
 }
-
-/*
-Array<GaussianBeam> ImageBeamSet::operator()(
-	const IPosition &start,
-	const IPosition &end
-) {
-	_doAreas = True;
-	return _beams(start, end);
-}
-*/
 
 const Array<GaussianBeam>& ImageBeamSet::operator()(
 	const IPosition &start,
@@ -284,6 +291,7 @@ void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
 	}
 	_beams.assign(beams);
 	_areas.assign(_getAreas(_areaUnit, _beams));
+	_makeStokesMaps(False);
 }
 
 void ImageBeamSet::setBeams(
@@ -292,6 +300,10 @@ void ImageBeamSet::setBeams(
 ) {
 	_beams(begin, end) = beams;
 	_areas.assign(_getAreas(_areaUnit, _beams));
+	// FIXME there is a more efficient way to make the stokes
+	// maps in this case
+	_makeStokesMaps(False);
+
 }
 
 size_t ImageBeamSet::nelements() const {
@@ -316,6 +328,7 @@ void ImageBeamSet::set(const GaussianBeam& beam) {
 	_maxBeam = beam;
 	_minBeamPos = IPosition(_beams.ndim(), 0);
 	_maxBeamPos = IPosition(_beams.ndim(), 0);
+	_makeStokesMaps(True);
 }
 
 void ImageBeamSet::setBeam(
@@ -323,6 +336,7 @@ void ImageBeamSet::setBeam(
 ) {
 	_beams(position) = beam;
 	Double area = beam.getArea(_areaUnit);
+	_areas(position) = area;
 	if (area < _areas(_maxBeamPos)) {
 		_minBeam = beam;
 		_minBeamPos = position;
@@ -330,6 +344,9 @@ void ImageBeamSet::setBeam(
 	if (area > _areas(_maxBeamPos)) {
 		_maxBeam = beam;
 		_maxBeamPos = position;
+	}
+	if (_axesMap.find(POLARIZATION) != _axesMap.end()) {
+		_makeStokesMaps(False, position[_axesMap.find(POLARIZATION)->second]);
 	}
 }
 
@@ -349,6 +366,49 @@ IPosition ImageBeamSet::getMinAreaBeamPosition() const {
 	return _minBeamPos;
 }
 
+GaussianBeam ImageBeamSet::getMaxAreaBeamForPol(
+	IPosition& pos, const uInt polarization
+) const {
+	return _getBeamForPol(pos, _maxStokesMap, polarization);
+
+}
+
+GaussianBeam ImageBeamSet::getMinAreaBeamForPol(
+	IPosition& pos, const uInt polarization
+) const {
+	return _getBeamForPol(pos, _minStokesMap, polarization);
+}
+
+GaussianBeam ImageBeamSet::getMedianAreaBeamForPol(
+	IPosition& pos, const uInt polarization
+) const {
+	return _getBeamForPol(pos, _medianStokesMap, polarization);
+}
+
+GaussianBeam ImageBeamSet::_getBeamForPol(
+	IPosition& pos, const vector<IPosition>& map,
+	const uInt polarization
+) const {
+	uInt nStokes = _nStokes();
+	if (nStokes == 0) {
+		throw AipsError(
+			className() + "::" + __FUNCTION__
+			+ ": This beam set has no polarization axis"
+		);
+	}
+	if (polarization >= nStokes) {
+		throw AipsError(
+			className() + "::" + __FUNCTION__
+			+ ": polarization=" + String::toString(polarization)
+			+ " must be less than number of polarizations="
+			+ String::toString(nStokes)
+		);
+	}
+	pos = map[polarization];
+	return _beams(pos);
+}
+
+
 void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
 	if (_beams.ndim() != axes.size()) {
 		ostringstream oss;
@@ -357,6 +417,106 @@ void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
 		throw AipsError(oss.str());
 	}
 }
+
+void ImageBeamSet::_makeStokesMaps(
+	const Bool beamsAreIdentical,
+	const Int affectedStokes
+) {
+	uInt nStokes = _nStokes();
+	if (nStokes == 0) {
+		return;
+	}
+	if (_maxStokesMap.size() != nStokes) {
+		_maxStokesMap.resize(nStokes);
+		_minStokesMap.resize(nStokes);
+		_medianStokesMap.resize(nStokes);
+	}
+	if (_axesMap.find(SPECTRAL) == _axesMap.end()) {
+		IPosition pos(1, 0);
+		for (uInt i=0; i<nStokes; i++) {
+			if (affectedStokes < 0 || affectedStokes == (Int)i) {
+				pos[0] = i;
+				_maxStokesMap[i] = pos;
+				_minStokesMap[i] = pos;
+				_medianStokesMap[i] = pos;
+			}
+		}
+	}
+	else if (beamsAreIdentical) {
+		IPosition pos(2, 0);
+		for (uInt i=0; i<nStokes; i++) {
+			if (affectedStokes < 0 || affectedStokes == (Int)i) {
+				pos[_axesMap[POLARIZATION]] = i;
+				_minStokesMap[i] = pos;
+				_maxStokesMap[i] = pos;
+				_medianStokesMap[i] = pos;
+			}
+		}
+	}
+	else {
+		uInt spectralAxis = _axesMap.find(SPECTRAL)->second;
+		uInt stokesAxis = _axesMap.find(POLARIZATION)->second;
+		uInt nChan = _beams.shape()[spectralAxis];
+		IPosition shape(2);
+		shape[spectralAxis] = nChan;
+		shape[stokesAxis] = 1;
+		Array<Double> beamAreas(shape);
+		// WARN assumes a maximum _beams dimensionality of 2,
+		// which is OK for now but if this class is extended
+		// to allow more than two dimensional _beams this will
+		// have to change.
+		IPosition start(2);
+		IPosition end(2);
+		start[spectralAxis] = 0;
+		end[spectralAxis] = nChan - 1;
+		Double minArea, maxArea;
+		IPosition minPos, maxPos;
+		IPosition pos(2);
+		for (uInt i=0; i<nStokes; i++) {
+			if (affectedStokes < 0 || (Int)i == affectedStokes) {
+				start[stokesAxis] = i;
+				end[stokesAxis] = i;
+				beamAreas = _areas(
+					Slicer(start, end, Slicer::endIsLast)
+				);
+				pos[stokesAxis] = i;
+				minMax(minArea, maxArea, minPos, maxPos, beamAreas);
+				pos[spectralAxis] = minPos[spectralAxis];
+				_minStokesMap[i] = pos;
+				pos[spectralAxis] = maxPos[spectralAxis];
+				_maxStokesMap[i] = pos;
+				// get the median
+				Vector<uInt> indices;
+				GenSortIndirect<Double>::sort(indices, beamAreas);
+				uInt k = nChan % 2 == 0
+					? nChan/2 - 1 : nChan/2;
+				pos[spectralAxis] = indices[k];
+				_medianStokesMap[i] = pos;
+			}
+		}
+	}
+}
+
+uInt ImageBeamSet::_nStokes() const {
+	return _axesMap.find(POLARIZATION) == _axesMap.end()
+		? 0
+		: _beams.shape()[_axesMap.find(POLARIZATION)->second];
+}
+
+ImageBeamSet::AxesMap ImageBeamSet::_setAxesMap(
+	const Vector<AxisType>& axisTypes
+) {
+	std::map<ImageBeamSet::AxisType, uInt> mymap;
+	uInt count = 0;
+	for (
+		Vector<AxisType>::const_iterator iter=axisTypes.begin();
+		iter != axisTypes.end(); iter++, count++
+	) {
+		mymap[*iter] = count;
+	}
+	return mymap;
+}
+
 
 Array<Double> ImageBeamSet::_getAreas(
 	String& areaUnit, const Array<GaussianBeam>& beams
