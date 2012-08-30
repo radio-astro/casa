@@ -707,13 +707,21 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 		
                 #In the interactive mode, deconvlution can be skipped and in that case
                 #psf is not generated. So check if all psfs are there if not, generate
+#                if interactive:
+#                    if nterms==1:
+#                        for psfim in psfimage:
+#                            if not os.path.isdir(psfim):
+#                                imCln.approximatepsf(psf=psfim) 
+#                    else:
+#                        casalog.post('Multi-term PSFs not made','WARN')
+
                 if interactive:
-                    if nterms==1:
-                        for psfim in psfimage:
+                    for psfim in psfimage:
                             if not os.path.isdir(psfim):
-                                imCln.approximatepsf(psf=psfim) 
-                    else:
-                        casalog.post('Multi-term PSFs not made','WARN')
+                                if nterms==1:
+                                    imCln.approximatepsf(psf=psfim) 
+                                else:
+                                    casalog.post('Multi-term PSF '+psfim+' not made','WARN')
             
             if dochaniter and not imset.skipclean :
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
