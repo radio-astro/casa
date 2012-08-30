@@ -128,7 +128,11 @@ int main( int argc, const char *argv[] ) {
     //
     // This avoids this swapping, making the behavior more consistent when running on an X11
     // system displaying on OSX or just when using it with OSX.
-    QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
+    //
+    // This option makes *NO*DIFFERENCE* for the context menu on the "Point Button Tool".
+    // Thu Aug 30 10:32:15 EDT 2012 <drs>
+    //
+//     QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
 
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
 		     server_startup, without_gui, persistent, casapy_start,
