@@ -2501,9 +2501,10 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
           const std::string&      obs)
 {
   Bool rstat(False);
+  SubMS *splitter = NULL;
   try {
     *itsLog << LogOrigin("ms", "split");
-    SubMS *splitter = new SubMS(*itsMS);
+    splitter = new SubMS(*itsMS);
     *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
     String t_field(m1toBlankCStr_(field));
     String t_spw(m1toBlankCStr_(spw));
@@ -2553,6 +2554,7 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
        
     *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
     delete splitter;
+    splitter = NULL;
    
     {// Update HISTORY table of newly created MS
       String message= toCasaString(outputms) + " split from " + itsMS->tableName();
@@ -2566,6 +2568,9 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
     rstat = True;
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    if(splitter){
+      delete splitter;
+    }
     Table::relinquishAutoLocks(True);
     RETHROW(x);
   }
