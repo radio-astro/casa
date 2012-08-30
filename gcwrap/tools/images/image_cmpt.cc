@@ -3053,16 +3053,18 @@ bool image::twopointcorrelation(
 }
 
 record* image::summary(
-		const std::string& doppler, const bool list, const bool pixelorder) {
+	const string& doppler, const bool list,
+	const bool pixelorder, const bool verbose
+) {
 	try {
 		*_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
 		return fromRecord(
-			_image->summary(doppler, list, pixelorder)
+			_image->summary(doppler, list, pixelorder, verbose)
 		);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
