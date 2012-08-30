@@ -350,11 +350,20 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     MSDataDescription ddTable = rawms.dataDescription();
     MSSpectralWindow spectralTable = rawms.spectralWindow();
     MSPolarization polTable = rawms.polarization();
-    MSSource srcTable = rawms.source();
+    MSSource srcTable;
+    uInt nsrc = 0;
+    try {
+        srcTable = rawms.source();
+        nsrc = srcTable.nrow();
+    }
+    catch (AipsError x) {
+        os << LogOrigin("MSFitsOutput", "writeMain")
+           << LogIO::WARN << "No source table in MS. " 
+           << x.getMesg() << LogIO::POST;
+    }
     const uInt ndds = ddTable.nrow();
     const uInt nspec = spectralTable.nrow();
     const uInt npol = polTable.nrow();
-    const uInt nsrc = srcTable.nrow();
     if (ndds == 0) {
         os << LogIO::SEVERE << "No data description table in MS" << LogIO::POST;
         return 0;
@@ -385,11 +394,10 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     ROScalarColumn<Int> measFreq(spectralTable, MSSpectralWindow::columnName(
             MSSpectralWindow::MEAS_FREQ_REF));
 
-    ROArrayColumn<Double> restfreqcol(srcTable, MSSource::columnName(
-            MSSource::REST_FREQUENCY));
-
     Double restFreq(0.0);
     if (nsrc > 0) {
+        ROArrayColumn<Double> restfreqcol(srcTable, MSSource::columnName(
+            MSSource::REST_FREQUENCY));
         if (restfreqcol.isDefined(0) && restfreqcol(0).nelements() > 0) {
             IPosition ip = restfreqcol(0).shape();
             ip = 0;
