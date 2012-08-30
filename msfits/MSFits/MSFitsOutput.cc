@@ -222,9 +222,9 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     //  if (ok && !ms.source().isNull()) 
     if (ok && asMultiSource) {
         os << LogIO::NORMAL << "Writing AIPS SU table" << LogIO::POST;
-        ok = writeSU(fitsOutput, ms, fieldidMap, nrfield, spwidMap, nrspw);
-        if (!ok) {
-            os << LogIO::SEVERE << "Could not write SU table\n" << LogIO::POST;
+        bool bk = writeSU(fitsOutput, ms, fieldidMap, nrfield, spwidMap, nrspw);
+        if (!bk) {
+            os << LogIO::WARN << "Could not write SU table\n" << LogIO::POST;
         }
     }
 
@@ -245,17 +245,17 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
             Table syscal = handleSysCal(ms, spwids, isSubset);
 
             os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
-            ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write TY table\n"
+            bool bk = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
+            if (!bk) {
+                os << LogIO::WARN << "Could not write TY table\n"
                         << LogIO::POST;
             } else {
                 os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
-                ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw,
+                bk = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw,
                         combineSpw, sensitivity, refPixelFreq, refFreq, chanbw);
             }
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write GC table\n"
+            if (!bk) {
+                os << LogIO::WARN << "Could not write GC table\n"
                         << LogIO::POST;
             }
         }
@@ -263,9 +263,9 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     if (ok) {
         if (ms.weather().tableDesc().ncolumn() != 0) {
             os << LogIO::NORMAL << "Writing AIPS WX table" << LogIO::POST;
-            ok = writeWX(fitsOutput, ms);
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write WX table\n"
+            bool bk = writeWX(fitsOutput, ms);
+            if (!bk) {
+                os << LogIO::WARN << "Could not write WX table\n"
                         << LogIO::POST;
             }
         }
@@ -2375,7 +2375,7 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms) {
     const uInt nrow = subtable.nrow();
 
     if (nrow == 0) {
-        os << LogIO::SEVERE << "No weather info" << LogIO::POST;
+        os << LogIO::WARN << "No weather info" << LogIO::POST;
         return False;
     }
     // Get reference time (i.e. start time) from the main table.
