@@ -74,7 +74,10 @@ public:
     Matrix<Double> fderr;
     Matrix<Int> numSol;
     Vector<Double> freq;
+    Matrix<Double> spidx;
+    Matrix<Double> spidxerr;
   } fluxScaleStruct;
+
 
   SolvableVisCal(VisSet& vs);
   
@@ -313,12 +316,15 @@ public:
   virtual void normalize();
 
   // Determine and apply flux density scaling
-  virtual void fluxscale(const Vector<Int>& refFieldIn,
+  virtual void fluxscale(const String& outfile,
+                         const Vector<Int>& refFieldIn,
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
 			 fluxScaleStruct& oFluxScaleStruct,
-			 const String& oListFile)=0;
+	//		 const String& oListFile)=0;
+			 const String& oListFile,
+                         const Bool& incremental)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -613,12 +619,14 @@ public:
 			  const Vector<Int>& ) { throw(AipsError("NYI")); };
 
   // Scale solutions
-  virtual void fluxscale(const Vector<Int>& ,
+  virtual void fluxscale(const String&,
+                         const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
 			 SolvableVisCal::fluxScaleStruct&,
-			 const String&)
+			 const String&,
+                         const Bool&)
 	{ throw(AipsError("NYI")); };
 
   // SVM-specific write to caltable
@@ -748,12 +756,14 @@ public:
   virtual void applyRefAnt();
 
   // Fluxscale is implemented here
-  void fluxscale(const Vector<Int>& refFieldIn,
+  void fluxscale(const String& outfile,
+                 const Vector<Int>& refFieldIn,
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
-		 const String& oListFile);
+		 const String& oListFile,
+                 const Bool& incremental=False);
 
   // SVJ-specific write to caltable
   virtual void keepNCT();
