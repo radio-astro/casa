@@ -84,14 +84,14 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copyp
 			oldvisweightscale = visweightscale
 			vis = []
 			visweightscale = []
-			ismaster = []
+			ismaster = [] # reset ismaster
 			i = 0
 			for elvis in oldvis:
 				if elvis in mmslist: # append the subMSs individually
 					m.open(elvis)
 					mses = m.getreferencedtables()
-					mses.sort()
 					m.close()
+					mses.sort()
 					mastername = os.path.basename(os.path.dirname(os.path.realpath(elvis+'/ANTENNA')))
 					for mname in mses:
 						#print 'subms: ', mname
