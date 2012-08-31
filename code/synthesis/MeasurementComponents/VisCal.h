@@ -270,6 +270,8 @@ protected:
   // Return print (cout) level
   inline Int& prtlev() { return prtlev_; };
 
+  // set current field index vector to given field id
+  void setCurrField(const Int& ifld);
 
 private:
 

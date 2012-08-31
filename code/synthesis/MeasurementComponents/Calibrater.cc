@@ -2122,7 +2122,9 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<String>& tranFields,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   const String& oListFile) {
+			   //const String& oListFile) {
+			   const String& oListFile,
+                           const Bool& incremental) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2168,7 +2170,8 @@ void Calibrater::fluxscale(const String& infile,
 
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
-    oListFile);
+    oListFile,incremental);
+//    oListFile);
 
 }
 
@@ -2180,7 +2183,9 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
-			   const String& oListFile) {
+	//		   const String& oListFile) {
+			   const String& oListFile,
+                           const Bool& incremental) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -2201,7 +2206,8 @@ void Calibrater::fluxscale(const String& infile,
 
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
-    oListFile);
+    oListFile,incremental);
+  //  oListFile);
 
 }
 
@@ -2212,7 +2218,9 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& tranField,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   const String& oListFile) {
+//			   const String& oListFile) {
+			   const String& oListFile,
+                           const Bool& incremental) {
 
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
@@ -2276,10 +2284,13 @@ void Calibrater::fluxscale(const String& infile,
       applypar.define ("select", select);
       fsvj_->setApply(applypar);
 
+      //Bool incremental=False;
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-        oListFile);
+      //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+        oListFile,incremental);
+//        oListFile);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);
