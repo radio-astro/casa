@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,listfile=None,append=None,refspwmap=None):
+def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None,listfile=None,append=None,refspwmap=None,incremental=None):
        """Bootstrap the flux density scale from standard calibrators:
 
        After running gaincal on standard flux density calibrators (with or
@@ -61,6 +61,9 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                will be referenced to reference field solutions only in
                spw 1 or 3.
 
+       incremental -- Create an incremental caltable containing only the gain correction 
+                    factors. 
+               default: False; (older behavior, produces flux scaled gain table)
        """
 
        try:
@@ -70,7 +73,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                output = mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
                               transfer=transfer,listfile=listfile,append=append,
-			      refspwmap=refspwmap)
+			      refspwmap=refspwmap,incremental=incremental)
                mycb.close()
 
                #write history
