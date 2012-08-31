@@ -2089,7 +2089,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       for (Int j =0 ; j < numrows_this ; ++j){
 	if(thisSPWId(j)<-1){ // came from the second input table
 	  sourceRecord = sourceRow.get(j);
-	  if(doSPW_p){ // the SPW table was rearranged
+	  if(doSPW_p || newSPWIndex_p.isDefined(thisSPWId(j)+10000)){ // the SPW table was rearranged
 	    sourceRecord.define(sourceSPWId, newSPWIndex_p(thisSPWId(j)+10000) );
 	  }
 	  else { // the SPW table did not have to be rearranged, just revert changes to SPW from copySource
@@ -2432,6 +2432,9 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       //cout << "counterpart found for other spw " << otherSpwId 
       //     << " found in this spw " << *newSpwPtr << endl;
       matchedSPW = True;
+      if(*newSpwPtr != otherSpwId){
+	newSPWIndex_p.define(otherSpwId, *newSpwPtr);
+      }
     }      
     
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&
