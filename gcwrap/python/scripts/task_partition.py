@@ -307,6 +307,7 @@ class PartitionHelper(ParallelTaskHelper):
             for job in outputList:
                 if job.status == 'done':
                     subMSList.append(job.getCommandArguments()['outputvis'])
+            subMSList.sort()
 
             if len(subMSList) == 0:
                 casalog.post("Error: no subMSs were created.", 'WARN')
