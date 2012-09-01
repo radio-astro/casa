@@ -205,7 +205,7 @@ it'll do them for the same amount of time -->
 -->
     <param type="double" name="acaratio">
       <description>Ratio of the total observation time for ACA in relation to 12-m array or 0 for no ACA</description>
-      <value>0.</value>
+      <value>0.0</value>
       <allowed kind="range"><value range="min">0</value></allowed>
     </param>
 
@@ -221,7 +221,7 @@ it'll do them for the same amount of time -->
 
     <param type="double" name="pwv">
       <description>Precipitable Water Vapor in mm. 0 for noise-free simulation</description>
-      <value>0</value>
+      <value>0.0</value>
       <allowed kind="range"><value range="min">0</value></allowed>
     </param>
 
@@ -381,7 +381,7 @@ it'll do them for the same amount of time -->
 
     <param type="bool" name="overwrite">
       <description>overwrite files starting with $project</description>
-      <value>True</value>
+      <value>False</value>
     </param>
 
 
