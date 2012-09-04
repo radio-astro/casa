@@ -73,8 +73,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
         npol_p(-1), pointToPix_p(), directionIndex_p(-1), thePix_p(0),
         filledFluxScale_p(False),doneMainConv_p(False),
         convFunctionMap_p(-1),
-        actualConvIndex_p(-1),
-        calcFluxScale_p(True), convSize_p(0), convSupport_p(0)  {
+				      calcFluxScale_p(True), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p()  {
     //
 
     pbClass_p=PBMathInterface::COMMONPB;
@@ -83,15 +82,15 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
     nchan_p(-1),npol_p(-1),pointToPix_p(),
     directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
-    convFunctionMap_p(-1), actualConvIndex_p(-1), calcFluxScale_p(True), convSize_p(0), convSupport_p(0) {
+    convFunctionMap_p(-1), calcFluxScale_p(True),actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p() {
     //
     pbClass_p=typeToUse;
 
   }
   SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
   : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
-    doneMainConv_p(False), convFunctionMap_p(-1), actualConvIndex_p(-1),
-    calcFluxScale_p(calcfluxneeded), convSize_p(0), convSupport_p(0)
+    doneMainConv_p(False), convFunctionMap_p(-1),
+    calcFluxScale_p(calcfluxneeded), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p()
   {
     String err;
     fromRecord(err, rec, calcfluxneeded);
@@ -133,6 +132,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       pointToPix_p=MDirection::Convert( MDirection(), elRef);
       nx_p=iimage.shape()(coordIndex);
       ny_p=iimage.shape()(coordIndex+1);
+      pointingPix_p.resize(nx_p, ny_p);
+      pointingPix_p.set(False);
       coordIndex=csys_p.findCoordinate(Coordinate::SPECTRAL);
       Int pixAxis=csys_p.pixelAxes(coordIndex)[0];
       nchan_p=iimage.shape()(pixAxis);
@@ -249,14 +250,13 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     }
     
    
-
+    toPix(vb);
     addPBToFlux(vb);
 
     DirectionCoordinate dc=dc_p;
 
     //where in the image in pixels is this pointing
     Vector<Double> pixFieldDir(2);
-    toPix(vb);
     pixFieldDir=thePix_p;
 
     MDirection fieldDir=direction1_p;
@@ -752,7 +752,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       }
       rec.define("pbclass", Int(pbClass_p));
       rec.define("actualconvindex",  actualConvIndex_p);
-      
+      //The following is not needed ..can be regenerated
+      //rec.define("pointingpix", pointingPix_p);
     }
     catch(AipsError x) {
       return False;
@@ -792,6 +793,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
        }
        pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
        rec.get("actualconvindex",  actualConvIndex_p);
+       pointingPix_p.resize();
+       //rec.get("pointingpix", pointingPix_p);
        calcFluxScale_p=calcFluxneeded;
 
      }
@@ -804,18 +807,25 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   }
   void SimplePBConvFunc::addPBToFlux(const VisBuffer& vb){
     if(calcFluxScale_p){
-      TempImage<Float> thispb(fluxScale_p.shape(), fluxScale_p.coordinates());
-      thispb.set(1.0);
-      sj_p->applySquare(thispb, thispb, vb, 0);
-      LatticeExpr<Float> le(fluxScale_p+thispb);
-      fluxScale_p.copyData(le);
-      LatticeExprNode LEN = max(fluxScale_p);
-      Float maxsca=LEN.getFloat();
-      //Tempporary fix when cubesky is chunking...do not add on 
-      //already defined position
-      if(maxsca > 1.98)
-	fluxScale_p.copyData(LatticeExpr<Float>(fluxScale_p-thispb));
-      
+      Vector<Int> pixdepoint(2);
+       convertArray(pixdepoint, thePix_p);
+       if(!pointingPix_p(pixdepoint(0), pixdepoint(1))){
+	 TempImage<Float> thispb(fluxScale_p.shape(), fluxScale_p.coordinates());
+	 thispb.set(1.0);
+	 sj_p->applySquare(thispb, thispb, vb, 0);
+	 LatticeExpr<Float> le(fluxScale_p+thispb);
+	 fluxScale_p.copyData(le);
+	 pointingPix_p(pixdepoint(0), pixdepoint(1))=True;
+	 //LatticeExprNode LEN = max(fluxScale_p);
+	 //Float maxsca=LEN.getFloat();
+	 //Tempporary fix when cubesky is chunking...do not add on 
+	 //already defined position
+	 //if(maxsca > 1.98){
+	 //  cerr << "avoiding subtract " << endl;
+	//fluxScale_p.copyData(LatticeExpr<Float>(fluxScale_p-thispb));
+
+	 //}      
+      /*
       if(0) {
 	ostringstream os1;
 	os1 << "SINGLE_" << vb.fieldId() ;
@@ -826,6 +836,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	PagedImage<Float> thisScreen2(fluxScale_p.shape(), fluxScale_p.coordinates(), String(os2));
 	thisScreen2.copyData(fluxScale_p);
       }
+      */
+       }
     }
 
   }

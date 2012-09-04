@@ -156,6 +156,7 @@ namespace casa{
       Block <CountedPtr<Cube<Complex> > > convWeights_p;
       Block<CountedPtr<Vector<Int> > > convSizes_p;
       Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
+      Matrix<Bool> pointingPix_p;
 
       
     };
