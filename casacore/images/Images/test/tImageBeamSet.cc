@@ -36,7 +36,7 @@
 int main() {
 	try {
 		{
-			cout << "*** Test constructors" << endl;
+			cout << "*** Test constructors, = operator" << endl;
 			// empty beam set
 			ImageBeamSet x;
 			AlwaysAssert(x.empty(), AipsError);
@@ -61,6 +61,14 @@ int main() {
 			x = b;
 			AlwaysAssert(x == b, AipsError);
 			ImageBeamSet k(beam);
+			Vector<ImageBeamSet::AxisType> ytypes(1);
+			ytypes[0] = ImageBeamSet::POLARIZATION;
+			ImageBeamSet y(IPosition(1, 4), ytypes);
+			// test different shapes
+			y = b;
+			AlwaysAssert(y == b, AipsError);
+
+
 		}
 		{
 			cout << "*** test setBeam()" << endl;
