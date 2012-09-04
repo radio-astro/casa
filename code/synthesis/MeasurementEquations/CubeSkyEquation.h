@@ -70,7 +70,7 @@ class CubeSkyEquation : public SkyEquation {
   void isLargeCube(ImageInterface<Complex>& theIm, Int& nCubeSlice);
   //void makeApproxPSF(Int model, ImageInterface<Float>& psf);
   //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
-  void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
+  void makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs);
 
   //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
@@ -82,8 +82,8 @@ class CubeSkyEquation : public SkyEquation {
   void configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi);
 
   //Different versions of psf making
-  void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
-  void makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs);
+  void makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs);
+  void makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs);
   virtual void fixImageScale();
   Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
   Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;

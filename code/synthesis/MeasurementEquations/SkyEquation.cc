@@ -800,7 +800,7 @@ void SkyEquation::makeApproxPSF(Int model, ImageInterface<Float>& psf) {
   
 }
 
-void SkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> *>& PSFs) {
+void SkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> *>& PSFs) {
 
   Int nmodels=PSFs.nelements();
   for (Int model=0; model < nmodels; ++model){
