@@ -141,6 +141,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 	    <value>poly</value>
 	    <allowed kind="enum">
 	            <value>poly</value>
+	            <value>chebyshev</value>
 	            <value>cspline</value>
 	            <value>sinusoid</value>
 	    </allowed>
@@ -294,6 +295,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 		<equals value="poly">
 			<default param="order"><value>5</value></default>
 	        </equals>
+		<equals value="chebyshev">
+			<default param="order"><value>5</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
@@ -431,11 +437,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  setting this parameter to 1) to avoid detecting baseline
                  undulations instead of real lines.
         blfunc -- baseline model function
-                options: (str) 'poly','cspline','sinusoid'
+                options: (str) 'poly','chebyshev','cspline','sinusoid'
                 default: 'poly'
                 example: blfunc='poly' uses a single polynomial line of 
                          any order which should be given as an expandable 
                          parameter 'order' to fit baseline. 
+                         blfunc='chebyshev' uses Chebyshev polynomials. 
                          blfunc='cspline' uses a cubic spline function, a piecewise 
                          cubic polynomial having C2-continuity (i.e., the second 
                          derivative is continuous at the joining points). 

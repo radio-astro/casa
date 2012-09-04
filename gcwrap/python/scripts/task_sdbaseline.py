@@ -205,6 +205,10 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 				header += "    Function: "+blfunc+"\n"
 				if blfunc == 'poly':
 					header += "   Fit order: %d\n"%(order)
+				elif blfunc == 'chebyshev':
+					header += "   Fit order: %d\n"%(order)
+					header += "  clipThresh: %f\n"%(clipthresh)
+					header += "   clipNIter: %d\n"%(clipniter)
 				elif blfunc == 'cspline':
 					header += "      nPiece: %d\n"%(npiece)
 					header += "  clipThresh: %f\n"%(clipthresh)
@@ -286,6 +290,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			if (maskmode == 'auto'):
 				if (blfunc == 'poly'):
 					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+				elif (blfunc == 'chebyshev'):
+					s.auto_chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'cspline'):
 					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'sinusoid'):
@@ -293,6 +299,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 			else:
 				if (blfunc == 'poly'):
 					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+				elif (blfunc == 'chebyshev'):
+					s.chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'cspline'):
 					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 				elif (blfunc == 'sinusoid'):
