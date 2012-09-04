@@ -424,7 +424,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
   
 }
 
-void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) 
+void CubeSkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs) 
 {
 
   if(iftm_p[0]->name()=="MosaicFT")
@@ -433,7 +433,7 @@ void CubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs)
     makeSimplePSF(psfs);
 
 }
-void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
+void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   //lets try to make the psf directly
   LogIO os(LogOrigin("SkyEquation", "makeMosaicPSF"));
   makeSimplePSF(psfs);
@@ -498,7 +498,7 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
   ift_=ift_back;
 }
 
-void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
+void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 
     Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
@@ -1153,8 +1153,8 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     // 1. Now get the (unnormalized) image and add the 
     // weight to the summed weight
     Matrix<Float> delta;
-    imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
-
+    //imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
+    iftm_p[model]->getImage(delta, False);
     weightSlice_p[model]+=delta;
 
     // 2. Apply the SkyJones and add to grad chisquared
@@ -1168,11 +1168,13 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     SubImage<Float> *ggSSlice;
     sliceCube(ggSSlice, sm_->ggS(model), cubeSlice, nCubeSlice);
   
+    
     // 3. Apply the square of the SkyJones and add this to gradgrad chisquared
     applySkyJonesSquare(vb, -1, weightSlice_p[model], *workSlice,
 			*ggSSlice);
   
-
+    (imPutSlice_p[model])->clearCache();
+    imPutSlice_p[model]->tempClose();
     delete workSlice;
     delete gSSlice;
     delete ggSSlice;
@@ -1230,9 +1232,14 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
-    Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(20.0*(sm_->numberOfModels()));
-    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), 0);
-    slice->setMaximumCacheSize(sliceIm->shape().product());
+    Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
+    slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
+					     IPosition(4, min(sliceIm->shape()(0), 1000), min(sliceIm->shape()(1), 1000), 1, 1)), sliceIm->coordinates(), 0);
+    
+    /*slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
+					     IPosition(4, min(sliceIm->shape()(0), 1000), min(sliceIm->shape()(1), 1000), 1, 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
+    */
+    slice->setMaximumCacheSize((sliceIm->shape()[0])*(sliceIm->shape()[1])/4);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
     //slice->setCoordinateInfo(sm_->image(model).coordinates());
