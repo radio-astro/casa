@@ -1314,6 +1314,246 @@ clipfrom='0.01Jy', clipto='0.0001Jy', blc=[100,100], trc=[150,150])
 </method>
 
 
+<method type="function" name="mtopen">
+  <shortdescription>Init : Make a series of images using a Multi-Term Clean algorithm</shortdescription>
+  
+  <description>
+    
+    Makes a series of images.
+
+    For N terms in the polynomial, supply a list of 2N-1 Hessian elements (psfs), and the
+    scale sizes.
+    
+  </description>
+  <input>
+
+    <param type="int" name="ntaylor">
+      <description>Number of terms in the taylor polynomial</description>
+      <value>2</value>
+    </param>
+    
+     <param type="doubleArray" name="scalevector">
+     <description>Vector of scale sizes to use</description>
+     <value type="vector">
+     <value>0.0</value>
+     <value>3.0</value>
+     <value>10.0</value></value>
+     </param>
+
+     <param type="stringArray" name="psfs">
+     <description>Intpu : List of names of 2N-1 psfs. 
+       This is valid only for a Taylor-polynomial model.
+     </description>
+     <value></value>
+     </param>
+
+    <param type="bool" name="async">
+      <description>Run asynchronously in the background?</description>
+      <value>false</value>
+    </param>
+
+  </input>
+  
+  <returns type="bool"/>
+  <example>
+
+ xxx    
+
+  </example>
+</method>
+
+
+
+<method type="function" name="mtclean">
+  <shortdescription>Make a series of images using a Multi-Term Clean algorithm</shortdescription>
+  
+  <description>
+    
+    Makes a series of images.
+
+    Supply a list of N residual images and a corresponding list of 2N-1 Hessian elements (psfs).
+    
+    This way, for each field or partial-run, one can choose how many terms to operate with, 
+    changing this number depending on the signal-to-noise level. 
+ 
+  </description>
+  <input>
+
+     <param type="stringArray" name="residuals">
+     <description>Input : List of names of N residual images</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="models">
+     <description>Output : List of names of N model images</description>
+     <value></value>
+     </param>
+
+    
+    <param type="int" name="niter">
+      <description>Number of Iterations, set to zero for no CLEANing</description>
+      <value>1000</value>
+    </param>
+    
+    <param type="double" name="gain">
+      <description>Loop Gain for CLEANing, try 0.7 for msclean or fullmsclean</description>
+      <value>0.1</value>
+    </param>
+    
+    <param type="any" name="threshold">
+      <any type="variant"/>
+      <description>Flux level at which to stop CLEANing</description>
+      <value>0Jy</value>
+    </param>
+    
+    <param type="bool" name="displayprogress">
+      <description>Display progress</description>
+      <value>false</value>
+    </param>
+    
+    <param type="string" name="mask">
+      <description>Name of mask images used for CLEANing</description>
+      <value></value>
+    </param>
+    
+    <param type="bool" name="async">
+      <description>Run asynchronously in the background?</description>
+      <value>false</value>
+    </param>
+  </input>
+  
+  <returns type="record"/>
+  <example>
+
+ xxx    
+
+  </example>
+</method>
+
+
+
+   <method type="function" name="mtrestore">
+   <shortdescription>Restore the Multi-Term residuals</shortdescription>
+   
+<description>
+
+The model images are smoothed by the specified Gaussian beam.
+The principal solution is computed from the residuals.
+The smoothed models are added to these new residuals. 
+
+This ensures that any undeconvolved source flux has been transformed
+into the Taylor-coefficient basis, before being added into the smoothed
+Taylor-coefficient model images.
+
+( If the beam is not supplied, one will be fit to the PSF ). 
+</description>
+<input>
+
+     <param type="stringArray" name="models">
+     <description>Input : Name of input model</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="residuals">
+     <description>Input : Name of residual image</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="images">
+     <description>Output : Name of output restored image</description>
+     <value></value>
+     </param>
+
+     <param type="any" name="bmaj">
+     <any type="variant"/>
+     <description>Major axis of beam</description>
+     <value>0rad</value>
+     </param>
+
+     <param type="any" name="bmin">
+     <any type="variant"/>
+     <description>Minor axis of beam</description>
+     <value>0rad</value>
+     </param>
+
+     <param type="any" name="bpa">
+     <any type="variant"/>
+     <value>0deg</value>
+     <description>Position angle of beam</description>
+     </param>
+
+     <param type="bool" name="async">
+     <description>Run asynchronously in the background</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+
+deco.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
+bmaj='2.0arcsec', bmin='2.0arcsec')
+
+</example>
+</method>
+
+   <method type="function" name="mtcalcpowerlaw">
+   <shortdescription>Interpret Taylor coefficients as a power law, and compute spectral index</shortdescription>
+   
+<description>
+
+Take ratios of restored images to compute alpha and beta
+
+</description>
+<input>
+
+     <param type="stringArray" name="images">
+     <description>Input : Names of input restored images</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="residuals">
+     <description>Input : Names of input residuals images ( for error calcs )</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="alphaname">
+     <description>Output : Name of output spectral-index image</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="betaname">
+     <description>Output : Name of output spectral-curvature image</description>
+     <value></value>
+     </param>
+
+     <param type="any" name="threshold">
+     <any type="variant"/>
+     <description>Threshold</description>
+     <value>0.0Jy</value>
+     </param>
+
+     <param type="bool" name="calcerror">
+     <description>Calculate an error image for spectral index</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="async">
+     <description>Run asynchronously in the background</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+<example>
+
+deco.restore(model='3C273XC1.clean', image='3C273XC1.clean.restored',
+bmaj='2.0arcsec', bmin='2.0arcsec')
+
+</example>
+</method>
+
+
+
+
 </tool>
 
 

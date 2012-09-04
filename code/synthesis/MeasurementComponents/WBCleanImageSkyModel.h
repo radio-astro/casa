@@ -33,7 +33,6 @@
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <lattices/Lattices/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/MultiTermLatticeCleaner.h>
 #include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 #include <casa/OS/Timer.h>
 
@@ -148,6 +147,7 @@ private:
 
   IPosition gip,imshape;
   Bool donePSF_p;
+  Bool doneMTMCinit_p;
   Int nx,ny;
 
   Int numbermajorcycles_p;
@@ -171,7 +171,7 @@ private:
 
   Bool resizeWorkArrays(Int length);
   
-  Int makeSpectralPSFs(SkyEquation& se);
+  Int makeSpectralPSFs(SkyEquation& se, Bool writeToDisk);
    //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
   Bool calculateCoeffResiduals();
