@@ -126,6 +126,14 @@ ImageBeamSet& ImageBeamSet::operator=(
 		_minBeamPos = other._minBeamPos;
 		_maxBeamPos.resize(other._maxBeamPos.size());
 		_maxBeamPos = other._maxBeamPos;
+		if (
+			_maxStokesMap.size() > 0 && other._maxStokesMap.size() > 0
+			&& _maxStokesMap.begin()->size() != other._maxStokesMap.begin()->size()
+		) {
+			_maxStokesMap.resize(0);
+			_minStokesMap.resize(0);
+			_medianStokesMap.resize(0);
+		}
 		_maxStokesMap = other._maxStokesMap;
 		_minStokesMap = other._minStokesMap;
 		_medianStokesMap = other._medianStokesMap;
