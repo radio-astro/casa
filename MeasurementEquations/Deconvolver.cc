@@ -116,7 +116,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Deconvolver::Deconvolver() 
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
+    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
 {
 
   defaults();
@@ -138,7 +139,8 @@ void Deconvolver::defaults()
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
+    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
   defaults();
@@ -146,7 +148,8 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 }
 
 Deconvolver::Deconvolver(const Deconvolver &other)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0)
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
+    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
 {
   defaults();
   open(other.dirty_p->table().tableName(), other.psf_p->table().tableName());
@@ -2123,5 +2126,425 @@ void Deconvolver::checkMask(ImageInterface<Float>& maskImage, Int& xbeg, Int& xe
 
 
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Multi-Term Clean algorithm with Taylor-Polynomial basis functions
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Bool Deconvolver::mtopen(const Int nTaylor,
+			 const Vector<Float>& userScaleSizes,
+			 const Vector<String>& psfs)
+{
+  
+  //  if(!valid()) return False; //make MT version
+  LogIO os(LogOrigin("Deconvolver", "mtopen()", WHERE));
+
+  // Check for already-open mt-deconvolver
+  
+  if(mt_nterms_p != -1)
+    {
+      os << LogIO::WARN << "Multi-term Deconvolver is already open, and set-up for " << mt_nterms_p << " Taylor-terms. Please close the deconvolver and reopen, or continue with cleaning." << LogIO::POST;
+      return False;
+    }
+
+  // Check for valid ntaylor
+  if( nTaylor <=0 ) 
+    {
+      os << LogIO::SEVERE << "nTaylor must be at-least 1" << LogIO::POST; 
+      return False;
+    }
+
+  mt_nterms_p = nTaylor;
+  Int mt_npsftaylor = 2*nTaylor-1;
+
+  // Check if the correct number of PSFs exist.
+  if( psfs.nelements() != mt_npsftaylor )
+    {
+      os << LogIO::SEVERE << "For " << mt_nterms_p << " Taylor terms, " << mt_npsftaylor << " PSFs are needed to populate the Hessian matrix. " << LogIO::POST;
+      return False;
+    }
+
+  os << "Initializing MT-Clean with " << mt_nterms_p << " Taylor terms, " << userScaleSizes.nelements() << " scales and " << psfs.nelements() << " unique Hessian elements (psfs)" << LogIO::POST;
+
+  // Open all the PSFs...
+  Block<CountedPtr<PagedImage<Float> > > mt_psfs(mt_npsftaylor);
+
+  // Open the first PSF and extract shape info.
+  mt_psfs[0] = new PagedImage<Float>(psfs[0]);
+  AlwaysAssert(&*mt_psfs[0], AipsError);
+  nx_p=mt_psfs[0]->shape()(0);
+  ny_p=mt_psfs[0]->shape()(1);
+  //mt_psfs_p[0].setMaximumCacheSize(2*nx_p*ny_p);
+  //mt_psfs_p[0].setCacheSizeInTiles(10000);
+
+  // Open the other PSFs and verify shape consistency
+  for(uInt i=1; i<mt_npsftaylor;i++)
+    {
+      mt_psfs[i] = new PagedImage<Float>(psfs[i]);
+      AlwaysAssert(&*mt_psfs[i], AipsError);
+      if( mt_psfs[i]->shape()(0) != nx_p || mt_psfs[i]->shape()(1) != ny_p )
+	{
+	  os << LogIO::SEVERE << "Supplied PSFs are of different shapes. Please try again." << LogIO::POST;
+	  mt_psfs.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
+	  return False;
+	}
+    }
+
+  // Initialize the Multi-Term Cleaner
+  try
+    {
+      mt_cleaner_p.setntaylorterms(mt_nterms_p);
+      mt_cleaner_p.setscales(userScaleSizes);
+      mt_cleaner_p.initialise(nx_p,ny_p); // allocates memory once....
+    }
+  catch (AipsError x) 
+    {
+      os << LogIO::WARN << "Cannot allocate required memory for Multi-Term minor cycle" 
+       << LogIO::POST;
+      return False;
+    } 
+
+  // Send the PSFs into the Multi-Term Matrix Cleaner
+  for (Int order=0;order<mt_npsftaylor;order++)
+    {
+      Matrix<Float> tempMat;
+      Array<Float> tempArr;
+      (mt_psfs[order])->get(tempArr,True); // by reference.
+      tempMat.reference(tempArr);
+
+      mt_cleaner_p.setpsf( order , tempMat ); 
+    }
+
+  // Compute Hessian elements for Taylor terms and Scales ( convolutions ), take the Hessian block-diagonal approximation and inverse, Check for invertability.
+  Int ret = mt_cleaner_p.computeHessianPeak();
+  if (ret != 0)
+    {
+      os << LogIO::SEVERE << "Cannot Invert Hessian matrix. Please close the deconvolver and supply different PSFs." << LogIO::POST; 
+      return False;
+    }
+
+  // mt_psfs goes out of scope and CountedPtrs delete themselves automatically.
+
+  mt_valid_p=True;
+  
+  return True;
+}
+
+Bool Deconvolver::mtclean(const Vector<String>& residuals,
+			  const Vector<String>& models,
+			  const Int niter,
+			  const Float gain, 
+			  const Quantity& threshold, 
+			  const Bool displayProgress,
+			  const String& mask, 
+			  Float& maxResidual, Int& iterationsDone)
+{
+  
+  LogIO os(LogOrigin("Deconvolver", "mtclean()", WHERE));
+
+  if(mt_valid_p==False)
+    {
+      os << LogIO::WARN << "Multi-Term Deconvolver is not initialized yet. Please call 'mtopen()' first" << LogIO::POST;
+      return False;
+    }
+
+  os << "Running MT-Clean with " << mt_nterms_p << " Taylor terms " << LogIO::POST;
+
+  // Send in the mask.
+  if( mask != String("") )
+    {
+      PagedImage<Float> mt_mask(mask);
+      Matrix<Float> tempMat;
+      Array<Float> tempArr;
+      (mt_mask).get(tempArr,True);
+      tempMat.reference(tempArr);
+      
+      mt_cleaner_p.setmask( tempMat );
+    }
+
+  // Send in the residuals and model images.
+  Block<CountedPtr<PagedImage<Float> > > mt_residuals(mt_nterms_p);
+  Block<CountedPtr<PagedImage<Float> > > mt_models(mt_nterms_p);
+  for (Int i=0;i<mt_nterms_p;i++)
+    {
+      mt_residuals[i] = new PagedImage<Float>(residuals[i]);
+      AlwaysAssert(&*mt_residuals[i], AipsError);
+      if( mt_residuals[i]->shape()(0) != nx_p || mt_residuals[i]->shape()(1) != ny_p )
+	{
+	  os << LogIO::SEVERE << "Supplied Residual images don't match PSF shapes." << LogIO::POST;
+	  mt_residuals.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
+	  return False;
+	}
+
+      mt_models[i] = new PagedImage<Float>(models[i]);
+      AlwaysAssert(&*mt_models[i], AipsError);
+      if( mt_models[i]->shape()(0) != nx_p || mt_models[i]->shape()(1) != ny_p )
+	{
+	  os << LogIO::SEVERE << "Supplied Model images don't match PSF shapes." << LogIO::POST;
+	  mt_models.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
+	  return False;
+	}
+
+
+      Matrix<Float> tempMat;
+      Array<Float> tempArr;
+
+      (mt_residuals[i])->get(tempArr,True); // by reference.
+      tempMat.reference(tempArr);
+      mt_cleaner_p.setresidual( i , tempMat ); 
+
+      (mt_models[i])->get(tempArr,True); // by reference.
+      tempMat.reference(tempArr);
+      mt_cleaner_p.setmodel( i , tempMat ); 
+
+    } // end of for i 
+
+
+  // Fill in  maxResidual and iterationsDone
+
+  Float fractionOfPsf=0.05;
+  
+  // Call the cleaner
+  iterationsDone = mt_cleaner_p.mtclean(niter, fractionOfPsf, gain, threshold.getValue(String("Jy")));
+
+  // Get back the model (this is not held in MTMC by reference, because of 'incremental=T/F' logic....
+  for (Int order=0;order<mt_nterms_p;order++)
+    {
+      Matrix<Float> tempMod;
+      mt_cleaner_p.getmodel(order,tempMod);
+      mt_models[order]->put(tempMod);
+
+      // Also get the updated residuals. Not really needed, but good to have.
+      mt_cleaner_p.getresidual(order,tempMod);
+      mt_residuals[order]->put(tempMod);
+
+      if(order==0) maxResidual = max(fabs(tempMod));
+
+    }           
+
+  return True;
+}
+
+
+Bool Deconvolver::mtrestore(const Vector<String>& models,
+			  const Vector<String>& residuals,
+			  const Vector<String>& images,
+			  GaussianBeam& mbeam)
+{
+
+  LogIO os(LogOrigin("Deconvolver", "mtrestore()", WHERE));
+
+  // check that the mt_cleaner_p is alive..
+  if(mt_valid_p==False)
+    {
+      os << LogIO::WARN << "Multi-Term Deconvolver is not initialized yet. Please call 'mtopen()' first" << LogIO::POST;
+      return False;
+    }
+  
+  os << "Restoring Taylor-coefficient images" << LogIO::POST;
+
+  Block<CountedPtr<PagedImage<Float> > > mt_residuals(mt_nterms_p);
+  for (Int i=0;i<mt_nterms_p;i++)
+    {
+      mt_residuals[i] = new PagedImage<Float>(residuals[i]);
+      AlwaysAssert(&*mt_residuals[i], AipsError);
+      if( mt_residuals[i]->shape()(0) != nx_p || mt_residuals[i]->shape()(1) != ny_p )
+	{
+	  os << LogIO::SEVERE << "Supplied Residual images don't match PSF shapes." << LogIO::POST;
+	  mt_residuals.resize(0); // Not sure if this is safe, with CountedPtrs. WARN.
+	  return False;
+	}
+    }
+
+  // Calculate principal solution on the residuals.
+  //// Send in new residuals
+  for (Int order=0;order<mt_nterms_p;order++)
+    {
+      Matrix<Float> tempMat;
+      Array<Float> tempArr;
+      (mt_residuals[order])->get(tempArr,True); // by reference.
+      tempMat.reference(tempArr);
+      mt_cleaner_p.setresidual( order , tempMat ); 
+    }           
+
+  //// Compute p-soln
+  mt_cleaner_p.computeprincipalsolution();
+
+  //// Get residuals out
+  for (Int order=0;order<mt_nterms_p;order++)
+    {
+      Matrix<Float> tempMat;
+      Matrix<Float> tempMod;
+      mt_cleaner_p.getresidual(order,tempMod);
+      mt_residuals[order]->put(tempMod);
+    }
+
+  // Convolve models with the clean beam and add new residuals.... per term
+  for (Int order=0;order<mt_nterms_p;order++)
+    {
+      PagedImage<Float> thismodel(models[order]);
+      PagedImage<Float> thisimage( thismodel.shape(), thismodel.coordinates(), images[order]);
+
+      LatticeExpr<Float> cop(thismodel);
+      thisimage.copyData(cop);
+
+      StokesImageUtil::Convolve(thisimage, mbeam);
+
+      LatticeExpr<Float> le(thisimage+( *mt_residuals[order] )); 
+      thisimage.copyData(le);
+
+      ImageInfo ii = thisimage.imageInfo();
+      ii.setRestoringBeam(mbeam);
+      thisimage.setImageInfo(ii);
+      thisimage.setUnits(Unit("Jy/beam"));
+      thisimage.table().unmarkForDelete();
+
+    }
+
+  return True;
+}
+
+// This code duplicates WBCleanImageSkyModel::calculateAlphaBeta
+// Eventually, This Deconvolver code will replace what's in WBCleanImageSkyModel.cc
+//  This function must be callable stand-alone, and must not use private vars.
+//      This is to allow easy recalculation of alpha with different thresholds
+Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
+				 const Vector<String>& residuals,
+				 const String& alphaname,
+				 const String& betaname,
+				 const Quantity& threshold,
+				 const Bool calcerror)
+{
+  LogIO os(LogOrigin("Deconvolver", "mtcalcpowerlaw()", WHERE));
+
+  Int ntaylor = images.nelements();
+
+  if(ntaylor<2)
+    {
+      os << LogIO::SEVERE << "Please enter at-least two Taylor-coefficient images" << LogIO::POST;
+      return False;
+    }
+  else
+    {
+
+      // Check that the images exist on disk
+
+      os << "Calculating spectral index";
+      if(ntaylor>3) os << " and spectral curvature";
+      os << " from " << ntaylor << " restored images, using a mask defined by a threshold of " << threshold.getValue(String("Jy")) << " Jy " << LogIO::POST;
+    }
+  
+  // Open restored images 
+  PagedImage<Float> imtaylor0(images[0]);
+  PagedImage<Float> imtaylor1(images[1]);
+
+  // Check shapes
+  if( imtaylor0.shape() != imtaylor1.shape() )
+    {
+      os << LogIO::SEVERE << "Taylor-coefficient image shapes must match." << LogIO::POST;
+      return False;
+    }
+
+  // Create empty alpha image
+  PagedImage<Float> imalpha(imtaylor0.shape(),imtaylor0.coordinates(),alphaname); 
+  imalpha.set(0.0);
+
+  Float specthreshold = threshold.getValue(String("Jy"));
+  
+  // Create a mask - make this adapt to the signal-to-noise 
+  LatticeExpr<Float> mask1(iif((imtaylor0)>(specthreshold),1.0,0.0));
+  LatticeExpr<Float> mask0(iif((imtaylor0)>(specthreshold),0.0,1.0));
+
+  /////// Calculate alpha
+  LatticeExpr<Float> alphacalc( ((imtaylor1)*mask1)/((imtaylor0)+(mask0)) );
+  imalpha.copyData(alphacalc);
+
+  // Set the restoring beam for alpha
+  ImageInfo ii = imalpha.imageInfo();
+  ii.setRestoringBeam( (imtaylor0.imageInfo()).restoringBeam() );
+  imalpha.setImageInfo(ii);
+  //imalpha.setUnits(Unit("Spectral Index"));
+  imalpha.table().unmarkForDelete();
+
+  // Make a mask for the alpha image
+  LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , True, False));
+
+  createMask(lemask, imalpha);
+  os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
+
+
+  ////// Calculate error on alpha, if requested.
+  if(calcerror)
+    {
+      if( residuals.nelements() != ntaylor )
+	{
+	  os << LogIO::WARN << "Number of residual images is different from number of restored images. Not calculating alpha-error map." << LogIO::POST;
+	}
+      else
+	{
+	  PagedImage<Float> imalphaerror(imtaylor0.shape(),imtaylor0.coordinates(),alphaname+String(".error")); 
+	  imalphaerror.set(0.0);
+	  
+	  /* Open residual images */
+	  PagedImage<Float> residual0(residuals[0]);
+	  PagedImage<Float> residual1(residuals[1]);
+
+	  if( residual0.shape() != residual1.shape() || residual0.shape() != imtaylor0.shape() )
+	    {
+	      os << LogIO::WARN << "Shapes of residual images (and/or restored images) do not match. Not calculating alpha-error map." << LogIO::POST;
+	    }
+	  else
+	    {
+	      LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (residual0*mask1)/(imtaylor0+mask0) )*( (residual0*mask1)/(imtaylor0+mask0) ) + ( (residual1*mask1)/(imtaylor1+mask0) )*( (residual1*mask1)/(imtaylor1+mask0) )  ) );
+	      imalphaerror.copyData(alphacalcerror);
+	      imalphaerror.setImageInfo(ii);
+	      createMask(lemask, imalphaerror);
+	      imalphaerror.table().unmarkForDelete();      
+	      os << "Written Spectral Index Error Image : " << alphaname << ".error" << LogIO::POST;
+	      
+	      //          mergeDataError( imalpha, imalphaerror, alphaerrorname+".new" );
+	    }
+
+	}
+
+    }// end if calcerror
+
+  ////// Calculate beta, if enough images are given.
+  if(ntaylor>2)
+    {
+      PagedImage<Float> imbeta(imtaylor0.shape(),imtaylor0.coordinates(),betaname); 
+      imbeta.set(0.0);
+      PagedImage<Float> imtaylor2(images[2]);
+      if( imtaylor2.shape() != imtaylor0.shape() )
+	{
+	  os << LogIO::WARN << "Restored image shapes do not match. Not calculating 'beta'" << LogIO::POST;
+	}
+      else
+	{
+	  LatticeExpr<Float> betacalc( ((imtaylor2)*mask1)/((imtaylor0)+(mask0))-0.5*(imalpha)*(imalpha-1.0) );
+	  imbeta.copyData(betacalc);
+	  imbeta.setImageInfo(ii);
+	  //imbeta.setUnits(Unit("Spectral Curvature"));
+	  createMask(lemask, imbeta);
+	  imbeta.table().unmarkForDelete();
+	  
+	  os << "Written Spectral Curvature Image : " << betaname << LogIO::POST;
+	}
+    }
+  
+  return True;
+}
+
+// This is also a copy of WBCleanImageSkyModel::createMask
+// Eventually, WBCleanImageSkyModel must use this Deconvolver version.
+Bool Deconvolver::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage)
+{
+      ImageRegion outreg = outimage.makeMask("mask0",False,True);
+      LCRegion& outmask=outreg.asMask();
+      outmask.copyData(lemask);
+      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, True);
+      outimage.setDefaultMask("mask0");
+      return True;
+}
+
 
 } //# NAMESPACE CASA - END
