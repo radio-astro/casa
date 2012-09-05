@@ -5395,7 +5395,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedEffBW.push_back(newWidth); 
 	      mergedRes.push_back(newWidth); 
 	      mergedAverageN.push_back(averageN[0]+1); // one more channel contributes
-	      tv2[0] = k; // channel k from spw idi
+	      // channel k is from spw idi
+	      if(newIsDescendingI){
+		tv2[0] = newNUM_CHANi-1-k;
+	      }
+	      else{
+		tv2[0] = k;
+	      }
 	      for(int j=0; j<averageN[0]; j++){
 		tv.push_back(averageWhichSPW[0][j]); // additional contributors
 		tv2.push_back(averageWhichChan[0][j]); // channel 0 from spw id0
@@ -5444,7 +5450,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      if(overlap_frac > 0.){ // update averaging info
 		averageN[j] += 1;
 		averageWhichSPW[j].push_back(idi);
-		averageWhichChan[j].push_back(k);
+		if(newIsDescendingI){
+		  averageWhichChan[j].push_back(newNUM_CHANi-1-k);
+		}
+		else{
+		  averageWhichChan[j].push_back(k);
+		}
 		averageChanFrac[j].push_back(overlap_frac);
 	      }
 	    } // end loop over spw idi
@@ -5550,15 +5561,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       } // end loop over SPWs
 
-//       // print channel fractions for debugging
+      // print channel fractions for debugging
+//       vector< vector<bool> > wasprinted;
 //       for(uInt i=0; i<newNUM_CHAN; i++){
-//  	   cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
-// 	   for(Int j=0; j<averageN[i]; j++){
-// 	     cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 	          << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
-// 	     cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-// 	   }
-//       }	
+// 	vector<bool> tboolv;
+// 	cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
+// 	for(Int j=0; j<averageN[i]; j++){
+// 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+// 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
+// 	  tboolv.push_back(False);
+// 	}
+// 	wasprinted.push_back(tboolv);
+//       }
+      
       
       if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
 	return True;
@@ -6204,17 +6220,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		      weight = averageChanFrac[i][j] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
-			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-// 			cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
-// 			     << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 			     << " i, j, k " << i << ", " << j << ", " << k << " averageChanFrac[i][j] " << averageChanFrac[i][j] 
-// 			     << " modNorm(k) " << modNorm(k) << " newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
-// 			     << newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
-// 			     << " newCorrectedData(k,i) " << newCorrectedData(k,i) 
-// 			     << " weight " << weight << endl; 
+			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;			
 		      }
 		      if(DATAColIsOK){
 			newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+// 			if (!wasprinted[i][j]){
+// 			  cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
+// 			       << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 			       << " i, j, k " << i << ", " << j << ", " << k << " averageChanFrac[i][j] " << averageChanFrac[i][j] 
+// 			       << " modNorm(k) " << modNorm(k) << " newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
+// 			       << newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
+// 			       << " newCorrectedData(k,i) " << newData(k,i) 
+// 			       << " weight " << weight << endl;
+// 			  wasprinted[i][j] = True;
+// 			} 
 		      }
 		      if(FLOAT_DATAColIsOK){
 			newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
