@@ -219,12 +219,14 @@ bool SpectralPositioningWidget::fillPointWorld( QList<double> &worldX, QList<dou
 		if ( recognizedFormat ){
 			double length = qAbs( worldXValues[1] - worldXValues[0] );
 			double height = qAbs( worldYValues[1] - worldYValues[0] );
+
 			//Initialize the vectors we will pass to the algorithm
 			//We need the blc and then the tlc.
 			worldX.append( centerXRad + length/2 );
 			worldX.append( centerXRad - length/2 );
 			worldY.append( centerYRad - height/2 );
 			worldY.append( centerYRad + height/2 );
+
 		}
 	}
 	return recognizedFormat;
@@ -506,7 +508,7 @@ void SpectralPositioningWidget::updateUIWorldPoint(){
 
 	QString raStr = Util::toDegreeString( raHours, raMins, raSecs );
 	ui.pointRALineEdit->setText( raStr );
-	QString decStr = Util::toDegreeString( decDegs, decMins, decSecs );
+	QString decStr = Util::toDecString( decDegs, decMins, decSecs );
 	Util::appendSign( centerY, decStr );
 	ui.pointDECLineEdit->setText( decStr );
 }
@@ -524,7 +526,7 @@ void SpectralPositioningWidget::setWorldEdits( double topLeft, double bottomLeft
 	int blcYdeg, blcYmin;
 	double blcYsec;
 	Util::getDec( bottomLeft, blcYdeg, blcYmin, blcYsec );
-	QString blcDECStr = Util::toDegreeString( blcYdeg, blcYmin, blcYsec );
+	QString blcDECStr = Util::toDecString( blcYdeg, blcYmin, blcYsec );
 	Util::appendSign( bottomLeft, blcDECStr );
 	ui.blcyLineEdit->setText( blcDECStr );
 
@@ -537,7 +539,7 @@ void SpectralPositioningWidget::setWorldEdits( double topLeft, double bottomLeft
 	int trcYDec, trcYmin;
 	double trcYsec;
 	Util::getDec( bottomRight, trcYDec, trcYmin, trcYsec );
-	QString trcDECStr = Util::toDegreeString( trcYDec, trcYmin, trcYsec );
+	QString trcDECStr = Util::toDecString( trcYDec, trcYmin, trcYsec );
 	Util::appendSign( bottomRight, trcDECStr );
 	ui.trcyLineEdit->setText( trcDECStr );
 }

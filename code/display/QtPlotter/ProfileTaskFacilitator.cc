@@ -28,6 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/Logging/LogIO.h>
 #include <QDoubleValidator>
+#include <QDebug>
 
 namespace casa {
 
@@ -101,12 +102,22 @@ const String ProfileTaskFacilitator::getPixelBox() const {
 	Vector<double> yPixels;
 	taskMonitor->getPixelBounds(xPixels, yPixels);
 	String box = "";
+	const String commaStr = ",";
 	if ( xPixels.size() == 2 && yPixels.size() == 2 ){
-		const String commaStr = ",";
+
 		box = String::toString(xPixels[0]) + commaStr;
 		box.append( String::toString( yPixels[0] )+ commaStr);
 		box.append( String::toString( xPixels[1] ) + commaStr );
 		box.append( String::toString( yPixels[1] ) );
+	}
+	else if ( xPixels.size() == 1 && yPixels.size() == 1 ){
+		box = String::toString(xPixels[0]) + commaStr;
+		box.append( String::toString( yPixels[0] )+ commaStr);
+		box.append( String::toString( xPixels[0] ) + commaStr );
+		box.append( String::toString( yPixels[0] ) );
+	}
+	else {
+		qDebug() << "Unrecognized region pixel size is "<<xPixels.size();
 	}
 	return box;
 }

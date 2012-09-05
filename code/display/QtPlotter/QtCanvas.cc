@@ -965,6 +965,7 @@ QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::A
 
 int QtCanvas::getLastAxis() const {
 	int lastAxis = QtPlotSettings::END_AXIS_INDEX;
+	//qDebug() << "curveMap size is "<<curveMap.size();
 	if ( ! showTopAxis || curveMap.size() > 1 ){
 		lastAxis = QtPlotSettings::xTop;
 	}

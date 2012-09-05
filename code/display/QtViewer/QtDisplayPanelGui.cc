@@ -1299,6 +1299,10 @@ void QtDisplayPanelGui::showImageProfile() {
 
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	QHash<QString, ImageInterface<float>*> overlap;
+	bool profileVisible = false;
+	if ( profile_ && profile_->isVisible()){
+		profileVisible = true;
+	}
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 
 		QtDisplayData* pdd = qdds.getRight();
@@ -1491,9 +1495,13 @@ void QtDisplayPanelGui::showImageProfile() {
 				profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
 		emit overlay(overlap);
 	}
+
 	PanelDisplay* ppd = qdp_->panelDisplay();
 	QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
-	if (rect) {
+
+	//Fix of the measles problem.  Cycling through existing regions is only
+	//necessary if the profile is not shown (up-to-date).
+	if (rect && !profileVisible) {
 		// this is the *new* region implementation... all events come from region source...
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
 		qrs->generateExistingRegionUpdates( );

@@ -79,147 +79,147 @@ QtProfile::~QtProfile()
 }
 
 QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *parent, std::string rcstr)
-        :QMainWindow(parent),
-         //pc(0),
-         //te(0),
-         analysis(0), image(img), over(0),WORLD_COORDINATES("world"),
-         coordinate( WORLD_COORDINATES ), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
-         cSysRval(""), fileName(name), position(""), yUnit(""),
-         yUnitPrefix(""), xpos(""), ypos(""), cube(0),
-         npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
-         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
-         lastPX(Vector<Double>()), lastPY(Vector<Double>()),
-         lastWX(Vector<Double>()), lastWY(Vector<Double>()),
-         z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
-         itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
-         current_region_id(0),
-         colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
+:QMainWindow(parent),
+ //pc(0),
+ //te(0),
+ analysis(0), image(img), over(0),WORLD_COORDINATES("world"),
+ coordinate( WORLD_COORDINATES ), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
+ cSysRval(""), fileName(name), position(""), yUnit(""),
+ yUnitPrefix(""), xpos(""), ypos(""), cube(0),
+ npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
+ z_xval(Vector<Float>()), z_yval(Vector<Float>()),
+ lastPX(Vector<Double>()), lastPY(Vector<Double>()),
+ lastWX(Vector<Double>()), lastWY(Vector<Double>()),
+ z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
+ itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
+ current_region_id(0),
+ colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
 {
-    setupUi(this);
-    initPlotterResource();
+	setupUi(this);
+	initPlotterResource();
 
-    setBackgroundRole(QPalette::Dark);
+	setBackgroundRole(QPalette::Dark);
 
-    fillPlotTypes(img);
-    connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
-            this, SLOT(changePlotType(const QString &)));
-    connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
-            this, SLOT(changeErrorType(const QString &)));
+	fillPlotTypes(img);
+	connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
+			this, SLOT(changePlotType(const QString &)));
+	connect(errorMode, SIGNAL(currentIndexChanged(const QString &)),
+			this, SLOT(changeErrorType(const QString &)));
 
-    pixelCanvas = this->canvasHolder->getCanvas();
-    QPalette pal = pixelCanvas->palette();
-    pal.setColor(QPalette::Background, Qt::white);
-    pixelCanvas->setPalette(pal);
-    connect( functionTabs, SIGNAL(currentChanged(int)), pixelCanvas, SLOT(changeTaskMode(int)));
+	pixelCanvas = this->canvasHolder->getCanvas();
+	QPalette pal = pixelCanvas->palette();
+	pal.setColor(QPalette::Background, Qt::white);
+	pixelCanvas->setPalette(pal);
+	connect( functionTabs, SIGNAL(currentChanged(int)), pixelCanvas, SLOT(changeTaskMode(int)));
 
-    initPreferences();
+	initPreferences();
 
-    //Plot colors we will use
-    colorSummaryWidget = new ColorSummaryWidget( this );
-    colorSummaryWidget->setColorCanvas( pixelCanvas );
+	//Plot colors we will use
+	colorSummaryWidget = new ColorSummaryWidget( this );
+	colorSummaryWidget->setColorCanvas( pixelCanvas );
 
-    //User legend preferences
-    legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
+	//User legend preferences
+	legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
-    CoordinateSystem cSys = image->coordinates();
-    SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-    Converter::setSpectralCoordinate( spectralCoordinate );
+	CoordinateSystem cSys = image->coordinates();
+	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+	Converter::setSpectralCoordinate( spectralCoordinate );
 
-    // read the preferred ctype from casarc
-    QString pref_ctype = read( ".freqcoord.type");
-    if (pref_ctype.size()>0){
-    	// change to the preferred ctype
-    	updateAxisUnitCombo( pref_ctype, bottomAxisCType );
-    	updateAxisUnitCombo( pref_ctype, topAxisCType );
-    }
+	// read the preferred ctype from casarc
+	QString pref_ctype = read( ".freqcoord.type");
+	if (pref_ctype.size()>0){
+		// change to the preferred ctype
+		updateAxisUnitCombo( pref_ctype, bottomAxisCType );
+		updateAxisUnitCombo( pref_ctype, topAxisCType );
+	}
 
-    ctypeUnit = String(bottomAxisCType->currentText().toStdString());
-    getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
-    pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
+	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
+	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+	pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 
-    QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
-    for ( int i = 0; i < yUnitsList.size(); i++ ){
-    	yAxisCombo->addItem( yUnitsList[i] );
-    }
-    yAxisCombo->setCurrentIndex( 0 );
-    setDisplayYUnits( yAxisCombo->currentText() );
-    connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
+	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
+	for ( int i = 0; i < yUnitsList.size(); i++ ){
+		yAxisCombo->addItem( yUnitsList[i] );
+	}
+	yAxisCombo->setCurrentIndex( 0 );
+	setDisplayYUnits( yAxisCombo->currentText() );
+	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
 
 
 
-    // get reference frame info for freq axis label
-    MFrequency::Types freqtype = determineRefFrame(img);
-    spcRefFrame = String(MFrequency::showType(freqtype));
-    Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
-    spcRef->setCurrentIndex(frameindex);
-    connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
-            this, SLOT(changeCoordinateType(const QString &)));
-    connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
-    		this, SLOT(changeTopAxisCoordinateType(const QString &)));
-    connect(spcRef, SIGNAL(currentIndexChanged(const QString &)),
-            this, SLOT(changeFrame(const QString &)));
+	// get reference frame info for freq axis label
+	MFrequency::Types freqtype = determineRefFrame(img);
+	spcRefFrame = String(MFrequency::showType(freqtype));
+	Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
+	spcRef->setCurrentIndex(frameindex);
+	connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
+			this, SLOT(changeCoordinateType(const QString &)));
+	connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
+			this, SLOT(changeTopAxisCoordinateType(const QString &)));
+	connect(spcRef, SIGNAL(currentIndexChanged(const QString &)),
+			this, SLOT(changeFrame(const QString &)));
 
-    QSettings settings("CASA", "Viewer");
-    QString pName = settings.value("Print/printer").toString();
+	QSettings settings("CASA", "Viewer");
+	QString pName = settings.value("Print/printer").toString();
 
-    connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
-    connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(channelSelect(float)));
-    connect(pixelCanvas, SIGNAL(channelRangeSelect(float,float)), this, SLOT( channelRangeSelect(float,float)));
+	connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
+	connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(channelSelect(float)));
+	connect(pixelCanvas, SIGNAL(channelRangeSelect(float,float)), this, SLOT( channelRangeSelect(float,float)));
 
-    pixelCanvas->setTitle("");
-    pixelCanvas->setWelcome("assign a mouse button to\n"
-                   "'crosshair' or 'rectangle' or 'polygon'\n"
-                   "click/press+drag the assigned button on\n"
-                   "the image to get a spectral profile");
+	pixelCanvas->setTitle("");
+	pixelCanvas->setWelcome("assign a mouse button to\n"
+			"'crosshair' or 'rectangle' or 'polygon'\n"
+			"click/press+drag the assigned button on\n"
+			"the image to get a spectral profile");
 
-    QString lbl = bottomAxisCType->currentText();
-    pixelCanvas->setXLabel(lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xBottom );
-    lbl = topAxisCType->currentText();
-    pixelCanvas->setXLabel( lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xTop);
+	QString lbl = bottomAxisCType->currentText();
+	pixelCanvas->setXLabel(lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xBottom );
+	lbl = topAxisCType->currentText();
+	pixelCanvas->setXLabel( lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xTop);
 
-    yUnit = QString(img->units().getName().chars());
-    setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	yUnit = QString(img->units().getName().chars());
+	setPixelCanvasYUnits( yUnitPrefix, yUnit );
 
-    pixelCanvas->setAutoScaleX(true);
-    pixelCanvas->setAutoScaleY(true);
+	pixelCanvas->setAutoScaleX(true);
+	pixelCanvas->setAutoScaleY(true);
 
-    connect(actionZoomIn, SIGNAL(triggered()), this, SLOT(zoomIn()));
-    connect(actionZoomOut, SIGNAL(triggered()), this, SLOT(zoomOut()));
-    connect(actionZoomNeutral, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
-    connect(actionPrint, SIGNAL(triggered()), this, SLOT(print()));
-    connect(actionSaveGraphic, SIGNAL(triggered()), this, SLOT(saveGraphic()));
-    connect(actionExport, SIGNAL(triggered()), this, SLOT(exportProfile()));
-    connect(actionMoveLeft, SIGNAL(triggered()), this, SLOT(left()));
-    connect(actionMoveRight, SIGNAL(triggered()), this, SLOT(right()));
-    connect(actionMoveUp, SIGNAL(triggered()), this, SLOT(up()));
-    connect(actionMoveDown, SIGNAL(triggered()), this, SLOT(down()));
-    connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
-    connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
-    connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
+	connect(actionZoomIn, SIGNAL(triggered()), this, SLOT(zoomIn()));
+	connect(actionZoomOut, SIGNAL(triggered()), this, SLOT(zoomOut()));
+	connect(actionZoomNeutral, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
+	connect(actionPrint, SIGNAL(triggered()), this, SLOT(print()));
+	connect(actionSaveGraphic, SIGNAL(triggered()), this, SLOT(saveGraphic()));
+	connect(actionExport, SIGNAL(triggered()), this, SLOT(exportProfile()));
+	connect(actionMoveLeft, SIGNAL(triggered()), this, SLOT(left()));
+	connect(actionMoveRight, SIGNAL(triggered()), this, SLOT(right()));
+	connect(actionMoveUp, SIGNAL(triggered()), this, SLOT(up()));
+	connect(actionMoveDown, SIGNAL(triggered()), this, SLOT(down()));
+	connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
+	connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
+	connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
 
-    //Spectral Line Fitting & Moments/Collapse initialization
-    momentSettingsWidget->setTaskSpecLineFitting( false );
-    specFitSettingsWidget->setTaskSpecLineFitting( true );
-    specFitSettingsWidget -> setCanvas( pixelCanvas );
-    momentSettingsWidget -> setCanvas( pixelCanvas );
-    lineOverlaysHolder->setCanvas( pixelCanvas );
-    lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
-    specFitSettingsWidget -> setTaskMonitor( this );
-    momentSettingsWidget -> setTaskMonitor( this );
-    positioningWidget -> setTaskMonitor( this );
-    specFitSettingsWidget -> setLogger( itsLog );
-    momentSettingsWidget -> setLogger( itsLog );
-    positioningWidget->setLogger( itsLog );
-    try{
-   	 analysis  = new ImageAnalysis(img);
-   	 momentSettingsWidget->reset();
-   	 specFitSettingsWidget->reset();
-   	 setUnitsText( xaxisUnit );
-    }
-    catch (AipsError x){
-   	 String message = "Error when starting the profiler:\n" + x.getMesg();
-   	 *itsLog << LogIO::WARN << message << LogIO::POST;
-    }
+	//Spectral Line Fitting & Moments/Collapse initialization
+	momentSettingsWidget->setTaskSpecLineFitting( false );
+	specFitSettingsWidget->setTaskSpecLineFitting( true );
+	specFitSettingsWidget -> setCanvas( pixelCanvas );
+	momentSettingsWidget -> setCanvas( pixelCanvas );
+	lineOverlaysHolder->setCanvas( pixelCanvas );
+	lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
+	specFitSettingsWidget -> setTaskMonitor( this );
+	momentSettingsWidget -> setTaskMonitor( this );
+	positioningWidget -> setTaskMonitor( this );
+	specFitSettingsWidget -> setLogger( itsLog );
+	momentSettingsWidget -> setLogger( itsLog );
+	positioningWidget->setLogger( itsLog );
+	try{
+		analysis  = new ImageAnalysis(img);
+		momentSettingsWidget->reset();
+		specFitSettingsWidget->reset();
+		setUnitsText( xaxisUnit );
+	}
+	catch (AipsError x){
+		String message = "Error when starting the profiler:\n" + x.getMesg();
+		*itsLog << LogIO::WARN << message << LogIO::POST;
+	}
 
 }
 
@@ -233,184 +233,184 @@ void QtProfile::setUnitsText( String unitStr ){
 
 MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
 {
-  MFrequency::Types freqtype;
+	MFrequency::Types freqtype;
 
-  CoordinateSystem cSys=img->coordinates();
-  Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+	CoordinateSystem cSys=img->coordinates();
+	Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
 
-  if ( specAx < 0 ) {
-    QMessageBox::information( this, "No spectral axis...",
-			      "Sorry, could not find a spectral axis for this image...",
-			      QMessageBox::Ok);
-    return MFrequency::DEFAULT;
-  }
+	if ( specAx < 0 ) {
+		QMessageBox::information( this, "No spectral axis...",
+				"Sorry, could not find a spectral axis for this image...",
+				QMessageBox::Ok);
+		return MFrequency::DEFAULT;
+	}
 
-  SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
-  MFrequency::Types tfreqtype;
-  MEpoch tepoch;
-  MPosition tposition;
-  MDirection tdirection;
-  specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
-  freqtype = specCoor.frequencySystem(False); // false means: get the native type
+	SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
+	MFrequency::Types tfreqtype;
+	MEpoch tepoch;
+	MPosition tposition;
+	MDirection tdirection;
+	specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+	freqtype = specCoor.frequencySystem(False); // false means: get the native type
 
-  if( check_native_frame && tfreqtype != freqtype ){ // there is an active conversion layer
-	  // ask user if he/she wants to change to native frame
-	  String title = "Change display reference frame?";
-	  String message = "Native reference frame is " + MFrequency::showType(freqtype)
-	  + ",\n display frame is " + MFrequency::showType(tfreqtype) + ".\n"
-	  + "Change display frame permanently to " + MFrequency::showType(freqtype) + "?\n"
-	  + "(Needs write access to image.)";
-	  if(QMessageBox::question(this, title.c_str(), message.c_str(),
-			  QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
-		  // user wants to change
-		  try {
-			  // set the reference conversion to the native type, effectively switching it off
-			  if(!specCoor.setReferenceConversion(freqtype, tepoch, tposition, tdirection)
-					  || !cSys.replaceCoordinate(specCoor, specAx)
-					  || !img->setCoordinateInfo(cSys)){
+	if( check_native_frame && tfreqtype != freqtype ){ // there is an active conversion layer
+		// ask user if he/she wants to change to native frame
+		String title = "Change display reference frame?";
+		String message = "Native reference frame is " + MFrequency::showType(freqtype)
+		+ ",\n display frame is " + MFrequency::showType(tfreqtype) + ".\n"
+		+ "Change display frame permanently to " + MFrequency::showType(freqtype) + "?\n"
+		+ "(Needs write access to image.)";
+		if(QMessageBox::question(this, title.c_str(), message.c_str(),
+				QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
+			// user wants to change
+			try {
+				// set the reference conversion to the native type, effectively switching it off
+				if(!specCoor.setReferenceConversion(freqtype, tepoch, tposition, tdirection)
+						|| !cSys.replaceCoordinate(specCoor, specAx)
+						|| !img->setCoordinateInfo(cSys)){
 
-				  img->coordinates().spectralCoordinate(specAx).getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
-				  title = "Failure";
-				  message = "casaviewer: Error setting reference frame conversion to native frame ("
-						  + MFrequency::showType(freqtype) + ")\nWill use " + MFrequency::showType(tfreqtype) + " instead";
-				  QMessageBox::warning(this, title.c_str(), message.c_str(),
-						  QMessageBox::Ok, QMessageBox::NoButton);
-				  freqtype = tfreqtype;
-			  }
-		  } catch (AipsError x) {
-			  title = "Failure";
-			  message = "Error when trying to change display reference frame:\n" + x.getMesg();
-			  QMessageBox::warning(this, title.c_str(), message.c_str(),
-					  QMessageBox::Ok, QMessageBox::NoButton);
-			  freqtype = tfreqtype;
-		  }
-	  }
-	  else{ // user does not want to change
-		  freqtype = tfreqtype;
-	  }
-  } // end if there is a conv layer
+					img->coordinates().spectralCoordinate(specAx).getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+					title = "Failure";
+					message = "casaviewer: Error setting reference frame conversion to native frame ("
+							+ MFrequency::showType(freqtype) + ")\nWill use " + MFrequency::showType(tfreqtype) + " instead";
+					QMessageBox::warning(this, title.c_str(), message.c_str(),
+							QMessageBox::Ok, QMessageBox::NoButton);
+					freqtype = tfreqtype;
+				}
+			} catch (AipsError x) {
+				title = "Failure";
+				message = "Error when trying to change display reference frame:\n" + x.getMesg();
+				QMessageBox::warning(this, title.c_str(), message.c_str(),
+						QMessageBox::Ok, QMessageBox::NoButton);
+				freqtype = tfreqtype;
+			}
+		}
+		else{ // user does not want to change
+			freqtype = tfreqtype;
+		}
+	} // end if there is a conv layer
 
-  return freqtype;
+	return freqtype;
 
 }
 void QtProfile::zoomOut()
 {
-    pixelCanvas->zoomOut();
+	pixelCanvas->zoomOut();
 }
 
 void QtProfile::zoomIn()
 {
-   pixelCanvas->zoomIn();
+	pixelCanvas->zoomIn();
 }
 
 void QtProfile::zoomNeutral()
 {
-   pixelCanvas->zoomNeutral();
+	pixelCanvas->zoomNeutral();
 }
 
 void QtProfile::print()
 {
 #ifndef QT_NO_PRINTER
-    QPrinter printer(QPrinter::ScreenResolution);
-    //printer.setFullPage(true);
-    QPrintDialog *dlg = new QPrintDialog(&printer, this);
-    if (dlg->exec() == QDialog::Accepted) {
-       QSettings settings("CASA", "Viewer");
-       settings.setValue("Print/printer", printer.printerName());
-       printIt(&printer);
-    }
-    delete dlg;
+	QPrinter printer(QPrinter::ScreenResolution);
+	//printer.setFullPage(true);
+	QPrintDialog *dlg = new QPrintDialog(&printer, this);
+	if (dlg->exec() == QDialog::Accepted) {
+		QSettings settings("CASA", "Viewer");
+		settings.setValue("Print/printer", printer.printerName());
+		printIt(&printer);
+	}
+	delete dlg;
 #endif
 }
 void QtProfile::printExp()
 {
 #ifndef QT_NO_PRINTER
-    QPrinter printer(QPrinter::ScreenResolution);
-    QSettings settings("CASA", "Viewer");
-    printer.setPrinterName(settings.value("Print/printer").toString());
-    printIt(&printer);
+	QPrinter printer(QPrinter::ScreenResolution);
+	QSettings settings("CASA", "Viewer");
+	printer.setPrinterName(settings.value("Print/printer").toString());
+	printIt(&printer);
 #endif
 }
 
 void QtProfile::saveGraphic()
 {
-    QString dflt = fileName + position + ".png";
+	QString dflt = fileName + position + ".png";
 
-    QString fn = QFileDialog::getSaveFileName(this,
-       tr("Save as..."), QString(dflt), tr("(*.png);;(*.pdf);;(*.xpm);;(*.jpg);;(*.ppm);;(*.jpeg)"));
+	QString fn = QFileDialog::getSaveFileName(this,
+			tr("Save as..."), QString(dflt), tr("(*.png);;(*.pdf);;(*.xpm);;(*.jpg);;(*.ppm);;(*.jpeg)"));
 
-    if (fn.isEmpty())
-        return ;
+	if (fn.isEmpty())
+		return ;
 
-    QString ext = fn.section('.', -1);
-    if (ext == "xpm" || ext == "jpg" || ext == "png" ||
-        ext == "xbm" || ext == "ppm" || ext == "jpeg")
-        ;
-    else
-        fn.append(".png");
+	QString ext = fn.section('.', -1);
+	if (ext == "xpm" || ext == "jpg" || ext == "png" ||
+			ext == "xbm" || ext == "ppm" || ext == "jpeg")
+		;
+	else
+		fn.append(".png");
 
-    QFile file(fn);
-    if (!file.open(QFile::WriteOnly))
-        return ;
+	QFile file(fn);
+	if (!file.open(QFile::WriteOnly))
+		return ;
 
-    pixelCanvas->graph()->save(fn);
-    return ;
+	pixelCanvas->graph()->save(fn);
+	return ;
 }
 void QtProfile::saveExp()
 {
-    //qDebug() << "fileName:" << fileName;
-    QFile file(fileName.append(position).append(".png"));
-    if (!file.open(QFile::WriteOnly))
-        return ;
-    //qDebug() << "open ok";
+	//qDebug() << "fileName:" << fileName;
+	QFile file(fileName.append(position).append(".png"));
+	if (!file.open(QFile::WriteOnly))
+		return ;
+	//qDebug() << "open ok";
 
-    pixelCanvas->graph()->save(fileName, "PNG");
-    //qDebug() << "save ok";
-    return ;
+	pixelCanvas->graph()->save(fileName, "PNG");
+	//qDebug() << "save ok";
+	return ;
 }
 
 void QtProfile::exportProfile()
 {
-    QString fn = QFileDialog::getSaveFileName(this,
-       tr("Export profile"),
-       QString(), tr( "FITS files (*.fits);; Text files (*.txt, *.plt)"));
+	QString fn = QFileDialog::getSaveFileName(this,
+			tr("Export profile"),
+			QString(), tr( "FITS files (*.fits);; Text files (*.txt, *.plt)"));
 
-    if (fn.isEmpty())
-        return ;
+	if (fn.isEmpty())
+		return ;
 
-    QString ext = fn.section('.', -1);
-    bool ok;
-    if (ext =="fits")
-   	 ok = exportFITSSpectrum(fn);
-    else {
-    if (ext != "txt" && ext != "plt")
-        fn.append(".txt");
-		 ok = exportASCIISpectrum(fn);
-    }
+	QString ext = fn.section('.', -1);
+	bool ok;
+	if (ext =="fits")
+		ok = exportFITSSpectrum(fn);
+	else {
+		if (ext != "txt" && ext != "plt")
+			fn.append(".txt");
+		ok = exportASCIISpectrum(fn);
+	}
 }
 
 void QtProfile::left()
 {
-   QApplication::sendEvent(pixelCanvas,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Left, 0, 0));
+	QApplication::sendEvent(pixelCanvas,
+			new QKeyEvent(QEvent::KeyPress, Qt::Key_Left, 0, 0));
 }
 
 void QtProfile::right()
 {
-   QApplication::sendEvent(pixelCanvas,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Right, 0, 0));
+	QApplication::sendEvent(pixelCanvas,
+			new QKeyEvent(QEvent::KeyPress, Qt::Key_Right, 0, 0));
 }
 
 void QtProfile::up()
 {
-   QApplication::sendEvent(pixelCanvas,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Up, 0, 0));
+	QApplication::sendEvent(pixelCanvas,
+			new QKeyEvent(QEvent::KeyPress, Qt::Key_Up, 0, 0));
 }
 
 void QtProfile::down()
 {
-   QApplication::sendEvent(pixelCanvas,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
+	QApplication::sendEvent(pixelCanvas,
+			new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 }
 
 void QtProfile::initPreferences(){
@@ -418,7 +418,7 @@ void QtProfile::initPreferences(){
 			pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
 			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(), pixelCanvas->isShowChannelLine());
 	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool, bool)),
-				this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool, bool)));
+			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool, bool)));
 	profilePrefs->syncUserPreferences();
 }
 
@@ -428,8 +428,8 @@ void QtProfile::preferences()
 }
 
 void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
-				bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
-				bool showChannelLine){
+		bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
+		bool showChannelLine){
 	bool update=false;
 	if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
 		update=true;
@@ -441,7 +441,7 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 	pixelCanvas->setShowChannelLine( showChannelLine );
 	pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 	adjustTopAxisSettings();
-	
+
 	stateMProf=inMProf;
 	stateRel  = inRel;
 
@@ -466,14 +466,14 @@ void QtProfile::setPlotError(int st)
 
 void QtProfile::changeCoordinate(const QString &text) {
 
-  coordinate = String(text.toStdString());
+	coordinate = String(text.toStdString());
 
-  //Double x1, y1;
-  //getProfileRange(x1, y1, coordinate.chars());
-  //qDebug() << "coordinate:" << QString(coordinate.chars())
-  //           << "profile Range:" << x1 << y1;
+	//Double x1, y1;
+	//getProfileRange(x1, y1, coordinate.chars());
+	//qDebug() << "coordinate:" << QString(coordinate.chars())
+	//           << "profile Range:" << x1 << y1;
 
-  emit coordinateChange(coordinate);
+	emit coordinateChange(coordinate);
 }
 
 
@@ -496,22 +496,22 @@ void QtProfile::changeTopAxisCoordinateType( const QString & /*text*/ ){
 
 
 void QtProfile::changeCoordinateType(const QString &text ) {
-		xpos = "";
-		ypos = "";
-		position = QString("");
-		profileStatus->showMessage(position);
-		pixelCanvas->clearCurve();
+	xpos = "";
+	ypos = "";
+	position = QString("");
+	profileStatus->showMessage(position);
+	pixelCanvas->clearCurve();
 
-		ctypeUnit = String(text.toStdString());
-		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+	ctypeUnit = String(text.toStdString());
+	getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 
-		setUnitsText( xaxisUnit );
+	setUnitsText( xaxisUnit );
 
-		pixelCanvas->setPlotSettings(QtPlotSettings());
-		pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
-		updateXAxisLabel( text, QtPlotSettings::xBottom );
+	pixelCanvas->setPlotSettings(QtPlotSettings());
+	pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
+	updateXAxisLabel( text, QtPlotSettings::xBottom );
 
-		//cout << "put to rc.viewer: " << text.toStdString() << endl;
+	//cout << "put to rc.viewer: " << text.toStdString() << endl;
 	persist( ".freqcoord.type", text);
 	if(lastPX.nelements() > 0){
 		// update display with new coord type
@@ -522,15 +522,15 @@ void QtProfile::changeCoordinateType(const QString &text ) {
 }
 
 void QtProfile::closeEvent (QCloseEvent *) {
-   //qDebug() << "closeEvent";
-  lastPX.resize(0);
-  lastPY.resize(0);
-  lastWX.resize(0);
-  lastWY.resize(0);
-  z_xval.resize(0);
-  z_yval.resize(0);
-  z_eval.resize(0);
-  emit hideProfile();
+	//qDebug() << "closeEvent";
+	lastPX.resize(0);
+	lastPY.resize(0);
+	lastWX.resize(0);
+	lastWY.resize(0);
+	z_xval.resize(0);
+	z_yval.resize(0);
+	z_eval.resize(0);
+	emit hideProfile();
 }
 
 void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
@@ -608,97 +608,97 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 }
 
 void QtProfile::wcChanged( const String c,
-			   const Vector<Double> px, const Vector<Double> py,
-			   const Vector<Double> wx, const Vector<Double> wy,
-			   const ProfileType ptype)
+		const Vector<Double> px, const Vector<Double> py,
+		const Vector<Double> wx, const Vector<Double> wy,
+		const ProfileType ptype)
 {
 	if (!isVisible()) return;
-    if (!analysis) return;
-    *itsLog << LogOrigin("QtProfile", "wcChanged");
+	if (!analysis) return;
+	*itsLog << LogOrigin("QtProfile", "wcChanged");
 
-    bool cubeZero = checkCube();
-    if (cubeZero){
-    	return;
-    }
+	bool cubeZero = checkCube();
+	if (cubeZero){
+		return;
+	}
 
-    copyToLastEvent( c,px,py,wx,wy );
+	copyToLastEvent( c,px,py,wx,wy );
 
-    setPlotType( wx.size() );
+	setPlotType( wx.size() );
 
-    assignCoordinate( c );
+	assignCoordinate( c );
 
-    Int ns;
-    px.shape(ns);
+	Int ns;
+	px.shape(ns);
 
-    Vector<Double> pxv(ns);
-    Vector<Double> pyv(ns);
-    Vector<Double> wxv(ns);
-    Vector<Double> wyv(ns);
+	Vector<Double> pxv(ns);
+	Vector<Double> pyv(ns);
+	Vector<Double> wxv(ns);
+	Vector<Double> wyv(ns);
 
-    initializeCoordinateVectors( px,py,wx,wy,pxv,pyv,wxv,wyv );
+	initializeCoordinateVectors( px,py,wx,wy,pxv,pyv,wxv,wyv );
 
 
-    if (ns < 1) return;
+	if (ns < 1) return;
 
-    switch (ptype)
-    {
-       case SINGPROF:
-    	   pixelCanvas->setTitle("Single Point Profile");
-    	   region = "Point";
-    	   break;
-       case RECTPROF:
-    	   pixelCanvas->setTitle("Rectangle Region Profile");
-           region = "Rect";
-           break;
-       case ELLPROF:
-    	   pixelCanvas->setTitle("Elliptical Region Profile");
-           region = "Ellipse";
-           break;
-       case POLYPROF:
-           pixelCanvas->setTitle("Polygon Region Profile");
-           region = "Poly";
-           break;
-       case UNKNPROF:
-    	   break;
-       default:
-           pixelCanvas->setTitle("");
-           region = "";
-    }
-    pixelCanvas->setWelcome("");
+	switch (ptype)
+	{
+	case SINGPROF:
+		pixelCanvas->setTitle("Single Point Profile");
+		region = "Point";
+		break;
+	case RECTPROF:
+		pixelCanvas->setTitle("Rectangle Region Profile");
+		region = "Rect";
+		break;
+	case ELLPROF:
+		pixelCanvas->setTitle("Elliptical Region Profile");
+		region = "Ellipse";
+		break;
+	case POLYPROF:
+		pixelCanvas->setTitle("Polygon Region Profile");
+		region = "Poly";
+		break;
+	case UNKNPROF:
+		break;
+	default:
+		pixelCanvas->setTitle("");
+		region = "";
+	}
+	pixelCanvas->setWelcome("");
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
 	//Get Profile Flux density v/s coordinateType
 	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 	if ( !ok ){
-	    return;
+		return;
 	}
 
-    ok = setErrorPlotting( wxv, wyv );
-    if ( !ok ){
-    	return;
-    }
+	ok = setErrorPlotting( wxv, wyv );
+	if ( !ok ){
+		return;
+	}
 
-    // scale for better display
-    Int ordersOfM = scaleAxis();
+	// scale for better display
+	Int ordersOfM = scaleAxis();
 
-    // remove the "/beam" in case of plotting flux
-    if(itsPlotType==QtProfile::PFLUX){
-      Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
-      if(pos>-1){
-	yUnit.remove(pos,5);
-	setPixelCanvasYUnits( yUnitPrefix, yUnit);
-      }
-    }
+	// remove the "/beam" in case of plotting flux
+	if(itsPlotType==QtProfile::PFLUX){
+		Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
+		if(pos>-1){
+			yUnit.remove(pos,5);
+			setPixelCanvasYUnits( yUnitPrefix, yUnit);
+		}
+	}
 
-    // plot the graph
-    plotMainCurve();
+	// plot the graph
+	plotMainCurve();
 
-    addImageAnalysisGraph( wxv,wyv, ordersOfM );
-    storeCoordinates( pxv, pyv, wxv, wyv );
+	addImageAnalysisGraph( wxv,wyv, ordersOfM );
+	storeCoordinates( pxv, pyv, wxv, wyv );
 
-    momentSettingsWidget->setCollapseVals( z_xval );
-    specFitSettingsWidget->setCollapseVals( z_xval );
+	momentSettingsWidget->setCollapseVals( z_xval );
+	specFitSettingsWidget->setCollapseVals( z_xval );
 }
 
 
@@ -737,12 +737,12 @@ void QtProfile::changePlotType(const QString &text) {
 		if (cSys.qualityAxisNumber() > -1 && errorMode->findText("propagated") < 0)
 			errorMode->insertItem(1, "propagated");
 		break;
-	//case QtProfile::PVRMSE:
-	//	if (errorMode->findText("rmse") > -1)
-	//		errorMode->removeItem(errorMode->findText("rmse"));
-	//	if (errorMode->findText("propagated") > -1)
-	//		errorMode->removeItem(errorMode->findText("propagated"));
-	//	break;
+		//case QtProfile::PVRMSE:
+		//	if (errorMode->findText("rmse") > -1)
+		//		errorMode->removeItem(errorMode->findText("rmse"));
+		//	if (errorMode->findText("propagated") > -1)
+		//		errorMode->removeItem(errorMode->findText("propagated"));
+		//	break;
 	}
 	redraw();
 }
@@ -756,7 +756,7 @@ void QtProfile::changeErrorType(const QString &text) {
 }
 
 void QtProfile::redraw( ) {
-    wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
+	wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
 }
 
 void QtProfile::changeAxisOld(String xa, String ya, String za, std::vector<int> ) {
@@ -1041,273 +1041,273 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 
 
 void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*/,
-			   const QList<double> &world_x, const QList<double> &world_y,
-			   const QList<int> &pixel_x, const QList<int> &pixel_y,
-			   const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
-    if (!isVisible()) return;
-    if (!analysis) return;
-    spectra_info_map[id_] = shape;
-    String c(WORLD_COORDINATES);
+		const QList<double> &world_x, const QList<double> &world_y,
+		const QList<int> &pixel_x, const QList<int> &pixel_y,
+		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
+	if (!isVisible()) return;
+	if (!analysis) return;
+	spectra_info_map[id_] = shape;
+	String c(WORLD_COORDINATES);
 
-    Vector<Double> px(pixel_x.size());
-    Vector<Double> py(pixel_y.size());
-    Vector<Double> wx(world_x.size());
-    Vector<Double> wy(world_y.size());
+	Vector<Double> px(pixel_x.size());
+	Vector<Double> py(pixel_y.size());
+	Vector<Double> wx(world_x.size());
+	Vector<Double> wy(world_y.size());
 
-    for ( uint x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
-    for ( uint x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
-    for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
-    for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
+	for ( uint x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
+	for ( uint x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
+	for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
+	for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
 
-    *itsLog << LogOrigin("QtProfile", "newRegion");
+	*itsLog << LogOrigin("QtProfile", "newRegion");
 
-    bool cubeZero = checkCube();
-    if ( cubeZero ){
-    	return;
-    }
+	bool cubeZero = checkCube();
+	if ( cubeZero ){
+		return;
+	}
 
-    current_region_id = id_;
+	current_region_id = id_;
 
-    copyToLastEvent( c, px, py, wx, wy );
+	copyToLastEvent( c, px, py, wx, wy );
 
-    setPlotType( static_cast<int>(wx.size()) );
+	setPlotType( static_cast<int>(wx.size()) );
 
-    assignCoordinate( c );
+	assignCoordinate( c );
 
-    Int ns;
-    px.shape(ns);
+	Int ns;
+	px.shape(ns);
 
-    Vector<Double> pxv(ns);
-    Vector<Double> pyv(ns);
-    Vector<Double> wxv(ns);
-    Vector<Double> wyv(ns);
+	Vector<Double> pxv(ns);
+	Vector<Double> pyv(ns);
+	Vector<Double> wxv(ns);
+	Vector<Double> wyv(ns);
 
-    initializeCoordinateVectors( px,py,wx,wy,pxv,pyv,wxv,wyv );
+	initializeCoordinateVectors( px,py,wx,wy,pxv,pyv,wxv,wyv );
 
-    if (ns < 1) return;
+	if (ns < 1) return;
 
-    setTitle( shape );
+	setTitle( shape );
 
-    if ( pxv.size() > 0 ){
-    	setPositionStatus( pxv, pyv, wxv, wyv );
-    }
+	if ( pxv.size() > 0 ){
+		setPositionStatus( pxv, pyv, wxv, wyv );
+	}
 
-    //Get Profile Flux density v/s coordinateType
-    bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval, z_yval);
-    if ( !ok ){
-    	return;
-    }
+	//Get Profile Flux density v/s coordinateType
+	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval, z_yval);
+	if ( !ok ){
+		return;
+	}
 
-    ok = setErrorPlotting( wxv, wyv);
+	ok = setErrorPlotting( wxv, wyv);
 
-    Int ordersOfM = scaleAxis();
-    //remove the "/beam" in case of plotting flux
-    if (itsPlotType==QtProfile::PFLUX){
-    	Int pos = yUnit.indexOf("/beam", 0, Qt::CaseInsensitive);
-        if ( pos > -1 ){
-        	yUnit.remove(pos,5);
-        	setPixelCanvasYUnits( yUnitPrefix, yUnit);
-        }
-    }
+	Int ordersOfM = scaleAxis();
+	//remove the "/beam" in case of plotting flux
+	if (itsPlotType==QtProfile::PFLUX){
+		Int pos = yUnit.indexOf("/beam", 0, Qt::CaseInsensitive);
+		if ( pos > -1 ){
+			yUnit.remove(pos,5);
+			setPixelCanvasYUnits( yUnitPrefix, yUnit);
+		}
+	}
 
-    // plot the graph
-    plotMainCurve();
+	// plot the graph
+	plotMainCurve();
 
-    addImageAnalysisGraph( wxv, wyv, ordersOfM );
-    storeCoordinates( pxv, pyv, wxv, wyv );
+	addImageAnalysisGraph( wxv, wyv, ordersOfM );
+	storeCoordinates( pxv, pyv, wxv, wyv );
 
-    momentSettingsWidget->setCollapseVals( z_xval );
-    specFitSettingsWidget->setCollapseVals( z_xval );
-    positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
+	momentSettingsWidget->setCollapseVals( z_xval );
+	specFitSettingsWidget->setCollapseVals( z_xval );
+	positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
 }
 
 
 void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
-			      const QList<int> &pixel_x, const QList<int> &pixel_y ) {
+		const QList<int> &pixel_x, const QList<int> &pixel_y ) {
 
-    if (!isVisible()) return;
-    if (!analysis) return;
-    if ( type == viewer::Region::RegionChangeFocus )
-	current_region_id = id_;			// viewer region focus has changed
-    else if ( type == viewer::Region::RegionChangeNewChannel )
-	return;						// viewer moving to new channel
-    else if ( id_ != current_region_id )
-	return;						// some other region
-    
+	if (!isVisible()) return;
+	if (!analysis) return;
+	if ( type == viewer::Region::RegionChangeFocus )
+		current_region_id = id_;			// viewer region focus has changed
+	else if ( type == viewer::Region::RegionChangeNewChannel )
+		return;						// viewer moving to new channel
+	else if ( id_ != current_region_id )
+		return;						// some other region
 
-    SpectraInfoMap::iterator it = spectra_info_map.find(id_);
-    if ( it == spectra_info_map.end( ) ) return;
-    QString shape = it->second.shape( );
 
-    String c(WORLD_COORDINATES);
+	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
+	if ( it == spectra_info_map.end( ) ) return;
+	QString shape = it->second.shape( );
 
-    Vector<Double> px(pixel_x.size());
-    Vector<Double> py(pixel_y.size());
-    Vector<Double> wx(world_x.size());
-    Vector<Double> wy(world_y.size());
+	String c(WORLD_COORDINATES);
 
-    for ( uint x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
-    for ( uint x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
-    for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
-    for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
+	Vector<Double> px(pixel_x.size());
+	Vector<Double> py(pixel_y.size());
+	Vector<Double> wx(world_x.size());
+	Vector<Double> wy(world_y.size());
 
-    *itsLog << LogOrigin("QtProfile", "newRegion");
+	for ( uint x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
+	for ( uint x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
+	for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
+	for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
 
-    bool cubeZero = checkCube();
-    if ( cubeZero ){
-    	return;
-    }
+	*itsLog << LogOrigin("QtProfile", "newRegion");
 
-    copyToLastEvent( c, px, py, wx, wy );
+	bool cubeZero = checkCube();
+	if ( cubeZero ){
+		return;
+	}
 
-    setPlotType( wx.size() );
+	copyToLastEvent( c, px, py, wx, wy );
 
-    assignCoordinate( c );
+	setPlotType( wx.size() );
 
-    Int ns;
-    px.shape(ns);
+	assignCoordinate( c );
 
-    Vector<Double> pxv(ns);
-    Vector<Double> pyv(ns);
-    Vector<Double> wxv(ns);
-    Vector<Double> wyv(ns);
+	Int ns;
+	px.shape(ns);
 
-    initializeCoordinateVectors( px, py, wx, wy, pxv, pyv, wxv, wyv );
+	Vector<Double> pxv(ns);
+	Vector<Double> pyv(ns);
+	Vector<Double> wxv(ns);
+	Vector<Double> wyv(ns);
 
-    if (ns < 1) return;
+	initializeCoordinateVectors( px, py, wx, wy, pxv, pyv, wxv, wyv );
 
-    setTitle( shape );
+	if (ns < 1) return;
 
-    setPositionStatus( pxv,pyv,wxv,wyv );
-    positioningWidget->updateRegion( pxv,pyv,wxv,wyv);
+	setTitle( shape );
 
-    //Get Profile Flux density v/s coordinateType
-     bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
-     if ( !ok ){
-     	return;
-     }
+	setPositionStatus( pxv,pyv,wxv,wyv );
+	positioningWidget->updateRegion( pxv,pyv,wxv,wyv);
 
-    setErrorPlotting( wxv,wyv);
+	//Get Profile Flux density v/s coordinateType
+	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
+	if ( !ok ){
+		return;
+	}
 
-    // scale for better display
-    Int ordersOfM = scaleAxis();
+	setErrorPlotting( wxv,wyv);
 
-    // plot the graph
-    plotMainCurve();
+	// scale for better display
+	Int ordersOfM = scaleAxis();
 
-    addImageAnalysisGraph( wxv, wyv, ordersOfM );
-    storeCoordinates( pxv, pyv, wxv, wyv );
+	// plot the graph
+	plotMainCurve();
 
-    momentSettingsWidget->setCollapseVals(z_xval );
-    specFitSettingsWidget->setCollapseVals( z_xval );
+	addImageAnalysisGraph( wxv, wyv, ordersOfM );
+	storeCoordinates( pxv, pyv, wxv, wyv );
+
+	momentSettingsWidget->setCollapseVals(z_xval );
+	specFitSettingsWidget->setCollapseVals( z_xval );
 }
 
 
 bool QtProfile::exportFITSSpectrum(QString &fn)
 {
 	// get the image coo and the spectral axis therein
-   CoordinateSystem cSys = image->coordinates();
-   Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
-   Vector<Int> pCoord = cSys.pixelAxes(wCoord);
+	CoordinateSystem cSys = image->coordinates();
+	Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
+	Vector<Int> pCoord = cSys.pixelAxes(wCoord);
 
-   if (wCoord <0){
-   	// well, it REALLY should not get to here
-   	QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
-   	messageFromProfile(msg);
-   	return false;
-   }
+	if (wCoord <0){
+		// well, it REALLY should not get to here
+		QString msg="No spectral coordinate in image:\n" + QString((image->name(True)).c_str());
+		messageFromProfile(msg);
+		return false;
+	}
 
-   // get the spectral dimension and make some checks
-   uInt nPoints=(image->shape())(pCoord(0));
-   if (nPoints != z_yval.size()){
-   	// well, this should not happen
-   	QString msg="The dimension of the image and\nthe extracted profile do not match!";
-   	messageFromProfile(msg);
-   	return false;
-   }
-   else if (nPoints<1){
-   	// well, this should not happen
-   	QString msg="The extracted profile contains no points!";
-   	messageFromProfile(msg);
-   	return false;
-   }
+	// get the spectral dimension and make some checks
+	uInt nPoints=(image->shape())(pCoord(0));
+	if (nPoints != z_yval.size()){
+		// well, this should not happen
+		QString msg="The dimension of the image and\nthe extracted profile do not match!";
+		messageFromProfile(msg);
+		return false;
+	}
+	else if (nPoints<1){
+		// well, this should not happen
+		QString msg="The extracted profile contains no points!";
+		messageFromProfile(msg);
+		return false;
+	}
 
-   // create a new coo and add the spectral one
-   CoordinateSystem csysProfile = CoordinateSystem();
-   csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
+	// create a new coo and add the spectral one
+	CoordinateSystem csysProfile = CoordinateSystem();
+	csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
 
-   // if necessary, add a quality coordinate
-   IPosition profDim;
-   if (z_eval.size()>0){
-   	Vector<Int> quality(2);
-   	quality(0) = Quality::DATA;
-   	quality(1) = Quality::ERROR;
-   	QualityCoordinate qualAxis(quality);
-   	csysProfile.addCoordinate(qualAxis);
+	// if necessary, add a quality coordinate
+	IPosition profDim;
+	if (z_eval.size()>0){
+		Vector<Int> quality(2);
+		quality(0) = Quality::DATA;
+		quality(1) = Quality::ERROR;
+		QualityCoordinate qualAxis(quality);
+		csysProfile.addCoordinate(qualAxis);
 
-   	profDim = IPosition(2,nPoints,2);
-   }
-   else{
-   	profDim = IPosition(1,nPoints);
-   }
+		profDim = IPosition(2,nPoints,2);
+	}
+	else{
+		profDim = IPosition(1,nPoints);
+	}
 
-   // create the temp-image
-   TempImage<Float> profile(TiledShape(profDim),csysProfile);
+	// create the temp-image
+	TempImage<Float> profile(TiledShape(profDim),csysProfile);
 
-   // scale the data and store the values in the
-   // temp-image
+	// scale the data and store the values in the
+	// temp-image
 	Float scaleFactor=pow(10.,ordersOfM_);
 	IPosition posIndex;
-   if (z_eval.size()>0){
-   	Int qualCooPos, qualIndex;
-   	posIndex = IPosition(2, 0);
+	if (z_eval.size()>0){
+		Int qualCooPos, qualIndex;
+		posIndex = IPosition(2, 0);
 
-   	// re-find the quality coordinate
-   	qualCooPos = csysProfile.findCoordinate(Coordinate::QUALITY);
-   	if (qualCooPos<0){
-   		// this really should not happen
-      	QString msg="Error finding the Quality coordinate!";
-      	messageFromProfile(msg);
-      	return false;
-   	}
+		// re-find the quality coordinate
+		qualCooPos = csysProfile.findCoordinate(Coordinate::QUALITY);
+		if (qualCooPos<0){
+			// this really should not happen
+			QString msg="Error finding the Quality coordinate!";
+			messageFromProfile(msg);
+			return false;
+		}
 
-   	// get the pixel index of DATA
-   	if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::DATA)){
-      	QString msg="Error finding the DATA index in quality coordinate!";
-      	messageFromProfile(msg);
-      	return false;
-   	}
-   	posIndex(1)=qualIndex;
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_yval(index)/scaleFactor << " : " << posIndex;
-   	}
+		// get the pixel index of DATA
+		if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::DATA)){
+			QString msg="Error finding the DATA index in quality coordinate!";
+			messageFromProfile(msg);
+			return false;
+		}
+		posIndex(1)=qualIndex;
+		for (uInt index=0; index<nPoints; index++){
+			posIndex(0)=index;
+			profile.putAt (z_yval(index)/scaleFactor, posIndex);
+			//cout << " " << z_yval(index)/scaleFactor << " : " << posIndex;
+		}
 
 
-   	// get the pixel index of ERROR
-   	if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::ERROR)){
-      	QString msg="Error finding the ERROR index in quality coordinate!";
-      	messageFromProfile(msg);
-      	return false;
-   	}
-   	posIndex(1)=qualIndex;
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_eval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_eval(index)/scaleFactor << " : " << posIndex;
-   	}
-   }
-   else{
-   	posIndex = IPosition(1);
-   	for (uInt index=0; index<nPoints; index++){
-   		posIndex(0)=index;
-   		profile.putAt (z_yval(index)/scaleFactor, posIndex);
-   		//cout << " " << z_yval(index)/scaleFactor;
-   	}
-   }
+		// get the pixel index of ERROR
+		if (!(csysProfile.qualityCoordinate(qualCooPos)).toPixel(qualIndex, Quality::ERROR)){
+			QString msg="Error finding the ERROR index in quality coordinate!";
+			messageFromProfile(msg);
+			return false;
+		}
+		posIndex(1)=qualIndex;
+		for (uInt index=0; index<nPoints; index++){
+			posIndex(0)=index;
+			profile.putAt (z_eval(index)/scaleFactor, posIndex);
+			//cout << " " << z_eval(index)/scaleFactor << " : " << posIndex;
+		}
+	}
+	else{
+		posIndex = IPosition(1);
+		for (uInt index=0; index<nPoints; index++){
+			posIndex(0)=index;
+			profile.putAt (z_yval(index)/scaleFactor, posIndex);
+			//cout << " " << z_yval(index)/scaleFactor;
+		}
+	}
 
-   // attach a mask to the temp-image
+	// attach a mask to the temp-image
 	Array<Bool> maskArray(profDim, True);
 	ArrayLattice<Bool> maskLattice=ArrayLattice<Bool>(maskArray);
 	profile.attachMask(maskLattice);
@@ -1322,13 +1322,13 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
 	miscInfo.setComment("proftype", "the profile type");
 	miscInfo.define("plottype", (plotMode->currentText()).toStdString());
 	miscInfo.setComment("plottype", "the plot type");
-   if (z_eval.size()>0){
-   	miscInfo.define("errtype", (errorMode->currentText()).toStdString());
-   	miscInfo.setComment("errtype", "the error type");
-   }
+	if (z_eval.size()>0){
+		miscInfo.define("errtype", (errorMode->currentText()).toStdString());
+		miscInfo.setComment("errtype", "the error type");
+	}
 	profile.setMiscInfo(miscInfo);
 
-   // thats the default values for the call "ImageFITSConverter::ImageToFITS"
+	// thats the default values for the call "ImageFITSConverter::ImageToFITS"
 	String error; uInt memoryInMB(64); Bool preferVelocity(True);
 	Bool opticalVelocity(True); Int BITPIX(-32); Float minPix(1.0); Float maxPix(-1.0);
 	Bool allowOverwrite(False); Bool degenerateLast(False); Bool verbose(True);
@@ -1405,65 +1405,65 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
 		);
 	} catch (AipsError x) {
 		// catch an exception and report
-   	QString msg="Error while exporting FITS:\n"+QString((x.getMesg()).c_str());
-   	messageFromProfile(msg);
-   	return false;
+		QString msg="Error while exporting FITS:\n"+QString((x.getMesg()).c_str());
+		messageFromProfile(msg);
+		return false;
 	}
 
 	// check for any error indicated via the error-string
 	if (error.size()>0){
-   	QString msg="Error while exporting FITS:\n"+QString((error.c_str()));
-   	messageFromProfile(msg);
-   	return false;
+		QString msg="Error while exporting FITS:\n"+QString((error.c_str()));
+		messageFromProfile(msg);
+		return false;
 	}
 
 	return true;
 }
 
 bool QtProfile::exportASCIISpectrum(QString &fn)
-	{
-   QFile file(fn);
-    if (!file.open(QFile::WriteOnly | QIODevice::Text))
-        return false;
-    QTextStream ts(&file);
+{
+	QFile file(fn);
+	if (!file.open(QFile::WriteOnly | QIODevice::Text))
+		return false;
+	QTextStream ts(&file);
 
-    ts << "#title: Spectral profile - " << fileName << " "
-       << region << "(" << position << ")\n";
-    ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
-    ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-    ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
-    if (z_eval.size() > 0)
-        ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+	ts << "#title: Spectral profile - " << fileName << " "
+			<< region << "(" << position << ")\n";
+	ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
+	ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
+	ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
+	if (z_eval.size() > 0)
+		ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
 
-    // get the scale factor
-    Float scaleFactor=pow(10.,-ordersOfM_);
+	// get the scale factor
+	Float scaleFactor=pow(10.,-ordersOfM_);
 
-    ts.setRealNumberNotation(QTextStream::ScientificNotation);
-    ts.setRealNumberPrecision(12);
+	ts.setRealNumberNotation(QTextStream::ScientificNotation);
+	ts.setRealNumberPrecision(12);
 
-    if (z_eval.size() > 0){
-    	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
-    	}
-    }
-    else {
-    	for (uInt i = 0; i < z_xval.size(); i++) {
-    		ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
-    	}
-    }
+	if (z_eval.size() > 0){
+		for (uInt i = 0; i < z_xval.size(); i++) {
+			ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
+		}
+	}
+	else {
+		for (uInt i = 0; i < z_xval.size(); i++) {
+			ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
+		}
+	}
 
-    int i = pixelCanvas->getLineCount();
-    for (int k = 1; k < i; k++) {
-      ts << "\n";
-      ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-      CurveData data = pixelCanvas->getCurveData(k);
-      int j = data.size() / 2;
-      for (int m = 0; m < j; m++) {
-         ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
-      }
-    }
+	int i = pixelCanvas->getLineCount();
+	for (int k = 1; k < i; k++) {
+		ts << "\n";
+		ts << "# " << pixelCanvas->getCurveName(k) << "\n";
+		CurveData data = pixelCanvas->getCurveData(k);
+		int j = data.size() / 2;
+		for (int m = 0; m < j; m++) {
+			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
+		}
+	}
 
-    return true;
+	return true;
 }
 
 void QtProfile::messageFromProfile(QString &msg){
@@ -1480,12 +1480,12 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 	// check whether plot mode "flux" make sense
 	bool allowFlux(false);
 	const Unit& brightnessUnit = img->units();
-   String bUName = brightnessUnit.getName();
-   bUName.downcase();
-   if(bUName.contains("/beam"))
-   	allowFlux=true;
+	String bUName = brightnessUnit.getName();
+	bUName.downcase();
+	if(bUName.contains("/beam"))
+		allowFlux=true;
 
-   if (plotMode->count() <1 ){
+	if (plotMode->count() <1 ){
 		// fill the plot types
 		plotMode->addItem("mean");
 		plotMode->addItem("median");
@@ -1505,19 +1505,19 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 		}
 		stringToPlotType(plotMode->currentText(), itsPlotType);
 	}
-   else{
-   	// add/remove "flux" if necessary
-   	if (allowFlux){
-      	if (plotMode->findText("flux")<0)
-      		plotMode->addItem("flux");
-   	}
-   	else{
-   		if (plotMode->findText("flux") > -1)
-   			plotMode->removeItem(plotMode->findText("flux"));
-   	}
-   }
+	else{
+		// add/remove "flux" if necessary
+		if (allowFlux){
+			if (plotMode->findText("flux")<0)
+				plotMode->addItem("flux");
+		}
+		else{
+			if (plotMode->findText("flux") > -1)
+				plotMode->removeItem(plotMode->findText("flux"));
+		}
+	}
 
-   // clean out the error box
+	// clean out the error box
 	if (errorMode->count() > 0){
 		if (errorMode->findText("propagated") > -1){
 			errorMode->removeItem(errorMode->findText("propagated"));
@@ -1551,23 +1551,23 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 		if (cSys.qualityAxisNumber() > -1)
 			errorMode->addItem("propagated");
 		break;
-	//case QtProfile::PVRMSE:
-	//	break;
+		//case QtProfile::PVRMSE:
+		//	break;
 	}
 
 	// read the preferred error mode from casarc
-   QString pref_errMode = read( ".error.type");
-   if (pref_errMode.size()>0){
-     // change to the preferred plotMode
-   	int e_index= errorMode->findText(pref_errMode);
-   	if (e_index > -1)
-   		errorMode->setCurrentIndex(e_index);
-   	else
-   		errorMode->setCurrentIndex(0);
-   }
+	QString pref_errMode = read( ".error.type");
+	if (pref_errMode.size()>0){
+		// change to the preferred plotMode
+		int e_index= errorMode->findText(pref_errMode);
+		if (e_index > -1)
+			errorMode->setCurrentIndex(e_index);
+		else
+			errorMode->setCurrentIndex(0);
+	}
 
-   stringToErrorType(errorMode->currentText(), itsErrorType);
-   persist( ".error.type", errorMode->currentText());
+	stringToErrorType(errorMode->currentText(), itsErrorType);
+	persist( ".error.type", errorMode->currentText());
 }
 
 
@@ -1603,681 +1603,683 @@ void QtProfile::stringToErrorType(const QString &text, QtProfile::ErrorType &eTy
 
 
 void QtProfile::getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr){
-   // determine the coordinate type
-   if (ctypeUnitStr.contains("air wavelength"))
-   	cTypeStr = String("air wavelength");
-   else if (ctypeUnitStr.contains("wavelength"))
-   	cTypeStr = String("wavelength");
-   else if (ctypeUnitStr.contains("radio velocity"))
-   	cTypeStr = String("radio velocity");
-   else if (ctypeUnitStr.contains("optical velocity"))
-   	cTypeStr = String("optical velocity");
-   else if (ctypeUnitStr.contains("frequency"))
-   	cTypeStr = String("frequency");
-   else
-   	cTypeStr = String("channel");
+	// determine the coordinate type
+	if (ctypeUnitStr.contains("air wavelength"))
+		cTypeStr = String("air wavelength");
+	else if (ctypeUnitStr.contains("wavelength"))
+		cTypeStr = String("wavelength");
+	else if (ctypeUnitStr.contains("radio velocity"))
+		cTypeStr = String("radio velocity");
+	else if (ctypeUnitStr.contains("optical velocity"))
+		cTypeStr = String("optical velocity");
+	else if (ctypeUnitStr.contains("frequency"))
+		cTypeStr = String("frequency");
+	else
+		cTypeStr = String("channel");
 
-   // determine the unit
-   if (ctypeUnitStr.contains("[Hz]"))
-   	unitStr = String("Hz");
-   else if (ctypeUnitStr.contains("[MHz]"))
-   	unitStr = String("MHz");
-   else if (ctypeUnitStr.contains("[GHz]"))
-   	unitStr = String("GHz");
-   else if (ctypeUnitStr.contains("[m/s]"))
-   	unitStr = String("m/s");
-   else if (ctypeUnitStr.contains("[km/s]"))
-   	unitStr = String("km/s");
-   else if (ctypeUnitStr.contains("[mm]"))
-   	unitStr = String("mm");
-   else if (ctypeUnitStr.contains("[um]"))
-   	unitStr = String("um");
-   else if (ctypeUnitStr.contains("[nm]"))
-   	unitStr = String("nm");
-   else if (ctypeUnitStr.contains("[Angstrom]"))
-   	unitStr = String("Angstrom");
-   else
-   	unitStr = String("");
+	// determine the unit
+	if (ctypeUnitStr.contains("[Hz]"))
+		unitStr = String("Hz");
+	else if (ctypeUnitStr.contains("[MHz]"))
+		unitStr = String("MHz");
+	else if (ctypeUnitStr.contains("[GHz]"))
+		unitStr = String("GHz");
+	else if (ctypeUnitStr.contains("[m/s]"))
+		unitStr = String("m/s");
+	else if (ctypeUnitStr.contains("[km/s]"))
+		unitStr = String("km/s");
+	else if (ctypeUnitStr.contains("[mm]"))
+		unitStr = String("mm");
+	else if (ctypeUnitStr.contains("[um]"))
+		unitStr = String("um");
+	else if (ctypeUnitStr.contains("[nm]"))
+		unitStr = String("nm");
+	else if (ctypeUnitStr.contains("[Angstrom]"))
+		unitStr = String("Angstrom");
+	else
+		unitStr = String("");
 }
 
 
 void QtProfile::printIt(QPrinter* printer)
 {
-    QPainter painter(printer);
-    QRect rect = painter.viewport();
-    rect.adjust(72, 72, -72, -72);
-    QPixmap *mp = pixelCanvas->graph();
-    QSize size = mp->size();
-    size.scale(rect.size(), Qt::KeepAspectRatio);
-    painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
-    painter.setWindow(mp->rect());
-    painter.drawPixmap(0, 0, *mp);
-    painter.end();
+	QPainter painter(printer);
+	QRect rect = painter.viewport();
+	rect.adjust(72, 72, -72, -72);
+	QPixmap *mp = pixelCanvas->graph();
+	QSize size = mp->size();
+	size.scale(rect.size(), Qt::KeepAspectRatio);
+	painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
+	painter.setWindow(mp->rect());
+	painter.drawPixmap(0, 0, *mp);
+	painter.end();
 }
 
 QString QtProfile::getRaDec(double x, double y) {
 
-   int h, m;
-   double ras;
-   Util::getRa( x, h, m, ras );
-   int d, c;
-   double decs;
-   int sign = (y > 0) ? 1 : -1;
-   Util::getDec( y, d, c, decs );
+	int h, m;
+	double ras;
+	Util::getRa( x, h, m, ras );
+	int d, c;
+	double decs;
+	int sign = (y > 0) ? 1 : -1;
+	Util::getDec( y, d, c, decs );
 
-   QString raDec = "";
-   raDec.append((h < 10) ? "0" : "").append(QString().setNum(h)).append(":")
-        .append((m < 10) ? "0" : "").append(QString().setNum(m)).append(":")
-        .append((ras < 10) ? "0" : "").append(QString().setNum(ras))
-        .append((sign > 0) ? "+" : "-")
-        .append((d < 10) ? "0" : "").append(QString().setNum(d)).append("d")
-        .append((c < 10) ? "0" : "").append(QString().setNum(c)).append("m")
-        .append((decs < 10) ? "0" : "").append(QString().setNum(decs));
-   return raDec;
+	QString raDec = "";
+	raDec.append((h < 10) ? "0" : "").append(QString().setNum(h)).append(":")
+        		.append((m < 10) ? "0" : "").append(QString().setNum(m)).append(":")
+        		.append((ras < 10) ? "0" : "").append(QString().setNum(ras))
+        		.append((sign > 0) ? "+" : "-")
+        		.append((d < 10) ? "0" : "").append(QString().setNum(d)).append("d")
+        		.append((c < 10) ? "0" : "").append(QString().setNum(c)).append("m")
+        		.append((decs < 10) ? "0" : "").append(QString().setNum(decs));
+	return raDec;
 }
 
 
 
-	void QtProfile::setTitle( const QString& shape ){
-		if ( shape == "point" ) {
-			pixelCanvas->setTitle("Single Point Profile");
-			region = "Point";
-		} else if ( shape == "rectangle" ) {
-		    pixelCanvas->setTitle("Rectangle Region Profile");
-		    region = "Rect";
-		} else if ( shape == "ellipse" ) {
-		    pixelCanvas->setTitle("Elliptical Region Profile");
-		    region = "Ellipse";
-		} else if ( shape == "polygon" ) {
-		    pixelCanvas->setTitle("Polygon Region Profile");
-		    region = "Poly";
-		} else {
-		    pixelCanvas->setTitle("");
-		    region = "";
-		}
-		pixelCanvas->setWelcome("");
+void QtProfile::setTitle( const QString& shape ){
+	if ( shape == "point" ) {
+		pixelCanvas->setTitle("Single Point Profile");
+		region = "Point";
+	} else if ( shape == "rectangle" ) {
+		pixelCanvas->setTitle("Rectangle Region Profile");
+		region = "Rect";
+	} else if ( shape == "ellipse" ) {
+		pixelCanvas->setTitle("Elliptical Region Profile");
+		region = "Ellipse";
+	} else if ( shape == "polygon" ) {
+		pixelCanvas->setTitle("Polygon Region Profile");
+		region = "Poly";
+	} else {
+		pixelCanvas->setTitle("");
+		region = "";
 	}
+	pixelCanvas->setWelcome("");
+}
 
 
-	void QtProfile::copyToLastEvent( const String& c, const Vector<Double> &px,
-	    		const Vector<Double> &py,
-	    		const Vector<Double> &wx,
-	    		const Vector<Double> &wy ){
-		last_event_cs.resize(c.size());
-		last_event_cs = c;
+void QtProfile::copyToLastEvent( const String& c, const Vector<Double> &px,
+		const Vector<Double> &py,
+		const Vector<Double> &wx,
+		const Vector<Double> &wy ){
+	last_event_cs.resize(c.size());
+	last_event_cs = c;
 
-		last_event_px.resize(px.size());
-		last_event_px = px;
+	last_event_px.resize(px.size());
+	last_event_px = px;
 
-		last_event_py.resize(py.size());
-		last_event_py = py;
+	last_event_py.resize(py.size());
+	last_event_py = py;
 
-		last_event_wx.resize(wx.size());
-		last_event_wx = wx;
+	last_event_wx.resize(wx.size());
+	last_event_wx = wx;
 
-		last_event_wy.resize(wy.size());
-		last_event_wy = wy;
+	last_event_wy.resize(wy.size());
+	last_event_wy = wy;
 
-		npoints = wx.size();
-	}
+	npoints = wx.size();
+}
 
-	void QtProfile::setPlotType( int wcArraySize ){
-		 if (npoints_old==0 && wcArraySize>0){
-			npoints_old = wcArraySize;
+void QtProfile::setPlotType( int wcArraySize ){
+	if (npoints_old==0 && wcArraySize>0){
+		npoints_old = wcArraySize;
+		changePlotType(plotMode->currentText());
+	} else {
+		if (npoints==1 & npoints_old!=1){
+			npoints_old = npoints;
 			changePlotType(plotMode->currentText());
-		 } else {
-			if (npoints==1 & npoints_old!=1){
-			    npoints_old = npoints;
-			    changePlotType(plotMode->currentText());
-			} else if (npoints!=1 & npoints_old==1) {
-			    npoints_old = npoints;
-			    changePlotType(plotMode->currentText());
-			}
-		 }
-	}
-
-	bool QtProfile::checkCube(){
-		bool cubeZero = false;
-		if (cube == 0) {
-		       pixelCanvas->setWelcome("No profile available "
-		                   "for the given data \nor\n"
-		                   "No profile available for the "
-		                   "display axes orientation");
-		       pixelCanvas->clearCurve();
-		       cubeZero = true;
-		}
-		return cubeZero;
-	}
-
-	void QtProfile::assignCoordinate( const String& c){
-		 if (c != coordinate) {
-		    	coordinate = c.chars();
-			//if (coordinate == WORLD_COORDINATES)
-			//    chk->setCurrentIndex(0);
-			//else
-			//    chk->setCurrentIndex(1);
-		 }
-	}
-
-	void QtProfile::initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
-			const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
-			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const {
-		if (cube == -1){
-		    pxv.assign(py);
-		    pyv.assign(px);
-		    wxv.assign(wy);
-		    wyv.assign(wx);
-		} else{
-		    pxv.assign(px);
-		    pyv.assign(py);
-		    wxv.assign(wx);
-		    wyv.assign(wy);
+		} else if (npoints!=1 & npoints_old==1) {
+			npoints_old = npoints;
+			changePlotType(plotMode->currentText());
 		}
 	}
+}
 
-	void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
-								const Vector<double> &wxv, const Vector<double> &wyv ) {
-		 Double xmean, ymean;
-		if (WORLD_COORDINATES.compare( coordinate )== 0 ) {
-			//xpos, ypos and position only used for display
-			xpos = QString::number( Util::getCenter( wxv, xmean));
-			ypos = QString::number( Util::getCenter( wyv, ymean));
-			position = getRaDec(xmean, ymean);
-		}
-		else {
-
-			//xpos, ypos and position only used for display
-			xpos = QString::number(Util::getCenter(pxv,xmean));
-			ypos = QString::number(Util::getCenter(pyv,ymean));
-			position = QString("[%1, %2]").arg(xpos).arg(ypos);
-		}
-		profileStatus->showMessage(position);
+bool QtProfile::checkCube(){
+	bool cubeZero = false;
+	if (cube == 0) {
+		pixelCanvas->setWelcome("No profile available "
+				"for the given data \nor\n"
+				"No profile available for the "
+				"display axes orientation");
+		pixelCanvas->clearCurve();
+		cubeZero = true;
 	}
+	return cubeZero;
+}
 
-	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-			const String& coordinateType, const String& xaxisUnit,
-			Vector<Float> &z_xval, Vector<Float> &z_yval){
-		Bool ok = False;
-		switch (itsPlotType) {
-		case QtProfile::PMEAN:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						 (Int)QtProfile::MEAN, 0, cSysRval);
-			break;
-		case QtProfile::PMEDIAN:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						 (Int)QtProfile::MEDIAN, 0, cSysRval);
-			break;
-		case QtProfile::PSUM:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						 (Int)QtProfile::SUM, 0, cSysRval);
-			break;
-		case QtProfile::PFLUX:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						 (Int)QtProfile::FLUX, 0, cSysRval);
-			break;
+void QtProfile::assignCoordinate( const String& c){
+	if (c != coordinate) {
+		coordinate = c.chars();
+		//if (coordinate == WORLD_COORDINATES)
+		//    chk->setCurrentIndex(0);
+		//else
+		//    chk->setCurrentIndex(1);
+	}
+}
+
+void QtProfile::initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
+		const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
+		Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const {
+	if (cube == -1){
+		pxv.assign(py);
+		pyv.assign(px);
+		wxv.assign(wy);
+		wyv.assign(wx);
+	} else{
+		pxv.assign(px);
+		pyv.assign(py);
+		wxv.assign(wx);
+		wyv.assign(wy);
+	}
+}
+
+void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
+		const Vector<double> &wxv, const Vector<double> &wyv ) {
+	Double xmean, ymean;
+	if (WORLD_COORDINATES.compare( coordinate )== 0 ) {
+		//xpos, ypos and position only used for display
+		xpos = QString::number( Util::getCenter( wxv, xmean));
+		ypos = QString::number( Util::getCenter( wyv, ymean));
+		position = getRaDec(xmean, ymean);
+	}
+	else {
+
+		//xpos, ypos and position only used for display
+		xpos = QString::number(Util::getCenter(pxv,xmean));
+		ypos = QString::number(Util::getCenter(pyv,ymean));
+		position = QString("[%1, %2]").arg(xpos).arg(ypos);
+	}
+	profileStatus->showMessage(position);
+}
+
+bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
+		const String& coordinateType, const String& xaxisUnit,
+		Vector<Float> &z_xval, Vector<Float> &z_yval){
+	Bool ok = False;
+	switch (itsPlotType) {
+	case QtProfile::PMEAN:
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				(Int)QtProfile::MEAN, 0, cSysRval);
+		break;
+	case QtProfile::PMEDIAN:
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				(Int)QtProfile::MEDIAN, 0, cSysRval);
+		break;
+	case QtProfile::PSUM:
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				(Int)QtProfile::SUM, 0, cSysRval);
+		break;
+	case QtProfile::PFLUX:
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				(Int)QtProfile::FLUX, 0, cSysRval);
+		break;
 		//case QtProfile::PVRMSE:
-		//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+			//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 		//			 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 		//			 (Int)QtProfile::RMSE, 0);
 		//	 break;
-		default:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						 (Int)QtProfile::MEAN, 0, cSysRval);
-			break;
-		}
-
-		if (!ok) {
-		 // change to notify user of error...
-			*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
-		}
-		return ok;
+	default:
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				(Int)QtProfile::MEAN, 0, cSysRval);
+		break;
 	}
 
-	bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv ){
-		bool ok = true;
-		// get the coordinate system
-		CoordinateSystem cSys = image->coordinates();
-		switch (itsErrorType) {
-			case QtProfile::PNOERROR:
-			    if (z_eval.size()> 0)
+	if (!ok) {
+		// change to notify user of error...
+		*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
+	}
+	return ok;
+}
+
+bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv ){
+	bool ok = true;
+	// get the coordinate system
+	CoordinateSystem cSys = image->coordinates();
+	switch (itsErrorType) {
+	case QtProfile::PNOERROR:
+		if (z_eval.size()> 0)
+			z_eval.resize(0);
+		break;
+	case QtProfile::PERMSE:
+		if ( wxv.size() < 2 ) {
+			*itsLog << LogIO::NORMAL << "Can not do the plot request, only one point!" << LogIO::POST;
+			if (z_eval.size()> 0)
 				z_eval.resize(0);
-			    break;
-			case QtProfile::PERMSE:
-			    if ( wxv.size() < 2 ) {
-				*itsLog << LogIO::NORMAL << "Can not do the plot request, only one point!" << LogIO::POST;
+		} else {
+			switch (itsPlotType) {
+			case QtProfile::PSUM:
+			case QtProfile::PFLUX:
+				*itsLog << LogIO::NORMAL << "Plotting RMSE as error of SUM makes no sense!" << LogIO::POST;
 				if (z_eval.size()> 0)
-				z_eval.resize(0);
-			    } else {
-				switch (itsPlotType) {
-				    case QtProfile::PSUM:
-				    case QtProfile::PFLUX:
-					*itsLog << LogIO::NORMAL << "Plotting RMSE as error of SUM makes no sense!" << LogIO::POST;
-					if (z_eval.size()> 0)
-					    z_eval.resize(0);
-					break;
-				    //case QtProfile::PVRMSE:
-				    //		 cout << "Plotting RMSE over RMSE makes no sense!" << endl;
-				    //  	 if (z_eval.size()> 0)
-				    //  		 z_eval.resize(0);
-				    //		 break;
-				    default:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-								     WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-								     (Int)QtProfile::RMSE, 0, cSysRval);
-					break;
-				}
-			    }
-			    break;
-			case QtProfile::PPROPAG:
-			    if ( cSys.qualityAxisNumber() < 0 ) {
-				*itsLog << LogIO::NORMAL << "Can not do the plot request, no quality axis!" << LogIO::POST;
-				if (z_eval.size()> 0)
-				    z_eval.resize(0);
-			    } else {
-				switch ( itsPlotType ) {
-				    case QtProfile::PMEAN:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-								     WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-								     (Int)QtProfile::NSQRTSUM, 1, cSysRval);
-					break;
-				    case QtProfile::PMEDIAN:
-					*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
-					if (z_eval.size()> 0)
-					    z_eval.resize(0);
-					    break;
-				    case QtProfile::PSUM:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-								     WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-								     (Int)QtProfile::SQRTSUM, 1, cSysRval);
-					break;
-				    case QtProfile::PFLUX:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-								     WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-								     (Int)QtProfile::EFLUX, 1, cSysRval);
-					break;
-				    default:
-					if (z_eval.size()> 0)
-					    z_eval.resize(0);
-					break;
-				}
-			    }
-			    break;
+					z_eval.resize(0);
+				break;
+				//case QtProfile::PVRMSE:
+				//		 cout << "Plotting RMSE over RMSE makes no sense!" << endl;
+				//  	 if (z_eval.size()> 0)
+				//  		 z_eval.resize(0);
+				//		 break;
 			default:
-			    if (z_eval.size()> 0)
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::RMSE, 0, cSysRval);
+				break;
+			}
+		}
+		break;
+	case QtProfile::PPROPAG:
+		if ( cSys.qualityAxisNumber() < 0 ) {
+			*itsLog << LogIO::NORMAL << "Can not do the plot request, no quality axis!" << LogIO::POST;
+			if (z_eval.size()> 0)
 				z_eval.resize(0);
-			    break;
-		    }
-
-		    if ( ! ok ) {
-			// change to notify user of error...
-			*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
-
-		    }
-		    return ok;
+		} else {
+			switch ( itsPlotType ) {
+			case QtProfile::PMEAN:
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::NSQRTSUM, 1, cSysRval);
+				break;
+			case QtProfile::PMEDIAN:
+				*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
+				if (z_eval.size()> 0)
+					z_eval.resize(0);
+				break;
+			case QtProfile::PSUM:
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::SQRTSUM, 1, cSysRval);
+				break;
+			case QtProfile::PFLUX:
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::EFLUX, 1, cSysRval);
+				break;
+			default:
+				if (z_eval.size()> 0)
+					z_eval.resize(0);
+				break;
+			}
+		}
+		break;
+	default:
+		if (z_eval.size()> 0)
+			z_eval.resize(0);
+		break;
 	}
 
-	Int QtProfile::scaleAxis(){
-		// scale for better display
-		    // max absolute display numbers should be between 0.1 and 100.0
-		    Double dmin = 0.1;
-		    Double dmax = 100.;
-		    Double ymin = min(z_yval);
-		    Double ymax = max(z_yval);
-		    ymax = max(abs(ymin), ymax);
-		    Double symax;
-		    Int ordersOfM = 0;
+	if ( ! ok ) {
+		// change to notify user of error...
+		*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
 
-		    symax = ymax;
-		    while(symax < dmin && ymax != 0.0){
-			ordersOfM += 3;
-			symax = ymax * pow(10.,ordersOfM);
-		    }
-		    while(symax > dmax && ymax != 0.0){
-			ordersOfM -= 3;
-			symax = ymax * pow(10.,ordersOfM);
-		    }
+	}
+	return ok;
+}
 
-		    if(ordersOfM!=0){
-			// correct display y axis values
-			for (uInt i = 0; i < z_yval.size(); i++) {
-			    z_yval(i) *= pow(10.,ordersOfM);
-			}
-			if ( z_eval.size() > 0 ) {
-			    for (uInt i = 0; i < z_eval.size(); i++) {
+Int QtProfile::scaleAxis(){
+	// scale for better display
+	// max absolute display numbers should be between 0.1 and 100.0
+	Double dmin = 0.1;
+	Double dmax = 100.;
+	Double ymin = min(z_yval);
+	Double ymax = max(z_yval);
+	ymax = max(abs(ymin), ymax);
+	Double symax;
+	Int ordersOfM = 0;
+	symax = ymax;
+	while(symax < dmin && ymax != 0.0){
+		ordersOfM += 3;
+		symax = ymax * pow(10.,ordersOfM);
+	}
+	while(symax > dmax && ymax != 0.0){
+		ordersOfM -= 3;
+		symax = ymax * pow(10.,ordersOfM);
+	}
+
+	if(ordersOfM!=0){
+		// correct display y axis values
+		for (uInt i = 0; i < z_yval.size(); i++) {
+			z_yval(i) *= pow(10.,ordersOfM);
+		}
+		if ( z_eval.size() > 0 ) {
+			for (uInt i = 0; i < z_eval.size(); i++) {
 				z_eval(i) *= pow(10.,ordersOfM);
-			    }
 			}
-		    }
+		}
 
-		    // store the scaling factor
-		    ordersOfM_=ordersOfM;
-
-		    if(ordersOfM!=0){
-			// correct unit string
-			if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ){
-			    // express factor as number
-			    ostringstream oss;
-			    oss << -ordersOfM;
-			    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
-			} else {
-			    // express factor as character
-			    switch(-ordersOfM){ // note the sign!
-				case -12:
-				    yUnitPrefix = "p";
-				    break;
-				case -9:
-				    yUnitPrefix = "n";
-				    break;
-				case -6:
-				    yUnitPrefix = "u";
-				    break;
-			    	case -3:
-				    yUnitPrefix = "m";
-				    break;
-				case 3:
-				    yUnitPrefix = "k";
-				    break;
-				case 6:
-				    yUnitPrefix = "M";
-				    break;
-				case 9:
-				    yUnitPrefix = "G";
-				    break;
-				default:
-				    ostringstream oss;
-				    oss << -ordersOfM;
-				    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
-				    break;
-			    }
-			}
-		    } else{ // no correction
-			yUnitPrefix = "";
-		    }
-		    setPixelCanvasYUnits( yUnitPrefix, yUnit );
-		  return ordersOfM;
 	}
 
-	void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
-		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
-		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
+	// store the scaling factor
+	ordersOfM_=ordersOfM;
+
+	if(ordersOfM!=0){
+		// correct unit string
+		if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ){
+			// express factor as number
+			ostringstream oss;
+			oss << -ordersOfM;
+			yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+		} else {
+			// express factor as character
+			switch(-ordersOfM){ // note the sign!
+			case -12:
+				yUnitPrefix = "p";
+				break;
+			case -9:
+				yUnitPrefix = "n";
+				break;
+			case -6:
+				yUnitPrefix = "u";
+				break;
+			case -3:
+				yUnitPrefix = "m";
+				break;
+			case 3:
+				yUnitPrefix = "k";
+				break;
+			case 6:
+				yUnitPrefix = "M";
+				break;
+			case 9:
+				yUnitPrefix = "G";
+				break;
+			default:
+				ostringstream oss;
+				oss << -ordersOfM;
+				yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+				break;
+			}
+		}
+
 	}
+	else{ // no correction
+		yUnitPrefix = "";
+	}
+	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	return ordersOfM;
+}
+
+void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
+	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
+	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
+}
 
 
 
-	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
-		bool ok = true;
-		if ( over != NULL ){
-			QHashIterator<QString, ImageAnalysis*> i(*over);
+void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
+	bool ok = true;
+	if ( over != NULL ){
+		QHashIterator<QString, ImageAnalysis*> i(*over);
 
-			while (i.hasNext() && stateMProf) {
-				i.next();
-				QString ky = i.key();
-				ImageAnalysis* ana = i.value();
-				Vector<Float> xval(100);
-				Vector<Float> yval(100);
+		while (i.hasNext() && stateMProf) {
+			i.next();
+			QString ky = i.key();
+			ImageAnalysis* ana = i.value();
+			Vector<Float> xval(100);
+			Vector<Float> yval(100);
 
-				switch (itsPlotType)
-				{
-				case QtProfile::PMEAN:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0);
-					break;
-				case QtProfile::PMEDIAN:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEDIAN, 0);
-					break;
-				case QtProfile::PSUM:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::PSUM, 0);
-					break;
-				case QtProfile::PFLUX:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::PFLUX, 0);
-					break;
-			 //case QtProfile::PVRMSE:
-			 //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-			 //			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			 //			(Int)QtProfile::RMSE, 0);
-			 // break;
-				default:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					 (Int)QtProfile::MEAN, 0);
-					break;
+			switch (itsPlotType)
+			{
+			case QtProfile::PMEAN:
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::MEAN, 0);
+				break;
+			case QtProfile::PMEDIAN:
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::MEDIAN, 0);
+				break;
+			case QtProfile::PSUM:
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::PSUM, 0);
+				break;
+			case QtProfile::PFLUX:
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::PFLUX, 0);
+				break;
+				//case QtProfile::PVRMSE:
+				//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+				//			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+				//			(Int)QtProfile::RMSE, 0);
+				// break;
+			default:
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+						(Int)QtProfile::MEAN, 0);
+				break;
+			}
+
+			if (ok) {
+				if(ordersOfM!=0){
+					// correct display y axis values
+					for (uInt i = 0; i < yval.size(); i++) {
+						yval(i) *= pow(10.,ordersOfM);
+					}
 				}
+				Vector<Float> xRel(yval.size());
+				Vector<Float> yRel(yval.size());
+				Int count = 0;
+				if (stateRel) {
+					ky = ky+ "_rel.";
+					for (uInt i = 0; i < yval.size(); i++) {
+						uInt k = z_yval.size() - 1;
+						//cout << xval(i) << " - " << yval(i) << endl;
+						//cout << z_xval(0) << " + " << z_xval(k) << endl;
+						if (coordinateType.contains("elocity")) {
+							if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+								for (uInt j = 0; j < k; j++) {
+									//cout << z_xval(j) << " + "
+									//     << z_yval(j) << endl;
+									if (xval(i) <= z_xval(j) &&
+											xval(i) > z_xval(j + 1)) {
+										float s = z_xval(j + 1) - z_xval(j);
+										if (s != 0) {
+											xRel(count) = xval(i);
+											yRel(count)= yval(i) -
+													(z_yval(j) + (xval(i) - z_xval(j)) / s *
+															(z_yval(j + 1) - z_yval(j)));
+											count++;
+											//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											//           (z_yval(j + 1) - z_yval(j)));
 
-				if (ok) {
-					if(ordersOfM!=0){
-						// correct display y axis values
-						for (uInt i = 0; i < yval.size(); i++) {
-							yval(i) *= pow(10.,ordersOfM);
+										}
+										break;
+									}
+								}
+							}
+						}
+						else {
+							if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+								for (uInt j = 0; j < k; j++) {
+									if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+										float s = z_xval(j + 1) - z_xval(j);
+										if (s != 0) {
+											xRel(count) = xval(i);
+											yRel(count)= yval(i) -
+													(z_yval(j) + (xval(i) - z_xval(j)) / s *
+															(z_yval(j + 1) - z_yval(j)));
+											count++;
+											//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
+											//           (z_yval(j + 1) - z_yval(j)));
+										}
+										break;
+									}
+								}
+							}
 						}
 					}
-					Vector<Float> xRel(yval.size());
-					Vector<Float> yRel(yval.size());
-					Int count = 0;
-					if (stateRel) {
-						ky = ky+ "_rel.";
-						for (uInt i = 0; i < yval.size(); i++) {
-							uInt k = z_yval.size() - 1;
-							//cout << xval(i) << " - " << yval(i) << endl;
-							//cout << z_xval(0) << " + " << z_xval(k) << endl;
-							if (coordinateType.contains("elocity")) {
-								if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
-								 for (uInt j = 0; j < k; j++) {
-									 //cout << z_xval(j) << " + "
-									 //     << z_yval(j) << endl;
-									 if (xval(i) <= z_xval(j) &&
-											 xval(i) > z_xval(j + 1)) {
-										 float s = z_xval(j + 1) - z_xval(j);
-										 if (s != 0) {
-											 xRel(count) = xval(i);
-											 yRel(count)= yval(i) -
-													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-															 (z_yval(j + 1) - z_yval(j)));
-											 count++;
-											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-											 //           (z_yval(j + 1) - z_yval(j)));
-
-										 }
-										 break;
-									 }
-								 }
-							 }
-						 }
-						 else {
-							 if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
-								 for (uInt j = 0; j < k; j++) {
-									 if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
-										 float s = z_xval(j + 1) - z_xval(j);
-										 if (s != 0) {
-											 xRel(count) = xval(i);
-											 yRel(count)= yval(i) -
-													 (z_yval(j) + (xval(i) - z_xval(j)) / s *
-															 (z_yval(j + 1) - z_yval(j)));
-											 count++;
-											 //yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s *
-											 //           (z_yval(j + 1) - z_yval(j)));
-										 }
-										 break;
-									 }
-								 }
-							 }
-						 }
-					 }
-					 xRel.resize(count, True);
-					 yRel.resize(count, True);
-					 addCanvasMainCurve( xRel, yRel, ky );
-				 }
-				 else {
-					 addCanvasMainCurve( xval, yval, ky );
-				 }
-			 }
-			}
-
-		}
-	}
-
-	void QtProfile::adjustTopAxisSettings(){
-		int mainCurveCount = pixelCanvas->getLineCount();
-		if ( mainCurveCount > 1 ){
-			this->topAxisCType->setEnabled( false );
-		}
-		else if ( pixelCanvas->getShowTopAxis() ){
-			topAxisCType->setEnabled( true );
-		}
-		else {
-			topAxisCType-> setEnabled( false );
-		}
-	}
-
-	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
-			const QString& label ){
-		specFitSettingsWidget->addCurveName( label );
-		pixelCanvas->addPolyLine(xVals, yVals, label );
-		adjustTopAxisSettings();
-	}
-
-	void QtProfile::storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
-									const Vector<double> wxv, const Vector<double> wyv ){
-		lastWX.assign(wxv);
-		lastWY.assign(wyv);
-		lastPX.assign(pxv);
-		lastPY.assign(pyv);
-	}
-
-
-	//Methods from the SpecFitMonitor interface that this class
-	//implements.
-	void QtProfile::postStatus( String status ){
-		profileStatus->showMessage(QString(status.c_str()));
-	}
-	Vector<Float> QtProfile::getXValues() const {
-		return z_xval;
-	}
-	Vector<Float> QtProfile::getYValues() const {
-		return z_yval;
-	}
-	Vector<Float> QtProfile::getZValues() const {
-		return z_eval;
-	}
-
-	QString QtProfile::getYUnit() const {
-		return yUnit;
-	}
-
-	QString QtProfile::getYUnitPrefix() const {
-		return yUnitPrefix;
-	}
-	String QtProfile::getXAxisUnit() const {
-		return xaxisUnit;
-	}
-
-	QString QtProfile::getFileName() const {
-		return fileName;
-	}
-
-	QString QtProfile::getImagePath() const {
-		return imagePath;
-	}
-
-	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const{
-		//First look for a specific image with the name
-		if ( imageName.length() > 0 && over ){
-			QHashIterator<QString, ImageAnalysis*> i( *over );
-			while (i.hasNext()) {
-				i.next();
-				QString ky = i.key();
-				if ( ky == imageName ){
-					ImageAnalysis* analysis = i.value();
-					const ImageInterface<Float>* imageInterface = analysis->getImage();
-					return imageInterface;
+					xRel.resize(count, True);
+					yRel.resize(count, True);
+					addCanvasMainCurve( xRel, yRel, ky );
+				}
+				else {
+					addCanvasMainCurve( xval, yval, ky );
 				}
 			}
 		}
-		return image;
-	}
 
-	const void QtProfile::getPixelBounds( Vector<double>& pixelX, Vector<double>& pixelY) const {
-		pixelX = lastPX;
-		pixelY = lastPY;
 	}
+}
 
-	void QtProfile::persist( const QString& key, const QString& value ){
-		rc.put( "viewer." + rcid() + key.toStdString(), value.toStdString());
+void QtProfile::adjustTopAxisSettings(){
+	int mainCurveCount = pixelCanvas->getLineCount();
+	if ( mainCurveCount > 1 ){
+		this->topAxisCType->setEnabled( false );
 	}
-
-	QString QtProfile::read( const QString & key ) const {
-		QString valueStr( rc.get("viewer." + rcid() + key.toStdString()).c_str());
-		return valueStr;
+	else if ( pixelCanvas->getShowTopAxis() ){
+		topAxisCType->setEnabled( true );
 	}
-
-	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img){
-		emit showCollapsedImg(path, dataType, displayType, autoRegister, tmpData, img);
+	else {
+		topAxisCType-> setEnabled( false );
 	}
+}
 
-	void QtProfile::pixelsChanged( int pixX, int pixY ){
-		specFitSettingsWidget->pixelsChanged( pixX, pixY );
-	}
+void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
+		const QString& label ){
+	specFitSettingsWidget->addCurveName( label );
+	pixelCanvas->addPolyLine(xVals, yVals, label );
+	adjustTopAxisSettings();
+}
 
-	void QtProfile::curveColorPreferences(){
-		colorSummaryWidget->show();
-	}
+void QtProfile::storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
+		const Vector<double> wxv, const Vector<double> wyv ){
+	lastWX.assign(wxv);
+	lastWY.assign(wyv);
+	lastPX.assign(pxv);
+	lastPY.assign(pyv);
+}
 
-	void QtProfile::legendPreferences(){
-		legendPreferencesDialog->show();
-	}
 
-	void QtProfile::frameChanged( int frameNumber ){
-		if ( frameNumber >= 0 ){
-			frameIndex = frameNumber;
+//Methods from the SpecFitMonitor interface that this class
+//implements.
+void QtProfile::postStatus( String status ){
+	profileStatus->showMessage(QString(status.c_str()));
+}
+Vector<Float> QtProfile::getXValues() const {
+	return z_xval;
+}
+Vector<Float> QtProfile::getYValues() const {
+	return z_yval;
+}
+Vector<Float> QtProfile::getZValues() const {
+	return z_eval;
+}
+
+QString QtProfile::getYUnit() const {
+	return yUnit;
+}
+
+QString QtProfile::getYUnitPrefix() const {
+	return yUnitPrefix;
+}
+String QtProfile::getXAxisUnit() const {
+	return xaxisUnit;
+}
+
+QString QtProfile::getFileName() const {
+	return fileName;
+}
+
+QString QtProfile::getImagePath() const {
+	return imagePath;
+}
+
+const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const{
+	//First look for a specific image with the name
+	if ( imageName.length() > 0 && over ){
+		QHashIterator<QString, ImageAnalysis*> i( *over );
+		while (i.hasNext()) {
+			i.next();
+			QString ky = i.key();
+			if ( ky == imageName ){
+				ImageAnalysis* analysis = i.value();
+				const ImageInterface<Float>* imageInterface = analysis->getImage();
+				return imageInterface;
+			}
 		}
-		if ( 0 <= frameIndex && frameIndex < static_cast<int>(z_xval.size()) ){
-			pixelCanvas->setFrameMarker( z_xval[frameIndex]);
-		}
+	}
+	return image;
+}
+
+const void QtProfile::getPixelBounds( Vector<double>& pixelX, Vector<double>& pixelY) const {
+	pixelX = lastPX;
+	pixelY = lastPY;
+}
+
+void QtProfile::persist( const QString& key, const QString& value ){
+	rc.put( "viewer." + rcid() + key.toStdString(), value.toStdString());
+}
+
+QString QtProfile::read( const QString & key ) const {
+	QString valueStr( rc.get("viewer." + rcid() + key.toStdString()).c_str());
+	return valueStr;
+}
+
+void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img){
+	emit showCollapsedImg(path, dataType, displayType, autoRegister, tmpData, img);
+}
+
+void QtProfile::pixelsChanged( int pixX, int pixY ){
+	specFitSettingsWidget->pixelsChanged( pixX, pixY );
+}
+
+void QtProfile::curveColorPreferences(){
+	colorSummaryWidget->show();
+}
+
+void QtProfile::legendPreferences(){
+	legendPreferencesDialog->show();
+}
+
+void QtProfile::frameChanged( int frameNumber ){
+	if ( frameNumber >= 0 ){
+		frameIndex = frameNumber;
+	}
+	if ( 0 <= frameIndex && frameIndex < static_cast<int>(z_xval.size()) ){
+		pixelCanvas->setFrameMarker( z_xval[frameIndex]);
+	}
+}
+
+void QtProfile::setPosition( const QList<double>& xValues, const QList<double>& yValues ){
+	emit adjustPosition( xValues[0], yValues[0], xValues[1], yValues[1]);
+}
+
+void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
+	const QString TITLE_BASE = "Spectral Profile";
+	if ( purpose == MOMENTS_COLLAPSE ){
+		//Hide the function tabs and show only the moments/collapse functionality
+		this->purposeStackedLayout->setCurrentIndex( 1 );
+		setWindowTitle( TITLE_BASE+": Collapse/Moments - "+fileName);
+		pixelCanvas->changeTaskMode( 0 );
+	}
+	else if ( purpose == SPECTROSCOPY ){
+		//Show the function tabs and hide moments/collapse functionality
+		this->purposeStackedLayout->setCurrentIndex( 0 );
+		setWindowTitle( TITLE_BASE+" - "+fileName);
+		int tabIndex = functionTabs->currentIndex();
+		pixelCanvas->changeTaskMode( tabIndex );
 	}
 
-	void QtProfile::setPosition( const QList<double>& xValues, const QList<double>& yValues ){
-		emit adjustPosition( xValues[0], yValues[0], xValues[1], yValues[1]);
-	}
+}
 
-	void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
-		const QString TITLE_BASE = "Spectral Profile";
-		if ( purpose == MOMENTS_COLLAPSE ){
-			//Hide the function tabs and show only the moments/collapse functionality
-			this->purposeStackedLayout->setCurrentIndex( 1 );
-			setWindowTitle( TITLE_BASE+": Collapse/Moments - "+fileName);
-			pixelCanvas->changeTaskMode( 0 );
-		}
-		else if ( purpose == SPECTROSCOPY ){
-			//Show the function tabs and hide moments/collapse functionality
-			this->purposeStackedLayout->setCurrentIndex( 0 );
-			setWindowTitle( TITLE_BASE+" - "+fileName);
-			int tabIndex = functionTabs->currentIndex();
-			pixelCanvas->changeTaskMode( tabIndex );
-		}
+void QtProfile::setDisplayYUnits( const QString& unitStr ){
+	pixelCanvas->setDisplayYUnits( unitStr );
+	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
+}
 
-	}
+void QtProfile::regionUpdatesStarting(){
+	pixelCanvas->regionUpdatesStarting();
+}
 
-	void QtProfile::setDisplayYUnits( const QString& unitStr ){
-		pixelCanvas->setDisplayYUnits( unitStr );
-		this->specFitSettingsWidget->setDisplayYUnits( unitStr );
-	}
-
-	void QtProfile::regionUpdatesStarting(){
-		pixelCanvas->regionUpdatesStarting();
-	}
-
-	void QtProfile::regionUpdatesEnding() {
-		pixelCanvas->regionUpdatesEnding();
-	}
+void QtProfile::regionUpdatesEnding() {
+	pixelCanvas->regionUpdatesEnding();
+}
 }

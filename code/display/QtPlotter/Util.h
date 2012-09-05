@@ -45,6 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
 			static void minMax( double& min, double& max, const Vector<Double>& values );
 			static QString toDegreeString( int hrs, int mins, double secs );
+			static QString toDecString( int hrs, int mins, double secs );
 			static void appendSign( double rad, QString& degreeString );
 			/**
 			 * Designed to take an input string of the format '[km/s]' and return 'km/s'.

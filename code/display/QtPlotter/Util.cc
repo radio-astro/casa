@@ -171,6 +171,10 @@ namespace casa {
 		return QString::number(hrs) + ":"+QString::number(mins)+":"+QString::number(secs);
 	}
 
+	QString Util::toDecString( int hrs, int mins, double secs ){
+		return QString::number(hrs) + "."+QString::number(mins)+"."+QString::number(secs);
+	}
+
 	void Util::appendSign( double rad, QString& degreeString ){
 		if ( rad < 0 ){
 			degreeString = "-"+degreeString;

@@ -47,7 +47,7 @@ namespace casa {
 	    void operator( )( Region *element ) { element->emitUpdate( ); }
 	};
 	void RegionSourceKernel::generateExistingRegionUpdates( ) {
-	    std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
+	   std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
 	}
 
 	void RegionSourceKernel::register_new_region( Region *region ) {
