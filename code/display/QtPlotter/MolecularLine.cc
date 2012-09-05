@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QTextDocument>
+#include <QTextStream>
 #include <qwt_scale_map.h>
 #include <qwt_double_rect.h>
 
@@ -41,11 +42,16 @@ MolecularLine::MolecularLine() : QwtPlotMarker(){
 	init();
 }
 
-MolecularLine::MolecularLine( float center, float peak, QString name ): QwtPlotMarker() {
+MolecularLine::MolecularLine( float center, float peak, const QString& name,
+		const QString& chemicalName, const QString& resolvedQNs,
+		const QString& frequencyUnits ): QwtPlotMarker() {
 	init();
 	this -> center = center;
 	this -> peak = peak;
 	this -> label = name;
+	this -> chemicalName = chemicalName;
+	this -> resolvedQNs = resolvedQNs;
+	this -> frequencyUnits = frequencyUnits;
 }
 
 void MolecularLine::init() {
@@ -144,6 +150,14 @@ bool MolecularLine::equalTo( const MolecularLine* const other ) const {
 		}
 	}
 	return equalLines;
+}
+
+void MolecularLine::toStream( QTextStream* stream ) const {
+	*stream << " Species: "<<label<<"\n";
+	*stream << " Chemical Name: "<< chemicalName<<"\n";
+	*stream << " Frequency: "<< center << " "<< frequencyUnits<<"\n";
+	*stream << " Resolved QNs: "<< resolvedQNs<<"\n";
+	*stream << " Intensity: " << peak<<"\n";
 }
 
 MolecularLine::~MolecularLine() {

@@ -40,10 +40,10 @@
 //# this include:
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String WCAxisLabeller::LABEL_CHAR_SIZE = "labelcharsize";
+const String WCAxisLabeller::PLOT_TITLE="titletext";
 
 WCAxisLabeller::WCAxisLabeller() {
   // set defaults from .aipsrc, if they exist there.
@@ -98,7 +98,7 @@ Bool WCAxisLabeller::setOptions(const Record &rec, Record &)
 					rec, "axislabelswitch") 
 		       || localchange);
   localchange = (readOptionRecord(itsOptionsTitleText, error,
-					rec, "titletext") || localchange);
+					rec, PLOT_TITLE) || localchange);
   localchange = (readOptionRecord(itsOptionsTitleTextColor, error,
 					rec, "titletextcolor") || localchange);
   localchange = (readOptionRecord(itsOptionsXAxisText, 
@@ -168,7 +168,7 @@ Record WCAxisLabeller::getOptions() const
   titletext.define("value", itsOptionsTitleText);
   titletext.define("allowunset", False);
   titletext.define("context", "axis_labels");
-  rec.defineRecord("titletext", titletext);
+  rec.defineRecord(PLOT_TITLE, titletext);
 
   Record titletextcolor;
   titletextcolor.define("dlformat", "titletextcolor");

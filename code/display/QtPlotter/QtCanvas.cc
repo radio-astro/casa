@@ -36,6 +36,7 @@
 #include <QWidget>
 #include <QAction>
 #include <QMouseEvent>
+#include <QTextStream>
 #include <cmath>
 #include <QtGui>
 #include <iostream>
@@ -546,7 +547,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 	if ( xcursor.isValid( ) ){
 		QtPlotSettings currSettings = zoomStack[curZoom];
 		double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
-		double channelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
+		channelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
 		emit channelSelect(channelSelectValue);
 		return;
 	}
@@ -694,7 +695,13 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
 	//qDebug() << "mouse release" << event->button() << Qt::LeftButton;
 
-	if ( xcursor.isValid( ) ) return;
+	if ( xcursor.isValid( ) ){
+		QtPlotSettings currSettings = zoomStack[curZoom];
+		double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+		float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
+		emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
+		return;
+	}
 
 	if (event->button() == Qt::LeftButton){
 		if (xRangeMode){
@@ -829,7 +836,7 @@ void QtCanvas::keyPressEvent(QKeyEvent *event)
 #else
     case Qt::Key_Control:
 #endif
-	xcursor = QColor(Qt::gray);
+	xcursor = QColor(/*Qt::gray*/this->frameMarkerColor);
 	update( );
 	break;
     default:
@@ -1714,6 +1721,10 @@ QList<QString> QtCanvas::getMolecularLineNames() const {
 		nameList.append( name );
 	}
 	return nameList;
+}
+
+QList<MolecularLine*> QtCanvas::getMolecularLines() const {
+	return molecularLineStack;
 }
 
 void QtCanvas::setImageYUnits( const QString& imageUnits ) {

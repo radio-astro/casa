@@ -22,51 +22,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef LINEOVERLAYSTAB_QO_H
-#define LINEOVERLAYSTAB_QO_H
+#ifndef ANIMATORWIDGETT_QO_H
+#define ANIMATORWIDGETT_QO_H
 
 #include <QtGui/QWidget>
-#include <display/QtPlotter/LineOverlaysTab.ui.h>
-#include <display/QtPlotter/LineOverlaysSearchResultsDialog.qo.h>
-#include <display/QtPlotter/SearchRedshiftDialog.qo.h>
-#include <casa/BasicSL/String.h>
-
+#include <display/QtViewer/AnimatorWidget.ui.h>
 
 namespace casa {
 
-class QtCanvas;
-class SearchMoleculesWidget;
-class Converter;
-
-class LineOverlaysTab : public QWidget
+/**
+ * Manages an individual panel of the viewer animator.  Objects of
+ * this class may animate frames withen an image or they may animate
+ * between loaded images.
+ */
+class AnimatorWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    LineOverlaysTab(QWidget *parent = 0);
-    void setRange( float min, float max, String units );
-    void setInitialReferenceFrame( QString referenceStr );
-    void setCanvas( QtCanvas* canvas );
-    ~LineOverlaysTab();
+    AnimatorWidget(QWidget *parent = 0);
+
+    void setFrameInformation( int frm, int len );
+    void setRateInformation( int minr, int maxr, int rate );
+    void setModeEnabled( bool enable );
+    void setPlaying( int play );
+    int getRate() const;
+    int getFrame() const;
+    ~AnimatorWidget();
+
+signals:
+	void goTo(int frame);
+	void setRate(int);
+	void toStart();
+	void revStep();
+	void revPlay();
+	void stop();
+	void fwdStep();
+	void fwdPlay();
+	void toEnd();
+	void frameNumberEdited( int );
 
 private slots:
-	void graphSelectedLines();
-	void graphSelectedSpecies();
-	void searchCompleted();
-	void eraseLines();
-	void saveIdentifiedLines();
-	void findRedshift( double center, double peak );
+	void frameNumberEdited();
 
 private:
-	void addLineToPixelCanvas( float center, float peak,
-			QString molecularName, QString chemicalName,
-			QString resolvedQNs, QString frequencyUnit, Converter* converter);
-
-    Ui::LineOverlaysTabClass ui;
-    SearchMoleculesWidget* searchWidget;
-    QtCanvas* pixelCanvas;
-    LineOverlaysSearchResultsDialog searchResults;
-    SearchRedshiftDialog searchRedshiftDialog;
+	void blockSignals( bool block );
+    Ui::AnimatorWidget ui;
+    bool rateNotSet;
 };
 }
-#endif // LINEOVERLAYSTAB_QO_H
+#endif // ANIMATORWIDGET_QO_H

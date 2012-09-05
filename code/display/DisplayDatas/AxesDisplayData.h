@@ -35,6 +35,9 @@
 #include <display/Display/DParameterColorChoice.h>
 #include <display/DisplayDatas/PassiveCachingDD.h>
 
+#include <iostream>
+using namespace std;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class WorldCanvas;

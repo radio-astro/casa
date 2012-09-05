@@ -79,8 +79,10 @@ QList<int> SearchMoleculesDialog::getLineIndices() const{
 }
 
 bool SearchMoleculesDialog::getLine(int lineIndex, Float& peak, Float& center,
-		QString& molecularName ) const {
-	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName );
+		QString& molecularName, QString& chemicalName, QString& resolvedQNs,
+		QString& frequencyUnit ) const {
+	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName,
+			chemicalName, resolvedQNs, frequencyUnit );
 }
 
 double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value ) const {

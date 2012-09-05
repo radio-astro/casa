@@ -281,7 +281,11 @@ void GaussianEstimateDialog::updateMolecularLines( ){
 		Float center;
 		Float peak;
 		QString molecularName;
-		searchDialog.getLine(lineIndices[i], peak, center, molecularName );
+		QString chemicalName;
+		QString resolvedQNs;
+		QString frequencyUnits;
+		searchDialog.getLine(lineIndices[i], peak, center, molecularName, chemicalName,
+				resolvedQNs, frequencyUnits );
 
 		//First we have to make the frequency value redshifted.
 		double shiftedCenter = searchDialog.getRedShiftedValue( false, center );
@@ -291,7 +295,8 @@ void GaussianEstimateDialog::updateMolecularLines( ){
 			shiftedCenter = converter->convert( shiftedCenter );
 		}
 		for( int j = 0; j < static_cast<int>(estimates.size()); j++ ){
-			plots[estimates[j]]->molecularLineChanged( peak, shiftedCenter, molecularName);
+			plots[estimates[j]]->molecularLineChanged( peak, shiftedCenter,
+					molecularName, chemicalName, resolvedQNs, frequencyUnits );
 		}
 	}
 	delete converter;

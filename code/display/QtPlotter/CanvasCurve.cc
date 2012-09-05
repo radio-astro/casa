@@ -205,9 +205,16 @@ double CanvasCurve::valueToPercent( double yValue ) const {
 }
 
 double CanvasCurve::convert( double yValue, const QString oldUnits, const QString newUnits ) const {
+
 	String oldUnitStr( oldUnits.toStdString() );
+	if ( oldUnits == "Kelvin"){
+		oldUnitStr = "K";
+	}
 	Quantity quantity( yValue, oldUnitStr );
 	String newUnitStr( newUnits.toStdString() );
+	if ( newUnitStr == "Kelvin"){
+		newUnitStr = "K";
+	}
 	quantity.convert( newUnitStr );
 	double convertedYValue = quantity.getValue();
 	return convertedYValue;

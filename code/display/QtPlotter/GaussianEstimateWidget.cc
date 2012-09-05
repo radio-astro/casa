@@ -395,18 +395,17 @@ void GaussianEstimateWidget::fwhmFixedChanged( bool checked ){
 //--------------------------------------------------------------------
 
 void GaussianEstimateWidget::molecularLineChanged( float peak, float center,
-		const QString& label){
+		const QString& label, const QString& chemicalName, const QString& resolvedQNs,
+		const QString& frequencyUnits ){
 
 	//Update the sliders which should update everything else.
 	setSliderValuePeak( peak );
 	setSliderValueCenter( center );
 	QString key = label + QString::number(center);
 	if ( ! molecularLineMap.contains( key )){
-		MolecularLine* molecularLine = new MolecularLine();
+		MolecularLine* molecularLine = new MolecularLine(center, peak, label,
+				chemicalName, resolvedQNs, frequencyUnits );
 		molecularLine->attach( plot );
-		molecularLine->setCenter( center );
-		molecularLine->setPeak( peak );
-		molecularLine->setLabel( label );
 		plot->replot();
 		molecularLineMap.insert( key, molecularLine );
 	}

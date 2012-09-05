@@ -101,7 +101,7 @@ public:
 	//Draws a vertical line indicating the current frame.
 	void drawFrameMarker( QPainter* );
 	QString getUnits( QtPlotSettings::AxisIndex axisIndex = QtPlotSettings::xBottom );
-
+	QList<MolecularLine*> getMolecularLines() const;
 
 	//Plotting curves
 	void plotPolyLines(QString);
@@ -218,6 +218,7 @@ signals:
 	void channelSelect(float xvalue);
 	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
 	void findRedshiftAt( double center, double peak );
+	void channelRangeSelect( float startVal, float endVal );
 	void curvesChanged();
 
 protected:
@@ -454,6 +455,8 @@ private:
 
 	//Stop canvas refreshes if lots of updates are coming in at once.
 	bool refreshCanvas;
+
+	float channelSelectValue;
 
 };
 

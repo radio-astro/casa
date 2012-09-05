@@ -46,6 +46,7 @@
 #include <display/QtViewer/QtExportManager.qo.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
+#include <display/QtViewer/AnimatorHolder.qo.h>
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/region/QtRegionSource.qo.h>
@@ -247,6 +248,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	customToolBar2->hide();
 	customToolBar2->toggleViewAction()->setVisible(False);
 
+	//Animation
 	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
 	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
 	animDockWidget_  = new QDockWidget();
@@ -256,15 +258,19 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 			animloc == "left" ? Qt::LeftDockWidgetArea :
 					animloc == "top" ? Qt::TopDockWidgetArea :
 							Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
-
-	animWidget_      = new QFrame;
-	animDockWidget_->setWidget(animWidget_);
-
-	Ui::QtAnimatorGui::setupUi(animWidget_);
-	// creates/inserts animator controls into animWidget_.
-	// These widgets (e.g. frameSlider_) are protected members
-	// of Ui::QtAnimatorGui, accessible to this derived class.
-	// They are declared/defined in QtAnimatorGui.ui[.h].
+	animationHolder = new AnimatorHolder( this );
+	connect(animationHolder, SIGNAL(goTo(int)), qdp_, SLOT(goTo(int)));
+	connect(animationHolder, SIGNAL(frameNumberEdited(int)), qdp_, SLOT(goTo(int)));
+	connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
+	connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
+	connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
+	connect(animationHolder, SIGNAL(revPlay()),            SLOT(revPlay_()));
+	connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
+	connect(animationHolder, SIGNAL(fwdPlay()),           SLOT(fwdPlay_()));
+	connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
+	connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
+	connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+	animDockWidget_->setWidget(animationHolder);
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
@@ -400,14 +406,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	//## Animation
 	//######################################
 
-	animWidget_->setFrameShadow(QFrame::Plain);
-	animWidget_->setFrameShape(QFrame::NoFrame);       // (invisible)
-	//  animWidget_->setFrameShape(QFrame::StyledPanel);
-	// (to outline outer frame)
-	animFrame_->setFrameShape(QFrame::StyledPanel);
-	// (to outline inner frame (in Ui))
-
-
 	animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
 			Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
 
@@ -415,27 +413,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
 			QSizePolicy::Minimum);	  // (vertical)
-	animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+	//animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//#dk  For bug submission, was 'min,fixed' 4 dockWidg; notSet 4 animWidg.
 	//# Main problem seems to be that dockWidget itself won't do 'fixed'
 	//# correctly -- won't size down (or, sometimes, up) to contained
 	//# widget's desired size (Qt task 94288, issue N93095).
-
-	revTB_ ->setCheckable(True);
-	stopTB_->setCheckable(True);
-	playTB_->setCheckable(True);
-
-	// rateEdit_ ->setReadOnly(True);
-	// 	//#dk~ temporary only: no edits allowed here yet.
-
-	//  frameEdit_->setReadOnly(True);
-	frameEdit_->setValidator(new QIntValidator(frameEdit_));
-	// (Assures only validated Ints will signal editingFinished).
-
-	// animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
-	// 			      "Press 'Compact' to hide the extra controls." );
-	// (...More animator widgets still need these help texts as well...)
-
 
 	// Set interface according to the initial state of underlying animator.
 
@@ -462,40 +444,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	//             /index_html?method=entry&id=102107
 	animDockWidget_->setSizePolicy( QSizePolicy::Minimum,
 			QSizePolicy::Fixed);	  // (needed)
-
-	//#dg  animWidget_->setSizePolicy( QSizePolicy::Minimum,
-	//#dg                              QSizePolicy::Fixed);  // (unneeded)
-	//#dg  QApplication::processEvents();                   // (unneeded)
-	//#dg  animDockWidget_->resize( animWidget_->minimumSizeHint());
-	//#dg  (no luck either...)
-
-
-	/*    //#dg
-    cerr <<"anMSzH:"<<animWidget_->minimumSizeHint().width()	    
-         <<","<<animWidget_->minimumSizeHint().height()
-         <<"   SzH:"<<animWidget_->sizeHint().width()	    
-         <<","<<animWidget_->sizeHint().height()<<endl; 
-    cerr <<"trMSzH:"<<trkgWidget_->minimumSizeHint().width()	    
-         <<","<<trkgWidget_->minimumSizeHint().height()
-         <<"   SzH:"<<trkgWidget_->sizeHint().width()	    
-         <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
-
-
-	/*    //#dg
-    cerr <<"anWszPol:"<<animWidget_->sizePolicy().horizontalPolicy()	    
-         <<","<<animWidget_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"anDszPol:"<<animDockWidget_->sizePolicy().horizontalPolicy() 
-         <<","<<animDockWidget_->sizePolicy().verticalPolicy()<<endl;
-    cerr <<"trEszPol:"<<trkgEdit_->sizePolicy().horizontalPolicy()	    
-         <<","<<trkgEdit_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"trWszPol:"<<trkgWidget_->sizePolicy().horizontalPolicy()	    
-         <<","<<trkgWidget_->sizePolicy().verticalPolicy()<<endl; 
-    cerr <<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy() 
-         <<","<<trkgDockWidget_->sizePolicy().verticalPolicy()<<endl;
-//*/  //#dg  
-
-
 
 	// menus / toolbars
 
@@ -593,21 +541,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect( mouseToolBar_, SIGNAL(topLevelChanged(bool)), SLOT(mousetoolbarMoved(bool)) );
 #endif
 
-	//## user interface to animator
 
-	connect(frameSlider_, SIGNAL(valueChanged(int)), qdp_, SLOT(goTo(int)));
-	connect(frameEdit_, SIGNAL(editingFinished()),  SLOT(frameNumberEdited_()));
-	// connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
-	connect(rateEdit_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
-	connect(normalRB_,    SIGNAL(toggled(bool)),     qdp_, SLOT(setMode(bool)));
-
-	connect(toStartTB_, SIGNAL(clicked()),  qdp_, SLOT(toStart()));
-	connect(revStepTB_, SIGNAL(clicked()),  qdp_, SLOT(revStep()));
-	connect(revTB_, SIGNAL(clicked()),            SLOT(revPlay_()));
-	connect(stopTB_, SIGNAL(clicked()),     qdp_, SLOT(stop()));
-	connect(playTB_, SIGNAL(clicked()),           SLOT(fwdPlay_()));
-	connect(fwdStep_, SIGNAL(clicked()),    qdp_, SLOT(fwdStep()));
-	connect(toEndTB_, SIGNAL(clicked()),    qdp_, SLOT(toEnd()));
 
 
 	// Reaction to signals from the basic graphics panel, qdp_.
@@ -688,6 +622,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		}
 		// To do: use a QSetting, to preserve size.
 	}
+	connect( &movieTimer, SIGNAL(timeout()), this, SLOT(incrementMovieChannel()));
 }
 
 
@@ -750,9 +685,16 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	qdds.toEnd();
 	qdds.addRight(qdd);
 
+	updateFrameInformation();
 	emit ddCreated(qdd, autoRegister);
 
-	return qdd;  }
+	return qdd;
+}
+
+void QtDisplayPanelGui::updateFrameInformation(){
+	int displayDataCount = qdds_.len();
+	animationHolder->setModeEnabled( displayDataCount );
+}
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
 	// create a new DD
@@ -774,32 +716,34 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 	}
 }
 
-void QtDisplayPanelGui::doSelectChannel( const Vector<float> &zvec, float zval ) {
-	unsigned int size = zvec.size( );
-	if ( size == 0 ) return;
-	unsigned int channel_num = static_cast<unsigned int>(zvec[0]);
-	bool forward = zvec[0] < zvec[size-1];
-	if ( forward ) {
-		for ( unsigned int i=0; i < size; ++i ) {
-			if ( zval > zvec[i] ) channel_num = i;
-		}
-		if ( channel_num < (size-1) ) {
-			if ( (zval-zvec[channel_num]) > (zvec[channel_num+1]-zval) ) {
-				channel_num += 1;
-			}
-		}
-	} else {
-		for ( unsigned int i=0; i < size; ++i ) {
-			if ( zval < zvec[i] ) channel_num = i;
-		}
-		if ( channel_num > 0 ) {
-			if ( (zval-zvec[channel_num]) > (zvec[channel_num-1]-zval) ) {
-				channel_num -= 1;
-			}
-		}
-	}
+void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
+	qdp_->goTo( channelNumber, true );
+	int frameCount = qdp_->nFrames();
+	animationHolder->setFrameInformation( AnimatorHolder::NORMAL_MODE, channelNumber, frameCount );
+	emit frameChanged( channelNumber );
+}
 
-	qdp_->goTo((int)channel_num);
+void QtDisplayPanelGui::incrementMovieChannel(){
+	if ( movieChannel < movieChannelEnd ){
+		movieChannel++;
+	}
+	else {
+		movieChannel--;
+	}
+	if ( movieChannel == movieChannelEnd ){
+		movieTimer.stop();
+	}
+	else {
+		doSelectChannel( movieChannel );
+	}
+}
+
+void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
+	int animationRate = animationHolder->getRate( AnimatorHolder::NORMAL_MODE );
+	movieTimer.setInterval( 1000/ animationRate );
+	movieChannel = startChannel;
+	movieChannelEnd = endChannel;
+	movieTimer.start();
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
@@ -809,7 +753,10 @@ void QtDisplayPanelGui::removeAllDDs() {
 		qdds.removeRight();
 		emit ddRemoved(qdd);
 		qdd->done();
-		delete qdd;  }  }
+		delete qdd;
+	}
+	updateFrameInformation();
+}
 
 
 
@@ -821,9 +768,12 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
 			emit ddRemoved(qdd);
 			qdd->done();
 			delete qdd;
-			return True;  }  }
-
-	return False;  }
+			return True;
+		}
+	}
+	updateFrameInformation();
+	return False;
+}
 
 
 
@@ -922,17 +872,6 @@ void QtDisplayPanelGui:: addedData( QString /*type*/, QtDisplayData * ) { }
 // Animation slots.
 
 void QtDisplayPanelGui::updateAnimUi_() {
-	// This slot monitors the QtDisplayPanel::animatorChange() signal, to
-	// keep the animator user interface ('view') in sync with that 'model'
-	// (QtDisplayPanel's animator state).  It assumes that the animator
-	// model is in a valid state (and this routine should not emit signals
-	// that would cause state-setting commands to be fed back to that model).
-	// Prevent the signal-feedback recursion mentioned above.
-	// (The signal used from text boxes is only emitted on user edits).
-	Bool nrbSav = normalRB_->blockSignals(True),
-			brbSav = blinkRB_->blockSignals(True),
-			// rslSav = rateSlider_->blockSignals(True),
-			fslSav = frameSlider_->blockSignals(True);
 
 	// Current animator state.
 	Int  frm   = qdp_->frame();
@@ -947,98 +886,12 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	Bool modez = qdp_->modeZ();
 
 	emit frameChanged( frm );
-	frameEdit_->setText(QString::number(frm));
-	nFrmsLbl_ ->setText(QString::number(len));
+	//modeGB_->setEnabled( True );
 
-	if(modez) normalRB_->setChecked(True);
-	else blinkRB_->setChecked(True);
-	// NB: QRadioButton::setChecked(false)  doesn't work
-	// (not what we want here anyway).
-
-	// rateSlider_->setMinimum(minr);
-	// rateSlider_->setMaximum(maxr);
-	// rateSlider_->setValue(rate);
-	rateEdit_->setMinimum(minr);
-	rateEdit_->setMaximum(maxr);
-	rateEdit_->setValue(rate);
-
-	frameSlider_->setMinimum(0);
-	frameSlider_->setMaximum(len-1);
-	//frameSlider_->setMinimum(strt);
-	//frameSlider_->setMaximum(lst);
-	frameSlider_->setValue(frm);
-
-	// stFrmEdit_ ->setText(QString::number(strt));
-	// lstFrmEdit_->setText(QString::number(lst));
-	// stepEdit_  ->setText(QString::number(stp));
-
-
-
-	// Enable interface according to number of frames.
-
-	// enabled in any case:
-	modeGB_->setEnabled(True);		// Blink mode
-	// animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
-
-	// Enabled only if there is more than 1 frame to animate:
-	Bool multiframe = (len > 1);
-
-	rateLbl_->setEnabled(multiframe);	//
-	// rateSlider_->setEnabled(multiframe);	// Rate controls.
-	rateEdit_->setEnabled(multiframe);	//
-	// perSecLbl_->setEnabled(multiframe);	//
-
-	toStartTB_->setEnabled(multiframe);	//
-	revStepTB_->setEnabled(multiframe);	//
-	revTB_->setEnabled(multiframe);	//
-	stopTB_->setEnabled(multiframe);	// Tape deck controls.
-	playTB_->setEnabled(multiframe);	//
-	fwdStep_->setEnabled(multiframe);	//
-	toEndTB_->setEnabled(multiframe);	//
-	frameEdit_->setEnabled(multiframe);	// Frame number entry.
-	nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-	// curFrmLbl_->setEnabled(multiframe);	//
-	frameSlider_->setEnabled(multiframe);	// Frame number slider.
-	// stFrmLbl_->setEnabled(multiframe);	//
-	// stFrmEdit_->setEnabled(multiframe);	// first and last frames
-	// lstFrmLbl_->setEnabled(multiframe);	// to include in animation
-	// lstFrmEdit_->setEnabled(multiframe);	// and animation step.
-	// stepLbl_->setEnabled(multiframe);	//
-	// stepEdit_->setEnabled(multiframe);	//
-
-
-	revTB_ ->setChecked(play<0);
-	stopTB_->setChecked(play==0);
-	playTB_->setChecked(play>0);
-
-
-	//#dk  (For now, always disable the following animator
-	//      interface, because it is not yet fully supported).
-
-	// stFrmLbl_->setEnabled(False);		//
-	// stFrmEdit_->setEnabled(False);	//
-	// lstFrmLbl_->setEnabled(False);	// first and last frames
-	// lstFrmEdit_->setEnabled(False);	// to include in animation,
-	// stepLbl_->setEnabled(False);		// and animation step.
-	// stepEdit_->setEnabled(False);		//
-
-
-	// restore signal-blocking state (to 'unblocked', in all likelihood).
-
-	normalRB_->blockSignals(nrbSav),
-			blinkRB_->blockSignals(brbSav),
-			// rateSlider_->blockSignals(rslSav),
-			frameSlider_->blockSignals(fslSav);
-
-	//cout << "updataAni============" << endl;
+	animationHolder->setFrameInformation( modez, frm, len );
+	animationHolder->setRateInformation( modez, minr, maxr, rate );
+	animationHolder->setPlaying( modez, play );
 }
-
-
-void QtDisplayPanelGui::frameNumberEdited_() {
-	// User has entered a frame number (text already Int-validated).
-	qdp_->goTo(frameEdit_->text().toInt());  }
-
-
 // Public slots: may be safely operated programmatically (i.e.,
 // scripted, when available), or via gui actions.
 
@@ -1473,10 +1326,9 @@ void QtDisplayPanelGui::showImageProfile() {
 
 						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
 								this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
-						connect(profile_, SIGNAL(channelSelect(const Vector<float>&,float)),
-								this, SLOT(doSelectChannel(const Vector<float>&,float)));
+						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
-
+						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
 						{
 							QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 							if (pos) {
@@ -2385,6 +2237,7 @@ void QtDisplayPanelGui::controlling_dd_update(QtDisplayData*) {
 		if ( controlling_dd != 0 )
 			connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+
 	}
 
 }

@@ -137,7 +137,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
     pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 
-    QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak");
+    QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
     for ( int i = 0; i < yUnitsList.size(); i++ ){
     	yAxisCombo->addItem( yUnitsList[i] );
     }
@@ -163,7 +163,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
     QString pName = settings.value("Print/printer").toString();
 
     connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
-    connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(emitChannelSelect(float)));
+    connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(channelSelect(float)));
+    connect(pixelCanvas, SIGNAL(channelRangeSelect(float,float)), this, SLOT( channelRangeSelect(float,float)));
 
     pixelCanvas->setTitle("");
     pixelCanvas->setWelcome("assign a mouse button to\n"
@@ -219,6 +220,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
    	 String message = "Error when starting the profiler:\n" + x.getMesg();
    	 *itsLog << LogIO::WARN << message << LogIO::POST;
     }
+
 }
 
 
@@ -950,9 +952,58 @@ void QtProfile::plotMainCurve(){
 	topAxisCType->setEnabled( pixelCanvas->getShowTopAxis() );
 }
 
-void QtProfile::emitChannelSelect( float xval ) {
-	emit channelSelect( z_xval, xval );
+int QtProfile::findNearestChannel( float xval ) const {
+	//This finds the channel closest to the passed in value.
+	int channel_num = static_cast<unsigned int>(z_xval[0]);
+	bool forward = false;
+	int size = z_xval.size();
+	if(  z_xval[0] < z_xval[size-1] ){
+		forward = true;
+	}
+	if ( forward ) {
+		for ( int i=0; i < size; ++i ) {
+			if ( xval > z_xval[i] ){
+				channel_num = i;
+			}
+		}
+		if ( channel_num < (size-1) ) {
+			if ( (xval-z_xval[channel_num]) > (z_xval[channel_num+1]-xval) ) {
+				channel_num += 1;
+			}
+		}
+	}
+	else {
+		for ( int i=0; i < size; ++i ) {
+			if ( xval < z_xval[i] ){
+				channel_num = i;
+			}
+		}
+		if ( channel_num > 0 ) {
+			if ( (xval-z_xval[channel_num]) > (z_xval[channel_num-1]-xval) ) {
+				channel_num -= 1;
+			}
+		}
+	}
+	return channel_num;
 }
+
+void QtProfile::channelSelect( float xval ) {
+	unsigned int size = z_xval.size( );
+	if ( size == 0 ) return;
+	int channelIndex = findNearestChannel( xval );
+	emit channelSelect( channelIndex );
+}
+
+void QtProfile::channelRangeSelect( float channelStart, float channelEnd ){
+	unsigned int size = z_xval.size( );
+	if ( size == 0 ) return;
+	int channelStartIndex = findNearestChannel( channelStart );
+	int channelEndIndex = findNearestChannel( channelEnd );
+	if ( channelStartIndex != channelEndIndex ){
+		emit movieChannel( channelStartIndex, channelEndIndex );
+	}
+}
+
 
 void QtProfile::setCollapseRange(float xmin, float xmax){
 	momentSettingsWidget->setRange( xmin, xmax );

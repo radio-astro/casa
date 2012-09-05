@@ -43,8 +43,11 @@ public:
     LineOverlaysSearchResultsDialog(QWidget *parent = 0);
     QList<int> getLineIndices() const;
     bool getLine(int lineIndex, Float& peak, Float& center,
-           		QString& molecularName ) const;
-    void getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const;
+           		QString& molecularName, QString& chemicalName,
+           		QString& resolvedQNs, QString& frequencyUnit ) const;
+    void getLines( QList<float>& peaks, QList<float>& centers,
+    		QString& molecularName, QList<QString>& chemicalNames,
+    		QList<QString>& resolvedQNs, QString& frequencyUnit ) const;
     void displaySearchResults( const Record& results );
     int getLineCount() const;
     ~LineOverlaysSearchResultsDialog();

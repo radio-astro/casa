@@ -198,7 +198,6 @@ public slots:
 
 	void plotMainCurve();
 	void setCollapseRange(float xmin, float xmax);
-	void emitChannelSelect(float xval);
 
 	void overplot(QHash<QString, ImageInterface<float>*>);
 
@@ -216,8 +215,9 @@ signals:
    void hideProfile();
    void coordinateChange(const String&);
    void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
-   void channelSelect( const Vector<float> &zvec, float zval );
+   void channelSelect( int channelIndex );
    void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
+   void movieChannel( int startChannel, int endChannel );
 
 private:
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
@@ -267,6 +267,8 @@ private:
    //Conversion
    QString getRaDec(double x, double y);
 
+   //Finds the channel index closest to the passed in value.
+   int findNearestChannel( float xval ) const;
    void initPreferences();
    void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
    ImageAnalysis* analysis;
@@ -346,9 +348,12 @@ private:
    private slots:
    	   void regionUpdatesStarting();
    	   void regionUpdatesEnding();
-   		void changeTopAxis();
-   		void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
-   		void setDisplayYUnits( const QString& unitStr );
+   	   void changeTopAxis();
+   	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
+   	   void setDisplayYUnits( const QString& unitStr );
+   	   void channelSelect(float xval);
+   	   void channelRangeSelect( float channelStart, float channelEnd );
+
 
 };
 

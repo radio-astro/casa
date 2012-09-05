@@ -51,7 +51,8 @@ public:
     void setRangeX( Float xValue, Float yValue );
     void setRangeY( Float xValue, Float yValue );
     void setDisplayYUnits( const QString& units );
-    void molecularLineChanged( float peak, float center, const QString& label);
+    void molecularLineChanged( float peak, float center, const QString& label,
+    		const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
     SpecFitGaussian getEstimate();
     void setEstimate( const SpecFitGaussian& estimate );
     void unitsChanged( const QString& oldUnits, const QString& newUnits);

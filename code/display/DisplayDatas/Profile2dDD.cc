@@ -47,6 +47,9 @@
 #include <display/DisplayEvents/DDModEvent.h>
 #include <measures/Measures/MeasTable.h>
 
+#include <iostream>
+using namespace std;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default construtor

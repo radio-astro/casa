@@ -72,6 +72,13 @@ p, li { white-space: pre-wrap; }
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="saveLinesButton">
+       <property name="text">
+        <string>Save Lines...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="clearLinesButton">
        <property name="text">
         <string>Clear Lines</string>
