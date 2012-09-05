@@ -197,8 +197,8 @@ private:
   Int computeRHS();
 
   // Solver functions : minor-cycle iterations. Need to be efficient.
-  Int solveMatrixEqn(Int ntaylor,Int scale);
-  Int chooseComponent(Int ntaylor,Int scale, Int criterion);
+  Int solveMatrixEqn(Int ntaylor,Int scale, IPosition blc, IPosition trc);
+  Int chooseComponent(Int ntaylor,Int scale, Int criterion, IPosition blc, IPosition trc);
   Int updateModelAndRHS(Float loopgain);
   Int updateRHS(Int ntaylor, Int scale, Float loopgain,Vector<Float> coeffs, IPosition blc, IPosition trc, IPosition blcPsf, IPosition trcPsf);
   Int checkConvergence(Int updatetype, Float &fluxlimit, Float &loopgain); 

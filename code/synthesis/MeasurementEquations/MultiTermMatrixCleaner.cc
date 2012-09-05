@@ -353,20 +353,28 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
 
       // if itercount_p==0, set the blc/trc to the full image size.
       // For later iterations, it will get updated according to globalmaxpos_p and psfsupport_p
+      //                              when buildImagePatches() is called.
+      if(itercount_p==0)
+	{
+	  blc_p = IPosition(2,0,0);
+	  trc_p = IPosition(2,nx_p-1,ny_p-1);
+	}
+
 
       Int scale=0;
       Int ntaylor=ntaylor_p;
-      #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion)
+      IPosition blc(blc_p), trc(trc_p);
+#pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
        { 
 	 #pragma omp for 
           for(scale=0;scale<nscales_p;scale++)
           {
             /* Solve the matrix eqn for all pixels */
-            solveMatrixEqn(ntaylor,scale);
+            solveMatrixEqn(ntaylor,scale,blc,trc);
             /* Choose a component from the list of solutions. Record the location for each scale.*/
 	    // Calculate penalty function
 	    // Find max across all pixels.
-            chooseComponent(ntaylor, scale,criterion);
+            chooseComponent(ntaylor, scale,criterion,blc,trc);
 	  }
        }//end pragma omp
 
@@ -382,8 +390,9 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
        }
 
        /* Update the image and psf patch sizes according to the 
-	  current globalmaxval and psfsupport */
-       //buildImagePatches();
+	  current globalmaxval and psfsupport.
+          This patch is over which the next-iteration's solveMatrixEqn is computed */
+       buildImagePatches();
 
         /* Update the current solution by this chosen step */
         updateModelAndRHS(loopgain);
@@ -992,9 +1001,22 @@ Int MultiTermMatrixCleaner::computeFluxLimit(Float &fluxlimit, Float threshold)
  *  Solve the matrix eqn for each point in the lattice.
 Note : This function is called within the 'scale' omp/pragma loop. Needs to be thread-safe
  ****************************************/
-Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
+Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale, IPosition blc, IPosition trc)
 {
-         /* Solve for the coefficients, one scale at at time*/
+  
+	for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+	{
+	     Matrix<Float> coeffs = (matCoeffs_p[IND2(taylor1,scale)])(blc,trc);  
+	     coeffs = 0.0;
+             for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	     {
+	       Matrix<Float> rhs = (matR_p[IND2(taylor2,scale)])(blc,trc);
+	       coeffs = coeffs +  ((Float)(invMatA_p[scale])(taylor1,taylor2))* rhs;
+	     }
+	}
+  
+  /* Solve for the coefficients, one scale at at time*/
+	/*	
 	for(Int taylor1=0;taylor1<ntaylor;taylor1++)
 	{
 	     (matCoeffs_p[IND2(taylor1,scale)]) = 0.0; 
@@ -1003,6 +1025,7 @@ Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
 		  matCoeffs_p[IND2(taylor1,scale)] = matCoeffs_p[IND2(taylor1,scale)] + ((Float)(invMatA_p[scale])(taylor1,taylor2))*(matR_p[IND2(taylor2,scale)]);
 	     }
 	}
+	*/
 	return 0;
 }/* end of solveMatrixEqn() */
 	
@@ -1018,10 +1041,41 @@ Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
 Note : This function is called within the 'scale' omp/pragma loop. Needs to be thread-safe
  ****************************************/
 
-Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterion)
+Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterion, IPosition blc, IPosition trc)
 {
-    switch(criterion)
-     {
+
+
+  Matrix<Float> work = ( vecWork_p[scale] )(blc,trc);  
+
+  work = 0.0;
+  for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+    {
+      Matrix<Float> coeffs1 = (matCoeffs_p[IND2(taylor1,scale)])(blc,trc);
+      Matrix<Float> resid = (matR_p[IND2(taylor1,scale)])(blc,trc);
+      work = work + (Float)2.0 * coeffs1 * resid;
+      for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	{
+	  Matrix<Float> coeffs2 = (matCoeffs_p[IND2(taylor2,scale)])(blc,trc);
+	  work = work - (Float)((matA_p[scale])(taylor1,taylor2)) * coeffs1 * coeffs2;
+	}
+    }
+  findMaxAbsMask(vecWork_p[scale],vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
+  
+  /*
+    
+  vecWork_p[scale] = 0.0;
+  for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+    {
+      vecWork_p[scale] = vecWork_p[scale] + (Float)2.0  * (  (matCoeffs_p[IND2(taylor1,scale)])  *  (matR_p[IND2(taylor1,scale)])  );
+      for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	vecWork_p[scale] = vecWork_p[scale] - (Float)((matA_p[scale])(taylor1,taylor2)) * matCoeffs_p[IND2(taylor1,scale)] * matCoeffs_p[IND2(taylor2,scale)] ;
+    }
+  findMaxAbsMask(vecWork_p[scale],vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
+  */
+
+
+  //    switch(criterion)
+  //    {
        //     case 1 : /* For each scale, find the maximum chi-square derivative (maybe) */
 	 //       {
 	 /*
@@ -1075,8 +1129,8 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
        }
        break;
        */
-     case 5 : /* For each scale, same as 1, but use only psf peaks */
-       {
+  //     case 5 : /* For each scale, same as 1, but use only psf peaks */
+  //      {
 	 /*    
                /// Code block using a private matrix
 	       Matrix<Float> ttWork_p((matR_p[IND2(0,0)]).shape());
@@ -1089,7 +1143,7 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
                 }
                 findMaxAbsMask(ttWork_p,vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
 	 */
-		
+  /*		
 	 /// Code block using pre-allocated matrices
 	        vecWork_p[scale] = 0.0;
                 for(Int taylor1=0;taylor1<ntaylor;taylor1++)
@@ -1103,7 +1157,7 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
 
        }
        break;
-
+  */
        /*
      case 6 : // chi-square for this scale = sum of abs of residual images for taylor terms 
        {
@@ -1120,9 +1174,9 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
        }
        break;
        */
-     default:
-       os << LogIO::SEVERE << "Internal error : Unknown option for type of update direction" << LogIO::POST;
-     }
+       //     default:
+       //       os << LogIO::SEVERE << "Internal error : Unknown option for type of update direction" << LogIO::POST;
+       //     }
  
 
 	return 0;
@@ -1189,7 +1243,7 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
    /* Reconcile box sizes/locations with the image size */
   /////   makeBoxesSameSize(blc,trc,blcPsf,trcPsf);
 
-  buildImagePatches();
+  //buildImagePatches();
 
    //UUU   
    /*
