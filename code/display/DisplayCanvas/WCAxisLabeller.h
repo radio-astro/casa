@@ -243,6 +243,7 @@ class WCAxisLabeller : public DisplayOptions {
   // </group>
 
   static const String LABEL_CHAR_SIZE;
+  static const String PLOT_TITLE;
  private:
 
   // global switch on or off

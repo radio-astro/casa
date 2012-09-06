@@ -1,4 +1,5 @@
 //# SolvableVisCal.cc: Implementation of SolvableVisCal classes
+//        nt
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -33,6 +34,8 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayIter.h>
 #include <scimath/Mathematics/MatrixMathLA.h>
+#include <scimath/Fitting/LinearFit.h>
+#include <scimath/Functionals/Polynomial.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Quanta/MVTime.h>
@@ -1423,7 +1426,7 @@ void SolvableVisCal::setSpecify(const Record& specify) {
 
     nChanParList()=Vector<Int>(nSpw(),1);
     startChanList()=Vector<Int>(nSpw(),0);
-    
+
     // we are creating a table from scratch
     logSink() << "Creating " << typeName()
 	      << " table from specified parameters."
@@ -1498,6 +1501,14 @@ void SolvableVisCal::specify(const Record& specify) {
     cout << "refTime() = " << refTime() << endl;
   }
  */
+/**
+  if (specify.isDefined("time")) {
+    // TBD: the time label
+    //cout << "time = " << specify.asString("time") << endl;
+    cout << "refTime() = " << refTime() << endl;
+    currTime()=specify.asDouble("time");
+  }
+**/
 
   if (specify.isDefined("spw")) {
     // TBD: the spws (in order) identifying the solutions
@@ -5566,14 +5577,28 @@ void SolvableVisJones::applyRefAnt() {
 }
 
 
-void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
+void SolvableVisJones::fluxscale(const String& outfile,
+                                 const Vector<Int>& refFieldIn,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
 				 fluxScaleStruct& oFluxScaleStruct,
-				 const String& oListFile) {
+				 const String& oListFile,
+                                 const Bool& incremental) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
+  //String outCalTabName="_tmp_testfluxscaletab";
+  String outCalTabName=outfile;
+
+  // turn on incremental caltable mode
+  //Bool incremental = True;
+  //Bool fitperchan = True;
+
+  if (incremental) {
+    logSink() << LogIO::NORMAL
+              << "will output an incremental caltable"
+              << LogIO::POST;
+  }
 
   if (!ct_ || ct_->nrow()<1)
     throw(AipsError("SVJ:fluxscale: Empty or absent caltable specified"));
@@ -5603,6 +5628,8 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
   Int nFld=max(fldList)+1;
 
   Vector<Double> solFreq(nSpw(),-1.0);
+  Vector<Double> mgreft(nFld,0);
+ 
 
   try {
 
@@ -5756,11 +5783,19 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     Cube<Double> mg2; 
     Cube<Double> mgwt;   
     Cube<Int>    mgn;    
+    Int prevFld(-1);
+
     Int lastFld(-1);
     while (!ctiter.pastEnd()) {
       Int iSpw(ctiter.thisSpw());
       Int iFld(ctiter.thisField());
       Int iAnt(ctiter.thisAntenna1());
+      //refTime_ = ctiter.thisTime();
+      if (iFld > prevFld) {
+        mgreft = ctiter.thisTime();
+      }
+      prevFld = iFld;
+
 
       if (solFreq(iSpw)<0.0) {
 	Vector<Double> freq;
@@ -5811,7 +5846,6 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
       ctiter.next();
     }
     } // scope
-
   /*
 
     // fill per-ant -fld, -spw  mean gain moduli
@@ -6096,12 +6130,88 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
       } // ispw
 		  
     } // iTran
+    // max 3 coefficients
+    Matrix<Double> spidx(nTran,3,0.0);
+    Matrix<Double> spidxerr(nTran,3,0.0);
+    Matrix<Double> covar;
 
+    for (Int iTran=0; iTran<nTran; iTran++) {
+      uInt tranidx=tranField(iTran);
+      Int nValidFlux=ntrue(scaleOK.column(tranidx));
+      String oFitMsg;
+      if (nValidFlux>1) { 
+        // calculate spectral index
+        // fit the per-spw fluxes to get spectral index
+        LinearFit<Double> fitter;
+        uInt fitorder; 
+        if (nValidFlux > 2) {
+          fitorder=2;
+        }
+        else {
+          fitorder=1;
+        }
+        // set fitting for spectral index, alpha and beta(curvature)
+        // with S = S_o*f/f0^(alpha+beta*log(f/fo))
+        // fitting y = c + alpha*x + beta*x^2
+        // log(S/S0)=alpha*log(f/f0) + beta*log(f/f0)**2
+        Polynomial< AutoDiff<Double> > bp(fitorder);
+        fitter.setFunction(bp);
+        // need the way to mask some spw
+      
+        Vector<Double> log_solFreq=log10(solFreq);
+        Vector<Double> log_fd=log10(fd.column(tranidx));
+
+        //Vector<Double> soln=fitter.fit(log10(solFreq), log10(fd.column(tranidx)), fderr.column(tranidx)/solFreq);
+        Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        Vector<Double> errs=fitter.errors();
+        covar=fitter.compuCovariance();
+
+        for (Int i=0; i<soln.nelements(); i++) {
+           //cout<<"soln("<<i<<")="<<soln(i)<<endl;
+           //cout<<"errs("<<i<<")="<<errs(i)<<endl;
+           spidx(iTran,i) = soln(i);
+           spidxerr(iTran,i) = errs(i);
+        } 
+        oFitMsg =" Fitted spectral index for ";
+	oFitMsg += fldNames(tranidx);
+        oFitMsg += " with fitorder="+String::toString<Int>(fitorder)+": ";
+        for (Int j=1; j<soln.nelements();j++) {
+          if (j==1) {
+            oFitMsg += "spectral index="+String::toString<Double>(soln(1)); 
+            oFitMsg += " +/- "+String::toString<Double>(errs(1)); 
+          }
+          if (j==2) {
+            oFitMsg += " curvature="+String::toString<Double>(soln(2)); 
+            oFitMsg += " +/- "+String::toString<Double>(errs(2)); 
+          }
+        }
+        if ( oListFile != "" ) {
+          ofstream oStream;
+	  oStream.open( oListFile.chars(), ios::out|ios::app );
+	  oStream << "#" << oFitMsg << endl << flush;
+	  oStream.close();
+        }
+        logSink() << oFitMsg << LogIO::POST;
+      }// nValidFlux
+    }//iTran
+    Int sh1, sh2;
+    covar.shape(sh1,sh2);
+
+    for (Int i=0;i<sh1; i++) {
+      for (Int j=0;j<sh2; j++) {
+        logSink() << LogIO::DEBUG1 
+        <<"covar("<<i<<","<<j<<")="<<covar(i,j)
+        << LogIO::POST;
+      }
+    }
+
+    //store determined quantities for returned output
     oFluxScaleStruct.fd = fd.copy();
     oFluxScaleStruct.fderr = fderr.copy();
     oFluxScaleStruct.numSol = numSol.copy();
     oFluxScaleStruct.freq = solFreq.copy();
-
+    oFluxScaleStruct.spidx  = spidx.copy();
+    oFluxScaleStruct.spidxerr  = spidxerr.copy();
     // quit if no scale factors found
     if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
 
@@ -6110,24 +6220,100 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
     //    cout << "Adjusting gains...";
 
     // Adjust tran field's gains here
-    { // make an inner scope
-    Block<String> cols(3);
-    cols[0]="SPECTRAL_WINDOW_ID";
-    cols[1]="TIME";
-    cols[2]="FIELD_ID";
-    CTIter ctiter(*ct_,cols);
 
-    while (!ctiter.pastEnd()) {
-      Int iSpw(ctiter.thisSpw());
-      Int iFld(ctiter.thisField());
+    //create incremental caltable
+    if (incremental) {
+      //ROMSSpWindowColumns spwcol(ct_->spectralWindow());
+      //Vector<Int> NCHAN=spwcol.numChan().getColumn();
+      //nChanPar()=NCHAN(0);
 
-      if (scaleOK(iSpw,iFld)) {
-	Cube<Complex> cpar(ctiter.cparam());
-	cpar/=Complex(Float(mgratio(iSpw,iFld)));
-	ctiter.setcparam(cpar);
+      delete ct_;
+      // setup and fill a record
+      // set record description
+      Vector<Int> spwlist(nSpw());
+      indgen(spwlist);
+
+      RecordDesc fsparDesc;
+      fsparDesc.addField ("caltable", TpString);
+      fsparDesc.addField ("time", TpDouble);
+      fsparDesc.addField ("spw", TpArrayInt);
+      fsparDesc.addField ("antenna", TpArrayInt);
+      fsparDesc.addField ("pol", TpString);
+      fsparDesc.addField ("parameter", TpArrayDouble);
+      fsparDesc.addField ("paramerr", TpArrayDouble);
+      fsparDesc.addField ("caltype", TpString);
+
+      // create record with field values
+      Record fspar(fsparDesc);
+      fspar.define("caltable",outCalTabName);
+      //fspar.define("time",tc(0));
+      fspar.define("spw", spwlist);
+      fspar.define("caltype", "G Cal");
+      setSpecify(fspar);
+        //
+        { // generate per chan factor taking account for spectral index
+          // for(Int ich=0;ich<nchan;ich++); fl = soln(0) + alpha*chanf(ich) * beta*chanf(ich)*chanf(ich)
+          // fact = sqrt(fl) at each ich for each spw and each field
+          // and store 1/fact in bcal-like table 
+        }
+      for (Int iFld=0;iFld<nFld;iFld++) {
+        setCurrField(iFld);
+        //
+        initSolvePar(); // somewhat redundant but needed to reset solveCPar
+
+        //currField()=iFld; 
+        //refTime()=tc(0);
+        //currTime()=tc(0);  
+        refTime()=mgreft(iFld);
+        // for future time support in specify
+        fspar.define("time",mgreft(iFld)); 
+
+         // for only looping thru field id (set all spw for each field)
+        fspar.define("parameter", 1./mgratio.column(iFld));
+        fspar.define("paramerr", 1./mgerr.column(iFld));
+        //
+        specify(fspar);
       }
-      ctiter.next();
+/***
+      Block<String> cols(3);
+      cols[0]="SPECTRAL_WINDOW_ID";
+      cols[1]="TIME";
+      cols[2]="FIELD_ID";
+      CTIter ctiter(*ct_,cols);
+      while (!ctiter.pastEnd()) {
+        Int iSpw(ctiter.thisSpw());
+        Int iFld(ctiter.thisField());
+        cerr<<"iFld last="<<iFld<<endl;
+        //Cube<Complex> cpar(ctiter.cparam());
+        Cube<Float> fpar(ctiter.fparam());
+        //cpar = Complex(Float(mgratio(iSpw,iFld)));
+        fpar = Float(mgratio(iSpw,iFld));
+        //ctiter.setcparam(cpar);
+        ctiter.setfparam(fpar);
+        ctiter.next(); 
+      }
+      storeNCT(outfile,False);
+***/
     }
+    else {
+      // older behavior
+      Block<String> cols(3);
+      cols[0]="SPECTRAL_WINDOW_ID";
+      cols[1]="TIME";
+      cols[2]="FIELD_ID";
+      CTIter ctiter(*ct_,cols);
+
+      while (!ctiter.pastEnd()) {
+	Int iSpw(ctiter.thisSpw());
+	Int iFld(ctiter.thisField());
+
+	if (scaleOK(iSpw,iFld)) {
+          Cube<Complex> cpar(ctiter.cparam());
+          cpar/=Complex(Float(mgratio(iSpw,iFld)));
+          ctiter.setcparam(cpar);
+        }
+        ctiter.next();
+      }
     } // scope
 
     /*

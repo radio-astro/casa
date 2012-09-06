@@ -200,7 +200,7 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="page">
          <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -337,33 +337,13 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="pointRASpinBoxHr">
-                <property name="toolTip">
-                 <string>Right Ascension Hours</string>
+               <widget class="QLineEdit" name="pointRALineEdit">
+                <property name="minimumSize">
+                 <size>
+                  <width>256</width>
+                  <height>0</height>
+                 </size>
                 </property>
-                <property name="suffix">
-                 <string>h</string>
-                </property>
-                <property name="maximum">
-                 <number>24</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="pointRASpinBoxMin">
-                <property name="toolTip">
-                 <string>Right Ascension Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>m</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="pointRALineEditSec">
                 <property name="toolTip">
                  <string>Right Ascension Seconds</string>
                 </property>
@@ -411,30 +391,13 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="pointDECSpinBoxDeg">
-                <property name="toolTip">
-                 <string>Declination Degrees</string>
+               <widget class="QLineEdit" name="pointDECLineEdit">
+                <property name="minimumSize">
+                 <size>
+                  <width>256</width>
+                  <height>0</height>
+                 </size>
                 </property>
-                <property name="minimum">
-                 <number>-90</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="pointDECSpinBoxMin">
-                <property name="toolTip">
-                 <string>Declination Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>'</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="pointDECLineEditSec">
                 <property name="toolTip">
                  <string>Right Ascension Seconds</string>
                 </property>
@@ -690,6 +653,12 @@ p, li { white-space: pre-wrap; }
                   <height>21</height>
                  </size>
                 </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>32</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -706,55 +675,7 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="blcxSpinBoxHr">
-                <property name="toolTip">
-                 <string>Right Ascension Hours</string>
-                </property>
-                <property name="suffix">
-                 <string>h</string>
-                </property>
-                <property name="maximum">
-                 <number>23</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="blcxSpinBoxMin">
-                <property name="toolTip">
-                 <string>Right Ascension Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>m</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="blcxLineEditSec">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>63</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>63</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Right Ascension Seconds</string>
-                </property>
-               </widget>
+               <widget class="QLineEdit" name="blcxLineEdit"/>
               </item>
              </layout>
             </item>
@@ -796,61 +717,7 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="trcxSpinBoxHr">
-                <property name="toolTip">
-                 <string>Right Ascension Hours</string>
-                </property>
-                <property name="suffix">
-                 <string>h</string>
-                </property>
-                <property name="maximum">
-                 <number>23</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="trcxSpinBoxMin">
-                <property name="minimumSize">
-                 <size>
-                  <width>56</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Right Ascension Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>m</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="trcxLineEditSec">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>63</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>63</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Right Ascension Seconds</string>
-                </property>
-               </widget>
+               <widget class="QLineEdit" name="trcxLineEdit"/>
               </item>
              </layout>
             </item>
@@ -858,6 +725,12 @@ p, li { white-space: pre-wrap; }
              <layout class="QHBoxLayout" name="horizontalLayout_7">
               <item>
                <widget class="QLabel" name="dec1Label">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>32</height>
+                 </size>
+                </property>
                 <property name="text">
                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -874,55 +747,7 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="blcySpinBoxDeg">
-                <property name="toolTip">
-                 <string>Declination Degrees</string>
-                </property>
-                <property name="minimum">
-                 <number>-90</number>
-                </property>
-                <property name="maximum">
-                 <number>90</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="blcySpinBoxMin">
-                <property name="toolTip">
-                 <string>Declination Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>'</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="blcyLineEditSec">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>63</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>63</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Right Ascension Seconds</string>
-                </property>
-               </widget>
+               <widget class="QLineEdit" name="blcyLineEdit"/>
               </item>
              </layout>
             </item>
@@ -964,61 +789,7 @@ p, li { white-space: pre-wrap; }
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="trcySpinBoxDeg">
-                <property name="toolTip">
-                 <string>Declination Degrees</string>
-                </property>
-                <property name="suffix">
-                 <string/>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="trcySpinBoxMin">
-                <property name="minimumSize">
-                 <size>
-                  <width>56</width>
-                  <height>21</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Declination Minutes</string>
-                </property>
-                <property name="suffix">
-                 <string>'</string>
-                </property>
-                <property name="maximum">
-                 <number>59</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="trcyLineEditSec">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>63</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>63</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>Right Ascension Seconds</string>
-                </property>
-               </widget>
+               <widget class="QLineEdit" name="trcyLineEdit"/>
               </item>
              </layout>
             </item>

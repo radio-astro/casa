@@ -233,7 +233,9 @@ class Calibrater
 		 const Vector<String>& tranFields,
 		 const Bool& append,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-		 const String& oListFile);
+//		 const String& oListFile);
+		 const String& oListFile,
+                 const Bool& incremental);
 
   // Fluxscale (using MSSelection syntax for fields)
   void fluxscale(const String& infile, 
@@ -244,7 +246,9 @@ class Calibrater
 		 const Bool& append,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 		 Vector<Int>& tranidx,
-		 const String& oListFile);
+//		 const String& oListFile);
+		 const String& oListFile,
+                 const Bool& incremental);
 
   // Fluxscale (via field indices)
   void fluxscale(const String& infile, 
@@ -254,7 +258,9 @@ class Calibrater
 		 const Vector<Int>& tranField,
 		 const Bool& append,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-		 const String& oListFile);
+//		 const String& oListFile);
+		 const String& oListFile,
+                const Bool& incremental);
 
   // Accumulate (incremental)
   void accumulate(const String& intab,

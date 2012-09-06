@@ -732,9 +732,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     restoreOverlappingModels();
     Float finalabsmax=maxField(resmax, resmin); 
+    converged=(finalabsmax < 1.05 * threshold());
     setThreshold(finalabsmax);
     os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
-    converged=(finalabsmax < 1.05 * threshold());
+    
     os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "

@@ -79,7 +79,9 @@ private slots:
 	void thresholdTextChanged( const QString& text );
 
 private:
-	enum SummationIndex {MAX, MEAN, MEDIAN, MIN, RMS, STDDEV, INTEGRATED, ABS_MEAN_DEV, END_INDEX};
+	enum SummationIndex {MEAN, INTEGRATED, WEIGHTED_MEAN, DISPERSION, MEDIAN,
+		MEDIAN_VELOCITY, STDDEV,  RMS, ABS_MEAN_DEV, MAX, MAX_VELOCITY, MIN,
+		 MIN_VELOCITY, END_INDEX};
 	QMap<SummationIndex, int> momentMap;
     Ui::MomentSettingsWidgetRadio ui;
     ImageAnalysis* imageAnalysis;
@@ -88,6 +90,12 @@ private:
     QString outputFileName;
     QList<QString> momentOptions;
     QProgressDialog progressBar;
+
+    //Progress Monitor functionality
+    int momentCount;
+    int cycleCount;
+    int baseIncrement;
+    int previousCount;
 
     void setTableValue(int row, int col, float val );
     void getChannelMinMax( int channelIndex, QString& minStr, QString& maxStr ) const;

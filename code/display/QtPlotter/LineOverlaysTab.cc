@@ -27,6 +27,7 @@
 #include <display/QtPlotter/SearchMoleculesWidget.qo.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/Util.h>
+#include <QFileDialog>
 #include <QDebug>
 namespace casa {
 LineOverlaysTab::LineOverlaysTab(QWidget *parent)
@@ -45,6 +46,7 @@ LineOverlaysTab::LineOverlaysTab(QWidget *parent)
 	connect( &searchResults, SIGNAL(graphSelectedSpecies()), this, SLOT(graphSelectedSpecies()));
 	connect( searchWidget, SIGNAL(searchCompleted()), this, SLOT(searchCompleted()));
 	connect( ui.clearLinesButton, SIGNAL(clicked()), this, SLOT(eraseLines()));
+	connect( ui.saveLinesButton, SIGNAL(clicked()), this, SLOT(saveIdentifiedLines()));
 }
 
 void LineOverlaysTab::setCanvas( QtCanvas* canvas ){
@@ -85,20 +87,24 @@ void LineOverlaysTab::graphSelectedSpecies(){
 			Float center;
 			Float peak;
 			QString molecularName;
-			bool lineExists = searchResults.getLine(lineIndices[i], peak, center, molecularName );
+			QString chemicalName;
+			QString resolvedQNs;
+			QString frequencyUnit;
+			bool lineExists = searchResults.getLine(lineIndices[i], peak,
+					center, molecularName, chemicalName, resolvedQNs,
+					frequencyUnit);
 			if ( lineExists ){
 				if ( !usedSpecies.contains( molecularName )){
 					QList<float> peaks;
 					QList<float> centers;
-					searchResults.getLines( peaks, centers, molecularName );
+					QList<QString> chemicalNames;
+					QList<QString> resolvedQNs;
+					QString frequencyUnit;
+					searchResults.getLines( peaks, centers, molecularName, chemicalNames,
+							resolvedQNs, frequencyUnit );
 					for ( int j = 0; j < centers.size(); j++ ){
-						if ( converter != NULL ){
-							centers[j] = converter->convert( centers[j] );
-						}
-						if ( pixelCanvas != NULL ){
-							MolecularLine* line = new MolecularLine( centers[j], peaks[j], molecularName );
-							pixelCanvas->addMolecularLine( line );
-						}
+						addLineToPixelCanvas(centers[j], peaks[j], molecularName,
+								chemicalNames[j], resolvedQNs[j], frequencyUnit, converter);
 					}
 					usedSpecies.append( molecularName );
 				}
@@ -110,6 +116,27 @@ void LineOverlaysTab::graphSelectedSpecies(){
 	}
 	delete converter;
 }
+
+void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString molecularName,
+		QString chemicalName, QString resolvedQNs, QString frequencyUnit,
+		Converter* converter){
+
+	//First we have to make the frequency value redshifted.
+	double shiftedCenter = searchWidget->getRedShiftedValue( false, center );
+
+	//Now Convert it to the same units the pixel canvas is using.
+	if ( converter != NULL ){
+		shiftedCenter = converter->convert( shiftedCenter );
+	}
+
+	//Add the line to the pixel canvas.
+	if ( pixelCanvas != NULL ){
+		MolecularLine* line = new MolecularLine( shiftedCenter, peak,
+				molecularName, chemicalName, resolvedQNs, frequencyUnit );
+		pixelCanvas->addMolecularLine( line );
+	}
+}
+
 
 void LineOverlaysTab::graphSelectedLines(){
 	QList<int> lineIndices = searchResults.getLineIndices();
@@ -129,15 +156,14 @@ void LineOverlaysTab::graphSelectedLines(){
 			Float center;
 			Float peak;
 			QString molecularName;
-			bool lineExists = searchResults.getLine(lineIndices[i], peak, center, molecularName );
+			QString chemicalName;
+			QString frequencyUnit;
+			QString resolvedQN;
+			bool lineExists = searchResults.getLine(lineIndices[i], peak,
+					center, molecularName, chemicalName, resolvedQN, frequencyUnit );
 			if ( lineExists ){
-				if ( converter != NULL ){
-					center = converter->convert( center );
-				}
-				if ( pixelCanvas != NULL ){
-					MolecularLine* line = new MolecularLine( center, peak, molecularName );
-					pixelCanvas->addMolecularLine( line );
-				}
+				addLineToPixelCanvas(center, peak, molecularName,
+						chemicalName, resolvedQN, frequencyUnit, converter);
 			}
 			else {
 				qDebug() << "Could not retrieve line i="<< i<<" lineIndex="<<lineIndices[i];
@@ -158,7 +184,7 @@ void LineOverlaysTab::eraseLines(){
 
 
 
-void LineOverlaysTab::findRedshift( double center, double peak ){
+void LineOverlaysTab::findRedshift( double center, double /*peak*/ ){
 	QString unitStr = pixelCanvas->getUnits();
 	searchRedshiftDialog.setUnits( unitStr );
 	searchRedshiftDialog.setCenter( center );
@@ -166,8 +192,45 @@ void LineOverlaysTab::findRedshift( double center, double peak ){
 	searchRedshiftDialog.setDatabasePath( searchWidget->getDatabasePath());
 	searchRedshiftDialog.setDopplerType( searchWidget->getDopplerType());
 	searchRedshiftDialog.setFrequencyType( searchWidget->getReferenceFrame());
-
+	searchRedshiftDialog.setIdentifiedLines( pixelCanvas->getMolecularLineNames());
 	searchRedshiftDialog.show();
+}
+
+void LineOverlaysTab::saveIdentifiedLines(){
+	std::string homedir = getenv("HOME");
+	QFileDialog fd( this, tr("Specify a file for storing the graphed molecular lines."),
+				QString(homedir.c_str()), "");
+	fd.setFileMode( QFileDialog::AnyFile );
+	if ( fd.exec() ){
+		QStringList fileNames = fd.selectedFiles();
+		if ( fileNames.size() > 0 ){
+			QString outputFileName = fileNames[0];
+			QFile file( outputFileName );
+			if (file.open(QFile::WriteOnly | QFile::Truncate)){
+				QTextStream out( &file );
+				QList<MolecularLine* >  lines = pixelCanvas->getMolecularLines();
+				for ( int i = 0; i < static_cast<int>(lines.size()); i++ ){
+					out << "\n";
+					out << "Line "<<(i+1)<<"\n";
+					lines[i]->toStream( &out );
+					out.flush();
+				}
+				file.close();
+				QString msg( "Graphed molecular line information was saved \n to "+outputFileName);
+				Util::showUserMessage( msg, this );
+			}
+			else {
+				QString msg( "Could not open "+outputFileName+" for writing.");
+				Util::showUserMessage( msg, this);
+			}
+		}
+		else {
+			QString msg( "There were no graphed molecular lines to save.");
+			Util::showUserMessage( msg, this );
+		}
+
+	}
+
 }
 
 

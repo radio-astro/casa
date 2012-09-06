@@ -51,7 +51,7 @@ public:
 	virtual String getXAxisUnit() const = 0;
 	virtual void postStatus( String str ) = 0;
 	virtual void plotMainCurve() = 0;
-	virtual const ImageInterface<Float>* getImage() const = 0;
+	virtual const ImageInterface<Float>* getImage( const QString& imageName = "") const = 0;
 	virtual const void getPixelBounds( Vector<double>& xPixels, Vector<double>& yPixels) const = 0;
 
 	//Specific to Moments

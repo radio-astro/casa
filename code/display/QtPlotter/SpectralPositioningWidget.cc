@@ -4,6 +4,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Quanta/MVAngle.h>
 #include <assert.h>
 
 #include <QDebug>
@@ -11,7 +12,8 @@
 namespace casa {
 
 SpectralPositioningWidget::SpectralPositioningWidget(QWidget *parent)
-    : QWidget( parent ), profileTaskMonitor( NULL ), logger( NULL ){
+    : QWidget( parent ), profileTaskMonitor( NULL ), logger( NULL ),
+      pixelXValues(2), pixelYValues(2), worldXValues(2), worldYValues(2){
 	ui.setupUi(this);
 
 	initSpectrumPosition();
@@ -97,15 +99,6 @@ void SpectralPositioningWidget::initSpectrumPosition(){
 	ui.boxPixBLCYLineEdit -> setValidator( pixelValidator );
 	ui.boxPixTRCXLineEdit -> setValidator( pixelValidator );
 	ui.boxPixTRCYLineEdit -> setValidator( pixelValidator );
-
-	secValidator = new QDoubleValidator( 0, 60, 3, this );
-	ui.pointRALineEditSec -> setValidator( secValidator );
-	ui.pointDECLineEditSec -> setValidator( secValidator );
-	ui.blcxLineEditSec -> setValidator( secValidator );
-	ui.blcyLineEditSec -> setValidator( secValidator );
-	ui.trcxLineEditSec -> setValidator( secValidator );
-	ui.trcyLineEditSec -> setValidator( secValidator );
-
 }
 
 //-------------------------------------------------------------------------
@@ -193,7 +186,7 @@ void SpectralPositioningWidget::setPosition(){
 			success = populateWorlds( pixelX, pixelY, worldX, worldY );
 		}
 		else if ( page == POINT_RA_DEC ){
-			fillPointWorld( worldX, worldY);
+			success = fillPointWorld( worldX, worldY);
 		}
 		else if ( page == BOX_PIXEL ){
 			success = fillBoxPixel( pixelX, pixelY );
@@ -209,7 +202,7 @@ void SpectralPositioningWidget::setPosition(){
 			profileTaskMonitor->setPosition( worldX, worldY);
 		}
 		else {
-			 *logger << LogIO::WARN << "Could not make a new region." << LogIO::POST;
+			 *logger << LogIO::WARN << "Could not set the position." << LogIO::POST;
 		}
 	}
 	else {
@@ -218,18 +211,25 @@ void SpectralPositioningWidget::setPosition(){
 }
 
 
-void SpectralPositioningWidget::fillPointWorld( QList<double> &worldX, QList<double> &worldY ) const {
-	double centerXRad = spinToRadians( false, ui.pointRASpinBoxHr, ui.pointRASpinBoxMin, ui.pointRALineEditSec );
-	double centerYRad = spinToRadians( true, ui.pointDECSpinBoxDeg, ui.pointDECSpinBoxMin, ui.pointDECLineEditSec );
+bool SpectralPositioningWidget::fillPointWorld( QList<double> &worldX, QList<double> &worldY ){
+	Bool recognizedFormat = true;
+	double centerXRad = toRadians( recognizedFormat, ui.pointRALineEdit );
+	if ( recognizedFormat ){
+		double centerYRad = toRadians( recognizedFormat, ui.pointDECLineEdit );
+		if ( recognizedFormat ){
+			double length = qAbs( worldXValues[1] - worldXValues[0] );
+			double height = qAbs( worldYValues[1] - worldYValues[0] );
 
-	double length = qAbs( worldXValues[1] - worldXValues[0] );
-	double height = qAbs( worldYValues[1] - worldYValues[0] );
-	//Initialize the vectors we will pass to the algorithm
-	//We need the blc and then the tlc.
-	worldX.append( centerXRad + length/2 );
-	worldX.append( centerXRad - length/2 );
-	worldY.append( centerYRad - height/2 );
-	worldY.append( centerYRad + height/2 );
+			//Initialize the vectors we will pass to the algorithm
+			//We need the blc and then the tlc.
+			worldX.append( centerXRad + length/2 );
+			worldX.append( centerXRad - length/2 );
+			worldY.append( centerYRad - height/2 );
+			worldY.append( centerYRad + height/2 );
+
+		}
+	}
+	return recognizedFormat;
 }
 
 void SpectralPositioningWidget::fillPointPixel( QList<int> &pixelX, QList<int>&pixelY ) const {
@@ -329,41 +329,49 @@ bool SpectralPositioningWidget::fillBasedOnBoxSpecification(  const double*  con
 }
 
 bool SpectralPositioningWidget::fillBoxWorld( QList<double> &worldX, QList<double> & worldY )  {
-
-	double secondXRad = spinToRadians( false, ui.trcxSpinBoxHr, ui.trcxSpinBoxMin, ui.trcxLineEditSec );
-	double firstXRad = spinToRadians( false, ui.blcxSpinBoxHr, ui.blcxSpinBoxMin, ui.blcxLineEditSec );
-	double secondYRad = spinToRadians( true, ui.trcySpinBoxDeg, ui.trcySpinBoxMin, ui.trcyLineEditSec );
-	double firstYRad = spinToRadians( true, ui.blcySpinBoxDeg, ui.blcySpinBoxMin, ui.blcyLineEditSec );
-
-	double trcxRad;
-	double blcxRad;
-	double trcyRad;
-	double blcyRad;
-	bool valid = fillBasedOnBoxSpecification( &firstXRad, &firstYRad, &secondXRad, &secondYRad,
-			&blcxRad, &blcyRad, &trcxRad, &trcyRad, false );
-
+	Bool valid = true;
+	double secondXRad = toRadians( valid, ui.trcxLineEdit );
 	if ( valid ){
-		//Initialize the vectors we will pass to the algorithm
-		worldX.append( blcxRad );
-		worldX.append( trcxRad );
-		worldY.append( blcyRad );
-		worldY.append( trcyRad );
+		double firstXRad = toRadians( valid, ui.blcxLineEdit );
+		if ( valid ){
+			double secondYRad = toRadians( valid, ui.trcyLineEdit );
+			if ( valid ){
+				double firstYRad = toRadians( valid, ui.blcyLineEdit );
+				if ( valid ){
+					double trcxRad;
+					double blcxRad;
+					double trcyRad;
+					double blcyRad;
+					valid = fillBasedOnBoxSpecification( &firstXRad, &firstYRad, &secondXRad, &secondYRad,
+							&blcxRad, &blcyRad, &trcxRad, &trcyRad, false );
+
+					if ( valid ){
+						//Initialize the vectors we will pass to the algorithm
+						worldX.append( blcxRad );
+						worldX.append( trcxRad );
+						worldY.append( blcyRad );
+						worldY.append( trcyRad );
+					}
+				}
+			}
+		}
 	}
 	return valid;
 }
 
-double SpectralPositioningWidget::spinToRadians( bool dec, QSpinBox *degSpinBox,
-		QSpinBox* minSpinBox, QLineEdit* secSpinBox) const {
-	int deg = degSpinBox -> value();
-	int min = minSpinBox -> value();
-	QString secStr = secSpinBox -> text();
-	float sec = secStr.toFloat( );
+double SpectralPositioningWidget::toRadians( Bool& valid, QLineEdit *lineEdit ){
+	Quantity quantity;
+	QString angleText = lineEdit->text();
+	String angleExpression( angleText.toStdString() );
+	valid = MVAngle::read( quantity, angleExpression );
 	double radians = 0;
-	if ( dec ){
-		radians = Util::degMinSecToRadians( deg, min, sec );
+	if ( valid ){
+		MVAngle angle( quantity );
+		radians = angle.radian();
 	}
 	else {
-		radians = Util::hrMinSecToRadians( deg, min, sec );
+		QString msg( "The format used to specify the position was not recognized.");
+		Util::showUserMessage( msg, this );
 	}
 	return radians;
 }
@@ -403,15 +411,37 @@ bool SpectralPositioningWidget::populateWorlds(const QList<int> &pixelX, const Q
 //-------------------------------------------------------------------------------------
 //   Update the text fields/spin boxes based on changes in the viewer
 //-------------------------------------------------------------------------------------
-
+void SpectralPositioningWidget::adjustPoint( const Vector<Double>& newX, const Vector<Double>& newY,
+		Vector<Double>& xValues, Vector<Double>& yValues ){
+	//Interpret the points coming in as the center of the box.  Move the
+	//current box so that it is centered at the point coming in.
+	double centerX = (xValues[0] + xValues[1])/2;
+	double centerY = (yValues[0] + yValues[1])/2;
+	double moveX = newX[0] - centerX;
+	double moveY = newY[0] - centerY;
+	for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+		xValues[i] = xValues[i]+moveX;
+		yValues[i] = yValues[i]+moveY;
+	}
+}
 
 
 void SpectralPositioningWidget::updateRegion( const Vector<Double> px, const Vector<Double> py,
     		const Vector<Double> wx, const Vector<Double> wy ){
-	pixelXValues = px;
-	pixelYValues = py;
-	worldXValues = wx;
-	worldYValues = wy;
+	if ( px.size() == 1 && py.size() == 1 && wx.size() == 1 && wy.size() == 1 ){
+		adjustPoint( px, py, pixelXValues, pixelYValues );
+		adjustPoint( wx, wy, worldXValues, worldYValues );
+	}
+	else if ( px.size() == 2 && py.size() == 2 && wx.size() == 2 && wy.size() == 2 ){
+		pixelXValues = px;
+		pixelYValues = py;
+		worldXValues = wx;
+		worldYValues = wy;
+	}
+	else {
+		qDebug() << "Update region: unrecognized size! px.size="<<px.size()
+				<<" py.size="<<py.size()<<" wx.size="<<wx.size()<<" wy.size="<<wy.size();
+	}
 
 	updateUI();
 }
@@ -476,44 +506,42 @@ void SpectralPositioningWidget::updateUIWorldPoint(){
 	double decSecs;
 	Util::getDec( centerY, decDegs, decMins, decSecs );
 
-	ui.pointRASpinBoxHr->setValue( raHours );
-	ui.pointRASpinBoxMin->setValue( raMins );
-	ui.pointRALineEditSec->setText( QString::number( raSecs ));
-	ui.pointDECSpinBoxDeg->setValue( decDegs );
-	ui.pointDECSpinBoxMin->setValue( decMins );
-	ui.pointDECLineEditSec->setText( QString::number( decSecs ));
+	QString raStr = Util::toDegreeString( raHours, raMins, raSecs );
+	ui.pointRALineEdit->setText( raStr );
+	QString decStr = Util::toDecString( decDegs, decMins, decSecs );
+	Util::appendSign( centerY, decStr );
+	ui.pointDECLineEdit->setText( decStr );
 }
+
+
 
 void SpectralPositioningWidget::setWorldEdits( double topLeft, double bottomLeft,
 		double topRight, double bottomRight ){
 	int blcXhr, blcXmin;
 	double blcXsec;
 	Util::getRa( topLeft, blcXhr, blcXmin, blcXsec );
-	ui.blcxSpinBoxHr->setValue( blcXhr );
-	ui.blcxSpinBoxMin->setValue( blcXmin );
-	ui.blcxLineEditSec->setText( QString::number( blcXsec ));
+	QString blcRAStr = Util::toDegreeString( blcXhr, blcXmin, blcXsec );
+	ui.blcxLineEdit->setText( blcRAStr );
 
 	int blcYdeg, blcYmin;
 	double blcYsec;
 	Util::getDec( bottomLeft, blcYdeg, blcYmin, blcYsec );
-	ui.blcySpinBoxDeg->setValue( blcYdeg );
-	ui.blcySpinBoxMin->setValue( blcYmin );
-	ui.blcyLineEditSec->setText( QString::number( blcYsec ));
+	QString blcDECStr = Util::toDecString( blcYdeg, blcYmin, blcYsec );
+	Util::appendSign( bottomLeft, blcDECStr );
+	ui.blcyLineEdit->setText( blcDECStr );
 
 	int trcXhr, trcXmin;
 	double trcXsec;
 	Util::getRa( topRight, trcXhr, trcXmin, trcXsec );
-	ui.trcxSpinBoxHr->setValue( trcXhr );
-	ui.trcxSpinBoxMin->setValue( trcXmin );
-	ui.trcxLineEditSec->setText( QString::number( trcXsec ));
+	QString trcRAStr = Util::toDegreeString( trcXhr, trcXmin, trcXsec );
+	ui.trcxLineEdit->setText( trcRAStr );
 
 	int trcYDec, trcYmin;
 	double trcYsec;
 	Util::getDec( bottomRight, trcYDec, trcYmin, trcYsec );
-	ui.trcySpinBoxDeg->setValue( trcYDec );
-	ui.trcySpinBoxMin->setValue( trcYmin );
-	ui.trcyLineEditSec->setText( QString::number( trcYsec ));
-
+	QString trcDECStr = Util::toDecString( trcYDec, trcYmin, trcYsec );
+	Util::appendSign( bottomRight, trcDECStr );
+	ui.trcyLineEdit->setText( trcDECStr );
 }
 
 void SpectralPositioningWidget::setPixelLineEdits( double topLeft, double bottomLeft,

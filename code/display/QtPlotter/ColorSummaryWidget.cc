@@ -25,9 +25,12 @@
 #include "ColorSummaryWidget.qo.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/QtPlotter/ColorSummaryDelegate.h>
+#include <display/QtPlotter/MolecularLine.h>
+#include <display/QtPlotter/GaussianEstimateWidget.qo.h>
 #include <display/QtPlotter/Util.h>
 
 #include <QColorDialog>
+#include <QDebug>
 
 namespace casa {
 
@@ -39,6 +42,8 @@ const QString ColorSummaryWidget::CUSTOM_FIT_COLOR_COUNT = "Custom Fit Color Cou
 const QString ColorSummaryWidget::CUSTOM_SUMMARY_COLOR_COUNT = "Custom Summary Color Count";
 const QString ColorSummaryWidget::COLOR_SCHEME_PREFERENCE = "Color Scheme Preference";
 const QString ColorSummaryWidget::CHANNEL_LINE_COLOR = "Channel Line Color";
+const QString ColorSummaryWidget::MOLECULAR_LINE_COLOR = "Molecular Line Color";
+const QString ColorSummaryWidget::INITIAL_GAUSSIAN_ESTIMATE_COLOR = "Initial Gaussian Estimate Color";
 
 ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
     : QDialog(parent), traditionalChange( false ), alternativeChange( false ){
@@ -62,6 +67,8 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	connect( ui.customRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
 
 	connect( ui.channelLineColorButton, SIGNAL(clicked()), this, SLOT(channelLineColorChanged()));
+	connect (ui.molecularLineColorButton, SIGNAL(clicked()), this, SLOT(molecularLineColorChanged()));
+	connect( ui.initialGaussianEstimateColorButton, SIGNAL(clicked()), this, SLOT(initialGaussianEstimateColorChanged()));
 
 	//Initialize properties of the list
 	ui.profileCurveList->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -98,6 +105,8 @@ void ColorSummaryWidget::initializePresetColors(){
 	      		"magenta" << "yellow" << "darkRed" << "darkBlue" << "darkGreen" <<
 	      		"darkCyan" << "darkGray" << "darkMagenta" << "gold" << "gray";
 	 channelLineColor = Qt::magenta;
+	 molecularLineColor = "#00957B";
+	 initialGaussianEstimateColor = "#CA5F00";
 }
 
 void ColorSummaryWidget::initializeUserColors(){
@@ -131,11 +140,18 @@ void ColorSummaryWidget::initializeUserColors(){
 	else {
 		ui.traditionalRadioButton->setChecked( true );
 	}
-	QColor basicColor = Qt::magenta;
-	QString channelLineColorStr = settings.value( CHANNEL_LINE_COLOR, basicColor.name()).toString();
+	//QColor basicColor = Qt::magenta;
+	QString channelLineColorStr = settings.value( CHANNEL_LINE_COLOR, channelLineColor.name()).toString();
 	channelLineColor.setNamedColor( channelLineColorStr );
-	setChannelLineLabelColor( channelLineColorStr );
+	setLabelColor( ui.channelLineColorLabel, channelLineColorStr );
 
+	QString molecularLineColorStr = settings.value( MOLECULAR_LINE_COLOR, molecularLineColor.name()).toString();
+	molecularLineColor.setNamedColor( molecularLineColorStr );
+	setLabelColor( ui.molecularLineColorLabel, molecularLineColorStr );
+
+	QString initialGaussianColorStr = settings.value( INITIAL_GAUSSIAN_ESTIMATE_COLOR, initialGaussianEstimateColor.name()).toString();
+	initialGaussianEstimateColor.setNamedColor( initialGaussianColorStr );
+	setLabelColor( ui.initialGaussianEstimateColorLabel, initialGaussianColorStr );
 }
 
 void ColorSummaryWidget::readCustomColor( QSettings& settings,
@@ -188,9 +204,9 @@ void ColorSummaryWidget::addColor( QListWidget* list ){
 	}
 }
 
-void ColorSummaryWidget::setChannelLineLabelColor( QString colorName  ){
+void ColorSummaryWidget::setLabelColor( QLabel* colorWidget, QString colorName  ){
 	QString styleColor =  "QLabel { background-color: " + colorName + "; }";
-	ui.channelLineColorLabel->setStyleSheet( styleColor );
+	colorWidget->setStyleSheet( styleColor );
 }
 
 //---------------------------------------------------------------------
@@ -247,10 +263,25 @@ void ColorSummaryWidget::channelLineColorChanged(){
 	QColor selectedColor = QColorDialog::getColor( channelLineColor, this );
 	if ( selectedColor.isValid() ){
 		channelLineColor = selectedColor;
-		setChannelLineLabelColor( selectedColor.name() );
+		setLabelColor( ui.channelLineColorLabel, selectedColor.name() );
 	}
 }
 
+void ColorSummaryWidget::molecularLineColorChanged(){
+	QColor selectedColor = QColorDialog::getColor( molecularLineColor, this );
+	if ( selectedColor.isValid() ){
+		molecularLineColor = selectedColor;
+		setLabelColor( ui.molecularLineColorLabel, selectedColor.name() );
+	}
+}
+
+void ColorSummaryWidget::initialGaussianEstimateColorChanged(){
+	QColor selectedColor = QColorDialog::getColor( initialGaussianEstimateColor, this );
+	if ( selectedColor.isValid() ){
+		initialGaussianEstimateColor = selectedColor;
+		setLabelColor( ui.initialGaussianEstimateColorLabel, selectedColor.name() );
+	}
+}
 
 //-------------------------------------------------------------------------
 //                    Private Utility
@@ -339,10 +370,40 @@ void ColorSummaryWidget::pixelCanvasColorChange(){
 	pixelCanvas->setTraditionalColors( traditionalColors );
 
 	pixelCanvas->setChannelLineColor( channelLineColor );
+	GaussianEstimateWidget::setEstimateColor( initialGaussianEstimateColor );
+	MolecularLine::setMolecularLineColor( molecularLineColor );
 	pixelCanvas->curveColorsChanged();
 }
 
+void ColorSummaryWidget::copyViewList(QListWidget* listWidget, QList<QString>& canvasList){
+	canvasList.clear();
+	for ( int i = 0; i < listWidget->count(); i++ ){
+		QListWidgetItem* listItem = listWidget->item(i);
+		if ( listItem != NULL ){
+			QColor listColor = listItem->backgroundColor();
+			QString colorStr = listColor.name();
+			canvasList.append( colorStr );
+		}
+	}
+}
+
+void ColorSummaryWidget::copyViewLists(){
+	if ( ui.customRadioButton->isChecked() ){
+		copyViewList( ui.profileCurveList, customMainList );
+		copyViewList( ui.fitCurveList, customFitList );
+		copyViewList( ui.fitCurveSummaryList, customFitSummaryList );
+	}
+	else if ( ui.alternativeRadioButton->isChecked() ){
+		copyViewList( ui.profileCurveList, mainCurveColorList );
+		copyViewList( ui.fitCurveList, fitCurveColorList );
+		copyViewList( ui.fitCurveSummaryList, fitSummaryCurveColorList );
+	}
+}
+
 void ColorSummaryWidget::accept(){
+	//Copy the display lists into the lists of string color names we will
+	//pass to the canvas.
+	copyViewLists();
 	//Tell the canvas about the color changes
 	pixelCanvasColorChange();
 	//Persist the color changes
@@ -377,6 +438,8 @@ void ColorSummaryWidget::persist(){
 		persistColorList( settings, ui.fitCurveSummaryList, CUSTOM_SUMMARY_COLOR, CUSTOM_SUMMARY_COLOR_COUNT );
 	}
 	settings.setValue( CHANNEL_LINE_COLOR, channelLineColor.name());
+	settings.setValue( MOLECULAR_LINE_COLOR, molecularLineColor.name());
+	settings.setValue( INITIAL_GAUSSIAN_ESTIMATE_COLOR, initialGaussianEstimateColor.name());
 }
 
 void ColorSummaryWidget::reject(){

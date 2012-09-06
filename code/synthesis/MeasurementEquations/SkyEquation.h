@@ -194,7 +194,7 @@ public:
   virtual void makeApproxPSF(Int model, ImageInterface<Float>& PSF);
 
   // make all the approx psfs in one go
-  virtual void makeApproxPSF(PtrBlock<TempImage<Float> *>& PSFs);
+  virtual void makeApproxPSF(PtrBlock<ImageInterface<Float> *>& PSFs);
 
   // Make complex XFRs needed for incrementGradientChiSquared
   virtual void makeComplexXFRs();

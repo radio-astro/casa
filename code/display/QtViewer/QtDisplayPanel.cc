@@ -671,13 +671,15 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
   if(pd_->isCSmaster(dd) && ddHasPreferredZIndex) {
     // New dd has become CS master: pass along its opinions
     // on animator frame number setting, if any.
-    animrec.define("zindex", preferredZIndex);  }
+    animrec.define("zindex", preferredZIndex);
+  }
 
   // Blink index or length may also change when DD added.
 
   if(pd_->isBlinkDD(dd)) {
     animrec.define("blength", pd_->bLength());
-    animrec.define("bindex",  pd_->bIndex());  }
+    animrec.define("bindex",  pd_->bIndex());
+  }
 
         
   setAnimator_(animrec);
@@ -1919,7 +1921,8 @@ void QtDisplayPanel::goToZ(int frm) {
   // Connected from text box and slider; also usable by scripts.
   stop_();
   goToZ_(frm);
-  emit animatorChange();  }
+  emit animatorChange();
+}
 
 
   
@@ -1947,10 +1950,10 @@ void QtDisplayPanel::goToZ_(Int frm) {
 	// (which is fixed, here), but to the number of planes moved
 	// (by _all_ panels) when an animation (tapedeck) step occurs.
 
-  pd_->setLinearRestrictions(zInd, zIncr);  }
+  pd_->setLinearRestrictions(zInd, zIncr);
 	// (I think we want to do this regardless of previous
 	// zIndex_: new canvases, init, etc. (?))
-    
+}
 
  
 
@@ -1965,11 +1968,9 @@ void QtDisplayPanel::goToB(int frm) {
   
 
 void QtDisplayPanel::goToB_(Int frm) {
-  
   frm = max(0, min(nBFrames()-1, frm));
 	// Assure within range.  If changing number of frames also,
 	// do that first.
-  
   bStart_ = min(bStart_, frm);
   bEnd_ =   max(bEnd_, frm+1);
   
@@ -1984,7 +1985,9 @@ void QtDisplayPanel::goToB_(Int frm) {
     bIncr.set("bIndex", 1);
     pd_->setLinearRestrictions(bInd, bIncr);
     
-    if(oldbIndex!=bIndex_) checkColorBars_();  }  }
+    if(oldbIndex!=bIndex_) checkColorBars_();
+  }
+}
  
 
          
@@ -1993,10 +1996,9 @@ void QtDisplayPanel::setMode(bool modez) {
   // True: "Normal" ("Z") mode.  False: "Blink" ("B") mode.
   // (NB: small 'b' bool for a reason -- see declataion of goTo(int)).
 
-  stop_();
-  
   if(modeZ_!=modez) {	// (already there otherwise).
-    
+
+	stop_();
     modeZ_ = modez;
   
     hold();
@@ -2011,10 +2013,13 @@ void QtDisplayPanel::setMode(bool modez) {
 
     checkColorBars_();
     
-    release();  }
+    release();
+    emit animatorChange();
+  }
+
   
   
-  emit animatorChange();  }
+}
 
 
 

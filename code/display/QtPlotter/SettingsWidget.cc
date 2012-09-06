@@ -168,6 +168,30 @@ void SettingsWidget::setUnits( QString units ){
 	}
 }
 
+void SettingsWidget::setDisplayYUnits( const QString& units ){
+	if ( taskHelper != NULL ){
+		taskHelperRadio -> setDisplayYUnits( units );
+	}
+}
+
+void SettingsWidget::setImageYUnits( const QString& units ){
+	if ( taskHelper != NULL ){
+		taskHelperRadio -> setImageYUnits( units );
+	}
+}
+
+void SettingsWidget::setCurveName( const QString& curveName ){
+	if ( taskHelper != NULL ){
+		taskHelperRadio -> setCurveName( curveName );
+	}
+}
+
+void SettingsWidget::addCurveName( const QString& curveName ){
+	if ( taskHelper != NULL ){
+		taskHelperRadio->addCurveName( curveName );
+	}
+}
+
 void SettingsWidget::setRange( float start, float end ){
 	if ( taskHelper != NULL ){
 		taskHelper ->setRange(start, end );

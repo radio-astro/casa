@@ -45,9 +45,13 @@ public:
     void setCollapseVals(const Vector<Float> &spcVals);
     void setCanvas( QtCanvas* pCanvas );
     void setTaskMonitor( ProfileTaskMonitor* fitMonitor );
+    void setCurveName( const QString& curveName );
+    void addCurveName( const QString& curveName );
     void reset( bool taskChanged = false );
     void setLogger( LogIO* log );
     void setUnits( QString units );
+    void setDisplayYUnits( const QString& units );
+    void setImageYUnits( const QString& units );
     void setRange( float start, float end );
     static bool isOptical();
     static void setOptical( bool optical );

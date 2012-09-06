@@ -585,6 +585,9 @@ void VisCal::deleteVisCal() {
   currWtScale_=NULL;
 }
 
+void VisCal::setCurrField(const Int& ifld) {
+  currField_.set(ifld);
+}
 
 // **********************************************************
 //  VisMueller Implementations

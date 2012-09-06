@@ -79,6 +79,7 @@ SplatalogueTable* SearchEngine::search(
 	ostringstream query;
 	query << "SELECT FROM "  << _table->tableName();
 	query << " WHERE ";
+
 	query << "(" << _getBetweenClause(SplatalogueTable::FREQUENCY, freqLow, freqHigh) << ")";
 	if (species.size() > 0) {
 		query << " AND (" << SplatalogueTable::SPECIES << " IN (";
@@ -157,6 +158,7 @@ SplatalogueTable* SearchEngine::search(
 		query << " AND " << nonRRLPortion.str();
 	}
 	query << " ORDER BY " << SplatalogueTable::FREQUENCY;
+
 	Table resTable = _runQuery(query.str());
 	SplatalogueTable *resSplatTable = new SplatalogueTable(resTable);
 	if (!resultsTableName.empty()) {

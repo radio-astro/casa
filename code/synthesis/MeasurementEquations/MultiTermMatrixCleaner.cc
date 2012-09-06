@@ -195,6 +195,33 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
 }
 
 
+Bool MultiTermMatrixCleaner::buildImagePatches()
+{
+
+   gip = IPosition(2,nx_p,ny_p);  
+
+   /* The update region. */
+   IPosition inc(2,1,1);
+   blc_p = IPosition(globalmaxpos_p - psfsupport_p/2);
+   trc_p = IPosition(globalmaxpos_p + psfsupport_p/2 - IPosition(2,1,1));
+   //cout << "residual box 1 : " << blc << trc << endl;
+   LCBox::verify(blc_p, trc_p, inc, gip);
+   //cout << "residual box 2 : " << blc << trc << endl;
+
+   
+   /* Shifted region, with the psf at the globalmaxpos_p. */
+   blcPsf_p = IPosition(blc_p + psfpeak_p - globalmaxpos_p); // OLD
+   trcPsf_p = IPosition(trc_p + psfpeak_p - globalmaxpos_p); // OLD
+   //cout << "psf box 1 : " << blcPsf << trcPsf << endl;
+   LCBox::verify(blcPsf_p, trcPsf_p, inc, psfsupport_p); // NEW
+   //cout << "psf box 2 : " << blcPsf << trcPsf << endl;
+
+   /* Reconcile box sizes/locations with the image size */
+   makeBoxesSameSize(blc_p,trc_p,blcPsf_p,trcPsf_p);
+
+}
+
+
 Bool MultiTermMatrixCleaner::setpsf(int order, Matrix<Float> & psf)
 {
 	AlwaysAssert((order>=(int)0 && order<(int)vecPsfFT_p.nelements()), AipsError);
@@ -217,7 +244,7 @@ Bool MultiTermMatrixCleaner::setresidual(int order, Matrix<Float> & dirty)
 }
 
 /* Input : Model Component Image */
-
+//TODO : This is an extra copy of the model image. Why not hold it by reference ???
 Bool MultiTermMatrixCleaner::setmodel(int order, Matrix<Float> & model)
 {
 	AlwaysAssert((order>=(int)0 && order<(int)vecModel_p.nelements()), AipsError);
@@ -250,15 +277,18 @@ Bool MultiTermMatrixCleaner::getmodel(int order, Matrix<Float> & model)
 }
 
 /* Output Residual Image */
-/*
+
+
 Bool MultiTermMatrixCleaner::getresidual(int order, Matrix<Float> & residual)
 {
 	AlwaysAssert((order>=(int)0 && order<(int)vecDirty_p.nelements()), AipsError);
 	//AlwaysAssert(residual, AipsError);
 	residual.assign(vecDirty_p[order]);
+	///residual.assign( matR_p[IND2(order,0)]  ); // This is the one that gets updated during iters.
+
   return True;
 }
-*/
+
 
 
  /* Output Hessian matrix */
@@ -293,8 +323,11 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   /* Compute all convolutions and the matrix A */
   /* If matrix is not invertible, return ! */
   /* This is done only once - for the first major cycle. Null operation otherwise */
-  if( computeHessianPeak() == -2 )
-	  return -2;
+  if( doneCONV_p == False )
+    {
+      if( computeHessianPeak() == -2 )
+	return -2;
+    }
 
   /* Set up the Mask image */
   /* This must be after the Hessian is computed.. */
@@ -317,17 +350,31 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   for(itercount_p=0;itercount_p<maxniter_p;itercount_p++)
   {
       globalmaxval_p=-1e+10;
+
+      // if itercount_p==0, set the blc/trc to the full image size.
+      // For later iterations, it will get updated according to globalmaxpos_p and psfsupport_p
+      //                              when buildImagePatches() is called.
+      if(itercount_p==0)
+	{
+	  blc_p = IPosition(2,0,0);
+	  trc_p = IPosition(2,nx_p-1,ny_p-1);
+	}
+
+
       Int scale=0;
       Int ntaylor=ntaylor_p;
-      #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion)
+      IPosition blc(blc_p), trc(trc_p);
+#pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
        { 
 	 #pragma omp for 
           for(scale=0;scale<nscales_p;scale++)
           {
             /* Solve the matrix eqn for all pixels */
-            solveMatrixEqn(ntaylor,scale);
+            solveMatrixEqn(ntaylor,scale,blc,trc);
             /* Choose a component from the list of solutions. Record the location for each scale.*/
-            chooseComponent(ntaylor, scale,criterion);
+	    // Calculate penalty function
+	    // Find max across all pixels.
+            chooseComponent(ntaylor, scale,criterion,blc,trc);
 	  }
        }//end pragma omp
 
@@ -341,6 +388,11 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
            maxscaleindex_p = scale;
           }
        }
+
+       /* Update the image and psf patch sizes according to the 
+	  current globalmaxval and psfsupport.
+          This patch is over which the next-iteration's solveMatrixEqn is computed */
+       buildImagePatches();
 
         /* Update the current solution by this chosen step */
         updateModelAndRHS(loopgain);
@@ -388,6 +440,16 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   /* Write out the multiscale model images - to disk */ 
   //  for(Int scale=0;scale<nscales_p;scale++)
   //  writeMatrixToDisk("modelimage_scale_"+String::toString(scale) , vecScaleModel_p[scale]);
+
+
+  // Fill the updated residual image for scale 0 back into vecDirty_p
+  // TODO This is an unnecessary copy, but needed only to get updated residuals
+  //         at the end of a deconvolver call. If this mem-copy can go, it would be great.
+  for(Int taylor=0;taylor<ntaylor_p;taylor++)
+    {
+	vecDirty_p[taylor] =  matR_p[IND2(taylor,0)] ; // This is the one that gets updated during iters.
+    }
+
 
   /* Return the number of minor-cycle iterations completed in this run */
   return(itercount_p+1);
@@ -939,9 +1001,22 @@ Int MultiTermMatrixCleaner::computeFluxLimit(Float &fluxlimit, Float threshold)
  *  Solve the matrix eqn for each point in the lattice.
 Note : This function is called within the 'scale' omp/pragma loop. Needs to be thread-safe
  ****************************************/
-Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
+Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale, IPosition blc, IPosition trc)
 {
-         /* Solve for the coefficients, one scale at at time*/
+  
+	for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+	{
+	     Matrix<Float> coeffs = (matCoeffs_p[IND2(taylor1,scale)])(blc,trc);  
+	     coeffs = 0.0;
+             for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	     {
+	       Matrix<Float> rhs = (matR_p[IND2(taylor2,scale)])(blc,trc);
+	       coeffs = coeffs +  ((Float)(invMatA_p[scale])(taylor1,taylor2))* rhs;
+	     }
+	}
+  
+  /* Solve for the coefficients, one scale at at time*/
+	/*	
 	for(Int taylor1=0;taylor1<ntaylor;taylor1++)
 	{
 	     (matCoeffs_p[IND2(taylor1,scale)]) = 0.0; 
@@ -950,6 +1025,7 @@ Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
 		  matCoeffs_p[IND2(taylor1,scale)] = matCoeffs_p[IND2(taylor1,scale)] + ((Float)(invMatA_p[scale])(taylor1,taylor2))*(matR_p[IND2(taylor2,scale)]);
 	     }
 	}
+	*/
 	return 0;
 }/* end of solveMatrixEqn() */
 	
@@ -965,10 +1041,41 @@ Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale)
 Note : This function is called within the 'scale' omp/pragma loop. Needs to be thread-safe
  ****************************************/
 
-Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterion)
+Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterion, IPosition blc, IPosition trc)
 {
-    switch(criterion)
-     {
+
+
+  Matrix<Float> work = ( vecWork_p[scale] )(blc,trc);  
+
+  work = 0.0;
+  for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+    {
+      Matrix<Float> coeffs1 = (matCoeffs_p[IND2(taylor1,scale)])(blc,trc);
+      Matrix<Float> resid = (matR_p[IND2(taylor1,scale)])(blc,trc);
+      work = work + (Float)2.0 * coeffs1 * resid;
+      for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	{
+	  Matrix<Float> coeffs2 = (matCoeffs_p[IND2(taylor2,scale)])(blc,trc);
+	  work = work - (Float)((matA_p[scale])(taylor1,taylor2)) * coeffs1 * coeffs2;
+	}
+    }
+  findMaxAbsMask(vecWork_p[scale],vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
+  
+  /*
+    
+  vecWork_p[scale] = 0.0;
+  for(Int taylor1=0;taylor1<ntaylor;taylor1++)
+    {
+      vecWork_p[scale] = vecWork_p[scale] + (Float)2.0  * (  (matCoeffs_p[IND2(taylor1,scale)])  *  (matR_p[IND2(taylor1,scale)])  );
+      for(Int taylor2=0;taylor2<ntaylor;taylor2++)
+	vecWork_p[scale] = vecWork_p[scale] - (Float)((matA_p[scale])(taylor1,taylor2)) * matCoeffs_p[IND2(taylor1,scale)] * matCoeffs_p[IND2(taylor2,scale)] ;
+    }
+  findMaxAbsMask(vecWork_p[scale],vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
+  */
+
+
+  //    switch(criterion)
+  //    {
        //     case 1 : /* For each scale, find the maximum chi-square derivative (maybe) */
 	 //       {
 	 /*
@@ -996,18 +1103,19 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
 	 */
        //       }
        //       break;
-     case 2 : /* For each scale, find the peak residual */
+       /*
+     case 2 : // For each scale, find the peak residual 
        {
                Float norm = sqrt((1.0/(matA_p[scale])(0,0)));
                findMaxAbsMask( norm*matR_p[IND2(0,scale)] , vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
        }
        break;
-     case 3: /* For each scale, find the peak t_0 coefficnent */
+     case 3: // For each scale, find the peak t_0 coefficnent 
        {
                findMaxAbsMask( matCoeffs_p[IND2(0,scale)] , vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
        }
        break;
-     case 4: /* For each scale find the max chisq derivative (diag approx for all hessians) - BAD*/
+     case 4: // For each scale find the max chisq derivative (diag approx for all hessians) - BAD
        {
  	       Matrix<Float> ttWork_p((matR_p[IND2(0,0)]).shape());
                 ttWork_p = 0.0;
@@ -1020,8 +1128,9 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
                 findMaxAbsMask(ttWork_p,vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
        }
        break;
-     case 5 : /* For each scale, same as 1, but use only psf peaks */
-       {
+       */
+  //     case 5 : /* For each scale, same as 1, but use only psf peaks */
+  //      {
 	 /*    
                /// Code block using a private matrix
 	       Matrix<Float> ttWork_p((matR_p[IND2(0,0)]).shape());
@@ -1034,7 +1143,7 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
                 }
                 findMaxAbsMask(ttWork_p,vecScaleMasks_p[scale],maxScaleVal_p[scale],maxScalePos_p[scale]);
 	 */
-		
+  /*		
 	 /// Code block using pre-allocated matrices
 	        vecWork_p[scale] = 0.0;
                 for(Int taylor1=0;taylor1<ntaylor;taylor1++)
@@ -1048,7 +1157,9 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
 
        }
        break;
-     case 6 : /* chi-square for this scale = sum of abs of residual images for taylor terms */
+  */
+       /*
+     case 6 : // chi-square for this scale = sum of abs of residual images for taylor terms 
        {
 
 	 /// Code block using pre-allocated matrices
@@ -1062,9 +1173,10 @@ Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterio
 
        }
        break;
-     default:
-       os << LogIO::SEVERE << "Internal error : Unknown option for type of update direction" << LogIO::POST;
-     }
+       */
+       //     default:
+       //       os << LogIO::SEVERE << "Internal error : Unknown option for type of update direction" << LogIO::POST;
+       //     }
  
 
 	return 0;
@@ -1101,7 +1213,7 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
    // blc, trc :model image -> needs to be centred on the component location
    // blcPsf : psf or scale-blob -> centred on the psf image center (peak).
 
-   gip = IPosition(2,nx_p,ny_p);  
+  /////   gip = IPosition(2,nx_p,ny_p);  
 
    //IPosition support(2,nx_p,ny_p); // OLD
    //IPosition psfpeak(itsPositionPeakPsf);
@@ -1117,34 +1229,21 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
 
 
    /* The update region. */
-   IPosition inc(2,1,1);
-   IPosition blc(globalmaxpos_p - psfsupport_p/2);
-   IPosition trc(globalmaxpos_p + psfsupport_p/2 - IPosition(2,1,1));
-   //cout << "residual box 1 : " << blc << trc << endl;
-   LCBox::verify(blc, trc, inc, gip);
-   //cout << "residual box 2 : " << blc << trc << endl;
+   /////IPosition inc(2,1,1);
+   /////IPosition blc(globalmaxpos_p - psfsupport_p/2);
+  /////   IPosition trc(globalmaxpos_p + psfsupport_p/2 - IPosition(2,1,1));
+  /////   LCBox::verify(blc, trc, inc, gip);
 
    
    /* Shifted region, with the psf at the globalmaxpos_p. */
-   ////IPosition blcPsf(psfpeak_p - psfsupport_p/2); // NEw
-   ////IPosition trcPsf(psfpeak_p + psfsupport_p/2 - IPosition(2,1,1)); // NEw
-   IPosition blcPsf(blc + psfpeak_p - globalmaxpos_p); // OLD
-   IPosition trcPsf(trc + psfpeak_p - globalmaxpos_p); // OLD
-   //cout << "psf box 1 : " << blcPsf << trcPsf << endl;
-   LCBox::verify(blcPsf, trcPsf, inc, psfsupport_p); // NEW
-   //cout << "psf box 2 : " << blcPsf << trcPsf << endl;
-
+  /////   IPosition blcPsf(blc + psfpeak_p - globalmaxpos_p); // OLD
+  /////   IPosition trcPsf(trc + psfpeak_p - globalmaxpos_p); // OLD
+  /////   LCBox::verify(blcPsf, trcPsf, inc, psfsupport_p); // NEW
 
    /* Reconcile box sizes/locations with the image size */
-   makeBoxesSameSize(blc,trc,blcPsf,trcPsf);
-   //cout << "residual box 3 : " << blc << trc << endl;
-   //cout << "psf box 2 : " << blcPsf << trcPsf << endl;
+  /////   makeBoxesSameSize(blc,trc,blcPsf,trcPsf);
 
-   // Scale boxes.
-   IPosition immid(2,nx_p/2, ny_p/2);
-   IPosition blcScale(blcPsf + immid - psfsupport_p/2); // NEw
-   IPosition trcScale(trcPsf + immid - psfsupport_p/2); // NEw
-   LCBox::verify(blcScale, trcScale, inc, gip); // NEW
+  //buildImagePatches();
 
    //UUU   
    /*
@@ -1158,10 +1257,10 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
    /* Update the model images */
    ///   Matrix<Float> scaleSub = (vecScales_p[maxscaleindex_p])(blcPsf,trcPsf);  // OLD
    /// Matrix<Float> scaleSub = (vecScales_p[maxscaleindex_p])(blcScale, trcScale);  // NEW
-   Matrix<Float> scaleSub = (vecScales_p[maxscaleindex_p])(blcPsf, trcPsf);  // NEWER (same size as psf)
+   Matrix<Float> scaleSub = (vecScales_p[maxscaleindex_p])(blcPsf_p, trcPsf_p);  // NEWER (same size as psf)
    for(Int taylor=0;taylor<ntaylor_p;taylor++)
    {
-     Matrix<Float> modelSub = (vecModel_p[taylor])(blc,trc); 
+     Matrix<Float> modelSub = (vecModel_p[taylor])(blc_p,trc_p); 
      modelSub += scaleSub * loopgain * (matCoeffs_p[IND2(taylor,maxscaleindex_p)])(globalmaxpos_p);
    }
 
@@ -1172,6 +1271,7 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
    
    Int scale;
    Int ntaylor=ntaylor_p;
+   IPosition blc(blc_p), trc(trc_p), blcPsf(blcPsf_p), trcPsf(trcPsf_p);
    #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,loopgain,coeffs,blc,trc,blcPsf,trcPsf)
   { 
     #pragma omp for 
@@ -1315,6 +1415,36 @@ Int MultiTermMatrixCleaner::writeMatrixToDisk(String imagename, Matrix<Float>& t
       csys.addCoordinate(tab2);
       PagedImage<Float> limage(themat.shape(), csys, imagename);
       limage.put(themat);
+}
+
+
+/* Compute principal solution in-place on the list of residual images ( vecDirty ) 
+    -- Call MTMC::setresidual() repeatedly to fill in final residuals before computing
+       the principal solution. This does the same as solveMatrixEquation(), but 
+       stores the results in-place in the residual images */
+Bool MultiTermMatrixCleaner::computeprincipalsolution()
+{
+  os << "MTMC :: Computing principal solution on residuals" << LogIO::POST;
+
+	AlwaysAssert((vecDirty_p.nelements()>0), AipsError);
+
+	/* Solve for the coefficients at the delta-function scale*/
+	for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
+	{
+	     (matCoeffs_p[IND2(taylor1,0)]) = 0.0; 
+             for(Int taylor2=0;taylor2<ntaylor_p;taylor2++)
+	     {
+	       matCoeffs_p[IND2(taylor1,0)] = matCoeffs_p[IND2(taylor1,0)] + ((Float)(invMatA_p[0])(taylor1,taylor2))*(vecDirty_p[taylor2]);
+	     }
+	}
+	
+	/* Copy this into the residual vector */
+	for(Int taylor=0; taylor<ntaylor_p;taylor++)
+	  {
+	    vecDirty_p[taylor].assign(matCoeffs_p[IND2(taylor,0)]);
+	  }
+
+  return True;
 }
 
 

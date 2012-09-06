@@ -77,13 +77,18 @@ QList<int> LineOverlaysSearchResultsDialog::getLineIndices() const{
 	return searchResultsWidget->getLineIndices();
 }
 
-bool LineOverlaysSearchResultsDialog::getLine(int lineIndex, Float& peak, Float& center,
-           		QString& molecularName ) const{
-	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName );
+bool LineOverlaysSearchResultsDialog::getLine(int lineIndex, Float& peak,
+		Float& center, QString& molecularName, QString& chemicalName,
+		QString& resolvedQNs, QString& frequencyUnit) const{
+	return searchResultsWidget->getLine( lineIndex, peak, center,
+			molecularName, chemicalName, resolvedQNs, frequencyUnit );
 }
 
-void LineOverlaysSearchResultsDialog::getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const{
-	return searchResultsWidget->getLines( peaks, centers, molecularName );
+void LineOverlaysSearchResultsDialog::getLines( QList<float>& peaks,
+		QList<float>& centers, QString& molecularName, QList<QString>& chemicalNames,
+		QList<QString>& resolvedQNs, QString& frequencyUnit) const{
+	return searchResultsWidget->getLines( peaks, centers, molecularName,
+			chemicalNames, resolvedQNs, frequencyUnit );
 }
 
 void LineOverlaysSearchResultsDialog::displaySearchResults( const Record& record ){

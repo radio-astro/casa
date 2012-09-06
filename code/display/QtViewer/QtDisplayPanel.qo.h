@@ -387,7 +387,7 @@ public:
   virtual void setRate(int rate);
 
     
-  virtual void goTo(int frm) { if(modeZ()) goToZ(frm); else goToB(frm);  }
+  virtual void goTo(int frm, bool channelFrame=false) { if(modeZ() || channelFrame ) goToZ(frm); else goToB(frm);  }
 	//# Note: connected to std Qt signal which takes 'int'.
 	//# As of Qt4.1.3, declaring goTo(Int frm) will no longer
 	//# do (which is a bit of a pain...).  (Actually, though,

@@ -544,6 +544,7 @@ Record SearcherLocal::doSearch( String& errorMsg ){
 				chemicalNames[i] = filterList[i - start];
 			}
 		}
+
 		SplatalogueTable *resTable = searcher.search( fileName, minValueFreq, maxValueFreq,
 					speciesNames, false, chemicalNames, qns, intensityLow, intensityHigh,
 					smu2Low, smu2High, logaLow, logaHigh,

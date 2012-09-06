@@ -70,6 +70,8 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/CanvasHolder.qo.h
   QtPlotter/SelectEstimateDialog.qo.h
   QtPlotter/SpectralPositioningWidget.qo.h
+  QtViewer/AnimatorWidget.qo.h
+  QtViewer/AnimatorHolder.qo.h
   QtViewer/FileBox.qo.h
   QtViewer/MakeMask.qo.h
   QtViewer/MakeRegion.qo.h
@@ -123,8 +125,9 @@ casa_qt4_wrap_ui( outfiles_ui
   QtAutoGui/pushButtonItem.ui
   QtAutoGui/sliderEditorItem.ui
   QtAutoGui/sliderLabelItem.ui
+  QtViewer/AnimatorWidget.ui
+  QtViewer/AnimatorHolder.ui
   QtViewer/printControl.ui
-  QtViewer/QtAnimatorGui.ui
   QtViewer/QtAnnotatorGui.ui
   QtViewer/QtDataManager.ui
   QtViewer/QtExportManager.ui
@@ -428,6 +431,8 @@ casa_add_library( display
   QtPlotter/conversion/ConverterWavelengthVelocity.cc
   QtPlotter/conversion/ConverterChannel.cc
   QtPlotter/SelectEstimateDialog.cc
+  QtViewer/AnimatorWidget.cc
+  QtViewer/AnimatorHolder.cc
   QtViewer/QtOptions.cc
   QtViewer/FileBox.cc
   QtViewer/QtWCBox.cc

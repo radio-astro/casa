@@ -81,6 +81,7 @@ public:
     void updateReferenceFrame();
     static void setInitialReferenceFrame( QString initialReferenceStr );
     void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
+    double getRedShiftedValue( bool reverseRedshift, double value ) const;
     String getDatabasePath() const;
     Record getSearchResults() const;
     MDoppler::Types getDopplerType() const;
@@ -105,9 +106,9 @@ private:
 
     void setAstronomicalFilters( Searcher* searcher );
     void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-    void initializeSearchRange( QLineEdit* lineEdit, Double& value, MDoppler redshift );
+    void initializeSearchRange( QLineEdit* lineEdit, Double& value );
 
-    MDoppler getRedShiftAdjustment() const;
+    MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
     enum AstroFilters { NONE, TOP_20, PLANETARY_ATMOSPHERE,HOT_CORES,
 		DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC };

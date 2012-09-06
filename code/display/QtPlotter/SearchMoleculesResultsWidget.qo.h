@@ -40,8 +40,11 @@ public:
     ~SearchMoleculesResultsWidget();
     QList<int> getLineIndices() const;
     bool getLine(int lineIndex, Float& peak, Float& center,
-       		QString& molecularName ) const;
-    void getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const;
+       		QString& molecularName, QString& chemicalName,
+       		QString& resolvedQNs,QString& frequencyUnits ) const;
+    void getLines( QList<float>& peaks, QList<float>& centers,
+    		QString molecularName, QList<QString>& chemicalNames,
+    		QList<QString>& resolvedQNSs, QString frequencyUnit) const;
     int getLineCount() const;
     int getSelectedLineCount() const;
     void displaySearchResults( const Record& results );

@@ -25,6 +25,7 @@
 #include "CanvasHolder.qo.h"
 
 #include <QFormLayout>
+#include <QDebug>
 
 namespace casa {
 CanvasHolder::CanvasHolder(QWidget *parent)
@@ -42,6 +43,7 @@ CanvasHolder::CanvasHolder(QWidget *parent)
 	setAutoFillBackground( true );
 	setPalette( holderPalette );
 	setBackgroundRole( QPalette::Base );
+
 
 	changeLegendDisplay();
 	connect( &pixelCanvas, SIGNAL(curvesChanged()), this, SLOT( changeLegendDisplay()));
@@ -199,5 +201,6 @@ void CanvasHolder::setColorBarVisibility( bool visible ){
 CanvasHolder::~CanvasHolder()
 {
 	delete legend;
+	legend = NULL;
 }
 }

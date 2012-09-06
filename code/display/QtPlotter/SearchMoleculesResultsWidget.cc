@@ -48,6 +48,7 @@ void SearchMoleculesResultsWidget::initializeTable(){
 	ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.searchResultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.searchResultsTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn );
+	ui.searchResultsTable->setSortingEnabled( true );
 }
 
 
@@ -129,8 +130,9 @@ QList<int> SearchMoleculesResultsWidget::getLineIndices() const{
 	return lineIndices;
 }
 
-void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& centers,
-		QString molecularName ) const {
+void SearchMoleculesResultsWidget::getLines( QList<float>& peaks,
+		QList<float>& centers, QString molecularName, QList<QString>& chemNames,
+		QList<QString>& resolvedQNSs, QString frequencyUnit ) const {
 	int rowCount = ui.searchResultsTable->rowCount();
 	for ( int i = 0; i < rowCount; i++ ){
 		QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( i, COL_SPECIES ));
@@ -139,10 +141,15 @@ void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& 
 			if ( speciesName == molecularName ){
 				Float peak;
 				Float center;
-				bool success = getLine( i, peak, center, speciesName );
+				QString chemicalName;
+				QString resolvedQNs;
+				bool success = getLine( i, peak, center, speciesName,
+						chemicalName, resolvedQNs, frequencyUnit );
 				if ( success ){
 					peaks.append( peak );
 					centers.append( center );
+					chemNames.append( chemicalName );
+					resolvedQNSs.append( resolvedQNs );
 				}
 
 			}
@@ -151,7 +158,8 @@ void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& 
 }
 
 bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& center,
-		QString& molecularName ) const {
+		QString& molecularName, QString& chemicalName, QString& resolvedQNs,
+		QString& frequencyUnits) const {
 	bool lineExists = true;
 	//Name
 	QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_SPECIES ));
@@ -164,6 +172,7 @@ bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& ce
 			QString freqStr = frequencyItem->text();
 			center = freqStr.toFloat();
 		}
+		frequencyUnits = SearchMoleculesWidget::SPLATALOGUE_UNITS;
 
 		//Intensity
 		QTableWidgetItem* peakItem = ui.searchResultsTable->item(lineIndex, COL_INTENSITY );
@@ -172,6 +181,17 @@ bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& ce
 			peak = peakStr.toFloat();
 			peak = peak * -1;
 		}
+
+		//Chemical Name
+		QTableWidgetItem* chemNameItem = ui.searchResultsTable->item(lineIndex, COL_CHEMICAL );
+		if ( chemNameItem != NULL ){
+			chemicalName = chemNameItem->text();
+		}
+
+		//Resolved QNs
+		QLabel* label =	dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_QN ));
+		QString qnsHtml = label->text();
+		resolvedQNs = Util::stripFont( qnsHtml );
 	}
 	else {
 		lineExists = false;

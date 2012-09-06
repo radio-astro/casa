@@ -49,6 +49,7 @@ public:
     void setLocalSearch( bool local );
     void setFrequencyType( MRadialVelocity::Types mType );
     void setDopplerType( MDoppler::Types type );
+    void setIdentifiedLines( const QList<QString>& lineNames );
     ~SearchRedshiftDialog();
 
 public slots:
@@ -65,6 +66,7 @@ private:
     SearchThread* searchThread;
     QProgressDialog progressBar;
     MFrequency::Types frequencyType;
+    MRadialVelocity::Types radialVelocityType;
     MDoppler::Types dopplerType;
 };
 }
