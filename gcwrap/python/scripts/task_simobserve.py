@@ -27,6 +27,9 @@ def simobserve(
     overwrite=None,
     async=False):
 
+    # Collect a list of parameter values to save inputs
+    in_params =  locals()
+
     import re
 
     try:
@@ -107,10 +110,11 @@ def simobserve(
     
     
         saveinputs = myf['saveinputs']
-        saveinputs('simobserve',fileroot+"/"+project+".simobserve.last")
-    
-    
-    
+        saveinputs('simobserve',fileroot+"/"+project+".simobserve.last",
+                   myparams=in_params)
+
+
+
         # some hardcoded variables that may be reintroduced in future development
         relmargin = .5  # number of PB between edge of model and pointing centers
         scanlength = 1  # number of integrations per scan 
@@ -816,6 +820,9 @@ def simobserve(
 
             if totalsec < totalscansec:
                 msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="warn")
+                ###
+                #print "you need at least %16.12e sec but you have %16.12e sec (%f < %f = %s)" % (totalscansec, totalsec, totalsec, totalscansec, str(totalsec<totalscansec))
+                ###
         
             # sm.observemany
             srces = []

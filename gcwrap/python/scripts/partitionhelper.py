@@ -501,7 +501,7 @@ def getSubtables(vis):
     for k in myKeyw.keys():
         theKeyw = myKeyw[k]
         if (type(theKeyw)==str and theKeyw.split(' ')[0]=='Table:'
-            and not theKeyw=='SORTED_TABLE'):
+            and not k=='SORTED_TABLE'):
             theSubTables.append(os.path.basename(theKeyw.split(' ')[1]))
             
     return theSubTables
@@ -521,9 +521,9 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
 
     ## make an MMS with all sub-MSs contained in a SUBMSS subdirectory
     origpath = os.getcwd()
-
+    mymstool = mstool()
+    mytbtool = tbtool()
     try:
-        mymstool = mstool()
         try:
             mymstool.createmultims(outputvis,
                                    submslist,
@@ -531,9 +531,28 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
                                    True,  # nomodify
                                    False, # lock
                                    copysubtables,
-                                   omitsubtables) # when copying the subtables, omit these 
-        finally:
+                                   omitsubtables) # when copying the subtables, omit these
+        except:
             mymstool.close()
+            raise
+        mymstool.close()
+        
+
+        # remove the SORTED_TABLE keywords because the sorting is not reliable after partitioning
+        try:
+            mytbtool.open(outputvis, nomodify=False)
+            if 'SORTED_TABLE' in mytbtool.keywordnames():
+                mytbtool.removekeyword('SORTED_TABLE')
+                mytbtool.close()
+                for thesubms in submslist:
+                    mytbtool.open(outputvis+'/SUBMSS/'+os.path.basename(thesubms), nomodify=False)
+                    if 'SORTED_TABLE' in mytbtool.keywordnames():
+                        mytbtool.removekeyword('SORTED_TABLE')
+                        mytbtool.close()
+            # else: assume that if the MMS header doesn't have the keyword, the submss don't have it either
+        except:
+            mytbtool.close()
+            raise
             
         # finally create symbolic links to the subtables of the first SubMS
         os.chdir(origpath)
@@ -553,8 +572,9 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
                 os.symlink('../'+mastersubms+'/'+s, s)
 
     except:
+        theproblem = str(sys.exc_info())
         os.chdir(origpath)
-        raise ValueError, "Problem in MMS creation: "+str(sys.exc_info()) 
+        raise ValueError, "Problem in MMS creation: "+theproblem
 
     os.chdir(origpath)
 

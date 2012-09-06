@@ -78,7 +78,7 @@ class test_virtualconcat(unittest.TestCase):
         testmms = False
         if os.environ.has_key('TEST_DATADIR'):   
             testmms = True
-            print "Testing on MMSs ...\n"
+            print "\nTesting on MMSs ...\n"
             DATADIR = str(os.environ.get('TEST_DATADIR'))
             if os.path.isdir(DATADIR):
                 datapath = DATADIR+'/concat/input/'
@@ -536,13 +536,23 @@ class test_virtualconcat(unittest.TestCase):
 
     def test9(self):
         '''Virtualconcat 9: 3 parts, different sources, same spws, different scratch columns: no, yes, no'''
+        global testmms
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part2-mod2-wscratch.ms',ignore_errors=True)
         shutil.copytree('part2-mod2.ms', 'part2-mod2-wscratch.ms', True)
         print 'creating scratch columns in part2-mod2-wscratch.ms'
-        cb.open('part2-mod2-wscratch.ms') # calibrator-open creates scratch columns
-        cb.close()
+        if testmms:
+            ms.open('part2-mod2-wscratch.ms')
+            mses = ms.getreferencedtables()
+            ms.close()
+            mses.sort()
+            for mname in mses:
+                cb.open(mname)
+                cb.close()
+        else:
+            cb.open('part2-mod2-wscratch.ms') # calibrator-open creates scratch columns
+            cb.close()
 
         self.res = virtualconcat(vis=['part1.ms','part2-mod2-wscratch.ms','part3.ms'],concatvis=msname)
         self.assertEqual(self.res,None)
@@ -589,13 +599,23 @@ class test_virtualconcat(unittest.TestCase):
         
     def test10(self):
         '''Virtualconcat 10: 3 parts, different sources, same spws, different scratch columns: yes, no, no'''
+        global testmms
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         shutil.rmtree('part1-wscratch.ms',ignore_errors=True)
         shutil.copytree('part1.ms', 'part1-wscratch.ms', True)
         print 'creating scratch columns in part1-wscratch.ms'
-        cb.open('part1-wscratch.ms') # calibrator-open creates scratch columns
-        cb.close()
+        if testmms:
+            ms.open('part1-wscratch.ms')
+            mses = ms.getreferencedtables()
+            ms.close()
+            mses.sort()
+            for mname in mses:
+                cb.open(mname)
+                cb.close()
+        else:
+            cb.open('part1-wscratch.ms') # calibrator-open creates scratch columns
+            cb.close()
 
         self.res = virtualconcat(vis=['part1-wscratch.ms','part2-mod2.ms','part3.ms'],concatvis=msname)
         self.assertEqual(self.res,None)

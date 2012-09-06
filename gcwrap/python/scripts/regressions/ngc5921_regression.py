@@ -585,6 +585,9 @@ reference = '1331*'
 # we want to transfer the flux to our other gain cal source 1445+099
 transfer = '1445*'
 
+# testing new option
+incremental=True
+
 fluxscale()
 
 # In the logger you should see something like:
@@ -614,14 +617,18 @@ vis = msfile
 # and transfer from 1445+099 to itself and the target N5921
 
 # Start with the fluxscale/gain and bandpass tables
-gaintable = [ftable,btable]
+#gaintable = [ftable,btable]
+#for incremental fluxscale table case
+gaintable = [ftable,gtable,btable]
 
 # use nearest (on sky) for gain transfer
 # use explicit selection on the bandpass table (all of it, in this case)
-gainfield = ['nearest','0']
+#gainfield = ['nearest','0']
+gainfield = ['nearest','nearest','0']
 
 # interpolation using linear for gain, nearest for bandpass
-interp = ['linear','nearest']
+#interp = ['linear','nearest']
+interp = ['linear', 'linear','nearest']
 
 # only one spw, do not need mapping
 spwmap = []

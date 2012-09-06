@@ -122,38 +122,22 @@ ia.open(project+"/"+project + '.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# # KS - updated 2011-09-09 (apply noise using cal table)
-# refstats = {'max': 1.5608,
-#             'min': -0.33003,
-#             'rms': 0.17279,
-#             'sigma': 0.15789,
-#             'sum': 18400}
-
-# KS - updated 2011-12-14 (Kumar's PB change and VP)
-refstats = {'max':  1.8715,
-            'min': -0.28008,
-            'rms': 0.20705,
-            'sigma': 0.18738,
-            'sum': 23089}
+refstats = {'max':  1.8829,
+            'min': -0.52625,
+            'rms': 0.22069,
+            'sigma': 0.20145,
+            'sum': 23627}
 
 #ia.open(project+"/"+project + '.aca.tp.diff')
 ia.open(project+"/"+project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# # KS - updated 2011-09-09 (apply noise using cal table)
-# diffstats = {'max': 2.7729,
-#              'min': -0.25207,
-#              'rms': 0.29521,
-#              'sigma': 0.26765,
-#              'sum': 32650 }
-
-# KS - updated 2011-12-14 (Kumar's PB change and VP)
-diffstats = {'max': 2.4615,
-             'min': -0.24603,
-             'rms': 0.25783,
-             'sigma': 0.23474,
-             'sum': 27961 }
+diffstats = {'max': 2.4528,
+             'min': -0.48053,
+             'rms': 0.26383,
+             'sigma': 0.24221,
+             'sum': 27423 }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

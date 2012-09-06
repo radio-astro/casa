@@ -569,11 +569,11 @@ class cleanhelper:
         # --- use outframe or dataframe for mask creation
         # * It appears somewhat duplicating with makemaskimage 
         #   but it is necessary to create a maskimage for
-        #   each field at this point...
-        #if self.usespecframe=='': 
-        #    maskframe=self.dataspecframe
-        #else:
-        #    maskframe=self.usespecframe
+        #   each field at this point...      
+        if self.usespecframe=='': 
+            maskframe=self.dataspecframe
+        else:
+            maskframe=self.usespecframe
         #print "Frame : ", maskframe
         #print "dataframe : ", self.dataspecframe , "   useframe : ", self.usespecframe
         for k in range(len(self.imagelist)):
@@ -583,8 +583,19 @@ class cleanhelper:
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
                 #mcsys=ia.coordsys().torecord()
-                #mcsys['spectral2']['conversion']['system']=maskframe
+                #if mcsys['spectral2']['conversion']['system']!=maskframe:
+                #    mcsys['spectral2']['conversion']['system']=maskframe
                 #ia.setcoordsys(mcsys)
+                #
+                ## This code to set the maskframe is copied from makemaskimages()
+                mycsys=ia.coordsys()
+                if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+                    mycsys.setreferencecode(maskframe,'spectral',True)
+                self.csys=mycsys.torecord()
+                if self.csys['spectral2']['conversion']['system']!=maskframe:
+                    self.csys['spectral2']['conversion']['system']=maskframe
+                ia.setcoordsys(self.csys)
+
                 ia.done(verbose=False)
 
         # take out extra []'s
@@ -857,6 +868,8 @@ class cleanhelper:
         self.csys=mycsys.torecord()
         if self.csys['spectral2']['conversion']['system']!=maskframe:
             self.csys['spectral2']['conversion']['system']=maskframe
+
+
         ia.setcoordsys(self.csys)
         #ia.setcoordsys(mycsys.torecord())
         ia.close()

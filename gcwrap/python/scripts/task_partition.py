@@ -50,9 +50,7 @@ class PartitionHelper(ParallelTaskHelper):
         self.dataDir = outputPath + '/' + self.outputBase+'.data'
         if self._arg['createmms']:
             if os.path.exists(self.dataDir): 
-                raise ValueError, \
-                      "Data directory for output (%s) already exists" %\
-                      self.dataDir
+                shutil.rmtree(self.dataDir)
 
             os.mkdir(self.dataDir)
 
@@ -309,6 +307,7 @@ class PartitionHelper(ParallelTaskHelper):
             for job in outputList:
                 if job.status == 'done':
                     subMSList.append(job.getCommandArguments()['outputvis'])
+            subMSList.sort()
 
             if len(subMSList) == 0:
                 casalog.post("Error: no subMSs were created.", 'WARN')

@@ -247,7 +247,7 @@ class immoment_test1(unittest.TestCase):
 #        _momentTest_debug_msg( 5 )
         results = None
         results = immoments( 'n1333_both', moments=[0], outfile='input_test_1' )
-        if ( results == None ):
+        if ( results != None ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Badfile, 'n1333_both', was not reported as bad."

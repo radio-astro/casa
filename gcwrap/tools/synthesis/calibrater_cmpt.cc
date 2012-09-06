@@ -647,7 +647,8 @@ casac::record* calibrater::fluxscale(
 		      const ::casac::variant& transfer,
 		      const std::string& listfile,
 		      const bool append, 
-		      const std::vector<int>& refspwmap)
+		      const std::vector<int>& refspwmap,
+                      const bool incremental)
 {
 
   casac::record* poOutput;
@@ -689,7 +690,8 @@ casac::record* calibrater::fluxscale(
 			     append,
 			     oFluxD,
 			     tranidx,
-			     oListFile);
+			     oListFile,
+                             incremental);
 
     // Associate the field IDs with the field numbers
 
@@ -731,6 +733,8 @@ casac::record* calibrater::fluxscale(
 	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
 	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
 	oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
+	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.column(t)));
+	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.column(t)));
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }

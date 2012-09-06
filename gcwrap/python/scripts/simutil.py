@@ -808,14 +808,16 @@ class simutil:
         ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # subreflector size for ACA?
         eps =[ 25.,   20.,  300,   300  ,15. ] # antenna surface accuracy
         
-        cq  =[ 0.88, 0.88,  0.99,  0.79, 0.86] # correlator quantization eff
+        cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86] # correlator eff
+        # ALMA includes quantization eff of 0.96    
         # VLA includes additional waveguide loss from correlator loss of 0.809
+        # EVLA is probably optimistic
 
         # things hardcoded in ALMA etimecalculator
         # t_ground=270.
         # t_cmb=2.73
-        # eta_q = 0.88  
-        # eta_a = 0.95*0.8*eta_s
+        # eta_q*eta_corr = 0.88*.961
+        # eta_ap = 0.72*eta_ruze
         
         if obs.count(telescope)>0:
             iobs=obs.index(telescope)
@@ -834,8 +836,8 @@ class simutil:
         eta_s = 0.95 # these are ALMA values
         # taper efficiency.    
         #eta_t = 0.86 # these are ALMA values
-        eta_t = 0.8 # 20100914 OT value
-        eta_t = 0.961 # 201208 OT value
+        eta_t = 0.819 # 20100914 OT value
+        eta_t = 0.72
 
         # Ruze phase efficiency.    
         if epsilon==None: epsilon = eps[iobs] # microns RMS
@@ -1103,7 +1105,7 @@ class simutil:
             ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
             ia.done()
-            imnoise=(stats["rms"][0])*pl.sqrt(2)  # 2 polarizations
+            imnoise=(stats["rms"][0])
         else:
             imnoise=0.
 
@@ -1121,7 +1123,7 @@ class simutil:
         else:
             noiseperbase=0.
 
-        theoreticalnoise=noiseperbase/pl.sqrt(nint*nbase)
+        theoreticalnoise=noiseperbase/pl.sqrt(nint*nbase*2) # assume 2-poln
         
         if debug==None:
             xx=glob.glob(tmpname+"*")

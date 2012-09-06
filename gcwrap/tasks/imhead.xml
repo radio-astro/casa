@@ -78,7 +78,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	</allowed>
         <value>summary</value>
     </param>
-
     <param type="string" name="hdkey" subparam="yes">
     	<description>The FITS keyword</description>
         <value></value>
@@ -111,11 +110,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value type="string"></value>
         <example>hdvalue='VLA'</example>
     </param>
-
+    <param type="bool"  name="verbose" subparam="yes">
+        <description>Give a full listing of beams or just a short summary? Only used when the image has multiple beams and mode="summary".</description>
+        <value>False</value>
+    </param>
 
     <constraints>
 	<when param="mode">
-  	    <equals value="summary"/>
+  	    <equals value="summary">
+            <default param="verbose"><value>False</value></default>
+        </equals>
   	    <equals value="list"/>
   	    <equals value="history"/>
   	    <equals value="fits"/>
@@ -175,6 +179,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            beammaj	   Major axis of the clean beam
            beammin         Minor axis of the clean beam
            beampa          Position angle of the clean beam
+           NOTE: If the image contains multiple beams, use mode="summary" to get
+           a listing.
 	   bunit	   Brightness unit (K, Jy/beam, etc)
 	   cdeltn	   Pixel size, nth axis  (max n is 4)
 	   crpixn	   Pixel coordinate of reference point, nth axis
@@ -235,6 +241,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
         Note that hdvalue will contain numbers, strings as well as units.
+        
+        If mode="summary", verbose=True and the image contains multiple beams, the output,
+        will contain information on every beam in the dataset. If mode="summary",
+        verbose=False and the image has multiple beams, only a brief summary of
+        beams for each polarization is listed. In this
+        case, the beams with the maximum area, the minimum area, and the median area for
+        each polarization are listed. If mode is not "summary" and/or the image does not
+        have multiple beams, verbose is not used.
         
         Examples:
 

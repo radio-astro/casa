@@ -590,5 +590,150 @@ deconvolver::makeprior(const std::string& prior, const std::string& templateimag
   return false;
 }
 
+
+bool deconvolver::mtopen(const int ntaylor,
+			 const std::vector<double>& scalevector,
+			 const std::vector<std::string>& psfs,
+			 const bool /*async*/)
+{
+
+  if(itsDeconv==0)
+    itsDeconv = new Deconvolver();
+  if(itsLog==0)
+    itsLog = new LogIO();
+
+  try {
+
+    Vector<Float> vec(scalevector.size());
+    if(vec.nelements() != 0)
+      convertArray(vec, Vector<Double>(scalevector));
+
+    Vector<String> psfvec(toVectorString(psfs));
+
+
+    return itsDeconv->mtopen(ntaylor, vec, psfvec);
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return false;
+}
+
+
+
+casac::record* 
+deconvolver::mtclean(const std::vector<std::string>& residuals,
+			  const std::vector<std::string>& models,
+			  const int niter,
+			  const double gain, 
+			  const ::casac::variant& threshold, 
+			  const bool displayprogress,
+			  const std::string& mask,
+			  const bool /*async*/)
+{
+
+  casac::record* rstat(0);
+
+  try {
+
+    Vector<String> resvec(toVectorString(residuals));
+    Vector<String> modvec(toVectorString(models));
+
+    casa::Quantity thresh(0.0, "Jy");
+    if(String(threshold.toString()) != String(""))
+      thresh=casaQuantity(threshold);
+
+    Float maxResidual=0.0;
+    Int iterations=0;
+    Bool converged=itsDeconv->mtclean(resvec, modvec, (Int)niter, (Float)gain, thresh, 
+				      (Bool)displayprogress, String(mask), maxResidual, iterations );
+
+    Record theRec;
+    theRec.define("converged", converged);
+    theRec.define("maxresidual", maxResidual);
+    theRec.define("iterations", iterations);
+    rstat = fromRecord(theRec);  
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return rstat;
+}
+
+bool deconvolver::mtrestore(const std::vector<std::string>& models,
+			  const std::vector<std::string>& residuals,
+			  const std::vector<std::string>& images,
+			  const ::casac::variant& bmaj, 
+			  const ::casac::variant& bmin, 
+			  const ::casac::variant& bpa, 
+			  const bool /*async*/)
+{
+
+ try {
+
+    Vector<String> modvec(toVectorString(models));
+    Vector<String> resvec(toVectorString(residuals));
+    Vector<String> imvec(toVectorString(images));
+
+    casa::Quantity maj(1, "arcsec");
+    casa::Quantity min(1, "arcsec");
+    casa::Quantity pa(0, "deg");
+    if(String(bmaj.toString()) != String("")){
+      maj=casaQuantity(bmaj);
+    }
+    if(String(bmin.toString()) != String("")){
+      min=casaQuantity(bmin);
+    }
+    if(String(bpa.toString()) != String("")){
+      pa=casaQuantity(bpa);
+    }
+    GaussianBeam beam(maj, min, pa);
+
+    return itsDeconv->mtrestore(modvec, resvec, imvec, beam);
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return false;
+}
+
+
+
+bool deconvolver::mtcalcpowerlaw(const std::vector<std::string>& images,
+                                 const std::vector<std::string>& residuals,
+                                 const std::string& alphaname,
+                                 const std::string& betaname,
+                                 const ::casac::variant& threshold, 
+                                 const bool calcerror,
+                                 const bool /*async*/)
+{
+
+ try {
+
+
+    Vector<String> imvec(toVectorString(images));
+    Vector<String> resvec(toVectorString(residuals));
+
+    casa::Quantity thresh(0.0, "Jy");
+    if(String(threshold.toString()) != String(""))
+      thresh=casaQuantity(threshold);
+   
+   return itsDeconv->mtcalcpowerlaw(imvec, resvec, alphaname, betaname, thresh, calcerror);
+
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+
+  return false;
+}
+
+
 } // casac namespace
 

@@ -105,7 +105,7 @@ class simple_cluster:
             # try:
             #     a=int(xyzd[1])
             # except:
-            #     print 'the numofenging should be a integer instead of:', xyzd[1]
+            #     print 'the numofengines should be a integer instead of:', xyzd[1]
             #     print 'this entry will be ignored'
             #     continue
             [a, b, c]=[str.strip(xyzd[0]), float(xyzd[1]), str.strip(xyzd[2])]
@@ -123,7 +123,7 @@ class simple_cluster:
             # Retrieve available resources to cap number of engines deployed 
             hostname = str(xyzd[0])
             (ncores_available,memory_available,cpu_available) = self.check_host_resources(hostname)
-            max_mem = memory_available
+            max_mem = memory_available 
             max_engines = ncores_available
             
             # Compute equivalent number of cores idle
@@ -132,7 +132,7 @@ class simple_cluster:
             # Determine maximum number of engines that can be deployed at target node
             max_engines_user = b
             if (max_engines_user<=0):
-                max_engines = ncores_available
+                max_engines = ncores_available * 0.9 # leave 10% to keep the machine operable
             elif (max_engines_user<=1):
                 max_engines = int(round(max_engines_user*ncores_available))
                 if (max_engines < 2):
@@ -149,7 +149,7 @@ class simple_cluster:
             if len(xyzd)>=4:
                 max_mem_user = float(xyzd[3])
                 if (max_mem_user<=0):
-                    max_mem = memory_available
+                    max_mem = memory_available * 0.9 # leave 10% to keep the machine operable
                 elif (max_mem_user<=1):
                     max_mem = int(round(max_mem_user*memory_available))
                 else:
@@ -222,7 +222,7 @@ class simple_cluster:
             memory=0.0
             for memtype in ['MemFree',
                             'Buffers',
-                            'Cached' # "Cached" has a the problem that there cas also be "SwapCached"
+                            'Cached' # "Cached" has a the problem that there can also be "SwapCached"
                             ]:
                 cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep -v SwapCached | grep "+memtype+"'"
                 str_memory = commands.getoutput(cmd_memory)

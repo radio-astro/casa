@@ -849,10 +849,12 @@ class sdbaseline_funcTest( unittest.TestCase ):
     def checkRms( self, blparamfile, max_rms ):
         rms = 10000.0
         for line in open(blparamfile,'r'):
-            items = line.split()
-            if (items[0] == 'rms') and (items[1] == '='):
-                rms = float(items[2])
-                break
+            if line.strip() != "":
+                items = line.split()
+                if len(items) >= 3:
+                    if (items[0] == 'rms') and (items[1] == '='):
+                        rms = float(items[2])
+                        break
 
         self.assertTrue((rms <= max_rms), msg = "CSpline fitting failed.")
 

@@ -8986,6 +8986,11 @@ ia.close()
      <description>List axis descriptors in pixel or world axis order</description>
      <value>true</value>
      </param>
+     <param type="bool"  name="verbose">
+        <description>Give a full listing of beams or just a short summary? Only used when the image has multiple beams.</description>
+        <value>false</value>
+     </param>
+     
 </input>
 <returns type="record"/>
 <description>
@@ -9036,11 +9041,28 @@ following fields filled in:
     \item[imagetype]   The image type.
 \end{description}
 
+For an image with multiple beams, the restoringbeam field is a dictionary of dictionaries with
+keys of names "*" followed by the channel number, if the image has a spectral coordinate,
+or the polarization number if it does not. That is, the keys have names "*0", "*1", "*2", etc.
+If the image has both a spectral and a polarization coordinate, each of these dictionaries is
+a dictionary with keys of the same form which range from 0 to the number of polarizations
+minus 1; "*0", "*1", ... The dictionaries pointed to by the channel and/or polarization number
+contain information for the beam at that position.
+
 If you set {\stfaf list=F}, then the summary will not be written to
 the logger.  The
 return value of the function, in the {\stfaf header} field is a
 vector string containing the formatted output that would normally
 have gone to the logger. 
+
+If verbose is True and the image contains multiple beams, the formatted output,
+whether it is written to the logger or placed in the output record, will have
+information on every beam in the dataset. If verbose=False and the image has
+multiple beams, only a summary of beams for each polarization is listed. In this
+case, the beams with the maximum area, the minimum area, and the median area for
+each polarization are listed. However, all the beams can still be found in the
+restoringbeam field of the returned dictionary. If the image does not have multiple
+beams, verbose is not used.
 
 </description>
 <example>

@@ -861,7 +861,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
 ### flat snr it converges less well
  ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
       cyclefactor=4,niter=10000,threshold='45mJy',
-      minpb=0.3,pbcor=False, usescratch=False)
+      minpb=0.3,pbcor=False, usescratch=False, restoringbeam=['8.5arcsec', '5.95arcsec', '178.7deg'])
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
 
@@ -1418,8 +1418,8 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 166.916
-clean_momentzero_rms = 15.206372
+clean_momentzero_max = 166.819
+clean_momentzero_rms = 14.234
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
 #  diff << 1 chanwidth.

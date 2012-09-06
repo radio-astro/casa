@@ -20,6 +20,9 @@ def simanalyze(
     overwrite=None,
     async=False):
 
+    # Collect a list of parameter values to save inputs
+    in_params =  locals()
+
     import re
     import glob
 
@@ -46,7 +49,8 @@ def simanalyze(
 
 
     saveinputs = myf['saveinputs']
-    saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last")
+    saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last",
+               myparams=in_params)
 
 
     grscreen = False

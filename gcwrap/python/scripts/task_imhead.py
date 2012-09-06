@@ -95,13 +95,9 @@ from taskinit import *
 
 
 def imhead(
-    imagename=None,
-    mode=None,
-    hdkey=None,
-    hdvalue=None,
-    hdtype=None,
-    hdcomment=None
-    ):
+    imagename, mode, hdkey, hdvalue,
+    hdtype, hdcomment, verbose
+):
     # Some debugging info.
     casalog.origin('imhead')
     casalog.post('parameter imagename: ' + imagename, 'DEBUG1')
@@ -127,11 +123,12 @@ def imhead(
     # ############################################################
     # History mode, List the history information for the
     # CASA image file.
+    myia = iatool()
     try:
         if mode.startswith('his'):
-            ia.open(imagename)
-            ia.history()
-            ia.done()
+            myia.open(imagename)
+            myia.history()
+            myia.done()
             # print "History information is listed in logger"
             return True
     except Exception, instance:
@@ -146,9 +143,9 @@ def imhead(
     # output
     try:
         if mode.startswith('sum'):
-            ia.open(imagename)
-            ia.summary()
-            ia.done()
+            myia.open(imagename)
+            myia.summary(verbose=verbose)
+            myia.done()
             # print "Summary information is listed in logger"
             return True
     except Exception, instance:
@@ -571,9 +568,18 @@ def imhead(
                     casalog.post(str('        -- ') + field + str(': ')
                                  + str(hd_values[field]))
                 else:
-
+                    value = str(hd_values[field])
+                    if (
+                        field.startswith("beam")
+                        and str(hd_values[field]) == not_known
+                    ):
+                        myia.open(imagename)
+                        res = myia.restoringbeam()
+                        myia.done()
+                        if (len(res.keys()) > 0):
+                            value = "This image has multiple beams. Use mode='summary' to get a listing'"
                     casalog.post(str('        -- ') + field + str(': ')
-                                 + str(hd_values[field]))
+                                 + value)
             if csys != None:
                 csys.done()
                 del csys

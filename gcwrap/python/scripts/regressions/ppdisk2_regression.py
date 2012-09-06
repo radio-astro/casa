@@ -94,12 +94,11 @@ ppdso_im=ia.open(project+"/"+project + '.alma.out20.noisy.image')
 ppdso_stats=ia.statistics()
 ia.close()
 
-# 20100428
-refstats = { 'flux': 0.0358,
-             'max': 6.65e-04,
-             'min': -2.5e-04, 
-             'rms': 2.02e-04,
-             'sigma': 1.51e-04 }
+refstats = { 'flux': 0.0359,
+             'max': 6.07e-04,
+             'min': -1.6e-04, 
+             'rms': 1.92e-04,
+             'sigma': 1.37e-04 }
 
 reftol   = {'flux':  0.05,
             'max':   0.1,

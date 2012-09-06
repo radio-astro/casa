@@ -1271,6 +1271,11 @@ cb.close()
      <description>List of alternate spw for referencing</description>
      <value>-1</value>
      </param>
+
+     <param type="bool" direction="in" name="incremental">
+     <description>create a incremental caltable</description>
+     <value>false</value>
+     </param>
 </input>
 
 <returns type="record">
