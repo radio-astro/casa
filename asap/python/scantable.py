@@ -3006,6 +3006,209 @@ class scantable(Scantable):
             raise_fitting_failure_exception(e)
 
     @asaplog_post_dec
+    def chebyshev_baseline(self, insitu=None, mask=None, order=None, 
+                           clipthresh=None, clipniter=None, plot=None, 
+                           getresidual=None, showprogress=None, minnrow=None, 
+                           outlog=None, blfile=None, csvformat=None):
+        """\
+        Return a scan which has been baselined (all rows) by Chebyshev polynomials.
+
+        Parameters:
+            insitu:       If False a new scantable is returned.
+                          Otherwise, the scaling is done in-situ
+                          The default is taken from .asaprc (False)
+            mask:         An optional mask
+            order:        the maximum order of Chebyshev polynomial (default is 5)
+            clipthresh:   Clipping threshold. (default is 3.0, unit: sigma)
+            clipniter:    maximum number of iteration of 'clipthresh'-sigma 
+                          clipping (default is 0)
+            plot:     *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
+                          plot the fit and the residual. In this each
+                          indivual fit has to be approved, by typing 'y'
+                          or 'n'
+            getresidual:  if False, returns best-fit values instead of
+                          residual. (default is True)
+            showprogress: show progress status for large data.
+                          default is True.
+            minnrow:      minimum number of input spectra to show.
+                          default is 1000.
+            outlog:       Output the coefficients of the best-fit
+                          function to logger (default is False)
+            blfile:       Name of a text file in which the best-fit
+                          parameter values to be written
+                          (default is "": no file/logger output)
+            csvformat:    if True blfile is csv-formatted, default is False.
+
+        Example:
+            # return a scan baselined by a cubic spline consisting of 2 pieces 
+            # (i.e., 1 internal knot),
+            # also with 3-sigma clipping, iteration up to 4 times
+            bscan = scan.cspline_baseline(npiece=2,clipthresh=3.0,clipniter=4)
+        
+        Note:
+            The best-fit parameter values output in logger and/or blfile are now
+            based on specunit of 'channel'. 
+        """
+        
+        try:
+            varlist = vars()
+            
+            if insitu is None: insitu = rcParams['insitu']
+            if insitu:
+                workscan = self
+            else:
+                workscan = self.copy()
+
+            #if mask         is None: mask         = [True for i in xrange(workscan.nchan())]
+            if mask         is None: mask         = []
+            if order        is None: order        = 5
+            if clipthresh   is None: clipthresh   = 3.0
+            if clipniter    is None: clipniter    = 0
+            if plot         is None: plot         = False
+            if getresidual  is None: getresidual  = True
+            if showprogress is None: showprogress = True
+            if minnrow      is None: minnrow      = 1000
+            if outlog       is None: outlog       = False
+            if blfile       is None: blfile       = ''
+            if csvformat     is None: csvformat     = False
+
+            if csvformat:
+                scsvformat = "T"
+            else:
+                scsvformat = "F"
+
+            #CURRENTLY, PLOT=true UNAVAILABLE UNTIL cubic spline fitting is implemented as a fitter method. 
+            workscan._chebyshev_baseline(mask, order, clipthresh, clipniter, 
+                                         getresidual, 
+                                         pack_progress_params(showprogress, 
+                                                              minnrow),
+                                         outlog, scsvformat+blfile)
+            workscan._add_history("chebyshev_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            raise_fitting_failure_exception(e)
+
+    @asaplog_post_dec
+    def auto_chebyshev_baseline(self, insitu=None, mask=None, order=None, 
+                              clipthresh=None, clipniter=None,
+                              edge=None, threshold=None, chan_avg_limit=None, 
+                              getresidual=None, plot=None,
+                              showprogress=None, minnrow=None, outlog=None,
+                              blfile=None, csvformat=None):
+        """\
+        Return a scan which has been baselined (all rows) by Chebyshev polynomials. 
+        Spectral lines are detected first using linefinder and masked out
+        to avoid them affecting the baseline solution.
+
+        Parameters:
+            insitu:         if False a new scantable is returned.
+                            Otherwise, the scaling is done in-situ
+                            The default is taken from .asaprc (False)
+            mask:           an optional mask retreived from scantable
+            order:          the maximum order of Chebyshev polynomial (default is 5)
+            clipthresh:     Clipping threshold. (default is 3.0, unit: sigma)
+            clipniter:      maximum number of iteration of 'clipthresh'-sigma 
+                            clipping (default is 0)
+            edge:           an optional number of channel to drop at
+                            the edge of spectrum. If only one value is
+                            specified, the same number will be dropped
+                            from both sides of the spectrum. Default
+                            is to keep all channels. Nested tuples
+                            represent individual edge selection for
+                            different IFs (a number of spectral channels
+                            can be different)
+            threshold:      the threshold used by line finder. It is
+                            better to keep it large as only strong lines
+                            affect the baseline solution.
+            chan_avg_limit: a maximum number of consequtive spectral
+                            channels to average during the search of
+                            weak and broad lines. The default is no
+                            averaging (and no search for weak lines).
+                            If such lines can affect the fitted baseline
+                            (e.g. a high order polynomial is fitted),
+                            increase this parameter (usually values up
+                            to 8 are reasonable). Most users of this
+                            method should find the default value sufficient.
+            plot:       *** CURRENTLY UNAVAILABLE, ALWAYS FALSE ***
+                            plot the fit and the residual. In this each
+                            indivual fit has to be approved, by typing 'y'
+                            or 'n'
+            getresidual:    if False, returns best-fit values instead of
+                            residual. (default is True)
+            showprogress:   show progress status for large data.
+                            default is True.
+            minnrow:        minimum number of input spectra to show.
+                            default is 1000.
+            outlog:         Output the coefficients of the best-fit
+                            function to logger (default is False)
+            blfile:         Name of a text file in which the best-fit
+                            parameter values to be written
+                            (default is "": no file/logger output)
+            csvformat:      if True blfile is csv-formatted, default is False.
+
+        Example:
+            bscan = scan.auto_cspline_baseline(npiece=3, insitu=False)
+        
+        Note:
+            The best-fit parameter values output in logger and/or blfile are now
+            based on specunit of 'channel'. 
+        """
+
+        try:
+            varlist = vars()
+
+            if insitu is None: insitu = rcParams['insitu']
+            if insitu:
+                workscan = self
+            else:
+                workscan = self.copy()
+            
+            #if mask           is None: mask           = [True for i in xrange(workscan.nchan())]
+            if mask           is None: mask           = []
+            if order          is None: order          = 5
+            if clipthresh     is None: clipthresh     = 3.0
+            if clipniter      is None: clipniter      = 0
+            if edge           is None: edge           = (0, 0)
+            if threshold      is None: threshold      = 3
+            if chan_avg_limit is None: chan_avg_limit = 1
+            if plot           is None: plot           = False
+            if getresidual    is None: getresidual    = True
+            if showprogress   is None: showprogress   = True
+            if minnrow        is None: minnrow        = 1000
+            if outlog         is None: outlog         = False
+            if blfile         is None: blfile         = ''
+            if csvformat      is None: csvformat      = False
+
+            if csvformat:
+                scsvformat = "T"
+            else:
+                scsvformat = "F"
+
+            #CURRENTLY, PLOT=true UNAVAILABLE UNTIL cubic spline fitting is implemented as a fitter method.
+            workscan._auto_chebyshev_baseline(mask, order, clipthresh, 
+                                              clipniter, 
+                                              normalise_edge_param(edge), 
+                                              threshold, 
+                                              chan_avg_limit, getresidual, 
+                                              pack_progress_params(showprogress, 
+                                                                   minnrow), 
+                                              outlog, scsvformat+blfile)
+            workscan._add_history("auto_chebyshev_baseline", varlist)
+            
+            if insitu:
+                self._assign(workscan)
+            else:
+                return workscan
+            
+        except RuntimeError, e:
+            raise_fitting_failure_exception(e)
+
+    @asaplog_post_dec
     def poly_baseline(self, mask=None, order=None, insitu=None, plot=None, 
                       getresidual=None, showprogress=None, minnrow=None, 
                       outlog=None, blfile=None, csvformat=None):

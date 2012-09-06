@@ -282,6 +282,12 @@ public:
   void autoPolyBaseline(const std::vector<bool>& mask, int order, const std::vector<int>& edge, float threshold=5.0, int chan_avg_limit=1, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="")
   { table_->autoPolyBaseline(mask, order, edge, threshold, chan_avg_limit, getresidual, showprogress, outlog, blfile); }
 
+  void chebyshevBaseline(const std::vector<bool>& mask, int order, float clipthresh, int clipniter, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="")
+  { table_->chebyshevBaseline(mask, order, clipthresh, clipniter, getresidual, showprogress, outlog, blfile); }
+
+  void autoChebyshevBaseline(const std::vector<bool>& mask, int order, float clipthresh, int clipniter, const std::vector<int>& edge, float threshold=5.0, int chan_avg_limit=1, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="")
+  { table_->autoChebyshevBaseline(mask, order, clipthresh, clipniter, edge, threshold, chan_avg_limit, getresidual, showprogress, outlog, blfile); }
+
   void cubicSplineBaseline(const std::vector<bool>& mask, int npiece, float clipthresh, int clipniter, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="")
   { table_->cubicSplineBaseline(mask, npiece, clipthresh, clipniter, getresidual, showprogress, outlog, blfile); }
 

@@ -148,6 +148,8 @@ void python_Scantable() {
 	 (boost::python::arg("nchan")=-1) )
     .def("_poly_baseline", &ScantableWrapper::polyBaseline)
     .def("_auto_poly_baseline", &ScantableWrapper::autoPolyBaseline)
+    .def("_chebyshev_baseline", &ScantableWrapper::chebyshevBaseline)
+    .def("_auto_chebyshev_baseline", &ScantableWrapper::autoChebyshevBaseline)
     .def("_cspline_baseline", &ScantableWrapper::cubicSplineBaseline)
     .def("_auto_cspline_baseline", &ScantableWrapper::autoCubicSplineBaseline)
     .def("_sinusoid_baseline", &ScantableWrapper::sinusoidBaseline)

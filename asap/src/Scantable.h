@@ -521,6 +521,25 @@ public:
 			const std::string& progressInfo="true,1000", 
 			const bool outLogger=false, 
 			const std::string& blfile="");
+  void chebyshevBaseline(const std::vector<bool>& mask,
+			 int order,
+			 float thresClip, 
+		         int nIterClip,
+		         bool getResidual=true,
+		         const std::string& progressInfo="true,1000", 
+		         const bool outLogger=false,
+		         const std::string& blfile="");
+  void autoChebyshevBaseline(const std::vector<bool>& mask,
+		             int order,
+		             float thresClip, 
+		             int nIterClip,
+		             const std::vector<int>& edge, 
+		             float threshold=3.0, 
+		             int chanAvgLimit=1, 
+		             bool getResidual=true,
+		             const std::string& progressInfo="true,1000", 
+		             const bool outLogger=false, 
+		             const std::string& blfile="");
   void cubicSplineBaseline(const std::vector<bool>& mask,
 			   int nPiece,
 			   float thresClip, 
@@ -709,6 +728,15 @@ private:
 						      const casa::Array<T2>&);
 
   void fitBaseline(const std::vector<bool>& mask, int whichrow, Fitter& fitter);
+  double getChebyshevPolynomial(int n, double x);
+  std::vector<float> doChebyshevFitting(const std::vector<float>& data, 
+					  const std::vector<bool>& mask,
+					  int order,
+					  std::vector<float>& params,
+					  int& nClipped,
+					  float thresClip=3.0, 
+					  int nIterClip=1,
+					  bool getResidual=true);
   std::vector<float> doCubicSplineFitting(const std::vector<float>& data, 
 					  const std::vector<bool>& mask,
 					  int nPiece,
