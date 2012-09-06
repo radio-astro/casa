@@ -219,12 +219,12 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     }
 
     // Write the SOURCE table.
-    //  if (ok && !ms.source().isNull()) {
-    if (ok) {
+    //  if (ok && !ms.source().isNull()) 
+    if (ok && asMultiSource) {
         os << LogIO::NORMAL << "Writing AIPS SU table" << LogIO::POST;
-        ok = writeSU(fitsOutput, ms, fieldidMap, nrfield, spwidMap, nrspw);
-        if (!ok) {
-            os << LogIO::SEVERE << "Could not write SU table\n" << LogIO::POST;
+        bool bk = writeSU(fitsOutput, ms, fieldidMap, nrfield, spwidMap, nrspw);
+        if (!bk) {
+            os << LogIO::WARN << "Could not write SU table\n" << LogIO::POST;
         }
     }
 
@@ -245,17 +245,17 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
             Table syscal = handleSysCal(ms, spwids, isSubset);
 
             os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
-            ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write TY table\n"
+            bool bk = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
+            if (!bk) {
+                os << LogIO::WARN << "Could not write TY table\n"
                         << LogIO::POST;
             } else {
                 os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
-                ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw,
+                bk = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw,
                         combineSpw, sensitivity, refPixelFreq, refFreq, chanbw);
             }
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write GC table\n"
+            if (!bk) {
+                os << LogIO::WARN << "Could not write GC table\n"
                         << LogIO::POST;
             }
         }
@@ -263,9 +263,9 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
     if (ok) {
         if (ms.weather().tableDesc().ncolumn() != 0) {
             os << LogIO::NORMAL << "Writing AIPS WX table" << LogIO::POST;
-            ok = writeWX(fitsOutput, ms);
-            if (!ok) {
-                os << LogIO::SEVERE << "Could not write WX table\n"
+            bool bk = writeWX(fitsOutput, ms);
+            if (!bk) {
+                os << LogIO::WARN << "Could not write WX table\n"
                         << LogIO::POST;
             }
         }
@@ -350,11 +350,20 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     MSDataDescription ddTable = rawms.dataDescription();
     MSSpectralWindow spectralTable = rawms.spectralWindow();
     MSPolarization polTable = rawms.polarization();
-    MSSource srcTable = rawms.source();
+    MSSource srcTable;
+    uInt nsrc = 0;
+    try {
+        srcTable = rawms.source();
+        nsrc = srcTable.nrow();
+    }
+    catch (AipsError x) {
+        os << LogOrigin("MSFitsOutput", "writeMain")
+           << LogIO::WARN << "No source table in MS. " 
+           << x.getMesg() << LogIO::POST;
+    }
     const uInt ndds = ddTable.nrow();
     const uInt nspec = spectralTable.nrow();
     const uInt npol = polTable.nrow();
-    const uInt nsrc = srcTable.nrow();
     if (ndds == 0) {
         os << LogIO::SEVERE << "No data description table in MS" << LogIO::POST;
         return 0;
@@ -385,11 +394,10 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
     ROScalarColumn<Int> measFreq(spectralTable, MSSpectralWindow::columnName(
             MSSpectralWindow::MEAS_FREQ_REF));
 
-    ROArrayColumn<Double> restfreqcol(srcTable, MSSource::columnName(
-            MSSource::REST_FREQUENCY));
-
     Double restFreq(0.0);
     if (nsrc > 0) {
+        ROArrayColumn<Double> restfreqcol(srcTable, MSSource::columnName(
+            MSSource::REST_FREQUENCY));
         if (restfreqcol.isDefined(0) && restfreqcol(0).nelements() > 0) {
             IPosition ip = restfreqcol(0).shape();
             ip = 0;
@@ -1863,7 +1871,7 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
     Record strlengths, units;
     desc.addField("ID. NO.", TpInt);
     desc.addField("SOURCE", TpString);
-    strlengths.define("SOURCE", 16);
+    strlengths.define("SOURCE", 20);
     desc.addField("QUAL", TpInt);
     desc.addField("CALCODE", TpString);
     strlengths.define("CALCODE", 4);
@@ -2375,7 +2383,7 @@ Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms) {
     const uInt nrow = subtable.nrow();
 
     if (nrow == 0) {
-        os << LogIO::SEVERE << "No weather info" << LogIO::POST;
+        os << LogIO::WARN << "No weather info" << LogIO::POST;
         return False;
     }
     // Get reference time (i.e. start time) from the main table.

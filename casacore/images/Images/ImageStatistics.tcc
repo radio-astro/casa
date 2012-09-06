@@ -237,9 +237,10 @@ template <class T> Bool ImageStatistics<T>::_getBeamArea(
 				IPosition curPos(beamAreaShape.nelements(), 0);
 				GaussianBeam curBeam;
 				IPosition curBeamPos(beams.shape().nelements(), 0);
+				IPosition axisPath = IPosition::makeAxisPath(beamAreaShape.size());
 				for (
 					IPosition curPos(beamAreaShape.size(), 0);
-					curPos<beamAreaShape; curPos.next(beamAreaShape)
+					curPos<beamAreaShape; curPos.next(beamAreaShape, axisPath, False)
 				) {
 					if (storageSpecAxis >= 0) {
 						curBeamPos[0] = curPos[storageSpecAxis];

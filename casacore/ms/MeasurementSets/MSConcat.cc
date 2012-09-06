@@ -304,9 +304,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // POINTING
   if(!antIndexTrivial){
-    if(!copyPointingB(otherMS.pointing(), newAntIndices)){
-      log << LogIO::WARN << "Could not reindex Pointing subtable " << LogIO::POST ;
-    }
+    copyPointingB(otherMS.pointing(), newAntIndices);
   }
   
   /////////////////////////////////////////////////////
@@ -1543,17 +1541,17 @@ Bool MSConcat::copyPointingB(MSPointing& otherPoint,const
 
     return False;
   }
-  else if(!itsPointingNull && otherPointingNull){
-    os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
-       << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
+//   else if(!itsPointingNull && otherPointingNull){
+//     os << LogIO::NORMAL << "MS to be appended does not have a valid pointing table, "
+//        << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
              
-    Vector<uInt> delrows(itsMS.pointing().nrow());
-    indgen(delrows);
-    itsMS.pointing().removeRow(delrows); 
+//     Vector<uInt> delrows(itsMS.pointing().nrow());
+//     indgen(delrows);
+//     itsMS.pointing().removeRow(delrows); 
 
-    return False;
+//     return False;
 
-  }
+//   }
      
   Int rowToBeAdded=otherPoint.nrow();
   //reassigning antennas to the new indices of the ANTENNA table
@@ -2091,7 +2089,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       for (Int j =0 ; j < numrows_this ; ++j){
 	if(thisSPWId(j)<-1){ // came from the second input table
 	  sourceRecord = sourceRow.get(j);
-	  if(doSPW_p){ // the SPW table was rearranged
+	  if(doSPW_p || newSPWIndex_p.isDefined(thisSPWId(j)+10000)){ // the SPW table was rearranged
 	    sourceRecord.define(sourceSPWId, newSPWIndex_p(thisSPWId(j)+10000) );
 	  }
 	  else { // the SPW table did not have to be rearranged, just revert changes to SPW from copySource
@@ -2434,6 +2432,9 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       //cout << "counterpart found for other spw " << otherSpwId 
       //     << " found in this spw " << *newSpwPtr << endl;
       matchedSPW = True;
+      if(*newSpwPtr != otherSpwId){
+	newSPWIndex_p.define(otherSpwId, *newSpwPtr);
+      }
     }      
     
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&

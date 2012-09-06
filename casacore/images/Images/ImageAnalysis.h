@@ -451,7 +451,8 @@ class ImageAnalysis
     Record summary(
     	const String& doppler = "RADIO",
     	const Bool list = True,
-    	const Bool pixelorder = True
+    	const Bool pixelorder = True,
+    	const Bool verbose = False
     );
 
     Bool tofits(

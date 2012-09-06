@@ -177,9 +177,10 @@ int main() {
             AlwaysAssert((Int)values.size() == nbins, AipsError);
             AlwaysAssert((Int)counts.size() == nbins, AipsError);
             Float expValue = -96;
+            IPosition axisPath = IPosition::makeAxisPath(values.ndim());
             for (
                 IPosition pos(values.ndim(), 0); pos<values.shape();
-                pos.next(values.shape()), expValue+=8
+                pos.next(values.shape(), axisPath), expValue+=8
             ) {
                 AlwaysAssert(values(pos) == expValue, AipsError);
                 Float expCount = 0;

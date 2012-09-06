@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutputAstron.cc 21105 2011-07-15 08:07:31Z gervandiepen $
+//# $Id: MSFitsOutputAstron.cc 21256 2012-08-28 11:48:45Z gervandiepen $
 
 #include <msfits/MSFits/MSFitsOutputAstron.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -368,13 +368,7 @@ FitsOutput *MSFitsOutputAstron::writeMain(Int& refPixelFreq,
 
       if (doWsrt && meas_freq_ref(0) != 5 && i ==0 ) {
         f0_org = f0;
-	if (!rawms.keywordSet().isDefined ("NFRA_TMS_PARAMETERS")) {
-  
-	  cout << "ERROR - No NFRA_TMS_PARAMETERS table - cannot process this MS.\n";
-	  return false;
-
-	} else {
-
+	if (rawms.keywordSet().isDefined ("NFRA_TMS_PARAMETERS")) {
 	  Table tmsParm = rawms.keywordSet().asTable ("NFRA_TMS_PARAMETERS");
 	  Table sel;
 	  ROTableColumn tc(tmsParm, "NAME");

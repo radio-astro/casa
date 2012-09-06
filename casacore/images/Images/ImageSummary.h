@@ -202,8 +202,10 @@ public:
 // For spectral axes, both frequency and velocity information is listed. You
 // can specify what velocity definition you want with <src>velocityType</src>
 // If postLocally is True, the formatted strings are returned in the return value
-   Vector<String> list(LogIO& os, const MDoppler::Types velocityType=MDoppler::RADIO,
-                       Bool postLocally=False);
+   Vector<String> list(
+		   LogIO& os, const MDoppler::Types velocityType=MDoppler::RADIO,
+		   Bool postLocally=False, const Bool verbose=False
+   );
 
 // Set a new image
    Bool setNewImage (const ImageInterface<T>& image);
@@ -217,6 +219,18 @@ private:
 //
     String makeMasksString() const;
     String makeRegionsString() const;
+
+    void _listMultiBeam(LogIO& os, const Bool verbose) const;
+
+    void _chanInfoToStream(
+    	ostream& os, const SpectralCoordinate *const &spCoord,
+    	const uInt chan, const uInt chanWidth, const uInt freqPrec,
+    	const uInt velWidth, const uInt velPrec
+    ) const;
+
+    void _beamToStream(
+    	ostream& os, const GaussianBeam& beam, const Unit& unit
+    ) const;
 };
 
 

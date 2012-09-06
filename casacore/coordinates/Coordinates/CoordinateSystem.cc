@@ -763,11 +763,23 @@ const SpectralCoordinate& CoordinateSystem::spectralCoordinate() const {
 	}
 	return spectralCoordinate(spectralCoordinateNumber());
 }
+
 const StokesCoordinate& CoordinateSystem::stokesCoordinate(uInt which) const {
     AlwaysAssert(which < nCoordinates() && 
 		 coordinates_p[which]->type() == Coordinate::STOKES, AipsError);
     return dynamic_cast<const StokesCoordinate &>(*(coordinates_p[which]));
 }
+
+const StokesCoordinate& CoordinateSystem::stokesCoordinate() const {
+	if (! this->hasPolarizationCoordinate()) {
+		throw AipsError(
+			String(__FUNCTION__)
+			+ ": Coordinate system has no polarization coordinate"
+		);
+	}
+	return stokesCoordinate(polarizationCoordinateNumber());
+}
+
 
 const QualityCoordinate& CoordinateSystem::qualityCoordinate(uInt which) const {
     AlwaysAssert(which < nCoordinates() &&
