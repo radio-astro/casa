@@ -1360,7 +1360,7 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
                               const CoordinateSystem& coords,
                               Int slice, Int nslice){
     //bypass this for now
-    //
+  return False;
     // Enforce that all SPWs are in the same frequency frame.
     //
     // If all the SPWs in the MS are in LSRK frame, we can do data
@@ -1394,7 +1394,7 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
     if(nchanPerSlice_p>0){
         specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
-        specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))-0.5);
+        specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))+0.5);
         chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
     }
     if(end < start){
@@ -1413,6 +1413,8 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     if(spwb.nelements()==0)
         return False;
 
+    //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
+    //	 <<  blockSpw_p[0] << endl;
     //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
     vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
 
