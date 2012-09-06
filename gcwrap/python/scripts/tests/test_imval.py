@@ -312,7 +312,7 @@ class imval_test(unittest.TestCase):
     
         results=None
         try:
-            results = imval( imagename=image_file, box=[1,2,3,4] )
+            results = imval( imagename=image_file, box="1,2,3,4" )
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs'] \
@@ -355,7 +355,7 @@ class imval_test(unittest.TestCase):
     
         results=None
         try:
-            results = imval( imagename=image_file, chans=10 )
+            results = imval( imagename=image_file, chans="10" )
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs'] \
