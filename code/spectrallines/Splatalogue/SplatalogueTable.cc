@@ -36,6 +36,9 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <iomanip>
 
+#include <iostream>
+using namespace std;
+
 namespace casa {
 
 const String SplatalogueTable::SPECIES = "SPECIES";
@@ -103,7 +106,7 @@ String SplatalogueTable::list() const {
 	ROScalarColumn<Float> eu(*this, EU);
 	ROScalarColumn<String> linelist(*this, LINELIST);
 
-	char cspecies[15], crec[3], cchemName[21], cfreq[12], cqns[21],
+	char cspecies[15], crec[11], cchemName[21], cfreq[12], cqns[21],
 		cintensity[10], csmu2[10], clogA[10], cel[10], ceu[10],
 		clinelist[11];
 	ostringstream os;
@@ -116,7 +119,7 @@ String SplatalogueTable::list() const {
     for (uInt i=0; i<nrow(); i++) {
     	sprintf(cspecies, "%-14.14s", species.asString(i).chars());
     	rec = recommended.asBool(i) ? "*" : " ";
-    	sprintf(crec, "%10s", rec.chars());
+    	sprintf(crec, "%10.10s", rec.chars());
     	sprintf(cchemName, "%-20.20s", chemName.asString(i).chars());
     	sprintf(cfreq, "%11.6f", freq.asdouble(i));
     	sprintf(cqns, "%-20.20s", qns.asString(i).chars());
