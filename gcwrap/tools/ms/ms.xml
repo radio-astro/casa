@@ -1838,8 +1838,8 @@ Date/Time:                         RR:                      RL:                 
      <shortdescription>
        Return the selected indices of the MS database.  The keys in
        the record are the same as those used in msselect function
-       (i.e. "spw", "time", "field", "baseline", "scan", "scanintent",
-       "polarization" and "uvdist").
+       (i.e. 'spw', 'time', 'field', 'baseline', 'scan', 'scanintent',
+       'polarization' and 'uvdist').
      </shortdescription>
      <keyword>msselectedindices</keyword>
      <input>

@@ -5,6 +5,9 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"     
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	 <xsl:output omit-xml-declaration="yes"/>   
+
+<xsl:param name="methodname"/>
+
 <xsl:template match="*">
 <xsl:apply-templates select="aps:interface"/>
 </xsl:template>
@@ -13,15 +16,16 @@
 %module <xsl:value-of select="@name"/>
 <xsl:text disable-output-escaping="yes">
 %include &lt;tools/casa_typemaps.i&gt;
+%feature("kwargs");
+%feature("autodoc");
 </xsl:text>
 <xsl:for-each select="aps:method">
    <xsl:if test="lower-case(@type)!='constructor'">
       <xsl:apply-templates select="aps:output"/>
+      <xsl:apply-templates select="aps:shortdescription"><xsl:with-param name="methodname"><xsl:value-of select="@name"/></xsl:with-param></xsl:apply-templates>
    </xsl:if>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-%feature("kwargs");
-%feature("autodoc");
 %exception {
    try {
       $action
@@ -37,6 +41,11 @@
 #include &lt;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;
 %}
 </xsl:text>
+</xsl:template>
+
+<xsl:template match="aps:shortdescription">  
+	<xsl:param name="methodname"/>
+	<xsl:text disable-output-escaping="yes">%feature("docstring", "</xsl:text><xsl:value-of select="."/><xsl:text>") </xsl:text><xsl:value-of select="$methodname"/>;
 </xsl:template>
 
 <xsl:template match="aps:output">  
