@@ -65,6 +65,7 @@ listobs.xml
 listpartition.xml
 listsdm.xml
 listvis.xml
+makemask.xml
 mosaic.xml
 msview.xml
 msmoments.xml 
