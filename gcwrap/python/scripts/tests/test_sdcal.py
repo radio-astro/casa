@@ -241,8 +241,14 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        self.res=sdcal()
-        self.assertFalse(self.res)
+        try:
+            self.res=sdcal()
+            #self.assertFalse(self.res)
+            self.fail("The task must throw exception.")
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test001(self):
         """Test 001: Time averaging without weight"""
@@ -269,8 +275,14 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
     def test003(self):
         """Test 003: Invalid calibration mode"""
         # argument verification error
-        self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
-        self.assertFalse(self.res)
+        try:
+            self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
+            #self.assertFalse(self.res)
+            self.fail("The task must throw exception.")
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test004(self):
         """Test 004: Specify existing output file name with overwrite=False"""
