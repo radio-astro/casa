@@ -18,6 +18,7 @@ test_conjugatevis               dpetry@eso.org
 test_coordsys                   dmehring@nrao.edu
 test_csvclean                   kgolap@aoc.nrao.edu
 test_cvel                       dpetry@eso.org
+test_cvelfreqs                  dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixplanets                 dpetry@nrao.edu
 test_fixvis                     dpetry@nrao.edu

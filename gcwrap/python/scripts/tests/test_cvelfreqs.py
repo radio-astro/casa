@@ -6,6 +6,7 @@ from __main__ import default
 from tasks import *
 from taskinit import *
 import unittest
+import numpy as np
 
 # Test Matrix
 # mode = 'channel', 'frequency', 'velocity'
@@ -37,7 +38,7 @@ def testit():
         try:
             outf = ms.cvelfreqs(spwids=myspwids,mode=mymode,nchan=mynchan,start=mystart,width=mywidth)
             if not type(outf)==type([]):
-                outf = [outf]
+                outf = list(outf)
             print mycase
             print outf
             print myexpectation
@@ -91,7 +92,7 @@ def testitb():
             print mycase
             print outf
             if not type(outf)==type([]):
-                outf = [outf]
+                outf = list(outf)
             fexpectation = []
             vexpectation = []
             vout = []
@@ -130,7 +131,7 @@ def testitc():
             print mycase
             print outf
             if not type(outf)==type([]):
-                outf = [outf]
+                outf = list(outf)
             fexpectation = []
             vexpectation = []
             vout = []
@@ -2683,14 +2684,18 @@ class cvelfreqs_test(unittest.TestCase):
         ms.open('sampler.ms')
 
         channelfreqs = ms.cvelfreqs(mode='channel', spwids=[0,1,2], start=1, width=2, nchan=10)
+        channelfreqs = list(channelfreqs)
         print "channel freqs ", channelfreqs 
         frequencyfreqs = ms.cvelfreqs(mode='frequency', spwids=[0,1,2], start=str(1E9+60)+'Hz', width='100Hz', nchan=10)
+        frequencyfreqs = list(frequencyfreqs)
         print "frequency freqs ", frequencyfreqs
         restfrqo =  (-1000./299792458.0 + 1.) * (1E10 + 10.)
         opticalfreqs = ms.cvelfreqs(mode='velocity', veltype='optical', spwids=[0,1,2], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqo)
+        opticalfreqs = list(opticalfreqs)
         print "optical freqs ", opticalfreqs
         restfrqr = (1E10 + 10.) / (1 - (-1000./299792458.0))
         radiofreqs  = ms.cvelfreqs(mode='velocity', veltype='radio', spwids=[0,1,2], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqr)
+        radiofreqs = list(radiofreqs)
         print "radio freqs ", radiofreqs
 
         ms.close()
@@ -2786,9 +2791,15 @@ class cvelfreqs_test(unittest.TestCase):
         myfailures = 0
         
         newchannelfreqs = ms.cvelfreqs(mode='channel', spwids=[3])
+        newchannelfreqs = list(newchannelfreqs)
+        
         newfrequencyfreqs = ms.cvelfreqs(mode='frequency', spwids=[4], start=str(1E9+60)+'Hz', width='100Hz', nchan=10)
+        newfrequencyfreqs = list(newfrequencyfreqs)
+        
         newopticalfreqs = ms.cvelfreqs(mode='velocity', veltype='optical', spwids=[5], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqo)
+        newopticalfreqs = list(newopticalfreqs)
         newradiofreqs  = ms.cvelfreqs(mode='velocity', veltype='radio', spwids=[6], start="-1001m/s", width='-2m/s', nchan=10, restfreq=restfrqr)
+        newradiofreqs = list(newradiofreqs)
 
         ms.close()
 
