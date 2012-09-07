@@ -5174,6 +5174,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel numbers to av. over
       vector<vector<Double> > averageChanFrac; // for each new channel store the
       // channel fraction for each old channel
+
       // initialise the averaging vectors
       for(uInt i=0; i<newNUM_CHAN; i++){
 	averageN.push_back(1);
@@ -5188,7 +5189,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	averageWhichChan.push_back(tv);
 	vector<Double> tvd; // another one
-	tvd.push_back(1.);
+	tvd.push_back(1.); 
 	averageChanFrac.push_back(tvd);
       }
 
@@ -5484,7 +5485,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // k's the one 
  	    if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap
 	      Double overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
-	      if(overlap_frac>0.5){ // merge channel k completely with channel j 
+	      if(overlap_frac>0.01){ // merge channel k completely with channel j 
 		Double newWidth = uboundk - lboundj;
 		Double newCenter = (lboundj+uboundk)/2.;
 		mergedChanFreq[j] =  newCenter;
@@ -5493,7 +5494,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		mergedRes[j] = newWidth; 
 		mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; 
 	      }
-	      else{ // create separate, more narrow channel
+	      else{ // create separate, (slightly) more narrow channel
 		Double newWidth = uboundk - uboundj;
 		Double newCenter = (uboundj+uboundk)/2.;
 		vector<Int> tv;
@@ -6173,31 +6174,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 
 	    Bool haveCoverage = False;
-	    Vector<Double> numNominal(nCorrelations, 0.);
 	    Vector<Double> modNorm(nCorrelations, 0.); // normalization for the averaging of the contributions from the SPWs
-	    for(Int j=0; j<averageN[i]; j++){
-	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
-		for(uInt k=0; k<nCorrelations; k++){
+	    vector<vector<Double> > modAverageChanFrac(averageN[i], vector<Double>(nCorrelations, 0.));
+	    for(uInt k=0; k<nCorrelations; k++){
+	      for(Int j=0; j<averageN[i]; j++){
+		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
 		    haveCoverage = True;
-		    if(averageChanFrac[i][j]==1.){ // count number of channels right on this frequency
-		      numNominal(k) += 1.;
-		    }
-		    modNorm(k) += averageChanFrac[i][j];
 		    if(FLAGColIsOK){
-		      newFlag(k,i) = False; // there is valid data for this channel => don't flag in output
+		      newFlag(k,i) = False; // there is valid data for this channel and correlation => don't flag in output
 		    }
-		  }
-		}
-		for(uInt k=0; k<nCorrelations; k++){
-		  if(numNominal(k)>0. && numNominal(k)<averageN[i]-1){ // there are channels right on this frequency
-		    // and there are at least two more not on this frequency.
-		    // In order to make cvel's output agree with the interpolation done in clean,
-		    //  need to reduce the weight of the channels right on the frequency. 
-		    if(averageChanFrac[i][j]==1.){ // this is one of them
-		      averageChanFrac[i][j] = 0.1;
-		      modNorm(k) -= 0.9; // correct norm
-		    }
+		    modAverageChanFrac[j][k] = averageChanFrac[i][j];
+		    modNorm(k) += averageChanFrac[i][j];
 		  }
 		}
 	      }
@@ -6217,7 +6205,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
-		      weight = averageChanFrac[i][j] / modNorm(k);
+		      weight = modAverageChanFrac[j][k] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;			
@@ -6227,10 +6215,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 // 			if (!wasprinted[i][j]){
 // 			  cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
 // 			       << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 			       << " i, j, k " << i << ", " << j << ", " << k << " averageChanFrac[i][j] " << averageChanFrac[i][j] 
-// 			       << " modNorm(k) " << modNorm(k) << " newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
+// 			       << " i, j, k " << i << ", " << j << ", " << k << " modAverageChanFrac[j][k] " << modAverageChanFrac[j][k] 
+// 			       << " modNorm(k) " << modNorm(k) << " newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
 // 			       << newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
-// 			       << " newCorrectedData(k,i) " << newData(k,i) 
+// 			       << " newData(k,i) " << newData(k,i) 
 // 			       << " weight " << weight << endl;
 // 			  wasprinted[i][j] = True;
 // 			} 
