@@ -133,22 +133,29 @@ class ia_tofits_test(unittest.TestCase):
         fitsname = "myfits.fits"
         myia.tofits(outfile=fitsname)
         myia.done()
-        myia.fromfits("", fitsname)
-        ep = 1e-7
-        for c in range(shape[2]):
-            for p in range(shape[3]):
-                beam = myia.restoringbeam(c, p)
-                majax = qa.convert(beam["major"], "arcsec")["value"]
-                minax = qa.convert(beam["minor"], "arcsec")["value"]
-                pa = qa.convert(beam["positionangle"], "deg")["value"]
-                if c == 6 and p == 3:
-                    self.assertTrue(abs(1 - majax/cmaj["value"]) < ep)
-                    self.assertTrue(abs(1 - minax/cmin["value"]) < ep)
-                    self.assertTrue(abs(1 - pa/cpa["value"]) < ep)
-                else:
-                    self.assertTrue(abs(1 - majax/bmaj["value"]) < ep)
-                    self.assertTrue(abs(1 - minax/bmin["value"]) < ep)
-                    self.assertTrue(abs(1 - pa/bpa["value"]) < ep)
+        for i in [0, 1]:
+            if i == 0:
+                myia.fromfits("", fitsname)
+            else:
+                myia.open(fitsname)
+            print "*** name " + myia.name()
+            print "*** " + str(i)
+            ep = 1e-7
+            for c in range(shape[2]):
+                for p in range(shape[3]):
+                    beam = myia.restoringbeam(c, p)
+                    majax = qa.convert(beam["major"], "arcsec")["value"]
+                    minax = qa.convert(beam["minor"], "arcsec")["value"]
+                    pa = qa.convert(beam["positionangle"], "deg")["value"]
+                    if c == 6 and p == 3:
+                        self.assertTrue(abs(1 - majax/cmaj["value"]) < ep)
+                        self.assertTrue(abs(1 - minax/cmin["value"]) < ep)
+                        self.assertTrue(abs(1 - pa/cpa["value"]) < ep)
+                    else:
+                        self.assertTrue(abs(1 - majax/bmaj["value"]) < ep)
+                        self.assertTrue(abs(1 - minax/bmin["value"]) < ep)
+                        self.assertTrue(abs(1 - pa/bpa["value"]) < ep)
+            myia.done()
 
 def suite():
     return [ia_tofits_test]
