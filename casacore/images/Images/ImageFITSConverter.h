@@ -53,6 +53,7 @@ class LogIO;
 class Unit;
 class LoggerHolder;
 class ConstFitsKeywordList;
+class FitsInput;
 
 // <summary>
 // Interconvert between AIPS++ Images and FITS files.
@@ -256,7 +257,7 @@ public:
 //                                                 LogIO& os, IPosition& shape, Bool dropStokes);
 
 // Recover ImageInfo from header. Used keywords are removed from header
-    static ImageInfo getImageInfo (RecordInterface& header);
+    static ImageInfo getImageInfo (RecordInterface& header, FitsInput& input);
 
 //Old version
 //    static ImageInfo getImageInfoOld (RecordInterface& header);
@@ -326,6 +327,12 @@ private:
 // Create an open FITS file with the name given
    static Bool openFitsOutput(String &error, FitsOutput *(&openFitsOutput), const String &fitsName,
    		                            const Bool &allowOverwrite);
+
+   // read the BEAMS table if present and add the restoring beams to <src>info</src>
+     static void _readBeamsTable(ImageInfo& info, FitsInput& infile);
+
+     static void _writeBeamsTable(FitsOutput *const &outfile, const ImageInfo& info);
+
 };
 
 
@@ -345,20 +352,12 @@ template<class HDUType> class ImageFITSConverterImpl
 public:
     static void FITSToImage(ImageInterface<Float> *&newImage,
 			    String &error,
-			    const String &imageName,
+			    FitsInput& fitsInput,
+			    const String &newImageName,
 			    uInt whichRep,
 			    HDUType &fitsImage,
 			    uInt memoryInMB = 64,
                             Bool zeroBlanks=False);
-
-
-// Old version
-//    static void FITSToImageOld(ImageInterface<Float> *&newImage,
-//			    String &error,
-//			    const String &imageName,
-//			    HDUType &fitsImage,
-//			    uInt memoryInMB = 64,
-//                           Bool zeroBlanks=False);
 
 };
 

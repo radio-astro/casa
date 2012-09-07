@@ -41,6 +41,8 @@
 #include <casa/Quanta/Unit.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
+#include <fits/FITS/BinTable.h>
+#include <tables/Tables/ScalarColumn.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -53,7 +55,6 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
                              Int& magicInt, Bool& hasBlanks, 
                              LogIO& os, FitsInput& infile, uInt whichRep)
 {
-   
 // Shape
    PrimaryArray<T> fitsImage(infile);
    Int ndim = fitsImage.dims();
@@ -143,10 +144,7 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
 // Brightness Unit
 
     brightnessUnit = ImageFITSConverter::getBrightnessUnit(headerRec, os);
-
-// ImageInfo
-
-    imageInfo = ImageFITSConverter::getImageInfo(headerRec);
+    imageInfo = ImageFITSConverter::getImageInfo(headerRec, infile);
 
 // If we had one of those unofficial pseudo-Stokes on the Stokes axis, store it in the imageInfo
 
@@ -191,7 +189,7 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
 // Try and find the restoring beam in the history cards if
 // its not in the header
 
-    if (! imageInfo.hasSingleBeam()) {
+    if (! imageInfo.hasBeam()) {
        imageInfo.getRestoringBeam(log);
     }
 }
@@ -300,7 +298,7 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
 
 // ImageInfo
 
-    imageInfo = ImageFITSConverter::getImageInfo(headerRec);
+    imageInfo = ImageFITSConverter::getImageInfo(headerRec, infile);
 
 // If we had one of those unofficial pseudo-Stokes on the Stokes axis, store it in the imageInfo
 

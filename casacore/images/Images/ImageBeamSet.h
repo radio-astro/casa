@@ -214,6 +214,9 @@ public:
 		IPosition& pos, const uInt polarization
 	) const;
 
+	// get the axis number for the specified type. Return -1 if there is no such axis
+	Int getAxis(const AxisType type) const;
+
 private:
 
 	typedef std::map<AxisType, uInt> AxesMap;

@@ -605,19 +605,21 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		Array<Float> pixels(vec.reform(IPosition(shape)));
 		rstat = imagefromarray(outfile, pixels, csys, linear, overwrite);
 
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 	}
 	return rstat;
 }
 
-Bool ImageAnalysis::imagefromfits(const String& outfile,
-		const String& fitsfile, const Int whichrep, const Int whichhdu,
-		const Bool zeroBlanks, const Bool overwrite) {
+Bool ImageAnalysis::imagefromfits(
+	const String& outfile, const String& fitsfile,
+	const Int whichrep, const Int whichhdu,
+	const Bool zeroBlanks, const Bool overwrite
+) {
 	Bool rstat = False;
 	try {
-		*_log << LogOrigin("ImageAnalysis", "imagefromfits");
+		*_log << LogOrigin(className(), __FUNCTION__);
 
 		// Check output file
 		if (!overwrite && !outfile.empty()) {
@@ -644,9 +646,10 @@ Bool ImageAnalysis::imagefromfits(const String& outfile,
 		}
 		_image.reset(pOut);
 		rstat = True;
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+	}
+	catch (const AipsError& x) {
+		*_log << "Exception Reported: " << x.getMesg()
+				<< LogIO::EXCEPTION;
 	}
 	return rstat;
 }
