@@ -51,10 +51,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </param>
 
             <!-- Mode = copy,expand,merge -->
-            <param type="string" name="inpmask" subparam="true">
+            <!--<param type="string" name="inpmask" subparam="true">-->
+            <param type="any" name="inpmask" subparam="true">
             <!-- for merge, inpmask can be list -->
+              <any type="variant" limittypes="string stringArray"/>
               <description>Embedded mask to use (default, mask0,...). Use \'\' for integer mask (zero vs non-zero in inpimage)</description>
-              <value>mask0</value>
+              <value type="string">mask0</value>
             </param>
         
             <!-- Mode = expand -->
@@ -107,8 +109,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="outfreqs"><value type="intArray">[]</value></default>
                     </equals>
                     <equals value="merge">
-                        <default param="inpimage"><value type="stringArray"></value></default>
-                        <default param="regionlist"><value type="stringArray"></value></default>
+                        <default param="inpimage"><value type="stringArray">[]</value></default>
+                        <default param="inpmask"><value type="stringArray">[]</value></default>
+                    <!--    <default param="regionlist"><value type="stringArray"></value></default>-->
                     </equals>
                     <!--<equals value="draw">
                         <default param="inpimage"><value type="string"></value></default>
