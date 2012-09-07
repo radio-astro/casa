@@ -460,7 +460,7 @@ def cvel(vis, outputvis,
         return True
 
     except Exception, instance:
-        casalog.post("Error ...", 'SEVERE')
+        print '*** Error *** ',instance
         # delete temp output (comment out for debugging)
         if os.path.exists(outputvis+".spwCombined"):
             casalog.post("Deleting temporary output files ...", 'INFO')
