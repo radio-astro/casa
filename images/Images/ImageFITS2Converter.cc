@@ -34,6 +34,7 @@
 #include <lattices/Lattices/MaskedLatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <fits/FITS/fitsio.h>
+#include <fits/FITS/FITSTable.h>
 #include <fits/FITS/hdu.h>
 #include <fits/FITS/FITSDateUtil.h>
 #include <fits/FITS/FITSKeywordUtil.h>
@@ -52,7 +53,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Containers/Record.h>
-
+#include <casa/Containers/RecordField.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/OS/File.h>
@@ -71,144 +72,143 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Bool ImageFITSConverter::FITSToImage(ImageInterface<Float> *&newImage,
-				     String &error,
-				     const String &imageName,
-				     const String &fitsName, 
-				     uInt whichRep,
-				     uInt whichHDU,
-				     uInt memoryInMB,
-				     Bool allowOverwrite,
-				     Bool zeroBlanks)
-{
-    newImage = 0;
-    error = "";
+Bool ImageFITSConverter::FITSToImage(
+	ImageInterface<Float> *&newImage, String &error,
+	const String &imageName, const String &fitsName,
+	uInt whichRep, uInt whichHDU, uInt memoryInMB,
+	Bool allowOverwrite, Bool zeroBlanks
+) {
+	newImage = 0;
+	error = "";
+	// First make sure that imageName is writable and does not already
+	// exist.  Optionally remove it if it does.  If imageName is empty,
+	// great.  That means we are going to make a TempImage
 
-// First make sure that imageName is writable and does not already
-// exist.  Optionally remove it if it does.  If imageName is empty,
-// great.  That means we are going to make a TempImage
+	if (!imageName.empty()) {
+		File imfile(imageName);
+		if (!ImageFITSConverter::removeFile (error, imfile, imageName, allowOverwrite)) return False;
 
-    if (!imageName.empty()) {
-       File imfile(imageName);
-       if (!ImageFITSConverter::removeFile (error, imfile, imageName, allowOverwrite)) return False;
-//
-       Directory imdir = imfile.path().dirName();
-       if (!imdir.exists() || !imdir.isWritable()) {
-          error = String("Directory ") + imdir.path().originalName() + 
-                  " does not exist or is not writable";
-          return False;
-       }
-   }
-//
-    File fitsfile(fitsName);
-    if (!fitsfile.exists() || !fitsfile.isReadable() || 
-	!fitsfile.isRegular()) {
-        error = fitsName + " does not exist or is not readable";
-	return False;
-    }
-//
-// OK, now see if we can attach the FITS reading classes
-//
-    FitsInput infile(fitsfile.path().expandedName().chars(), FITS::Disk);
-    if (infile.err()) {
-        error = String("Cannot open file (or other I/O error): ") + fitsName;
-	return False;
-    }
-//
-// Advance to the right HDU
-//
-    for (uInt i=0; i<whichHDU; i++) {
-	infile.skip_hdu();
-	if (infile.err()) {
-	    error = "Error advancing to image in file: " + fitsName;
-	    return False;
+		Directory imdir = imfile.path().dirName();
+		if (!imdir.exists() || !imdir.isWritable()) {
+			error = String("Directory ") + imdir.path().originalName() +
+					" does not exist or is not writable";
+			return False;
+		}
 	}
-    }
-//
-// Make sure the current spot in the FITS file is an image
-//
-    if (infile.rectype() != FITS::HDURecord ||
-	(infile.hdutype() != FITS::PrimaryArrayHDU &&
-         infile.hdutype() != FITS::ImageExtensionHDU)) {
-	error = "No image at specified location in file " + fitsName;
-        return False;
-    }
-//    
-// The rest has to be done in a type dependent way - hand over to template
-// functions.
-//
-    switch(infile.datatype()) {
-    case FITS::BYTE:
-        {
-	    if (infile.hdutype() == FITS::PrimaryArrayHDU) {
-		PrimaryArray<unsigned char> fitsdata(infile);
-		ImageFITSConverterImpl<PrimaryArray<unsigned char> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    } else {
-		ImageExtension<unsigned char> fitsdata(infile);
-		ImageFITSConverterImpl<ImageExtension<unsigned char> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    }
-        }
-    break;
-    case FITS::SHORT:
-        {
-	    if (infile.hdutype() == FITS::PrimaryArrayHDU) {
-		PrimaryArray<short> fitsdata(infile);
-		ImageFITSConverterImpl<PrimaryArray<short> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    } else {
-		ImageExtension<short> fitsdata(infile);
-		ImageFITSConverterImpl<ImageExtension<short> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    }
-        }
-        break;
-    case FITS::LONG:
-        {
-	    if (infile.hdutype() == FITS::PrimaryArrayHDU) {
-		PrimaryArray<FitsLong> fitsdata(infile);
-		ImageFITSConverterImpl<PrimaryArray<FitsLong> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    } else {
-		ImageExtension<FitsLong> fitsdata(infile);
-		ImageFITSConverterImpl<ImageExtension<FitsLong> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    }
-        }
-        break;
-    case FITS::FLOAT:
-        {
-	    if (infile.hdutype() == FITS::PrimaryArrayHDU) {
-		PrimaryArray<Float> fitsdata(infile);
-		ImageFITSConverterImpl<PrimaryArray<Float> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    } else {
-		ImageExtension<Float> fitsdata(infile);
-		ImageFITSConverterImpl<ImageExtension<Float> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    }
-        }
-        break;
-    case FITS::DOUBLE:
-        {
-	    if (infile.hdutype() == FITS::PrimaryArrayHDU) {
-		PrimaryArray<Double> fitsdata(infile);
-		ImageFITSConverterImpl<PrimaryArray<Double> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    } else {
-		ImageExtension<Double> fitsdata(infile);
-		ImageFITSConverterImpl<ImageExtension<Double> >::FITSToImage(
-		       newImage, error, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
-	    }
-        }
-        break;
-    default:
-        error = "Unknown datatype  - no data returned";
-	return False;
-    }
-    return True;
 
+	File fitsfile(fitsName);
+	if (
+		! fitsfile.exists() || !fitsfile.isReadable()
+		|| ! fitsfile.isRegular()
+	) {
+		error = fitsName + " does not exist or is not readable";
+		return False;
+	}
+
+	// OK, now see if we can attach the FITS reading classes
+
+	FitsInput infile(fitsfile.path().expandedName().chars(), FITS::Disk);
+
+	if (infile.err()) {
+		error = String("Cannot open file (or other I/O error): ") + fitsName;
+		return False;
+	}
+	//
+	// Advance to the right HDU
+	//
+	for (uInt i=0; i<whichHDU; i++) {
+		infile.skip_hdu();
+		if (infile.err()) {
+			error = "Error advancing to image in file: " + fitsName;
+			return False;
+		}
+	}
+	//
+	// Make sure the current spot in the FITS file is an image
+	//
+	if (infile.rectype() != FITS::HDURecord ||
+			(infile.hdutype() != FITS::PrimaryArrayHDU &&
+					infile.hdutype() != FITS::ImageExtensionHDU)) {
+		error = "No image at specified location in file " + fitsName;
+		return False;
+	}
+	// The rest has to be done in a type dependent way - hand over to template
+	// functions.
+	switch(infile.datatype()) {
+	case FITS::BYTE:
+	{
+		if (infile.hdutype() == FITS::PrimaryArrayHDU) {
+			PrimaryArray<unsigned char> fitsdata(infile);
+			ImageFITSConverterImpl<PrimaryArray<unsigned char> >::FITSToImage(
+				newImage, error, infile, imageName, whichRep,
+				fitsdata, memoryInMB, zeroBlanks
+			);
+		} else {
+			ImageExtension<unsigned char> fitsdata(infile);
+			ImageFITSConverterImpl<ImageExtension<unsigned char> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		}
+	}
+	break;
+	case FITS::SHORT:
+	{
+		if (infile.hdutype() == FITS::PrimaryArrayHDU) {
+			PrimaryArray<short> fitsdata(infile);
+			ImageFITSConverterImpl<PrimaryArray<short> >::FITSToImage(
+				newImage, error, infile, imageName,
+				whichRep, fitsdata, memoryInMB, zeroBlanks
+			);
+		} else {
+			ImageExtension<short> fitsdata(infile);
+			ImageFITSConverterImpl<ImageExtension<short> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		}
+	}
+	break;
+	case FITS::LONG:
+	{
+		if (infile.hdutype() == FITS::PrimaryArrayHDU) {
+			PrimaryArray<FitsLong> fitsdata(infile);
+			ImageFITSConverterImpl<PrimaryArray<FitsLong> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		} else {
+			ImageExtension<FitsLong> fitsdata(infile);
+			ImageFITSConverterImpl<ImageExtension<FitsLong> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		}
+	}
+	break;
+	case FITS::FLOAT:
+	{
+		if (infile.hdutype() == FITS::PrimaryArrayHDU) {
+			PrimaryArray<Float> fitsdata(infile);
+			ImageFITSConverterImpl<PrimaryArray<Float> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		} else {
+			ImageExtension<Float> fitsdata(infile);
+			ImageFITSConverterImpl<ImageExtension<Float> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		}
+	}
+	break;
+	case FITS::DOUBLE:
+	{
+		if (infile.hdutype() == FITS::PrimaryArrayHDU) {
+			PrimaryArray<Double> fitsdata(infile);
+			ImageFITSConverterImpl<PrimaryArray<Double> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		} else {
+			ImageExtension<Double> fitsdata(infile);
+			ImageFITSConverterImpl<ImageExtension<Double> >::FITSToImage(
+					newImage, error, infile, imageName, whichRep, fitsdata, memoryInMB, zeroBlanks);
+		}
+	}
+	break;
+	default:
+		error = "Unknown datatype  - no data returned";
+		return False;
+	}
+	return True;
 }
 
 Bool ImageFITSConverter::ImageToFITS(
@@ -244,7 +244,7 @@ Bool ImageFITSConverter::ImageToFITS(
 		// put the image to the FITSOut
 		if (!ImageFITSConverter::ImageToFITSOut(error, os, image, outfile, memoryInMB,
 				preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-				verbose, stokesLast,	preferWavelength,	airWavelength,	True, False, origin)){
+				verbose, stokesLast,	preferWavelength,	airWavelength,	True, True, origin)){
 			return False;
 		}
 	}
@@ -431,8 +431,9 @@ CoordinateSystem ImageFITSConverter::getCoordinateSystem (Int& stokesFITSValue,
 
 
 
-ImageInfo ImageFITSConverter::getImageInfo (RecordInterface& header)
-{
+ImageInfo ImageFITSConverter::getImageInfo (
+	RecordInterface& header, FitsInput& input
+) {
    ImageInfo ii;
    Vector<String> errors;
    Bool ok = ii.fromFITS (errors, header);
@@ -440,10 +441,70 @@ ImageInfo ImageFITSConverter::getImageInfo (RecordInterface& header)
       LogIO log(LogOrigin("ImageFITSConverter::getImageInfo", "ImageToFITS", WHERE));
       log << errors << endl;
    }
-//
+   _readBeamsTable(ii, input);
+
    FITSKeywordUtil::removeKeywords(header, ImageInfo::keywordNamesFITS());
-//
    return ii;
+}
+
+
+
+void ImageFITSConverter::_readBeamsTable(
+	ImageInfo& info, FitsInput& infile
+) {
+	if (info.hasBeam()) {
+		return;
+	}
+	Table beamTable;
+	while (infile.rectype() != FITS::EndOfFile && !infile.err()) {
+		if (infile.hdutype() != FITS::BinaryTableHDU) {
+			infile.skip_hdu();
+		}
+		else {
+			BinaryTable binTab(infile);
+			String type = binTab.extname();
+			if (type.contains("BEAMS")) {
+				beamTable = binTab.fullTable();
+				break;
+			}
+			else {
+				throw AipsError("Unknown table " + type);
+			}
+		}
+	}
+	if (beamTable.nrow() == 0) {
+		// no beam table found
+		return;
+	}
+	LogIO os;
+	os << LogOrigin("ImageFITSConverter", __FUNCTION__)
+		<< LogIO::NORMAL << "Loading multiple beams from BEAMS table"
+		<< LogIO::POST;
+	uInt nChan = beamTable.keywordSet().asuInt("NCHAN");
+	uInt	 nPol = beamTable.keywordSet().asuInt("NPOL");
+
+	info.setAllBeams(nChan, nPol, GaussianBeam::NULL_BEAM);
+	ROScalarColumn<Float> bmaj(beamTable, "BMAJ");
+	ROScalarColumn<Float> bmin(beamTable, "BMIN");
+	ROScalarColumn<Float> bpa(beamTable, "BPA");
+	ROScalarColumn<Int> chan(beamTable, "CHAN");
+	ROScalarColumn<Int> pol(beamTable, "POL");
+
+	String bmajUnit = bmaj.keywordSet().asString("TUNIT");
+	String bminUnit = bmin.keywordSet().asString("TUNIT");
+	String bpaUnit = bpa.keywordSet().asString("TUNIT");
+	GaussianBeam beam;
+	Quantity xmaj(0, bmajUnit);
+	Quantity xmin(0, bminUnit);
+	Quantity xpa(0, bpaUnit);
+	for (uInt i=0; i<beamTable.nrow(); i++) {
+		xmaj.setValue(bmaj(i));
+		xmin.setValue(bmin(i));
+		xpa.setValue(bpa(i));
+		beam.setMajorMinor(xmaj, xmin);
+		beam.setPA(xpa);
+		info.setBeam(chan(i), pol(i), beam);
+	}
 }
 
 
@@ -1005,6 +1066,7 @@ Bool ImageFITSConverter::ImageToFITSOut(
 				header.setComment(miscname, image.miscInfo().comment(i));
 			}
 		}
+
 	}
 
 	//
@@ -1032,7 +1094,7 @@ Bool ImageFITSConverter::ImageToFITSOut(
 	// Set up the FITS header
 	FitsKeywordList kw;
 	kw = FITSKeywordUtil::makeKeywordList(primHead, True);
-
+	//kw.mk(FITS::EXTEND, True, "Tables may follow");
 	// add the general keywords for WCS and so on
 	ok = FITSKeywordUtil::addKeywords(kw, header);
 	if (! ok) {
@@ -1286,14 +1348,73 @@ Bool ImageFITSConverter::ImageToFITSOut(
 		if (pMeter) delete pMeter;
 		if (pMask!=0) delete pMask;
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		error = "Unknown error copying image to FITS file";
 		if (outfile) {
 			delete outfile;
 		}
 		return False;
 	}
+
+	_writeBeamsTable(outfile, ii);
+
 	return True;
+}
+
+void ImageFITSConverter::_writeBeamsTable(
+	FitsOutput *const &outfile, const ImageInfo& info
+) {
+
+	if (! info.hasMultipleBeams()) {
+		return;
+	}
+	// write multiple beams to a table
+	RecordDesc desc;
+	Record stringLengths; // no strings
+	Record units;
+	GaussianBeam beam = *info.getBeamSet().getBeams().begin();
+	desc.addField("BMAJ", TpFloat);
+	units.define("BMAJ", beam.getMajor().getUnit());
+	desc.addField("BMIN", TpFloat);
+	units.define("BMIN", beam.getMinor().getUnit());
+	desc.addField("BPA", TpFloat);
+	units.define("BPA", beam.getPA(True).getUnit());
+	desc.addField("CHAN", TpInt);
+	desc.addField("POL", TpInt);
+	Record extraKeywords;
+	extraKeywords.define("EXTNAME", "BEAMS");
+	extraKeywords.define("EXTVER", 1);
+	extraKeywords.define("XTENSION", "BINTABLE");
+	extraKeywords.setComment("XTENSION", "Binary extension");
+	extraKeywords.define("NCHAN", (Int)info.nChannels());
+	extraKeywords.define("NPOL", (Int)info.nStokes());
+	FITSTableWriter writer(
+		outfile, desc, stringLengths, info.getBeamSet().nelements(),
+		extraKeywords, units, False
+	);
+	RecordFieldPtr<Float> bmaj(writer.row(), "BMAJ");
+	RecordFieldPtr<Float> bmin(writer.row(), "BMIN");
+	RecordFieldPtr<Float> bpa(writer.row(), "BPA");
+	RecordFieldPtr<Int> chan(writer.row(), "CHAN");
+	RecordFieldPtr<Int> pol(writer.row(), "POL");
+	const ImageBeamSet beamSet = info.getBeamSet();
+	Int specAxis = beamSet.getAxis(ImageBeamSet::SPECTRAL);
+	Int polAxis = beamSet.getAxis(ImageBeamSet::POLARIZATION);
+	Bool hasSpectral = specAxis >= 0;
+	Bool hasStokes = polAxis >= 0;
+	IPosition axisPath = IPosition::makeAxisPath(beamSet.ndim());
+	for (
+		IPosition pos(beamSet.ndim(), 0);
+			pos!=beamSet.shape(); pos.next(beamSet.shape(), axisPath)
+	) {
+		GaussianBeam beam = beamSet(pos);
+		*chan = hasSpectral ? pos[specAxis] : -1;
+		*pol = hasStokes ? pos[polAxis] : -1;
+		*bmaj = beam.getMajor().getValue();
+		*bmin = beam.getMinor().getValue();
+		*bpa = beam.getPA("deg", True);
+		writer.write();
+	}
 }
 
 Bool ImageFITSConverter::QualImgToFITSOut(String &error,

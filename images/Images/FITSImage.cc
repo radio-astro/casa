@@ -809,5 +809,6 @@ void FITSImage::setMaskZero(Bool filterZero)
 	filterZeroMask_p = filterZero;
 }
 
+
 } //# NAMESPACE CASA - END
 

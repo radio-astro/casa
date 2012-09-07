@@ -471,26 +471,7 @@ Bool ImageInfo::toFITS(String & error, RecordInterface & outRecord) const {
 			outRecord.define("bpa", beam.getPA(Unit("deg")));
 		}
 		else {
-			outRecord.define("nchans", nChannels());
-			outRecord.define("nstokes", nStokes());
-			Vector<Double> bmaj(_beams.nelements());
-			Vector<Double> bmin(_beams.nelements());
-			Vector<Double> bpa(_beams.nelements());
-			Vector<Double>::iterator imaj = bmaj.begin();
-			Vector<Double>::iterator imin = bmin.begin();
-			Vector<Double>::iterator ipa = bpa.begin();
-			Array<GaussianBeam> beams = _beams.getBeams();
-			for (
-				Array<GaussianBeam>::const_iterator iter=beams.begin();
-				iter!=beams.end(); iter++, imaj++, imin++, ipa++
-			) {
-				*imaj = iter->getMajor("deg");
-				*imin = iter->getMinor("deg");
-				*ipa = iter->getPA(Unit("deg"));
-			}
-			outRecord.define("mbmaj", bmaj);
-			outRecord.define("mbmin", bmin);
-			outRecord.define("mbpa", bpa);
+			// caller now responsible for writing beams in multi-beam iamge
 		}
     }
     else {
@@ -565,47 +546,8 @@ Bool ImageInfo::fromFITS(
 				ok = False;
 			}
 		}
-		catch(AipsError x) {
+		catch(const AipsError& x) {
 			error(0) = "ERROR reading BMAJ, BMIN, BPA: " + x.getMesg();
-			ok = False;
-		}
-	}
-	else if (
-		header.isDefined("mbmaj1") && header.isDefined("mbmin1")
-		&& header.isDefined("mbpa1") && header.isDefined("nchans")
-		&& header.isDefined("nstokes")
-	) {
-		ImageBeamSet oldBeams = _beams;
-		try {
-			uInt nChans = header.asRecord("nchans").asuInt(0);
-			uInt nStokes = header.asRecord("nstokes").asuInt(0);
-			_setUpBeamArray(nChans, nStokes);
-			Array<GaussianBeam> beams = _beams.getBeams();
-			uInt count = 1;
-			for (
-				Array<GaussianBeam>::iterator iter=beams.begin();
-				iter!=beams.end(); iter++, count++
-			) {
-				String c = String::toString(count);
-				Double mbmaj = header.asRecord("mbmaj" + String::toString(c)).asDouble(0);
-				Double mbmin = header.asRecord("mbmin" + String::toString(c)).asDouble(0);
-				Double mbpa = header.asRecord("mbpa" + String::toString(c)).asDouble(0);
-				if (mbmaj < mbmin || mbmin < 0 || mbmaj < 0) {
-					throw AipsError(
-						"Invalid beam parameters from FITS header"
-					);
-				}
-				*iter = GaussianBeam(
-					Quantity(mbmaj, "deg"),
-					Quantity(mbmin, "deg"),
-					Quantity(mbpa, "deg")
-				);
-			}
-			_beams.setBeams(beams);
-		}
-		catch(AipsError x) {
-			_beams = oldBeams;
-			error(0) = "ERROR reading multibeams: " + x.getMesg();
 			ok = False;
 		}
 	}
