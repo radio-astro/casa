@@ -868,6 +868,17 @@ if( XERCES_VERSION VERSION_EQUAL   3.0 OR
 endif()
 
 #
+# Sqlite3
+#
+
+find_package ( SQLITE 3.3.6)
+if( NOT SQLITE_FOUND )
+  message (WARNING "Sqlite3 package not found")
+endif ( NOT SQLITE_FOUND )
+
+
+
+#
 # RPFITS (Fortran)
 #
 casa_find( RPFITS
@@ -911,7 +922,7 @@ casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
 casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost )
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost SQLITE)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
 casa_add_module( spectrallines CASACORE imageanalysis Boost)
 casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost stdcasa casadbus spectrallines)
