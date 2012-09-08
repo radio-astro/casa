@@ -53,7 +53,6 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, reg
     """
     (ia,) = gentools(['ia']) 
     casalog.origin('makemask')
-    print "Run the task"
     
     try:
         tmp_maskimage='__tmp_makemaskimage'
@@ -288,6 +287,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, reg
 	# mask name in outmask(''=mask0) of outimage.  e.g makemask(mode='merge', inpimage='myimage1.im', outmask='')
 	# if outmask ='', create an image mask. if outmask !='': write boolean mask of name specified in outmask in outimage
 	if mode=='merge':
+            print "merge mode..."
 	    sum_tmp_outfile='__tmp_outputmask'
             tmp_inmask='__tmp_frominmask'
             try:
@@ -298,7 +298,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, reg
 		    shutil.copytree(outimage,sum_tmp_outfile)
 		    #print "copied outimage to tmp file"
      
-		if type(inpimage)==list and len(inpimage)>1:
+		if type(inpimage)==list and len(inpimage)>0:
 		    # summing all the images
                     casalog.post('Summing all mask images in inpimage and  normalized to 1 for mask','INFO')
 		    for img in inpimage:
@@ -309,18 +309,21 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, reg
                         shutil.rmtree(tmpregrid)
 		    # get boolean masks
 		    #  will work in image(1/0) masks
-		if type(inpmask)==list and len(inpmask)>1:
+		if type(inpmask)==list and len(inpmask)>0:
                     casalog.post('Summing all T/F mask in inpmask and normalized to 1 for mask','INFO')
 		    for msk in inpmask:
 			if msk.find(':')<0:
 			    # assume default mask
 			    msk=msk+':mask0'
-			ia.open(msk)
+                        imname=msk[:msk.rfind(':')]
+			ia.open(imname)
 			inmasks=ia.maskhandler('get')
+                        ia.close()
+                        print "inmasks=",str(inmasks)
 			if not inmasks.count(msk.split(':')[-1]):
-			    raise TypeError, msk.split(':')[-1]+" does not exist in "+msk.split(':')[0]  
+			    raise TypeError, msk.split(':')[-1]+" does not exist in "+imname+" -available masks:"+str(inmasks)
 			# move T/F mask to image mask
-			pixelmask2cleanmask(msk.split(':')[-2], msk.split(':')[-1], tmp_inmask, True)    
+			pixelmask2cleanmask(imname, msk.split(':')[-1], tmp_inmask, True)    
 			regridmask(tmp_inmask,sum_tmp_outfile,'__tmp_fromTFmask')
 			addimagemask(sum_tmp_outfile,'__tmp_fromTFmask')
                         shutil.rmtree('__tmp_fromTFmask') 
@@ -403,7 +406,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear'):
     tmp_axes=[]
     for axi in axes:
         tmp_axes.append(axisorder.index(reforder[axi]))        
-    print "tmp_axes=",tmp_axes
+    #print "tmp_axes=",tmp_axes
     axes=tmp_axes
     ir=ia.regrid(outfile=outputmask,shape=oshp,csys=ocsys.torecord(),axes=axes,method=method)       
     ia.done()
@@ -413,8 +416,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear'):
 
 def addimagemask(sumimage, imagetoadd, threshold=0.0):
     (ia,) = gentools(['ia']) 
-    print "addimagemask: sumimage=",sumimage," imagetoadd=",imagetoadd
+    #print "addimagemask: sumimage=",sumimage," imagetoadd=",imagetoadd
     ia.open(sumimage)
     ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'+'+imagetoadd+')/('+sumimage+'+'+imagetoadd+'),'+sumimage+')')
-    print "calc done"
     ia.close()  
