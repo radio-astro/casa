@@ -2394,7 +2394,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 							    xindd, // the old channel centers 
 							    yin, // the old visibilities 
 							    yinFlags,// the old flags
-							    methodC, // the interpol method
+							    InterpolateArray1D<Double,Complex>::linear, // the interpol method
 							    False, // for flagging: good is not true
 							    doExtrapolate // do not extrapolate
 							    );	    
@@ -2445,7 +2445,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2477,7 +2478,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2500,7 +2502,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2538,7 +2541,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Float>::interpolate(fYinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							  xindd, yinf, yinFlags,
-							  methodF, False, doExtrapolate);	    
+							  InterpolateArray1D<Double,Float>::linear, 
+							  False, doExtrapolate);	    
 	    fFFTServer.fftshift(youtf, youtFlags, fYinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False);
 
