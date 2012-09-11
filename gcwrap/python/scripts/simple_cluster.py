@@ -123,37 +123,34 @@ class simple_cluster:
             # Retrieve available resources to cap number of engines deployed 
             hostname = str(xyzd[0])
             (ncores_available,memory_available,cpu_available) = self.check_host_resources(hostname)
-            max_mem = memory_available 
-            max_engines = ncores_available
-            
-            # Compute equivalent number of cores idle
-            ncores_available = int(round(ncores_available*cpu_available/100.0))
-            
+
             # Determine maximum number of engines that can be deployed at target node
             max_engines_user = b
             if (max_engines_user<=0):
-                max_engines = ncores_available * 0.9 # leave 10% to keep the machine operable
-            elif (max_engines_user<=1):
-                max_engines = int(round(max_engines_user*ncores_available))
+                max_engines = int(0.9*(cpu_available/100.0)*ncores_available)
                 if (max_engines < 2):
-                    casalog.post("CPU free capacity available s% would not support cluster mode at node %s, starting only 1 engine" 
-                                 % (str(cpu_available),hostname),'WARNING')
-                    max_engines = 1
+                    casalog.post("CPU free capacity available s% of %s cores would not support cluster mode at node %s, starting only 1 engine" % 
+                                 (str(cpu_available),str(ncores_available),hostname),'WARNING')
+                    max_engines = 1                
+            elif (max_engines_user<=1):
+                max_engines = int(max_engines_user*ncores_available)
             else:
-                max_engines = max_engines_user
-
-            max_engines = int(max_engines)                
+                max_engines = int(max_engines_user)
+            
             casalog.post("Will deploy up to %s engines at node %s" % (str(max_engines),hostname))
             
             # Determine maximum memory that can be used at target node
             if len(xyzd)>=4:
                 max_mem_user = float(xyzd[3])
                 if (max_mem_user<=0):
-                    max_mem = memory_available * 0.9 # leave 10% to keep the machine operable
+                    max_mem = int(round(0.9*memory_available))
                 elif (max_mem_user<=1):
                     max_mem = int(round(max_mem_user*memory_available))
                 else:
-                    max_mem = max_mem_user
+                    max_mem = int(max_mem_user)
+            else:
+                max_mem = int(round(0.9*memory_available))
+                    
                     
             casalog.post("Will use up to %sMB of memory at node %s" % (str(max_mem),hostname))
             
@@ -165,7 +162,7 @@ class simple_cluster:
                     mem_per_engine = mem_per_engine_user
             
             # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
-            nengines=int(round(max_mem/mem_per_engine))
+            nengines=int(max_mem/mem_per_engine)
             if (nengines < 2):
                 casalog.post("Free memory available %sMB would not support cluster mode at node %s, starting only 1 engine"
                              % (str(max_mem),hostname), 'WARNING')
@@ -176,8 +173,8 @@ class simple_cluster:
         
             nengines = int(nengines)
             if (nengines>max_engines): 
-                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constraint" 
-                             % (hostname,str(nengines),str(max_engines)))
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constraint" % 
+                             (hostname,str(nengines),str(max_engines)))
                 nengines = max_engines       
             
             omp_num_nthreads = 1
