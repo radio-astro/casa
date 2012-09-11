@@ -279,12 +279,9 @@ mystep = 7
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    tsysinterp = 'nearest'
-    tsysspwmap=[]
-    if(casadef.casa_version>='3.4.0'):
-        print "Using linear interpolation for Tsys in applycal ..."
-        tsysinterp='linear'
-        tsysspwmap=[0,9,0,11,0,13,0,15]
+    print "Using linear interpolation for Tsys in applycal ..."
+    tsysinterp='linear'
+    tsysspwmap=[0,9,0,11,0,13,0,15]
 
     for myfield in ['3c273 - Bandpass','Titan','3c273 - Phase','1224+213 Phase','M100']:
         print "Field ", myfield
@@ -331,8 +328,7 @@ if(mystep in thesteps):
     flagcmd += "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # channels 239, 447/448, 720/721 and 2847/2848 are off
               
     flagfile = "m100_flag_step9.txt"
-    if os.path.exists(flagfile):
-        os.system('rm -f '+ flagfile)
+    os.system('rm -f '+ flagfile)
     
     # Save it to disk   
     with open(flagfile, 'w') as f:
