@@ -3003,6 +3003,16 @@ void SolvableVisCal::applySNRThreshold() {
 
 }
 
+// Return the cal flag record, with tableName included
+Record SolvableVisCal::actionRec() {
+  Record cf;
+  cf.define("table",calTableName());
+  cf.merge(VisCal::actionRec());
+  return cf;
+}
+
+
+
 void SolvableVisCal::smooth(Vector<Int>& fields,
 			    const String& smtype,
 			    const Double& smtime) {
@@ -3556,15 +3566,20 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
     //    mss.reset(cti,MSSelection::PARSE_LATE,"","",field);
     mss.setFieldExpr(field);
     TableExprNode ten=mss.toTableExprNode(&cti);
-    //    cout << "Selected field list: " << mss.getFieldList() << endl;
+    cout << "Selected field list: " << mss.getFieldList() << endl;
 
     // Apply selection to table
-    getSelectedTable(*ct_,wholect,ten,"");
-    //    getSelectedTable(selct,wholect,ten,"");
-    //    cout << " selct.tableName() = " << selct.tableName() << endl;
-    //    cout << " selct.nrow()      = " << selct.nrow() << endl;
-    //    cout << " selct.tableType() = " << selct.tableType() << endl;
-    //    ct_ = new NewCalTable(selct.tableName(),Table::Old,Table::Memory);
+    try {
+      getSelectedTable(*ct_,wholect,ten,"");
+      //    getSelectedTable(selct,wholect,ten,"");
+      //    cout << " selct.tableName() = " << selct.tableName() << endl;
+      //    cout << " selct.nrow()      = " << selct.nrow() << endl;
+      //    cout << " selct.tableType() = " << selct.tableType() << endl;
+      //    ct_ = new NewCalTable(selct.tableName(),Table::Old,Table::Memory);
+    } catch (AipsError x) {
+      logSink() << x.getMesg() << LogIO::SEVERE;
+      throw(AipsError("Error selecting on caltable: "+ctname+"... "));
+    }
 
   }
   else

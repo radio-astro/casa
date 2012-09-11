@@ -209,7 +209,7 @@ class Calibrater
 
   // Apply all setapply'd calibration components to DATA and
   //  deposit in the CORRECTED_DATA column
-  Bool correct();
+  Bool correct(String mode="calflag");
 
   // Apply all setapply'd calibration components to MODEL_DATA and
   //  deposit in the MODEL_DATA column
@@ -342,6 +342,8 @@ class Calibrater
   Bool applystate();
   Bool solvestate();
 
+  Record& getActRec() {return actRec_;};
+
   Bool cleanup();
 
   // Method to update MS HISTORY Table
@@ -438,6 +440,9 @@ class Calibrater
 
   // channel masking 
   PtrBlock<Vector<Bool>*> chanmask_;
+
+  // Activity record
+  Record actRec_;
 
 };
 
