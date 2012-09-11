@@ -122,5 +122,6 @@ wvrgcal.xml
 virtualconcat.xml
 vishead.xml
 visstat.xml
+widebandpbcor.xml
 widefield.xml )
 

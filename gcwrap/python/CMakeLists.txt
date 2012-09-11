@@ -191,6 +191,7 @@ scripts/task_msview.py
 scripts/task_imview.py
 scripts/task_vishead.py
 scripts/task_visstat.py
+scripts/task_widebandpbcor.py
 scripts/task_widefield.py
 scripts/TerminalController.py
 scripts/tget.py
