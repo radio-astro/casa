@@ -129,8 +129,8 @@ class simple_cluster:
             if (max_engines_user<=0):
                 max_engines = int(0.9*(cpu_available/100.0)*ncores_available)
                 if (max_engines < 2):
-                    casalog.post("CPU free capacity available s% of %s cores would not support cluster mode at node %s, starting only 1 engine" % 
-                                 (str(cpu_available),str(ncores_available),hostname),'WARNING')
+                    casalog.post("CPU free capacity available %s of %s cores would not support cluster mode at node %s, starting only 1 engine" 
+                                 %(str(cpu_available),str(ncores_available),hostname),'WARNING')
                     max_engines = 1                
             elif (max_engines_user<=1):
                 max_engines = int(max_engines_user*ncores_available)
@@ -173,8 +173,8 @@ class simple_cluster:
         
             nengines = int(nengines)
             if (nengines>max_engines): 
-                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constraint" % 
-                             (hostname,str(nengines),str(max_engines)))
+                casalog.post("Cap number of engines deployed at node %s from %s to %s in order to meet maximum number of engines constraint" 
+                             % (hostname,str(nengines),str(max_engines)))
                 nengines = max_engines       
             
             omp_num_nthreads = 1

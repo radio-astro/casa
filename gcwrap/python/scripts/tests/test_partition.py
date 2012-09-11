@@ -27,7 +27,7 @@ class test_base(unittest.TestCase):
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
-            shutil.copytree(fpath, self.msfile)
+            shutil.copytree(fpath, self.msfile, symlinks=True)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -47,7 +47,7 @@ class test_base(unittest.TestCase):
         
         fpath = os.path.join(datapath,self.msfile)
         if os.path.lexists(fpath):        
-            shutil.copytree(fpath, self.msfile)
+            shutil.copytree(fpath, self.msfile, symlinks=True)
         else:
             self.fail('Data does not exist -> '+fpath)
 
