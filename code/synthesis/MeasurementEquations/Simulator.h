@@ -266,7 +266,7 @@ public:
 
   // apply errors to the data in our MS
   //  Bool corrupt();
-  Bool corrupt(const Bool avoidauto);
+  Bool corrupt();
 
   // Set limits
   Bool setlimits(const Double shadowFraction,

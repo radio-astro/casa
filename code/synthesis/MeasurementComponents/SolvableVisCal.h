@@ -279,6 +279,9 @@ public:
   // Apply refant (implemented in SVJ)
   virtual void reReference()=0;
 
+  // Retrieve the cal flag info as a record
+  virtual Record actionRec();
+
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
 			  const Vector<Int>& fields)=0;

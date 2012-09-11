@@ -52,6 +52,12 @@ public:
   // Return type id
   inline virtual MuellerType type() const { return Mueller::General; };
   inline virtual uInt typesize() const { return 16; };
+
+  // Set scalardata_ 
+  //  TBD: Handle this better; for now, we need to set this from
+  //       an external call so we handle single-corr data properly
+  //       when setting non-corr-dep flags
+  inline void setScalarData(Bool scalardata) const { scalardata_=scalardata; };
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { m0_=&mat; origin(); };
@@ -77,6 +83,9 @@ public:
   virtual void apply(VisVector& v);
   virtual void apply(VisVector& v, Bool& vflag);
 
+  // Apply only flags according to cal flags
+  virtual void applyFlag(Bool& vflag);
+
   // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
   virtual void apply(VisVector& out, const VisVector& in);
 
@@ -98,6 +107,8 @@ protected:
 
   // Complex unity (for use in invert methods)
   const Complex cOne_;
+
+  mutable Bool scalardata_;
 
 private: 
 
@@ -136,6 +147,9 @@ public:
   virtual void apply(VisVector& v, Bool& vflag);
   using Mueller::apply;
 
+  // Apply only flags according to cal flags
+  virtual void applyFlag(Bool& vflag);
+
 protected:
   
   // Default/Copy ctors are protected 
@@ -172,6 +186,9 @@ public:
   virtual void apply(VisVector& v);
   virtual void apply(VisVector& v, Bool& vflag);
   using MuellerDiag::apply;
+
+  // Apply only flags according to cal flags
+  virtual void applyFlag(Bool& vflag);
 
 protected:
   
@@ -210,6 +227,9 @@ public:
   virtual void apply(VisVector& v);
   virtual void apply(VisVector& v, Bool& vflag);
   using MuellerDiag::apply;
+
+  // Apply only flags according to cal flags
+  virtual void applyFlag(Bool& vflag);
 
 protected:
   

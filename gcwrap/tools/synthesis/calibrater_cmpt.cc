@@ -546,7 +546,7 @@ calibrater::solve()
 }
 
 bool
-calibrater::correct()
+calibrater::correct(const std::string& applymode)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -560,6 +560,11 @@ calibrater::correct()
 
    try {
 
+     String appmode=applymode;
+
+     if (appmode=="")
+       appmode="calflag";
+
      logSink_p.clearLocally();
      LogIO os (LogOrigin ("calibrater", "correct"), logSink_p);
      os << "Beginning correct---------------------------" << LogIO::POST;
@@ -567,7 +572,7 @@ calibrater::correct()
      itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
-     retval = itsCalibrater->correct();
+     retval = itsCalibrater->correct(appmode);
      //     AlwaysAssert (retval, AipsError);
 
      os << "Finished correcting." << LogIO::POST;
@@ -797,6 +802,29 @@ calibrater::accumulate(const std::string& tablein,
     RETHROW(x);
   }
   return true;
+}
+
+
+//----------------------------------------------------------------------------
+// activityrec - return a record with generic info
+casac::record* calibrater::activityrec()
+{
+
+  casac::record* out;
+
+  try {
+
+    out = fromRecord(itsCalibrater->getActRec());
+
+  }
+
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return( out );
+
 }
 
 bool 

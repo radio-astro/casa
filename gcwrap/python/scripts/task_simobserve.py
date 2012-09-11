@@ -1125,10 +1125,8 @@ def simobserve(
                             mode="tsys-atm",table=noisymsroot,senscoeff=scoeff)
                 # don't set table, that way it won't save to disk
                 #                        mode="calculate",table=noisymsroot)
-            if uvmode:
-                sm.corrupt(avoidauto=True);
-            else: #Single-dish
-                sm.corrupt(avoidauto=False);
+
+            sm.corrupt(avoidauto=True);
             sm.done();
 
 

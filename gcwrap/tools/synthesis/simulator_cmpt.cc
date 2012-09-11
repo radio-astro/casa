@@ -717,14 +717,14 @@ simulator::setvp(const bool dovp, const bool usedefaultvp,
 
 bool
 // simulator::corrupt()
-simulator::corrupt(const bool avoidauto)
+simulator::corrupt()
 {
 
   Bool rstat(False);
   try {
     
     if(itsSim !=0){
-      rstat=itsSim->corrupt(avoidauto);
+      rstat=itsSim->corrupt();
     }
     
     

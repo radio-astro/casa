@@ -1223,7 +1223,7 @@ def simdata(
                                 mode="tsys-atm",table=noisymsroot)
                     # don't set table, that way it won't save to disk
                     #                        mode="calculate",table=noisymsroot)
-                sm.corrupt(avoidauto=True);
+                sm.corrupt();
                 sm.done();
 
             # now TP ms:
@@ -1299,7 +1299,7 @@ def simdata(
                                 tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
                                 mode="tsys-atm",table=noisymsroot+".sd",senscoeff=tpcoeff)
                     # don't set table, that way it won't save to disk
-                sm.corrupt(avoidauto=False);
+                sm.corrupt();
                 sm.done();
                 # update TP ms name for the following steps
                 sdmsfile = noisymsroot + ".sd.ms"

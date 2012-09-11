@@ -23,6 +23,7 @@ def applycal(vis=None,
 	     opacity=None,
 	     parang=None,
 	     calwt=None,
+	     applymode=None,
 	     flagbackup=None):
 
 	#Python script
@@ -40,11 +41,19 @@ def applycal(vis=None,
                 mycb = cbtool()
                 if ((type(vis)==str) & (os.path.exists(vis))):
 			# add CORRECTED_DATA column
-                        mycb.open(filename=vis,compress=False,addcorr=True,addmodel=False)
+                        mycb.open(filename=vis,compress=False,
+				  addcorr=True,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
-		# Back up the flags, if requested
-		if (flagbackup):
+
+		# enforce default if unspecified
+		if applymode=='':
+			applymode='calflag'
+			
+		# Back up the flags, if requested (and if necessary)
+		if (flagbackup and
+		    (applymode!='calonly' and
+		     applymode!='trial') ):
 			tflocal = casac.testflagger()
 			tflocal.open(vis)
 			backup_flags(tflocal)
@@ -123,7 +132,11 @@ def applycal(vis=None,
 		# Apply parallactic angle, if requested
 		if parang: mycb.setapply(type='P')
 
-		mycb.correct()
+		mycb.correct(applymode)
+
+		# report what the flags did
+		reportflags(mycb.activityrec())
+		
 		mycb.close()
 
 	        #write history
@@ -171,4 +184,27 @@ def backup_flags(tflocal):
         tflocal.saveflagversion(versionname=versionname,
                            comment='Flag backup before applycal on ' + time_string,
                            merge='replace')
+
+
+def reportflags(rec):
+	if (rec.keys().count('origin')==1 and
+	    rec['origin']=='Calibrater::correct' and
+	    rec.keys().count('VisEquation')==1):
+		casalog.post("Calibration apply flagging statistics:")
+		VE=rec['VisEquation']
+		nterm=len(VE)
+		if nterm>0:
+			casalog.post("  Total selected visibilities = "+str(VE['*1']['ndata']))
+			casalog.post("  Flags:")
+			for iterm in range(nterm):
+				VEi=VE['*'+str(iterm+1)]
+				flstr='   '+VEi['type']
+				flstr+=': '
+				flstr+='In: '+str(VEi['nflagIn'])
+				flstr+=' ('+str(100.*VEi['nflagIn']/VEi['ndata'])+'%) --> '
+				flstr+='Out: '+str(VEi['nflagOut'])
+				flstr+=' ('+str(100.*VEi['nflagOut']/VEi['ndata'])+'%)'
+				if (VEi.keys().count('table')>0):
+					flstr+=' ('+VEi['table']+')'
+				casalog.post(flstr)
 

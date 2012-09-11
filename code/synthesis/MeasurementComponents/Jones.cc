@@ -45,6 +45,7 @@ Jones::Jones() :
   ok_(NULL),
   oki_(NULL),
   cOne_(1.0),
+  scalardata_(False),
   vtmp_(VisVector::Four,True)
 {}
 
@@ -121,7 +122,7 @@ void Jones::applyRight(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of Jones::applyRight(v,vflag)"));
 
-  vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+  applyFlag(vflag);
   if (!vflag) applyRight(v);
   else v.zero();
   
@@ -166,11 +167,18 @@ void Jones::applyLeft(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of Jones::applyLeft(v,vflag)"));
 
-  vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+  applyFlag(vflag);
   if (!vflag) applyLeft(v);
   else v.zero();
 
 }
+
+// Set flags according to solution flags
+//  (non-corr-dep flag version)
+void Jones::applyFlag(Bool& vflag) const {
+  vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+}
+
 
 void Jones::zero() {
   ji_=j_;
@@ -235,7 +243,7 @@ void JonesGenLin::applyRight(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyRight(v,vflag)"));
 
-  vflag|=(!(ok_[0]&&ok_[1]));
+  applyFlag(vflag);
   if (!vflag) applyRight(v);
   else v.zero();
   
@@ -268,11 +276,19 @@ void JonesGenLin::applyLeft(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyLeft(v,vflag)"));
 
-  vflag|=(!(ok_[0]&&ok_[1]));
+  applyFlag(vflag);
   if (!vflag) applyLeft(v);
   else v.zero();
 
 }
+
+// Set flags according to solution flags
+//  (non-corr-dep flag version)
+void JonesGenLin::applyFlag(Bool& vflag) const {
+  vflag|=(!(ok_[0]&&ok_[1]));
+}
+
+
 
 void JonesGenLin::zero() {
   ji_=j_;
@@ -353,16 +369,7 @@ void JonesDiag::applyRight(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyRight(v,vflag)"));
 
-  switch(v.type()) {
-  // For scalar data, we only pay attention to the first flag
-  case VisVector::One: 
-    vflag|=(!ok_[0]);
-    break;
-  // ...otherwise, we flag outright
-  default:
-    vflag|=(!(ok_[0]&&ok_[1]));
-    break;
-  }
+  applyFlag(vflag);
   if (!vflag) applyRight(v);
   else v.zero();
 
@@ -400,19 +407,22 @@ void JonesDiag::applyLeft(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyLeft(v,vflag)"));
 
-  switch(v.type()) {
-  // For scalar data, we only pay attention to the first flag
-  case VisVector::One: 
-    vflag|=(!ok_[0]);
-    break;
-  // ...otherwise, we flag outright
-  default:
-    vflag|=(!(ok_[0]&&ok_[1]));
-    break;
-  }
+  applyFlag(vflag);
   if (!vflag) applyLeft(v);
   else v.zero();
 }
+
+
+// Set flags according to solution flags
+//  (non-corr-dep flag version)
+void JonesDiag::applyFlag(Bool& vflag) const {
+  if (scalardata_)
+    vflag|=(!ok_[0]);
+  else
+    vflag|=(!(ok_[0]&&ok_[1]));
+}
+
+
 
 void JonesDiag::zero() {
   ji_=j_;
@@ -469,7 +479,7 @@ void JonesScal::applyRight(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesScal::applyRight(v,vflag)"));
 
-  vflag|=(!*ok_);
+  applyFlag(vflag);
   if (!vflag) applyRight(v);
   else v.zero();
 }
@@ -486,10 +496,17 @@ void JonesScal::applyLeft(VisVector& v, Bool& vflag) const {
 
   if (!ok_) throw(AipsError("Illegal use of JonesScal::applyLeft(v,vflag)"));
 
-  vflag|=(!*ok_);
+  applyFlag(vflag);
   if (!vflag) applyLeft(v);
   else v.zero();
 }
+
+// Set flags according to solution flags
+//  (non-corr-dep flag version)
+void JonesScal::applyFlag(Bool& vflag) const {
+  vflag|=(!*ok_);
+}
+
 
 void JonesScal::zero() {
     (*j_)=0.0;

@@ -1143,21 +1143,12 @@ The errors are applied to the MODEL_DATA, and written to the
 DATA and CORRECTED_DATA columns.   Note that {\tt corrupt} handles
 only visibility-plane effects, not image-plane effects such as
 pointing errors and voltage patterns, which get applied in {\tt predict}.
-Note, the function applies errors only to cross-correlation data when 
-{\tt avoidauto = True} (defalut). Though the auto-correlation data are
-corrupted if {\tt avoidauto = False}, it so far works properly only for
+Note, the function applies errors to both cross- and auto-correlation
+data; The auto-correlation data are corrupted properly only for
 the thermalnoise set by {\tt setnoise}.
 
 
 </description>
-<input>
-
-     <param type="bool" name="avoidauto">
-     <description>Do not apply errors to auto-correlation data</description>
-     <value>true</value>
-     </param>
-
-</input>
 
 <returns type="bool">Boolean</returns>
 <example>

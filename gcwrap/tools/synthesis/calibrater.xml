@@ -1179,8 +1179,15 @@ cb.close();
 
 
 <method type="function" name="correct">
-   <shortdescription>Apply calibration information</shortdescription>
+<shortdescription>Apply calibration information</shortdescription>
    
+<input>
+     <param type="string" direction="in" name="applymode">
+     <description>Correction cal/flag mode: ''='calflag','cal','flag','trial'</description>
+     <value></value>
+     </param>
+</input>
+
 <returns type="bool"/>
 
 <description> 
@@ -1627,6 +1634,38 @@ cb.close();
 
 </example>
 </method>
+
+
+<method type="function" name="activityrec">
+   <shortdescription>Returns a record containing properties of recent activity</shortdescription>
+   
+<returns type="record">
+   <description>
+     The record key is the name of the Calibrator method that formed
+the record.  The contents depend on the activity.
+   </description>
+</returns>
+
+<description>
+
+This funtion enables returning generic information about recent activity.
+
+
+Pending improvements:
+
+\begin{itemize}
+\item ??
+\end{itemize}
+
+</description>
+
+<example>
+
+TBD
+
+</example>
+</method>
+
 
 
 

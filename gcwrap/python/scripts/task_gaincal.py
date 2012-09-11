@@ -119,6 +119,9 @@ def gaincal(vis=None,caltable=None,
 					      refant=refant,splinetime=splinetime,preavg=preavg,
 					      npointaver=npointaver,phasewrap=phasewrap)
 		mycb.solve()
+
+		reportsolvestats(mycb.activityrec());
+
 		mycb.close()
 
 	except Exception, instance:
@@ -126,3 +129,16 @@ def gaincal(vis=None,caltable=None,
 		mycb.close()
 		raise Exception, instance
 
+def reportsolvestats(rec):
+	if (rec.keys().count('origin')==1 and
+	    rec['origin']=='Calibrater::genericGatherAndSolve'):
+		casalog.post("Calibration solve statistics per spw:  (expected/attempted/succeeded):")
+		nexp=rec['nExpected']
+		natt=rec['nAttempt']
+		nsuc=rec['nSucceed']
+		for ispw in range(len(nexp)):
+			solstatstr="  Spw "+str(ispw)+": "
+			solstatstr+=str(nexp[ispw])+"/"
+			solstatstr+=str(natt[ispw])+"/"
+			solstatstr+=str(nsuc[ispw])
+			casalog.post(solstatstr)

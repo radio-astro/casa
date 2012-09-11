@@ -127,6 +127,7 @@ void VisEquation::setapply(PtrBlock<VisCal*>& vcin) {
 	vc()[i]=lvc[order(i)];
 	
 	if (prtlev()>2) cout << vc()[i]->typeName() << " (" << vc()[i]->type() << ")" << endl;
+	vc()[i]->initCalFlagCount();
       }
       
     }
@@ -190,7 +191,7 @@ Bool VisEquation::spwOK(const Int& spw) {
 
 //----------------------------------------------------------------------
 // Correct in place the OBSERVED visibilities in a VisBuffer
-void VisEquation::correct(VisBuffer& vb) {
+void VisEquation::correct(VisBuffer& vb, Bool trial) {
 
   if (prtlev()>0) cout << "VE::correct()" << endl;
 
@@ -203,15 +204,23 @@ void VisEquation::correct(VisBuffer& vb) {
   vb.sortCorr();
 
   // Apply each VisCal in left-to-right order 
-  //  ACs will NOT be corrected (avoidACs=True)
-  //  TBD: move AC handling up to Calibrater
   for (Int iapp=0;iapp<napp_;iapp++)
-    vc()[iapp]->correct(vb,True);
+    vc()[iapp]->correct(vb,trial);
 
   // Ensure correlations restored to original order
   // (this is a no-op if no sort necessary)
   vb.unSortCorr();
   
+}
+
+//----------------------------------------------------------------------
+// Report action record info (derived from consituent VisCals
+Record VisEquation::actionRec() {
+  Record cf;
+  // Add in each VisCal's record
+  for (Int iapp=0;iapp<napp_;iapp++)
+    cf.defineRecord(iapp,vc()[iapp]->actionRec());
+  return cf;
 }
 
 //----------------------------------------------------------------------
@@ -315,7 +324,7 @@ void VisEquation::collapse(VisBuffer& vb) {
 
 //----------------------------------------------------------------------
 // void VisEquation::collapseForSim(VisBuffer& vb) {
-void VisEquation::collapseForSim(VisBuffer& vb, const Bool avoidACs) {
+void VisEquation::collapseForSim(VisBuffer& vb) {
 
   if (prtlev()>0) cout << "VE::collapseforSim()" << endl;
 
@@ -352,7 +361,7 @@ void VisEquation::collapseForSim(VisBuffer& vb, const Bool avoidACs) {
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
     if (prtlev()>2) cout << vc()[lidx]->typeName();
     if (vc()[ridx]->extraTag()!="NoiseScale" or vc()[lidx]->type()!=VisCal::T) {
-      vc()[lidx]->correct(vb, avoidACs);
+      vc()[lidx]->correct(vb);
       if (prtlev()>2) cout << " -> correct";
     }
     if (prtlev()>2) cout << endl;
@@ -370,14 +379,14 @@ void VisEquation::collapseForSim(VisBuffer& vb, const Bool avoidACs) {
     // manually pick off a T intended to be noise scaling T:
     if (pivot_ <= VisCal::T and vc()[ridx]->type()==VisCal::T) {
       if (vc()[ridx]->extraTag()=="NoiseScale") {
-	vc()[ridx]->correct(vb, avoidACs);  // correct DATA
+	vc()[ridx]->correct(vb);  // correct DATA
 	if (prtlev()>2) cout << " -> correct";
       } else {
-	vc()[ridx]->corrupt(vb, avoidACs);
+	vc()[ridx]->corrupt(vb);
 	if (prtlev()>2) cout << " -> corrupt";
       }
     } else { 
-      vc()[ridx]->corrupt(vb, avoidACs);
+      vc()[ridx]->corrupt(vb);
       if (prtlev()>2) cout << " -> corrupt";
     }
     if (prtlev()>2) cout << endl;
