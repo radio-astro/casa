@@ -118,7 +118,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    Wide-band Primary-beam correction
 
     (1) Compute a set of Primary Beams at the specified frequencies
-    (2) Calculates Taylor-coefficient images that represent the PB spectrum
+    (2) Calculate Taylor-coefficient images that represent the PB spectrum
     (3) Perform a polynomial division to PB-correct the output Taylor-coefficient
           images from the MS-MFS algorithm ( clean(nterms>1) )
     (4) Recompute spectral index (and curvature) using the corrected Taylor-coefficient images.
@@ -129,36 +129,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    This is a temporary task, meant for use until projection-based gridding algorithms
    are available via the 'clean' task.
 
-   Input : 
-       Restored-images ( imagename.image.tt0,etc) 
-       Residual images ( imagename.residual.tt0, etc.. )
-       Measurement Set, for telescope/frequency/direction information.
-
-           For example : 
-
-               spwlist=[0,1,2] 
-               chanlist=[32,32,32]      
-               weightlist=[1.0,1.0,0.5]
-
-           This defines the list of frequencies at which PBs are evaluated, and the
-           weights they are assigned, while computing Taylor coefficients.
-
-   Output : 
-        imagename.pbcor.workdirectory  :  This directory contains an image cube with
-               PBs at the list of specified frequencies, and Taylor-coefficient images that
-               describe the PB spectrum.
-               -  imagename.pb.cube : Concatenated cube of PBs
-               -  imagename.pb.tt0, tt1, ... : Taylor coefficients describing the PB spectrum
-
-         imagename.image.pbcor.tt0,tt1,... : Corrected Taylor coefficients
-         imagename.pbcor.image.alpha : Corrected Spectral Index
-         imagename.pbcor.image.alpha.error : New error map.
-
-         Note that if action=\'\calcalpha\'\, then, only alpha (and beta) will be recomputed
-         using the new thresholds, and the alpha and alpha.error images will created with
-         the name :  imagename.image.alpha,   imagename.image.alpha.error
-         If these images exist on disk, they will be over-written.
-
+ 
    Task parameters :
 
    vis -- Name of input visibility file
@@ -191,18 +162,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                
            With action='pbcor', the following output images are created/overwritten.
 
-                    - imagename.pbcor.workdirectory  :  This directory contains an image cube with
-                            PBs at the list of specified frequencies, and Taylor-coefficient images that
-                           describe the PB spectrum.
-                            -  imagename.pb.cube : Concatenated cube of PBs
-                            -  imagename.pb.tt0, tt1, ... : Taylor coefficients describing the PB spectrum
-                    - imagename.image.pbcor.tt0,tt1,... : Corrected Taylor coefficients
-                    - imagename.pbcor.image.alpha : Corrected Spectral Index
-                    - imagename.pbcor.image.alpha.error : New error map.
+              - imagename.pbcor.workdirectory  :  This directory contains an image cube with
+                PBs at the list of specified frequencies, and Taylor-coefficient images that
+                describe the PB spectrum.
+                   -  imagename.pb.cube : Concatenated cube of PBs
+                   -  imagename.pb.tt0, tt1, ... : Taylor coefficients describing the PB spectrum
+              - imagename.image.pbcor.tt0,tt1,... : Corrected Taylor coefficients
+              - imagename.pbcor.image.alpha : Corrected Spectral Index
+              - imagename.pbcor.image.alpha.error : New error map.
 
             With action='calcalpha', the following output images are created/overwritten
-                    - imagename.image.alpha : Corrected Spectral Index
-                    - imagename.image.alpha.error : New error map.
+              - imagename.image.alpha : Corrected Spectral Index
+              - imagename.image.alpha.error : New error map.
 
    reffreq -- Reference frequency about which the Taylor-expansion is defined.
             example : reffreq = '1.5GHz'
@@ -222,11 +193,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    chanlist -- List of channel ids, within the above SPW ids, at which to make PBs.
 
              example :  spwlist=[0,1,2], chanlist=[32,32,32] 
-                                 Make PBs at frequencies corresponding to channel 32 of
-                                 spws 0,1 and 2.
-                              spwlist=[0,0,0], chanlist=[0,10,20]
-                                 Make PBs at frequencies corresponding to channels 0,10,20
-                                 of spw 0
+                          Make PBs at frequencies corresponding to channel 32 of
+                          spws 0,1 and 2.
+             example :  spwlist=[0,0,0], chanlist=[0,10,20]
+                           Make PBs at frequencies corresponding to channels 0,10,20
+                           of spw 0
  
                    Primary beams are computed at these specified frequencies and 
                    for pointings selected by 'field'.  Taylor-coefficients that represent
