@@ -32,8 +32,11 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
                 cont_subMS_list.append(subMS + ".cont")
                 contsub_subMS_list.append(subMS + ".contsub")
                 
-        # Virtual concatenate continuum-SubMSs in one engine because
-        # it is not possible to call a task within another task
+        # jagonzal: We have to sort the list because otherwise it  
+        # depends on the time the engines dispatches their sub-MSs
+        cont_subMS_list.sort()
+        contsub_subMS_list.sort()
+        
         try:
             virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list)
         except Exception, instance:
