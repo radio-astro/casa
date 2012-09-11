@@ -24,11 +24,11 @@ clearcal(vis='l2.ms')
 copytime=time.time()
 
 print '--Flag data--'
-default('flagdata')
+default('tflagdata')
 #flagdata(vis='l.ms',
 #	 timerange=['2002/01/27/05:45:47.0', '2002/01/27/07:00:00.0'],
 #	 fieldid=-1)
-flagdata(vis='l.ms',
+tflagdata(vis='l.ms',
 	 timerange='2002/01/27/05:45:47.0~2002/01/27/07:00:00.0')
 flagtime=time.time()
 
@@ -320,11 +320,11 @@ splitsrc1mmtime=time.time()
 ###############################################
 
 print '--Flag data--'
-default('flagdata')
+default('tflagdata')
 #flagdata(vis='l2.ms',
 #	 timerange=['2002/01/29/03:37:50.0', '2002/01/29/04:02:48.0'],
 #	 fieldid=-1)
-flagdata(vis='l2.ms',
+tflagdata(vis='l2.ms',
 	 timerange='2002/01/29/03:37:50.0~2002/01/29/04:02:48.0')
 flagtime=time.time()
 
