@@ -367,8 +367,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (mssErrHandler_p != NULL) 
       {
 	delete mssErrHandler_p;
-	MSAntennaParse::thisMSAErrorHandler=NULL;
+	mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
       }
+    mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
   }
   
   void MSSelection::deleteNodes()
@@ -436,11 +437,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     TableExprNode condition;
+
     if (MSAntennaParse::thisMSAErrorHandler == NULL)
       {
 	if (mssErrHandler_p == NULL) mssErrHandler_p = new MSSelectionErrorHandler();
 	setErrorHandler(ANTENNA_EXPR, mssErrHandler_p);
       }
+    else
+      mssErrHandler_p->reset();
 
     try
       {
@@ -607,11 +611,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     catch(AipsError& x)
       {
+	runErrorHandler();
 	deleteNodes();
+	deleteErrorHandlers();
 	throw(x);
       }	
 
     runErrorHandler();
+    deleteErrorHandlers();
     deleteNodes();
     return condition;
   }

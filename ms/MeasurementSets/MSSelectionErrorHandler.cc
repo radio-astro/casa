@@ -71,5 +71,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// logIO << mssErrorType.getMesg() << LogIO::WARN;
       }
   }
+
+  void MSSelectionErrorHandler::reset()
+  {
+    tokenList.resize(0);
+    messageList.resize(0);
+  }
+
 } //# NAMESPACE CASA - END
 
