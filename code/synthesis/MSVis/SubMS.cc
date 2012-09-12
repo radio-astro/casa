@@ -6181,6 +6181,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    Vector<Double> modNorm(nCorrelations, 0.); // normalization for the averaging of the contributions from the SPWs
 	    vector<vector<Double> > modAverageChanFrac(averageN[i], vector<Double>(nCorrelations, 0.));
 	    for(uInt k=0; k<nCorrelations; k++){
+	      Vector<Int> spwCount(nSpwsToCombine, 0);
 	      for(Int j=0; j<averageN[i]; j++){
 		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
@@ -6190,9 +6191,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    }
 		    modAverageChanFrac[j][k] = averageChanFrac[i][j];
 		    modNorm(k) += averageChanFrac[i][j];
+		    if(modAverageChanFrac[j][k]!=1.){
+		      ++spwCount(averageWhichSPW[i][j]); // count the contributions with non-unity overlap fraction for each spw
+		    }
 		  }
 		}
 	      }
+	      for(Int j=0; j<averageN[i]; j++){
+		// second iteration: eliminate contributions from spws with odd numbers of contribs with non-unity overlap fraction
+		if(spwCount(averageWhichSPW[i][j])%2!=0 && modAverageChanFrac[j][k]!=1.){
+		  //cout << "spw count " << averageWhichSPW[i][j] << " " << spwCount(averageWhichSPW[i][j]) << endl;
+		  //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
+		  modNorm(k) -= modAverageChanFrac[j][k];
+		  modAverageChanFrac[j][k] = 0.;
+		}
+	      }  
 	    }
 
 	    if(haveCoverage){ // there is unflagged data for this channel
