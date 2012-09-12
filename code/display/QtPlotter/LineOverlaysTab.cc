@@ -44,6 +44,8 @@ LineOverlaysTab::LineOverlaysTab(QWidget *parent)
 
 	connect( &searchResults, SIGNAL(graphSelectedLines()), this, SLOT(graphSelectedLines()));
 	connect( &searchResults, SIGNAL(graphSelectedSpecies()), this, SLOT(graphSelectedSpecies()));
+	connect( &searchResults, SIGNAL(showPreviousSearchResults()), searchWidget, SLOT(prevResults()));
+	connect( &searchResults, SIGNAL(showNextSearchResults()), searchWidget, SLOT(nextResults()));
 	connect( searchWidget, SIGNAL(searchCompleted()), this, SLOT(searchCompleted()));
 	connect( ui.clearLinesButton, SIGNAL(clicked()), this, SLOT(eraseLines()));
 	connect( ui.saveLinesButton, SIGNAL(clicked()), this, SLOT(saveIdentifiedLines()));
@@ -189,7 +191,7 @@ void LineOverlaysTab::findRedshift( double center, double /*peak*/ ){
 	searchRedshiftDialog.setUnits( unitStr );
 	searchRedshiftDialog.setCenter( center );
 	searchRedshiftDialog.setLocalSearch( searchWidget->isLocal());
-	searchRedshiftDialog.setDatabasePath( searchWidget->getDatabasePath());
+	//searchRedshiftDialog.setDatabasePath( searchWidget->getDatabasePath());
 	searchRedshiftDialog.setDopplerType( searchWidget->getDopplerType());
 	searchRedshiftDialog.setFrequencyType( searchWidget->getReferenceFrame());
 	searchRedshiftDialog.setIdentifiedLines( pixelCanvas->getMolecularLineNames());

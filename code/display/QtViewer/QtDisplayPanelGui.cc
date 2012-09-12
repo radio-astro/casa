@@ -1612,12 +1612,13 @@ void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
 
 void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
 	// Display tracking data gathered by underlying panel.
-
 	for(uInt i=0; i<trackingRec.nfields(); i++) {
 		TrackBox* trkBox = trkBox_(trackingRec.name(i));
-		if(trkBox!=0) trkBox->setText(trackingRec.asString(i));  }  }
-
-
+		if(trkBox!=0){
+			trkBox->setText(trackingRec.asString(i));
+		}
+	}
+}
 
 TrackBox* QtDisplayPanelGui::trkBox_(QtDisplayData* qdd) {
 	return trkBox_(qdd->name());  }

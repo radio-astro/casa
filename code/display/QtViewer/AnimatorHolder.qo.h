@@ -83,13 +83,19 @@ private slots:
 	void fwdStepImage();
 	void fwdPlayImage();
 	void toEndImage();
+	void imageModeChange();
+	void channelModeChange();
 
 private:
 	void modeChanged( bool mode );
+	void changePalette( QGroupBox* box, QColor color );
+	void setSelected( bool mode );
 	bool previousMode;
     Ui::AnimatorHolder ui;
     AnimatorWidget* animatorChannel;
     AnimatorWidget* animatorImage;
+    QColor selectedColor;
+    QColor backgroundColor;
 
 };
 }

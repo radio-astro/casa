@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,54 +22,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef ANIMATORWIDGETT_QO_H
-#define ANIMATORWIDGETT_QO_H
 
-#include <QtGui/QWidget>
-#include <display/QtViewer/AnimatorWidget.ui.h>
+#include "DatabaseConnector.h"
+#include <sys/stat.h>
+#include <iostream>
+using namespace std;
 
 namespace casa {
 
-/**
- * Manages an individual panel of the viewer animator.  Objects of
- * this class may animate frames withen an image or they may animate
- * between loaded images.
- */
-class AnimatorWidget : public QWidget
-{
-    Q_OBJECT
+DatabaseConnector* DatabaseConnector::connection = NULL;
 
-public:
-    AnimatorWidget(QWidget *parent = 0);
+string DatabaseConnector::databasePath = "";
 
-    void setFrameInformation( int frm, int len );
-    void setRateInformation( int minr, int maxr, int rate );
-    void setModeEnabled( bool enable );
-    void setPlaying( int play );
-    int getRate() const;
-    int getFrame() const;
-    ~AnimatorWidget();
-
-signals:
-	void goTo(int frame);
-	void setRate(int);
-	void toStart();
-	void revStep();
-	void revPlay();
-	void stop();
-	void fwdStep();
-	void fwdPlay();
-	void toEnd();
-	void frameNumberEdited( int );
-
-private slots:
-	void frameNumberEdited();
-
-private:
-	void blockSignals( bool block );
-
-    Ui::AnimatorWidget ui;
-    bool rateNotSet;
-};
+DatabaseConnector::DatabaseConnector( const string& path ) {
+	databasePath = path;
+	int rc = sqlite3_open( databasePath.c_str(), &db );
+	if ( rc != SQLITE_OK ){
+		cout << "Can't open database: "<<sqlite3_errmsg(db) << endl;
+		sqlite3_close( db );
+	}
 }
-#endif // ANIMATORWIDGET_QO_H
+
+string DatabaseConnector::getCreatedDate(){
+	struct tm* clock;
+	struct stat attrib;
+	stat(databasePath.c_str(), &attrib );
+	clock = gmtime(&(attrib.st_mtime));
+	char* timeStr = asctime( clock );
+	string fileDate( timeStr );
+	return fileDate;
+}
+
+sqlite3* DatabaseConnector::getDatabase( const string& path){
+	if ( connection == NULL ){
+		connection = new DatabaseConnector( path );
+	}
+	return connection->db;
+}
+
+DatabaseConnector::~DatabaseConnector() {
+	if ( db != NULL ){
+		sqlite3_close( db );
+	}
+}
+
+} /* namespace casa */

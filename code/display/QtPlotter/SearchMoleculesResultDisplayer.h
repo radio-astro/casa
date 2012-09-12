@@ -25,7 +25,9 @@
 
 #ifndef SEARCHMOLECULESRESULTDISPLAYER_H_
 #define SEARCHMOLECULESRESULTDISPLAYER_H_
-#include <casa/Containers/Record.h>
+
+#include <spectrallines/Splatalogue/SplatResult.h>
+#include <vector>
 namespace casa {
 /**
  * Interface provides decoupling between classes that initialize a search
@@ -36,7 +38,16 @@ namespace casa {
 class SearchMoleculesResultDisplayer {
 public:
 	SearchMoleculesResultDisplayer();
-	virtual void displaySearchResults( const Record& results ) = 0;
+	/**
+	 * The parameters offset and count determine where the
+	 * passed in results fit in the overall search.  The 'offset'
+	 * parameters in the starting index and countTotal is the total
+	 * number of search results available.  This may be smaller than
+	 * the number of results returned if the countTotal exceeds the
+	 * limit on the number of search results obtained at one time.
+	 */
+	virtual void displaySearchResults( const vector<SplatResult>& results,
+			int offset, int countTotal) = 0;
 	virtual ~SearchMoleculesResultDisplayer();
 };
 

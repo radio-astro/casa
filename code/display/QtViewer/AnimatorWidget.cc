@@ -51,6 +51,8 @@ AnimatorWidget::AnimatorWidget(QWidget *parent)
 	rateNotSet = true;
 }
 
+
+
 void AnimatorWidget::blockSignals( bool block ){
 	ui.frameSlider_->blockSignals(block);
 	ui.frameEdit_->blockSignals( block );
@@ -89,7 +91,7 @@ void AnimatorWidget::setModeEnabled( bool multiframe ){
 	ui.toEndTB_->setEnabled(multiframe);	//
 	ui.frameEdit_->setEnabled(multiframe);	// Frame number entry.
 	ui.nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-	ui.frameSlider_->setEnabled(multiframe);	// Frame number slider.
+	ui.frameSlider_->setEnabled(multiframe);	// Frame number slider.*/
 }
 
 void AnimatorWidget::setRateInformation( int minr, int maxr, int rate ){

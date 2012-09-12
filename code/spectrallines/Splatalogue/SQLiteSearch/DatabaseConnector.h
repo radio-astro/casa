@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,54 +22,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef ANIMATORWIDGETT_QO_H
-#define ANIMATORWIDGETT_QO_H
 
-#include <QtGui/QWidget>
-#include <display/QtViewer/AnimatorWidget.ui.h>
+#ifndef DATABASECONNECTOR_H_
+#define DATABASECONNECTOR_H_
+
+#include <sqlite3.h>
+#include <string>
+using namespace std;
 
 namespace casa {
 
 /**
- * Manages an individual panel of the viewer animator.  Objects of
- * this class may animate frames withen an image or they may animate
- * between loaded images.
+ * Maintains a connection to an SQLite database.
  */
-class AnimatorWidget : public QWidget
-{
-    Q_OBJECT
 
+class DatabaseConnector {
 public:
-    AnimatorWidget(QWidget *parent = 0);
-
-    void setFrameInformation( int frm, int len );
-    void setRateInformation( int minr, int maxr, int rate );
-    void setModeEnabled( bool enable );
-    void setPlaying( int play );
-    int getRate() const;
-    int getFrame() const;
-    ~AnimatorWidget();
-
-signals:
-	void goTo(int frame);
-	void setRate(int);
-	void toStart();
-	void revStep();
-	void revPlay();
-	void stop();
-	void fwdStep();
-	void fwdPlay();
-	void toEnd();
-	void frameNumberEdited( int );
-
-private slots:
-	void frameNumberEdited();
-
+	static sqlite3* getDatabase( const string& path );
+	static string getCreatedDate();
+	virtual ~DatabaseConnector();
 private:
-	void blockSignals( bool block );
-
-    Ui::AnimatorWidget ui;
-    bool rateNotSet;
+	DatabaseConnector( const string& path);
+	static DatabaseConnector* connection;
+	static string databasePath;
+	sqlite3* db;
 };
-}
-#endif // ANIMATORWIDGET_QO_H
+
+} /* namespace casa */
+#endif /* DATABASECONNECTOR_H_ */

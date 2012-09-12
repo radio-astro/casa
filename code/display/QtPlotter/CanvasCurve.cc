@@ -179,8 +179,8 @@ double CanvasCurve::percentToValue( double yValue ) const {
 
 double CanvasCurve::getMax() const {
 	int maxPoints = curveData.size() / 2;
-	double maxValue;
-	if ( maxPoints > 1 ){
+	double maxValue = 0;
+	if ( maxPoints >= 1 ){
 		maxValue = curveData[1];
 		for ( int i = 0; i < maxPoints; i++ ){
 			double yValue = curveData[2*i+1];

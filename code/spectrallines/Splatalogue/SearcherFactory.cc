@@ -22,13 +22,39 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 #include "SearcherFactory.h"
-#include "spectrallines/Splatalogue/Searcher.h"
-#include "spectrallines/Splatalogue/SearcherLocal.h"
+#include <spectrallines/Splatalogue/Searcher.h>
+#include <spectrallines/Splatalogue/SQLiteSearch/SearcherSQLite.h>
+#include <casa/System/Aipsrc.h>
+
+#include <iostream>
+using namespace std;
+
 namespace casa {
 
-Searcher* SearcherFactory::getSearcher( bool /*local*/ ){
-	SearcherLocal* localSearcher = new SearcherLocal();
-	return localSearcher;
+Searcher* SearcherFactory::getSearcher( bool local ){
+	Searcher* searcher = NULL;
+	if ( local ){
+		//Note:: When the SQLite code (and database get put into its
+		//own library, finding the location of the database should be
+		//removed from here and put into the DatabaseConnector.
+		String defaultDatabasePath;
+		Bool foundDatabase = Aipsrc::find(defaultDatabasePath, "user.ephemerides.SplatDefault.tbl");
+		if( !foundDatabase ){
+			foundDatabase = Aipsrc::findDir(defaultDatabasePath, "data/ephemerides/SplatDefault.tbl");
+		}
+
+		if ( foundDatabase ) {
+			const String tableName = "SplatDefault.tbl";
+			int index = defaultDatabasePath.find(tableName, 0);
+			int tableNameSize = tableName.length();
+			defaultDatabasePath.replace(index, tableNameSize, "splat.db");
+			searcher = new SearcherSQLite(defaultDatabasePath.c_str() );
+		}
+	}
+	else {
+		cout << "Only local database searches are currently supported"<<endl;
+	}
+	return searcher;
 }
 
 

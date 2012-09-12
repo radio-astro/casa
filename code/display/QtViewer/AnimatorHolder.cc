@@ -31,9 +31,13 @@ const bool AnimatorHolder::BLINK_MODE = false;
 const bool AnimatorHolder::NORMAL_MODE = true;
 
 AnimatorHolder::AnimatorHolder(QWidget *parent)
-    : QWidget(parent), animatorChannel( NULL ), animatorImage( NULL )
+    : QWidget(parent), animatorChannel( NULL ), animatorImage( NULL ),
+      selectedColor( Qt::white)
 {
 	ui.setupUi(this);
+
+	QPalette pal( palette());
+	backgroundColor = pal.color( QPalette::Background );
 
 	animatorChannel = new AnimatorWidget( ui.channelGroupBox );
 	animatorChannel->setModeEnabled( false );
@@ -41,6 +45,9 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	layoutChannel->setContentsMargins( 2,2,2,2 );
 	layoutChannel->addWidget( animatorChannel );
 	ui.channelGroupBox->setLayout( layoutChannel );
+	ui.channelGroupBox->setAutoFillBackground( true );
+	ui.channelGroupBox->setCheckable( true );
+	connect( ui.channelGroupBox, SIGNAL(clicked()), this, SLOT(channelModeChange()));
 
 	animatorImage = new AnimatorWidget( ui.imageGroupBox );
 	animatorImage->setModeEnabled( false );
@@ -48,8 +55,12 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	layoutImage->setContentsMargins( 2,2,2,2 );
 	layoutImage->addWidget( animatorImage );
 	ui.imageGroupBox->setLayout( layoutImage );
+	ui.imageGroupBox->setAutoFillBackground( true );
+	ui.imageGroupBox->setCheckable( true );
+	connect( ui.imageGroupBox, SIGNAL(clicked()), this, SLOT(imageModeChange()));
 
 	previousMode = NORMAL_MODE;
+	setSelected( NORMAL_MODE );
 
 	connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(goToChannel(int)));
 	connect(animatorChannel, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedChannel(int)));
@@ -141,84 +152,64 @@ int AnimatorHolder::getRate( bool mode ) const {
 //-------------------------------------------------------------------------
 
 void AnimatorHolder::goToChannel(int frame){
-	modeChanged( NORMAL_MODE );
 	emit goTo( frame );
 }
-void AnimatorHolder::setRateChannel(int /*rate*/){
-	modeChanged( NORMAL_MODE );
-	//emit setRate( rate );
+void AnimatorHolder::setRateChannel(int rate){
+	emit setRate( rate );
 }
 void AnimatorHolder::frameNumberEditedChannel( int frame ){
-	modeChanged( NORMAL_MODE );
 	emit frameNumberEdited( frame );
 }
 void AnimatorHolder::toStartChannel(){
-	modeChanged( NORMAL_MODE );
 	emit toStart();
 }
 void AnimatorHolder::revStepChannel(){
-	modeChanged( NORMAL_MODE );
 	emit revStep();
 }
 void AnimatorHolder::revPlayChannel(){
-	modeChanged( NORMAL_MODE );
 	emit revPlay();
 }
 void AnimatorHolder::fwdPlayChannel(){
-	modeChanged( NORMAL_MODE );
 	emit fwdPlay();
 }
 void AnimatorHolder::stopChannel(){
-	modeChanged( NORMAL_MODE );
 	emit stop();
 }
 void AnimatorHolder::fwdStepChannel(){
-	modeChanged( NORMAL_MODE );
 	emit fwdStep();
 }
 void AnimatorHolder::toEndChannel(){
-	modeChanged( NORMAL_MODE );
 	emit toEnd();
 }
 void AnimatorHolder::goToImage(int frame){
-	modeChanged( BLINK_MODE );
 	emit goTo( frame );
 }
-void AnimatorHolder::setRateImage(int /*frame*/){
-	modeChanged( BLINK_MODE );
-	//emit setRate( frame );
+void AnimatorHolder::setRateImage(int rate){
+	emit setRate( rate );
 }
 void AnimatorHolder::frameNumberEditedImage( int frame ){
-	modeChanged( BLINK_MODE );
 	emit frameNumberEdited( frame );
 }
 void AnimatorHolder::toStartImage(){
-	modeChanged( BLINK_MODE );
 	emit toStart();
 }
 void AnimatorHolder::revStepImage(){
-	modeChanged( BLINK_MODE );
 	emit revStep();
 }
 void AnimatorHolder::revPlayImage(){
-	modeChanged( BLINK_MODE );
 	emit revPlay();
 }
 
 void AnimatorHolder::fwdPlayImage(){
-	modeChanged( BLINK_MODE );
 	emit fwdPlay();
 }
 void AnimatorHolder::stopImage(){
-	modeChanged( BLINK_MODE );
 	emit stop();
 }
 void AnimatorHolder::fwdStepImage(){
-	modeChanged( BLINK_MODE );
 	emit fwdStep();
 }
 void AnimatorHolder::toEndImage(){
-	modeChanged( BLINK_MODE );
 	emit toEnd();
 }
 
@@ -236,11 +227,41 @@ void AnimatorHolder::modeChanged( bool mode ){
 			rate = animatorChannel->getRate();
 			frame = animatorChannel->getFrame();
 		}
+		setSelected( mode );
 		previousMode = mode;
 		emit setMode( mode );
 		emit setRate( rate );
 		emit goTo( frame );
 	}
+}
+
+void AnimatorHolder::channelModeChange(){
+	bool mode = ui.channelGroupBox->isChecked();
+	modeChanged( mode );
+}
+
+void AnimatorHolder::imageModeChange(){
+	bool mode = ! ui.imageGroupBox->isChecked();
+	modeChanged( mode );
+}
+
+void AnimatorHolder::changePalette( QGroupBox* box, QColor color ){
+	QPalette pal = box->palette();
+	pal.setColor( QPalette::Background, color );
+	box->setPalette( pal );
+}
+
+void AnimatorHolder::setSelected( bool mode ){
+	if ( mode ){
+		changePalette( ui.channelGroupBox, selectedColor );
+		changePalette( ui.imageGroupBox, backgroundColor );
+	}
+	else {
+		changePalette( ui.channelGroupBox, backgroundColor );
+		changePalette( ui.imageGroupBox, selectedColor );
+	}
+	ui.channelGroupBox->setChecked( mode );
+	ui.imageGroupBox->setChecked( !mode );
 }
 
 AnimatorHolder::~AnimatorHolder()

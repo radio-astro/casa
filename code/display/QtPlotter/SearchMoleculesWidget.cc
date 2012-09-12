@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "SearchMoleculesWidget.qo.h"
-#include <casa/System/Aipsrc.h>
+
 
 #include <display/QtPlotter/Util.h>
 #include <display/Display/Options.h>
@@ -40,9 +40,9 @@ using namespace std;
 
 namespace casa {
 
-const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="GHz";
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = 84;
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = 90;
+const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = 84000;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = 90000;
 
 QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
@@ -53,8 +53,11 @@ void SearchMoleculesWidget::setInitialReferenceFrame( QString frameStr ){
 
 
 SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
-    : QWidget(parent), unitStr( SPLATALOGUE_UNITS ), searchThread( NULL ),
-      progressBar( this ), resultDisplay( NULL )
+    : QWidget(parent), unitStr( SPLATALOGUE_UNITS ),
+      searchThread( NULL ), searcher( NULL ),
+      progressBar( this ), searchResultCount(0),
+      searchResultOffset(0), searchResultLimit(500),
+      resultDisplay( NULL )
 {
 	ui.setupUi(this);
 
@@ -125,19 +128,9 @@ SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
 
 	//Signal/Slot
 	connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(search()));
-	connect( ui.browseButton, SIGNAL(clicked()), this, SLOT(openCatalog()));
 	connect( ui.velocityRadio, SIGNAL(clicked()), this, SLOT(dopplerShiftChanged()));
 	connect( ui.redshiftRadio, SIGNAL(clicked()), this, SLOT(dopplerShiftChanged()));
 	connect( ui.dopplerUnitsComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(dopplerVelocityUnitsChanged()));
-
-	//Database initialization
-	Bool foundDatabase = Aipsrc::find(defaultDatabasePath, "user.ephemerides.SplatDefault.tbl");
-	if( !foundDatabase ){
-		foundDatabase = Aipsrc::findDir(defaultDatabasePath, "data/ephemerides/SplatDefault.tbl");
-	}
-	if ( foundDatabase ){
-		ui.catalogueLineEdit->setText( "Splatalogue");
-	}
 }
 
 //-------------------------------------------------------------------------------------
@@ -172,14 +165,6 @@ void SearchMoleculesWidget::updateReferenceFrame(){
 //--------------------------------------------------------------------------------------
 //                        Signal/Slot
 //--------------------------------------------------------------------------------------
-
-void SearchMoleculesWidget::openCatalog(){
-	QString dPath = QFileDialog::getExistingDirectory( this,
-			"Select Spectral Line Catalog",
-			"/home");
-	databasePath = dPath.toStdString();
-	ui.catalogueLineEdit->setText( dPath );
-}
 
 void SearchMoleculesWidget::convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter ){
 	QString editText = lineEdit->text();
@@ -339,15 +324,24 @@ void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ){
 
 void SearchMoleculesWidget::search(){
 
-	//First decide if we have a database to search
-	//We will try to use a user specified one.  Otherwise, we
-	//will try the default.
 	bool localSearcher = isLocal();
-	String dPath = getDatabasePath();
+
+	//Initialize the scrolling parameters
+	searchResultCount=0;
+	searchResultOffset=0;
 
 	//Acquire the searcher that will do the search for us.
-	Searcher* searcher = SearcherFactory::getSearcher( localSearcher );
-	searcher->setDatabasePath( dPath );
+	if ( searcher == NULL ){
+		searcher = SearcherFactory::getSearcher( localSearcher );
+		if ( searcher != NULL ){
+			searcher->setSearchResultLimit( searchResultLimit );
+		}
+		else {
+			QString msg( "Searches are not supported because the database is missing.");
+			Util::showUserMessage( msg, this );
+			return;
+		}
+	}
 
 	//Get the search parameters
 	QString searchList = ui.searchLineEdit->text();
@@ -355,22 +349,21 @@ void SearchMoleculesWidget::search(){
 	if ( ! searchList.isEmpty() ){
 		moleculeList = searchList.split(",");
 	}
-	Vector<String> chemNames( moleculeList.size());
+	vector<string> chemNames( moleculeList.size());
 	for ( int i = 0; i < moleculeList.size(); i++ ){
 		chemNames[i] = moleculeList[i].trimmed().toStdString();
 	}
 	searcher->setChemicalNames( chemNames );
 
 	//Create a temporary file for the search results
-	String resultTableName = viewer::options.temporaryPath("SearcheMoleculesResults");
-	searcher->setResultFile( resultTableName );
+	//String resultTableName = viewer::options.temporaryPath("SearchMoleculesResults");
+	//searcher->setResultFile( resultTableName );
 
 	//Set the range for the search
 	Double minValue = SPLATALOGUE_DEFAULT_MIN;
 	Double maxValue = SPLATALOGUE_DEFAULT_MAX;
-	//MDoppler redShift = getRedShiftAdjustment();
-	initializeSearchRange( ui.rangeMinLineEdit, minValue/*, redShift*/ );
-	initializeSearchRange( ui.rangeMaxLineEdit, maxValue/*, redShift*/ );
+	initializeSearchRange( ui.rangeMinLineEdit, minValue );
+	initializeSearchRange( ui.rangeMaxLineEdit, maxValue );
 	if ( minValue > maxValue ){
 		double tmp = minValue;
 		minValue = maxValue;
@@ -383,23 +376,56 @@ void SearchMoleculesWidget::search(){
 
 	//Start the background thread that will do the search
 	delete searchThread;
-	searchThread = new SearchThread( searcher );
+	searchThread = NULL;
+	startSearchThread();
+}
+
+void SearchMoleculesWidget::startSearchThread(){
+	searchThread = new SearchThread( searcher, searchResultOffset );
 	connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 	searchThread->start();
 	progressBar.show();
 }
 
 
+
+void SearchMoleculesWidget::nextResults(){
+	int nextStart = searchResultOffset + searchResultLimit;
+	if ( nextStart < searchResultCount ){
+		searchResultOffset = nextStart;
+		startSearchThread();
+	}
+	else {
+		qDebug() << "There are no NEXT search results";
+	}
+}
+
+
+
+void SearchMoleculesWidget::prevResults(){
+	int nextStart = searchResultOffset - searchResultLimit;
+	if ( nextStart >= 0 ){
+		searchResultOffset = nextStart;
+		startSearchThread();
+	}
+	else {
+		qDebug() << "There are no PREVIOUS search results";
+	}
+}
 void SearchMoleculesWidget::searchFinished(){
 
 	String errorMsg = searchThread->getErrorMessage();
 	if ( errorMsg.length() == 0 ){
+		if (searchResultOffset == 0 ){
+			searchResultCount = searchThread->getResultsCount();
+		}
 		searchResults = searchThread->getResults();
 		bool noResults = searchResults.empty();
 		if ( noResults ){
 			progressBar.hide();
 		}
-		resultDisplay ->displaySearchResults( searchResults );
+		resultDisplay ->displaySearchResults( searchResults,
+				searchResultOffset, searchResultCount);
 		emit searchCompleted();
 	}
 	else {
@@ -453,23 +479,17 @@ QString SearchMoleculesWidget::getUnit() const {
 	return unitStr;
 }
 
-Record SearchMoleculesWidget::getSearchResults() const {
+vector<SplatResult> SearchMoleculesWidget::getSearchResults() const {
 	return searchResults;
 }
 
 bool SearchMoleculesWidget::isLocal() const {
-	//Note:  this will need to be reimplemented when we have access
-	//to the real splatalogue.
+	//Note:  this will need to be reimplemented if we ever have network
+	//access to Splatalogue
 	return true;
 }
 
-String SearchMoleculesWidget::getDatabasePath() const {
-	String dPath = defaultDatabasePath;
-	if ( databasePath.length() > 0 ){
-		dPath = databasePath;
-	}
-	return dPath;
-}
+
 
 MDoppler::Types SearchMoleculesWidget::getDopplerType() const {
 	QString dopplerStr = ui.dopplerTypeCombo->currentText();
@@ -484,6 +504,7 @@ MRadialVelocity::Types SearchMoleculesWidget::getReferenceFrame() const{
 
 SearchMoleculesWidget::~SearchMoleculesWidget()
 {
+	delete searcher;
 	delete searchThread;
 }
 }

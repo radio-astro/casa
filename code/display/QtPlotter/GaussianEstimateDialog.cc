@@ -61,6 +61,9 @@ GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 	connect( ui.coordinateCheckBox, SIGNAL(stateChanged(int)), this, SLOT(plotsCoordinatedChanged(int)));
 	connect(&selectEstimateDialog, SIGNAL(accepted()), this, SLOT(updateMolecularLines()));
 	connect(&clearPlotDialog, SIGNAL(accepted()), this, SLOT(clearSelectedPlots()));
+
+	//Searching was moved to main screen
+	ui.searchButton->setVisible( false );
 }
 
 //--------------------------------------------------------------------------------
