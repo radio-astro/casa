@@ -4239,6 +4239,13 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
 
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
+
   // VisBuffer indices
   Double* time=  cvb.time().data();
   Int*    a1=    cvb.antenna1().data();
