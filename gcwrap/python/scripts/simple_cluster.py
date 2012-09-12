@@ -258,13 +258,13 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass            
             
-            cmd_memory = "ssh -q " + hostname + " 'vm_stat | grep free' "
+            cmd_memory = "ssh -q " + hostname + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
             str_memory = commands.getoutput(cmd_memory)
-            str_memory = string.replace(str_memory,"Pages free:","")
-            str_memory = string.replace(str_memory,"kB","")
+            str_memory = string.replace(str_memory,"M free.","")
+            str_memory = string.replace(str_memory," ","")
 
             try:
-                memory = (float(str_memory)*4096.)/(1024*1024)
+                memory = float(str_memory)
             except:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                 pass
