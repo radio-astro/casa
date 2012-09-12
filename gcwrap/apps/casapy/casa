@@ -16,7 +16,7 @@ fi
 readonly HOSTNAME=$(hostname -s)
 readonly OS_TYPE=$(uname -s)
 readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
-readonly SCRIPT_DIRECTORY=$(dirname "$0")
+# readonly SCRIPT_DIRECTORY=$(dirname "$0")
 readonly SCRIPT_NAME=$(basename "$0")
 if [ -L "$0" ]; then
     readonly SCRIPT_PATH="`readlink $0`"
@@ -79,11 +79,13 @@ function ensure_executable_exists {
 function ensure_dbus_is_running {
 #
 # We let the user's desktop manage dbus on Linux.
+# TODO: What about servers?
 # TODO: Capture standard out from launchctl, only display it if errors occur.
     if [ "$OS_TYPE" = "Darwin" ]; then
         # echo "TBD: ensure_dbus_is_running"
         local _checkdbus=$(launchctl list | grep freedesktop | wc -l | tr -d ' ')
         if [ "${_checkdbus}" -eq "1" ]; then
+            # If only one of the two required dbus services are running, stop it.
             local _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
             launchctl remove ${_dbusctl}
         fi
@@ -160,7 +162,7 @@ function set_A_ROOT {
     if [ "x$A_ROOT" = "x" ]; then
         local result="`echo ${CASAPATH} | awk '{print $1}'`"
         if [ "x$result" = "x" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer_environment" ]; then
+            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
                 result="${CASA_INSTALLATION_DIRECTORY%/*}"
             else
                 result="${CASA_INSTALLATION_DIRECTORY}"
@@ -187,7 +189,7 @@ function set_CASA_3RD_PARTY_DIRECTORY {
     if [ "x$CASA_3RD_PARTY_DIRECTORY" = "x" ]; then
         local result=""
         if [ "$OS_TYPE" = "Darwin" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer_environment" ]; then
+            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
                 result="/opt/casa/darwin${OS_VERSION}"
             else
                 # Probably running from an app.  Not sure though...
@@ -242,7 +244,7 @@ function set_CASA_INSTALLATION_DIRECTORY {
             local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
             if [ "$OS_TYPE" = "Darwin" ]; then
                 result="${casa_root%/*/*}/${casa_os}"
-            elif [ "$CASA_INSTALLATION_TYPE" = "developer_environment" ]; then
+            elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
                 result="${casa_root}/${casa_os}"
             else
                 result="$casa_root"
@@ -267,7 +269,7 @@ function set_CASAPY_SCRIPT {
     # If it is already set, do not change it.
     if [ "x$CASAPY_SCRIPT" = "x" ]; then
         local result=""
-        if [ "$CASA_INSTALLATION_TYPE" = "developer_environment" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
             result="${CASA_INSTALLATION_DIRECTORY}/python/2.6/casapy.py"
         else
             case $OS_TYPE in
@@ -331,7 +333,7 @@ function set_PYTHON_EXECUTABLE {
         local result=""
         case $OS_TYPE in
             "Darwin")
-            if [ "$CASA_INSTALLATION_TYPE" = "developer_environment" ]; then
+            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
                 result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
             else
                 # Probably running from an app.  Not sure though...
@@ -399,7 +401,7 @@ function update_CASA_data_directory {
 # TODO: rewrite the following to not depend on command line option
 #       position or order.
 _debug_casa_shell_script="F"
-if [ "$1" = "--debug_shell_script" ]; then
+if [ "$1" = "--debug-shell-script" ]; then
     _debug_casa_shell_script="T"
     shift
 fi
@@ -441,7 +443,7 @@ display_debugging_message "CASA_INSTALLATION_TYPE = $CASA_INSTALLATION_TYPE"
 display_debugging_message "HOSTNAME = $HOSTNAME"
 display_debugging_message "OS_TYPE = $OS_TYPE"
 display_debugging_message "OS_VERSION = $OS_VERSION"
-display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
+# display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
 display_debugging_message "SCRIPT_NAME = $SCRIPT_NAME"
 display_debugging_message "SCRIPT_PATH = $SCRIPT_PATH"
 display_debugging_message "STARTUP_DIRECTORY = $STARTUP_DIRECTORY"
