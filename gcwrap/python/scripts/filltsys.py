@@ -19,28 +19,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 #*******************************************************************************
 from scipy.interpolate import interp1d
-from taskinit import tbtool
+from taskinit import gentools
 import numpy
 import string
 
-# to get casaversion
-def __casaversion():
-    import inspect
-    import sys
-    myf = sys._getframe(len(inspect.stack())-1).f_globals
-    casa = myf['casa']
-    vstr = casa['build']['version']
-    vint = int(vstr.replace('.',''))
-    return vint
-casaversion = __casaversion()
-
-def createtb():
-    if casaversion < 400:
-        return tbtool.create()
-    else:
-        return tbtool()
-
-_tb = createtb()
+_tb = gentools(['tb'])[0]
 
 scaling={'GHz':1.0e-9,
          'MHz':1.0e-6,
@@ -157,7 +140,7 @@ class TsysFillerBase( object ):
         self.filename = filename.rstrip('/')
         self.polno = None
         self.beamno = None
-        self.table = createtb()
+        self.table = gentools(['tb'])[0]
         self.table.open( self.filename, nomodify=False )
 
     def __del__( self ):
