@@ -70,6 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void reportError(const char *token,const String source=String(""));
     virtual String constructMessage();
 
+    virtual void reset();
     virtual void handleError(MSSelectionError&);
   protected:
     vector<String> tokenList, messageList;
