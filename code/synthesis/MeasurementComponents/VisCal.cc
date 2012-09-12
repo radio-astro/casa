@@ -730,9 +730,6 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Int ibln;
   for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
     
-    // Avoid ACs
-    if (*a1==*a2) *flagR=True;
-
     if (!*flagR) {  // if this row unflagged
 
       // The basline number
@@ -1156,9 +1153,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
     for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
       
-      // Avoid ACs
-      if (*a1==*a2) *flagR=True;
-
       if (!*flagR) {  // if this row unflagged
 	
 	// Solution channel registration
