@@ -1126,7 +1126,7 @@ def simobserve(
                 # don't set table, that way it won't save to disk
                 #                        mode="calculate",table=noisymsroot)
 
-            sm.corrupt(avoidauto=True);
+            sm.corrupt();
             sm.done();
 
 
