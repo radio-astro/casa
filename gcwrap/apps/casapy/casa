@@ -16,14 +16,22 @@ fi
 readonly HOSTNAME=$(hostname -s)
 readonly OS_TYPE=$(uname -s)
 readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
-# readonly SCRIPT_DIRECTORY=$(dirname "$0")
 readonly SCRIPT_NAME=$(basename "$0")
-if [ -L "$0" ]; then
-    readonly SCRIPT_PATH="`readlink $0`"
+
+#
+# Find the FULL path to the directory containing the script:
+initial_script_directory=$(dirname "$0")
+
+if [ "${initial_script_directory:0:1}" = "/" ]; then
+   echo "Full script directory path: $0"
+   readonly SCRIPT_DIRECTORY="${initial_script_directory}"
 else
-    readonly SCRIPT_PATH="$0"
+   echo "Partial path: $initial_script_directory"
+   clean_partial_path="${initial_script_directory#*/}"
+   cwd=`pwd`
+   readonly SCRIPT_DIRECTORY="${cwd}/${clean_partial_path}"
 fi
-readonly STARTUP_DIRECTORY=$(pwd)
+
 
 #
 # Skip forward to "Main" comment to see top level logic.
@@ -235,7 +243,7 @@ function set_CASA_INSTALLATION_DIRECTORY {
         if [ "x$CASAPATH" = "x" ]; then
             if [ "$OS_TYPE" == "Darwin" ]; then
                 # Probably running from an app.  Not sure though...
-                result="${SCRIPT_PATH%/*/*/*}/Contents"
+                result="${SCRIPT_DIRECTORY%/*/*}/Contents"
             else
                 exit_with_error_message -1 "Unable to detect CASA_INSTALLATION_DIRECTORY.\nPlease report this to CASA developers immediately."
             fi
@@ -443,9 +451,8 @@ display_debugging_message "CASA_INSTALLATION_TYPE = $CASA_INSTALLATION_TYPE"
 display_debugging_message "HOSTNAME = $HOSTNAME"
 display_debugging_message "OS_TYPE = $OS_TYPE"
 display_debugging_message "OS_VERSION = $OS_VERSION"
-# display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
+display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
 display_debugging_message "SCRIPT_NAME = $SCRIPT_NAME"
-display_debugging_message "SCRIPT_PATH = $SCRIPT_PATH"
 display_debugging_message "STARTUP_DIRECTORY = $STARTUP_DIRECTORY"
 display_debugging_message "CASAPATH = $CASAPATH"
 
