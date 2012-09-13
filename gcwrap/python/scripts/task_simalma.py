@@ -50,6 +50,9 @@ def simalma(
     overwrite=None,
     async=False):
 
+    # Collect a list of parameter values to save inputs
+    in_params =  locals()
+
     try:
         casalog.origin('simalma')
         if verbose: casalog.filter(level="DEBUG2")
@@ -82,7 +85,8 @@ def simalma(
             os.mkdir(fileroot)
 
         saveinputs = myf['saveinputs']
-        saveinputs('simalma',fileroot+"/"+project+".simalma.last")
+        saveinputs('simalma',fileroot+"/"+project+".simalma.last",
+                   myparams=in_params)
 
         # create the utility object:
         myutil = simutil(direction)
