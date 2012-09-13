@@ -63,9 +63,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class HDUType>
 void ImageFITSConverterImpl<HDUType>::FITSToImage(
 	ImageInterface<Float>*& pNewImage, String &error,
-	FitsInput& oldImage, const String &newImageName,
-	uInt whichRep, HDUType &fitsImage,
-	uInt memoryInMB, Bool zeroBlanks
+	const String &newImageName,
+	const uInt whichRep, HDUType &fitsImage,
+	const String& fitsFilename, const DataType dataType,
+	const uInt memoryInMB, const Bool zeroBlanks
 ) {
 	LogIO os(LogOrigin("ImageFITSConverterImpl", __FUNCTION__, WHERE));
 	// Crack the header and get what we need out of it.  DOn't get tricked
@@ -305,9 +306,7 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(
 		pNewImage = 0;
 	}
 	// ImageInfo (removes any consumed keywords)
-	ImageInfo imageInfo = ImageFITSConverter::getImageInfo(
-		headerRec, oldImage
-	);
+	ImageInfo imageInfo = ImageFITSConverter::getImageInfo(headerRec);
 
 	// If we had one of those unofficial pseudo-Stokes on the Stokes axis, store it in the imageInfo
 
@@ -319,12 +318,16 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(
 	}
 	// Try and find the restoring beam in the history cards if
 	// its not in the header
-
 	if (
 		! imageInfo.hasBeam()
 		&& ! imageInfo.getRestoringBeam(logger)
 	) {
-		imageInfo.removeRestoringBeam();
+		if (
+			headerRec.isDefined(ImageFITSConverter::CASAMBM)
+			&& headerRec.asRecord(ImageFITSConverter::CASAMBM).asBool("value")
+		) {
+			ImageFITSConverter::readBeamsTable(imageInfo, fitsFilename, dataType);
+		}
 	}
 	pNewImage->setImageInfo(imageInfo);
 	return;

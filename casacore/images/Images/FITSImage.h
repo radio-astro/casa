@@ -275,6 +275,7 @@ private:
   Bool           filterZeroMask_p;
   uInt           whichRep_p;
   uInt           whichHDU_p;
+  Bool           _hasBeamsTable;
 
 
 // Reopen the image if needed.

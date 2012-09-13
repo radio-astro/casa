@@ -78,7 +78,8 @@ FITSImage::FITSImage (const String& name, uInt whichRep, uInt whichHDU)
   isClosed_p  (True),
   filterZeroMask_p(False),
   whichRep_p(whichRep),
-  whichHDU_p(whichHDU)
+  whichHDU_p(whichHDU),
+  _hasBeamsTable(False)
 {
    setup();
 }
@@ -100,7 +101,8 @@ FITSImage::FITSImage (const String& name, const MaskSpecifier& maskSpec, uInt wh
   isClosed_p  (True),
   filterZeroMask_p(False),
   whichRep_p(whichRep),
-  whichHDU_p(whichHDU)
+  whichHDU_p(whichHDU),
+  _hasBeamsTable(False)
 {
    setup();
 }
@@ -123,7 +125,9 @@ FITSImage::FITSImage (const FITSImage& other)
   isClosed_p  (other.isClosed_p),
   filterZeroMask_p(other.filterZeroMask_p),
   whichRep_p(other.whichRep_p),
-  whichHDU_p(other.whichHDU_p)
+  whichHDU_p(other.whichHDU_p),
+  _hasBeamsTable(other._hasBeamsTable)
+
 {
    if (other.pPixelMask_p != 0) {
       pPixelMask_p = other.pPixelMask_p->clone();
@@ -161,6 +165,7 @@ FITSImage& FITSImage::operator=(const FITSImage& other)
       filterZeroMask_p=other.filterZeroMask_p;
       whichRep_p = other.whichRep_p;
       whichHDU_p = other.whichHDU_p;
+      _hasBeamsTable = other._hasBeamsTable;
    }
    return *this;
 } 
@@ -593,7 +598,6 @@ void FITSImage::setup()
 
 // set ImageInterface data
    setCoordsMember (cSys);
-   setImageInfo (imageInfo);
 
 // Set FITSImage data
 
@@ -636,6 +640,12 @@ void FITSImage::setup()
    }
 // Open the image.
    open();
+
+   // Finally, read any supported extensions, like a BEAMS table
+   if (_hasBeamsTable) {
+	   ImageFITSConverter::readBeamsTable(imageInfo, fullName, dataType_p);
+   }
+   setImageInfo (imageInfo);
 }
 
 
@@ -691,7 +701,6 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
                                     Int& longMagic, Bool& hasBlanks, const String& name,
                                     uInt whichRep, uInt whichHDU)
 {
-// Open sesame
 
     LogIO os(LogOrigin("FITSImage", "getImageAttributes", WHERE));
     File fitsfile(name);
@@ -712,9 +721,7 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
     recordsize = infile.fitsrecsize();
 
 
-//
 // Advance to the right HDU
-//
     for (uInt i=0; i<whichHDU; i++) {
         infile.skip_hdu();
         if (infile.err()) {
