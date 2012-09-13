@@ -21,149 +21,152 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-#include "SearcherLocal.h"
+#include "SearcherTable.h"
 #include <spectrallines/Splatalogue/SearchEngine.h>
-#include <spectrallines/Splatalogue/SplatalogueTable.h>
+
+
+#include <iostream>
+using namespace std;
 
 namespace casa {
 
-const String SearcherLocal::ACETALDEHYDE = "Acetaldehyde";
-const String SearcherLocal::ACETONE = "Acetone";
-const String SearcherLocal::ACETYLENE = "Acetylene";
-const String SearcherLocal::ALUMINUM_ISOCYANITRILE = "Aluminum Isocyanitrile";
-const String SearcherLocal::ALUMINUM_MONOCHLORIDE = "Aluminum Monochloride";
-const String SearcherLocal::ALUMINUM_MONOFLUORIDE = "Aluminum Monofluoride";
-const String SearcherLocal::AMIDOGEN = "Amidogen";
-const String SearcherLocal::AMINOACETONITRILE = "Aminoacetonitrile";
-const String SearcherLocal::AMMONIA = "Ammonia";
-const String SearcherLocal::ATOMIC_CARBON = "Atomic Carbon";
-const String SearcherLocal::ATOMIC_HYDROGEN = "Atomic Hydrogen";
-const String SearcherLocal::BUTADIYNYL13_ANION = "1,3-Butadiynyl anion";
-const String SearcherLocal::BUTADIYNYL13_RADICAL = "1,3-Butadiynyl radical";
-const String SearcherLocal::BUTATRIENYLIDENE = "Butatrienylidene";
-const String SearcherLocal::BUTYNENITRILE2 = "2-Butynenitrile";
-const String SearcherLocal::CARBON_MONOPHOSPHIDE = "Carbon Monophosphide";
-const String SearcherLocal::CARBON_MONOSULFIDE = "Carbon Monosulfide";
-const String SearcherLocal::CARBON_MONOXIDE = "Carbon Monoxide";
-const String SearcherLocal::CARBON_MONOXIDE_ION = "Carbon Monoxide Ion";
-const String SearcherLocal::CARBONYL_SULFIDE = "Carbonyl Sulfide";
-const String SearcherLocal::CYANAMIDE = "Cyanamide";
-const String SearcherLocal::CYANIC_ACID = "Cyanic acid";
-const String SearcherLocal::CYANIDE_RADICAL = "Cyanide Radical";
-const String SearcherLocal::CYANOACETYLENE = "Cyanoacetylene";
-const String SearcherLocal::CYANOETHYNYL = "Cyanoethynyl";
-const String SearcherLocal::CYANOALLENE = "Cyanoallene";
-const String SearcherLocal::CYANOBUTADIYNE = "Cyanobutadiyne";
-const String SearcherLocal::CYANOBUTADIYNYLIDE_ANION = "Cyanobutadiynylide anion";
-const String SearcherLocal::CYANO4_BUTADIYNYL13 = "4-Cyano-1,3-Butadiynyl";
-const String SearcherLocal::CYANOETHYNYLIDE_ION = "Cyanoethynylide ion";
-const String SearcherLocal::CYANOFORMALDEHYDE = "Cyanoformaldehye";
-const String SearcherLocal::CYANOMETHYL = "Cyanomethyl";
-const String SearcherLocal::CYANOMETHYLENE = "Cyanomethylene";
-const String SearcherLocal::CYANO3_PROPADIENYLIDENE12 = "3-Cyano-1,2-propadienylidene";
-const String SearcherLocal::CYCLOPROPENONE = "Cyclopropenone";
-const String SearcherLocal::CYCLOPROPENYLIDENE = "Cyclopropenylidene";
-const String SearcherLocal::DIAZENYLIUM = "Diazenylium";
-const String SearcherLocal::DIMETHYL_ETHER = "Dimethyl ether";
-const String SearcherLocal::ETHYL_CYANIDE = "Ethyl Cyanide";
-const String SearcherLocal::ETHYLENE_GLYCOL = "Ethylene Glycol";
-const String SearcherLocal::ETHYLENE_OXIDE = "Ethylene Oxide";
-const String SearcherLocal::ETHYNE_ISOCYANIDE = "Ethyne Isocyanide";
-const String SearcherLocal::ETHYNYL = "Ethynyl";
-const String SearcherLocal::FLUOROMETHYLIUMYLIDENE = "Fluoromethyliumylidene";
-const String SearcherLocal::FORMALDEHYDE = "Formaldehyde";
-const String SearcherLocal::FORMAMIDE = "Formamide";
-const String SearcherLocal::FORMIC_ACID = "Formic Acid";
-const String SearcherLocal::FORMYL_RADICAL = "Formyl Radical";
-const String SearcherLocal::FORMYLIUM = "Formylium";
-const String SearcherLocal::FULMINIC_ACID = "Fulminic acid";
-const String SearcherLocal::GAUCHE_ETHANOL = "gauche-Ethanol";
-const String SearcherLocal::GLYCOLALDEHYDE = "Glycolaldehyde";
-const String SearcherLocal::HEPTATRIYNENITRILE246 = "2,4,6-Heptatriynenitrile";
-const String SearcherLocal::HEPTATRIYNYLIDYNE246 = "2,4,6-Heptatriynylidyne";
-const String SearcherLocal::HEXATRIENYL = "Hexatrienyl";
-const String SearcherLocal::HEXATRIYNYL135 = "1,3,5-Hexatriynyl";
-const String SearcherLocal::HEXATRIYNYL135_ANION = "1,3,5-Hexatriynyl anion";
-const String SearcherLocal::HYDROCHLORIC_ACID = "Hydrochloric acid";
-const String SearcherLocal::HYDROGEN_CYANIDE = "Hydrogen Cyanide";
-const String SearcherLocal::HYDROGEN_FLUORIDE = "Hydrogen fluoride";
-const String SearcherLocal::HYDROGEN_ISOCYANIDE = "Hydrogen Isocyanide";
-const String SearcherLocal::HYDROGEN_SULFIDE = "Hydrogen sulfide";
-const String SearcherLocal::HYDROXYL = "Hydroxyl";
-const String SearcherLocal::HYDROXYMETHYLIUM_ION = "Hydroxymethylium ion";
-const String SearcherLocal::IMINOMETHYLIUM = "Iminomethylium";
-const String SearcherLocal::IMINO3_PROPADIENYLIDENE12 = "3-Imino-1,2 Propadienylidene";
-const String SearcherLocal::IMIDOGEN = "Imidogen";
-const String SearcherLocal::ISOCYANIC_ACID = "Isocyanic Acid";
-const String SearcherLocal::ISOTHIOCYANIC_ACID = "Isothiocyanic acid";
-const String SearcherLocal::KETENE = "Ketene";
-const String SearcherLocal::KETENIMINE = "Ketenimine";
-const String SearcherLocal::MAGNESIUM_CYANIDE = "Magnesium Cyanide";
-const String SearcherLocal::MAGNESIUM_ISOCYANIDE = "Magnesium Isocyanide";
-const String SearcherLocal::METHANIMINE = "Methanimine";
-const String SearcherLocal::METHANOL = "Methanol";
-const String SearcherLocal::METHYL_ACETYLENE = "Methyl Acetylene";
-const String SearcherLocal::METHYL_CYANIDE = "Methyl Cyanide";
-const String SearcherLocal::METHYL_DIACETYLENE = "Methyl diacetylene";
-const String SearcherLocal::METHYL_FORMATE = "Methyl Formate";
-const String SearcherLocal::METHYL_ISOCYANIDE = "Methyl isocyanide";
-const String SearcherLocal::METHYLCYANODIACETYLENE = "Methylcyanodiacetylene";
-const String SearcherLocal::METHYLAMINE = "Methylamine";
-const String SearcherLocal::METHYLENE = "Methylene";
-const String SearcherLocal::METHYLENE_AMIDOGEN = "Methylene amidogen";
-const String SearcherLocal::METHYLIDYNE = "Methylidyne";
-const String SearcherLocal::METHYLIUMYLIDENE = "Methyliumylidene";
-const String SearcherLocal::METHYLTRIACETYLENE="Methyltriacetylene";
-const String SearcherLocal::NITRIC_SULFIDE = "Nitric sulfide";
-const String SearcherLocal::NITRIC_OXIDE = "Nitric oxide";
-const String SearcherLocal::NITROSYL_HYDRIDE = "Nitrosyl hydride";
-const String SearcherLocal::NITROUS_OXIDE = "Nitrous Oxide";
-const String SearcherLocal::NONATETRAYNENITRILE2468 = "2,4,6,8-Nonatetraynenitrile";
-const String SearcherLocal::OCTATETRAYNYL1357 = "1,3,5,7-Octatetraynyl";
-const String SearcherLocal::OCTATETRAYNYL1357_ANION="1,3,5,7-Octatetraynyl anion";
-const String SearcherLocal::OXOETHENYLIDENE = "Oxoethenylidene";
-const String SearcherLocal::OXONIUM_HYDRIDE = "Oxonium hydride";
-const String SearcherLocal::OXO3_PROPADIENYLIDENE12="3-Oxo-1,2-Propadienylidene";
-const String SearcherLocal::PENTADIYNYLIDYNE24 = "2,4-Pentadiynylidyne";
-const String SearcherLocal::PHOSPHAETHYNE = "Phosphaethyne";
-const String SearcherLocal::PHOSPHAPROPYNYLIDYNE = "Phosphapropynylidyne";
-const String SearcherLocal::PHOSPHOROUS_MONOXIDE = "Phosphorus Monoxide";
-const String SearcherLocal::PHOSPHOROUS_NITRIDE = "Phosphorous nitride";
-const String SearcherLocal::PROPADIENYLIDENE = "Propadienylidene";
-const String SearcherLocal::PROPENAL = "Propenal";
-const String SearcherLocal::PROPYNAL2 = "2-Propynal";
-const String SearcherLocal::PROPYNYLIDYNE = "Propynylidyne";
-const String SearcherLocal::POTASSIUM_CHLORIDE = "Potassium chloride";
-const String SearcherLocal::PROTONATE_2_PROYNENITRILE = "Protonate 2-proynenitrile";
-const String SearcherLocal::PROTONATED_CARBON_DIOXIDE = "Protonated Carbon Dioxide";
-const String SearcherLocal::SILICON_CARBIDE = "Silicon Carbide";
-const String SearcherLocal::SILICON_CYANIDE = "Silicon Cyanide";
-const String SearcherLocal::SILICON_ISOCYANIDE = "Silicon Isocyanide";
-const String SearcherLocal::SILICON_MONOCARBIDE = "Silicon Monocarbide";
-const String SearcherLocal::SILICON_MONONITRIDE = "Silicon Mononitride";
-const String SearcherLocal::SILICON_MONOSULFIDE = "Silicon monosulfide";
-const String SearcherLocal::SILICON_MONOXIDE = "Silicon Monoxide";
-const String SearcherLocal::SILICON_TETRACARBIDE = "Silicon tetracarbide";
-const String SearcherLocal::SILANETETRAYL3_PROPADIENYLIDENE12 = "3-Silanetetrayl-1,2-Propadienylidene";
-const String SearcherLocal::SODIUM_CHLORIDE = "Sodium Chloride";
-const String SearcherLocal::SODIUM_CYANIDE = "Sodium Cyanide";
-const String SearcherLocal::SULFUR_DIOXIDE = "Sulfur dioxide";
-const String SearcherLocal::SULFUR_MONOXIDE = "Sulfur Monoxide";
-const String SearcherLocal::SULFUR_MONOXIDE_ION = "Sulfur Monoxide ion";
-const String SearcherLocal::TRIHYDROGEN_ION = "Trihydrogen ion";
-const String SearcherLocal::THIOCYANIC_ACID = "thiocyanic acid";
-const String SearcherLocal::THIOFORMALDEHYDE = "Thioformaldehyde";
-const String SearcherLocal::THIOFORMYLIUM = "Thioformylium";
-const String SearcherLocal::THIOXOETHENYLIDENE = "Thioxoethenylidene";
-const String SearcherLocal::THIOXO_12_PROPADIEYLIDENE3="3-Thioxo-1,2-Propadieylidene";
-const String SearcherLocal::UNDECAPENTAYNENITRILE246810 = "2,4,6,8,10-Undecapentaynenitrile";
-const String SearcherLocal::VINYL_ALCOHOL = "Vinyl Alcohol";
-const String SearcherLocal::VINYL_CYANIDE = "Vinyl Cyanide";
-const String SearcherLocal::WATER = "Water";
+const String SearcherTable::ACETALDEHYDE = "Acetaldehyde";
+const String SearcherTable::ACETONE = "Acetone";
+const String SearcherTable::ACETYLENE = "Acetylene";
+const String SearcherTable::ALUMINUM_ISOCYANITRILE = "Aluminum Isocyanitrile";
+const String SearcherTable::ALUMINUM_MONOCHLORIDE = "Aluminum Monochloride";
+const String SearcherTable::ALUMINUM_MONOFLUORIDE = "Aluminum Monofluoride";
+const String SearcherTable::AMIDOGEN = "Amidogen";
+const String SearcherTable::AMINOACETONITRILE = "Aminoacetonitrile";
+const String SearcherTable::AMMONIA = "Ammonia";
+const String SearcherTable::ATOMIC_CARBON = "Atomic Carbon";
+const String SearcherTable::ATOMIC_HYDROGEN = "Atomic Hydrogen";
+const String SearcherTable::BUTADIYNYL13_ANION = "1,3-Butadiynyl anion";
+const String SearcherTable::BUTADIYNYL13_RADICAL = "1,3-Butadiynyl radical";
+const String SearcherTable::BUTATRIENYLIDENE = "Butatrienylidene";
+const String SearcherTable::BUTYNENITRILE2 = "2-Butynenitrile";
+const String SearcherTable::CARBON_MONOPHOSPHIDE = "Carbon Monophosphide";
+const String SearcherTable::CARBON_MONOSULFIDE = "Carbon Monosulfide";
+const String SearcherTable::CARBON_MONOXIDE = "Carbon Monoxide";
+const String SearcherTable::CARBON_MONOXIDE_ION = "Carbon Monoxide Ion";
+const String SearcherTable::CARBONYL_SULFIDE = "Carbonyl Sulfide";
+const String SearcherTable::CYANAMIDE = "Cyanamide";
+const String SearcherTable::CYANIC_ACID = "Cyanic acid";
+const String SearcherTable::CYANIDE_RADICAL = "Cyanide Radical";
+const String SearcherTable::CYANOACETYLENE = "Cyanoacetylene";
+const String SearcherTable::CYANOETHYNYL = "Cyanoethynyl";
+const String SearcherTable::CYANOALLENE = "Cyanoallene";
+const String SearcherTable::CYANOBUTADIYNE = "Cyanobutadiyne";
+const String SearcherTable::CYANOBUTADIYNYLIDE_ANION = "Cyanobutadiynylide anion";
+const String SearcherTable::CYANO4_BUTADIYNYL13 = "4-Cyano-1,3-Butadiynyl";
+const String SearcherTable::CYANOETHYNYLIDE_ION = "Cyanoethynylide ion";
+const String SearcherTable::CYANOFORMALDEHYDE = "Cyanoformaldehye";
+const String SearcherTable::CYANOMETHYL = "Cyanomethyl";
+const String SearcherTable::CYANOMETHYLENE = "Cyanomethylene";
+const String SearcherTable::CYANO3_PROPADIENYLIDENE12 = "3-Cyano-1,2-propadienylidene";
+const String SearcherTable::CYCLOPROPENONE = "Cyclopropenone";
+const String SearcherTable::CYCLOPROPENYLIDENE = "Cyclopropenylidene";
+const String SearcherTable::DIAZENYLIUM = "Diazenylium";
+const String SearcherTable::DIMETHYL_ETHER = "Dimethyl ether";
+const String SearcherTable::ETHYL_CYANIDE = "Ethyl Cyanide";
+const String SearcherTable::ETHYLENE_GLYCOL = "Ethylene Glycol";
+const String SearcherTable::ETHYLENE_OXIDE = "Ethylene Oxide";
+const String SearcherTable::ETHYNE_ISOCYANIDE = "Ethyne Isocyanide";
+const String SearcherTable::ETHYNYL = "Ethynyl";
+const String SearcherTable::FLUOROMETHYLIUMYLIDENE = "Fluoromethyliumylidene";
+const String SearcherTable::FORMALDEHYDE = "Formaldehyde";
+const String SearcherTable::FORMAMIDE = "Formamide";
+const String SearcherTable::FORMIC_ACID = "Formic Acid";
+const String SearcherTable::FORMYL_RADICAL = "Formyl Radical";
+const String SearcherTable::FORMYLIUM = "Formylium";
+const String SearcherTable::FULMINIC_ACID = "Fulminic acid";
+const String SearcherTable::GAUCHE_ETHANOL = "gauche-Ethanol";
+const String SearcherTable::GLYCOLALDEHYDE = "Glycolaldehyde";
+const String SearcherTable::HEPTATRIYNENITRILE246 = "2,4,6-Heptatriynenitrile";
+const String SearcherTable::HEPTATRIYNYLIDYNE246 = "2,4,6-Heptatriynylidyne";
+const String SearcherTable::HEXATRIENYL = "Hexatrienyl";
+const String SearcherTable::HEXATRIYNYL135 = "1,3,5-Hexatriynyl";
+const String SearcherTable::HEXATRIYNYL135_ANION = "1,3,5-Hexatriynyl anion";
+const String SearcherTable::HYDROCHLORIC_ACID = "Hydrochloric acid";
+const String SearcherTable::HYDROGEN_CYANIDE = "Hydrogen Cyanide";
+const String SearcherTable::HYDROGEN_FLUORIDE = "Hydrogen fluoride";
+const String SearcherTable::HYDROGEN_ISOCYANIDE = "Hydrogen Isocyanide";
+const String SearcherTable::HYDROGEN_SULFIDE = "Hydrogen sulfide";
+const String SearcherTable::HYDROXYL = "Hydroxyl";
+const String SearcherTable::HYDROXYMETHYLIUM_ION = "Hydroxymethylium ion";
+const String SearcherTable::IMINOMETHYLIUM = "Iminomethylium";
+const String SearcherTable::IMINO3_PROPADIENYLIDENE12 = "3-Imino-1,2 Propadienylidene";
+const String SearcherTable::IMIDOGEN = "Imidogen";
+const String SearcherTable::ISOCYANIC_ACID = "Isocyanic Acid";
+const String SearcherTable::ISOTHIOCYANIC_ACID = "Isothiocyanic acid";
+const String SearcherTable::KETENE = "Ketene";
+const String SearcherTable::KETENIMINE = "Ketenimine";
+const String SearcherTable::MAGNESIUM_CYANIDE = "Magnesium Cyanide";
+const String SearcherTable::MAGNESIUM_ISOCYANIDE = "Magnesium Isocyanide";
+const String SearcherTable::METHANIMINE = "Methanimine";
+const String SearcherTable::METHANOL = "Methanol";
+const String SearcherTable::METHYL_ACETYLENE = "Methyl Acetylene";
+const String SearcherTable::METHYL_CYANIDE = "Methyl Cyanide";
+const String SearcherTable::METHYL_DIACETYLENE = "Methyl diacetylene";
+const String SearcherTable::METHYL_FORMATE = "Methyl Formate";
+const String SearcherTable::METHYL_ISOCYANIDE = "Methyl isocyanide";
+const String SearcherTable::METHYLCYANODIACETYLENE = "Methylcyanodiacetylene";
+const String SearcherTable::METHYLAMINE = "Methylamine";
+const String SearcherTable::METHYLENE = "Methylene";
+const String SearcherTable::METHYLENE_AMIDOGEN = "Methylene amidogen";
+const String SearcherTable::METHYLIDYNE = "Methylidyne";
+const String SearcherTable::METHYLIUMYLIDENE = "Methyliumylidene";
+const String SearcherTable::METHYLTRIACETYLENE="Methyltriacetylene";
+const String SearcherTable::NITRIC_SULFIDE = "Nitric sulfide";
+const String SearcherTable::NITRIC_OXIDE = "Nitric oxide";
+const String SearcherTable::NITROSYL_HYDRIDE = "Nitrosyl hydride";
+const String SearcherTable::NITROUS_OXIDE = "Nitrous Oxide";
+const String SearcherTable::NONATETRAYNENITRILE2468 = "2,4,6,8-Nonatetraynenitrile";
+const String SearcherTable::OCTATETRAYNYL1357 = "1,3,5,7-Octatetraynyl";
+const String SearcherTable::OCTATETRAYNYL1357_ANION="1,3,5,7-Octatetraynyl anion";
+const String SearcherTable::OXOETHENYLIDENE = "Oxoethenylidene";
+const String SearcherTable::OXONIUM_HYDRIDE = "Oxonium hydride";
+const String SearcherTable::OXO3_PROPADIENYLIDENE12="3-Oxo-1,2-Propadienylidene";
+const String SearcherTable::PENTADIYNYLIDYNE24 = "2,4-Pentadiynylidyne";
+const String SearcherTable::PHOSPHAETHYNE = "Phosphaethyne";
+const String SearcherTable::PHOSPHAPROPYNYLIDYNE = "Phosphapropynylidyne";
+const String SearcherTable::PHOSPHOROUS_MONOXIDE = "Phosphorus Monoxide";
+const String SearcherTable::PHOSPHOROUS_NITRIDE = "Phosphorous nitride";
+const String SearcherTable::PROPADIENYLIDENE = "Propadienylidene";
+const String SearcherTable::PROPENAL = "Propenal";
+const String SearcherTable::PROPYNAL2 = "2-Propynal";
+const String SearcherTable::PROPYNYLIDYNE = "Propynylidyne";
+const String SearcherTable::POTASSIUM_CHLORIDE = "Potassium chloride";
+const String SearcherTable::PROTONATE_2_PROYNENITRILE = "Protonate 2-proynenitrile";
+const String SearcherTable::PROTONATED_CARBON_DIOXIDE = "Protonated Carbon Dioxide";
+const String SearcherTable::SILICON_CARBIDE = "Silicon Carbide";
+const String SearcherTable::SILICON_CYANIDE = "Silicon Cyanide";
+const String SearcherTable::SILICON_ISOCYANIDE = "Silicon Isocyanide";
+const String SearcherTable::SILICON_MONOCARBIDE = "Silicon Monocarbide";
+const String SearcherTable::SILICON_MONONITRIDE = "Silicon Mononitride";
+const String SearcherTable::SILICON_MONOSULFIDE = "Silicon monosulfide";
+const String SearcherTable::SILICON_MONOXIDE = "Silicon Monoxide";
+const String SearcherTable::SILICON_TETRACARBIDE = "Silicon tetracarbide";
+const String SearcherTable::SILANETETRAYL3_PROPADIENYLIDENE12 = "3-Silanetetrayl-1,2-Propadienylidene";
+const String SearcherTable::SODIUM_CHLORIDE = "Sodium Chloride";
+const String SearcherTable::SODIUM_CYANIDE = "Sodium Cyanide";
+const String SearcherTable::SULFUR_DIOXIDE = "Sulfur dioxide";
+const String SearcherTable::SULFUR_MONOXIDE = "Sulfur Monoxide";
+const String SearcherTable::SULFUR_MONOXIDE_ION = "Sulfur Monoxide ion";
+const String SearcherTable::TRIHYDROGEN_ION = "Trihydrogen ion";
+const String SearcherTable::THIOCYANIC_ACID = "thiocyanic acid";
+const String SearcherTable::THIOFORMALDEHYDE = "Thioformaldehyde";
+const String SearcherTable::THIOFORMYLIUM = "Thioformylium";
+const String SearcherTable::THIOXOETHENYLIDENE = "Thioxoethenylidene";
+const String SearcherTable::THIOXO_12_PROPADIEYLIDENE3="3-Thioxo-1,2-Propadieylidene";
+const String SearcherTable::UNDECAPENTAYNENITRILE246810 = "2,4,6,8,10-Undecapentaynenitrile";
+const String SearcherTable::VINYL_ALCOHOL = "Vinyl Alcohol";
+const String SearcherTable::VINYL_CYANIDE = "Vinyl Cyanide";
+const String SearcherTable::WATER = "Water";
 
 
 
-SearcherLocal::SearcherLocal() :top20Names(12), extragalacticNames(36),
+SearcherTable::SearcherTable() :top20Names(12), extragalacticNames(36),
 		planetNames(19), hotCoreNames(81), darkCloudNames(51),
 		diffuseCloudNames(20), cometNames(30), agbPpnPnNames(69){
 	top20Names[0] = FORMALDEHYDE;
@@ -493,32 +496,76 @@ SearcherLocal::SearcherLocal() :top20Names(12), extragalacticNames(36),
 	agbPpnPnNames[68] = WATER;
 }
 
-void SearcherLocal::setAstroFilterTop20(){
-	filterList = top20Names;
-}
-void SearcherLocal::setAstroFilterPlanetaryAtmosphere(){
-	filterList = planetNames;
-}
-void SearcherLocal::setAstroFilterHotCores(){
-	filterList = hotCoreNames;
-}
-void SearcherLocal::setAstroFilterDarkClouds(){
-	filterList = darkCloudNames;
-}
-void SearcherLocal::setAstroFilterDiffuseClouds(){
-	filterList = diffuseCloudNames;
-}
-void SearcherLocal::setAstroFilterComets(){
-	filterList = cometNames;
-}
-void SearcherLocal::setAstroFilterAgbPpnPn(){
-	filterList = agbPpnPnNames;
-}
-void SearcherLocal::setAstroFilterExtragalactic(){
-	filterList = extragalacticNames;
+void SearcherTable::setAstroFilterTop20( bool filter ){
+	if ( filter ){
+		filterList = top20Names;
+	}
+	else {
+		filterList.resize(0);
+	}
 }
 
-Record SearcherLocal::doSearch( String& errorMsg ){
+void SearcherTable::setAstroFilterPlanetaryAtmosphere( bool filter ){
+	if ( filter ){
+		filterList = planetNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+void SearcherTable::setAstroFilterHotCores( bool filter ){
+	if ( filter ){
+		filterList = hotCoreNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+void SearcherTable::setAstroFilterDarkClouds( bool filter ){
+	if ( filter ){
+		filterList = darkCloudNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+void SearcherTable::setAstroFilterDiffuseClouds( bool filter ){
+	if ( filter ){
+		filterList = diffuseCloudNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+
+void SearcherTable::setAstroFilterComets( bool filter ){
+	if ( filter ){
+		filterList = cometNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+
+void SearcherTable::setAstroFilterAgbPpnPn( bool filter ){
+	if ( filter ){
+		filterList = agbPpnPnNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+
+void SearcherTable::setAstroFilterExtragalactic( bool filter ){
+	if ( filter ){
+		filterList = extragalacticNames;
+	}
+	else {
+		filterList.resize(0);
+	}
+}
+
+vector<SplatResult> SearcherTable::doSearch( string& errorMsg ){
 	Vector<String> qns;
 	Double intensityLow = -1;
 	Double intensityHigh = -1;
@@ -544,12 +591,25 @@ Record SearcherLocal::doSearch( String& errorMsg ){
 				chemicalNames[i] = filterList[i - start];
 			}
 		}
+
+		bool recommended = false;
+		//Change from std to casa types for the search engine.
+		Vector<String> speciesVector (speciesNames.size());
+		for ( int i = 0; i < static_cast<int>(speciesNames.size()); i++  ){
+			speciesVector[i]= speciesNames[i].c_str();
+		}
+		Vector<String> chemVector( chemicalNames.size());
+		for ( int i = 0; i < static_cast<int>(chemicalNames.size()); i++ ){
+			chemVector[i] = chemicalNames[i].c_str();
+		}
+
 		SplatalogueTable *resTable = searcher.search( fileName, minValueFreq, maxValueFreq,
-					speciesNames, false, chemicalNames, qns, intensityLow, intensityHigh,
+					speciesVector, recommended, chemVector, qns, intensityLow, intensityHigh,
 					smu2Low, smu2High, logaLow, logaHigh,
 					elLow, elHigh, euLow, euHigh,
 					includeRRLs, onlyRRLs );
 		resultsRecord = resTable->toRecord();
+
 
 		//Clean up
 		filterList.resize( 0 );
@@ -558,30 +618,60 @@ Record SearcherLocal::doSearch( String& errorMsg ){
 	catch( AipsError& err ){
 		errorMsg = "Search was unsuccessful.\nPlease check that a valid local database has been specified.";
 	}
-	return resultsRecord;
+	return toSplatResult(resultsRecord);
 }
 
-void SearcherLocal::setChemicalNames( const Vector<String>& chemNames ){
+vector<SplatResult> SearcherTable::toSplatResult( const Record& record ){
+	int resultCount = record.size();
+	vector<SplatResult> results;
+	for ( int i = 0; i < resultCount; i++ ){
+		Record line = record.asRecord("*" + String::toString(i) );
+
+		//Species
+		String species = line.asString( SplatalogueTable::RECORD_SPECIES );
+
+		//Chemical Name
+		String chemName = line.asString( SplatalogueTable::RECORD_CHEMNAME );
+
+		//Frequency
+		double freq = line.asDouble( SplatalogueTable::RECORD_FREQUENCY );
+		pair<double,string> freqResult( freq, "GHz");
+
+		//QNS
+		String qns = line.asString( SplatalogueTable::RECORD_QNS );
+
+		//Intensity
+		float intensity = line.asFloat( SplatalogueTable::RECORD_QNS );
+		pair<double,string> emptyPair;
+		SplatResult result( -1, species.c_str(), chemName.c_str(),
+					qns.c_str(), "", false , -1, freqResult,
+					emptyPair, emptyPair, emptyPair, -1, -1, intensity );
+		results.push_back(result);
+	}
+	return results;
+}
+
+void SearcherTable::setChemicalNames( const vector<string>& chemNames ){
 	chemicalNames = chemNames;
 }
 
-void SearcherLocal::setSpeciesNames( const Vector<String>& species ){
+void SearcherTable::setSpeciesNames( const vector<string>& species ){
 	speciesNames = species;
 }
 
-void SearcherLocal::setResultFile( const String& name ){
+void SearcherTable::setResultFile( const string& name ){
 	fileName = name;
 }
 
-void SearcherLocal::setSearchRangeFrequency( double minVal, double maxVal ){
+void SearcherTable::setSearchRangeFrequency( double minVal, double maxVal ){
 	minValueFreq = minVal;
 	maxValueFreq = maxVal;
 }
 
-void SearcherLocal::setDatabasePath( const String& path ){
+void SearcherTable::setDatabasePath( const string& path ){
 	databasePath = path;
 }
-SearcherLocal::~SearcherLocal() {
+SearcherTable::~SearcherTable() {
 	// TODO Auto-generated destructor stub
 }
 

@@ -21,12 +21,21 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-#ifndef SEARCHERLOCAL_H_
-#define SEARCHERLOCAL_H_
+#ifndef SEARCHERTABLE_H_
+#define SEARCHERTABLE_H_
 
 #include <spectrallines/Splatalogue/Searcher.h>
+#include <spectrallines/Splatalogue/SplatResult.h>
+#include <spectrallines/Splatalogue/SplatalogueTable.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/BasicSL/String.h>
 
+/**
+ * Note:  This code is no longer being supported or used since the move
+ * from a CASA Table database in the viewer to an SQLite database.  At least
+ * for now it is not being deleted in case the code reverts back to using a
+ * table.
+ */
 namespace casa {
 
 /**
@@ -34,38 +43,38 @@ namespace casa {
  * search criteria.
  */
 
-class SearcherLocal : public Searcher{
+class SearcherTable : public Searcher{
 public:
-	SearcherLocal();
+	SearcherTable();
 
 	//Search Paramaters
-	virtual void setChemicalNames( const Vector<String>& chemNames );
-	virtual void setSpeciesNames( const Vector<String>& speciesNames );
-	virtual void setDatabasePath( const String& databasePath );
-	virtual void setResultFile( const String& name );
+	virtual void setChemicalNames( const vector<string>& chemNames );
+	virtual void setSpeciesNames( const vector<string>& speciesNames );
+	virtual void setDatabasePath( const string& databasePath );
+	virtual void setResultFile( const string& name );
 	virtual void setSearchRangeFrequency( double minValue, double maxValue );
 
 	//Astronomical Filters
-	virtual void setAstroFilterTop20();
-	virtual void setAstroFilterPlanetaryAtmosphere();
-	virtual void setAstroFilterHotCores();
-	virtual void setAstroFilterDarkClouds();
-	virtual void setAstroFilterDiffuseClouds();
-	virtual void setAstroFilterComets();
-	virtual void setAstroFilterAgbPpnPn();
-	virtual void setAstroFilterExtragalactic();
+	virtual void setAstroFilterTop20( bool filter = true );
+	virtual void setAstroFilterPlanetaryAtmosphere( bool filter = true );
+	virtual void setAstroFilterHotCores( bool filter = true );
+	virtual void setAstroFilterDarkClouds( bool filter = true );
+	virtual void setAstroFilterDiffuseClouds( bool filter = true );
+	virtual void setAstroFilterComets( bool filter = true );
+	virtual void setAstroFilterAgbPpnPn( bool filter = true );
+	virtual void setAstroFilterExtragalactic( bool filter = true );
 
 	//Performing the Search
-	virtual Record doSearch( String& errorMsg );
-	virtual ~SearcherLocal();
+	virtual vector<SplatResult> doSearch( string& errorMsg );
+	virtual ~SearcherTable();
 private:
-
+	vector<SplatResult> toSplatResult( const Record& record );
 	String fileName;
-	String databasePath;
+	string databasePath;
 	double minValueFreq;
 	double maxValueFreq;
-	Vector<String> chemicalNames;
-	Vector<String> speciesNames;
+	vector<string> chemicalNames;
+	vector<string> speciesNames;
 	Vector<String> top20Names;
 	Vector<String> extragalacticNames;
 	Vector<String> planetNames;

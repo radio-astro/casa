@@ -52,6 +52,12 @@ public:
   // Return type id
   inline virtual JonesType type() const { return Jones::General; };
   inline virtual Int typesize() const { return 4; };
+
+  // Set scalardata_ 
+  //  TBD: Handle this better; for now, we need to set this from
+  //       an external call so we handle single-corr data properly
+  //       when setting non-corr-dep flags
+  inline void setScalarData(Bool scalardata) const { scalardata_=scalardata; };
   
   // Synchronize with leading element in external array
   inline void sync(Complex& mat) { j0_=&mat; origin(); };
@@ -81,6 +87,9 @@ public:
   virtual void applyLeft(VisVector& v) const;
   virtual void applyLeft(VisVector& v, Bool& vflag) const;
 
+  // Set flags according to solution flags
+  virtual void applyFlag(Bool& vflag) const;
+
   // print it out
   friend ostream& operator<<(ostream& os, const Jones& mat);
 
@@ -108,6 +117,9 @@ protected:
 
   // Complex unity
   const Complex cOne_;
+
+  // Is data scalar?
+  mutable Bool scalardata_;
 
 private:
 
@@ -147,6 +159,9 @@ public:
   // Apply leftward (transposed) to a VisVector
   virtual void applyLeft(VisVector& v) const;
   virtual void applyLeft(VisVector& v, Bool& vflag) const;
+
+  // Set flags according to solution flags
+  virtual void applyFlag(Bool& vflag) const;
 
   // Give access to Mueller formation methods
   friend class MuellerDiag;
@@ -193,6 +208,9 @@ public:
   virtual void applyLeft(VisVector& v) const;
   virtual void applyLeft(VisVector& v, Bool& vflag) const;
 
+  // Set flags according to solution flags
+  virtual void applyFlag(Bool& vflag) const;
+
   // Give access to Mueller formation methods
   friend class MuellerDiag;
   friend class MuellerDiag2;
@@ -237,6 +255,9 @@ public:
   // Apply leftward (transposed) to a VisVector
   virtual void applyLeft(VisVector& v) const;
   virtual void applyLeft(VisVector& v, Bool& vflag) const;
+
+  // Set flags according to solution flags
+  virtual void applyFlag(Bool& vflag) const;
 
   // Give access to Mueller formation methods
   friend class MuellerScal;

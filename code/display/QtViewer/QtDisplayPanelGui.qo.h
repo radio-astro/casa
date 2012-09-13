@@ -39,7 +39,6 @@
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
-#  include <display/QtViewer/QtAnimatorGui.ui.h>
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
@@ -71,6 +70,7 @@ class QtRegionShapeManager;
 class QtDataManager;
 class QtExportManager;
 class QtDataOptionsPanel;
+class AnimatorHolder;
 
 template <class T> class ImageInterface;
 
@@ -78,8 +78,7 @@ template <class T> class ImageInterface;
 // The main display window for the Qt version of the viewer.
 // </summary>
 
-class QtDisplayPanelGui : public QtPanelBase,
-		          protected Ui::QtAnimatorGui {
+class QtDisplayPanelGui : public QtPanelBase {
 
   Q_OBJECT;	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -244,6 +243,10 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void hideAllSubwindows();
   virtual void hideImageMenus();
 
+  //Increments the channel in the images from the start channel
+  //to the end channel.
+  void movieChannels( int startChannel, int endChannel );
+
   virtual void showStats(const String&);
   virtual void hideStats();
   //</group>
@@ -251,7 +254,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   // add a new DD
   virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, ImageInterface<Float>* img = NULL);
   // go to a specifc channel
-  virtual void doSelectChannel(const Vector<float> &zvec, float zval);
+  virtual void doSelectChannel(int channelIndex);
  
   // (Attempts to) restore panel state from named file.
   virtual Bool restorePanelState(String filename);
@@ -266,7 +269,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   std::string getrc( const std::string &key );
   void putrc( const std::string &key, const std::string &val );
   void showMomentsCollapseImageProfile();
-
+  void showSpecFitImageProfile();
 
  signals:
 
@@ -316,10 +319,7 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   /* virtual void toggleAnimExtras_(); */
   /* virtual void setAnimExtrasVisibility_();   */
-  
-  virtual void frameNumberEdited_();
-  
-  
+
   //# slots reacting to signals from the basic QtDisplayPanel.
   //# Protected, connected by this object itself.
   
@@ -470,7 +470,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   QtMouseToolBar* mouseToolBar_;
   
   QDockWidget*  animDockWidget_;
-  QFrame*       animWidget_;  // Ui::QtAnimatorGui populates this.
+  //QFrame*       animWidget_;  // Ui::QtAnimatorGui populates this.
   viewer::QtRegionDock  *regionDock_;
   
   QDockWidget*  trkgDockWidget_;
@@ -484,16 +484,22 @@ class QtDisplayPanelGui : public QtPanelBase,
 
  private:
   bool use_new_regions;
+  int movieChannel;
+  int movieChannelEnd;
+  QTimer movieTimer;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
+  void updateFrameInformation();
 
   viewer::Preferences *preferences;
+  AnimatorHolder* animationHolder;
 
  private slots:
+  void incrementMovieChannel();
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
 

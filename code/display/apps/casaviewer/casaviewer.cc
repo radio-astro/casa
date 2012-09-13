@@ -119,6 +119,21 @@ int main( int argc, const char *argv[] ) {
 
     signal( SIGTERM, exiting_server );
 
+    // On Mac OS X by default, Qt swaps the Control and Meta (Command) keys (i.e., whenever
+    // Control is pressed, Qt sends Meta, and whenever Meta is pressed Control is sent).
+    // When this attribute is true, Qt will not do the flip. QKeySequence::StandardShortcuts
+    // will also flip accordingly (i.e., QKeySequence::Copy will be Command+C on the keyboard
+    // regardless of the value set, though what is output for
+    // QKeySequence::toString(QKeySequence::PortableText) will be different).
+    //
+    // This avoids this swapping, making the behavior more consistent when running on an X11
+    // system displaying on OSX or just when using it with OSX.
+    //
+    // This option makes *NO*DIFFERENCE* for the context menu on the "Point Button Tool".
+    // Thu Aug 30 10:32:15 EDT 2012 <drs>
+    //
+//     QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
+
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
 		     server_startup, without_gui, persistent, casapy_start,
 		     logfile_path );

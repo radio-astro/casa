@@ -58,6 +58,10 @@ public:
   // Initialize all the memory being used.
   Bool initialise(Int nx,Int ny);
 
+  // Calculate Hessian elements and check for invertibility
+  // Does not have to be called externally, but can be. Either way, it executes only once.
+  Int computeHessianPeak();
+
   // Input : psfs and dirty images
   Bool setpsf(int order, Matrix<Float> & psf);
   
@@ -76,8 +80,11 @@ public:
   // Output : Model images
   Bool getmodel(int order, Matrix<Float> & model);
   
-  // Ouput : psfs and dirty images
-  //  Bool getresidual(int order, Matrix<Float> & residual);
+  // Output : psfs and dirty images
+  Bool getresidual(int order, Matrix<Float> & residual);
+  
+  // Compute principal solution - in-place on the residual images in vecDirty. 
+  Bool computeprincipalsolution();
  
   // Output : Hessian matrix
   Bool getinvhessian(Matrix<Double> & invhessian);
@@ -121,6 +128,10 @@ private:
   Float userthreshold_p;
   Float prev_max_p;
   Float min_max_p;
+
+  IPosition psfsupport_p;
+  IPosition psfpeak_p;
+  IPosition blc_p, trc_p, blcPsf_p, trcPsf_p;
 
   Vector<Float> scaleSizes_p; // Vector of scale sizes in pixels.
   Vector<Float> scaleBias_p; // Vector of scale biases !!
@@ -179,7 +190,6 @@ private:
   Int verifyScaleSizes();
   Int allocateMemory();
   Int setupScaleFunctions();
-  Int computeHessianPeak();
 
   // Setup per major cycle
   Int setupUserMask();
@@ -187,11 +197,12 @@ private:
   Int computeRHS();
 
   // Solver functions : minor-cycle iterations. Need to be efficient.
-  Int solveMatrixEqn(Int ntaylor,Int scale);
-  Int chooseComponent(Int ntaylor,Int scale, Int criterion);
+  Int solveMatrixEqn(Int ntaylor,Int scale, IPosition blc, IPosition trc);
+  Int chooseComponent(Int ntaylor,Int scale, Int criterion, IPosition blc, IPosition trc);
   Int updateModelAndRHS(Float loopgain);
   Int updateRHS(Int ntaylor, Int scale, Float loopgain,Vector<Float> coeffs, IPosition blc, IPosition trc, IPosition blcPsf, IPosition trcPsf);
   Int checkConvergence(Int updatetype, Float &fluxlimit, Float &loopgain); 
+  Bool buildImagePatches();
 
   // Helper functions
   Int writeMatrixToDisk(String imagename, Matrix<Float> &themat);

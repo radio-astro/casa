@@ -33,9 +33,10 @@ public:
 	/**
 	 * Generates an appropriate searcher.  Callers are responsible
 	 * for deleting the searcher when they are done with it.  Searchers can
-	 * either be local to the file system or accessing the Splatalogue database.
+	 * either be local to the file system or possibly accessing the
+	 * Splatalogue database via the network in the future.
 	 */
-	static Searcher* getSearcher( bool /*local*/ );
+	static Searcher* getSearcher( bool local );
 	virtual ~SearcherFactory();
 
 private:

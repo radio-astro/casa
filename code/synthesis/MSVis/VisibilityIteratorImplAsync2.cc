@@ -43,6 +43,8 @@ using namespace casa::asyncio;
 
 namespace casa {
 
+namespace vi {
+
 
 ViReadImplAsync2::ViReadImplAsync2 (const Block<MeasurementSet> & mss,
                                     const PrefetchColumns & prefetchColumns,
@@ -619,26 +621,6 @@ ViReadImplAsync2::setRowBlocking(Int nRow)
 //    vlat_p->startThread ();
 //}
 
-namespace asyncio {
-
-PrefetchColumns
-PrefetchColumns::operator+ (const PrefetchColumns & other)
-{
-    // Form and return the union
-
-            PrefetchColumns result;
-    result.insert (begin(), end());
-
-    for (const_iterator o = other.begin(); o != other.end(); o++){
-
-        result.insert (* o);
-    }
-
-    return result;
-}
-
-} // end namespace asyncio
-
 //void
 //ViReadImplAsync2::setPrefetchColumns (const PrefetchColumns & columns) const
 //{
@@ -868,5 +850,29 @@ ViWriteImplAsync2::setSigmaMat(const Matrix<Float>& sigmat)
                                          sigmat,
                                          & VisibilityIterator::setSigmaMat));
 }
+
+} // end namespace vi
+
+namespace asyncio {
+
+PrefetchColumns
+PrefetchColumns::operator+ (const PrefetchColumns & other)
+{
+    // Form and return the union
+
+            PrefetchColumns result;
+    result.insert (begin(), end());
+
+    for (const_iterator o = other.begin(); o != other.end(); o++){
+
+        result.insert (* o);
+    }
+
+    return result;
+}
+
+} // end namespace asyncio
+
+
 
 } // end namespace casa

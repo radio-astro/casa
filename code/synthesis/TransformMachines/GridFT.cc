@@ -363,7 +363,7 @@ void GridFT::prepGridForDegrid(){
        lix.rwVectorCursor()/=correction;
      }
    }
-   
+   image->clearCache();
    // Now do the FFT2D in place
    LatticeFFT::cfft2d(*lattice);
    
@@ -375,6 +375,8 @@ void GridFT::prepGridForDegrid(){
 
 void GridFT::finalizeToVis()
 {
+
+  griddedData.resize();
   if(isTiled) {
 
     logIO() << LogOrigin("GridFT", "finalizeToVis")  << LogIO::NORMAL;
@@ -423,13 +425,14 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
     if(useDoubleGrid_p){
+      griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
+    image->clearCache();
     //iimage.get(griddedData, False);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
+    
   }
   //AlwaysAssert(lattice, AipsError);
 }
@@ -1138,6 +1141,9 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("GridFT", "getImage") << LogIO::NORMAL;
 
+  if((griddedData.nelements() ==0) && (griddedData2.nelements()==0)){
+    throw(AipsError("Programmer error ...request for image without right order of calls"));
+  }
   weights.resize(sumWeight.shape());
 
   convertArray(weights, sumWeight);
@@ -1149,7 +1155,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
   }
   else {
 
-    const IPosition latticeShape = lattice->shape();
+    //const IPosition latticeShape = lattice->shape();
     
     //logIO() << LogIO::DEBUGGING
     //	    << "Starting FFT and scaling of image" << LogIO::POST;
@@ -1173,13 +1179,22 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       {
 	ArrayLattice<DComplex> darrayLattice(griddedData2);
 	LatticeFFT::cfft2d(darrayLattice,False);
+	griddedData.resize(griddedData2.shape());
 	convertArray(griddedData, griddedData2);
+	
 	//Don't need the double-prec grid anymore...
 	griddedData2.resize();
+	arrayLattice = new ArrayLattice<Complex>(griddedData);
+	lattice=arrayLattice;
       }
-    else
+    else{
+      arrayLattice = new ArrayLattice<Complex>(griddedData);
+      lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,False);
+    }
 
+    
+    
     {
       Int inx = lattice->shape()(0);
       Int iny = lattice->shape()(1);
@@ -1221,7 +1236,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       image->put(griddedData(blc, trc));
     }
   }
-    
+  griddedData.resize();
   return *image;
 }
 

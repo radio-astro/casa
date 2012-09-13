@@ -152,6 +152,7 @@ Bool AxesDisplayData::setOptions(Record &rec, Record &recOut) {
   Bool localchange = False;
   
   // "Basic" context
+  cout << "AxesDisplayData::setOptions"<<endl;
   localchange = (itsParamTitleText->fromRecord(rec) || localchange);
   localchange = (itsParamXAxisText->fromRecord(rec) || localchange);
   localchange = (itsParamYAxisText->fromRecord(rec) || localchange);

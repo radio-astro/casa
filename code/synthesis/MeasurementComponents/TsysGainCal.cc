@@ -737,8 +737,7 @@ void EVLAGainTsys::fillTcals() {
 }
 
 // Local version to extract integration time and bandwidth
-void EVLAGainTsys::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			    Bool avoidACs) {
+void EVLAGainTsys::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial) {
 
   // Calculate Nyquist factor so we get weights right
   //  (sqrt because it will be applied in antenna-based manner)
@@ -747,7 +746,7 @@ void EVLAGainTsys::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   //  cout << "currSpw() = " << currSpw() << " nyquist_= " << nyquist_ << endl;
 
   // Call parent to get the rest done as usual
-  GJones::applyCal(vb,Vout,avoidACs);
+  GJones::applyCal(vb,Vout,trial);
 
 }
   

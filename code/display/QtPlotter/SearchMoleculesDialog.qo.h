@@ -40,8 +40,10 @@ class SearchMoleculesDialog : public QDialog
 public:
     SearchMoleculesDialog(QWidget *parent = 0);
     QList<int> getLineIndices() const;
-    bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName ) const;
+    bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName,
+    		QString& chemicalName, QString& resolvedQNs, QString& frequencyUnit) const;
     void setRange( float min, float max, QString units );
+    double getRedShiftedValue( bool reverseRedshift, float value ) const;
     void searchFinished();
     void updateReferenceFrame();
     QString getUnit() const;

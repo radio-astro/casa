@@ -688,6 +688,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	     << model 
 	     << " (Total flux : " << LatticeExprNode(sum(image(model))).getFloat() << "Jy)"
 	     << LogIO::POST;
+
 	}
 
       }
@@ -711,6 +712,11 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   if (progress_p) delete progress_p;
   
   for(model=0; model < nmodels; ++model){
+    image(model).clearCache();
+    PSF(model).clearCache();
+    ggS(model).clearCache();
+    residual(model).clearCache();
+    deltaImage(model).clearCache();
     for(Int chan=0; chan < nchan; ++chan){
       if(lmaskCube[chan*nmodels+model] !=0) 
 	delete lmaskCube[chan*nmodels+model];
@@ -726,9 +732,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     restoreOverlappingModels();
     Float finalabsmax=maxField(resmax, resmin); 
+    converged=(finalabsmax < 1.05 * threshold());
     setThreshold(finalabsmax);
     os << LogIO::NORMAL << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
-    converged=(finalabsmax < 1.05 * threshold());
+    
     os << LogIO::NORMAL; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "

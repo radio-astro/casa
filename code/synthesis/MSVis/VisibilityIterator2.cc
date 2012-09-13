@@ -44,6 +44,20 @@ using namespace std;
 
 namespace casa {
 
+namespace vi {
+
+void
+FrequencySelection::filterByWindow (Int windowId) const
+{
+    filterWindowId_p = windowId;
+}
+
+Int
+FrequencySelection::filterWindow() const
+{
+    return filterWindowId_p;
+}
+
 String
 FrequencySelection::frameName (Int referenceFrame)
 {
@@ -112,6 +126,16 @@ FrequencySelections::clone () const
     return new FrequencySelections (* this);
 }
 
+const FrequencySelection &
+FrequencySelections::get (Int msIndex) const
+{
+    ThrowIf (msIndex < 0 || msIndex >= (int) selections_p.size(),
+             String::format ("MS index, %d, out of bounds [0,%d]", msIndex, selections_p.size() - 1));
+
+    return * selections_p [msIndex];
+}
+
+
 Int
 FrequencySelections::getFrameOfReference () const
 {
@@ -136,10 +160,31 @@ FrequencySelections::size () const
     return (Int) selections_p.size();
 }
 
+FrequencySelectionUsingChannels::const_iterator
+FrequencySelectionUsingChannels::begin () const
+{
+    filtered_p.clear();
+
+    for (Int i = 0; i < (int) elements_p.size(); i++){
+        if (filterWindow () < 0 || filterWindow() == i){
+            filtered_p.push_back (elements_p [i]);
+        }
+    }
+
+    return filtered_p.begin();
+}
+
+
 FrequencySelection *
 FrequencySelectionUsingChannels::clone () const
 {
     return new FrequencySelectionUsingChannels (* this);
+}
+
+FrequencySelectionUsingChannels::const_iterator
+FrequencySelectionUsingChannels::end () const
+{
+    return filtered_p.end();
 }
 
 String
@@ -162,10 +207,42 @@ FrequencySelectionUsingChannels::toString () const
     return s;
 }
 
+FrequencySelectionUsingFrame::const_iterator
+FrequencySelectionUsingFrame::begin () const
+{
+    filtered_p.clear();
+
+    for (Int i = 0; i < (int) elements_p.size(); i++){
+        if (filterWindow () < 0 || filterWindow() == i){
+            filtered_p.push_back (elements_p [i]);
+        }
+    }
+
+    return filtered_p.begin();
+}
+
 FrequencySelection *
 FrequencySelectionUsingFrame::clone () const
 {
     return new FrequencySelectionUsingFrame (* this);
+}
+
+FrequencySelectionUsingFrame::const_iterator
+FrequencySelectionUsingFrame::end () const
+{
+    return elements_p.end();
+}
+
+Double
+FrequencySelectionUsingFrame::Element::getBeginFrequency () const
+{
+    return beginFrequency_p;
+}
+
+Double
+FrequencySelectionUsingFrame::Element::getEndFrequency () const
+{
+    return endFrequency_p;
 }
 
 String
@@ -179,8 +256,8 @@ FrequencySelectionUsingFrame::toString () const
 
         s += utilj::format ("(spw=%d, 1st=%g, n=%g, inc=%g)",
                             e->spectralWindow_p,
-                            e->bottomFrequency_p,
-                            e->topFrequency_p,
+                            e->beginFrequency_p,
+                            e->endFrequency_p,
                             e->increment_p);
     }
 
@@ -414,13 +491,6 @@ ROVisibilityIterator2::dataDescriptionId () const
     return readImpl_p->dataDescriptionId ();
 }
 
-void
-ROVisibilityIterator2::doChannelSelection ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->doChannelSelection ();
-}
-
 Bool
 ROVisibilityIterator2::existsColumn (VisBufferComponent2 id) const
 {
@@ -530,13 +600,6 @@ ROVisibilityIterator2::floatData (Cube<Float>& fcube) const
     readImpl_p->floatData (fcube);
 }
 
-void
-ROVisibilityIterator2::frequency (Vector<Double>& freq) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->frequency (freq);
-}
-
 const Cube<RigidVector<Double, 2> >&
 ROVisibilityIterator2::getBeamOffsets () const
 {
@@ -566,90 +629,90 @@ ROVisibilityIterator2::getBeamOffsets () const
 //    return readImpl_p->getChannelIncrement ();
 //}
 
-void
-ROVisibilityIterator2::getCol (const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, slicer, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, slicer, array, resize);
-}
-
-void
-ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize ) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getCol (column, slicer, array, resize);
-}
-
-void
-ROVisibilityIterator2::getDataColumn (DataColumn whichOne, const Slicer& slicer,
-                                     Cube<Complex>& data) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getDataColumn (whichOne, slicer, data);
-}
-
-void
-ROVisibilityIterator2::getDataColumn (DataColumn whichOne, Cube<Complex>& data) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getDataColumn (whichOne, data);
-}
+//void
+//ROVisibilityIterator2::getCol (const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, slicer, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, slicer, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize ) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getCol (column, slicer, array, resize);
+//}
+//
+//void
+//ROVisibilityIterator2::getDataColumn (DataColumn whichOne, const Slicer& slicer,
+//                                     Cube<Complex>& data) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getDataColumn (whichOne, slicer, data);
+//}
+//
+//void
+//ROVisibilityIterator2::getDataColumn (DataColumn whichOne, Cube<Complex>& data) const
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getDataColumn (whichOne, data);
+//}
 
 Int
 ROVisibilityIterator2::getDataDescriptionId () const
@@ -657,34 +720,6 @@ ROVisibilityIterator2::getDataDescriptionId () const
     CheckImplementationPointerR ();
     return readImpl_p->getDataDescriptionId ();
 }
-
-void
-ROVisibilityIterator2::getFloatDataColumn (const Slicer& slicer, Cube<Float>& data) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getFloatDataColumn (slicer, data);
-}
-
-void
-ROVisibilityIterator2::getFloatDataColumn (Cube<Float>& data) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->getFloatDataColumn (data);
-}
-
-//void
-//ROVisibilityIterator2::getInterpolatedFloatDataFlagWeight () const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getInterpolatedFloatDataFlagWeight ();
-//}
-
-//void
-//ROVisibilityIterator2::getInterpolatedVisFlagWeight (DataColumn whichOne) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getInterpolatedVisFlagWeight (whichOne);
-//}
 
 MEpoch
 ROVisibilityIterator2::getEpoch () const
@@ -750,23 +785,35 @@ ROVisibilityIterator2::getReadImpl () const
     return readImpl_p;
 }
 
-void
-ROVisibilityIterator2::getSpwInFreqRange (Block<Vector<Int> >& spw,
-                                         Block<Vector<Int> >& start,
-                                         Block<Vector<Int> >& nchan,
-                                         Double freqStart,
-                                         Double freqEnd,
-                                         Double freqStep,
-                                         MFrequency::Types freqFrame)
+//void
+//ROVisibilityIterator2::getSpwInFreqRange (Block<Vector<Int> >& spw,
+//                                         Block<Vector<Int> >& start,
+//                                         Block<Vector<Int> >& nchan,
+//                                         Double freqStart,
+//                                         Double freqEnd,
+//                                         Double freqStep,
+//                                         MFrequency::Types freqFrame)
+//{
+//    CheckImplementationPointerR ();
+//    readImpl_p->getSpwInFreqRange (spw, start, nchan, freqStart, freqEnd, freqStep, freqFrame);
+//}
+//
+//void
+//ROVisibilityIterator2::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe){
+//  CheckImplementationPointerR ();
+//  readImpl_p->getFreqInSpwRange(freqStart, freqEnd, freqframe);
+//}
+
+Int
+ROVisibilityIterator2::getReportingFrameOfReference () const
 {
-    CheckImplementationPointerR ();
-    readImpl_p->getSpwInFreqRange (spw, start, nchan, freqStart, freqEnd, freqStep, freqFrame);
+    return readImpl_p->getReportingFrameOfReference ();
 }
 
 void
-ROVisibilityIterator2::getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe){
-  CheckImplementationPointerR ();
-  readImpl_p->getFreqInSpwRange(freqStart, freqEnd, freqframe);
+ROVisibilityIterator2::setReportingFrameOfReference (Int frame)
+{
+    readImpl_p->setReportingFrameOfReference (frame);
 }
 
 
@@ -805,22 +852,24 @@ ROVisibilityIterator2::hourangCalculate (Double time, MSDerivedValues & msd, con
 //    return readImpl_p->imagingWeight (wt);
 //}
 
+Vector<Double>
+ROVisibilityIterator2::getFrequencies (Double time, Int frameOfReference) const
+{
+
+}
+
+Vector<Int>
+ROVisibilityIterator2::getChannels (Double time, Int frameOfReference) const
+{
+}
+
+
 const VisImagingWeight &
 ROVisibilityIterator2::getImagingWeightGenerator () const
 {
     CheckImplementationPointerR ();
     return readImpl_p->getImagingWeightGenerator ();
 }
-
-
-//Bool
-//ROVisibilityIterator2::isAsyncEnabled () const
-//{
-//    CheckImplementationPointerR ();
-//
-//    return readImpl_p->isAsyncEnabled ();
-//}
-
 
 Bool
 ROVisibilityIterator2::isAsynchronous () const
@@ -873,13 +922,6 @@ ROVisibilityIterator2::moreChunks () const
     return readImpl_p->moreChunks ();
 }
 
-const ROMSColumns &
-ROVisibilityIterator2::msColumns () const
-{
-    CheckImplementationPointerR ();
-    return readImpl_p->msColumns ();
-}
-
 Int
 ROVisibilityIterator2::msId () const
 {
@@ -906,13 +948,6 @@ ROVisibilityIterator2::nRowsInChunk () const
 {
     CheckImplementationPointerR ();
     return readImpl_p->nRowsInChunk ();
-}
-
-Int
-ROVisibilityIterator2::nSubInterval () const
-{
-    CheckImplementationPointerR ();
-    return readImpl_p->nSubInterval ();
 }
 
 Bool
@@ -1085,20 +1120,12 @@ ROVisibilityIterator2::getReceptor0Angle ()
     return readImpl_p->getReceptor0Angle();
 }
 
-//Vector<uInt> getRowIds ();
-
 void
-ROVisibilityIterator2::rowIds (Vector<uInt>& rowids) const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->rowIds (rowids);
-}
-
-Vector<uInt>
-ROVisibilityIterator2::getRowIds() const
+ROVisibilityIterator2::getRowIds (Vector <uInt> & value) const
 {
     CheckImplementationPointerR();
-    return readImpl_p->getRowIds();
+
+    readImpl_p->getRowIds (value);
 }
 
 void
@@ -1106,13 +1133,6 @@ ROVisibilityIterator2::scan (Vector<Int>& scans) const
 {
     CheckImplementationPointerR ();
     readImpl_p->scan (scans);
-}
-
-void
-ROVisibilityIterator2::setAsyncEnabled (Bool enable)
-{
-    CheckImplementationPointerR ();
-    readImpl_p->setAsyncEnabled (enable);
 }
 
 void
@@ -1124,14 +1144,14 @@ ROVisibilityIterator2::setFrequencySelection (const FrequencySelection & selecti
 }
 
 void
-ROVisibilityIterator2::setFrequencySelection (const FrequencySelections & selection)
+ROVisibilityIterator2::setFrequencySelection (const FrequencySelections & selections)
 {
-    ThrowIf (selection.size () != nMS_p,
+    ThrowIf (selections.size () != nMS_p,
              utilj::format ("Frequency selection size, %d, does not VisibilityIterator # of MSs, %d.",
-                     nMS_p, selection.size()));
+                     nMS_p, selections.size()));
 
     CheckImplementationPointerR ();
-    readImpl_p->setFrequencySelection (selection);
+    readImpl_p->setFrequencySelections (selections);
 }
 
 
@@ -1154,27 +1174,6 @@ ROVisibilityIterator2::setRowBlocking (Int nRows) // for use by Async I/O *ONLY
 {
     CheckImplementationPointerR ();
     readImpl_p->setRowBlocking (nRows);
-}
-
-void
-ROVisibilityIterator2::setSelTable ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->setSelTable ();
-}
-
-void
-ROVisibilityIterator2::setState ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->setState ();
-}
-
-void
-ROVisibilityIterator2::setTileCache ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->setTileCache ();
 }
 
 void
@@ -1219,6 +1218,13 @@ ROVisibilityIterator2::stateId (Vector<Int>& stateids) const
     readImpl_p->stateId (stateids);
 }
 
+const vi::SubtableColumns &
+ROVisibilityIterator2::subtableColumns () const
+{
+    CheckImplementationPointerR ();
+    return readImpl_p->subtableColumns ();
+}
+
 void
 ROVisibilityIterator2::time (Vector<Double>& t) const
 {
@@ -1241,20 +1247,6 @@ ROVisibilityIterator2::timeInterval (Vector<Double>& ti) const
 }
 
 void
-ROVisibilityIterator2::updateSlicer ()
-{
-    CheckImplementationPointerR ();
-    readImpl_p->updateSlicer ();
-}
-
-void
-ROVisibilityIterator2::update_rowIds () const
-{
-    CheckImplementationPointerR ();
-    readImpl_p->update_rowIds ();
-}
-
-void
 ROVisibilityIterator2::useImagingWeight (const VisImagingWeight& imWgt)
 {
     CheckImplementationPointerR ();
@@ -1262,33 +1254,52 @@ ROVisibilityIterator2::useImagingWeight (const VisImagingWeight& imWgt)
 }
 
 void
-ROVisibilityIterator2::uvw (Vector<RigidVector<Double, 3> >& uvwvec) const
+ROVisibilityIterator2::uvw (Matrix<Double>& uvw) const
 {
     CheckImplementationPointerR ();
-    readImpl_p->uvw (uvwvec);
+    readImpl_p->uvw (uvw);
 }
 
 void
-ROVisibilityIterator2::uvwMat (Matrix<Double>& uvwmat) const
+ROVisibilityIterator2::visibilityCorrected (Cube<Complex>& vis) const
 {
     CheckImplementationPointerR ();
-    readImpl_p->uvwMat (uvwmat);
+    readImpl_p->visibilityCorrected (vis);
 }
 
 void
-ROVisibilityIterator2::visibility (Cube<Complex>& vis,
-                                  DataColumn whichOne) const
+ROVisibilityIterator2::visibilityModel (Cube<Complex>& vis) const
 {
     CheckImplementationPointerR ();
-    readImpl_p->visibility (vis, whichOne);
+    readImpl_p->visibilityModel (vis);
 }
 
 void
-ROVisibilityIterator2::visibility (Matrix<CStokesVector>& vis,
-                                  DataColumn whichOne) const
+ROVisibilityIterator2::visibilityObserved (Cube<Complex>& vis) const
 {
     CheckImplementationPointerR ();
-    readImpl_p->visibility (vis, whichOne);
+    readImpl_p->visibilityObserved (vis);
+}
+
+void
+ROVisibilityIterator2::visibilityCorrected (Matrix<CStokesVector>& vis) const
+{
+    CheckImplementationPointerR ();
+    readImpl_p->visibilityCorrected (vis);
+}
+
+void
+ROVisibilityIterator2::visibilityModel (Matrix<CStokesVector>& vis) const
+{
+    CheckImplementationPointerR ();
+    readImpl_p->visibilityModel (vis);
+}
+
+void
+ROVisibilityIterator2::visibilityObserved (Matrix<CStokesVector>& vis) const
+{
+    CheckImplementationPointerR ();
+    readImpl_p->visibilityObserved (vis);
 }
 
 IPosition
@@ -1437,25 +1448,45 @@ VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
 }
 
 void
-VisibilityIterator2::writeVis (const Matrix<CStokesVector>& vis, DataColumn whichOne)
+VisibilityIterator2::writeVisCorrected (const Matrix<CStokesVector>& vis)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->writeVis (vis, whichOne);
+    writeImpl_p->writeVisCorrected (vis);
 }
 
 void
-VisibilityIterator2::writeVis (const Cube<Complex>& vis, DataColumn whichOne)
+VisibilityIterator2::writeVisModel (const Matrix<CStokesVector>& vis)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->writeVis (vis, whichOne);
+    writeImpl_p->writeVisModel (vis);
 }
 
 void
-VisibilityIterator2::writeVisAndFlag (const Cube<Complex>& vis, const Cube<Bool>& flag,
-                                   DataColumn whichOne)
+VisibilityIterator2::writeVisObserved (const Matrix<CStokesVector>& vis)
 {
     CheckImplementationPointerW ();
-    writeImpl_p->writeVisAndFlag (vis, flag, whichOne);
+    writeImpl_p->writeVisObserved (vis);
+}
+
+void
+VisibilityIterator2::writeVisCorrected (const Cube<Complex>& vis)
+{
+    CheckImplementationPointerW ();
+    writeImpl_p->writeVisCorrected (vis);
+}
+
+void
+VisibilityIterator2::writeVisModel (const Cube<Complex>& vis)
+{
+    CheckImplementationPointerW ();
+    writeImpl_p->writeVisModel (vis);
+}
+
+void
+VisibilityIterator2::writeVisObserved (const Cube<Complex>& vis)
+{
+    CheckImplementationPointerW ();
+    writeImpl_p->writeVisObserved (vis);
 }
 
 void
@@ -1492,6 +1523,118 @@ VisibilityIterator2::writeBackChanges (VisBuffer2 * vb)
     CheckImplementationPointerW ();
     writeImpl_p->writeBackChanges (vb);
 }
+
+SubtableColumns::SubtableColumns (const MSIter & msIter)
+: msIter_p (msIter)
+{}
+
+const ROMSAntennaColumns&
+SubtableColumns::antenna() const
+{
+    return msIter_p.msColumns().antenna();
+}
+
+const ROMSDataDescColumns&
+SubtableColumns::dataDescription() const
+{
+    return msIter_p.msColumns().dataDescription();
+}
+
+const ROMSFeedColumns&
+SubtableColumns::feed() const
+{
+    return msIter_p.msColumns().feed();
+}
+
+const ROMSFieldColumns&
+SubtableColumns::field() const
+{
+    return msIter_p.msColumns().field();
+}
+
+const ROMSFlagCmdColumns&
+SubtableColumns::flagCmd() const
+{
+    return msIter_p.msColumns().flagCmd();
+}
+
+const ROMSHistoryColumns&
+SubtableColumns::history() const
+{
+    return msIter_p.msColumns().history();
+}
+
+const ROMSObservationColumns&
+SubtableColumns::observation() const
+{
+    return msIter_p.msColumns().observation();
+}
+
+const ROMSPointingColumns&
+SubtableColumns::pointing() const
+{
+    return msIter_p.msColumns().pointing();
+}
+
+const ROMSPolarizationColumns&
+SubtableColumns::polarization() const
+{
+
+    return msIter_p.msColumns().polarization();
+}
+
+const ROMSProcessorColumns&
+SubtableColumns::processor() const
+{
+    return msIter_p.msColumns().processor();
+}
+
+const ROMSSpWindowColumns&
+SubtableColumns::spectralWindow() const
+{
+
+    return msIter_p.msColumns().spectralWindow();
+}
+
+const ROMSStateColumns&
+SubtableColumns::state() const
+{
+    return msIter_p.msColumns().state();
+}
+
+const ROMSDopplerColumns&
+SubtableColumns::doppler() const
+{
+    return msIter_p.msColumns().doppler();
+}
+
+const ROMSFreqOffsetColumns&
+SubtableColumns::freqOffset() const
+{
+    return msIter_p.msColumns().freqOffset();
+}
+
+const ROMSSourceColumns&
+SubtableColumns::source() const
+{
+    return msIter_p.msColumns().source();
+}
+
+const ROMSSysCalColumns&
+SubtableColumns::sysCal() const
+{
+    return msIter_p.msColumns().sysCal();
+}
+
+const ROMSWeatherColumns&
+SubtableColumns::weather() const
+{
+    return msIter_p.msColumns().weather();
+}
+
+
+} // end namespace vi
+
 
 } // end namespace casa
 

@@ -25,7 +25,6 @@
 #include "SearchMoleculesResultsWidget.qo.h"
 #include <display/QtPlotter/SearchMoleculesWidget.qo.h>
 #include <display/QtPlotter/SearchMoleculesResultsWidget.qo.h>
-#include <spectrallines/Splatalogue/SplatalogueTable.h>
 #include <display/QtPlotter/Util.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
@@ -40,18 +39,20 @@ SearchMoleculesResultsWidget::SearchMoleculesResultsWidget(QWidget *parent)
 	initializeTable();
 }
 
-
 void SearchMoleculesResultsWidget::initializeTable(){
-	QStringList tableHeaders(QStringList() << "Species" << "Chemical Name" <<
-				"Frequency(GHz)" << "Resolved QNs" << "Intensity" );
+	QStringList tableHeaders(QStringList() << "Id"<<"Species" << "Chemical Name" <<
+				"Frequency(MHz)" << "Resolved QNs" << "Intensity" );
 	ui.searchResultsTable->setColumnCount( COLUMN_COUNT );
 	ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.searchResultsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.searchResultsTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn );
+	ui.searchResultsTable->setSortingEnabled( true );
+	ui.searchResultsTable->verticalHeader()->setVisible( false );
 }
 
 
-void SearchMoleculesResultsWidget::displaySearchResults( const Record& results ){
+void SearchMoleculesResultsWidget::displaySearchResults( const vector<SplatResult>& results,
+		int /*offset*/, int /*countTotal*/ ){
 	int resultCount = results.size();
 	if ( resultCount == 0 ){
 		QString msg( "There were no search results matching the given criteria.");
@@ -61,31 +62,30 @@ void SearchMoleculesResultsWidget::displaySearchResults( const Record& results )
 	ui.searchResultsTable->clearSelection();
 	for ( int i = 0; i < resultCount; i++ ){
 
-		Record line = results.asRecord("*" + String::toString(i) );
+		//Record line = results.asRecord("*" + String::toString(i) );
+		//Species Id
+		long speciesId = results[i].getSpeciesId();
+		setTableValue( i, COL_SPECIES_ID, speciesId );
 
 		//Species
-		String species = line.asString( SplatalogueTable::RECORD_SPECIES );
+		string species = results[i].getSpecies();
 		setTableValueHTML( i, COL_SPECIES, species.c_str() );
 
 		//Chemical Name
-		String chemName = line.asString(SplatalogueTable::RECORD_CHEMNAME);
-
+		string chemName = results[i].getChemicalName();
 		setTableValue( i, COL_CHEMICAL, chemName.c_str() );
 
 		//Frequency
-		Record frequencyRecord = line.asRecord(SplatalogueTable::RECORD_FREQUENCY);
-		String freqUnits = frequencyRecord.asString( SplatalogueTable::RECORD_UNIT );
-
+		pair<double,string> freqResult = results[i].getFrequency();
 		//Default frequency units seem to be GHz
-		double freqValue = frequencyRecord.asdouble( SplatalogueTable::RECORD_VALUE );
-		setTableValue( i, COL_FREQUENCY, freqValue );
+		setTableValue( i, COL_FREQUENCY, freqResult.first );
 
 		//QNS
-		String qns = line.asString(SplatalogueTable::RECORD_QNS);
+		string qns = results[i].getQuantumNumbers();
 		setTableValueHTML( i, COL_QN, qns.c_str());
 
 		//Intensity
-		float intensity = line.asfloat(SplatalogueTable::RECORD_INTENSITY);
+		float intensity = results[i].getIntensity();
 		setTableValue( i, COL_INTENSITY, intensity );
 
 		//Keep the GUI responsive while we are setting up the table
@@ -129,8 +129,9 @@ QList<int> SearchMoleculesResultsWidget::getLineIndices() const{
 	return lineIndices;
 }
 
-void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& centers,
-		QString molecularName ) const {
+void SearchMoleculesResultsWidget::getLines( QList<float>& peaks,
+		QList<float>& centers, QString molecularName, QList<QString>& chemNames,
+		QList<QString>& resolvedQNSs, QString frequencyUnit ) const {
 	int rowCount = ui.searchResultsTable->rowCount();
 	for ( int i = 0; i < rowCount; i++ ){
 		QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( i, COL_SPECIES ));
@@ -139,10 +140,15 @@ void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& 
 			if ( speciesName == molecularName ){
 				Float peak;
 				Float center;
-				bool success = getLine( i, peak, center, speciesName );
+				QString chemicalName;
+				QString resolvedQNs;
+				bool success = getLine( i, peak, center, speciesName,
+						chemicalName, resolvedQNs, frequencyUnit );
 				if ( success ){
 					peaks.append( peak );
 					centers.append( center );
+					chemNames.append( chemicalName );
+					resolvedQNSs.append( resolvedQNs );
 				}
 
 			}
@@ -151,7 +157,8 @@ void SearchMoleculesResultsWidget::getLines( QList<float>& peaks, QList<float>& 
 }
 
 bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& center,
-		QString& molecularName ) const {
+		QString& molecularName, QString& chemicalName, QString& resolvedQNs,
+		QString& frequencyUnits) const {
 	bool lineExists = true;
 	//Name
 	QLabel* speciesItem = dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_SPECIES ));
@@ -164,6 +171,7 @@ bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& ce
 			QString freqStr = frequencyItem->text();
 			center = freqStr.toFloat();
 		}
+		frequencyUnits = SearchMoleculesWidget::SPLATALOGUE_UNITS;
 
 		//Intensity
 		QTableWidgetItem* peakItem = ui.searchResultsTable->item(lineIndex, COL_INTENSITY );
@@ -172,6 +180,17 @@ bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& ce
 			peak = peakStr.toFloat();
 			peak = peak * -1;
 		}
+
+		//Chemical Name
+		QTableWidgetItem* chemNameItem = ui.searchResultsTable->item(lineIndex, COL_CHEMICAL );
+		if ( chemNameItem != NULL ){
+			chemicalName = chemNameItem->text();
+		}
+
+		//Resolved QNs
+		QLabel* label =	dynamic_cast<QLabel*>(ui.searchResultsTable->cellWidget( lineIndex, COL_QN ));
+		QString qnsHtml = label->text();
+		resolvedQNs = Util::stripFont( qnsHtml );
 	}
 	else {
 		lineExists = false;
@@ -202,6 +221,8 @@ void SearchMoleculesResultsWidget::setTableValueHTML( int row, int col, const QS
 	label->setText( val );
 	ui.searchResultsTable->setCellWidget( row, col, label );
 }
+
+
 
 SearchMoleculesResultsWidget::~SearchMoleculesResultsWidget()
 {

@@ -29,8 +29,11 @@ class AsynchronousInterface;
 class VlaDatum;
 class VlaData;
 class VLAT;
+class WriteData;
 
 } // end namespace asyncio
+
+namespace vi {
 
 class ViReadImplAsync2 : public VisibilityIteratorReadImpl2 {
     // This needs to be changed back to ROVisibilityIterator at some point
@@ -50,13 +53,23 @@ public:
 //            const PrefetchColumns & prefetchColumns,
 //            Int nReadAheadBuffers = -1);
 
-    ViReadImplAsync2 (const Block<MeasurementSet> & mss,
-                     const PrefetchColumns & prefetchColumns,
-                     const Block<Int> & sortColumns,
-                     const Bool addDefaultSortCols,
-                     Double timeInterval,
-                     Bool writable)
-    {} // Empty body for the moment.
+//    VisibilityIteratorReadImpl2 (ROVisibilityIterator2 * rovi,
+//                                 const Block<MeasurementSet> & mss,
+//                                 const Block<Int> & sortColumns,
+//                                 Bool addDefaultSortCols,
+//                                 Double timeInterval,
+//                                 Bool createVb = True);
+
+//    ViReadImplAsync2 (const Block<MeasurementSet> & mss,
+//                     const PrefetchColumns & prefetchColumns,
+//                     const Block<Int> & sortColumns,
+//                     const Bool addDefaultSortCols,
+//                     Double timeInterval,
+//                     Bool writable)
+//    : VisibilityIteratorReadImpl2 (mss, prefetchColumns, sortColumns,
+//                                   addDefaultSortCols, timeInterval,
+//                                   writable)
+//    {} // Empty body for the moment.
 
     ViReadImplAsync2 (const PrefetchColumns & prefetchColumns,
                      const VisibilityIteratorReadImpl2 & other,
@@ -133,25 +146,25 @@ public:
 
     Bool allBeamOffsetsZero() const; // { NotPrefetched; }
     void allSelectedSpectralWindows(Vector<Int>& , Vector<Int>& ) { NotPrefetched; }
-    Vector<Int>& antenna1(Vector<Int>& ) const { NotPrefetched; }
-    Vector<Int>& antenna2(Vector<Int>& ) const { NotPrefetched; }
-    const Vector<String>& antennaMounts() const; // { NotPrefetched; }
+    void antenna1(Vector<Int>& ) const { NotPrefetched; }
+    void antenna2(Vector<Int>& ) const { NotPrefetched; }
+    const Vector<String> & antennaMounts() const; // { NotPrefetched; }
     Vector<MDirection> azel(Double ) const { NotImplementedROVIA; }
     MDirection azel0(Double ) const { NotImplementedROVIA; }
-    Vector<Int>& channel(Vector<Int>& ) const { NotPrefetched; }
+    void channel(Vector<Int>& ) const { NotPrefetched; }
     Int channelGroupSize() const { NotImplementedROVIA; }
     Int channelIndex() const { NotImplementedROVIA; }
     Vector<SquareMatrix<Complex,2> >& CJones(Vector<SquareMatrix<Complex,2> >& ) const { NotPrefetched; }
-    Vector<Int>& corrType(Vector<Int>& ) const { NotPrefetched; }
+    void corrType(Vector<Int>& ) const { NotPrefetched; }
     Int dataDescriptionId() const { NotPrefetched; }
     Bool existsWeightSpectrum() const { NotImplementedROVIA; }
-    Vector<Double>& exposure(Vector<Double>& /*expo*/) const { NotPrefetched; }
-    Vector<Int>& feed1(Vector<Int>& ) const { NotPrefetched; }
-    Vector<Int>& feed2(Vector<Int>& ) const { NotPrefetched; }
+    void exposure(Vector<Double>& /*expo*/) const { NotPrefetched; }
+    void feed1(Vector<Int>& ) const { NotPrefetched; }
+    void feed2(Vector<Int>& ) const { NotPrefetched; }
     //Vector<Float> feed_pa(Double ) const { NotImplementedROVIA; }
     Int fieldId() const { NotPrefetched; }
-    Array<Bool>& flagCategory(Array<Bool>& /*flagCategories*/) const { NotPrefetched; }
-    Cube<Float>& floatData(Cube<Float>& /*fcube*/) const { NotPrefetched; }
+    void flagCategory(Array<Bool>& /*flagCategories*/) const { NotPrefetched; }
+    void floatData(Cube<Float>& /*fcube*/) const { NotPrefetched; }
     void getFloatDataColumn (Cube<Float>& /*data*/) const { NotImplementedROVIA; }
     void getFloatDataColumn(const Slicer& /*slicer*/, Cube<Float>& /*data*/) const { NotImplementedROVIA; }
     void getInterpolatedFloatDataFlagWeight() const { NotImplementedROVIA; }
@@ -159,23 +172,23 @@ public:
     Int arrayId() const { NotPrefetched; }
     String fieldName() const { NotImplementedROVIA; }
     String sourceName() const { NotImplementedROVIA; }
-    Cube<Bool>& flag(Cube<Bool>& ) const { NotPrefetched; }
-    Matrix<Bool>& flag(Matrix<Bool>& ) const { NotPrefetched; }
-    Vector<Bool>& flagRow(Vector<Bool>& ) const { NotPrefetched; }
-    Vector<Double>& frequency(Vector<Double>& ) const { NotPrefetched; }
+    void flag(Cube<Bool>& ) const { NotPrefetched; }
+    void flag(Matrix<Bool>& ) const { NotPrefetched; }
+    void flagRow(Vector<Bool>& ) const { NotPrefetched; }
+    void frequency(Vector<Double>& ) const { NotPrefetched; }
     const Cube<RigidVector<Double, 2> >& getBeamOffsets() const;// { NotImplementedROVIA; }
     Int getDataDescriptionId () const { NotPrefetched; }
     MEpoch getMEpoch () const { NotImplementedROVIA; }
-    const MeasurementSet & getMeasurementSet() const { NotImplementedROVIA; }
+    void getMeasurementSet() const { NotImplementedROVIA; }
     Int getMeasurementSetId() const { NotImplementedROVIA; }
     Int getNAntennas () const { NotImplementedROVIA; }
     Vector<Float> getReceptor0Angle () { NotImplementedROVIA; }
     Vector<uInt> getRowIds () const { NotImplementedROVIA; }
     Double hourang(Double ) const { NotImplementedROVIA; }
-    Vector<Double>& lsrFrequency(Vector<Double>& ) const { NotImplementedROVIA; }
+    void lsrFrequency(Vector<Double>& ) const { NotImplementedROVIA; }
     void lsrFrequency(const Int& , Vector<Double>& , Bool& ) { NotImplementedROVIA; }
-    const MeasurementSet& ms() const  { NotImplementedROVIA; }
-    const ROMSColumns& msColumns() const;
+    const casa::MeasurementSet& ms() const  { NotImplementedROVIA; }
+    void msColumns() const;
     Int msId() const;
     Int nCorr() const { NotPrefetched; }
     Int nRow() const { NotPrefetched; }
@@ -189,33 +202,33 @@ public:
     Int numberDDId() { NotPrefetched; }
     Int numberPol() { NotPrefetched; }
     Int numberSpw();
-    Vector<Int>& observationId(Vector<Int>& /*obsIDs*/) const { NotPrefetched; }
+    void observationId(Vector<Int>& /*obsIDs*/) const { NotPrefetched; }
     Vector<Float> parang(Double ) const { NotImplementedROVIA; }
-    const Float& parang0(Double ) const { NotImplementedROVIA; }
-    const MDirection& phaseCenter() const { NotPrefetched; }
+    const casa::Float & parang0(Double ) const { NotImplementedROVIA; }
+    const MDirection & phaseCenter() const { NotPrefetched; }
     Int polFrame() const  { NotPrefetched; }
-    Vector<Int>& processorId(Vector<Int>& /*procIDs*/) const { NotPrefetched; }
+    void processorId(Vector<Int>& /*procIDs*/) const { NotPrefetched; }
     Int polarizationId() const { NotPrefetched; }
-    const Cube<Double>& receptorAngles() const; // { NotImplementedROVIA; }
-    Vector<uInt>& rowIds(Vector<uInt>& ) const { NotImplementedROVIA; }
-    Vector<Int>& scan(Vector<Int>& ) const { NotPrefetched; }
-    Vector<Float>& sigma(Vector<Float>& ) const { NotPrefetched; }
-    Matrix<Float>& sigmaMat(Matrix<Float>& ) const { NotPrefetched; }
+    const casa::Cube<double>& receptorAngles() const; // { NotImplementedROVIA; }
+    void rowIds(Vector<uInt>& ) const { NotImplementedROVIA; }
+    void scan(Vector<Int>& ) const { NotPrefetched; }
+    void sigma(Vector<Float>& ) const { NotPrefetched; }
+    void sigmaMat(Matrix<Float>& ) const { NotPrefetched; }
     void slurp() const { NotImplementedROVIA; }
     Int spectralWindow() const { NotPrefetched; }
-    Vector<Int>& stateId(Vector<Int>& /*stateIds*/) const { NotPrefetched; }
-    Vector<Double>& time(Vector<Double>& ) const { NotPrefetched; }
-    Vector<Double>& timeCentroid(Vector<Double>& /*t*/) const { NotPrefetched; }
-    Vector<Double>& timeInterval(Vector<Double>& ) const { NotPrefetched; }
+    void stateId(Vector<Int>& /*stateIds*/) const { NotPrefetched; }
+    void time(Vector<Double>& ) const { NotPrefetched; }
+    void timeCentroid(Vector<Double>& /*t*/) const { NotPrefetched; }
+    void timeInterval(Vector<Double>& ) const { NotPrefetched; }
     Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& ) const { NotPrefetched; }
-    Matrix<Double>& uvwMat(Matrix<Double>& ) const { NotPrefetched; }
+    void uvwMat(Matrix<Double>& ) const { NotPrefetched; }
     VisibilityIteratorReadImpl2& velInterpolation(const String& ) { NotImplementedROVIA; }
-    Cube<Complex>& visibility(Cube<Complex>& , DataColumn ) const { NotPrefetched; }
-    Matrix<CStokesVector>& visibility(Matrix<CStokesVector>& , DataColumn ) const { NotPrefetched; }
+    void visibility(Cube<Complex>& , DataColumn ) const { NotPrefetched; }
+    void visibility(Matrix<CStokesVector>& , DataColumn ) const { NotPrefetched; }
     IPosition visibilityShape() const { NotImplementedROVIA; }
-    Vector<Float>& weight(Vector<Float>& ) const { NotPrefetched; }
-    Matrix<Float>& weightMat(Matrix<Float>& ) const { NotPrefetched; }
-    Cube<Float>& weightSpectrum(Cube<Float>& ) const { NotPrefetched; }
+    void weight(Vector<Float>& ) const { NotPrefetched; }
+    void weightMat(Matrix<Float>& ) const { NotPrefetched; }
+    void weightSpectrum(Cube<Float>& ) const { NotPrefetched; }
 
     static String prefetchColumnName (Int id); // for debug only
 
@@ -283,9 +296,6 @@ private:
 
 }; // end class ViReadImplAsync
 
-namespace asyncio {
-    class WriteData;
-} // end namespace asyncio
 
 class ViWriteImplAsync2 : public VisibilityIteratorWriteImpl2 {
 
@@ -356,6 +366,8 @@ private:
 
 
 typedef ViReadImplAsync2 ROVIA;
+
+} // end namespace vi
 
 } // end namespace casa
 

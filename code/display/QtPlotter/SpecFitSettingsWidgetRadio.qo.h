@@ -50,6 +50,10 @@ public:
     SpecFitSettingsWidgetRadio(QWidget *parent = 0);
     ~SpecFitSettingsWidgetRadio();
     void setUnits( QString units );
+    void setDisplayYUnits( const QString& units );
+    void setImageYUnits( const QString& units );
+    void setCurveName( const QString& curveName );
+    void addCurveName( const QString& curveName );
     void setRange(float start, float end );
     void reset();
     void pixelsChanged( int pixX, int pixY );
@@ -112,6 +116,8 @@ private:
 
 
     QString outputLogPath;
+    QString displayYUnits;
+    QString imageYUnits;
     QList<QList<SpecFit*> > curveList;
     int POINT_COUNT;
     int SUM_FIT_INDEX;

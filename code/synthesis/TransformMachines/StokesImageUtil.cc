@@ -41,6 +41,7 @@
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
+#include <lattices/Lattices/LatticeConvolver.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/Gaussian2D.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -99,44 +100,54 @@ namespace casa {
 // In-place convolve. image is 4 dimensional. RA and Dec first.
 void StokesImageUtil::Convolve(ImageInterface<Float>& image,
 			       ImageInterface<Float>& psf) {
-  
-  Vector<Int> map;
-  AlwaysAssert(StokesMap(map, image.coordinates()), AipsError);
-  
-  Vector<Int> psfmap;
-  AlwaysAssert(StokesMap(psfmap, psf.coordinates()), AipsError);
-  
-  Int nx = image.shape()(map(0));
-  Int ny = image.shape()(map(1));
-  
-  // Make FFT machine
-  FFTServer<Float,Complex> fft(IPosition(2, nx, ny));
-  
-  // Get the image into a Matrix for Fourier transformation
-  Array<Complex> xfr;
-  Matrix<Complex> cft;
-  
-  LatticeStepper ls(image.shape(), IPosition(4, nx, ny, 1, 1),
-		    IPosition(4, map(0), map(1), map(2), map(3)));
-  LatticeIterator<Float> li(image, ls);
-  
-  // Get the PSF into a Matrix for Fourier transformation
-  LatticeStepper psfls(psf.shape(), IPosition(4, nx, ny, 1, 1),
-		       IPosition(4, map(0), map(1), map(2), map(3)));
-  RO_LatticeIterator<Float> psfli(psf, psfls);
-  psfli.reset();
-  //fft.fft(xfr, psfli.matrixCursor());
-  fft.fft0(xfr, psfli.matrixCursor());
-  
-  // Loop over all planes
-  for (li.reset();!li.atEnd();li++) {
-    //fft.fft(cft, li.matrixCursor());
-    fft.fft0(cft,li.matrixCursor());
-    cft *= xfr;
-    // fft.fft(li.rwMatrixCursor(), cft);
-    fft.fft0(li.rwMatrixCursor(),cft,False);
-    fft.flip(li.rwMatrixCursor(), False, False);
+
+
+  Double availablemem=Double(HostInfo::memoryFree())*1024.0;
+  //Do an in memory if x-y complex can fit in remaining memory
+  if(availablemem < Double(image.shape()(0)*image.shape()(1))*6.0*8.0 ){
+    LatticeConvolver<Float> lattCon(psf);
+    lattCon.linear(image);
   }
+  else{
+    
+    Vector<Int> map;
+    AlwaysAssert(StokesMap(map, image.coordinates()), AipsError);
+    
+    Vector<Int> psfmap;
+    AlwaysAssert(StokesMap(psfmap, psf.coordinates()), AipsError);
+    
+    Int nx = image.shape()(map(0));
+    Int ny = image.shape()(map(1));
+    
+    // Make FFT machine
+    FFTServer<Float,Complex> fft(IPosition(2, nx, ny));
+    
+    // Get the image into a Matrix for Fourier transformation
+    Array<Complex> xfr;
+    Matrix<Complex> cft;
+    
+    LatticeStepper ls(image.shape(), IPosition(4, nx, ny, 1, 1),
+		      IPosition(4, map(0), map(1), map(2), map(3)));
+    LatticeIterator<Float> li(image, ls);
+    
+    // Get the PSF into a Matrix for Fourier transformation
+    LatticeStepper psfls(psf.shape(), IPosition(4, nx, ny, 1, 1),
+			 IPosition(4, map(0), map(1), map(2), map(3)));
+    RO_LatticeIterator<Float> psfli(psf, psfls);
+    psfli.reset();
+    //fft.fft(xfr, psfli.matrixCursor());
+    fft.fft0(xfr, psfli.matrixCursor());
+    
+    // Loop over all planes
+    for (li.reset();!li.atEnd();li++) {
+      //fft.fft(cft, li.matrixCursor());
+      fft.fft0(cft,li.matrixCursor());
+      cft *= xfr;
+      // fft.fft(li.rwMatrixCursor(), cft);
+      fft.fft0(li.rwMatrixCursor(),cft,False);
+      fft.flip(li.rwMatrixCursor(), False, False);
+    }
+  } 
 };
 
 void StokesImageUtil::Convolve(ImageInterface<Float>& image, 

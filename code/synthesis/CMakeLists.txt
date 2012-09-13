@@ -415,7 +415,6 @@ install (FILES
 	MSVis/MSMoments.h
 	MSVis/MSUVWGenerator.h
 	MSVis/MSUtil.h
-	MSVis/MsAverager.h
 	MSVis/Partition.h
 	MSVis/Reweighter.h
 	MSVis/SelectAverageSpw.h
@@ -643,6 +642,7 @@ casa_add_assay( synthesis MSVis/test/tUVSub.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
 casa_add_assay( synthesis MSVis/test/VisibilityProcessing_Test.cc )
+casa_add_assay( synthesis MSVis/test/VisibilityIterator_Test.cc )
 casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )

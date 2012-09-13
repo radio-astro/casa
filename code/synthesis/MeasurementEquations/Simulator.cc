@@ -1849,7 +1849,7 @@ Bool Simulator::setapply(const String& type,
 
 
 // Bool Simulator::corrupt() {
-Bool Simulator::corrupt(const Bool avoidauto=True) {
+Bool Simulator::corrupt() {
 
   // VIS-plane (only) corruption
   
@@ -1923,7 +1923,7 @@ Bool Simulator::corrupt(const Bool avoidauto=True) {
 	  for (vi.origin(); vi.more(); vi++) {
 
 	    // corrupt model to pivot, correct data up to pivot
-	    ve_p.collapseForSim(vb, avoidauto);
+	    ve_p.collapseForSim(vb);
 
 	    // Deposit corrupted visibilities into DATA
 	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);

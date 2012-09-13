@@ -40,11 +40,14 @@ public:
     ~SearchMoleculesResultsWidget();
     QList<int> getLineIndices() const;
     bool getLine(int lineIndex, Float& peak, Float& center,
-       		QString& molecularName ) const;
-    void getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const;
+       		QString& molecularName, QString& chemicalName,
+       		QString& resolvedQNs,QString& frequencyUnits ) const;
+    void getLines( QList<float>& peaks, QList<float>& centers,
+    		QString molecularName, QList<QString>& chemicalNames,
+    		QList<QString>& resolvedQNSs, QString frequencyUnit) const;
     int getLineCount() const;
     int getSelectedLineCount() const;
-    void displaySearchResults( const Record& results );
+    void displaySearchResults( const vector<SplatResult>& results, int offset, int totalCount );
 
 private:
 
@@ -53,7 +56,7 @@ private:
     void setTableValueHTML( int row, int col, const QString& val );
     void setTableValue( int row, int col, double val );
     Ui::SearchMoleculesResultsWidgetClass ui;
-    enum ResultColumns{ COL_SPECIES, COL_CHEMICAL, COL_FREQUENCY,
+    enum ResultColumns{ COL_SPECIES_ID, COL_SPECIES, COL_CHEMICAL, COL_FREQUENCY,
         	COL_QN, COL_INTENSITY, COLUMN_COUNT};
 
 };

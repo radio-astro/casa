@@ -721,13 +721,13 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
 
       // the following calls MSTileLayout...  disabled for now because it
       // forces tiles to be the full spw bandwidth in width (gmoellen, 2010/11/07)
-  /*
+  
       else if((tileShape.nelements()==1) && (tileShape[0]==0 || tileShape[0]==1)){
         outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
                              mscIn_p->observation().telescopeName()(0),
                              colNamesTok, tileShape[0]);
       }
-  */
+      /* 
       else{
 	// Derive tile shape based on input dataset's tiles, borrowed
 	//  from VisSet's scr col tile shape derivation
@@ -795,7 +795,8 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
 				 colNamesTok, dataTileShape);
 
         }
-	else
+      */
+      else{
 	  //Sweep all other cases of bad tileshape to a default one.
 	  //  (this probably never happens)
 	  outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
@@ -2393,7 +2394,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 							    xindd, // the old channel centers 
 							    yin, // the old visibilities 
 							    yinFlags,// the old flags
-							    methodC, // the interpol method
+							    InterpolateArray1D<Double,Complex>::linear, // the interpol method
 							    False, // for flagging: good is not true
 							    doExtrapolate // do not extrapolate
 							    );	    
@@ -2444,7 +2445,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2476,7 +2478,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2499,7 +2502,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Complex>::interpolate(yinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							    xindd, yin, yinFlags,
-							    methodC, False, doExtrapolate);	    
+							    InterpolateArray1D<Double,Complex>::linear, 
+							    False, doExtrapolate);	    
 	    fFFTServer.fftshift(yout, youtFlags, yinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False, False);
 
@@ -2537,7 +2541,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  if(method[iDone]==(Int)useLinIntThenFFTShift){
 	    InterpolateArray1D<Double,Float>::interpolate(fYinIntermediate, yinFlagsIntermediate, xout[iDone], 
 							  xindd, yinf, yinFlags,
-							  methodF, False, doExtrapolate);	    
+							  InterpolateArray1D<Double,Float>::linear, 
+							  False, doExtrapolate);	    
 	    fFFTServer.fftshift(youtf, youtFlags, fYinIntermediate, yinFlagsIntermediate, 
 				1, relShift, False);
 
@@ -5173,6 +5178,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // channel numbers to av. over
       vector<vector<Double> > averageChanFrac; // for each new channel store the
       // channel fraction for each old channel
+
       // initialise the averaging vectors
       for(uInt i=0; i<newNUM_CHAN; i++){
 	averageN.push_back(1);
@@ -5187,7 +5193,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	averageWhichChan.push_back(tv);
 	vector<Double> tvd; // another one
-	tvd.push_back(1.);
+	tvd.push_back(1.); 
 	averageChanFrac.push_back(tvd);
       }
 
@@ -5394,7 +5400,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      mergedEffBW.push_back(newWidth); 
 	      mergedRes.push_back(newWidth); 
 	      mergedAverageN.push_back(averageN[0]+1); // one more channel contributes
-	      tv2[0] = k; // channel k from spw idi
+	      // channel k is from spw idi
+	      if(newIsDescendingI){
+		tv2[0] = newNUM_CHANi-1-k;
+	      }
+	      else{
+		tv2[0] = k;
+	      }
 	      for(int j=0; j<averageN[0]; j++){
 		tv.push_back(averageWhichSPW[0][j]); // additional contributors
 		tv2.push_back(averageWhichChan[0][j]); // channel 0 from spw id0
@@ -5443,7 +5455,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	      if(overlap_frac > 0.){ // update averaging info
 		averageN[j] += 1;
 		averageWhichSPW[j].push_back(idi);
-		averageWhichChan[j].push_back(k);
+		if(newIsDescendingI){
+		  averageWhichChan[j].push_back(newNUM_CHANi-1-k);
+		}
+		else{
+		  averageWhichChan[j].push_back(k);
+		}
 		averageChanFrac[j].push_back(overlap_frac);
 	      }
 	    } // end loop over spw idi
@@ -5472,7 +5489,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // k's the one 
  	    if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap
 	      Double overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
-	      if(overlap_frac>0.5){ // merge channel k completely with channel j 
+	      if(overlap_frac>0.01){ // merge channel k completely with channel j 
 		Double newWidth = uboundk - lboundj;
 		Double newCenter = (lboundj+uboundk)/2.;
 		mergedChanFreq[j] =  newCenter;
@@ -5481,7 +5498,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		mergedRes[j] = newWidth; 
 		mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; 
 	      }
-	      else{ // create separate, more narrow channel
+	      else{ // create separate, (slightly) more narrow channel
 		Double newWidth = uboundk - uboundj;
 		Double newCenter = (uboundj+uboundk)/2.;
 		vector<Int> tv;
@@ -5549,15 +5566,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       } // end loop over SPWs
 
-//       // print channel fractions for debugging
+      // print channel fractions for debugging
+//       vector< vector<bool> > wasprinted;
 //       for(uInt i=0; i<newNUM_CHAN; i++){
-//  	   cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
-// 	   for(Int j=0; j<averageN[i]; j++){
-// 	     cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 	          << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
-// 	     cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-// 	   }
-//       }	
+// 	vector<bool> tboolv;
+// 	cout << "i freq width " << i << " " << newCHAN_FREQ(i) << " " << newCHAN_WIDTH(i) << endl;
+// 	for(Int j=0; j<averageN[i]; j++){
+// 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+// 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
+// 	  tboolv.push_back(False);
+// 	}
+// 	wasprinted.push_back(tboolv);
+//       }
+      
       
       if(noModify){ // newCHAN_FREQ and newCHAN_WIDTH have been determined now
 	return True;
@@ -6156,34 +6178,34 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    }
 
 	    Bool haveCoverage = False;
-	    Vector<Double> numNominal(nCorrelations, 0.);
 	    Vector<Double> modNorm(nCorrelations, 0.); // normalization for the averaging of the contributions from the SPWs
-	    for(Int j=0; j<averageN[i]; j++){
-	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
-		for(uInt k=0; k<nCorrelations; k++){
+	    vector<vector<Double> > modAverageChanFrac(averageN[i], vector<Double>(nCorrelations, 0.));
+	    for(uInt k=0; k<nCorrelations; k++){
+	      Vector<Int> spwCount(nSpwsToCombine, 0);
+	      for(Int j=0; j<averageN[i]; j++){
+		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
 		    haveCoverage = True;
-		    if(averageChanFrac[i][j]==1.){ // count number of channels right on this frequency
-		      numNominal(k) += 1.;
-		    }
-		    modNorm(k) += averageChanFrac[i][j];
 		    if(FLAGColIsOK){
-		      newFlag(k,i) = False; // there is valid data for this channel => don't flag in output
+		      newFlag(k,i) = False; // there is valid data for this channel and correlation => don't flag in output
 		    }
-		  }
-		}
-		for(uInt k=0; k<nCorrelations; k++){
-		  if(numNominal(k)>0. && numNominal(k)<averageN[i]-1){ // there are channels right on this frequency
-		    // and there are at least two more not on this frequency.
-		    // In order to make cvel's output agree with the interpolation done in clean,
-		    //  need to reduce the weight of the channels right on the frequency. 
-		    if(averageChanFrac[i][j]==1.){ // this is one of them
-		      averageChanFrac[i][j] = 0.1;
-		      modNorm(k) -= 0.9; // correct norm
+		    modAverageChanFrac[j][k] = averageChanFrac[i][j];
+		    modNorm(k) += averageChanFrac[i][j];
+		    if(modAverageChanFrac[j][k]!=1.){
+		      ++spwCount(averageWhichSPW[i][j]); // count the contributions with non-unity overlap fraction for each spw
 		    }
 		  }
 		}
 	      }
+	      for(Int j=0; j<averageN[i]; j++){
+		// second iteration: eliminate contributions from spws with odd numbers of contribs with non-unity overlap fraction
+		if(spwCount(averageWhichSPW[i][j])%2!=0 && modAverageChanFrac[j][k]!=1.){
+		  //cout << "spw count " << averageWhichSPW[i][j] << " " << spwCount(averageWhichSPW[i][j]) << endl;
+		  //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
+		  modNorm(k) -= modAverageChanFrac[j][k];
+		  modAverageChanFrac[j][k] = 0.;
+		}
+	      }  
 	    }
 
 	    if(haveCoverage){ // there is unflagged data for this channel
@@ -6200,20 +6222,23 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
-		      weight = averageChanFrac[i][j] / modNorm(k);
+		      weight = modAverageChanFrac[j][k] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
-			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-// 			cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
-// 			     << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
-// 			     << " i, j, k " << i << ", " << j << ", " << k << " averageChanFrac[i][j] " << averageChanFrac[i][j] 
-// 			     << " modNorm(k) " << modNorm(k) << " newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
-// 			     << newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
-// 			     << " newCorrectedData(k,i) " << newCorrectedData(k,i) 
-// 			     << " weight " << weight << endl; 
+			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;			
 		      }
 		      if(DATAColIsOK){
 			newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+// 			if (!wasprinted[i][j]){
+// 			  cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
+// 			       << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 			       << " i, j, k " << i << ", " << j << ", " << k << " modAverageChanFrac[j][k] " << modAverageChanFrac[j][k] 
+// 			       << " modNorm(k) " << modNorm(k) << " newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
+// 			       << newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
+// 			       << " newData(k,i) " << newData(k,i) 
+// 			       << " weight " << weight << endl;
+// 			  wasprinted[i][j] = True;
+// 			} 
 		      }
 		      if(FLOAT_DATAColIsOK){
 			newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;

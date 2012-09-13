@@ -669,11 +669,13 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                              << scan << ", " << field << ", " << ant1 << ", "
                              << ant2 << ", ";
                     int precision = csv_file.precision();
-                    csv_file << std::setprecision(3) << std::fixed << time;
+                    csv_file << std::setprecision(3) << std::fixed
+                             << time << ", ";
+                    csv_file << std::setprecision(9) << std::fixed
+                             << freq << ", ";
                     csv_file.unsetf(ios_base::fixed);
                     csv_file.precision(precision);
-                    csv_file << ", " << freq << ", "
-                             << spw << ", " << corr << ", " << offset << ", "
+                    csv_file << spw << ", " << corr << ", " << offset << ", "
                              << currchunk << ", " << irel << endl;
                 }
                 csv_file.close();

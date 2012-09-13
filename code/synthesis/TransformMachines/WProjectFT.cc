@@ -418,6 +418,7 @@ void WProjectFT::prepGridForDegrid(){
 
 void WProjectFT::finalizeToVis()
 {
+  griddedData.resize();
   if(isTiled) {
     
     logIO() << LogOrigin("WProjectFT", "finalizeToVis")  << LogIO::NORMAL;
@@ -481,12 +482,12 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
     if(useDoubleGrid_p){
+      griddedData.resize();
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-    arrayLattice = new ArrayLattice<Complex>(griddedData);
-    lattice=arrayLattice;
+   
   }
   //AlwaysAssert(lattice, AipsError);
   
@@ -1179,6 +1180,9 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
   //AlwaysAssert(lattice, AipsError);
   AlwaysAssert(image, AipsError);
   
+  if((griddedData.nelements() ==0) && (griddedData2.nelements()==0)){
+     throw(AipsError("Programmer error ...request for image without right order of calls"));
+  }
   logIO() << LogOrigin("WProjectFT", "getImage") << LogIO::NORMAL;
   
   weights.resize(sumWeight.shape());
@@ -1200,17 +1204,27 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
     }
   }
   else {
-    if(useDoubleGrid_p){
-      convertArray(griddedData, griddedData2);
-      griddedData2.resize();
-    }
-    const IPosition latticeShape = lattice->shape();
-    
     logIO() << LogIO::DEBUGGING
 	    << "Starting FFT and scaling of image" << LogIO::POST;
     
-    // x and y transforms
-    LatticeFFT::cfft2d(*lattice,False);
+    if(useDoubleGrid_p){
+      ArrayLattice<DComplex> darrayLattice(griddedData2);
+      LatticeFFT::cfft2d(darrayLattice,False);
+      griddedData.resize(griddedData2.shape());
+      convertArray(griddedData, griddedData2);
+      griddedData2.resize();
+      arrayLattice = new ArrayLattice<Complex>(griddedData);
+      lattice=arrayLattice;
+    }else{
+      arrayLattice = new ArrayLattice<Complex>(griddedData);
+      lattice=arrayLattice;
+      LatticeFFT::cfft2d(*lattice,False);
+
+    }
+
+
+    const IPosition latticeShape = lattice->shape();
+    
     
     {
       Int inx = lattice->shape()(0);
@@ -1272,7 +1286,7 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
       griddedData.resize(IPosition(1,0));
     }
   }
-  
+  griddedData.resize();
   return *image;
 }
 

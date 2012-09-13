@@ -41,6 +41,7 @@
 #include <measures/Measures/Stokes.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSIter.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <scimath/Mathematics/SquareMatrix.h>
@@ -57,10 +58,18 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+namespace vi {
+
 //# forward decl
 
 class VisBuffer2;
 
+class ChannelSelector;
+class ChannelSelectorCache;
+typedef Vector<Vector <Slice> > ChannelSlicer;
+class SpectralWindowChannelsCache;
+class SpectralWindowChannels;
+class SubtableColumns;
 
 
 // <summary>
@@ -161,7 +170,7 @@ public:
     //    };
 
     // Default constructor - useful only to assign another iterator later
-    VisibilityIteratorReadImpl2 ();
+    ////VisibilityIteratorReadImpl2 ();
 
     // Construct from an MS and a Block of MS column enums specifying the
     // iteration order.  If no order is specified, it uses the default sort
@@ -208,11 +217,7 @@ public:
 
         // Members
 
-    Bool isAsyncEnabled () const;
-
-    virtual Bool isWritable () const {
-        return False;
-    }
+    virtual Bool isWritable () const;
 
     // Reset iterator to origin/start of data (of current chunk)
     virtual void origin ();
@@ -221,15 +226,13 @@ public:
 
     // Return the time interval (in seconds) used for iteration.
     // This is not the same as the INTERVAL column.
-    virtual Double getInterval() const { return timeInterval_p; }
+
+    virtual Double getInterval() const;
 
     // Set or reset the time interval (in seconds) to use for iteration.
     // You should call originChunks () to reset the iteration after
     // calling this.
-    virtual void setInterval (Double timeInterval) {
-        msIter_p.setInterval (timeInterval);
-        timeInterval_p = timeInterval;
-    }
+    virtual void setInterval (Double timeInterval);
 
     // Set the 'blocking' size for returning data.
     // With the default (0) only a single integration is returned at a time, this
@@ -247,7 +250,7 @@ public:
 
     virtual const Block<Int>& getSortColumns() const;
 
-    virtual void setFrequencySelection (const FrequencySelections & selection);
+    virtual void setFrequencySelections (const FrequencySelections & selection);
 
     // Return False if no more 'Chunks' of data left
     virtual Bool moreChunks () const;
@@ -270,21 +273,17 @@ public:
     virtual VisibilityIteratorReadImpl2 & nextChunk ();
 
     // Return antenna1
-    virtual Vector<Int> & antenna1 (Vector<Int> & ant1) const;
+    virtual void antenna1 (Vector<Int> & ant1) const;
 
     // Return antenna2
-    virtual Vector<Int> & antenna2 (Vector<Int> & ant2) const;
+    virtual void antenna2 (Vector<Int> & ant2) const;
 
     // Return feed1
-    virtual Vector<Int> & feed1 (Vector<Int> & fd1) const;
+    virtual void feed1 (Vector<Int> & fd1) const;
 
     // Return feed2
-    virtual Vector<Int> & feed2 (Vector<Int> & fd2) const;
+    virtual void feed2 (Vector<Int> & fd2) const;
 
-    // Return channel numbers in selected VisSet spectrum
-    // (i.e. disregarding possible selection on the iterator, but
-    //  including the selection set when creating the VisSet)
-    virtual Vector<Int> & channel (Vector<Int> & chan) const;
 
     // Return feed configuration matrix for specified antenna
     void jonesC (Vector<SquareMatrix<Complex, 2> > & cjones) const;
@@ -354,34 +353,31 @@ public:
     virtual String sourceName () const;
 
     // Return flag for each polarization, channel and row
-    virtual Cube<Bool> & flag (Cube<Bool> & flags) const;
+    virtual void flag (Cube<Bool> & flags) const;
 
     // Return flag for each channel & row
-    virtual Matrix<Bool> & flag (Matrix<Bool> & flags) const;
+    virtual void flag (Matrix<Bool> & flags) const;
 
     // Determine whether FLAG_CATEGORY is valid.
     Bool existsFlagCategory() const;
 
     // Return flags for each polarization, channel, category, and row.
-    virtual Array<Bool> & flagCategory (Array<Bool> & flagCategories) const;
+    virtual void flagCategory (Array<Bool> & flagCategories) const;
 
     // Return row flag
-    virtual Vector<Bool> & flagRow (Vector<Bool> & rowflags) const;
+    virtual void flagRow (Vector<Bool> & rowflags) const;
 
     // Return scan number
-    virtual Vector<Int> & scan (Vector<Int> & scans) const;
+    virtual void scan (Vector<Int> & scans) const;
 
     // Return the OBSERVATION_IDs
-    virtual Vector<Int> & observationId (Vector<Int> & obsids) const;
+    virtual void observationId (Vector<Int> & obsids) const;
 
     // Return the PROCESSOR_IDs
-    virtual Vector<Int> & processorId (Vector<Int> & procids) const;
+    virtual void processorId (Vector<Int> & procids) const;
 
     // Return the STATE_IDs
-    virtual Vector<Int> & stateId (Vector<Int> & stateids) const;
-
-    // Return current frequencies (in Hz, acc. to the MS def'n v.2)
-    virtual Vector<Double> & frequency (Vector<Double> & freq) const;
+    virtual void stateId (Vector<Int> & stateids) const;
 
     // Return the current phase center as an MDirection
     virtual const MDirection & phaseCenter () const;
@@ -390,13 +386,13 @@ public:
     virtual Int polFrame () const;
 
     // Return the correlation type (returns Stokes enums)
-    virtual Vector<Int> & corrType (Vector<Int> & corrTypes) const;
+    virtual void corrType (Vector<Int> & corrTypes) const;
 
     // Return sigma
-    virtual Vector<Float> & sigma (Vector<Float> & sig) const;
+    virtual void sigma (Vector<Float> & sig) const;
 
     // Return sigma matrix (pol-dep)
-    virtual Matrix<Float> & sigmaMat (Matrix<Float> & sigmat) const;
+    virtual void sigmaMat (Matrix<Float> & sigmat) const;
 
     // Return current SpectralWindow
     virtual Int spectralWindow () const;
@@ -408,48 +404,50 @@ public:
     virtual Int dataDescriptionId () const;
 
     // Return MJD midpoint of interval.
-    virtual Vector<Double> & time (Vector<Double> & t) const;
+    virtual void time (Vector<Double> & t) const;
 
     // Return MJD centroid of interval.
-    virtual Vector<Double> & timeCentroid (Vector<Double> & t) const;
+    virtual void timeCentroid (Vector<Double> & t) const;
 
     // Return nominal time interval
-    virtual Vector<Double> & timeInterval (Vector<Double> & ti) const;
+    virtual void timeInterval (Vector<Double> & ti) const;
 
     // Return actual time interval
-    virtual Vector<Double> & exposure (Vector<Double> & expo) const;
+    virtual void  exposure (Vector<Double> & expo) const;
 
     // Return the visibilities as found in the MS, Cube (npol,nchan,nrow).
-    virtual Cube<Complex> & visibility (Cube<Complex> & vis,
-                                        ROVisibilityIterator2::DataColumn whichOne) const;
+    virtual void visibilityCorrected (Cube<Complex> & vis) const;
+    virtual void visibilityModel (Cube<Complex> & vis) const;
+    virtual void visibilityObserved (Cube<Complex> & vis) const;
 
     // Return FLOAT_DATA as a Cube (npol, nchan, nrow) if found in the MS.
-    virtual Cube<Float> & floatData (Cube<Float> & fcube) const;
+    virtual void floatData (Cube<Float> & fcube) const;
 
     // Return the visibility 4-vector of polarizations for each channel.
     // If the MS doesn't contain all polarizations, it is assumed it
     // contains one or two parallel hand polarizations.
-    virtual Matrix<CStokesVector> & visibility (Matrix<CStokesVector> & vis,
-                                                ROVisibilityIterator2::DataColumn whichOne) const;
+    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
+    virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
+    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
 
     // Return the shape of the visibility Cube
     virtual IPosition visibilityShape () const;
 
     // Return u,v and w (in meters)
-    virtual Vector<RigidVector<Double, 3> > & uvw (Vector<RigidVector<Double, 3> > & uvwvec) const;
-    virtual Matrix<Double> & uvwMat (Matrix<Double> & uvwmat) const;
+
+    virtual void uvw (Matrix<Double> & uvwmat) const;
 
     // Return weight
-    virtual Vector<Float> & weight (Vector<Float> & wt) const;
+    virtual void weight (Vector<Float> & wt) const;
 
     // Returns the nPol_p x curNumRow_p weight matrix
-    virtual Matrix<Float> & weightMat (Matrix<Float> & wtmat) const;
+    virtual void weightMat (Matrix<Float> & wtmat) const;
 
     // Determine whether WEIGHT_SPECTRUM exists.
     Bool existsWeightSpectrum () const;
 
     // Return weightspectrum (a weight for each channel)
-    virtual Cube<Float> & weightSpectrum (Cube<Float> & wtsp) const;
+    virtual void weightSpectrum (Cube<Float> & wtsp) const;
 
     // Return imaging weight (a weight for each channel)
     //virtual Matrix<Float> & imagingWeight (Matrix<Float> & wt) const;
@@ -475,7 +473,7 @@ public:
     // Return the row ids as from the original root table. This is useful
     // to find correspondance between a given row in this iteration to the
     // original ms row
-    virtual Vector<uInt> & rowIds (Vector<uInt> & rowids) const;
+    virtual void getRowIds (Vector<uInt> & rowids) const;
 
     // Return the numbers of rows in the current chunk
 
@@ -483,7 +481,7 @@ public:
 
     // Return the number of sub-intervals in the current chunk
 
-    virtual Int nSubInterval () const;
+    //virtual Int nSubInterval () const;
 
     // Call to use the slurp i/o method for all scalar columns. This
     // will set the BucketCache cache size to the full column length
@@ -496,56 +494,29 @@ public:
     // an MS or parts of an MS, it is not tested with multiple MSs.
     virtual void slurp () const;
 
-    // Velocity selection - specify the output channels in velocity:
-    // nChan - number of output channels, vStart - start velocity,
-    // vInc - velocity increment. So channel i will have velocity
-    // vStart + i*vInc (i=0,nChan-1).
-    // Specify velocities as in e.g., MVRadialVelocity (Quantity (2001.,"km/s")).
-    // The reference type and velocity definition are specified separately.
-    // Note that no averaging is performed, the visibilities will be interpolated
-    // and sampled at the specified velocities, it's up to you to choose a vInc
-    // appropriate to the channel width.
-    // The REST_FREQUENCY column in the SPECTRAL_WINDOW subtable is used to
-    // determine the velocity-frequency conversion.
-    // By default calculations are done for a single velocity with offsets
-    // applied for the others (ok for non-rel velocities with RADIO defn),
-    // set precise to True to do a full conversion for each output channel. (NYI)
-
-    // Select the velocity interpolation scheme.
-    // At present the choice is limited to : nearest and linear, linear
-    // is the default.
-    // TODO: add cubic, spline and possibly FFT
-
-    // Translate slicesv from the form returned by MSSelection::getChanSlices ()
-    // to matv as used by setChanAveBounds ().  widthsv is the channel averaging
-    // width for each _selected_ spw.
-    void slicesToMatrices (Vector<Matrix<Int> > & matv,
-                           const Vector<Vector<Slice> > & slicesv,
-                           const Vector<Int> & widthsv) const;
-
     // Get the spw, start  and nchan for all the ms's is this Visiter that
     // match the frequecy "freqstart-freqStep" and "freqEnd+freqStep" range
     // Can help in doing channel selection above..
     // freqFrame is the frame the caller frequency values are in (freqStart and freqEnd)
     // These will be converted to the frame of the selected spw to match
 
-    virtual void getSpwInFreqRange (Block<Vector<Int> > & spw,
-                                    Block<Vector<Int> > & start,
-                                    Block<Vector<Int> > & nchan,
-                                    Double freqStart, Double freqEnd,
-                                    Double freqStep, MFrequency::Types freqFrame = MFrequency::LSRK) const;
+//    virtual void getSpwInFreqRange (Block<Vector<Int> > & spw,
+//                                    Block<Vector<Int> > & start,
+//                                    Block<Vector<Int> > & nchan,
+//                                    Double freqStart, Double freqEnd,
+//                                    Double freqStep, MFrequency::Types freqFrame = MFrequency::LSRK) const;
 
     // Get the range of frequency convered by the selected data in the frame requested
 
-    virtual void getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe = MFrequency::LSRK) const;
+//    virtual void getFreqInSpwRange(Double& freqStart, Double& freqEnd, MFrequency::Types freqframe = MFrequency::LSRK) const;
 
     // Access the current ROMSColumns object in MSIter
-    virtual const ROMSColumns & msColumns () const;
+    virtual const vi::SubtableColumns & subtableColumns () const;
 
     // get back the selected spectral windows and spectral channels for
     // current ms
 
-    virtual void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
+    virtual const SpectralWindowChannels & getSpectralWindowChannels (Int msId, Int spectralWindowId);
 
     //assign a VisImagingWeight object to this iterator
     virtual void useImagingWeight (const VisImagingWeight & imWgt);
@@ -566,120 +537,121 @@ public:
     virtual MEpoch getEpoch () const;
     MFrequency::Types getObservatoryFrequencyType () const; //???
     MPosition getObservatoryPosition () const;
-    MDirection getPhaseCenter () const;
     Vector<Float> getReceptor0Angle ();
-    Vector<uInt> getRowIds () const;
-
 
 protected:
 
     void attachColumnsSafe (const Table & t);
 
-    // advance the iteration
-    virtual void advance ();
-    // set the currently selected table
-    virtual void setSelTable ();
-    // set the iteration state
-    virtual void setState ();
+    // attach the column objects to the currently selected table
 
-    ROVisibilityIterator2 * getViP () const;
+    virtual void attachColumns (const Table & t);
+
+    // returns the table, to which columns are attached,
+    // can be overridden in derived classes
+
+    virtual const Table attachTable () const;
+
+    // advance the iteration
+
+    virtual void advance ();
+
+    virtual void applyPendingChanges ();
+
+    // set the iteration state
+
+    virtual void configureNewChunk ();
+
+    // set the currently selected table
+
+    virtual void configureNewSubchunk ();
+
+    const ChannelSelector *
+    createDefaultChannelSelector (Double time, Int msId, Int spectralWindowId);
+
+    virtual const vi::ChannelSelector * determineChannelSelection (Double time);
+
+    Slice findChannelsInRange (Double lowerFrequency, Double upperFrequency,
+                               const vi::SpectralWindowChannels & spectralWindowChannels);
+
+    // Methods to get the data out of a table column according to whatever selection
+    // criteria (e.g., slicing) is in effect.
+
+    template <typename T>
+    void getColumnRows (const ROArrayColumn<T> & column, Array<T> & array) const;
+
+    template <typename T>
+    void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
+
+    Int getReportingFrameOfReference () const;
+
+    // Returns the MS objects that this VI is iterating over.
 
     std::vector<MeasurementSet> getMeasurementSets () const;
 
+    // Provides access to the MS-derived values object
+
     const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
+
+    // Get privileged (non-const) access to the containing ROVI
+
+    ROVisibilityIterator2 * getViP () const;
+
+    void getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
+                                const ROArrayColumn<Complex> & column) const;
+
+    // Ctor auxiliary method
+
+    virtual void initialize (const Block<MeasurementSet> & mss);
+
+    // Returns true if MS Iterator is currently pointing to a selected
+    // spectral window
 
     Bool isInASelectedSpectralWindow () const;
 
-    // update the DATA slicer
-    virtual void updateSlicer ();
-    // attach the column objects to the currently selected table
-    virtual void attachColumns (const Table & t);
-    // returns the table, to which columns are attached,
-    // can be overridden in derived classes
-    virtual const Table attachTable () const;
+    // Creates a channel selection for the current subchunk based on the channel
+    // or frequency selection made by the user.
 
-    // get the (velocity selected) interpolated visibilities, flags and weights.
-    // It is not really const at all (it seems to use This-> trickery so callers
-    // like flag () can be declared const).
+    vi::ChannelSelector *
+    makeChannelSelectorC (const FrequencySelection & selection,
+                          Double time, Int msId, Int spectralWindowId);
 
-//    virtual void getInterpolatedVisFlagWeight (DataColumn whichOne) const;
+    vi::ChannelSelector *
+    makeChannelSelectorF (const FrequencySelection & selection,
+                          Double time, Int msId, Int spectralWindowId);
 
-    // get the (velocity selected) interpolated FLOAT_DATA (as real Floats),
-    // flags and weights.
-
-//    void getInterpolatedFloatDataFlagWeight () const;
-
-    Bool usesTiledDataManager (const String & columnName, const MeasurementSet & ms) const;
-
-    virtual void checkForPendingChanges ();
-
-    // get the visibility data (observed, corrected or model);
-    // deals with Float and Complex observed data (DATA or FLOAT_DATA)
-    virtual void getDataColumn (DataColumn whichOne, const Slicer & slicer,
-                                Cube<Complex> & data) const;
-    virtual void getDataColumn (DataColumn whichOne, Cube<Complex> & data) const;
-
-    // get FLOAT_DATA as real Floats.
-    virtual void getFloatDataColumn (const Slicer & slicer, Cube<Float> & data) const;
-    virtual void getFloatDataColumn (Cube<Float> & data) const;
-
-    //constructor helpers
-    virtual void initialize (const Block<MeasurementSet> & mss);
+    // Method to reset the VI back to the start.  Unlike the public version
+    // there is a parameter to allow forcing the rewind even if the
+    // MS Iter is already at the origin.
 
     virtual void originChunks (Bool forceRewind);
 
-    //Re-Do the channel selection in multi ms case
-    virtual void doChannelSelection ();
-    //Set the tile cache size....when using slice access if tile cache size is
-    // not set memory usage can go wild.  Specifically, the caching scheme is
-    // ephemeral and lives for that instance of setting the caching scheme.
-    //
-    // If you don't set any then the defaults come into play and caches a few
-    // tiles along every axis at the tile you requested...which is a waste when
-    // say you know you want to proceed along the row axis for example...and in
-    // fact now VisIter just reads one tile (thus the commenting in setTileCache)
-    // and lets the OS do the caching rather than than having the table system
-    // cache extra tiles.
+    // Advances the MS Iterator until it points at a spectral window
+    // that is part of the frequency selection.
+
+    void positionMsIterToASelectedSpectralWindow ();
+
+    // Sets the default frequency reporting frame of reference.  This
+    // affects the default frame for obtaining the frequencies in a
+    // VisBuffer.
+
+    void setReportingFrameOfReference (Int);
+
+    // Adjusts the tile cache for some columns so that the cache size is
+    // optimized for the current input state (e.g., a new data description).
+
     virtual void setTileCache ();
-    //Check if spw is in selected SPW for actual ms
-    //virtual Bool isInSelectedSPW (const Int & spw);
 
-    // Updates, if necessary, rowIds_p member for the current chunk
-    virtual void update_rowIds () const;
+    // Throws exception if there is a pending (i.e., unapplied) change to
+    // the VI's properties.  Called when the VI is advanced since the user
+    // probably forgot to apply the changes.
 
-    void setAsyncEnabled (Bool enable);
+    virtual void throwIfPendingChanges ();
 
-    template<class T>
-    void getColScalar (const ROScalarColumn<T> & column, Vector<T> & array, Bool resize) const;
 
-    template<class T>
-    void getColArray (const ROArrayColumn<T> & column, Array<T> & array, Bool resize) const;
+    // Returns true if the named column uses a tiled data manager in the specified MS
 
-    // column access functions, can be overridden in derived classes
-    virtual void getCol (const ROScalarColumn<Bool> & column, Vector<Bool> & array, Bool resize = False) const;
-    virtual void getCol (const ROScalarColumn<Int> & column, Vector<Int> & array, Bool resize = False) const;
-    virtual void getCol (const ROScalarColumn<Double> & column, Vector<Double> & array, Bool resize = False) const;
-
-    virtual void getCol (const ROArrayColumn<Bool> & column, Array<Bool> & array, Bool resize = False) const;
-    virtual void getCol (const ROArrayColumn<Float> & column, Array<Float> & array, Bool resize = False) const;
-    virtual void getCol (const ROArrayColumn<Double> & column, Array<Double> & array, Bool resize = False) const;
-    virtual void getCol (const ROArrayColumn<Complex> & column, Array<Complex> & array, Bool resize = False) const;
-
-    virtual void getCol (const ROArrayColumn<Bool> & column, const Slicer & slicer, Array<Bool> & array, Bool resize = False) const;
-    virtual void getCol (const ROArrayColumn<Float> & column, const Slicer & slicer, Array<Float> & array, Bool resize = False) const;
-    virtual void getCol (const ROArrayColumn<Complex> & column, const Slicer & slicer, Array<Complex> & array, Bool resize = False) const;
-
-    //  virtual void getCol (const String & colName, Array<Double> & array,
-    //                      Array<Double> & all, Bool resize = False) const;
-    //  virtual void getCol (const String & colName, Vector<Bool> & array,
-    //                      Vector<Bool> & all, Bool resize = False) const;
-    //  virtual void getCol (const String & colName, Vector<Int> & array,
-    //                      Vector<Int> & all, Bool resize = False) const;
-    //  virtual void getCol (const String & colName, Vector<Double> & array,
-    //                      Vector<Double> & all, Bool resize = False) const;
-
-    template<class T>
-    void swapyz (Cube<T> & out, const Cube<T> & in) const;
+    Bool usesTiledDataManager (const String & columnName, const MeasurementSet & ms) const;
 
     class Cache {
 
@@ -689,44 +661,25 @@ protected:
 
         Cache & operator= (const Cache & other);
 
+        void flush ();
+
         MDirection         azel0_p;
+        Double             azel0Time_p;
         Vector<MDirection> azel_p;
+        Double             azelTime_p;
+        Vector<uInt>       chunkRowIds_p; // Row numbers of underlying MS; used to map
+                                          // form chunk rows to MS rows.  See rowIds method.
         Vector<Float>      feedpa_p;
-        Cube<Bool>         flagCube_p;
-        Bool               flagOK_p;
-        Bool               floatDataCubeOK_p;
-        Cube<Float>        floatDataCube_p;
-        Bool               freqCacheOK_p;
-        Vector<Double>     frequency_p;
+        Double             feedpaTime_p;
         Double             hourang_p;
+        Double             hourangTime_p;
         Matrix<Float>      imagingWeight_p;
-        Double             lastParang0UT_p;
-        Double             lastParangUT_p;
-        Double             lastazelUT_p;
-        Double             lastfeedpaUT_p;
         Bool               msHasFC_p;   // Does the current MS have a valid FLAG_CATEGORY?
         Bool               msHasWtSp_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
         Float              parang0_p;
+        Double             parang0Time_p;
         Vector<Float>      parang_p;
-        Vector<uInt>       rowIds_p;
-        Matrix<Double>     uvwMat_p;
-        Cube<Complex>      visCube_p;
-        Block<Bool>        visOK_p;
-        Bool               weightSpOK_p;
-        Cube<Float>        wtSp_p;
-    };
-
-    class Channels { // channel selection
-
-    public:
-
-        Block<Int> inc_p;
-        Block<Int> start_p;
-        Block<Int> width_p;
-        Block<Int> nGroups_p;
-        Block<Int> preselectedChanStart_p;
-        Block<Int> preselectednChan_p;
-
+        Double             parangTime_p;
     };
 
     class Columns {
@@ -761,96 +714,82 @@ protected:
 
     };
 
-    class MeasurementSetChannels {
-
-    public:
-
-        Block < Vector<Int> > inc_p;
-        Block < Vector<Int> > nGroups_p;
-        Block < Vector<Int> > start_p;
-        Block < Vector<Int> > width_p;
-        Block < Vector<Int> > spw_p;
-
-    };
-
     class PendingChanges {
+
     public:
 
-        PendingChanges () : frequencySelections_p (0) {}
-        ~PendingChanges () { delete frequencySelections_p; }
+        PendingChanges ();
+        ~PendingChanges ();
+
+        Bool empty () const;
+
+        pair<Bool, FrequencySelections *> popFrequencySelections (); // yields ownership
+        pair<Bool, Double> popInterval ();
+        pair<Bool, Int> popNRowBlocking ();
+
+        void setFrequencySelections (FrequencySelections *); // takes ownership
+        void setInterval (Double);
+        void setNRowBlocking (Int);
+
+    private:
+
+        enum {Empty = -1};
 
         FrequencySelections * frequencySelections_p;
+        Bool frequencySelectionsPending_p;
+        Double interval_p;
+        Int nRowBlocking_p;
     };
-
-    class Velocity { // for velocity selection and conversion
-
-    public:
-
-        Velocity ();
-        Velocity & operator= (const Velocity & other);
-
-        MDoppler::Convert cFromBETA_p;
-        Vector<Double>    lsrFreq_p;
-        Int               nVelChan_p;
-        Vector<Double>    selFreq_p;
-        MDoppler::Types   vDef_p;
-        MVRadialVelocity  vInc_p;
-        String            vInterpolation_p;
-        Bool              velSelection_p;
-        Bool              vPrecise_p;
-        MVRadialVelocity  vStart_p;
-
-    };
-
 
     typedef std::vector<MeasurementSet> MeasurementSets;
 
-    Bool                    addDefaultSort_p;
-    Bool                    asyncEnabled_p; // Allows lower-level code to make an async "copy" of this VI.
-    mutable Cache           cache_p;
-    Int                     channelGroupSize_p;
-    Channels                channels_p;
-    Int                     chunkNumber_p;
-    Columns                 columns_p;
-    Int                     curChanGroup_p;
-    Int                     curEndRow_p;
-    Int                     curNGroups_p;
-    uInt                    curNumRow_p;
-    Int                     curStartRow_p;
-    Int                     curTableNumRow_p;
-    Bool                    floatDataFound_p;
-    FrequencySelections *   frequencySelections_p;
-    FrequencySelections *   frequencySelectionsPending_p;
-    VisImagingWeight        imwgt_p;    // object to calculate imaging weight
-    Bool                    initialized_p;
-    Bool                    isMultiMS_p;
-    MeasurementSets         measurementSets_p; // [use]
-    Bool                    more_p;
-    MeasurementSetChannels  msChannels_p;
-    Int                     msCounter_p;
-    Bool                    msIterAtOrigin_p;
-    MSIter                  msIter_p;
-    mutable MSDerivedValues msd_p;
-    Int                     nAnt_p;
-    Int                     nChan_p;
-    Int                     nPol_p;
-    Int                     nRowBlocking_p;
-    Bool                    newChanGroup_p;
-    PendingChanges          pendingChanges_p;
-    ROVisibilityIterator2 * rovi_p; // [use]
-    RefRows                 selRows_p; // currently selected rows from msIter_p.table ()
-    Slicer                  slicer_p;
-    Block<Int>              sortColumns_p;
-    Bool                    stateOk_p;
-    SubChunkPair2           subchunk_p;
-    Vector<Bool>            tileCacheIsSet_p;
-    Double                  timeInterval_p;
-    Vector<Double>          time_p;
-    Bool                    useSlicer_p;
-    VisBuffer2 *            vb_p;
-    Velocity                velocity_p;
-    Slicer                  weightSlicer_p;
+    class RowBounds {
+    public:
 
+        RowBounds () : chunkNRows_p (-1), subchunkBegin_p (-1),
+                       subchunkEnd_p (-1), subchunkNRows_p (-1),
+                       subchunkRows_p (0, 0),
+                       timeMax_p (-1), timeMin_p (-1)
+        {}
+
+        Int chunkNRows_p;      // last row in current chunk
+        Int subchunkBegin_p; // first row in current subchunk
+        Int subchunkEnd_p;   // last row in current subchunk
+        Int subchunkNRows_p; // # rows in subchunk
+        RefRows subchunkRows_p; // subchunk's table row numbers
+        Vector<Double> times_p; // times for each row in the chunk
+        Double timeMax_p;       // max timestamp in the chunk
+        Double timeMin_p;       // min timechunk in the chunk
+
+    };
+
+    mutable Cache                 cache_p; // general copllection of cached values
+    ChannelSelectorCache *        channelSelectorCache_p; // [own] cache of recently used channel selectors
+    const ChannelSelector *       channelSelector_p; // [use] current channel selector for this MS & Spw
+    Columns                       columns_p; // The main columns for the current MS
+    Bool                          floatDataFound_p; // True if a float data column was found
+    FrequencySelections *         frequencySelections_p; // [own] Current frequency selection
+    VisImagingWeight              imwgt_p;    // object to calculate imaging weight
+    MeasurementSets               measurementSets_p; // [use]
+    Bool                          more_p; // True if more data in this chunk
+    Int                           msIndex_p; // array index of current MS
+    Bool                          msIterAtOrigin_p; // True if MS Iter is a start of first MS
+    MSIter                        msIter_p; // MS Iter that underlies the VI (sweeps in chunks)
+    mutable MSDerivedValues       msd_p; // Helper class holding MS derived values.
+    Int                           nPolarizations_p;
+    Int                           nRowBlocking_p; // suggested # of rows in a subchunk
+    PendingChanges                pendingChanges_p; // holds pending changes to VI properties
+    Int                           reportingFrame_p; // default frequency reporting (not selecting)
+                                                    // frame of reference
+    ROVisibilityIterator2 *       rovi_p; // [use] Containing VI
+    RowBounds                     rowBounds_p; // Subchunk row management object (see above)
+    Block<Int>                    sortColumns_p; // sort columns specified when creating VI
+    SpectralWindowChannelsCache * spectralWindowChannelsCache_p; // [own] Info about spectral windows
+    SubChunkPair2                 subchunk_p; // (chunkN #, subchunk #) pair
+    SubtableColumns *             subtableColumns_p; // [own] Allows const access to MS's subtable columns
+    Vector<Bool>                  tileCacheIsSet_p; // Flags indicating whether tile cache set for this column
+    Double                        timeInterval_p;
+    VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
 
 };
 
@@ -956,15 +895,15 @@ public:
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    virtual void writeVis (const Matrix<CStokesVector> & vis, DataColumn whichOne);
+    void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
+    void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
+    void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
 
     // Write/modify the visibilities
     // This writes the data as found in the MS, Cube (npol,nchan,nrow).
-    virtual void writeVis (const Cube<Complex> & vis, DataColumn whichOne);
-
-    // Write the visibility and flags, and interpolate from velocities if needed
-    virtual void writeVisAndFlag (const Cube<Complex> & vis, const Cube<Bool> & flag,
-                        DataColumn whichOne);
+    virtual void writeVisCorrected (const Cube<Complex> & vis);
+    virtual void writeVisModel (const Cube<Complex> & vis);
+    virtual void writeVisObserved (const Cube<Complex> & vis);
 
     // Write/modify the weights
     virtual void writeWeight (const Vector<Float> & wt);
@@ -1069,6 +1008,16 @@ protected:
 
     virtual void attachColumns (const Table & t);
 
+    template <typename T>
+    void putColumnRows (ArrayColumn<T> & column, const Array<T> & array);
+
+    template <typename T>
+    void putColumnRows (ArrayColumn<T> & column, const Matrix<T> & array);
+
+    template <typename T>
+    void putColumnRows (ScalarColumn<T> & column, const Vector <T> & array);
+
+
 //    void setInterpolatedVisFlag (const Cube<Complex> & vis,
 //                                 const Cube<Bool> & flag);
 //    void setInterpolatedWeight (const Matrix<Float> & wt);
@@ -1076,22 +1025,22 @@ protected:
     // Write the data column (observed, model or corrected);
     // deals with Float or Complex observed data (DATA and FLOAT_DATA).
 
-    void putDataColumn (DataColumn whichOne, const Slicer & slicer,
-                        const Cube<Complex> & data);
-    void putDataColumn (DataColumn whichOne, const Cube<Complex> & data);
-
-    // column access functions, can be overridden in derived classes
-    virtual void putCol (ScalarColumn<Bool> & column, const Vector<Bool> & array);
-    virtual void putCol (ArrayColumn<Bool> & column, const Array<Bool> & array);
-    virtual void putCol (ArrayColumn<Float> & column, const Array<Float> & array);
-    virtual void putCol (ArrayColumn<Complex> & column, const Array<Complex> & array);
-
-    virtual void putCol (ArrayColumn<Bool> & column, const Slicer & slicer, const Array<Bool> & array);
-    virtual void putCol (ArrayColumn<Float> & column, const Slicer & slicer, const Array<Float> & array);
-    virtual void putCol (ArrayColumn<Complex> & column, const Slicer & slicer, const Array<Complex> & array);
-
-    // non-virtual, no reason to template this function because Bool is the only type needed
-    void putColScalar (ScalarColumn<Bool> & column, const Vector<Bool> & array);
+//    void putDataColumn (DataColumn whichOne, const Slicer & slicer,
+//                        const Cube<Complex> & data);
+//    void putDataColumn (DataColumn whichOne, const Cube<Complex> & data);
+//
+//    // column access functions, can be overridden in derived classes
+//    virtual void putCol (ScalarColumn<Bool> & column, const Vector<Bool> & array);
+//    virtual void putCol (ArrayColumn<Bool> & column, const Array<Bool> & array);
+//    virtual void putCol (ArrayColumn<Float> & column, const Array<Float> & array);
+//    virtual void putCol (ArrayColumn<Complex> & column, const Array<Complex> & array);
+//
+//    virtual void putCol (ArrayColumn<Bool> & column, const Slicer & slicer, const Array<Bool> & array);
+//    virtual void putCol (ArrayColumn<Float> & column, const Slicer & slicer, const Array<Float> & array);
+//    virtual void putCol (ArrayColumn<Complex> & column, const Slicer & slicer, const Array<Complex> & array);
+//
+//    // non-virtual, no reason to template this function because Bool is the only type needed
+//    void putColScalar (ScalarColumn<Bool> & column, const Vector<Bool> & array);
 
     //This puts a model into the descriptor of the actual ms
     //Set iscomponentlist to True if the record represent a componentlist
@@ -1099,9 +1048,8 @@ protected:
     // a [-1] vector in validfields mean the model applies to all fields of the active ms 
     virtual void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
 
-
-
-
+    void convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
+                               Cube<Complex> & visCube);
 
 private:
 
@@ -1128,6 +1076,8 @@ private:
     Columns columns_p;
     VisibilityIterator2 * vi_p; // [use]
 };
+
+} // end namespace vi
 
 } //# NAMESPACE CASA - END
 

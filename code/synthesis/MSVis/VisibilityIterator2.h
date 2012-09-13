@@ -57,18 +57,29 @@
 #include <set>
 #include <vector>
 
-using casa::vi::VisBufferComponent2;
-using casa::vi::VisBufferComponents2;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
 
+class MSIter;
 class RecordInterface;
-
-namespace vi {
-    class VisBufferImpl2;
-}
+class ROMSAntennaColumns;
+class ROMSDataDescColumns;
+class ROMSFeedColumns;
+class ROMSFieldColumns;
+class ROMSFlagCmdColumns;
+class ROMSHistoryColumns;
+class ROMSObservationColumns;
+class ROMSPointingColumns;
+class ROMSPolarizationColumns;
+class ROMSProcessorColumns;
+class ROMSSpWindowColumns;
+class ROMSStateColumns;
+class ROMSDopplerColumns;
+class ROMSFreqOffsetColumns;
+class ROMSSourceColumns;
+class ROMSSysCalColumns;
+class ROMSWeatherColumns;
 
 namespace asyncio {
 
@@ -76,9 +87,47 @@ class VLAT;
 
 } // end namespace asyncio
 
+namespace vi {
+
 class VisBuffer2;
+class VisBufferImpl2;
 class VisibilityIteratorReadImpl2;
 class VisibilityIteratorWriteImpl2;
+
+class SubtableColumns {
+
+public:
+
+    // Simple wrapper class to limit access to only the columns associated with the
+    // current MS's subtables.  This prevents misuse of the main table data columns
+    // which are provided as part of the MSColumns object returned by
+    // MSIter::msColumns.
+
+    SubtableColumns (const MSIter & msIter);
+
+    const ROMSAntennaColumns& antenna() const;
+    const ROMSDataDescColumns& dataDescription() const;
+    const ROMSFeedColumns& feed() const;
+    const ROMSFieldColumns& field() const;
+    const ROMSFlagCmdColumns& flagCmd() const;
+    const ROMSHistoryColumns& history() const;
+    const ROMSObservationColumns& observation() const;
+    const ROMSPointingColumns& pointing() const;
+    const ROMSPolarizationColumns& polarization() const;
+    const ROMSProcessorColumns& processor() const;
+    const ROMSSpWindowColumns& spectralWindow() const;
+    const ROMSStateColumns& state() const;
+    const ROMSDopplerColumns& doppler() const;
+    const ROMSFreqOffsetColumns& freqOffset() const;
+    const ROMSSourceColumns& source() const;
+    const ROMSSysCalColumns& sysCal() const;
+    const ROMSWeatherColumns& weather() const;
+
+private:
+
+    const MSIter & msIter_p;
+
+};
 
 ///////////////////////////////////////////////////////////////////
 //
@@ -106,6 +155,7 @@ public:
     virtual ~FrequencySelection (){}
 
     virtual FrequencySelection * clone () const = 0;
+    void filterByWindow (Int windowId = -1) const;
     Int getFrameOfReference () const;
     virtual String toString () const = 0;
 
@@ -118,9 +168,11 @@ public:
 protected:
 
     FrequencySelection (Int referenceFrame);
+    Int filterWindow() const;
 
 private:
 
+    mutable Int filterWindowId_p;
     Int referenceFrame_p;
 };
 
@@ -144,6 +196,8 @@ public:
 
     void add (const FrequencySelection & selection);
     FrequencySelections * clone () const;
+    void filterToSpectralWindow (Int spectralWindowId);
+    const FrequencySelection & get (Int msIndex) const;
     Int getFrameOfReference () const;
     Bool isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const;
     Int size () const;
@@ -152,10 +206,12 @@ public:
 // Internal methods below this line
 //**********************************************************************
 
+
 private:
 
     typedef std::set<pair<Int, Int> > SelectedWindows;
 
+    mutable Int filterWindow_p;
     SelectedWindows selectedWindows_p;
 
     typedef std::vector<FrequencySelection *> Selections;
@@ -177,19 +233,6 @@ class FrequencySelectionUsingChannels : public FrequencySelection {
 
 public:
 
-    FrequencySelectionUsingChannels ();
-
-    void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
-    void add (const MSSelection & msSelection);
-    FrequencySelection * clone () const;
-    String toString () const;
-
-//**********************************************************************
-// Internal methods below this line
-//**********************************************************************
-
-private:
-
     class Element {
     public:
 
@@ -200,15 +243,34 @@ private:
           spectralWindow_p (spectralWindow)
         {}
 
+        Slice getSlice () const { return Slice (firstChannel_p, nChannels_p, increment_p);}
+
         Int firstChannel_p;
         Int increment_p;
         Int nChannels_p;
         Int spectralWindow_p;
     };
 
-    typedef vector<Element> Elements;
+    typedef std::vector<Element> Elements;
+    typedef Elements::const_iterator const_iterator;
+
+    FrequencySelectionUsingChannels ();
+
+    void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
+    void add (const MSSelection & msSelection);
+    const_iterator begin () const;
+    FrequencySelection * clone () const;
+    const_iterator end () const;
+    String toString () const;
+
+//**********************************************************************
+// Internal methods below this line
+//**********************************************************************
+
+private:
 
     Elements elements_p;
+    mutable Elements filtered_p;
 
 };
 
@@ -227,35 +289,46 @@ class FrequencySelectionUsingFrame : public FrequencySelection {
 
 public:
 
+    class Element {
+    public:
+
+        Element (Int spectralWindow = -1, Double beginFrequency = 0,
+                 Double endFrequency = 0, Double increment = 0)
+        : beginFrequency_p (beginFrequency),
+          endFrequency_p (endFrequency),
+          increment_p (increment),
+          spectralWindow_p (spectralWindow)
+          {}
+
+        Double getBeginFrequency () const;
+        Double getEndFrequency () const;
+
+    private:
+
+        friend class FrequencySelectionUsingFrame;
+
+        Double beginFrequency_p;
+        Double endFrequency_p;
+        Double increment_p;
+        Int spectralWindow_p;
+    };
+
+    typedef std::vector<Element> Elements;
+    typedef Elements::const_iterator const_iterator;
+
     FrequencySelectionUsingFrame (MFrequency::Types frameOfReference);
 
     void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
     void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
+    const_iterator begin () const;
     FrequencySelection * clone () const;
+    const_iterator end () const;
     String toString () const;
 
 private:
 
-    class Element {
-    public:
-
-        Element (Int spectralWindow = -1, Double bottomFrequency = 0,
-                 Double topFrequency = 0, Double increment = 0)
-        : bottomFrequency_p (bottomFrequency),
-          increment_p (increment),
-          spectralWindow_p (spectralWindow),
-          topFrequency_p (topFrequency)
-          {}
-
-        Double bottomFrequency_p;
-        Double increment_p;
-        Int spectralWindow_p;
-        Double topFrequency_p;
-    };
-
-    typedef vector<Element> Elements;
-
     Elements elements_p;
+    mutable Elements filtered_p;
 };
 
 
@@ -420,7 +493,8 @@ class ROVisibilityIterator2 : private boost::noncopyable
     friend class VisibilityIteratorReadImpl2;
     friend class VisibilityIteratorWriteImpl2;
     friend class ViReadImplAsync2;
-    friend class casa::vi::VisBufferImpl2;
+    friend class VisBufferImpl2;
+    friend class VisBufferState;
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
@@ -631,15 +705,8 @@ public:
 
   const MeasurementSet& ms() const;
 
-  // Access the current ROMSColumns object in MSIter
+  const vi::SubtableColumns & subtableColumns () const;
 
-  const ROMSColumns& msColumns() const;
-
-  // Return the row ids as from the original root table. This is useful
-  // to find correspondance between a given row in this iteration to the
-  // original ms row.
-
-  virtual void rowIds(Vector<uInt>& rowids) const;
 
   // The reporting frame of reference is the default frame of reference to be
   // used when the user requests the frequencies of the current data selection
@@ -743,10 +810,6 @@ protected:
   // Return the number of rows in the current iteration
 
   Int nRows () const;
-
-  // Return the number of sub-intervals in the current chunk
-
-  Int nSubInterval() const;
 
   void jonesC (Vector<SquareMatrix<Complex,2> >& cjones) const;
 
@@ -869,12 +932,6 @@ protected:
 
   virtual void stateId(Vector<Int>& stateids) const;
 
-  // Return current frequencies (in Hz, acc. to the MS def'n v.2)
-
-  virtual void frequency(Vector<Double>& freq) const;
-
-  // Return frequencies  (in Hz, acc. to the MS def'n v.2) in selected velocity frame,
-  // returns the same as frequency() if there is no vel selection active.
   // Return the current phase center as an MDirection
 
   virtual const MDirection& phaseCenter() const;
@@ -925,19 +982,20 @@ protected:
 
   // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
 
-  virtual void visibility(Cube<Complex>& vis,
-		    		          DataColumn whichOne) const;
+  virtual void visibilityCorrected (Cube<Complex> & vis) const;
+  virtual void visibilityModel (Cube<Complex> & vis) const;
+  virtual void visibilityObserved (Cube<Complex> & vis) const;
 
-  // Return FLOAT_DATA as a Cube(npol, nchan, nrow) if found in the MS.
-
-  virtual void floatData(Cube<Float>& fcube) const;
+  // Return FLOAT_DATA as a Cube (npol, nchan, nrow) if found in the MS.
+  virtual void floatData (Cube<Float> & fcube) const;
 
   // Return the visibility 4-vector of polarizations for each channel.
   // If the MS doesn't contain all polarizations, it is assumed it
   // contains one or two parallel hand polarizations.
 
-  virtual void visibility(Matrix<CStokesVector>& vis,
-				    DataColumn whichOne) const;
+  virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
+  virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
+  virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
 
   // Return the shape of the visibility Cube
 
@@ -945,8 +1003,7 @@ protected:
 
   // Return u,v and w (in meters)
 
-  virtual void uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
-  virtual void uvwMat(Matrix<Double>& uvwmat) const;
+  virtual void uvw(Matrix<Double>& uvw) const;
 
   // Return weight
 
@@ -964,6 +1021,9 @@ protected:
 
   virtual void weightSpectrum(Cube<Float>& wtsp) const;
 
+  Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
+  Vector<Int> getChannels (Double time, Int frameOfReference) const;
+
   // Convert the frequency from the observe frame to lsr frame.
   // Returns True in convert if given spw was not observed
   // in the LSRK frame
@@ -976,7 +1036,12 @@ protected:
   Int getNAntennas () const;
   MEpoch getEpoch () const;
   Vector<Float> getReceptor0Angle ();
-  Vector<uInt> getRowIds () const;
+
+  // Return the row ids as from the original root table. This is useful
+  // to find correspondance between a given row in this iteration to the
+  // original ms row.
+
+  void getRowIds (Vector<uInt> &) const;
 
   Bool newFieldId() const;
 
@@ -1016,21 +1081,9 @@ protected:
 
   virtual void advance();
 
-  // set the currently selected table
-
-  virtual void setSelTable();
-
-  // set the iteration state
-
-  void setState();
-
   std::vector<MeasurementSet> getMeasurementSets () const;
 
   const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
-
-  // update the DATA slicer
-
-  virtual void updateSlicer();
 
   // attach the column objects to the currently selected table
 
@@ -1041,70 +1094,7 @@ protected:
 
   virtual const Table attachTable() const;
 
-  void getDataColumn(DataColumn whichOne, const Slicer& slicer,
-			     Cube<Complex>& data) const;
-
-  void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
-
-  // get FLOAT_DATA as real Floats.
-
-  void getFloatDataColumn(const Slicer& slicer, Cube<Float>& data) const;
-
-  void getFloatDataColumn(Cube<Float>& data) const;
-
   void originChunks(Bool forceRewind);
-
-  //Re-Do the channel selection in multi ms case
-
-  void doChannelSelection();
-
-  //Set the tile cache size....when using slice access if tile cache size is
-  // not set memory usage can go wild.  Specifically, the caching scheme is
-  // ephemeral and lives for that instance of setting the caching scheme.
-  //
-  // If you don't set any then the defaults come into play and caches a few
-  // tiles along every axis at the tile you requested...which is a waste when
-  // say you know you want to proceed along the row axis for example...and in
-  // fact now VisIter just reads one tile (thus the commenting in setTileCache)
-  // and lets the OS do the caching rather than than having the table system
-  // cache extra tiles.
-
-  virtual void setTileCache();
-
-  // Updates, if necessary, rowIds_p member for the current chunk
-
-  void update_rowIds() const;
-
-  void setAsyncEnabled (Bool enable);
-
-  template<class T>
-    void getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, Bool resize) const;
-  template<class T>
-    void getColArray(const ROArrayColumn<T> &column, Array<T> &array, Bool resize) const;
-
-  // column access functions, can be overridden in derived classes
-
-  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Double> &column, Array<Double> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array,
-                      Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array,
-                      Bool resize = False) const;
-
 
   Int nMS_p;
   VisibilityIteratorReadImpl2 * readImpl_p;
@@ -1228,17 +1218,16 @@ public:
   // If the MS does not contain all polarizations, only the parallel
   // hand polarizations are used.
 
-  void writeVis(const Matrix<CStokesVector>& vis, DataColumn whichOne);
+  void writeVisCorrected (const Matrix<CStokesVector>& vis);
+  void writeVisModel (const Matrix<CStokesVector>& vis);
+  void writeVisObserved (const Matrix<CStokesVector>& vis);
 
   // Write/modify the visibilities
   // This writes the data as found in the MS, Cube(npol,nchan,nrow).
 
-  virtual void writeVis(const Cube<Complex>& vis, DataColumn whichOne);
-
-  // Write the visibility and flags, and interpolate from velocities if needed
-
-  virtual void writeVisAndFlag(const Cube<Complex>& vis, const Cube<Bool>& flag,
-	   	             DataColumn whichOne);
+  void writeVisCorrected (const Cube <Complex> & vis);
+  void writeVisModel (const Cube <Complex> & vis);
+  void writeVisObserved (const Cube <Complex> & vis);
 
   // Write/modify the weights
 
@@ -1300,6 +1289,8 @@ protected:
 
   VisibilityIteratorWriteImpl2 * writeImpl_p; // [own]
 };
+
+} // end namespace vi
 
 } //# NAMESPACE CASA - END
 

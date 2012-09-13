@@ -286,16 +286,16 @@ protected:
   PtrBlock<ImageInterface<Float> * > residual_p;
 
   // We actually create these
-  PtrBlock<TempImage<Complex> * > cimage_p;
-  PtrBlock<TempImage<Complex> * > cxfr_p;
-  PtrBlock<TempImage<Float> * > residualImage_p;
-  PtrBlock<TempImage<Float> * > gS_p;
-  PtrBlock<TempImage<Float> * > psf_p;
-  PtrBlock<TempImage<Float> * > ggS_p;
+  PtrBlock<ImageInterface<Complex> * > cimage_p;
+  PtrBlock<ImageInterface<Complex> * > cxfr_p;
+  PtrBlock<ImageInterface<Float> * > residualImage_p;
+  PtrBlock<ImageInterface<Float> * > gS_p;
+  PtrBlock<ImageInterface<Float> * > psf_p;
+  PtrBlock<ImageInterface<Float> * > ggS_p;
   // if (doFluxScale_p), image_p * fluxScale_p gives the true brightness
-  PtrBlock<TempImage<Float> * > fluxScale_p;
-  PtrBlock<TempImage<Float> * > work_p;
-  PtrBlock<TempImage<Float> * > deltaimage_p;
+  PtrBlock<ImageInterface<Float> * > fluxScale_p;
+  PtrBlock<ImageInterface<Float> * > work_p;
+  PtrBlock<ImageInterface<Float> * > deltaimage_p;
   Block<Bool> solve_p;
   Block<Bool> doFluxScale_p;
 
@@ -305,6 +305,8 @@ protected:
 
   LogSink logSink_p;
   LogSink& logSink() {return logSink_p;};
+  
+  Long cacheSize(Int model);
 
   PGPlotter *pgplotter_p;
   Bool displayProgress_p;

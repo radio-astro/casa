@@ -28,6 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/Logging/LogIO.h>
 #include <QDoubleValidator>
+#include <QDebug>
 
 namespace casa {
 
@@ -92,8 +93,8 @@ void ProfileTaskFacilitator::plotMainCurve(){
 	taskMonitor -> plotMainCurve();
 }
 
-const ImageInterface<Float>* ProfileTaskFacilitator::getImage() const{
-	return taskMonitor -> getImage();
+const ImageInterface<Float>* ProfileTaskFacilitator::getImage( const QString& imageName) const{
+	return taskMonitor -> getImage( imageName );
 }
 
 const String ProfileTaskFacilitator::getPixelBox() const {
@@ -101,12 +102,22 @@ const String ProfileTaskFacilitator::getPixelBox() const {
 	Vector<double> yPixels;
 	taskMonitor->getPixelBounds(xPixels, yPixels);
 	String box = "";
+	const String commaStr = ",";
 	if ( xPixels.size() == 2 && yPixels.size() == 2 ){
-		const String commaStr = ",";
+
 		box = String::toString(xPixels[0]) + commaStr;
 		box.append( String::toString( yPixels[0] )+ commaStr);
 		box.append( String::toString( xPixels[1] ) + commaStr );
 		box.append( String::toString( yPixels[1] ) );
+	}
+	else if ( xPixels.size() == 1 && yPixels.size() == 1 ){
+		box = String::toString(xPixels[0]) + commaStr;
+		box.append( String::toString( yPixels[0] )+ commaStr);
+		box.append( String::toString( xPixels[0] ) + commaStr );
+		box.append( String::toString( yPixels[0] ) );
+	}
+	else {
+		qDebug() << "Unrecognized region pixel size is "<<xPixels.size();
 	}
 	return box;
 }
@@ -246,19 +257,14 @@ void ProfileTaskFacilitator::setCollapseVals(const Vector<Float> &spcVals){
 		return;
 	}
 
-
-	// set the values into the fields
+	//Set the values into the fields
 	String msg;
 	if (ascending){
 		setRange( valueStart, valueEnd );
-		//startValue->setText(startQStr);
-		//endValue->setText(endQStr);
 		msg = String::toString(valueStart) + " and " + String::toString(valueEnd);
 	}
 	else{
 		setRange( valueEnd, valueStart);
-		//startValue->setText(endQStr);
-		//endValue->setText(startQStr);
 		msg = String::toString(valueEnd) + " and " + String::toString(valueStart);
 	}
 
@@ -267,7 +273,25 @@ void ProfileTaskFacilitator::setCollapseVals(const Vector<Float> &spcVals){
 	*logger << LogIO::NORMAL << msg << LogIO::POST;
 }
 
+void ProfileTaskFacilitator::setCurveName( const QString& /*curveName*/ ){
+	//Implemented to do nothing.  Subclasses should override if they need the
+	//names of the curves being drawn on the canvas.
+}
 
+void ProfileTaskFacilitator::addCurveName( const QString& /*curveName*/ ){
+	//Implemented to do nothing.  Subclasses should override if they need the
+	//names of the curves being added to the canvas.
+}
+
+void ProfileTaskFacilitator::setDisplayYUnits( const QString& /*units*/ ){
+	//Implemented to do nothing.  Subclasses should override if they need the
+	//y axis units being displayed on the canvas.
+}
+
+void ProfileTaskFacilitator::setImageYUnits( const QString& /*units*/ ){
+	//Implemented to do nothing.  Subclasses should override if they need the
+	//y axis units being displayed in the image.
+}
 
 ProfileTaskFacilitator::~ProfileTaskFacilitator() {
 	delete validator;

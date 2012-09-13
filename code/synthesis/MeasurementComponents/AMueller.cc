@@ -187,7 +187,7 @@ void AMueller::storeNCT() {
     CTColumns ncc(*ct_);
 
     // We are expecting nSpw rows...
-    AlwaysAssert( ncc.spectralWindow().chanFreq().nrow()==nSpw(), AipsError);
+    AlwaysAssert( Int(ncc.spectralWindow().chanFreq().nrow())==nSpw(), AipsError);
 
     // We store the freq domain as a pair of values in chanFreq(),
     //  and reset numChan()=fitorder_p
@@ -484,18 +484,20 @@ void AMueller::setApply(const Record& applypar)
 */
 
 // Apply this calibration to VisBuffer visibilities
-void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-                        Bool avoidACs)
+void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial)
 {
   LogIO os(LogOrigin("AMueller", "applyCal()", WHERE));
 
   if(fitorder_p == 0){
-    VisMueller::applyCal(vb, Vout, avoidACs && false);
+    VisMueller::applyCal(vb, Vout, trial);
   }
   else{
     if(prtlev() > 3)
       os << "  AMueller::applyCal()" << LogIO::POST;
 
+    if (trial)
+      throw(AipsError("trial apply not supported by AMueller with fitorder_p>0"));
+    
     Int cspw = currSpw();
     VBContinuumSubtractor vbcs;
 
@@ -516,7 +518,7 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   }
 }
 
-void AMueller::corrupt(VisBuffer& vb, Bool /* avoidACs */)
+void AMueller::corrupt(VisBuffer& vb)
 {
   LogIO os(LogOrigin("AMueller", "corrupt()", WHERE));
 

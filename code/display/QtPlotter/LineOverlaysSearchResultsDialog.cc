@@ -41,10 +41,22 @@ LineOverlaysSearchResultsDialog::LineOverlaysSearchResultsDialog(QWidget *parent
 	layout->addWidget( searchResultsWidget );
 	ui.searchResultsHolder->setLayout( layout );
 
+	//Initialize the scrolling features
+	ui.prevButton->setArrowType( Qt::LeftArrow );
+	ui.nextButton->setArrowType( Qt::RightArrow );
+	connect( ui.prevButton, SIGNAL(clicked()), this, SIGNAL(showPreviousSearchResults()));
+	connect( ui.nextButton, SIGNAL(clicked()), this, SIGNAL(showNextSearchResults()));
+	setSearchScrollingVisible( false );
 
 	connect( ui.graphSelectedButton, SIGNAL(clicked()), this, SLOT(drawSelectedLines()));
 	connect( ui.graphSelectedSpeciesButton, SIGNAL(clicked()), this, SLOT(drawSelectedSpecies()));
 	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(reject()));
+}
+
+void LineOverlaysSearchResultsDialog::setSearchScrollingVisible( bool visible ){
+	ui.prevButton->setVisible( visible );
+	ui.nextButton->setVisible( visible );
+	ui.foundLabel->setVisible( visible );
 }
 
 void LineOverlaysSearchResultsDialog::drawSelectedSpecies(){
@@ -77,18 +89,43 @@ QList<int> LineOverlaysSearchResultsDialog::getLineIndices() const{
 	return searchResultsWidget->getLineIndices();
 }
 
-bool LineOverlaysSearchResultsDialog::getLine(int lineIndex, Float& peak, Float& center,
-           		QString& molecularName ) const{
-	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName );
+bool LineOverlaysSearchResultsDialog::getLine(int lineIndex, Float& peak,
+		Float& center, QString& molecularName, QString& chemicalName,
+		QString& resolvedQNs, QString& frequencyUnit) const{
+	return searchResultsWidget->getLine( lineIndex, peak, center,
+			molecularName, chemicalName, resolvedQNs, frequencyUnit );
 }
 
-void LineOverlaysSearchResultsDialog::getLines( QList<float>& peaks, QList<float>& centers, QString molecularName ) const{
-	return searchResultsWidget->getLines( peaks, centers, molecularName );
+void LineOverlaysSearchResultsDialog::getLines( QList<float>& peaks,
+		QList<float>& centers, QString& molecularName, QList<QString>& chemicalNames,
+		QList<QString>& resolvedQNs, QString& frequencyUnit) const{
+	return searchResultsWidget->getLines( peaks, centers, molecularName,
+			chemicalNames, resolvedQNs, frequencyUnit );
 }
 
-void LineOverlaysSearchResultsDialog::displaySearchResults( const Record& record ){
-	searchResultsWidget->displaySearchResults( record );
+void LineOverlaysSearchResultsDialog::displaySearchResults( const vector<SplatResult>& record,
+		int offset, int totalCount){
+
+	searchResultsWidget->displaySearchResults( record, offset, totalCount );
+	int count = record.size();
+	int end = offset + count;
+	if ( count > 0 ){
+		ui.foundLabel->setText( "Displaying lines "+QString::number(offset+1)+
+				"-"+QString::number(end)+" out of "+QString::number(totalCount)+" lines.");
+		this->setSearchScrollingVisible( true );
+		if ( end >= totalCount ){
+			ui.nextButton->setVisible( false );
+		}
+		if ( offset == 0 ){
+			ui.prevButton->setVisible( false );
+		}
+	}
+	else {
+		this->setSearchScrollingVisible( false );
+	}
 }
+
+
 
 LineOverlaysSearchResultsDialog::~LineOverlaysSearchResultsDialog()
 {

@@ -44,6 +44,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
 
+namespace vi {
+
 class ROVisibilityIterator2;
 class SubChunkPair2;
 class VisibilityIterator2;
@@ -144,6 +146,9 @@ public:
     // VBs this method returns False.
 
     virtual const ROVisibilityIterator2 * getVi () const = 0;
+
+    virtual Bool isAttached () const = 0;
+    virtual Bool isFillable () const = 0;
 
     //---------------------------------------------------------------------
     //
@@ -418,10 +423,10 @@ protected:
 
     static VisBuffer2 * factory (ROVisibilityIterator2 * vi, Type t);
 
+    virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
+                                       Bool isNewArrayId, Bool isNewFieldId,
+                                       Bool isNewSpectralWindow, const SubChunkPair2 & subchunk) = 0;
     virtual void invalidate() = 0;
-    virtual void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
-                                   Bool isNewArrayId, Bool isNewFieldId,
-                                   Bool isNewSpectralWindow, const SubChunkPair2 & subchunk) = 0;
 
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
@@ -429,6 +434,8 @@ protected:
 private:
 
 };
+
+} // end namespace vi
 
 } //# NAMESPACE CASA - END
 

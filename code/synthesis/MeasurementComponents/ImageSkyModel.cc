@@ -184,8 +184,18 @@ ImageSkyModel::ImageSkyModel(const ImageSkyModel& other) {
 ImageSkyModel::~ImageSkyModel() {
   if(componentList_p) delete componentList_p; componentList_p=0;
   for (Int thismodel=0;thismodel<nmodels_p;thismodel++) {
-    if(residualImage_p[thismodel]) delete residualImage_p[thismodel]; residualImage_p[thismodel]=0;
-    if(cimage_p[thismodel]) delete cimage_p[thismodel]; cimage_p[thismodel]=0;
+    if(residualImage_p[thismodel]) {    
+      (residualImage_p[thismodel])->clearCache();
+      (residualImage_p[thismodel])->tempClose();
+      delete residualImage_p[thismodel];       
+    }
+    residualImage_p[thismodel]=0;
+    if(cimage_p[thismodel]){
+      (cimage_p[thismodel])->clearCache();
+      (cimage_p[thismodel])->tempClose();
+      delete cimage_p[thismodel]; 
+    }
+    cimage_p[thismodel]=0;
     for(Int numXFR=0;numXFR<maxNumXFR_p;numXFR++) {
       if(cxfr_p[thismodel*maxNumXFR_p+numXFR])
         delete cxfr_p[thismodel*maxNumXFR_p+numXFR];
@@ -362,14 +372,25 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
     //If tempImage is going to use disk based image ...try to respect the tile shape of 
     //of original model image
 
-    TempImage<Complex>* cimagePtr = 
+      TempImage<Complex>* cimagePtr = 
       new TempImage<Complex> (TiledShape(cimageShape, 
-					 image_p[model]->niceCursorShape()),
-			      cimageCoord,
-			      memoryMB);
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			      cimageCoord,0);
+    
+    /*PagedImage<Complex>* cimagePtr = 
+      new PagedImage<Complex> (TiledShape(cimageShape, 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			       cimageCoord,File::newUniqueName(".", "Temp").absoluteName());
+    cimagePtr->table().markForDelete();
+    */
+    //cimagePtr->setMaximumCacheSize(cimagePtr->shape().product()/2);
+    cimagePtr->setMaximumCacheSize(cacheSize(model));
     AlwaysAssert(cimagePtr, AipsError);
     cimage_p[model] = cimagePtr;
     cimage_p[model]->setMiscInfo(image_p[model]->miscInfo());
+    cimagePtr->clearCache();
   }
   return *cimage_p[model];
 };
@@ -413,7 +434,7 @@ ImageInterface<Complex>& ImageSkyModel::XFR(Int model, Int numXFR)
 					  sub.shape()(2),
 					  sub.shape()(3)),
 				sub.coordinates(),
-				memoryMB);
+			        0);
       //      cout << "ISM::XFR() shape = " << cxfrPtr->shape() << endl;
 
     } else {
@@ -425,9 +446,12 @@ ImageInterface<Complex>& ImageSkyModel::XFR(Int model, Int numXFR)
 					  cImage(model).shape()(2),
 					  cImage(model).shape()(3)),
 				cImage(model).coordinates(),
-				memoryMB);
+				0);
     }
     AlwaysAssert(cxfrPtr, AipsError);
+    //cxfrPtr->setMaximumCacheSize(cxfrPtr->shape().product()/2);
+    cxfrPtr->setMaximumCacheSize(cacheSize(model));
+    cxfrPtr->clearCache();
     cxfr_p[model*maxNumXFR_p+numXFR] = cxfrPtr;
   }
   AlwaysAssert(cxfr_p[model*maxNumXFR_p+numXFR], AipsError);
@@ -444,11 +468,24 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
 
   Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
   if(psf_p[model]==0) {
-    TempImage<Float>* psfPtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(), image_p[model]->niceCursorShape()),
+        TempImage<Float>* psfPtr = 
+      new TempImage<Float> (TiledShape(image_p[model]->shape(), 
+				       //image_p[model]->niceCursorShape()),
+			    IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
+    
+    /*PagedImage<Float>* psfPtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+    psfPtr->table().markForDelete();
+    */
     AlwaysAssert(psfPtr, AipsError);
+    //psfPtr->setMaximumCacheSize(psfPtr->shape().product()/2);
+    psfPtr->setMaximumCacheSize(cacheSize(model));
+    psfPtr->clearCache();
     psf_p[model] = psfPtr;
   }
   return *psf_p[model];
@@ -466,11 +503,26 @@ ImageInterface<Float>& ImageSkyModel::residual(Int model) {
   }
   else {
     if(residualImage_p[model]==0) {
-      Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+      Double memoryMB=HostInfo::memoryFree()/1024.0/(MEMFACTOR*maxnmodels_p);
+      
       TempImage<Float>* tempImagePtr =
-	new TempImage<Float> (TiledShape(image_p[model]->shape(), image_p[model]->niceCursorShape()),
+	new TempImage<Float> (TiledShape(image_p[model]->shape(), 
+					 //image_p[model]->niceCursorShape()),
+			      IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			       image_p[model]->coordinates(), memoryMB);
+      
+      /*PagedImage<Float>* tempImagePtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+      tempImagePtr->table().markForDelete();
+      */
       AlwaysAssert(tempImagePtr, AipsError);
+      
+      //tempImagePtr->setMaximumCacheSize(tempImagePtr->shape().product()/2);
+      tempImagePtr->setMaximumCacheSize(cacheSize(model));
+      tempImagePtr->clearCache();
       residualImage_p[model] = tempImagePtr;
     }
     return *residualImage_p[model];
@@ -486,10 +538,23 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
 
   if(gS_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
-    TempImage<Float>* gSPtr = 
+    
+      TempImage<Float>* gSPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				       image_p[model]->niceCursorShape()),
-			     image_p[model]->coordinates(), memoryMB);
+				       //     image_p[model]->niceCursorShape()),
+			    IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(), 0);
+    
+    /*PagedImage<Float>* gSPtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+      gSPtr->table().markForDelete();
+    */
+//gSPtr->setMaximumCacheSize(gSPtr->shape().product()/2);
+    gSPtr->setMaximumCacheSize(cacheSize(model));
+    gSPtr->clearCache();
     AlwaysAssert(gSPtr, AipsError);
     gS_p[model] = gSPtr;
   }
@@ -506,10 +571,22 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
     TempImage<Float>* ggSPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				       image_p[model]->niceCursorShape()),
+				       //   image_p[model]->niceCursorShape()),
+			    IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
+    
+    /*PagedImage<Float>* ggSPtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+    ggSPtr->table().markForDelete();
+    */
     AlwaysAssert(ggSPtr, AipsError);
+    //ggSPtr->setMaximumCacheSize(ggSPtr->shape().product()/2);
+    ggSPtr->setMaximumCacheSize(cacheSize(model));
+    ggSPtr->clearCache();
     ggS_p[model] = ggSPtr;
   }
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
@@ -524,12 +601,26 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
 
   if(fluxScale_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
-    TempImage<Float>* fluxScalePtr = 
+    
+      TempImage<Float>* fluxScalePtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				       image_p[model]->niceCursorShape()),
+				       //image_p[model]->niceCursorShape()),
+				       IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)),        
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
+    
+    /*
+    PagedImage<Float>* fluxScalePtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+      fluxScalePtr->table().markForDelete();
+    */
     AlwaysAssert(fluxScalePtr, AipsError);
+    //fluxScalePtr->setMaximumCacheSize(fluxScalePtr->shape().product()/2);
+    fluxScalePtr->setMaximumCacheSize(cacheSize(model));
+    fluxScalePtr->clearCache();
     fluxScale_p[model] = fluxScalePtr;
     // Set default value to avoid a nasty side effect elsewhere
     fluxScale_p[model]->set(1.0);
@@ -548,12 +639,25 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
 
   if(work_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
+    
     TempImage<Float>* workPtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(),
-				       image_p[model]->niceCursorShape()),
+				       //image_p[model]->niceCursorShape()),
+			     IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
+    
+    /*PagedImage<Float>* workPtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+    workPtr->table().markForDelete();
+    */
     AlwaysAssert(workPtr, AipsError);
+    //workPtr->setMaximumCacheSize(workPtr->shape().product()/2);
+    workPtr->setMaximumCacheSize(cacheSize(model));
+    workPtr->clearCache();
     work_p[model] = workPtr;
   }
   return *work_p[model];
@@ -568,12 +672,24 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
 
   if(deltaimage_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
-    TempImage<Float>* deltaimagePtr = 
+        TempImage<Float>* deltaimagePtr = 
       new TempImage<Float> (TiledShape(image_p[model]->shape(),
-				       image_p[model]->niceCursorShape()),
+				       //  image_p[model]->niceCursorShape()),
+			    IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			    image_p[model]->coordinates(),
-			    memoryMB);
+			    0);
+    
+    /*PagedImage<Float>* deltaimagePtr = 
+      new PagedImage<Float> (TiledShape(image_p[model]->shape(), 
+					 // image_p[model]->niceCursorShape()),
+					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+			     image_p[model]->coordinates(),File::newUniqueName(".", "Temp").absoluteName());
+      deltaimagePtr->table().markForDelete();
+    */
     AlwaysAssert(deltaimagePtr, AipsError);
+    //deltaimagePtr->setMaximumCacheSize(deltaimagePtr->shape().product()/2);
+    deltaimagePtr->setMaximumCacheSize(cacheSize(model));
+    deltaimagePtr->clearCache();
     deltaimage_p[model] = deltaimagePtr;
   }
   return *deltaimage_p[model];
@@ -657,6 +773,13 @@ ComponentList& ImageSkyModel::componentList()
   return *componentList_p;
 }
 
+Long ImageSkyModel::cacheSize(Int model){
+  AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
+  Long cachesize=(image_p[model]->shape()[0])*(image_p[model]->shape()[1])/4;
+  // return Long((HostInfo::memoryFree()/(sizeof(Float)*16)*1024));
+
+  return cachesize;
+}
 
 
 } //# NAMESPACE CASA - END

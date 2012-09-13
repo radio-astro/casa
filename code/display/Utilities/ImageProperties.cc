@@ -28,9 +28,14 @@
 #include <display/Utilities/ImageProperties.h>
 #include <images/Images/ImageOpener.h>
 
-#include <float.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageAnalysis.h>
+#include <images/Images/FITSImage.h>
+#include <images/Images/FITSQualityImage.h>
+#include <images/Images/FITSImgParser.h>
+#include <images/Images/MIRIADImage.h>
+
+#include <float.h>
 #include <sstream>
 #include <casa/Arrays/VectorSTLIterator.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -95,19 +100,52 @@ namespace casa {
 	    // check for validity...
 	    if ( path_ == "" ) return;
 	  
-	    if ( ImageOpener::imageType(path_) != ImageOpener::AIPSPP ||
-		 imagePixelType(path_) != TpFloat )
-		return;
+	    ImageInterface<Float> *image = 0;
 
-	    PagedImage<Float> image(path_, TableLock::AutoNoReadLocking);
-	    if ( image.ok( ) == false )
-		return;
+	    // check for a FITS extension in the path name
+	    File fin(path_);
+	    String tmp_path, ext_expr;
+	    tmp_path = path_;
+	    if (!fin.exists() && !fin.isDirectory()){
+		if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
+		    // create a string with the file path name only
+		    tmp_path = String(path, 0, path.rfind("[", path.length()));
+		    ext_expr = String(path, path.rfind("[", path.length()), path.length());
+		}
+	    }
 
-	    cs_ = image.coordinates( );
-	    ImageAnalysis ia(&image);
-	    shape_ = image.shape( ).asVector( );
-	    if ( shape_.size( ) <= 0 )
+	    switch ( ImageOpener::imageType(path_) ) {
+		case ImageOpener::AIPSPP:
+		    if ( imagePixelType(path_) != TpFloat ) return;
+		    image = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+		    break;
+		case ImageOpener::FITS:
+		  { FITSImgParser fip = FITSImgParser(tmp_path);
+		    if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
+			image  = new FITSQualityImage(path);
+		    } else {
+			image = new FITSImage(path);
+		    }
+		  } break;
+		case ImageOpener::MIRIAD:
+		    image = new MIRIADImage(path);
+		    break;
+		default:
+		    return;
+	    }
+
+	    if ( image->ok( ) == false ) {
+		delete image;
 		return;
+	    }
+
+	    cs_ = image->coordinates( );
+	    ImageAnalysis ia(image);
+	    shape_ = image->shape( ).asVector( );
+	    if ( shape_.size( ) <= 0 ) {
+		delete image;
+		return;
+	    }
 
 	    // initialize...
 	    status_ok = true;
@@ -167,11 +205,11 @@ namespace casa {
 	    }
 
 	    std::ostringstream buf;
-	    ImageInfo ii = image.imageInfo();
+	    ImageInfo ii = image->imageInfo();
 //<<<<<<< .daves
 	    GaussianBeam beam = ii.restoringBeam();
 	    /*
-	    std::string imageUnits = image.units().getName();
+	    std::string imageUnits = image->units().getName();
 	    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
 	    Int afterCoord = -1;
 	    Int dC = cs.findCoordinate(Coordinate::DIRECTION, afterCoord);
@@ -211,6 +249,7 @@ namespace casa {
 =======
 >>>>>>> .r20298
 */
+	    delete image;
 	}
 
     }

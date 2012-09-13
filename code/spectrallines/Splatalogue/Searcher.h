@@ -24,9 +24,9 @@
 #ifndef SEARCHER_H_
 #define SEARCHER_H_
 
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
+#include <spectrallines/Splatalogue/SplatResult.h>
+#include <string>
+#include <vector>
 
 namespace casa {
 
@@ -35,21 +35,34 @@ namespace casa {
 class Searcher {
 public:
 	Searcher();
-	virtual void setChemicalNames( const Vector<String>& chemNames ) = 0;
-	virtual void setSpeciesNames( const Vector<String>& speciesNames ) = 0;
-	virtual void setDatabasePath( const String& databasePath ) = 0;
-	virtual void setResultFile( const String& fileName ) = 0;
-	virtual void setSearchRangeFrequency( double minValue, double maxValue ) = 0;
-	virtual Record doSearch(String& errorMsg) = 0;
 
-	virtual void setAstroFilterTop20() = 0;
-	virtual void setAstroFilterPlanetaryAtmosphere() = 0;
-	virtual void setAstroFilterHotCores() = 0;
-	virtual void setAstroFilterDarkClouds() = 0;
-	virtual void setAstroFilterDiffuseClouds( ) = 0;
-	virtual void setAstroFilterComets() = 0;
-	virtual void setAstroFilterAgbPpnPn() = 0;
-	virtual void setAstroFilterExtragalactic() = 0;
+	//Search Parameters
+	virtual void setChemicalNames( const vector<string>& chemNames ) = 0;
+	virtual void setSpeciesNames( const vector<string>& speciesNames ) = 0;
+	virtual void setSearchRangeFrequency( double minValue, double maxValue ) = 0;
+	virtual void setRecommendedOnly( bool recommeded ) = 0;
+
+	//Filters
+	virtual void setAstroFilterTop20( bool filter = true) = 0;
+	virtual void setAstroFilterPlanetaryAtmosphere( bool filter = true ) = 0;
+	virtual void setAstroFilterHotCores(bool filter = true) = 0;
+	virtual void setAstroFilterDarkClouds(bool filter = true) = 0;
+	virtual void setAstroFilterDiffuseClouds( bool filter = true) = 0;
+	virtual void setAstroFilterComets(bool filter = true) = 0;
+	virtual void setAstroFilterAgbPpnPn(bool filter = true) = 0;
+	virtual void setAstroFilterExtragalactic(bool filter = true) = 0;
+
+	//Support for scolling
+	virtual void setSearchResultLimit( int limit ) = 0;
+
+	//Doing the search
+	virtual vector<SplatResult> doSearch(string& errorMsg, int offset ) = 0;
+	virtual long doSearchCount( string& errorMsg ) = 0;
+
+	//Information about the database
+	virtual string getCreatedDate() const = 0;
+	virtual string tableInfo( string& errorMessage ) const= 0;
+
 	virtual ~Searcher();
 };
 

@@ -30,12 +30,19 @@
 #include <qwt_plot_marker.h>
 #include <casa/aips.h>
 
+class QTextStream;
+
 namespace casa {
+
+
 
 class MolecularLine : public QwtPlotMarker {
 public:
-	MolecularLine();
-	MolecularLine( float center, float peak, QString name );
+	static void setMolecularLineColor( QColor lineColor );
+
+	MolecularLine( float center, float peak, const QString& name,
+			const QString& chemicalName, const QString& resolvedQNs,
+			const QString& frequencyUnits );
 	virtual int rtti() const;
 	void setCenter( float center );
 	float getCenter( ) const;
@@ -49,13 +56,18 @@ public:
 		int peakPixel, int zeroPixel, int width, int height ) const;
 	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
 	bool equalTo( const MolecularLine* const other ) const;
+	void toStream( QTextStream* stream ) const;
 	virtual ~MolecularLine();
 
 private:
+	MolecularLine();
+	static QColor lineColor;
 	float center;
 	float peak;
 	QString label;
-	QColor lineColor;
+	QString resolvedQNs;
+	QString chemicalName;
+	QString frequencyUnits;
 
 	void init();
 };

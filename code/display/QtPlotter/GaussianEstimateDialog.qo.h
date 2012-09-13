@@ -51,6 +51,8 @@ public:
     void setRangeX( Float min, Float max );
     void setRangeY( Float min, Float max );
     void setSpecFitUnits( const QString& specUnits );
+    void setDisplayYUnits( const QString& units );
+    QString getDisplayYUnits() const;
     QString getUnits() const;
     void setCurveColor( QColor color );
     SpecFitGaussian getEstimate(int index );
@@ -70,6 +72,7 @@ private:
 	void resetEstimates();
 	void clearPlots( int removeCount);
 	void setCurveData();
+	void setDisplayYUnits();
 	void setCurveColor();
 	void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
 	Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
@@ -78,6 +81,7 @@ private:
     Vector<float> yVals;
     QColor curveColor;
     QString specUnitStr;
+    QString displayYUnits;
     QString unitStr;
 	SearchMoleculesDialog searchDialog;
     QList<GaussianEstimateWidget*> plots;

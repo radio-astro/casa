@@ -148,8 +148,7 @@ protected:
   virtual Bool trivialJonesElem() { return False; };
 
   // Local version to extract integration time and bandwidth
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-                        Bool avoidACs=True);
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
   
   // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();

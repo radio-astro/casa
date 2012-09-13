@@ -61,6 +61,9 @@ GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 	connect( ui.coordinateCheckBox, SIGNAL(stateChanged(int)), this, SLOT(plotsCoordinatedChanged(int)));
 	connect(&selectEstimateDialog, SIGNAL(accepted()), this, SLOT(updateMolecularLines()));
 	connect(&clearPlotDialog, SIGNAL(accepted()), this, SLOT(clearSelectedPlots()));
+
+	//Searching was moved to main screen
+	ui.searchButton->setVisible( false );
 }
 
 //--------------------------------------------------------------------------------
@@ -119,6 +122,7 @@ void GaussianEstimateDialog::setGaussCount( int count ){
 	//Initialize the plots
 	setCurveData();
 	setCurveColor();
+	setDisplayYUnits();
 	resetEstimates();
 }
 
@@ -208,7 +212,22 @@ void GaussianEstimateDialog::setCurveColor( QColor color ){
 
 void GaussianEstimateDialog::setCurveColor(){
 	for ( int i = 0; i < plots.size(); i++ ){
-			plots[i]->setCurveColor( curveColor );
+		plots[i]->setCurveColor( curveColor );
+	}
+}
+
+void GaussianEstimateDialog::setDisplayYUnits( const QString& unitStr ){
+	displayYUnits = unitStr;
+	setDisplayYUnits();
+}
+
+QString GaussianEstimateDialog::getDisplayYUnits() const {
+	return displayYUnits;
+}
+
+void GaussianEstimateDialog::setDisplayYUnits(){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->setDisplayYUnits( displayYUnits );
 	}
 }
 
@@ -257,20 +276,33 @@ void GaussianEstimateDialog::updateMolecularLines( ){
 	QList<int> lineIndices = searchDialog.getLineIndices();
 	QString searchUnits = searchDialog.getUnit();
 	int count = qMin( lineIndices.size(), plots.size() );
+	Converter* converter = NULL;
+	if ( searchUnits != unitStr ){
+		converter = Converter::getConverter( searchUnits, unitStr );
+	}
 	for ( int i = 0; i < count; i++ ){
 		Float center;
 		Float peak;
 		QString molecularName;
-		searchDialog.getLine(lineIndices[i], peak, center, molecularName );
-		if ( searchUnits != unitStr ){
-			Converter* converter = Converter::getConverter( searchUnits, unitStr );
-			center = converter->convert( center );
-			delete converter;
+		QString chemicalName;
+		QString resolvedQNs;
+		QString frequencyUnits;
+		searchDialog.getLine(lineIndices[i], peak, center, molecularName, chemicalName,
+				resolvedQNs, frequencyUnits );
+
+		//First we have to make the frequency value redshifted.
+		double shiftedCenter = searchDialog.getRedShiftedValue( false, center );
+
+		//Convert it to the same units we are using
+		if ( converter != NULL ){
+			shiftedCenter = converter->convert( shiftedCenter );
 		}
 		for( int j = 0; j < static_cast<int>(estimates.size()); j++ ){
-			plots[estimates[j]]->molecularLineChanged( peak, center, molecularName);
+			plots[estimates[j]]->molecularLineChanged( peak, shiftedCenter,
+					molecularName, chemicalName, resolvedQNs, frequencyUnits );
 		}
 	}
+	delete converter;
 }
 
 //-------------------------------------------------------------------

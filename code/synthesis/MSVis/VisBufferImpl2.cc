@@ -34,6 +34,367 @@ namespace casa {
 
 namespace vi {
 
+//////////////////////////////////////////////////////////
+//
+// Auxiliary Classes are contained in the "vb" namespace.
+//
+// These include VbCacheItemBase, VbCacheItem, VisBufferCache
+// and VisBufferState.
+
+class VbCacheItemBase {
+
+    // Provides a common base class for all of the cached value classes.
+    // This is required because the actualy value classes use a template
+    // to capture the underlying value type.
+
+    friend class VisBufferImpl2;
+
+public:
+
+    VbCacheItemBase () : vb_p (0) {}
+
+    virtual ~VbCacheItemBase () {}
+
+    virtual void clear () = 0;
+    virtual void fill () const = 0;
+    virtual Bool isPresent () const = 0;
+
+protected:
+
+    virtual void copy (const VbCacheItemBase * other, Bool markAsCached = False) = 0;
+
+    VisBufferImpl2 * getVb () const
+    {
+        return vb_p;
+    }
+
+    virtual void initialize (VisBufferImpl2 * vb);
+
+    virtual void setAsPresent () = 0;
+
+private:
+
+    VisBufferImpl2 * vb_p; // [use]
+
+};
+
+typedef std::vector<VbCacheItemBase *> CacheRegistry;
+
+template <typename T>
+class VbCacheItem : public VbCacheItemBase {
+
+    friend class VisBufferImpl2;
+
+public:
+
+    typedef T DataType;
+    typedef void (VisBufferImpl2::* Filler) (T &) const;
+
+    VbCacheItem ()
+    : isPresent_p (False)
+    {}
+
+    virtual void
+    clear ()
+    {
+        item_p = T ();
+        isPresent_p = False;
+    }
+
+    virtual void
+    fill () const
+    {
+        const VisBufferImpl2 * vb = getVb();
+
+        ThrowIf (! vb->isAttached (),
+                 "Attempt to fill VisBuffer not attached to VisibilityIterator");
+
+        ThrowIf (! vb->isFillable (),
+                 "Attempt to fill VisBuffer which is in invalid state");
+
+        (vb ->* filler_p) (item_p);
+    }
+
+    const T &
+    get () const
+    {
+        if (! isPresent_p){
+            fill ();
+            isPresent_p = True;
+        }
+
+        return item_p;
+    }
+
+    T &
+    getRef ()
+    {
+        if (! isPresent_p){
+            fill ();
+            isPresent_p = True;
+        }
+
+        return item_p;
+    }
+
+
+    void
+    initialize (VisBufferImpl2 * vb, Filler filler)
+    {
+        VbCacheItemBase::initialize (vb);
+        filler_p = filler;
+    }
+
+    Bool
+    isPresent () const
+    {
+        return isPresent_p;
+    }
+
+    virtual void
+    set (const T & newItem)
+    {
+        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+
+        item_p = newItem;
+        isPresent_p = True;
+    }
+
+    template <typename U>
+    void
+    set (const U & newItem)
+    {
+        ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+
+        item_p = newItem;
+        isPresent_p = True;
+    }
+
+
+protected:
+
+    virtual void
+    copy (const VbCacheItemBase * otherRaw, Bool markAsCached)
+    {
+        // Convert generic pointer to one pointint to this
+        // cache item type.
+
+        const VbCacheItem * other = dynamic_cast <const VbCacheItem *> (otherRaw);
+        Assert (other != 0);
+
+        // Capture the cached status of the other item
+
+        isPresent_p = other->isPresent_p;
+
+        // If the other item was cached then copy it over
+        // otherwise clear out this item.
+
+        if (isPresent_p){
+            item_p = other->item_p;
+        }
+        else {
+            item_p = T ();
+
+            if (markAsCached){
+                isPresent_p = True;
+            }
+        }
+    }
+
+    void
+    setAsPresent ()
+    {
+        isPresent_p = True;
+    }
+
+private:
+
+    Filler       filler_p;
+    mutable Bool isPresent_p;
+    mutable T    item_p;
+};
+
+
+
+
+class VisBufferCache {
+
+    // Holds the cached values for a VisBuffer object.
+
+public:
+
+    VisBufferCache (VisBufferImpl2 * vb);
+
+    // The values that are potentially cached.
+
+    VbCacheItem <Vector<Int> > antenna1_p;
+    VbCacheItem <Vector<Int> > antenna2_p;
+    VbCacheItem <Int> arrayId_p;
+    VbCacheItem <Vector<SquareMatrix<Complex, 2> > > cjones_p;
+    VbCacheItem <Cube<Complex> > correctedVisCube_p;
+    VbCacheItem <Matrix<CStokesVector> > correctedVisibility_p;
+    VbCacheItem <Vector<Int> > corrType_p;
+    VbCacheItem <Int> dataDescriptionId_p;
+    VbCacheItem <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
+    VbCacheItem <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
+    VbCacheItem <Vector<Double> > exposure_p;
+    VbCacheItem <Vector<Int> > feed1_p;
+    VbCacheItem <Vector<Float> > feed1Pa_p;
+    VbCacheItem <Vector<Int> > feed2_p;
+    VbCacheItem <Vector<Float> > feed2Pa_p;
+    VbCacheItem <Int> fieldId_p;
+    VbCacheItem <Matrix<Bool> > flag_p;
+    VbCacheItem <Array<Bool> > flagCategory_p;
+    VbCacheItem <Cube<Bool> > flagCube_p;
+    VbCacheItem <Vector<Bool> > flagRow_p;
+    VbCacheItem <Cube<Float> > floatDataCube_p;
+    VbCacheItem <Matrix<Float> > imagingWeight_p;
+    VbCacheItem <Cube<Complex> > modelVisCube_p;
+    VbCacheItem <Matrix<CStokesVector> > modelVisibility_p;
+    VbCacheItem <Int> nChannel_p;
+    VbCacheItem <Int> nCorr_p;
+    VbCacheItem <Int> nRow_p;
+    VbCacheItem <Vector<Int> > observationId_p;
+    VbCacheItem <MDirection> phaseCenter_p;
+    VbCacheItem <Int> polFrame_p;
+    VbCacheItem <Vector<Int> > processorId_p;
+    VbCacheItem <Vector<uInt> > rowIds_p;
+    VbCacheItem <Vector<Int> > scan_p;
+    VbCacheItem <Vector<Float> > sigma_p;
+    VbCacheItem <Matrix<Float> > sigmaMat_p;
+    VbCacheItem <Int> spectralWindow_p;
+    VbCacheItem <Vector<Int> > stateId_p;
+    VbCacheItem <Vector<Double> > time_p;
+    VbCacheItem <Vector<Double> > timeCentroid_p;
+    VbCacheItem <Vector<Double> > timeInterval_p;
+    VbCacheItem <Matrix<Double> > uvw_p;
+    VbCacheItem <Cube<Complex> > visCube_p;
+    VbCacheItem <Matrix<CStokesVector> > visibility_p;
+    VbCacheItem <Vector<Float> > weight_p;
+    VbCacheItem <Matrix<Float> > weightMat_p;
+    VbCacheItem <Cube<Float> > weightSpectrum_p;
+
+    template <typename T, typename U>
+    static void
+    sortCorrelationItem (vi::VbCacheItem<T> & dataItem, IPosition & blc, IPosition & trc,
+                         IPosition & mat, U & tmp, Bool sort)
+    {
+
+        T & data = dataItem.getRef ();
+        U p1, p2, p3;
+
+        if (dataItem.isPresent() && data.nelements() > 0) {
+
+          blc(0) = trc(0) = 1;
+          p1.reference(data (blc, trc).reform(mat));
+
+          blc(0) = trc(0) = 2;
+          p2.reference(data (blc, trc).reform(mat));
+
+          blc(0) = trc(0) = 3;
+          p3.reference(data (blc, trc).reform(mat));
+
+          if (sort){ // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
+
+              tmp = p1;
+              p1 = p2;
+              p2 = p3;
+              p3 = tmp;
+          }
+          else {      // Unsort correlations: (PP,PQ,QP,QQ) -> (PP,QQ,PQ,QP)
+
+              tmp = p3;
+              p3 = p2;
+              p2 = p1;
+              p1 = tmp;
+          }
+        }
+    }
+
+};
+
+class VisBufferState {
+
+public:
+
+    template<typename T>
+    class FrequencyCache {
+    public:
+
+        typedef Vector<T> (ROVisibilityIterator2::* Updater) (Double, Int) const;
+
+        FrequencyCache (Updater updater) : updater_p (updater) {}
+
+        Int frame_p;
+        Double time_p;
+        Updater updater_p;
+        Vector<T> values_p;
+
+        void
+        flush ()
+        {
+            time_p = -1;
+        }
+
+        void
+        updateCacheIfNeeded (const ROVisibilityIterator2 * rovi, Double time,
+                             Int frame = VisBuffer2::FrameNotSpecified)
+        {
+            if (time == time_p && frame == frame_p){
+                return;
+            }
+
+            time_p = time;
+            frame_p = frame;
+
+            values_p = (rovi ->* updater_p) (time_p, frame_p);
+
+            assert (false);
+
+        }
+    };
+
+    VisBufferState ()
+    : areCorrelationsSorted_p (False),
+      channelNumbers_p (& ROVisibilityIterator2::getChannels),
+      dirtyComponents_p (),
+      frequencies_p (& ROVisibilityIterator2::getFrequencies),
+      isAttached_p (False),
+      isFillable_p (False),
+      isNewMs_p (False),
+      isNewArrayId_p (False),
+      isNewFieldId_p (False),
+      isNewSpectralWindow_p (False),
+      isWritable_p (False),
+      pointingTableLastRow_p (-1),
+      vi_p (0),
+      viC_p (0),
+      visModelData_p ()
+    {}
+
+    Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
+    FrequencyCache<Int> channelNumbers_p;
+    VisBufferComponents2 dirtyComponents_p;
+    FrequencyCache<Double> frequencies_p;
+    Bool isAttached_p;
+    Bool isFillable_p;
+    Bool isNewMs_p;
+    Bool isNewArrayId_p;
+    Bool isNewFieldId_p;
+    Bool isNewSpectralWindow_p;
+    Bool isWritable_p;
+    mutable Int pointingTableLastRow_p;
+    Int msId_p;
+    String msName_p;
+    Bool newMs_p;
+    SubChunkPair2 subchunk_p;
+    ROVisibilityIterator2 * vi_p; // [use]
+    const ROVisibilityIterator2 * viC_p; // [use]
+    mutable VisModelData visModelData_p;
+
+    CacheRegistry cacheRegistry_p;
+};
+
 
 VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
 {
@@ -75,7 +436,7 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     phaseCenter_p.initialize (vb, &VisBufferImpl2::fillPhaseCenter);
     polFrame_p.initialize (vb, &VisBufferImpl2::fillPolFrame);
     processorId_p.initialize (vb, &VisBufferImpl2::fillProcessorId);
-    ////rowIds_p.initialize (vb, &VisBufferImpl2::fillRowIds);
+    rowIds_p.initialize (vb, &VisBufferImpl2::fillRowIds);
     scan_p.initialize (vb, &VisBufferImpl2::fillScan);
     sigma_p.initialize (vb, &VisBufferImpl2::fillSigma);
     sigmaMat_p.initialize (vb, &VisBufferImpl2::fillSigmaMat);
@@ -85,7 +446,6 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     timeCentroid_p.initialize (vb, &VisBufferImpl2::fillTimeCentroid);
     timeInterval_p.initialize (vb, &VisBufferImpl2::fillTimeInterval);
     uvw_p.initialize (vb, &VisBufferImpl2::fillUvw);
-    uvwMat_p.initialize (vb, &VisBufferImpl2::fillUvwMat);
     visCube_p.initialize (vb, &VisBufferImpl2::fillCubeObserved);
     visibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityObserved);
     weight_p.initialize (vb, &VisBufferImpl2::fillWeight);
@@ -268,20 +628,6 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent)
 
 
 void
-VisBufferImpl2::detachFromVisibilityIterator2 ()
-{
-    ThrowIf (! state_p->isAttached_p,
-             "Cannot detach VisBuffer from VI since it is not attached.");
-
-#warning "Uncomment next line after cutover"
-    //// getViP()->detachVisBuffer (* this);
-
-    state_p->isAttached_p = False;
-    state_p->vi_p = 0;
-}
-
-
-void
 VisBufferImpl2::dirtyComponentsAdd (const VisBufferComponents2 & dirtyComponents)
 {
     state_p->dirtyComponents_p = state_p->dirtyComponents_p + dirtyComponents;
@@ -318,6 +664,19 @@ VisBufferImpl2::dirtyComponentsSet (VisBufferComponent2 component)
     state_p->dirtyComponents_p = VisBufferComponents2::singleton (component);
 }
 
+Bool
+VisBufferImpl2::isAttached () const
+{
+    return state_p->isAttached_p;
+}
+
+Bool
+VisBufferImpl2::isFillable () const
+{
+    return state_p->isFillable_p;
+}
+
+
 Int
 VisBufferImpl2::msId () const
 {
@@ -350,7 +709,7 @@ VisBufferImpl2::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) co
 
     Double t = time() (rowInBuffer);
 
-    state_p->frequencies_p.updateCacheIfNeeded (t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
 
     return state_p->frequencies_p.values_p (frequencyIndex);
 }
@@ -364,7 +723,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
 
     Double t = time() (rowInBuffer);
 
-    state_p->frequencies_p.updateCacheIfNeeded (t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
 
     return state_p->frequencies_p.values_p;
 }
@@ -374,7 +733,7 @@ VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 {
     Double t = time() (rowInBuffer);
 
-    state_p->channelNumbers_p.updateCacheIfNeeded (t);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
 
     return state_p->channelNumbers_p.values_p (frequencyIndex);
 }
@@ -385,7 +744,7 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 {
     Double t = time() (rowInBuffer);
 
-    state_p->channelNumbers_p.updateCacheIfNeeded (t);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
 
     return state_p->channelNumbers_p.values_p;
 }
@@ -418,6 +777,7 @@ void
 VisBufferImpl2::invalidate ()
 {
     cacheClear (False); // empty cached values
+    state_p->isFillable_p = False; // buffer is in limbo
 }
 
 Bool
@@ -564,7 +924,7 @@ VisBufferImpl2::resetWeightsUsingSigma ()
 
     // Scale by (unselected!) # of channels (to stay aligned with original nominal weights)
 
-    Int nchan = getViP()->msColumns().spectralWindow().numChan()(spectralWindow());
+    Int nchan = getViP()->subtableColumns().spectralWindow().numChan()(spectralWindow());
 
     weight *= Float(nchan);
 
@@ -580,6 +940,8 @@ VisBufferImpl2::setIterationInfo (Int msId,
                                   Bool isNewSpectralWindow,
                                   const SubChunkPair2 & subchunk)
 {
+    // Set the iteration attributes into this VisBuffer
+
     state_p->msId_p = msId;
     state_p->msName_p = msName;
     state_p->isNewMs_p = isNewMs;
@@ -588,6 +950,24 @@ VisBufferImpl2::setIterationInfo (Int msId,
     state_p->isNewFieldId_p = isNewFieldId;
     state_p->isNewSpectralWindow_p = isNewSpectralWindow;
     state_p->subchunk_p = subchunk;
+}
+
+
+void
+VisBufferImpl2::configureNewSubchunk (Int msId,
+                                      const String & msName,
+                                      Bool isNewMs,
+                                      Bool isNewArrayId,
+                                      Bool isNewFieldId,
+                                      Bool isNewSpectralWindow,
+                                      const SubChunkPair2 & subchunk)
+{
+    // Prepare this VisBuffer for the new subchunk
+
+    setIterationInfo (msId, msName, isNewMs, isNewArrayId, isNewFieldId,
+                      isNewSpectralWindow, subchunk);
+
+    state_p->isFillable_p = True; // New subchunk, so it's fillable
 
     state_p->frequencies_p.flush();
     state_p->channelNumbers_p.flush();
@@ -973,13 +1353,13 @@ VisBufferImpl2::sigmaMat () const
 }
 
 Int
-VisBufferImpl2::spectralWindow (Int nRow) const
+VisBufferImpl2::spectralWindow (Int row) const
 {
     return cache_p->spectralWindow_p.get ();
 }
 
 const Vector<Int> &
-VisBufferImpl2::stateId (Int nRow) const
+VisBufferImpl2::stateId () const
 {
     return cache_p->stateId_p.get ();
 }
@@ -1005,7 +1385,7 @@ VisBufferImpl2::timeInterval () const
 const Matrix<Double> &
 VisBufferImpl2::uvw () const
 {
-    return cache_p->uvwMat_p.get ();
+    return cache_p->uvw_p.get ();
 }
 
 const Cube<Complex> &
@@ -1243,7 +1623,7 @@ VisBufferImpl2::fillCubeCorrected (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    getViP()->visibility (value, VisibilityIterator2::Corrected);
+    getViP()->visibilityCorrected (value);
 }
 
 
@@ -1277,7 +1657,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
         // Get the model data from the measurement set via the VI
 
-        getViP()->visibility (value, VisibilityIterator2::Model);
+        getViP()->visibilityModel (value);
     }
 }
 
@@ -1286,7 +1666,7 @@ VisBufferImpl2::fillCubeObserved (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    getViP()->visibility (value, VisibilityIterator2::Observed);
+    getViP()->visibilityObserved (value);
 }
 
 void
@@ -1331,7 +1711,7 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
 {
   value.resize (antenna.nelements()); // could also use nRow()
 
-  const ROMSPointingColumns & mspc = getViP()->msColumns().pointing();
+  const ROMSPointingColumns & mspc = getViP()->subtableColumns ().pointing();
   state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
                                             time()(0), state_p->pointingTableLastRow_p);
   if (getViP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
@@ -1610,6 +1990,15 @@ VisBufferImpl2::fillProcessorId (Vector<Int>& value) const
 }
 
 void
+VisBufferImpl2::fillRowIds (Vector<uInt>& value) const
+{
+  CheckVisIter ();
+
+  getViP()->getRowIds(value);
+}
+
+
+void
 VisBufferImpl2::fillScan (Vector<Int>& value) const
 {
   CheckVisIter ();
@@ -1675,7 +2064,7 @@ VisBufferImpl2::fillTimeInterval (Vector<Double>& value) const
 }
 
 void
-VisBufferImpl2::fillUvw (Vector<RigidVector<Double, 3> >& value) const
+VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 {
   CheckVisIter ();
 
@@ -1683,19 +2072,11 @@ VisBufferImpl2::fillUvw (Vector<RigidVector<Double, 3> >& value) const
 }
 
 void
-VisBufferImpl2::fillUvwMat (Matrix<Double>& value) const
-{
-  CheckVisIter ();
-
-  getViP()->uvwMat (value);
-}
-
-void
 VisBufferImpl2::fillVisibilityCorrected (Matrix<CStokesVector>& value) const
 {
     CheckVisIter ();
 
-    getViP()->visibility (value, VisibilityIterator2::Corrected);
+    getViP()->visibilityCorrected (value);
 }
 
 void
@@ -1703,7 +2084,7 @@ VisBufferImpl2::fillVisibilityModel (Matrix<CStokesVector>& value) const
 {
     CheckVisIter ();
 
-    getViP()->visibility (value, VisibilityIterator2::Model);
+    getViP()->visibilityModel (value);
 }
 
 void
@@ -1711,7 +2092,7 @@ VisBufferImpl2::fillVisibilityObserved (Matrix<CStokesVector>& value) const
 {
     CheckVisIter ();
 
-    getViP()->visibility (value, VisibilityIterator2::Observed);
+    getViP()->visibilityObserved (value);
 }
 
 
@@ -1740,6 +2121,6 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 }
 
 
-} // end namespace vb
+} // end namespace vi
 
 } // end namespace casa

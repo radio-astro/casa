@@ -36,6 +36,7 @@ namespace casa {
 
 class QtCanvas;
 class SearchMoleculesWidget;
+class Converter;
 
 class LineOverlaysTab : public QWidget
 {
@@ -53,9 +54,14 @@ private slots:
 	void graphSelectedSpecies();
 	void searchCompleted();
 	void eraseLines();
+	void saveIdentifiedLines();
 	void findRedshift( double center, double peak );
 
 private:
+	void addLineToPixelCanvas( float center, float peak,
+			QString molecularName, QString chemicalName,
+			QString resolvedQNs, QString frequencyUnit, Converter* converter);
+
     Ui::LineOverlaysTabClass ui;
     SearchMoleculesWidget* searchWidget;
     QtCanvas* pixelCanvas;

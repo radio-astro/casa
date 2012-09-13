@@ -280,10 +280,14 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	cim_=0;
 	return;
    }
+
+
    init();
+   Record record;
+   Record outRecord;
+   record.define( WCAxisLabeller::PLOT_TITLE, name());
+   dd_->setOptions( record, outRecord );
 }
-
-
 
 
 void QtDisplayData::setImage( ImageInterface<Float>* img ){
@@ -377,10 +381,7 @@ void QtDisplayData::init(){
 		// is necessary after constructing DDs, to orient them away from
 		// their old default 1-based (glish) behavior.
 
-
-
 	  // Initialize colormap if necessary.
-
 	  if(usesClrMap_()) {
 
 	    // Check .aipsrc, otherwise use "Hot Metal 1" by default initially.
