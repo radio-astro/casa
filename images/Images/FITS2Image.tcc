@@ -66,7 +66,6 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
 
 // Get header as Vector of strings
    Vector<String> header = fitsImage.kwlist_str(True);
-   
 // Get Coordinate System.  Return un-used FITS cards in a Record for further use.
 
     Record headerRec;
@@ -75,8 +74,8 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
     cSys = ImageFITSConverter::getCoordinateSystem(stokesFITSValue, headerRec, header,
                                                    os, whichRep, shape, dropStokes);
     ndim = shape.nelements();
-
-// BITPIX
+    _hasBeamsTable = headerRec.isDefined(ImageFITSConverter::CASAMBM)
+        		&& headerRec.asRecord(ImageFITSConverter::CASAMBM).asBool("value");
 
     T* t=0;
     DataType dataType = whatType(t);
@@ -140,11 +139,8 @@ void FITSImage::crackHeader (CoordinateSystem& cSys,
        }
        hasBlanks = True;
     }
-
-// Brightness Unit
-
     brightnessUnit = ImageFITSConverter::getBrightnessUnit(headerRec, os);
-    imageInfo = ImageFITSConverter::getImageInfo(headerRec, infile);
+    imageInfo = ImageFITSConverter::getImageInfo(headerRec);
 
 // If we had one of those unofficial pseudo-Stokes on the Stokes axis, store it in the imageInfo
 
@@ -205,7 +201,6 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
 {
 
 // Shape
-
 	ImageExtension<T> fitsImage(infile);
     Int ndim = fitsImage.dims();
 
@@ -226,7 +221,8 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
     cSys = ImageFITSConverter::getCoordinateSystem(stokesFITSValue, headerRec, header,
                                                    os, whichRep, shape, dropStokes);
     ndim = shape.nelements();
-
+    _hasBeamsTable = headerRec.isDefined(ImageFITSConverter::CASAMBM)
+    		&& headerRec.asRecord(ImageFITSConverter::CASAMBM).asBool("value");
 // BITPIX
 
     T* t=0;
@@ -292,13 +288,9 @@ void FITSImage::crackExtHeader (CoordinateSystem& cSys,
        hasBlanks = True;
     }
 
-// Brightness Unit
-
     brightnessUnit = ImageFITSConverter::getBrightnessUnit(headerRec, os);
 
-// ImageInfo
-
-    imageInfo = ImageFITSConverter::getImageInfo(headerRec, infile);
+    imageInfo = ImageFITSConverter::getImageInfo(headerRec);
 
 // If we had one of those unofficial pseudo-Stokes on the Stokes axis, store it in the imageInfo
 
