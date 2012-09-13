@@ -147,28 +147,29 @@ if benchmarking:
 #
 
     
-default('flagdata')
+default('tflagdata')
 
 vis=msfile
 spw='0:5~112'
 correlation='RR'
 field='0'
-mode='manualflag'
+mode='manual'
 timerange='03:51:07~03:52:48'
-saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.time0351')
+saveinputs('tflagdata',prefix+'.saved.tflagdata.n2403.rr.time0351')
 
-flagdata()
+tflagdata()
 
 print ""
 print " now we clip RR above 0.4Jy"
 print ""
 
+mode='clip'
 timerange = ''
-clipexpr = 'RR'
+correlation = 'RR'
 clipminmax = [-100, 0.4]
-saveinputs('flagdata',prefix+'.saved.flagdata.n2403.rr.clip')
+saveinputs('tflagdata',prefix+'.saved.tflagdata.n2403.rr.clip')
 
-flagdata()
+tflagdata()
 
 print ""
 print " now we clip LL above 1.0Jy"
@@ -176,11 +177,10 @@ print ""
 
 timerange = ''
 correlation='LL'
-clipexpr = 'LL'
 clipminmax = [-100, 1.0]
-saveinputs('flagdata',prefix+'.saved.flagdata.n2403.ll.clip')
+saveinputs('tflagdata',prefix+'.saved.tflagdata.n2403.ll.clip')
 
-flagdata()
+tflagdata()
 
 #=====================================================================
 # Save flagging done up to this point
@@ -206,7 +206,7 @@ print " then, we save the flagging we just did"
 
 mode='save'
 versionname='afterflagdata'
-comment='flags after running flagdata'
+comment='flags after running tflagdata'
 merge='replace'
 
 flagmanager()
@@ -552,10 +552,10 @@ if benchmarking:
 #
 print "--flagdata--"
 
-default('flagdata')
+default('tflagdata')
 vis=msfile
 spw='0'
-mode='manualflag'
+mode='manual'
 
 print ""
 print " flag the narrow time range around 03:53 for RR"
@@ -567,9 +567,9 @@ print ""
 timerange='03:52:44~03:52:46'
 correlation='RR'
 
-saveinputs('flagdata',prefix+'.saved.flagdata.time0352')
+saveinputs('tflagdata',prefix+'.saved.tflagdata.time0352')
 
-flagdata()
+tflagdata()
 
 print ""
 print " flag antenna 0 for correlation LL over the whole time range"
@@ -579,9 +579,9 @@ antenna='0'
 timerange=''
 correlation='LL'
 
-saveinputs('flagdata',prefix+'.saved.flagdata.ant0.ll')
+saveinputs('tflagdata',prefix+'.saved.tflagdata.ant0.ll')
 
-flagdata()
+tflagdata()
 
 if benchmarking:
     flagcorrect2time=time.time()
@@ -1132,7 +1132,7 @@ if benchmarking:
     stages = {}
     stages[0] = ['import',(import2time-startTime)]
     stages[1] = ['listobs',(list2time-import2time)]
-    stages[2] = ['flagdata',(flag2time-list2time)]
+    stages[2] = ['tflagdata',(flag2time-list2time)]
     stages[3] = ['setjy',(setjy2time-flag2time)]
     stages[4] = ['gaincal',(gaincal2time-setjy2time)]
     stages[5] = ['plotgcal',(plotgcal2time-gaincal2time)]
