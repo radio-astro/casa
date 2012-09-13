@@ -42,10 +42,10 @@ def widebandpbcor(vis='',
 	taylorlist.append(imagename+'.image.tt'+str(i));
 	residuallist.append(imagename+'.residual.tt'+str(i));
         if(not os.path.exists(taylorlist[i])):
-            casalog.post('Taylor-coeff Restored Image : ',taylorlist[i],' not found.','SEVERE')
+            casalog.post('Taylor-coeff Restored Image : ' + taylorlist[i] + ' not found.','SEVERE')
             return False
         if(not os.path.exists(residuallist[i])):
-            casalog.post('Taylor-coeff Residual Image : ',residuallist[i],' not found.','SEVERE')
+            casalog.post('Taylor-coeff Residual Image : ' + residuallist[i] + ' not found.','SEVERE')
             return False
 
    casalog.post('Using images ' + str(taylorlist) + ' and ' + str(residuallist), 'NORMAL')
@@ -134,6 +134,10 @@ def widebandpbcor(vis='',
        if ret==False:
            return False
 
+       # Calculate PB alpha and beta ( just for information )
+       pbalphaname = pbdirname+'/'+imagename+'.pb.alpha'
+       _calcPBAlpha(pbtay=pblist, pbthreshold=pbthreshold,pbalphaname=pbalphaname)
+
        # Divide out the PB polynomial
        ret = _dividePBTaylor(imlist,pblist,imlistpbcor,pbthreshold);
        if ret==False:
@@ -158,6 +162,42 @@ def widebandpbcor(vis='',
 
 
 ###############################################
+
+def _calcPBAlpha(pbtay=[], pbthreshold=0.1,pbalphaname='pbalpha.im'):
+    nterms = len(pbtay)
+    if nterms<2:
+        return False
+    
+    if(os.path.exists(pbalphaname)):
+       rmcmd = 'rm -rf ' + pbalphaname
+       os.system(rmcmd)
+    if(not os.path.exists(pbalphaname)):
+       cpcmd = 'cp -r ' + pbtay[0] + ' ' + pbalphaname
+       os.system(cpcmd)
+
+    ia.open(pbalphaname)
+    alpha = ia.getchunk()
+    ia.close()
+
+    ptay=[]
+    ia.open(pbtay[0])
+    ptay.append(ia.getchunk())
+    ia.close()
+    ia.open(pbtay[1])
+    ptay.append(ia.getchunk())
+    ia.close()
+
+    ptay[0][ ptay[0] < pbthreshold  ] = 1.0
+    ptay[1][ ptay[0] < pbthreshold  ] = 0.0
+
+    alpha = ptay[1]/ptay[0]
+
+    ia.open(pbalphaname)
+    ia.putchunk(alpha)
+    ia.calcmask(mask='"'+pbtay[0]+'"'+'>'+str(pbthreshold));
+    ia.close()
+
+
 #################################################
 def _makePBList(msname='',pbprefix='',field='',spwlist=[],chanlist=[], imsize=[], cellx='10.0arcsec', celly='10.0arcsec',phasecenter=''):
    #print 'Making PB List from the following spw,chan pairs';

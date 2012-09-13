@@ -129,6 +129,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    This is a temporary task, meant for use until projection-based gridding algorithms
    are available via the 'clean' task.
 
+   An output directory named imagename.pbcor.workdirectory is created, and filled with
+   an image-cube of the evaluated primary beams at all specified frequencies,
+   Taylor-coefficients, and a 'spectral index' due to the primary beam.  
+   Note that for the actual pb-correction, only the Taylor-coefficient images are used.
  
    Task parameters :
 
@@ -165,8 +169,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               - imagename.pbcor.workdirectory  :  This directory contains an image cube with
                 PBs at the list of specified frequencies, and Taylor-coefficient images that
                 describe the PB spectrum.
-                   -  imagename.pb.cube : Concatenated cube of PBs
+                   -  imagename.pb.cube : Concatenated cube of PBs 
                    -  imagename.pb.tt0, tt1, ... : Taylor coefficients describing the PB spectrum
+                   -  imagename.pb.alpha : Spectral index of the PB (for information only)
               - imagename.image.pbcor.tt0,tt1,... : Corrected Taylor coefficients
               - imagename.pbcor.image.alpha : Corrected Spectral Index
               - imagename.pbcor.image.alpha.error : New error map.
