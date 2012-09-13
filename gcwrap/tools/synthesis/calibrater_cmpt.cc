@@ -726,6 +726,7 @@ casac::record* calibrater::fluxscale(
 
     IPosition oStart( 2, 0, 0 );
     IPosition oEnd( 2, uiNumSPW-1, 0 );
+
     for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
       oStart(1)=oEnd(1)=t;
@@ -738,8 +739,8 @@ casac::record* calibrater::fluxscale(
 	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
 	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
 	oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
-	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.column(t)));
-	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.column(t)));
+	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.row(t)));
+	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.row(t)));
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }

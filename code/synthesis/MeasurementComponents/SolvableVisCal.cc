@@ -6153,8 +6153,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
 		  
     } // iTran
     // max 3 coefficients
-    Matrix<Double> spidx(nTran,3,0.0);
-    Matrix<Double> spidxerr(nTran,3,0.0);
+    //Matrix<Double> spidx(nTran,3,0.0);
+    //Matrix<Double> spidxerr(nTran,3,0.0);
+    Matrix<Double> spidx(nFld,3,0.0);
+    Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
 
     for (Int iTran=0; iTran<nTran; iTran++) {
@@ -6189,10 +6191,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
         covar=fitter.compuCovariance();
 
         for (Int i=0; i<soln.nelements(); i++) {
-           //cout<<"soln("<<i<<")="<<soln(i)<<endl;
-           //cout<<"errs("<<i<<")="<<errs(i)<<endl;
-           spidx(iTran,i) = soln(i);
-           spidxerr(iTran,i) = errs(i);
+           spidx(tranidx,i) = soln(i);
+           spidxerr(tranidx,i) = errs(i);
         } 
         oFitMsg =" Fitted spectral index for ";
 	oFitMsg += fldNames(tranidx);
