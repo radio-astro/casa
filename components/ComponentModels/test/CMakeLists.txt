@@ -9,6 +9,7 @@ tConstantSpectrum
 tDiskShape
 tFluxStandard
 tFluxStandard2
+tFluxStandard3
 tGaussianComponent
 tGaussianShape
 tGaussianBeam
