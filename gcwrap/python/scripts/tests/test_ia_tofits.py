@@ -130,16 +130,22 @@ class ia_tofits_test(unittest.TestCase):
             major=cmaj, minor=cmin, pa=cpa,
             channel=6, polarization=3
         )
+        myia.addnoise()
+        exppix = myia.getchunk()
         fitsname = "myfits.fits"
         myia.tofits(outfile=fitsname)
         myia.done()
-        for i in [0, 1]:
+        for i in range(4):
             if i == 0:
                 myia.fromfits("", fitsname)
-            else:
+            elif i == 1:
                 myia.open(fitsname)
-            print "*** name " + myia.name()
-            print "*** " + str(i)
+            elif i == 2:
+                zz = iatool()
+                myia = zz.newimagefromfits("", fitsname)
+            else:
+                zz = iatool()
+                myia = zz.newimagefromfile(fitsname)
             ep = 1e-7
             for c in range(shape[2]):
                 for p in range(shape[3]):
@@ -155,6 +161,9 @@ class ia_tofits_test(unittest.TestCase):
                         self.assertTrue(abs(1 - majax/bmaj["value"]) < ep)
                         self.assertTrue(abs(1 - minax/bmin["value"]) < ep)
                         self.assertTrue(abs(1 - pa/bpa["value"]) < ep)
+                    # ensure the pixel values were read correctly
+                    gotpix = myia.getchunk()
+                    self.assertTrue((gotpix == exppix).all())
             myia.done()
 
 def suite():
