@@ -6197,16 +6197,32 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		  }
 		}
 	      }
-	      for(Int j=0; j<averageN[i]; j++){
-		// second iteration: eliminate contributions from spws with odd numbers of contribs with non-unity overlap fraction
-		if(spwCount(averageWhichSPW[i][j])%2!=0 && modAverageChanFrac[j][k]!=1.){
-		  //cout << "spw count " << averageWhichSPW[i][j] << " " << spwCount(averageWhichSPW[i][j]) << endl;
-		  //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
-		  modNorm(k) -= modAverageChanFrac[j][k];
-		  modAverageChanFrac[j][k] = 0.;
+	      if(modNorm(k)>0.){ // there are contributions
+		for(Int j=0; j<averageN[i]; j++){
+		  // Second iteration: eliminate contributions from spws with odd numbers of contribs with non-unity overlap fraction
+		  // which could influence the averaging asymmetrically
+		  if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])
+		     && spwCount(averageWhichSPW[i][j])<averageN[i] // there are also channels with full overlap 
+		     && spwCount(averageWhichSPW[i][j])%2!=0     // the number of channels with non-unity overlap is odd
+		     && modAverageChanFrac[j][k]!=1.){           // this contributor j has non-unity overlap
+		    //cout << "spw count " << averageWhichSPW[i][j] << " " << spwCount(averageWhichSPW[i][j]) << endl;
+		    //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
+		    modNorm(k) -= modAverageChanFrac[j][k];
+		    modAverageChanFrac[j][k] = 0.;
+		    if(modNorm(k)<=0.){ // should only occur in rare cases
+		      if(FLAGColIsOK && !newFlag(k,i)){
+			os << LogIO::WARN << "In intermediate SPW combination output row " << newMainTabRow << " the averaging failed for channel " << i 
+			   << ", correlation " << k << ". Visibility will be flagged." << LogIO::POST;
+			newFlag(k,i) = True;
+		      }
+		      modNorm(k) += averageChanFrac[i][j];
+		      modAverageChanFrac[j][k] = averageChanFrac[i][j];
+		      break;
+		    }
+		  }		
 		}
-	      }  
-	    }
+	      }
+	    } // end loop over correlations
 
 	    if(haveCoverage){ // there is unflagged data for this channel
 	      // loop over SPWs
@@ -6219,7 +6235,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 		  // loop over first dimension (number of correlations)
 		  for(uInt k=0; k<nCorrelations; k++){
-		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
+		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )
+		       && modNorm(k)>0.){ // this channel is not flagged for the given SPW and correlator and there are contributions
 
                       // renormalize for the case of missing SPW coverage
 		      weight = modAverageChanFrac[j][k] / modNorm(k);
