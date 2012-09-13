@@ -145,50 +145,44 @@ function rename_existing_casa_log_file {
 
 
 function set_A_ARCH {
-    # If it is already set, do not change it.
-    if [ "x$A_ARCH" = "x" ]; then
-        local result=`echo ${CASAPATH} | awk '{print $2}'`
-        if [ "x$result" = "x" ]; then
-            if [ "$OS_TYPE" = "Darwin" ]; then
-                result="darwin64"
+    # Empty or not, set it.
+    local result=`echo ${CASAPATH} | awk '{print $2}'`
+    if [ "x$result" = "x" ]; then
+        if [ "$OS_TYPE" = "Darwin" ]; then
+            result="darwin64"
+        else
+            CPU=$(uname -p)
+            if [ "${CPU}" = "x86_64" ]; then
+                result="linux_64b"
             else
-                CPU=$(uname -p)
-                if [ "${CPU}" = "x86_64" ]; then
-                    result="linux_64b"
-                else
-                    result="linux_gnu"
-                fi
+                result="linux_gnu"
             fi
         fi
-        readonly A_ARCH="$result"
     fi
+    readonly A_ARCH="$result"
     display_debugging_message "A_ARCH = $A_ARCH"
 }
 
 
 function set_A_ROOT {
-    # If it is already set, do not change it.
-    if [ "x$A_ROOT" = "x" ]; then
-        local result="`echo ${CASAPATH} | awk '{print $1}'`"
-        if [ "x$result" = "x" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="${CASA_INSTALLATION_DIRECTORY%/*}"
-            else
-                result="${CASA_INSTALLATION_DIRECTORY}"
-            fi
+    # Empty or not, set it.
+    local result="`echo ${CASAPATH} | awk '{print $1}'`"
+    if [ "x$result" = "x" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            result="${CASA_INSTALLATION_DIRECTORY%/*}"
+        else
+            result="${CASA_INSTALLATION_DIRECTORY}"
         fi
-        readonly A_ROOT="$result"
     fi
+    readonly A_ROOT="$result"
     ensure_directory_exists "$A_ROOT" "A_ROOT"
 }
 
 
 function set_A_SITE {
-    # If it is already set, do not change it.
-    if [ "x$A_SITE" = "x" ]; then
-        # Seems odd that this is hard coded if it is useful.
-        A_SITE="socorro"
-    fi
+    # Empty or not, set it.
+    # TODO: Find a way to detect this.
+    readonly A_SITE="socorro"
     display_debugging_message "A_SITE = $A_SITE"
 }
 
