@@ -28,6 +28,7 @@ else
    cwd=`pwd`
    readonly SCRIPT_DIRECTORY="${cwd}/${clean_partial_path}"
 fi
+readonly STARTUP_DIRECTORY=$(pwd)
 
 
 #
@@ -195,7 +196,11 @@ function set_CASA_3RD_PARTY_DIRECTORY {
         local result=""
         if [ "$OS_TYPE" = "Darwin" ]; then
             if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="/opt/casa/darwin${OS_VERSION}"
+                if [ "$OS_VERSION" = "10" ]; then
+                    result="/opt/casa/darwin${OS_VERSION}-64b"
+                else
+                    result="/opt/casa/darwin${OS_VERSION}"
+                fi
             else
                 # Probably running from an app.  Not sure though...
                 result="${CASA_INSTALLATION_DIRECTORY}"
