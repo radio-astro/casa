@@ -102,7 +102,6 @@ sdtpimaging.xml
 setjy.xml
 ssoflux.xml
 simalma.xml
-simdata.xml
 simobserve.xml
 simanalyze.xml
 slsearch.xml

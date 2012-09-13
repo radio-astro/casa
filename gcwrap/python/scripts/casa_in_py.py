@@ -125,7 +125,7 @@ from importfits_pg import importfits_pg as importfits
 from imfit_pg import imfit_pg as imfit
 from deconvolve_pg import deconvolve_pg as deconvolve
 
-from simdata_pg import simdata_pg as simdata
+from simalma_pg import simalma_pg as simalma
 from simanalyze_pg import simanalyze_pg as simanalyze
 from simobserve_pg import simobserve_pg as simobserve
 

@@ -321,10 +321,10 @@ class par(str):
 
 	        -----------------------------------------------------
 
-		(for simdata)
+		(for simanalyze)
 		cell -- output cell/pixel size
-		default: '0.1arcsec'
-	        example: 'incell'    #uses incell value for the output cell size
+		default: ''   #uses incell value for the output cell size
+	        example: '0.1arcsec'
 		
 	        -----------------------------------------------------
 
@@ -647,7 +647,7 @@ class par(str):
 
 		---------------------------------------------
 
-		(for simdata)
+		(for simobserve)
 		direction -- center of map or "" to center on the model
 		* can optionally be a list of pointings, which will override
 		pointingspacing. When direction is a list, the centroid of
@@ -1174,7 +1174,7 @@ class par(str):
 	@staticmethod
 	def inbright():
 		"""
-		(for simdata)
+		(for simobserve)
 		inbright -- peak surface brightness to scale input image
 		in Jy/pixel.
 		default: 'unchanged'
@@ -1186,7 +1186,7 @@ class par(str):
 
 		----------------------------------------------------------------
 		
-		(for simdata)
+		(for simobserve)
 		inbright -- peak surface brightness to scale input image
 		in Jy/square arcsec.
 		options: 'default' or surface brightness in Jy/sq.arcsec.
