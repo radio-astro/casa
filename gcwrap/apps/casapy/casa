@@ -145,7 +145,7 @@ function rename_existing_casa_log_file {
 
 
 function set_A_ARCH {
-    # Empty or not, set it.
+    # Ignore any previous values.
     local result=`echo ${CASAPATH} | awk '{print $2}'`
     if [ "x$result" = "x" ]; then
         if [ "$OS_TYPE" = "Darwin" ]; then
@@ -165,7 +165,7 @@ function set_A_ARCH {
 
 
 function set_A_ROOT {
-    # Empty or not, set it.
+    # Ignore any previous values.
     local result="`echo ${CASAPATH} | awk '{print $1}'`"
     if [ "x$result" = "x" ]; then
         if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
@@ -180,57 +180,53 @@ function set_A_ROOT {
 
 
 function set_A_SITE {
-    # Empty or not, set it.
-    # TODO: Find a way to detect this.
+    # Ignore any previous values.
+    # TODO: Find a way to detect this per site.
     readonly A_SITE="socorro"
     display_debugging_message "A_SITE = $A_SITE"
 }
 
 
 function set_CASA_3RD_PARTY_DIRECTORY {
-    # If it is already set, do not change it.
-    if [ "x$CASA_3RD_PARTY_DIRECTORY" = "x" ]; then
-        local result=""
-        if [ "$OS_TYPE" = "Darwin" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                if [ "$OS_VERSION" = "10" ]; then
-                    result="/opt/casa/darwin${OS_VERSION}-64b"
-                else
-                    result="/opt/casa/darwin${OS_VERSION}"
-                fi
+    # Ignore any previous values.
+    local result=""
+    if [ "$OS_TYPE" = "Darwin" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            if [ "$OS_VERSION" = "10" ]; then
+                result="/opt/casa/darwin${OS_VERSION}-64b"
             else
-                # Probably running from an app.  Not sure though...
-                result="${CASA_INSTALLATION_DIRECTORY}"
+                result="/opt/casa/darwin${OS_VERSION}"
             fi
         else
-            if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
-                result="$CASA_INSTALLATION_DIRECTORY"
+            # Probably running from an app.  Not sure though...
+            result="${CASA_INSTALLATION_DIRECTORY}"
+        fi
+    else
+        if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+            result="$CASA_INSTALLATION_DIRECTORY"
+        else
+            if [ "`uname -p`" = "i686" ]; then
+                result="/usr/lib/casapy"
             else
-                if [ "`uname -p`" = "i686" ]; then
-                    result="/usr/lib/casapy"
-                else
-                    result="/usr/lib64/casapy"
-                fi
+                result="/usr/lib64/casapy"
             fi
         fi
-        readonly CASA_3RD_PARTY_DIRECTORY="$result"
     fi
+    readonly CASA_3RD_PARTY_DIRECTORY="$result"
     ensure_directory_exists "$CASA_3RD_PARTY_DIRECTORY" "CASA_3RD_PARTY_DIRECTORY"
 }
 
 
 function set_CASA_COMMAND_LINE {
-    # If it is already set, do not change it.
-    if [ "x$CASA_COMMAND_LINE" = "x" ]; then
-        local result=""
-        if [ $DEBUG_CASA = "T" ]; then
-            display_debugging_message "DEBUGGER = $DEBUGGER"
-            result=" -a ${DEBUGGER} ${DEBUGGER} ${PYTHON_EXECUTABLE}"
-        else
-            result=" -a python ${PYTHON_EXECUTABLE} -W ignore::DeprecationWarning ${CASAPY_SCRIPT}"
-        fi
-        readonly CASA_COMMAND_LINE="$result"
+    # Ignore any previous values.
+    local result=""
+    if [ $DEBUG_CASA = "T" ]; then
+        display_debugging_message "DEBUGGER = $DEBUGGER"
+        result=" -a ${DEBUGGER} ${DEBUGGER} ${PYTHON_EXECUTABLE}"
+    else
+        result=" -a python ${PYTHON_EXECUTABLE} -W ignore::DeprecationWarning ${CASAPY_SCRIPT}"
     fi
+    readonly CASA_COMMAND_LINE="$result"
     display_debugging_message "CASA_COMMAND_LINE = $CASA_COMMAND_LINE"
 }
 
