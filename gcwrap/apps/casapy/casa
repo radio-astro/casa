@@ -209,10 +209,10 @@ function set_CASA_3RD_PARTY_DIRECTORY {
         if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
             result="$CASA_INSTALLATION_DIRECTORY"
         else
-            if [ "`uname -p`" = "i686" ]; then
-                result="/usr/lib/casapy"
-            else
+            if [ "`uname -p`" = "x86_64" ]; then
                 result="/usr/lib64/casapy"
+            else
+                result="/usr/lib/casapy"
             fi
         fi
     fi
