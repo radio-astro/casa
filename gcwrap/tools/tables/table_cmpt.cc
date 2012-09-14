@@ -660,13 +660,13 @@ table::query(const std::string& query, const std::string& name,
      taqlString << "select";
      if(!columns.empty())
        taqlString << " " << columns;
-     taqlString << " from " << this->name();
+     taqlString << " from \"" << this->name() << "\"";
      if(!query.empty())
        taqlString << " where " << query;
      if(!sortlist.empty())
        taqlString << " orderby " << sortlist;
      if(!name.empty())
-       taqlString << " giving " << name;
+       taqlString << " giving \"" << name << "\"";
      casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
      rstat = new ::casac::table(theQTab);
    } else {
