@@ -213,7 +213,22 @@ public:
 
   // Return the associated MS name
   String msName();
-  
+
+  // SYSCAL table name of the associated MS
+  String sysCalTableName();
+
+  // SPECTRAL_WINDOW table name of the associated MS
+  String spectralWindowTableName();
+
+  // FIELD table name of the associated MS
+  String fieldTableName();
+
+  // SYSPOWER table name of the associated MS
+  String syspowerTableName();
+
+  // CALDEVICE table name of the associated MS
+  String caldeviceTableName();
+
 private:
 
   //Add the scratch columns
