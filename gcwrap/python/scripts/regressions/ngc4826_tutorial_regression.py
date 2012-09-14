@@ -861,7 +861,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
 ### flat snr it converges less well
  ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
       cyclefactor=4,niter=10000,threshold='45mJy',
-      minpb=0.3,pbcor=False, usescratch=False, restoringbeam=['8.5arcsec', '5.95arcsec', '178.7deg'])
+      minpb=0.3,pbcor=False, usescratch=False)
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
 
@@ -1438,11 +1438,11 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # region.)
 clean_offsrc_rms = 0.0481
 clean_offline_rms = 0.04938
-clean_momentzero_rms = 15.75
+clean_momentzero_rms = 13.89
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
-model_pbcor_sum = 66.199394
+model_pbcor_sum = 74.00
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
