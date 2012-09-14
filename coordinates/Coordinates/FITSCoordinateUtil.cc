@@ -596,7 +596,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 	else if (which >= uInt(nwcs)) {
-	    os << LogIO::WARN << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
+	    os << LogIO::WARN << "Requested WCS # " << which << " (zero-based) exceeds the number available, i.e. must be smaller than " << nwcs << LogIO::POST;
+	    os << LogIO::WARN << "Will use the last available one." << LogIO::POST;
+	    which = nwcs-1;
 	}
 
 // Add the saved OBSGEO keywords.
