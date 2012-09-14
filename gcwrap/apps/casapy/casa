@@ -14,7 +14,7 @@
 
 #
 # Collect runtime environment info we care about.
-if [ "x$CASA_INSTALLATION_TYPE" = "x" ; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
+if [ "x$CASA_INSTALLATION_TYPE" = "x" ] ; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
 readonly HOSTNAME=$(hostname -s)
 readonly OS_TYPE=$(uname -s)
 readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
@@ -206,7 +206,7 @@ function set_CASA_3RD_PARTY_DIRECTORY {
             result="${CASA_INSTALLATION_DIRECTORY}"
         fi
     else
-        if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
             result="$CASA_INSTALLATION_DIRECTORY"
         else
             if [ "`uname -p`" = "x86_64" ]; then
@@ -343,7 +343,7 @@ function set_PYTHON_EXECUTABLE {
         fi
         ;;
     "Linux")
-        if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
             result="${CASA_3RD_PARTY_DIRECTORY}/lib/casapy/bin/python"
         else
             result="${CASA_3RD_PARTY_DIRECTORY}/bin/python"
@@ -414,7 +414,7 @@ display_debugging_message "DEBUG_CASA_SHELL_SCRIPT = $DEBUG_CASA_SHELL_SCRIPT"
 
 _debug_casa="F"
 if [ "$1" = "--debug" ]; then
-    if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+    if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
         echo
         echo "This copy of CASA was installed from a tar distribution.  We do"
         echo "not support debugging CASA installed from a tar distribution."
