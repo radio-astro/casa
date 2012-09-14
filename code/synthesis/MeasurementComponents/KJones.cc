@@ -70,7 +70,7 @@ KJones::KJones(VisSet& vs) :
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  TBD: these should be in the caltable!!
-  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpectralWindow msSpw(vs.spectralWindowTableName());
   MSSpWindowColumns msCol(msSpw);
   msCol.refFrequency().getColumn(KrefFreqs_,True);
   KrefFreqs_/=1.0e9;  // in GHz
@@ -622,7 +622,7 @@ KcrossJones::KcrossJones(VisSet& vs) :
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  TBD: these should be in the caltable!!
-  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpectralWindow msSpw(vs.spectralWindowTableName());
   MSSpWindowColumns msCol(msSpw);
   msCol.refFrequency().getColumn(KrefFreqs_,True);
   KrefFreqs_/=1.0e9;  // in GHz
@@ -779,7 +779,7 @@ KAntPosJones::KAntPosJones(VisSet& vs) :
   if (prtlev()>2) cout << "Kap::Kap(vs)" << endl;
 
   // Extract the FIELD phase direction measure column
-  MSField msf(vs.msName()+"/FIELD");
+  MSField msf(vs.fieldTableName());
   MSFieldColumns msfc(msf);
   dirmeas_p.reference(msfc.phaseDirMeasCol());
 
