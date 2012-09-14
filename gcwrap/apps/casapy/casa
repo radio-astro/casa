@@ -7,23 +7,31 @@
 # in file system conventions between Darwin and Linux.  Some of this
 # inconsistency is due to attempts to minimize wasted disk space on Linux.
 # This can be improved, some day...
+#
+# NOTE: This script is NOT used to start CASA from a Mac app.  It is used for
+# All Linux environments, and developer environments on OS X.
+
 
 #
 # Collect runtime environment info we care about.
-if [ "x$CASA_INSTALLATION_TYPE" = "x" ]; then
-    readonly CASA_INSTALLATION_TYPE="unknown"
-fi
+if [ "x$CASA_INSTALLATION_TYPE" = "x" ; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
 readonly HOSTNAME=$(hostname -s)
 readonly OS_TYPE=$(uname -s)
 readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
-# readonly SCRIPT_DIRECTORY=$(dirname "$0")
 readonly SCRIPT_NAME=$(basename "$0")
-if [ -L "$0" ]; then
-    readonly SCRIPT_PATH="`readlink $0`"
+
+#
+# Find the FULL path to the directory containing the script:
+initial_script_directory=$(dirname "$0")
+if [ "${initial_script_directory:0:1}" = "/" ]; then
+   readonly SCRIPT_DIRECTORY="${initial_script_directory}"
 else
-    readonly SCRIPT_PATH="$0"
+   clean_partial_path="${initial_script_directory#*/}"
+   cwd=`pwd`
+   readonly SCRIPT_DIRECTORY="${cwd}/${clean_partial_path}"
 fi
 readonly STARTUP_DIRECTORY=$(pwd)
+
 
 #
 # Skip forward to "Main" comment to see top level logic.
@@ -32,8 +40,8 @@ readonly STARTUP_DIRECTORY=$(pwd)
 #
 # Define functions
 #
-# Most of these functions are only called once, but I find giving chunks of code
-# descriptive names makes the code much easier to read and maintain.
+# Most of these functions are only called once, but I find giving chunks of
+# code descriptive names makes the code much easier to read and maintain.
 
 
 function display_debugging_message {
@@ -51,28 +59,6 @@ function display_startup_time_warning {
     echo "are cached or not."
     echo "========================================="
     echo
-}
-
-
-function ensure_directory_exists {
-    # $1 : path to directory
-    # $2 : name to use in messages
-    if [ -d "$1" ]; then
-        display_debugging_message "$2 found at: $1"
-    else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
-    fi
-}
-
-
-function ensure_executable_exists {
-    # $1 : path to executable
-    # $2 : name to use in messages
-    if [ -x "$1" ]; then
-        display_debugging_message "$2 found at: $1"
-    else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
-    fi
 }
 
 
@@ -107,6 +93,28 @@ function ensure_dbus_is_running {
 }
 
 
+function ensure_directory_exists {
+    # $1 : path to directory
+    # $2 : name to use in messages
+    if [ -d "$1" ]; then
+        display_debugging_message "$2 found at: $1"
+    else
+        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+    fi
+}
+
+
+function ensure_executable_exists {
+    # $1 : path to executable
+    # $2 : name to use in messages
+    if [ -x "$1" ]; then
+        display_debugging_message "$2 found at: $1"
+    else
+        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+    fi
+}
+
+
 function exit_with_error_message {
     # $1 : the exit status to report
     # $2 : message to display for the user
@@ -136,38 +144,39 @@ function rename_existing_casa_log_file {
 
 
 function set_A_ARCH {
-    # If it is already set, do not change it.
-    if [ "x$A_ARCH" = "x" ]; then
-        local result=`echo ${CASAPATH} | awk '{print $2}'`
-        if [ "x$result" = "x" ]; then
-            if [ "$OS_TYPE" = "Darwin" ]; then
-                result="darwin64"
+    # Ignore any previous values.
+    local result=`echo ${CASAPATH} | awk '{print $2}'`
+    if [ "x$result" = "x" ]; then
+        if [ "$OS_TYPE" = "Darwin" ]; then
+            result="darwin64"
+        else
+            CPU=$(uname -p)
+            if [ "${CPU}" = "x86_64" ]; then
+                result="linux_64b"
             else
-                CPU=$(uname -p)
-                if [ "${CPU}" = "x86_64" ]; then
-                    result="linux_64b"
-                else
-                    result="linux_gnu"
-                fi
+                result="linux_gnu"
             fi
         fi
-        readonly A_ARCH="$result"
     fi
+    readonly A_ARCH="$result"
     display_debugging_message "A_ARCH = $A_ARCH"
 }
 
 
 function set_A_ROOT {
-    # If it is already set, do not change it.
-    if [ "x$A_ROOT" = "x" ]; then
-        local result="`echo ${CASAPATH} | awk '{print $1}'`"
-        if [ "x$result" = "x" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="${CASA_INSTALLATION_DIRECTORY%/*}"
-            else
-                result="${CASA_INSTALLATION_DIRECTORY}"
-            fi
+    # Ignore any previous values.
+    local result="`echo ${CASAPATH} | awk '{print $1}'`"
+    if [ "x$result" = "x" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            result="${CASA_INSTALLATION_DIRECTORY%/*}"
+        else
+            result="${CASA_INSTALLATION_DIRECTORY}"
         fi
+    fi
+    # On some platforms, A_ROOT ends with an ugly "<name>/..".  Strip if off.
+    if [ "${result##*/}" = ".." ]; then
+        readonly A_ROOT="${result%/*/*}"
+    else
         readonly A_ROOT="$result"
     fi
     ensure_directory_exists "$A_ROOT" "A_ROOT"
@@ -175,89 +184,85 @@ function set_A_ROOT {
 
 
 function set_A_SITE {
-    # If it is already set, do not change it.
-    if [ "x$A_SITE" = "x" ]; then
-        # Seems odd that this is hard coded if it is useful.
-        A_SITE="socorro"
-    fi
+    # Ignore any previous values.
+    # TODO: Find a way to detect this per site.
+    readonly A_SITE="socorro"
     display_debugging_message "A_SITE = $A_SITE"
 }
 
 
 function set_CASA_3RD_PARTY_DIRECTORY {
-    # If it is already set, do not change it.
-    if [ "x$CASA_3RD_PARTY_DIRECTORY" = "x" ]; then
-        local result=""
-        if [ "$OS_TYPE" = "Darwin" ]; then
-            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="/opt/casa/darwin${OS_VERSION}"
+    # Ignore any previous values.
+    local result=""
+    if [ "$OS_TYPE" = "Darwin" ]; then
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            if [ "$OS_VERSION" = "10" ]; then
+                result="/opt/casa/darwin${OS_VERSION}-64b"
             else
-                # Probably running from an app.  Not sure though...
-                result="${CASA_INSTALLATION_DIRECTORY}"
+                result="/opt/casa/darwin${OS_VERSION}"
             fi
         else
-            if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
-                result="$CASA_INSTALLATION_DIRECTORY"
+            # Probably running from an app.  Not sure though...
+            result="${CASA_INSTALLATION_DIRECTORY}"
+        fi
+    else
+        if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+            result="$CASA_INSTALLATION_DIRECTORY"
+        else
+            if [ "`uname -p`" = "x86_64" ]; then
+                result="/usr/lib64/casapy"
             else
-                if [ "`uname -p`" = "i686" ]; then
-                    result="/usr/lib/casapy"
-                else
-                    result="/usr/lib64/casapy"
-                fi
+                result="/usr/lib/casapy"
             fi
         fi
-        readonly CASA_3RD_PARTY_DIRECTORY="$result"
     fi
+    readonly CASA_3RD_PARTY_DIRECTORY="$result"
     ensure_directory_exists "$CASA_3RD_PARTY_DIRECTORY" "CASA_3RD_PARTY_DIRECTORY"
 }
 
 
 function set_CASA_COMMAND_LINE {
-    # If it is already set, do not change it.
-    if [ "x$CASA_COMMAND_LINE" = "x" ]; then
-        local result=""
-        if [ $DEBUG_CASA = "T" ]; then
-            display_debugging_message "DEBUGGER = $DEBUGGER"
-            result=" -a ${DEBUGGER} ${DEBUGGER} ${PYTHON_EXECUTABLE}"
-        else
-            result=" -a python ${PYTHON_EXECUTABLE} -W ignore::DeprecationWarning ${CASAPY_SCRIPT}"
-        fi
-        readonly CASA_COMMAND_LINE="$result"
+    # Ignore any previous values.
+    local result=""
+    if [ $DEBUG_CASA = "T" ]; then
+        display_debugging_message "DEBUGGER = $DEBUGGER"
+        result=" -a ${DEBUGGER} ${DEBUGGER} ${PYTHON_EXECUTABLE}"
+    else
+        result=" -a python ${PYTHON_EXECUTABLE} -W ignore::DeprecationWarning ${CASAPY_SCRIPT}"
     fi
+    readonly CASA_COMMAND_LINE="$result"
     display_debugging_message "CASA_COMMAND_LINE = $CASA_COMMAND_LINE"
 }
 
 
 function set_CASA_INSTALLATION_DIRECTORY {
-    # If it is already set, do not change it.
-    if [ "x$CASA_INSTALLATION_DIRECTORY" = "x" ]; then
-        # Running from a Mac .app, CASAPATH will be empty.
-        if [ "x$CASAPATH" = "x" ]; then
-            if [ "$OS_TYPE" == "Darwin" ]; then
-                # Probably running from an app.  Not sure though...
-                result="${SCRIPT_PATH%/*/*/*}/Contents"
-            else
-                exit_with_error_message -1 "Unable to detect CASA_INSTALLATION_DIRECTORY.\nPlease report this to CASA developers immediately."
-            fi
+    # Ignore any previous values.
+    # TODO: Review this logic.
+    # Running from a Mac .app, CASAPATH will be empty.
+    if [ "x$CASAPATH" = "x" ]; then
+        if [ "$OS_TYPE" == "Darwin" ]; then
+            # Probably running from an app.  Not sure though...
+            result="${SCRIPT_DIRECTORY%/*/*}/Contents"
         else
-            local casa_root=$(echo $CASAPATH | awk '{printf "%s", $1}')
-            local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
-            if [ "$OS_TYPE" = "Darwin" ]; then
-                result="${casa_root%/*/*}/${casa_os}"
-            elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="${casa_root}/${casa_os}"
-            else
-                result="$casa_root"
-            fi
+            exit_with_error_message -1 "Unable to detect CASA_INSTALLATION_DIRECTORY.\nPlease report this to CASA developers immediately."
         fi
-        readonly CASA_INSTALLATION_DIRECTORY="$result"
+    else
+        local casa_root=$(echo $CASAPATH | awk '{printf "%s", $1}')
+        local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
+        if [ "$OS_TYPE" = "Darwin" ]; then
+            result="${casa_root%/*/*}/${casa_os}"
+        elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            result="${casa_root}/${casa_os}"
+        else
+            result="$casa_root"
+        fi
     fi
+    readonly CASA_INSTALLATION_DIRECTORY="$result"
     ensure_directory_exists "$CASA_INSTALLATION_DIRECTORY" "CASA_INSTALLATION_DIRECTORY"
 }
 
 
 function set_CASAPATH {
-    #
     # In most cases, CASAPATH will be set before this script starts, but it will
     # only contain the first two fields.
     export readonly CASAPATH="$A_ROOT $A_ARCH $A_SITE $HOSTNAME"
@@ -266,26 +271,24 @@ function set_CASAPATH {
 
 
 function set_CASAPY_SCRIPT {
-    # If it is already set, do not change it.
-    if [ "x$CASAPY_SCRIPT" = "x" ]; then
-        local result=""
-        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${CASA_INSTALLATION_DIRECTORY}/python/2.6/casapy.py"
-        else
-            case $OS_TYPE in
-                "Darwin")
-                result="${CASA_INSTALLATION_DIRECTORY}/Resources/python/casapy.py"
-                ;;
-                "Linux")
-                result="${CASA_INSTALLATION_DIRECTORY}/lib/python2.6/casapy.py"
-                ;;
-                *)
-                exit_with_error_message -1 "Unknown OS: $OS_TYPE"
-                ;;
-            esac
-        fi
-        readonly CASAPY_SCRIPT="$result"
+    # Ignore any previous values.
+    local result=""
+    if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+        result="${CASA_INSTALLATION_DIRECTORY}/python/2.6/casapy.py"
+    else
+        case $OS_TYPE in
+        "Darwin")
+            result="${CASA_INSTALLATION_DIRECTORY}/Resources/python/casapy.py"
+            ;;
+        "Linux")
+            result="${CASA_INSTALLATION_DIRECTORY}/lib/python2.6/casapy.py"
+            ;;
+        *)
+            exit_with_error_message -1 "Unknown OS: $OS_TYPE"
+            ;;
+        esac
     fi
+    readonly CASAPY_SCRIPT="$result"
     ensure_executable_exists "$CASAPY_SCRIPT" "CASAPY_SCRIPT"
 }
 
@@ -328,32 +331,30 @@ function set_PGPLOT_DIR {
 }
 
 function set_PYTHON_EXECUTABLE {
-    # If it is already set, do not change it.
-    if [ "x$PYTHON_EXECUTABLE" = "x" ]; then
-        local result=""
-        case $OS_TYPE in
-            "Darwin")
-            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-                result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
-            else
-                # Probably running from an app.  Not sure though...
-                result="${CASA_INSTALLATION_DIRECTORY}/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
-            fi
-            ;;
-            "Linux")
-            if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
-                result="${CASA_3RD_PARTY_DIRECTORY}/lib/casapy/bin/python"
-            else
-                result="${CASA_3RD_PARTY_DIRECTORY}/bin/python"
-            fi
-            ;;
-            *)
-            exit_with_error_message -1 "Unknown OS: $OS_TYPE"
-            ;;
-        esac
+    # Ignore any previous values.
+    local result=""
+    case $OS_TYPE in
+    "Darwin")
+        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+            result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
+        else
+            # Probably running from an app.  Not sure though...
+            result="${CASA_INSTALLATION_DIRECTORY}/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
+        fi
+        ;;
+    "Linux")
+        if [ "$CASA_INSTALLATION_TYPE" = "tar_installation" ]; then
+            result="${CASA_3RD_PARTY_DIRECTORY}/lib/casapy/bin/python"
+        else
+            result="${CASA_3RD_PARTY_DIRECTORY}/bin/python"
+        fi
+        ;;
+    *)
+        exit_with_error_message -1 "Unknown OS: $OS_TYPE"
+        ;;
+    esac
 
-        readonly PYTHON_EXECUTABLE="$result"
-    fi
+    readonly PYTHON_EXECUTABLE="$result"
     ensure_executable_exists "$PYTHON_EXECUTABLE" "PYTHON_EXECUTABLE"
 }
 
@@ -368,8 +369,9 @@ function source_CASA_shell_environments {
     ${HOME}/.aips++local.sh \
     ${HOME}/.casainit
     do
+        display_debugging_message "Checking for shell environment file: $ci"
         if  [ -r "$ci" ]; then
-            $verbose && echo "sourcing $ci"
+            display_debugging_message "Sourcing: $ci"
             . $ci
         fi
     done
@@ -381,7 +383,8 @@ function source_CASA_shell_environments {
 function update_CASA_data_directory {
     #
     # TODO: Check for write access before trying to run rsync.
-    casapy_ddir=${A_ROOT}/data
+    local casapy_ddir=${A_ROOT}/data
+    ensure_directory_exists "$casapy_ddir" "CASA Data Directory"
     if (( ${#casapy_ddir} > 0 )); then
         mkdir -p "$casapy_ddir"
         cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
@@ -393,6 +396,7 @@ function update_CASA_data_directory {
     fi
     cd -
 }
+
 
 #
 # Main
@@ -443,9 +447,8 @@ display_debugging_message "CASA_INSTALLATION_TYPE = $CASA_INSTALLATION_TYPE"
 display_debugging_message "HOSTNAME = $HOSTNAME"
 display_debugging_message "OS_TYPE = $OS_TYPE"
 display_debugging_message "OS_VERSION = $OS_VERSION"
-# display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
+display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
 display_debugging_message "SCRIPT_NAME = $SCRIPT_NAME"
-display_debugging_message "SCRIPT_PATH = $SCRIPT_PATH"
 display_debugging_message "STARTUP_DIRECTORY = $STARTUP_DIRECTORY"
 display_debugging_message "CASAPATH = $CASAPATH"
 
