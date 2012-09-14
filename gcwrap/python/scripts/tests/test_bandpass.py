@@ -89,7 +89,7 @@ class bandpass1_test(test_base):
         os.system('rm -rf ngc5921*.bcal')
         
     def test1a(self):
-        '''Bandpass 1a: Create bandpass table using in field=0'''
+        '''Bandpass 1a: Create bandpass table using field=0'''
         msbcal = self.msfile + '.bcal'
         reference = self.reffile + '.ref1a.bcal'
         bandpass(vis=self.msfile, caltable=msbcal, field='0',opacity=0.0,bandtype='B',
