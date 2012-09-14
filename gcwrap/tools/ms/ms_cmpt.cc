@@ -2086,7 +2086,7 @@ ms::putdata(const ::casac::record& items)
 
 bool
 ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, 
-		const int handling, const std::string& destmsfile)
+		const int handling, const std::string& destmsfile, const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2123,6 +2123,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.setWeightScale(weightscale);
 	    mscat.concatenate(appendedMS, static_cast<uint>(handling), destmsfile);
 
@@ -2131,6 +2132,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    param << "msfile='" << msfile
 		  << "' freqTol='" << casaQuantity(freqtol) 
 		  << "' dirTol='" << casaQuantity(dirtol) 
+		  << "' respectname='" << respectname 
 		  << "' handling= " << handling
 		  << " destmsfile='" << destmsfile << "'";
 	    String paramstr=param.str();
@@ -2148,7 +2150,8 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 }
 
 bool
-ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
+ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol,
+		    const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2182,13 +2185,14 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.concatenate(appendedMS, 3); // 3 meaning "don't concatenate Main and Pointing table"
 
 	    String message = "Subtables from "+String(msfile) + " appended to those from " + itsMS->tableName();
 	    ostringstream param;
 	    param << "msfile= " << msfile
 		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
-		  << casaQuantity(dirtol) << "'";
+		  << casaQuantity(dirtol) << "'" << "' respectname='" << respectname;
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::testconcatenate()"), msfile, "ms");
@@ -2206,7 +2210,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 
 bool
 ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const ::casac::variant& freqtol, 
-		    const ::casac::variant& dirtol, const float weightscale)
+		    const ::casac::variant& dirtol, const float weightscale, const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2242,6 +2246,7 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.setWeightScale(weightscale);
 
 	    mscat.virtualconcat(appendedMS, True, casa::String(auxfile));
@@ -2250,7 +2255,8 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 	    ostringstream param;
 	    param << "msfile='" << msfile
 		  << "' freqTol='" << casaQuantity(freqtol) 
-		  << "' dirTol='" << casaQuantity(dirtol) << "'";
+		  << "' dirTol='" << casaQuantity(dirtol) 
+		  << "' respectname='" << respectname << "'";
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::virtconcatenate()"), msfile, "ms");

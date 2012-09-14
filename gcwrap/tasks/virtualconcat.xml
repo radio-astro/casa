@@ -31,6 +31,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value type="string"></value>
   </param>
 
+  <param type="bool" name="respectname" >
+    <description>If true, fields with a different name are not merged even if their direction agrees</description>
+    <value>True</value>
+  </param>
+
   <param type="doubleArray" name="visweightscale">
     <description>List of the weight scaling factors to be applied to the individual MSs</description>
     <value></value>
@@ -114,6 +119,10 @@ dirtol -- Direction shift tolerance for considering data as the same field
 	   their phase center differ by less than 1 arcsec.  If the field names
            are different in the input data sets, the name in the output data
            set will be the first relevant data set in the list.
+
+respectname -- If true, fields with a different name are not merged even if their 
+        direction agrees (within dirtol). 
+        default: True
 
 visweightscale -- The weights of the individual MSs will be scaled in the concatenated
         output MS by the factors in this list. Useful for handling heterogeneous arrays.

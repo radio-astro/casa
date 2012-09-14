@@ -2748,9 +2748,15 @@ for i in range(len(tcoord)):
      </param>
 
      <param type="string" direction="in" name="destmsfile">
-     <description>optional support for virtual concat: empty table (no subtables) where to store the appended MS copy </description>
+     <description>Optional support for virtual concat: empty table (no subtables) where to store the appended MS copy </description>
      <value></value>
      </param>
+
+     <param type="bool" direction="in" name="respectname">
+     <description>If true, fields with a different name are not merged even if their direction agrees</description>
+     <value>false</value>
+     </param>
+
 
   </input>
   <returns type="bool"/>
@@ -2804,6 +2810,12 @@ for i in range(len(tcoord)):
      <any type="variant"/>
      <value>1mas</value>
      </param>
+
+     <param type="bool" direction="in" name="respectname">
+     <description>If true, fields with a different name are not merged even if their direction agrees</description>
+     <value>false</value>
+     </param>
+
   </input>
   <returns type="bool"/>
 
@@ -2865,6 +2877,11 @@ for i in range(len(tcoord)):
      <param type="float" direction="in" name="weightscale">
      <description>Scale the weights of the MS to be appended by this factor</description>
      <value>1.</value>
+     </param>
+
+     <param type="bool" direction="in" name="respectname">
+     <description>If true, fields with a different name are not merged even if their direction agrees</description>
+     <value>true</value>
      </param>
 
   </input>

@@ -5,7 +5,8 @@ import time
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale,createmms):
+def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
+	   visweightscale,createmms):
 	"""concatenate visibility datasets
 	The list of data sets given in the vis argument are concatenated into an output
 	data set in concatvis.  If concatvis already exists (e.g., it is the same as the
@@ -68,6 +69,10 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 		   their phase center differ by less than 1 arcsec.  If the field names
 		   are different in the input data sets, the name in the output data
 		   set will be the first relevant data set in the list.
+
+	respectname -- If true, fields with a different name are not merged even if their 
+                direction agrees (within dirtol)
+                default: False
 
 	timesort -- If true, the output visibility table will be sorted in time.
 		default: false.  Data in order as read in.
@@ -257,11 +262,13 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 					cb.open(tempname) # calibrator-open creates scratch columns
 					cb.close()
 					# concatenate copy instead of original file
-					m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
+					m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,respectname=respectname,
+						      weightscale=wscale,handling=handlingswitch,
 						      destmsfile=destms)
 					shutil.rmtree(tempname, ignore_errors=True)
 			else:
-				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch,
+				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,respectname=respectname,
+					      weightscale=wscale,handling=handlingswitch,
 					      destmsfile=destms)
 
 		if timesort:
@@ -273,6 +280,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 		m.writehistory(message='concatvis    = "'+str(concatvis)+'"',origin='concat')
 		m.writehistory(message='freqtol      = "'+str(freqtol)+'"',origin='concat')
 		m.writehistory(message='dirtol       = "'+str(dirtol)+'"',origin='concat')
+		m.writehistory(message='respectname  = "'+str(respectname)+'"',origin='concat')
 		m.writehistory(message='copypointing = "'+str(copypointing)+'"',origin='concat')
 		m.writehistory(message='visweightscale = "'+str(visweightscale)+'"',origin='concat')
 
