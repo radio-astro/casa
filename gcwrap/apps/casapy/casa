@@ -397,6 +397,7 @@ function update_CASA_data_directory {
     cd -
 }
 
+
 #
 # Main
 #
