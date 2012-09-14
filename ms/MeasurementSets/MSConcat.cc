@@ -75,6 +75,7 @@ MSConcat::MSConcat(MeasurementSet& ms):
   itsDirTol=Quantum<Double>(1.0, "mas");
   itsFreqTol=Quantum<Double>(1.0, "Hz");
   itsWeightScale = 1.;
+  itsRespectForFieldName = False;
   doSource_p=False;
   doObsA_p = doObsB_p = False;
 }
@@ -290,7 +291,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // FIELD
   oldRows = itsMS.field().nrow();
-  const Block<uInt> newFldIndices = copyField(otherMS.field()); 
+  const Block<uInt> newFldIndices = copyField(otherMS.field());
   {
     const uInt addedRows = itsMS.field().nrow() - oldRows;
     const uInt matchedRows = otherMS.field().nrow() - addedRows;
@@ -1380,6 +1381,10 @@ void MSConcat::setWeightScale(const Float weightScale){
   itsWeightScale=weightScale;
 }
 
+void MSConcat::setRespectForFieldName(const Bool respectFieldName){
+  itsRespectForFieldName = respectFieldName;
+}
+
 void MSConcat::checkShape(const IPosition& otherShape) const 
 {
   const uInt nAxes = min(itsFixedShape.nelements(), otherShape.nelements());
@@ -1937,11 +1942,15 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
       refDir = dirCtr(refDir.getValue());
     }
     
-    const Int newFld = 
-      fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
-    if (newFld >= 0) {
-      fldMap[f] = newFld;
-    } else { // need to add a new entry in the FIELD subtable
+    const Int newFld = fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
+    if ( newFld >= 0  
+	 && (!itsRespectForFieldName
+	     || (itsRespectForFieldName && fieldCols.name()(newFld) == otherFieldCols.name()(f))
+	     )
+	) {
+	fldMap[f] = newFld;
+    } 
+    else { // need to add a new entry in the FIELD subtable
       fldMap[f] = fld.nrow();
       fld.addRow();
       fldRow.putMatchingFields(fldMap[f], otherFldRow.get(f));
