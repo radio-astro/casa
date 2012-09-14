@@ -14,7 +14,7 @@
 
 #
 # Collect runtime environment info we care about.
-if [ "x$CASA_INSTALLATION_TYPE" = "x" ] ; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
+if [ "x$CASA_INSTALLATION_TYPE" = "x" ]; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
 readonly HOSTNAME=$(hostname -s)
 readonly OS_TYPE=$(uname -s)
 readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
