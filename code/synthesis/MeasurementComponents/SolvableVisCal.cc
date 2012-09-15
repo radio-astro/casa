@@ -6068,6 +6068,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
 	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  //mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
 	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
 	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
 
@@ -6181,12 +6182,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Polynomial< AutoDiff<Double> > bp(fitorder);
         fitter.setFunction(bp);
         // need the way to mask some spw
-      
-        Vector<Double> log_solFreq=log10(solFreq);
+        //Vector<Double> log_solFreq=log10(solFreq);
+        Vector<Double> log_relsolFreq=log10(solFreq)-mean(log10(solFreq));
         Vector<Double> log_fd=log10(fd.column(tranidx));
 
         //Vector<Double> soln=fitter.fit(log10(solFreq), log10(fd.column(tranidx)), fderr.column(tranidx)/solFreq);
-        Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        //Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
         Vector<Double> errs=fitter.errors();
         covar=fitter.compuCovariance();
 
