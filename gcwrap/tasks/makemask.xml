@@ -72,24 +72,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
               <value type="intArray">[]</value>
             </param>
 
+            <param type="string" name="template" subparam="true">
+              <description>template image name</description>
+              <value type="string"></value>
+            </param>
+              
+
 
             <!-- Mode = merge -->
             <!-- make mask from regions, boxfiles, LEL expressions -->
-	    <param type="any" name="regionlist" subparam="true">
+	    <!--<param type="any" name="regionlist" subparam="true">
 	      <description>Cleanbox(es), region(s)</description>
 	      <any type="variant"/>
 	      <value type="stringArray"></value>
-	    </param>
+	    </param>-->
 
             <!-- outmask type -->
-            <param type="string" name="maskname" subparam="true">
+            <!--<param type="string" name="maskname" subparam="true">
               <description>Name of mask to embed</description>
               <value>mask0</value>
             </param>
             <param type="bool" name="replace" subparam="true">
               <description>If this mask name exists, replace it. Otherwise, complain.</description>
               <value>True</value>
-            </param>
+            </param>-->
         
 
 
@@ -107,6 +113,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="inpmask"><value type="string">mask0</value></default>
                         <default param="inpfreqs"><value type="intArray">[]</value></default>
                         <default param="outfreqs"><value type="intArray">[]</value></default>
+                        <default param="template"><value type="string"></value></default>
                     </equals>
                     <equals value="merge">
                         <default param="inpimage"><value type="stringArray">[]</value></default>
