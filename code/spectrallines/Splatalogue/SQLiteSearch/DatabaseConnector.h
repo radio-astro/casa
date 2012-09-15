@@ -26,10 +26,11 @@
 #ifndef DATABASECONNECTOR_H_
 #define DATABASECONNECTOR_H_
 
-#include <sqlite3.h>
+
 #include <string>
 using namespace std;
 
+class sqlite3;
 namespace casa {
 
 /**

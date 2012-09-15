@@ -374,7 +374,7 @@ public:
   
   //# animation
    
-  virtual void setMode(bool modez);
+  virtual void setMode(bool modez, bool channelCubes = false);
   virtual void setMode(String mode) { setMode(downcase(mode)=="normal");  }
 
   virtual void toStart() { goTo(startFrame());  }

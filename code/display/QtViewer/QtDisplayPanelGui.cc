@@ -264,12 +264,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
 	connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
 	connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
-	connect(animationHolder, SIGNAL(revPlay()),            SLOT(revPlay_()));
+	connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
 	connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
-	connect(animationHolder, SIGNAL(fwdPlay()),           SLOT(fwdPlay_()));
+	connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
 	connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
 	connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
 	connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+	connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
+	connect(animationHolder, SIGNAL(movieChannels(int,bool,int)), this, SLOT(movieChannels(int,bool,int)));
+	connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
 	animDockWidget_->setWidget(animationHolder);
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
@@ -685,14 +688,14 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	qdds.toEnd();
 	qdds.addRight(qdd);
 
-	updateFrameInformation();
 	emit ddCreated(qdd, autoRegister);
-
+	updateFrameInformation();
 	return qdd;
 }
 
 void QtDisplayPanelGui::updateFrameInformation(){
-	int displayDataCount = qdds_.len();
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	int displayDataCount = rdds.len();
 	animationHolder->setModeEnabled( displayDataCount );
 }
 
@@ -724,12 +727,24 @@ void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
 }
 
 void QtDisplayPanelGui::incrementMovieChannel(){
-	if ( movieChannel < movieChannelEnd ){
+
+	//Increment the channel
+	if ( movieChannel < movieChannelEnd || movieForward ){
 		movieChannel++;
 	}
 	else {
 		movieChannel--;
 	}
+
+	//Take care of wrap around in either direction.
+	if ( movieChannel > movieLast ){
+		movieChannel = 0;
+	}
+	if ( movieChannel < 0 ){
+		movieChannel = movieLast;
+	}
+
+	//Check to see if we should stop or continue playing
 	if ( movieChannel == movieChannelEnd ){
 		movieTimer.stop();
 	}
@@ -739,11 +754,33 @@ void QtDisplayPanelGui::incrementMovieChannel(){
 }
 
 void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
+	//Make sure it is not currently playing
+	//before we start a new one.
+	movieTimer.stop();
+	movieForward = false;
+	movieLast = endChannel+1;
+
+	//Start a new movie.
 	int animationRate = animationHolder->getRate( AnimatorHolder::NORMAL_MODE );
 	movieTimer.setInterval( 1000/ animationRate );
 	movieChannel = startChannel;
 	movieChannelEnd = endChannel;
 	movieTimer.start();
+}
+
+void QtDisplayPanelGui::movieChannels( int startChannel, bool forward,
+		int maxChannels ){
+	movieTimer.stop();
+
+	movieForward = forward;
+	movieLast = maxChannels;
+	movieChannelEnd = -1;
+	movieChannel = startChannel;
+	movieTimer.start();
+}
+
+void QtDisplayPanelGui::movieStop(){
+	movieTimer.stop();
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
@@ -2102,22 +2139,31 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 		if(anyUdds) {
 			action = new QAction("Register All", ddRegMenu_);
 			ddRegMenu_->addAction(action);
-			connect(action, SIGNAL(triggered()),  qdp_, SLOT(registerAll()));  }
+			connect(action, SIGNAL(triggered()),  this, SLOT(registerAllDDs()));  }
 
 		if(anyRdds) {
 			action = new QAction("Unregister All", ddRegMenu_);
 			ddRegMenu_->addAction(action);
-			connect(action, SIGNAL(triggered()),  qdp_, SLOT(unregisterAll()));  }
+			connect(action, SIGNAL(triggered()), this, SLOT(unregisterAllDDs()));  }
 
 
 		ddCloseMenu_->addSeparator();
 
 		action = new QAction("Close All", ddCloseMenu_);
 		ddCloseMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));  }  }
+		connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));
+	}
+}
 
+void QtDisplayPanelGui::registerAllDDs(){
+	qdp_->registerAll();
+	updateFrameInformation();
+}
 
-
+void QtDisplayPanelGui::unregisterAllDDs(){
+	qdp_->unregisterAll();
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
@@ -2188,7 +2234,9 @@ void QtDisplayPanelGui::ddRegClicked_() {
 	if(action==0) return;		// (shouldn't happen).
 	QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-	qdp_->registerDD(dd);  }
+	qdp_->registerDD(dd);
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::ddUnregClicked_() {
@@ -2196,7 +2244,9 @@ void QtDisplayPanelGui::ddUnregClicked_() {
 	if(action==0) return;		// (shouldn't happen).
 	QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-	qdp_->unregisterDD(dd);  }
+	qdp_->unregisterDD(dd);
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::ddCloseClicked_() {

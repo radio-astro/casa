@@ -25,6 +25,7 @@
 
 #include "DatabaseConnector.h"
 #include <sys/stat.h>
+#include <sqlite3.h>
 #include <iostream>
 using namespace std;
 

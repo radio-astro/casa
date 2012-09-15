@@ -60,12 +60,9 @@ Searcher* SearcherFactory::getSearcher( bool local ){
 
 
 SearcherFactory::SearcherFactory(){
-	// TODO Auto-generated constructor stub
-
 }
 
-SearcherFactory::~SearcherFactory() {
-	// TODO Auto-generated destructor stub
+SearcherFactory::~SearcherFactory(){
 }
 
 } /* namespace casa */
