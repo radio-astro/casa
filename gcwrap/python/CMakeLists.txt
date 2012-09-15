@@ -132,7 +132,7 @@ scripts/task_listpartition.py
 scripts/task_listsdm.py
 scripts/task_listvis.py
 scripts/taskmanager.py
-scripts/task_makemask.py
+scripts/task_makemask.py 
 scripts/task_mosaic.py
 scripts/task_msmoments.py
 scripts/task_oldflagcmd.py
