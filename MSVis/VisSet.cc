@@ -1023,13 +1023,22 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData)
 
 String VisSet::msName(){
 
+  String name;
   if(ms_p.isMarkedForDelete()){ // this is a temporary selected table
     Block<String> refTables = ms_p.getPartNames(True);
-    return refTables[0];
+    if(ms_p.tableInfo ().subType() == "CONCATENATED" && refTables[0].freq("/SUBMSS")==1){
+      name = refTables[0].before("/SUBMSS");
+    }
+    else{
+      name = refTables[0];
+    }
   }
   else{
-    return ms_p.tableName();
+    name = ms_p.tableName();
   }
+
+  return name;
+
 }
 
 String VisSet::sysCalTableName(){

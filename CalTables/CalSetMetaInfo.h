@@ -60,10 +60,10 @@ public:
   ~CalSetMetaInfo()   {cleanUp();};
 
   void setRootName(const String& root) {rootName=root;};
-  String fullSubTableName(String& subTableName,const String& base) 
-  {return String(base + "/" + subTableName);};
-  String fullSubTableName(String& subTableName) 
-  {return fullSubTableName(subTableName,rootName);};
+  String fullSubTableName(String& subTableName,const String& base){
+    return Table(base).rwKeywordSet().asTable(subTableName).tableName();};
+  String fullSubTableName(String& subTableName){
+    return fullSubTableName(subTableName,rootName);};
 
   void reset(const String& root);
   String getAntName(Int ant);
