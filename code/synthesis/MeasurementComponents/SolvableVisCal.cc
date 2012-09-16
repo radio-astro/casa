@@ -6067,8 +6067,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	if (nPA>0) {
 	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
-	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
-	  //mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
+	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
 	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
 	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
 
