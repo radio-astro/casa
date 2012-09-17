@@ -95,19 +95,17 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             masterptab = ''
             emptyptab = tempout+'/EMPTY_POINTING'
             nochangeinpointing = (str(antenna)+str(timerange)=='')
-                
-            for m in mses:
+
+            if nochangeinpointing:    
                 # resulting pointing table is the same for all
                 #  -> replace by empty table if it is a link and won't be modified anyway
                 #     and put back original into the master after split
-                theptab = m+'/POINTING'
-                replaced = False
-                if nochangeinpointing:
-                    if(os.path.islink(theptab)):
-                        os.remove(theptab)
-                        shutil.copytree(emptyptab, theptab)
-                        replaced=True
-                    elif(masterptab==''):
+
+                # find the master
+                for m in mses:
+                    theptab = m+'/POINTING'
+                    if not os.path.islink(theptab):
+                        #print "is master ", theptab
                         mastersubms = m
                         masterptab = m+'/POINTING'
                         # save time by not copying the POINTING table len(mses) times
@@ -118,6 +116,18 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         del myttb
                         tmpp.close()
                         del tmpp
+                        break
+
+            # main work loop
+            for m in mses:
+                theptab = m+'/POINTING'
+                replaced = False
+                if nochangeinpointing:
+                    if(os.path.islink(theptab)):
+                        #print "is link ", theptab
+                        os.remove(theptab)
+                        shutil.copytree(emptyptab, theptab)
+                        replaced=True
                         
                 outvis = tempout+'/'+os.path.basename(m)
                 print 'Running split_core on ', m
