@@ -965,10 +965,9 @@ def splitant(filename, outprefix='',overwrite=False):
 
     """
     # Import the table toolkit from CASA
-    import casac
+    from casac import casac
     from asap.scantable import is_ms
-    tbtool = casac.homefinder.find_home_by_name('tableHome')
-    tb = tbtool.create()
+    tb = casac.table()
     # Check the input filename
     if isinstance(filename, str):
         import os.path
