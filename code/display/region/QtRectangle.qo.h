@@ -84,7 +84,8 @@ namespace casa {
 		int zIndex( ) const { return Region::zIndex( ); }
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Rectangle::regionCenter( x, y ); }
+		void linearCenter( double &x, double &y ) const { Rectangle::linearCenter( x, y ); }
+		void pixelCenter( double &x, double &y ) const { Rectangle::pixelCenter( x, y ); }
 
 		QtRectangle( QtRegionSourceKernel *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals=false );
 

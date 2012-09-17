@@ -104,7 +104,10 @@ namespace casa {
 		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
 		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
 
-		virtual void regionCenter( double &/*x*/, double &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
+		virtual void linearCenter( double &/*x*/, double &/*y*/ ) const = 0;
+		  // DISPLAY_PURE_VIRTUAL(Region::linearCenter,);
+		virtual void pixelCenter( double &/*x*/, double &/*y*/ ) const = 0;
+		  // DISPLAY_PURE_VIRTUAL(Region::pixelCenter,);
 
 		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
 		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);

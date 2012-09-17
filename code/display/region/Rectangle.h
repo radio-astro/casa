@@ -71,7 +71,8 @@ namespace casa {
 		void resize( double /*width_delta*/, double /*height_delta*/ );
 		bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
-		void regionCenter( double &x, double &y ) const;
+		void linearCenter( double &x, double &y ) const;
+		void pixelCenter( double &x, double &y ) const;
 
 		AnnotationBase *annotation( ) const;
 

@@ -88,7 +88,7 @@ namespace casa {
 	    if(pc==0) return;
 
 	    double center_x, center_y;
-	    regionCenter( center_x, center_y );
+	    linearCenter( center_x, center_y );
 
 	    int x1, y1, x2, y2;
 	    int cx, cy;
@@ -194,7 +194,7 @@ namespace casa {
 		if ( ! wc_->linToWorld(blc, lin)) return region_centers;
 
 		double center_x, center_y;
-		regionCenter( center_x, center_y );
+		linearCenter( center_x, center_y );
 		lin(0) = center_x;
 		lin(1) = center_y;
 		if ( ! wc_->linToWorld(center, lin)) return region_centers;
@@ -322,7 +322,7 @@ namespace casa {
 	    if ( ! wc_->linToWorld(blc, lin)) return region_statistics;
 
 	    double center_x, center_y;
-	    regionCenter( center_x, center_y );
+	    linearCenter( center_x, center_y );
 	    lin(0) = center_x;
 	    lin(1) = center_y;
 	    if ( ! wc_->linToWorld(center, lin)) return region_statistics;

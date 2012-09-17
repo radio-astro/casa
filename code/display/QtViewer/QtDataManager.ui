@@ -18,7 +18,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Load Data -- Viewer</string>
+   <string>Data Manager -- Viewer</string>
   </property>
   <widget class="QWidget" name="bottomWidget_" native="true">
    <property name="geometry">
@@ -1441,8 +1441,8 @@
       <rect>
        <x>350</x>
        <y>240</y>
-       <width>324</width>
-       <height>24</height>
+       <width>341</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="minimumSize">
@@ -1460,8 +1460,8 @@
      <widget class="QRadioButton" name="save_casa_region">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>1</y>
+        <x>7</x>
+        <y>5</y>
         <width>120</width>
         <height>20</height>
        </rect>
@@ -1473,27 +1473,74 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QRadioButton" name="save_ds9_region">
+     <widget class="QFrame" name="frame_5">
       <property name="geometry">
        <rect>
-        <x>150</x>
-        <y>1</y>
-        <width>115</width>
-        <height>20</height>
+        <x>128</x>
+        <y>3</y>
+        <width>209</width>
+        <height>27</height>
        </rect>
       </property>
-      <property name="text">
-       <string>ds9 region file</string>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
       </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <widget class="QRadioButton" name="save_ds9_region">
+       <property name="geometry">
+        <rect>
+         <x>4</x>
+         <y>2</y>
+         <width>115</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>ds9 region file</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="save_ds9_csys">
+       <property name="geometry">
+        <rect>
+         <x>123</x>
+         <y>1</y>
+         <width>80</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>22</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>pixel</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>j2000</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>b1950</string>
+        </property>
+       </item>
+      </widget>
      </widget>
     </widget>
     <widget class="QFrame" name="frame_4">
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>265</y>
+       <y>269</y>
        <width>691</width>
-       <height>41</height>
+       <height>35</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -1506,7 +1553,7 @@
       <property name="geometry">
        <rect>
         <x>6</x>
-        <y>10</y>
+        <y>6</y>
         <width>91</width>
         <height>22</height>
        </rect>
@@ -1519,7 +1566,7 @@
       <property name="geometry">
        <rect>
         <x>98</x>
-        <y>10</y>
+        <y>7</y>
         <width>451</width>
         <height>22</height>
        </rect>
@@ -1531,8 +1578,14 @@
         <x>560</x>
         <y>4</y>
         <width>114</width>
-        <height>32</height>
+        <height>30</height>
        </rect>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>30</height>
+       </size>
       </property>
       <property name="text">
        <string>save</string>
@@ -1543,7 +1596,7 @@
      <property name="geometry">
       <rect>
        <x>95</x>
-       <y>300</y>
+       <y>303</y>
        <width>603</width>
        <height>22</height>
       </rect>

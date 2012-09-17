@@ -114,7 +114,7 @@ namespace casa {
 	    if(pc==0) return;
 
 	    double center_x, center_y;
-	    regionCenter( center_x, center_y );
+	    linearCenter( center_x, center_y );
 
 	    int x, y;
 	    try { linear_to_screen( wc_, blc_x, blc_y, x, y ); } catch(...) { return; }

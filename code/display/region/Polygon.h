@@ -68,7 +68,8 @@ namespace casa {
 		// returns mouse state (Region::MouseState)
 		unsigned int mouseMovement( double x, double y, bool other_selected );
 
-		void regionCenter( double &x, double &y ) const;
+		void linearCenter( double &x, double &y ) const;
+		void pixelCenter( double &x, double &y ) const;
 
 		void closeFigure( bool signal_complete=true );
 		virtual void polygonComplete( ) DISPLAY_PURE_VIRTUAL(Polygon::polyognComplete,);

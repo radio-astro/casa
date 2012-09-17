@@ -93,7 +93,8 @@ namespace casa {
 		QtPolygon( QtRegionSourceKernel *factory, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Polygon::regionCenter( x, y ); }
+		void linearCenter( double &x, double &y ) const { Polygon::linearCenter( x, y ); }
+		void pixelCenter( double &x, double &y ) const { Polygon::pixelCenter( x, y ); }
 
 		// qt-event -> QtRegion -> QtPolygon -> Region::refresh( )
 		void refresh( ) { Polygon::refresh( ); }
