@@ -588,10 +588,12 @@ def tflagdata(vis,
         #      return summary_stats , summary_stats_list;
         # else :
         #      return summary_stats;
+        tb.showcache()
         return summary_stats;
     
     except Exception, instance:
         tflocal.done()
+        tb.showcache()
         casalog.post('%s'%instance,'ERROR')
         raise
         
@@ -610,6 +612,7 @@ def tflagdata(vis,
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                          'WARN')
         
+    tb.showcache()
     return
 
 
