@@ -544,12 +544,13 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
             if 'SORTED_TABLE' in mytbtool.keywordnames():
                 mytbtool.removekeyword('SORTED_TABLE')
                 mytbtool.close()
-                for thesubms in submslist:
-                    mytbtool.open(outputvis+'/SUBMSS/'+os.path.basename(thesubms), nomodify=False)
-                    if 'SORTED_TABLE' in mytbtool.keywordnames():
-                        mytbtool.removekeyword('SORTED_TABLE')
-                        mytbtool.close()
-            # else: assume that if the MMS header doesn't have the keyword, the submss don't have it either
+            for thesubms in submslist:
+                mytbtool.open(outputvis+'/SUBMSS/'+os.path.basename(thesubms), nomodify=False)
+                if 'SORTED_TABLE' in mytbtool.keywordnames():
+                    tobedel = mytbtool.getkeyword('SORTED_TABLE').split(' ')[1]
+                    mytbtool.removekeyword('SORTED_TABLE')
+                    os.system('rm -rf '+tobedel)
+                mytbtool.close()
         except:
             mytbtool.close()
             raise
