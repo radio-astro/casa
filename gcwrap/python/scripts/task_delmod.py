@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def delmod(vis=None,otf=None,scr=None):
+def delmod(vis=None,otf=None,field=None,scr=None):
 
         casalog.origin('delmod')
 
@@ -19,11 +19,10 @@ def delmod(vis=None,otf=None,scr=None):
 		# only if vis exists...
 		if ((type(vis)==str) & (os.path.exists(vis))):
 			# ... and we are asked to do something...
-			if (otf | scr):
-				# open without adding anything!
-				cb.open(vis,addcorr=False,addmodel=False)
-				cb.delmod(otf,scr)
-				cb.close()
+			# open without adding anything!
+			cb.open(vis,addcorr=False,addmodel=False)
+			cb.delmod(otf,field,scr)
+			cb.close()
 		else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 

@@ -17,10 +17,27 @@
 		<description>Delete the on-the-fly model data keywords</description>
 		<value>True</value>
 	</param>
+
+        <param type="string" name="field" subparam="true">
+                <description>Select field using field id(s) or field name(s)</description>
+                <value></value>
+        </param>
+
 	<param type="bool" name="scr">
 		<description>Delete the MODEL_DATA scr col (if it exists)</description>
 		<value>False</value>
 	</param>
+
+   <constraints>
+        <when param="otf">
+                <equals type="bool" value="True">
+                        <default param="field"><value type="string"/></default>
+                </equals>
+                <equals type="bool" value="False"/>
+        </when>
+   </constraints>
+
+
 
 	</input>
 <returns type="void"/>
@@ -41,8 +58,18 @@
       usescratch=T in setjy, ft, or clean; or by running the
       clearcal task with addmodel=T.)
 
+      If otf=T, specific fields can be selected for deletion
+      using standard field selection semantics.  If field='',
+      all fields' models will be deleted.
+
       For convenience, this method also provides a means for
-      deleting the MODEL_DATA column by setting scr=T.  
+      deleting the MODEL_DATA column by setting scr=T.  Note
+      that it is not possible to delete the MODEL_DATA column
+      per field.
+
+      If otf=F and scr=F, delmod will provide a listing
+      of the header field records.
+
 
  </example>
  </task>
