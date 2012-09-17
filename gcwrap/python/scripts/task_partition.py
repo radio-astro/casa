@@ -63,9 +63,13 @@ class PartitionHelper(ParallelTaskHelper):
             mytb.open(self.ptab)
             self.pointingisempty = (mytb.nrows()==0)
             mytb.close()
-            mytb.open(self.stab)
-            self.syscalisempty = (mytb.nrows()==0)
-            mytb.close()
+            
+            if(os.path.exists(self.stab)): # syscal is optional
+                mytb.open(self.stab)
+                self.syscalisempty = (mytb.nrows()==0)
+                mytb.close()
+            else:
+                self.syscalisempty = True
 
             if not self.pointingisempty:
                 # move to datadir
