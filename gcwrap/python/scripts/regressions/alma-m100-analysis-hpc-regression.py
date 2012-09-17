@@ -17,7 +17,7 @@
 
 # alma-m100-analysis-hpc-regression.py
 # An ALMA Science Verification Data Analysis Regression
-# using observations of M100 from September 2011 and parallelisation
+# using observations of M100 from September 2011 and _parallelisation_
 
 
 step_title = { 0 : 'Data import and partitioning',
@@ -294,7 +294,6 @@ if(mystep in thesteps):
                      gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
                      flagbackup=F)
 
-            tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
     timing()
 
@@ -595,7 +594,6 @@ if(mystep in thesteps):
 	        gainfield=['*Band*','*Band*','*Band*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the secondary phase cal
 	applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
@@ -604,7 +602,6 @@ if(mystep in thesteps):
        	 	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the primary phase cal
 	applycal(vis=name+'-line-vs.ms',field='1224*',
@@ -613,7 +610,6 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to Titan
         applycal(vis=name+'-line-vs.ms',field='Titan',
@@ -622,7 +618,6 @@ if(mystep in thesteps):
                  gainfield=['*Band*','Titan','Titan'],
                  calwt=F,
                  flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to M100
 	applycal(vis=name+'-line-vs.ms',field='M100',
@@ -631,7 +626,6 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 
 # For X146 the calibrated fluxes for the secondary phase cal are different for the different pols. What
@@ -734,7 +728,8 @@ if(mystep in thesteps):
     os.system('rm -rf M100all.ms*')
     virtualconcat(vis=['X54-calibrated.ms', 'X220-calibrated.ms'],
                   concatvis='M100all.ms',
-                  copypointing=False # need to add copypointing to virtualconcat!
+                  copypointing=False,
+                  keepcopy=False # set this to True to keep a copy of the input (takes time)
                   )
 
     timing()
@@ -749,7 +744,7 @@ if(mystep in thesteps):
     split(vis='M100all.ms', outputvis='M100all_lores.ms',
           datacolumn='data',
           timebin='60s',
-          keepmms=True # need to enable timeaveraging in split! 
+          keepmms=True 
           )
 
     timing()
