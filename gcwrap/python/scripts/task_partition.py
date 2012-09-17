@@ -617,6 +617,5 @@ def partition(vis,
     except Exception, instance:
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
-        
-    tb.showcache()
+
     return True
