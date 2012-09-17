@@ -80,17 +80,46 @@ void EGainCurve::setApply(const Record& applypar) {
   }
 
   if (usertab=="") {
+
+    { ostringstream o;
+      o<< "Invoking gaincurve application without a caltable (e.g., " << endl
+       << " via gaincurve=T in calibration tasks) will soon be disabled." << endl
+       << " Please begin using gencal to generate a gaincurve caltable, " << endl
+       << " and then supply that table in the standard manner." << endl;
+      message.message(o);
+      message.priority(LogMessage::WARN);
+      logSink().post(message);
+      logSink().
+    }
+
+    String tempname="temporary.gaincurve";
+
     // Generate automatically via specify mechanism
-    setSpecify(applypar);
-    specify(applypar);
-    calTableName()="tempGC";
+    Record specpar;
+    specpar.define("caltable",tempname);
+    specpar.define("caltype","gc");
+    setSpecify(specpar);
+    specify(specpar);
     storeNCT();
-    delete ct_; ct_=NULL;
+    delete ct_; ct_=NULL;  // so we can form it in the standard way...
+
+    // Load the caltable for standard apply
     Record newapplypar=applypar;
-    newapplypar.define("table","tempGC");
+    newapplypar.define("table",tempname);
     SolvableVisCal::setApply(newapplypar);
+
+    // Delete the temporary gaincurve disk table (in-mem copy still ok)
+    if (calTableName()==tempname &&
+	Table::canDeleteTable(calTableName()) ) {
+      Table::deleteTable(calTableName());
+    }
+
+    // Revise name that will appear in log messages, etc.
+    calTableName()="<"+tempname+">";
+
   }
   else
+    // Standard apply via table
     SolvableVisCal::setApply(applypar);
 
   // Resize za()
@@ -288,14 +317,14 @@ void EGainCurve::specify(const Record& specify) {
 	    piter.array().nonDegenerate().reform(nomgain.shape())=nomgain;
 	  }
 
-
+  /*
 	  { ostringstream o;
 	    o<< "   Antenna=" << antnames_(iant) << ": "
 	     << piter.array().nonDegenerate();
 	    message.message(o);
 	    logSink().post(message);
 	  }
-
+  */
 	}
 	
 	spwOK_(currSpw())=True;
