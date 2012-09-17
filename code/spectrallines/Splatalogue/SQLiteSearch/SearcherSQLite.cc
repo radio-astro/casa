@@ -268,7 +268,7 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 		query.append( SPECIES_COLUMN );
 		query.append( IN );
 		query.append( OPEN_PAREN );
-		for (uint i=0; i<speciesNames.size(); i++) {
+		for (unsigned int i=0; i<speciesNames.size(); i++) {
 			query.append( SINGLE_QUOTE );
 			query.append( speciesNames[i] );
 			query.append( SINGLE_QUOTE );
@@ -298,7 +298,7 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 		query.append( CHEMICAL_NAME_COLUMN );
 		query.append( IN );
 		query.append( OPEN_PAREN );
-		for (uint i=0; i<chemicalNames.size(); i++) {
+		for (unsigned int i=0; i<chemicalNames.size(); i++) {
 			query.append( SINGLE_QUOTE );
 			query.append( chemicalNames[i] );
 			query.append( SINGLE_QUOTE );
