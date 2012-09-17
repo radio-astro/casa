@@ -352,18 +352,21 @@ ms::fromfits(const std::string& msfile, const std::string &fitsfile,
 	     const std::string& antnamescheme)
 {
   try {
-    *itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
+    *itsLog << LogOrigin("ms", "fromfits")
+            << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
     String namescheme(antnamescheme);
     namescheme.downcase();
     MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
     msfitsin.readFitsFile(obstype);
-    *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile 
+    *itsLog << LogOrigin("ms", "fromfits")
+            << LogIO::NORMAL3 << "Flushing MS " << msfile 
             << " to disk" << LogIO::POST;
 
 
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
-       //*itsLog << LogIO::SEVERE << "Exception Reported: " 
+       //*itsLog << LogOrigin("ms", "fromfits") 
+       //        << LogIO::SEVERE << "Exception Reported: " 
        //        << x.getMesg() << LogIO::POST;
        RETHROW(x);
   }
@@ -490,7 +493,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
          }
          catch (AipsError x) {
              Table::relinquishAutoLocks(True);
-             *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+             *itsLog << LogOrigin("ms", "tofits") 
+                     << LogIO::SEVERE << x.getMesg() << LogIO::POST;
              RETHROW(x);
          }
 	 Vector<Int>fldids=selrec.asArrayInt("field");
@@ -523,13 +527,14 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     if(!mssel)
 	       delete mssel; 
 	     mssel=0;
-	     *itsLog << LogIO::WARN
+	     *itsLog << LogIO::WARN << LogOrigin("ms", "tofits")
 		     << "No data for selection: will convert full MeasurementSet"
 		     << LogIO::POST;
 	     mssel=new MeasurementSet(*itsMS);
 	   } 
 	   else{
-           *itsLog << "By selection " << itsMS->nrow()
+           *itsLog << LogOrigin("ms", "summary")
+                   << "By selection " << itsMS->nrow()
                   <<  " rows to be converted are reduced to "
                   << mssel->nrow() << LogIO::POST;
 	   }
@@ -540,14 +545,15 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     delete mssel; 
            mssel = new MeasurementSet(*itsMS);
          }
-
          MeasurementSet selms(*mssel);
-         //cout << "inchan=" << inchan << " istart=" << istart << " istep=" << istep << endl; 
+         //cout << "inchan=" << inchan << " istart=" << istart 
+         //       << " istep=" << istep << endl; 
          if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
-                                          inchan, istep, writesyscal,
-                                          multisource, combinespw,
-                                          writestation, 1.0, padwithflags, iwidth)) {
-           *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
+                                       inchan, istep, writesyscal,
+                                       multisource, combinespw,
+                                       writestation, 1.0, padwithflags, iwidth)) {
+           *itsLog << LogOrigin("ms", "tofits") 
+                   << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
          }
 
@@ -556,7 +562,9 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	   delete mssel;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogOrigin("ms", "tofits") 
+               << LogIO::SEVERE << "Exception Reported: " 
+               << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
