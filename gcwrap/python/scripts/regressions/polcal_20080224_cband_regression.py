@@ -444,7 +444,7 @@ if ( myquackinterval > 0.0 ):
     # First quack the data
     #
     print '--Flagdata (scan starts)--'
-    default('flagdata')
+    default('tflagdata')
     
     print "Quacking scan beginnings using interval "+str(myquackinterval)
     
@@ -456,8 +456,8 @@ if ( myquackinterval > 0.0 ):
     mode = 'quack'
     quackinterval = myquackinterval
     
-    saveinputs('flagdata',prefix+'.flagdata.quack.saved')
-    flagdata()
+    saveinputs('tflagdata',prefix+'.tflagdata.quack.saved')
+    tflagdata()
     
     #
     # Use Flagmanager to save a copy of the flags so far
@@ -478,7 +478,7 @@ if ( myquackinterval > 0.0 ):
 #
 if (flagants != '' and not flagants.isspace() ):
     print '--Flagdata (antennas)--'
-    default('flagdata')
+    default('tflagdata')
     
     print "Flag all data to AN "+flagants
     
@@ -486,11 +486,11 @@ if (flagants != '' and not flagants.isspace() ):
     correlation = ''
     field = ''
     spw = usespw
-    mode = 'manualflag'
+    mode = 'manual'
     antenna = flagants
     
-    saveinputs('flagdata',prefix+'.flagdata.ants.saved')
-    flagdata()
+    saveinputs('tflagdata',prefix+'.tflagdata.ants.saved')
+    tflagdata()
     
     #
     # Use Flagmanager to save a copy of the flags so far
@@ -512,7 +512,7 @@ flagtimes = '19:06:50~19:06:57,19:21:17~19:21:20'
 #
 if (flagtimes != '' and not flagtimes.isspace() ):
     print '--Flagdata (timerange)--'
-    default('flagdata')
+    default('tflagdata')
     
     print "Flag timeranges "+flagtimes
     
@@ -520,12 +520,12 @@ if (flagtimes != '' and not flagtimes.isspace() ):
     correlation = ''
     field = ''
     spw = usespw
-    mode = 'manualflag'
+    mode = 'manual'
     antenna = ''
     timerange = flagtimes
     
-    saveinputs('flagdata',prefix+'.flagdata.times.saved')
-    flagdata()
+    saveinputs('tflagdata',prefix+'.tflagdata.times.saved')
+    tflagdata()
     
     #
     # Use Flagmanager to save a copy of the flags so far
@@ -1732,7 +1732,7 @@ if benchmarking:
     print >>logfile,'* Breakdown:                           *'
     print >>logfile,'*   import       time was: '+str(import2time-startTime)
     print >>logfile,'*   listobs      time was: '+str(list2time-import2time)
-    print >>logfile,'*   flagdata     time was: '+str(flag2time-list2time)
+    print >>logfile,'*   tflagdata     time was: '+str(flag2time-list2time)
     print >>logfile,'*   setjy        time was: '+str(setjy2time-flag2time)
     print >>logfile,'*   gaincal      time was: '+str(gaincal2time-setjy2time)
     print >>logfile,'*   listcal(G)   time was: '+str(listgcal2time-gaincal2time)

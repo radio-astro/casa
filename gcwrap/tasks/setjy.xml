@@ -110,6 +110,7 @@
 			<value>Perley-Butler 2010</value>
 			<allowed kind="enum">
 			<value>Perley-Butler 2010</value>
+			<value>Perley-Butler 2013</value>
 			<value>Perley-Taylor 99</value>
 			<value>Baars</value>
 			<value>Perley 90</value>
@@ -148,6 +149,7 @@
                   </when>
                   <when param="standard">
                   <equals type="string" value="Perley-Butler 2010"/>
+                  <equals type="string" value="Perley-Butler 2013"/>
 		  <equals type="string" value="Perley-Taylor 99"/>
 	          <equals type="string" value="Baars"/>
 	          <equals type="string" value="Perley 90"/>

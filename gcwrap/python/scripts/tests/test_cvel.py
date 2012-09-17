@@ -613,8 +613,9 @@ class cvel_test(unittest.TestCase):
             outputvis = outfile,
             mode="channel_b"
             )
+        
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 2443, 0)
+        ret = verify_ms(outfile, 1, 2425, 0)
         self.assertTrue(ret[0],ret[1])
     
     def test31(self):
@@ -906,7 +907,7 @@ class cvel_test(unittest.TestCase):
             outputvis = outfile,
             mode='channel',
             spw='1,15',
-            start = 199,
+            start = 198,
             width = 3,
             phasecenter = "J2000 18h25m56.09 -12d04m28.20"
             )

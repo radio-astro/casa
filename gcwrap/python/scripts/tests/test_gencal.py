@@ -4,8 +4,9 @@ import shutil
 import commands
 import numpy
 import numpy.ma as ma
+import testhelper as th
 from __main__ import default
-from tasks import *
+from tasks import gencal
 from taskinit import *
 import unittest
 
@@ -21,6 +22,7 @@ Unit tests for gencal
 # 
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/gencal/'
+
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
 if os.environ.has_key('TEST_DATADIR'):   
@@ -38,7 +40,11 @@ class gencal_antpostest(unittest.TestCase):
 
     # Input and output names
     msfile = 'tdem0003gencal.ms'
+    if testmms:
+        msfile = 'tdem0003gencal.mms'
     caltable = 'anpos.cal'
+    reffile1 = datapath+'anpos.manual.cal'
+    reffile2 = datapath+'anpos.auto.cal'
     res = False
 
     def setUp(self):
@@ -66,7 +72,10 @@ class gencal_antpostest(unittest.TestCase):
         self.assertTrue(os.path.exists(self.caltable))
 
         # ToDo:check generated caltable. Wait for new caltable
-
+        
+        # Compare with reference file from the repository
+        reference = self.reffile1
+        self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT']))
 
     def test_antpos_auto(self):
         """
@@ -87,6 +96,10 @@ class gencal_antpostest(unittest.TestCase):
           self.assertTrue(os.path.exists(self.caltable))
           
           # ToDo: check for generated caltable
+          
+          # Compare with reference file from the repository
+          reference = self.reffile2
+          self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT']))
 
         except urllib2.URLError, err:
           print "Cannot access %s , skip this test" % evlabslncorrURL

@@ -1,6 +1,27 @@
 class par(str):
 
         @staticmethod
+        def acaconfig():
+                """
+                Antenna configuration of ACA 7-m array [''|'cycle1'|'i'|'ns']
+                Available configurations are:
+                * '' (default) : automatically defines based on antennalist. 
+                                 If antennalist is Cycle-1 configuration, acaconfig='cycle1'.
+                                 Otherwise, acaconfig='i'
+                * 'cycle1' : Cycle-1 ACA-7m configuration. Uses 'aca_cycle1.cfg'.
+                * 'i' : Normal ACA configuration in full operation. Uses 'aca.i.cfg'.
+                * 'ns': North-South extended configuration in full operation. Uses 'aca.ns.cfg'.
+                """
+
+        @staticmethod
+        def acaratio():
+                """
+                Ratio of the total observation time of ACA relative to that of 12m array.
+                Set 0 for no ACA observation. 
+                For Cycle-1 with ACA, set acaratio = 3.
+                """
+
+        @staticmethod
         def accumtime():
                 """ Cumulative table timescale when creating from scratch. This is the sampling
                 interval upon which to accumulate *if* an input calibration table (tablein)
@@ -321,10 +342,10 @@ class par(str):
 
 	        -----------------------------------------------------
 
-		(for simdata)
+		(for simanalyze)
 		cell -- output cell/pixel size
-		default: '0.1arcsec'
-	        example: 'incell'    #uses incell value for the output cell size
+		default: ''  # uses incell value for the output cell size
+	        example: '0.1arcsec'
 		
 	        -----------------------------------------------------
 
@@ -647,12 +668,12 @@ class par(str):
 
 		---------------------------------------------
 
-		(for simdata)
+		(for simobserve)
 		direction -- center of map or "" to center on the model
 		* can optionally be a list of pointings, which will override
 		pointingspacing. When direction is a list, the centroid of
 		direction will be used as the center.
-		* otherwise simdata will pack mapsize according to maptype
+		* otherwise simobserve will fill mapsize according to maptype
 		default: ""
 		example: 'J2000 19h00m00 -40d00m00'
 		"""
@@ -1174,7 +1195,7 @@ class par(str):
 	@staticmethod
 	def inbright():
 		"""
-		(for simdata)
+		(for simobserve)
 		inbright -- peak surface brightness to scale input image
 		in Jy/pixel.
 		default: 'unchanged'
@@ -1183,14 +1204,6 @@ class par(str):
 		numerical values in your image and assume they are in Jy/pixel,
 		even if it says some other unit in the header. This will be made
 		more flexible in the future.
-
-		----------------------------------------------------------------
-		
-		(for simdata)
-		inbright -- peak surface brightness to scale input image
-		in Jy/square arcsec.
-		options: 'default' or surface brightness in Jy/sq.arcsec.
-		default: 'default'
 		"""
 
 	@staticmethod
@@ -2222,6 +2235,13 @@ class par(str):
             default: 'tsys'
 		"""
 
+	@staticmethod
+	def pwv():
+		"""
+		precipitable water vapor if constructing an atmospheric model.
+		Set 0 for noise-free simulation.
+		"""
+		
 	@staticmethod
 	def quackinterval():
 		"""

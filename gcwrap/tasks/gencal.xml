@@ -24,7 +24,7 @@
 		</param>
 
 		<param type="string" name="caltype">
-			<description>The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\', \'antpos\',\'antposvla\', \'tsys\',\'evlagain\'</description>
+			<description>The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\'</description>
 			<value></value>
                         <allowed kind="enum">
                             <value>amp</value>
@@ -35,6 +35,10 @@
                             <value>antposvla</value>
                             <value>tsys</value>
                             <value>evlagain</value>
+                            <value>opac</value>
+                            <value>gc</value>
+                            <value>gceff</value>
+                            <value>eff</value>
                         </allowed>
 		</param>
 
@@ -64,7 +68,8 @@
 
      The gencal task provides a means of specifying antenna-based
      calibration values manually.  The values are put in designated
-     tables and applied to the data using applycal.
+     tables and applied to the data using applycal.  Several
+     specialized calibrations are also generated with gencal.
 
      Current antenna-based gencal options (caltype) are:
         'amp'= amplitude correction
@@ -75,6 +80,10 @@
         'antposvla' = VLA-centric antenna position corrections 
         'tsys' = Tsys from the SYSCAL table (ALMA)
         'evlagain' = EVLA switched-power gains (experimental)
+        'opac' = Tropospheric opacity
+        'gc' = Gain curve (zenith-angle-dependent gain) (VLA only)
+        'eff' = Antenna efficiency (sqrt(K/Jy)) (VLA only)
+        'gceff' = Gain curve and efficiency (VLA only)
 
      The calibration specifications are not time-variable in the
      present implementation.  Calibration values can be assigned to
@@ -107,6 +116,15 @@
      cases, specification of spw, antenna, pol, and parameter will be
      ignored.
 
+     For caltype='opac', specify the desired opacity(ies) in the parameter
+     argument.  At this time, only constant (in time) opacities are
+     supported via gencal.  
+
+     For gaincurve and efficiency (caltype='gc', 'gceff', or 'eff'), 
+     observatory-provided factors are determined per spw according
+     to the observing frequencies.  The parameter argument is 
+     ignored.  These caltypes are currently only supported
+     for VLA processing.  (Appropriate factors for ALMA are TBD.)
 
      Keyword arguments:
 
@@ -139,6 +157,11 @@
                                in the old VLA-centric coordinate system
                  'tsys' = Tsys from the SYSCAL table (ALMA)
                  'evlagain' = EVLA switched-power gains (experimental)
+                 'opac' = Tropospheric opacity (1 real parameter 
+                         per antenna, spw)
+                 'gc' = Antenna zenith-angle dependent gain curve (auto-lookup)
+                 'gceff' = Gain curve and efficiency (auto-lookup)
+                 'eff' = Antenna efficiency (auto-lookup)
                  default: none.
                  example: caltype='ph'
      spw -- Spectral window selection for specified parameters. 

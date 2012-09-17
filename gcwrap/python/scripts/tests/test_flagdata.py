@@ -628,12 +628,16 @@ class test_selections2(test_base):
         # integer
         flagdata(vis=self.vis, unflag=True)
         flagdata(vis=self.vis, observation=1)
-        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 28500)
+        self.assertEqual(res['total'], 2882778)
         
         # non-existing ID
         flagdata(vis=self.vis, unflag=True)
-        flagdata(vis=self.vis, observation='10')
-        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 0)
+        flagdata(vis=self.vis, observation='3')
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['total'], 2882778)
                 
 
 # Dummy class which cleans up created files

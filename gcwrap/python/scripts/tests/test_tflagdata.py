@@ -820,6 +820,7 @@ class test_selections2(test_base):
         
         # non-existing ID
         tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        tflagdata(vis=self.vis, observation='10', savepars=False)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0)
         self.assertEqual(res['total'], 2882778)

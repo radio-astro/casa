@@ -352,18 +352,21 @@ ms::fromfits(const std::string& msfile, const std::string &fitsfile,
 	     const std::string& antnamescheme)
 {
   try {
-    *itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
+    *itsLog << LogOrigin("ms", "fromfits")
+            << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
     String namescheme(antnamescheme);
     namescheme.downcase();
     MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
     msfitsin.readFitsFile(obstype);
-    *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile 
+    *itsLog << LogOrigin("ms", "fromfits")
+            << LogIO::NORMAL3 << "Flushing MS " << msfile 
             << " to disk" << LogIO::POST;
 
 
     open(msfile, nomodify, lock);
   } catch (AipsError x) {
-       //*itsLog << LogIO::SEVERE << "Exception Reported: " 
+       //*itsLog << LogOrigin("ms", "fromfits") 
+       //        << LogIO::SEVERE << "Exception Reported: " 
        //        << x.getMesg() << LogIO::POST;
        RETHROW(x);
   }
@@ -490,7 +493,8 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
          }
          catch (AipsError x) {
              Table::relinquishAutoLocks(True);
-             *itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+             *itsLog << LogOrigin("ms", "tofits") 
+                     << LogIO::SEVERE << x.getMesg() << LogIO::POST;
              RETHROW(x);
          }
 	 Vector<Int>fldids=selrec.asArrayInt("field");
@@ -523,13 +527,14 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     if(!mssel)
 	       delete mssel; 
 	     mssel=0;
-	     *itsLog << LogIO::WARN
+	     *itsLog << LogIO::WARN << LogOrigin("ms", "tofits")
 		     << "No data for selection: will convert full MeasurementSet"
 		     << LogIO::POST;
 	     mssel=new MeasurementSet(*itsMS);
 	   } 
 	   else{
-           *itsLog << "By selection " << itsMS->nrow()
+           *itsLog << LogOrigin("ms", "summary")
+                   << "By selection " << itsMS->nrow()
                   <<  " rows to be converted are reduced to "
                   << mssel->nrow() << LogIO::POST;
 	   }
@@ -540,14 +545,15 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	     delete mssel; 
            mssel = new MeasurementSet(*itsMS);
          }
-
          MeasurementSet selms(*mssel);
-         //cout << "inchan=" << inchan << " istart=" << istart << " istep=" << istep << endl; 
+         //cout << "inchan=" << inchan << " istart=" << istart 
+         //       << " istep=" << istep << endl; 
          if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
-                                          inchan, istep, writesyscal,
-                                          multisource, combinespw,
-                                          writestation, 1.0, padwithflags, iwidth)) {
-           *itsLog << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
+                                       inchan, istep, writesyscal,
+                                       multisource, combinespw,
+                                       writestation, 1.0, padwithflags, iwidth)) {
+           *itsLog << LogOrigin("ms", "tofits") 
+                   << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
            rstat = False;
          }
 
@@ -556,7 +562,9 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 	   delete mssel;
      }
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       *itsLog << LogOrigin("ms", "tofits") 
+               << LogIO::SEVERE << "Exception Reported: " 
+               << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
    }
@@ -2086,7 +2094,7 @@ ms::putdata(const ::casac::record& items)
 
 bool
 ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, 
-		const int handling, const std::string& destmsfile)
+		const int handling, const std::string& destmsfile, const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2123,6 +2131,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.setWeightScale(weightscale);
 	    mscat.concatenate(appendedMS, static_cast<uint>(handling), destmsfile);
 
@@ -2131,6 +2140,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    param << "msfile='" << msfile
 		  << "' freqTol='" << casaQuantity(freqtol) 
 		  << "' dirTol='" << casaQuantity(dirtol) 
+		  << "' respectname='" << respectname 
 		  << "' handling= " << handling
 		  << " destmsfile='" << destmsfile << "'";
 	    String paramstr=param.str();
@@ -2148,7 +2158,8 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 }
 
 bool
-ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
+ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol,
+		    const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2182,13 +2193,14 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.concatenate(appendedMS, 3); // 3 meaning "don't concatenate Main and Pointing table"
 
 	    String message = "Subtables from "+String(msfile) + " appended to those from " + itsMS->tableName();
 	    ostringstream param;
 	    param << "msfile= " << msfile
 		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
-		  << casaQuantity(dirtol) << "'";
+		  << casaQuantity(dirtol) << "'" << "' respectname='" << respectname;
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::testconcatenate()"), msfile, "ms");
@@ -2206,7 +2218,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 
 bool
 ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const ::casac::variant& freqtol, 
-		    const ::casac::variant& dirtol, const float weightscale)
+		    const ::casac::variant& dirtol, const float weightscale, const bool respectname)
 {
     Bool rstat(False);
     try {
@@ -2242,6 +2254,7 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setRespectForFieldName(respectname);
 	    mscat.setWeightScale(weightscale);
 
 	    mscat.virtualconcat(appendedMS, True, casa::String(auxfile));
@@ -2250,7 +2263,8 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 	    ostringstream param;
 	    param << "msfile='" << msfile
 		  << "' freqTol='" << casaQuantity(freqtol) 
-		  << "' dirTol='" << casaQuantity(dirtol) << "'";
+		  << "' dirTol='" << casaQuantity(dirtol) 
+		  << "' respectname='" << respectname << "'";
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::virtconcatenate()"), msfile, "ms");

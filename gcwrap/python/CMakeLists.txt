@@ -132,6 +132,7 @@ scripts/task_listpartition.py
 scripts/task_listsdm.py
 scripts/task_listvis.py
 scripts/taskmanager.py
+scripts/task_makemask.py 
 scripts/task_mosaic.py
 scripts/task_msmoments.py
 scripts/task_oldflagcmd.py
@@ -167,7 +168,6 @@ scripts/task_sdtpimaging.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py
-scripts/task_simdata.py
 scripts/task_simobserve.py
 scripts/task_simanalyze.py
 scripts/task_slsearch.py
@@ -190,6 +190,7 @@ scripts/task_msview.py
 scripts/task_imview.py
 scripts/task_vishead.py
 scripts/task_visstat.py
+scripts/task_widebandpbcor.py
 scripts/task_widefield.py
 scripts/TerminalController.py
 scripts/tget.py

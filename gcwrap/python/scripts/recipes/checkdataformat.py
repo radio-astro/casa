@@ -46,7 +46,7 @@ def dataformat(dataname):
                              isCASAimage=True
                              dataformat = "CASA image"
                          elif tb.colnames()=='map' and \
-                           any([k=='coords' for k in tb.colkeywordnames()]):
+                           any([k=='coords' for k in tb.keywordnames()]):
                              isCASAimage=True
                              dataformat ="CASA image" 
 

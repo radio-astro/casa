@@ -56,6 +56,8 @@ class simple_cluster:
         if not 'procCluster' in myf.keys():
             sc = simple_cluster()
             sc.init_cluster()
+            #sc.stop_cluster()
+            #sc.start_cluster()
         return myf['procCluster']
     
     ###########################################################################
@@ -123,37 +125,34 @@ class simple_cluster:
             # Retrieve available resources to cap number of engines deployed 
             hostname = str(xyzd[0])
             (ncores_available,memory_available,cpu_available) = self.check_host_resources(hostname)
-            max_mem = memory_available 
-            max_engines = ncores_available
-            
-            # Compute equivalent number of cores idle
-            ncores_available = int(round(ncores_available*cpu_available/100.0))
-            
+
             # Determine maximum number of engines that can be deployed at target node
             max_engines_user = b
             if (max_engines_user<=0):
-                max_engines = ncores_available * 0.9 # leave 10% to keep the machine operable
-            elif (max_engines_user<=1):
-                max_engines = int(round(max_engines_user*ncores_available))
+                max_engines = int(0.9*(cpu_available/100.0)*ncores_available)
                 if (max_engines < 2):
-                    casalog.post("CPU free capacity available s% would not support cluster mode at node %s, starting only 1 engine" 
-                                 % (str(cpu_available),hostname),'WARNING')
-                    max_engines = 1
+                    casalog.post("CPU free capacity available %s of %s cores would not support cluster mode at node %s, starting only 1 engine" 
+                                 %(str(cpu_available),str(ncores_available),hostname),'WARNING')
+                    max_engines = 1                
+            elif (max_engines_user<=1):
+                max_engines = int(max_engines_user*ncores_available)
             else:
-                max_engines = max_engines_user
-
-            max_engines = int(max_engines)                
+                max_engines = int(max_engines_user)
+            
             casalog.post("Will deploy up to %s engines at node %s" % (str(max_engines),hostname))
             
             # Determine maximum memory that can be used at target node
             if len(xyzd)>=4:
                 max_mem_user = float(xyzd[3])
                 if (max_mem_user<=0):
-                    max_mem = memory_available * 0.9 # leave 10% to keep the machine operable
+                    max_mem = int(round(0.9*memory_available))
                 elif (max_mem_user<=1):
                     max_mem = int(round(max_mem_user*memory_available))
                 else:
-                    max_mem = max_mem_user
+                    max_mem = int(max_mem_user)
+            else:
+                max_mem = int(round(0.9*memory_available))
+                    
                     
             casalog.post("Will use up to %sMB of memory at node %s" % (str(max_mem),hostname))
             
@@ -165,7 +164,7 @@ class simple_cluster:
                     mem_per_engine = mem_per_engine_user
             
             # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
-            nengines=int(round(max_mem/mem_per_engine))
+            nengines=int(max_mem/mem_per_engine)
             if (nengines < 2):
                 casalog.post("Free memory available %sMB would not support cluster mode at node %s, starting only 1 engine"
                              % (str(max_mem),hostname), 'WARNING')
@@ -261,13 +260,13 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass            
             
-            cmd_memory = "ssh -q " + hostname + " 'vm_stat | grep free' "
+            cmd_memory = "ssh -q " + hostname + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
             str_memory = commands.getoutput(cmd_memory)
-            str_memory = string.replace(str_memory,"Pages free:","")
-            str_memory = string.replace(str_memory,"kB","")
+            str_memory = string.replace(str_memory,"M free.","")
+            str_memory = string.replace(str_memory," ","")
 
             try:
-                memory = (float(str_memory)*4096.)/(1024*1024)
+                memory = float(str_memory)
             except:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                 pass
@@ -791,7 +790,6 @@ class simple_cluster:
         if not self._configdone:
             return
         while self._resource_on:
-            time.sleep(5)
             self.check_resource()
         self._resource_running=False
     
@@ -1191,9 +1189,12 @@ class simple_cluster:
                             x=job.get_result(block=False)
                         except client.CompositeError, exception:
                             if notify and self._jobs[job]['status']=="scheduled":
-                                print 'engine %d job %s broken: %s' % (eng, sht, str(exception))
-                                print 'backtrace: %s' % (exception.print_tracebacks())
+                                print 'Error retrieving result of job %s from engine %s: %s, backtrace:' % (sht,str(eng),str(exception))
+                                exception.print_tracebacks()
                             self._jobs[job]['status']="broken"
+                        except:
+                            print 'Error retrieving result of job %s from engine %s, backtrace:' % (sht,str(eng))
+                            traceback.print_tb(sys.exc_info()[2])
 
                         if x==None:
                             cmd=self._jobs[job]['command']
@@ -1214,8 +1215,7 @@ class simple_cluster:
                             #print 'x=', x
                             if self._jobs[job]['status']=="running":
                                 if notify:
-                                    # jagonzal: There was a bug here, it was printing 'finished' instead of 'running'
-                                    print 'engine %d job %s running' % (eng, sht)
+                                    print 'engine %d job %s finished' % (eng, sht)
                                 self._jobs[job]['status']="done"
                             if self._jobs[job]['status']=="scheduled":
                                 if isinstance(x, int):

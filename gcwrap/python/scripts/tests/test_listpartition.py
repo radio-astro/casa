@@ -79,19 +79,14 @@ class test_MS(test_base):
     def setUp(self):
         self.setUp_MSdata()
              
-
-    def testMS1(self):
-        '''listpartition MS1: Default values'''
-        res = listpartition()
-        self.assertFalse(res,'Default parameters should return False')
         
-    def testMS2(self):
-        '''listpartition MS2: Input MS'''
+    def testMS1(self):
+        '''listpartition MS1: Input MS'''
         res = listpartition(vis=self.vis)
         self.assertEqual(res, {}, "It should return an empty dictionary")
                     
-    def testMS3(self):
-        '''listpartition MS3: Save to a file'''
+    def testMS2(self):
+        '''listpartition MS2: Save to a file'''
         output = 'listpartitionms.txt'
         if os.path.exists(output):
             os.system('rm -rf '+output)
@@ -100,8 +95,8 @@ class test_MS(test_base):
         self.assertTrue(os.path.exists(output), 'Output file does not exist')
         
                 
-    def testMS4(self):
-        '''listpartition MS4: Create an output dictionary'''
+    def testMS3(self):
+        '''listpartition MS3: Create an output dictionary'''
 
         resdict = listpartition(vis=self.vis, createdict=True)
         

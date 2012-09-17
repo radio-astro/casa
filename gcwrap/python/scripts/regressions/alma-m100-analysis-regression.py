@@ -252,6 +252,8 @@ if(mystep in thesteps):
 		       averagedata=T, avgchannel='4000', coloraxis='field',
 		       iteraxis='spw')
 
+    tb.clearlocks()
+
     timing()
 
 
@@ -903,8 +905,12 @@ if(mystep in thesteps):
     exppeak33 = [1.11061167717, 1.08436012268]
     exprms33 = [0.000449335755548, 0.000499602989294]
     #expectation values set 15 March 2012 based on analysis using CASA active r18746
-    exppeak = [1.11075341702, 1.08440160751]
-    exprms = [0.000527012278326, 0.000579607207328] # note worse RMS
+    exppeakr18746 = [1.11075341702, 1.08440160751]
+    exprmsr18746 = [0.000527012278326, 0.000579607207328] # note worse RMS
+    #expectation values set 17 Sept  2012 based on analysis using CASA active r21038
+    # (change was due to a modification of the fluxscale task in r21037)
+    exppeak = [1.11501789093, 1.08849704266]
+    exprms = [0.000528678297997, 0.000582209031563]
 
 
     for name in basename:
@@ -929,6 +935,9 @@ if(mystep in thesteps):
     #expectation values set 15 March 2012 based on analysis using CASA active r18746
     exppeakm = 0.163885176182
     exprmsm = 0.00828791689128
+    #expectation values set 17 Sept 2012 based on analysis using CASA active r21038
+    exppeakm = 0.164736732841
+    exprmsm = 0.00830688327551
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
     resrmsm=(calstat['rms'][0])

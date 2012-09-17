@@ -546,7 +546,7 @@ calibrater::solve()
 }
 
 bool
-calibrater::correct()
+calibrater::correct(const std::string& applymode)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -560,6 +560,11 @@ calibrater::correct()
 
    try {
 
+     String appmode=applymode;
+
+     if (appmode=="")
+       appmode="calflag";
+
      logSink_p.clearLocally();
      LogIO os (LogOrigin ("calibrater", "correct"), logSink_p);
      os << "Beginning correct---------------------------" << LogIO::POST;
@@ -567,7 +572,7 @@ calibrater::correct()
      itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
-     retval = itsCalibrater->correct();
+     retval = itsCalibrater->correct(appmode);
      //     AlwaysAssert (retval, AipsError);
 
      os << "Finished correcting." << LogIO::POST;
@@ -721,6 +726,7 @@ casac::record* calibrater::fluxscale(
 
     IPosition oStart( 2, 0, 0 );
     IPosition oEnd( 2, uiNumSPW-1, 0 );
+
     for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
       oStart(1)=oEnd(1)=t;
@@ -733,8 +739,8 @@ casac::record* calibrater::fluxscale(
 	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
 	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
 	oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
-	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.column(t)));
-	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.column(t)));
+	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.row(t)));
+	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.row(t)));
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }
@@ -797,6 +803,29 @@ calibrater::accumulate(const std::string& tablein,
     RETHROW(x);
   }
   return true;
+}
+
+
+//----------------------------------------------------------------------------
+// activityrec - return a record with generic info
+casac::record* calibrater::activityrec()
+{
+
+  casac::record* out;
+
+  try {
+
+    out = fromRecord(itsCalibrater->getActRec());
+
+  }
+
+  catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return( out );
+
 }
 
 bool 

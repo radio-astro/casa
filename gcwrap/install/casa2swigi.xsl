@@ -5,6 +5,10 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"     
          xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	 <xsl:output omit-xml-declaration="yes"/>   
+
+	 <xsl:variable name="singlequote"><xsl:text>'</xsl:text></xsl:variable>
+<xsl:param name="methodname"/>
+
 <xsl:template match="*">
 <xsl:apply-templates select="aps:interface"/>
 </xsl:template>
@@ -13,15 +17,27 @@
 %module <xsl:value-of select="@name"/>
 <xsl:text disable-output-escaping="yes">
 %include &lt;tools/casa_typemaps.i&gt;
+%feature("kwargs");
+%feature("autodoc");
 </xsl:text>
 <xsl:for-each select="aps:method">
    <xsl:if test="lower-case(@type)!='constructor'">
       <xsl:apply-templates select="aps:output"/>
+      <xsl:text disable-output-escaping="yes">%feature("docstring", " </xsl:text>
+      <xsl:apply-templates select="aps:shortdescription"/>
+      <xsl:apply-templates select="aps:description"/>
+      <xsl:if test="count(aps:input/aps:param)">
+         <xsl:call-template name="iparaminfo"/>
+      </xsl:if>
+      <xsl:if test="count(aps:output/aps:param)">
+         <xsl:call-template name="oparaminfo"/>
+      </xsl:if>
+      <xsl:text>
+--------------------------------------------------------------------------------
+	      ") </xsl:text><xsl:value-of select="@name"/>;
    </xsl:if>
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-%feature("kwargs");
-%feature("autodoc");
 %exception {
    try {
       $action
@@ -39,8 +55,61 @@
 </xsl:text>
 </xsl:template>
 
+<xsl:template match="aps:shortdescription">  
+<xsl:text>
+
+Summary
+	</xsl:text> <xsl:value-of select="."/>
+</xsl:template>
+
+<xsl:template match="aps:description">  
+<xsl:text>
+
+Description
+	</xsl:text> <xsl:value-of select="replace(., '&quot;', $singlequote)"/>
+</xsl:template>
+
+
 <xsl:template match="aps:output">  
 	  <xsl:call-template name="dooutargs"/>
+</xsl:template>
+
+<xsl:template name="iparaminfo">
+<xsl:text>
+
+Input Parameters:
+	</xsl:text>
+	<xsl:for-each select="aps:input/aps:param">
+	   <xsl:choose>
+	<xsl:when test="string-length(@name) &lt; 8">
+	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	</xsl:text>
+              </xsl:when>
+	      <xsl:otherwise>
+	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	</xsl:text>
+	      </xsl:otherwise>
+	</xsl:choose>
+   </xsl:for-each>
+</xsl:template>
+
+<xsl:template name="oparaminfo">
+<xsl:text>
+
+Output Parameters:
+	</xsl:text>
+	<xsl:for-each select="aps:output/aps:param">
+	   <xsl:choose>
+	      <xsl:when test="string-length(@name) &lt; 8">
+	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	</xsl:text>
+              </xsl:when>
+	      <xsl:otherwise>
+	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	</xsl:text>
+	      </xsl:otherwise>
+	</xsl:choose>
+   </xsl:for-each>
 </xsl:template>
 
 <xsl:template name="dooutargs">

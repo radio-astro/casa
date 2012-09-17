@@ -75,8 +75,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
         if (keepmms and ParallelTaskHelper.isParallelMS(vis)): 
             if (timebin!='0s' and timebin!='-1s'): 
-                casalog.post('Averaging over time and keeping the MMS structure may lead to time averaging results\n'
-                             +'different from those obtained with keepmms=False.', 'WARN')
+                casalog.post('Averaging over time with keepmms=True may lead to results different\n'
+                             +'  from those obtained with keepmms=False due to different binning.', 'WARN')
                             
             myms = mstool()
             myms.open(vis)
@@ -95,27 +95,39 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             masterptab = ''
             emptyptab = tempout+'/EMPTY_POINTING'
             nochangeinpointing = (str(antenna)+str(timerange)=='')
-                
-            for m in mses:
+
+            if nochangeinpointing:    
                 # resulting pointing table is the same for all
                 #  -> replace by empty table if it is a link and won't be modified anyway
                 #     and put back original into the master after split
+
+                # find the master
+                for m in mses:
+                    theptab = m+'/POINTING'
+                    if not os.path.islink(theptab):
+                        #print "is master ", theptab
+                        mastersubms = m
+                        masterptab = m+'/POINTING'
+                        # save time by not copying the POINTING table len(mses) times
+                        myttb = tbtool()
+                        myttb.open(masterptab)
+                        tmpp = myttb.copy(newtablename=emptyptab, norows=True)
+                        myttb.close()
+                        del myttb
+                        tmpp.close()
+                        del tmpp
+                        break
+
+            # main work loop
+            for m in mses:
                 theptab = m+'/POINTING'
                 replaced = False
                 if nochangeinpointing:
                     if(os.path.islink(theptab)):
+                        #print "is link ", theptab
                         os.remove(theptab)
                         shutil.copytree(emptyptab, theptab)
                         replaced=True
-                    elif(masterptab==''):
-                        mastersubms = m
-                        masterptab = m+'/POINTING'
-                        # save time by not copying the POINTING table len(mses) times
-                        mytb = tbtool()
-                        mytb.open(masterptab)
-                        tmpp = mytb.copy(newtablename=emptyptab, norows=True)
-                        mytb.close()
-                        tmpp.close()
                         
                 outvis = tempout+'/'+os.path.basename(m)
                 print 'Running split_core on ', m
@@ -170,7 +182,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                     myms.open(successfulmses[0], nomodify=False)
                     auxfile = "split_aux_"+str(time.time())
                     for i in xrange(1,len(successfulmses)):
-                        myms.virtconcatenate(successfulmses[i], auxfile, '1Hz', '10mas')
+                        myms.virtconcatenate(successfulmses[i], auxfile, '1Hz', '10mas', True)
                     myms.close()
                     os.remove(auxfile)
                     ph.makeMMS(outputvis, successfulmses, True, ['POINTING']) 
@@ -203,6 +215,7 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
         raise ValueError, 'Please specify outputvis'
 
     myms = mstool()
+    mytb = None
     if ((type(vis)==str) & (os.path.exists(vis))):
         myms.open(vis, nomodify=True)
     else:
@@ -361,13 +374,12 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
     # Update FLAG_CMD if necessary.
     if ((spw != '') and (spw != '*')) or do_chan_mod:
         isopen = False
+        mytb = tbtool()
         try:
-            mytb = tbtool()
             mytb.open(outputvis + '/FLAG_CMD', nomodify=False)
             isopen = True
-            #print "is open"
             nflgcmds = mytb.nrows()
-            #print "nflgcmds =", nflgcmds
+            
             if nflgcmds > 0:
                 mademod = False
                 cmds = mytb.getcol('COMMAND')
@@ -426,13 +438,19 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
                     casalog.post('Updating FLAG_CMD', 'INFO')
                     mytb.putcol('COMMAND', cmds)
 
+            mytb.close()
+
             
         except Exception, instance:
+            if isopen:
+                mytb.close()
+            myms = None
+            mytb = None
             casalog.post("*** Error \'%s\' updating FLAG_CMD" % (instance),
                          'SEVERE')
-            retval = False
-        finally:
-            if isopen:
-                casalog.post('Closing FLAG_CMD', 'DEBUG1')
-                mytb.close()
+            return False
+
+    myms = None
+    mytb = None
+
     return retval

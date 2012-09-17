@@ -37,7 +37,7 @@ _af_msg_keys = {
 	types.ObjectType		  : 1,
 	types.InstanceType		  : 1,
 	types.ModuleType		  : 1,
-	"casac"				  : 2,
+	"__casac__"				  : 2,
 	"viewertool"                      : 2,
 	"builtin"			  : 3,
 	"parameter"			  : 4
@@ -166,7 +166,7 @@ def assignmentFilter(self,line):
 								lineOK = False
 							else:
 								try:
-									lvar_type = lvar_type.__module__
+									lvar_type = string.split(lvar_type.__module__, '.')[0]
 									if _af_msg_keys.has_key(lvar_type):
 										lineOK = False
 								except:

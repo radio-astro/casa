@@ -7,13 +7,16 @@
 # (1) MS-MFS with nterms=3 on VLA_multifrequency_3C286.ms                      #
 #     - checks output residual rms and total power                             #
 #     - checks output peak intensity, spectral index and spectral curvature    #
+#
+# (2) Post-deconvolution PB-correction, on the output of (1)
+#     - checks output peak corrected intensity, spectral index and curvature.
 #                                                                              # 
 ################################################################################
 #                                                                              # 
 # More tests that will appear here in the future :                             #
 #                                                                              # 
-# (2) MS-MFS on extended emission                                              #
-# (3) MS-MFS with wide-band primary-beam correction                            #
+# (2) MS-MFS with wide-band primary-beam correction                            #
+# (3) MS-MFS on extended emission : DONE                                             #
 # (4) MS-MFS with mosaicing                                                    #
 #                                                                              #
 ################################################################################
@@ -34,8 +37,8 @@ startProc=time.clock()
 # Mark time
 copyTime=time.time()
 
-# Test (1) : Run the clean task
 if(regstate):
+   # Test (1) : Run the clean task
    print '--Image with MS-MFS--'
    default('clean')
    npix=1024;
@@ -43,6 +46,13 @@ if(regstate):
                nterms=3,reffreq='1.4GHz',
                niter=50,gain=0.8,threshold='7.0mJy',imsize=[npix,npix],
                cell=['2.5arcsec','2.5arcsec'],weighting='briggs',usescratch=False);
+
+   # Test (2) : Post-deconvolution PB-correction
+   print '--Post deconvolution wideband PB correction--'
+   ret = widebandpbcor(vis='VLA_multifrequency_3C286.ms', imagename='reg_3C286',
+                       nterms=3, threshold='5mJy', action='pbcor', reffreq='1.4GHz',
+                       pbmin=0.2, field='',spwlist=[0, 1, 2, 3, 4, 5, 6], chanlist=[8, 8, 8, 8, 8, 8, 8],
+                       weightlist=[1, 1, 1, 1, 1, 1, 1])
 
 # Stop timers
 endProc=time.clock()
@@ -95,6 +105,9 @@ else:
    correct_intensity = 14.8404045105;
    correct_alpha = -0.471577763557;
    correct_beta = -0.124552100897;
+   ## Added on 13 Sep 2012
+   correct_pbcor_intensity = 0.234191760421
+   correct_pbcor_alpha = -0.910139858723
 
    # (5) : (V2.3) This is the truth (for active, 02Mar2010) - included coefficient residuals in alpha/beta calcs.
    # Changes from previous numbers 'active r14198' are within the noise, and only for alpha/beta.
@@ -204,6 +217,39 @@ else:
    else:
       print >>logfile,'-- FAILED : No spectral curvature map generated';
       regstate = False;
+
+   # PB-corrected intensity)
+   if(os.path.exists('reg_3C286.pbcor.image.tt0')):
+      ia.open('reg_3C286.pbcor.image.tt0');
+      offpix = ia.pixelvalue([304,542])
+      ia.close();
+      diff_int = abs( offpix['value']['value'] - correct_pbcor_intensity )/ abs(correct_pbcor_intensity);
+      if(diff_int<0.02): 
+         print >>logfile,'* Passed widebandpbcor intensity test ';
+      else: 
+         print >>logfile,'* FAILED widebandpbcor intensity test '
+	 regstate = False;
+      print >>logfile,'-- pb-corrected intensity : ' + str(offpix['value']['value']) + ' (' + str(correct_pbcor_intensity) + ')';
+   else:
+      print >>logfile,'-- FAILED : No pb-corrected intensity map generated';
+      regstate = False;
+
+   # PB-corrected alpha (not checking beta)
+   if(os.path.exists('reg_3C286.pbcor.image.alpha')):
+      ia.open('reg_3C286.pbcor.image.alpha');
+      offpix = ia.pixelvalue([304,542])
+      ia.close();
+      diff_alpha = abs( offpix['value']['value'] - correct_pbcor_alpha )/ abs(correct_pbcor_alpha);
+      if(diff_alpha<0.02): 
+         print >>logfile,'* Passed widebandpbcor alpha test ';
+      else: 
+         print >>logfile,'* FAILED widebandpbcor alpha test '
+	 regstate = False;
+      print >>logfile,'-- pb-corrected spectral index : ' + str(offpix['value']['value']) + ' (' + str(correct_pbcor_alpha) + ')';
+   else:
+      print >>logfile,'-- FAILED : No pb-corrected spectral index map generated';
+      regstate = False;
+
 
 # Final verdict
 if(regstate):

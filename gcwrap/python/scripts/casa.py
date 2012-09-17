@@ -136,7 +136,7 @@ from plotxy import  plotxy
 from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy
-from simdata import  simdata
+from simalma import  simalma
 from simobserve import  simobserve
 from simanalyze import  simanalyze
 from smoothcal import  smoothcal

@@ -54,6 +54,42 @@ class PartitionHelper(ParallelTaskHelper):
 
             os.mkdir(self.dataDir)
 
+            ## handle the POINTING, SYSCAL, and HISTORY tables ##
+            self.ptab = self._arg['vis']+'/POINTING'
+            self.stab = self._arg['vis']+'/SYSCAL'
+
+            # test if they are non-empty
+            mytb = tbtool()
+            mytb.open(self.ptab)
+            self.pointingisempty = (mytb.nrows()==0)
+            mytb.close()
+            
+            if(os.path.exists(self.stab)): # syscal is optional
+                mytb.open(self.stab)
+                self.syscalisempty = (mytb.nrows()==0)
+                mytb.close()
+            else:
+                self.syscalisempty = True
+
+            if not self.pointingisempty:
+                # move to datadir
+                os.system('mv '+self.ptab+' '+self.dataDir)
+                # create empty copy in original place so partition does not need to deal with it
+                mytb.open(self.dataDir+'/POINTING')
+                tmpp = mytb.copy(newtablename=self.ptab, norows=True)
+                tmpp.close()
+                mytb.close()
+
+            if not self.syscalisempty:
+                # move to datadir
+                os.system('mv '+self.stab+' '+self.dataDir)
+                # create empty copy in original place so partition does not need to deal with it
+                mytb.open(self.dataDir+'/SYSCAL')
+                tmpp = mytb.copy(newtablename=self.stab, norows=True)
+                tmpp.close()
+                mytb.close()
+
+
     def generateJobs(self):
         '''
         This method overrides the method in the TaskHelper baseclass
@@ -65,6 +101,8 @@ class PartitionHelper(ParallelTaskHelper):
         if self._arg['outputvis'] != '':
             casalog.post("Analyzing MS for partitioning")
             self._createPrimarySplitCommand()
+            
+        return True
 
     def _createCalMSCommand(self):
         '''
@@ -292,12 +330,23 @@ class PartitionHelper(ParallelTaskHelper):
         
         if self._arg['createmms']:
             casalog.post("Finalizing MMS structure")
+
+            # restore POINTING, SYSCAL, and HISTORY
+            if not self.pointingisempty:
+                print "restoring POINTING"
+                os.system('rm -rf '+self.ptab) # remove empty copy
+                os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
+            if not self.syscalisempty:
+                print "restoring SYSCAL"
+                os.system('rm -rf '+self.stab) # remove empty copy
+                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
+            
             outputList = self._jobQueue.getOutputJobs()
             # We created a data directory and many SubMSs,
             # now build the reference MS
             if self._arg['calmsselection'] in ['auto','manual']:
                 # A Cal MS was created in the data directory, see if it was
-                # successful, if so build a reference MS
+                # successful, if so build a multi-MS
                 if os.path.exists(self._arg['calmsname']):
                     raise ValueError, "Output MS already exists"
                 self._msTool.createmultims(self._arg['calmsname'],
@@ -313,7 +362,32 @@ class PartitionHelper(ParallelTaskHelper):
                 casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
 
-            ph.makeMMS(self._arg['outputvis'], subMSList)
+            mastersubms = subMSList[0]
+
+            # deal with POINTING table
+            if not self.pointingisempty:
+                shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
+                shutil.copytree(self.ptab, mastersubms+'/POINTING') # master subms gets a full copy of the original
+                for i in xrange(1,len(subMSList)):
+                    theptab = subMSList[i]+'/POINTING'
+                    shutil.rmtree(theptab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
+                    # (link in target will be created my makeMMS)
+
+            # deal with SYSCAL table
+            if not self.syscalisempty:
+                shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
+                shutil.copytree(self.stab, mastersubms+'/SYSCAL') # master subms gets a full copy of the original
+                for i in xrange(1,len(subMSList)):
+                    thestab = subMSList[i]+'/SYSCAL'
+                    shutil.rmtree(thestab, ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
+                    # (link in target will be created my makeMMS)
+
+            ph.makeMMS(self._arg['outputvis'], subMSList,
+                       True, # copy subtables
+                       ['POINTING','SYSCAL'] # omitting these
+                       )
 
             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
             
@@ -529,7 +603,9 @@ def partition(vis,
                          combine=combine,
                          intent=scanintent,
                          obs=str(observation))
-    finally:
+        msTool.close()
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' captured in partition" % (instance),'WARN')
         msTool.close()
 
     # Write history to output MS, not the input ms.

@@ -65,6 +65,7 @@ listobs.xml
 listpartition.xml
 listsdm.xml
 listvis.xml
+makemask.xml
 mosaic.xml
 msview.xml
 msmoments.xml 
@@ -101,7 +102,6 @@ sdtpimaging.xml
 setjy.xml
 ssoflux.xml
 simalma.xml
-simdata.xml
 simobserve.xml
 simanalyze.xml
 slsearch.xml
@@ -121,5 +121,5 @@ wvrgcal.xml
 virtualconcat.xml
 vishead.xml
 visstat.xml
+widebandpbcor.xml
 widefield.xml )
-

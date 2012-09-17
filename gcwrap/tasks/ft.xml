@@ -6,16 +6,18 @@
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="ft" category="imaging, calibration">
-	<shortdescription>Insert a source model into the MODEL_DATA column of a visibility set:</shortdescription>
+	<shortdescription>Insert a source model  a visibility set:</shortdescription>
 	<description>
-       A source model (souce.model image) or components list is converted into a
-       model visibility that is inserted into the MODEL_DATA column.  This is
-       needed to use resolved source in gaincal and in fluxscale.  (Setjy will
+       A source model (souce.model image) or components list is converted into 
+       model visibilities that is inserted into the MODEL_DATA column or alternatively 
+       is stored  in the header of the MS to be served on the fly when requested.  This is
+       needed to use more complicated sources than setjy provides; e.g resolved source 
+       or off centered sources in gaincal.  (Setjy will
        automatically make this ft step.)
 
        The sources currently available are 3C48, 3C138, 3C147, 3C286
        at 1.4, 5.0, 8.4, 15, 22, 43 GHz.  Their location is site
-       dependent.  In Charlottesville and at the AOC, the models are
+       dependent.  In Charlottesville and at the SOC, the models are
        in /usr/lib/casapy/data/nrao/VLA/CalModels.
 	</description>
 	<input>

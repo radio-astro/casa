@@ -17,7 +17,7 @@
 
 # alma-m100-analysis-hpc-regression.py
 # An ALMA Science Verification Data Analysis Regression
-# using observations of M100 from September 2011 and parallelisation
+# using observations of M100 from September 2011 and _parallelisation_
 
 
 step_title = { 0 : 'Data import and partitioning',
@@ -279,12 +279,9 @@ mystep = 7
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    tsysinterp = 'nearest'
-    tsysspwmap=[]
-    if(casadef.casa_version>='3.4.0'):
-        print "Using linear interpolation for Tsys in applycal ..."
-        tsysinterp='linear'
-        tsysspwmap=[0,9,0,11,0,13,0,15]
+    print "Using linear interpolation for Tsys in applycal ..."
+    tsysinterp='linear'
+    tsysspwmap=[0,9,0,11,0,13,0,15]
 
     for myfield in ['3c273 - Bandpass','Titan','3c273 - Phase','1224+213 Phase','M100']:
         print "Field ", myfield
@@ -297,7 +294,6 @@ if(mystep in thesteps):
                      gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
                      flagbackup=F)
 
-            tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
     timing()
 
@@ -331,8 +327,7 @@ if(mystep in thesteps):
     flagcmd += "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # channels 239, 447/448, 720/721 and 2847/2848 are off
               
     flagfile = "m100_flag_step9.txt"
-    if os.path.exists(flagfile):
-        os.system('rm -f '+ flagfile)
+    os.system('rm -f '+ flagfile)
     
     # Save it to disk   
     with open(flagfile, 'w') as f:
@@ -599,7 +594,6 @@ if(mystep in thesteps):
 	        gainfield=['*Band*','*Band*','*Band*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the secondary phase cal
 	applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
@@ -608,7 +602,6 @@ if(mystep in thesteps):
        	 	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to the primary phase cal
 	applycal(vis=name+'-line-vs.ms',field='1224*',
@@ -617,7 +610,6 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to Titan
         applycal(vis=name+'-line-vs.ms',field='Titan',
@@ -626,7 +618,6 @@ if(mystep in thesteps):
                  gainfield=['*Band*','Titan','Titan'],
                  calwt=F,
                  flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 	# to M100
 	applycal(vis=name+'-line-vs.ms',field='M100',
@@ -635,7 +626,6 @@ if(mystep in thesteps):
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
-        tb.clearlocks() # workaround until the file locking problems in applycal are fixed
 
 
 # For X146 the calibrated fluxes for the secondary phase cal are different for the different pols. What
@@ -738,7 +728,8 @@ if(mystep in thesteps):
     os.system('rm -rf M100all.ms*')
     virtualconcat(vis=['X54-calibrated.ms', 'X220-calibrated.ms'],
                   concatvis='M100all.ms',
-                  copypointing=False # need to add copypointing to virtualconcat!
+                  copypointing=False,
+                  keepcopy=False # set this to True to keep a copy of the input (takes time)
                   )
 
     timing()
@@ -753,7 +744,7 @@ if(mystep in thesteps):
     split(vis='M100all.ms', outputvis='M100all_lores.ms',
           datacolumn='data',
           timebin='60s',
-          keepmms=True # need to enable timeaveraging in split! 
+          keepmms=True 
           )
 
     timing()
@@ -906,8 +897,12 @@ if(mystep in thesteps):
     exppeak33 = [1.11061167717, 1.08436012268]
     exprms33 = [0.000449335755548, 0.000499602989294]
     #expectation values set 15 March 2012 based on analysis using CASA active r18746
-    exppeak = [1.11075341702, 1.08440160751]
-    exprms = [0.000527012278326, 0.000579607207328] # note worse RMS
+    exppeakr18746 = [1.11075341702, 1.08440160751]
+    exprmsr18746 = [0.000527012278326, 0.000579607207328] # note worse RMS
+    #expectation values set 17 Sept  2012 based on analysis using CASA active r21038
+    # (change was due to a modification of the fluxscale task in r21037)
+    exppeak = [1.11501789093, 1.08849704266]
+    exprms = [0.000528678297997, 0.000582209031563]
 
 
     for name in basename:
@@ -930,8 +925,12 @@ if(mystep in thesteps):
     exppeakm33 = 0.164112448692
     exprmsm33 = 0.0083269206807
     #expectation values set 15 March 2012 based on analysis using CASA active r18746
-    exppeakm = 0.163885176182
-    exprmsm = 0.00828791689128
+    exppeakmr18746 = 0.163885176182
+    exprmsmr18746 = 0.00828791689128
+    #expectation values set 17 Sept 2012 based on analysis using CASA active r21038
+    exppeakm = 0.164736732841
+    exprmsm = 0.00830688327551
+    
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
     resrmsm=(calstat['rms'][0])

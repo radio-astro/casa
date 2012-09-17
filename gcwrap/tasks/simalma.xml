@@ -586,15 +586,17 @@ ALMA simulation task:
     hourangle -- hour angle of observation e.g. '-3h'
     totaltime --- total time of observation e.g '7200s' or if an number without
          units, interpreted as the number of times to repeat the map
-    acaratio  --- ratio of the total observation time for ACA relative to 
+    acaratio  --- ratio of the total observation time of ACA relative to 
          that of 12m array. Set 0 for no ACA observation. 
          For Cycle-1, set acaratio = 0 or 3.
     acaconfig --- ACA configuration. Available configurations are:
        * "" (default) : automatically defines based on antennalist. 
                If antennalist is Cycle-1 configuration, acaconfig='cycle1'.
                Otherwise, acaconfig='i'
-       * "i" : Normal ACA configuration in full operation.
-       * "ns": North-South extended configuration in full operation.
+       * 'cycle1' : Cycle-1 ACA-7m configuration. Uses 'aca_cycle1.cfg'.
+       * "i" : Normal ACA configuration in full operation. Uses 'aca.i.cfg'.
+       * "ns": North-South extended configuration in full operation. 
+               Uses 'aca.ns.cfg'.
     -------------------------------
     pwv -- precipitable water vapor if constructing an atmospheric model.
          Set 0 for noise-free simulation.

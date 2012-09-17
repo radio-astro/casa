@@ -6,7 +6,8 @@ from taskinit import *
 import partitionhelper as ph
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copypointing):
+def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
+		  visweightscale,keepcopy,copypointing):
 	"""
 	Concatenate visibility data sets creating a multi-MS.
 	
@@ -31,6 +32,9 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copyp
 		default: ;; means always combine
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		their phase center is less than 1 arcsec.
+	respectname -- If true, fields with a different name are not merged even if their 
+                direction agrees (within dirtol)
+                default: True
 	visweightscale -- list of the weight scales to be applied to the individual MSs
 	        default: [] (don't modify weights, equivalent to setting scale to 1 for each MS)
         keepcopy -- If true, a copy of the input MSs is kept in their original place.
@@ -239,7 +243,8 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copyp
 				
 			m.virtconcatenate(msfile=elvis,
 					  auxfilename=auxfile,
-					  freqtol=freqtol,dirtol=dirtol,weightscale=wscale)
+					  freqtol=freqtol,dirtol=dirtol,respectname=respectname,
+					  weightscale=wscale)
 		#end for
 		os.remove(auxfile)
 
@@ -248,6 +253,7 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,visweightscale,keepcopy,copyp
 		m.writehistory(message='concatvis    = "'+str(concatvis)+'"',origin='virtualconcat')
 		m.writehistory(message='freqtol      = "'+str(freqtol)+'"',origin='virtualconcat')
 		m.writehistory(message='dirtol       = "'+str(dirtol)+'"',origin='virtualconcat')
+		m.writehistory(message='respectname  = "'+str(respectname)+'"',origin='virtualconcat')
 		m.writehistory(message='visweightscale = "'+str(visweightscale)+'"',origin='virtualconcat')
 
 		m.close()

@@ -160,8 +160,6 @@ class cluster(object):
                 self.__prefix+self.__start_engine_file)
 
       p=Popen(cmd, stdout=out, stderr=err)
-      out.close()
-      err.close()
       sts = os.waitpid(p.pid, 0)
       if sts[1] != 0:
          print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
@@ -175,6 +173,9 @@ class cluster(object):
             print >> sys.stderr, "WARNING: Command failed:", " ".join(cmd)
          print "start engine %s on %s" % (i, node_name)
       self.__engines=self.__update_cluster_info(num_engine, work_dir,omp_num_nthreads)
+      
+      out.close()
+      err.close()
 
    # jagonzal (CAS-4292): This method crashes when initializing the nodes via __init_nodes,
    # so it is deprecated. Instead it is necessary to use directly the start_engine method 
@@ -308,7 +309,7 @@ class cluster(object):
       cmd=commands.getoutput("which ipengine")
       ef.write('export contrid=%s\n' % self.__controller)
       ef.write('export stamp=%s\n' % self.__timestamp)
-      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- &\n')
+      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- 2>&1 | grep -v Calibrater::selectvis &\n')
       ef.close()
 
    def __write_stop_node(self):
@@ -670,11 +671,16 @@ class cluster(object):
         #print '-----', sdir+'casa_in_py.py'
         # jagonzal (CAS-4322): Load casapy environment (casa dictionary, environmental variables, etc)
         # For example casa['dirs']['data'] is used in setjy
-        self.__client.execute("execfile(scriptdir+'casapy_engine.py')", i)
+        # self.__client.execute("execfile(scriptdir+'casapy_engine.py')", i)
         self.__client.execute("execfile(scriptdir+'casa_in_py.py')", i)
         self.__client.execute('inited=True', i)
-     except IOError, e:
-        print "could not initialize the node\n", e
+     except client.CompositeError, exception:
+         print 'Error initializing engine %s: %s' % (str(i), str(exception))
+         exception.print_tracebacks()
+     except:
+         print 'Error initializing engine %s: %s' % (str(i))
+         traceback.print_tb(sys.exc_info()[2])     
+    
 
    def reset_cluster(self):
       '''Re-initialize the engines.
@@ -1538,13 +1544,14 @@ class cluster(object):
       # jagonzal (CAS-): We have to capture the engine's exceptions at this level
       try:
            res = self.__client.get_result()[i]
-      except client.CompositeError, e:
-           print e
+      except client.CompositeError, exception:
+           print 'Error retrieving result from engine %s: %s' % (str(i),str(exception))
+           exception.print_tracebacks()
            res = None
-      finally:
-          pass
+      except:
            # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-           # traceback.print_tb(sys.exc_info()[2])
+           print 'Error retrieving result from engine %s' % (str(i))
+           traceback.print_tb(sys.exc_info()[2])
 
       return res
 
