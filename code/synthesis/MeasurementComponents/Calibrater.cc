@@ -144,6 +144,11 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     }
     historytab_p=Table(ms_p->historyTableName(),
 		       TableLock(TableLock::UserNoReadLocking), Table::Update);
+    // jagonzal (CAS-4110): When the selectvis method throws an exception the initialize method
+    // is called again to leave the calibrater in a proper state, and since there was a previous
+    // initialization the history handler was already created, and has to be destroyed before
+    // creating a new one to avoid leaveing the HISTORY table opened.
+    if (hist_p) delete hist_p;
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
 
