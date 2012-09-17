@@ -1663,45 +1663,54 @@ TOpac::~TOpac() {
 }
 
 void TOpac::setApply(const Record& applypar) {
-  
-  // TBD: Handle opacity table case properly
-  // TBD: Handle spwmap properly  (opacity is not spw-dep)
 
-  // TBD: Call parent?
-  //  T::setApply(applypar);
+  // TBD: Handle spwmap properly?
 
-  // This version uses user-supplied opacity value for all ants
-
-  if (applypar.isDefined("opacity")) {
-    opacity_.resize();
-    opacity_=applypar.asArrayDouble("opacity");
-  }
-  else
-    // Should not reach here
-    throw(AipsError("No opacity info specified."));
-	
-  Int nopac=opacity_.nelements();
-  if (nopac<1) throw(AipsError("No opacity info specified."));
-  if (nopac<nSpw()) {
-    // Resize (with copy) to match nSpw, 
-    //  duplicating last specified entry
-    opacity_.resize(nSpw(),True);
-    opacity_(IPosition(1,nopac),IPosition(1,nSpw()-1))=opacity_(nopac-1);
-  }
-
-  Int oldspw; oldspw=currSpw();
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-    currSpw()=ispw;
-    currRPar().resize(1,1,nAnt());
-    currRPar()=Float(opacity_(ispw));
-    currParOK().resize(1,1,nAnt());
-    currParOK()=True;
-  }
-  currSpw()=oldspw;
-
-  // Resize za()
+  // Prepare zenith angle storage
   za().resize(nAnt());
   za().set(0.0);
+
+  String table("");
+  if (applypar.isDefined("table"))
+    table=applypar.asString("table");
+
+  if (table!="")
+    // Attempt new-fashioned opacity table
+    SolvableVisCal::setApply(applypar);
+  else {
+
+    // Detect and extract opacities from applypar record (old way)
+    if (applypar.isDefined("opacity")) {
+      opacity_.resize();
+      opacity_=applypar.asArrayDouble("opacity");
+    }
+    Int nopac=opacity_.nelements();
+    
+    if (nopac>0 && sum(opacity_)>0.0) {
+
+      // Old-fashioned opacity_ is non-trivial, so adopt them
+      
+      if (nopac<nSpw()) {
+	// Resize (with copy) to match nSpw, 
+	//  duplicating last specified entry
+	opacity_.resize(nSpw(),True);
+	opacity_(IPosition(1,nopac),IPosition(1,nSpw()-1))=opacity_(nopac-1);
+      }
+    
+      Int oldspw; oldspw=currSpw();
+      for (Int ispw=0;ispw<nSpw();++ispw) {
+	currSpw()=ispw;
+	currRPar().resize(1,1,nAnt());
+	currRPar()=Float(opacity_(ispw));
+	currParOK().resize(1,1,nAnt());
+	currParOK()=True;
+      }
+      currSpw()=oldspw;
+      
+    }
+    else
+      throw(AipsError("No opacity info specified."));
+  }
 
 }
 
@@ -1733,9 +1742,14 @@ void TOpac::calcPar() {
   for (Int iant=0;iant<nAnt();++iant,++a) 
     (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
 
+  
+  // If we are interpolating from a table, get opacity(time)
+  if (ci_)
+    SolvableVisCal::calcPar();
+
   // Pars now valid, matrices not yet
   validateP();
-  invalidateJ();
+  invalidateJ();  // Force new calculation of za-dep matrix elements
 
 }
 
@@ -1758,7 +1772,6 @@ void TOpac::calcAllJones() {
   }
 
 }
-
 
 
 // **********************************************************
