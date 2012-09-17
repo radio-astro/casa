@@ -1025,18 +1025,12 @@ String VisSet::msName(){
 
   String name;
   if(ms_p.isMarkedForDelete()){ // this is a temporary selected table
-    Block<String> refTables = ms_p.getPartNames(True);
-    if(ms_p.tableInfo ().subType() == "CONCATENATED" && refTables[0].freq("/SUBMSS")==1){
-      name = refTables[0].before("/SUBMSS");
-    }
-    else{
-      name = refTables[0];
-    }
+    Block<String> refTables = ms_p.getPartNames(False);
+    name = refTables[0];
   }
   else{
     name = ms_p.tableName();
   }
-
   return name;
 
 }
