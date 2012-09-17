@@ -47,7 +47,7 @@ Searcher* SearcherFactory::getSearcher( bool local ){
 			const String tableName = "SplatDefault.tbl";
 			int index = defaultDatabasePath.find(tableName, 0);
 			int tableNameSize = tableName.length();
-			defaultDatabasePath.replace(index, tableNameSize, "splat.db");
+			defaultDatabasePath.replace(index, tableNameSize, "splatalogue.db");
 			searcher = new SearcherSQLite(defaultDatabasePath.c_str() );
 		}
 	}
