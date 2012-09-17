@@ -377,7 +377,7 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
 					 // image_p[model]->niceCursorShape()),
 					 IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
 			      cimageCoord,0);
-    
+      cimagePtr->set(0.0);
     /*PagedImage<Complex>* cimagePtr = 
       new PagedImage<Complex> (TiledShape(cimageShape, 
 					 // image_p[model]->niceCursorShape()),
@@ -483,6 +483,7 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
     psfPtr->table().markForDelete();
     */
     AlwaysAssert(psfPtr, AipsError);
+    psfPtr->set(0.0);
     //psfPtr->setMaximumCacheSize(psfPtr->shape().product()/2);
     psfPtr->setMaximumCacheSize(cacheSize(model));
     psfPtr->clearCache();
@@ -522,6 +523,7 @@ ImageInterface<Float>& ImageSkyModel::residual(Int model) {
       
       //tempImagePtr->setMaximumCacheSize(tempImagePtr->shape().product()/2);
       tempImagePtr->setMaximumCacheSize(cacheSize(model));
+      tempImagePtr->set(0.0);
       tempImagePtr->clearCache();
       residualImage_p[model] = tempImagePtr;
     }
@@ -554,6 +556,7 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
     */
 //gSPtr->setMaximumCacheSize(gSPtr->shape().product()/2);
     gSPtr->setMaximumCacheSize(cacheSize(model));
+    gSPtr->set(0.0);
     gSPtr->clearCache();
     AlwaysAssert(gSPtr, AipsError);
     gS_p[model] = gSPtr;
@@ -586,6 +589,7 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
     AlwaysAssert(ggSPtr, AipsError);
     //ggSPtr->setMaximumCacheSize(ggSPtr->shape().product()/2);
     ggSPtr->setMaximumCacheSize(cacheSize(model));
+    ggSPtr->set(0.0);
     ggSPtr->clearCache();
     ggS_p[model] = ggSPtr;
   }
@@ -620,6 +624,7 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
     AlwaysAssert(fluxScalePtr, AipsError);
     //fluxScalePtr->setMaximumCacheSize(fluxScalePtr->shape().product()/2);
     fluxScalePtr->setMaximumCacheSize(cacheSize(model));
+    fluxScalePtr->set(0.0);
     fluxScalePtr->clearCache();
     fluxScale_p[model] = fluxScalePtr;
     // Set default value to avoid a nasty side effect elsewhere
@@ -657,6 +662,7 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
     AlwaysAssert(workPtr, AipsError);
     //workPtr->setMaximumCacheSize(workPtr->shape().product()/2);
     workPtr->setMaximumCacheSize(cacheSize(model));
+    workPtr->set(0.0);
     workPtr->clearCache();
     work_p[model] = workPtr;
   }
@@ -689,6 +695,7 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
     AlwaysAssert(deltaimagePtr, AipsError);
     //deltaimagePtr->setMaximumCacheSize(deltaimagePtr->shape().product()/2);
     deltaimagePtr->setMaximumCacheSize(cacheSize(model));
+    deltaimagePtr->set(0.0);
     deltaimagePtr->clearCache();
     deltaimage_p[model] = deltaimagePtr;
   }
