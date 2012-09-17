@@ -56,6 +56,8 @@ class simple_cluster:
         if not 'procCluster' in myf.keys():
             sc = simple_cluster()
             sc.init_cluster()
+            #sc.stop_cluster()
+            #sc.start_cluster()
         return myf['procCluster']
     
     ###########################################################################
@@ -788,7 +790,6 @@ class simple_cluster:
         if not self._configdone:
             return
         while self._resource_on:
-            time.sleep(5)
             self.check_resource()
         self._resource_running=False
     
@@ -1188,9 +1189,12 @@ class simple_cluster:
                             x=job.get_result(block=False)
                         except client.CompositeError, exception:
                             if notify and self._jobs[job]['status']=="scheduled":
-                                print 'engine %d job %s broken: %s' % (eng, sht, str(exception))
-                                print 'backtrace: %s' % (exception.print_tracebacks())
+                                print 'Error retrieving result of job %s from engine %s: %s, backtrace:' % (sht,str(eng),str(exception))
+                                exception.print_tracebacks()
                             self._jobs[job]['status']="broken"
+                        except:
+                            print 'Error retrieving result of job %s from engine %s, backtrace:' % (sht,str(eng))
+                            traceback.print_tb(sys.exc_info()[2])
 
                         if x==None:
                             cmd=self._jobs[job]['command']
@@ -1211,8 +1215,7 @@ class simple_cluster:
                             #print 'x=', x
                             if self._jobs[job]['status']=="running":
                                 if notify:
-                                    # jagonzal: There was a bug here, it was printing 'finished' instead of 'running'
-                                    print 'engine %d job %s running' % (eng, sht)
+                                    print 'engine %d job %s finished' % (eng, sht)
                                 self._jobs[job]['status']="done"
                             if self._jobs[job]['status']=="scheduled":
                                 if isinstance(x, int):

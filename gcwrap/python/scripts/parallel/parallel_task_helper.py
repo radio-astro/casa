@@ -53,8 +53,12 @@ class ParallelTaskHelper:
                 localArgs['vis'] = subMS
                 self._executionList.append(
                     simple_cluster.JobData(self._taskName,localArgs))
-        finally:
             msTool.close()
+            return True
+        except Exception, instance:
+            casalog.post("Error handling MMS %s: %s" % (self._arg['vis'],instance),'WARNING')
+            msTool.close()
+            return False
 
 
     def executeJobs(self):
@@ -71,10 +75,15 @@ class ParallelTaskHelper:
             return None
         
         # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
-        msTool = mstool();
-        msTool.open(self._arg['vis'])
-        subMS_list = msTool.getreferencedtables()
-        msTool.close()
+        try:
+            msTool = mstool()
+            msTool.open(self._arg['vis'])
+            subMS_list = msTool.getreferencedtables()
+            msTool.close()
+        except Exception, instance:
+            casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
+            msTool.close()
+            return False
         
         index = 0
         if isinstance(ret_list[0],bool) and self._consolidateOutput:
@@ -89,7 +98,10 @@ class ParallelTaskHelper:
             ret_dict = {}
             for index in range(len(ret_list)):
                 dict_i = ret_list[index]
-                ret_dict = self.sum_dictionaries(dict_i,ret_dict)
+                try:
+                    ret_dict = self.sum_dictionaries(dict_i,ret_dict)
+                except Exception, instance:
+                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
             return ret_dict     
         elif (ret_list[0]==None) and self._consolidateOutput:
              return None      
@@ -119,9 +131,15 @@ class ParallelTaskHelper:
             
     def go(self):
         self.initialize()
-        self.generateJobs()
-        self.executeJobs()
-        retVar = self.postExecution()
+        if (self.generateJobs()):
+            self.executeJobs()
+            try:
+                retVar = self.postExecution()
+            except Exception, instance:
+                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
+                return False
+        else:
+            retVar = False
         return retVar
 
     @staticmethod

@@ -101,6 +101,8 @@ class PartitionHelper(ParallelTaskHelper):
         if self._arg['outputvis'] != '':
             casalog.post("Analyzing MS for partitioning")
             self._createPrimarySplitCommand()
+            
+        return True
 
     def _createCalMSCommand(self):
         '''
@@ -601,7 +603,9 @@ def partition(vis,
                          combine=combine,
                          intent=scanintent,
                          obs=str(observation))
-    finally:
+        msTool.close()
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' captured in partition" % (instance),'WARN')
         msTool.close()
 
     # Write history to output MS, not the input ms.
@@ -613,5 +617,6 @@ def partition(vis,
     except Exception, instance:
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
-
+        
+    tb.showcache()
     return True
