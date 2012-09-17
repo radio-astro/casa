@@ -56,10 +56,12 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
     
     casalog.origin('fixplanets')
 
+    mst = mstool()
     tbt = tbtool()
+    imt = None
 
     try:
-        fields = ms.msseltoindex(vis=vis,field=field)['field']
+        fields = mst.msseltoindex(vis=vis,field=field)['field']
         numfields = 0 
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
@@ -85,8 +87,10 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 thetime = 0
                 if(reftime.lower()=='median'):
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False',
+                    tttb = tbt.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False',
                               name=fixplanetstemp, columns='TIME')
+                    tttb.close()
+                    tttb = None
                     tbt.close()
                     tbt.open(fixplanetstemp)
                     if(tbt.nrows()>0):
@@ -100,7 +104,9 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                         return True
                 elif(reftime.lower()=='first'):
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
+                    tttb = tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
+                    tttb.close()
+                    tttb = None
                     tbt.close()
                     tbt.open(fixplanetstemp)
                     if(tbt.nrows()>0):
@@ -119,7 +125,9 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                     except Exception, instance:
                         raise TypeError, "reftime parameter is not a valid date (e.g. YYYY/MM/DD/hh:mm:ss)" %reftime
                     tbt.open(vis)
-                    tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
+                    tttb = tbt.query('FIELD_ID=='+str(fld), name=fixplanetstemp, columns='TIME')
+                    tttb.close()
+                    tttb = None
                     tbt.close()
                     tbt.open(fixplanetstemp)
                     if(tbt.nrows()>0):
@@ -142,7 +150,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 shutil.rmtree(fixplanetstemp, ignore_errors=True)
 
                 # determine reference antenna
-                antids = ms.msseltoindex(vis=vis,baseline=refant)['antenna1']
+                antids = mst.msseltoindex(vis=vis,baseline=refant)['antenna1']
                 antid = -1
                 if(len(antids) == 0):
                     casalog.post( "Antenna selection returned zero results.", 'WARN')
@@ -164,6 +172,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                 name=fixplanetstemp2)
                 nr = ttb.nrows()
                 ttb.close()
+                ttb = None
                 if(nr==0):
                     shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                     ttb2 = tbt.query('TRACKING==True AND NEARABS(TIME,'+str(thetime)+',3.) AND ANTENNA_ID=='
@@ -171,6 +180,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                      name=fixplanetstemp2)
                     nr = ttb2.nrows()
                     ttb2.close()
+                    ttb2 = None
                     if(nr==0):
                         casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)
                                       +" with TRACKING==True within 3 seconds of TIME "+str(thetime), 'NORMAL')
@@ -181,6 +191,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                          name=fixplanetstemp2)
                         nr = ttb3.nrows()
                         ttb3.close()
+                        ttb3 = None
                         if(nr==0):
                             shutil.rmtree(fixplanetstemp2, ignore_errors=True)
                             ttb4 = tbt.query('NEARABS(TIME,'+str(thetime)+',3.) AND ANTENNA_ID=='
@@ -188,6 +199,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                                              name=fixplanetstemp2)
                             nr = ttb4.nrows()
                             ttb4.close()
+                            ttb4 = None
                             if(nr==0):
                                 tbt.close()
                                 casalog.post( "Cannot find any POINTING table rows for antenna "+str(antid)
@@ -358,10 +370,12 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             for i in xrange(numfields):
                 if (i in fields):
                     fldids.append(i)
-
-            im.open(vis, usescratch=False)
-            im.calcuvw(fldids, refcode='J2000', reuse=False)
-            im.close()
+                    
+            imt = imtool()
+            imt.open(vis, usescratch=False)
+            imt.calcuvw(fldids, refcode='J2000', reuse=False)
+            imt.close()
+            imt = None
 
             if((oldrefcol!=[]) and (thenewref>0)): 
                 tbt.open(vis+'/FIELD', nomodify=False)
@@ -375,9 +389,15 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             casalog.post("Tidying up the MMS subtables ...", 'NORMAL')
             ParallelTaskHelper.restoreSubtableAgreement(vis)
 
+        mst = None
+        tbt = None
+
         return True
 
     except Exception, instance:
+        mst = None
+        tbt = None
+        imt = None
         casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
         return False
 
