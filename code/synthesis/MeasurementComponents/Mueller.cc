@@ -46,6 +46,7 @@ Mueller::Mueller() :
   ok_(NULL),
   oki_(NULL),
   cOne_(1.0), 
+  scalardata_(False),
   vtmp_(VisVector::Four,True)
 {}
 
@@ -108,6 +109,9 @@ void Mueller::apply(VisVector& v, Bool& vflag) {
 
 }
 
+void Mueller::applyFlag(Bool& vflag) {
+  throw(AipsError("Mueller::applyFlag(vflag) (general) NYI."));
+}
 
 void Mueller::invert() {
 
@@ -190,21 +194,23 @@ void MuellerDiag::apply(VisVector& v, Bool& vflag) {
 
   if (!ok_) throw(AipsError("Illegal use of MuellerDiag::apply(v,vflag)."));
 
-  switch (v.type()) {
-  // For scalar data, we only pay attention to first flag
-  case VisVector::One: {
-    vflag|=(!ok_[0]);
-    break;
-  }
-  default: {
-    vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
-    break;
-  }
-  }
+  applyFlag(vflag);
   if (!vflag) apply(v);
   else v.zero();
 
 }
+
+void MuellerDiag::applyFlag(Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag::applyFlag(vflag)."));
+
+  if (scalardata_)
+    vflag|=(!ok_[0]);
+  else
+    vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
+}
+
+
 
 void MuellerDiag::zero() {
   mi_=m_;
@@ -273,21 +279,20 @@ void MuellerDiag2::apply(VisVector& v, Bool& vflag) {
 
   if (!ok_) throw(AipsError("Illegal use of MuellerDiag2::apply(v,vflag)."));
 
-  switch (v.type()) {
-  // For scalar data, pay attention only to first flag
-  case VisVector::One: {
-    vflag|=(!ok_[0]);
-    break;
-  }
-  //...otherwise insist all is ok
-  default: {
-    vflag|=(!(ok_[0]&&ok_[1]));
-    break;
-  }
-  }
+  applyFlag(vflag);
   if (!vflag) apply(v);
   else v.zero();
 
+}
+
+void MuellerDiag2::applyFlag(Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerDiag2::applyFlag(vflag)."));
+
+  if (scalardata_)
+    vflag|=(!ok_[0]);
+  else
+    vflag|=(!(ok_[0]&&ok_[1]));
 }
 
 void MuellerDiag2::zero() {
@@ -332,10 +337,17 @@ void MuellerScal::apply(VisVector& v, Bool& vflag) {
 
   if (!ok_) throw(AipsError("Illegal use of MuellerScal::apply(v,vflag)."));
 
-  vflag|=(!*ok_);
+  applyFlag(vflag);
   if (!vflag) apply(v);
   else v.zero();
 
+}
+
+void MuellerScal::applyFlag(Bool& vflag) {
+
+  if (!ok_) throw(AipsError("Illegal use of MuellerScal::applyFlag(vflag)."));
+
+  vflag|=(!*ok_);
 }
 
 

@@ -73,7 +73,8 @@ Calibrater::Calibrater():
   vc_p(),
   svc_p(0),
   histLockCounter_p(), 
-  hist_p(0)
+  hist_p(0),
+  actRec_()
 {
 }
 
@@ -143,6 +144,11 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     }
     historytab_p=Table(ms_p->historyTableName(),
 		       TableLock(TableLock::UserNoReadLocking), Table::Update);
+    // jagonzal (CAS-4110): When the selectvis method throws an exception the initialize method
+    // is called again to leave the calibrater in a proper state, and since there was a previous
+    // initialization the history handler was already created, and has to be destroyed before
+    // creating a new one to avoid leaveing the HISTORY table opened.
+    if (hist_p) delete hist_p;
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
 
@@ -1139,7 +1145,7 @@ Bool Calibrater::unsetsolve() {
 
 
 Bool
-Calibrater::correct()
+Calibrater::correct(String mode)
 {
     logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
 
@@ -1147,6 +1153,18 @@ Calibrater::correct()
 
     try {
 
+        // make mode all-caps
+        String upmode=mode;
+	upmode.upcase();
+
+	// If trialmode=T, only the flags will be set
+	//   (and only written if not TRIAL)
+	Bool trialmode=(upmode.contains("TRIAL") || 
+			upmode.contains("FLAGONLY"));
+	/*
+	cout << "mode = " << mode << " (" << upmode << ") trialmode=" 
+	     << boolalpha << trialmode << endl;
+	*/
         // Set up VisSet and its VisibilityIterator.
 
         VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
@@ -1184,14 +1202,22 @@ Calibrater::correct()
                         vb->resetWeightMat();
                     }
 
-                    ve_p->correct(* vb);    // throws exception if nothing to apply
-
-                    vi.setVis (vb->visCube(), whichOutCol);
-                    vi.setFlag (vb->flag());
-
-                    if (calwt){
-                        vi.setWeightMat(vb->weightMat()); // Write out weight col, if it has changed
-                    }
+		    // throws exception if nothing to apply
+                    ve_p->correct(*vb,trialmode);
+		    
+		    // Only if not a trial run, trigger write to disk
+		    if (upmode!="TRIAL") {
+		      
+		      if (upmode.contains("CAL")) {
+			vi.setVis (vb->visCube(), whichOutCol);
+			if (calwt)
+			  vi.setWeightMat(vb->weightMat()); // Write out weight col, if it has changed
+		      }
+		      
+		      if (upmode.contains("FLAG"))
+			vi.setFlag (vb->flag());
+		      
+		    }
                 }
                 else{
                     uncalspw[spw] = true;
@@ -1212,6 +1238,11 @@ Calibrater::correct()
         // Now that we're out of the loop, summarize any errors.
 
         retval = summarize_uncalspws(uncalspw, "correct");
+
+	actRec_=Record();
+	actRec_.define("origin","Calibrater::correct");
+	actRec_.defineRecord("VisEquation",ve_p->actionRec());
+
     }
     catch (AipsError x) {
         logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
@@ -1224,7 +1255,8 @@ Calibrater::correct()
         retval = False;         // Not that it ever gets here...
     }
     return retval;
-}
+ }
+
 
 VisibilityIterator::DataColumn
 Calibrater::configureForCorrection ()
@@ -1543,9 +1575,13 @@ Bool Calibrater::genericGatherAndSolve() {
   // Manage verbosity of partial channel averaging
   Vector<Bool> verb(vi.numberSpw(),True);
 
+  Vector<Int> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    nexp(vi.spectralWindow())+=1;
 
     // Arrange to accumulate 
     //    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
@@ -1631,6 +1667,9 @@ Bool Calibrater::genericGatherAndSolve() {
       // Use spw of first VB in vbga
       // TBD: (currSpw==thisSpw) here??  (I.e., use svc_p->currSpw()?  currSpw is prot!)
       Int thisSpw=svc_p->spwMap()(vbga(0).spectralWindow());
+    
+      natt(thisSpw)+=1;
+
       slotidx(thisSpw)++;
       
       // Make data amp- or phase-only, if needed
@@ -1693,9 +1732,10 @@ Bool Calibrater::genericGatherAndSolve() {
 	  
 	} // parameter channels
 
-	if (totalGoodSol)
+	if (totalGoodSol) {
 	  svc_p->keepNCT();
-
+	  nsuc(thisSpw)+=1;
+	}
 	
 	// Count good solutions.
 	if (totalGoodSol)	nGood++;
@@ -1712,8 +1752,9 @@ Bool Calibrater::genericGatherAndSolve() {
 	svc_p->keepNCT();
 
 	nGood++;
+	nsuc(thisSpw)+=1;
       } 
-
+	
     } // vbOK
 
   } // isol
@@ -1725,6 +1766,13 @@ Bool Calibrater::genericGatherAndSolve() {
 
   summarize_uncalspws(unsolspw, "solv");
   
+  // Fill activity record
+  actRec_=Record();
+  actRec_.define("origin","Calibrater::genericGatherAndSolve");
+  actRec_.define("nExpected",nexp);
+  actRec_.define("nAttempt",natt);
+  actRec_.define("nSucceed",nsuc);
+
   // Store whole of result in a caltable
   if (nGood==0) {
     logSink() << "No output calibration table written."
@@ -2650,8 +2698,10 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TSYS",*vs_p);
     else if (utype.contains("EVLAGAIN"))
       cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
-//    else if (utype.contains("OPAC"))
-//      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("OPAC"))
+      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("GC") || utype.contains("EFF"))
+      cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 

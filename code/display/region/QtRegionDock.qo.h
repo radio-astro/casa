@@ -27,6 +27,8 @@
 
 #ifndef REGION_QTREGIONDOCK_H_
 #define REGION_QTREGIONDOCK_H_
+#include <map>
+#include <list>
 #include <iostream>
 #include <display/region/QtRegionDock.ui.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
@@ -39,6 +41,7 @@ namespace casa {
 
     namespace viewer {
 
+	class QtRegion;
 	class QtRegionState;
 	class ds9writer;
 
@@ -49,7 +52,7 @@ namespace casa {
 		QtRegionDock( QtDisplayPanelGui *, QWidget* parent=0 );
 		~QtRegionDock();
 
-		void addRegion(QtRegionState*,int index = -1);
+		void addRegion(QtRegion *,QtRegionState*,int index = -1);
 		int indexOf(QtRegionState*) const;
 		void removeRegion(QtRegionState*);
 		void selectRegion(QtRegionState*);
@@ -66,8 +69,18 @@ namespace casa {
 
 		void dismiss( );
 
+		std::list<QtRegion*> regions( ) { return region_list; }
+		// zero length string indicates OK!
+		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string csys="pixel" );
+
 	    signals:
+		// triggers deletion elsewhere of QtRegion containing this QtRegionState
+		// which then causes the removal of this QtRegionState...
 		void deleteRegion(QtRegionState*);
+		// notice sent after QtRegionState is removed from QStackWidget,
+		// *and* after QtRegion has already been deleted...
+		// also sent when a region is created (see std::string arg)...
+		void regionChange( viewer::QtRegion *, std::string );
 		void deleteAllRegions( );
 		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 		void saveRegions( std::list<QtRegionState*>, ds9writer & );
@@ -99,6 +112,11 @@ namespace casa {
 		QString current_save_dir;
 		QString current_load_dir;
 		bool dismissed;
+
+		typedef std::list<QtRegion*> region_list_t;
+		region_list_t region_list;
+		typedef std::map<QtRegionState*,QtRegion*> region_map_t;
+		region_map_t region_map;
 
 	};
     }

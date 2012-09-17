@@ -66,9 +66,12 @@ private:
 	double percentToValue( double yValue ) const;
 	double valueToPercent( double yValue ) const;
 	double convert( double yValue, const QString oldUnits, const QString newUnits ) const;
-
+	String adjustForKelvin( const QString& units, const QString& otherUnits ) const;
 	static const QString FRACTION_OF_PEAK;
 	static const QString JY_BEAM;
+	static const QString JY_BEAM_SHORT;
+	static const QString KELVIN;
+	static const QString KELVIN_SHORT;
 	QColor curveColor;
 	QString legend;
 	CurveData curveData;

@@ -25,13 +25,18 @@
 #include "CanvasCurve.h"
 #include <casa/Quanta/Quantum.h>
 #include <display/QtPlotter/conversion/Converter.h>
+#include <components/ComponentModels/Flux.h>
 #include <QDebug>
 #include <cmath>
+#include <complex>
 
 namespace casa {
 
 const QString CanvasCurve::FRACTION_OF_PEAK = "Fraction of Peak";
 const QString CanvasCurve::JY_BEAM = "Jy/beam";
+const QString CanvasCurve::JY_BEAM_SHORT = "Jy";
+const QString CanvasCurve::KELVIN = "Kelvin";
+const QString CanvasCurve::KELVIN_SHORT = "K";
 
 CanvasCurve::CanvasCurve(){
 }
@@ -179,8 +184,8 @@ double CanvasCurve::percentToValue( double yValue ) const {
 
 double CanvasCurve::getMax() const {
 	int maxPoints = curveData.size() / 2;
-	double maxValue;
-	if ( maxPoints > 1 ){
+	double maxValue = 0;
+	if ( maxPoints >= 1 ){
 		maxValue = curveData[1];
 		for ( int i = 0; i < maxPoints; i++ ){
 			double yValue = curveData[2*i+1];
@@ -204,19 +209,55 @@ double CanvasCurve::valueToPercent( double yValue ) const {
 	return convertedYValue;
 }
 
+String CanvasCurve::adjustForKelvin( const QString& units,
+		const QString& otherUnits ) const {
+	String adjustedUnits( units.toStdString() );
+	if ( units == KELVIN){
+		adjustedUnits = KELVIN_SHORT.toStdString();
+	}
+	else if ( units == JY_BEAM && otherUnits == KELVIN ){
+		adjustedUnits = JY_BEAM_SHORT.toStdString();
+	}
+	return adjustedUnits;
+}
+
+
 double CanvasCurve::convert( double yValue, const QString oldUnits, const QString newUnits ) const {
 
-	String oldUnitStr( oldUnits.toStdString() );
-	if ( oldUnits == "Kelvin"){
-		oldUnitStr = "K";
-	}
+	String oldUnitStr = adjustForKelvin( oldUnits, newUnits );
 	Quantity quantity( yValue, oldUnitStr );
-	String newUnitStr( newUnits.toStdString() );
-	if ( newUnitStr == "Kelvin"){
-		newUnitStr = "K";
+	String newUnitStr = adjustForKelvin( newUnits, oldUnits );
+	//qDebug() << "Converting oldUnitStr="<<oldUnitStr.c_str()<<" to "<< newUnitStr.c_str()<<" value="<<yValue;
+
+	double convertedYValue = 0;
+	if ( oldUnits != KELVIN && newUnits != KELVIN ){
+		quantity.convert( newUnitStr );
+		convertedYValue = quantity.getValue();
 	}
-	quantity.convert( newUnitStr );
-	double convertedYValue = quantity.getValue();
+	else {
+		/*Vector<double> inputValues(4);
+		inputValues[0] = 1;
+		inputValues[3] = yValue;
+		Unit unit( oldUnitStr );
+		Quantum< Vector<Double> > quantum( inputValues, unit );
+		FluxRep<double> rep( quantum );
+		Unit newUnit( newUnitStr);
+		rep.convertUnit( newUnit );
+		Vector<double> outputValues(4);
+		rep.value( outputValues );
+		convertedYValue = outputValues[0];*/
+		/*FluxRep<Double> fluxRep(1.0, 0.0, 0.0, yValue); // I = 1.0, V = 0.1
+		fluxRep.convertUnit( newUnitStr );
+		const std::complex<double> result= fluxRep.value( 0 );
+		convertedYValue = result.real();*/
+		convertedYValue = yValue;
+
+		// cout << "The I flux (in WU is)" << flux.value(0) << endl;
+	}
+
+	/*if ( newUnitStr =="K"){
+		qDebug() << "Converted value is "<<convertedYValue;
+	}*/
 	return convertedYValue;
 }
 

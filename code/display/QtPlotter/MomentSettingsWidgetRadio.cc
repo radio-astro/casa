@@ -310,7 +310,9 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	previousCount = 0;
     cycleCount = 0;
 	progressBar.show();
+//#warning "Revert to THREADING"
 	collapseThread->start();
+	//collapseThread->run();
 }
 
 void MomentSettingsWidgetRadio::collapseDone(){
@@ -459,6 +461,7 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 	}
 	//Until we get to qwt6
 	ui.graphThresholdButton->setEnabled( false );
+	ui.graphThresholdButton->setVisible( false );
 }
 
 

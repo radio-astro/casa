@@ -52,6 +52,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <images/Images/ImageUtilities.h>
+#include <images/Images/ImageInfo.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/Display/Options.h>
 
@@ -2271,6 +2272,31 @@ void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
 }
 
 void QtProfile::setDisplayYUnits( const QString& unitStr ){
+
+	/*ImageInfo information = this->image->imageInfo();
+	GaussianBeam beam = information.restoringBeam();
+	Quantity majorQuantity = beam.getMajor();
+	qDebug() <<majorQuantity.getValue() << " Major units are: "<<majorQuantity.getUnit().c_str();
+	Quantity minorQuantity = beam.getMinor();
+	qDebug() <<minorQuantity.getValue() << " Minor units are: "<<minorQuantity.getUnit().c_str();
+	Quantity pa = beam.getPA();
+	qDebug() << "PA "<<pa.getValue()<<" unit="<<pa.getUnit().c_str();
+
+	//First we compute the solid angle of the beam.  The formula is
+	//PI * (half power width)^2 / 4 ln 2
+	double halfPowerWidth = (majorQuantity.getValue() + minorQuantity.getValue() ) / 2;
+	qDebug() << "Half power width"<<halfPowerWidth;
+	double solidAngle = 3.14159 * pow( halfPowerWidth, 2) / (4 * log( 2 ));
+	qDebug() << "Solid angle is "<<solidAngle;
+
+	//Temperature in Kelvin is now:
+	//Jy/beam x 10^(-32) x (3 x 10^8)^2 / ( solidAngle x 2 x 1.38 x 10^-23 x (xvalueinHz)^2 ).
+	double sampleValue = 3.24187; //Jy/beam
+	double xValue = 229755000000; //Hz
+	double num = sampleValue * 9 * pow( 10.0,-16);
+	double den = solidAngle * 2 * 1.38 * pow(xValue,2) * pow( 10.0,-23 );
+	double tempValue = num / den;
+	qDebug() << "Temperature is "<< tempValue;*/
 	pixelCanvas->setDisplayYUnits( unitStr );
 	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
 }

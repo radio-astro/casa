@@ -686,7 +686,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.164
+           VERSION 1.0.165
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -862,10 +862,21 @@ casa_find( XERCES
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
 )
-if( XERCES_VERSION VERSION_EQUAL   3.0 OR
-    XERCES_VERSION VERSION_GREATER 3.0 )
+if( XERCES_VERSION VERSION_EQUAL   3.2 OR
+    XERCES_VERSION VERSION_GREATER 3.2 )
   message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
 endif()
+
+#
+# Sqlite3
+#
+
+find_package ( SQLITE 3.3.6)
+if( NOT SQLITE_FOUND )
+  message (WARNING "Sqlite3 package not found")
+endif ( NOT SQLITE_FOUND )
+
+
 
 #
 # RPFITS (Fortran)
@@ -911,9 +922,9 @@ casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
 casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost )
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus Boost SQLITE)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
-casa_add_module( spectrallines CASACORE imageanalysis Boost)
+casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
 casa_add_module( display CASACORE WCSLIB QT4 casaqt synthesis imageanalysis Boost stdcasa casadbus spectrallines)
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)

@@ -63,6 +63,12 @@ namespace casa {
 			  QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 		virtual ~QtRegion( );
 
+		// needed for writing out a list of regions (CASA or DS9 format) because the
+		// output is based upon QtRegionState pointers (because that is what is available
+		// to the QtRegionDock... this should be rectified to use a list of QtRegion
+		// pointers for region output...
+		QtRegionState *state( ) { return mystate; }
+
 		const std::string name( ) const { return name_.toStdString( ); }
 		virtual QtMouseToolNames::PointRegionSymbols marker( ) const
 				{ return QtMouseToolNames::SYM_UNKNOWN; }
@@ -127,9 +133,9 @@ namespace casa {
 
 		// functions added with the introduction of RegionToolManager and the
 		// unified selection and manipulation of the various region types...
-		void mark( bool set=true ) { mystate->mark( set ); }
+		void mark( bool set=true );
 		bool marked( ) const { return mystate->marked( ); }
-		bool mark_toggle( ) { return mystate->mark_toggle( ); }
+		bool mark_toggle( );
 
 		bool markCenter( ) const { return mystate->markCenter( ); }
 
@@ -157,6 +163,7 @@ namespace casa {
 		/* void name( const QString &newname ); */
 		/* void color( const QString &newcolor ); */
 	    signals:
+		void regionChange( viewer::QtRegion *, std::string );
 		void regionCreated( int, const QString &shape, const QString &name,
 				    const QList<double> &world_x, const QList<double> &world_y,
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
@@ -168,6 +175,8 @@ namespace casa {
 					   const QList<double> &world_x, const QList<double> &world_y,
 					   const QList<int> &pixel_x, const QList<int> &pixel_y,
 					   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+		void selectionChanged(viewer::QtRegion*,bool);
 
 		/* void updated( ); */
 		/* void deleted( const QtRegion * ); */

@@ -3003,6 +3003,16 @@ void SolvableVisCal::applySNRThreshold() {
 
 }
 
+// Return the cal flag record, with tableName included
+Record SolvableVisCal::actionRec() {
+  Record cf;
+  cf.define("table",calTableName());
+  cf.merge(VisCal::actionRec());
+  return cf;
+}
+
+
+
 void SolvableVisCal::smooth(Vector<Int>& fields,
 			    const String& smtype,
 			    const Double& smtime) {
@@ -3556,15 +3566,20 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
     //    mss.reset(cti,MSSelection::PARSE_LATE,"","",field);
     mss.setFieldExpr(field);
     TableExprNode ten=mss.toTableExprNode(&cti);
-    //    cout << "Selected field list: " << mss.getFieldList() << endl;
+    cout << "Selected field list: " << mss.getFieldList() << endl;
 
     // Apply selection to table
-    getSelectedTable(*ct_,wholect,ten,"");
-    //    getSelectedTable(selct,wholect,ten,"");
-    //    cout << " selct.tableName() = " << selct.tableName() << endl;
-    //    cout << " selct.nrow()      = " << selct.nrow() << endl;
-    //    cout << " selct.tableType() = " << selct.tableType() << endl;
-    //    ct_ = new NewCalTable(selct.tableName(),Table::Old,Table::Memory);
+    try {
+      getSelectedTable(*ct_,wholect,ten,"");
+      //    getSelectedTable(selct,wholect,ten,"");
+      //    cout << " selct.tableName() = " << selct.tableName() << endl;
+      //    cout << " selct.nrow()      = " << selct.nrow() << endl;
+      //    cout << " selct.tableType() = " << selct.tableType() << endl;
+      //    ct_ = new NewCalTable(selct.tableName(),Table::Old,Table::Memory);
+    } catch (AipsError x) {
+      logSink() << x.getMesg() << LogIO::SEVERE;
+      throw(AipsError("Error selecting on caltable: "+ctname+"... "));
+    }
 
   }
   else
@@ -4223,6 +4238,13 @@ void SolvableVisJones::differentiate(CalVisBuffer& cvb) {
   // Nominal synchronization of dJs
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
 
   // VisBuffer indices
   Double* time=  cvb.time().data();
@@ -6045,7 +6067,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	if (nPA>0) {
 	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
-	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
 	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
 	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
 
@@ -6131,8 +6154,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
 		  
     } // iTran
     // max 3 coefficients
-    Matrix<Double> spidx(nTran,3,0.0);
-    Matrix<Double> spidxerr(nTran,3,0.0);
+    //Matrix<Double> spidx(nTran,3,0.0);
+    //Matrix<Double> spidxerr(nTran,3,0.0);
+    Matrix<Double> spidx(nFld,3,0.0);
+    Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
 
     for (Int iTran=0; iTran<nTran; iTran++) {
@@ -6157,20 +6182,19 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Polynomial< AutoDiff<Double> > bp(fitorder);
         fitter.setFunction(bp);
         // need the way to mask some spw
-      
-        Vector<Double> log_solFreq=log10(solFreq);
+        //Vector<Double> log_solFreq=log10(solFreq);
+        Vector<Double> log_relsolFreq=log10(solFreq)-mean(log10(solFreq));
         Vector<Double> log_fd=log10(fd.column(tranidx));
 
         //Vector<Double> soln=fitter.fit(log10(solFreq), log10(fd.column(tranidx)), fderr.column(tranidx)/solFreq);
-        Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        //Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
         Vector<Double> errs=fitter.errors();
         covar=fitter.compuCovariance();
 
         for (Int i=0; i<soln.nelements(); i++) {
-           //cout<<"soln("<<i<<")="<<soln(i)<<endl;
-           //cout<<"errs("<<i<<")="<<errs(i)<<endl;
-           spidx(iTran,i) = soln(i);
-           spidxerr(iTran,i) = errs(i);
+           spidx(tranidx,i) = soln(i);
+           spidxerr(tranidx,i) = errs(i);
         } 
         oFitMsg =" Fitted spectral index for ";
 	oFitMsg += fldNames(tranidx);

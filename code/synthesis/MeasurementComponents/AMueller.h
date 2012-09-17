@@ -90,9 +90,9 @@ public:
   virtual void setApply() {SolvableVisCal::setApply();}
   virtual void setApply(const Record& applypar);
 
-  // Apply this calibration to vb.  AMueller does NOT support avoidACs,
-  // and ignores it!
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, Bool avoidACs);
+  // Apply this calibration to vb.  AMueller does NOT support trial
+  //                                and ignores it!
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout, Bool trial=False);
 
   // Freq dependence
   virtual Bool freqDepPar() { return False; };
@@ -107,8 +107,8 @@ public:
 
   // Specialize corrupt to pre-zero model for corruption
   //using VisMueller::corrupt;
-  virtual void corrupt(VisBuffer& vb, Bool avoidACs);
-  //virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs);
+  virtual void corrupt(VisBuffer& vb);
+  //virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
 
   // Set (repeatedly, unfortunately) whether or not subtraction is being done,
   // and IF fitorder == 0, sync matrices for current meta data (VisMueller

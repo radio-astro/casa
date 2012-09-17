@@ -51,6 +51,8 @@ AnimatorWidget::AnimatorWidget(QWidget *parent)
 	rateNotSet = true;
 }
 
+
+
 void AnimatorWidget::blockSignals( bool block ){
 	ui.frameSlider_->blockSignals(block);
 	ui.frameEdit_->blockSignals( block );
@@ -60,6 +62,7 @@ void AnimatorWidget::blockSignals( bool block ){
 }
 
 void AnimatorWidget::setFrameInformation( int frm, int len ){
+	frameCount = len;
 	blockSignals( true );
 	ui.frameEdit_->setText(QString::number(frm));
 	ui.nFrmsLbl_ ->setText(QString::number(len));
@@ -77,6 +80,10 @@ void AnimatorWidget::setFrameInformation( int frm, int len ){
 	setModeEnabled( multiframe );
 }
 
+int AnimatorWidget::getFrameCount() const {
+	return frameCount;
+}
+
 void AnimatorWidget::setModeEnabled( bool multiframe ){
 	ui.rateLbl_->setEnabled(multiframe);
 	ui.rateEdit_->setEnabled(multiframe);
@@ -89,7 +96,7 @@ void AnimatorWidget::setModeEnabled( bool multiframe ){
 	ui.toEndTB_->setEnabled(multiframe);	//
 	ui.frameEdit_->setEnabled(multiframe);	// Frame number entry.
 	ui.nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-	ui.frameSlider_->setEnabled(multiframe);	// Frame number slider.
+	ui.frameSlider_->setEnabled(multiframe);	// Frame number slider.*/
 }
 
 void AnimatorWidget::setRateInformation( int minr, int maxr, int rate ){
@@ -110,10 +117,19 @@ int AnimatorWidget::getFrame() const {
 }
 void AnimatorWidget::setPlaying( int play ){
 	blockSignals( true );
+	this->play = play;
 	ui.revTB_ ->setChecked(play<0);
 	ui.stopTB_->setChecked(play==0);
 	ui.playTB_->setChecked(play>0);
 	blockSignals( false );
+}
+
+bool AnimatorWidget::isPlaying() const{
+	bool playing = false;
+	if ( play < 0 || play > 0 ){
+		playing = true;
+	}
+	return playing;
 }
 
 void AnimatorWidget::frameNumberEdited(){

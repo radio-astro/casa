@@ -1094,7 +1094,7 @@ bool FileBox::polAllowed(const Double xa, const Double ya) {
 }
 
 bool FileBox::planeAllowed(String xa, String ya) {
-   //cout << "xa=" << xa << " ya=" << ya << endl;
+   cout << "xa=" << xa << " ya=" << ya << endl;
    xa.gsub(" ", "");
    ya.gsub(" ", "");
 
@@ -1114,7 +1114,7 @@ bool FileBox::planeAllowed(String xa, String ya) {
       ipx = zIndex;
       idx = pIndex;
    }
-   //cout << "idx=" << idx << " ipx=" << ipx << endl;
+   cout << "idx=" << idx << " ipx=" << ipx << endl;
    String w[10];
    if (!allowc) {
       Int nw = split(xa, w, 10, ',');
@@ -1156,6 +1156,7 @@ bool FileBox::planeAllowed(String xa, String ya) {
 
 void FileBox::zPlaneChanged(){
    List<QtDisplayData*> DDs = qdp_->registeredDDs();
+
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() > 0) {
       qdds.toEnd();

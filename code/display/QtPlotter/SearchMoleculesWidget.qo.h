@@ -47,25 +47,38 @@ namespace casa {
  */
 class SearchThread : public QThread {
 public:
-	SearchThread( Searcher* searcher){
+	SearchThread( Searcher* searcher, int offset ){
 		this->searcher= searcher;
+		this->offset = offset;
 	}
 	String getErrorMessage() const {
 		return errorMsg;
 	}
-	Record getResults() const {
+	String getErrorMessageCount() const {
+		return errorMsgCount;
+	}
+
+	long getResultsCount() const {
+		return searchResultsCount;
+	}
+	vector<SplatResult> getResults() const {
 		return searchResults;
 	}
 	void run(){
-		searchResults = searcher->doSearch( errorMsg );
+		if ( offset == 0 ){
+			searchResultsCount = searcher->doSearchCount( errorMsgCount );
+		}
+		searchResults = searcher->doSearch( errorMsg, offset );
 	}
 	~SearchThread(){
-		delete searcher;
 	}
 private:
 	Searcher* searcher;
-	Record searchResults;
-	String errorMsg;
+	int searchResultsCount;
+	int offset;
+	vector<SplatResult> searchResults;
+	string errorMsg;
+	string errorMsgCount;
 };
 
 
@@ -77,13 +90,15 @@ public:
     SearchMoleculesWidget(QWidget *parent = 0);
     QString getUnit() const;
     bool isLocal() const;
+    //bool isPrevResults() const;
+    //bool isNextResults() const;
     void setRange( float min, float max, QString units );
     void updateReferenceFrame();
     static void setInitialReferenceFrame( QString initialReferenceStr );
     void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
     double getRedShiftedValue( bool reverseRedshift, double value ) const;
-    String getDatabasePath() const;
-    Record getSearchResults() const;
+    //String getDatabasePath() const;
+    vector<SplatResult> getSearchResults() const;
     MDoppler::Types getDopplerType() const;
     MRadialVelocity::Types getReferenceFrame() const;
     ~SearchMoleculesWidget();
@@ -93,12 +108,13 @@ signals:
 	void searchCompleted();
 
 private slots:
-    void openCatalog();
     void search();
     void searchUnitsChanged( const QString& searchUnits );
     void dopplerShiftChanged();
     void dopplerVelocityUnitsChanged();
     void searchFinished();
+    void prevResults();
+    void nextResults();
 
 private:
 
@@ -107,6 +123,7 @@ private:
     void setAstronomicalFilters( Searcher* searcher );
     void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
     void initializeSearchRange( QLineEdit* lineEdit, Double& value );
+    void startSearchThread();
 
     MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
@@ -114,17 +131,23 @@ private:
 		DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC };
 
     Ui::SearchMoleculesWidget ui;
-    String defaultDatabasePath;
-    String databasePath;
+    //String defaultDatabasePath;
+    //String databasePath;
     QString unitStr;
     QString dopplerVelocityUnitStr;
-    Record searchResults;
+    vector<SplatResult> searchResults;
     QList<QString> velocityUnitsList;
     QMap<QString, MRadialVelocity::Types> radialVelocityTypeMap;
     QMap<QString, MDoppler::Types> dopplerTypeMap;
     bool dopplerInVelocity;
     SearchThread* searchThread;
+    Searcher* searcher;
     QProgressDialog progressBar;
+
+    //Scrolling support
+    int searchResultCount;
+    int searchResultOffset;
+    int searchResultLimit;
 
     static const double SPLATALOGUE_DEFAULT_MIN;
     static const double SPLATALOGUE_DEFAULT_MAX;

@@ -119,7 +119,10 @@ public:
 
   // Correct in place the OBSERVED visibilities in a VisBuffer
   //  with the apply-able VisCals
-  void correct(VisBuffer& vb);
+  void correct(VisBuffer& vb, Bool trial=False);
+
+  // Report flag-by-cal statistics
+  Record actionRec();
 
   // Corrupt in place the MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals
@@ -133,7 +136,7 @@ public:
   // This collapse avoids I/O (assumes the vb data/model are ready),
   //  and uses a generic pivot (see setPivot) rather than the svc
   //  void collapseForSim(VisBuffer& vb);
-  void collapseForSim(VisBuffer& vb, const Bool avoidACs=True);
+  void collapseForSim(VisBuffer& vb);
 
   // Calculate residuals 
   //   (optionally for specific chan)

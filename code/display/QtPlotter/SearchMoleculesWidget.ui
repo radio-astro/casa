@@ -28,34 +28,6 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLabel" name="catalogueLabel">
-           <property name="text">
-            <string>&lt;font color='black'&gt;Catalogue:&lt;/font&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="catalogueLineEdit">
-           <property name="minimumSize">
-            <size>
-             <width>211</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="browseButton">
-           <property name="text">
-            <string>Browse...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QLabel" name="searchLabel">

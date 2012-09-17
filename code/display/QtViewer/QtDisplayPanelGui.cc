@@ -95,6 +95,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this);
+		connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), SIGNAL(regionChange(viewer::QtRegion*,std::string)));
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
@@ -264,12 +265,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
 	connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
 	connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
-	connect(animationHolder, SIGNAL(revPlay()),            SLOT(revPlay_()));
+	connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
 	connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
-	connect(animationHolder, SIGNAL(fwdPlay()),           SLOT(fwdPlay_()));
+	connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
 	connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
 	connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
 	connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+	connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
+	connect(animationHolder, SIGNAL(movieChannels(int,bool,int)), this, SLOT(movieChannels(int,bool,int)));
+	connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
 	animDockWidget_->setWidget(animationHolder);
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
@@ -685,14 +689,14 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	qdds.toEnd();
 	qdds.addRight(qdd);
 
-	updateFrameInformation();
 	emit ddCreated(qdd, autoRegister);
-
+	updateFrameInformation();
 	return qdd;
 }
 
 void QtDisplayPanelGui::updateFrameInformation(){
-	int displayDataCount = qdds_.len();
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	int displayDataCount = rdds.len();
 	animationHolder->setModeEnabled( displayDataCount );
 }
 
@@ -724,12 +728,24 @@ void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
 }
 
 void QtDisplayPanelGui::incrementMovieChannel(){
-	if ( movieChannel < movieChannelEnd ){
+
+	//Increment the channel
+	if ( movieChannel < movieChannelEnd || movieForward ){
 		movieChannel++;
 	}
 	else {
 		movieChannel--;
 	}
+
+	//Take care of wrap around in either direction.
+	if ( movieChannel > movieLast ){
+		movieChannel = 0;
+	}
+	if ( movieChannel < 0 ){
+		movieChannel = movieLast;
+	}
+
+	//Check to see if we should stop or continue playing
 	if ( movieChannel == movieChannelEnd ){
 		movieTimer.stop();
 	}
@@ -739,11 +755,33 @@ void QtDisplayPanelGui::incrementMovieChannel(){
 }
 
 void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
+	//Make sure it is not currently playing
+	//before we start a new one.
+	movieTimer.stop();
+	movieForward = false;
+	movieLast = endChannel+1;
+
+	//Start a new movie.
 	int animationRate = animationHolder->getRate( AnimatorHolder::NORMAL_MODE );
 	movieTimer.setInterval( 1000/ animationRate );
 	movieChannel = startChannel;
 	movieChannelEnd = endChannel;
 	movieTimer.start();
+}
+
+void QtDisplayPanelGui::movieChannels( int startChannel, bool forward,
+		int maxChannels ){
+	movieTimer.stop();
+
+	movieForward = forward;
+	movieLast = maxChannels;
+	movieChannelEnd = -1;
+	movieChannel = startChannel;
+	movieTimer.start();
+}
+
+void QtDisplayPanelGui::movieStop(){
+	movieTimer.stop();
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
@@ -791,6 +829,14 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 	}
 
 	qdp_->loadRegions( path, datatype, displaytype );
+}
+
+std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format ) {
+    std::transform(format.begin(), format.end(), format.begin(), ::tolower);
+    if ( format != "ds9" && format != "crtf" ) {
+	return "invalid output format '" + format + "'";
+    }
+    return regionDock_->outputRegions( regions, file, format );
 }
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
@@ -961,28 +1007,27 @@ void QtDisplayPanelGui::createNewPanel( ) {
 }
 
 void QtDisplayPanelGui::showDataManager() {
-	if(qdm_==0) qdm_ = new QtDataManager(this);
+	if(qdm_==0) {
+	    qdm_ = new QtDataManager(this);
+	    connect( this, SIGNAL(ddRemoved(QtDisplayData*)),       qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));
+	    connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
+	}
 	qdm_->showNormal();
-	qdm_->raise();  }
+	qdm_->raise();
+}
 
 void QtDisplayPanelGui::hideDataManager() {
 	if(qdm_==0) return;
 	qdm_->hide();  }
 
 void QtDisplayPanelGui::showExportManager() {
-	if(qem_==0) {
-		qem_ = new QtExportManager(this);
-		connect(this, SIGNAL(ddRemoved(QtDisplayData*)), qem_, SLOT(updateEM(QtDisplayData*)));
-		connect(this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qem_, SLOT(updateEM(QtDisplayData*, Bool)));
-	}
-	qem_->updateEM();
-	qem_->showNormal();
-	qem_->raise();  }
+	showDataManager( );
+	qdm_->showTab("save image");
+}
 
 void QtDisplayPanelGui::hideExportManager() {
-	if(qem_==0) return;
-	qem_->hide();  }
-
+	hideDataManager( );
+}
 
 void QtDisplayPanelGui::showPreferences( ) {
 	if ( preferences == 0 )
@@ -1612,12 +1657,13 @@ void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
 
 void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
 	// Display tracking data gathered by underlying panel.
-
 	for(uInt i=0; i<trackingRec.nfields(); i++) {
 		TrackBox* trkBox = trkBox_(trackingRec.name(i));
-		if(trkBox!=0) trkBox->setText(trackingRec.asString(i));  }  }
-
-
+		if(trkBox!=0){
+			trkBox->setText(trackingRec.asString(i));
+		}
+	}
+}
 
 TrackBox* QtDisplayPanelGui::trkBox_(QtDisplayData* qdd) {
 	return trkBox_(qdd->name());  }
@@ -1911,7 +1957,7 @@ Bool QtDisplayPanelGui::syncDataDir_(String filename) {
 
 	QString datadirname = datadir.path();
 
-	if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname);
+	if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname.toStdString( ));
 	else selectedDMDir = datadirname.toStdString();
 	return True;  }
 
@@ -2101,22 +2147,31 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 		if(anyUdds) {
 			action = new QAction("Register All", ddRegMenu_);
 			ddRegMenu_->addAction(action);
-			connect(action, SIGNAL(triggered()),  qdp_, SLOT(registerAll()));  }
+			connect(action, SIGNAL(triggered()),  this, SLOT(registerAllDDs()));  }
 
 		if(anyRdds) {
 			action = new QAction("Unregister All", ddRegMenu_);
 			ddRegMenu_->addAction(action);
-			connect(action, SIGNAL(triggered()),  qdp_, SLOT(unregisterAll()));  }
+			connect(action, SIGNAL(triggered()), this, SLOT(unregisterAllDDs()));  }
 
 
 		ddCloseMenu_->addSeparator();
 
 		action = new QAction("Close All", ddCloseMenu_);
 		ddCloseMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));  }  }
+		connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));
+	}
+}
 
+void QtDisplayPanelGui::registerAllDDs(){
+	qdp_->registerAll();
+	updateFrameInformation();
+}
 
-
+void QtDisplayPanelGui::unregisterAllDDs(){
+	qdp_->unregisterAll();
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::closeEvent(QCloseEvent *event) {
@@ -2187,7 +2242,9 @@ void QtDisplayPanelGui::ddRegClicked_() {
 	if(action==0) return;		// (shouldn't happen).
 	QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-	qdp_->registerDD(dd);  }
+	qdp_->registerDD(dd);
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::ddUnregClicked_() {
@@ -2195,7 +2252,9 @@ void QtDisplayPanelGui::ddUnregClicked_() {
 	if(action==0) return;		// (shouldn't happen).
 	QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-	qdp_->unregisterDD(dd);  }
+	qdp_->unregisterDD(dd);
+	updateFrameInformation();
+}
 
 
 void QtDisplayPanelGui::ddCloseClicked_() {

@@ -1,4 +1,4 @@
-//# StandardVisCal.h: Declaration of standard (Solvable)VisCal types
+//# EJones.h: Antenna-pattern related calibration term: E Jones
 //# Copyright (C) 1996,1997,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -58,11 +58,18 @@ public:
   virtual String typeName()     { return "EGainCurve"; };
   virtual String longTypeName() { return "EGainCurve (Gain(elev) corrections)"; };
 
+  // Gain curve coeffs are Float parameters
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
+
   // Type of Jones matrix (
   Jones::JonesType jonesType() { return Jones::Diagonal; };
 
   // Local specialization of setApply to extract gain curves from table
   void setApply(const Record& applypar);
+
+  // Generate gain curves caltable via specify
+  void setSpecify(const Record& specify);
+  void specify(const Record& specify);
 
   // Guess (throws error because we don't yet solve for this)
   virtual void guessPar(VisBuffer& vb);
@@ -92,6 +99,9 @@ private:
   // avoid compiler warnings
   using SolvableVisJones::setApply;  
 
+  // Name of the gain curve source table
+  String gainCurveSrc_;
+
   // The observation start time (for selecting gain curves)
   Double obstime_;
 
@@ -104,71 +114,13 @@ private:
   // Zenith angles
   Vector<Double> za_;
 
+  // Effeciency samples
+  Vector<Double> eff_;
+
   // Local spwOK_
   Vector<Bool> spwOK_;
-
-
   
 };
-
-
-// **********************************************************
-//  EPJones (pointing errors)
-//
-/*
-class EPJones : public SolvableVisJones {
-public:
-
-  // Constructor
-  EPJones(VisSet& vs);
-  //   EPJones(const Int& nAnt);  // NYI
-
-  virtual ~EPJones();
-
-  // Return the type enum
-  virtual Type type() { return VisCal::E; };
-
-  // Return type name as string
-  virtual String typeName()     { return "EP Jones"; };
-  virtual String longTypeName() { return "EP Jones (pointing errors)"; };
-
-  // Type of Jones matrix according to nPar()
-  Jones::JonesType jonesType() { return Jones::Diagonal; };
-
-  // Specialized access to pointing parameters (no chan axis)
-  Matrix<Float>& pointPar();
-
-  // Arrange to apply (corrupt only)
-  using SolvableVisCal::setApply;
-  virtual void setApply(const Record& applypar);
-
-  // Apply calibration to a VisBuffer 
-  virtual void applyCal(VisBuffer& vb, 
-			Cube<Complex>& Mout);
-
-  // Differentiate a VisBuffer w.r.t. pointng parameters
-  virtual void differentiate(VisBuffer& vb,
-			     Cube<Complex>& Mout,
-			     Array<Complex>& dMout,
-			     Matrix<Bool>& Mflg);
-
-protected:
-
-  // EP has two real parameters
-  virtual Int nPar() { return 2; };
-
-  // Jones matrix elements are NOT trivial
-  virtual Bool trivialJonesElem() { return False; };
-
-private:
-
-  // Local Matrix for referencing pointing pars in a convenient way
-  Matrix<Float> pointPar_;
-
-};
-*/
-
-
 
 
 } //# NAMESPACE CASA - END

@@ -1023,9 +1023,44 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress, Bool doModelData)
 
 String VisSet::msName(){
 
-  String a=ms_p.antenna().tableName();
-  return a.erase(a.length()-8);
+  String name;
+  if(ms_p.isMarkedForDelete()){ // this is a temporary selected table
+    Block<String> refTables = ms_p.getPartNames(False);
+    name = refTables[0];
+  }
+  else{
+    name = ms_p.tableName();
+  }
+  return name;
+
 }
+
+String VisSet::sysCalTableName(){
+
+  return ms_p.sysCalTableName();
+}
+
+String VisSet::spectralWindowTableName(){
+  
+  return ms_p.spectralWindowTableName();
+}
+
+String VisSet::fieldTableName(){
+  
+  return ms_p.fieldTableName();
+}
+
+String VisSet::syspowerTableName(){
+  
+  return ms_p.rwKeywordSet().asTable("SYSPOWER").tableName();
+}
+
+String VisSet::caldeviceTableName(){
+  
+  return ms_p.rwKeywordSet().asTable("CALDEVICE").tableName();
+}
+
+
 
 
 } //# NAMESPACE CASA - END

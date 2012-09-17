@@ -21,48 +21,50 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-#include "SearcherFactory.h"
-#include <spectrallines/Splatalogue/Searcher.h>
-#include <spectrallines/Splatalogue/SQLiteSearch/SearcherSQLite.h>
-#include <casa/System/Aipsrc.h>
+//#
 
+#include "DatabaseConnector.h"
+#include <sys/stat.h>
+#include <sqlite3.h>
 #include <iostream>
 using namespace std;
 
 namespace casa {
 
-Searcher* SearcherFactory::getSearcher( bool local ){
-	Searcher* searcher = NULL;
-	if ( local ){
-		//Note:: When the SQLite code (and database get put into its
-		//own library, finding the location of the database should be
-		//removed from here and put into the DatabaseConnector.
-		String defaultDatabasePath;
-		Bool foundDatabase = Aipsrc::find(defaultDatabasePath, "user.ephemerides.SplatDefault.tbl");
-		if( !foundDatabase ){
-			foundDatabase = Aipsrc::findDir(defaultDatabasePath, "data/ephemerides/SplatDefault.tbl");
-		}
+DatabaseConnector* DatabaseConnector::connection = NULL;
 
-		if ( foundDatabase ) {
-			const String tableName = "SplatDefault.tbl";
-			int index = defaultDatabasePath.find(tableName, 0);
-			int tableNameSize = tableName.length();
-			defaultDatabasePath.replace(index, tableNameSize, "splat.db");
-			searcher = new SearcherSQLite(defaultDatabasePath.c_str() );
-		}
+string DatabaseConnector::databasePath = "";
+
+DatabaseConnector::DatabaseConnector( const string& path ) {
+	databasePath = path;
+	int rc = sqlite3_open( databasePath.c_str(), &db );
+	if ( rc != SQLITE_OK ){
+		cout << "Can't open database: "<<sqlite3_errmsg(db) << endl;
+		sqlite3_close( db );
 	}
-	else {
-		cout << "Only local database searches are currently supported"<<endl;
-	}
-	return searcher;
 }
 
-
-
-SearcherFactory::SearcherFactory(){
+string DatabaseConnector::getCreatedDate(){
+	struct tm* clock;
+	struct stat attrib;
+	stat(databasePath.c_str(), &attrib );
+	clock = gmtime(&(attrib.st_mtime));
+	char* timeStr = asctime( clock );
+	string fileDate( timeStr );
+	return fileDate;
 }
 
-SearcherFactory::~SearcherFactory(){
+sqlite3* DatabaseConnector::getDatabase( const string& path){
+	if ( connection == NULL ){
+		connection = new DatabaseConnector( path );
+	}
+	return connection->db;
+}
+
+DatabaseConnector::~DatabaseConnector() {
+	if ( db != NULL ){
+		sqlite3_close( db );
+	}
 }
 
 } /* namespace casa */

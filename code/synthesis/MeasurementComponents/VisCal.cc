@@ -180,6 +180,10 @@ void VisCal::setApply(const Record& apply) {
   // This is apply context  
   setApplied(True);
 
+  // Initialize flag counting
+  initCalFlagCount();
+
+
 }
 
 
@@ -192,25 +196,32 @@ String VisCal::applyinfo() {
 
 }
 
-void VisCal::correct(VisBuffer& vb, Bool avoidACs) {
+void VisCal::correct(VisBuffer& vb, Bool trial) {
 
   if (prtlev()>3) cout << "VC::correct(vb)" << endl;
 
+  // Count pre-cal flags
+  countInFlag(vb);
+
   // Call non-in-place version, in-place-wise:
-  correct(vb,vb.visCube(),avoidACs);
+  correct(vb,vb.visCube(),trial);
+
+  // Count post-cal flags
+  countOutFlag(vb);
+
 }
 
 
 // void VisCal::corrupt(VisBuffer& vb) {
-void VisCal::corrupt(VisBuffer& vb, Bool avoidACs) {
+void VisCal::corrupt(VisBuffer& vb) {
 
   if (prtlev()>3) cout << "VC::corrupt(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
-  corrupt(vb,vb.modelVisCube(),avoidACs);
+  corrupt(vb,vb.modelVisCube());
 }
 
-void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool avoidACs) {
+void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool trial) {
 
   if (prtlev()>3) cout << " VC::correct(vb,Vout)" << endl;
   
@@ -223,12 +234,12 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool avoidACs) {
   syncCal(vb,True);
 
   // Call generic row-by-row apply, with inversion turned ON
-  applyCal(vb,Vout,avoidACs);
+  applyCal(vb,Vout,trial);
 
 }
 
 // void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
-void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs) {
+void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   if (prtlev()>3) cout << " VC::corrupt()" << endl;
 
@@ -247,11 +258,26 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs) {
   syncCal(vb,False);
 
   // Call generic row-by-row apply, with inversion turned OFF
-  applyCal(vb,Mout,avoidACs);
+  applyCal(vb,Mout);
 
   // Restore user's calWt()
   calWt()=userCalWt;
 
+}
+
+void VisCal:: initCalFlagCount() {
+  ndataIn_=nflagIn_=nflagOut_=0;
+}
+
+Record VisCal::actionRec() {
+  Record cf;
+  if (isApplied()) {
+    cf.define("type",typeName());
+    cf.define("ndata",ndataIn_);
+    cf.define("nflagIn",nflagIn_);
+    cf.define("nflagOut",nflagOut_);
+  }
+  return cf;
 }
 
 
@@ -307,6 +333,17 @@ void VisCal::currMetaNote() {
 }
 
 // VisCal PROTECTED:
+
+
+void VisCal::countInFlag(const VisBuffer& vb) {
+  Int ncorr=vb.nCorr();
+  ndataIn_+=(vb.flag().nelements()*ncorr);
+  nflagIn_+=(ntrue(vb.flag())*ncorr);
+}
+
+void VisCal::countOutFlag(const VisBuffer& vb){
+  nflagOut_+=ntrue(vb.flag())*vb.nCorr(); 
+}
   
 void VisCal::syncCal(const VisBuffer& vb,
 		     const Bool& doInv) {
@@ -652,11 +689,18 @@ void VisMueller::state() {
 
 // Apply this calibration to VisBuffer visibilities
 void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			  Bool avoidACs) {
+			  Bool trial) {
 
   if (prtlev()>3) cout << "  VM::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
+  /*
+  cout << "VM::applyCal: type= " << typeName() << "  trial = " 
+       << boolalpha << trial << " calWt = " << calWt() 
+       << "  freqDepPar() = " << freqDepPar()
+       << "  freqDepMat() = " << freqDepMat()
+       << endl;
+  */
 
   // Data info/indices
   Int* dataChan;
@@ -664,20 +708,28 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Bool* flag=&vb.flag()(0,0);
   Int* a1=&vb.antenna1()(0);
   Int* a2=&vb.antenna2()(0);
+  Matrix<Float> wtmat;
 
   // Access to weights
-  ArrayIterator<Float> wt(vb.weightMat(),1);
+  if (calWt() && !trial) 
+    wtmat.reference(vb.weightMat());
+
+  ArrayIterator<Float> wt(wtmat,1);
   Vector<Float> wtvec;
+
+  if (V().type()==VisVector::One) {
+    cout << "  (setScalarData(True))   " << endl;
+    M().setScalarData(True);
+  }
+  else
+    M().setScalarData(False);
 
   // iterate rows
   Int& nRow(vb.nRow());
   Int& nChanDat(vb.nChannel());
   Int ibln;
-  for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
+  for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
     
-    // Avoid ACs
-    if (avoidACs && *a1==*a2) *flagR=True;
-
     if (!*flagR) {  // if this row unflagged
 
       // The basline number
@@ -692,40 +744,42 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
       if (freqDepMat() && !freqDepPar())
 	startChan()=(*dataChan);
 
-      if (freqDepMat() && freqDepPar()) {
-	solCh0=(*dataChan)-startChan();
-	if (solCh0 < 0) solCh0=0;
-      }
-    
       // Solution and data array registration
       M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
-      V().sync(Vout(0,0,row));
+      if (!trial)
+	V().sync(Vout(0,0,row));
 
-      wtvec.reference(wt.array());
 
       for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
 
-	// data and solution ok, do the apply
-	if (!*flag)
-	  M().apply(V(),*flag);
-
-	// inc soln ch axis if freq-dependent (and next dataChan within soln)
-	if (freqDepMat() && 
-	    ( *dataChan+1>startChan() &&
-	      (*dataChan+1)<(startChan()+nChanMat() ) ) ) {
-	  M()++; 
+	if (trial) 
+	  M().applyFlag(*flag);
+	else {
+	  // data and solution ok, do the apply
+	  if (!*flag)
+	    M().apply(V(),*flag);
 	}
+
+	// inc soln ch axis if freq-dependent 
+	if (freqDepMat()) 
+	  M()++; 
 
       } // chn
 
       // If requested update the weights
-      if (calWt()) updateWt(wtvec,*a1,*a2);
-
+      if (calWt() && !trial) {
+	wtvec.reference(wt.array());
+	updateWt(wtvec,*a1,*a2);
+      }
 
     } // !*flagR
     else {
       flag+=nChanDat; 
     }
+
+    if (calWt() && !trial)
+      wt.next();
+
   }
 
 }
@@ -1045,12 +1099,19 @@ void VisJones::state() {
 
 // Apply this calibration to VisBuffer visibilities
 void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			Bool avoidACs) {
+			Bool trial) {
 
   if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
 
+  /*
+  cout << "VJ::applyCal: type= " << typeName() << "  trial = " 
+       << boolalpha << trial << " calWt = " << calWt() 
+       << "  freqDepPar() = " << freqDepPar()
+       << "  freqDepMat() = " << freqDepMat()
+       << endl;
+  */
 
   if (applyByMueller()) 
     VisMueller::applyCal(vb,Vout);
@@ -1064,21 +1125,34 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     Bool* flag=&vb.flag()(0,0);
     Int* a1=&vb.antenna1()(0);
     Int* a2=&vb.antenna2()(0);
+    Matrix<Float> wtmat;
+
+    // Prepare to cal weights
+    if (!trial)
+      wtmat.reference(vb.weightMat());
   
-    ArrayIterator<Float> wt(vb.weightMat(),1);
+    ArrayIterator<Float> wt(wtmat,1);
     Vector<Float> wtvec;
 
-    //cout << "VC:apply " << Vout(0,0,1216) << " ... ";
-    
+    // Alert Jones matrices to whether data is scalar or not
+    //  (this is relevant only for proper handling of flags
+    //   in case of scalar data, for now)
+    if (V().type()==VisVector::One) {
+      cout << "    (setScalarData(True))  " << endl;
+      J1().setScalarData(True);
+      J2().setScalarData(True);
+    }
+    else {
+      J1().setScalarData(False);
+      J2().setScalarData(False);
+    }
+
     // iterate rows
     Int& nRow(vb.nRow());
     Int& nChanDat(vb.nChannel());
     //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
-    for (Int row=0; row<nRow; row++,flagR++,a1++,a2++,wt.next()) {
+    for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
       
-      // Avoid ACs
-      if (avoidACs && *a1==*a2) *flagR=True;
-
       if (!*flagR) {  // if this row unflagged
 	
 	// Solution channel registration
@@ -1100,17 +1174,23 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 	// Solution and data array registration
 	J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
 	J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
-	V().sync(Vout(0,0,row));
+	if (!trial)
+	  V().sync(Vout(0,0,row));
 
-	wtvec.reference(wt.array());
 
 	for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
 	  
-	  // if this data channel unflagged
-	  if (!*flag) {
-	    J1().applyRight(V(),*flag);
-	    J2().applyLeft(V(),*flag);
-
+	  if (trial) {
+	    // only update flag info
+	    J1().applyFlag(*flag);
+	    J2().applyFlag(*flag);
+	  }
+	  else {
+	    // if this data channel unflagged
+	    if (!*flag) {
+	      J1().applyRight(V(),*flag);
+	      J2().applyLeft(V(),*flag);
+	    }
 	  }
 	  
 	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
@@ -1125,15 +1205,21 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 	
 
 	// If requested, update the weights
-	if (calWt()) updateWt(wtvec,*a1,*a2);
-	
+	if (!trial && calWt()) {
+	  wtvec.reference(wt.array());
+	  updateWt(wtvec,*a1,*a2);
+	}
+
       } // !*flagR
       else {
-	flag+=nChanDat; 
+        flag+=nChanDat; 
       }
-    }
-    //    cout << Vout(0,0,1216) << endl;
 
+      if (!trial)
+	wt.next();
+
+    }
+    
   }
 
 }

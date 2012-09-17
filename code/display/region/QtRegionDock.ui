@@ -20,7 +20,7 @@
    <string>Regions</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <widget class="QStackedWidget" name="regions">
+   <widget class="QStackedWidget" name="region_stack">
     <property name="geometry">
      <rect>
       <x>0</x>

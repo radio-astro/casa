@@ -505,7 +505,6 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		// Fetching tracking info for a non-conforming display data results
 		//           in "blanking" the tracking info...
 		// During "blinking" mode, this is bad...
-
     trackingRec.define(qdd->name(), qdd->trackingInfo(ev));  }
   
   
@@ -1992,34 +1991,37 @@ void QtDisplayPanel::goToB_(Int frm) {
 
          
 
-void QtDisplayPanel::setMode(bool modez) {
+void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
   // True: "Normal" ("Z") mode.  False: "Blink" ("B") mode.
   // (NB: small 'b' bool for a reason -- see declataion of goTo(int)).
-
+	stop_();
   if(modeZ_!=modez) {	// (already there otherwise).
 
-	stop_();
+	
     modeZ_ = modez;
   
     hold();
   
     goToZ_(zIndex());	// (Sets proper multi-panel zIndex increment
 			//  in accordance with new mode, primarily).
-  
-    if(mode()=="Blink")  goToB_(bIndex());
+    if(mode()=="Blink" || channelCubes ){
+    	goToB_(bIndex());
+    }
 		// (Sets 'Blink restrictions').    
-    else  pd_->removeRestriction("bIndex");
+    else {
+    	pd_->removeRestriction("bIndex");
+    }
 		// (Those restrictions shouldn't exist in "Normal" mode).
 
     checkColorBars_();
     
-    release();
+    release();}
     emit animatorChange();
   }
 
   
   
-}
+
 
 
 

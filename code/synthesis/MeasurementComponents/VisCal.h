@@ -146,14 +146,18 @@ public:
 
   // Apply calibration to data in VisBuffer (correct Data or corrupt Model)
   //  (in-place versions)
-  virtual void correct(VisBuffer& vb,Bool avoidACs=True);
+  virtual void correct(VisBuffer& vb, Bool trial=False);
   //  virtual void corrupt(VisBuffer& vb);
-  virtual void corrupt(VisBuffer& vb, Bool avoidACs=True);
+  virtual void corrupt(VisBuffer& vb);
   // Apply calibration to data in VisBuffer; 
   //  (alternate output versions)
-  virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool avoidACs=True);
+  virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
   //  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
-  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs=True);
+  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
+
+  // Flag counting
+  virtual void initCalFlagCount();
+  virtual Record actionRec();
 
   // Report the state
   virtual void state();
@@ -230,9 +234,12 @@ protected:
   // Access to weight-scaling factors
   inline Matrix<Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
 
+  // Flag counting
+  virtual void countInFlag(const VisBuffer& vb);
+  virtual void countOutFlag(const VisBuffer& vb);
+
   // Row-by-row apply to a Cube<Complex> (generic)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			Bool avoidACs=True)=0;
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False)=0;
 
   // Synchronize "gains" with a VisBuffer or another VisCal
   virtual void syncCal(const VisBuffer& vb,
@@ -341,6 +348,9 @@ private:
   // Weight scale factors
   PtrBlock<Matrix<Float>*> currWtScale_;  // [nSpw](nPar,nElm)
 
+  // Flag counting
+  Int ndataIn_, nflagIn_, nflagOut_;
+
   // Print level
   Int prtlev_;
 
@@ -408,8 +418,7 @@ protected:
   inline Bool MValid()      {return MValid_(currSpw());};
 
   // Row-by-row apply to a Cube<Complex> (applyByMueller override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			Bool avoidACs=True);
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
 
   // Sync matrices for current meta data (Mueller override)
   virtual void syncCalMat(const Bool& doInv=False);
@@ -531,8 +540,7 @@ protected:
   inline Bool JValid()      {return JValid_(currSpw());};
 
   // Row-by-row apply to a Cube<Complex> (applyByJones override)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,
-			Bool avoidACs=True);
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
 
   // Sync matrices for current meta data (VisJones override)
   virtual void syncCalMat(const Bool& doInv=False);

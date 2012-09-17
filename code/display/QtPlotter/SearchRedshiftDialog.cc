@@ -26,7 +26,6 @@
 #include <display/QtPlotter/SearchMoleculesWidget.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <display/Display/Options.h>
-#include <spectrallines/Splatalogue/SplatalogueTable.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDoppler.h>
 #include <QDebug>
@@ -139,21 +138,26 @@ void SearchRedshiftDialog::findRedshift(){
 
 	//Acquire the searcher that will do the search for us.
 	Searcher* searcher = SearcherFactory::getSearcher( localSearch);
-	searcher->setDatabasePath( databasePath );
+	if ( searcher == NULL){
+		QString msg( "The local database was not found so search functionality is unavailable.");
+		Util::showUserMessage( msg, this );
+		return;
+	}
+	searcher->setSearchResultLimit( -1 );
 
-	Vector<String> chemNames;
+	vector<string> chemNames;
 	searcher->setChemicalNames( chemNames );
 
 	//Get the search parameters
 	QString speciesName = ui.speciesCombo->currentText();
 	if ( speciesName.length() > 0 ){
-		Vector<String> speciesList( 1 );
+		vector<string> speciesList( 1 );
 		speciesList[0] = speciesName.toStdString();
 		searcher->setSpeciesNames( speciesList );
 
 		//Create a temporary file for the search results
-		String resultTableName = viewer::options.temporaryPath("SearchRedshiftResults");
-		searcher->setResultFile( resultTableName );
+		//String resultTableName = viewer::options.temporaryPath("SearchRedshiftResults");
+		//searcher->setResultFile( resultTableName );
 
 		//Range for the search should be everything.
 		Double minValue = 0;
@@ -162,7 +166,7 @@ void SearchRedshiftDialog::findRedshift(){
 
 		//Start the background thread that will do the search
 		delete searchThread;
-		searchThread = new SearchThread( searcher );
+		searchThread = new SearchThread( searcher, 0 );
 		connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 		searchThread->start();
 		progressBar.show();
@@ -188,7 +192,7 @@ double SearchRedshiftDialog::getTargetFrequency() const{
 }
 
 void SearchRedshiftDialog::searchFinished(){
-	Record results = searchThread->getResults();
+	vector<SplatResult> results = searchThread->getResults();
 	int resultCount = results.size();
 	if ( resultCount == 0 ){
 		progressBar.hide();
@@ -202,11 +206,11 @@ void SearchRedshiftDialog::searchFinished(){
 	double targetFrequency = getTargetFrequency();
 	double restFrequency = -1;
 	for ( int i = 0; i < resultCount; i++ ){
-		Record line = results.asRecord("*" + String::toString(i) );
+		//Record line = results.asRecord("*" + String::toString(i) );
 
 		//Frequency
-		Record frequencyRecord = line.asRecord(SplatalogueTable::RECORD_FREQUENCY);
-		double freqValue = frequencyRecord.asdouble( SplatalogueTable::RECORD_VALUE );
+		double freqValue = results[i].getFrequency().first;
+
 
 		//In GHz, the redshifted value (targetFrequency) will be smaller
 		//than the rest frequency.  We are looking for the rest frequency

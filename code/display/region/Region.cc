@@ -82,7 +82,8 @@ namespace casa {
 	    double blcx, blcy, trcx, trcy;
 	    boundingRectangle(blcx,blcy,trcx,trcy);
 	    double pblcx, pblcy, ptrcx, ptrcy;
-	    linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy );
+	    try { linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy ); }
+	    catch (...) { return true; }
 	    // non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
 	    return (ptrcx - pblcx) < 1 && (ptrcy - pblcy) < 1;
 	}

@@ -40,9 +40,10 @@
 #include <cmath>
 #include <QtGui>
 #include <iostream>
+#include <algorithm>
 #include <graphics/X11/X_exit.h>
 
-
+using namespace std;
  
 namespace casa { 
 
@@ -275,7 +276,7 @@ void QtCanvas::setDataRange()
 
 	QtPlotSettings settings;
 	adjustExtremes( &xmin, &xmax );
-	//adjustExtremes( &ymin, &ymax );
+	adjustExtremes( &ymin, &ymax );
 
 	//Store the results in the plot settings
 	if (autoScaleX) {
@@ -1588,12 +1589,32 @@ QPixmap* QtCanvas::graph()
    return &pixmap;
 }
 
-void QtCanvas::adjustExtremes( double* const min, double* const max ) const {
-	const float BOUND = 0.00000001f;
-	const float ADJUSTMENT = 0.000000001f;
+void QtCanvas::adjustExtremes( double* const min, double* const max) const {
+	const float BOUND = 0.0001f;
+	const double ADJUSTMENT = 0.00001f;
 	if ( fabs(*max - *min) < BOUND ){
-		*max = *max + ADJUSTMENT;
-		*min = *min - ADJUSTMENT;
+		//Calculate the actual adjustment based on the magnitude of the
+		//difference.
+		float diff = fabs(*max - *min );
+		double scaleFactor = 1;
+		if ( diff > 0 ){
+			while ( diff < 1 ){
+				diff = diff * 10;
+				scaleFactor = scaleFactor / 10;
+			}
+		}
+		else {
+			//The values are equal so base the difference on the
+			//same scale as the value.
+			float value = *min;
+			while( value > 0 && value < 1 ){
+				value = value * 10;
+				scaleFactor = scaleFactor / 10;
+			}
+		}
+		double actualAdjustment = std::min( ADJUSTMENT, scaleFactor );
+		*max = *max + actualAdjustment;
+		*min = *min - actualAdjustment;
 	}
 }
 
