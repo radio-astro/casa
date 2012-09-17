@@ -799,6 +799,26 @@ class simutil:
 
     def noisetemp(self, telescope=None, freq=None,
                   diam=None, epsilon=None):
+
+        """
+        Noise temperature and efficiencies for several telescopes:
+              ALMA, ACA, EVLA, VLA, and SMA
+        Input: telescope name, frequency as a quantity string "300GHz", 
+               dish diameter (optional - knows diameters for arrays above)
+               epsilon = rms surface accuracy in microns (also optional - 
+                   this method contains the spec values for each telescope)
+        Output: eta_p phase efficieny (from Ruze formula), 
+                eta_s spill (main beam) efficiency,
+                eta_b geometrical blockage efficiency,
+                eta_t taper efficiency,
+                eta_q correlator efficiency including quantization,
+                t_rx  reciever temperature.
+        antenna efficiency = eta_p * eta_s * eta_b * eta_t
+        Notes: VLA correlator efficiency includes waveguide loss
+               EVLA correlator efficiency is probably optimistic at 0.88
+        """
+
+        return eta_p, eta_s, eta_b, eta_t, eta_q, t_rx
         
         if telescope==None: telescope=self.telescopename
         telescope=str.upper(telescope)
@@ -2536,8 +2556,8 @@ class simutil:
     # image/clean subtask
 
     def imclean(self,mstoimage,imagename,
-              cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
-              outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
+                cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
+                outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
         from clean import clean
 
         # determine channelization from (first) ms:
@@ -2572,7 +2592,7 @@ class simutil:
             ftmachine="mosaic" 
 
         # in 3.4 clean doesn't accept just any imsize
-        from cleanhelper import *
+        from cleanhelper import getOptimumSize
         optsize=[0,0]
         optsize[0]=cleanhelper.getOptimumSize(imsize[0])
         nksize=len(imsize)

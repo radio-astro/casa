@@ -344,7 +344,7 @@ class par(str):
 
 		(for simanalyze)
 		cell -- output cell/pixel size
-		default: ''   #uses incell value for the output cell size
+		default: ''  # uses incell value for the output cell size
 	        example: '0.1arcsec'
 		
 	        -----------------------------------------------------
@@ -673,7 +673,7 @@ class par(str):
 		* can optionally be a list of pointings, which will override
 		pointingspacing. When direction is a list, the centroid of
 		direction will be used as the center.
-		* otherwise simdata will pack mapsize according to maptype
+		* otherwise simobserve will fill mapsize according to maptype
 		default: ""
 		example: 'J2000 19h00m00 -40d00m00'
 		"""
@@ -1204,14 +1204,6 @@ class par(str):
 		numerical values in your image and assume they are in Jy/pixel,
 		even if it says some other unit in the header. This will be made
 		more flexible in the future.
-
-		----------------------------------------------------------------
-		
-		(for simobserve)
-		inbright -- peak surface brightness to scale input image
-		in Jy/square arcsec.
-		options: 'default' or surface brightness in Jy/sq.arcsec.
-		default: 'default'
 		"""
 
 	@staticmethod

@@ -479,20 +479,20 @@ def simobserve(
         util.direction = dir0
         
         # if the integration time is a real time quantity
-#         if qa.quantity(integration)['value'] < 0.:
-#            # casapy crashes for negative totaltime
-#            msg("Negative integration time is not allowed",priority="error")
-#            return False
         # test for weird units
-        util.isquantity(integration)
+        if not util.isquantity(integration):
+            msg("integration time "+integration+" does not appear to represent a time interval (use 's','min'; not 'sec','m')",priority="error")
+            return False
+
         if qa.quantity(integration)['unit'] != '':
             if not qa.compare(integration,"1s"):
-                msg("integration time "+integration+" does not appear to represent a time interval (sec,min,h)",priority="error")
+                msg("integration time "+integration+" does not appear to represent a time interval ('s','min'; not 'sec','m')",priority="error")
                 return False
             intsec = qa.convert(qa.quantity(integration),"s")['value']
         else:
             if len(integration)>0:
                 intsec = float(integration)
+                msg("interpreting integration time parameter as "+str(intsec)+"s",priority="warn")
             else:
                 intsec = 0
         integration="%fs" %intsec
@@ -735,7 +735,10 @@ def simobserve(
             intsec = qa.convert(qa.quantity(integration),"s")['value']
 
             # totaltime as an integer for # times through the mosaic:
-            util.isquantity(totaltime)
+            if not util.isquantity(totaltime):
+                msg("total time "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
+                return False
+                
             if qa.quantity(totaltime)['value'] < 0.:
                 # casapy crashes for negative totaltime
                 msg("Negative totaltime is not allowed.",priority="error")
@@ -749,7 +752,7 @@ def simobserve(
                 msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
             else:
                 if not qa.compare(totaltime,"1s"):
-                    msg("total time "+totaltime+" does not appear to represent a time interval (sec,min,h)",priority="error")
+                    msg("total time "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
                     return False
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
 
