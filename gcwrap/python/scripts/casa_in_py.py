@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import time
 import string
 import commands
 
@@ -16,6 +17,44 @@ try:
     import asap as sd
 except ImportError, e:
     print "failed to load asap:\n", e
+    
+# jagonzal: Create CASA dictionary (some tasks like setjy need it)
+homedir = os.getenv('HOME')
+if homedir == None :
+   print "Environment variable HOME is not set, please set it"
+   sys.exit(1)
+home=os.environ['HOME']
+
+import casadef
+casa = { 'build': {
+             'time': casadef.build_time,
+             'version': casadef.casa_version,
+             'number': casadef.subversion_revision
+         },
+         'source': {
+             'url': casadef.subversion_url,
+             'revision': casadef.subversion_revision
+         },
+         'helpers': {
+             'logger': 'casalogger',
+             'viewer': 'casaviewer',
+             'info': None,
+             'dbus': None,
+             'ipcontroller': None,
+             'ipengine': None
+         },
+         'dirs': {
+             'rc': homedir + '/.casa',
+             'data': None,
+             'recipes': casadef.python_library_directory+'/recipes',
+             'root': None
+         },
+         'flags': { },
+         'files': { 
+             'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+         },
+         'state' : { 'startup': True }
+       }
 
 #import matplotlib
 
@@ -75,6 +114,10 @@ except ImportError, e:
 ##
 ## finally load tools
 ####
+
+# jagonzal: Import tasks but don't load task manager and dbus
+os.environ['CASA_ENGINE']="YES"
+from tasks import *
 
 casalog = casac.logsink()
 casalog.setglobal(True)
