@@ -89,7 +89,6 @@ void EGainCurve::setApply(const Record& applypar) {
       message.message(o);
       message.priority(LogMessage::WARN);
       logSink().post(message);
-      logSink().
     }
 
     String tempname="temporary.gaincurve";
