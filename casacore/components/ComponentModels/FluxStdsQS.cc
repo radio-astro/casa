@@ -180,6 +180,65 @@ Bool FluxStdPerleyButler2010::setSourceCoeffs()
   return found;
 }
 
+Bool FluxStdPerleyButler2013::setSourceCoeffs()
+{
+  Bool found = true;
+  setFreqUnit("GHz");
+  FCQS::Source srcEnum = getSrcEnum();
+  Vector<Float> coeffs(5), coefferrs(5);
+
+  // four sources: 3C123,3C196,3C286,3C295
+  // this coefficients are as of 2013.09.13 given by Bryan Butler (CAS-4489)
+  if(srcEnum == FCQS::THREEC286)
+    fill_coeffs(RVF4(1.2553, -0.4689, -0.1597, 0.0286), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
+  //else if(srcEnum == FCQS::THREEC48)
+    //fill_coeffs(RVF4(1.3197, -0.7253, -0.2023, 0.0540));
+  else if(srcEnum == FCQS::THREEC123) {
+    coeffs(0)=1.8070;
+    coefferrs(0)=0.0007;
+    coeffs(1)=-0.7367;
+    coefferrs(1)=0.0014;
+    coeffs(2)=-0.3162;
+    coefferrs(2)=0.0039;
+    coeffs(3)=0.2045;
+    coefferrs(3)=0.0037;
+    coeffs(4)=-0.0672;
+    coeffs(4)=0.0013;
+    fill_coeffs(RVF5(coeffs),RVF5(coefferrs));
+  }
+  /***
+  else if(srcEnum == FCQS::THREEC147)
+    fill_coeffs(RVF4(1.4428, -0.6300, -0.3142, 0.1032));
+  else if(srcEnum == FCQS::THREEC138)
+    fill_coeffs(RVF4(1.0053, -0.4384, -0.1855, 0.0511));
+  else if(srcEnum == FCQS::NINETEEN34M638){
+    // The broken polynomial is smooth enough to be 1st-order differentiable.
+    //
+    // The coefficients have been shifted to use GHz instead of MHz.
+    fill_lohi_coeffs(RVF4(1.170418, 0.248618, -1.649694, 0.605334),  // Low
+                     MFrequency(Quantity(10.0, "GHz")),              // break
+                     RVF4(-2.5739, 10.0707, -10.0595, 2.9372));      // High
+  }
+  ***/
+  else if(srcEnum == FCQS::THREEC295)
+    fill_coeffs(RVF4(1.4832, -0.7749, -0.3529, 0.0767),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
+  else if(srcEnum == FCQS::THREEC196) {
+    coeffs(0)=1.2892;
+    coefferrs(0)=0.0007;
+    coeffs(1)=-0.7973;
+    coefferrs(1)=0.0017;
+    coeffs(2)=-0.3504;
+    coefferrs(2)=0.0036;
+    coeffs(3)=0.1835;
+    coefferrs(3)=0.0028;
+    coeffs(4)=-0.0452;
+    coefferrs(4)=0.0009;
+    fill_coeffs(RVF5(coeffs),RVF5(coefferrs));
+  } 
+  else
+    found = false;
+  return found;
+}
+
 
 } //# NAMESPACE CASA - END
-

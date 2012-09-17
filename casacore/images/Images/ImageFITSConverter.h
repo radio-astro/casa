@@ -32,6 +32,7 @@
 
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Utilities/DataType.h>
 
 #ifndef WCSLIB_GETWCSTAB
  #define WCSLIB_GETWCSTAB
@@ -53,6 +54,7 @@ class LogIO;
 class Unit;
 class LoggerHolder;
 class ConstFitsKeywordList;
+class FitsInput;
 
 // <summary>
 // Interconvert between AIPS++ Images and FITS files.
@@ -141,6 +143,8 @@ class ConstFitsKeywordList;
 class ImageFITSConverter
 {
 public:
+	const static String CASAMBM;
+
     // Convert a FITS file to an AIPS++ image.
     // <ul>
     //   <li> <src>newImage</src> will be zero if the conversion fail. If the 
@@ -273,6 +277,12 @@ public:
 // Parse header record and set MiscInfo
    static Bool extractMiscInfo (RecordInterface& miscInfo, const RecordInterface& header);
 
+   // read the BEAMS table if present and add the restoring beams to <src>info</src>
+   static void readBeamsTable(
+		   ImageInfo& info, const String& filename,
+		   const DataType type
+   );
+
 private:
 
 // Put a CASA image to an opened FITS image
@@ -326,6 +336,10 @@ private:
 // Create an open FITS file with the name given
    static Bool openFitsOutput(String &error, FitsOutput *(&openFitsOutput), const String &fitsName,
    		                            const Bool &allowOverwrite);
+
+
+     static void _writeBeamsTable(FitsOutput *const &outfile, const ImageInfo& info);
+
 };
 
 
@@ -343,22 +357,17 @@ private:
 template<class HDUType> class ImageFITSConverterImpl
 {
 public:
-    static void FITSToImage(ImageInterface<Float> *&newImage,
-			    String &error,
-			    const String &imageName,
-			    uInt whichRep,
-			    HDUType &fitsImage,
-			    uInt memoryInMB = 64,
-                            Bool zeroBlanks=False);
-
-
-// Old version
-//    static void FITSToImageOld(ImageInterface<Float> *&newImage,
-//			    String &error,
-//			    const String &imageName,
-//			    HDUType &fitsImage,
-//			    uInt memoryInMB = 64,
-//                           Bool zeroBlanks=False);
+    static void FITSToImage(
+    	ImageInterface<Float> *&newImage,
+    	String &error,
+    	const String &newImageName,
+    	const uInt whichRep,
+    	HDUType &fitsImage,
+    	const String& fitsFilename,
+    	const DataType dataType,
+    	const uInt memoryInMB = 64,
+    	const Bool zeroBlanks=False
+    	);
 
 };
 

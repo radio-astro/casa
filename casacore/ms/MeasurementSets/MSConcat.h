@@ -108,6 +108,9 @@ public:
 
   void setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol); 
   void setWeightScale(const Float weightScale); 
+  void setRespectForFieldName(const Bool respectFieldName); // If True, fields of same direction are not merged
+                                                            // if their name is different
+
 private:
   MSConcat();
   static IPosition isFixedShape(const TableDesc& td);
@@ -145,6 +148,7 @@ private:
   Quantum<Double> itsFreqTol;
   Quantum<Double> itsDirTol;
   Float itsWeightScale;
+  Bool itsRespectForFieldName;
   Vector<Bool> itsChanReversed;
   SimpleOrderedMap <Int, Int> newSourceIndex_p;
   SimpleOrderedMap <Int, Int> newSourceIndex2_p;

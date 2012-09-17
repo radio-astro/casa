@@ -393,6 +393,11 @@ GaussianBeam ImageBeamSet::getMedianAreaBeamForPol(
 	return _getBeamForPol(pos, _medianStokesMap, polarization);
 }
 
+Int ImageBeamSet::getAxis(const AxisType type) const {
+	AxesMap::const_iterator x = _axesMap.find(type);
+	return x == _axesMap.end() ? -1 : x->second;
+}
+
 GaussianBeam ImageBeamSet::_getBeamForPol(
 	IPosition& pos, const vector<IPosition>& map,
 	const uInt polarization
