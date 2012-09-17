@@ -36,11 +36,13 @@ class Searcher {
 public:
 	Searcher();
 
+	//Set all search parameters back to their defaults.
+	virtual void reset() = 0;
+
 	//Search Parameters
 	virtual void setChemicalNames( const vector<string>& chemNames ) = 0;
 	virtual void setSpeciesNames( const vector<string>& speciesNames ) = 0;
 	virtual void setSearchRangeFrequency( double minValue, double maxValue ) = 0;
-	virtual void setRecommendedOnly( bool recommeded ) = 0;
 
 	//Filters
 	virtual void setAstroFilterTop20( bool filter = true) = 0;
@@ -61,7 +63,7 @@ public:
 
 	//Information about the database
 	virtual string getCreatedDate() const = 0;
-	virtual string tableInfo( string& errorMessage ) const= 0;
+	virtual string tableInfo( const string& tableName, string& errorMessage ) const= 0;
 
 	virtual ~Searcher();
 };

@@ -41,8 +41,8 @@ using namespace std;
 namespace casa {
 
 const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = 84000;
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = 90000;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = /*84000*/-1;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = /*90000*/-1;
 
 QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
@@ -342,6 +342,9 @@ void SearchMoleculesWidget::search(){
 			return;
 		}
 	}
+	else {
+		searcher->reset();
+	}
 
 	//Get the search parameters
 	QString searchList = ui.searchLineEdit->text();
@@ -378,12 +381,14 @@ void SearchMoleculesWidget::search(){
 	delete searchThread;
 	searchThread = NULL;
 	startSearchThread();
+	//searchFinished();
 }
 
 void SearchMoleculesWidget::startSearchThread(){
 	searchThread = new SearchThread( searcher, searchResultOffset );
 	connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 	searchThread->start();
+	//searchThread->run();
 	progressBar.show();
 }
 

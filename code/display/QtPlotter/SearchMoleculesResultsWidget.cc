@@ -40,7 +40,7 @@ SearchMoleculesResultsWidget::SearchMoleculesResultsWidget(QWidget *parent)
 }
 
 void SearchMoleculesResultsWidget::initializeTable(){
-	QStringList tableHeaders(QStringList() << "Id"<<"Species" << "Chemical Name" <<
+	QStringList tableHeaders(QStringList() << "ID"<<"Species" << "Chemical Name" <<
 				"Frequency(MHz)" << "Resolved QNs" << "Intensity" );
 	ui.searchResultsTable->setColumnCount( COLUMN_COUNT );
 	ui.searchResultsTable->setHorizontalHeaderLabels( tableHeaders );

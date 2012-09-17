@@ -160,13 +160,14 @@ void SearchRedshiftDialog::findRedshift(){
 		//searcher->setResultFile( resultTableName );
 
 		//Range for the search should be everything.
-		Double minValue = 0;
+		Double minValue = getTargetFrequency();
 		Double maxValue = numeric_limits<double>::max();
 		searcher->setSearchRangeFrequency( minValue, maxValue );
 
 		//Start the background thread that will do the search
 		delete searchThread;
 		searchThread = new SearchThread( searcher, 0 );
+		searchThread->setCountNeeded( false );
 		connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 		searchThread->start();
 		progressBar.show();

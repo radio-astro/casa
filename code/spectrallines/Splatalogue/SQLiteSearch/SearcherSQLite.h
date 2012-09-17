@@ -46,15 +46,17 @@ public:
 	 * Returns a string containing (columnName, columnType) information
 	 * for all the columns in the table.
 	 */
-	string tableInfo( string& errorMsg ) const;
+	string tableInfo( const string& tableName, string& errorMsg ) const;
 
 	/**
 	 * Returns the date the database file was installed.
 	 */
 	string getCreatedDate() const;
 
+	//Set all the search parameters back to their defaults.
+	void reset();
+
 	//Search Paramaters
-	virtual void setRecommendedOnly( bool recomended );
 	virtual void setChemicalNames( const vector<string>& chemNames );
 	virtual void setSpeciesNames( const vector<string>& speciesNames );
 
@@ -112,27 +114,36 @@ private:
 	double minValueFreq;
 	double maxValueFreq;
 	bool recommendedOnly;
-	std::vector<std::string> speciesNames;
-	std::vector<std::string> chemicalNames;
+	vector<string> speciesNames;
+	vector<string> chemicalNames;
 
-	bool filterTop20;
-	bool filterPlanetaryAtmosphere;
-	bool filterHotCores;
-	bool filterDarkClouds;
-	bool filterDiffuseClouds;
-	bool filterComets;
-	bool filterAgbPpnPn;
-	bool filterExtragalactic;
 
-	//Database Name
-	const static std::string DB_NAME;
+	enum FILTER_LIST { FILTER_TOP_20, FILTER_PLANETARY_ATMOSPHERE, FILTER_HOT_CORES,
+		FILTER_DARK_CLOUDS, FILTER_DIFFUSE_CLOUDS, FILTER_COMETS, FILTER_AGB_PPN_PN,
+		FILTER_EXTRAGALACTIC, END_FILTERS };
+	vector<bool> filters;
+	static vector<string> filterNames;
+
+	//Table Names
+	const static std::string TABLE_MAIN;
+	const static std::string TABLE_SPECIES;
 
 	//Table columns
 	const static std::string FREQUENCY_COLUMN;
 	const static std::string SPECIES_ID_COLUMN;
 	const static std::string SPECIES_COLUMN;
-	const static std::string RECOMMENDED_COLUMN;
+	const static std::string SMU2_COLUMN;
+	const static std::string EL_COLUMN;
+	const static std::string EU_COLUMN;
+	const static std::string INTENSITY_COLUMN;
+	const static std::string RESOLVED_QNS_COLUMN;
 	const static std::string CHEMICAL_NAME_COLUMN;
+	enum TableColumns { SPECIES_ID_COL, SPECIES_NAME_COL, CHEMICAL_NAME_COL,
+		FREQUENCY_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, EL_COL,
+		EU_COL, END_COL };
+	static std::vector<string> resultColumns;
+
+
 	const static std::string FILTER_KNOWN_AST_COLUMN;
 	const static std::string FILTER_PLANET_COLUMN;
 	const static std::string FILTER_HOTCORE_COLUMN;
@@ -142,11 +153,7 @@ private:
 	const static std::string FILTER_EXTRAGALACTIC_COLUMN;
 	const static std::string FILTER_AGB_PPN_PN_COLUMN;
 	const static std::string FILTER_TOP20_COLUMN;
-	const static std::string INTENSITY_COLUMN;
-	const static std::string RESOLVED_QNS_COLUMN;
-	enum TableColumns { SPECIES_ID_COL, SPECIES_NAME_COL, CHEMICAL_NAME_COL,
-		FREQUENCY_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, EL_COL,
-		EU_COL, END_COL };
+
 
 	//SQL Constants
 	const static std::string FROM;
@@ -156,6 +163,7 @@ private:
 	const static std::string CLOSE_PAREN;
 	const static std::string SINGLE_QUOTE;
 	const static std::string COMMA;
+	const static std::string PERIOD;
 	const static std::string EQUALS;
 	const static std::string IN;
 
