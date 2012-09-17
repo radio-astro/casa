@@ -95,6 +95,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this);
+		connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), SIGNAL(regionChange(viewer::QtRegion*,std::string)));
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
@@ -830,6 +831,14 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 	qdp_->loadRegions( path, datatype, displaytype );
 }
 
+std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format ) {
+    std::transform(format.begin(), format.end(), format.begin(), ::tolower);
+    if ( format != "ds9" && format != "crtf" ) {
+	return "invalid output format '" + format + "'";
+    }
+    return regionDock_->outputRegions( regions, file, format );
+}
+
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 	// retrieve DD with given name (0 if none).
 	QtDisplayData* qdd;
@@ -998,28 +1007,27 @@ void QtDisplayPanelGui::createNewPanel( ) {
 }
 
 void QtDisplayPanelGui::showDataManager() {
-	if(qdm_==0) qdm_ = new QtDataManager(this);
+	if(qdm_==0) {
+	    qdm_ = new QtDataManager(this);
+	    connect( this, SIGNAL(ddRemoved(QtDisplayData*)),       qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));
+	    connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
+	}
 	qdm_->showNormal();
-	qdm_->raise();  }
+	qdm_->raise();
+}
 
 void QtDisplayPanelGui::hideDataManager() {
 	if(qdm_==0) return;
 	qdm_->hide();  }
 
 void QtDisplayPanelGui::showExportManager() {
-	if(qem_==0) {
-		qem_ = new QtExportManager(this);
-		connect(this, SIGNAL(ddRemoved(QtDisplayData*)), qem_, SLOT(updateEM(QtDisplayData*)));
-		connect(this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qem_, SLOT(updateEM(QtDisplayData*, Bool)));
-	}
-	qem_->updateEM();
-	qem_->showNormal();
-	qem_->raise();  }
+	showDataManager( );
+	qdm_->showTab("save image");
+}
 
 void QtDisplayPanelGui::hideExportManager() {
-	if(qem_==0) return;
-	qem_->hide();  }
-
+	hideDataManager( );
+}
 
 void QtDisplayPanelGui::showPreferences( ) {
 	if ( preferences == 0 )
@@ -1949,7 +1957,7 @@ Bool QtDisplayPanelGui::syncDataDir_(String filename) {
 
 	QString datadirname = datadir.path();
 
-	if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname);
+	if(dataMgr()!=0) dataMgr()->updateDirectory(datadirname.toStdString( ));
 	else selectedDMDir = datadirname.toStdString();
 	return True;  }
 

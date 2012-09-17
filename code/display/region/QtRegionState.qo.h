@@ -98,6 +98,7 @@ namespace casa {
 		QPushButton *getFitButton(){return imfit_fit;};
 
 	    signals:
+		void regionChange( viewer::QtRegion *, std::string );
 		void refreshCanvas( );
 		void statisticsVisible( bool );
 		void positionVisible( bool );

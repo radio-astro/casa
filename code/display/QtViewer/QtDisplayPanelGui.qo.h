@@ -103,6 +103,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
+
+  typedef std::list<viewer::QtRegion*> region_list_t;
+  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::QtRegion*>( ); }
   
   // public toolbars, for inserting custom buttons.
   QToolBar* customToolBar;	//# limited room
@@ -188,8 +191,11 @@ class QtDisplayPanelGui : public QtPanelBase {
 
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+  // zero length string indicates OK!
+  std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format );
 
   bool useNewRegions( ) const { return use_new_regions; }
+
 
  public slots:
  
@@ -275,6 +281,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showSpecFitImageProfile();
 
  signals:
+
+    void regionChange( viewer::QtRegion *, std::string );
 
     void axisToolUpdate( QtDisplayData *controlling_dd );
 
