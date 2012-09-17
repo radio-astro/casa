@@ -86,7 +86,8 @@ namespace casa {
 		int zIndex( ) const { return Region::zIndex( ); }
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Point::regionCenter( x, y ); }
+		void linearCenter( double &x, double &y ) const { Point::linearCenter( x, y ); }
+		void pixelCenter( double &x, double &y ) const { Point::pixelCenter( x, y ); }
 
 		QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, bool hold_signals=false );
 

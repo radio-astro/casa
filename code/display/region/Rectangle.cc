@@ -234,9 +234,18 @@ namespace casa {
 		invalidateCenterInfo();
 	}
 
-	void Rectangle::regionCenter( double &x, double &y ) const {
+	void Rectangle::linearCenter( double &x, double &y ) const {
 	    x = linear_average(blc_x,trc_x);
 	    y = linear_average(blc_y,trc_y);
+	}
+
+	void Rectangle::pixelCenter( double &x, double &y ) const {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+
+	    double lx = linear_average(blc_x,trc_x);
+	    double ly = linear_average(blc_y,trc_y);
+
+	    try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 	}
 
 	AnnotationBase *Rectangle::annotation( ) const {

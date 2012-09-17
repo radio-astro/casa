@@ -71,7 +71,8 @@ namespace casa {
 
 		std::list<QtRegion*> regions( ) { return region_list; }
 		// zero length string indicates OK!
-		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string csys="pixel" );
+		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file,
+					   std::string format, std::string ds9_csys="pixel" );
 
 	    signals:
 		// triggers deletion elsewhere of QtRegion containing this QtRegionState

@@ -150,6 +150,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   void img_output_target_changed(const QString &s="");
   void img_output_target_changed(bool) { img_output_target_changed( ); }
 
+  void region_ds9_csys_disable(bool);
   void region_output_target_changed(const QString &s="");
   void region_output_target_changed(bool) { region_output_target_changed( ); }
 

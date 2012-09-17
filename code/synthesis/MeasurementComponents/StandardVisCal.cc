@@ -1679,6 +1679,17 @@ void TOpac::setApply(const Record& applypar) {
     SolvableVisCal::setApply(applypar);
   else {
 
+    LogMessage message;
+    { ostringstream o;
+      o<< "Invoking opacity application without a caltable (e.g., " << endl
+       << " via opacity=[...] in calibration tasks) will soon be disabled." << endl
+       << " Please begin using gencal to generate an opacity caltable, " << endl
+       << " and then supply that table in the standard manner." << endl;
+      message.message(o);
+      message.priority(LogMessage::WARN);
+      logSink().post(message);
+    }
+
     // Detect and extract opacities from applypar record (old way)
     if (applypar.isDefined("opacity")) {
       opacity_.resize();
@@ -1717,11 +1728,17 @@ void TOpac::setApply(const Record& applypar) {
 String TOpac::applyinfo() {
 
   ostringstream o;
-  o << typeName()
-    << ": opacity=" << opacity_
-    << boolalpha
+  o << typeName();
+
+  if (ci_)
+    o << ": table=" << calTableName();
+  else
+    o << ": opacity=" << opacity_;
+
+  o << boolalpha
     << " calWt=" << calWt();
-    //    << " t="      << interval();
+
+  //    << " t="      << interval();
 
   return String(o);
 

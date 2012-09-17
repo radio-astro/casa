@@ -483,12 +483,24 @@ namespace casa {
 	    return new_handle;
 	}
 
-	void Polygon::regionCenter( double &x, double &y ) const {
+	void Polygon::linearCenter( double &x, double &y ) const {
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 	    x = linear_average(blc_x,trc_x);
 	    y = linear_average(blc_y,trc_y);
+	}
+
+	void Polygon::pixelCenter( double &x, double &y ) const {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
+	    double lx = linear_average(blc_x,trc_x);
+	    double ly = linear_average(blc_y,trc_y);
+
+	    try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 	}
 
 	void Polygon::drawRegion( bool selected ) {

@@ -192,7 +192,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
   // zero length string indicates OK!
-  std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format );
+  std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string ds9_csys="pixel" );
 
   bool useNewRegions( ) const { return use_new_regions; }
 

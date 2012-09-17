@@ -552,8 +552,13 @@ String ImageFitter::_resultsToString() {
 		}
 		summary << _statisticsToString() << endl;
 		if (_doZeroLevel) {
+			String units = _getImage()->units().getName();
+			if (units.empty()) {
+				units = "Jy/pixel";
+			}
 			summary << "Zero level offset fit: " << _zeroLevelOffsetSolution[relChan]
-				<< " +/- " << _zeroLevelOffsetError[relChan] << endl;
+				<< " +/- " << _zeroLevelOffsetError[relChan] << " "
+				<< units << endl;
 		}
 		for (uInt i = 0; i < _curResults.nelements(); i++) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;

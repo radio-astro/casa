@@ -831,12 +831,13 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 	qdp_->loadRegions( path, datatype, displaytype );
 }
 
-std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format ) {
+std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions,
+					      std::string file, std::string format, std::string ds9_csys ) {
     std::transform(format.begin(), format.end(), format.begin(), ::tolower);
     if ( format != "ds9" && format != "crtf" ) {
 	return "invalid output format '" + format + "'";
     }
-    return regionDock_->outputRegions( regions, file, format );
+    return regionDock_->outputRegions( regions, file, format, ds9_csys );
 }
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {

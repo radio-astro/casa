@@ -140,7 +140,8 @@ namespace casa {
 	}
 
 	// zero length string indicates OK!
-	std::string QtRegionDock::outputRegions( std::list<viewer::QtRegionState*> regionstate_list, std::string file, std::string format, std::string csys ) {
+	std::string QtRegionDock::outputRegions( std::list<viewer::QtRegionState*> regionstate_list, std::string file,
+						 std::string format, std::string ds9_csys ) {
 	    if ( regionstate_list.size( ) > 0 ) {
 		if ( format == "crtf" ) {
 		    AnnRegion::unitInit();
@@ -151,7 +152,7 @@ namespace casa {
 		    annotation_list.print(sink);
 		    sink.close( );
 		} else if ( format == "ds9" ) {
-		    ds9writer writer(file.c_str( ),csys.c_str( ));
+		    ds9writer writer(file.c_str( ),ds9_csys.c_str( ));
 		    try { emit saveRegions(regionstate_list,writer); } catch (...) { return "encountered error"; }
 		} else {
 		    return "invalid format";

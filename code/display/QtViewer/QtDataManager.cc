@@ -249,6 +249,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	connect(save_casa_region,   SIGNAL(toggled(bool)),                 SLOT(region_output_target_changed(bool)));
 	connect(save_ds9_region,    SIGNAL(toggled(bool)),                 SLOT(region_output_target_changed(bool)));
 	connect(region_do_save,     SIGNAL(clicked( )),                    SLOT(region_do_output( )));
+
+	save_ds9_csys->setDisabled(true);
+	connect(save_ds9_region,    SIGNAL(toggled(bool)),                 SLOT(region_ds9_csys_disable(bool)));
     }
 
     QtDataManager::~QtDataManager(){ }
@@ -424,11 +427,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	treeitem_to_region.clear( );
 	region_to_treeitem.clear( );
 	ts.dtree( )->clear( );
+	ostringstream oss;
+	oss << fixed << setprecision(0);
 	for ( region_list_t::iterator it=regions.begin( ); it != regions.end( ); ++it ) {
 	    QTreeWidgetItem *item = new QTreeWidgetItem(ts.dtree( ));
 	    item->setText( 0, QString::fromStdString((*it)->name( )) );
 	    item->setText( 1, QString::fromStdString((*it)->lineColor( )) );
-	    item->setText( 2, QString("foo,bar") );
+	    double x,y;
+	    (*it)->pixelCenter(x,y);
+	    oss.str("");
+	    oss << x << "," << y;
+	    item->setText( 2, QString::fromStdString(oss.str( )) );
 	    if ( (*it)->marked( ) )
 		item->setCheckState(0,Qt::Checked);
 	    else
@@ -593,6 +602,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( item->text(1) == "Directory" ) {
 		    ts.updateDir( );
 		} else {
+		    if ( item->text(1) == "CASA Region File" )
+			save_casa_region->setChecked(true);
+		    else if ( item->text(1) == "DS9 Region File" )
+			save_ds9_region->setChecked(true);
 		    ts.outFileLine( )->setText( item->text(0) );
 		}
 	    }
@@ -1295,7 +1308,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( OK && ! leaveOpen_->isChecked() ) close();  // (will hide dialog for now).
     }
 
+
+    void QtDataManager::region_ds9_csys_disable( bool checked ) {
+	if ( checked )
+	    save_ds9_csys->setDisabled(false);
+	else
+	    save_ds9_csys->setDisabled(true);
+    }
+
+
     void QtDataManager::region_output_target_changed( const QString &txt ) {
+
+	if ( QObject::sender( ) == save_casa_region ) {
+	    if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
+		save_ds9_region->setChecked(false);
+	} else if ( QObject::sender( ) == save_ds9_region ) {
+	    if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
+		save_casa_region->setChecked(false);
+	}
+	  
 
 	if ( region_output_name->text( ) != last_region_extension_tweak_string ) {
 	    if ( txt.endsWith(".crtf") && save_casa_region->isChecked( ) == false ) {
@@ -1360,11 +1391,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return;
 	}
 
-	std::string err = panel_->outputRegions( region_list, msg.path.toStdString( ), msg.output_format == validation_msg::DS9 ? "ds9" : "crtf" );
+	std::string err = panel_->outputRegions( region_list, msg.path.toStdString( ),
+						 msg.output_format == validation_msg::DS9 ? "ds9" : "crtf",
+						 save_ds9_csys->currentText( ).toStdString( ) );
 	if ( err.size( ) == 0 ) {
-	    img_output_error->setStyleSheet("color: blue");
-	    img_output_error->setText("success...");
-	    img_do_save->setEnabled(false);
+	    region_output_error->setStyleSheet("color: blue");
+	    region_output_error->setText("success...");
+	    region_do_save->setEnabled(false);
 
 	    if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
 
