@@ -501,6 +501,9 @@ public:
   // Type of Jones matrix according to nPar()
   Jones::JonesType jonesType() { return Jones::Scalar; };
 
+  // We have Float parameters
+  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
+
   // Local specialization of setApply to extract opacity
   void setApply(const Record& applypar);
 

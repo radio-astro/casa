@@ -2693,8 +2693,10 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TSYS",*vs_p);
     else if (utype.contains("EVLAGAIN"))
       cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
-//    else if (utype.contains("OPAC"))
-//      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("OPAC"))
+      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("GC") || utype.contains("EFF"))
+      cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 
