@@ -90,12 +90,14 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
         Bool combineSpw, Bool writeStation, Double sensitivity,
         const Bool padWithFlags, Int avgchan) {
     ROMSObservationColumns obsCols(ms.observation());
+    
     if (obsCols.nrow() > 0 && (obsCols.telescopeName()(0) == "WSRT"
             || obsCols.telescopeName()(0) == "LOFAR")) {
         return MSFitsOutputAstron::writeFitsFile(fitsfile, ms, column,
                 startchan, nchan, stepchan, writeSysCal, asMultiSource,
                 combineSpw, writeStation, sensitivity);
     }
+    
     LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
     os << LogIO::NORMAL << " nchan=" << nchan << " startchan=" << startchan 
          << " stepchan=" << stepchan << " avgchan=" << avgchan << LogIO::POST; 
@@ -1554,7 +1556,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
         // Prepare handling of peculiar UVFITS antenna position conventions:
         // VLA and WSRT requires rotation into local frame:
         String arrayName = inarrayname(arraynum);
-        Bool doRot = (arrayName == "VLA" || arrayName == "WSRT");
+        Bool doRot = (arrayName == "VLA" /*|| arrayName == "WSRT"*/);
         Matrix<Double> posRot = Rot3D(0, 0.0);
 
         if (doRot) {
@@ -1565,7 +1567,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
         // "VLBI" (==arraypos<1000m) requires y-axis reflection:
         //   (ATCA looks like VLBI in UVFITS, but is already RHed.)
         // It looks as if WSRT needs y-axis reflection for UVFIX.
-        Bool doRefl = ((arrayName == "WSRT") || ((arrayName != "ATCA"
+        Bool doRefl = (/*(arrayName == "WSRT") || */((arrayName != "ATCA"
                 && arrayName != "EVLA") && allLE(abs(arraypos), 1000.0)));
 
         // EVLA wants full ITRF per antenna and arraypos=(0,0,0)
@@ -1758,14 +1760,21 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
 
             *nosta = id[antnum];
             String mount = upcase(inantmount(antnum));
+            // MS has "EQUATORIAL", "ALT-AZ", "X-Y",  "SPACE-HALCA" 
             if (mount.contains("ALT-AZ")) {
                 *mntsta = 0;
             } else if (mount.contains("EQUATORIAL")) {
                 *mntsta = 1;
             } else if (mount.contains("ORBIT")) {
                 *mntsta = 2;
+            } else if (mount.contains("X-Y")) {
+                *mntsta = 3;
+            } else if (mount.contains("SPACE-HALCA")) {
+                *mntsta = 7;
+            } else if (mount.contains("BIZARRE")) {
+                *mntsta = 4; // 5, 6
             } else {
-                *mntsta = -1; // ???
+                *mntsta = 7; // fits does not use anyway, put it 7
             }
             *staxof = inantoffset(antnum)(IPosition(1, 0));
             // OK, try to find if we're L/R or X/Y

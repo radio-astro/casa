@@ -1927,17 +1927,19 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt) {
         case 1:
             mount = "EQUATORIAL";
             break;
-        case 2:
+        case 3:
             mount = "X-Y";
             break;
-        case 3:
+        case 2:
             mount = "ORBITING";
             break;
         case 4:
+        case 5:
+        case 6:
             mount = "BIZARRE";
             break;
         default:
-            mount = "UNKNOWN";
+            mount = "SPACE_HALCA";
             break;
         }
         //overwrite mount type for SMA
