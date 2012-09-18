@@ -43,6 +43,7 @@ class fluxscale1_test(unittest.TestCase):
                         
         self.gtable = self.prefix + '.ref1a.gcal'
         self.reffile = self.prefix + '.def.fcal'
+        self.reffile2 = self.prefix + '.def.inc.fcal'
         self.tearDown()
         
         fpath = os.path.join(datapath,self.msfile)
@@ -52,6 +53,8 @@ class fluxscale1_test(unittest.TestCase):
             shutil.copytree(fpath, self.gtable, symlinks=True)
             fpath = os.path.join(datapath,self.reffile)
             shutil.copytree(fpath, self.reffile, symlinks=True)
+            fpath = os.path.join(datapath,self.reffile2)
+            shutil.copytree(fpath, self.reffile2, symlinks=True)
         else:
             self.fail('Data does not exist -> '+fpath)
 
@@ -100,6 +103,23 @@ class fluxscale1_test(unittest.TestCase):
             self.assertFalse(diff_ret.removed())
             self.assertEqual(diff_ret.unchanged().__len__(), 5)
             
+    def test_incremental(self): 
+        '''Fluxscale 1b: Create an incremental flux table using field=0 as reference'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.msfile + '.inc.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
+                  transfer='1445*', incremental=True)
+        self.assertTrue(os.path.exists(outtable))
+
+        # File to compare with
+        reference = self.reffile2
+
+        # Compare the calibration table with a reference
+        self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
 
 
 class fluxscale2_test(unittest.TestCase):
@@ -137,7 +157,7 @@ class fluxscale2_test(unittest.TestCase):
         
         
     def test_spws(self):
-        '''Fluxscale 1b: Create a fluxscale table for an MS with many spws'''
+        '''Fluxscale 2: Create a fluxscale table for an MS with many spws'''
         # Input
         gtable = self.gtable
         
@@ -153,7 +173,17 @@ class fluxscale2_test(unittest.TestCase):
         
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
-                
+        
+        # compared some determined values returned in the dict
+        refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
+                 'fluxdErr': np.array([-1.        ,  0.04080052, -1.        , -1.        , -1.        , -1.        ]), \
+                 'fieldName': '1310+323-F0', 'numSol': np.array([-1,  8, -1, -1, -1, -1], dtype=np.int32), \
+                 'fluxd': np.array([-1.        ,  1.44578847, -1.        , -1.        , -1.        , -1.        ])}, \
+                 'freq': np.array([  1.15138579e+11,   1.15217017e+11,  -1.00000000e+00, -1.00000000e+00,  -1.00000000e+00, \
+                                 -1.00000000e+00]), 'spwName': np.array(['', '', '', '', '', ''], dtype='|S1'), \
+                 'spwID': np.array([0, 1, 2, 3, 4, 5], dtype=np.int32)} 
+        diff_fluxd=abs(refdict['1']['fluxd'][1]-thisdict['1']['fluxd'][1])/refdict['1']['fluxd'][1]
+        self.assertTrue(diff_fluxd<1.e-8)
 #        if testmms:
 #            # Do another check
 #            print 'Check MS and MMS returned dictionaries ...'
