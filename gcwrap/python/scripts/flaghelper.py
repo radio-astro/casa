@@ -1627,9 +1627,6 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
                 parslist['addantenna'] = addantenna
             savelist[key] = parslist
         
-        # FIXME: Backup the flags
-#        if (flagbackup):
-#            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
     if debug:
         casalog.post('Dictionary of valid commands to save')
         casalog.post('%s'%savelist)
@@ -1665,8 +1662,7 @@ def backupFlags(msfile, prename):
     
         time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
     
-        casalog.post('Saving current flags to ' + versionname
-                     + ' before applying new flags')
+        casalog.post('Saving current flags to ' + versionname, 'DEBUG')
     
         tftool.saveflagversion(versionname=versionname,
                                 comment='Flags autosave on ' + time_string, merge='replace')

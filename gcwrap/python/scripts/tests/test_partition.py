@@ -4,7 +4,8 @@ import time
 import unittest
 import testhelper as th
 import partitionhelper as ph
-from tasks import partition, listpartition
+from tasks import *
+from taskinit import *
 from __main__ import default
 
 
@@ -62,7 +63,8 @@ class partition_test1(test_base):
     def tearDown(self):
         shutil.rmtree(self.msfile, ignore_errors=True)        
         shutil.rmtree(self.mmsfile, ignore_errors=True)        
-
+        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
+        shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
     def test_nomms(self):
         '''Partition: Create a normal MS with createmms=False'''
@@ -209,6 +211,8 @@ class partition_test2(test_base):
     def tearDown(self):
         shutil.rmtree(self.msfile, ignore_errors=True)        
         shutil.rmtree(self.mmsfile, ignore_errors=True)        
+        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
+        shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
     def test_sepaxis(self):
         '''Partition: separationaxis=none'''        
@@ -326,7 +330,58 @@ class partition_test2(test_base):
                 setlist.add(a)
 
         self.assertEqual(list(setlist), spwlist)
-         
+        
+    def test_flagversions(self):
+        '''Partition: check that the .flagversions is created'''
+                
+        # Run partition and create the .flagversions
+        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
+        self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
+ 
+         # Check that the number of backups in MMS is correct
+        tflocal = casac.testflagger()
+        tflocal.open(self.mmsfile)
+        nv = tflocal.getflagversionlist()
+        tflocal.done()
+        self.assertEqual(len(nv), 3)
+               
+        # Run tflagdata on MMS to check if it works well.
+        tflagdata(vis=self.mmsfile, mode='unflag', flagbackup=True)
+        
+        # Check that the number of backups in MMS is correct
+        tflocal = casac.testflagger()
+        tflocal.open(self.mmsfile)
+        nvref = tflocal.getflagversionlist()
+        tflocal.done()
+        self.assertEqual(len(nvref), 4)
+        
+    def test_flagsrestore(self):
+        '''Partition: check that we can restore the flags'''
+        # Delete any flagversions
+        if os.path.exists(self.msfile+'.flagversions'):
+            shutil.rmtree(self.msfile+'.flagversions')
+            
+        # Unflag the MS
+        tflagdata(vis=self.msfile, mode='unflag', flagbackup=False)
+        
+        # Run partition and create the .flagversions
+        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
+        self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
+        
+        # Flag spw=9 and then spw=7 in the MMS
+        tflagdata(vis=self.mmsfile, mode='manual', spw='9', flagbackup=True)
+        tflagdata(vis=self.mmsfile, mode='manual', spw='7', flagbackup=True)
+        
+        # There should be flags in spw=7 and 9 in MMS
+        res = tflagdata(vis=self.mmsfile, mode='summary')
+        self.assertEqual(res['flagged'],549888)
+        
+        # Restore the original flags (there should be none)
+        flagmanager(vis=self.mmsfile, mode='restore', versionname='partition_1')
+        res = tflagdata(vis=self.mmsfile, mode='summary')
+        self.assertEqual(res['flagged'],0)
+        
+          
 def suite():
     return [partition_test1, partition_test2]
 
