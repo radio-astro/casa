@@ -56,8 +56,6 @@ class simple_cluster:
         if not 'procCluster' in myf.keys():
             sc = simple_cluster()
             sc.init_cluster()
-            #sc.stop_cluster()
-            #sc.start_cluster()
         return myf['procCluster']
     
     ###########################################################################
@@ -651,7 +649,9 @@ class simple_cluster:
         """ Destructor method to shut down the cluster gracefully """
         # Stop cluster and thread services
         self.stop_monitor()
-        self.stop_resource()
+        # jagonzal (CAS-4324): Is better to update the resources in the
+        # check_status method, after updating the status of the jobs
+        # self.stop_resource()
         # Now we can stop the cluster w/o problems
         # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
         self._cluster.stop_cluster()            
@@ -685,6 +685,13 @@ class simple_cluster:
                     casalog.post("Open MP enabled at host %s,  OMP_NUM_THREADS=%s" % (self._hosts[i][0],str(self._hosts[i][3])))
                 else:
                     casalog.post("Problem enabling Open MP at host %s: %s" % (self._hosts[i][0],omp_num_threads),'WARNING')
+                    
+        self.start_logger()
+        self.start_monitor()
+        # jagonzal (CAS-4324): Is better to update the resources in the
+        # check_status method, after updating the status of the jobs
+        # self.start_resource()
+        self._rsrc = self.show_resource(True)
     
     def get_host(self, id):
         '''Find out the name of the node that hosts this engine.
@@ -786,11 +793,14 @@ class simple_cluster:
         will call this function.
 
         '''
+                    
         self._resource_running=True
         if not self._configdone:
             return
         while self._resource_on:
-            self.check_resource()
+            if ((len(self._jobs.keys())>0) or (len(self._rsrc.keys())==0)):
+                self.check_resource()
+            time.sleep(5)
         self._resource_running=False
     
     def stop_resource(self): 
@@ -1230,6 +1240,12 @@ class simple_cluster:
                         if notify and self._jobs[job]['status']=="running":
                             print 'engine %d job %s broken' % (eng, sht)
                         self._jobs[job]['status']="broken"
+                
+            # jagonzal (CAS-4324): This method consumes lots of resources, and the user terminal
+            # is not very responsive while it's running, so we execute it only when there are jobs
+            # beign processed.        
+            if (len(self._jobs.keys())>0):
+                self.check_resource()
 
             gr=set()
             for val in self._jobs.values():
@@ -2273,13 +2289,8 @@ class simple_cluster:
         if not self._configdone:
             return
         self.create_project(project)
-        # jagonzal (CAS-4367): Don't use brute-force killall approach to stop cluster
-        # self.stop_nodes()
-        self.stop_resource()
+        
         self.start_cluster()
-        self.start_monitor()
-        self.start_logger()
-        self.start_resource()
 
         # Put the cluster object into the global namespace
         sys._getframe(len(inspect.stack())-1).f_globals['procCluster'] = self
