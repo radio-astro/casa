@@ -31,7 +31,10 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/OS/Timer.h>
+#include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/VisModelData.h>
@@ -57,13 +60,51 @@ VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
 
   }
 
-void VisModelData::clearModel(const MeasurementSet& thems){
+void VisModelData::listModel(const MeasurementSet& thems){
  
+  Table newTab(thems);
+
+  ROMSColumns msc(thems);
+  Vector<String> fldnames=msc.field().name().getColumn();
+  Vector<Int> fields=msc.fieldId().getColumn();
+  const Sort::Order order=Sort::Ascending;
+  const Int option=Sort::HeapSort | Sort::NoDuplicates;
+  Int nfields=GenSort<Int>::sort (fields, order, option);
+
+  LogIO logio;
+  if (nfields>0) {
+
+    logio << "MS Header field records:"
+	  << LogIO::POST;
+
+    Int nlis(0);
+    for (Int k=0; k< nfields; ++k){
+      if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	{
+	  String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
+	  if(newTab.rwKeywordSet().isDefined(elkey))
+	    logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ")" << LogIO::POST;
+	  ++nlis;
+	}
+    }
+    if (nlis==0)
+      logio << " None." << LogIO::POST;
+  }
+    
+}
+void VisModelData::clearModel(const MeasurementSet& thems){
+  
   Table newTab(thems);
   if(!newTab.isWritable())
     return;
+
+  LogIO logio;
+  logio << "Clearing all model records in MS header."
+	  << LogIO::POST;
+
   ROMSColumns msc(thems);
   Vector<Int> fields=msc.fieldId().getColumn();
+  Vector<String> fldnames=msc.field().name().getColumn();
   const Sort::Order order=Sort::Ascending;
   const Int option=Sort::HeapSort | Sort::NoDuplicates;
   Int nfields=GenSort<Int>::sort (fields, order, option);
@@ -71,6 +112,8 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
 
       {
+	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
+
 	String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
 	if(newTab.rwKeywordSet().isDefined(elkey))
 	  newTab.rwKeywordSet().removeField(elkey);
@@ -80,6 +123,49 @@ void VisModelData::clearModel(const MeasurementSet& thems){
   
 
 
+
+}
+void VisModelData::clearModel(const MeasurementSet& thems, const String field){
+ 
+  Table newTab(thems);
+  if(!newTab.isWritable())
+    return;
+
+  ROMSColumns msc(thems);
+  Vector<String> fldnames=msc.field().name().getColumn();
+
+  // Parse field specification
+  MSSelection mss;
+  mss.setFieldExpr(field);
+  TableExprNode ten=mss.toTableExprNode(&thems);
+  Vector<Int> fields=mss.getFieldList();
+  Int nfields=fields.nelements();
+
+  if (nfields==0)
+    // Call the method that deletes them all
+    VisModelData::clearModel(thems);
+  else {
+    // only delete the specified ones
+
+    LogIO logio;
+    logio << "Clearing model records in MS header for selected fields." 
+	  << LogIO::POST;
+
+    for (Int k=0; k< nfields; ++k){
+      if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	
+	{
+	  logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
+	  String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
+	  if(newTab.rwKeywordSet().isDefined(elkey))
+	    newTab.rwKeywordSet().removeField(elkey);
+	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	}
+      else
+	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") not found." << LogIO::POST;
+    }
+  
+  }
 
 }
 

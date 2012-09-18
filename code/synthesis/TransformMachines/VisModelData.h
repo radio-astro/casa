@@ -100,6 +100,12 @@ class VisModelData {
   //helper function to clear the keywordSet of the ms of the model  for the fields 
   //in that ms
   static void clearModel(const MeasurementSet& thems);
+  // ...with field selection
+  static void clearModel(const MeasurementSet& thems, const String field);
+
+  // List the fields
+  static void listModel(const MeasurementSet& thems);
+
   static FTMachine* NEW_FT(const Record& ftrec);
   //check if an addFT or addCompFT is necessary
   //Bool hasFT(Int msid, Int fieldid);
