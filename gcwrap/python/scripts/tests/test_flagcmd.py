@@ -138,20 +138,20 @@ class test_manual(test_base):
         input = "observation='1'"
         filename = create_input(input)
         
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
     def test_compatibility(self):
         input = "observation='1' mode='manualflag'"
         filename = create_input(input)
         
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
         
     def test_autocorr(self):
         '''flagcmd: autocorr=True'''
         self.setUp_ngc5921()
-        flagcmd(vis=self.vis, inpmode='cmd', command=['autocorr=True'], action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=['autocorr=True'], action='apply')
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 203994, 'Should flag only the auto-correlations')
         
@@ -170,18 +170,18 @@ class test_alma(test_base):
         filename = create_input(input)
         
         # flag POINTING CALIBRATION scans and ignore comment line
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
         res = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
         self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
     def test_cmd(self):
-        '''flagcmd: inpmode=cmd with empty parameter'''
+        '''flagcmd: inpmode=list with empty parameter'''
         
         # Test the correct parsing with empty parameter such as antenna=''
-        flagcmd(vis=self.vis, inpmode='cmd', 
-                 command=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
+        flagcmd(vis=self.vis, inpmode='list', 
+                 inpfile=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
                  action='apply', savepars=False)
         res = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184)
@@ -196,13 +196,13 @@ class test_alma(test_base):
         
         # Save cmd to FLAG_CMD
         cmd = "mode='clip' clipminmax=[0,50] correlation='ABS_WVR'"
-        flagcmd(vis=self.vis, inpmode='cmd', command=[cmd], action='list', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[cmd], action='list', savepars=True)
         
         # Extract it
         res = flagcmd(vis=self.vis, action='extract', useapplied=True)
         
         # Apply to clip only WVR
-        flagcmd(vis=self.vis, inpmode='cmd', command=[res[0]['command']], savepars=False, action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply')
         ret = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 22752)
         self.assertEqual(ret['correlation']['I']['flagged'], 22752)
@@ -223,7 +223,7 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent from file
         # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
@@ -231,7 +231,7 @@ class test_unapply(test_base):
         #           Other scans give differences at the 0.005% level.
         input = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         res = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
         #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
@@ -251,12 +251,12 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
         input = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the quack line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
@@ -274,12 +274,12 @@ class test_unapply(test_base):
         # Flag using manual agent
         input = "scan=1"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
         input = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(input)
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the manual line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
@@ -333,7 +333,7 @@ class test_savepars(test_base):
         os.system('cp '+filename+' '+filename1)
 
         # save command to MS
-        flagcmd(vis=self.vis, action='list', inpmode='cmd', command=[input], savepars=True)
+        flagcmd(vis=self.vis, action='list', inpmode='list', inpfile=[input], savepars=True)
         
         # list/save to a file
         os.system('rm -rf myflags.txt')
@@ -348,7 +348,7 @@ class test_savepars(test_base):
         filename = create_input(input)
         
         # apply and don't save to MS
-        flagcmd(vis=self.vis, inpmode='file', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         
         # list and check that parameters were not saved to MS
         os.system('rm -rf myflags.txt')
@@ -417,7 +417,7 @@ class test_XML(test_base):
         '''flagcmd: CAS-4234, non-existing correlation raise no error'''
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
-        flagcmd(vis=self.vis, inpmode='cmd', command=["correlation='XX,RR,RL'"], action='list',
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["correlation='XX,RR,RL'"], action='list',
                 savepars=True)
         
         flagcmd(vis=self.vis, action='apply')
@@ -463,8 +463,8 @@ class test_shadow(test_base):
         
         # Flag
         flagcmd(vis=self.vis, action='clear', clearall=True)
-#        flagcmd(vis=self.vis, action='apply', inpmode='file', inpfile=filename)
-        flagcmd(vis=self.vis, action='apply', inpmode='cmd', command=input)
+#        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=filename)
+        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=input)
         
         # Check flags
         res = tflagdata(vis=self.vis, mode='summary')
@@ -517,7 +517,7 @@ class test_rflag(test_base):
         commlist=['mode=rflag spw=9,10 timedev='+filename1+' freqdev='+filename2]
 
         tflagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='cmd', command=commlist, action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
         res3 = tflagdata(vis=self.vis, mode='summary')
         print "(3) Finished flagcmd test : using tdevfile, fdevfile in the cmd (test 1)) : ", res3['flagged']
 
@@ -527,7 +527,7 @@ class test_rflag(test_base):
                           freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
 
         tflagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='cmd', command=commlist, action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
         res4 = tflagdata(vis=self.vis, mode='summary')
 
         print "(4) Finished flagcmd test : using cmd arrays : ", res4['flagged']
@@ -538,7 +538,7 @@ class test_rflag(test_base):
         tflagdata(vis=self.vis,mode='unflag');
         tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
                       freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
-        flagcmd(vis=self.vis, inpmode='file', inpfile='outcmd.txt');
+        flagcmd(vis=self.vis, inpmode='list', inpfile='outcmd.txt');
         res5 = tflagdata(vis=self.vis, mode='summary')
         print "(5) Finished flagcmd test : using outcmd.txt from tflagdata (test 2) : ", res5['flagged']
 
@@ -551,7 +551,7 @@ class test_rflag(test_base):
         """
         # (6) flagcmd AUTO. Should give same answers as test_tflagdata[test_rflag1]
         tflagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='cmd', command=['mode=rflag spw=9,10'], action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10'], action='apply')
         res6 = tflagdata(vis=self.vis, mode='summary')
         print "(6) Finished flagcmd test : auto : ", res6['flagged']
 
@@ -576,6 +576,7 @@ class test_actions(test_base):
     def test_plot_empty(self):
         '''flagcmd: Test action=plot. Nothing to plot'''        
         outplot = 'fourplot.png'
+        flagcmd(vis=self.vis, action='clear', clearall=True)
         flagcmd(vis=self.vis, inpmode='table', useapplied=True, action='plot',
                 plotfile=outplot)
         
@@ -584,8 +585,8 @@ class test_actions(test_base):
     def test_plot(self):
         '''flagcmd: Test action=plot'''
         outplot = 'fourplot.png'
-        flagcmd(vis=self.vis, inpmode='cmd', 
-            command=["intent='CAL*POINT*' field=''","scan='5'"], 
+        flagcmd(vis=self.vis, inpmode='list', 
+            inpfile=["intent='CAL*POINT*' field=''","scan='5'"], 
             action='list', savepars=True)
         
         flagcmd(vis=self.vis, inpmode='table', useapplied=True, action='plot',
@@ -594,8 +595,31 @@ class test_actions(test_base):
         self.assertTrue(os.path.exists(outplot),'Plot file was not created')
 
         
+    def test_list1(self):
+         '''flagcmd: action=list with inpmode from a list'''
+         flagcmd(vis=self.vis, action='clear', clearall=True)         
+         cmd = ["spw='5~7'","spw='1'"]
+         flagcmd(vis=self.vis, action='list', inpmode='list', inpfile=cmd, savepars=True)
+         
+         # Apply the flags
+         flagcmd(vis=self.vis)
+         
+         res=tflagdata(vis=self.vis, mode='summary')
+         self.assertEqual(res['flagged'],1099776)  
         
-        
+    def test_list2(self):
+         '''flagcmd: action=list with inpmode from a file'''
+         flagcmd(vis=self.vis, action='clear', clearall=True)         
+         cmd = "spw='5~7'\n"+\
+                "spw='1'"
+         filename = create_input(cmd)         
+         flagcmd(vis=self.vis, action='list', inpmode='list', inpfile=filename, savepars=True)
+
+         # Apply the flags
+         flagcmd(vis=self.vis)
+         
+         res=tflagdata(vis=self.vis, mode='summary')
+         self.assertEqual(res['flagged'],1099776)  
         
 #################################################
         

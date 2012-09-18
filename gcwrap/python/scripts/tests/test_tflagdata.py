@@ -818,13 +818,6 @@ class test_selections2(test_base):
         self.assertEqual(res['flagged'], 28500)
         self.assertEqual(res['total'], 2882778)
         
-        # non-existing ID
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
-        tflagdata(vis=self.vis, observation='10', savepars=False)
-        res = tflagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 0)
-        self.assertEqual(res['total'], 2882778)
-
     def test_observation2(self):
         '''tflagdata: observation ID selections in list mode'''
         # creat input list
@@ -884,13 +877,13 @@ class test_elevation(test_base):
         test_eq(tflagdata(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 
 
-class test_list(test_base):
-    """Test of mode = 'list'"""
+class test_list_file(test_base):
+    """Test of mode = 'list' using input file"""
     
     def setUp(self):
         self.setUp_ngc5921()
 
-    def test_list1(self):
+    def test_file1(self):
         '''tflagdata: apply flags from a list and do not save'''
         # creat input list
         input = "scan=1~3 mode=manual\n"+"scan=5 mode=manualflag\n"\
@@ -904,7 +897,7 @@ class test_list(test_base):
         self.assertEqual(res['scan']['4']['flagged'], 0)
         self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
         
-    def test_list2(self):
+    def test_file2(self):
         '''tflagdata: only save parameters without running the tool'''
         # creat input list
         input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
@@ -921,7 +914,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
         
-    def test_list3(self):
+    def test_file3(self):
         '''tflagdata: flag and save list to FLAG_CMD'''
         # creat input list
         input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
@@ -941,7 +934,7 @@ class test_list(test_base):
         self.assertTrue(filecmp.cmp(filename, 'myflags.txt', 1), 'Files should be equal')
     
         
-    def test_list4(self):
+    def test_file4(self):
         '''tflagdata: save without running and apply in flagcmd'''
         # Delete any rows from FLAG_CMD
         flagcmd(vis=self.vis, action='clear', clearall=True)
@@ -954,7 +947,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2524284)
 
-    def test_list5(self):
+    def test_file5(self):
         '''tflagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         # get the correct data, by passing the previous setUp()
         self.setUp_data4tfcrop()
@@ -973,7 +966,7 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
 
-    def test_list6(self):
+    def test_file6(self):
         '''tflagdata: select by reason in list mode from a file'''
         # creat input list
         input = "mode='manual' scan='1' reason='SCAN_1'\n"\
@@ -1031,7 +1024,7 @@ class test_list(test_base):
         self.assertEqual(res['flagged'], 69568)
         
     def test_reason3(self):
-        '''tflagdata: replace input reason with add_reason'''
+        '''tflagdata: replace input reason from file with cmdreason'''
         # creat input list
         input = "mode='manual' scan='1' reason='SCAN_1'\n"\
                 "mode='manual' scan='2'\n"\
@@ -1049,7 +1042,127 @@ class test_list(test_base):
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
         
+class test_list_list(test_base):
+    """Test of mode = 'list' using input list"""
+    
+    def setUp(self):
+        self.setUp_ngc5921()
+
+    def test_list1(self):
+        '''tflagdata: apply flags from a Python list and do not save'''
+        # creat input list
+        input = ["scan='1~3' mode='manual'",
+                 "scan='5' mode='manualflag'",
+                 "#scan='4'"]
         
+        # apply and don't save to MS. Ignore comment line
+        tflagdata(vis=self.vis, mode='list', inpfile=input, savepars=False, action='apply')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['4']['flagged'], 0)
+        self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
+        
+    def test_list2(self):
+        '''tflagdata: only save parameters without running the tool'''
+        # creat input list
+        input = ["scan='1~3' mode='manual'",
+                 "scan='5' mode='manual'"]
+
+        # save to another file
+        if os.path.exists("myflags.txt"):
+            os.system('rm -rf myflags.txt')
+            
+        tflagdata(vis=self.vis, mode='list', inpfile=input, savepars=True, action='', outfile='myflags.txt')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
+        
+    def test_list3(self):
+        '''tflagdata: Compare flags from tflagdata and flagcmd'''
+        # creat input list
+        input = ["scan='1~3' mode='manual'",
+                 "scan='5' mode='manual'"]
+ 
+        # Delete any rows from FLAG_CMD
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+        
+        # Flag from list and save to FLAG_CMD
+        tflagdata(vis=self.vis, mode='list', inpfile=input)
+        res1 = tflagdata(vis=self.vis, mode='summary')
+        
+        # Unflag and save in flagcmd using the cmd mode
+        tflagdata(vis=self.vis, mode='unflag')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=input)
+        res2 = tflagdata(vis=self.vis, mode='summary')
+
+        # Verify
+        self.assertEqual(res1['flagged'], res2['flagged'])
+        self.assertEqual(res1['total'], res2['total'])
+
+    def test_list4(self):
+        '''tflagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
+        # get the correct data, by passing the previous setUp()
+        self.setUp_data4tfcrop()
+        
+        # creat input list
+        input = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
+
+        # Save to FLAG_CMD
+        tflagdata(vis=self.vis, mode='list', inpfile=input, action='', savepars=True)
+        
+        # Run in flagcmd and select by reason
+        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
+
+    def test_list5(self):
+        '''tflagdata: select by reason in list mode from a list'''
+        # creat input list
+        input = ["mode='manual' scan='1' reason='SCAN_1'",
+                "mode='manual' scan='2'",
+                "scan='3' reason='SCAN_3'",
+                "scan='4' reason=''"]
+        
+        # Select one reason
+        tflagdata(vis=self.vis, mode='list', inpfile=input, reason='SCAN_3')
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['3']['flagged'], 762048, 'Should flag only reason=SCAN_3')
+        self.assertEqual(res['flagged'], 762048, 'Should flag only reason=SCAN_3')
+        
+        # Select list of reasons
+        tflagdata(vis=self.vis, mode='list', inpfile=input, reason=['','SCAN_1'])
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
+        self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
+        
+        # No reason selection
+        tflagdata(vis=self.vis, mode='unflag')
+        tflagdata(vis=self.vis, mode='list', inpfile=input)
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 95256)
+        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
+        
+                
+    def test_reason_list(self):
+        '''tflagdata: replace input reason from list with cmdreason'''
+        # creat input list
+        input = ["mode='manual' scan='1' reason='SCAN_1'",
+                "mode='manual' scan='2'",
+                "scan='3' reason='SCAN_3'",
+                "scan='4' reason=''"]
+        
+        tflagdata(vis=self.vis, mode='list', inpfile=input, savepars=True, outfile='reason3.txt',
+                  cmdreason='MANUALFLAG', action='')
+        
+        # Apply the flag cmds
+        tflagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG')
+        
+        res = tflagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1663578)
+                
         
         
 class test_clip(test_base):
@@ -1094,6 +1207,7 @@ def suite():
             test_statistics_queries,
             test_msselection,
             test_elevation,
-            test_list,
+            test_list_list,
+            test_list_file,
             test_clip,
             cleanup]
