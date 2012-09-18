@@ -210,6 +210,40 @@ sleepMs (Int milliseconds)
 
 }
 
+vector<String>
+split (const String & string, const String & splitter, Bool ignoreConsecutiveSplitters)
+{
+    vector<String> result;
+
+    Int start = 0;
+
+    while (True){
+
+        Int matchStart = string.find (splitter, start);
+
+        if (matchStart == (int) String::npos){
+
+            // No match: put rest of string into the result
+
+            result.push_back (string.substr (start));
+            break;
+        }
+
+        String text = string.substr (start, matchStart - start);
+
+        if (! (text.empty() &&  ignoreConsecutiveSplitters)){
+
+            // If the text is nonempty or we're not ignored consecutive
+            // occurrences of splitters, then push text onto the result.
+
+            result.push_back (text);
+        }
+
+        start = matchStart + splitter.length();
+    }
+
+    return result;
+}
 
 void
 toStdError (const String & m, const String & prefix)

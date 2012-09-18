@@ -188,6 +188,8 @@ String getTimestamp ();
 
 Bool isEnvDefined (const String & name);
 
+std::vector<String> split (const String & string, const String & splitter,
+                           Bool ignoreConsecutiveSplitters = False);
 
 template <typename Itr>
 String
