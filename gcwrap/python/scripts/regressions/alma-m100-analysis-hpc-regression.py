@@ -136,6 +136,7 @@ if(mystep in thesteps):
 
     os.system('rm -rf X54.ms X220.ms')
 
+	# Note: the versionname after partition is called partition_1, not Original!
     partition(vis='X54-monolith.ms', outputvis='X54.ms', numsubms=mynumsubmss)
     partition(vis='X220-monolith.ms', outputvis='X220.ms', numsubms=mynumsubmss)
 
@@ -228,7 +229,7 @@ if(mystep in thesteps):
     
     for name in basename:
 
-        flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
+        flagmanager(vis=name+'.ms', mode='restore', versionname='partition_1')
         
         tflagdata(vis=name + '.ms', mode='list', inpfile=flagfile, flagbackup=False)
 
