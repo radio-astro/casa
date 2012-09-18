@@ -718,7 +718,6 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Vector<Float> wtvec;
 
   if (V().type()==VisVector::One) {
-    cout << "  (setScalarData(True))   " << endl;
     M().setScalarData(True);
   }
   else
@@ -1138,7 +1137,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     //  (this is relevant only for proper handling of flags
     //   in case of scalar data, for now)
     if (V().type()==VisVector::One) {
-      cout << "    (setScalarData(True))  " << endl;
       J1().setScalarData(True);
       J2().setScalarData(True);
     }
