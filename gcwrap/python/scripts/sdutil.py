@@ -117,7 +117,7 @@ def get_restfreq_in_Hz(s_restfreq):
 def normalise_restfreq(in_restfreq):
     if isinstance(in_restfreq, float):
         return in_restfreq
-    elif isinstance(in_restfreq, int):
+    elif isinstance(in_restfreq, int) or isinstance(in_restfreq, long):
         return float(in_restfreq)
     elif isinstance(in_restfreq, str):
         return get_restfreq_in_Hz(in_restfreq)
@@ -127,7 +127,7 @@ def normalise_restfreq(in_restfreq):
             elem = in_restfreq[i]
             if isinstance(elem, float):
                 res.append(elem)
-            elif isinstance(elem, int):
+            elif isinstance(elem, int) or isinstance(elem, long):
                 res.append(float(elem))
             elif isinstance(elem, str):
                 res.append(get_restfreq_in_Hz(elem))

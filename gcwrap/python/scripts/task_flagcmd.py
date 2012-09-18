@@ -14,7 +14,6 @@ def flagcmd(
     tablerows=None,
     reason=None,
     useapplied=None,
-    command=None,
     tbuff=None,
     ants=None,
     action=None,
@@ -82,8 +81,7 @@ def flagcmd(
         cmdlist = []
 
         if action == 'clear':
-            casalog.post('Action "clear" will disregard inpmode (no reading)'
-                         )
+            casalog.post('Action "clear" will disregard inpmode (no reading)')
         elif inpmode == 'table':
 
             casalog.post('Reading from FLAG_CMD table')
@@ -103,31 +101,45 @@ def flagcmd(
                         useapplied=useapplied, myreason=reason)
 
             listmode = 'cmd'
-        elif inpmode == 'file':
+        elif inpmode == 'list':
 
-            casalog.post('Reading from ASCII file')
             # ##### TO DO: take time ranges calculation into account ??????
             # Parse the input file
             try:
-                if inpfile == '':
-                    casalog.post('Input file is empty', 'ERROR')
+                if inpfile == '' or inpfile == []:
+                    casalog.post('Input list is empty', 'ERROR')
+                    
+                elif isinstance(inpfile, list):
+                    casalog.post('Reading from input list')
+                    cmdlist = inpfile
+        
+                    casalog.post('Input ' + str(cmdlist.__len__())
+                                 + ' lines from input list')
+                    # Make a FLAG_CMD compatible dictionary and select by reason
+                    myflagcmd = fh.makeDict(cmdlist, reason)
 
-                cmdlist = fh.readFile(inpfile)
-
-                # Make a FLAG_CMD compatible dictionary and select by reason
-                myflagcmd = fh.makeDict(cmdlist, reason)
-
-                # List of command keys in dictionary
-                vrows = myflagcmd.keys()
+                    listmode = ''
+                elif isinstance(inpfile, str):
+    
+                    casalog.post('Reading from input file')
+                    cmdlist = fh.readFile(inpfile)
+    
+                    # Make a FLAG_CMD compatible dictionary and select by reason
+                    myflagcmd = fh.makeDict(cmdlist, reason)
+                    listmode = 'file'
+                    
+                else:
+                    casalog.post('Unsupported input file type', 'ERROR')
+    
             except:
 
-                raise Exception, 'Error reading the input file ' \
-                    + inpfile
+                raise Exception, 'Error reading the input list %s' %inpfile
 
+            # List of command keys in dictionary
+            vrows = myflagcmd.keys()
             casalog.post('Read ' + str(vrows.__len__())
-                         + ' lines from file ' + inpfile)
+                         + ' lines from list')
 
-            listmode = 'file'
         elif inpmode == 'xml':
 
             casalog.post('Reading from Flag.xml')
@@ -156,16 +168,18 @@ def flagcmd(
             listmode = 'online'
             
         else:
-
-            # command strings
-            cmdlist = command
-            casalog.post('Input ' + str(cmdlist.__len__())
-                         + ' lines from input list')
-
-            if cmdlist.__len__() > 0:
-                myflagcmd = fh.makeDict(cmdlist, 'any')
-
-            listmode = ''
+            casalog.post('Input type is not supported', 'ERROR')
+#        else:
+#
+#            # command strings
+#            cmdlist = command
+#            casalog.post('Input ' + str(cmdlist.__len__())
+#                         + ' lines from input list')
+#
+#            if cmdlist.__len__() > 0:
+#                myflagcmd = fh.makeDict(cmdlist, 'any')
+#
+#            listmode = ''
 
 
         casalog.post('Flagcmd dictionary is: %s'%myflagcmd, 'DEBUG')
@@ -370,13 +384,14 @@ def flagcmd(
                              origin='flagcmd')
         mslocal.writehistory(message='inpmode = "' + str(inpmode) + '"'
                              , origin='flagcmd')
-        if inpmode == 'file':
-            mslocal.writehistory(message='inpfile = "' + str(inpfile)
-                                 + '"', origin='flagcmd')
-        elif inpmode == 'cmd':
-            for cmd in command:
-                mslocal.writehistory(message='command  = "' + str(cmd)
-                        + '"', origin='flagcmd')
+        if inpmode == 'list':
+            mslocal.writehistory(message="inpfile = '%s'"%inpfile, origin='flagcmd')
+#            mslocal.writehistory(message='inpfile = "' + str(inpfile)
+#                                 + '"', origin='flagcmd')
+#        elif inpmode == 'cmd':
+#            for cmd in command:
+#                mslocal.writehistory(message='command  = "' + str(cmd)
+#                        + '"', origin='flagcmd')
         mslocal.close()
     except:
         casalog.post('Cannot open vis for history, ignoring', 'WARN')

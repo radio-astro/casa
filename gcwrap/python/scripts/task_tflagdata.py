@@ -84,7 +84,7 @@ def tflagdata(vis,
     # different default values. This task uses a new tool and framework underneath.
     
     # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
-    if (inpfile != ""):
+    if isinstance(inpfile, str) and inpfile != "":                   
         inpfile = os.path.abspath(inpfile)
         fh.addAbsPath(inpfile)
         
@@ -191,15 +191,28 @@ def tflagdata(vis,
         if mode == 'list':
             casalog.post('List mode is active')
             # Parse the input file
-            try:
-                if inpfile == '':
-                     casalog.post('Input file is empty', 'ERROR')
-                     
-                flaglist = fh.readFile(inpfile)
-                casalog.post('%s'%flaglist,'DEBUG')
+            try:            
+                # Is it a file or a Python list?
+                if isinstance(inpfile, list):
+                    # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                    casalog.post('Will read commands from a Python list')
+                    flagcmd = fh.makeDict(inpfile, reason)
+                    
+                elif isinstance(inpfile, str):
+                    
+                    if inpfile == '':
+                         casalog.post('Input file is empty', 'ERROR')
+                         
+                    casalog.post('Will read commands from a file')
+                    flaglist = fh.readFile(inpfile)
+                    casalog.post('%s'%flaglist,'DEBUG')
+                    
+                    # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                    flagcmd = fh.makeDict(flaglist, reason)
                 
-                # Make a FLAG_CMD compatible dictionary. Select by reason if requested
-                flagcmd = fh.makeDict(flaglist, reason)
+                else:
+                    casalog.post('Input type is not supported', 'ERROR')
+                    
                 casalog.post('%s'%flagcmd,'DEBUG')
                 
                 # Update the list of commands with the selection
@@ -213,10 +226,10 @@ def tflagdata(vis,
                 
 
             except:
-                raise Exception, 'Error reading the input file '+inpfile
+                raise Exception, 'Error reading the input list '
             
             casalog.post('Read ' + str(vrows.__len__())
-                         + ' lines from file ' + inpfile)
+                         + ' lines from input list ')
                              
         elif mode == 'manual':
             agent_pars['autocorr'] = autocorr

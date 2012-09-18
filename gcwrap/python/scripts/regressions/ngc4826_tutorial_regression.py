@@ -1418,7 +1418,7 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 166.819
+clean_momentzero_max = 165.74
 clean_momentzero_rms = 14.234
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
@@ -1438,11 +1438,11 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # region.)
 clean_offsrc_rms = 0.0481
 clean_offline_rms = 0.04938
-clean_momentzero_rms = 13.89
+clean_momentzero_rms = 14.05
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
-model_pbcor_sum = 74.00
+model_pbcor_sum = 66.57
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
@@ -1456,7 +1456,7 @@ model_pbcor_sum = 74.00
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
 clean_image_max = 1.4647
-clean_momentone_median = 423.70
+clean_momentone_median = 424.40
 clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 

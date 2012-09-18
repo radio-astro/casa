@@ -6,6 +6,7 @@ import math
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 import partitionhelper as ph
+import flaghelper as fh
 import simple_cluster
 
 class PartitionHelper(ParallelTaskHelper):
@@ -581,9 +582,16 @@ def partition(vis,
 
     if createmms or not \
            ((calmsselection in ['auto','manual']) ^ (outputvis != '')):
+        
         # This means we are creating more than a single MS do it in parallel
         ph = PartitionHelper(locals())
         ph.go()
+        
+        # Create a backup of the flags that are in the MMS
+        casalog.origin('partition')
+        casalog.post('Create a backup of the flags that are in the MMS')
+        fh.backupFlags(outputvis, 'partition')    
+
         return
 
     # Create the msTool

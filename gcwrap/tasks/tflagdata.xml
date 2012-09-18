@@ -63,10 +63,18 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
             </param>
 
             <!-- LIST parameters -->
+<!--
             <param type="string" name="inpfile" subparam="true">
                 <description>Input file with list of commands to run</description>
                 <value></value>
             </param>
+-->
+            <param type="any" name="inpfile" subparam="true">
+                <description>Input ASCII file or Python list with list of commands to run</description>
+                <any type="variant" limittypes="string stringArray"/>
+                <value type="string"></value>
+            </param>
+
             <param type="any" name="reason" subparam="true">
                         <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
@@ -686,6 +694,7 @@ The task will flag a subset of data based on the following modes of operation:
         default: 'manual'
 
         list -- Flag according to the data selection and flag commands specified in the input list.
+                The input list may come from a text file or from a Python list of strings.
                 Each input line may contain data selection parameters and any parameter
                 specific to the mode given in the line. Default values will be used for
                 the parameters that are not present in the line. Each line will be taken 
@@ -697,14 +706,26 @@ The task will flag a subset of data based on the following modes of operation:
                 For optimization, the task will create a union of the data selection parameters
                 present in the list and select only that portion of the MS.
                   
-               inpfile -- Input ASCII file containing a list of commands to the task.
+               inpfile -- Input ASCII file or a Python list of command strings.
                   default: ''
-                  Example: the following commands can be put in a file and given to the task.
+                  Example1: the following commands can be saved into a file and given
+                            to the task (e.g. save it to flags.txt).
                   
                      scan=1~3 mode=manual
                      mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
                      spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0
                      mode=extend extendpols=True
+
+                    tflagdata(vis,mode='list',inpfile='flags.txt')
+
+                  Example2: the same commands can be given in a Python list on the command line
+                             to the task.
+                     cmd=["scan='1~3' mode='manual'", 
+                          "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False",
+                          "spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0",
+                          "mode='extend' extendpols=True"]
+
+                     tflagdata(vis,mode='list',inpfile=cmd)                    
         
                reason -- select flag commands based on REASON(s) 
                    default: 'any' (all flags regardless of reason)
@@ -1191,7 +1212,15 @@ The task will flag a subset of data based on the following modes of operation:
 
         tflagdata('my.ms', scan='1~3, mode='manual', savepars=True, outfile='flags.txt')
             
-    3) Flag all commands from the list given in flags.txt.
+    3a) Flag all the commands given in the Python list of strings.
+    
+        cmd = ["scan='1~3' mode='manual'",
+               "spw='9' mode='tfcrop' correlation='ABS_RR,LL' ntime=51.0",
+               "mode='extend' extendpols=True"]
+    
+        tflagdata('my.ms', mode='list', inpfile=cmd)
+
+    3b) Flag all the commands given in the file called flags.txt.
     
         > cat flags.txt
         scan='1~3' mode='manual'

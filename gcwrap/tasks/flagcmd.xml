@@ -30,19 +30,19 @@
                 </param>
 
                 <param type="string" name="inpmode">
-                        <description>Input mode for flag commands(table/file/xml/cmd)</description>
+                        <description>Input mode for flag commands(table/list/cmd)</description>
                         <value>table</value>
                         <allowed kind="enum">
                         <value>table</value>
-                        <value>file</value>
-                        <value>cmd</value>
+                        <value>list</value>
                         <value>xml</value>
                         </allowed>
                 </param>
 
-                <param type="string" name="inpfile" subparam="true">
+                <param type="any" name="inpfile" subparam="true">
                         <description>Source of flag commands</description>
-                        <value></value>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
                 </param>
                 <param type="intArray" name="tablerows" subparam="true">
                         <description>Rows of inpfile to read</description>
@@ -57,13 +57,7 @@
                         <description>Select commands whose rows have APPLIED column set to True</description>
                         <value>False</value>
                 </param>
-
-                <param type="any" name="command" subparam="true">
-                        <description>flag command(s) as a list of strings</description>
-                        <any type="variant" limittypes="string stringArray"/>
-                        <value type="string"></value>
-                </param>
-
+                
                 <param type="double" name="tbuff" subparam="true">
                         <description>Time buffer (sec) to pad flags</description>
                         <value>0.0</value>
@@ -125,12 +119,9 @@
                                     <default param="reason"><value type="string">any</value></default>
                                     <default param="useapplied"><value type="bool">False</value></default>
                             </equals>
-                            <equals value="file">
+                            <equals value="list">
                                     <default param="inpfile"><value type="string"></value></default>
                                     <default param="reason"><value type="string">any</value></default>
-                            </equals>
-                            <equals value="cmd">
-                                    <default param="command"><value>['']</value></default>
                             </equals>
                             <equals value="xml">
                                     <default param="tbuff"><value>0.0</value></default>
@@ -175,8 +166,7 @@
 
     The flagcmd task will flag data based on the commands input on inpmode :
         table = input from FLAG_CMD table in MS
-        file  = input from flagging command file "inpfile"
-        cmd   = input from a (python) list of command strings
+        list  = input from a file or a (Python) list of command strings
         xml   = input from Flag.xml in the MS given by vis
 
     Batch operations include : apply/unapply/list/plot/clear/extract
@@ -237,16 +227,29 @@
                unapplied flags
 
 
-       inpmode "file" --  input commands from ASCII file
+       inpmode "list" -- input commands from an ASCII file or via a list of strings.
    
-          inpfile -- name of ASCII flagging command file
+          inpfile -- name of an ASCII file or a list of strings.
                default: '' 
-               example: the following commands can be put into a file and given to the task.
+                  example1: the following commands can be saved into a file and given
+                            to the task (e.g. save it to flags.txt).
                   
-                 scan='1~3' mode='manual'
-                 mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
-                 spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
-                 mode='extend' extendpols=True
+                     scan=1~3 mode=manual
+                     mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
+                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0
+                     mode=extend extendpols=True
+
+                    flagcmd(vis, inpmode='list',inpfile='flags.txt')
+
+               example2: the same commands can be written in a Python list of strings and given
+                             to the task.
+                     cmd=["scan='1~3' mode='manual'", 
+                          "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False",
+                          "spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0",
+                          "mode='extend' extendpols=True"]
+
+                     flagcmd(vis, inpmode='list',inpfile=cmd)                    
+
 
           reason -- select flag commands based on REASON(s) 
                default: 'any' (all flags regardless of reason)
@@ -258,13 +261,6 @@
                mateched, e.g. reason='' matches only blank reasons, 
                and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                matches this compound reason string only
-
-   
-       inpmode "cmd" -- input commands via list of strings
-   
-          command -- list of command strings
-               default: ['']
-               example: command=["mode='clip' clipzeros=True","mode='shadow']
 
    
        inpmode "xml" -- input online flags from Flag.xml file in the MS
@@ -347,7 +343,7 @@
 
           NOTE: choosing this option will disregard anything you
           set in inpmode and will always work on the FLAG_CMD table
-          in vis
+          in vis.
 
           clearall -- really clear all flags?
                default: False (will not clear)
@@ -412,7 +408,7 @@
           
        * To save commands from a file into the MS without applying.
         
-          inpmode = 'file'
+          inpmode = 'list'
           inpfile = 'flags.txt'
           action = 'list'
 
@@ -487,7 +483,7 @@
 
      -- Flag command useage --
 
-        (For inpmode='file' and inpmode='cmd')
+        (For inpmode='list')
 
        * For example, a series of commands might be:
 
@@ -503,14 +499,14 @@
           mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
 
         These commands can be in an ASCII file, e.g. "myflags.txt"
-        and input using inpmode='file', e.g.
+        and input using inpmode='list', e.g.
 
-          flagcmd(vis='myvis.ms',inpmode='file',inpfile='myflags.txt')
+          flagcmd(vis='myvis.ms',inpmode='list',inpfile='myflags.txt')
 
         or input from the interface
 
-          flagcmd(vis='myvis.ms',inpmode='cmd',
-                  command=["mode='shadow'",
+          flagcmd(vis='myvis.ms',inpmode='list',
+                  inpfile=["mode='shadow'",
                            "mode='clip' clipminmax=[0,5] correlation='ABS_ALL'",
                            "mode='quack' quackmode='end' quackinterval=1.0",
                            "antenna='ea01' timerange='00:00:00~01:00:00'",

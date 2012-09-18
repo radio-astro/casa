@@ -1110,6 +1110,13 @@ cb.solve();
      <description>If T, delete the otf model data keywords</description>
      <value>false</value>
      </param>
+
+     <param type="any" direction="in" name="field">
+     <description>Select on field</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
      <param type="bool" direction="in" name="scr">
      <description>If T, delete the MODEL_DATA column</description>
      <value>false</value>
