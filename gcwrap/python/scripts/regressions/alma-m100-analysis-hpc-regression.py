@@ -48,7 +48,7 @@ step_title = { 0 : 'Data import and partitioning',
                25: 'Continuum image of M100',
                26: 'Determine and subtract continuum',
                27: 'Test image of central field',
-               28: 'Clean line cube mosaic',
+               28: 'pclean line cube mosaic',
                29: 'Make moment maps',
                30: 'Verification of the regression results'
                }
@@ -813,30 +813,30 @@ if(mystep in thesteps):
     timing()
 
 
-# Clean line cube mosaic
+# pclean line cube mosaic
 mystep = 28
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     os.system('rm -rf M100line.*')
-    clean(vis='M100all_lores.ms.contsub',imagename='M100line',
-          field='2~47',
-          spw='0:220~259',
-          mode='channel',
-          niter=1000,gain=0.1,threshold='0.0mJy',psfmode='clark',
-          imagermode='mosaic',ftmachine='mosaic',mosweight=False,
-          scaletype='SAULT',
-          interactive=False,
-          mask='M100line-orig.mask',
-          nchan=40,start=220,
-          width=1,
-          outframe='',veltype='radio',
-          imsize=600,cell='0.5arcsec',
-          phasecenter='J2000 12h22m54.9 +15d49m10',
-          restfreq='115.271201800GHz',stokes='I',
-          weighting='briggs',robust=0.5,
-          pbcor=False,minpb=0.2,
-          npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+    pclean(vis='M100all_lores.ms.contsub',imagename='M100line',
+           field='2~47',
+           spw='0:220~259',
+           mode='channel',
+           niter=1000,gain=0.1,threshold='0.0mJy',psfmode='clark',
+           imagermode='mosaic',ftmachine='mosaic',mosweight=False,
+           scaletype='SAULT',
+           interactive=False,
+           mask='M100line-orig.mask',
+           nchan=40,start=220,
+           width=1,
+           outframe='',veltype='radio',
+           imsize=600,cell='0.5arcsec',
+           phasecenter='J2000 12h22m54.9 +15d49m10',
+           restfreq='115.271201800GHz',stokes='I',
+           weighting='briggs',robust=0.5,
+           pbcor=False,minpb=0.2,
+           npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
 
     timing()
 
