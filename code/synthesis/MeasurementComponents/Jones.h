@@ -76,6 +76,10 @@ public:
   // In-place invert
   virtual void invert();
 
+  // Set matrix elements according to ok flag
+  //   (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
+
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
 
@@ -115,8 +119,8 @@ protected:
   Complex *j_, *ji_;
   Bool *ok_, *oki_;
 
-  // Complex unity
-  const Complex cOne_;
+  // Complex unity, zero
+  const Complex cOne_,cZero_;
 
   // Is data scalar?
   mutable Bool scalardata_;
@@ -148,6 +152,10 @@ public:
 
   // In-place invert
   virtual void invert();
+
+  // Set matrix elements according to ok flag
+  //   (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
 
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
@@ -197,6 +205,10 @@ public:
   // In-place invert
   virtual void invert();
 
+  // Set matrix elements according to ok flag
+  //   (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
+
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);
 
@@ -244,6 +256,10 @@ public:
 
   // In-place invert
   virtual void invert();
+
+  // Set matrix elements according to ok flag
+  //   (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
 
   // In-place multipication with another Jones
   virtual void operator*=(const Jones& other);

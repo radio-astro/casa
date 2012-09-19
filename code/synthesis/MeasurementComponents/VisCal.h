@@ -436,6 +436,11 @@ protected:
   // Invert Mueller matrices
   virtual void invMueller();
 
+  // Set matrix elements according to their ok flags
+  //  (e.g., makes a unit matrix if everything flagged,
+  //   so we don't have to make atomic ok checks in apply)
+  virtual void setMatByOk();
+
   // Create Mueller matrix algebra interface
   void createMueller();
  
@@ -561,6 +566,11 @@ protected:
 
   // Invert Jones matrices
   virtual void invJones();
+
+  // Set matrix elements according to their ok flags
+  //  (e.g., makes a unit matrix if everything flagged,
+  //   so we don't have to make atomic ok checks in apply)
+  virtual void setMatByOk();
 
   // Create Jones interface
   void createJones();

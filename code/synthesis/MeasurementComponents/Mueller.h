@@ -79,6 +79,10 @@ public:
   // In-place invert
   virtual void invert();
 
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
+
   // In-place multiply onto a VisVector: General version
   virtual void apply(VisVector& v);
   virtual void apply(VisVector& v, Bool& vflag);
@@ -105,8 +109,8 @@ protected:
   Complex *m_, *mi_;
   Bool *ok_, *oki_;
 
-  // Complex unity (for use in invert methods)
-  const Complex cOne_;
+  // Complex unity, zero (for use in invert and similar methods)
+  const Complex cOne_,cZero_;
 
   mutable Bool scalardata_;
 
@@ -141,6 +145,10 @@ public:
   
   // In-place invert
   virtual void invert();
+
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
 
   // In-place multiply onto a VisVector: optimized Diagonal version
   virtual void apply(VisVector& v);
@@ -181,6 +189,10 @@ public:
   
   // In-place invert
   virtual void invert();
+
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
 
   // In-place multiply onto a VisVector: optimized Diag2 version
   virtual void apply(VisVector& v);
@@ -223,6 +235,10 @@ public:
   // In-place invert
   virtual void invert();
 
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
+
   // In-place multiply onto a VisVector: optimized Scalar version
   virtual void apply(VisVector& v);
   virtual void apply(VisVector& v, Bool& vflag);
@@ -261,6 +277,10 @@ public:
   // In-place invert (negate)
   virtual void invert();
 
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
+
   // In-place add onto a VisVector: optimized Diag2 version
   virtual void apply(VisVector& v);
   using MuellerDiag2::apply;
@@ -289,6 +309,10 @@ public:
 
   // In-place invert (negate)
   virtual void invert();
+
+  // Set matrix elements according to ok flag
+  //  (so we don't have to check ok flags atomically in apply)
+  virtual void setMatByOk();
 
   // In-place add onto a VisVector:
   virtual void apply(VisVector& v);
