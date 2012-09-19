@@ -63,16 +63,18 @@ class PartitionHelper(ParallelTaskHelper):
             mytb = tbtool()
             mytb.open(self.ptab)
             self.pointingisempty = (mytb.nrows()==0)
-            self.makepointinglinks = not self.pointingisempty
             mytb.close()
+            self.makepointinglinks = not self.pointingisempty
+            self.pwriteaccess = True
             
             self.syscalisempty = True
             self.makesyscallinks = False
+            self.swriteaccess = True
             if(os.path.exists(self.stab)): # syscal is optional
                 mytb.open(self.stab)
                 self.syscalisempty = (mytb.nrows()==0)
-                self.makesyscallinks = not self.syscalisempty
                 mytb.close()
+                self.makesyscallinks = not self.syscalisempty
 
             if not self.pointingisempty:
                 if os.access(os.path.dirname(self.ptab), os.W_OK):
@@ -84,7 +86,7 @@ class PartitionHelper(ParallelTaskHelper):
                     tmpp.close()
                     mytb.close()
                 else:
-                    self.pointingisempty = True # effectively
+                    self.pwriteaccess = False
                     
 
             if not self.syscalisempty:
@@ -97,7 +99,7 @@ class PartitionHelper(ParallelTaskHelper):
                     tmpp.close()
                     mytb.close()
                 else:
-                    self.syscalisempty = True # effectively
+                    self.swriteaccess = False
 
 
     def generateJobs(self):
@@ -342,11 +344,11 @@ class PartitionHelper(ParallelTaskHelper):
             casalog.post("Finalizing MMS structure")
 
             # restore POINTING and SYSCAL
-            if not self.pointingisempty:
+            if self.pwriteaccess and not self.pointingisempty:
                 print "restoring POINTING"
                 os.system('rm -rf '+self.ptab) # remove empty copy
                 os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
-            if not self.syscalisempty:
+            if self.swriteaccess and not self.syscalisempty:
                 print "restoring SYSCAL"
                 os.system('rm -rf '+self.stab) # remove empty copy
                 os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
