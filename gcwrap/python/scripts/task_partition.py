@@ -55,7 +55,7 @@ class PartitionHelper(ParallelTaskHelper):
 
             os.mkdir(self.dataDir)
 
-            ## handle the POINTING, SYSCAL, and HISTORY tables ##
+            ## handle the POINTING and SYSCAL tables ##
             self.ptab = self._arg['vis']+'/POINTING'
             self.stab = self._arg['vis']+'/SYSCAL'
 
@@ -63,32 +63,41 @@ class PartitionHelper(ParallelTaskHelper):
             mytb = tbtool()
             mytb.open(self.ptab)
             self.pointingisempty = (mytb.nrows()==0)
+            self.makepointinglinks = not self.pointingisempty
             mytb.close()
             
+            self.syscalisempty = True
+            self.makesyscallinks = False
             if(os.path.exists(self.stab)): # syscal is optional
                 mytb.open(self.stab)
                 self.syscalisempty = (mytb.nrows()==0)
+                self.makesyscallinks = not self.syscalisempty
                 mytb.close()
-            else:
-                self.syscalisempty = True
 
             if not self.pointingisempty:
-                # move to datadir
-                os.system('mv '+self.ptab+' '+self.dataDir)
-                # create empty copy in original place so partition does not need to deal with it
-                mytb.open(self.dataDir+'/POINTING')
-                tmpp = mytb.copy(newtablename=self.ptab, norows=True)
-                tmpp.close()
-                mytb.close()
+                if os.access(os.path.dirname(self.ptab), os.W_OK):
+                    # move to datadir
+                    os.system('mv '+self.ptab+' '+self.dataDir)
+                    # create empty copy in original place so partition does not need to deal with it
+                    mytb.open(self.dataDir+'/POINTING')
+                    tmpp = mytb.copy(newtablename=self.ptab, norows=True)
+                    tmpp.close()
+                    mytb.close()
+                else:
+                    self.pointingisempty = True # effectively
+                    
 
             if not self.syscalisempty:
-                # move to datadir
-                os.system('mv '+self.stab+' '+self.dataDir)
-                # create empty copy in original place so partition does not need to deal with it
-                mytb.open(self.dataDir+'/SYSCAL')
-                tmpp = mytb.copy(newtablename=self.stab, norows=True)
-                tmpp.close()
-                mytb.close()
+                if os.access(os.path.dirname(self.ptab), os.W_OK):
+                    # move to datadir
+                    os.system('mv '+self.stab+' '+self.dataDir)
+                    # create empty copy in original place so partition does not need to deal with it
+                    mytb.open(self.dataDir+'/SYSCAL')
+                    tmpp = mytb.copy(newtablename=self.stab, norows=True)
+                    tmpp.close()
+                    mytb.close()
+                else:
+                    self.syscalisempty = True # effectively
 
 
     def generateJobs(self):
@@ -332,7 +341,7 @@ class PartitionHelper(ParallelTaskHelper):
         if self._arg['createmms']:
             casalog.post("Finalizing MMS structure")
 
-            # restore POINTING, SYSCAL, and HISTORY
+            # restore POINTING and SYSCAL
             if not self.pointingisempty:
                 print "restoring POINTING"
                 os.system('rm -rf '+self.ptab) # remove empty copy
@@ -369,6 +378,7 @@ class PartitionHelper(ParallelTaskHelper):
             if not self.pointingisempty:
                 shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
                 shutil.copytree(self.ptab, mastersubms+'/POINTING') # master subms gets a full copy of the original
+            if self.makepointinglinks:
                 for i in xrange(1,len(subMSList)):
                     theptab = subMSList[i]+'/POINTING'
                     shutil.rmtree(theptab, ignore_errors=True)
@@ -379,6 +389,7 @@ class PartitionHelper(ParallelTaskHelper):
             if not self.syscalisempty:
                 shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
                 shutil.copytree(self.stab, mastersubms+'/SYSCAL') # master subms gets a full copy of the original
+            if self.makesyscallinks:
                 for i in xrange(1,len(subMSList)):
                     thestab = subMSList[i]+'/SYSCAL'
                     shutil.rmtree(thestab, ignore_errors=True)
