@@ -327,6 +327,7 @@ protected:
   // Parameter to indicate the polaraization type of the data (circular or linear)
   // Required by cImage() to decide shapes.
   StokesImageUtil::PolRep dataPolRep_p;
+  Bool workDirOnNFS_p;
 };
 
 
