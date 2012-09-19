@@ -688,6 +688,9 @@ protected:
   // Create matrix renderers for dMs
   void createDiffMueller();
 
+  // Override VM::setMatByOk in solve context
+  void setMatByOk() { if (!isSolved()) VisMueller::setMatByOk(); };
+
   // Initialize trivial diff'd Muellers
   virtual void initTrivDM();
 
@@ -832,6 +835,9 @@ protected:
 
   // Create matrix renderers for dJs
   void createDiffJones();
+
+  // Override VJ::setMatByOk in solve context
+  void setMatByOk() { if (!isSolved()) VisJones::setMatByOk(); };
 
   // Initialize trivial diff'd Jones
   virtual void initTrivDJ();
