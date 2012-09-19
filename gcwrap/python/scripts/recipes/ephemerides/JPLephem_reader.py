@@ -46,7 +46,7 @@ cols = {
                'unit': 'deg'},
     'NP_dist': {'header': r'NP\.dist',
                 'comment': 'North-Pole ang. distance',
-               'pat': r'(?P<NP_dist>[0-9.]+)',
+               'pat': r'(?P<NP_dist>[-+0-9.]+)',
                 'unit': 'arcsec'},
     'illu': {'header': r'Illu%',
              #'comment': 'Illumination',
