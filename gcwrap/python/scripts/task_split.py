@@ -118,8 +118,20 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         del tmpp
                         break
 
+            mytb = tbtool()
+
             # main work loop
             for m in mses:
+
+                # make sure the SORTED_TABLE keywords are disabled
+                mytb.open(m, nomodify=False)
+                if 'SORTED_TABLE' in mytb.keywordnames():
+                    tobedel = mytb.getkeyword('SORTED_TABLE').split(' ')[1]
+                    mytb.removekeyword('SORTED_TABLE')
+                    os.system('rm -rf '+tobedel)
+                mytb.close()
+
+                # deal with the POINTING table
                 theptab = m+'/POINTING'
                 replaced = False
                 if nochangeinpointing:
@@ -128,7 +140,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         os.remove(theptab)
                         shutil.copytree(emptyptab, theptab)
                         replaced=True
-                        
+
+                # run split
                 outvis = tempout+'/'+os.path.basename(m)
                 print 'Running split_core on ', m
                 try:
@@ -138,19 +151,21 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                 except Exception, instance:
                     casalog.post("*** Error while processing SubMS "+m+": %s" % (instance), 'SEVERE')
                     raise
-       
+
+                # deal with the POINTING table
                 if replaced:
                     # restore link
                     shutil.rmtree(theptab, ignore_errors=True)
                     os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
                     # (link in target will be created my makeMMS)
 
+                # accumulate list of successful splits
                 if not retval[m]:
                     nfail+=1
                 else:
                     successfulmses.append(outvis)
 
-            if nfail>0:
+            if nfail>0: # there were successful splits
                 if len(successfulmses)==0:
                     casalog.post('Split failed in all subMSs.', 'WARN')
                     rval=False
@@ -173,8 +188,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                             shutil.rmtree(successfulmses[0]+'/POINTING')
                             shutil.copytree(masterptab, successfulmses[0]+'/POINTING')
                     
-            if rval:
-                # construct new MMS from the output
+            if rval: # construct new MMS from the output
                 if(width==1 and str(field)+str(spw)+str(antenna)+str(timerange)+str(scan)+str(intent)\
                    +str(array)+str(uvrange)+str(correlation)+str(observation)==''):
                     ph.makeMMS(outputvis, successfulmses)
