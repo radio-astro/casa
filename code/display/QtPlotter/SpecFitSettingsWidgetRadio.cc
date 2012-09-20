@@ -683,32 +683,26 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	for ( int k = 0; k < curveList.size(); k++ ){
 
 		QList<SpecFit*> curves = curveList[k];
-		/*if ( !curves[0]->isSpecFitFor(pixelX, pixelY)){
-			continue;
-		}
-		else {
-			//Clear off the previous fit, if there was one.
-			clean();
-		}*/
+		if ( curves.size() > 0 ){
+			Vector<Float> xValues = curves[0]->getXValues();
+			for ( int i = 0; i < curves.size(); i++ ){
+				curves[i]->evaluate( xValues );
 
-		Vector<Float> xValues = curves[0]->getXValues();
-		for ( int i = 0; i < curves.size(); i++ ){
-			curves[i]->evaluate( xValues );
+				Vector<Float> yValues = curves[i]->getYValues();
+				QString curveName = curves[i]->getCurveName();
 
-			Vector<Float> yValues = curves[i]->getYValues();
-			QString curveName = curves[i]->getCurveName();
-
-			//Send the curve to the canvas for plotting.
-			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-			for ( int i = 0; i < POINT_COUNT; i++ ){
-				yCumValues[i] = yCumValues[i]+yValues[i];
+				//Send the curve to the canvas for plotting.
+				pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
+				for ( int i = 0; i < POINT_COUNT; i++ ){
+					yCumValues[i] = yCumValues[i]+yValues[i];
+				}
 			}
-		}
 
-		//Add a curve that represents the sum of all the individual fits
-		if ( curves.size() > 1 ){
-			QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
-			pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+			//Add a curve that represents the sum of all the individual fits
+			if ( curves.size() > 1 ){
+				QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
+				pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+			}
 		}
 	}
 }
