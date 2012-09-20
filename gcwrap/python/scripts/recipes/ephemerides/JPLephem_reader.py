@@ -42,11 +42,11 @@ cols = {
             'pat':    r'(?P<DEC>([-+]?\d+ \d+ )?[-+]?\d+\.\d+)'},
     'NP_ang': {'header': r'NP\.ang',
                'comment': 'North-Pole pos. angle',
-               'pat': r'(?P<NP_ang>[0-9.]+)',
+               'pat': r'(?P<NP_ang>[0-9.]+|n\.a\.)',
                'unit': 'deg'},
     'NP_dist': {'header': r'NP\.dist',
                 'comment': 'North-Pole ang. distance',
-               'pat': r'(?P<NP_dist>[-+0-9.]+)',
+               'pat': r'(?P<NP_dist>[-+0-9.]+|n\.a\.)',
                 'unit': 'arcsec'},
     'illu': {'header': r'Illu%',
              #'comment': 'Illumination',
@@ -153,7 +153,8 @@ def readJPLephem(fmfile):
         'meanrad': {'pat': r'(?:Mean radius \(km\)\s*=|^Target radii\s*:)\s*([0-9.]+)(?:\s*km)?\s*$',
                     'unit': 'km'},
         # Triaxial target radii
-        'radii': {'pat': r'Target radii\s*:\s*([0-9.]+\s*x\s*[0-9.]+\s*x\s*[0-9.]+)\s*km.*Equator, meridian, pole',
+        #'radii': {'pat': r'Target radii\s*:\s*([0-9.]+\s*x\s*[0-9.]+\s*x\s*[0-9.]+)\s*km.*Equator, meridian, pole',
+        'radii': {'pat': r'Target radii\s*:\s*([0-9.]+\s*x\s*[0-9.]+\s*x\s*[0-9.]+)\s*km.*Equator, meridian, pole|Target radii\s*:\s*([0-9.]+)\s*km\s*',
                   'unit': 'km'},
         'T_mean': {'pat': r'Mean Temperature \(K\)\s*=\s*([0-9.]+)',
                    'unit': 'K'},
@@ -186,6 +187,8 @@ def readJPLephem(fmfile):
     in_data = False
     comp_mismatches = []
     print_datapat = False
+    # define interpretation of invalid values ('n.a.')
+    invalid=-999.
     for line in ephem:
         if in_data:
             if re.match(stoppat, line):
@@ -194,6 +197,8 @@ def readJPLephem(fmfile):
             if matchobj:
                 gdict = matchobj.groupdict()
                 for col in gdict:
+                    if gdict[col]=='n.a.':
+                        gdict[col]=invalid
                     retdict['data'][col]['data'].append(gdict[col])
                 if len(gdict) < num_cols:
                     print "Partially mismatching line:"
@@ -253,11 +258,18 @@ def readJPLephem(fmfile):
             #print "looking for", 
             for hk in headers:
                 if not retdict.has_key(hk):
-                    #print hk,
                     matchobj = re.search(headers[hk]['pat'], line)
                     if matchobj:
-                        retdict[hk] = matchobj.group(1) # 0 is the whole line
-                        break
+                        if hk=='radii':
+                            mobjs=matchobj.groups()
+                            for gp in mobjs:
+                                if gp!=None:
+                                    retdict[hk] = gp
+                                    break
+                            break
+                        else:
+                            retdict[hk] = matchobj.group(1) # 0 is the whole line
+                            break
     ephem.close()
 
     # If there were errors, provide debugging info.
@@ -295,10 +307,16 @@ def readJPLephem(fmfile):
             if headers[hk].has_key('unit'):
                 if hk == 'radii':
                     radii = retdict[hk].split('x')
-                    a, b, c = [float(r) for r in radii]
-                    retdict[hk] = {'unit': headers[hk]['unit'],
+                    if len(radii)==1:
+                        a = float(radii[0])
+                        retdict[hk] = {'unit': headers[hk]['unit'], 'value': (a,a,a)}
+                        retdict['meanrad'] = {'unit': headers[hk]['unit'],
+                                          'value': a}
+                    else:
+                        a, b, c = [float(r) for r in radii]
+                        retdict[hk] = {'unit': headers[hk]['unit'],
                                    'value': (a, b, c)}
-                    retdict['meanrad'] = {'unit': headers[hk]['unit'],
+                        retdict['meanrad'] = {'unit': headers[hk]['unit'],
                                           'value': mean_radius(a, b, c)}
                 else:
                     try:
