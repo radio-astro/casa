@@ -1256,15 +1256,21 @@ class immoment_test2(unittest.TestCase):
                 mymax = abs(gotpix - exppix).max()
                 print "max " + str(mymax)
                 self.assertTrue(mymax < epsilon)
-            
 
-            
-            
-            
+    def test_CAS4526(self):
+        """Verify CAS-4526 fix"""
+        myia = iatool()
+        myia.fromshape("", [100, 100, 1, 10])
+        myia.addnoise()
+        myia.setbrightnessunit("Jy/beam")
+        for i in range(10):
+            bmaj = str(4+i) + "arcmin"
+            bmin = str(3+i) + "arcmin"
+            bpa = "60deg"
+            myia.setrestoringbeam(major=bmaj, minor=bmin, pa=bpa, channel=i, polarization=0)
+        self.assertTrue(myia.moments(moments=[0], axis=3))
+        self.assertTrue(myia.moments(moments=[0]))
 
-        
-        
-        
         
             
 def suite():
