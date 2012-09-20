@@ -376,6 +376,8 @@ class PartitionHelper(ParallelTaskHelper):
 
             mastersubms = subMSList[0]
 
+            subtabs_to_omit = []
+
             # deal with POINTING table
             if not self.pointingisempty:
                 shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
@@ -386,6 +388,7 @@ class PartitionHelper(ParallelTaskHelper):
                     shutil.rmtree(theptab, ignore_errors=True)
                     os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
                     # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('POINTING')
 
             # deal with SYSCAL table
             if not self.syscalisempty:
@@ -397,10 +400,11 @@ class PartitionHelper(ParallelTaskHelper):
                     shutil.rmtree(thestab, ignore_errors=True)
                     os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
                     # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('SYSCAL')
 
             ph.makeMMS(self._arg['outputvis'], subMSList,
                        True, # copy subtables
-                       ['POINTING','SYSCAL'] # omitting these
+                       subtabs_to_omit # omitting these
                        )
 
             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
