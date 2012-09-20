@@ -59,8 +59,13 @@ class PartitionHelper(ParallelTaskHelper):
             self.ptab = self._arg['vis']+'/POINTING'
             self.stab = self._arg['vis']+'/SYSCAL'
 
-            # test if they are non-empty
             mytb = tbtool()
+
+            # test their properties
+            self.pointingisempty = True
+            self.makepointinglinks = False
+            self.pwriteaccess = True
+
             mytb.open(self.ptab)
             self.pointingisempty = (mytb.nrows()==0)
             mytb.close()
@@ -77,7 +82,8 @@ class PartitionHelper(ParallelTaskHelper):
                 self.makesyscallinks = not self.syscalisempty
 
             if not self.pointingisempty:
-                if os.access(os.path.dirname(self.ptab), os.W_OK):
+                if os.access(os.path.dirname(self.ptab), os.W_OK) \
+                       and not os.path.islink(self.ptab):
                     # move to datadir
                     os.system('mv '+self.ptab+' '+self.dataDir)
                     # create empty copy in original place so partition does not need to deal with it
@@ -90,7 +96,8 @@ class PartitionHelper(ParallelTaskHelper):
                     
 
             if not self.syscalisempty:
-                if os.access(os.path.dirname(self.ptab), os.W_OK):
+                if os.access(os.path.dirname(self.ptab), os.W_OK) \
+                       and not os.path.islink(self.ptab):
                     # move to datadir
                     os.system('mv '+self.stab+' '+self.dataDir)
                     # create empty copy in original place so partition does not need to deal with it
