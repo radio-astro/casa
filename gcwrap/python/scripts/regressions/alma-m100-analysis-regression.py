@@ -224,27 +224,18 @@ mystep = 4
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    # Create flagcmd input file
-    flagcmd = "mode='manual' antenna='CM01'\n"\
-              "mode='manual' intent='*POINTING*'\n"\
-              "mode='manual' intent='*ATMOSPHERE*'\n"\
-              "mode='shadow'\n"\
-              "mode='manual' antenna='*&&&'" # autocorrelations
-              
-    flagfile = "m100_flag_step4.txt"
-    if os.path.exists(flagfile):
-        os.system('rm -f '+ flagfile)
-    
-    # Save it to disk   
-    with open(flagfile, 'w') as f:
-        f.write(flagcmd)
-    f.close()
-    
+    # Create flagcmd input list
+    flagcmd = ["mode='manual' antenna='CM01'",
+              "mode='manual' intent='*POINTING*'",
+              "mode='manual' intent='*ATMOSPHERE*'",
+              "mode='shadow'",
+              "mode='manual' autocorr=True"]
+                  
     for name in basename:
 
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
         
-        tflagdata(vis=name + '.ms', mode='list', inpfile=flagfile, flagbackup=False)
+        tflagdata(vis=name + '.ms', mode='list', inpfile=flagcmd, flagbackup=False)
 
 	if(makeplots):
 		# Plot amplitude vs time
@@ -338,25 +329,16 @@ mystep = 9
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    # Create flagcmd input file (could also call tflagdata twice alternatively)
-    flagcmd = "mode='manual' field='' spw='0~3:0~10;3800~3839'\n" # edge channels
-    flagcmd += "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'\n" # channels 239, 447/448, 720/721 and 2847/2848 are off
+    # Create flagcmd input list (could also call tflagdata twice alternatively)
+    flagcmd = ["mode='manual' field='' spw='0~3:0~10;3800~3839'",
+    		  "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'"]
               
-    flagfile = "m100_flag_step9.txt"
-    if os.path.exists(flagfile):
-        os.system('rm -f '+ flagfile)
-    
-    # Save it to disk   
-    with open(flagfile, 'w') as f:
-        f.write(flagcmd)
-    f.close()
-
     for name in basename:
 
         flagmanager(vis=name + '-line.ms', mode='restore',
                     versionname='apriori')
         
-        tflagdata(vis=name + '-line.ms', mode='list', inpfile=flagfile, flagbackup=False)
+        tflagdata(vis=name + '-line.ms', mode='list', inpfile=flagcmd, flagbackup=False)
 
     # some integrations are off
     tflagdata(vis='X220-line.ms', mode='manual',
