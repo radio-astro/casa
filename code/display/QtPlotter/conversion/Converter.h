@@ -45,7 +45,7 @@ public:
 	bool setVelocityUnits( const QString& units );
 	bool setWavelengthUnits( const QString& units );
 	QString getNewUnits() const;
-	static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
+
 
 
 	//Abstract methods to be implemented by subclasses.
@@ -59,7 +59,7 @@ protected:
 	static const QList<QString> FREQUENCY_UNITS;
 	static const QList<QString> WAVELENGTH_UNITS;
 	static const QList<QString> VELOCITY_UNITS;
-	static const QList<QString> BEAM_UNITS;
+
 	QString oldUnits;
 	QString newUnits;
 	static SpectralCoordinate spectralCoordinate;

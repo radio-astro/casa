@@ -25,6 +25,7 @@
 #include "CanvasCurve.h"
 #include <casa/Quanta/Quantum.h>
 #include <display/QtPlotter/conversion/Converter.h>
+#include <display/QtPlotter/conversion/ConverterIntensity.h>
 #include <components/ComponentModels/Flux.h>
 #include <QDebug>
 #include <cmath>
@@ -32,14 +33,11 @@
 
 namespace casa {
 
-const QString CanvasCurve::FRACTION_OF_PEAK = "Fraction of Peak";
-const QString CanvasCurve::JY_BEAM = "Jy/beam";
-const QString CanvasCurve::JY_BEAM_SHORT = "Jy";
-const QString CanvasCurve::KELVIN = "Kelvin";
-const QString CanvasCurve::KELVIN_SHORT = "K";
 
 CanvasCurve::CanvasCurve(){
 }
+
+
 CanvasCurve::CanvasCurve( CurveData cData, ErrorData eData,
 			QString legendTitle, QColor cColor, int curveLevel ){
 	curveData = cData;
@@ -49,25 +47,31 @@ CanvasCurve::CanvasCurve( CurveData cData, ErrorData eData,
 	curveType = curveLevel;
 }
 
+
 QColor CanvasCurve::getColor() const{
 	return curveColor;
 }
+
 
 void CanvasCurve::setColor( QColor color ){
 	curveColor = color;
 }
 
+
 QString CanvasCurve::getLegend() const{
 	return legend;
 }
+
 
 int CanvasCurve::getCurveType() const {
 	return curveType;
 }
 
+
 CurveData CanvasCurve::getCurveData(){
 	return curveData;
 }
+
 
 Vector<float> CanvasCurve::getXValues() const{
 	int xCount = curveData.size() / 2;
@@ -78,6 +82,7 @@ Vector<float> CanvasCurve::getXValues() const{
 	return xValues;
 }
 
+
 Vector<float> CanvasCurve::getYValues() const{
 	int yCount = curveData.size() / 2;
 	Vector<float> yValues( yCount );
@@ -87,195 +92,135 @@ Vector<float> CanvasCurve::getYValues() const{
 	return yValues;
 }
 
+
+Vector<float> CanvasCurve::getErrorValues() const{
+	int errorCount = errorData.size();
+	Vector<float> errorValues( errorCount );
+	for ( int i = 0; i < errorCount; i++ ){
+		errorValues[i] = errorData[i];
+	}
+	return errorValues;
+}
+
+
 ErrorData CanvasCurve::getErrorData(){
 	return errorData;
 }
+
 
 void CanvasCurve::setLegend( const QString& legendStr ){
 	legend = legendStr;
 }
 
-void CanvasCurve::scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay ){
-	scaleYValuesCurve( oldDisplayUnits, yUnitDisplay );
-	scaleYValuesError( oldDisplayUnits, yUnitDisplay  );
-}
 
-void CanvasCurve::scaleYValuesCurve( const QString& oldUnits, const QString& newUnits ){
+double CanvasCurve::convertValue( double value, double freqValue, const QString& oldDisplayUnits,
+		const QString& yUnitDisplay, const QString& xUnits){
 
-	QString baseConvertUnits = oldUnits;
-	int maxPoints = curveData.size() / 2;
-	//Change them back to the original units before converting.
-	if ( oldUnits == FRACTION_OF_PEAK ){
-		for ( int i = 0; i < maxPoints; i++ ){
-			curveData[2*i+1] = percentToValue( curveData[2*i+1]);
-		}
-		baseConvertUnits = storedUnits;
+	//Frequency value must be in Hertz
+	const QString HERTZ = "Hz";
+	double freqHertz = freqValue;
+	if ( xUnits != HERTZ ){
+		Converter* converter = Converter::getConverter( xUnits, HERTZ );
+		freqHertz = converter->convert( freqValue );
+		delete converter;
 	}
-
-	if ( newUnits == FRACTION_OF_PEAK ){
-
-		//If we are going to a percent, store the max and units so we can later go
-		//back
-		storeData( oldUnits );
-
-		//Scale the vector
-		for ( int i = 0; i < maxPoints; i++ ){
-			curveData[ 2*i+1 ] = valueToPercent( curveData[2*i+1] );
-		}
-	}
-	//Converting between Jy/beam.
-	else if ( oldUnits.indexOf( JY_BEAM) > 0  && newUnits.indexOf( JY_BEAM )> 0 ){
-		for ( int i = 0; i < maxPoints; i++ ){
-			curveData[2*i+1] = Converter::convertJyBeams( oldUnits, newUnits, curveData[2*i+1]);
-		}
-	}
-	else {
-		//Use Quanta to convert
-		for ( int i = 0; i < maxPoints; i++ ){
-			curveData[ 2*i+1 ] = convert( curveData[2*i+1], baseConvertUnits, newUnits );
-		}
-	}
+	//Convert the y values
+ 	Vector<float> yValues(1);
+ 	Vector<float> xValues(1);
+ 	yValues[0] = value;
+ 	xValues[0] = freqHertz;
+	ConverterIntensity::convert( yValues, xValues, oldDisplayUnits, yUnitDisplay,
+			maxValue, maxUnits );
+	return yValues[0];
 }
 
 
-void CanvasCurve::scaleYValuesError( const QString& oldUnits, const QString& newUnits ){
+void CanvasCurve::scaleYValues( const QString& oldDisplayUnits,
+		const QString& yUnitDisplay, const QString& xUnits ){
+	//If we are going to fraction of peak, we need to store our old max and units so
+	//we can later go back.
+	if ( yUnitDisplay == ConverterIntensity::FRACTION_OF_PEAK &&
+			oldDisplayUnits != ConverterIntensity::FRACTION_OF_PEAK ){
+		storeData( oldDisplayUnits );
+	}
 
-	QString baseConvertUnits = oldUnits;
+	//Convert xValues to Hz
+	Vector<float> xValues = getXValues();
+	const QString HERTZ = "Hz";
+	if ( xUnits != HERTZ ){
+		Converter* converter = Converter::getConverter( xUnits, HERTZ );
+		for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+			xValues[i] = converter->convert( xValues[i] );
+		}
+		delete converter;
+	}
+
+	//Convert the y values
+ 	Vector<float> yValues = getYValues();
+	ConverterIntensity::convert( yValues, xValues, oldDisplayUnits, yUnitDisplay,
+			maxValue, maxUnits );
+
+	//Convert the error values
+	Vector<float> errorValues = getErrorValues();
+	ConverterIntensity::convert( errorValues, xValues,
+			oldDisplayUnits, yUnitDisplay, maxErrorValue, maxUnits  );
+
+	//Copy the yvalues and error values back.
+	setYValues( yValues );
+	setErrorValues( errorValues );
+}
+
+void CanvasCurve::setYValues( const Vector<float>& yValues ){
+	int maxPoints = max( static_cast<int>(curveData.size() / 2), static_cast<int>(yValues.size()) );
+	for ( int i = 0; i < maxPoints; i++ ){
+		curveData[2*i+1] = yValues[i];
+	}
+}
+
+void CanvasCurve::setErrorValues( const Vector<float>& errorValues ){
+	int maxPoints = max( static_cast<int>(errorData.size()), static_cast<int>(errorValues.size()) );
+	for ( int i = 0; i < maxPoints; i++ ){
+		errorData[i] = errorValues[i];
+	}
+}
+
+double CanvasCurve::getMaxError( ) const {
 	int maxPoints = errorData.size();
-	if ( maxPoints > 0 ){
-
-		//Change them back to the original units before converting.
-		if ( oldUnits == FRACTION_OF_PEAK ){
-			for ( int i = 0; i < maxPoints; i++ ){
-				errorData[i] = percentToValue( errorData[i]);
-			}
-			baseConvertUnits = storedUnits;
-		}
-
-		if ( newUnits == FRACTION_OF_PEAK ){
-
-			//Scale the vector
-			for ( int i = 0; i < maxPoints; i++ ){
-				errorData[i] = valueToPercent( errorData[i] );
-			}
-		}
-		//Converting between Jy/beam.
-		else if ( oldUnits.indexOf( JY_BEAM) > 0  && newUnits.indexOf( JY_BEAM ) > 0 ){
-			for ( int i = 0; i < maxPoints; i++ ){
-				errorData[i] = Converter::convertJyBeams( oldUnits, newUnits, errorData[i]);
-			}
-		}
-		else {
-			//Use Quanta to convert
-			for ( int i = 0; i < maxPoints; i++ ){
-				errorData[i] = convert( errorData[i], baseConvertUnits, newUnits );
-			}
-		}
-	}
-}
-
-
-
-
-double CanvasCurve::percentToValue( double yValue ) const {
-	double convertedYValue = yValue * storedMax;
-	return convertedYValue;
-}
-
-double CanvasCurve::getMax() const {
-	int maxPoints = curveData.size() / 2;
 	double maxValue = 0;
-	if ( maxPoints >= 1 ){
-		maxValue = curveData[1];
+	if ( maxPoints > 0 ){
+		maxValue = errorData[0];
 		for ( int i = 0; i < maxPoints; i++ ){
-			double yValue = curveData[2*i+1];
-			if ( yValue > maxValue ){
-				maxValue = yValue;
+			if ( errorData[i] > maxValue ){
+				maxValue = errorData[i];
 			}
 		}
 	}
 	return maxValue;
 }
 
+
+double CanvasCurve::getMaxY( ) const {
+	int maxPoints = curveData.size()/2;
+	double maxValue = 0;
+	if ( maxPoints >= 1 ){
+		maxValue = curveData[1];
+		for ( int i = 0; i < maxPoints; i++ ){
+			if ( curveData[2*i+1] > maxValue ){
+				maxValue = curveData[2*i+1];
+			}
+		}
+	}
+	return maxValue;
+}
+
+
 void CanvasCurve::storeData( const QString& oldUnits ){
 	//Find the max data value we will scale by.
-	storedUnits = oldUnits;
-	storedMax = getMax();
-
+	maxUnits = oldUnits;
+	maxValue = getMaxY(  );
+	maxErrorValue = getMaxError();
 }
 
-double CanvasCurve::valueToPercent( double yValue ) const {
-	double convertedYValue = yValue / storedMax;
-	return convertedYValue;
-}
-
-String CanvasCurve::adjustForKelvin( const QString& units,
-		const QString& otherUnits ) const {
-	String adjustedUnits( units.toStdString() );
-	if ( units == KELVIN){
-		adjustedUnits = KELVIN_SHORT.toStdString();
-	}
-	else if ( units == JY_BEAM && otherUnits == KELVIN ){
-		adjustedUnits = JY_BEAM_SHORT.toStdString();
-	}
-	return adjustedUnits;
-}
-
-
-double CanvasCurve::convert( double yValue, const QString oldUnits, const QString newUnits ) const {
-
-	String oldUnitStr = adjustForKelvin( oldUnits, newUnits );
-	Quantity quantity( yValue, oldUnitStr );
-	String newUnitStr = adjustForKelvin( newUnits, oldUnits );
-	//qDebug() << "Converting oldUnitStr="<<oldUnitStr.c_str()<<" to "<< newUnitStr.c_str()<<" value="<<yValue;
-
-	double convertedYValue = 0;
-	if ( oldUnits != KELVIN && newUnits != KELVIN ){
-		quantity.convert( newUnitStr );
-		convertedYValue = quantity.getValue();
-	}
-	else {
-		/*Vector<double> inputValues(4);
-		inputValues[0] = 1;
-		inputValues[3] = yValue;
-		Unit unit( oldUnitStr );
-		Quantum< Vector<Double> > quantum( inputValues, unit );
-		FluxRep<double> rep( quantum );
-		Unit newUnit( newUnitStr);
-		rep.convertUnit( newUnit );
-		Vector<double> outputValues(4);
-		rep.value( outputValues );
-		convertedYValue = outputValues[0];*/
-		/*FluxRep<Double> fluxRep(1.0, 0.0, 0.0, yValue); // I = 1.0, V = 0.1
-		fluxRep.convertUnit( newUnitStr );
-		const std::complex<double> result= fluxRep.value( 0 );
-		convertedYValue = result.real();*/
-		convertedYValue = yValue;
-
-		// cout << "The I flux (in WU is)" << flux.value(0) << endl;
-	}
-
-	/*if ( newUnitStr =="K"){
-		qDebug() << "Converted value is "<<convertedYValue;
-	}*/
-	return convertedYValue;
-}
-
-double CanvasCurve::convertValue( double value, const QString& oldUnits, const QString& newUnits ) const {
-	double convertedValue = value;
-	if ( oldUnits != newUnits ){
-		if ( oldUnits == FRACTION_OF_PEAK ){
-			convertedValue = storedMax * value;
-		}
-		else if ( newUnits == FRACTION_OF_PEAK ){
-			convertedValue = value / storedMax;
-		}
-		else {
-			convertedValue = convert( value, oldUnits, newUnits );
-		}
-	}
-	return convertedValue;
-}
 
 QString CanvasCurve::getToolTip( double x, double y , const double X_ERROR,
 		const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const {
@@ -327,7 +272,6 @@ void CanvasCurve::getMinMax(Double& xmin, Double& xmax, Double& ymin,
 }
 
 CanvasCurve::~CanvasCurve() {
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace casa */

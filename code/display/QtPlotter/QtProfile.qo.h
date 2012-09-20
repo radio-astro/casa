@@ -263,7 +263,7 @@ private:
 
    Int scaleAxis();
    void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
-
+   void initializeSolidAngle() const;
    //Conversion
    QString getRaDec(double x, double y);
 

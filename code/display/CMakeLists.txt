@@ -430,6 +430,7 @@ casa_add_library( display
   QtPlotter/conversion/ConverterWavelengthFrequency.cc
   QtPlotter/conversion/ConverterWavelengthVelocity.cc
   QtPlotter/conversion/ConverterChannel.cc
+  QtPlotter/conversion/ConverterIntensity.cc
   QtPlotter/SelectEstimateDialog.cc
   QtViewer/AnimatorWidget.cc
   QtViewer/AnimatorHolder.cc
