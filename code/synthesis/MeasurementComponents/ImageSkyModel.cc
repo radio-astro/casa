@@ -506,9 +506,9 @@ ImageInterface<Float>& ImageSkyModel::residual(Int model) {
       
       TempImage<Float>* tempImagePtr =
 	new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-					 image_p[model]->niceCursorShape()),
+			      image_p[model]->niceCursorShape()),
 			      //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
-			       image_p[model]->coordinates(), workDirOnNFS_p ? memoryMB : 0);
+			       image_p[model]->coordinates(), memoryMB);
       
       AlwaysAssert(tempImagePtr, AipsError);
       
