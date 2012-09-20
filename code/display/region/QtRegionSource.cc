@@ -198,7 +198,8 @@ namespace casa {
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-
+	    connect( this, SIGNAL( newCorners( double, double, double, double)),
+	   	    		result, SLOT( adjustCorners( double, double, double, double)));
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
