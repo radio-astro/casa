@@ -196,7 +196,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 			}
 			if (nPol > 0) {
 				polarization = nChan > 0
-					? i % nChan
+					? (i - channel) % nChan
 					: i;
 				start[polAxis] = polarization;
 			}
@@ -207,7 +207,6 @@ template <class T> void Image2DConvolver<T>::convolve(
 				Vector<Double> subRefPix = subCsys.referencePixel();
 				subRefPix[specAxis] = 0;
 				subCsys.setReferencePixel(subRefPix);
-
 			}
 			GaussianBeam inputBeam = imageInfo.restoringBeam(channel, polarization);
 			Bool doConvolve = True;
@@ -225,7 +224,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				os << " ";
 				if (near(inputBeam, GaussianBeam(parameters), 1e-5, Quantity(1e-2, "arcsec"))) {
 					doConvolve = False;
-					os << " Input beam is already near target resolution so this "
+					os << LogIO::NORMAL << " Input beam is already near target resolution so this "
 						<< "plane will not be convolved" << LogIO::POST;
 				}
 				else {
@@ -262,8 +261,6 @@ template <class T> void Image2DConvolver<T>::convolve(
 				beamOut = inputBeam;
 				subImageOut.put(subImage.get());
 			}
-
-
 			{
 				Bool doMask = imageOut.isMasked() && imageOut.hasPixelMask();
 				Lattice<Bool>* pMaskOut = 0;
@@ -652,10 +649,6 @@ template <class T> T Image2DConvolver<T>::_fillKernel(
    T pa = static_cast<T>(parameters(2));
    T ratio = static_cast<T>(parameters(1) / parameters(0));
    T major = static_cast<T>(parameters(0));
-   /*
-   cout << "*** x " << std::setprecision(11) << height << " " << xCentre << " " << yCentre << " "
-		   << " " << major << " " <<  ratio << " " << pa << endl;
-		   */
    if (kernelType==VectorKernel::GAUSSIAN) {
        fillGaussian (maxValKernel, volumeKernel, kernelMatrix, height,
                      xCentre, yCentre, major, ratio, pa);

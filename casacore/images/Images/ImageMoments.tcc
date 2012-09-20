@@ -236,8 +236,6 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		&& _image->imageInfo().hasMultipleBeams()
 	) {
 		GaussianBeam maxBeam = _image->imageInfo().getBeamSet().getMaxAreaBeam();
-		cout << "*** beams " << _image->imageInfo().getBeamSet() << endl;
-		cout << "*** max beam " << maxBeam << endl;
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
@@ -377,181 +375,180 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
                                     Bool removeAxis)
 //
 // This function does all the work
-//
-{
+                                    //
+                                    {
+
 	os_p << LogOrigin("ImageMoments", __FUNCTION__);
-   if (!goodParameterStatus_p) {
-      throw AipsError("Internal status of class is bad.  You have ignored errors");
-   }
+	if (!goodParameterStatus_p) {
+		throw AipsError("Internal status of class is bad.  You have ignored errors");
+	}
+	// Find spectral axis
+	// use a copy of the coordinate system here since, if the image has multiple beams,
+	// _image will change and hence a reference to its CoordinateSystem will disappear
+	// causing a seg fault.
+	CoordinateSystem cSys = _image->coordinates();
+	Int spectralAxis = CoordinateUtil::findSpectralAxis(cSys);
+	if (momentAxis_p == momentAxisDefault_p) {
+		this->setMomentAxis(spectralAxis);
+		if (_image->shape()(momentAxis_p) <= 1) {
+			goodParameterStatus_p = False;
+			throw AipsError("Illegal moment axis; it has only 1 pixel");
+		}
+		worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
+	}
+	String momentAxisUnits = cSys.worldAxisUnits()(worldMomentAxis_p);
+	os_p << LogIO::NORMAL << endl << "Moment axis type is "
+			<< cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
 
-// Find spectral axis 
+	// If the moment axis is a spectral axis, indicate we want to convert to velocity
 
-   const CoordinateSystem& cSys = _image->coordinates();
-   Int spectralAxis = CoordinateUtil::findSpectralAxis(cSys);
-//
-   if (momentAxis_p == momentAxisDefault_p) {
-	   this->setMomentAxis(spectralAxis);
+	convertToVelocity_p = False;
+	if (momentAxis_p == spectralAxis) convertToVelocity_p = True;
+	// Check the user's requests are allowed
 
-     if (_image->shape()(momentAxis_p) <= 1) {
-         goodParameterStatus_p = False;
-        throw AipsError("Illegal moment axis; it has only 1 pixel");
-     }
-     worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
-   }
-   String momentAxisUnits = cSys.worldAxisUnits()(worldMomentAxis_p);
-   os_p << LogIO::NORMAL << endl << "Moment axis type is "
-        << cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
+	if (!checkMethod()) {
+		throw AipsError(error_p);
+	}
 
-// If the moment axis is a spectral axis, indicate we want to convert to velocity
+	// Check that input and output image names aren't the same.
+	// if there is only one output image
 
-   convertToVelocity_p = False;
-   if (momentAxis_p == spectralAxis) convertToVelocity_p = True;
+	if (moments_p.nelements() == 1 && !doTemp) {
+		if (!outName.empty() && (outName == _image->name())) {
+			throw AipsError("Input image and output image have same name");
+		}
+	}
 
-// Check the user's requests are allowed
+	// Try and set some useful Booools.
 
-   if (!checkMethod()) {
-	   throw AipsError(error_p);
-   }
+	Bool smoothClipMethod = False;
+	Bool windowMethod = False;
+	Bool fitMethod = False;
+	Bool clipMethod = False;
+	Bool doPlot = plotter_p.isAttached();
 
-// Check that input and output image names aren't the same.
-// if there is only one output image
+	if (doSmooth_p && !doWindow_p) {
+		smoothClipMethod = True;
+	} else if (doWindow_p) {
+		windowMethod = True;
+	} else if (doFit_p) {
+		fitMethod = True;
+	} else {
+		clipMethod = True;
+	}
 
-   if (moments_p.nelements() == 1 && !doTemp) {
-      if (!outName.empty() && (outName == _image->name())) {
-         throw AipsError("Input image and output image have same name");
-      }
-   } 
+	// We only smooth the image if we are doing the smooth/clip method
+	// or possibly the interactive window method.  Note that the convolution
+	// routines can only handle convolution when the image fits fully in core
+	// at present.
 
-// Try and set some useful Booools.
+	PtrHolder<ImageInterface<T> > pSmoothedImageHolder;
+	ImageInterface<T>* pSmoothedImage = 0;
+	String smoothName;
+	if (doSmooth_p) {
+		if (!smoothImage(pSmoothedImageHolder, smoothName)) {
+			throw AipsError(error_p);
+		}
+		pSmoothedImage = pSmoothedImageHolder.ptr();
 
-   Bool smoothClipMethod = False;
-   Bool windowMethod = False;
-   Bool fitMethod = False;
-   Bool clipMethod = False;
-   Bool doPlot = plotter_p.isAttached();
+		// Find the auto Y plot range.   The smooth & clip and the window
+		// methods only plot the smoothed data.
 
-   if (doSmooth_p && !doWindow_p) {
-      smoothClipMethod = True;      
-   } else if (doWindow_p) {
-      windowMethod = True;
-   } else if (doFit_p) {
-      fitMethod = True;
-   } else {
-      clipMethod = True;
-   }     
-
-// We only smooth the image if we are doing the smooth/clip method
-// or possibly the interactive window method.  Note that the convolution
-// routines can only handle convolution when the image fits fully in core
-// at present.
-   
-   PtrHolder<ImageInterface<T> > pSmoothedImageHolder;
-   ImageInterface<T>* pSmoothedImage = 0;
-   String smoothName;
-   if (doSmooth_p) {
-      if (!smoothImage(pSmoothedImageHolder, smoothName)) {
-    	  throw AipsError(error_p);
-      }
-      pSmoothedImage = pSmoothedImageHolder.ptr();
-
-// Find the auto Y plot range.   The smooth & clip and the window
-// methods only plot the smoothed data.
-
-      if (doPlot && fixedYLimits_p && (smoothClipMethod || windowMethod)) {
-         ImageStatistics<T> stats(*pSmoothedImage, False);
-         Array<T> data;
-         stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True);
-         yMin_p = data(IPosition(data.nelements(),0));
-         stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True);
-         yMax_p = data(IPosition(data.nelements(),0));
-      }
-   }
+		if (doPlot && fixedYLimits_p && (smoothClipMethod || windowMethod)) {
+			ImageStatistics<T> stats(*pSmoothedImage, False);
+			Array<T> data;
+			stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True);
+			yMin_p = data(IPosition(data.nelements(),0));
+			stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True);
+			yMax_p = data(IPosition(data.nelements(),0));
+		}
+	}
 
 
-// Find the auto Y plot range if not smoothing and stretch
-// limits for plotting
+	// Find the auto Y plot range if not smoothing and stretch
+	// limits for plotting
 
-   if (fixedYLimits_p && doPlot) {
-      if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
-         ImageStatistics<T> stats(*_image, False);
-         Array<T> data;
-//
-         if (!stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True)) {
-            throw AipsError("Error finding minimum of input image");
-         }
-         yMin_p = data(IPosition(data.nelements(),0));
-//
-         if (!stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True)) {
-            throw AipsError("Error finding maximum of input image");
-         }
-         yMax_p = data(IPosition(data.nelements(),0));
-      }
-   }
+	if (fixedYLimits_p && doPlot) {
+		if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
+			ImageStatistics<T> stats(*_image, False);
+			Array<T> data;
+			//
+			if (!stats.getConvertedStatistic(data, LatticeStatsBase::MIN, True)) {
+				throw AipsError("Error finding minimum of input image");
+			}
+			yMin_p = data(IPosition(data.nelements(),0));
+			//
+			if (!stats.getConvertedStatistic(data, LatticeStatsBase::MAX, True)) {
+				throw AipsError("Error finding maximum of input image");
+			}
+			yMax_p = data(IPosition(data.nelements(),0));
+		}
+	}
 
 
-// Set output images shape and coordinates.
-   
-   IPosition outImageShape;
-   CoordinateSystem cSysOut = this->makeOutputCoordinates (outImageShape, cSys, 
-                                                     _image->shape(),
-                                                     momentAxis_p, removeAxis);
+	// Set output images shape and coordinates.
 
-// Resize the vector of pointers for output images 
+	IPosition outImageShape;
+	CoordinateSystem cSysOut = this->makeOutputCoordinates (outImageShape, cSys,
+			_image->shape(),
+			momentAxis_p, removeAxis);
 
-   outPt.resize(moments_p.nelements());
-   for (uInt i=0; i<outPt.nelements(); i++) outPt[i] = 0;
+	// Resize the vector of pointers for output images
 
-// Loop over desired output moments
+	outPt.resize(moments_p.nelements());
+	for (uInt i=0; i<outPt.nelements(); i++) outPt[i] = 0;
 
-   String suffix;
-   Bool goodUnits;
-   Bool giveMessage = True;
-   Unit imageUnits = _image->units();
-//   
-   for (uInt i=0; i<moments_p.nelements(); i++) {
+	// Loop over desired output moments
 
-// Set moment image units and assign pointer to output moments array
-// Value of goodUnits is the same for each output moment image
+	String suffix;
+	Bool goodUnits;
+	Bool giveMessage = True;
+	Unit imageUnits = _image->units();
+	//
+	for (uInt i=0; i<moments_p.nelements(); i++) {
 
-      Unit momentUnits;
-      goodUnits = this->setOutThings(suffix, momentUnits, imageUnits, momentAxisUnits, 
-                               moments_p(i), convertToVelocity_p);
-//   
-// Create output image(s).    Either PagedImage or TempImage
-//
-      ImageInterface<Float>* imgp = 0;
-      if (!doTemp) {
-         const String in = _image->name(False);
-         String outFileName;
-         if (moments_p.nelements() == 1) {
-            if (outName.empty()) {
-               outFileName = in + suffix;
-            } else {
-               outFileName = outName;
-            }
-         } else {
-            if (outName.empty()) {
-               outFileName = in + suffix;
-            } else {
-               outFileName = outName + suffix;
-            }
-         }
-//
-         if (!overWriteOutput_p) {
-            NewFile x;
-            String error;
-            if (!x.valueOK(outFileName, error)) {
-               throw AipsError(error);
-            }
-         }
- //
-         imgp = new PagedImage<T>(outImageShape, cSysOut, outFileName);         
-         os_p << LogIO::NORMAL << "Created " << outFileName << LogIO::POST;
-      } else {
-         imgp = new TempImage<T>(TiledShape(outImageShape), cSysOut);
-         os_p << LogIO::NORMAL << "Created TempImage" << LogIO::POST;
-      }
-//
+		// Set moment image units and assign pointer to output moments array
+		// Value of goodUnits is the same for each output moment image
+
+		Unit momentUnits;
+		goodUnits = this->setOutThings(suffix, momentUnits, imageUnits, momentAxisUnits,
+				moments_p(i), convertToVelocity_p);
+		//
+		// Create output image(s).    Either PagedImage or TempImage
+		//
+		ImageInterface<Float>* imgp = 0;
+		if (!doTemp) {
+			const String in = _image->name(False);
+			String outFileName;
+			if (moments_p.nelements() == 1) {
+				if (outName.empty()) {
+					outFileName = in + suffix;
+				} else {
+					outFileName = outName;
+				}
+			} else {
+				if (outName.empty()) {
+					outFileName = in + suffix;
+				} else {
+					outFileName = outName + suffix;
+				}
+			}
+			//
+			if (!overWriteOutput_p) {
+				NewFile x;
+				String error;
+				if (!x.valueOK(outFileName, error)) {
+					throw AipsError(error);
+				}
+			}
+			//
+			imgp = new PagedImage<T>(outImageShape, cSysOut, outFileName);
+			os_p << LogIO::NORMAL << "Created " << outFileName << LogIO::POST;
+		} else {
+			imgp = new TempImage<T>(TiledShape(outImageShape), cSysOut);
+			os_p << LogIO::NORMAL << "Created TempImage" << LogIO::POST;
+		}
+		//
       if (imgp==0) {
          for (uInt j=0; j<i; j++) delete outPt[j];
          os_p << "Failed to create output file" << LogIO::EXCEPTION;        
