@@ -15,6 +15,7 @@ class ParallelTaskHelper:
     '''
     def __init__(self, task_name, args = {}):
         self._arg = args
+        self._arguser = {}
         self._taskName = task_name
         self._executionList = []
         self._jobQueue = None
@@ -24,6 +25,9 @@ class ParallelTaskHelper:
         self._cluster = None
         # jagonzal: To inhibit return values consolidation
         self._consolidateOutput = True
+        
+    def override_arg(self,arg,value):
+        self._arguser[arg] = value
 
     def initialize(self):
         '''
@@ -48,15 +52,22 @@ class ParallelTaskHelper:
                 raise ValueError, \
                       "MS is not a MultiMS, simple parallelization failed"
 
+            subMs_idx = 0
             for subMS in msTool.getreferencedtables():
                 localArgs = copy.copy(self._arg)
                 localArgs['vis'] = subMS
+                
+                for key in self._arguser:
+                    localArgs[key] = self._arguser[key][subMs_idx]
+                subMs_idx += 1
+                
                 self._executionList.append(
                     simple_cluster.JobData(self._taskName,localArgs))
+                
             msTool.close()
             return True
         except Exception, instance:
-            casalog.post("Error handling MMS %s: %s" % (self._arg['vis'],instance),'WARNING')
+            casalog.post("Error handling MMS %s: %s" % (self._arg['vis'],instance),'WARN')
             msTool.close()
             return False
 
@@ -81,7 +92,7 @@ class ParallelTaskHelper:
             subMS_list = msTool.getreferencedtables()
             msTool.close()
         except Exception, instance:
-            casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
+            casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
             msTool.close()
             return False
         
@@ -90,7 +101,7 @@ class ParallelTaskHelper:
             retval = True
             for subMs in subMS_list:
                 if not ret_list[index]:
-                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),'WARNING')
+                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),'WARN')
                     retval = False
                 index += 1
             return retval
@@ -101,7 +112,7 @@ class ParallelTaskHelper:
                 try:
                     ret_dict = self.sum_dictionaries(dict_i,ret_dict)
                 except Exception, instance:
-                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
+                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
             return ret_dict     
         elif (ret_list[0]==None) and self._consolidateOutput:
              return None      
@@ -136,7 +147,7 @@ class ParallelTaskHelper:
             try:
                 retVar = self.postExecution()
             except Exception, instance:
-                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARNING')
+                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
                 return False
         else:
             retVar = False
