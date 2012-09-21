@@ -55,7 +55,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <param type="any" name="inpmask" subparam="true">
             <!-- for merge, inpmask can be list -->
               <any type="variant" limittypes="string stringArray"/>
-              <description>Embedded mask to use (default, mask0,...). Use \'\' for integer mask (zero vs non-zero in inpimage)</description>
+              <description>Embedded mask to use (default, mask0,...). Use \'\' for integer mask (zero vs non-zero in inpimage).  Need to include parent image name for merge mode</description>
+ 
               <value type="string">mask0</value>
             </param>
         
@@ -157,9 +158,14 @@ Input/Output Rules :
 ------------------------------
 
 inpimage : Name of input image 
-inpmask : Specify how to read the mask from inpimage.
-               'mask0' : give an embedded-mask name (true/false)
-               ' '  : use the inpimage values to make a mask (zero/non-zero)
+inpmask : 
+         (copy or expand mode)
+         Specify how to read the mask from inpimage.
+         'mask0' : give an embedded-mask name (true/false)
+            ' '  : use the inpimage values to make a mask (zero/non-zero)
+         (merge mode)
+         Specify the T/F mask(s) to be merged. Need to include the parent image file
+         name along with the internal mask name seperated by ':'. (e.g. image1.im:mask0)
 
 outimage : Name of output image. 
                  To re-grid a mask to a different coordinate system, give outimage 
@@ -239,13 +245,22 @@ Usage examples :
 -->
 
 (7) (merge mode):
-     Make a one/zero mask from a list of region files, using the input coordinate-sys,
+<!--     Make a one/zero mask from a list of region files, using the input coordinate-sys,
      and saving in a new output file.  Remember, if outimage has a different 
-     coordinate system from inpimage, the mask will be regridded to it. 
+     coordinate system from inpimage, the mask will be regridded to it. --> 
+     Merge a one/zero mask and T/F masks, using the input coordinate-sys of inpimage and
+     saving in a new output file. Remember, if outimage already exist and has a different
+     coordinate system from inpimage, the mask will be regridded to it.
+     Both inpimage and inpmask can be string or a list of strings for multiple masks.
+     For inpmask, the name masks must be given in the format, 'parent_image_name:internal_mask_name', 
+     as shown the example below.
+     In the case outimage does not exist yet, it will use the coordinates of inpimage or 
+     the first one in inpimage list.  If inpimage is not specified, it will then use the first one in
+     inpmask list. 
 
      makemask(mode='merge',
-              inpimage='image.im', regionlist=['box1.rgn','circle[[15pix , 15pix] ,8pix ]']
-              inmask=['mask0','mask1'],
+              inpimage='image1.im', <!--regionlist=['box1.rgn','circle[[15pix , 15pix] ,8pix ]']-->
+              inpmask=['image1.im:mask0','image2.mask:mask1'],
               outimage='newmask.im', outmask='');
 
 
