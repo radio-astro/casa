@@ -886,11 +886,6 @@ class simple_cluster:
         # Open monitoring file
         fid = open(self._monitoringFile + ".tmp", 'w')
 		
-        # Retrieve jobQueue	(here we have the input arguments dictionary, in particular the sub-MS)
-        jobQueue = []
-        if (self._JobQueueManager != None):
-            jobQueue = self._JobQueueManager.getOutputJobs('running')
-		
         # Print header
         print >> fid, "%20s%10s%10s%10s%10s%10s%10s%10s%15s%15s%20s%30s" % ( "Host","Engine","Status","CPU[%]","Memory[%]","Time[s]",
                                                                              "Read[MB]","Write[MB]","Read[MB/s]","Write[MB/s]","Job","Sub-MS")
@@ -981,23 +976,20 @@ class simple_cluster:
             result[engine[1]][engine[0]]["Status"] = "Idle"
             result[engine[1]][engine[0]]["Time"] = 0
             result[engine[1]][engine[0]]["Job"] = ""
-            # Store actual engine values
-            if (len(jobQueue) == len(engines_list)):
-                # Retrieve job input parameters information from jobQueue
-                result[engine[1]][engine[0]]["Sub-MS"] = jobQueue[engine[0]].getCommandArguments()['vis'].split('/').pop()
-                # Retrieve job status information from job structure
-                for job in self._jobs.keys():
-                    jobEngine = self._jobs[job]['engine']
-                    if (jobEngine == engine[0]):
-                        result[engine[1]][engine[0]]["Status"] = self._jobs[job]['status']
-                        result[engine[1]][engine[0]]["Time"] = round(self._jobs[job]['time'])
-                        result[engine[1]][engine[0]]["Job"] = self._jobs[job]['short'].split('=').pop().replace(' ','')
-                        result[engine[1]][engine[0]]["Read"] = float(read_bytes - self._jobs[job]['read_offset'])/(1024*1024)
-                        result[engine[1]][engine[0]]["Write"] = float(write_bytes - self._jobs[job]['write_offset'])/(1024*1024)
-                        # Compute data rates
-                        if (result[engine[1]][engine[0]]["Time"] > 0):
-                            result[engine[1]][engine[0]]["ReadRate"] = result[engine[1]][engine[0]]["Read"] / result[engine[1]][engine[0]]["Time"]
-                            result[engine[1]][engine[0]]["WriteRate"] = result[engine[1]][engine[0]]["Write"] / result[engine[1]][engine[0]]["Time"]
+            # Retrieve job status information from job structure
+            for job in self._jobs.keys():
+                jobEngine = self._jobs[job]['engine']
+                if (jobEngine == engine[0]):           
+                    result[engine[1]][engine[0]]["Sub-MS"] = self._jobs[job]['subms']
+                    result[engine[1]][engine[0]]["Status"] = self._jobs[job]['status']
+                    result[engine[1]][engine[0]]["Time"] = round(self._jobs[job]['time'])
+                    result[engine[1]][engine[0]]["Job"] = self._jobs[job]['short'].split('=').pop().replace(' ','')
+                    result[engine[1]][engine[0]]["Read"] = float(read_bytes - self._jobs[job]['read_offset'])/(1024*1024)
+                    result[engine[1]][engine[0]]["Write"] = float(write_bytes - self._jobs[job]['write_offset'])/(1024*1024)                      
+                    # Compute data rates
+                    if (result[engine[1]][engine[0]]["Time"] > 0):
+                        result[engine[1]][engine[0]]["ReadRate"] = result[engine[1]][engine[0]]["Read"] / result[engine[1]][engine[0]]["Time"]
+                        result[engine[1]][engine[0]]["WriteRate"] = result[engine[1]][engine[0]]["Write"] / result[engine[1]][engine[0]]["Time"]
             # Accumulate host values
             result[engine[1]]["CPU"] += result[engine[1]][engine[0]]["CPU"]
             result[engine[1]]["Memory"] += result[engine[1]][engine[0]]["Memory"]
@@ -1486,7 +1478,7 @@ class simple_cluster:
         cmd+=')'
         return cmd
     
-    def do_and_record(self, cmd, id, group=''):
+    def do_and_record(self, cmd, id, group='', subMS=''):
         '''Submit a function call to an engine and record its execution status.
 
         Keyword arguments:
@@ -1522,6 +1514,7 @@ class simple_cluster:
             self._jobs[job]['short']=cmd
         else:
             self._jobs[job]['short']=cmd[:str.find(cmd, '(')]
+        self._jobs[job]['subms']=subMS
         self._jobs[job]['status']="scheduled"
         self._jobs[job]['engine']=id
         self._jobs[job]['jobname']=self._job_title
@@ -2651,8 +2644,10 @@ class JobQueueManager:
                 # This stores each job in the output queue indexed by
                 # it's JobID (name)
                 self.__outputQueue[self.__cluster.do_and_record\
-                                   (job.getCommandLine(), engineList.pop())] =\
-                                   job
+                                   (job.getCommandLine(), 
+                                    engineList.pop(),
+                                    subMS=job.getCommandArguments()['vis'].split('/').pop())
+                                   ]=job
 
             # Wait for a bit then try again
             time.sleep(1)
