@@ -1,6 +1,6 @@
 //# QtRegionDock.cc: dockable Qt implementation of viewer region management
 //# with surrounding Gui functionality
-//# Copyright (C) 2011
+//# Copyright (C) 2011,2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -76,6 +76,22 @@ namespace casa {
 	QtRegionDock::~QtRegionDock() {  }
 
 	// void QtRegionDock::showStats( const QString &stats ) { }
+
+	void QtRegionDock::enterEvent( QEvent* ) {
+	    if ( region_stack->count( ) > 0 ) {
+		QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+		QtRegion::setWeakSelection(current_selection);
+		if ( current_selection ) current_selection->emitRefresh( );
+	    }
+	}
+
+	void QtRegionDock::leaveEvent( QEvent* ) {
+	    QtRegion::setWeakSelection(0);
+	    if ( region_stack->count( ) > 0 ) {
+		QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+		if ( current_selection ) current_selection->emitRefresh( );
+	    }
+	}
 
 	void QtRegionDock::addRegion(QtRegion *r, QtRegionState *state, int index) {
 
@@ -220,6 +236,15 @@ namespace casa {
 	    if ( state == 0 )
 		throw internal_error("region state corruption");
 	    state->justExposed( );
+
+	    if ( QtRegion::getWeakSelection( ) != 0 ) {
+		// stack changes when new region is created... but we're only interested in
+		// changes which happen due to user scrolling (in which case, the mouse has
+		// entered the region dock and the weak selection has been set).
+		QtRegion::setWeakSelection(state);
+		state->emitRefresh( );
+	    }
+
 	    last_index = index;
 	}
 

@@ -46,6 +46,7 @@ Mueller::Mueller() :
   ok_(NULL),
   oki_(NULL),
   cOne_(1.0), 
+  cZero_(0.0), 
   scalardata_(False),
   vtmp_(VisVector::Four,True)
 {}
@@ -119,6 +120,14 @@ void Mueller::invert() {
 
 }
 
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void Mueller::setMatByOk() {
+
+  throw(AipsError("Invalid attempt to setMatByOk."));
+
+}
+
 // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
 void Mueller::apply(VisVector& out, const VisVector& in) {
   out=in;
@@ -158,11 +167,26 @@ void MuellerDiag::invert() {
     if ((*oki_) && abs(*mi_)>0.0)
       (*mi_) = cOne_/(*mi_);
     else {
-      (*mi_)=Complex(0.0);
+      (*mi_)=cZero_;
       (*oki_)=False;
     }
   
 }
+
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void MuellerDiag::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) m_[0]=cOne_;
+  if (!ok_[1]) m_[1]=cOne_;
+  if (!ok_[2]) m_[2]=cOne_;
+  if (!ok_[3]) m_[3]=cOne_;
+
+}
+
 
 
 // In-place multiply onto a VisVector: optimized Diagonal version
@@ -195,8 +219,7 @@ void MuellerDiag::apply(VisVector& v, Bool& vflag) {
   if (!ok_) throw(AipsError("Illegal use of MuellerDiag::apply(v,vflag)."));
 
   applyFlag(vflag);
-  if (!vflag) apply(v);
-  else v.zero();
+  apply(v);
 
 }
 
@@ -245,11 +268,24 @@ void MuellerDiag2::invert() {
     if ((*oki_)&& abs(*mi_)>0.0)
       (*mi_) = cOne_/(*mi_);
     else {
-      (*mi_) = Complex(0.0);
+      (*mi_) = cZero_;
       (*oki_) = False;
     }
   
 }
+
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void MuellerDiag2::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) m_[0]=cOne_;
+  if (!ok_[1]) m_[1]=cOne_;
+
+}
+
 
 // In-place multiply onto a VisVector: optimized Diag2 version
 void MuellerDiag2::apply(VisVector& v) {
@@ -280,8 +316,7 @@ void MuellerDiag2::apply(VisVector& v, Bool& vflag) {
   if (!ok_) throw(AipsError("Illegal use of MuellerDiag2::apply(v,vflag)."));
 
   applyFlag(vflag);
-  if (!vflag) apply(v);
-  else v.zero();
+  apply(v);
 
 }
 
@@ -327,6 +362,17 @@ void MuellerScal::invert() {
 
 }
 
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void MuellerScal::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) m_[0]=cOne_;
+
+}
+
 // In-place multiply onto a VisVector: optimized Scalar version
 void MuellerScal::apply(VisVector& v) {
   // Apply single value to all vector elements
@@ -338,8 +384,7 @@ void MuellerScal::apply(VisVector& v, Bool& vflag) {
   if (!ok_) throw(AipsError("Illegal use of MuellerScal::apply(v,vflag)."));
 
   applyFlag(vflag);
-  if (!vflag) apply(v);
-  else v.zero();
+  apply(v);
 
 }
 
@@ -371,10 +416,22 @@ void AddMuellerDiag2::invert() {
     if ((*oki_))
       (*mi_)*=-1.0;  // negate
     else {
-      (*mi_) = Complex(0.0);
+      (*mi_) = cZero_;
       (*oki_) = False;
     }
   
+}
+
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void AddMuellerDiag2::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) m_[0]=cZero_;
+  if (!ok_[1]) m_[1]=cZero_;
+
 }
 
 // In-place multiply onto a VisVector: optimized Diag2 version
@@ -418,11 +475,26 @@ void AddMuellerDiag::invert() {
     if ((*oki_))
       (*mi_)*=-1.0;  // negate
     else {
-      (*mi_) = Complex(0.0);
+      (*mi_) = cZero_;
       (*oki_) = False;
     }
   
 }
+
+// Set matrix elements according to ok flag
+//  (so we don't have to check ok flags atomically in apply)
+void AddMuellerDiag::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) m_[0]=cZero_;
+  if (!ok_[1]) m_[1]=cZero_;
+  if (!ok_[2]) m_[2]=cZero_;
+  if (!ok_[3]) m_[3]=cZero_;
+
+}
+
 
 // In-place add onto a VisVector: optimized Diag2 version
 void AddMuellerDiag::apply(VisVector& v) {

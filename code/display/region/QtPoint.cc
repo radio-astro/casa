@@ -31,6 +31,7 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/ds9/ds9writer.h>
+#include <QDebug>
 
 namespace casa {
     namespace viewer {
@@ -44,6 +45,15 @@ namespace casa {
 	}
 
 	QtPoint::~QtPoint( ) { }
+
+	void QtPoint::adjustCorners( double blcx, double blcy, double trcx, double trcy ){
+		world_to_linear(wc_, blcx, blcy, blc_x, blc_y );
+		world_to_linear( wc_, trcx, trcy, trc_x, trc_y);
+		updateStateInfo( true, Region::RegionChangeUpdate );
+		//setDrawCenter(false);
+		//invalidateCenterInfo();
+		refresh();
+	}
 
 	void QtPoint::output( ds9writer &out ) const {
 

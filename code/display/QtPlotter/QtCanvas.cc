@@ -250,7 +250,7 @@ void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &erro
 		CanvasCurve curve( data, error, curveLabel, curveColor, level );
 		//Make sure the curve is in the same units as the canvas is using.
 		if ( yUnitDisplay != yUnitImage ){
-			curve.scaleYValues( yUnitImage, yUnitDisplay );
+			curve.scaleYValues( yUnitImage, yUnitDisplay, getUnits() );
 		}
 		curveMap[id]     = curve;
 		refreshPixmap();
@@ -1769,7 +1769,7 @@ void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
 	if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ){
 		//Tell all the curves to convert their yUnits
 		for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ){
-			curveMap[i].scaleYValues( oldDisplayUnits, yUnitDisplay );
+			curveMap[i].scaleYValues( oldDisplayUnits, yUnitDisplay, getUnits() );
 		}
 		//We won't bother to scale the curve markers.
 		profileFitMarkers.clear();

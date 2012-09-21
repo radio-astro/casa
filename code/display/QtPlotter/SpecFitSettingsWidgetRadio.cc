@@ -432,7 +432,8 @@ SpectralList SpecFitSettingsWidgetRadio::buildSpectralList( int nGauss,
 						QString newUnitStr( newUnits.c_str() );
 						QString fitCurveName = ui.curveComboBox->currentText();
 						CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
-						peakVal = curve.convertValue( peakVal, displayYUnits, newUnitStr );
+						QString xUnits = pixelCanvas->getUnits();
+						peakVal = curve.convertValue( peakVal, centerVal, displayYUnits, newUnitStr, xUnits );
 
 						GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 						estimate->fixByString( fixedStr.toStdString());
@@ -488,7 +489,7 @@ void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGaus
 	int startChannelIndex = -1;
 	int endChannelIndex = -1;
 	CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
-	Vector<Float> z_xval = curve.getXValues();
+	Vector<float> z_xval = curve.getXValues();
 	findChannelRange( startVal, endVal, z_xval, startChannelIndex, endChannelIndex );
 	if ( startChannelIndex >= 0 && endChannelIndex >= 0 ){
 
@@ -682,32 +683,26 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	for ( int k = 0; k < curveList.size(); k++ ){
 
 		QList<SpecFit*> curves = curveList[k];
-		/*if ( !curves[0]->isSpecFitFor(pixelX, pixelY)){
-			continue;
-		}
-		else {
-			//Clear off the previous fit, if there was one.
-			clean();
-		}*/
+		if ( curves.size() > 0 ){
+			Vector<Float> xValues = curves[0]->getXValues();
+			for ( int i = 0; i < curves.size(); i++ ){
+				curves[i]->evaluate( xValues );
 
-		Vector<Float> xValues = curves[0]->getXValues();
-		for ( int i = 0; i < curves.size(); i++ ){
-			curves[i]->evaluate( xValues );
+				Vector<Float> yValues = curves[i]->getYValues();
+				QString curveName = curves[i]->getCurveName();
 
-			Vector<Float> yValues = curves[i]->getYValues();
-			QString curveName = curves[i]->getCurveName();
-
-			//Send the curve to the canvas for plotting.
-			pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-			for ( int i = 0; i < POINT_COUNT; i++ ){
-				yCumValues[i] = yCumValues[i]+yValues[i];
+				//Send the curve to the canvas for plotting.
+				pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
+				for ( int i = 0; i < POINT_COUNT; i++ ){
+					yCumValues[i] = yCumValues[i]+yValues[i];
+				}
 			}
-		}
 
-		//Add a curve that represents the sum of all the individual fits
-		if ( curves.size() > 1 ){
-			QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
-			pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+			//Add a curve that represents the sum of all the individual fits
+			if ( curves.size() > 1 ){
+				QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
+				pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+			}
 		}
 	}
 }
@@ -809,6 +804,23 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 		return false;
 	}
 
+	//Convert the center and fwhm from pixels to whatever units the canvas is
+	//using.
+	QString xAxisUnit = pixelCanvas->getUnits();
+	ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage());
+	CoordinateSystem cSys = img->coordinates();
+	int axisCount = cSys.nPixelAxes();
+	IPosition imPos(axisCount);
+	Bool velocityUnits;
+	Bool wavelengthUnits;
+	getConversion( xAxisUnit.toStdString(), velocityUnits, wavelengthUnits );
+	float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
+	float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
+	float fwhmVal = 2 * abs(fwhmValX - centerVal);
+	if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ){
+		return false;
+	}
+
 	//The peak value will be in whatever units the
 	//fit image is using.  We need to convert it to the image units that the canvas
 	//knows about (which may not be the same thing if we are fitting a different
@@ -819,25 +831,8 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 	if ( imageUnitsStr != imageYUnits ){
 		QString fitCurveName = ui.curveComboBox->currentText();
 		CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
-		double convertedPeakVal = fitCurve.convertValue( peakVal, imageUnitsStr, imageYUnits );
+		double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, imageYUnits, xAxisUnit );
 		peakVal = convertedPeakVal;
-	}
-
-	//Convert the center and fwhm from pixels to whatever units the canvas is
-	//using.
-	String xAxisUnit = getXAxisUnit();
-	ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage());
-	CoordinateSystem cSys = img->coordinates();
-	int axisCount = cSys.nPixelAxes();
-	IPosition imPos(axisCount);
-	Bool velocityUnits;
-	Bool wavelengthUnits;
-	getConversion( xAxisUnit, velocityUnits, wavelengthUnits );
-	float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit,velocityUnits, wavelengthUnits));
-	float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit,velocityUnits, wavelengthUnits));
-	float fwhmVal = 2 * abs(fwhmValX - centerVal);
-	if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ){
-		return false;
 	}
 
 	SpecFit* gaussFit = new SpecFitGaussian( peakVal, centerVal, fwhmVal, index );
@@ -1071,7 +1066,7 @@ void SpecFitSettingsWidgetRadio::gaussianEstimatesChanged(){
 		//If our display y-values don't match those of the gaussian estimate dialog,
 		//we need to convert.
 		if ( displayYUnits != estimateDisplayYUnits ){
-			peakVal = curve.convertValue( peakVal, estimateDisplayYUnits, displayYUnits );
+			peakVal = curve.convertValue( peakVal, centerVal, estimateDisplayYUnits, displayYUnits,xAxisUnit );
 		}
 
 		setEstimateValue( i, PEAK, peakVal );
@@ -1112,14 +1107,21 @@ void SpecFitSettingsWidgetRadio::setDisplayYUnits( const QString& units ){
 		int estimateCount = ui.estimateTable->rowCount();
 		QString fitCurveName = ui.curveComboBox->currentText();
 		CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
-		for ( int i = 0; i < estimateCount; i++ ){
-			QTableWidgetItem* peakItem = ui.estimateTable->item(i, PEAK );
-			if ( peakItem != NULL ){
-				QString peakStr = peakItem->text();
-				float peakVal = peakStr.toFloat();
-				peakVal = curve.convertValue( peakVal, displayYUnits, units );
-				setEstimateValue( i, PEAK, peakVal );
+		Vector<float> xValues = curve.getXValues();
+		if ( xValues.size() > 0 ){
+			QString xUnits = pixelCanvas->getUnits();
+			for ( int i = 0; i < estimateCount; i++ ){
+				QTableWidgetItem* peakItem = ui.estimateTable->item(i, PEAK );
+				if ( peakItem != NULL ){
+					QString peakStr = peakItem->text();
+					float peakVal = peakStr.toFloat();
+					peakVal = curve.convertValue( peakVal,xValues[0], displayYUnits, units,xUnits );
+					setEstimateValue( i, PEAK, peakVal );
+				}
 			}
+		}
+		else {
+			qDebug() << "SpecFitSettingsWidgetRadio::setDisplayYUnits -What curve didn't have any xValues????";
 		}
 	}
 	displayYUnits = units;
