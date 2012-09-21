@@ -2592,7 +2592,7 @@ class simutil:
             ftmachine="mosaic" 
 
         # in 3.4 clean doesn't accept just any imsize
-        from cleanhelper import getOptimumSize
+        from cleanhelper import cleanhelper
         optsize=[0,0]
         optsize[0]=cleanhelper.getOptimumSize(imsize[0])
         nksize=len(imsize)

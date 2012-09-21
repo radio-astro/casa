@@ -61,8 +61,12 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 	tmp_outmaskimage='__tmp_outmakemaskimage'
         tmp_regridim='__tmp_regridim'
 
-	if inpimage==outimage:
-	    tmp_outmaskimage=tmp_maskimage
+        if mode != 'merge':
+           if outimage=='':
+               outimage=inpimage
+
+	   if inpimage==outimage:
+	       tmp_outmaskimage=tmp_maskimage
 
     # the following code is somewhat duplicated among the modes but keep separated from each mode
     # for now....
@@ -70,9 +74,9 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
         if mode=='copy':
            #print "Copy mode"
            needregrid=True
-           if outimage=='':
+           #if outimage=='':
                #overwrite
-               outimage=inpimage
+           #    outimage=inpimage
 
            if not os.path.isdir(outimage):
                needregrid=False
@@ -129,7 +133,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 		inshp = ia.shape()
 		incsys = ia.coordsys()
 		# if outimage not specified modified inpimage
-		if outimage=='': outimage=inpimage
+		#if outimage=='': outimage=inpimage
 		    # no regrid is necessary
 		    # case 1:  
 		    # work mask manipulation in images
@@ -412,13 +416,42 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
             tmp_inmask='__tmp_frominmask'
             try:
 		if not os.path.isdir(outimage):
-		    shutil.copytree(inpimage,sum_tmp_outfile)
+                    # figure out which input mask to be used as template
+                    # if inpimage is defined use the first one else try the first one
+                    # inpmask
+                    if outimage=='':
+                        if type(inpimage)==list:
+                             outimage=inpimage[0]
+                        elif type(inpimage)==str:
+                             outimage=inpimage
+                        casalog.post("No outimage is specified. Will overwrite input image: "+outimage,'INFO')
+                    if type(inpimage)==list and len(inpimage)!=0:
+                        tmp_template=inpimage[0]
+                    elif inpimage!='' and inpimage!=[]:
+                        tmp_template=inpimage # string
+                    else:
+                        if type(inpmask)==list and len(inpmask)!=0:
+                            range=inpmask[0].rfind(':')
+                            if range ==-1:
+                                raise IOError, "Cannot resolve inpmask name, check the format"
+                            else:
+                                tmp_template=inpmask[0][:inpmask[0].rfind(':')]
+                        elif inpmask!='' and inpmask!=[]:
+                            # this is equivalent to 'copy' the inpmask
+                            tmp_template=inpmask #string
+                        
+		    shutil.copytree(tmp_template,sum_tmp_outfile)
 		    #print "copied inpimage to tmp file"
 		else:
 		    shutil.copytree(outimage,sum_tmp_outfile)
 		    #print "copied outimage to tmp file"
      
-		if type(inpimage)==list and len(inpimage)>0:
+                if type(inpimage)==str:
+                    inpimage=[inpimage]
+                if type(inpmask)==str:
+                    inpmask=[inpmask]
+
+		if len(inpimage)>0:
 		    # summing all the images
                     casalog.post('Summing all mask images in inpimage and  normalized to 1 for mask','INFO')
 		    for img in inpimage:
@@ -429,7 +462,8 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
                         shutil.rmtree(tmpregrid)
 		    # get boolean masks
 		    #  will work in image(1/0) masks
-		if type(inpmask)==list and len(inpmask)>0:
+                
+		if len(inpmask)>0:
                     casalog.post('Summing all T/F mask in inpmask and normalized to 1 for mask','INFO')
 		    for msk in inpmask:
 			if msk.find(':')<0:
@@ -453,7 +487,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 		    ia.open(sum_tmp_outfile)
 		    ia.calcmask(mask='%s<0.5' % sum_tmp_outfile,name=outmask,asdefault=True)
 		    ia.done()
-	        # if outfile exist initially outfile is copied to sum_tmp_outfile
+	        # if outfile exists initially outfile is copied to sum_tmp_outfile
 		# if outfile does not exist initially sum_tmp_outfile is a copy of inpimage
 		# so rename it with overwrite=T all the cases
                 #print "open sum_tmp_outfile=",sum_tmp_outfile
