@@ -40,6 +40,8 @@
 namespace casa {
     namespace viewer {
 
+	QtRegionState *QtRegion::weak_selection = 0;
+
 	QtRegion::QtRegion( QtRegionSourceKernel *factory ) :
 			source_(factory), dock_(factory->dock( )), name_(""), hold_signals(0),
 			z_index_within_range(true), id_(QtId::get_id( )) {

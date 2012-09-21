@@ -233,6 +233,7 @@ namespace casa {
 
 		bool selected( ) const { return selected_; }
 
+		virtual bool weaklySelected( ) const = 0;
 		// indicates that the user has selected this rectangle...
 		// ...may need to scroll region dock
 		virtual void selectedInCanvas( ) DISPLAY_PURE_VIRTUAL(Region::selectedInCanvas,);
@@ -279,7 +280,7 @@ namespace casa {
 		static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
-	   RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg);
+		RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg);
 		RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_xunits( ) const;
@@ -297,6 +298,8 @@ namespace casa {
 
 
 		virtual bool within_drawing_area( );
+
+		void drawHalfFilledRectangle( int x1, int y1, int x2, int y2 );
 
 		LineStyle current_ls;
 		typedef std::pair<LineStyle,int> ls_ele;

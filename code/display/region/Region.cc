@@ -232,6 +232,46 @@ namespace casa {
 	    return wc_->inDrawArea(sblcx,sblcy) && wc_->inDrawArea(strcx,strcy);
 	}
 
+	void Region::drawHalfFilledRectangle( int x1, int y1, int x2, int y2 ) {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+	    PixelCanvas *pc = wc_->pixelCanvas();
+	    pc->drawRectangle(x1, y1, x2, y2);
+	    double blcx, blcy, trcx, trcy;
+	    boundingRectangle(blcx,blcy,trcx,trcy);
+	    int sblcx, sblcy, strcx, strcy;
+	    linear_to_screen( wc_, blcx, blcy, trcx, trcy, sblcx, sblcy, strcx, strcy );
+
+	    const int slop = 1;
+	    bool left = abs(sblcx-x1) < slop ? true : false;
+	    bool top = abs(strcy-y2) < slop ? true : false;
+	    bool bottom = abs(sblcy-y1) < slop ? true : false;
+	    bool right = abs(strcx-x2) < slop ? true : false;
+
+	    Vector<int> x(3);
+	    Vector<int> y(3);
+	    if ( left && top ) {
+		x[0] = x1; y[0] = y1;
+		x[1] = x2; y[1] = y1;
+		x[2] = x2; y[2] = y2;
+	    } else if ( left && bottom ) {
+		x[0] = x1; y[0] = y2;
+		x[1] = x2; y[1] = y2;
+		x[2] = x2; y[2] = y1;
+	    } else if ( right && top ) {
+		x[0] = x1; y[0] = y2;
+		x[1] = x2; y[1] = y1;
+		x[2] = x1; y[2] = y1;
+	    } else {
+		x[0] = x1; y[0] = y1;
+		x[1] = x1; y[1] = y2;
+		x[2] = x2; y[2] = y2;
+	    }
+
+	    pushDrawingEnv(Region::SolidLine,0);
+	    pc->drawFilledPolygon(x,y);
+	    popDrawingEnv( );
+	}
+
 	void Region::draw( bool other_selected ) {
 	    visible_ = true;
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) {
@@ -266,7 +306,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 	    setDrawingEnv( );
-	    drawRegion( (! other_selected && selected( )) || marked( ) );
+	    drawRegion( (! other_selected && selected( )) || marked( ) || weaklySelected( ) );
 	    //if (draw_center_) cout << "center drawn" << endl; else cout << "center NOT drawn" << endl;
 	    resetDrawingEnv( );
 

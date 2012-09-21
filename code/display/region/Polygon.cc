@@ -568,7 +568,12 @@ namespace casa {
 		if (s) {
 		    // draw handles of outline rectangle for resizing whole polygon...
 		    pushDrawingEnv( Region::SolidLine);
-		    if ( marked( ) ) {
+		    if ( weaklySelected( ) ) {
+			drawHalfFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			drawHalfFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			drawHalfFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			drawHalfFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    } else if ( marked( ) ) {
 			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
 			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
 			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);

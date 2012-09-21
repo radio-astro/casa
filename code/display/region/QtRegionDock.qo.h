@@ -1,5 +1,5 @@
 //# QtRegionDock.qo.h: dockable Qt implementation of viewer region management
-//# Copyright (C) 2011
+//# Copyright (C) 2011, 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -102,6 +102,8 @@ namespace casa {
 		void emit_region_stack_change( int );
 
 	    protected:
+		void enterEvent( QEvent* );
+		void leaveEvent( QEvent* );
 		void closeEvent ( QCloseEvent * event );
 
 	    private:
