@@ -124,6 +124,14 @@ if [[ ! -e ${SAXONJAR} ]]; then
 fi
 
 [ ! -e "$SAXONJAR" ] && error "can't find the Saxon processor $SAXONJAR!"
+
+which java > /dev/null
+if [ $? -ne 0 ]; then
+   echo "Java was not found in your PATH. Java needs to be available for buildmytasks to work. "
+   echo "Please visit http://www.oracle.com/technetwork/java/javase/downloads/index.html to obtain java."
+   echo "If(Once) java is installed you will need to put java's location in your PATH for buildmytasks to run"
+   exit
+fi
 verbose "Saxon processor: $SAXONJAR"
 SAXON="java -jar $SAXONJAR"
 verbose "Saxon command: $SAXON"
