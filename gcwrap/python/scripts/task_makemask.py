@@ -44,8 +44,9 @@
 #      internal mask with different spectral grid
 ###################
 import numpy as np
+import shutil
 from taskinit import *
-from recipes.pixelmask2cleanmask import *
+from recipes.pixelmask2cleanmask import pixelmask2cleanmask
 (csys,) = gentools(['cs']) 
 
 def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, template):
@@ -55,6 +56,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
     """
     (ia,) = gentools(['ia']) 
     casalog.origin('makemask')
+    check=[0,2,3]
     try:
         # temp files
         tmp_maskimage='__tmp_makemaskimage'
@@ -134,7 +136,6 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 		incsys = ia.coordsys()
 		# if outimage not specified modified inpimage
 		#if outimage=='': outimage=inpimage
-		    # no regrid is necessary
 		    # case 1:  
 		    # work mask manipulation in images
 		    # if inmask is not empty need to extract embedded mask
@@ -149,6 +150,7 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 		else:
 		    # copy of inpimage in tmp_maskimage
 		    ia.fromimage(outfile=tmp_maskimage, infile=inpimage)
+                    #print "Copying inpimage:"+inpimage+" to "+tmp_maskimage
 
                 #setting up the output image (copy from inpimage or template)
                 if not os.path.isdir(outimage):
@@ -169,61 +171,53 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
                 else:
                     shutil.copytree(outimage,tmp_outmaskimage)
                      
-		# check for working output image
-		#if not os.path.exists(tmp_outmaskimage):
-		    # if tmp_outmaskimage does not exist yet make a copy
-		#    shutil.copytree(tmp_maskimage,tmp_outmaskimage)
-		#    needtoregrid=False
-
-		# get mask info from input image
-		# regrid output image first???
 		# if inpfreq/outfreq are channel indices (int) then
 		# regrid in x y coords only and extract specified channel mask
 		# to specified output channels. (no regriding in spectral axis)
 		# if inpfreqs/outfreqs are velocity or freqs, 
-		# it assumes it expressed in the range with minval~maxval
+		# it assumes it is expressed in the range with minval~maxval
 		# create subimage of the input mask with the range,
 		# do regrid with the subimage to output.
 	  
 		# decide to regrid or not
-		# 1. for the case all channels are selected for input and output, simply regrid
-		# 2. for inpfreqs and outfreqs are integers (= channel indices), regrid only in
-		#    first and second axes (e.g. ra,dec) 
+		# 1. the case all channels are selected for input and output, simply regrid
+		# 2. if inpfreqs and outfreqs are integers (= channel indices), regrid only in
+		#    first and second axes (e.g. ra,dec) and no regridding along spectral axis
+                # 3. if inpfreqs and outfreqs are ranges in freq or vel, make subimage and regrid
 		
-		if ((inpfreqs==[[]] or inpfreqs==[]) and (outfreqs==[[]] or outfreqs==[])) \
-                    or (inpfreqs=='' and outfreqs==''):
-		    # try regrid
+		if inshp[3]!=1 and ((inpfreqs==[] and outfreqs==[]) \
+                    or (inpfreqs=='' and outfreqs=='')):
+		    # unless inpimage is continuum, skip chan selection part and regrid 
 		    needtoregrid=True
 		    # detach input(tmp) image and open output tmp image
-		    ia.open(tmp_outmaskimage)
+		#    ia.open(tmp_outmaskimage)
 		else: 
-                    # make sure tmp_maskimage is open
-                    if ia.isopen():
-                        if ia.name(strippath=True)!=tmp_maskimage:
-                            ia.close()
-                            ia.open(tmp_maskimage)
-                    else:
-                        ia.open(tmp_maskimage)
+                #    # make sure tmp_maskimage is open
+                #    if ia.isopen():
+                #        if ia.name(strippath=True)!=tmp_maskimage:
+                #            ia.close()
+                #            ia.open(tmp_maskimage)
+                #    else:
+                #        ia.open(tmp_maskimage)
 
 		    # selection by channel indices (number) 
 		    # if both inpfreqs and outfreqs are int skip regridding
 		    # if outfreqs is vel or freq ranges, try regridding 
-		    if inpfreqs==[[]] or inpfreqs==[]:
+		    if inpfreqs==[[]] or inpfreqs==[]: 
                         # select all channels for input
 			inpfreqs=range(inshp[3])
-			#print "set inpfreqs=",inpfreqs
 
                     # check inpfreqs and outfreqs types
                     selmode='bychan'
                     if type(inpfreqs)==list:
                         if type(inpfreqs[0])==int:
-                            if type(outfreqs)==list and type(outfreqs[0])==int:
+                            if type(outfreqs)==list and (len(outfreqs)==0 or type(outfreqs[0])==int):
                                 selmode='bychan'
                             elif type(outfreqs)==str:
-                                if inpfreqs[0]==0: #contintuum
+                                if inpfreqs[0]==0: #contintuum -allow index-type specification
                                     selmode='byvf'
                                 else:
-                                    raise TypeError, "Mixed types in infreqs and outfreqs" 
+                                    raise TypeError, "Mixed types in infreqs and outfreqs are not allowed" 
                         else:
                             raise TypeError, "Non-integer in inpfreq is not supported" 
                     elif type(inpfreqs)==str:
@@ -235,37 +229,47 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 
                     # inpfreqs and outfreqs are list of int
                     # match literally without regridding.
-                    #if type(inpfreqs)==list and type(inpfreqs[0]==int):
                     if selmode=='bychan': 
                         casalog.post("selection of input and output ranges by channel")
-		        refchanst = inpfreqs[0]
-		        refchanen = inpfreqs[-1]
-			bychanindx=True
-		        slst = [0,0,0,refchanst]
-		        slen = [inshp[0]-1,inshp[1]-1,0,refchanen]
-		        #print "getting chunk at blc=",slst," trc=",slen
-		        #refchanchunk=ia.getchunk(blc=slst,trc=slen).transpose()
-		        refchanchunk=ia.getchunk(blc=slst,trc=slen)
-		        #print "Before transpose refchanchunk.shape=",refchanchunk.shape
-		        refchanchunk=refchanchunk.transpose()
-		        ia.close()
-		        #print "refchanchunk:shape=",refchanchunk.shape
-	     
-		        ia.open(tmp_outmaskimage)
-		        # need find nearest inchan 
-		        # store by chan indices (no regrid)
-		        usechanims={}  # list of input mask to be use for each outpfreq
-		        for i in outfreqs:
-			    nearestch = findnearest(inpfreqs,i)
-			    usechanims[i]=nearestch 
-		        #print "usechanims=",usechanims
-		        for j in outfreqs:
-			    pix = refchanchunk[usechanims[j]-refchanst]
-			    #print "pix=",pix
-			    #print "pix.shape=",pix.shape
-			    #print "inshp=",inshp, ' j=',j
-			    #ia.putchunk(pixels=pix,blc=[inshp[0]-1,inshp[1]-1,0,j])
-			    ia.putchunk(pixels=pix.transpose(),blc=[0,0,0,j])
+                        
+                        if ia.isopen():
+                            ia.close()
+                        if outfreqs==[] or outfreqs==[[]]:
+                            outchans=[]
+                        else:
+                            outchans=outfreqs
+                        expandchanmask(tmp_maskimage,inpfreqs,tmp_outmaskimage,outchans)
+                        ia.open(tmp_outmaskimage)
+
+                        # replace below with expandchanmask()
+#		        refchanst = inpfreqs[0]
+#		        refchanen = inpfreqs[-1]
+#			bychanindx=True
+#		        slst = [0,0,0,refchanst]
+#		        slen = [inshp[0]-1,inshp[1]-1,0,refchanen]
+#		        #print "getting chunk at blc=",slst," trc=",slen
+#		        #refchanchunk=ia.getchunk(blc=slst,trc=slen).transpose()
+#		        refchanchunk=ia.getchunk(blc=slst,trc=slen)
+#		        #print "Before transpose refchanchunk.shape=",refchanchunk.shape
+#		        refchanchunk=refchanchunk.transpose()
+#		        ia.close()
+#		        #print "refchanchunk:shape=",refchanchunk.shape
+#	     
+#		        ia.open(tmp_outmaskimage)
+#		        # need find nearest inchan 
+#		        # store by chan indices (no regrid)
+#		        usechanims={}  # list of input mask to be use for each outpfreq
+#		        for i in outfreqs:
+#			    nearestch = findnearest(inpfreqs,i)
+#			    usechanims[i]=nearestch 
+#		        #print "usechanims=",usechanims
+#		        for j in outfreqs:
+#			    pix = refchanchunk[usechanims[j]-refchanst]
+#			    #print "pix=",pix
+#			    #print "pix.shape=",pix.shape
+#			    #print "inshp=",inshp, ' j=',j
+#			    #ia.putchunk(pixels=pix,blc=[inshp[0]-1,inshp[1]-1,0,j])
+#			    ia.putchunk(pixels=pix.transpose(),blc=[0,0,0,j])
 
                     elif selmode=='byvf': # outfreqs are quantities (freq or vel)
                         casalog.post("selection of input/output ranges by frequencies/velocities")
@@ -316,12 +320,13 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
                         p1 = ocsys.topixel(world)['numeric'][px]
                         world['numeric'][wc]=qa.convert(qa.quantity(outfreqlist[1]),'Hz')['value']
                         p2 = ocsys.topixel(world)['numeric'][px]
-                        #print "p1=",p1, " p2=",p2
+                        casalog.post("translated channel indices:"+qa.tos(outfreqlist[0])+"->p1="+str(p1)+\
+                        " "+qa.tos(outfreqlist[0])+"->  p2="+str(p2))
                         if len(inpfreqs)==1:
                             inpfreqchans=inpfreqs
                         else:
                             inpfreqchans=[indlo,indhi]
-                        outfreqchans=range(int(p1),int(p2)+1)
+                        outfreqchans=range(int(round(p1)),int(round(p2))+1)
                         #print "inpfreqchans=",inpfreqchans
                         #print "outfreqchans=",outfreqchans
 
@@ -355,12 +360,13 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
 		    # closing current output image
 		    ia.close()
 		    ia.open(tmp_maskimage)
-		    os.system('cp -r %s beforeregrid.im' % tmp_maskimage)
-		    print "Removing %s" % tmp_outmaskimage
-		    os.system('rm -r '+tmp_outmaskimage)
+		    #os.system('cp -r %s beforeregrid.im' % tmp_maskimage)
+                    if os.path.isdir(tmp_outmaskimage):
+		        #print "Removing %s" % tmp_outmaskimage
+		        shutil.rmtree(tmp_outmaskimage)
                     regridmask(tmp_maskimage,outimage,tmp_outmaskimage)
 		    ia.remove()
-		    print "closing after regrid"
+		    #print "closing after regrid"
 		    ia.open(tmp_outmaskimage) # reopen output tmp image
 
 		if outmask!='':
@@ -431,8 +437,8 @@ def makemask(mode, outimage, outmask, inpimage, inpmask, inpfreqs, outfreqs, tem
                         tmp_template=inpimage # string
                     else:
                         if type(inpmask)==list and len(inpmask)!=0:
-                            range=inpmask[0].rfind(':')
-                            if range ==-1:
+                            fsep=inpmask[0].rfind(':')
+                            if fsep ==-1:
                                 raise IOError, "Cannot resolve inpmask name, check the format"
                             else:
                                 tmp_template=inpmask[0][:inpmask[0].rfind(':')]
@@ -547,6 +553,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     sometime fails).
     '''
     #print "Regrid.."
+    print "inputmask=",inputmask," template=",template," outputmask=",outputmask
     if not os.path.isdir(template):
         raise IOError, "template image %s does not exist" % template
     
@@ -571,7 +578,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
         # create subimage based on the inpfreqs range
         inblc=chanrange[0]
         intrc=chanrange[1]
-        #print "spaxis=",spaxis," inblc=",inblc," intrc=",intrc
+        print "spaxis=",spaxis," inblc=",inblc," intrc=",intrc
         rgn = rg.wbox(blc=inblc,trc=intrc,pixelaxes=spaxis.tolist(),csys=incsys.torecord())
     else:
         rgn={}     
@@ -613,6 +620,10 @@ def expandchanmask(inimage,inchans,outimage,outchans):
     ia.open(outimage)
     # need find nearest inchan
     # store by chan indices (no regrid)
+    outshp=ia.shape()
+    if outchans==[]:
+        #select all channels
+        outchans=range(outshp[3])
     usechanims={}  # list of input mask to be use for each outpfreq
     for i in outchans:
         nearestch = findnearest(inchans,i)
