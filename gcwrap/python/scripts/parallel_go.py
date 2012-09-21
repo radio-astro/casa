@@ -309,7 +309,7 @@ class cluster(object):
       cmd=commands.getoutput("which ipengine")
       ef.write('export contrid=%s\n' % self.__controller)
       ef.write('export stamp=%s\n' % self.__timestamp)
-      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- 2>&1 | grep -v Calibrater::selectvis &\n')
+      ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- 2>&1 | grep -v MSSelectionNullSelection &\n')
       ef.close()
 
    def __write_stop_node(self):
