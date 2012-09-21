@@ -62,8 +62,6 @@ class fluxscale1_test(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.msfile, ignore_errors=True)        
-        shutil.rmtree('newtest.ms', ignore_errors=True)        
-        shutil.rmtree('test.ms.fcal', ignore_errors=True)        
         os.system('rm -rf ngc5921*.fcal')
         os.system('rm -rf ngc5921*.gcal')
 
@@ -86,22 +84,19 @@ class fluxscale1_test(unittest.TestCase):
         
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+        # compare some determined values returned in the dict
+        refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
+                 'fluxdErr': np.array([0.00055571]), \
+                 'fieldName': '1445+09900002_0', 'numSol': np.array([54]), \
+                 'fluxd': np.array([0.16825763])}, \
+                 'freq': np.array([1.41266507e+09]), \
+                 'spwName': np.array(['none'], dtype='|S5'), \
+                 'spwID': np.array([0])} 
         
-        if testmms:
-            # Do another check
-            print 'Check MS and MMS returned dictionaries ...'
-            msfile = os.environ.get('CASAPATH').split()[0] +\
-                            '/data/regression/unittest/fluxscale/ngc5921.ms'
-            newms = 'newtest.ms'
-            shutil.copytree(msfile, newms, symlinks=True)
-            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', 
-                               reference='1331*',transfer='1445*')
-            
-            diff_ret = th.DictDiffer(thisdict, msdict)
-            self.assertFalse(diff_ret.changed())        
-            self.assertFalse(diff_ret.added())
-            self.assertFalse(diff_ret.removed())
-            self.assertEqual(diff_ret.unchanged().__len__(), 5)
+        diff_fluxd=abs(refdict['1']['fluxd'][0]-thisdict['1']['fluxd'][0])/refdict['1']['fluxd'][0]
+        self.assertTrue(diff_fluxd<1.5e-8)
+        
             
     def test_incremental(self): 
         '''Fluxscale 1b: Create an incremental flux table using field=0 as reference'''
@@ -148,10 +143,7 @@ class fluxscale2_test(unittest.TestCase):
            
             
     def tearDown(self):
-        pass
         shutil.rmtree(self.msfile, ignore_errors=True)
-#        shutil.rmtree('newtest.ms', ignore_errors=True)        
-#        shutil.rmtree('test.ms.fcal', ignore_errors=True)        
         os.system('rm -rf ngc4826*.gcal')
         os.system('rm -rf ngc4826*.fcal')
         
@@ -174,7 +166,7 @@ class fluxscale2_test(unittest.TestCase):
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
         
-        # compared some determined values returned in the dict
+        # compare some determined values returned in the dict
         refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
                  'fluxdErr': np.array([-1.        ,  0.04080052, -1.        , -1.        , -1.        , -1.        ]), \
                  'fieldName': '1310+323-F0', 'numSol': np.array([-1,  8, -1, -1, -1, -1], dtype=np.int32), \
@@ -184,21 +176,6 @@ class fluxscale2_test(unittest.TestCase):
                  'spwID': np.array([0, 1, 2, 3, 4, 5], dtype=np.int32)} 
         diff_fluxd=abs(refdict['1']['fluxd'][1]-thisdict['1']['fluxd'][1])/refdict['1']['fluxd'][1]
         self.assertTrue(diff_fluxd<1.e-8)
-#        if testmms:
-#            # Do another check
-#            print 'Check MS and MMS returned dictionaries ...'
-#            msfile = os.environ.get('CASAPATH').split()[0] +\
-#                            '/data/regression/unittest/fluxscale/ngc4826.ms'
-#            newms = 'newtest.ms'
-#            shutil.copytree(msfile, newms)
-#            msdict = fluxscale(vis=newms, caltable=gtable, fluxtable='test.ms.fcal', reference='3C273-F0',
-#                             transfer=['1310+323-F0'],refspwmap=[0,0])
-#            
-#            diff_ret = th.DictDiffer(thisdict, msdict)
-#            self.assertFalse(diff_ret.changed())        
-#            self.assertFalse(diff_ret.added())
-#            self.assertFalse(diff_ret.removed())
-#            self.assertEqual(diff_ret.unchanged().__len__(), 5)
  
 def suite():
     return [fluxscale1_test, fluxscale2_test]
