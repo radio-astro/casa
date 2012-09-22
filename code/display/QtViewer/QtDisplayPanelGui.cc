@@ -415,8 +415,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	animDockWidget_->toggleViewAction()->setText("Animator");
 
-	animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
-			QSizePolicy::Minimum);	  // (vertical)
+	//animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
+	//		QSizePolicy::Minimum);	  // (vertical)
+	animationHolder->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Fixed );
 	//animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//#dk  For bug submission, was 'min,fixed' 4 dockWidg; notSet 4 animWidg.
 	//# Main problem seems to be that dockWidget itself won't do 'fixed'
@@ -427,15 +428,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	updateAnimUi_();
 
-	// animAuxButton_->setText("Compact");
-	// Puts animator initially in 'Full' configuration.
-	//  animAuxButton_->setText("Full");
-	// (This would put it in 'Compact' configuration).
-
-
-	// setAnimExtrasVisibility_();
-	// Hides or shows extra animator widgets according to
-	// the 'Compact/Full' button.
 
 
 	// Trying to make dock area give back space anim. doesn't need.

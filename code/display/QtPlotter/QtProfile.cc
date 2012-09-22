@@ -124,8 +124,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
 	CoordinateSystem cSys = image->coordinates();
-	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-	Converter::setSpectralCoordinate( spectralCoordinate );
+	if ( cSys.hasSpectralAxis() ){
+		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+		Converter::setSpectralCoordinate( spectralCoordinate );
+	}
 
 	// read the preferred ctype from casarc
 	QString pref_ctype = read( ".freqcoord.type");
@@ -239,7 +241,6 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool 
 
 	CoordinateSystem cSys=img->coordinates();
 	Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
-
 	if ( specAx < 0 ) {
 		QMessageBox::information( this, "No spectral axis...",
 				"Sorry, could not find a spectral axis for this image...",
@@ -883,6 +884,7 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
 	}
+	//qDebug() << "spcRval="<<spcRval.c_str()<<" cSysRval="<<cSysRval.c_str();
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
@@ -1048,6 +1050,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
+	//qDebug() << "New region analysis is "<<analysis;
 	if (!analysis) return;
 	spectra_info_map[id_] = shape;
 	String c(WORLD_COORDINATES);
@@ -2317,4 +2320,5 @@ void QtProfile::regionUpdatesStarting(){
 void QtProfile::regionUpdatesEnding() {
 	pixelCanvas->regionUpdatesEnding();
 }
+
 }
