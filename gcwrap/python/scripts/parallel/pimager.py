@@ -487,6 +487,308 @@ class pimager():
         ia.open(inimage)
         ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
         ia.done()
+    def setupcommonparams(self, spw='*', field='*', phasecenter='', 
+                          stokes='I', ftmachine='ft', wprojplanes=64, facets=1, 
+                          imsize=[512, 512], pixsize=['1arcsec', '1arcsec'], weight='natural',
+                          robust=0.0, npixels=0, gain=0.1,  uvtaper=False, outertaper=[], 
+                          timerange='', uvrange='', baselines='', scan='', observation='', 
+                          visinmem=False, pbcorr=False, numthreads=1, cyclefactor=1.5):
+        self.spw=spw
+        self.field=field
+        self.phasecenter=phasecenter
+        self.stokes=stokes
+        self.ftmachine=ftmachine
+        self.wprojplanes=wprojplanes
+        self.facets=facets
+        self.imsize=imsize
+        self.cell=pixsize
+        self.weight=weight
+        self.robust=robust
+        self.npixels=npixels
+        self.gain=gain
+        self.uvtaper=uvtaper
+        self.outertaper=outertaper
+        self.timrange=timerange
+        self.uvrange=uvrange
+        self.baselines=baselines
+        self.scan=scan
+        self.observation=observation
+        self.visinmem=visinmem
+        self.pbcorr=pbcorr
+        self.numthreads=numthreads
+        self.cyclefactor=cyclefactor
+    
+    def pcontmt(self, msname=None, imagename=None, imsize=[1000, 1000], 
+              pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+              field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
+              majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
+              contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
+              numthreads=1, savemodel=False, nterms=2):
+        if(nterms==1):
+            self.pcont(msname=msname, imagename=imagename, imsize=imsize, 
+              pixsize=pixsize, phasecenter=phasecenter, field=field, spw=spw, stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets,  
+              majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, 
+              threshold=threshold, alg=alg, scales=scales, weight=weight, robust=robust, 
+              npixels=npixels,  uvtaper=uvtaper, outertaper=outertaper, 
+              timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+              observation=observation, pbcorr=pbcorr, contclean=contclean, 
+              visinmem=visinmem, interactive=interactive, maskimage=maskimage,
+              numthreads=numthreads, savemodel=savemodel)
+        else:
+            self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                                   stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                                   facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                                   robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+                                   outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+                                   baselines=baselines, scan=scan, observation=observation, 
+                                   visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                                   cyclefactor=cyclefactor)
+            dc=casac.deconvolver()
+            ia=casac.image()
+            niterpercycle=niter/majorcycles if(majorcycles >0) else niter
+            if(niterpercycle == 0):
+                niterpercycle=niter
+                majorcycles=1
+            self.setupcluster()
+            spwids=ms.msseltoindex(vis=msname, spw=self.spw)['spw']
+            timesplit=0
+            timeimage=0
+            elimageroot=imagename
+            elmask=maskimage
+            owd=os.getcwd()
+            fullpath=lambda a: owd+'/'+a if ((len(a) !=0) and a[0] != '/') else a
+            imagename=fullpath(elimageroot)
+            maskimage=fullpath(elmask) 
+            models=[]
+            psfs=[]
+            residuals=[]
+            restoreds=[]
+            sumwts=[]
+            ntaylor=nterms
+            npsftaylor = 2 * nterms - 1
+            for tt in range(0, nterms):
+                models.append(imagename+'.model.tt'+str(tt))
+                residuals.append(imagename+'.residual.tt'+str(tt));
+                restoreds.append(imagename+'.image.tt'+str(tt));
+                sumwts.append(imagename+'.sumwt.tt'+str(tt));
+            #tempmodel=owd+'/tempmodel'
+            #shutil.rmtree(tempmodel, True)
+            for tt in range(0,npsftaylor):
+              psfs.append(imagename+'.psf.tt'+str(tt));
+            if(not contclean):
+                toberemoved=glob.glob(imagename+'*')
+                for rem in toberemoved:
+                    print "Removing ", rem
+                    shutil.rmtree(rem, True) 
+            ###num of cpu 
+            numcpu=self.numcpu
+            time1=time.time()
+            ###spw and channel selection
+            #spwsel,startsel,nchansel=self.findchanselcont(msname, spwids, numcpu)
+
+            #print 'SPWSEL ', spwsel, startsel, nchansel
+            freqrange=[0.0, 0.0]
+            spwsel=self.findchansel(msname, spw, numcpu, freqrange=freqrange)
+            minfreq=freqrange[0]
+            maxfreq=freqrange[1]
+
+            out=range(numcpu) 
+        
+            c=self.c
+            ####
+            #the default working directory is somewhere 
+            owd=os.getcwd()
+            self.c.pgc('import os')
+            self.c.pgc('os.chdir("'+owd+'")')
+            ##################### 
+            #c.pgc('casalog.filter()')
+            c.pgc('from  parallel.parallel_cont import *')
+
+            band=maxfreq-minfreq
+            ###need to get the data selection for each process here
+            ## this algorithm is a poor first try
+            if(minfreq <0 ):
+                minfreq=0.0
+            freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
+            band='"%s"'%(str((band*1.1))+'Hz')
+            ###define image names
+            imlist=[]
+            char_set = string.ascii_letters
+            cfcachelist=[]
+            for k in range(numcpu):
+                substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
+                while (os.path.exists(substr+'.model.tt0')):
+                    substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
+                   ###############
+                imlist.append(substr)
+        ##continue clean or not
+            if(contclean and os.path.exists(models[0])):
+                for k in range(numcpu):
+                    for tt in range(0, nterms):
+                        self.copyimage(inimage=models[tt], outimage=imlist[k]+'.model.tt'+str(tt), init=False)
+            else:
+                for k in range(len(imlist)):
+                    for tt in range(nterms):
+                        shutil.rmtree(imlist[k]+'.model.tt'+str(tt), True)
+            intmask=0
+            donewgt=[False]*numcpu
+         ### do one major cycle at the end
+            donemaj=False
+            maj=0;
+            maxresid=-1.0
+            while(not donemaj):
+            
+                casalog.post('Starting Gridding for major cycle '+str(maj)) 
+                for k in range(numcpu):
+                    imnam='"%s"'%(imlist[k])
+                    runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+', scales='+str(scales)+')'
+                    print 'command is ', runcomm
+                    out[k]=c.odo(runcomm,k)
+                over=False
+                printkounter=0
+                while(not over):
+                    time.sleep(5)
+                    overone=True
+                    for k in range(numcpu):
+                        cj=c.check_job(out[k],False)
+                        overone=(overone and cj)
+                    #print 'maj, cj, dwght', maj, cj, donewgt[k]                    
+                    over=overone
+                self.combineimages(rootnames=imlist, nterms=nterms, outputrootname=imagename)
+                if((maskimage == '') or (maskimage==[])):
+                    maskimage='lala.mask'
+                if (interactive and (intmask==0)):
+                    if(maj==0):
+                        ia.removefile(maskimage)
+                    intmask=im.drawmask(residuals[0],maskimage);
+                    print 'intmask', intmask
+                    if(intmask==1):
+                        im.done()
+                    if(intmask==2):
+                        break;
+                else:
+                    if (maj==0):
+                        if(os.path.exists(maskimage)):
+                            self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residuals[0]);
+                            shutil.rmtree(maskimage, True)
+                            shutil.move('__lala.mask', maskimage)
+                        else:
+                            print 'DOING a full image mask'
+                            self.copyimage(inimage=residuals[0], outimage=maskimage, init=True, initval=1.0)
+            #########Things to be done after first major cycle only
+           #########
+                if(maj==0):
+                    dc.mtopen(ntaylor=nterms, scalevector=scales, psfs=psfs)
+                    if(not contclean or (not os.path.exists(model))):
+                        for tt in range(nterms):
+                            self.copyimage(inimage=residuals[tt], outimage=models[tt], 
+                                           init=True, initval=0.0) 
+                ##for mosaic stuff needs to be done here
+                
+                    if((self.weight=='uniform') or (self.weight=='briggs')):
+                        c.pgc('wtgrid=a.getweightgrid(msname="'+msname+'")')
+                        sumweight=c.pull('wtgrid', 0)[0]
+                        for jj in range(1,numcpu):
+                            sumweight += c.pull('wtgrid', jj)[jj]
+                            print 'Max min var of weight dens', np.max(sumweight), np.min(sumweight), np.var(sumweight)
+                        c.push(wtgrid=sumweight)
+                        c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
+                newthresh=threshold
+                if(majorcycles <= 1):
+                    ia.open(residuals[0])
+                    residstat=ia.statistics()
+                    maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                    psfoutermax=self.maxouterpsf(psfim=psfs[0], image=restoreds[0])
+                    newthresh=psfoutermax*cyclefactor*maxresid
+                    oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
+                    if(newthresh < oldthresh):
+                        newthresh=oldthresh
+                    newthresh=qa.tos(qa.quantity(newthresh, "Jy"))
+            ####no need to do this in last major cycle
+                needclean=((maj < majorcycles if (majorcycles >1) else True)  and 
+                           ((maxresid > qa.convert(qa.quantity(threshold),'Jy')['value']) if(majorcycles <2) else True) 
+                           and (niterpercycle > 1))
+                donemaj = not needclean
+
+                if(needclean):
+                    retval = dc.mtclean(residuals=residuals, models=models, 
+                                        niter=niterpercycle, gain=gain, threshold=threshold, 
+                                        displayprogress=True, mask=maskimage)
+                    print 'mtclean return', retval
+                    if(majorcycles <=1):
+                        niterpercycle=niterpercycle-retval['iterations']
+                    maxresid=retval['maxresidual']
+                    ia.open(models[0])
+                    print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+                    ia.done()
+                    for k in range(len(imlist)):
+                        for tt in range(nterms):
+                            ia.open(imlist[k]+'.model.tt'+str(tt))
+                            ia.insert(infile=models[tt], locate=[0,0,0,0])
+                            ia.done()
+                    maj +=1
+            ia.open(imlist[numcpu-1]+'.image.tt0')
+            beam=ia.restoringbeam()
+            dc.mtrestore(models=models, residuals=residuals, images=restoreds,
+                         bmaj=beam['major'], bmin=beam['minor'], bpa=beam['positionangle'])
+            alphaname = imagename+'.alpha'
+            betaname = imagename+'.beta'
+            dc.mtcalcpowerlaw(images=restoreds, residuals=residuals,
+                              alphaname=alphaname, 
+                              betaname=betaname,
+                              threshold='0.001Jy', calcerror=True)
+            dc.done
+
+
+    def combineimages(self, rootnames=[], nterms=2, outputrootname=''):
+        combmodels=[]
+        combpsfs=[]
+        combresiduals=[]
+        combwts=[]
+        combimages=[]
+        ncpu = len(rootnames)
+        for tt in range(0,nterms):  
+            combmodels.append(outputrootname+'.model.tt'+str(tt))
+            combresiduals.append(outputrootname+'.residual.tt'+str(tt))
+            combwts.append(outputrootname+'.sumwt.tt'+str(tt))
+            combimages.append(outputrootname+'.image.tt'+str(tt))
+            if not os.path.exists( combmodels[tt] ):
+                self.copyimage(inimage=rootnames[0]+'.model.tt'+ str(tt), outimage=combmodels[tt], init=True)
+            if not os.path.exists( combresiduals[tt] ):
+                self.copyimage(inimage=rootnames[0]+'.residual.tt'+ str(tt), outimage=combresiduals[tt], init=True)
+            if not os.path.exists( combwts[tt] ):
+                self.copyimage(inimage=rootnames[0]+'.sumwt.tt'+ str(tt), outimage=combwts[tt], init=True)
+            if not os.path.exists( combimages[tt] ):
+                self.copyimage(inimage=rootnames[0]+'.image.tt'+ str(tt), outimage=combimages[tt], init=True)
+            for chunk in range(0,ncpu):
+                chunkresidual=rootnames[chunk]+'.residual.tt'+str(tt)
+                ia.open(combresiduals[tt])
+                ia.calc( '"'+combresiduals[tt] + '"+"' + chunkresidual + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
+                ###note the above is multiplying by weight of tt0 
+                ia.close()
+                ia.open(combwts[tt])
+                ia.calc( '"'+combwts[tt] + '"+"' + rootnames[chunk]+'.sumwt.tt'+str(tt)+'"')
+                ia.close()
+            ## Normalize residuals by number of chunks.
+            ia.open( combresiduals[tt] )
+            ia.calc( '"'+combresiduals[tt] + '"/"' + combwts[0]+'"' )
+            ia.done()
+        for tt in range(0,2*nterms-1):  
+            combpsfs.append(outputrootname+'.psf.tt'+str(tt));
+            if not os.path.exists( combpsfs[tt] ):
+                self.copyimage(inimage=rootnames[0]+'.psf.tt'+ str(tt), outimage=combpsfs[tt], init=True)
+            ## Add together all chan-chunk images.
+            for chunk in range(0,ncpu):
+                chunkpsf=rootnames[chunk]+'.psf.tt'+str(tt)
+                ia.open(combpsfs[tt])
+                ia.calc( '"'+combpsfs[tt] + '"+"' + chunkpsf + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
+                ia.close()
+            ## Normalize PSFs 
+            ia.open( combpsfs[tt] )
+            ia.calc('"'+ combpsfs[tt] + '"/"' + combwts[0] +'"')
+            ia.done()
+        #done
+    
     def pcont(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
@@ -541,31 +843,15 @@ class pimager():
             niterpercycle=niter
             majorcycles=1
         num_ext_procs=0
-        self.spw=spw
-        self.field=field
-        self.phasecenter=phasecenter
-        self.stokes=stokes
-        self.ftmachine=ftmachine
-        self.wprojplanes=wprojplanes
-        self.facets=facets
-        self.imsize=imsize
-        self.cell=pixsize
-        self.weight=weight
-        self.robust=robust
-        self.npixels=npixels
-        self.gain=gain
-        self.uvtaper=uvtaper
-        self.outertaper=outertaper
-        self.timrange=timerange
-        self.uvrange=uvrange
-        self.baselines=baselines
-        self.scan=scan
-        self.observation=observation
-        self.visinmem=visinmem
-        self.pbcorr=pbcorr
-        self.numthreads=numthreads
-        self.cyclefactor=cyclefactor
-
+        self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                               stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                               facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                               robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+                               outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+                               baselines=baselines, scan=scan, observation=observation, 
+                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                               cyclefactor=cyclefactor)
+        
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
       
         if(spw==''):
@@ -888,21 +1174,11 @@ class pimager():
         ###num of cpu per node
         numcpu=numcpuperhost
         time1=time.time()
-        self.spw=spw
-        self.field=field
-        self.phasecenter=phasecenter
-        self.ftmachine=ftmachine
-        self.wprojplanes=wprojplanes
-        self.facets=facets
-        self.imsize=imsize
-        self.cell=pixsize
-        self.gain=gain
-        self.weight=weight
-        self.robust=robust
-        self.npixels=npixels
-        self.visinmem=visinmem
-        self.numthreads=numthreads
-        self.pbcorr=pbcorr
+        self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                               stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                               facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                               robust=robust, npixels=npixels, gain=gain,   
+                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads)
         self.setupcluster(hostnames,numcpuperhost, 3)
         numcpu=self.numcpu
         ##Start an slave for my async use for cleaning up etc here
@@ -1238,30 +1514,15 @@ class pimager():
         ###num of cpu per node
         numcpu=numcpuperhost
         time1=time.time()
-        self.spw=spw
-        self.field=field
-        self.phasecenter=phasecenter
-        self.ftmachine=ftmachine
-        self.wprojplanes=wprojplanes
-        self.facets=facets
-        self.imsize=imsize
-        self.cell=pixsize
-        self.weight=weight
-        self.gain=gain
-        self.robust=robust
-        self.npixels=npixels
-        self.stokes=stokes
-        self.visinmem=visinmem
-        self.uvtaper=uvtaper
-        self.outertaper=outertaper
-        self.timrange=timerange
-        self.uvrange=uvrange
-        self.baselines=baselines
-        self.scan=scan
-        self.cyclefactor=cyclefactor
-        self.observation=observation
-        self.numthreads=numthreads
-        self.pbcorr=pbcorr
+        self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                               stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                               facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                               robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+                               outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+                               baselines=baselines, scan=scan, observation=observation, 
+                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                               cyclefactor=cyclefactor)
+             
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
         ####

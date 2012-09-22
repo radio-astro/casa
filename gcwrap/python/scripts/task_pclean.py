@@ -29,6 +29,7 @@ def pclean(vis=None,
            robust=None,
            npixels=None,
            mode=None,
+           nterms=None,
            start=None,
            nchan=None,
            width=None,
@@ -57,7 +58,9 @@ def pclean(vis=None,
         mode='cube'
     if (mode=='cube') and (nchan <2) :
         raise ValueError, 'Not going to handle cube with 1 channel; use continuum'
-  
+    if(mode=='mfs'):
+        mode='continuum'
+
     
     if((type(cell)==list) and (len(cell)==1)):
         cell.append(cell[0])
@@ -138,8 +141,8 @@ def pclean(vis=None,
 
     sc=simple_cluster.simple_cluster.getCluster()
     ###################
-    sc.stop_cluster()
-    sc.start_cluster()
+    #sc.stop_cluster()
+    #sc.start_cluster()
     #######have to do this to get rid of a responsiveness problem on the main CLI
     cluster=sc._cluster
     #cluster=simple_cluster.simple_cluster.getCluster()._cluster
@@ -157,20 +160,39 @@ def pclean(vis=None,
        imagename=vis
 
     if mode=='continuum':
-        pim.pcont(msname=vis, imagename=imagename, 
-              imsize=imsize, pixsize=[cellx, celly], 
-              phasecenter=phasecenter, 
-              field=field, spw=spw, 
-              ftmachine=ftmachine, alg=alg, 
-              hostnames='', numcpuperhost=-1, 
-              majorcycles=majorcycles, niter=niter, gain=gain,
-              threshold=threshold, weight=weighting, robust=robust, scales=scales,
-              wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
-                  contclean=(not overwrite), uvtaper=uvtaper, outertaper=outertaper,
-                  timerange=timerange,
-                  uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                  visinmem=False, maskimage=mask, interactive=interactive, 
-                  numthreads=1, pbcorr=pbcorr, savemodel=True)
+        if(nterms==1):
+            pim.pcont(msname=vis, imagename=imagename, 
+                      imsize=imsize, pixsize=[cellx, celly], 
+                      phasecenter=phasecenter, 
+                      field=field, spw=spw, 
+                      ftmachine=ftmachine, alg=alg, 
+                      hostnames='', numcpuperhost=-1, 
+                      majorcycles=majorcycles, niter=niter, gain=gain,
+                      threshold=threshold, weight=weighting, robust=robust, scales=scales,
+                      wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
+                      contclean=(not overwrite), uvtaper=uvtaper, outertaper=outertaper,
+                      timerange=timerange,
+                      uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
+                      visinmem=False, maskimage=mask, interactive=interactive, 
+                      numthreads=1, pbcorr=pbcorr, savemodel=True)
+        else:
+            if(ftmachine != 'ft'):
+                raise ValueError, "ftmachine %s is not supported yet with multiterm MFS" % ftmachine
+            if(alg != 'multiscale'):
+                raise ValueError, "Decolvolution %s is not supported with multiterm MFS; use 'multiscale'" % alg
+            pim.pcontmt(msname=vis, imagename=imagename, 
+                      imsize=imsize, pixsize=[cellx, celly], 
+                      phasecenter=phasecenter, 
+                      field=field, spw=spw, 
+                      ftmachine=ftmachine, alg=alg,  
+                      majorcycles=majorcycles, niter=niter, gain=gain,
+                      threshold=threshold, weight=weighting, robust=robust, scales=scales,
+                      wprojplanes=wprojplanes,facets=facets,  stokes=stokes,
+                      contclean=(not overwrite), uvtaper=uvtaper, outertaper=outertaper,
+                      timerange=timerange,
+                      uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
+                      visinmem=False, maskimage=mask, interactive=interactive, 
+                      numthreads=1, pbcorr=pbcorr, savemodel=True, nterms=nterms)
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
