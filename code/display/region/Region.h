@@ -299,8 +299,6 @@ namespace casa {
 
 		virtual bool within_drawing_area( );
 
-		void drawHalfFilledRectangle( int x1, int y1, int x2, int y2 );
-
 		LineStyle current_ls;
 		typedef std::pair<LineStyle,int> ls_ele;
 		std::list<ls_ele> ls_stack;
