@@ -909,6 +909,8 @@ protected:
   int mask_id_p;
   int prev_image_id_p;
   int prev_mask_id_p;
+  //numthreads
+  Int numthreads_p;
 };
 
 
