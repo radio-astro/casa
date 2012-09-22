@@ -66,7 +66,8 @@ if os.access(templatems,F_OK):
     print "  Using "+templatems+" found in current directory"
 else:
     pathname=os.environ.get('CASAPATH').split()[0]
-    datapath=pathname+'/data/regression/ATST3/Orion/'
+    #datapath=pathname+'/data/regression/ATST3/Orion/'
+    datapath=pathname+'/data/regression/orionmos4sim/'
     msname='orion.ms'
     mspath=datapath+msname
     # Path to web archive
