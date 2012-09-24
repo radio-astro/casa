@@ -141,13 +141,9 @@ def verify_asdm(asdmname, withPointing):
     if (not isOK):
         raise Exception
 
-
-###########################
-# beginning of actual test 
-
-class asdm_import(unittest.TestCase):
-    
-    def setUp(self):
+# Setup for different data importing
+class test_base(unittest.TestCase):
+    def setUp_m51(self):
         res = None
         if(os.path.exists(myasdm_dataset_name)):
             shutil.rmtree(myasdm_dataset_name)
@@ -157,6 +153,22 @@ class asdm_import(unittest.TestCase):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/exportasdm/input/'
         shutil.copytree(datapath + myms_dataset_name, myms_dataset_name)
         default(importasdm)
+
+    def setUp_xosro(self):
+#        self.asdm = 'X_osro_scan1'
+        self.asdm = 'X_osro_013.55979.93803716435'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/flagdata/'
+        if(not os.path.lexists(self.asdm)):
+            os.system('ln -s '+datapath+self.asdm +' '+self.asdm)
+            
+        default(importasdm)
+
+###########################
+# beginning of actual test 
+class asdm_import1(test_base):
+    
+    def setUp(self):
+        self.setUp_m51()
         
     def tearDown(self):
         shutil.rmtree(myasdm_dataset_name)
@@ -332,8 +344,29 @@ class asdm_import(unittest.TestCase):
         except:
             print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
             raise
+        
+class asdm_import2(test_base):
     
+    def setUp(self):
+        self.setUp_xosro()
+        
+    def tearDown(self):
+        os.system('rm -rf '+self.asdm)
+       
+    def test_CAS4532(self):
+        '''importasdm CAS-4532: white spaces on Antenna.xml'''
+        # The X_osro_scan1/Antenna.xml and SpectralWindow.xml 
+        # contain white spaces between some of the contents and 
+        # the tags. This should not cause any error in the XML 
+        # parser from fh.readXML
+        import flaghelper as fh
+        
+        flagcmddict = fh.readXML(self.asdm, 0.0)
+        self.assertTrue(flagcmddict, 'Some XML file may contain white spaces not handled by readXML')
+        
+        self.assertEqual(flagcmddict.keys().__len__(),214)
+        
 def suite():
-    return [asdm_import]        
+    return [asdm_import1,asdm_import2]        
         
     
