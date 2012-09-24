@@ -338,9 +338,10 @@ namespace casa {
 		Int h = y2 - y1;
 
 		Int s = 0;		// handle size
-		if (w>=35 && h>=35) s = 6;
-		else if (w>=20 && h>=20) s = 4;
-		else if (w>= 9 && h>= 9) s = 3;
+		if (w>=18 && h>=18) s = 6;
+		else if (w>=15 && h>=15) s = 5;
+		else if (w>=12 && h>=12) s = 4;
+		else if (w>=9 && h>=9) s = 3;
 
 		double xdx, ydy;
 		screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
@@ -404,7 +405,7 @@ namespace casa {
 	    if ( visible_ == false ) return result;
 
 	    //if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
-	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y || within_vertex_handle( x, y )) {
+	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;

@@ -540,9 +540,10 @@ namespace casa {
 		Int h = y2 - y1;
 
 		Int s = 0;
-		if (w>=35 && h>=35) s = 6;
-		else if (w>=20 && h>=20) s = 4;
-		else if (w>= 9 && h>= 9) s = 3;
+		if (w>=18 && h>=18) s = 6;
+		else if (w>=15 && h>=15) s = 5;
+		else if (w>=12 && h>=12) s = 4;
+		else if (w>=9 && h>=9) s = 3;
 
 		// get handle size in linear coordinates...
 		double xdx, ydy;
