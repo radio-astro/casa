@@ -610,7 +610,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 		}
 		else {
 			if ( taskMode == SPECTRAL_LINE_MODE ){
-				if ( xRangeIsShown ){
+				//if ( xRangeIsShown ){
 					//The user is specifying the (Center,Peak) or the FWHM
 					//of a Gaussian estimate. The point must be in the selected
 					//range to be valid.
@@ -624,11 +624,11 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 						QString msg( "Initial Gaussian estimates must be within\n the specified spectral-line fitting range.");
 						Util::showUserMessage( msg, this );
 					}
-				}
+				/*}
 				else {
 					QString msg( "Please specify a Spectral-Line Fitting range \nby shift-clicking the left mouse button\n and dragging it before you specify\n initial Gaussian estimates.");
 					Util::showUserMessage( msg, this );
-				}
+				}*/
 			}
 			else if ( taskMode == LINE_OVERLAY_MODE ){
 				storeClickPosition( event );
@@ -645,7 +645,10 @@ bool QtCanvas::storeClickPosition( QMouseEvent* event ){
 	int yPos = event->pos().y();
 	gaussianEstimateX = getDataX( xPos );
 	gaussianEstimateY = getDataY( yPos );
-	if ( xRangeRect.contains( xPos, yPos ) ){
+	if ( xRangeIsShown && xRangeRect.contains( xPos, yPos ) ){
+		validPosition = true;
+	}
+	else if ( !xRangeIsShown ){
 		validPosition = true;
 	}
 	return validPosition;

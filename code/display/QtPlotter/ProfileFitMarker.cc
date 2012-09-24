@@ -57,6 +57,7 @@ void ProfileFitMarker::drawMarker( QPainter& painter){
 		QPen penCopy( pen );
 		const int POINT_SIZE = 5;
 		const int FWHM_SIZE = 3;
+		penCopy.setColor( Qt::black );
 		penCopy.setWidth( POINT_SIZE );
 		painter.setPen(penCopy);
 
