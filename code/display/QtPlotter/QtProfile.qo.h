@@ -346,8 +346,6 @@ private:
 
 
    private slots:
-   	   void regionUpdatesStarting();
-   	   void regionUpdatesEnding();
    	   void changeTopAxis();
    	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
    	   void setDisplayYUnits( const QString& unitStr );

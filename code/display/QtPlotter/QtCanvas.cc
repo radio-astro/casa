@@ -58,8 +58,7 @@ QtCanvas::QtCanvas(QWidget *parent)
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           lineOverlayContextMenu(this), gaussianContextMenu( this ),
-          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 ),
-          refreshCanvas( true )
+          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
 
 
@@ -904,29 +903,27 @@ void QtCanvas::setShowTopAxis( bool showAxis ){
 	}
 }
 
-void QtCanvas::refreshPixmap()
-{
-	if ( refreshCanvas ){
-		pixmap = QPixmap(size());
-		pixmap.fill(this, 0, 0);
-		QPainter painter(&pixmap);
+void QtCanvas::refreshPixmap(){
 
-		drawLabels(&painter);
+	pixmap = QPixmap(size());
+	pixmap.fill(this, 0, 0);
+	QPainter painter(&pixmap);
 
-		if (!imageMode){
-			drawGrid(&painter);
-			drawCurves(&painter);
-			drawFrameMarker(&painter);
-		}
-		else {
-			drawTicks( &painter );
-			drawBackBuffer(&painter);
-		}
-		if (welcome.text !=""){
-			drawWelcome(&painter);
-		}
-		update();
+	drawLabels(&painter);
+
+	if (!imageMode){
+		drawGrid(&painter);
+		drawCurves(&painter);
+		drawFrameMarker(&painter);
 	}
+	else {
+		drawTicks( &painter );
+		drawBackBuffer(&painter);
+	}
+	if (welcome.text !=""){
+		drawWelcome(&painter);
+	}
+	update();
 }
 
 void QtCanvas::drawFrameMarker( QPainter* painter ){
@@ -1778,15 +1775,6 @@ void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
 		profileFitMarkers.clear();
 		setDataRange();
 	}
-}
-
-void QtCanvas::regionUpdatesStarting(){
-	refreshCanvas = false;
-}
-
-void QtCanvas::regionUpdatesEnding(){
-	refreshCanvas = true;
-	refreshPixmap();
 }
 
 QString QtCanvas::getDisplayYUnits(){

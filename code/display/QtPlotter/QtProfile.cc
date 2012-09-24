@@ -1050,8 +1050,15 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
-	//qDebug() << "New region analysis is "<<analysis;
 	if (!analysis) return;
+
+	//Only treat it as a new region if we haven't already registered
+	//it in the map.  This method executing multiple times was causing
+	//images with many regions to be slow to load.
+	int occurances = spectra_info_map.count( id_ );
+	if ( occurances >= 1 ){
+		return;
+	}
 	spectra_info_map[id_] = shape;
 	String c(WORLD_COORDINATES);
 
@@ -1133,13 +1140,13 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 
 	if (!isVisible()) return;
 	if (!analysis) return;
+
 	if ( type == viewer::Region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
 	else if ( type == viewer::Region::RegionChangeNewChannel )
 		return;						// viewer moving to new channel
 	else if ( id_ != current_region_id )
 		return;						// some other region
-
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
@@ -1157,7 +1164,7 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 	for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
 	for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
 
-	*itsLog << LogOrigin("QtProfile", "newRegion");
+	*itsLog << LogOrigin("QtProfile", "updateRegion");
 
 	bool cubeZero = checkCube();
 	if ( cubeZero ){
@@ -2313,12 +2320,6 @@ void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
 }
 
-void QtProfile::regionUpdatesStarting(){
-	pixelCanvas->regionUpdatesStarting();
-}
 
-void QtProfile::regionUpdatesEnding() {
-	pixelCanvas->regionUpdatesEnding();
-}
 
 }

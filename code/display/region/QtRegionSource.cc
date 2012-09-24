@@ -39,7 +39,6 @@
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <measures/Measures/MCDirection.h>
-#include <QDebug>
 
 namespace casa {
     namespace viewer {
@@ -216,9 +215,7 @@ namespace casa {
 	int QtRegionSourceKernel::numFrames( ) const { return panel_->numFrames( ); }
 
 	void QtRegionSourceKernel::updateRegionState(QtDisplayData*) {
-		emit regionUpdatesStarting();
 	    generateExistingRegionUpdates( );
-		emit regionUpdatesEnding();
 	}
 
 	void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {
