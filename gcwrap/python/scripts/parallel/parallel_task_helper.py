@@ -79,49 +79,45 @@ class ParallelTaskHelper:
         self._jobQueue.executeQueue()
 
     def postExecution(self):      
-        ret_list = []
+        ret_list = {}
         if (self._cluster != None):
             ret_list =  self._cluster.get_return_list()
         else:
             return None
         
         # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
-        try:
-            msTool = mstool()
-            msTool.open(self._arg['vis'])
-            subMS_list = msTool.getreferencedtables()
-            msTool.close()
-        except Exception, instance:
-            casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
-            msTool.close()
-            return False
+        #try:
+        #    msTool = mstool()
+        #    msTool.open(self._arg['vis'])
+        #    subMS_list = msTool.getreferencedtables()
+        #    msTool.close()
+        #except Exception, instance:
+        #    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
+        #    msTool.close()
+        #    return False
         
         index = 0
-        if isinstance(ret_list[0],bool) and self._consolidateOutput:
+        if isinstance(ret_list.values()[0],bool) and self._consolidateOutput:
             retval = True
-            for subMs in subMS_list:
-                if not ret_list[index]:
+            for subMs in ret_list:
+                if not ret_list[subMs]:
                     casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),'WARN')
                     retval = False
                 index += 1
             return retval
-        elif isinstance(ret_list[0],dict) and self._consolidateOutput:
+        elif isinstance(ret_list.values()[0],dict) and self._consolidateOutput:
             ret_dict = {}
-            for index in range(len(ret_list)):
-                dict_i = ret_list[index]
+            for subMs in ret_list:
+                dict_i = ret_list[subMs]
                 try:
                     ret_dict = self.sum_dictionaries(dict_i,ret_dict)
                 except Exception, instance:
                     casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
             return ret_dict     
-        elif (ret_list[0]==None) and self._consolidateOutput:
+        elif (ret_list.values()[0]==None) and self._consolidateOutput:
              return None      
         else:
-            ret_map = {}
-            for subMs in subMS_list:
-                ret_map[subMs] = ret_list[index]
-                index += 1
-            return ret_map
+            return ret_list
         
     # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
     def sum_dictionaries(self,dict_list,ret_dict):

@@ -1116,10 +1116,10 @@ class simple_cluster:
 		"""
 		"""
 
-		return_list = []
+		return_list = {}
 		jobQueue = self._JobQueueManager.getOutputJobs()
 		for job in jobQueue:
-			return_list.append(job.getReturnValues())
+			return_list[job.getCommandArguments()['vis']]=job.getReturnValues()
 
 		return return_list
 
