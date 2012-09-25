@@ -577,6 +577,10 @@ class pimager():
               psfs.append(imagename+'.psf.tt'+str(tt));
             if(not contclean):
                 toberemoved=glob.glob(imagename+'*')
+                ##keep masks
+                for k in range(len(toberemoved)):
+                    if(string.find(toberemoved[k], '.mask') > 0):
+                           toberemoved.remove(toberemoved[k])
                 for rem in toberemoved:
                     print "Removing ", rem
                     shutil.rmtree(rem, True) 
