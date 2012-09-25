@@ -528,14 +528,14 @@ if (usemms_step==1):
 # Flag end channels
 #
 print '--Flagdata--'
-default('flagdata')
+default('tflagdata')
 
 print ""
 print "Flagging edge channels in all spw"
 print "  0~3:0~1;62~63 , 4~11:0~1;30~31, 12~15:0~1;62~63 "
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag',
+tflagdata(vis='ngc4826.tutorial.ms', mode='manual',
          spw='0~3:0;1;62;63,4~11:0;1;30;31,12~15:0;1;62;63')
 
 #
@@ -546,7 +546,7 @@ print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
 print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
 print ""
 
-flagdata(vis='ngc4826.tutorial.ms', mode='manualflag', field='8', spw='15', antenna='3&9', 
+tflagdata(vis='ngc4826.tutorial.ms', mode='manual', field='8', spw='15', antenna='3&9', 
          timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
 
 #
@@ -1915,7 +1915,7 @@ if benchmarking:
     stages[2] = ['clearcal',(clearcal2time-concat2time)]
     stages[3] = ['listobs',(list2time-clearcal2time)]
     stages[4] = ['plotxy',(plotxy2time-list2time)]
-    stages[5] = ['flagdata',(flag2time-plotxy2time)]
+    stages[5] = ['tflagdata',(flag2time-plotxy2time)]
     stages[6] = ['setjy',(setjy2time-flag2time)]
     stages[7] = ['gaincal',(gaincal2time-setjy2time)]
     stages[8] = ['fluxscale',(fluxscale2time-gaincal2time)]
