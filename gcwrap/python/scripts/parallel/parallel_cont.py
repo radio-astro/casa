@@ -116,7 +116,7 @@ class imagecont():
         if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
             self.imperms[msname].getweightgrid(type='ftweight', wgtimages=wgtimage)
 #### 
-    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
+    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel', nterms=1, scales=[0]):
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
@@ -152,7 +152,10 @@ class imagecont():
                 self.setextraoptions(im,  fluxscaleimage=imname+'.flux', scaletype='SAULT')
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
-        self.makecontimage(im, self.novaliddata[msname], imname)
+        if(nterms==1):
+            self.makecontimage(im, self.novaliddata[msname], imname)
+        else:
+            self.makemtcontimage(im, imname, nterms, scales, freq)
         self.imageparamset=True
 
     def imagecontbychan(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[1], spw=[0], field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
@@ -762,4 +765,34 @@ class imagecont():
                  #        model=imname+'.model', image=imname+'.image', 
                  #        residual=imname+'.residual')
                 #casalog.post('CACHE:  '+ str(tb.showcache()))
+    def makemtcontimage(self, im, imname, nterms, scales, reffreq):
+        incremental=self.imageparamset
+        models=[]
+        psfs=[]
+        residuals=[]
+        restoreds=[]
+        sumwts=[]
+        npsftaylor = 2 * nterms - 1
+        for tt in range(nterms):
+            models.append(imname+'.model.tt'+str(tt));
+            residuals.append(imname+'.residual.tt'+str(tt));
+            restoreds.append(imname+'.image.tt'+str(tt));
+            sumwts.append(imname+'.sumwt.tt'+str(tt));
+            if(not os.path.exists(models[tt])):
+                im.make(models[tt]);
+        for tt in range(0,npsftaylor):
+              psfs.append(imname+'.psf.tt'+str(tt));
+        #this is a dummy i believe as deconvolution is done else where
+        im.setscales(scalemethod='uservector',uservector=scales);
+        im.settaylorterms(ntaylorterms=nterms,
+                          reffreq=(qa.convert(qa.unit(reffreq),"Hz"))['value'])
+        im.setoptions(ftmachine=self.ft)
+        im.clean(model=models,image=restoreds,psfimage=psfs[0:nterms], residual=residuals,  algorithm='msmfs',niter=-1)
+        if( incremental == False ) :  # first major cycle
+           im.getweightgrid(type='ftweight', wgtimages=sumwts)
+           ## rename extra psfs....
+           ##im.getextrapsfs(multifieldid=0, psfs = psfs[ntaylor:npsftaylor])
+           for p in range( nterms, npsftaylor ):
+              os.system('mv '+imname+'.TempPsf.'+str(p)+' '+psfs[p]) 
+        #casalog.post('CACHE:  '+ str(tb.showcache()))
         
