@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqFrameValid_p(False), 
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
-			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), cmplxImage_p(NULL)
+			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), cmplxImage_p(NULL), numthreads_p(-1)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
-    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), cmplxImage_p(NULL)
+    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), cmplxImage_p(NULL), numthreads_p(-1)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -178,6 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       canComputeResiduals_p = other.canComputeResiduals_p;
       toVis_p=other.toVis_p;
       cmplxImage_p=other.cmplxImage_p;
+      numthreads_p=other.numthreads_p;
     };
     return *this;
   };
@@ -859,6 +860,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void FTMachine::setnumthreads(Int num){
+    numthreads_p=num;
+  }
+  Int FTMachine::getnumthreads(){
+    return numthreads_p;
+  }
+
   //
   // Refocus the array on a point at finite distance
   //
@@ -995,6 +1003,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("polinuse", polInUse_p);
     outRecord.define("tovis", toVis_p);
     outRecord.define("sumweight", sumWeight);
+    outRecord.define("numthreads", numthreads_p);
     return True;
   };
   
@@ -1106,7 +1115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       inRecord.get("freqinterpmethod", tmpInt);
       freqInterpMethod_p=static_cast<InterpolateArray1D<Double, Complex >::InterpolationMethod>(tmpInt);
     }
-    
+    inRecord.get("numthreads", numthreads_p);
     return True;
   };
   

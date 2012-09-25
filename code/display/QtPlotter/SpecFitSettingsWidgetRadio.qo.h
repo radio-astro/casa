@@ -101,6 +101,7 @@ private:
 			int index, QList<SpecFit*>& curves);
 	bool processFitResultPolynomial( const SpectralElement* solution,
 				QList<SpecFit*>& curves);
+	bool isInRange( double xValue ) const;
 	QString settingsToString() const;
 	double toPixels( double val) const;
 	void drawCurves( int pixelX, int pixelY );

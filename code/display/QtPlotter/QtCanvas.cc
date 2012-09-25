@@ -58,8 +58,7 @@ QtCanvas::QtCanvas(QWidget *parent)
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           lineOverlayContextMenu(this), gaussianContextMenu( this ),
-          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 ),
-          refreshCanvas( true )
+          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
 
 
@@ -610,7 +609,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 		}
 		else {
 			if ( taskMode == SPECTRAL_LINE_MODE ){
-				if ( xRangeIsShown ){
+				//if ( xRangeIsShown ){
 					//The user is specifying the (Center,Peak) or the FWHM
 					//of a Gaussian estimate. The point must be in the selected
 					//range to be valid.
@@ -624,11 +623,11 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 						QString msg( "Initial Gaussian estimates must be within\n the specified spectral-line fitting range.");
 						Util::showUserMessage( msg, this );
 					}
-				}
+				/*}
 				else {
 					QString msg( "Please specify a Spectral-Line Fitting range \nby shift-clicking the left mouse button\n and dragging it before you specify\n initial Gaussian estimates.");
 					Util::showUserMessage( msg, this );
-				}
+				}*/
 			}
 			else if ( taskMode == LINE_OVERLAY_MODE ){
 				storeClickPosition( event );
@@ -645,7 +644,10 @@ bool QtCanvas::storeClickPosition( QMouseEvent* event ){
 	int yPos = event->pos().y();
 	gaussianEstimateX = getDataX( xPos );
 	gaussianEstimateY = getDataY( yPos );
-	if ( xRangeRect.contains( xPos, yPos ) ){
+	if ( xRangeIsShown && xRangeRect.contains( xPos, yPos ) ){
+		validPosition = true;
+	}
+	else if ( !xRangeIsShown ){
 		validPosition = true;
 	}
 	return validPosition;
@@ -901,29 +903,27 @@ void QtCanvas::setShowTopAxis( bool showAxis ){
 	}
 }
 
-void QtCanvas::refreshPixmap()
-{
-	if ( refreshCanvas ){
-		pixmap = QPixmap(size());
-		pixmap.fill(this, 0, 0);
-		QPainter painter(&pixmap);
+void QtCanvas::refreshPixmap(){
 
-		drawLabels(&painter);
+	pixmap = QPixmap(size());
+	pixmap.fill(this, 0, 0);
+	QPainter painter(&pixmap);
 
-		if (!imageMode){
-			drawGrid(&painter);
-			drawCurves(&painter);
-			drawFrameMarker(&painter);
-		}
-		else {
-			drawTicks( &painter );
-			drawBackBuffer(&painter);
-		}
-		if (welcome.text !=""){
-			drawWelcome(&painter);
-		}
-		update();
+	drawLabels(&painter);
+
+	if (!imageMode){
+		drawGrid(&painter);
+		drawCurves(&painter);
+		drawFrameMarker(&painter);
 	}
+	else {
+		drawTicks( &painter );
+		drawBackBuffer(&painter);
+	}
+	if (welcome.text !=""){
+		drawWelcome(&painter);
+	}
+	update();
 }
 
 void QtCanvas::drawFrameMarker( QPainter* painter ){
@@ -1775,15 +1775,6 @@ void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
 		profileFitMarkers.clear();
 		setDataRange();
 	}
-}
-
-void QtCanvas::regionUpdatesStarting(){
-	refreshCanvas = false;
-}
-
-void QtCanvas::regionUpdatesEnding(){
-	refreshCanvas = true;
-	refreshPixmap();
 }
 
 QString QtCanvas::getDisplayYUnits(){

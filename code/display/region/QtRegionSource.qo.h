@@ -71,10 +71,8 @@ namespace casa {
 				    const QList<double> &world_x, const QList<double> &world_y,
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
 				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-		void regionUpdatesStarting();
 		void regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
-		void regionUpdatesEnding();
 		void regionUpdateResponse( int, const QString &shape, const QString &name,
 					   const QList<double> &world_x, const QList<double> &world_y,
 					   const QList<int> &pixel_x, const QList<int> &pixel_y,

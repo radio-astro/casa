@@ -192,9 +192,16 @@ void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 		if ( rowCount == 1 ){
 			int row = selectionRange.bottomRow();
 			if ( centerPeak ){
-				setEstimateValue( row, PEAK, yValue );
-				setEstimateValue( row, CENTER, xValue );
-				pixelCanvas->setProfileFitMarkerCenterPeak( row, xValue, yValue );
+				//Check that the center value is between the specified limits
+				if ( isInRange( xValue )){
+					setEstimateValue( row, PEAK, yValue );
+					setEstimateValue( row, CENTER, xValue );
+					pixelCanvas->setProfileFitMarkerCenterPeak( row, xValue, yValue );
+				}
+				else {
+					QString msg( "The initial estimate must be in the fit range.");
+					Util::showUserMessage( msg, this );
+				}
 			}
 			else {
 				//Take the distance between the center and xValue, then
@@ -209,11 +216,25 @@ void SpecFitSettingsWidgetRadio::specFitEstimateSpecified(double xValue,
 					pixelCanvas -> setProfileFitMarkerFWHM( row, fwhm, yValue );
 				}
 			}
-			//Update the profile fit marker in this row.
 		}
-
 	}
+}
 
+bool SpecFitSettingsWidgetRadio::isInRange( double xValue ) const {
+	bool validValue = false;
+	bool okMin = false;
+	double value1 = ui.minLineEdit->text().toDouble( &okMin );
+	bool okMax = false;
+	double value2 = ui.maxLineEdit->text().toDouble( &okMax );
+	if ( okMin && okMax ){
+		if ( value1 <= xValue && xValue <= value2 ){
+			validValue = true;
+		}
+		else if ( value2 <= xValue && xValue <= value1 ){
+			validValue = true;
+		}
+	}
+	return validValue;
 }
 
 void SpecFitSettingsWidgetRadio::reset(){
@@ -238,6 +259,7 @@ void SpecFitSettingsWidgetRadio::reset(){
 }
 
 void SpecFitSettingsWidgetRadio::clean(){
+	ui.gaussCountSpinBox->setValue( 0 );
 	plotMainCurve();
 
 }

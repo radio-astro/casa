@@ -56,15 +56,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 bool QtDisplayPanelGui::logger_did_region_warning = false;;
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
-				   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
-				   colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
-				   qsm_(0), qst_(0),
-				   profile_(0), savedTool_(QtMouseToolNames::NONE),
-				   profileDD_(0),
-				   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
-				   regionDock_(0), rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
-				   showdataoptionspanel_enter_count(0),
-				   controlling_dd(0), preferences(0), autoDDOptionsShow(True) {
+								   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
+								   colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
+								   qsm_(0), qst_(0),
+								   profile_(0), savedTool_(QtMouseToolNames::NONE),
+								   profileDD_(0),
+								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+								   regionDock_(0), rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
+								   showdataoptionspanel_enter_count(0),
+								   controlling_dd(0), preferences(0), autoDDOptionsShow(True) {
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
@@ -234,7 +234,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(atb_play, SIGNAL(clicked()),           SLOT(fwdPlay_()));
 #endif
 
-// This tool bar is _public_; programmer can add custom interface to it.
+	// This tool bar is _public_; programmer can add custom interface to it.
 	customToolBar    = addToolBar("Custom Toolbar");
 	customToolBar->setObjectName("Custom Toolbar");
 	customToolBar->hide();	// (hidden by default).
@@ -415,8 +415,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	animDockWidget_->toggleViewAction()->setText("Animator");
 
-	animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
-			QSizePolicy::Minimum);	  // (vertical)
+	//animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
+	//		QSizePolicy::Minimum);	  // (vertical)
+	animationHolder->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Fixed );
 	//animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//#dk  For bug submission, was 'min,fixed' 4 dockWidg; notSet 4 animWidg.
 	//# Main problem seems to be that dockWidget itself won't do 'fixed'
@@ -427,15 +428,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	updateAnimUi_();
 
-	// animAuxButton_->setText("Compact");
-	// Puts animator initially in 'Full' configuration.
-	//  animAuxButton_->setText("Full");
-	// (This would put it in 'Compact' configuration).
-
-
-	// setAnimExtrasVisibility_();
-	// Hides or shows extra animator widgets according to
-	// the 'Compact/Full' button.
 
 
 	// Trying to make dock area give back space anim. doesn't need.
@@ -832,12 +824,12 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 }
 
 std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions,
-					      std::string file, std::string format, std::string ds9_csys ) {
-    std::transform(format.begin(), format.end(), format.begin(), ::tolower);
-    if ( format != "ds9" && format != "crtf" ) {
-	return "invalid output format '" + format + "'";
-    }
-    return regionDock_->outputRegions( regions, file, format, ds9_csys );
+		std::string file, std::string format, std::string ds9_csys ) {
+	std::transform(format.begin(), format.end(), format.begin(), ::tolower);
+	if ( format != "ds9" && format != "crtf" ) {
+		return "invalid output format '" + format + "'";
+	}
+	return regionDock_->outputRegions( regions, file, format, ds9_csys );
 }
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
@@ -888,7 +880,7 @@ List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
 		if(regd) rdds++;
 		else rdds.removeRight();  }
 #endif
-return rDDs;  }
+	return rDDs;  }
 
 
 List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
@@ -1009,9 +1001,9 @@ void QtDisplayPanelGui::createNewPanel( ) {
 
 void QtDisplayPanelGui::showDataManager() {
 	if(qdm_==0) {
-	    qdm_ = new QtDataManager(this);
-	    connect( this, SIGNAL(ddRemoved(QtDisplayData*)),       qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));
-	    connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
+		qdm_ = new QtDataManager(this);
+		connect( this, SIGNAL(ddRemoved(QtDisplayData*)),       qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));
+		connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
 	}
 	qdm_->showNormal();
 	qdm_->raise();
@@ -1379,137 +1371,10 @@ void QtDisplayPanelGui::showImageProfile() {
 						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
-						{
-							QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
-							if (pos) {
-
-								connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-										const Vector<Double>, const Vector<Double>, const ProfileType)),
-										profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-												const Vector<Double>, const Vector<Double>, const ProfileType)));
-								connect( profile_, SIGNAL(coordinateChange(const String&)),
-										pos, SLOT(setCoordType(const String&)));
-
-								// one region source is shared among all of the tools...
-								// so there is no need to connect these signals for all of the tools...
-								std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
-
-								if ( qrs ) {
-									connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
-											qrs.get(), SLOT(adjustPosition(double,double,double,double)));
-									connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-											const QList<double> &, const QList<int> &, const QList<int> &,
-											const QString &, const QString &, const QString &, int, int ) ),
-											profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-													const QList<double> &, const QList<int> &, const QList<int> &,
-													const QString &, const QString &, const QString &, int, int ) ) );
-									connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
-											const QList<int> &, const QList<int> & ) ),
-											profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
-													const QList<int> &, const QList<int> & ) ) );
-									//Note:  The following two signals were put in to prevent the 'measles' problem
-									//in the profiler (the canvas redrawing itself over and over and region updates
-									//come in.
-									connect( qrs.get(), SIGNAL( regionUpdatesStarting()), profile_, SLOT(regionUpdatesStarting()));
-									connect( qrs.get(), SIGNAL( regionUpdatesEnding()), profile_, SLOT(regionUpdatesEnding()));
-									connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
-											const QList<double> &, const QList<int> &, const QList<int> &,
-											const QString &, const QString &, const QString &, int, int ) ),
-											profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-													const QList<double> &, const QList<int> &, const QList<int> &,
-													const QString &, const QString &, const QString &, int, int ) ) );
-
-								}
-
-							}
-							else {
-								QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
-								if (pos) {
-									connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-											const Vector<Double>, const Vector<Double>, const ProfileType)),
-											profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-													const Vector<Double>, const Vector<Double>, const ProfileType)));
-									connect( profile_, SIGNAL(coordinateChange(const String&)),
-											pos, SLOT(setCoordType(const String&)));
-
-								}
-							}
-						}
-
-						{
-							QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
-							if (rect) {
-								connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-										const Vector<Double>, const Vector<Double>, const ProfileType)),
-										profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-												const Vector<Double>, const Vector<Double>, const ProfileType )));
-								connect( profile_, SIGNAL(coordinateChange(const String&)),
-										rect, SLOT(setCoordType(const String&)));
-
-							} else {
-								QtOldRectTool *rect = dynamic_cast<QtOldRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
-								if (rect) {
-									connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-											const Vector<Double>, const Vector<Double>, const ProfileType)),
-											profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-													const Vector<Double>, const Vector<Double>, const ProfileType )));
-									connect( profile_, SIGNAL(coordinateChange(const String&)),
-											rect, SLOT(setCoordType(const String&)));
-								}
-							}
-						}
-
-						{
-							QtEllipseTool *ellipse = dynamic_cast<QtEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
-							if (ellipse) {
-								connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-										const Vector<Double>, const Vector<Double>, const ProfileType )),
-										profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-												const Vector<Double>, const Vector<Double>, const ProfileType )));
-								connect( profile_, SIGNAL(coordinateChange(const String&)),
-										ellipse, SLOT(setCoordType(const String&)));
-
-							}
-							else {
-								QtOldEllipseTool *ellipse = dynamic_cast<QtOldEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
-								if (ellipse) {
-									connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-											const Vector<Double>, const Vector<Double>, const ProfileType )),
-											profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-													const Vector<Double>, const Vector<Double>, const ProfileType )));
-									connect( profile_, SIGNAL(coordinateChange(const String&)),
-											ellipse, SLOT(setCoordType(const String&)));
-								}
-							}
-						}
-
-						{
-							QtPolyTool *poly = dynamic_cast<QtPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
-							if (poly) {
-								connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-										const Vector<Double>, const Vector<Double>, const ProfileType )),
-										profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-												const Vector<Double>, const Vector<Double>, const ProfileType )));
-								connect( profile_, SIGNAL(coordinateChange(const String&)),
-										poly, SLOT(setCoordType(const String&)));
-
-							}
-							else {
-								QtOldPolyTool *poly = dynamic_cast<QtOldPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
-								if (poly) {
-									connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-											const Vector<Double>, const Vector<Double>, const ProfileType )),
-											profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-													const Vector<Double>, const Vector<Double>, const ProfileType )));
-									connect( profile_, SIGNAL(coordinateChange(const String&)),
-											poly, SLOT(setCoordType(const String&)));
-								}
-							}
-						}
+						connectRegionSignals(ppd);
 					}
 					else {
 						if (profileDD_ != pdd) {
-
 							// [Re-]orient pre-existing profiler to pdd
 							profile_->resetProfile(img, pdd->name().c_str());
 							profileDD_ = pdd;
@@ -1518,10 +1383,12 @@ void QtDisplayPanelGui::showImageProfile() {
 							pdd->checkAxis();
 						}
 					}
+
 					if (pdd->getAxisIndex(String("Spectral")) == -1) {
 						profileDD_ = 0;
 						hideImageProfile();
-					} else {
+					}
+					else {
 						profileDD_ = pdd;
 						profile_->show();
 						pdd->checkAxis();
@@ -1544,9 +1411,6 @@ void QtDisplayPanelGui::showImageProfile() {
 
 	PanelDisplay* ppd = qdp_->panelDisplay();
 	QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
-
-	//Fix of the measles problem.  Cycling through existing regions is only
-	//necessary if the profile is not shown (up-to-date).
 	if (rect && !profileVisible) {
 		// this is the *new* region implementation... all events come from region source...
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
@@ -1557,6 +1421,121 @@ void QtDisplayPanelGui::showImageProfile() {
 	if ( profile_ ) {
 		int frameIndex = qdp_->frame();
 		profile_->frameChanged( frameIndex );
+	}
+}
+
+void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd){
+	QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
+	if (pos) {
+
+		connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+				const Vector<Double>, const Vector<Double>, const ProfileType)),
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+						const Vector<Double>, const Vector<Double>, const ProfileType)));
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
+				pos, SLOT(setCoordType(const String&)));
+
+		// one region source is shared among all of the tools...
+		// so there is no need to connect these signals for all of the tools...
+		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+
+		if ( qrs ) {
+			connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
+					qrs.get(), SLOT(adjustPosition(double,double,double,double)));
+			connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+					const QList<double> &, const QList<int> &, const QList<int> &,
+					const QString &, const QString &, const QString &, int, int ) ),
+					profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+							const QList<double> &, const QList<int> &, const QList<int> &,
+							const QString &, const QString &, const QString &, int, int ) ) );
+			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+					const QList<int> &, const QList<int> & ) ),
+					profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+							const QList<int> &, const QList<int> & ) ) );
+			connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
+					const QList<double> &, const QList<int> &, const QList<int> &,
+					const QString &, const QString &, const QString &, int, int ) ),
+					profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+							const QList<double> &, const QList<int> &, const QList<int> &,
+							const QString &, const QString &, const QString &, int, int ) ) );
+
+		}
+	}
+	else {
+		QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
+		if (pos) {
+			connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+					const Vector<Double>, const Vector<Double>, const ProfileType)),
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+							const Vector<Double>, const Vector<Double>, const ProfileType)));
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
+					pos, SLOT(setCoordType(const String&)));
+
+		}
+	}
+
+	QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+	if (rect) {
+		connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+				const Vector<Double>, const Vector<Double>, const ProfileType)),
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+						const Vector<Double>, const Vector<Double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
+				rect, SLOT(setCoordType(const String&)));
+	}
+	else {
+		QtOldRectTool *rect = dynamic_cast<QtOldRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+		if (rect) {
+			connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+					const Vector<Double>, const Vector<Double>, const ProfileType)),
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+							const Vector<Double>, const Vector<Double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
+					rect, SLOT(setCoordType(const String&)));
+		}
+	}
+
+	QtEllipseTool *ellipse = dynamic_cast<QtEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+	if (ellipse) {
+		connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+				const Vector<Double>, const Vector<Double>, const ProfileType )),
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+						const Vector<Double>, const Vector<Double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
+				ellipse, SLOT(setCoordType(const String&)));
+
+	}
+	else {
+		QtOldEllipseTool *ellipse = dynamic_cast<QtOldEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+		if (ellipse) {
+			connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+					const Vector<Double>, const Vector<Double>, const ProfileType )),
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+							const Vector<Double>, const Vector<Double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
+					ellipse, SLOT(setCoordType(const String&)));
+		}
+	}
+
+	QtPolyTool *poly = dynamic_cast<QtPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
+	if (poly) {
+		connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+				const Vector<Double>, const Vector<Double>, const ProfileType )),
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+						const Vector<Double>, const Vector<Double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
+				poly, SLOT(setCoordType(const String&)));
+	}
+	else {
+		QtOldPolyTool *poly = dynamic_cast<QtOldPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
+		if (poly) {
+			connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+					const Vector<Double>, const Vector<Double>, const ProfileType )),
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+							const Vector<Double>, const Vector<Double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
+					poly, SLOT(setCoordType(const String&)));
+		}
 	}
 }
 
@@ -1675,7 +1654,7 @@ TrackBox* QtDisplayPanelGui::trkBox_(String ddname) {
 
 
 TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
-                		   QGroupBox(parent), qdd_(qdd) {
+                						   QGroupBox(parent), qdd_(qdd) {
 
 	trkgEdit_ = new QTextEdit;
 

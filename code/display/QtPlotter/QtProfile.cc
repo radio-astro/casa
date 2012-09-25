@@ -124,8 +124,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
 	CoordinateSystem cSys = image->coordinates();
-	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-	Converter::setSpectralCoordinate( spectralCoordinate );
+	if ( cSys.hasSpectralAxis() ){
+		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+		Converter::setSpectralCoordinate( spectralCoordinate );
+	}
 
 	// read the preferred ctype from casarc
 	QString pref_ctype = read( ".freqcoord.type");
@@ -239,7 +241,6 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool 
 
 	CoordinateSystem cSys=img->coordinates();
 	Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
-
 	if ( specAx < 0 ) {
 		QMessageBox::information( this, "No spectral axis...",
 				"Sorry, could not find a spectral axis for this image...",
@@ -883,6 +884,7 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
 	}
+	//qDebug() << "spcRval="<<spcRval.c_str()<<" cSysRval="<<cSysRval.c_str();
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
@@ -1049,6 +1051,14 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
 	if (!analysis) return;
+
+	//Only treat it as a new region if we haven't already registered
+	//it in the map.  This method executing multiple times was causing
+	//images with many regions to be slow to load.
+	int occurances = spectra_info_map.count( id_ );
+	if ( occurances >= 1 ){
+		return;
+	}
 	spectra_info_map[id_] = shape;
 	String c(WORLD_COORDINATES);
 
@@ -1130,13 +1140,13 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 
 	if (!isVisible()) return;
 	if (!analysis) return;
+
 	if ( type == viewer::Region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
 	else if ( type == viewer::Region::RegionChangeNewChannel )
 		return;						// viewer moving to new channel
 	else if ( id_ != current_region_id )
 		return;						// some other region
-
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
@@ -1154,7 +1164,7 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 	for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
 	for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
 
-	*itsLog << LogOrigin("QtProfile", "newRegion");
+	*itsLog << LogOrigin("QtProfile", "updateRegion");
 
 	bool cubeZero = checkCube();
 	if ( cubeZero ){
@@ -2310,11 +2320,6 @@ void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
 }
 
-void QtProfile::regionUpdatesStarting(){
-	pixelCanvas->regionUpdatesStarting();
-}
 
-void QtProfile::regionUpdatesEnding() {
-	pixelCanvas->regionUpdatesEnding();
-}
+
 }
