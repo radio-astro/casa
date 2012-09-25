@@ -266,7 +266,7 @@ ComponentList ImageFitter::fit() {
 				*_getLog(), completePixelMask->get(False)
 			);
 		}
-		catch (AipsError x) {
+		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
 				<< x.getMesg() << LogIO::POST;
 		}
@@ -288,7 +288,6 @@ ComponentList ImageFitter::fit() {
 	}
 	FluxRep<Double>::clearAllowedUnits();
 	FluxRep<Float>::clearAllowedUnits();
-
 	if (converged && ! _newEstimatesFileName.empty()) {
 		_writeNewEstimatesFile();
 	}
@@ -451,6 +450,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
         ? "I" : String(_getStokes());
 	// </todo>
 	if(estimatesFilename.empty()) {
+		_fixed.resize(1);
 		*_getLog() << LogIO::NORMAL
 			<< "No estimates file specified, so will attempt to find and fit one gaussian."
 			<< LogIO::POST;
@@ -613,7 +613,6 @@ void ImageFitter::_setFluxes() {
 		*_getLog() << LogIO::EXCEPTION
 			<< "Pixel area could not be determined";
 	}
- 
     if (intensityToFluxConversion.getUnit() == "beam") {
         try {
             Unit unit = resArea.getUnit();
@@ -1320,6 +1319,7 @@ void ImageFitter::_fitsky(
 				fitter, modelType, maskedPixels,
 				minVal, maxVal, minPos, maxPos
 			);
+			*_getLog() << origin;
 		}
 		else if (modelType == Fit2D::LEVEL) {
 			parameters.resize(1);
@@ -1401,7 +1401,6 @@ void ImageFitter::_fitsky(
 			j++;
 		}
 	}
-
 }
 
 Vector<Double> ImageFitter::_singleParameterEstimate(
