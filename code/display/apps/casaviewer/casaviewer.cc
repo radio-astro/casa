@@ -56,6 +56,8 @@
 #include <graphics/X11/X_exit.h>
 */
 
+#include <casadbus/utilities/Diagnostic.h>
+
 #include <casa/namespace.h>
 
 static pid_t manager_root_pid = 0;
@@ -72,7 +74,7 @@ static void launch_server( const char *origname, int numargs, char **args,
 static char *find_xvfb( const char *paths );
 static pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority );
 
-static void exiting_server( int sig ) { exit(0); }
+static void exiting_server( int /*sig*/ ) { exit(0); }
 static void signal_manager_root( int sig ) {
     if ( manager_root_pid && ! sigterm_received ) {
 	killpg( manager_root_pid, sig );
@@ -104,6 +106,8 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 }
 
 int main( int argc, const char *argv[] ) {
+
+    casa::dbus::diagnostic.argv( argc, argv );
 
     bool server_startup = false;
     bool without_gui = false;
@@ -456,7 +460,7 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
     }
 }
 
-void start_manager_root( const char *origname, int numargs, char **args, const char *dbusname,
+void start_manager_root( const char *origname, int /*numargs*/, char **args, const char */*dbusname*/,
 			 bool without_gui, pid_t root_pid ) {
 
     pid_t child_xvfb = 0;
