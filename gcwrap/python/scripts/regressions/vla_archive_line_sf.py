@@ -3,7 +3,7 @@ import os
 from regressframe import regressionframe
 
 class regressverify :
-	datarepos = '/o[t/casa/data'
+	datarepos = '/opt/casa/data'
 	def fill(self) :
 		rstat = True 
 		return rstat
@@ -36,9 +36,11 @@ pipeline.fill['importvla']['args'] = {'archivefiles':[datapath + 'AS758_C030425.
 				      'frequencytol':10000000.0}
 pipeline.fill['verify'] = verify.fill
 
-pipeline.flag['tasks'] = ['flagautocorr']
-pipeline.flag['flagautocorr'] = {}
-pipeline.flag['flagautocorr']['args'] = {'vis':'g192_a.ms'}
+pipeline.flag['tasks'] = ['tflagdata']
+pipeline.flag['tflagdata'] = {}
+pipeline.flag['tflagdata']['args'] = {'vis':'g192_a.ms',
+									'mode':'manual',
+									'autocorr':True}
 pipeline.flag['verify'] = verify.flag
 
 pipeline.calibrate['tasks'] = ['setjy', 'gaincal', 'bandpass', 'fluxscale', 'applycal']
