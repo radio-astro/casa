@@ -156,6 +156,7 @@ FlagAgentBase::initialize()
    filterRows_p = false;
    filterPols_p = false;
    flagAutoCorrelations_p = false;
+   uvwUnits_p = true; // Meters
 
 	// Initialize state
    terminationRequested_p = false;
@@ -744,6 +745,16 @@ FlagAgentBase::setDataSelection(Record config)
 			if (flagDataHandler_p->parseExpression(parser))
 			{
 				uvwList_p=parser.getUVList();
+				Vector<Bool> units = parser.getUVUnitsList();
+				if (units[0]==1)
+				{
+					uvwUnits_p = true; //Meters
+				}
+				else
+				{
+					uvwUnits_p = false; //Lambda
+				}
+
 				filterRows_p=true;
 
 				// Request to pre-load uvw
@@ -751,6 +762,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 				*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << " uvunits are " << units << LogIO::POST;
 			}
 		}
 	}
@@ -1435,6 +1447,15 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				u = uvw(row_i)(0);
 				v = uvw(row_i)(1);
 				uvDistance = sqrt(u*u + v*v);
+
+				// CAS-4270: Convert uvdist in lambda units
+				if (uvwUnits_p == false)
+				{
+					Int spw = visibilityBuffer_p->get()->spectralWindow();
+					Double Lambda = (*flagDataHandler_p->getLambdaMap())[spw];
+					uvDistance /= Lambda;
+				}
+
 				if (!find(uvwList_p,uvDistance)) continue;
 			}
 

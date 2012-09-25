@@ -372,6 +372,7 @@ private:
 	Vector<Int> antenna2List_p;
 	Matrix<Int> baselineList_p;
 	Matrix<Double> uvwList_p;
+	Bool uvwUnits_p;
 	OrderedMap<Int, Vector<Int> > polarizationList_p;
 	Vector<Int> observationList_p;
 	Vector<Int> scanIntentList_p;

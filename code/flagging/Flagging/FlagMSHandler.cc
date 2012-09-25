@@ -196,6 +196,16 @@ FlagMSHandler::open()
 		}
 	}
 
+	// Read reference frequencies per SPW
+	ROMSSpWindowColumns *spwSubTable = new ROMSSpWindowColumns(originalMeasurementSet_p->spectralWindow());
+	ROScalarColumn<Double> refFrequencies = spwSubTable->refFrequency();
+	lambdaMap_p = new lambdaMap();
+	for (uInt spwidx=0;spwidx<refFrequencies.nrow();spwidx++)
+	{
+		(*lambdaMap_p)[spwidx]=C::c/refFrequencies(spwidx);
+		*logger_p << LogIO::DEBUG1 << " spwidx: " << spwidx << " lambda: " << (*lambdaMap_p)[spwidx] << LogIO::POST;
+	}
+
 	return true;
 }
 

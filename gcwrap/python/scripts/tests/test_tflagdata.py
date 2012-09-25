@@ -1176,6 +1176,26 @@ class test_clip(test_base):
         tflagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = tflagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
+        
+
+class test_CASA_4_0_bug_fix(test_base):
+    """tflagdata:: Regression test for fixes introducced during the CASA 4.0 bug fix season"""
+        
+    def test_CAS_4270(self):
+        """tflagdata: clip only zero-value data"""
+        
+        self.setUp_data4tfcrop()
+        
+        tflagdata(vis=self.vis,mode='unflag')
+        tflagdata(vis=self.vis,mode='manual',uvrange='<2klambda')
+        tflagdata(vis=self.vis,mode='clip')
+        summary_ref = tflagdata(vis=self.vis,mode='summary')
+        
+        tflagdata(vis=self.vis,mode='unflag')
+        tflagdata(vis=self.vis,mode='list',inpfile=["uvrange='<2Klambda'","mode='clip'"])
+        summary_out = tflagdata(vis=self.vis,mode='summary')
+        
+        self.assertEqual(summary_out['flagged'],summary_ref['flagged'],'uvrange given in lambda is not properly translated into meters')
     
 
 # Cleanup class 
@@ -1210,4 +1230,5 @@ def suite():
             test_list_list,
             test_list_file,
             test_clip,
-            cleanup]
+            cleanup,
+            test_CASA_4_0_bug_fix]

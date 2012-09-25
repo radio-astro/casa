@@ -145,6 +145,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	polarizationIndexMap_p = NULL;
 	antennaPointingMap_p = NULL;
 	scanStartStopMap_p = NULL;
+	lambdaMap_p = NULL;
 	fieldNames_p = NULL;
 
 	// Initialize table characteristics
@@ -183,6 +184,7 @@ FlagDataHandler::~FlagDataHandler()
 	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
 	if (antennaPointingMap_p) delete antennaPointingMap_p;
 	if (scanStartStopMap_p) delete scanStartStopMap_p;
+	if (lambdaMap_p) delete lambdaMap_p;
 	if (fieldNames_p) delete fieldNames_p;
 
 	return;

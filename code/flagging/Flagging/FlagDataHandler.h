@@ -29,6 +29,7 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
 
 // Async I/O infrastructure
 #include <synthesis/MSVis/AsynchronousTools.h>
@@ -68,6 +69,7 @@ typedef std::map< uShort,uShort > polarizationMap;
 typedef std::map< uInt,String > polarizationIndexMap;
 typedef std::vector< vector<Double> > antennaPointingMap;
 typedef std::map< Int,vector<Double> > scanStartStopMap;
+typedef std::map< Int,Double > lambdaMap;
 
 const Complex ImaginaryUnit = Complex(0,1);
 
@@ -882,6 +884,7 @@ public:
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
 	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
 	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
+	lambdaMap * getLambdaMap() {return lambdaMap_p;}
 
 	void setProfiling(Bool value) {profiling_p=value;}
 
@@ -981,6 +984,7 @@ protected:
 	polarizationIndexMap *polarizationIndexMap_p;
 	antennaPointingMap *antennaPointingMap_p;
 	scanStartStopMap *scanStartStopMap_p;
+	lambdaMap *lambdaMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 	bool mapPolarizations_p;
