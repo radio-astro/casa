@@ -32,7 +32,11 @@
 #include <stdio.h>
 #include <casadbus/utilities/Diagnostic.h>
 
+#if defined(__APPLE__)
+#include <crt_externs.h>
+#else
 extern "C" char **environ;
+#endif
 
 namespace casa {
     namespace dbus {
@@ -74,6 +78,10 @@ namespace casa {
 		fprintf( diagnostic.kernel_->fptr, "%5d %s\n", diagnostic.kernel_->pid, buf );
 		fflush( diagnostic.kernel_->fptr );
 		// --- --- current environment --- --- --- --- --- --- ---
+#if defined(__APPLE__)
+		char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
+		char** environ = *envPtr;
+#endif
 		for ( char **ep=environ; *ep; ++ep )
 		    fprintf( diagnostic.kernel_->fptr, "%5d env:     %s\n", diagnostic.kernel_->pid, *ep );
 		fflush( diagnostic.kernel_->fptr );
