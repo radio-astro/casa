@@ -148,6 +148,8 @@ average over frequency (channels) and time (integrations).
     further flagging, imaging and/or self-calibration.  split can
     average over frequency (channels) and time (integrations).
 
+    With the keepmms parameter, split can be run parallelized on multi-MS
+    input.
 
         Keyword arguments:
         vis -- Name of input visibility file
@@ -278,7 +280,8 @@ average over frequency (channels) and time (integrations).
                      be included (subject to the selection parameters).
 
         keepmms -- If true and the input is a multi-MS, make the output one, too.
-	           Otherwise, the output will be a normal MS without partitioning. (experimental)
+	           Otherwise, the output will be a normal MS without partitioning. 
+		   (experimental)
                    Default: False
 
 </example> 

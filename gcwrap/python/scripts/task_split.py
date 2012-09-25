@@ -70,6 +70,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     """
 
     casalog.origin('split')
+    mylocals = locals()
     rval = True
     try:
 
@@ -84,7 +85,6 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             myms.close() 
             mses.sort()
 
-            retval = {}
             nfail = 0
             if os.path.exists(outputvis):
                 raise ValueError, "Output MS %s already exists - will not overwrite." % outputvis
@@ -120,7 +120,11 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
             mytb = tbtool()
 
-            # main work loop
+            # prepare the input MMS for processing
+            replaced = []
+            outputviss = []
+            theptabs = []
+            
             for m in mses:
 
                 # make sure the SORTED_TABLE keywords are disabled
@@ -133,50 +137,55 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
                 # deal with the POINTING table
                 theptab = m+'/POINTING'
-                replaced = False
-                if nochangeinpointing:
-                    if(os.path.islink(theptab)):
-                        #print "is link ", theptab
-                        os.remove(theptab)
-                        shutil.copytree(emptyptab, theptab)
-                        replaced=True
+                theptabs.append(theptab)
+
+                if nochangeinpointing and os.path.islink(theptab):
+                    #print "is link ", theptab
+                    os.remove(theptab)
+                    shutil.copytree(emptyptab, theptab)
+                    replaced.append(True)
+                else:
+                    replaced.append(False)
 
                 # run split
-                outvis = tempout+'/'+os.path.basename(m)
-                print 'Running split_core on ', m
-                try:
-                    retval[m] = split_core(m, outvis, datacolumn, field, spw, width, antenna,
-                                           timebin, timerange, scan, intent, array, uvrange,
-                                           correlation, observation, combine, keepflags)
-                except Exception, instance:
-                    casalog.post("*** Error while processing SubMS "+m+": %s" % (instance), 'SEVERE')
-                    raise
+                outputviss.append(os.path.abspath(tempout+'/'+os.path.basename(m)))
+            # end for
+
+            # send off the jobs
+            print 'Running split_core ... '
+            helper = ParallelTaskHelper('split', mylocals)
+            helper.override_arg('outputvis',outputviss)
+            helper._consolidateOutput = False
+            goretval = helper.go()
+
+            for i in xrange(len(mses)):
+                m = mses[i]
 
                 # deal with the POINTING table
-                if replaced:
+                if replaced[i]:
                     # restore link
-                    shutil.rmtree(theptab, ignore_errors=True)
-                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
+                    shutil.rmtree(theptabs[i], ignore_errors=True)
+                    os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptabs[i])
                     # (link in target will be created my makeMMS)
 
                 # accumulate list of successful splits
-                if not retval[m]:
+                if not goretval[m]:
                     nfail+=1
                 else:
-                    successfulmses.append(outvis)
+                    successfulmses.append(outputviss[i])
 
-            if nfail>0: # there were successful splits
+            if nfail>0: # there were unsuccessful splits
                 if len(successfulmses)==0:
                     casalog.post('Split failed in all subMSs.', 'WARN')
                     rval=False
                 else:
                     casalog.post('*** Summary: there were failures in '+str(nfail)+' SUBMSs:', 'WARN')
-                    casalog.post('*** (these may be harmless if they are caused by selection):', 'WARN')
+                    casalog.post('*** (these are harmless if they are caused by selection):', 'WARN')
                     for m in mses:
-                        if not retval[m]:
-                            casalog.post(os.path.basename(m)+': '+str(retval[m]), 'WARN')
+                        if not goretval[m]:
+                            casalog.post(os.path.basename(m)+': '+str(goretval[m]), 'WARN')
                         else:
-                            casalog.post(os.path.basename(m)+': '+str(retval[m]), 'NORMAL') 
+                            casalog.post(os.path.basename(m)+': '+str(goretval[m]), 'NORMAL') 
 
                     casalog.post('Will construct MMS from subMSs with successful selection ...', 'NORMAL')
 
