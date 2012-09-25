@@ -944,7 +944,11 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se, Bool writeToDisk)
 
 	  if(writeToDisk)
 	    {
-	      storeAsImg(String("TempPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
+	      //need unique name as multiple processes can be running in the 
+	      //same workingdir
+	      String tmpName=image_p[thismodel]->name();
+	      tmpName.del(String(".model.tt0"), 0);
+	      storeAsImg(tmpName+String(".TempPsf.")+String::toString(taylor),PSF(index));
 	    }
 	}
       
