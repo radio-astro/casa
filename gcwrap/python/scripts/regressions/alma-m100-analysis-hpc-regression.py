@@ -137,11 +137,11 @@ if(mystep in thesteps):
     importasdm(asdm='uid___A002_X2a5c2f_X54',vis='X54-monolith.ms',asis='Stati* Anten*', overwrite=True)
     importasdm(asdm='uid___A002_X2a5c2f_X220',vis='X220-monolith.ms',asis='Stati* Anten*', overwrite=True)
 
-    os.system('rm -rf X54.ms X220.ms')
+    os.system('rm -rf X54.ms* X220.ms*')
 
 	# Note: the versionname after partition is called partition_1, not Original!
-    partition(vis='X54-monolith.ms', outputvis='X54.ms', numsubms=mynumsubmss)
-    partition(vis='X220-monolith.ms', outputvis='X220.ms', numsubms=mynumsubmss)
+    partition(vis='X54-monolith.ms', outputvis='X54.ms', numsubms=mynumsubmss, separationaxis='scan')
+    partition(vis='X220-monolith.ms', outputvis='X220.ms', numsubms=mynumsubmss, separationaxis='scan')
 
     if(makeplots):
         for name in basename:

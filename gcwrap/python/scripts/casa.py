@@ -98,7 +98,6 @@ from exportuvfits import  exportuvfits
 from feather import  feather
 from find import  find
 from fixvis import  fixvis
-from flagautocorr import  flagautocorr
 from flagdata import  flagdata
 from flagdata2 import  flagdata2
 from flagmanager import  flagmanager

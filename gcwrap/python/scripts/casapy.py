@@ -1018,7 +1018,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
             ###the following applies: "It would be nice if one
             ### could tell the system to NOT recall
             ### previous non-default settings sometimes."
-            if(not myf['casaglobals']):
+            if(not myf['casaglobals'] and myf.has_key(k)):
                 del myf[k]
             l=l+1
             if l%5==0:

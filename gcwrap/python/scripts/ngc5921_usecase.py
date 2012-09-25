@@ -159,11 +159,13 @@ listobs()
 #
 # Get rid of the autocorrelations from the MS
 #
-print '--Flagautocorr--'
+print '--Flag auto-correlation--'
 
-# Don't default this one either, there is only one parameter (vis)
-
-flagautocorr()
+default('tflagdata')
+vis = msfile
+mode = 'manual'
+autocorr = True
+tflagdata()
 
 #
 #=====================================================================

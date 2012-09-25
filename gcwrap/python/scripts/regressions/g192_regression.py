@@ -23,9 +23,9 @@ print '--Observation summary--'
 default('listobs')
 listobs(vis='g192_a.ms')
 #listtime = time.time()
-print '--Flagautocorr--'
-default('flagautocorr')
-flagautocorr(vis='g192_a.ms')
+print '--Flag auto-correlations--'
+default('tflagdata')
+tflagdata(vis='g192_a.ms',mode='manual',autocorr=True)
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')
@@ -82,12 +82,13 @@ print '--Flag bad scan--'
 #flag data in the specified time range for the source and spw
 
 # But actually doing so causes this regression test to fail!
-# flagdata(vis="g192_src.split.ms", field="0", spw="0", timerange="2003/04/26/02:45:00.0~2003/04/26/02:49:00.0")
-fg.open(msname='g192_src.split.ms')
-fg.setdata(field='0',spw='0', time='2003/04/26/02:45:00.0 ~ 2003/04/26/02:49:00.0')
-#af.settimerange(timerange=['26-APR-2003/02:45:00.0','26-APR-2003/02:49:00.0'])
-fg.run()
-fg.done()
+tflagdata(vis="g192_src.split.ms", field="0", spw="0", 
+		timerange="2003/04/26/02:45:00.0~2003/04/26/02:49:00.0")
+#fg.open(msname='g192_src.split.ms')
+#fg.setdata(field='0',spw='0', time='2003/04/26/02:45:00.0 ~ 2003/04/26/02:49:00.0')
+##af.settimerange(timerange=['26-APR-2003/02:45:00.0','26-APR-2003/02:49:00.0'])
+#fg.run()
+#fg.done()
 flagsrctime=time.time()
 
 print '--Clean src line--'
@@ -219,7 +220,7 @@ print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
 print >>logfile,'Processing rate MB/s  was: '+str(634.9/(endTime - startTime))
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
-print >>logfile,'*   flagautocorr time was: '+str(flagtime-importtime)
+print >>logfile,'*   tflagdata    time was: '+str(flagtime-importtime)
 print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
 print >>logfile,'*   gaincal      time was: '+str(gaintime-setjytime)
 print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)

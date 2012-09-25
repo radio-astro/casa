@@ -818,8 +818,6 @@ class simutil:
                EVLA correlator efficiency is probably optimistic at 0.88
         """
 
-        return eta_p, eta_s, eta_b, eta_t, eta_q, t_rx
-        
         if telescope==None: telescope=self.telescopename
         telescope=str.upper(telescope)
         
