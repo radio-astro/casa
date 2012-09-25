@@ -263,8 +263,8 @@ class imagecont():
     def cleancont(self, niter=100, alg='clark', thr='0.0mJy', psf='newmodel.psf', dirty='newmodel.dirty', model='newmodel.model', mask='', scales=[0]):
         dc=casac.deconvolver()
         dc.open(dirty=dirty, psf=psf)
-        if((alg=='hogbom') or (alg == 'msclean')):
-            sca=scales if (alg=='msclean') else [0]
+        if((alg=='hogbom') or (alg == 'msclean') or (alg == 'multiscale')):
+            sca=scales if ((alg=='msclean') or (alg=='multiscale')) else [0]
             dc.setscales(scalemethod='uservector', uservector=sca)
             alg='fullmsclean'
         retval={}
