@@ -960,15 +960,18 @@ the source is at the first time observed in the selected data.
      </param>
 
      <param type="string" name="outframe">
-     <description>frequency frame of output image (default "", same as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
+     <description>frequency frame of output image (default LSRK, "" =&gt; as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
      </description>
      <value>LSRK</value>
-     <value>LSRD</value>
-     <value>BARY</value>
-     <value>GALACTO</value>
-     <value>LGROUP</value>
-     <value>CMB</value>
-     <value></value>
+     <allowed kind="enum">
+       <value>LSRK</value>
+       <value>LSRD</value>
+       <value>BARY</value>
+       <value>GALACTO</value>
+       <value>LGROUP</value>
+       <value>CMB</value>
+       <value></value>
+     </allowed>
      </param>
 
      <param type="string" name="veltype">
