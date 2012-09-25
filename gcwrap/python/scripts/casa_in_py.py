@@ -149,7 +149,6 @@ cu = casac.utils()
 
 
 from imstat_pg import imstat_pg as imstat
-from oldflagcmd_pg import oldflagcmd_pg as oldflagcmd
 from flagdata_pg import flagdata_pg as flagdata
 from flagdata2_pg import flagdata2_pg as flagdata2
 from tflagdata_pg import tflagdata_pg as tflagdata
@@ -212,7 +211,6 @@ from uvsub_pg import uvsub_pg as uvsub
 from imcontsub_pg import imcontsub_pg as imcontsub
 from imstat_pg import imstat_pg as imstat
 from clearstat_pg import clearstat_pg as clearstat
-from flagautocorr_pg import flagautocorr_pg as flagautocorr
 from browsetable_pg import browsetable_pg as browsetable
 from smoothcal_pg import smoothcal_pg as smoothcal
 from imval_pg import imval_pg as imval

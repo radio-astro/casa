@@ -26,7 +26,6 @@ feather.xml
 find.xml
 fixplanets.xml
 fixvis.xml
-flagautocorr.xml
 flagcmd.xml
 flagdata.xml
 tflagdata.xml
@@ -69,7 +68,6 @@ makemask.xml
 mosaic.xml
 msview.xml
 msmoments.xml 
-oldflagcmd.xml
 peel.xml
 plotants.xml
 plotcal.xml
