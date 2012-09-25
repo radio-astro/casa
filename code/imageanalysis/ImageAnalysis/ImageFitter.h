@@ -219,7 +219,7 @@ private:
 	    Fit2D& fitter
 	) const;
 
-	ComponentList _fitsky(
+	void _fitsky(
 		Fit2D& fitter, Array<Float>& pixels,
 	    Array<Bool>& pixelMask, Bool& converged,
 	    Double& zeroLevelOffsetSolution,
