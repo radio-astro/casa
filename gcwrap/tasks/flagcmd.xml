@@ -16,8 +16,7 @@
 
         The flagcmd task will flag data based on the commands input on inpmode :
             table = input from FLAG_CMD table in MS
-            file  = input from flagging command file "inpfile"
-            cmd   = input from a (python) list of command strings
+            list  = input from text file or list of strings given in inpfile
             xml   = input from Flag.xml in the MS given by vis
 
         Batch operations include : apply/unapply/list/plot/clear/extract
@@ -30,7 +29,7 @@
                 </param>
 
                 <param type="string" name="inpmode">
-                        <description>Input mode for flag commands(table/list/cmd)</description>
+                        <description>Input mode for flag commands(table/list/xml)</description>
                         <value>table</value>
                         <allowed kind="enum">
                         <value>table</value>
@@ -186,7 +185,7 @@
     --INPUT--
 
     inpmode -- Input mode for flags
-            options: 'table','file','cmd','xml'
+            options: 'table','list','xml'
             default: 'table'
 
        inpmode "table" --  input commands from FLAG_CMD table of MS
@@ -231,13 +230,14 @@
    
           inpfile -- name of an ASCII file or a list of strings.
                default: '' 
+               options: [] or '' with filename.
                   example1: the following commands can be saved into a file and given
                             to the task (e.g. save it to flags.txt).
                   
-                     scan=1~3 mode=manual
-                     mode=clip clipminmax=[0,2] correlation=ABS_XX clipoutside=False
-                     spw=9 mode=tfcrop correlation=ABS_YY ntime=51.0
-                     mode=extend extendpols=True
+                     scan='1~3' mode='manual'
+                     mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
+                     spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
+                     mode='extend' extendpols=True
 
                     flagcmd(vis, inpmode='list',inpfile='flags.txt')
 
@@ -361,7 +361,7 @@
           WARNING: this can be dangerous, and you must set clearall=True 
           to use this!!! This will delete the specified rows from the 
           internal FLAG_CMD table for vis regardless of what mode is set
-          to (useful for when you import from xml or file, and decide to 
+          to (useful for when you import from xml or file), and decide to 
           redo it). This action will NOT unapply the commands.
 
 
@@ -498,7 +498,7 @@
           mode='shadow' antenna='ea01,ea02,ea03'
           mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
 
-        These commands can be in an ASCII file, e.g. "myflags.txt"
+        These commands can be saved in an ASCII file, e.g. "myflags.txt"
         and input using inpmode='list', e.g.
 
           flagcmd(vis='myvis.ms',inpmode='list',inpfile='myflags.txt')
@@ -613,8 +613,8 @@
           basic "manual" operation, ie. flag the data meeting the selection.
           
         
-        2. Modes specific parameters with default values (for further details, refer to
-           the task tflagdata).
+        2. Modes specific parameters with default values (for further details and updated
+           default values, refer to the task tflagdata).
           
           2.1 Mode manual.
               autocorr=False

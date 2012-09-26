@@ -49,7 +49,7 @@ importuvfits()
 if benchmarking:
     importtime = time.time()
 
-flagdata(vis=msfile, mode='manualflag', antenna='VA10', spw='*', field='0')
+tflagdata(vis=msfile, mode='manual', antenna='VA10', spw='*', field='0')
 
 print '--Widefield--'
 default('widefield')

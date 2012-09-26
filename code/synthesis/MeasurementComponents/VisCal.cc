@@ -718,7 +718,6 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Vector<Float> wtvec;
 
   if (V().type()==VisVector::One) {
-    cout << "  (setScalarData(True))   " << endl;
     M().setScalarData(True);
   }
   else
@@ -730,51 +729,42 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   Int ibln;
   for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
     
-    if (!*flagR) {  // if this row unflagged
-
-      // The basline number
-      ibln=blnidx(*a1,*a2);
+    // The basline number
+    ibln=blnidx(*a1,*a2);
+    
+    // Solution channel registration
+    Int solCh0(0);
+    dataChan=&vb.channel()(0);
+    
+    // If cal _parameters_ are not freqDep (e.g., a delay)
+    //  the startChan() should be the same as the first data channel
+    if (freqDepMat() && !freqDepPar())
+      startChan()=(*dataChan);
+    
+    // Solution and data array registration
+    M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
+    if (!trial)
+      V().sync(Vout(0,0,row));
+    
+    
+    for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
       
-      // Solution channel registration
-      Int solCh0(0);
-      dataChan=&vb.channel()(0);
+      if (trial) 
+	M().applyFlag(*flag);
+      else 
+	// data and solution ok, do the apply
+	M().apply(V(),*flag);
 
-      // If cal _parameters_ are not freqDep (e.g., a delay)
-      //  the startChan() should be the same as the first data channel
-      if (freqDepMat() && !freqDepPar())
-	startChan()=(*dataChan);
+      // inc soln ch axis if freq-dependent 
+      if (freqDepMat()) 
+	M()++; 
 
-      // Solution and data array registration
-      M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
-      if (!trial)
-	V().sync(Vout(0,0,row));
+    } // chn
 
-
-      for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
-
-	if (trial) 
-	  M().applyFlag(*flag);
-	else {
-	  // data and solution ok, do the apply
-	  if (!*flag)
-	    M().apply(V(),*flag);
-	}
-
-	// inc soln ch axis if freq-dependent 
-	if (freqDepMat()) 
-	  M()++; 
-
-      } // chn
-
-      // If requested update the weights
-      if (calWt() && !trial) {
-	wtvec.reference(wt.array());
-	updateWt(wtvec,*a1,*a2);
-      }
-
-    } // !*flagR
-    else {
-      flag+=nChanDat; 
+    // If requested update the weights
+    if (calWt() && !trial) {
+      wtvec.reference(wt.array());
+      updateWt(wtvec,*a1,*a2);
     }
 
     if (calWt() && !trial)
@@ -834,6 +824,9 @@ void VisMueller::syncMueller(const Bool& doInv) {
 
   // Invert, if requested
   if (doInv) invMueller();
+
+  // Set matrix elements by their ok flags
+  setMatByOk();
 
   // Mueller matrices now valid
   validateM();
@@ -921,6 +914,23 @@ void VisMueller::invMueller() {
       // If matrix elements look ok so far, attempt to invert
       //  (if invert fails, matrix is zeroed and meOk is set accordingly)
       M().invert();
+
+}
+
+void VisMueller::setMatByOk() {
+
+  // This method only called in apply context!
+  AlwaysAssert((isApplied()),AipsError);
+
+  if (prtlev()>6) 
+    cout << "       VM::setMatByOk()" << endl;
+
+  M().sync(currMElem()(0,0,0),currMElemOK()(0,0,0));
+  for (Int ibln=0;ibln<nCalMat();ibln++) 
+    for (Int ichan=0; ichan<nChanMat(); ++ichan, M()++) 
+      // If matrix elements look ok so far, attempt to invert
+      //  (if invert fails, matrix is zeroed and meOk is set accordingly)
+      M().setMatByOk();
 
 }
 
@@ -1138,7 +1148,6 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     //  (this is relevant only for proper handling of flags
     //   in case of scalar data, for now)
     if (V().type()==VisVector::One) {
-      cout << "    (setScalarData(True))  " << endl;
       J1().setScalarData(True);
       J2().setScalarData(True);
     }
@@ -1153,66 +1162,48 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
     for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
       
-      if (!*flagR) {  // if this row unflagged
-	
-	// Solution channel registration
-	Int solCh0(0);
-	dataChan=&vb.channel()(0);
+      // Solution channel registration
+      Int solCh0(0);
+      dataChan=&vb.channel()(0);
+      
+      // If cal _parameters_ are not freqDep (e.g., a delay)
+      //  the startChan() should be the same as the first data channel
+      if (freqDepMat() && !freqDepPar())
+	startChan()=(*dataChan);
 
-	// If cal _parameters_ are not freqDep (e.g., a delay)
-	//  the startChan() should be the same as the first data channel
-	if (freqDepMat() && !freqDepPar())
-	  startChan()=(*dataChan);
+      // Solution and data array registration
+      J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
+      J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
+      if (!trial)
+	V().sync(Vout(0,0,row));
 
-	/* NEWCALTABLE
-	if (freqDepMat() && freqDepPar()) {
-	  solCh0=(*dataChan)-startChan();
-	  if (solCh0 < 0) solCh0=0;
+
+      for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
+	  
+	if (trial) {
+	  // only update flag info
+	  J1().applyFlag(*flag);
+	  J2().applyFlag(*flag);
 	}
-	*/
-
-	// Solution and data array registration
-	J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
-	J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
-	if (!trial)
-	  V().sync(Vout(0,0,row));
-
-
-	for (Int chn=0; chn<nChanDat; chn++,flag++,V()++,dataChan++) {
+	else {
+	  // if this data channel unflagged
+	  J1().applyRight(V(),*flag);
+	  J2().applyLeft(V(),*flag);
+	}
 	  
-	  if (trial) {
-	    // only update flag info
-	    J1().applyFlag(*flag);
-	    J2().applyFlag(*flag);
-	  }
-	  else {
-	    // if this data channel unflagged
-	    if (!*flag) {
-	      J1().applyRight(V(),*flag);
-	      J2().applyLeft(V(),*flag);
-	    }
-	  }
+	// inc soln ch axis if freq-dependent (and next dataChan within soln)
+	if (freqDepMat()) {
+	  J1()++; 
+	  J2()++; 
+	}
 	  
-	  // inc soln ch axis if freq-dependent (and next dataChan within soln)
-	  if (freqDepMat())  /* && 
-	      ( *dataChan+1>startChan() &&
-	      (*dataChan+1)<(startChan()+nChanMat() ) ) ) */ {
-	    J1()++; 
-	    J2()++; 
-	  }
-	  
-	} // chn
+      } // chn
 	
 
-	// If requested, update the weights
-	if (!trial && calWt()) {
-	  wtvec.reference(wt.array());
-	  updateWt(wtvec,*a1,*a2);
-	}
-
-      } // !*flagR
-      else {
-        flag+=nChanDat; 
+      // If requested, update the weights
+      if (!trial && calWt()) {
+	wtvec.reference(wt.array());
+	updateWt(wtvec,*a1,*a2);
       }
 
       if (!trial)
@@ -1293,6 +1284,9 @@ void VisJones::syncJones(const Bool& doInv) {
 
   // Invert, if requested
   if (doInv) invJones();
+
+  // Set matrix elements according to OK flags
+  setMatByOk();
 
   // Form weight update factors, if necessary
   if (calWt()) syncWtScale();
@@ -1376,6 +1370,20 @@ void VisJones::invJones() {
       // If matrix elements look ok so far, attempt to invert
       //  (if invert fails, currJElemOK will be set accordingly)
       J1().invert();
+
+}
+
+void VisJones::setMatByOk() {
+
+  if (prtlev()>6) 
+    cout << "       VJ::setMatByOk" << endl;
+
+  J1().sync(currJElem()(0,0,0),currJElemOK()(0,0,0));
+  for (Int iant=0;iant<nAnt();iant++) 
+    for (Int ichan=0; ichan<nChanMat();++ichan,J1()++) 
+      // If matrix elements look ok so far, attempt to invert
+      //  (if invert fails, currJElemOK will be set accordingly)
+      J1().setMatByOk();
 
 }
 

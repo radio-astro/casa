@@ -1,5 +1,5 @@
 //# QtPolygon.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011, 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -105,6 +105,8 @@ namespace casa {
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+		// is this region weakly or temporarily selected?
+		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
 		void setLabelPosition( TextPosition pos ) { QtRegion::setLabelPosition(pos); }

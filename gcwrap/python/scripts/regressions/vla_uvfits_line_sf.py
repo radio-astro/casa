@@ -27,27 +27,27 @@ class regressverify :
 			rstat = False
 			print 'ms.nrow failed: got ',ms.nrow, ' expected 22653'
 		suminfo = ms.summary()
-		if suminfo['header']['nfields'] != 3 :
+		if suminfo['nfields'] != 3 :
 			rstat = False
-			print 'nfields failed got '+suminfo['header']['nfields']+' expected 3'
-		if suminfo['header']['field_0']['name'] != '1331+30500002_0' :
+			print 'nfields failed got '+suminfo['nfields']+' expected 3'
+		if suminfo['field_0']['name'] != '1331+30500002_0' :
 			rstat = False
-			print 'nfield_0 failed got '+suminfo['header']['field_0']['name']
-		if suminfo['header']['field_1']['name'] != '1445+09900002_0' :
+			print 'nfield_0 failed got '+suminfo['field_0']['name']
+		if suminfo['field_1']['name'] != '1445+09900002_0' :
 			rstat = False
-			print 'nfield_1 failed got '+suminfo['header']['field_1']['name']
-		if suminfo['header']['field_2']['name'] != 'N5921_2' :
+			print 'nfield_1 failed got '+suminfo['field_1']['name']
+		if suminfo['field_2']['name'] != 'N5921_2' :
 			rstat = False
-			print 'nfield_2 failed got '+suminfo['header']['field_2']['name']
-		if suminfo['header']['timeref'] != 'TAI' :
+			print 'nfield_2 failed got '+suminfo['field_2']['name']
+		if suminfo['timeref'] != 'TAI' :
 			rstat = False
-			print 'timeref failed got '+suminfo['header']['timeref']
+			print 'timeref failed got '+suminfo['timeref']
 		ms.close()
 		return rstat
 	def flag(self) :
 		rstat = True
 		print "Starting flagging verification"
-		flagsummary = flagdata2('ngc5921.ms',summary=True)
+		flagsummary = tflagdata('ngc5921.ms',mode='summary')
 		if(flagsummary['flagged'] != 203994) :
 		   rstat = false
 		   print 'flagged failed got ', flagsummary['flagged'], ' expected 203994'
@@ -137,9 +137,11 @@ pipeline.fill['listobs']['args'] = {'vis':'ngc5921.ms',
 
 pipeline.fill['verify'] = verify.fill
 
-pipeline.flag['tasks'] = ['flagautocorr']
-pipeline.flag['flagautocorr'] = {}
-pipeline.flag['flagautocorr']['args'] = {'vis':'ngc5921.ms'}
+pipeline.flag['tasks'] = ['tflagdata']
+pipeline.flag['tflagdata'] = {}
+pipeline.flag['tflagdata']['args'] = {'vis':'ngc5921.ms',
+									'mode':'manual',
+									'autocorr':True}
 pipeline.flag['verify'] = verify.flag
 
 pipeline.calibrate['tasks'] = ['setjy', 'bandpass', 'gaincal', 'listcal', 'fluxscale', 'applycal', 'applycal', 'split', 'split', 'exportuvfits']

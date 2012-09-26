@@ -301,6 +301,7 @@ traceEvent(1,"Entering imager::defaults",25);
   spwchansels_p.resize();
   flatnoise_p=True;
   freqrange_p.resize();
+  numthreads_p=-1;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -1883,10 +1884,15 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 
   doPointing = applyPointingOffsets;
   doPBCorr = doPointingCorrection;
+////The set below does not seemed to be remembered later in the process it 
+/// under some compiler version so setting a private variable to be used
+/// a negative number means use all that is available
+  numthreads_p= numthreads;
 #ifdef HAS_OMP
   if(numthreads > 0){
-    if(numthreads <= omp_get_max_threads())
+    if(numthreads <= omp_get_max_threads()){
       omp_set_num_threads(numthreads);
+    }
   }
 #endif
   return True;

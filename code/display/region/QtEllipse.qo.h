@@ -1,5 +1,5 @@
 //# QtEllipse.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011,2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -95,6 +95,8 @@ namespace casa {
 
 		// indicates that the user has selected this ellipse...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+		// is this region weakly or temporarily selected?
+		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
 		void updateStateInfo( bool region_modified, Region::RegionChanges change ) { QtRegion::updateStateInfo( region_modified, change ); }

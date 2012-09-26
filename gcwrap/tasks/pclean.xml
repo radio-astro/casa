@@ -170,12 +170,15 @@
 		      <value>channel</value>
 		      <value>frequency</value>
 		      <value>velocity</value>
-		      <!--value>frequency</value>
-		      <value>velocity</value>
-		      <value>mfs</value-->
+		      <value>mfs</value>
 		    </allowed>
 		</param>
+		<param type="int" name="nterms" subparam="true">
+			<description>number of terms for multifrequency synthesis</description>
+			<value>1</value>
+		</param>
 
+		
 		<param type="any" name="start" subparam="true">
 			<description>Begin the output cube at the frequency of this channel in the MS in channel number or frequency or velocity</description>
                         <any type="variant"/>
@@ -276,7 +279,12 @@
 		</param>
 		<constraints>
 		  <when param="mode">
-		    <equals type="string" value="continuum"></equals>
+		    <equals type="string" value="continuum">
+		      <default param="nterms"><value>1</value></default>
+		    </equals>
+		    <equals type="string" value="mfs">
+		      <default param="nterms"><value>1</value></default>
+		    </equals>
 		    <equals type="string" value="cube">
 		      <default param="start"><value type="int">0</value></default>
 		      <default param="nchan"><value>2</value></default>
@@ -336,8 +344,8 @@
 		   </equals>
 		 </when>
 		 <when param="alg">
-		   <equals type="string" value="hogbom"/>
 		   <equals type="string" value="clark"/>
+		   <equals type="string" value="hogbom"/>
 		   <equals type="string" value="multiscale">
 		     <default param="scales"><value type="intArray"><value>1</value></value></default>
 		   </equals>     
@@ -385,8 +393,7 @@
                example: imagename='m2', output images are:
                  m2.image; cleaned and restored image
                            With or without primary beam correction
-                 m2dirty.image; dirty image
-                 m2psf.image; point-spread function (dirty beam)
+                 m2.psf; point-spread function (dirty beam)
                  m2.model; image of clean components
                  m2.mask; image containing clean regions, when interative=True
 

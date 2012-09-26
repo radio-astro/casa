@@ -158,6 +158,7 @@ def request_from_JPL(objnam, enddate,
                      startdate=None,
                      date_incr=None,
                      get_axis_orientation=None,
+                     get_axis_ang_orientation=None,
                      get_sub_long=None,
                      obsloc="",
                      return_address=None,
@@ -197,6 +198,11 @@ def request_from_JPL(objnam, enddate,
         disk as an ellipse, but it is often unavailable.
         True or False
         Defaults to whether or not objnam is in should_have_orientation.
+    get_axis_ang_orientation:
+        Request the angular orientation (position angle and angular distance from 
+        sub-observer point) of the object's polar axis relative to the line
+        of sight.
+        True or False (by default it is included)
     get_sub_long:
         Request the planetographic (geodetic) longitudes and latitudes of the
         subobserver and sub-Solar points.  Only needed if the object has
@@ -311,6 +317,8 @@ def request_from_JPL(objnam, enddate,
         quantities.append(15)
     if not get_sep:
         quantities.remove(12)
+    if not get_axis_ang_orientation:
+        quantities.remove(17)
     print "Retrieved quantity code list=",quantities
 
     # It seems that STEP_SIZE must be an integer, but the unit can be changed

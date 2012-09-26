@@ -35,6 +35,7 @@ set( PYTHON_MODULES
      ${PYTHONDIR}/opacity.py
      ${PYTHONDIR}/parameters.py
 #     ${PYTHONDIR}/plotter2.py
+     ${PYTHONDIR}/sbseparator.py
      ${PYTHONDIR}/scantable.py
      ${PYTHONDIR}/selector.py
      ${PYTHONDIR}/simplelinefinder.py

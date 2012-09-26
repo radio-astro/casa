@@ -730,15 +730,13 @@ casac::record* calibrater::fluxscale(
 
     IPosition oStart( 2, 0, 0 );
     IPosition oEnd( 2, uiNumSPW-1, 0 );
-
     for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
       oStart(1)=oEnd(1)=t;
-
-      if (allNE(oFluxD.numSol(oStart,oEnd),-1)) {
+      //if (allNE(oFluxD.numSol(oStart,oEnd),-1)) {
+      if (anyNE(oFluxD.numSol(oStart,oEnd),-1)) {
 	
 	Record oSubRecord;
-	
 	oSubRecord.define( "fieldName", oFieldName[t] );
 	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
 	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));

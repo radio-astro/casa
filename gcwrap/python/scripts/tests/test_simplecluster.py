@@ -420,7 +420,7 @@ class test_applycal_mms(test_simplecluster):
     def setUp(self):
         self.vis = "ngc5921.applycal.mms"
         self.ref = "ngc5921.split.mms"
-        self.aux = ["ngc5921.fluxscale", "ngc5921.bcal"]
+        self.aux = ["ngc5921.fluxscale", "ngc5921.gcal", "ngc5921.bcal"]
         
         if os.path.exists(self.vis):
             print "The MMS is already in the working area, deleting ..."
@@ -461,37 +461,11 @@ class test_applycal_mms(test_simplecluster):
         for file in self.aux:
             os.system('rm -rf ' + file)         
         
-    def test1_applycal_scratchless_mode_single_model(self):
-        """Test 1: Set vis model header one single fields and apply calibration"""
+    def test1_applycal_fluxscale_gcal_bcal(self):
+        """Test 1: Apply calibration using fluxscal gcal and bcal tables"""
 
-        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
-        
-        # select the fields for 1445+099 and N5921
-        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
-                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
-        
-        # Now for completeness apply 1331+305 to itself
-        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
-                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
-        
-        compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
-        
-        self.assertTrue(compare)
-        
-    def test2_applycal_scratch_mode_single_model(self):
-        """Test 2: Set MODEL_DATA in one single field and apply calibration"""
-
-        retval = setjy(vis=self.vis, field='1331+305*',modimage = '',standard='Perley-Taylor 99',scalebychan=False,usescratch=True)
-        self.assertTrue(retval, "setjy run failed")
-        
-        # select the fields for 1445+099 and N5921
-        applycal(vis=self.vis,field="1,2",spw="",intent="",selectdata=False,gaintable=self.aux,
-                 gainfield=['1', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)
-        
-        # Now for completeness apply 1331+305 to itself
-        applycal(vis=self.vis,field="0",spw="",intent="",selectdata=False,gaintable=self.aux,
-                 gainfield=['0', '*'],interp=['linear', 'nearest'],spwmap=[],gaincurve=False,opacity=0.0)       
+        applycal(vis=self.vis,field='',spw='',selectdata=False,gaintable=self.aux,
+                 gainfield=['nearest','nearest','0'],interp=['linear', 'linear','nearest'],spwmap=[],gaincurve=False,opacity=0.0)
         
         compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
         

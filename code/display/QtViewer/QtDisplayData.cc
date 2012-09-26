@@ -193,22 +193,11 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		// for ( int i = 0; i < regions.size( ); ++i ) {
 		// 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
 		// }
-		if ( regrid_to && method != "" ) {
-		    // regrid new image to match the one provided...
-		    ImageAnalysis ia(im_);
-		    // need an option to delete temporary files on exit...
-		    std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
-		    panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
-		    ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
-		    std::auto_ptr<ImageInterface<Float> > imptr(im_);
-		    im_ = newim;
-	      }
 
-    		  } else if(imagePixelType(path_)==TpComplex) {
-    			  cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);  }
-    		  else  throw AipsError("Only Float and Complex CASA images "
-			          "are supported at present.");
-    		  break;
+	    } else if(imagePixelType(path_)==TpComplex) {
+		cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);  }
+	    else  throw AipsError( "Only Float and Complex CASA images are supported at present.");
+	    break;
     	  }
     	  case ImageOpener::FITS: {
     		  FITSImgParser fip = FITSImgParser(tmp_path);
@@ -235,7 +224,21 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     		  throw AipsError("Only casa, FITS and MIRIAD images are supported.");
     	  }
     	  }
-    	  if(im_==0 && cim_==0) throw AipsError("Couldn't create image.");
+
+	  if ( im_ != 0 ) {
+		if ( regrid_to && method != "" ) {
+		    // regrid new image to match the one provided...
+		    ImageAnalysis ia(im_);
+		    // need an option to delete temporary files on exit...
+		    std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
+		    panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
+		    ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
+		    std::auto_ptr<ImageInterface<Float> > imptr(im_);
+		    im_ = newim;
+		}
+	  } else if ( cim_ == 0 ) {
+		throw AipsError("Couldn't create image.");
+	  }
       }
       else {
     	  // Parse LEL expression to create expression-type ImageInterface.

@@ -3480,6 +3480,11 @@ void SolvableVisCal::storeNCT() {
 
   if (prtlev()>3) cout << " SVC::storeNCT()" << endl;
 
+  // Escape from attempt to write to an empty name,
+  //  because this may delete more than one wants
+  if (calTableName().empty())
+    throw(AipsError("Empty string provided for caltable name; this is not allowed."));
+
   // If append=T and the specified table exists...
   if (append() && Table::isReadable(calTableName())) {
 
@@ -3566,7 +3571,7 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
     //    mss.reset(cti,MSSelection::PARSE_LATE,"","",field);
     mss.setFieldExpr(field);
     TableExprNode ten=mss.toTableExprNode(&cti);
-    cout << "Selected field list: " << mss.getFieldList() << endl;
+    //cout << "Selected field list: " << mss.getFieldList() << endl;
 
     // Apply selection to table
     try {
@@ -4445,6 +4450,13 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
 
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
+
   // VisBuffer indices
   Double* time=  vb.time().data();
   Int*    a1=    vb.antenna1().data();
@@ -4604,6 +4616,13 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
   // Nominal synchronization of dJs
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
 
   // VisBuffer indices
   Double* time=  vb.time().data();

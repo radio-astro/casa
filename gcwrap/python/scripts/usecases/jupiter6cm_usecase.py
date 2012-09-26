@@ -298,11 +298,13 @@ listobs()
 # 
 # Get rid of the autocorrelations from the MS
 #
-print '--Flagautocorr--'
+print '--Flag auto-correlations--'
 
-# Don't default this one either
-
-flagautocorr()
+default(tflagdata)
+vis = msfile
+mode = 'manual'
+autocorr = True
+tflagdata()
 
 #
 #=====================================================================
@@ -535,42 +537,30 @@ flagmanager()
 # You can use Flagdata to explicitly clip the data also
 #
 print '--Flagdata--'
-default('flagdata')
+default('tflagdata')
 
 vis = msfile
 
 
 # Set some clipping regions
-mode = 'manualflag'
+mode = 'clip'
 clipcolumn = 'DATA'
 clipoutside = False 
 
 # Clip calibraters
 field = '1331+305'
-clipexpr = 'ABS RR'
+correlation = 'ABS_RR,LL'
 clipminmax = [0.0,0.75]
-flagdata()
+tflagdata()
 
-clipexpr = 'ABS LL'
-clipminmax = [0.0,0.75]
-flagdata()
-
-clipexpr = 'ABS RL'
+correlation = 'ABS_RL,LR'
 clipminmax = [0.0,0.055]
-flagdata()
-
-clipexpr = 'ABS LR'
-clipminmax = [0.0,0.055]
-flagdata()
+tflagdata()
 
 field = '0137+331'
-clipexpr = 'ABS RR'
+correlation = 'ABS_RR,LL'
 clipminmax = [0.0,0.55]
-flagdata()
-
-clipexpr = 'ABS LL'
-clipminmax = [0.0,0.55]
-flagdata()
+tflagdata()
 
 # You can also do the antenna edits on 0137+331 and JUPITER
 # with flagdata

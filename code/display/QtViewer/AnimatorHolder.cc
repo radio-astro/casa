@@ -41,6 +41,7 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	backgroundColor = pal.color( QPalette::Background );
 
 	animatorChannel = new AnimatorWidget( ui.channelGroupBox );
+	animatorChannel->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 	animatorChannel->setModeEnabled( false );
 	QHBoxLayout* layoutChannel = new QHBoxLayout();
 	layoutChannel->setContentsMargins( 2,2,2,2 );
@@ -50,6 +51,7 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	connect( ui.channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
 
 	animatorImage = new AnimatorWidget( ui.imageGroupBox );
+	animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 	animatorImage->setModeEnabled( false );
 	QHBoxLayout* layoutImage = new QHBoxLayout();
 	layoutImage->setContentsMargins( 2,2,2,2 );

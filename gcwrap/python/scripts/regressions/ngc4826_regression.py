@@ -80,14 +80,14 @@ setjy(vis='n4826_22apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=Fal
 setjy1time=time.time()
 ## Flag bad data non-interactively
 print '--flag data - 22apr97--'
-default('flagdata')
+default('tflagdata')
 #flagdata(vis="n4826_22apr.ms",
 #	 antennaid=-1,baseline=[-1],chans=[-1],
 #	 clipfunction="ABS",clipcorr="YY",
 #	 clipminmax=[0.0, 80.0],
 #	 fieldid=-1,field="",spwid=-1,timerange="",unflag=False)
-flagdata(vis="n4826_22apr.ms", mode='manualflag',
-                clipexpr='ABS YY',
+tflagdata(vis="n4826_22apr.ms", mode='clip',
+                correlation='ABS_YY',
                 clipminmax=[0.0,80.0],
                 clipoutside=True)
 #setclip=["ABS YY",[0.0, 80.0],True])
@@ -188,9 +188,9 @@ setjy(vis='n4826_16apr.ms',field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=Fal
 setjy2time=time.time()
 ## Flag end channels
 print '--flagdata - 16apr98 --'
-default('flagdata')
+default('tflagdata')
 #flagdata(vis='n4826_16apr.ms',chans=[0,1,62,63],spwid=[2,3,4,5],fieldid=-1)
-flagdata(vis='n4826_16apr.ms',spw='2~5:0;1;62;63', mode='manualflag')
+tflagdata(vis='n4826_16apr.ms',spw='2~5:0;1;62;63', mode='manual')
 flagdata2time=time.time()
 ## Derive gain calibration solutions, try VLA-like calibration:
 print '--gaincal - 16apr98 --'
@@ -245,14 +245,13 @@ split2time=time.time()
 #	 fieldid=[-1],field="",spwid=-1,
 #	 timerange=['16-APR-1998/09:42:39.0', '16-APR-1998/10:24:46.0'],
 #	 unflag=False)
-default('flagdata')
-flagdata(vis="srca.split.ms", mode='manualflag',
+default('tflagdata')
+tflagdata(vis="srca.split.ms", mode='clip',
 	 antenna='5',
-         clipexpr="ABS I",
+         correlation="ABS_I",
          clipminmax=[0.0,0.0],
          clipoutside=True,
-	 timerange='1998/04/16/09:42:39.0~1998/04/16/10:24:46.0',
-	 unflag=False)
+	 timerange='1998/04/16/09:42:39.0~1998/04/16/10:24:46.0')
 #setclip=["ABS I",[0.0,0.0],True],
 
 ## Image the calibrater data:

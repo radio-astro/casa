@@ -135,7 +135,7 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             myms.close()
             # jagonzal (CAS-4113): Take care of the trivial parallelization
             if not split_result:
-                casalog.post("%s does not have data for spw=%s, field=%s, bailing out!" % (vis,tempspw,field),'SEVERE')
+                casalog.post("NullSelection: %s does not have data for spw=%s, field=%s, bailing out!" % (vis,tempspw,field),'SEVERE')
                 shutil.rmtree(csvis)
                 return False
         else:

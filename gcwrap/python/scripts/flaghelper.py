@@ -367,7 +367,8 @@ def readXML(sdmfile, mytbuff):
         rowname = rownode.getElementsByTagName('name')
         ant = str(rowname[0].childNodes[0].nodeValue)
         rowid = rownode.getElementsByTagName('antennaId')
-        antid = str(rowid[0].childNodes[0].nodeValue)
+        # CAS-4532: remove spaces between content and tags
+        antid = str(rowid[0].childNodes[0].nodeValue).strip()
         antdict[antid] = ant
     casalog.post('Found ' + str(rowlist.length)
                  + ' antennas in Antenna.xml')
@@ -380,7 +381,8 @@ def readXML(sdmfile, mytbuff):
         ispw = 0
         for rownode in rowlist:
             rowid = rownode.getElementsByTagName('spectralWindowId')
-            spwid = str(rowid[0].childNodes[0].nodeValue)
+            # CAS-4532: remove spaces between content and tags
+            spwid = str(rowid[0].childNodes[0].nodeValue).strip()
             spwdict[spwid] = {}
             spwdict[spwid]['index'] = ispw
             # SMC: 6/3/2012 ALMA SDM does not have name

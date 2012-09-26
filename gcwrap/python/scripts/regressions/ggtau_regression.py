@@ -24,7 +24,7 @@ clearcal('ggtau_07feb97.ms')
 copytime=time.time()
 
 print '--Flag data--'
-default('flagdata')
+default('tflagdata')
 
 # Setup four flagging specifications:
 #
@@ -36,17 +36,22 @@ default('flagdata')
 
 # Flag spec. 1          2          3          4
 
-field   = ['0,1,3',   '0',       '3',       '3'      ]
-spw     = ['2:31~32', '2:33~34', '2:34~37', '2:34~37']
-antenna = ['',        '',        '1&3',     '2&4'    ]
+#field   = ['0,1,3',   '0',       '3',       '3'      ]
+#spw     = ['2:31~32', '2:33~34', '2:34~37', '2:34~37']
+#antenna = ['',        '',        '1&3',     '2&4'    ]
 
-# Use flagdata() in vector mode
-vis='ggtau_07feb97.ms'
-mode='manualflag'
+# Use tflagdata() in list mode
+vis = 'ggtau_07feb97.ms'
+mode = 'list'
+cmd = ["field='0,1,3' spw='2:31~32'",
+	   "field='0' spw='2:33~34'",
+	   "field='3' antenna='1&3' spw='2:34~37'",
+	   "field='3' antenna='2&4' spw='2:34~37'"]
+inpfile = cmd
 
-flagdata()
+tflagdata()
 
-# It is equivalent to call flagdata() four times but slower
+# It is equivalent to call tflagdata() four times but slower
 #flagdata(vis='ggtau_07feb97.ms',field='0,1,3',spw='2:31~32')
 #flagdata(vis='ggtau_07feb97.ms',field='0',spw='2:33~34')
 #flagdata(vis='ggtau_07feb97.ms',field='3',antenna='1&3',spw='2:34~37')

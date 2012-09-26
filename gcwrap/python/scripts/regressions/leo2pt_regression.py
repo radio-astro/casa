@@ -119,7 +119,10 @@ fillsize = float( fstr.split("\t")[0] )
 # Now flag on the unaveraged data
 #
 print '---Flagdata (Off-source timeranges)---'
-flagdata(vis='leo2pt_regression.ms',mode='manualflag',field=['0','4'],timerange=['<10:52:02','13:44:38~13:47:57'])
+cmd = ["field='0' timerange='<10:52:02'",
+       "field='4' timerange='13:44:38~13:47:57'"]
+tflagdata(vis='leo2pt_regression.ms',mode='list', inpfile=cmd)
+#flagdata(vis='leo2pt_regression.ms',mode='manualflag',field=['0','4'],timerange=['<10:52:02','13:44:38~13:47:57'])
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('flagtime')
@@ -127,7 +130,9 @@ prevTime = currTime
 
 # Antenna 5, 15 supposedly bad
 print '---Flagdata (bad antennas)---'
-flagdata(vis='leo2pt_regression.ms',mode='manualflag',antenna=['ea05','ea15'])
+cmd = ["antenna='ea05'","antenna='ea15'"]
+tflagdata(vis='leo2pt_regression.ms',mode='list', inpfile=cmd)
+#flagdata(vis='leo2pt_regression.ms',mode='manualflag',antenna=['ea05','ea15'])
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('flagants')
@@ -135,7 +140,7 @@ prevTime = currTime
 
 #
 print '---Flagdata (quack)---'
-flagdata(vis='leo2pt_regression.ms',mode='quack',quackinterval=20.0)
+tflagdata(vis='leo2pt_regression.ms',mode='quack',quackinterval=20.0)
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('quack')
@@ -143,8 +148,9 @@ prevTime = currTime
 
 #
 print '---Flagdata (clip zeroes)---'
-flagdata(vis='leo2pt_regression.ms',mode='manualflag',clipminmax=[0.0,1.0E-8],clipoutside=F,clipexpr='ABS RR')
-flagdata(vis='leo2pt_regression.ms',mode='manualflag',clipminmax=[0.0,1.0E-8],clipoutside=F,clipexpr='ABS LL')
+tflagdata(vis='leo2pt_regression.ms',mode='clip', clipzeros=True, clipoutside=False, correlation='ABS_RR,LL')
+#flagdata(vis='leo2pt_regression.ms',mode='manualflag',clipminmax=[0.0,1.0E-8],clipoutside=F,clipexpr='ABS RR')
+#flagdata(vis='leo2pt_regression.ms',mode='manualflag',clipminmax=[0.0,1.0E-8],clipoutside=F,clipexpr='ABS LL')
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('clipdata')

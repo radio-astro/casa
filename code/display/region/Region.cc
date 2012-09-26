@@ -266,7 +266,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 	    setDrawingEnv( );
-	    drawRegion( (! other_selected && selected( )) || marked( ) );
+	    drawRegion( (! other_selected && selected( )) || marked( ) || weaklySelected( ) );
 	    //if (draw_center_) cout << "center drawn" << endl; else cout << "center NOT drawn" << endl;
 	    resetDrawingEnv( );
 

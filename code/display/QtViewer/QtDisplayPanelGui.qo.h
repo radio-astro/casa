@@ -504,6 +504,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
+  void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
   void updateFrameInformation();

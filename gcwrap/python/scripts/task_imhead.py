@@ -91,6 +91,9 @@ import os
 
 from taskinit import *
 
+not_known = ' Not Known '
+
+
 # TODO Holy moly is this code screaming to be refactored.
 
 
@@ -129,7 +132,6 @@ def imhead(
             myia.open(imagename)
             myia.history()
             myia.done()
-            # print "History information is listed in logger"
             return True
     except Exception, instance:
         casalog.post(str('*** Error ***') + str(instance), 'SEVERE')
@@ -146,7 +148,6 @@ def imhead(
             myia.open(imagename)
             myia.summary(verbose=verbose)
             myia.done()
-            # print "Summary information is listed in logger"
             return True
     except Exception, instance:
         casalog.post(str('*** Error ***') + str(instance), 'SEVERE')
@@ -219,15 +220,11 @@ def imhead(
     #   type:     "Not Known"
     #   unit:     ""
     #   comment:  ""
-    not_known = ' Not Known '
     for hd_field in hd_keys:
         hd_values[hd_field] = not_known
         hd_types[hd_field] = not_known
         hd_units[hd_field] = ''
         hd_comments[hd_field] = ''
-
-    # #print " HEADER KEYS: ", hd_keys
-    # #print " HEADER VALUES: ", hd_values
 
     # ############################################################
     #            Read the header contents.
@@ -277,56 +274,13 @@ def imhead(
     misc_info = {}
     data_unit = ''
     try:
-        ia.open(imagename)
-        hd_dict = ia.summary(list=False)
-        stats = ia.statistics(verbose=False, list=False)
-        csys = ia.coordsys()
-        misc_info = ia.miscinfo()
-        data_unit = ia.brightnessunit()
-        ia.done()
+        myia.open(imagename)
+        csys = myia.coordsys()
+        myia.done()
     except Exception, instance:
-        casalog.post(str('*** Error *** Unable to open image file ')
+        casalog.post(str('*** Error *** Unable to get coordinate syatem info ')
                      + imagename, 'SEVERE')
-        casalog.post(str('              Python error: ')
-                     + str(instance), 'SEVERE')
-        return False
-
-    # Add the Statistical information as follows:
-    #    DATAMIN, DATAMAX, MINPIX, MINPIXPOS, MAXPOS, MAXPIXPOS
-
-    # Store the MIN and MAX values.
-    if stats.has_key('min'):
-        hd_values['datamin'] = stats['min'][0]
-        hd_types['datamin'] = 'double'
-        hd_units['datamin'] = data_unit
-        hd_comments['datamin'] = ''
-    if stats.has_key('minposf'):
-        hd_values['minpos'] = stats['minposf']
-        hd_types['minpos'] = 'list'
-        hd_units['minpos'] = ''
-        hd_comments['minpos'] = ''
-    if stats.has_key('minpos'):
-        hd_values['minpixpos'] = stats['minpos']
-        hd_types['minpixpos'] = 'list'
-        hd_units['minpixpos'] = 'pixels'
-        hd_comments['minpixpos'] = ''
-
-    if stats.has_key('max'):
-        hd_values['datamax'] = stats['max'][0]
-        hd_types['datamax'] = 'double'
-        hd_units['datamax'] = data_unit
-        hd_comments['datamax'] = ''
-    if stats.has_key('maxposf'):
-        hd_values['maxpos'] = stats['maxposf']
-        hd_types['maxpos'] = 'list'
-        hd_units['maxpos'] = ''
-        hd_comments['maxpos'] = ''
-    if stats.has_key('maxpos'):
-        hd_values['maxpixpos'] = stats['maxpos']
-        hd_types['maxpixpos'] = 'list'
-        hd_units['maxpixpos'] = 'pixels'
-        hd_comments['maxpixpos'] = ''
-
+        raise instance
     # Find some of the general information from COORD SYS object:
     #     OBSERVER, TELESCOPE, RESTFREQUENCY, PROJECTION, EPOCH, and
     #     EQUINOX
@@ -337,7 +291,6 @@ def imhead(
         hd_comments['observer'] = ''
     except:
         no_op = 'noop'
-
     try:
         hd_values['telescope'] = csys.telescope()
         hd_types['telescope'] = 'string'
@@ -397,7 +350,62 @@ def imhead(
         hd_comments['date-obs'] = ''
     except:
         no_op = 'noop'
+        
+    # yeah the code sucks this way, but when one is given a pile of
+    # crap to maintain, this is what happens.
+    if mode == "get" and hd_values.has_key(hdkey) and hd_values[hdkey] != not_known:
+        return _doget(hd_values.keys(), hdkey, hd_values, hd_types, hd_units)
+    
+    try:
+        myia.open(imagename)
+        hd_dict = myia.summary(list=False)
+        stats = myia.statistics(verbose=False, list=False)
+        misc_info = myia.miscinfo()
+        data_unit = myia.brightnessunit()
+        myia.done()
+    except Exception, instance:
+        casalog.post(str('*** Error *** Unable to open image file ')
+                     + imagename, 'SEVERE')
+        casalog.post(str('              Python error: ')
+                     + str(instance), 'SEVERE')
+        return False
+    # Add the Statistical information as follows:
+    #    DATAMIN, DATAMAX, MINPIX, MINPIXPOS, MAXPOS, MAXPIXPOS
 
+    # Store the MIN and MAX values.
+    if stats.has_key('min'):
+        hd_values['datamin'] = stats['min'][0]
+        hd_types['datamin'] = 'double'
+        hd_units['datamin'] = data_unit
+        hd_comments['datamin'] = ''
+    if stats.has_key('minposf'):
+        hd_values['minpos'] = stats['minposf']
+        hd_types['minpos'] = 'list'
+        hd_units['minpos'] = ''
+        hd_comments['minpos'] = ''
+    if stats.has_key('minpos'):
+        hd_values['minpixpos'] = stats['minpos']
+        hd_types['minpixpos'] = 'list'
+        hd_units['minpixpos'] = 'pixels'
+        hd_comments['minpixpos'] = ''
+
+    if stats.has_key('max'):
+        hd_values['datamax'] = stats['max'][0]
+        hd_types['datamax'] = 'double'
+        hd_units['datamax'] = data_unit
+        hd_comments['datamax'] = ''
+    if stats.has_key('maxposf'):
+        hd_values['maxpos'] = stats['maxposf']
+        hd_types['maxpos'] = 'list'
+        hd_units['maxpos'] = ''
+        hd_comments['maxpos'] = ''
+    if stats.has_key('maxpos'):
+        hd_values['maxpixpos'] = stats['maxpos']
+        hd_types['maxpixpos'] = 'list'
+        hd_units['maxpixpos'] = 'pixels'
+        hd_comments['maxpixpos'] = ''
+
+    
     # Set some more of the standard header keys from the
     # header dictionary abtained from ia.summary().  The
     # fiels that will be set are:
@@ -452,7 +460,6 @@ def imhead(
     stokes = 'Not Known'
     if isinstance(axes[3][0], int):
         stokes = csys.stokes()
-    # print "GETTING COORD INFO"
     hd_coordtypes = []
     for i in range(hd_dict['ndim']):
         hd_values['ctype' + str(i + 1)] = hd_dict['axisnames'][i]
@@ -469,8 +476,6 @@ def imhead(
         hd_units['cdelt' + str(i + 1)] = hd_dict['axisunits'][i]
         hd_types['cdelt' + str(i + 1)] = 'float'
         hd_values['cunit' + str(i + 1)] = hd_dict['axisunits'][i]
-
-    # print "HD_VALUES ctype3: ", hd_values['ctype3']
 
     # Add the miscellaneous info/keywords
     # TODO add some some smarts to figure out the type
@@ -492,7 +497,6 @@ def imhead(
     casalog.post(str(hd_units), 'DEBUG2')
     casalog.post(str(hd_comments), 'DEBUG2')
 
-    # print "DONE GETTING HDR INFO"
     # ############################################################
     #                     FITS MODE
     #
@@ -583,7 +587,6 @@ def imhead(
             if csys != None:
                 csys.done()
                 del csys
-            # print "List information displayed in the logger"
             return hd_values
         except Exception, instance:
 
@@ -610,24 +613,15 @@ def imhead(
                      ), 'WARN')
         mode = 'put'
 
-    # print "MODE IS: ", mode
     if mode == 'add':
         if hdkey in tbkeys:
-            # print "ADDING A TABLE KEY"
             try:
                 # We are dealing with having to add to the table columns.
                 tb.open(imagename, nomodify=False)
-                # print "COLUMNS KEYS: ", tbColumns.keys()
-                # print "image info KEYS: ", tbColumns['imageinfo'].keys()
-                # keys = tb.getkeywords()
-                # print "HDKEY: ", hdkey
-                # print "HDVALUE: ", hdvalue
                 if hdkey == 'imtype':
                     tbColumns['imageinfo']['imagetype'] = hdvalue
                 else:
-                    # print "ADDED IMTYPE: ", hdvalue, "  ", tbColumns['imageinfo']['imagetype']
                     tbColumns['imageinfo']['objectname'] = hdvalue
-                    # print "ADDED IMTYPE: ", hdvalue, "  ", tbColumns['imageinfo']['imagetype']
                 tb.putkeywords(tbColumns)
                 tb.close()
                 casalog.post(hdkey + ' keyword has been ADDED to '
@@ -662,8 +656,6 @@ def imhead(
             # this keyword.  Since these keywords are known by
             # by the coordsys tool, it is sufficent to change
             # to "put" mode and update the field.
-            # print "HERE IN ADD"
-            # print "VALUE IS: ", hdvalue
             if hdkey == 'masks':
                 casalog.post('imhead does not add masks to images, this is to complex a task\n use the "makemask" task to add masks'
                              , 'WARN')
@@ -683,8 +675,6 @@ def imhead(
                 # one.  The default is the string stored in hd_types
                 # if there isn't a value then str is used.
                 value = hdvalue
-                # print 'hdtype IS: ', type(hdtype)
-                # print 'hdtype IS: ', hdtype
                 keytype = 'str'
                 if type(hdtype) != None and len(hdtype) > 0:
                     keytype = hdtype
@@ -708,22 +698,18 @@ def imhead(
                     keytype = 'float'
                 if keytype == 'string':
                     keytype = 'str'
-                # print "KEY TYPE: ", keytype
 
-                # print "VALUE TYPE IS: ", type(value)
                 # TODO -- Add a check to see if we really need
                 #        to do the type conversion.
-                # print "eval( ",keytype, "(",str( value ),")"
                 if isinstance(value, str):
                     value = eval(keytype + '("' + value + '")')
                 else:
                     value = eval(keytype + '("' + str(value) + '")')
 
-                # print "VALUE IS: ", value
                 misc_info[hdkey] = value
-                ia.open(imagename)
-                ia.setmiscinfo(misc_info)
-                ia.done()
+                myia.open(imagename)
+                myia.setmiscinfo(misc_info)
+                myia.done()
                 casalog.post(hdkey + ' keyword has been ADDED to '
                              + imagename + "'s header with value "
                              + str(value), 'NORMAL')
@@ -758,11 +744,8 @@ def imhead(
                     if (tbColumns['imageinfo'].has_key('objectname')):
                         tbColumns['imageinfo'].pop('objectname')
                 else:
-                    # print "REMOVING IMAGE TYPE FROM HDR"
                     tbColumns['imageinfo'].has_key('imagetype')
                     tbColumns['imageinfo'].pop('imagetype')
-                # print "Keys in TABLES: ", tbColumns.keys()
-                # print "KEYS in IMAGE INFO: ", tbColumns['imageinfo'].keys()
                 tb.putcolkeywords(columnname="", value=tbColumns)
                 tb.flush()
                 tb.done()
@@ -792,16 +775,16 @@ def imhead(
                 if hdkey.startswith('beam'):
                     # We don't actually remove the beam information, we
                     # instead set it to the default information.
-                    ia.open(imagename)
-                    ia.setrestoringbeam(remove=True)
-                    ia.done()
+                    myia.open(imagename)
+                    myia.setrestoringbeam(remove=True)
+                    myia.done()
                     casalog.post('The restoring beam has been removed from '
                                   + imagename, 'NORMAL')
                     return True
                 elif hdkey.startswith('mask'):
-                    ia.open(imagename)
-                    ia.maskhandler(op='delete', name=hdvalue)
-                    ia.done()
+                    myia.open(imagename)
+                    myia.maskhandler(op='delete', name=hdvalue)
+                    myia.done()
                     casalog.post('Mask ' + hdvalue
                                  + ' has been removed from '
                                  + imagename, 'NORMAL')
@@ -837,9 +820,9 @@ def imhead(
                 value = hdvalue
                 if misc_info.has_key(hdkey):
                     junk = misc_info.pop(hdkey)
-                ia.open(imagename)
-                ia.setmiscinfo(misc_info)
-                ia.done()
+                myia.open(imagename)
+                myia.setmiscinfo(misc_info)
+                myia.done()
                 casalog.post(hdkey + ' keyword has been ADDED to '
                              + imagename + "'s header with value "
                              + str(value), 'NORMAL')
@@ -852,58 +835,8 @@ def imhead(
                              + str(instance), 'SEVERE')
                 return False
 
-    # ############################################################
-    #                     get MODE
-    #
-    # Just #print out the requested information. Note that we
-    # acquired all of the header details, which is not very
-    # efficient for get, but it does make the code cleaner!
-    # Getting the min/max values can take some time to
-    # calculate, and it might be worthwhile doing this step
-    # only if we are getting them.
-    # ############################################################
-    # print "IN KEYLIST: ", key_list.count( hdkey )
-    # print "IN VALUE LIST: ", hd_values.has_key( hdkey )
-    if mode == 'get' and key_list.count(hdkey) < 1:
-        # The Keyword is not in the header, nothing to GET!!!
-        casalog.post(hdkey
-                     + str(' is NOT in the header unable to "get" its value.'
-                     ), 'SEVERE')
-        return False
-    if mode == 'tet' and str(hd_values[hdkey]) == not_known:
-        # This is a standard header keyword but we don't have a value
-        # for it so we return "not_known"
-        return {'unit': not_known, 'value': not_known}
-
-    if mode == 'get':
-        retValue = ''
-        msg = ''
-        # print "TYPE:  ", hd_types[hdkey]
-        # print "VALUE: ", hd_values[hdkey]
-        if len(str(hd_types[hdkey])) < 1 or str(hd_types[hdkey]) \
-            == not_known:
-            retValue = str(hd_values[hdkey])
-        elif str(hd_types[hdkey]) == 'list':
-            retValue = hd_values[hdkey]
-        else:
-            keytype = str(hd_types[hdkey])
-            if keytype == 'double':
-                keytype = 'float'
-            if keytype == 'string':
-                keytype = 'str'
-            # print keytype+'("'+str( hd_values[hdkey] )+'")'
-            retValue = eval(keytype + '("' + str(hd_values[hdkey])
-                            + '")')
-
-        retValue = {'unit': hd_units[hdkey], 'value': retValue}
-        # print "RETURNING: ", retValue
-        msg = 'Value of Header Key ' + hdkey + ' is:' + str(retValue)
-        if len(hd_units) > 0:
-            msg = msg + ' ' + str(hd_units[hdkey])
-
-        casalog.post(msg, 'NORMAL')
-        return retValue
-
+    if mode == "get":
+        return _doget(key_list, hdkey, hd_values, hd_types, hd_units)
     # ############################################################
     #                     put MODE
     #
@@ -956,18 +889,18 @@ def imhead(
         try:
             # These are field that can be set with the image
             # analysis tool
-            ia.open(imagename)
+            myia.open(imagename)
             if hdkey == 'bunit':
-                ia.setbrightnessunit(hdvalue)
+                myia.setbrightnessunit(hdvalue)
             elif hdkey == 'masks':
 
                 # We only set the default mask to the first mask in
                 # the list.
                 # TODO delete any masks that aren't in the list.
                 if type(hdvalue, list):
-                    ia.maskhanderler(op='set', name=hdvalue[0])
+                    myia.maskhanderler(op='set', name=hdvalue[0])
                 else:
-                    ia.maskhanderler(op='set', name=hdvalue)
+                    myia.maskhanderler(op='set', name=hdvalue)
             elif hdkey.startswith('beam'):
 
                 # Get orignal values.  Note that since there are
@@ -976,16 +909,12 @@ def imhead(
                 #
                 # TODO IF NOT A LIST BUT A STRING CHECK FOR
                 # UNITS
-                # if ( hd_values.has_key( 'beammajor' ) ):
-                #    print "MAJOR ", hd_values['beammajor']
-                # else:
-                #    print "MAJOR NOT KNOWN"
+               
 
                 major = {'unit': 'arcsec', 'value': 1}
                 if str(hd_values['beammajor']) != not_known:
                     major = {'value': hd_values['beammajor'],
                              'unit': hd_units['beammajor']}
-                # print "MAJOR", major
 
                 minor = {'unit': 'arcsec', 'value': 1}
                 if str(hd_values['beamminor']) != not_known:
@@ -996,14 +925,12 @@ def imhead(
                 if str(hd_values['beampa']) != not_known:
                     pa = {'value': hd_values['beampa'],
                           'unit': hd_units['beampa']}
-                # print "HDVALUE: ", hdvalue
                 if hdkey == 'beammajor':
                     major = _imhead_strip_units(hdvalue,
                             hd_values['beammajor'], hd_units['beammajor'
                             ])
                     major['value'] = float(major['value'])
                 elif hdkey == 'beamminor':
-                    # print "MAJOR After Parsing: ", major
                     minor = _imhead_strip_units(hdvalue,
                             hd_values['beamminor'], hd_units['beamminor'
                             ])
@@ -1015,9 +942,9 @@ def imhead(
                 else:
                     casalog.post('*** Error *** Unrecognized beam keyword '
                                   + hdkey, 'SEVERE')
-                    ia.done()
+                    myia.done()
                     return False
-                ia.setrestoringbeam(beam={'major': major, 'minor'
+                myia.setrestoringbeam(beam={'major': major, 'minor'
                                     : minor, 'positionangle': pa},
                                     log=True)
             elif hdkey == 'shape':
@@ -1025,10 +952,10 @@ def imhead(
             # CAS-3301
                 casalog.post('*** Error *** imhead does not support changing the shape of the image body. Use the ia tool instead'
                              , 'SEVERE')
-                ia.done()
+                myia.done()
                 return False
 
-            ia.done()
+            myia.done()
             casalog.post(hdkey + ' keyword has been UPDATED to '
                          + imagename + "'s header", 'NORMAL')
             return hdvalue
@@ -1047,8 +974,8 @@ def imhead(
         #
         # Header values that can be changed through the coordsys tool
         try:
-            ia.open(imagename)
-            csys = ia.coordsys()
+            myia.open(imagename)
+            csys = myia.coordsys()
             if hdkey == 'date-obs':
                 if hdvalue == 'Not Known' or hdvalue == 'UNKNOWN':
                     hdvalue = 0
@@ -1064,9 +991,7 @@ def imhead(
                 csys.setconversiontype(spectral=str(hdvalue))
             elif hdkey == 'restfreq':
                 # TODO handle a list of rest frequencies
-                # print "NEW REST FREQUENCY: ", hdvalue, "  ", type(hdvalue)
 
-                # print "HDVALUE: ", hdvalue
                 if isinstance(hdvalue, list):
                     no_op = 'noop'  # Nothing to change here
                 elif not isinstance(hdvalue, str):
@@ -1076,27 +1001,22 @@ def imhead(
                 # Loop through the list of values, adding each
                 # one separately.
 
-                # print "LIST: ", hdvalue
                 if isinstance(hdvalue, str):
                     num_freq = 1
                 else:
                     num_freq = len(hdvalue)
-                # print "NUMBER OF FREQ: ", num_freq
 
                 for i in range(num_freq):
                     if not isinstance(hdvalue[i], str):
                         current = str(hdvalue[i])
                     else:
                         current = hdvalue[i]
-                    # print "CURRENT: ", current
-
                     # Remove any units from the string, if
                     # there are any.
                     parsed_input = _imhead_strip_units(current, 0.0,
                             hd_units[hdkey])
                     parsed_input['value'] = float(parsed_input['value'])
 
-                    # print "Setting rest frequency to: ",parsed_input
                     if i < 1:
                         csys.setrestfrequency(parsed_input)
                     else:
@@ -1107,18 +1027,16 @@ def imhead(
                 return
 
             # Now store the values!
-            # print "SETTING CSYS"
-            ia.setcoordsys(csys=csys.torecord())
-            # print "DONE"
-            ia.done()
+            myia.setcoordsys(csys=csys.torecord())
+            myia.done()
             csys.done()
             del csys
             casalog.post(hdkey + ' keyword has been UPDATED to '
                          + imagename + "'s header", 'NORMAL')
             return hdvalue
         except Exception, instance:
-            if ia.isopen():
-                ia.done()
+            if myia.isopen():
+                myia.done()
             if csys != None:
                 csys.done()
                 del csys
@@ -1130,12 +1048,11 @@ def imhead(
             return False
     elif hdkey[0:5] in crdkeys:
 
-        # print "PROCESSING COORDINATE KEYWORD"
         # Coordinate axes information, changed through the coordsys tool
         try:
             # Open the file and obtain a coordsys tool
-            ia.open(imagename)
-            csys = ia.coordsys()
+            myia.open(imagename)
+            csys = myia.coordsys()
 
             # Find which axis is being modified from the field name
             # (hdkey). Note, that internally we use 0-based
@@ -1295,11 +1212,11 @@ def imhead(
 
             # Store the changed values.
             if csys != None:
-                ia.setcoordsys(csys=csys.torecord())
+                myia.setcoordsys(csys=csys.torecord())
                 csys.done()
                 del csys
 
-            ia.done()
+            myia.done()
             casalog.post(hdkey + ' keyword has been UPDATED in '
                          + imagename + "'s header", 'NORMAL')
             return hdvalue
@@ -1342,16 +1259,15 @@ def imhead(
 
             # TODO -- Add a check to see if we really need
             #        to do the type conversion.
-            # print "eval( ",keytype, "(",str( value ),")"
             if isinstance(value, str):
                 value = eval(keytype + '("' + value + '")')
             else:
                 value = eval(keytype + '("' + str(value) + '")')
 
             misc_info[hdkey] = value
-            ia.open(imagename)
-            ia.setmiscinfo(misc_info)
-            ia.done()
+            myia.open(imagename)
+            myia.setmiscinfo(misc_info)
+            myia.done()
             casalog.post(hdkey + ' keyword has been ADDED to '
                          + imagename + "'s header with value "
                          + str(value), 'NORMAL')
@@ -1389,7 +1305,6 @@ def _imhead_strip_units(input_number, default_value=0.0, default_unit=''
                         ):
     # Find the place where the units start and the number
     # ends.
-    # print "IN STRIP UNITS -- ", input_number
 
     if isinstance(input_number, dict):
         if input_number.has_key('value'):
@@ -1407,7 +1322,6 @@ def _imhead_strip_units(input_number, default_value=0.0, default_unit=''
             if input_number[j].isdigit():
                 lastNumber = j
 
-        # print "index of last number: ", lastNumber
         if lastNumber >= len(input_number) - 1:
             unit = default_unit
         else:
@@ -1422,7 +1336,54 @@ def _imhead_strip_units(input_number, default_value=0.0, default_unit=''
             'Unable to parse units from numerical value in input ' \
             + str(input_number)
 
-    # print "RETURNING: ", { 'value': value, 'unit': unit}
     return {'value': value, 'unit': unit}
+
+
+def _doget(key_list, hdkey, hd_values, hd_types, hd_units):
+ # ############################################################
+    #                     get MODE
+    #
+    # Just #print out the requested information. Note that we
+    # acquired all of the header details, which is not very
+    # efficient for get, but it does make the code cleaner!
+    # Getting the min/max values can take some time to
+    # calculate, and it might be worthwhile doing this step
+    # only if we are getting them.
+    # ############################################################
+    if key_list.count(hdkey) < 1:
+        # The Keyword is not in the header, nothing to GET!!!
+        casalog.post(hdkey
+                     + str(' is NOT in the header unable to "get" its value.'
+                     ), 'SEVERE')
+        return False
+    if str(hd_values[hdkey]) == not_known:
+        # This is a standard header keyword but we don't have a value
+        # for it so we return "not_known"
+        return {'unit': not_known, 'value': not_known}
+
+    retValue = ''
+
+    msg = ''
+    if len(str(hd_types[hdkey])) < 1 or str(hd_types[hdkey]) \
+        == not_known:
+        retValue = str(hd_values[hdkey])
+    elif str(hd_types[hdkey]) == 'list':
+        retValue = hd_values[hdkey]
+    else:
+
+        keytype = str(hd_types[hdkey])
+        if keytype == 'double':
+            keytype = 'float'
+        if keytype == 'string':
+            keytype = 'str'
+        retValue = eval(keytype + '("' + str(hd_values[hdkey])
+                        + '")')
+    retValue = {'unit': hd_units[hdkey], 'value': retValue}
+    msg = 'Value of Header Key ' + hdkey + ' is:' + str(retValue)
+    if len(hd_units) > 0:
+        msg = msg + ' ' + str(hd_units[hdkey])
+
+    casalog.post(msg, 'NORMAL')
+    return retValue
 
 

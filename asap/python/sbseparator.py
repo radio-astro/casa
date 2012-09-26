@@ -12,9 +12,15 @@ from asap.asapgrid import asapgrid2
 
 class sbseparator:
     """
-    The sbseparator class is defined to separate USB and LSB spectra
-    observed with DSB reciever. It also helps supressing emmission of
-    image sideband.
+    The sbseparator class is defined to separate SIGNAL and IMAGE
+    sideband spectra observed by frequency-switching technique.
+    It also helps supressing emmission of IMAGE sideband.
+    *** WARNING *** THIS MODULE IS EXPERIMENTAL
+    Known issues:
+    - Frequencies of IMAGE sideband cannot be reconstructed from
+      information in scantable in sideband sparation. Frequency
+      setting of SIGNAL sideband is stored in output table for now.
+    - Flag information (stored in FLAGTRA) is ignored.
 
     Example:
         # Create sideband separator instance whith 3 input data
@@ -261,6 +267,13 @@ class sbseparator:
                 shutil.rmtree(signalname)
         signaltab.save(signalname)
         if self.getboth:
+            # Warnings
+            asaplog.post()
+            asaplog.push("Saving IMAGE sideband.")
+            asaplog.push("Note, frequency information of IMAGE sideband cannot be properly filled so far. (future development)")
+            asaplog.push("Storing frequency setting of SIGNAL sideband in FREQUENCIES table for now.")
+            asaplog.post("WARN")
+
             imagename = outname + ".imageband"
             if os.path.exists(imagename):
                 if not overwrite:

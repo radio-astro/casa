@@ -282,9 +282,9 @@ print '--Flagdata--'
 
 
 # Use flagdata() in vector mode
-default('flagdata')
+default('tflagdata')
 vis = msfile1
-mode = 'manualflag'
+mode = 'list'
 
 
 ##################################################
@@ -317,19 +317,26 @@ mode = 'manualflag'
 #          timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
 
 # Parallel flagdata execution:
-autocorr  = [true, false , false, false , false ]
-antenna   = [''  , 'VA09', ''   , 'VA14', 'VA15']
-timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
-                           '2003/05/02/18:50:50~2003/05/02/19:13:30', \
-                           '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
-spw       = [''  , ''    , ''   , ''    , '0'   ]
+flagcmds = ["autocorr=True",
+       "autocorr=False antenna='VA09'",
+       "autocorr=False timerange='2003/05/02/21:40:58~2003/05/02/22:01:30'",
+       "autocorr=False antenna='VA14' timerange='2003/05/02/18:50:50~2003/05/02/19:13:30'",
+       "autocorr=False antenna='VA15' timerange='2003/05/02/22:38:49~2003/05/02/22:39:11' spw='0'"]
+
+inpfile=flagcmds
+#autocorr  = [true, false , false, false , false ]
+#antenna   = [''  , 'VA09', ''   , 'VA14', 'VA15']
+#timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
+#                           '2003/05/02/18:50:50~2003/05/02/19:13:30', \
+#                           '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
+#spw       = [''  , ''    , ''   , ''    , '0'   ]
 
 
 ###################################################
 # Finally, apply all the flag specifications
 #
 
-flagdata()
+tflagdata()
 
 
 # Record flagging completion time
@@ -554,32 +561,17 @@ print '--Flagdata--'
 #   final image RMS.
 #
 
-default('flagdata')
+default('tflagdata')
 vis = msfile2
-mode = 'manualflag'
+mode = 'list'
 
-field = ['']*5
-spw = ['']*5
-antenna = ['']*5
-clipexpr = ['ABS RR']*5
-clipminmax = [[0.0,0.0]]*5
-clipcolumn = ['DATA']*5
-clipoutside = [true]*5
-autocorr = [false]*5
-unflag = [false]*5
-correlation = ['']*5
-uvrange =['']*5
-timerange = ['']*5
-scan = ['']*5
-feed = ['']*5
-array = ['']*5
-
+#
 #
 ##################################################
 #
 # Get rid of the autocorrelations from the MS
 #
-autocorr[0] = true
+#autocorr[0] = true
 
 #
 # Flag all data from antennas 8,9,18
@@ -587,7 +579,7 @@ autocorr[0] = true
 
 #flagdata(vis=msfile2,antenna='9,10,19', mode='manualflag')
 
-antenna[1] = 'VA09,VA10,VA19'
+#antenna[1] = 'VA09,VA10,VA19'
 
 #
 # Flag antenna 14 for timerange.  ANTENNAID 14 is ANTENNANAME 15
@@ -598,17 +590,13 @@ antenna[1] = 'VA09,VA10,VA19'
 #	 antenna='15',
 #	 timerange='2003/05/08/00:00:00~2003/05/08/20:00:00')
 
-antenna[2] = 'VA15'
-timerange[2] = '2003/05/08/00:00:00~2003/05/08/20:00:00'
-
+#
 #  antenna '22' has a bad scan 144
 #flagdata(vis=msfile2,mode='manualflag',
 #	 antenna='6,22',
 #	 scan='144')
 
-antenna[3] = 'VA06,VA22'
-scan[3] = '144'
-
+#
 #
 # Flag the last data channels
 #
@@ -616,14 +604,21 @@ scan[3] = '144'
 #default('flagdata')
 #flagdata(vis=msfile2, spw='*:59;60;61;62', mode='manualflag')
 
-spw[4] = '*:59;60;61;62'
+#spw[4] = '*:59;60;61;62'
 
+flagcmds = ["autocorr=True",
+            "antenna='VA09,VA10,VA19'",
+            "antenna='VA15' timerange='2003/05/08/00:00:00~2003/05/08/20:00:00'",
+            "antenna='VA06,VA22' scan='144'",
+            "spw='*:59;60;61;62'"]
+
+inpfile=flagcmds
 #
 ###################################################
 # Finally, apply all the flag specifications
 #
 
-flagdata()
+tflagdata()
 
 # Record flagging completion time
 if benchmarking:
@@ -988,17 +983,14 @@ if doimage:
 # 7499.6601 (n1333_both.ms)
 
 # test values 
-cal1_2may=4.55 # (channel averaged)
-cal2_2may=4.12 # (channel averaged)
-cal1_8may=5.97 # (channel averaged)
-cal2_8may=7.13 # (channel averaged)
-src2may=3.23   # (channel averaged)
-src8may=8.72   # (channel averaged)
-#immax=0.493
-#imrms=0.0671
-#new values after changing to flat sigma image
-immax=0.570
-imrms=0.0670
+cal1_2may=4.56 # (channel averaged)
+cal2_2may=4.00 # (channel averaged)
+cal1_8may=5.72 # (channel averaged)
+cal2_8may=6.70 # (channel averaged)
+src2may=3.13   # (channel averaged)
+src8may=8.18   # (channel averaged)
+immax=0.562
+imrms=0.0668
 
 diff_cal1_2may=abs((cal1_2may-gcal1_2may)/cal1_2may)
 diff_cal2_2may=abs((cal2_2may-gcal2_2may)/cal2_2may)

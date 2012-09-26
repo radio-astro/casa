@@ -18,7 +18,7 @@
 <xsl:text disable-output-escaping="yes">
 %include &lt;tools/casa_typemaps.i&gt;
 %feature("kwargs");
-%feature("autodoc");
+%feature("autodoc", "0");
 </xsl:text>
 <xsl:for-each select="aps:method">
    <xsl:if test="lower-case(@type)!='constructor'">

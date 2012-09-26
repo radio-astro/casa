@@ -818,8 +818,6 @@ class simutil:
                EVLA correlator efficiency is probably optimistic at 0.88
         """
 
-        return eta_p, eta_s, eta_b, eta_t, eta_q, t_rx
-        
         if telescope==None: telescope=self.telescopename
         telescope=str.upper(telescope)
         
@@ -2592,7 +2590,7 @@ class simutil:
             ftmachine="mosaic" 
 
         # in 3.4 clean doesn't accept just any imsize
-        from cleanhelper import getOptimumSize
+        from cleanhelper import cleanhelper
         optsize=[0,0]
         optsize[0]=cleanhelper.getOptimumSize(imsize[0])
         nksize=len(imsize)

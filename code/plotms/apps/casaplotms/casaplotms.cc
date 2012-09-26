@@ -32,6 +32,7 @@
 #include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
+#include <casadbus/utilities/Diagnostic.h>
 
 #include <signal.h>
 
@@ -42,6 +43,9 @@ int main(int argc, char* argv[]) {
 #if (0)
 setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediately always */
 #endif
+
+    // log arguments if CASA_DIAGNOSTIC_FILE environment variable is set...
+    casa::dbus::diagnostic.argv( argc, argv );
 
     // Parameter defaults.
     String ms    = "",

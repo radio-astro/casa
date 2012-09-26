@@ -837,7 +837,18 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int * offstor=off.getStorage(del);
   const Double *dpstor=dphase.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4)  
+  Int nth=1;
+#ifdef HAS_OMP
+  if(numthreads_p >0){
+    nth=min(numthreads_p, omp_get_max_threads());
+  }
+  else{   
+    nth= omp_get_max_threads();
+  }
+  nth=min(4,nth);
+#endif
+
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(nth)  
 {
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
@@ -851,17 +862,14 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
-  #ifdef HAS_OMP
-  Int nthreads=omp_get_max_threads();
-  if (nthreads >3){
+  if (nth >3){
     ixsub=2;
     iysub=2; 
   }
-  else if(nthreads >1){
+  else if(nth >1){
      ixsub=2;
      iysub=1; 
   }
-#endif
   x0=1;
   y0=1;
   nxsub=nx;
@@ -1108,7 +1116,18 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   const Int *cmapstor=chanMap.getStorage(del);
   const Int * suppstor=convSupport.getStorage(del);
   Int irow;
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(4) 
+  Int nth=1;
+#ifdef HAS_OMP
+  if(numthreads_p >0){
+    nth=min(numthreads_p, omp_get_max_threads());
+  }
+  else{   
+    nth= omp_get_max_threads();
+  }
+  nth=min(4,nth);
+#endif
+
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(nth) 
   {
 #pragma omp for
     for (irow=startRow; irow<=endRow; ++irow){
@@ -1121,15 +1140,12 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   Int rbeg=startRow+1;
   Int rend=endRow+1;
   Int npart=1;
-#ifdef HAS_OMP
-  Int nthreads=omp_get_max_threads();
-  if (nthreads >3){
+  if (nth >3){
     npart=4;
   }
-  else if(nthreads >1){
+  else if(nth >1){
     npart=2; 
   }
-#endif
   Int ix=0;
   #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
   {

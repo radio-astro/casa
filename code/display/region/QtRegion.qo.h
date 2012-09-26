@@ -1,5 +1,5 @@
 //# QtRegion.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011,2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -114,6 +114,10 @@ namespace casa {
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
+		// is this region weakly or temporarily selected?
+		static void setWeakSelection(QtRegionState*s) { weak_selection = s; }
+		static QtRegionState *getWeakSelection( ) { return weak_selection; }
+		bool weaklySelected( ) const { return mystate == weak_selection; }
 
 		// indicates that region movement requires the update of state information...
 		void updateStateInfo( bool region_modified, Region::RegionChanges );
@@ -232,6 +236,11 @@ namespace casa {
 		QtRegionState *mystate;
 		QString name_;
 		QString color_;
+
+		// used to indicate that a region is weakly selected e.g. by
+		// entering (and/or scrolling through) the region stack...
+		static QtRegionState *weak_selection;
+
 	    private:
 		std::map<Region::RegionChanges,bool> held_signals;
 		void fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );

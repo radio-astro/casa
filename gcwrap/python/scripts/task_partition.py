@@ -55,40 +55,58 @@ class PartitionHelper(ParallelTaskHelper):
 
             os.mkdir(self.dataDir)
 
-            ## handle the POINTING, SYSCAL, and HISTORY tables ##
+            ## handle the POINTING and SYSCAL tables ##
             self.ptab = self._arg['vis']+'/POINTING'
             self.stab = self._arg['vis']+'/SYSCAL'
 
-            # test if they are non-empty
             mytb = tbtool()
+
+            # test their properties
+            self.pointingisempty = True
+            self.makepointinglinks = False
+            self.pwriteaccess = True
+
             mytb.open(self.ptab)
             self.pointingisempty = (mytb.nrows()==0)
             mytb.close()
+            self.makepointinglinks = not self.pointingisempty
+            self.pwriteaccess = True
             
+            self.syscalisempty = True
+            self.makesyscallinks = False
+            self.swriteaccess = True
             if(os.path.exists(self.stab)): # syscal is optional
                 mytb.open(self.stab)
                 self.syscalisempty = (mytb.nrows()==0)
                 mytb.close()
-            else:
-                self.syscalisempty = True
+                self.makesyscallinks = not self.syscalisempty
 
             if not self.pointingisempty:
-                # move to datadir
-                os.system('mv '+self.ptab+' '+self.dataDir)
-                # create empty copy in original place so partition does not need to deal with it
-                mytb.open(self.dataDir+'/POINTING')
-                tmpp = mytb.copy(newtablename=self.ptab, norows=True)
-                tmpp.close()
-                mytb.close()
+                if os.access(os.path.dirname(self.ptab), os.W_OK) \
+                       and not os.path.islink(self.ptab):
+                    # move to datadir
+                    os.system('mv '+self.ptab+' '+self.dataDir)
+                    # create empty copy in original place so partition does not need to deal with it
+                    mytb.open(self.dataDir+'/POINTING')
+                    tmpp = mytb.copy(newtablename=self.ptab, norows=True)
+                    tmpp.close()
+                    mytb.close()
+                else:
+                    self.pwriteaccess = False
+                    
 
             if not self.syscalisempty:
-                # move to datadir
-                os.system('mv '+self.stab+' '+self.dataDir)
-                # create empty copy in original place so partition does not need to deal with it
-                mytb.open(self.dataDir+'/SYSCAL')
-                tmpp = mytb.copy(newtablename=self.stab, norows=True)
-                tmpp.close()
-                mytb.close()
+                if os.access(os.path.dirname(self.ptab), os.W_OK) \
+                       and not os.path.islink(self.ptab):
+                    # move to datadir
+                    os.system('mv '+self.stab+' '+self.dataDir)
+                    # create empty copy in original place so partition does not need to deal with it
+                    mytb.open(self.dataDir+'/SYSCAL')
+                    tmpp = mytb.copy(newtablename=self.stab, norows=True)
+                    tmpp.close()
+                    mytb.close()
+                else:
+                    self.swriteaccess = False
 
 
     def generateJobs(self):
@@ -332,12 +350,12 @@ class PartitionHelper(ParallelTaskHelper):
         if self._arg['createmms']:
             casalog.post("Finalizing MMS structure")
 
-            # restore POINTING, SYSCAL, and HISTORY
-            if not self.pointingisempty:
+            # restore POINTING and SYSCAL
+            if self.pwriteaccess and not self.pointingisempty:
                 print "restoring POINTING"
                 os.system('rm -rf '+self.ptab) # remove empty copy
                 os.system('mv '+self.dataDir+'/POINTING '+self.ptab)
-            if not self.syscalisempty:
+            if self.swriteaccess and not self.syscalisempty:
                 print "restoring SYSCAL"
                 os.system('rm -rf '+self.stab) # remove empty copy
                 os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
@@ -365,29 +383,35 @@ class PartitionHelper(ParallelTaskHelper):
 
             mastersubms = subMSList[0]
 
+            subtabs_to_omit = []
+
             # deal with POINTING table
             if not self.pointingisempty:
                 shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
                 shutil.copytree(self.ptab, mastersubms+'/POINTING') # master subms gets a full copy of the original
+            if self.makepointinglinks:
                 for i in xrange(1,len(subMSList)):
                     theptab = subMSList[i]+'/POINTING'
                     shutil.rmtree(theptab, ignore_errors=True)
                     os.symlink('../'+os.path.basename(mastersubms)+'/POINTING', theptab)
                     # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('POINTING')
 
             # deal with SYSCAL table
             if not self.syscalisempty:
                 shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
                 shutil.copytree(self.stab, mastersubms+'/SYSCAL') # master subms gets a full copy of the original
+            if self.makesyscallinks:
                 for i in xrange(1,len(subMSList)):
                     thestab = subMSList[i]+'/SYSCAL'
                     shutil.rmtree(thestab, ignore_errors=True)
                     os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
                     # (link in target will be created my makeMMS)
+                subtabs_to_omit.append('SYSCAL')
 
             ph.makeMMS(self._arg['outputvis'], subMSList,
                        True, # copy subtables
-                       ['POINTING','SYSCAL'] # omitting these
+                       subtabs_to_omit # omitting these
                        )
 
             thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
