@@ -89,7 +89,7 @@ SI unit table (50):
     s         (second)                     1 s
     sr        (steradian)                  1 sr
     t         (tonne)                      1000 kg
-Customary unit table (77):
+Customary unit table (78):
     "         (arcsec)                     4.8481368111e-06 rad
     "_2       (square arcsec)              2.35044305391e-11 sr
     '         (arcmin)                     0.000290888208666 rad
@@ -123,6 +123,7 @@ Customary unit table (77):
     abOhm     (abohm)                      1e-09 m2.kg.s-3.A-2
     abV       (abvolt)                     1e-08 m2.kg.s-3.A-1
     ac        (acre)                       4046.8564224 m2
+    adu       (dimensionless ADC unit)     1 _
     arcmin_2  (square arcmin)              8.46159499408e-08 sr
     arcsec_2  (square arcsec)              2.35044305391e-11 sr
     ata       (technical atmosphere)       98066.5 m-1.kg.s-2
