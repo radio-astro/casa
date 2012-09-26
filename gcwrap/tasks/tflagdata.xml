@@ -11,8 +11,8 @@
             This task has two main types of operation. One type
             will read the parameters from the interface and flag
             using any of the various modes available. Ther other type
-            will read the commands from a text file containing a list of
-            flag commands (each line containing data selection
+            will read the commands from a text file or a Python list of strings,
+            containing a list of flag commands (each line containing data selection
             parameters and any parameter specific for the mode being 
             requested). Please see examples at the end of this help.
             
@@ -63,14 +63,8 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
             </param>
 
             <!-- LIST parameters -->
-<!--
-            <param type="string" name="inpfile" subparam="true">
-                <description>Input file with list of commands to run</description>
-                <value></value>
-            </param>
--->
             <param type="any" name="inpfile" subparam="true">
-                <description>Input ASCII file or Python list with list of commands to run</description>
+                <description>Input ASCII file or Python list of strings with flag commands.</description>
                 <any type="variant" limittypes="string stringArray"/>
                 <value type="string"></value>
             </param>
@@ -661,7 +655,7 @@ The task will flag a subset of data based on the following modes of operation:
 
               uvrange -- Select data within uvrange (default units meters)
                     default: '' (all); example:
-                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lamgda
+                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
                     uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
                     uvrange='0~1000km'; uvrange in kilometers
 
@@ -708,6 +702,7 @@ The task will flag a subset of data based on the following modes of operation:
                   
                inpfile -- Input ASCII file or a Python list of command strings.
                   default: ''
+                  options: [] or '' with filename.
                   Example1: the following commands can be saved into a file and given
                             to the task (e.g. save it to flags.txt).
                   
@@ -1198,10 +1193,10 @@ The task will flag a subset of data based on the following modes of operation:
     
 ---- EXAMPLES ----
 
-    NOTE: The vector mode of the previous flagdata task can be achieved by using the
-          flagcmd task, inpmode='cmd'. Example:
+    NOTE: The vector mode of the previous flagdata task can be achieved with this task by using it
+          with mode='list' and the commands given in a list in inpmode=[]. Example:
     
-       flagcmd('my.ms', inpmode='cmd', command=["mode='clip' clipzeros=True","mode='shadow'])
+       tflagdata('my.ms', inpmode='list', inpfile=["mode='clip' clipzeros=True","mode='shadow'])
         
 
     1) Manually flag scans 1~3 and save the parameters to the FLAG_CMD sub-table.

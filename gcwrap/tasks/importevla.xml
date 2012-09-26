@@ -320,7 +320,7 @@ flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions
                            reason=['ANTENNA_NOT_POINTING','CORRELATOR_DATA_INVALID'])
                 
                 Apply all the flags in the file using flagcmd
-                flagcmd('CLowTest_000.ms',inpmode='file',inpfile='CLTest_000_cmd.txt',action='apply')
+                flagcmd('CLowTest_000.ms',inpmode='list',inpfile='CLTest_000_cmd.txt',action='apply')
                                 
 
 HISTORY: Task last updated v9.0 S.M. Castro 2012-03-8 (3.4.0)
