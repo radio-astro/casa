@@ -60,8 +60,6 @@ QtCanvas::QtCanvas(QWidget *parent)
           lineOverlayContextMenu(this), gaussianContextMenu( this ),
           frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
-
-
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
     setBackgroundRole(QPalette::Dark);
@@ -101,7 +99,6 @@ void QtCanvas::initLineOverlayContextMenu(){
 	findRedshiftAction->setStatusTip( "Specify a line and get the redshift back.");
 	connect( findRedshiftAction, SIGNAL(triggered()), this, SLOT(findRedshift()));
 	lineOverlayContextMenu.addAction( findRedshiftAction );
-
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)

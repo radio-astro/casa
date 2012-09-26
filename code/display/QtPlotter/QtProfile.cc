@@ -142,14 +142,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 
 
-	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
-	for ( int i = 0; i < yUnitsList.size(); i++ ){
-		yAxisCombo->addItem( yUnitsList[i] );
-	}
-	yAxisCombo->setCurrentIndex( 0 );
-	setDisplayYUnits( yAxisCombo->currentText() );
-	initializeSolidAngle();
-	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
 
 	// get reference frame info for freq axis label
 	MFrequency::Types freqtype = determineRefFrame(img);
@@ -183,6 +175,17 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	yUnit = QString(img->units().getName().chars());
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
+	for ( int i = 0; i < yUnitsList.size(); i++ ){
+		yAxisCombo->addItem( yUnitsList[i] );
+	}
+	yAxisCombo->setCurrentIndex( 0 );
+	setDisplayYUnits( yAxisCombo->currentText() );
+	initializeSolidAngle();
+	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
+
+
+
 
 	pixelCanvas->setAutoScaleX(true);
 	pixelCanvas->setAutoScaleY(true);
@@ -2018,6 +2021,12 @@ Int QtProfile::scaleAxis(){
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
+	//It doesn't make sense to change the y-axis units if they
+	//are dimensionless astronomical data units.
+	if ( yUnit ==ConverterIntensity::ADU ){
+		this->yAxisCombo->setVisible( false );
+		this->leftLabel->setVisible( false );
+	}
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
@@ -2316,8 +2325,13 @@ void QtProfile::initializeSolidAngle() const {
 }
 
 void QtProfile::setDisplayYUnits( const QString& unitStr ){
-	pixelCanvas->setDisplayYUnits( unitStr );
-	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
+	QString displayUnit = unitStr;
+	//ADU units are dimensionless
+	if ( yUnit == ConverterIntensity::ADU ){
+		displayUnit = "";
+	}
+	pixelCanvas->setDisplayYUnits( displayUnit );
+	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
 }
 
 

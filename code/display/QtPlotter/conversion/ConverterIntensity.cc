@@ -33,6 +33,7 @@ namespace casa {
 const QString ConverterIntensity::FRACTION_OF_PEAK = "Fraction of Peak";
 const QString ConverterIntensity::JY_BEAM = "Jy/beam";
 const QString ConverterIntensity::KELVIN = "Kelvin";
+const QString ConverterIntensity::ADU = "adu";
 const double ConverterIntensity::SPEED_LIGHT_FACTOR = 0.0000000009;
 const double ConverterIntensity::FREQUENCY_FACTOR = 2 * 0.0000000000000000000000138;
 double ConverterIntensity::beamSolidAngle = 0;
@@ -114,11 +115,19 @@ double ConverterIntensity::convertQuantity( double yValue, double frequencyValue
 	String oldUnitStr = oldUnits.toStdString();
 	String newUnitStr = newUnits.toStdString();
 
-	double convertedYValue = 0;
+	double convertedYValue = yValue;
 	if ( oldUnits != KELVIN && newUnits != KELVIN ){
 		Quantity quantity( yValue, oldUnitStr );
-		quantity.convert( newUnitStr );
-		convertedYValue = quantity.getValue();
+		//qDebug() << "Converting oldUnits="<<oldUnits<<" new units="<<newUnits;
+		Unit newUnitVal( newUnitStr );
+		bool compatible = quantity.isConform(newUnitVal );
+		if ( compatible ){
+			quantity.convert( newUnitStr );
+			convertedYValue = quantity.getValue();
+		}
+		else {
+			//qDebug()<<"Converting from oldUnits="<<oldUnits<<" to new units="<< newUnits<<" is not supported value="<<yValue;
+		}
 	}
 	else if ( oldUnits == KELVIN && newUnits != KELVIN ) {
 		if ( beamSolidAngle > 0 ){
