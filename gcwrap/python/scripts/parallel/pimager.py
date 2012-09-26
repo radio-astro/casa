@@ -578,9 +578,11 @@ class pimager():
             if(not contclean):
                 toberemoved=glob.glob(imagename+'*')
                 ##keep masks
+                tbr=copy.deepcopy(toberemoved)
                 for k in range(len(toberemoved)):
                     if(string.find(toberemoved[k], '.mask') > 0):
-                           toberemoved.remove(toberemoved[k])
+                           tbr.remove(toberemoved[k])
+                toberemoved=tbr
                 for rem in toberemoved:
                     print "Removing ", rem
                     shutil.rmtree(rem, True) 
@@ -701,7 +703,8 @@ class pimager():
                 if(majorcycles <= 1):
                     ia.open(residuals[0])
                     residstat=ia.statistics()
-                    maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
+                    ia.done()
+                    maxresid=np.max([residstat['max'], np.fabs(residstat['min'])])
                     psfoutermax=self.maxouterpsf(psfim=psfs[0], image=restoreds[0])
                     newthresh=psfoutermax*cyclefactor*maxresid
                     oldthresh=qa.convert(qa.quantity(threshold, "Jy"), "Jy")['value']
@@ -733,6 +736,7 @@ class pimager():
                     maj +=1
             ia.open(imlist[numcpu-1]+'.image.tt0')
             beam=ia.restoringbeam()
+            ia.done()
             dc.mtrestore(models=models, residuals=residuals, images=restoreds,
                          bmaj=beam['major'], bmin=beam['minor'], bpa=beam['positionangle'])
             alphaname = imagename+'.alpha'
@@ -742,6 +746,7 @@ class pimager():
                               betaname=betaname,
                               threshold='0.001Jy', calcerror=True)
             dc.done
+            c.pgc('del a')
 
 
     def combineimages(self, rootnames=[], nterms=2, outputrootname=''):
@@ -1119,6 +1124,7 @@ class pimager():
             myim.done()
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
         casalog.post('Time to image is '+str((time2-time1)/60.0)+ ' mins')
+        c.pgc('del a')
         #c.stop_cluster()
 
     def pcube_try(self, msname=None, imagename='elimage', imsize=[1000, 1000], 

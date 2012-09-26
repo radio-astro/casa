@@ -63,14 +63,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <!-- Mode = expand -->
 	    <param type="any" name="inpfreqs" subparam="true">
               <description>List of chans/freqs (in inpimage) to read masks from and merge </description>
-              <any type="variant"/>
-              <value type="intArray">[]</value>
+              <any type="variant" limittypes="string intArray"/>
+              <value type="intArray"></value>
             </param>
 
 	    <param type="any" name="outfreqs" subparam="true">
               <description>List of chans/freqs (in outimage) on which to expand the mask</description>
-              <any type="variant"/>
-              <value type="intArray">[]</value>
+              <any type="variant" limittypes="string intArray"/>
+              <value type="intArray"></value>
             </param>
 
             <param type="string" name="template" subparam="true">
@@ -112,8 +112,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <equals value="expand">
                         <default param="inpimage"><value type="string"></value></default>
                         <default param="inpmask"><value type="string">mask0</value></default>
-                        <default param="inpfreqs"><value type="intArray">[]</value></default>
-                        <default param="outfreqs"><value type="intArray">[]</value></default>
+                        <default param="inpfreqs"><value type="intArray"></value></default>
+                        <default param="outfreqs"><value type="intArray"></value></default>
                         <default param="template"><value type="string"></value></default>
                     </equals>
                     <equals value="merge">
@@ -158,7 +158,9 @@ Input/Output Rules :
 ------------------------------
 
 inpimage : Name of input image 
-inpmask : 
+           (merge mode) Name(s) of input images (string or a list of string) 
+inpmask : Name of input mask 
+          default: 'mask0' 
          (copy or expand mode)
          Specify how to read the mask from inpimage.
          'mask0' : give an embedded-mask name (true/false)
@@ -166,12 +168,15 @@ inpmask :
          (merge mode)
          Specify the T/F mask(s) to be merged. Need to include the parent image file
          name along with the internal mask name seperated by ':'. (e.g. image1.im:mask0)
-
+         Can be a string or a list of strings.
+ 
 outimage : Name of output image. 
                  To re-grid a mask to a different coordinate system, give outimage 
                  a copy of an image with the target coordinate system. 
+
 outmask : Specify how to save the mask in outimage
-        
+          default: mask0        
+
     - If outimage exists, it will regrid the mask to the new coordinate system  and modify outimage.
              - If outmask name is specified, it will modify only the embedded mask in outimage.
              - if outmask is '', it will modify the values in outimage.
@@ -181,7 +186,18 @@ outmask : Specify how to save the mask in outimage
     - If outimage == inpimage, do not regrid. Only modify in-place.
 
 
+Expandable parameters for mode='expand':
+  inpfreqs : input channel/frequency/velocity range
+             Specify channels in a list of integers. for frequency/velocity, 
+             a range is specified in a string with '~', e.g. '1.5MHz~1.6MHz'
+             default: []  - all channels
+  outfreqs : output channel/frequency/velocity range  
+             Specify same way as inpfreqs
+             default: []  - all channels
+  template : template image name
+             default: '' 
 
+ 
 Usage examples : 
 ---------------------------
 
@@ -218,21 +234,30 @@ Usage examples :
 
 
 (5) (expand mode):
+     Expand a (one/zero) mask from continuum imaging to use as an input mask image for
+     spectral line imaging. Use an existing spectral line clean image as a template. 
+     The inpfreqs is left out as it uses a default (=[], means all channels).
+
+     makemask(mode='expand', 
+              inpimage='cont.clean.mask', inpmask='', outfreqs=[4,5,6,7],
+              outimage='spec.clean.mask', outmask='', template='spec.clean.image')
+
+(6) (expand mode):
      Expand a boolean mask from one range of channels to another range 
      in the same image.
 
      makemask(mode='expand', 
-              inpimage='oldmask.im', inpmask='mask0', inpfreq=[5,6], outfreq=[4,5,6,7],
+              inpimage='oldmask.im', inpmask='mask0', inpfreqs=[5,6], outfreqs=[4,5,6,7],
               outimage='oldmask.im', outmask='mask0')
 
 
-(6) (expand mode):
+(7) (expand mode):
      Expand a boolean mask from a range of channels in the input image to another range
      of channels in a  different image with a different spectral-coordinate system.
      Save the mask as ones/zeros so that it can be given to 'clean'.
 
      makemask(mode='expand', 
-              inpimage='smallmask.im', inpmask='mask0', inpfreq='1.5MHz~1.6MHz', outfreq='1.2MHz~1.8MHz',
+              inpimage='smallmask.im', inpmask='mask0', inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz',
               outimage='bigmask.im', outmask='')
 
 <!--
@@ -244,7 +269,7 @@ Usage examples :
               outimage='newmask.im', outmask='');
 -->
 
-(7) (merge mode):
+(8) (merge mode):
 <!--     Make a one/zero mask from a list of region files, using the input coordinate-sys,
      and saving in a new output file.  Remember, if outimage has a different 
      coordinate system from inpimage, the mask will be regridded to it. --> 
