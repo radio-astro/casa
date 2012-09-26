@@ -231,7 +231,7 @@ if(mystep in thesteps):
 		# Plot amplitude vs time
 		plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
 		       averagedata=T, avgchannel='4000', coloraxis='field',
-		       iteraxis='spw')
+		       iteraxis='spw', plotfile=name+'-amp-vs-time.png', overwrite=True)
 
     timing()
 
@@ -629,13 +629,21 @@ if(mystep in thesteps):
     for name in basename:
         os.system('rm -rf test-'+name+'-sec_phasecal*')
         if usepclean:
+            #pclean does not handle masks except for image masks
+            # so making it
+            myim=casac.imager()
+            myim.open(name+'-line-vs.ms')
+            myim.selectvis(field='3c*Ph*', spw='0~3')
+            myim.defineimage(nx=200, cellx='0.5arcsec')
+            myim.regionmask(mask='test-'+name+'-sec_phasecal.mask',boxes=[[96,96,104,104]])
+            myim.done()
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-sec_phasecal',
                    field='3c*Ph*',spw='0~3',
                    nterms=2,
                    mode='mfs',niter=100,
                    interactive=False,
-                   mask=[96, 96, 104, 104],imsize=200,cell='0.5arcsec')
+                   mask='test-'+name+'-sec_phasecal.mask', imsize=200,cell='0.5arcsec')
         else:
             clean(vis=name+'-line-vs.ms',
                   imagename='test-'+name+'-sec_phasecal',
@@ -661,13 +669,21 @@ if(mystep in thesteps):
     for name in basename:
         os.system('rm -rf test-'+name+'-prim_phasecal*')
         if usepclean:
+            #pclean does not handle masks except for image masks
+            # so making it
+            myim=casac.imager()
+            myim.open(name+'-line-vs.ms')
+            myim.selectvis(field='1224*', spw='0~3')
+            myim.defineimage(nx=200, cellx='0.5arcsec')
+            myim.regionmask(mask='test-'+name+'-prim_phasecal.mask',boxes=[[96,96,104,104]])
+            myim.done()
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-prim_phasecal',
                    field='1224*',spw='0~3',
                    nterms=2,
                    mode='mfs',niter=100,
                    interactive=False,
-                   mask=[96, 96, 104, 104],imsize=200,cell='0.5arcsec')
+                   mask='test-'+name+'-prim_phasecal.mask',imsize=200,cell='0.5arcsec')
         else:
             clean(vis=name+'-line-vs.ms',
                   imagename='test-'+name+'-prim_phasecal',
@@ -700,12 +716,20 @@ if(mystep in thesteps):
     for name in basename:
         os.system('rm -rf test-'+name+'-Titan*')
         if usepclean:
+            #pclean does not handle masks except for image masks
+            # so making it
+            myim=casac.imager()
+            myim.open(name+'-line-vs.ms')
+            myim.selectvis(field='Titan', spw='0~3')
+            myim.defineimage(nx=200, cellx='0.5arcsec')
+            myim.regionmask(mask='test-'+name+'-Titan.mask',boxes=[[96,96,104,104]])
+            myim.done()
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-Titan',
                    field='Titan',spw='0~3',
                    mode='mfs',niter=100,
                    interactive=False,
-                   mask=[96, 96, 104, 104],imsize=200,cell='0.5arcsec')
+                   mask='test-'+name+'-Titan.mask',imsize=200,cell='0.5arcsec')
         else:
             clean(vis=name+'-line-vs.ms',
                   imagename='test-'+name+'-Titan',
@@ -777,7 +801,7 @@ if(mystep in thesteps):
                mode = 'mfs',
                niter = 1000,
                mask='M100cont-orig.mask',
-               imagermode = 'mosaic',
+               ftmachine = 'mosaic',
                interactive = F,
                imsize = 200,
                cell = '0.5arcsec',
@@ -827,15 +851,13 @@ if(mystep in thesteps):
             spw='0:231~248',
             mode='mfs',
             niter=500,gain=0.1,threshold='0.0mJy',
-            imagermode='csclean',
             interactive=False,
             mask='test-M100line-orig.mask',
-            outframe='',veltype='radio',
             imsize=200,cell='0.5arcsec',
             phasecenter='',
             stokes='I',
             weighting='briggs',robust=0.5,
-            npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+            npercycle=100,cyclefactor=1.5)
     else:
         clean(
             vis='M100all_lores.ms.contsub',
@@ -868,20 +890,18 @@ if(mystep in thesteps):
                field='2~47',
                spw='0:220~259',
                mode='channel',
-               niter=1000,gain=0.1,threshold='0.0mJy',psfmode='clark',
-               imagermode='mosaic',ftmachine='mosaic',mosweight=False,
-               scaletype='SAULT',
+               niter=1000,gain=0.1,threshold='0.0mJy', alg='clark',
+               ftmachine='mosaic',
                interactive=False,
                mask='M100line-orig.mask',
                nchan=40,start=220,
                width=1,
-               outframe='',veltype='radio',
                imsize=600,cell='0.5arcsec',
                phasecenter='J2000 12h22m54.9 +15d49m10',
                restfreq='115.271201800GHz',stokes='I',
                weighting='briggs',robust=0.5,
-               pbcor=False,minpb=0.2,
-               npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
+               pbcor=False,
+               npercycle=100,cyclefactor=1.5)
     else:
         clean(vis='M100all_lores.ms.contsub',imagename='M100line',
               field='2~47',
