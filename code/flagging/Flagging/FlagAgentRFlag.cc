@@ -1064,11 +1064,12 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	if (initFreq)
 	{
 		Vector<Double> freqInHz = visBuffer.frequency();
-		for (uInt channel_idx=0;channel_idx < freqInHz.size();channel_idx++)
+		// jagonzal (CAS-4312): We have to take into account channel selection for the frequency mapping
+		for (uInt channel_idx=0;channel_idx < channelIndex_p.size();channel_idx++)
 		{
-			field_spw_frequency_p[field_spw][channel_idx] = freqInHz[channel_idx]/1E9;
+			field_spw_frequency_p[field_spw][channel_idx] = freqInHz[channelIndex_p[channel_idx]]/1E9;
 		}
-		field_spw_frequencies_p[field_spw] = freqInHz[0]/1E9;
+		field_spw_frequencies_p[field_spw] = freqInHz[channelIndex_p[0]]/1E9;
 	}
 
 

@@ -1179,10 +1179,10 @@ class test_clip(test_base):
         
 
 class test_CASA_4_0_bug_fix(test_base):
-    """tflagdata:: Regression test for fixes introducced during the CASA 4.0 bug fix season"""
+    """tflagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""
         
     def test_CAS_4270(self):
-        """tflagdata: clip only zero-value data"""
+        """tflagdata: Test uvrange given in lambda units"""
         
         self.setUp_data4tfcrop()
         
@@ -1196,8 +1196,18 @@ class test_CASA_4_0_bug_fix(test_base):
         summary_out = tflagdata(vis=self.vis,mode='summary')
         
         self.assertEqual(summary_out['flagged'],summary_ref['flagged'],'uvrange given in lambda is not properly translated into meters')
-    
-
+        
+    def test_CAS_4312(self):
+        """tflagdata: Test channel selection with Rflag agent"""
+        
+        self.setUp_data4tfcrop()
+        tflagdata(vis=self.vis,mode='unflag')
+        tflagdata(vis=self.vis,mode='rflag',spw='9:10~20')
+        summary = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(summary['spw']['8']['flagged'],0,'Error in channel selection with Rflag agent')
+        self.assertEqual(summary['spw']['9']['flagged'],1861,'Error in channel selection with Rflag agent')
+        self.assertEqual(summary['spw']['10']['flagged'],0,'Error in channel selection with Rflag agent')
+        
 # Cleanup class 
 class cleanup(test_base):
     

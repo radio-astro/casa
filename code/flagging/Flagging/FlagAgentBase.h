@@ -377,11 +377,6 @@ private:
 	Vector<Int> observationList_p;
 	Vector<Int> scanIntentList_p;
 
-	// Lists of elements to be process
-	vector<uInt> rowsIndex_p;
-	vector<uInt> channelIndex_p;
-	vector<uInt> polarizationIndex_p;
-
 	// Thread state parameters
 	volatile Bool terminationRequested_p;
 	volatile Bool threadTerminated_p;
@@ -401,6 +396,14 @@ private:
 
 	// Flagging mode configuration
 	Bool writePrivateFlagCube_p;
+
+protected:
+	// Lists of elements to be process
+	// jagonzal (CAS-4312): We need channelIndex_p available for the Rflag agent,
+	// in order to take into account channel selection for the frequency mapping
+	vector<uInt> rowsIndex_p;
+	vector<uInt> channelIndex_p;
+	vector<uInt> polarizationIndex_p;
 };
 
 class FlagAgentList
