@@ -60,7 +60,8 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol,copypointing):
 				casalog.post('copying structure of '+vis[0]+' to '+testconcatvis , 'INFO')
 				# Copy procedure which does not copy the bulk data of the main table
 				t.open(vis[0])
-				t.copy(newtablename=testconcatvis, deep=True, valuecopy=True, norows=True) # copy only table structure
+				tmptb = t.copy(newtablename=testconcatvis, deep=True, valuecopy=True, norows=True) # copy only table structure
+				tmptb.close()
 				t.close()
 				# copy content of subtables
  				thesubtables = os.walk(vis[0]).next()[1]
@@ -71,7 +72,8 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol,copypointing):
 						if (subt=='POINTING' and not copypointing):
 							casalog.post('*** copypointing==False: resulting MS will have empty POINTING table', 'INFO')
 							no_rows = True
- 						tb.copy(testconcatvis+'/'+subt, deep=False, valuecopy=True, norows=no_rows)
+ 						tmptb = tb.copy(testconcatvis+'/'+subt, deep=False, valuecopy=True, norows=no_rows)
+						tmptb.close()
  						tb.close()
  				vis.remove(vis[0])
 		# determine handling switch value
