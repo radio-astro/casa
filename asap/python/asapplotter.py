@@ -208,7 +208,6 @@ class asapplotter:
         self._plotter.palette(color=0,colormap=self._colormap,
                               linestyle=0,linestyles=self._linestyles)
         self._plotter.legend(self._legendloc)
-
         self._plot(self._data)
         if self._minmaxy is not None:
             self._plotter.set_limits(ylim=self._minmaxy)
@@ -980,8 +979,7 @@ class asapplotter:
              'i': scan.getif, 'p': scan.getpol, 't': scan.get_time,
              'r': int}#, '_r': int}
 
-        polmodes = dict(zip(self._selection.get_pols(),
-                            self._selection.get_poltypes()))
+        polmodes = dict(zip(sel.get_pols(), sel.get_poltypes()))
         # this returns either a tuple of numbers or a length  (ncycles)
         # convert this into lengths
         n0,nstack0 = self._get_selected_n(scan)
@@ -1014,10 +1012,12 @@ class asapplotter:
             if self._rows and self._cols:
                 n = min(n,self._rows*self._cols)
                 self._plotter.set_panels(rows=self._rows,cols=self._cols,
-                                         nplots=n,margin=self._margins,ganged=ganged)
+                                         nplots=n,margin=self._margins,
+                                         ganged=ganged)
             else:
                 n = min(n,maxpanel)
-                self._plotter.set_panels(rows=n,cols=0,nplots=n,margin=self._margins,ganged=ganged)
+                self._plotter.set_panels(rows=n,cols=0,nplots=n,
+                                         margin=self._margins,ganged=ganged)
         else:
             self._plotter.set_panels(margin=self._margins)
         #r = 0
@@ -1072,7 +1072,8 @@ class asapplotter:
                     self._panelrows += [r]
                     
             #if (b > b0 or newpanel) and stackcount < nstack:
-            if stackcount < nstack and (newpanel or rowstack or (a == a0 and b > b0)):
+            if stackcount < nstack and (newpanel or \
+                                            rowstack or (a == a0 and b > b0)):
                 y = []
                 if len(polmodes):
                     y = scan._getspectrum(r, polmodes[scan.getpol(r)])
@@ -1215,7 +1216,8 @@ class asapplotter:
         order = self._get_sortstring([self._panelling,self._stacking])
         if order:
             self._selection.set_order(order)
-        if refresh and self._data: self.plot(self._data)
+        if refresh and self._data: 
+            self.plot()
 
     def _get_selected_n(self, scan):
         d1 = {'b': scan.getbeamnos, 's': scan.getscannos,
