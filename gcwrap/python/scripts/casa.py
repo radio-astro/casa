@@ -126,6 +126,7 @@ from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
 from msview import msview
+from partition import partition
 from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal
