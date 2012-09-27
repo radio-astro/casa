@@ -21,19 +21,7 @@
 #include <casa/OS/SymLink.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Utilities/Assert.h>
-#include <components/ComponentModels/ComponentList.h>
-#include <components/ComponentModels/ComponentShape.h>
-#include <components/ComponentModels/GaussianShape.h>
-#include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/SkyCompRep.h>
-#include <components/ComponentModels/TwoSidedShape.h>
-#include <components/SpectralComponents/SpectralElement.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/GaussianConvert.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
 
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
@@ -980,7 +968,7 @@ record* image::deconvolvecomponentlist(
 			)
 		);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -1036,9 +1024,15 @@ record* image::deconvolvefrombeam(
 		GaussianBeam myBeam(beamParam[0], beamParam[1], beamParam[2]);
 		Bool success = False;
 		Angular2DGaussian decon;
-		Bool retval = ImageUtilities::deconvolveFromBeam(
-			decon, mySource, success, *_log, myBeam
-		);
+		Bool retval = False;
+		try {
+			retval = myBeam.deconvolve(decon, mySource);
+			success = True;
+		}
+		catch (const AipsError& x) {
+			retval = False;
+			success = False;
+		}
 		Record deconval = decon.toRecord();
 		deconval.defineRecord("pa", deconval.asRecord("positionangle"));
 		deconval.removeField("positionangle");
