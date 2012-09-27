@@ -60,20 +60,15 @@ class pcasa_test(unittest.TestCase):
 
         listobs(vis)
 
-        flagdata2(vis,
+        tflagdata(vis,
                   scan = "3",
                   antenna = "8",
-                  unflag=True,
+                  mode='unflag',
                   flagbackup = False)
         
-        flagdata(vis,
-                 scan = "3",
-                 antenna = "8",
-                 unflag=True,
-                 flagbackup = False)
 
 
-        flagcmd(vis, optype="list")
+        flagcmd(vis, inpmode="list")
 
         # Commented out because of CAS-2661.
         #for log in pCASA.pc.cluster.get_casalogs():

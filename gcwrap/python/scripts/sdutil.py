@@ -1,7 +1,8 @@
-from casac import casac
 import os
+from casac import casac
 import asap as sd
 from asap import _to_list
+import numpy as np
 
 qatl = casac.quanta()
 
@@ -121,7 +122,12 @@ def normalise_restfreq(in_restfreq):
         return float(in_restfreq)
     elif isinstance(in_restfreq, str):
         return get_restfreq_in_Hz(in_restfreq)
-    elif isinstance(in_restfreq, list):
+    elif isinstance(in_restfreq, list) or isinstance(in_restfreq, np.ndarray):
+        if isinstance(in_restfreq, np.ndarray):
+            if len(in_restfreq.shape) > 1:
+                mesg = "given in numpy.ndarray, in_restfreq must be 1-D."
+                raise Exception, mesg
+        
         res = []
         for i in xrange(len(in_restfreq)):
             elem = in_restfreq[i]

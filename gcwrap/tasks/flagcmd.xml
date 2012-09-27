@@ -631,7 +631,7 @@
               addantenna=''
               
           2.4 Mode quack.
-              quackinterval=0.0     
+              quackinterval=1.0     
               quackmode='beg' 
               quackincrement=False
               

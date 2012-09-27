@@ -94,7 +94,6 @@ scripts/task_fixplanets.py
 scripts/task_fixvis.py
 scripts/task_flagcmd.py
 scripts/task_flagdata.py
-scripts/task_flagdata2.py
 scripts/task_flagmanager.py
 scripts/task_fluxscale.py
 scripts/task_ft.py

@@ -161,10 +161,10 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
             <param type="any" name="quackinterval" subparam="true">
                 <description>Quack n seconds from scan beginning or end</description>
                 <any type="variant" limittypes="double doubleArray" />
-                <value type="double">0.0</value>
+                <value type="double">1.0</value>
             </param>
             <param type="any" name="quackmode" subparam="true">
-                <description>Quack mode. \'beg\' ==> beginning of scan.\'endb\' ==> end of scan. \'end\' ==> all but end of scan. \'tail\' ==> all but beginning of scan</description>
+                <description>Quack mode. \'beg\' ==> first n seconds of scan.\'endb\' ==> last n seconds of scan. \'end\' ==> all but first n seconds of scan. \'tail\' ==> all but last n seconds of scan.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">beg</value>
             </param>
