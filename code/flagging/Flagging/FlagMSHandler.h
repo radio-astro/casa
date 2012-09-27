@@ -71,6 +71,9 @@ public:
 	// (typically for checking existence of CORRECTED_DATA
 	bool checkIfColumnExists(String column);
 
+	// Signal true when a progress summary has to be printed
+	bool summarySignal();
+
 private:
 
 	// Mapping functions

@@ -842,6 +842,7 @@ public:
 	virtual String getTableName() {return String("none");}
 	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
 	virtual bool checkIfColumnExists(String column) {return true;}
+	virtual bool summarySignal() {return true;}
 
 	// Set the iteration approach
 	void setIterationApproach(uShort iterationApproach);
@@ -914,7 +915,10 @@ public:
 	bool flushFlags_p;
 	bool flushFlagRow_p;
 	uInt64 chunkCounts_p;
+	uInt64 progressCounts_p;
 	uInt64 msCounts_p;
+	uShort summaryThreshold_p;
+	bool printChunkSummary_p;
 	uShort tableTye_p;
 
 	// Visibility Buffer

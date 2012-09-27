@@ -571,6 +571,7 @@ FlagMSHandler::nextChunk()
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
 	msCounts_p += chunkCounts_p;
+	progressCounts_p += chunkCounts_p;
 	chunkCounts_p = 0;
 	bool moreChunks = false;
 	if (stopIteration_p)
@@ -674,7 +675,7 @@ FlagMSHandler::nextBuffer()
 	// Set new common flag cube
 	if (moreBuffers)
 	{
-		logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
+		logger_p->origin(LogOrigin("FlagMSHandler::ProgressReport"));
 
 		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
 		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
@@ -694,7 +695,7 @@ FlagMSHandler::nextBuffer()
 		chunkCounts_p += curentFlagCube.shape().product();
 
 		// Print chunk characteristics
-		if (bufferNo == 1)
+		if ((bufferNo == 1) and (printChunkSummary_p))
 		{
 			String corrs = "[ ";
 			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
@@ -705,9 +706,10 @@ FlagMSHandler::nextBuffer()
 
 			Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
 
-			*logger_p << LogIO::NORMAL << 
+			*logger_p << LogIO::NORMAL <<
 			  "------------------------------------------------------------------------------------ " << LogIO::POST;
-			*logger_p << "Chunk = " << chunkNo << " [" << progress << "%]"
+			*logger_p << LogIO::NORMAL <<
+					"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
 					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
 					", Array = " << visibilityBuffer_p->get()->arrayId() <<
 					", Scan = " << visibilityBuffer_p->get()->scan0() <<
@@ -877,6 +879,27 @@ FlagMSHandler::checkIfColumnExists(String column)
 {
 	return originalMeasurementSet_p->tableDesc().isColumn(column);
 }
+
+// -----------------------------------------------------------------------
+// Signal true when a progress summary has to be printed
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::summarySignal()
+{
+	Double progress = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
+	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+	{
+		summaryThreshold_p += 10;
+		printChunkSummary_p = true;
+		return true;
+	}
+	else
+	{
+		printChunkSummary_p = false;
+		return false;
+	}
+}
+
 
 } //# NAMESPACE CASA - END
 

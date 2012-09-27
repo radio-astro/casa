@@ -1609,7 +1609,7 @@ FlagAgentBase::isNaN(Double number)
 void
 FlagAgentBase::chunkSummary()
 {
-	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__));
 
 	// With this check we skip cases like summary or display
 	if (chunkFlags_p > 0)
@@ -1617,11 +1617,11 @@ FlagAgentBase::chunkSummary()
 		tableFlags_p +=  chunkFlags_p;
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> "  << "Data flagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << LogIO::NORMAL << "=> "  << "Data flagged so far " <<  100.0*chunkFlags_p/flagDataHandler_p->progressCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> "  << "Data unflagged in this chunk: " <<  100.0*chunkFlags_p/flagDataHandler_p->chunkCounts_p<< "%" << LogIO::POST;
+			*logger_p << LogIO::NORMAL << "=> "  << "Data unflagged so far: " <<  100.0*chunkFlags_p/flagDataHandler_p->progressCounts_p<< "%" << LogIO::POST;
 		}
 
 	}
@@ -1631,7 +1631,7 @@ FlagAgentBase::chunkSummary()
 	if (chunkNaNs_p > 0)
 	{
 		tableNaNs_p += chunkNaNs_p;
-		*logger_p << logLevel_p << "=> "  << "Number of NaNs detected in this chunk: " <<  (Double)chunkNaNs_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "=> "  << "Number of NaNs detected so far: " <<  (Double)chunkNaNs_p << LogIO::POST;
 	}
 
 	chunkFlags_p = 0;
@@ -1643,24 +1643,28 @@ FlagAgentBase::chunkSummary()
 void
 FlagAgentBase::tableSummary()
 {
-	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__));
+
+	// Update values just in case chunkSummary was not called before
+	tableFlags_p +=  chunkFlags_p;
+	tableNaNs_p += chunkNaNs_p;
 
 	// With this check we skip cases like summary or display
 	if (tableFlags_p > 0)
 	{
 		if (flag_p)
 		{
-			*logger_p << logLevel_p << "=> "  << "Percentage of data flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << LogIO::NORMAL << "=> "  << "Percentage of data flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 		else
 		{
-			*logger_p << logLevel_p << "=> "  << "Percentage of data un-flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
+			*logger_p << LogIO::NORMAL << "=> "  << "Percentage of data un-flagged in table selection: " <<  100.0*tableFlags_p/flagDataHandler_p->msCounts_p<< "%" << LogIO::POST;
 		}
 	}
 
 	if (tableNaNs_p > 0)
 	{
-		*logger_p << logLevel_p << "=> "  << "Total number NaNs detected in table selection: " <<  (Double)tableNaNs_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "=> "  << "Total number NaNs detected in table selection: " <<  (Double)tableNaNs_p << LogIO::POST;
 	}
 
 	tableFlags_p = 0;
@@ -1782,7 +1786,7 @@ FlagAgentBase::iterateRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG2 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p << " from a total of " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
@@ -1793,7 +1797,7 @@ FlagAgentBase::iterateRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::DEBUG1 << " Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::DEBUG2 << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
 				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
@@ -1859,7 +1863,7 @@ FlagAgentBase::iterateInRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG2 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p
 				<< " from a total of " << rowsIndex_p.size() << " rows with " << channelIndex_p.size() << " channels ("
@@ -1868,7 +1872,7 @@ FlagAgentBase::iterateInRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::DEBUG1 << " Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::DEBUG2 << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") "<< LogIO::POST;
 	}
@@ -1920,14 +1924,14 @@ FlagAgentBase::iterateAntennaPairs()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG2 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " baselines starting with baseline " << threadId_p
 				<< " from a total of " << flagDataHandler_p->getAntennaPairMap()->size() << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::DEBUG2 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
@@ -2015,14 +2019,14 @@ FlagAgentBase::iterateAntennaPairsFlags()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__
+		*logger_p << LogIO::DEBUG2 << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " baselines starting with baseline " << threadId_p
 				<< " from a total of " << flagDataHandler_p->getAntennaPairMap()->size() << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::DEBUG2 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
