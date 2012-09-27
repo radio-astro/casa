@@ -1186,7 +1186,6 @@ class test_CASA_4_0_bug_fix(test_base):
         
         self.setUp_data4tfcrop()
         
-        tflagdata(vis=self.vis,mode='unflag')
         tflagdata(vis=self.vis,mode='manual',uvrange='<2klambda')
         tflagdata(vis=self.vis,mode='clip')
         summary_ref = tflagdata(vis=self.vis,mode='summary')
@@ -1201,12 +1200,30 @@ class test_CASA_4_0_bug_fix(test_base):
         """tflagdata: Test channel selection with Rflag agent"""
         
         self.setUp_data4tfcrop()
-        tflagdata(vis=self.vis,mode='unflag')
         tflagdata(vis=self.vis,mode='rflag',spw='9:10~20')
         summary = tflagdata(vis=self.vis,mode='summary')
         self.assertEqual(summary['spw']['8']['flagged'],0,'Error in channel selection with Rflag agent')
         self.assertEqual(summary['spw']['9']['flagged'],1861,'Error in channel selection with Rflag agent')
         self.assertEqual(summary['spw']['10']['flagged'],0,'Error in channel selection with Rflag agent')
+        
+        
+    def test_CAS_4200(self):
+        """tflagdata: Test quack mode with quackinterval 0"""
+        
+        self.setUp_data4tfcrop()
+        tflagdata(vis=self.vis,mode='quack',quackinterval=0)
+        summary_zero = tflagdata(vis=self.vis,mode='summary')
+        self.assertEqual(summary_zero['flagged'],0,'Error in quack mode with quack interval 0')
+        
+        tflagdata(vis=self.vis,mode='quack',quackinterval=1)
+        summary_one = tflagdata(vis=self.vis,mode='summary')
+        
+        tflagdata(vis=self.vis,mode='unflag')
+        tflagdata(vis=self.vis,mode='quack')
+        summary_default = tflagdata(vis=self.vis,mode='summary')
+        
+        self.assertEqual(summary_one['flagged'],summary_default['flagged'],'Error in quack mode with quack interval 1')
+        
         
 # Cleanup class 
 class cleanup(test_base):
