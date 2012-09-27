@@ -107,6 +107,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <returns type="bool"/>
 
     <example>
+
+Information about the observation and the performance of WVRGCAL is written to the CASA logger; 
+see the CASA cookbook for a more detailed description of these parameters.
+
+Of particular note is the discrepancy parameter (Disc): high values (> a few hundred microns) 
+may indicate some levels of cloud contamination and the effect of applying the WVRGCAL correction 
+should be checked; values > 1000 um in all antennas have currently been found to indicate that 
+WVRGCAL correction should not be used.
+
       
   vis -- Name of input visibility file
               default: none; example: vis='ngc5921.ms'
