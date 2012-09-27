@@ -150,7 +150,6 @@ cu = casac.utils()
 
 from imstat_pg import imstat_pg as imstat
 from flagdata_pg import flagdata_pg as flagdata
-from flagdata2_pg import flagdata2_pg as flagdata2
 from tflagdata_pg import tflagdata_pg as tflagdata
 from flagcmd_pg import flagcmd_pg as flagcmd
 from importevla_pg import importevla_pg as importevla

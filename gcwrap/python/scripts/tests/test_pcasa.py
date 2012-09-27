@@ -60,17 +60,12 @@ class pcasa_test(unittest.TestCase):
 
         listobs(vis)
 
-        flagdata2(vis,
+        tflagdata(vis,
                   scan = "3",
                   antenna = "8",
-                  unflag=True,
+                  mode='unflag',
                   flagbackup = False)
         
-        flagdata(vis,
-                 scan = "3",
-                 antenna = "8",
-                 unflag=True,
-                 flagbackup = False)
 
 
         flagcmd(vis, inpmode="list")

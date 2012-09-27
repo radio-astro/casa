@@ -99,7 +99,6 @@ from feather import  feather
 from find import  find
 from fixvis import  fixvis
 from flagdata import  flagdata
-from flagdata2 import  flagdata2
 from flagmanager import  flagmanager
 from fluxscale import  fluxscale
 from ft import  ft
