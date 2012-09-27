@@ -73,7 +73,7 @@ class pcasa_test(unittest.TestCase):
                  flagbackup = False)
 
 
-        flagcmd(vis, optype="list")
+        flagcmd(vis, inpmode="list")
 
         # Commented out because of CAS-2661.
         #for log in pCASA.pc.cluster.get_casalogs():
