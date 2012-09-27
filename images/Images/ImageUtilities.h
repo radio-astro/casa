@@ -230,18 +230,19 @@ public:
 
     // Deconvolve SkyComponent from beam
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-    static casa::SkyComponent deconvolveSkyComponent(
-        casa::LogIO& os, const casa::SkyComponent& skyIn,
-        const GaussianBeam& beam,
-        const casa::DirectionCoordinate& dirCoord
+    static SkyComponent deconvolveSkyComponent(
+        LogIO& os, const SkyComponent& skyIn,
+        const GaussianBeam& beam
     );
 
+    /*
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     // Put beam into +x -> +y frame
     static GaussianBeam putBeamInXYFrame (
         const GaussianBeam& beam,
         const casa::DirectionCoordinate& dirCoord
     );
+    */
 
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     static Vector<Double> decodeSkyComponent (
@@ -254,12 +255,14 @@ public:
     // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
     // Deconvolve from beam
     // Returns True if the deconvolved source is a point source, False otherwise.
+    /*
     static Bool deconvolveFromBeam(
     	Angular2DGaussian& deconvolvedSize,
     	const Angular2DGaussian& convolvedSize,
         Bool& successFit, LogIO& os,
         const GaussianBeam& beam, const Bool verbose=True
     );
+    */
 
     /*
     static Bool deconvolveFromBeam(

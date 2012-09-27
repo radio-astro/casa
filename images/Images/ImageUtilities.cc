@@ -331,50 +331,29 @@ SkyComponent ImageUtilities::encodeSkyComponent(
 			<< LogIO::POST;
 		return sky;
 	}
-
-	const DirectionCoordinate& dirCoord = cSys.directionCoordinate(
-			dirCoordinate
-	);
-	return ImageUtilities::deconvolveSkyComponent(os, sky, beam, dirCoord);
+	return ImageUtilities::deconvolveSkyComponent(os, sky, beam);
 }
 
 // moved from ImageAnalysis. See comments in ImageUtilities.h
-SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
-        const SkyComponent& skyIn, const GaussianBeam& beam,
-        const DirectionCoordinate& dirCoord) {
+SkyComponent ImageUtilities::deconvolveSkyComponent(
+	LogIO& os,
+	const SkyComponent& skyIn, const GaussianBeam& beam
+) {
 	const ComponentShape& shapeIn = skyIn.shape();
 	ComponentType::Shape type = shapeIn.type();
 	if (type == ComponentType::POINT) {
 		return skyIn;
 	}
-
     SkyComponent skyOut = skyIn.copy();
-
-    // Put beam p.a. into XY frame
-    GaussianBeam beam2 = putBeamInXYFrame(beam, dirCoord);
-
     if (type == ComponentType::GAUSSIAN) {
         // Recover shape
         const TwoSidedShape& ts = dynamic_cast<const TwoSidedShape&> (shapeIn);
         Quantity major = ts.majorAxis();
         Quantity minor = ts.minorAxis();
         Quantity pa = ts.positionAngle();
-        // Adjust position angle to XY pixel frame  (pos +x -> +y)
-        Vector<Double> p = ts.toPixel(dirCoord);
-
-        // Deconvolve.
-        Quantity paXYFrame(p(4), Unit("rad"));
-        Angular2DGaussian source(major, minor, paXYFrame);
+        Angular2DGaussian source(major, minor, pa);
         Angular2DGaussian deconvolvedSize;
-        Bool fitSuccess;
-        // TODO atm we do not check for fit success, but probably should. fitSuccess is new
-        // and part of unrelated work.
-        deconvolveFromBeam(deconvolvedSize, source, fitSuccess, os, beam2);
-
-        // Account for frame change of position angle
-        Quantity diff = paXYFrame - deconvolvedSize.getPA();
-        pa -= diff;
-        deconvolvedSize.setPA(pa);
+        beam.deconvolve(deconvolvedSize, source);
         const MDirection dirRefIn = shapeIn.refDirection();
         GaussianShape shapeOut(
         	dirRefIn, deconvolvedSize.getMajor(),
@@ -389,46 +368,6 @@ SkyComponent ImageUtilities::deconvolveSkyComponent(LogIO& os,
     }
 	return skyOut;
 }
-
-GaussianBeam ImageUtilities::putBeamInXYFrame(
-    const GaussianBeam& beam, const DirectionCoordinate& dirCoord
-) {
-// moved from ImageAnalysis
-
-// The beam is spatially invariant across an image, and its position
-// must be fit in the pixel coordinate system to make any sense.
-// However, its position angle is positive N->E which means
-// some attempt to look at the increments has been made...
-// We want positive +x -> +y  so have to try and do this.
-    GaussianBeam beam2 = beam;
-    Vector<Double> inc = dirCoord.increment();
-    Double pa = beam.getPA(True).getValue(Unit("rad"));
-    Double pa2 = beam2.getPA().getValue(Unit("rad"));
-    //
-    if (inc(1) > 0) {
-        if (inc(0) < 0) {
-            pa2 = C::pi_2 + pa;
-        }
-        else {
-            pa2 = C::pi_2 - pa;
-        }
-    }
-    else {
-        if (inc(0) < 0) {
-            pa2 = C::pi + C::pi_2 - pa;
-        } else {
-            pa2 = C::pi + C::pi_2 + pa;
-        }
-    }
-    //
-    Double pa3 = fmod(pa2, C::pi);
-    if (pa3 < 0.0) {
-        pa3 += C::pi;
-    }
-    beam2.setPA(Quantity(pa3, "rad"));
-    return beam2;
-}
-
 
 Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
                                                    const ImageInfo& ii,
@@ -475,6 +414,7 @@ Vector<Double> ImageUtilities::decodeSkyComponent (const SkyComponent& sky,
    return pars;
 }
 
+/*
 Bool ImageUtilities::deconvolveFromBeam(
 	Angular2DGaussian& deconvolvedSize, const Angular2DGaussian& convolvedSize,
 	Bool& successFit, LogIO& os, const GaussianBeam& beam,
@@ -486,14 +426,11 @@ Bool ImageUtilities::deconvolveFromBeam(
     // of the local coordinate system.  Since the restoring beam
     // is invariant over the image, we need to rotate the restoring
     // beam into the same coordinate system as the component.
-    Bool isPointSource = False;
-    Quantity majorOut;
-    Quantity minorOut;
-    Quantity paOut;
+
+    successFit = True;
+
     try {
-        isPointSource = beam.deconvolve(deconvolvedSize, convolvedSize);
-        successFit = True;
-        return isPointSource;
+        return beam.deconvolve(deconvolvedSize, convolvedSize);
     }
     catch (const AipsError& x) {
     	successFit = False;
@@ -506,9 +443,10 @@ Bool ImageUtilities::deconvolveFromBeam(
     		oss << "Beam  = " << beam << endl;
     		os << String(oss) << LogIO::POST;
     	}
-        return False;
     }
+    return False;
 }
+*/
 
 void ImageUtilities::worldWidthsToPixel (LogIO& os,
                                          Vector<Double>& dParameters,

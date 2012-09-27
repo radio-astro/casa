@@ -73,6 +73,8 @@ template <class T>
 Image2DConvolver<T>::~Image2DConvolver ()
 {}
 
+// TODO use GaussianBeams rather than Vector<Quantity>s, this method
+// can probably be eliminated.
 template <class T>
 Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 	LogIO& os, const Vector<Quantity>& targetBeamParms,
@@ -84,13 +86,10 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 		targetBeamParms[0], targetBeamParms[1],
 		targetBeamParms[2]
 	);
-	Bool successFit = False;
-	ImageUtilities::deconvolveFromBeam(
-		convolvingBeam, targetBeam,
-		successFit, os, inputBeam,
-		True
-	);
-	if (! successFit) {
+	try {
+		inputBeam.deconvolve(convolvingBeam, targetBeam);
+	}
+	catch (const AipsError& x) {
 		os << "Unable to reach target resolution of "
 			<< targetBeam << " Input image beam "
 			<< inputBeam << " is probably too large"

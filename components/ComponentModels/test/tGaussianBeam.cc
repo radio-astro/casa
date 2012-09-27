@@ -128,11 +128,9 @@ int main() {
 		v = beam.toVector();
 		GaussianBeam beam4(v);
 		AlwaysAssert(beam4 == beam3, AipsError);
-
+		const Unit rad("rad");
 		{
 			// Easy test 1 - P.A. = 0
-
-			Unit rad("rad");
 			Angular2DGaussian source(
 				Quantity(20, "arcsec"),
 				Quantity(10, "arcsec"),
@@ -170,17 +168,15 @@ int main() {
 		}
 		{
 			// Easy test 2 - P.A. aligned
-
-			Unit rad("rad");
 			Angular2DGaussian source(
-				Quantity(20, "arcsec"),
 				Quantity(10, "arcsec"),
-				Quantity(45, "deg")
+				Quantity(5, "arcsec"),
+				Quantity(20, "deg")
 		    );
 			GaussianBeam beam(
-				Quantity(15, "arcsec"),
-				Quantity(5, "arcsec"),
-				Quantity(45, "deg")
+				Quantity(8, "arcsec"),
+				Quantity(4, "arcsec"),
+				Quantity(20, "deg")
 		    );
 
 			Double maj = sqrt(
@@ -198,7 +194,7 @@ int main() {
 		    );
 			Quantity minQ(min, rad);
 			minQ.convert(source.getMinor().getFullUnit());
-			Quantity paQ(45.0,source.getPA().getFullUnit());
+			Quantity paQ(20, source.getPA().getFullUnit());
 
 			Angular2DGaussian expected(majQ, minQ, paQ);
 			Angular2DGaussian model;
@@ -214,16 +210,15 @@ int main() {
 		}
 		{
 			// Easy test 3 - beam and source the same
-			Unit rad("rad");
 			Angular2DGaussian source(
 				Quantity(20, "arcsec"),
 				Quantity(10, "arcsec"),
-				Quantity(45, "arcsec")
+				Quantity(45, "deg")
 			);
 			GaussianBeam beam(
 				Quantity(20.00001, "arcsec"),
 				Quantity(10.00001, "arcsec"),
-				Quantity(45, "arcsec")
+				Quantity(45, "deg")
 			);
 			Angular2DGaussian model;
 			Bool isPoint = beam.deconvolve(model, source);
@@ -234,6 +229,34 @@ int main() {
 			cout << "isPoint  = " << isPoint << endl << endl;
 			AlwaysAssert(isPoint, AipsError);
 			AlwaysAssert(near(beam, model,1e-6, Quantity(1, "mas")), AipsError);
+		}
+		{
+			// Not so easy test 4
+			Angular2DGaussian source(
+				Quantity(4, "arcsec"),
+				Quantity(3, "arcsec"),
+				Quantity(20, "deg")
+			);
+			GaussianBeam beam(
+				Quantity(3, "arcsec"),
+				Quantity(2, "arcsec"),
+				Quantity(50, "deg")
+			);
+			Angular2DGaussian expected(
+				Quantity(3.0203474964313628, "arcsec"),
+				Quantity(1.6963198403605391, "arcsec"),
+				Quantity(-1.9489431240069859, "deg")
+			);
+			Angular2DGaussian model;
+			model.convert("arcsec", "arcsec", "deg");
+			Bool isPoint = beam.deconvolve(model, source);
+			cout << "Source   = " << source << endl;
+			cout << "Beam     = " << beam << endl;
+			cout << "Model    = " << model << endl;
+			cout << "Expected = " << expected << endl;
+			cout << "isPoint  = " << isPoint << endl << endl;
+			AlwaysAssert(!isPoint, AipsError);
+			AlwaysAssert(near(expected, model,1e-6, Quantity(1, "mas")), AipsError);
 		}
 	}
 	catch (AipsError x) {
