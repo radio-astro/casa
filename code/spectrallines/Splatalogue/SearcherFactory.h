@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 #ifndef SEARCHERFACTORY_H_
 #define SEARCHERFACTORY_H_
-
+#include <casa/System/Aipsrc.h>
 namespace casa {
 
 class Searcher;
@@ -40,6 +40,7 @@ public:
 	virtual ~SearcherFactory();
 
 private:
+	static String getLocation( bool local );
 	SearcherFactory();
 };
 

@@ -31,8 +31,8 @@
 using namespace std;
 
 class sqlite3;
-namespace casa {
 
+namespace casa {
 /**
  * Maintains a connection to an SQLite database.
  */
@@ -49,5 +49,5 @@ private:
 	sqlite3* db;
 };
 
-} /* namespace casa */
+}
 #endif /* DATABASECONNECTOR_H_ */

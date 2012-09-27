@@ -293,28 +293,28 @@ void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ){
 	if ( filterIndex > 0 ){
 		switch( filterIndex ){
 		case TOP_20:
-			searcher->setAstroFilterTop20();
+			searcher->setFilterTop20();
 			break;
 		case PLANETARY_ATMOSPHERE:
-			searcher->setAstroFilterPlanetaryAtmosphere();
+			searcher->setFilterPlanetaryAtmosphere();
 			break;
 		case HOT_CORES:
-			searcher->setAstroFilterHotCores();
+			searcher->setFilterHotCores();
 			break;
 		case DARK_CLOUDS:
-			searcher->setAstroFilterDarkClouds();
+			searcher->setFilterDarkClouds();
 			break;
 		case DIFFUSE_CLOUDS:
-			searcher->setAstroFilterDiffuseClouds();
+			searcher->setFilterDiffuseClouds();
 			break;
 		case COMETS:
-			searcher->setAstroFilterComets();
+			searcher->setFilterComets();
 			break;
 		case AGB_PPN_PN:
-			searcher->setAstroFilterAgbPpnPn();
+			searcher->setFilterAgbPpnPn();
 			break;
 		case EXTRAGALACTIC:
-			searcher->setAstroFilterExtragalactic();
+			searcher->setFilterExtragalactic();
 			break;
 		default:
 			assert( false );
@@ -372,7 +372,7 @@ void SearchMoleculesWidget::search(){
 		minValue = maxValue;
 		maxValue = tmp;
 	}
-	searcher->setSearchRangeFrequency( minValue, maxValue );
+	searcher->setFrequencyRange( minValue, maxValue );
 
 	//Set any astronomical filters for the search
 	setAstronomicalFilters( searcher );

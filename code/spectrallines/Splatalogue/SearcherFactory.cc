@@ -24,20 +24,18 @@
 #include "SearcherFactory.h"
 #include <spectrallines/Splatalogue/Searcher.h>
 #include <spectrallines/Splatalogue/SQLiteSearch/SearcherSQLite.h>
-#include <casa/System/Aipsrc.h>
 
 #include <iostream>
 using namespace std;
 
 namespace casa {
 
-Searcher* SearcherFactory::getSearcher( bool local ){
-	Searcher* searcher = NULL;
+String SearcherFactory::getLocation( bool local ){
+	String defaultDatabasePath;
 	if ( local ){
 		//Note:: When the SQLite code (and database get put into its
 		//own library, finding the location of the database should be
 		//removed from here and put into the DatabaseConnector.
-		String defaultDatabasePath;
 		Bool foundDatabase = Aipsrc::find(defaultDatabasePath, "user.ephemerides.SplatDefault.tbl");
 		if( !foundDatabase ){
 			foundDatabase = Aipsrc::findDir(defaultDatabasePath, "data/ephemerides/SplatDefault.tbl");
@@ -48,6 +46,16 @@ Searcher* SearcherFactory::getSearcher( bool local ){
 			int index = defaultDatabasePath.find(tableName, 0);
 			int tableNameSize = tableName.length();
 			defaultDatabasePath.replace(index, tableNameSize, "splatalogue.db");
+		}
+	}
+	return defaultDatabasePath;
+}
+
+Searcher* SearcherFactory::getSearcher( bool local ){
+	Searcher* searcher = NULL;
+	if ( local ){
+		String defaultDatabasePath = getLocation( local );
+		if ( ! defaultDatabasePath.length() == 0 ){
 			searcher = new SearcherSQLite(defaultDatabasePath.c_str() );
 		}
 	}
@@ -56,8 +64,6 @@ Searcher* SearcherFactory::getSearcher( bool local ){
 	}
 	return searcher;
 }
-
-
 
 SearcherFactory::SearcherFactory(){
 }

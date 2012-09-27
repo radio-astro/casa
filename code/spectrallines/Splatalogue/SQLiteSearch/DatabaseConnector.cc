@@ -28,7 +28,6 @@
 #include <sqlite3.h>
 #include <iostream>
 using namespace std;
-
 namespace casa {
 
 DatabaseConnector* DatabaseConnector::connection = NULL;
@@ -67,4 +66,4 @@ DatabaseConnector::~DatabaseConnector() {
 	}
 }
 
-} /* namespace casa */
+}

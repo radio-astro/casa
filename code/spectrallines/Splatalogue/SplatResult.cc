@@ -25,29 +25,23 @@
 
 #include "SplatResult.h"
 #include <sstream>
-
+#include <stdio.h>
 namespace casa {
 
 SplatResult::SplatResult(int speciesId, const string& species,
-		const string& chemicalName,
-		const string& quantumNumbers, const string& catalogueName,
-		bool recommended, long molecularType, const pair<double,string>& frequency,
-		const pair<double,string>& smu2, const pair<double,string>& el,
-		const pair<double,string>& eu, double logA, double wavelength,
-		double intensity) {
+		const string& chemicalName, const string& quantumNumbers,
+		const pair<double,string>& frequency,
+		double smu2, const pair<double,string>& el,
+		const pair<double,string>& eu, double logA, double intensity) {
 	this->_speciesId = speciesId;
 	this->_species = species;
 	this->_chemicalName = chemicalName;
 	this->_quantumNumbers = quantumNumbers;
-	this->_catalogueName = catalogueName;
-	this->_recommended = recommended;
-	this->_molecularType = molecularType;
 	this->_frequency = frequency;
 	this->_smu2 = smu2;
 	this->_el = el;
 	this->_eu = eu;
 	this->_logA = logA;
-	this->_wavelength = wavelength;
 	this->_intensity = intensity;
 
 }
@@ -65,19 +59,11 @@ std::string SplatResult::getChemicalName() const {
 std::string SplatResult::getQuantumNumbers() const {
 	return _quantumNumbers;
 }
-std::string SplatResult::getCatalogueName() const {
-	return _catalogueName;
-}
-bool SplatResult::isRecommended() const {
-	return _recommended;
-}
-long SplatResult::getMolecularType() const {
-	return _molecularType;
-}
+
 pair<double,std::string> SplatResult::getFrequency() const {
 	return _frequency;
 }
-pair<double,std::string> SplatResult::getSmu2() const {
+double SplatResult::getSmu2() const {
 	return _smu2;
 }
 pair<double,std::string> SplatResult::getEL() const {
@@ -89,27 +75,52 @@ pair<double,std::string> SplatResult::getEU() const {
 double SplatResult::getLogA() const {
 	return _logA;
 }
-double SplatResult::getWavelength() const {
-	return _wavelength;
-}
+
 double SplatResult::getIntensity() const {
 	return _intensity;
 }
 string SplatResult::toString() const {
 	ostringstream os;
-	os << "Species: "<< _species << "\n";
-	os << "Recommended: "<< _recommended << "\n";
-	os << "Chemical Name: "<< _chemicalName << "\n";
-	os << "Frequency: "<< _frequency.first << "\n";
+	os << "Species:      "<< _species << "\n";
+	os << "Chemical Name:"<< _chemicalName << "\n";
+	os << "Frequency:    "<< _frequency.first << " "<<_frequency.second<<"\n";
 	os << "Resolved QNs: "<< _quantumNumbers << "\n";
-	os << "Intensity: "<< _intensity << "\n";
-	os << "SMU2: "<< _smu2.first << "\n";
-	os << "LOGA: " << _logA << "\n";
-	os << "EL: " << _el.first << "\n";
-	os << "EU: " << _eu.first << "\n";
-	os << "LINELIST: " << _catalogueName << "\n";
+	os << "Intensity:    "<< _intensity << "\n";
+	os << "Siju2:        "<< _smu2 << "\n";
+	os << "LOGA:         "<< _logA << "\n";
+	os << "EL:           "<< _el.first << " "<< _el.second<< "\n";
+	os << "EU:           "<< _eu.first << " "<< _eu.second <<"\n";
 	return os.str();
 }
+
+string SplatResult::toLine( string spacer ) const {
+	ostringstream os;
+	const int COLUMN_WIDTH = 30;
+	const int NUM_COLUMN_WIDTH = 16;
+	char speciesStr[COLUMN_WIDTH];
+	string formatStr( "%-29.29s");
+	string numFormatStr( "%15.6f");
+	sprintf( speciesStr, formatStr.c_str(), _species.c_str());
+	char chemStr[COLUMN_WIDTH];
+	sprintf( chemStr, formatStr.c_str(), _chemicalName.c_str());
+	char freqStr[NUM_COLUMN_WIDTH];
+	sprintf( freqStr, numFormatStr.c_str(), _frequency.first );
+	char qnsStr[COLUMN_WIDTH];
+	sprintf( qnsStr, formatStr.c_str(), _quantumNumbers.c_str() );
+	char intStr[NUM_COLUMN_WIDTH];
+	sprintf( intStr, numFormatStr.c_str(), _intensity );
+	char smu2Str[NUM_COLUMN_WIDTH];
+	sprintf( smu2Str, numFormatStr.c_str(), _smu2 );
+	char logaStr[NUM_COLUMN_WIDTH];
+	sprintf( logaStr, numFormatStr.c_str(), _logA );
+	char elStr[NUM_COLUMN_WIDTH];
+	sprintf( elStr, numFormatStr.c_str(), _el.first );
+	os << speciesStr << spacer << chemStr << spacer << freqStr << spacer <<
+			qnsStr<< spacer << intStr<< spacer << spacer << smu2Str<< spacer
+			<< spacer << logaStr<< spacer <<elStr << endl;
+	return os.str();
+}
+
 SplatResult::~SplatResult() {
 	// TODO Auto-generated destructor stub
 }

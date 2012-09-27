@@ -486,6 +486,7 @@ double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
 	String xAxisUnit = getXAxisUnit();
 	double pixelValue = val;
 	//We are not already in pixels = channels
+
 	if ( xAxisUnit.length() > 0 ){
 		QString unitStr( xAxisUnit.c_str());
 		Converter* converter = Converter::getConverter( unitStr, unitStr );
